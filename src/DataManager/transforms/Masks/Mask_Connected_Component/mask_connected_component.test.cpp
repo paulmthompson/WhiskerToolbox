@@ -12,302 +12,206 @@
 #include "transforms/TransformRegistry.hpp"
 #include "transforms/ParameterFactory.hpp"
 
+#include "fixtures/MaskConnectedComponentTestFixture.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_component]") {
+// ============================================================================
+// Core Functionality Tests (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponent - removes small components while preserving large ones",
+                 "[mask_connected_component][fixture]") {
+    auto mask_data = m_test_masks["large_and_small_components"];
     
-    SECTION("removes small components while preserving large ones") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({10, 10});
-        
-        // Create a mask with a large component (9 pixels) and small components (1-2 pixels each)
-        Mask2D large_component = {
-            {1, 1}, {2, 1}, {3, 1},  // Row 1
-            {1, 2}, {2, 2}, {3, 2},  // Row 2  
-            {1, 3}, {2, 3}, {3, 3}   // Row 3 (3x3 square)
-        };
-        
-        Mask2D small_component1 = {
-            {7, 1}  // Single pixel
-        };
-        
-        Mask2D small_component2 = {
-            {7, 7}, {8, 7}  // Two adjacent pixels
-        };
-        
-        // Add all components to the same time
-        mask_data->addAtTime(TimeFrameIndex(0), large_component, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(0), small_component1, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(0), small_component2, NotifyObservers::No);
-
-        // Set threshold to 5 - should keep the 9-pixel component, remove the 1 and 2-pixel components
-        auto params = std::make_unique<MaskConnectedComponentParameters>();
-        params->threshold = 5;
-        
-        auto result = remove_small_connected_components(mask_data.get(), params.get());
-        
-        REQUIRE(result != nullptr);
-        
-        // Check that we have data at time 0
-        auto times = result->getTimesWithData();
-        REQUIRE(times.size() == 1);
-        REQUIRE(*times.begin() == TimeFrameIndex(0));
-        
-        // Get masks at time 0
-        auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
-        
-        // Should have one mask (the large component preserved)
-        REQUIRE(result_masks.size() == 1);
-        
-        // The preserved mask should have 9 points
-        auto const & preserved_mask = result_masks[0];
-        REQUIRE(preserved_mask.size() == 9);
-        
-        // Verify the preserved points are from the large component
-        std::set<std::pair<uint32_t, uint32_t>> expected_points;
-        for (auto const & point : large_component) {
-            expected_points.insert({point.x, point.y});
-        }
-        
-        std::set<std::pair<uint32_t, uint32_t>> actual_points;
-        for (auto const & point : preserved_mask) {
-            actual_points.insert({point.x, point.y});
-        }
-        
-        REQUIRE(actual_points == expected_points);
-    }
+    // Set threshold to 5 - should keep the 9-pixel component, remove the 1 and 2-pixel components
+    auto params = std::make_unique<MaskConnectedComponentParameters>();
+    params->threshold = 5;
     
-    SECTION("preserves all components when threshold is 1") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({5, 5});
-        
-        // Create several small components
-        Mask2D component1 = {{1, 1}};
-        Mask2D component2 = {{3, 3}};
-        Mask2D component3 = {{0, 4}, {1, 4}};  // 2-pixel component
-
-        mask_data->addAtTime(TimeFrameIndex(10), component1, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(10), component2, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(10), component3, NotifyObservers::No);
-
-        auto params = std::make_unique<MaskConnectedComponentParameters>();
-        params->threshold = 1;
-        
-        auto result = remove_small_connected_components(mask_data.get(), params.get());
-        
-        REQUIRE(result != nullptr);
-        
-        auto const & result_masks = result->getAtTime(TimeFrameIndex(10));
-        
-        // Should preserve all 3 components
-        REQUIRE(result_masks.size() == 3);
-        
-        // Total pixels should be 1 + 1 + 2 = 4
-        size_t total_pixels = 0;
-        for (auto const & mask : result_masks) {
-            total_pixels += mask.size();
-        }
-        REQUIRE(total_pixels == 4);
-    }
+    auto result = remove_small_connected_components(mask_data.get(), params.get());
     
-    SECTION("removes all components when threshold is too high") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({10, 10});
-        
-        // Create some medium-sized components
-        Mask2D component1 = {{0, 0}, {1, 0}, {0, 1}};  // 3 pixels
-        Mask2D component2 = {{5, 5}, {6, 5}};  // 2 pixels
-
-        mask_data->addAtTime(TimeFrameIndex(5), component1, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(5), component2, NotifyObservers::No);
-
-        // Set threshold higher than any component
-        auto params = std::make_unique<MaskConnectedComponentParameters>();
-        params->threshold = 10;
-        
-        auto result = remove_small_connected_components(mask_data.get(), params.get());
-        
-        REQUIRE(result != nullptr);
-        
-        // Should have no masks at time 5 (all removed)
-        auto const & result_masks = result->getAtTime(TimeFrameIndex(5));
-        REQUIRE(result_masks.empty());
-        
-        // Should have no times with data
-        auto times = result->getTimesWithData();
-        REQUIRE(times.empty());
-    }
+    REQUIRE(result != nullptr);
     
-    SECTION("handles empty mask data") {
-        auto mask_data = std::make_shared<MaskData>();
-        
-        auto params = std::make_unique<MaskConnectedComponentParameters>();
-        params->threshold = 5;
-        
-        auto result = remove_small_connected_components(mask_data.get(), params.get());
-        
-        REQUIRE(result != nullptr);
-        REQUIRE(result->getTimesWithData().empty());
-    }
+    // Check that we have data at time 0
+    auto times = result->getTimesWithData();
+    REQUIRE(times.size() == 1);
+    REQUIRE(*times.begin() == TimeFrameIndex(0));
     
-    SECTION("handles multiple time points") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({8, 8});
-        
-        // Time 0: Large component (should be preserved)
-        Mask2D large_comp = {
-            {0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}  // 6 pixels
-        };
-        
-        // Time 1: Small component (should be removed)
-        Mask2D small_comp = {
-            {5, 5}, {5, 6}  // 2 pixels
-        };
-        
-        // Time 2: Medium component (should be preserved)
-        Mask2D medium_comp = {
-            {3, 3}, {4, 3}, {3, 4}, {4, 4}, {3, 5}  // 5 pixels
-        };
-
-        mask_data->addAtTime(TimeFrameIndex(0), large_comp, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(1), small_comp, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(2), medium_comp, NotifyObservers::No);
-
-        auto params = std::make_unique<MaskConnectedComponentParameters>();
-        params->threshold = 4;
-        
-        auto result = remove_small_connected_components(mask_data.get(), params.get());
-        
-        REQUIRE(result != nullptr);
-        
-        auto times = result->getTimesWithData();
-        
-        // Should preserve times 0 and 2, remove time 1
-        REQUIRE(times.size() == 2);
-        REQUIRE(*times.begin() == TimeFrameIndex(0));
-        auto it = times.begin();
-        std::advance(it, 1);
-        REQUIRE(*it == TimeFrameIndex(2));
-        
-        // Verify preserved components have correct sizes
-        auto const & masks_t0 = result->getAtTime(TimeFrameIndex(0));
-        REQUIRE(masks_t0.size() == 1);
-        REQUIRE(masks_t0[0].size() == 6);
-        
-        auto const & masks_t2 = result->getAtTime(TimeFrameIndex(2));
-        REQUIRE(masks_t2.size() == 1);
-        REQUIRE(masks_t2[0].size() == 5);
-        
-        // Time 1 should be empty
-        auto const & masks_t1 = result->getAtTime(TimeFrameIndex(1));
-        REQUIRE(masks_t1.empty());
-    }
+    // Get masks at time 0
+    auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
+    
+    // Should have one mask (the large component preserved)
+    REQUIRE(result_masks.size() == 1);
+    
+    // The preserved mask should have 9 points
+    auto const & preserved_mask = result_masks[0];
+    REQUIRE(preserved_mask.size() == 9);
 }
 
-TEST_CASE("MaskConnectedComponentOperation interface", "[mask_connected_component][operation]") {
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponent - preserves all components when threshold is 1",
+                 "[mask_connected_component][fixture]") {
+    auto mask_data = m_test_masks["multiple_small_components"];
     
-    SECTION("operation name and type checking") {
-        MaskConnectedComponentOperation op;
-        
-        REQUIRE(op.getName() == "Remove Small Connected Components");
-        REQUIRE(op.getTargetInputTypeIndex() == typeid(std::shared_ptr<MaskData>));
-        
-        // Test canApply with correct type
-        auto mask_data = std::make_shared<MaskData>();
-        DataTypeVariant valid_variant = mask_data;
-        REQUIRE(op.canApply(valid_variant));
-        
-        // Test canApply with null pointer
-        std::shared_ptr<MaskData> null_mask;
-        DataTypeVariant null_variant = null_mask;
-        REQUIRE_FALSE(op.canApply(null_variant));
+    auto params = std::make_unique<MaskConnectedComponentParameters>();
+    params->threshold = 1;
+    
+    auto result = remove_small_connected_components(mask_data.get(), params.get());
+    
+    REQUIRE(result != nullptr);
+    
+    auto const & result_masks = result->getAtTime(TimeFrameIndex(10));
+    
+    // Should preserve all 3 components
+    REQUIRE(result_masks.size() == 3);
+    
+    // Total pixels should be 1 + 1 + 2 = 4
+    size_t total_pixels = 0;
+    for (auto const & mask : result_masks) {
+        total_pixels += mask.size();
     }
-    
-    SECTION("default parameters") {
-        MaskConnectedComponentOperation op;
-        auto params = op.getDefaultParameters();
-        
-        REQUIRE(params != nullptr);
-        
-        auto mask_params = dynamic_cast<MaskConnectedComponentParameters*>(params.get());
-        REQUIRE(mask_params != nullptr);
-        REQUIRE(mask_params->threshold == 10);
-    }
-    
-    SECTION("execute operation") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({6, 6});
-        
-        // Add a component larger than default threshold
-        Mask2D large_comp = {
-            {0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1},
-            {0, 2}, {1, 2}, {2, 2}, {3, 0}, {3, 1}, {3, 2}  // 12 pixels
-        };
-        
-        // Add a small component 
-        Mask2D small_comp = {
-            {5, 5}  // 1 pixel
-        };
+    REQUIRE(total_pixels == 4);
+}
 
-        mask_data->addAtTime(TimeFrameIndex(0), large_comp, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(0), small_comp, NotifyObservers::No);
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponent - removes all components when threshold is too high",
+                 "[mask_connected_component][fixture]") {
+    auto mask_data = m_test_masks["medium_components"];
+    
+    // Set threshold higher than any component (max is 3 pixels)
+    auto params = std::make_unique<MaskConnectedComponentParameters>();
+    params->threshold = 10;
+    
+    auto result = remove_small_connected_components(mask_data.get(), params.get());
+    
+    REQUIRE(result != nullptr);
+    
+    // Should have no masks at time 5 (all removed)
+    auto const & result_masks = result->getAtTime(TimeFrameIndex(5));
+    REQUIRE(result_masks.empty());
+    
+    // Should have no times with data
+    auto times = result->getTimesWithData();
+    REQUIRE(times.empty());
+}
 
-        MaskConnectedComponentOperation op;
-        DataTypeVariant input_variant = mask_data;
-        
-        auto params = op.getDefaultParameters();  // threshold = 10
-        auto result_variant = op.execute(input_variant, params.get());
-        
-        REQUIRE(std::holds_alternative<std::shared_ptr<MaskData>>(result_variant));
-        
-        auto result = std::get<std::shared_ptr<MaskData>>(result_variant);
-        REQUIRE(result != nullptr);
-        
-        auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
-        REQUIRE(result_masks.size() == 1);  // Only large component preserved
-        REQUIRE(result_masks[0].size() == 12);  // Large component has 12 pixels
-    }
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponent - handles empty mask data",
+                 "[mask_connected_component][fixture]") {
+    auto mask_data = m_test_masks["empty_mask_data"];
+    
+    auto params = std::make_unique<MaskConnectedComponentParameters>();
+    params->threshold = 5;
+    
+    auto result = remove_small_connected_components(mask_data.get(), params.get());
+    
+    REQUIRE(result != nullptr);
+    REQUIRE(result->getTimesWithData().empty());
+}
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponent - handles multiple time points",
+                 "[mask_connected_component][fixture]") {
+    auto mask_data = m_test_masks["multiple_timestamps"];
+    
+    auto params = std::make_unique<MaskConnectedComponentParameters>();
+    params->threshold = 4;
+    
+    auto result = remove_small_connected_components(mask_data.get(), params.get());
+    
+    REQUIRE(result != nullptr);
+    
+    auto times = result->getTimesWithData();
+    
+    // Should preserve times 0 and 2, remove time 1
+    REQUIRE(times.size() == 2);
+    REQUIRE(*times.begin() == TimeFrameIndex(0));
+    auto it = times.begin();
+    std::advance(it, 1);
+    REQUIRE(*it == TimeFrameIndex(2));
+    
+    // Verify preserved components have correct sizes
+    auto const & masks_t0 = result->getAtTime(TimeFrameIndex(0));
+    REQUIRE(masks_t0.size() == 1);
+    REQUIRE(masks_t0[0].size() == 6);
+    
+    auto const & masks_t2 = result->getAtTime(TimeFrameIndex(2));
+    REQUIRE(masks_t2.size() == 1);
+    REQUIRE(masks_t2[0].size() == 5);
+    
+    // Time 1 should be empty
+    auto const & masks_t1 = result->getAtTime(TimeFrameIndex(1));
+    REQUIRE(masks_t1.empty());
+}
+
+// ============================================================================
+// Operation Interface Tests (using fixture)
+// ============================================================================
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponentOperation - name and type checking",
+                 "[mask_connected_component][operation][fixture]") {
+    MaskConnectedComponentOperation op;
+    
+    REQUIRE(op.getName() == "Remove Small Connected Components");
+    REQUIRE(op.getTargetInputTypeIndex() == typeid(std::shared_ptr<MaskData>));
+    
+    // Test canApply with correct type
+    auto mask_data = m_test_masks["large_and_small_components"];
+    DataTypeVariant valid_variant = mask_data;
+    REQUIRE(op.canApply(valid_variant));
+    
+    // Test canApply with null pointer
+    std::shared_ptr<MaskData> null_mask;
+    DataTypeVariant null_variant = null_mask;
+    REQUIRE_FALSE(op.canApply(null_variant));
+}
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponentOperation - default parameters",
+                 "[mask_connected_component][operation][fixture]") {
+    MaskConnectedComponentOperation op;
+    auto params = op.getDefaultParameters();
+    
+    REQUIRE(params != nullptr);
+    
+    auto mask_params = dynamic_cast<MaskConnectedComponentParameters*>(params.get());
+    REQUIRE(mask_params != nullptr);
+    REQUIRE(mask_params->threshold == 10);
+}
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "MaskConnectedComponentOperation - execute operation",
+                 "[mask_connected_component][operation][fixture]") {
+    auto mask_data = m_test_masks["operation_test_data"];
+    
+    MaskConnectedComponentOperation op;
+    DataTypeVariant input_variant = mask_data;
+    
+    auto params = op.getDefaultParameters();  // threshold = 10
+    auto result_variant = op.execute(input_variant, params.get());
+    
+    REQUIRE(std::holds_alternative<std::shared_ptr<MaskData>>(result_variant));
+    
+    auto result = std::get<std::shared_ptr<MaskData>>(result_variant);
+    REQUIRE(result != nullptr);
+    
+    auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks.size() == 1);  // Only large component preserved
+    REQUIRE(result_masks[0].size() == 12);  // Large component has 12 pixels
 } 
 
-TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transforms][mask_connected_component][json]") {
-    // Create DataManager and populate it with MaskData in code
-    DataManager dm;
+// ============================================================================
+// JSON Pipeline Tests (using fixture)
+// ============================================================================
 
-    // Create a TimeFrame for our data
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
-    
-    // Create test mask data with multiple components of different sizes
-    auto test_mask = std::make_shared<MaskData>();
-    test_mask->setImageSize({10, 10});
-    test_mask->setTimeFrame(time_frame);
-    
-    // Large component (9 pixels) - should be preserved
-    Mask2D large_component = {
-        {1, 1}, {2, 1}, {3, 1},  // Row 1
-        {1, 2}, {2, 2}, {3, 2},  // Row 2  
-        {1, 3}, {2, 3}, {3, 3}   // Row 3 (3x3 square)
-    };
-    
-    // Small component (1 pixel) - should be removed
-    Mask2D small_component1 = {
-        {7, 1}  // Single pixel
-    };
-    
-    // Medium component (4 pixels) - should be preserved
-    Mask2D medium_component = {
-        {5, 5}, {6, 5}, {5, 6}, {6, 6}  // 2x2 square
-    };
-    
-    // Add all components to the mask
-    test_mask->addAtTime(TimeFrameIndex(0), large_component, NotifyObservers::No);
-    test_mask->addAtTime(TimeFrameIndex(0), small_component1, NotifyObservers::No);
-    test_mask->addAtTime(TimeFrameIndex(0), medium_component, NotifyObservers::No);
-
-    // Store the mask data in DataManager with a known key
-    dm.setData("test_mask", test_mask, TimeKey("default"));
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "Data Transform: Mask Connected Component - JSON pipeline",
+                 "[transforms][mask_connected_component][json][fixture]") {
+    auto dm = getDataManager();
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -324,7 +228,7 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
         "                \"step_id\": \"1\",\n"
         "                \"transform_name\": \"Remove Small Connected Components\",\n"
         "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_mask\",\n"
+        "                \"input_key\": \"json_pipeline_mixed\",\n"
         "                \"output_key\": \"filtered_mask\",\n"
         "                \"parameters\": {\n"
         "                    \"threshold\": 3\n"
@@ -348,10 +252,10 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
     }
     
     // Execute the transformation pipeline using load_data_from_json_config
-    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
+    auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
     
     // Verify the transformation was executed and results are available
-    auto result_mask = dm.getData<MaskData>("filtered_mask");
+    auto result_mask = dm->getData<MaskData>("filtered_mask");
     REQUIRE(result_mask != nullptr);
     
     // Verify the connected component filtering results
@@ -365,7 +269,20 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
     }
     REQUIRE(total_pixels == 13);  // 9 (large) + 4 (medium) = 13 pixels
     
-    // Test another pipeline with different threshold (should remove more components)
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "Data Transform: Mask Connected Component - strict threshold JSON pipeline",
+                 "[transforms][mask_connected_component][json][fixture]") {
+    auto dm = getDataManager();
+    
+    // Test pipeline with higher threshold (should remove more components)
     const char* json_config_strict = 
         "[\n"
         "{\n"
@@ -380,7 +297,7 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
         "                \"step_id\": \"1\",\n"
         "                \"transform_name\": \"Remove Small Connected Components\",\n"
         "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_mask\",\n"
+        "                \"input_key\": \"json_pipeline_mixed\",\n"
         "                \"output_key\": \"strictly_filtered_mask\",\n"
         "                \"parameters\": {\n"
         "                    \"threshold\": 5\n"
@@ -391,6 +308,10 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
         "}\n"
         "]";
     
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_connected_component_strict_test";
+    std::filesystem::create_directories(test_dir);
+    
     std::filesystem::path json_filepath_strict = test_dir / "pipeline_config_strict.json";
     {
         std::ofstream json_file(json_filepath_strict);
@@ -400,15 +321,28 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
     }
     
     // Execute the strict filtering pipeline
-    auto data_info_list_strict = load_data_from_json_config(&dm, json_filepath_strict.string());
+    auto data_info_list_strict = load_data_from_json_config(dm, json_filepath_strict.string());
     
     // Verify the strict filtering results
-    auto result_mask_strict = dm.getData<MaskData>("strictly_filtered_mask");
+    auto result_mask_strict = dm->getData<MaskData>("strictly_filtered_mask");
     REQUIRE(result_mask_strict != nullptr);
     
     auto const & result_masks_strict = result_mask_strict->getAtTime(TimeFrameIndex(0));
     REQUIRE(result_masks_strict.size() == 1);  // Should have only 1 component (large)
     REQUIRE(result_masks_strict[0].size() == 9);  // Large component has 9 pixels
+    
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
+                 "Data Transform: Mask Connected Component - permissive threshold JSON pipeline",
+                 "[transforms][mask_connected_component][json][fixture]") {
+    auto dm = getDataManager();
     
     // Test pipeline with very low threshold (should preserve all components)
     const char* json_config_permissive = 
@@ -425,7 +359,7 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
         "                \"step_id\": \"1\",\n"
         "                \"transform_name\": \"Remove Small Connected Components\",\n"
         "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_mask\",\n"
+        "                \"input_key\": \"json_pipeline_mixed\",\n"
         "                \"output_key\": \"permissive_filtered_mask\",\n"
         "                \"parameters\": {\n"
         "                    \"threshold\": 1\n"
@@ -436,6 +370,10 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
         "}\n"
         "]";
     
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_connected_component_permissive_test";
+    std::filesystem::create_directories(test_dir);
+    
     std::filesystem::path json_filepath_permissive = test_dir / "pipeline_config_permissive.json";
     {
         std::ofstream json_file(json_filepath_permissive);
@@ -445,10 +383,10 @@ TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline", "[transfor
     }
     
     // Execute the permissive filtering pipeline
-    auto data_info_list_permissive = load_data_from_json_config(&dm, json_filepath_permissive.string());
+    auto data_info_list_permissive = load_data_from_json_config(dm, json_filepath_permissive.string());
     
     // Verify the permissive filtering results
-    auto result_mask_permissive = dm.getData<MaskData>("permissive_filtered_mask");
+    auto result_mask_permissive = dm->getData<MaskData>("permissive_filtered_mask");
     REQUIRE(result_mask_permissive != nullptr);
     
     auto const & result_masks_permissive = result_mask_permissive->getAtTime(TimeFrameIndex(0));
