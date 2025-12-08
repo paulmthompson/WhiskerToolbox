@@ -1,10 +1,13 @@
-# Benchmarking Infrastructure
+---
+title: "Profiling and Performance"
+format: html
+---
 
-This document describes the benchmarking infrastructure for WhiskerToolbox, including how to create benchmarks, run them, and analyze performance using various profiling tools.
+This document describes the benchmarking infrastructure for Neuralyzer, including how to create benchmarks, run them, and analyze performance using various profiling tools.
 
 ## Quick Start
 
-```bash
+``` bash
 # Build with benchmarks enabled (they're on by default)
 cmake --preset linux-clang-release -DENABLE_BENCHMARK=ON
 cmake --build --preset linux-clang-release
@@ -27,13 +30,13 @@ cd out/build/Clang/Release/benchmark
 
 The benchmarking system is built on `cmake/BenchmarkUtils.cmake`, which provides:
 
-- `add_selective_benchmark()` - Create individual benchmark executables
-- `configure_benchmark_for_profiling()` - Add profiling tool support
-- `print_benchmark_summary()` - Display configuration summary
+-   `add_selective_benchmark()` - Create individual benchmark executables
+-   `configure_benchmark_for_profiling()` - Add profiling tool support
+-   `print_benchmark_summary()` - Display configuration summary
 
 Each benchmark can be individually enabled/disabled via CMake options:
 
-```bash
+``` bash
 # Disable a specific benchmark
 cmake -DBENCHMARK_MASK_AREA=OFF ..
 
@@ -45,20 +48,15 @@ cmake -DBENCHMARK_MASK_AREA=ON -DBENCHMARK_OTHER=OFF ..
 
 `benchmark/fixtures/BenchmarkFixtures.hpp` provides fixtures for generating realistic test data:
 
-- `MaskDataFixture` - Generate MaskData with configurable properties
-- `LineDataFixture` - Generate LineData for curve/line benchmarks
-- `PointDataFixture` - Generate PointData for point-based benchmarks
+-   `MaskDataFixture` - Generate MaskData with configurable properties
+-   `LineDataFixture` - Generate LineData for curve/line benchmarks
+-   `PointDataFixture` - Generate PointData for point-based benchmarks
 
-Presets are available for common scenarios:
-- `Presets::SmallMaskData()` - Quick iteration (10 frames)
-- `Presets::MediumMaskData()` - Realistic testing (100 frames)
-- `Presets::LargeMaskData()` - Stress testing (1000 frames)
-- `Presets::SparseMaskData()` - Few masks, large time gaps
-- `Presets::DenseMaskData()` - Many small masks per frame
+Presets are available for common scenarios: - `Presets::SmallMaskData()` - Quick iteration (10 frames) - `Presets::MediumMaskData()` - Realistic testing (100 frames) - `Presets::LargeMaskData()` - Stress testing (1000 frames) - `Presets::SparseMaskData()` - Few masks, large time gaps - `Presets::DenseMaskData()` - Many small masks per frame
 
 Example usage:
 
-```cpp
+``` cpp
 #include "fixtures/BenchmarkFixtures.hpp"
 
 BENCHMARK_F(MyBenchmark, TestCase)(benchmark::State& state) {
@@ -77,7 +75,7 @@ BENCHMARK_F(MyBenchmark, TestCase)(benchmark::State& state) {
 
 Create `benchmark/MyFeature.benchmark.cpp`:
 
-```cpp
+``` cpp
 #include "fixtures/BenchmarkFixtures.hpp"
 #include <benchmark/benchmark.h>
 
@@ -119,7 +117,7 @@ BENCHMARK_MAIN();
 
 Add to `benchmark/CMakeLists.txt`:
 
-```cmake
+``` cmake
 add_selective_benchmark(
     NAME MyFeature
     SOURCES 
@@ -143,7 +141,7 @@ endif()
 
 ### 3. Build and Run
 
-```bash
+``` bash
 cmake --build --preset linux-clang-release
 ./out/build/Clang/Release/benchmark/benchmark_MyFeature
 ```
@@ -154,7 +152,7 @@ cmake --build --preset linux-clang-release
 
 Test with different input sizes:
 
-```cpp
+``` cpp
 BENCHMARK(BM_MyFunction)
     ->Arg(100)
     ->Arg(1000)
@@ -169,7 +167,7 @@ BENCHMARK(BM_MyFunction)
 
 ### Fixtures with Parameters
 
-```cpp
+``` cpp
 BENCHMARK_F(MyBenchmark, TestCase)(benchmark::State& state) {
     size_t size = state.range(0);
     // Use size parameter
@@ -183,7 +181,7 @@ BENCHMARK_REGISTER_F(MyBenchmark, TestCase)
 
 Track additional metrics:
 
-```cpp
+``` cpp
 for (auto _ : state) {
     auto result = myFunction(data);
     state.counters["items_processed"] = data.size();
@@ -200,7 +198,7 @@ state.SetBytesProcessed(state.iterations() * data.size() * sizeof(Item));
 
 Profile CPU usage and generate call graphs:
 
-```bash
+``` bash
 # Record profile data
 perf record -g ./benchmark_MaskArea --benchmark_filter=Pipeline
 
@@ -217,17 +215,13 @@ perf annotate functionName
 perf top
 ```
 
-Key perf options:
-- `-g` - Enable call-graph (stack trace) recording
-- `-e cycles` - Profile CPU cycles
-- `-e cache-misses` - Profile cache misses
-- `--call-graph dwarf` - Use DWARF for more accurate call graphs
+Key perf options: - `-g` - Enable call-graph (stack trace) recording - `-e cycles` - Profile CPU cycles - `-e cache-misses` - Profile cache misses - `--call-graph dwarf` - Use DWARF for more accurate call graphs
 
 ### 2. Heaptrack (Memory Profiling)
 
 Analyze memory allocation patterns:
 
-```bash
+``` bash
 # Run with heaptrack
 heaptrack ./benchmark_MaskArea
 
@@ -238,19 +232,13 @@ heaptrack_gui heaptrack.benchmark_MaskArea.*.gz
 heaptrack_print heaptrack.benchmark_MaskArea.*.gz
 ```
 
-What heaptrack shows:
-- Total memory allocated
-- Peak memory usage
-- Number of allocations
-- Call stacks for allocations
-- Memory leaks
-- Temporary allocations
+What heaptrack shows: - Total memory allocated - Peak memory usage - Number of allocations - Call stacks for allocations - Memory leaks - Temporary allocations
 
 ### 3. Valgrind Cachegrind (Cache Analysis)
 
 Analyze cache behavior:
 
-```bash
+``` bash
 # Run cachegrind
 valgrind --tool=cachegrind ./benchmark_MaskArea --benchmark_filter=CacheBehavior
 
@@ -261,17 +249,13 @@ cg_annotate cachegrind.out.<pid>
 kcachegrind cachegrind.out.<pid>
 ```
 
-Metrics provided:
-- L1/L2/L3 cache hits/misses
-- Instruction cache behavior
-- Data cache behavior
-- Branch prediction statistics
+Metrics provided: - L1/L2/L3 cache hits/misses - Instruction cache behavior - Data cache behavior - Branch prediction statistics
 
 ### 4. Assembly Inspection
 
 View generated assembly for optimization:
 
-```bash
+``` bash
 # Method 1: objdump
 objdump -d -C -S ./benchmark_MaskArea | less
 
@@ -283,18 +267,13 @@ objdump -d -C -S ./benchmark_MaskArea | grep -A 50 "calculateMaskArea"
 find . -name "*.s" | xargs less
 ```
 
-What to look for:
-- Loop vectorization (SIMD instructions)
-- Unnecessary branches
-- Memory access patterns
-- Inlining decisions
-- Register usage
+What to look for: - Loop vectorization (SIMD instructions) - Unnecessary branches - Memory access patterns - Inlining decisions - Register usage
 
 ### 5. Time Command (Quick Stats)
 
 Get quick overview of resource usage:
 
-```bash
+``` bash
 /usr/bin/time -v ./benchmark_MaskArea
 
 # Key metrics:
@@ -308,7 +287,7 @@ Get quick overview of resource usage:
 
 If built with `-DENABLE_TIME_TRACE=ON`:
 
-```bash
+``` bash
 # View compilation time breakdown
 ClangBuildAnalyzer --all build_trace build_results.bin
 ClangBuildAnalyzer --analyze build_results.bin
@@ -318,7 +297,7 @@ ClangBuildAnalyzer --analyze build_results.bin
 
 ### Workflow 1: Optimize a Hot Function
 
-```bash
+``` bash
 # 1. Identify hot spots
 perf record -g ./benchmark_MaskArea
 perf report  # Identify slowest function
@@ -338,7 +317,7 @@ compare.py compare before.txt after.txt  # From Google Benchmark tools
 
 ### Workflow 2: Fix Memory Issues
 
-```bash
+``` bash
 # 1. Identify allocation hot spots
 heaptrack ./benchmark_MaskArea
 
@@ -359,7 +338,7 @@ heaptrack ./benchmark_MaskArea
 
 ### Workflow 3: Compare Algorithms
 
-```bash
+``` bash
 # Benchmark different implementations
 ./benchmark_MaskArea --benchmark_filter="Algorithm_v1|Algorithm_v2" \
     --benchmark_format=json > comparison.json
@@ -376,25 +355,25 @@ tools/compare.py benchmarks comparison.json baseline.json
 
 ### Do's
 
-1. **Use Fixtures** - Set up expensive test data once
-2. **DoNotOptimize** - Prevent compiler from optimizing away benchmarks
-3. **Test Multiple Sizes** - Use parameter ranges to test scaling
-4. **Add Counters** - Track domain-specific metrics (items/sec, throughput)
-5. **Disable Benchmarks** - Turn off unused benchmarks to speed up builds
-6. **Run Multiple Times** - Benchmarks automatically run multiple iterations
-7. **Profile Before Optimizing** - Use profiling tools to find actual bottlenecks
+1.  **Use Fixtures** - Set up expensive test data once
+2.  **DoNotOptimize** - Prevent compiler from optimizing away benchmarks
+3.  **Test Multiple Sizes** - Use parameter ranges to test scaling
+4.  **Add Counters** - Track domain-specific metrics (items/sec, throughput)
+5.  **Disable Benchmarks** - Turn off unused benchmarks to speed up builds
+6.  **Run Multiple Times** - Benchmarks automatically run multiple iterations
+7.  **Profile Before Optimizing** - Use profiling tools to find actual bottlenecks
 
 ### Don'ts
 
-1. **Don't Measure Setup** - Put expensive setup in `SetUp()`, not in loop
-2. **Don't Ignore Variability** - Check standard deviation in results
-3. **Don't Benchmark Debug Builds** - Always use Release or RelWithDebInfo
-4. **Don't Optimize Without Data** - Profile first, optimize second
-5. **Don't Test Only One Size** - Real data varies, test across ranges
+1.  **Don't Measure Setup** - Put expensive setup in `SetUp()`, not in loop
+2.  **Don't Ignore Variability** - Check standard deviation in results
+3.  **Don't Benchmark Debug Builds** - Always use Release or RelWithDebInfo
+4.  **Don't Optimize Without Data** - Profile first, optimize second
+5.  **Don't Test Only One Size** - Real data varies, test across ranges
 
 ### Code Patterns
 
-```cpp
+``` cpp
 // ✅ Good: Setup outside loop
 void SetUp(benchmark::State const& state) override {
     test_data_ = generateExpensiveData();
@@ -428,7 +407,7 @@ auto result = expensiveComputation();
 
 ### Benchmark Output
 
-```
+```         
 -------------------------------------------------------------------
 Benchmark                         Time             CPU   Iterations
 -------------------------------------------------------------------
@@ -437,39 +416,30 @@ BM_Pipeline/1                 12.45 ms        12.43 ms           56
 BM_Pipeline/2                124.56 ms       124.12 ms            6
 ```
 
-- **Time**: Wall-clock time (includes I/O, system time)
-- **CPU**: CPU time (excludes I/O wait)
-- **Iterations**: How many times the benchmark ran
+-   **Time**: Wall-clock time (includes I/O, system time)
+-   **CPU**: CPU time (excludes I/O wait)
+-   **Iterations**: How many times the benchmark ran
 
 ### What's Fast Enough?
 
-- **< 1 microsecond**: Excellent for element operations
-- **< 1 millisecond**: Good for frame-level processing
-- **< 100 milliseconds**: Acceptable for batch operations
-- **> 1 second**: Consider optimization or progress reporting
+-   **\< 1 microsecond**: Excellent for element operations
+-   **\< 1 millisecond**: Good for frame-level processing
+-   **\< 100 milliseconds**: Acceptable for batch operations
+-   **\> 1 second**: Consider optimization or progress reporting
 
 ### Profiling Result Interpretation
 
-**Perf Report:**
-- Focus on functions with >5% of total time
-- Check for unexpected function calls
-- Look for optimization opportunities in hot paths
+**Perf Report:** - Focus on functions with \>5% of total time - Check for unexpected function calls - Look for optimization opportunities in hot paths
 
-**Heaptrack:**
-- Peak memory < 2x working set is good
-- Allocation count should be O(1) for inner loops
-- Look for unnecessary temporary allocations
+**Heaptrack:** - Peak memory \< 2x working set is good - Allocation count should be O(1) for inner loops - Look for unnecessary temporary allocations
 
-**Cachegrind:**
-- L1 miss rate < 5% is excellent
-- L2 miss rate < 1% is good
-- Look for cache-unfriendly access patterns
+**Cachegrind:** - L1 miss rate \< 5% is excellent - L2 miss rate \< 1% is good - Look for cache-unfriendly access patterns
 
 ## Continuous Performance Monitoring
 
 ### Save Baseline Results
 
-```bash
+``` bash
 # Save current performance as baseline
 ./benchmark_MaskArea --benchmark_out=baseline.json \
     --benchmark_out_format=json
@@ -482,24 +452,13 @@ BM_Pipeline/2                124.56 ms       124.12 ms            6
 tools/compare.py benchmarks baseline.json current.json
 ```
 
-### CI Integration
-
-Add to CI pipeline:
-
-```yaml
-- name: Run Benchmarks
-  run: |
-    ./benchmark_MaskArea --benchmark_format=json > bench_results.json
-    # Upload as artifact or compare with baseline
-```
-
 ## Troubleshooting
 
 ### Benchmarks Too Fast
 
-If benchmarks complete in < 1 microsecond:
+If benchmarks complete in \< 1 microsecond:
 
-```cpp
+``` cpp
 // Increase work per iteration
 for (auto _ : state) {
     for (int i = 0; i < 100; ++i) {  // Amortize overhead
@@ -512,16 +471,16 @@ state.SetItemsProcessed(state.iterations() * 100);
 
 ### High Variability
 
-If standard deviation > 10% of mean:
+If standard deviation \> 10% of mean:
 
-1. Close other applications
-2. Disable CPU frequency scaling: `sudo cpupower frequency-set --governor performance`
-3. Pin to specific CPU: `taskset -c 0 ./benchmark_MaskArea`
-4. Increase minimum iteration time: `--benchmark_min_time=5`
+1.  Close other applications
+2.  Disable CPU frequency scaling: `sudo cpupower frequency-set --governor performance`
+3.  Pin to specific CPU: `taskset -c 0 ./benchmark_MaskArea`
+4.  Increase minimum iteration time: `--benchmark_min_time=5`
 
 ### Build Issues
 
-```bash
+``` bash
 # Benchmarks not building
 cmake -DENABLE_BENCHMARK=ON ..
 
@@ -535,8 +494,8 @@ sudo apt install libbenchmark-dev  # Ubuntu/Debian
 
 ## Additional Resources
 
-- [Google Benchmark Documentation](https://github.com/google/benchmark)
-- [Perf Tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
-- [Heaptrack Documentation](https://github.com/KDE/heaptrack)
-- [Valgrind Manual](https://valgrind.org/docs/manual/manual.html)
-- [Optimization Guide](https://github.com/dendibakh/perf-book)
+-   [Google Benchmark Documentation](https://github.com/google/benchmark)
+-   [Perf Tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
+-   [Heaptrack Documentation](https://github.com/KDE/heaptrack)
+-   [Valgrind Manual](https://valgrind.org/docs/manual/manual.html)
+-   [Optimization Guide](https://github.com/dendibakh/perf-book)

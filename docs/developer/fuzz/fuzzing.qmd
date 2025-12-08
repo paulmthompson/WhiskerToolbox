@@ -1,0 +1,30 @@
+---
+title: "Fuzz Testing"
+format: html
+---
+
+## Overview
+
+Fuzz testing is a way that we can test programs with random inputs. This is a technique that allows us to test many interesting edge cases very efficiently and really harden our program against failing.
+
+## Procedure
+
+The procedure might look like this: Imagine we have an input file for some kind of processing. In fuzz testing, we could randomly generate text and feed it to our transformation function, and we could do this many, many times. We consider a success in this case to be if the program doesn't crash.
+
+In our circumstance with **Neuralyzer** we could imagine that for loading data, we could randomly generate lots and lots of data and see if those loading functions crash whenever we try to load it. Alternatively, we could randomly generate different specification files or configuration files to load that data and see if it crashes. If we forget a semicolon or something that causes a critical failure, does it crash, or does it fail gracefully and give some kind of useful message to the user?
+
+## Structured Fuzzing and Corpora
+
+We also can try to add some structure to our fuzzing in what is referred to as a **corpus** for our fuzz test. In a corpus, we specify a range of parameter values, and we can vary some parameters within that range and see if the output changes. This can help us catch things that are more specific than just random crashes. By changing values to be within the ranges that we would expect and doing this many times over many different parameters, we may be able to catch things that we wouldn't see otherwise.
+
+## Neuralyzer and Chaining Transformations
+
+We also might be able to test how we chain together different types of transformations. In **Neuralyzer**, we have the ability to chain together different types of data transformations. By chaining together data transformations in a random way, we might be able to ensure our processing pipelines are robust in this type of variability.
+
+The goal of Neuralyzer is to be able to have as many of the specifications as we can in a format that can be read from JSON files. This is facilitated with a reflection library known as `Reflect CPP`. The more things that we have in JSON specifications, the easier it is for us to use a corpus to load those and test them with fuzzing.
+
+## Implementation
+
+Fuzz testing in this library can be specified with the fuzz test library made by Google: <https://github.com/google/fuzztest>.
+
+Whenever we use the fuzz testing library for a translation unit, we should specify that library for that file with the name of the translation unit. We can specify a fuzzing file as `.fuzz.cpp` in our library, and then we can add it to the fuzz test driver. Again, these should be written in such a way that if expectations are not met, it will flag what the state was from the random state there, help us understand why this test may have failed, and repeat it with those more specific parameters.

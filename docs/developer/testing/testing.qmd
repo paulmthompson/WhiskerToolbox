@@ -1,0 +1,24 @@
+---
+title: "Testing"
+format: html
+---
+
+Testing makes sure that our code works as expected, and that future changes do not break existing functionality.
+
+### Testing Guidelines
+
+-   Testing is performed with Catch2. 
+
+-   The component being tested generally has two TEST_CASE parts. The first will test the “happy path” to ensure that the computations work as expected. Different SECTIONs will be used for different computations. A second TEST_CASE will handle error handling and edge cases. Each SECTION will be for a different edge case / error.
+
+-   Use descriptive names for each test.
+
+-   TEST_CASES should also use useful tags.
+
+-   Use REQUIRE instead of CHECK
+
+-   Simple setup can be performed in the beginning of a TEST_CASE. Fixtures are only necessary for complex setup/teardown.
+
+-   Prefer Catch::Matchers::WithinRel to Catch::Approx
+
+-   Test files are included in the same folder as a given translation unit. They should have the same name as the header file with the extension ".test.cpp". For example mask_to_line.hpp and mask_to_line.cpp will have the test file mask_to_line.test.cpp.

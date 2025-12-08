@@ -3,7 +3,7 @@ title: "Building"
 format: html
 ---
 
-CMakeUserPresets.json
+For building any large c++ project, we are going to need to have 1) a compiler; and 2) a build system. Multiple compilers are supported by this project (GCC, Clang and MSVC), and the one you select varies by platform. The build system is CMake. You are also going to need to use the dependency management system for c++, vcpkg. The first time you install all of the dependencies, it is going to take a while
 
 ### IDE Specific Instructions:
 

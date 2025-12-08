@@ -43,18 +43,23 @@ website:
       style: "docked"
       contents:
         - developer/index.qmd
+        - developer/benchmark/benchmarking.qmd
         - developer/building.qmd
         - developer/code_quality.qmd
         - developer/copilot.qmd
         - developer/contributing_code.qmd
         - developer/data_manager.qmd 
         - developer/file_io.qmd
+        - developer/fuzz/fuzzing.qmd
         - developer/image_processing.qmd
+        - developer/intro_to_c.qmd
         - developer/media_widget.qmd
+        - developer/analysis/static_analysis.qmd
         - developer/data_manager_widget.qmd
         - developer/data_transform_widget.qmd
         - developer/data_viewer_widget.qmd
         - developer/table_view.qmd
+        - developer/testing/testing.qmd
         - developer/transforms.qmd
         - section: "Features"
           href: developer/Features/overview.qmd

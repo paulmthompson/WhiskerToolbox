@@ -1,0 +1,23 @@
+---
+title: "Introduction to C++"
+format: html
+---
+
+C++ is a compiled, systems programming language. It has a long history and is feature-rich. You can do just about anything with C++ code, but it also includes many [foot guns](https://www.goodreads.com/quotes/226222-c-makes-it-easy-to-shoot-yourself-in-the-foot).
+
+### Books
+
+### Video Tutorials
+
+[Mike Shah](https://www.mshah.io/) (Lecturer at Yale, formerly Northeastern University) has an excellent modern C++ design series on youtube. Episodes are a nice \~20 minute length:
+
+[Modern Cpp series by Mike Shah](https://www.youtube.com/watch?v=LGOgNqkRMs0&list=PLvv0ScY6vfd8j-tlhYVPYgiIyXduu6m-L)
+
+He also has a series on modern OpenGL on youtube:
+
+[Introduction to OpenGL](https://www.youtube.com/watch?v=Q7vm264YNrM&list=PLvv0ScY6vfd9zlZkIIqGDeG5TUWswkMox)
+
+The flagship C++ conference has a "Back to Basics" track every year which \~10 hours of teaching on a range of introductory topics. I highly recommend these, and the various instructors tend to be professional trainers who have additional resources
+
+-   [CppCon 2023 Back to Basics Playlist](https://www.youtube.com/playlist?list=PLHTh1InhhwT6NbFOtrjCep42dSNstruLx)
+-   [CppCon 2022 Back to Basics Playlist](https://www.youtube.com/playlist?list=PLHTh1InhhwT47Xpx7Cn-bPw9Qygjr98rs)
