@@ -9,21 +9,20 @@
 #include <memory>
 #include <vector>
 
-#include "fixtures/DigitalIntervalBooleanTestFixture.hpp"
+#include "fixtures/scenarios/digital/digital_interval_boolean_scenarios.hpp"
 
 // ============================================================================
-// Tests using shared fixture (for V1/V2 parity)
+// Tests using scenarios (for V1/V2 parity)
 // ============================================================================
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Digital Interval Boolean - AND Operation",
-                 "[transforms][v1][digital_interval_boolean]") {
+TEST_CASE("V1 Transform: Digital Interval Boolean - AND Operation",
+          "[transforms][v1][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
     params.operation = BooleanParams::BooleanOperation::AND;
 
     SECTION("Basic AND - overlapping intervals") {
-        auto input = m_input_series["and_overlapping"];
-        auto other = m_other_series["and_overlapping"];
+        auto [input, other] = and_overlapping();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -38,8 +37,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND - no overlap") {
-        auto input = m_input_series["and_no_overlap"];
-        auto other = m_other_series["and_no_overlap"];
+        auto [input, other] = and_no_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -48,8 +46,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND - complete overlap") {
-        auto input = m_input_series["and_complete_overlap"];
-        auto other = m_other_series["and_complete_overlap"];
+        auto [input, other] = and_complete_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -62,8 +59,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND - one series subset of other") {
-        auto input = m_input_series["and_subset"];
-        auto other = m_other_series["and_subset"];
+        auto [input, other] = and_subset();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -76,15 +72,14 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Digital Interval Boolean - OR Operation",
-                 "[transforms][v1][digital_interval_boolean]") {
+TEST_CASE("V1 Transform: Digital Interval Boolean - OR Operation",
+          "[transforms][v1][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
     params.operation = BooleanParams::BooleanOperation::OR;
 
     SECTION("Basic OR - separate intervals") {
-        auto input = m_input_series["or_separate"];
-        auto other = m_other_series["or_separate"];
+        auto [input, other] = or_separate();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -99,8 +94,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("OR - overlapping intervals merge") {
-        auto input = m_input_series["or_overlapping_merge"];
-        auto other = m_other_series["or_overlapping_merge"];
+        auto [input, other] = or_overlapping_merge();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -113,8 +107,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("OR - multiple intervals with gaps") {
-        auto input = m_input_series["or_multiple_with_gaps"];
-        auto other = m_other_series["or_multiple_with_gaps"];
+        auto [input, other] = or_multiple_with_gaps();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -131,15 +124,14 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Digital Interval Boolean - XOR Operation",
-                 "[transforms][v1][digital_interval_boolean]") {
+TEST_CASE("V1 Transform: Digital Interval Boolean - XOR Operation",
+          "[transforms][v1][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
     params.operation = BooleanParams::BooleanOperation::XOR;
 
     SECTION("Basic XOR - no overlap") {
-        auto input = m_input_series["xor_no_overlap"];
-        auto other = m_other_series["xor_no_overlap"];
+        auto [input, other] = xor_no_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -154,8 +146,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("XOR - partial overlap excludes overlap") {
-        auto input = m_input_series["xor_partial_overlap"];
-        auto other = m_other_series["xor_partial_overlap"];
+        auto [input, other] = xor_partial_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -170,8 +161,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("XOR - complete overlap results in nothing") {
-        auto input = m_input_series["xor_complete_overlap"];
-        auto other = m_other_series["xor_complete_overlap"];
+        auto [input, other] = xor_complete_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -180,8 +170,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("XOR - complex pattern") {
-        auto input = m_input_series["xor_complex"];
-        auto other = m_other_series["xor_complex"];
+        auto [input, other] = xor_complex();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -198,14 +187,14 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Digital Interval Boolean - NOT Operation",
-                 "[transforms][v1][digital_interval_boolean]") {
+TEST_CASE("V1 Transform: Digital Interval Boolean - NOT Operation",
+          "[transforms][v1][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
     params.operation = BooleanParams::BooleanOperation::NOT;
 
     SECTION("NOT - single interval") {
-        auto input = m_input_series["not_single_interval"];
+        auto input = not_single_interval();
 
         auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
@@ -214,7 +203,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("NOT - intervals with gaps") {
-        auto input = m_input_series["not_with_gaps"];
+        auto input = not_with_gaps();
 
         auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
@@ -226,7 +215,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("NOT - multiple gaps") {
-        auto input = m_input_series["not_multiple_gaps"];
+        auto input = not_multiple_gaps();
 
         auto result = apply_boolean_operation(input.get(), params);
         REQUIRE(result != nullptr);
@@ -240,15 +229,14 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Digital Interval Boolean - AND_NOT Operation",
-                 "[transforms][v1][digital_interval_boolean]") {
+TEST_CASE("V1 Transform: Digital Interval Boolean - AND_NOT Operation",
+          "[transforms][v1][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
     params.operation = BooleanParams::BooleanOperation::AND_NOT;
 
     SECTION("AND_NOT - subtract overlapping portion") {
-        auto input = m_input_series["and_not_subtract_overlap"];
-        auto other = m_other_series["and_not_subtract_overlap"];
+        auto [input, other] = and_not_subtract_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -261,8 +249,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND_NOT - no overlap keeps input") {
-        auto input = m_input_series["and_not_no_overlap"];
-        auto other = m_other_series["and_not_no_overlap"];
+        auto [input, other] = and_not_no_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -275,8 +262,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND_NOT - complete overlap removes everything") {
-        auto input = m_input_series["and_not_complete_overlap"];
-        auto other = m_other_series["and_not_complete_overlap"];
+        auto [input, other] = and_not_complete_overlap();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -285,8 +271,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND_NOT - punch holes in input") {
-        auto input = m_input_series["and_not_punch_holes"];
-        auto other = m_other_series["and_not_punch_holes"];
+        auto [input, other] = and_not_punch_holes();
         params.other_series = other;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -303,14 +288,13 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Digital Interval Boolean - Edge Cases",
-                 "[transforms][v1][digital_interval_boolean][edge_cases]") {
+TEST_CASE("V1 Transform: Digital Interval Boolean - Edge Cases",
+          "[transforms][v1][digital_interval_boolean][edge_cases]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
 
     SECTION("Empty input series") {
-        auto input = m_input_series["empty_input"];
-        auto other = m_other_series["empty_input"];
+        auto [input, other] = empty_input();
         params.operation = BooleanParams::BooleanOperation::OR;
         params.other_series = other;
 
@@ -321,8 +305,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("Both series empty") {
-        auto input = m_input_series["both_empty"];
-        auto other = m_other_series["both_empty"];
+        auto [input, other] = both_empty();
         params.operation = BooleanParams::BooleanOperation::AND;
         params.other_series = other;
 
@@ -340,7 +323,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("NOT with empty series") {
-        auto input = m_input_series["not_empty"];
+        auto input = not_empty();
         params.operation = BooleanParams::BooleanOperation::NOT;
 
         auto result = apply_boolean_operation(input.get(), params);
@@ -349,14 +332,13 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V1 Transform: Progress Callback",
-                 "[transforms][v1][digital_interval_boolean][progress]") {
+TEST_CASE("V1 Transform: Progress Callback",
+          "[transforms][v1][digital_interval_boolean][progress]") {
+    using namespace digital_interval_boolean_scenarios;
     BooleanParams params;
     
     SECTION("Progress callback is invoked") {
-        auto input = m_input_series["large_intervals"];
-        auto other = m_other_series["large_intervals"];
+        auto [input, other] = large_intervals();
         params.operation = BooleanParams::BooleanOperation::AND;
         params.other_series = other;
 

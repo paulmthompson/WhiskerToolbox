@@ -11,7 +11,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "fixtures/DigitalIntervalBooleanTestFixture.hpp"
+#include "fixtures/scenarios/digital/digital_interval_boolean_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -29,12 +29,12 @@ using namespace WhiskerToolbox::Transforms::V2::Examples;
 // available when tests run.
 
 // ============================================================================
-// Tests: Algorithm Correctness using shared fixture
+// Tests: Algorithm Correctness using scenarios
 // ============================================================================
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 Binary Container Transform: Digital Interval Boolean - AND Operation",
-                 "[transforms][v2][binary_container][digital_interval_boolean]") {
+TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operation",
+          "[transforms][v2][binary_container][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     
     auto& registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
@@ -42,8 +42,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     ComputeContext ctx;
 
     SECTION("Basic AND - overlapping intervals") {
-        auto input = m_input_series["and_overlapping"];
-        auto other = m_other_series["and_overlapping"];
+        auto [input, other] = and_overlapping();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -66,8 +65,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND - no overlap") {
-        auto input = m_input_series["and_no_overlap"];
-        auto other = m_other_series["and_no_overlap"];
+        auto [input, other] = and_no_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -85,8 +83,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND - complete overlap") {
-        auto input = m_input_series["and_complete_overlap"];
-        auto other = m_other_series["and_complete_overlap"];
+        auto [input, other] = and_complete_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -107,8 +104,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND - one series subset of other") {
-        auto input = m_input_series["and_subset"];
-        auto other = m_other_series["and_subset"];
+        auto [input, other] = and_subset();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -129,9 +125,9 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 Binary Container Transform: Digital Interval Boolean - OR Operation",
-                 "[transforms][v2][binary_container][digital_interval_boolean]") {
+TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operation",
+          "[transforms][v2][binary_container][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     
     auto& registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
@@ -139,8 +135,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     ComputeContext ctx;
 
     SECTION("Basic OR - separate intervals") {
-        auto input = m_input_series["or_separate"];
-        auto other = m_other_series["or_separate"];
+        auto [input, other] = or_separate();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -163,8 +158,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("OR - overlapping intervals merge") {
-        auto input = m_input_series["or_overlapping_merge"];
-        auto other = m_other_series["or_overlapping_merge"];
+        auto [input, other] = or_overlapping_merge();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -185,8 +179,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("OR - multiple intervals with gaps") {
-        auto input = m_input_series["or_multiple_with_gaps"];
-        auto other = m_other_series["or_multiple_with_gaps"];
+        auto [input, other] = or_multiple_with_gaps();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -211,9 +204,9 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 Binary Container Transform: Digital Interval Boolean - XOR Operation",
-                 "[transforms][v2][binary_container][digital_interval_boolean]") {
+TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operation",
+          "[transforms][v2][binary_container][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     
     auto& registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
@@ -221,8 +214,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     ComputeContext ctx;
 
     SECTION("Basic XOR - no overlap") {
-        auto input = m_input_series["xor_no_overlap"];
-        auto other = m_other_series["xor_no_overlap"];
+        auto [input, other] = xor_no_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -245,8 +237,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("XOR - partial overlap excludes overlap") {
-        auto input = m_input_series["xor_partial_overlap"];
-        auto other = m_other_series["xor_partial_overlap"];
+        auto [input, other] = xor_partial_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -269,8 +260,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("XOR - complete overlap results in nothing") {
-        auto input = m_input_series["xor_complete_overlap"];
-        auto other = m_other_series["xor_complete_overlap"];
+        auto [input, other] = xor_complete_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -288,8 +278,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("XOR - complex pattern") {
-        auto input = m_input_series["xor_complex"];
-        auto other = m_other_series["xor_complex"];
+        auto [input, other] = xor_complex();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -314,9 +303,9 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 Binary Container Transform: Digital Interval Boolean - NOT Operation",
-                 "[transforms][v2][binary_container][digital_interval_boolean]") {
+TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operation",
+          "[transforms][v2][binary_container][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     
     auto& registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
@@ -324,8 +313,8 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     ComputeContext ctx;
 
     SECTION("NOT - single interval") {
-        auto input = m_input_series["not_single_interval"];
-        auto other = m_other_series["not_single_interval"]; // Ignored for NOT
+        auto input = not_single_interval();
+        auto other = DigitalIntervalSeriesBuilder().build(); // Ignored for NOT
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -343,8 +332,8 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("NOT - intervals with gaps") {
-        auto input = m_input_series["not_with_gaps"];
-        auto other = m_other_series["not_with_gaps"]; // Ignored for NOT
+        auto input = not_with_gaps();
+        auto other = DigitalIntervalSeriesBuilder().build(); // Ignored for NOT
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -365,8 +354,8 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("NOT - multiple gaps") {
-        auto input = m_input_series["not_multiple_gaps"];
-        auto other = m_other_series["not_multiple_gaps"]; // Ignored for NOT
+        auto input = not_multiple_gaps();
+        auto other = DigitalIntervalSeriesBuilder().build(); // Ignored for NOT
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -389,9 +378,9 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Operation",
-                 "[transforms][v2][binary_container][digital_interval_boolean]") {
+TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Operation",
+          "[transforms][v2][binary_container][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     
     auto& registry = ElementRegistry::instance();
     DigitalIntervalBooleanParams params;
@@ -399,8 +388,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     ComputeContext ctx;
 
     SECTION("AND_NOT - subtract overlapping portion") {
-        auto input = m_input_series["and_not_subtract_overlap"];
-        auto other = m_other_series["and_not_subtract_overlap"];
+        auto [input, other] = and_not_subtract_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -421,8 +409,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND_NOT - no overlap keeps input") {
-        auto input = m_input_series["and_not_no_overlap"];
-        auto other = m_other_series["and_not_no_overlap"];
+        auto [input, other] = and_not_no_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -443,8 +430,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND_NOT - complete overlap removes everything") {
-        auto input = m_input_series["and_not_complete_overlap"];
-        auto other = m_other_series["and_not_complete_overlap"];
+        auto [input, other] = and_not_complete_overlap();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -462,8 +448,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("AND_NOT - punch holes in input") {
-        auto input = m_input_series["and_not_punch_holes"];
-        auto other = m_other_series["and_not_punch_holes"];
+        auto [input, other] = and_not_punch_holes();
 
         auto result = registry.executeBinaryContainerTransform<
             DigitalIntervalSeries,
@@ -488,16 +473,15 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 }
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 Binary Container Transform: Digital Interval Boolean - Edge Cases",
-                 "[transforms][v2][binary_container][digital_interval_boolean][edge_cases]") {
+TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - Edge Cases",
+          "[transforms][v2][binary_container][digital_interval_boolean][edge_cases]") {
+    using namespace digital_interval_boolean_scenarios;
     
     auto& registry = ElementRegistry::instance();
     ComputeContext ctx;
 
     SECTION("Empty input series") {
-        auto input = m_input_series["empty_input"];
-        auto other = m_other_series["empty_input"];
+        auto [input, other] = empty_input();
 
         DigitalIntervalBooleanParams params;
         params.operation = "or";
@@ -519,8 +503,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("Both series empty") {
-        auto input = m_input_series["both_empty"];
-        auto other = m_other_series["both_empty"];
+        auto [input, other] = both_empty();
 
         DigitalIntervalBooleanParams params;
         params.operation = "and";
@@ -541,8 +524,8 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("NOT with empty series") {
-        auto input = m_input_series["not_empty"];
-        auto other = m_other_series["not_empty"];
+        auto input = not_empty();
+        auto other = DigitalIntervalSeriesBuilder().build();
 
         DigitalIntervalBooleanParams params;
         params.operation = "not";
@@ -563,8 +546,7 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
     }
 
     SECTION("Progress callback is invoked") {
-        auto input = m_input_series["large_intervals"];
-        auto other = m_other_series["large_intervals"];
+        auto [input, other] = large_intervals();
 
         DigitalIntervalBooleanParams params;
         params.operation = "and";
@@ -645,11 +627,22 @@ TEST_CASE("V2 Container Transform: DigitalIntervalBooleanParams - JSON Loading",
 // Tests: DataManager Integration via load_data_from_json_config_v2
 // ============================================================================
 
-TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
-                 "V2 DataManager Integration: Digital Interval Boolean via load_data_from_json_config_v2",
-                 "[transforms][v2][datamanager][digital_interval_boolean]") {
+TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_from_json_config_v2",
+          "[transforms][v2][datamanager][digital_interval_boolean]") {
+    using namespace digital_interval_boolean_scenarios;
     
-    auto* dm = getDataManager();
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Populate DataManager with test data
+    auto [and_input, and_other] = and_overlapping();
+    dm.setData("and_overlapping_input", and_input, TimeKey("default"));
+    dm.setData("and_overlapping_other", and_other, TimeKey("default"));
+    
+    auto [or_input, or_other] = or_overlapping_merge();
+    dm.setData("or_overlapping_merge_input", or_input, TimeKey("default"));
+    dm.setData("or_overlapping_merge_other", or_other, TimeKey("default"));
 
     SECTION("AND operation through JSON pipeline") {
         // Create temporary JSON config file
@@ -657,7 +650,6 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
         std::filesystem::create_directories(test_dir);
         std::filesystem::path json_filepath = test_dir / "and_pipeline.json";
 
-        // The fixture already populated DataManager with "and_overlapping_input" and "and_overlapping_other"
         // Uses additional_input_keys for multi-input (binary) transforms
         const char* json_config = R"([
         {
@@ -690,10 +682,10 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
         }
 
         // Execute the V2 pipeline
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
 
         // Verify result was stored
-        auto result = dm->getData<DigitalIntervalSeries>("and_result");
+        auto result = dm.getData<DigitalIntervalSeries>("and_result");
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
@@ -747,9 +739,9 @@ TEST_CASE_METHOD(DigitalIntervalBooleanTestFixture,
             json_file.close();
         }
 
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
 
-        auto result = dm->getData<DigitalIntervalSeries>("or_result");
+        auto result = dm.getData<DigitalIntervalSeries>("or_result");
         REQUIRE(result != nullptr);
 
         auto const & result_intervals = result->getDigitalIntervalSeries();
