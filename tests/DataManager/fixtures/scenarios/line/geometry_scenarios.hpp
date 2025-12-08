@@ -230,7 +230,9 @@ inline std::shared_ptr<LineData> horizontal_for_normalization() {
 }
 
 /**
- * @brief Problematic 2-point line 1 with negative coordinates
+ * @brief Problematic 2-point line 1
+ * 
+ * Tests edge case for angle calculation with specific coordinate values
  */
 inline std::shared_ptr<LineData> problematic_line_1() {
     return LineDataBuilder()
@@ -239,7 +241,9 @@ inline std::shared_ptr<LineData> problematic_line_1() {
 }
 
 /**
- * @brief Problematic 2-point line 2 with negative coordinates
+ * @brief Problematic 2-point line 2
+ * 
+ * Tests edge case for angle calculation with specific coordinate values
  */
 inline std::shared_ptr<LineData> problematic_line_2() {
     return LineDataBuilder()
