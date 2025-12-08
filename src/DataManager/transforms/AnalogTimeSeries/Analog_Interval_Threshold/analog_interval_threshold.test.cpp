@@ -12,7 +12,7 @@
 #include "transforms/TransformRegistry.hpp"
 #include "transforms/ParameterFactory.hpp"
 
-#include "fixtures/AnalogIntervalThresholdTestFixture.hpp"
+#include "fixtures/scenarios/analog/interval_threshold_scenarios.hpp"
 
 #include <cmath>
 #include <functional>
@@ -57,7 +57,7 @@ auto validateIntervalsAboveThreshold = [](
     return true;// All values in all intervals meet threshold
 };
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval Threshold - Happy Path", "[transforms][analog_interval_threshold]") {
+TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analog_interval_threshold]") {
     std::shared_ptr<DigitalIntervalSeries> result_intervals;
     IntervalThresholdParams params;
     // Set default to IGNORE mode to preserve original test behavior
@@ -70,7 +70,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     };
 
     SECTION("Positive threshold - simple case") {
-        auto ats = m_test_signals["positive_simple"];
+        auto ats = analog_scenarios::positive_simple();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -104,7 +104,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Negative threshold") {
-        auto ats = m_test_signals["negative_threshold"];
+        auto ats = analog_scenarios::negative_threshold();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -130,7 +130,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Absolute threshold") {
-        auto ats = m_test_signals["absolute_threshold"];
+        auto ats = analog_scenarios::absolute_threshold();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -155,7 +155,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("With lockout time") {
-        auto ats = m_test_signals["with_lockout"];
+        auto ats = analog_scenarios::with_lockout();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -182,7 +182,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("With minimum duration") {
-        auto ats = m_test_signals["with_min_duration"];
+        auto ats = analog_scenarios::with_min_duration();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -205,7 +205,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Signal ends while above threshold") {
-        auto ats = m_test_signals["ends_above_threshold"];
+        auto ats = analog_scenarios::ends_above_threshold();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -228,7 +228,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("No intervals detected") {
-        auto ats = m_test_signals["no_intervals"];
+        auto ats = analog_scenarios::no_intervals();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -243,7 +243,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Progress callback detailed check") {
-        auto ats = m_test_signals["progress_callback"];
+        auto ats = analog_scenarios::progress_callback();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -275,7 +275,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Complex signal with multiple parameters") {
-        auto ats = m_test_signals["complex_signal"];
+        auto ats = analog_scenarios::complex_signal();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -300,7 +300,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval Threshold - Error and Edge Cases", "[transforms][analog_interval_threshold]") {
+TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transforms][analog_interval_threshold]") {
     std::shared_ptr<DigitalIntervalSeries> result_intervals;
     IntervalThresholdParams params;
     // Set default to IGNORE mode to preserve original test behavior
@@ -332,7 +332,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Empty time series") {
-        auto ats = m_test_signals["empty_signal"];
+        auto ats = analog_scenarios::empty_signal();
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
 
@@ -342,7 +342,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Single sample above threshold") {
-        auto ats = m_test_signals["single_above"];
+        auto ats = analog_scenarios::single_above();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -364,7 +364,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Single sample below threshold") {
-        auto ats = m_test_signals["single_below"];
+        auto ats = analog_scenarios::single_below();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -379,7 +379,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("All values above threshold") {
-        auto ats = m_test_signals["all_above"];
+        auto ats = analog_scenarios::all_above();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -396,7 +396,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Zero threshold") {
-        auto ats = m_test_signals["zero_threshold"];
+        auto ats = analog_scenarios::zero_threshold();
 
         params.thresholdValue = 0.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -415,7 +415,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Negative threshold value") {
-        auto ats = m_test_signals["negative_value"];
+        auto ats = analog_scenarios::negative_value();
 
         params.thresholdValue = -1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::NEGATIVE;
@@ -434,7 +434,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Very large lockout time") {
-        auto ats = m_test_signals["large_lockout"];
+        auto ats = analog_scenarios::large_lockout();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -451,7 +451,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Very large minimum duration") {
-        auto ats = m_test_signals["large_min_duration"];
+        auto ats = analog_scenarios::large_min_duration();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -466,7 +466,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Irregular timestamp spacing") {
-        auto ats = m_test_signals["irregular_spacing"];
+        auto ats = analog_scenarios::irregular_spacing();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -485,9 +485,9 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval Threshold - Single Sample Above Threshold Zero Lockout", "[transforms][analog_interval_threshold]") {
+TEST_CASE( "Data Transform: Interval Threshold - Single Sample Above Threshold Zero Lockout", "[transforms][analog_interval_threshold]") {
     SECTION("Single sample above threshold followed by below threshold") {
-        auto ats = m_test_signals["single_sample_lockout"];
+        auto ats = analog_scenarios::single_sample_lockout();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -514,7 +514,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Multiple single samples above threshold") {
-        auto ats = m_test_signals["multiple_single_samples"];
+        auto ats = analog_scenarios::multiple_single_samples();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -544,7 +544,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval Threshold - Operation Class Tests", "[transforms][analog_interval_threshold][operation]") {
+TEST_CASE( "Data Transform: Interval Threshold - Operation Class Tests", "[transforms][analog_interval_threshold][operation]") {
     IntervalThresholdOperation operation;
     DataTypeVariant variant;
     IntervalThresholdParams params;
@@ -560,7 +560,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("canApply with valid data") {
-        auto ats = m_test_signals["operation_interface"];
+        auto ats = analog_scenarios::operation_interface();
         variant = ats;
 
         REQUIRE(operation.canApply(variant));
@@ -574,7 +574,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("execute with valid parameters") {
-        auto ats = m_test_signals["operation_interface"];
+        auto ats = analog_scenarios::operation_interface();
         variant = ats;
 
         auto result = operation.execute(variant, &params);
@@ -588,7 +588,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("execute with null parameters") {
-        auto ats = m_test_signals["operation_interface"];
+        auto ats = analog_scenarios::operation_interface();
         variant = ats;
 
         auto result = operation.execute(variant, nullptr);
@@ -599,7 +599,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("execute with progress callback") {
-        auto ats = m_test_signals["operation_interface"];
+        auto ats = analog_scenarios::operation_interface();
         variant = ats;
 
         int volatile progress_val = -1;
@@ -619,7 +619,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("execute with wrong parameter type") {
-        auto ats = m_test_signals["operation_interface"];
+        auto ats = analog_scenarios::operation_interface();
         variant = ats;
 
         // Create a different parameter type
@@ -636,7 +636,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("execute with different threshold directions") {
-        auto ats = m_test_signals["operation_different_directions"];
+        auto ats = analog_scenarios::operation_different_directions();
         variant = ats;
 
         // Test negative threshold
@@ -669,12 +669,12 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval Threshold - Missing Data Handling", "[transforms][analog_interval_threshold]") {
+TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[transforms][analog_interval_threshold]") {
     std::shared_ptr<DigitalIntervalSeries> result_intervals;
     IntervalThresholdParams params;
 
     SECTION("Missing data treated as zero - positive threshold") {
-        auto ats = m_test_signals["missing_data_positive"];
+        auto ats = analog_scenarios::missing_data_positive();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -701,7 +701,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Missing data treated as zero - negative threshold") {
-        auto ats = m_test_signals["missing_data_negative"];
+        auto ats = analog_scenarios::missing_data_negative();
 
         params.thresholdValue = -0.5;
         params.direction = IntervalThresholdParams::ThresholdDirection::NEGATIVE;
@@ -724,7 +724,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Missing data treated as zero - negative threshold where zeros DO meet threshold") {
-        auto ats = m_test_signals["missing_data_negative"];
+        auto ats = analog_scenarios::missing_data_negative();
 
         params.thresholdValue = 0.5;// threshold > 0, so zeros (0.0) < 0.5 meet negative threshold
         params.direction = IntervalThresholdParams::ThresholdDirection::NEGATIVE;
@@ -747,7 +747,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("Missing data ignored mode") {
-        auto ats = m_test_signals["missing_data_ignore"];
+        auto ats = analog_scenarios::missing_data_ignore();
         auto const & values = ats->getAnalogTimeSeries();
         auto const & times = ats->getTimeSeries();
 
@@ -774,7 +774,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 
     SECTION("No gaps in data") {
-        auto ats = m_test_signals["no_gaps"];
+        auto ats = analog_scenarios::no_gaps();
 
         params.thresholdValue = 1.0;
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
@@ -804,7 +804,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Interval T
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Analog Interval Threshold - JSON pipeline", "[transforms][analog_interval_threshold][json]") {
+TEST_CASE( "Data Transform: Analog Interval Threshold - JSON pipeline", "[transforms][analog_interval_threshold][json]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "interval_threshold_step_1"},
@@ -824,7 +824,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Analog Int
     DataManager dm;
     TransformRegistry registry;
 
-    auto ats = m_test_signals["test_signal"];
+    auto ats = analog_scenarios::test_signal();
     auto time_frame = ats->getTimeFrame();
     dm.setTime(TimeKey("default"), time_frame);
     dm.setData("TestSignal.channel1", ats, TimeKey("default"));
@@ -878,12 +878,12 @@ TEST_CASE("Data Transform: Analog Interval Threshold - Parameter Factory", "[tra
     REQUIRE(params->missingDataMode == IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO);
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, "Data Transform: Analog Interval Threshold - load_data_from_json_config", "[transforms][analog_interval_threshold][json_config]") {
+TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_config", "[transforms][analog_interval_threshold][json_config]") {
     // Create DataManager and populate it with AnalogTimeSeries from fixture
     DataManager dm;
 
     // Get test data from fixture
-    auto test_analog = m_test_signals["test_signal"];
+    auto test_analog = analog_scenarios::test_signal();
     auto time_frame = test_analog->getTimeFrame();
     dm.setTime(TimeKey("default"), time_frame);
     

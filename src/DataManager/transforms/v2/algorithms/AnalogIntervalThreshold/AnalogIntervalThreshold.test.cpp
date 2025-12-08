@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
@@ -9,7 +10,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-#include "fixtures/AnalogIntervalThresholdTestFixture.hpp"
+#include "fixtures/scenarios/analog/interval_threshold_scenarios.hpp"
 
 #include <iostream>
 
@@ -24,7 +25,7 @@ using namespace WhiskerToolbox::Transforms::V2::Examples;
 // Tests: Algorithm Correctness (using shared fixture)
 // ============================================================================
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture, 
+TEST_CASE( 
                  "V2 Container Transform: Analog Interval Threshold - Happy Path", 
                  "[transforms][v2][container][analog_interval_threshold]") {
     
@@ -42,7 +43,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     };
     
     SECTION("Positive threshold - simple case") {
-        auto ats = m_test_signals["positive_simple"];
+        auto ats = analog_scenarios::positive_simple();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -67,7 +68,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Negative threshold") {
-        auto ats = m_test_signals["negative_threshold"];
+        auto ats = analog_scenarios::negative_threshold();
         params.threshold_value = -1.0f;
         params.direction = "negative";
         params.lockout_time = 0.0f;
@@ -88,7 +89,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Absolute threshold") {
-        auto ats = m_test_signals["absolute_threshold"];
+        auto ats = analog_scenarios::absolute_threshold();
         params.threshold_value = 1.0f;
         params.direction = "absolute";
         params.lockout_time = 0.0f;
@@ -109,7 +110,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("With lockout time") {
-        auto ats = m_test_signals["with_lockout"];
+        auto ats = analog_scenarios::with_lockout();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 100.0f;  // 100 time units lockout
@@ -132,7 +133,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("With minimum duration") {
-        auto ats = m_test_signals["with_min_duration"];
+        auto ats = analog_scenarios::with_min_duration();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -151,7 +152,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Signal ends while above threshold") {
-        auto ats = m_test_signals["ends_above_threshold"];
+        auto ats = analog_scenarios::ends_above_threshold();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -170,7 +171,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("No intervals detected") {
-        auto ats = m_test_signals["no_intervals"];
+        auto ats = analog_scenarios::no_intervals();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -186,7 +187,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Complex signal with multiple parameters") {
-        auto ats = m_test_signals["complex_signal"];
+        auto ats = analog_scenarios::complex_signal();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 50.0f;
@@ -207,7 +208,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
+TEST_CASE(
                  "V2 Container Transform: Analog Interval Threshold - Edge Cases",
                  "[transforms][v2][container][analog_interval_threshold]") {
     
@@ -217,7 +218,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     ComputeContext ctx;
     
     SECTION("Empty analog time series") {
-        auto ats = m_test_signals["empty_signal"];
+        auto ats = analog_scenarios::empty_signal();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -231,7 +232,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Single sample above threshold") {
-        auto ats = m_test_signals["single_above"];
+        auto ats = analog_scenarios::single_above();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -249,7 +250,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Single sample below threshold") {
-        auto ats = m_test_signals["single_below"];
+        auto ats = analog_scenarios::single_below();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -264,7 +265,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("All values above threshold") {
-        auto ats = m_test_signals["all_above"];
+        auto ats = analog_scenarios::all_above();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -282,7 +283,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Cancellation support") {
-        auto ats = m_test_signals["positive_simple"];
+        auto ats = analog_scenarios::positive_simple();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -300,7 +301,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Very large lockout time") {
-        auto ats = m_test_signals["large_lockout"];
+        auto ats = analog_scenarios::large_lockout();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 10000.0f;  // Much larger than series
@@ -316,7 +317,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Very large minimum duration") {
-        auto ats = m_test_signals["large_min_duration"];
+        auto ats = analog_scenarios::large_min_duration();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -331,7 +332,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
+TEST_CASE(
                  "V2 Container Transform: Analog Interval Threshold - Missing Data",
                  "[transforms][v2][container][analog_interval_threshold]") {
     
@@ -341,7 +342,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     ComputeContext ctx;
     
     SECTION("Missing data treated as zero - positive threshold") {
-        auto ats = m_test_signals["missing_data_positive"];
+        auto ats = analog_scenarios::missing_data_positive();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -358,7 +359,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Missing data ignore mode") {
-        auto ats = m_test_signals["missing_data_ignore"];
+        auto ats = analog_scenarios::missing_data_ignore();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -375,7 +376,7 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("No gaps in data") {
-        auto ats = m_test_signals["no_gaps"];
+        auto ats = analog_scenarios::no_gaps();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -587,16 +588,20 @@ TEST_CASE("V2 Container Transform: AnalogIntervalThreshold - Registry Integratio
 #include <filesystem>
 #include <fstream>
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
+TEST_CASE(
                  "V2 Container Transform: AnalogIntervalThreshold - DataManagerPipelineExecutor",
                  "[transforms][v2][container][analog_interval_threshold][json]") {
     
     using namespace WhiskerToolbox::Transforms::V2;
     
-    // Get DataManager from fixture
-    DataManager* dm = getDataManager();
-    
     SECTION("Execute pipeline via DataManagerPipelineExecutor") {
+        // Create DataManager and populate with test data
+        DataManager dm;
+        auto ats = analog_scenarios::positive_simple();
+        auto time_frame = ats->getTimeFrame();
+        dm.setTime(TimeKey("default"), time_frame);
+        dm.setData("positive_simple", ats, TimeKey("default"));
+        
         // Create pipeline JSON config (V2 format)
         nlohmann::json json_config = {
             {"steps", {{
@@ -614,14 +619,14 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
             }}}
         };
         
-        DataManagerPipelineExecutor executor(dm);
+        DataManagerPipelineExecutor executor(&dm);
         REQUIRE(executor.loadFromJson(json_config));
         
         auto result = executor.execute();
         REQUIRE(result.success);
         
         // Verify the results
-        auto interval_series = dm->getData<DigitalIntervalSeries>("detected_intervals");
+        auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals");
         REQUIRE(interval_series != nullptr);
         
         auto const & intervals = interval_series->getDigitalIntervalSeries();
@@ -634,6 +639,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Execute pipeline with lockout and min_duration parameters") {
+        // Create DataManager and populate with test data
+        DataManager dm;
+        auto ats = analog_scenarios::complex_signal();
+        auto time_frame = ats->getTimeFrame();
+        dm.setTime(TimeKey("default"), time_frame);
+        dm.setData("complex_signal", ats, TimeKey("default"));
+        
         nlohmann::json json_config = {
             {"steps", {{
                 {"step_id", "interval_threshold_advanced"},
@@ -650,13 +662,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
             }}}
         };
         
-        DataManagerPipelineExecutor executor(dm);
+        DataManagerPipelineExecutor executor(&dm);
         REQUIRE(executor.loadFromJson(json_config));
         
         auto result = executor.execute();
         REQUIRE(result.success);
         
-        auto interval_series = dm->getData<DigitalIntervalSeries>("detected_intervals_advanced");
+        auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals_advanced");
         REQUIRE(interval_series != nullptr);
         
         auto const & intervals = interval_series->getDigitalIntervalSeries();
@@ -669,6 +681,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Execute pipeline with absolute threshold") {
+        // Create DataManager and populate with test data
+        DataManager dm;
+        auto ats = analog_scenarios::absolute_threshold();
+        auto time_frame = ats->getTimeFrame();
+        dm.setTime(TimeKey("default"), time_frame);
+        dm.setData("absolute_threshold", ats, TimeKey("default"));
+        
         nlohmann::json json_config = {
             {"steps", {{
                 {"step_id", "interval_threshold_absolute"},
@@ -685,13 +704,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
             }}}
         };
         
-        DataManagerPipelineExecutor executor(dm);
+        DataManagerPipelineExecutor executor(&dm);
         REQUIRE(executor.loadFromJson(json_config));
         
         auto result = executor.execute();
         REQUIRE(result.success);
         
-        auto interval_series = dm->getData<DigitalIntervalSeries>("detected_intervals_absolute");
+        auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals_absolute");
         REQUIRE(interval_series != nullptr);
         
         auto const & intervals = interval_series->getDigitalIntervalSeries();
@@ -704,6 +723,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Execute pipeline with negative threshold") {
+        // Create DataManager and populate with test data
+        DataManager dm;
+        auto ats = analog_scenarios::negative_threshold();
+        auto time_frame = ats->getTimeFrame();
+        dm.setTime(TimeKey("default"), time_frame);
+        dm.setData("negative_threshold", ats, TimeKey("default"));
+        
         nlohmann::json json_config = {
             {"steps", {{
                 {"step_id", "interval_threshold_negative"},
@@ -720,13 +746,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
             }}}
         };
         
-        DataManagerPipelineExecutor executor(dm);
+        DataManagerPipelineExecutor executor(&dm);
         REQUIRE(executor.loadFromJson(json_config));
         
         auto result = executor.execute();
         REQUIRE(result.success);
         
-        auto interval_series = dm->getData<DigitalIntervalSeries>("detected_intervals_negative");
+        auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals_negative");
         REQUIRE(interval_series != nullptr);
         
         auto const & intervals = interval_series->getDigitalIntervalSeries();
@@ -739,20 +765,24 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
+TEST_CASE(
                  "V2 Container Transform: AnalogIntervalThreshold - load_data_from_json_config_v2",
                  "[transforms][v2][container][analog_interval_threshold][json_config]") {
     
     using namespace WhiskerToolbox::Transforms::V2;
-    
-    // Get DataManager from fixture
-    DataManager* dm = getDataManager();
     
     // Create temporary directory for JSON config files
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_interval_threshold_v2_test";
     std::filesystem::create_directories(test_dir);
     
     SECTION("Execute V2 pipeline via load_data_from_json_config_v2") {
+        // Create DataManager and populate with test data
+        DataManager dm;
+        auto test_analog = analog_scenarios::test_signal();
+        auto time_frame = test_analog->getTimeFrame();
+        dm.setTime(TimeKey("default"), time_frame);
+        dm.setData("test_signal", test_analog, TimeKey("default"));
+        
         // Create JSON config in V1-compatible format (used by load_data_from_json_config_v2)
         const char* json_config = 
             "[\n"
@@ -791,10 +821,10 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
         }
         
         // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // Verify the transformation was executed and results are available
-        auto result_intervals = dm->getData<DigitalIntervalSeries>("v2_detected_intervals");
+        auto result_intervals = dm.getData<DigitalIntervalSeries>("v2_detected_intervals");
         REQUIRE(result_intervals != nullptr);
         
         // Verify the interval detection results
@@ -808,6 +838,13 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
     }
     
     SECTION("Execute V2 pipeline with advanced parameters") {
+        // Create DataManager and populate with test data
+        DataManager dm;
+        auto test_analog = analog_scenarios::test_signal();
+        auto time_frame = test_analog->getTimeFrame();
+        dm.setTime(TimeKey("default"), time_frame);
+        dm.setData("test_signal", test_analog, TimeKey("default"));
+        
         const char* json_config_advanced = 
             "[\n"
             "{\n"
@@ -844,9 +881,9 @@ TEST_CASE_METHOD(AnalogIntervalThresholdTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_intervals = dm->getData<DigitalIntervalSeries>("v2_detected_intervals_advanced");
+        auto result_intervals = dm.getData<DigitalIntervalSeries>("v2_detected_intervals_advanced");
         REQUIRE(result_intervals != nullptr);
         
         auto const & intervals = result_intervals->getDigitalIntervalSeries();
