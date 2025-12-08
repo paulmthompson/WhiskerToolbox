@@ -12,7 +12,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "fixtures/LinePointDistanceTestFixture.hpp"
+#include "fixtures/scenarios/line/distance_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -55,15 +55,13 @@ static std::vector<Point2D<float>> getPointsAt(PointData const* point_data, Time
 // Tests: Algorithm Correctness (using fixture)
 // ============================================================================
 
-TEST_CASE_METHOD(LinePointDistanceTestFixture,
-                 "V2 Binary Element Transform: LineMinPointDist - Core Functionality",
-                 "[transforms][v2][binary_element][line_min_point_dist]") {
+TEST_CASE("V2 Binary Element Transform: LineMinPointDist - Core Functionality",
+          "[transforms][v2][binary_element][line_min_point_dist]") {
     
     LineMinPointDistParams params;
     
     SECTION("Basic distance calculation - horizontal line with point above") {
-        auto line_data = m_line_data["horizontal_line_point_above"];
-        auto point_data = m_point_data["horizontal_line_point_above"];
+        auto [line_data, point_data] = line_distance_scenarios::horizontal_line_point_above();
         
         TimeFrameIndex timestamp(10);
         auto line = getLineAt(line_data.get(), timestamp);
@@ -75,8 +73,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
     
     SECTION("Multiple points with different distances - finds minimum") {
-        auto line_data = m_line_data["vertical_line_multiple_points"];
-        auto point_data = m_point_data["vertical_line_multiple_points"];
+        auto [line_data, point_data] = line_distance_scenarios::vertical_line_multiple_points();
         
         TimeFrameIndex timestamp(20);
         auto line = getLineAt(line_data.get(), timestamp);
@@ -94,8 +91,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
     
     SECTION("Point directly on the line has zero distance") {
-        auto line_data = m_line_data["point_on_line"];
-        auto point_data = m_point_data["point_on_line"];
+        auto [line_data, point_data] = line_distance_scenarios::point_on_line();
         
         TimeFrameIndex timestamp(70);
         auto line = getLineAt(line_data.get(), timestamp);
@@ -107,8 +103,7 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
     
     SECTION("Multiple timesteps with different distances") {
-        auto line_data = m_line_data["multiple_timesteps"];
-        auto point_data = m_point_data["multiple_timesteps"];
+        auto [line_data, point_data] = line_distance_scenarios::multiple_timesteps();
         
         // Timestamp 30: horizontal line, point at (5,2), distance = 2.0
         {
@@ -138,15 +133,13 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
     }
 }
 
-TEST_CASE_METHOD(LinePointDistanceTestFixture,
-                 "V2 Binary Element Transform: LineMinPointDist - Edge Cases",
-                 "[transforms][v2][binary_element][line_min_point_dist]") {
+TEST_CASE("V2 Binary Element Transform: LineMinPointDist - Edge Cases",
+          "[transforms][v2][binary_element][line_min_point_dist]") {
     
     LineMinPointDistParams params;
     
     SECTION("Line with only one point (invalid) returns infinity") {
-        auto line_data = m_line_data["invalid_line_one_point"];
-        auto point_data = m_point_data["invalid_line_one_point"];
+        auto [line_data, point_data] = line_distance_scenarios::invalid_line_one_point();
         
         TimeFrameIndex timestamp(40);
         auto line = getLineAt(line_data.get(), timestamp);
@@ -248,11 +241,23 @@ TEST_CASE("V2 Binary Element Transform: Registry Integration",
 // Tests: DataManager Integration via load_data_from_json_config_v2
 // ============================================================================
 
-TEST_CASE_METHOD(LinePointDistanceTestFixture,
-                 "V2 DataManager Integration: LineMinPointDist via load_data_from_json_config_v2",
-                 "[transforms][v2][datamanager][line_min_point_dist]") {
+TEST_CASE("V2 DataManager Integration: LineMinPointDist via load_data_from_json_config_v2",
+          "[transforms][v2][datamanager][line_min_point_dist]") {
     
-    DataManager* dm = getDataManager();
+    DataManager dm;
+    
+    // Create test data using scenarios
+    auto [line_data_two_ts, point_data_two_ts] = line_distance_scenarios::json_pipeline_two_timesteps();
+    dm.setData("json_pipeline_two_timesteps_line", line_data_two_ts, TimeKey("default"));
+    dm.setData("json_pipeline_two_timesteps_point", point_data_two_ts, TimeKey("default"));
+    
+    auto [line_data_on_line, point_data_on_line] = line_distance_scenarios::json_pipeline_point_on_line();
+    dm.setData("json_pipeline_point_on_line_line", line_data_on_line, TimeKey("default"));
+    dm.setData("json_pipeline_point_on_line_point", point_data_on_line, TimeKey("default"));
+    
+    auto [line_data_horiz, point_data_horiz] = line_distance_scenarios::horizontal_line_point_above();
+    dm.setData("horizontal_line_point_above_line", line_data_horiz, TimeKey("default"));
+    dm.setData("horizontal_line_point_above_point", point_data_horiz, TimeKey("default"));
     
     // Create temporary directory for JSON config files
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_min_point_dist_v2_test";
@@ -294,10 +299,10 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
         }
         
         // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // Verify the transformation was executed and results are available
-        auto result_distances = dm->getData<RaggedAnalogTimeSeries>("v2_line_point_distances");
+        auto result_distances = dm.getData<RaggedAnalogTimeSeries>("v2_line_point_distances");
         REQUIRE(result_distances != nullptr);
         
         // Check we have 2 results (t=100 and t=200)
@@ -363,9 +368,9 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_distances = dm->getData<RaggedAnalogTimeSeries>("v2_point_on_line_distances");
+        auto result_distances = dm.getData<RaggedAnalogTimeSeries>("v2_point_on_line_distances");
         REQUIRE(result_distances != nullptr);
         REQUIRE(result_distances->getNumSamples() == 1);
         
@@ -412,9 +417,9 @@ TEST_CASE_METHOD(LinePointDistanceTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_distances = dm->getData<RaggedAnalogTimeSeries>("v2_horizontal_distances");
+        auto result_distances = dm.getData<RaggedAnalogTimeSeries>("v2_horizontal_distances");
         REQUIRE(result_distances != nullptr);
         REQUIRE(result_distances->getNumSamples() == 1);
         
