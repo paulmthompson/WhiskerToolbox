@@ -10,26 +10,28 @@ This section provides automatically generated API documentation for WhiskerToolb
 
 The complete API reference is available through the Doxygen-generated documentation:
 
-<div style="text-align: center; margin: 2em 0;">
-  <a href="api/html/index.html" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px; text-decoration: none; display: inline-block;">Open API Documentation</a>
-</div>
+::: {style="text-align: center; margin: 2em 0;"}
+<a href="api/html/index.html" class="btn btn-primary" style="padding: 12px 24px; font-size: 16px; text-decoration: none; display: inline-block;">Open API Documentation</a>
+:::
 
-<iframe src="api/html/index.html" style="width: 100%; height: 800px; border: 1px solid #ccc; border-radius: 4px;"></iframe>
+<iframe src="api/html/index.html" style="width: 100%; height: 800px; border: 1px solid #ccc; border-radius: 4px;">
+
+</iframe>
 
 ## Key Sections
 
 The API documentation includes:
 
-- **Classes**: Documentation for all C++ classes including DataManager, various widget classes, and data processing classes
-- **Namespaces**: Organized documentation by namespace
-- **Files**: Documentation organized by source file location
-- **Functions**: All public functions and methods with parameter descriptions
+-   **Classes**: Documentation for all C++ classes including DataManager, various widget classes, and data processing classes
+-   **Namespaces**: Organized documentation by namespace
+-   **Files**: Documentation organized by source file location
+-   **Functions**: All public functions and methods with parameter descriptions
 
 ## Building the API Documentation
 
 To regenerate the API documentation locally:
 
-```bash
+``` bash
 cd /path/to/WhiskerToolbox
 doxygen Doxyfile
 ```
