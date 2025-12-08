@@ -36,40 +36,4 @@ Please make sure to run clang-tidy on all of your submitted files with the style
 
 <https://clang.llvm.org/extra/clang-tidy/>
 
-## Testing
-
--   Testing is performed with Catch2. 
-
--   The component being tested generally has two TEST_CASE parts. The first will test the “happy path” to ensure that the computations work as expected. Different SECTIONs will be used for different computations. A second TEST_CASE will handle error handling and edge cases. Each SECTION will be for a different edge case / error.
-
--   Use descriptive names for each test.
-
--   TEST_CASES should also use useful tags.
-
--   Use REQUIRE instead of CHECK
-
--   Simple setup can be performed in the beginning of a TEST_CASE. Fixtures are only necessary for complex setup/teardown.
-
--   Prefer Catch::Matchers::WithinRel to Catch::Approx
-
--   Test files are included in the same folder as a given translation unit. They should have the same name as the header file with the extension ".test.cpp". For example mask_to_line.hpp and mask_to_line.cpp will have the test file mask_to_line.test.cpp.
-
-## Further Resources and References
-
-### LLM Support
-
-A configuration file for a plain text generator, [repo-to-text](https://github.com/kirill-markin/repo-to-text), is included in the top level source directory. This can generate a single text file for the entire Neuralyzer repository which can be easily pasted into a LLM of choice.
-
-### Testing
-
-#### C++ Development
-
-Mike Shah has an excellent modern C++ design series on youtube. Episodes are a nice \~20 minute length:
-
-[Modern Cpp series by Mike Shah](https://www.youtube.com/watch?v=LGOgNqkRMs0&list=PLvv0ScY6vfd8j-tlhYVPYgiIyXduu6m-L)
-
-#### Graphics Programming
-
-Mike Shah also has a series on modern OpenGL on youtube:
-
-[Introduction to OpenGL](https://www.youtube.com/watch?v=Q7vm264YNrM&list=PLvv0ScY6vfd9zlZkIIqGDeG5TUWswkMox)
+## 
