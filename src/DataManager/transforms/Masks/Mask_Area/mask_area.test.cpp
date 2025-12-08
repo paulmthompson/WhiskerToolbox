@@ -13,30 +13,28 @@
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 
-#include "fixtures/MaskAreaTestFixture.hpp"
+#include "fixtures/scenarios/mask/area_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
 // ============================================================================
-// Core Functionality Tests (using fixture)
+// Core Functionality Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Empty mask data", 
-                 "[mask][area][transform][fixture]") {
-    auto mask_data = m_test_masks["empty_mask_data"];
+TEST_CASE("Mask area calculation - Empty mask data", 
+          "[mask][area][transform]") {
+    auto mask_data = mask_scenarios::empty_mask_data();
     auto result = area(mask_data.get());
 
     REQUIRE(result->getAnalogTimeSeries().empty());
     REQUIRE(result->getTimeSeries().empty());
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Single mask at one timestamp", 
-                 "[mask][area][transform][fixture]") {
-    auto mask_data = m_test_masks["single_mask_single_timestamp"];
+TEST_CASE("Mask area calculation - Single mask at one timestamp", 
+          "[mask][area][transform]") {
+    auto mask_data = mask_scenarios::single_mask_single_timestamp();
     auto result = area(mask_data.get());
 
     auto const & values = result->getAnalogTimeSeries();
@@ -48,10 +46,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values[0] == 3.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Multiple masks at one timestamp", 
-                 "[mask][area][transform][fixture]") {
-    auto mask_data = m_test_masks["multiple_masks_single_timestamp"];
+TEST_CASE("Mask area calculation - Multiple masks at one timestamp", 
+          "[mask][area][transform]") {
+    auto mask_data = mask_scenarios::multiple_masks_single_timestamp();
     auto result = area(mask_data.get());
 
     auto const & values = result->getAnalogTimeSeries();
@@ -63,10 +60,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values[0] == 8.0f); // 3 + 5 = 8 points total
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Masks across multiple timestamps", 
-                 "[mask][area][transform][fixture]") {
-    auto mask_data = m_test_masks["masks_multiple_timestamps"];
+TEST_CASE("Mask area calculation - Masks across multiple timestamps", 
+          "[mask][area][transform]") {
+    auto mask_data = mask_scenarios::masks_multiple_timestamps();
     auto result = area(mask_data.get());
 
     auto const & values = result->getAnalogTimeSeries();
@@ -84,10 +80,9 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(values[time40_idx] == 7.0f); // 3 + 4 = 7 points
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Verify AnalogTimeSeries structure and statistics", 
-                 "[mask][area][transform][fixture]") {
-    auto mask_data = m_test_masks["single_mask_for_statistics"];
+TEST_CASE("Mask area calculation - Verify AnalogTimeSeries structure and statistics", 
+          "[mask][area][transform]") {
+    auto mask_data = mask_scenarios::single_mask_for_statistics();
     auto result = area(mask_data.get());
 
     // Verify it's a proper AnalogTimeSeries
@@ -102,13 +97,12 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
 }
 
 // ============================================================================
-// Edge Cases (using fixture)
+// Edge Cases (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Empty mask (zero pixels)", 
-                 "[mask][area][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["empty_mask_at_timestamp"];
+TEST_CASE("Mask area calculation - Empty mask (zero pixels)", 
+          "[mask][area][transform][edge]") {
+    auto mask_data = mask_scenarios::empty_mask_at_timestamp();
     auto result = area(mask_data.get());
 
     REQUIRE(result->getAnalogTimeSeries().size() == 1);
@@ -116,21 +110,20 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(result->getAnalogTimeSeries()[0] == 0.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Mixed empty and non-empty masks", 
-                 "[mask][area][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["mixed_empty_nonempty"];
+TEST_CASE("Mask area calculation - Mixed empty and non-empty masks", 
+          "[mask][area][transform][edge]") {
+    auto mask_data = mask_scenarios::mixed_empty_nonempty();
     auto result = area(mask_data.get());
 
     REQUIRE(result->getAnalogTimeSeries().size() == 1);
     REQUIRE(result->getTimeSeries().size() == 1);
+    REQUIRE(result->getTimeSeries()[0] == TimeFrameIndex(20));
     REQUIRE(result->getAnalogTimeSeries()[0] == 3.0f); // 0 + 3 = 3
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Mask area calculation - Large number of masks", 
-                 "[mask][area][transform][edge][fixture]") {
-    auto mask_data = m_test_masks["large_mask_count"];
+TEST_CASE("Mask area calculation - Large number of masks", 
+          "[mask][area][transform][edge]") {
+    auto mask_data = mask_scenarios::large_mask_count();
     auto result = area(mask_data.get());
 
     // Sum of 1 + 2 + 3 + ... + 10 = 55
@@ -138,12 +131,19 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
 }
 
 // ============================================================================
-// JSON Pipeline Tests (using fixture)
+// JSON Pipeline Tests (using scenarios with DataManager)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Data Transform: Mask Area - JSON pipeline", 
-                 "[transforms][mask_area][json][fixture]") {
+TEST_CASE("Data Transform: Mask Area - JSON pipeline", 
+          "[transforms][mask_area][json]") {
+    // Set up DataManager with scenario data
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::json_pipeline_basic();
+    dm.setData("json_pipeline_basic", mask_data, TimeKey("default"));
+    
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "mask_area_step_1"},
@@ -154,15 +154,14 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
         }}}
     };
 
-    auto dm = getDataManager();
     TransformRegistry registry;
 
-    TransformPipeline pipeline(dm, &registry);
+    TransformPipeline pipeline(&dm, &registry);
     pipeline.loadFromJson(json_config);
     pipeline.execute();
 
     // Verify the results
-    auto area_series = dm->getData<AnalogTimeSeries>("MaskAreas");
+    auto area_series = dm.getData<AnalogTimeSeries>("MaskAreas");
     REQUIRE(area_series != nullptr);
 
     auto const & values = area_series->getAnalogTimeSeries();
@@ -171,19 +170,23 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(times.size() == 2);
     REQUIRE(values.size() == 2);
     
-    // Check timestamp 100 (3 points)
+    // json_pipeline_basic has masks at t=100 (3 pixels) and t=200 (4 pixels)
     auto time100_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(100)));
     REQUIRE(values[time100_idx] == 3.0f);
     
-    // Check timestamp 200 (4 points)
     auto time200_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(200)));
     REQUIRE(values[time200_idx] == 4.0f);
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Data Transform: Mask Area - load_data_from_json_config", 
-                 "[transforms][mask_area][json_config][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Area - load_data_from_json_config", 
+          "[transforms][mask_area][json_config]") {
+    // Set up DataManager with scenario data
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::json_pipeline_multi_timestamp();
+    dm.setData("json_pipeline_multi_timestamp", mask_data, TimeKey("default"));
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -222,10 +225,10 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     }
     
     // Execute the transformation pipeline using load_data_from_json_config
-    auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
     
     // Verify the transformation was executed and results are available
-    auto result_areas = dm->getData<AnalogTimeSeries>("calculated_areas");
+    auto result_areas = dm.getData<AnalogTimeSeries>("calculated_areas");
     REQUIRE(result_areas != nullptr);
     
     // Verify the area calculation results
@@ -235,15 +238,13 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     REQUIRE(times.size() == 3);
     REQUIRE(values.size() == 3);
     
-    // Check timestamp 100 (3 points)
+    // json_pipeline_multi_timestamp has masks at t=100 (3 pixels), t=200 (5 pixels), t=300 (2 pixels)
     auto time100_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(100)));
     REQUIRE(values[time100_idx] == 3.0f);
     
-    // Check timestamp 200 (5 points)
     auto time200_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(200)));
     REQUIRE(values[time200_idx] == 5.0f);
     
-    // Check timestamp 300 (2 points)
     auto time300_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(300)));
     REQUIRE(values[time300_idx] == 2.0f);
     
@@ -255,10 +256,15 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Data Transform: Mask Area - Empty mask JSON pipeline", 
-                 "[transforms][mask_area][json_config][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Area - Empty mask JSON pipeline", 
+          "[transforms][mask_area][json_config]") {
+    // Set up DataManager with scenario data
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::empty_mask_data();
+    dm.setData("empty_mask_data", mask_data, TimeKey("default"));
     
     const char* json_config_empty = 
         "[\n"
@@ -295,10 +301,10 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     }
     
     // Execute the empty mask pipeline
-    auto data_info_list_empty = load_data_from_json_config(dm, json_filepath_empty.string());
+    auto data_info_list_empty = load_data_from_json_config(&dm, json_filepath_empty.string());
     
     // Verify the empty mask results
-    auto result_empty_areas = dm->getData<AnalogTimeSeries>("empty_areas");
+    auto result_empty_areas = dm.getData<AnalogTimeSeries>("empty_areas");
     REQUIRE(result_empty_areas != nullptr);
     REQUIRE(result_empty_areas->getAnalogTimeSeries().empty());
     REQUIRE(result_empty_areas->getTimeSeries().empty());
@@ -311,10 +317,15 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MaskAreaTestFixture, 
-                 "Data Transform: Mask Area - Multi-mask JSON pipeline", 
-                 "[transforms][mask_area][json_config][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Area - Multi-mask JSON pipeline", 
+          "[transforms][mask_area][json_config]") {
+    // Set up DataManager with scenario data
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::json_pipeline_multi_mask();
+    dm.setData("json_pipeline_multi_mask", mask_data, TimeKey("default"));
     
     const char* json_config_multi = 
         "[\n"
@@ -351,10 +362,11 @@ TEST_CASE_METHOD(MaskAreaTestFixture,
     }
     
     // Execute the multi-mask pipeline
-    auto data_info_list_multi = load_data_from_json_config(dm, json_filepath_multi.string());
+    auto data_info_list_multi = load_data_from_json_config(&dm, json_filepath_multi.string());
     
-    // Verify the multi-mask results (2 + 3 = 5 points total)
-    auto result_multi_areas = dm->getData<AnalogTimeSeries>("multi_areas");
+    // Verify the multi-mask results
+    // json_pipeline_multi_mask has 2 masks at t=500 with areas 2 and 3 (sum = 5)
+    auto result_multi_areas = dm.getData<AnalogTimeSeries>("multi_areas");
     REQUIRE(result_multi_areas != nullptr);
     
     auto const & multi_values = result_multi_areas->getAnalogTimeSeries();
