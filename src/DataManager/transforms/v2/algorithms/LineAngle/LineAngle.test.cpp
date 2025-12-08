@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
