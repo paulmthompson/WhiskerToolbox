@@ -4,15 +4,11 @@ This guide describes the process for creating reusable test fixtures that enable
 
 ## Overview
 
-The goal is to:
-1. **Decouple test data** from transformation logic
-2. **Reuse the same test data** across V1 and V2 tests
-3. **Ensure algorithmic consistency** between implementations
-4. **Keep parameter/JSON testing** in their respective test files
+The goal is to: 1. **Decouple test data** from transformation logic 2. **Reuse the same test data** across V1 and V2 tests 3. **Ensure algorithmic consistency** between implementations 4. **Keep parameter/JSON testing** in their respective test files
 
 ## Directory Structure
 
-```
+```         
 tests/
 └── DataManager/
     └── fixtures/
@@ -37,7 +33,7 @@ src/DataManager/
 
 Identify the test data patterns in your V1 tests:
 
-```cpp
+``` cpp
 // Before: Data creation scattered in V1 tests
 TEST_CASE("Mask area calculation", "[mask][area]") {
     auto mask_data = std::make_shared<MaskData>();
@@ -56,7 +52,7 @@ TEST_CASE("Mask area calculation", "[mask][area]") {
 
 Create a fixture header in `tests/DataManager/fixtures/`:
 
-```cpp
+``` cpp
 // tests/DataManager/fixtures/MyTransformTestFixture.hpp
 #ifndef MY_TRANSFORM_TEST_FIXTURE_HPP
 #define MY_TRANSFORM_TEST_FIXTURE_HPP
@@ -114,16 +110,16 @@ private:
 
 **Key Design Principles:**
 
-1. **Use descriptive keys** - Name test data by the scenario, not the expected result
-2. **Store both in map and DataManager** - Allows direct access and key-based lookup
-3. **Document expected results in comments** - But don't encode them in the fixture
-4. **Keep fixture minimal** - Only data creation, no transform logic
+1.  **Use descriptive keys** - Name test data by the scenario, not the expected result
+2.  **Store both in map and DataManager** - Allows direct access and key-based lookup
+3.  **Document expected results in comments** - But don't encode them in the fixture
+4.  **Keep fixture minimal** - Only data creation, no transform logic
 
 ### Step 3: Refactor V1 Tests to Use Fixture
 
 Update the V1 test file to use `TEST_CASE_METHOD`:
 
-```cpp
+``` cpp
 // src/DataManager/transforms/.../my_transform.test.cpp
 
 #include "my_transform.hpp"
@@ -156,7 +152,7 @@ TEST_CASE("Transform - JSON pipeline", "[transforms][v1][json]") {
 
 In the V2 test file, use the same fixture:
 
-```cpp
+``` cpp
 // src/DataManager/transforms/v2/algorithms/MyTransform/MyTransform.test.cpp
 
 #include "MyTransform.hpp"
@@ -215,7 +211,7 @@ TEST_CASE_METHOD(MyTransformTestFixture,
 
 Create explicit parity tests:
 
-```cpp
+``` cpp
 TEST_CASE_METHOD(MyTransformTestFixture,
                  "V1/V2 Parity - Single element",
                  "[transforms][parity]") {
@@ -240,7 +236,7 @@ TEST_CASE_METHOD(MyTransformTestFixture,
 
 For transforms that work on different input types:
 
-```cpp
+``` cpp
 class MultiInputTestFixture {
 protected:
     std::map<std::string, std::shared_ptr<TypeA>> m_type_a_data;
@@ -252,7 +248,7 @@ protected:
 
 Document expected results without encoding them:
 
-```cpp
+``` cpp
 void populateTestData() {
     // Scenario: Single mask at timestamp 100 with 3 pixels
     // V1 Expected: AnalogTimeSeries with {100: 3.0}
@@ -267,7 +263,7 @@ void populateTestData() {
 
 For testing parameter variations:
 
-```cpp
+``` cpp
 void populateTestData() {
     // Base data for parameter testing
     createSignal("param_test_base", {1.0, 2.0, 3.0}, {0, 10, 20});
@@ -281,29 +277,27 @@ void populateTestData() {
 
 Keep these in the respective V1/V2 test files:
 
-1. **Parameter struct tests** - JSON loading, validation
-2. **Transform-specific API tests** - V1 `TransformOperation` vs V2 `ElementRegistry`
-3. **JSON pipeline format tests** - V1 format vs V2 format
-4. **Registry-specific tests** - Metadata, type mapping
-5. **Simple inline tests** - Trivial cases that don't need fixture
+1.  **Parameter struct tests** - JSON loading, validation
+2.  **Transform-specific API tests** - V1 `TransformOperation` vs V2 `ElementRegistry`
+3.  **JSON pipeline format tests** - V1 format vs V2 format
+4.  **Registry-specific tests** - Metadata, type mapping
+5.  **Simple inline tests** - Trivial cases that don't need fixture
 
 ## Checklist for Porting
 
-- [ ] Identify reusable test scenarios in V1 tests
-- [ ] Create fixture in `tests/DataManager/fixtures/`
-- [ ] Add fixture to V1 test's CMakeLists.txt includes
-- [ ] Refactor V1 tests to use `TEST_CASE_METHOD`
-- [ ] Verify V1 tests still pass
-- [ ] Add fixture include to V2 test file
-- [ ] Create V2 tests using same data keys
-- [ ] Create DataManager integration tests using `load_data_from_json_config_v2`
-- [ ] Verify V2 tests pass with same expected results
-- [ ] (Optional) Add explicit V1/V2 parity tests
+-   [ ] Identify reusable test scenarios in V1 tests
+-   [ ] Create fixture in `tests/DataManager/fixtures/`
+-   [ ] Add fixture to V1 test's CMakeLists.txt includes
+-   [ ] Refactor V1 tests to use `TEST_CASE_METHOD`
+-   [ ] Verify V1 tests still pass
+-   [ ] Add fixture include to V2 test file
+-   [ ] Create V2 tests using same data keys
+-   [ ] Create DataManager integration tests using `load_data_from_json_config_v2`
+-   [ ] Verify V2 tests pass with same expected results
+-   [ ] (Optional) Add explicit V1/V2 parity tests
 
 ## Example: AnalogEventThreshold
 
-See the complete implementation:
-- Fixture: `tests/DataManager/fixtures/AnalogEventThresholdTestFixture.hpp`
-- V2 Tests: `src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp`
+See the complete implementation: - Fixture: `tests/DataManager/fixtures/AnalogEventThresholdTestFixture.hpp` - V2 Tests: `src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp`
 
 The fixture creates named test signals like `"positive_no_lockout"`, `"negative_with_lockout"`, etc., which are then used in both V1 and V2 tests with their respective APIs.

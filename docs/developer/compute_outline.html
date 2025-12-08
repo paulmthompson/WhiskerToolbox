@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Image Processing – Neuralyzer</title>
+<title>compute_outline – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -72,7 +72,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -155,174 +155,28 @@ ul.task-list li input[type="checkbox"] {
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/image_processing.html">Image Processing</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Developer Documentation</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Profiling and Performance</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Building</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">C++ Development Tools Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Contributing Code</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Fuzz Testing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Introduction to C++</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Transform Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/transforms.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">transforms</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Collapsible Widget</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data-types" id="toc-data-types" class="nav-link active" data-scroll-target="#data-types">Data Types</a></li>
+  <li><a href="#data-transforms" id="toc-data-transforms" class="nav-link" data-scroll-target="#data-transforms">Data Transforms</a></li>
+  <li><a href="#tableview-computers" id="toc-tableview-computers" class="nav-link" data-scroll-target="#tableview-computers">Tableview Computers</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Image Processing</h1>
+<h1 class="title">compute_outline</h1>
 </div>
 
 
@@ -339,8 +193,361 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="data-types" class="level3">
+<h3 class="anchored" data-anchor-id="data-types">Data Types</h3>
+<p>AnalogTimeSeries -&gt; float for each time</p>
+<p>DigitalEventSeries</p>
+<p>DigitalIntervalSeries</p>
+<p>LineData</p>
+<p>MaskData</p>
+<p>PointData</p>
+</section>
+<section id="data-transforms" class="level3">
+<h3 class="anchored" data-anchor-id="data-transforms">Data Transforms</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 30%">
+<col style="width: 22%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Input</th>
+<th>Output</th>
+<th>Params</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Analog Event Threshold</td>
+<td>AnalogTimeSeries</td>
+<td>DigitalEventSeries</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Analog Interval Peak</td>
+<td><p>AnalogTimeSeries</p>
+<p>DigitalIntervalSeries</p></td>
+<td>DigitalEventSeries</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Analog Scaling</td>
+<td>AnalogTimeSeries</td>
+<td>AnalogTimeSeries</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Analog Filter</td>
+<td>AnalogTimeSeries</td>
+<td>AnalogTimeSeries</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>AnalogHilbertPhase</td>
+<td>AnalogTimeSeries</td>
+<td>AnalogTimeSeries</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Boolean</td>
+<td><p>DigitalIntervalSeries</p>
+<p>DigitalIntervalSeries</p></td>
+<td>DigitalIntervalSeries</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Digital interval Group</td>
+<td>DigitalIntervalSeries</td>
+<td>DigitalIntervalSeries</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>LineAlignment</td>
+<td><p>LineData (Single)</p>
+<p>MediaData</p></td>
+<td>LineData (Ragged)</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Angle</td>
+<td>LineData (T)</td>
+<td>AnalogTimeSeries (T)</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Line Base Flip</td>
+<td><p>LineData (T)</p>
+<p>PointData (just single point)</p></td>
+<td>LineData (T)</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Clip</td>
+<td><p>LineData (T)</p>
+<p>LineData (S)</p></td>
+<td>LineData (T)</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Line Curvature</td>
+<td>LineData (T)</td>
+<td>AnalogTimeSeries (T)</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Group to Intervals</td>
+<td>LineData</td>
+<td>DigitalIntervalSeries</td>
+<td>EntityGroupManager</td>
+</tr>
+<tr class="even">
+<td>Line Index Grouping</td>
+<td>LineData</td>
+<td>Nothing</td>
+<td>EntityGroupManager</td>
+</tr>
+<tr class="odd">
+<td>Line Kalman Grouping</td>
+<td>LineData</td>
+<td>Nothing</td>
+<td>EntityGroupManager</td>
+</tr>
+<tr class="even">
+<td>Line Min Point Dist</td>
+<td><p>LineData</p>
+<p>PointData</p></td>
+<td>AnalogTimeSeries</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Outlier Detection</td>
+<td>LineData</td>
+<td>Nothing</td>
+<td>EntityGroupManager</td>
+</tr>
+<tr class="even">
+<td>Line Point Extraction</td>
+<td>LineData</td>
+<td>PointData</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Proximity Grouping</td>
+<td>LineData</td>
+<td>Nothing</td>
+<td>EntityGroupManager</td>
+</tr>
+<tr class="even">
+<td>Line Resampling</td>
+<td>LineData</td>
+<td>LineData</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Subsegment</td>
+<td>LineData</td>
+<td>LineData</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Mask Area</td>
+<td>MaskData</td>
+<td>AnalogTimeSeries</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Mask Centroid</td>
+<td>MaskData</td>
+<td>PointData</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Mask Connected Component</td>
+<td>MaskData</td>
+<td>MaskData</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Mask Hole Filling</td>
+<td>MaskData</td>
+<td>MaskData</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Median Filter</td>
+<td>MaskData</td>
+<td>MaskData</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Mask Principal Axis</td>
+<td>MaskData</td>
+<td>LineData</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Mask Skeletonize</td>
+<td>MaskData</td>
+<td>MaskData</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Mask to Line</td>
+<td>MaskData</td>
+<td>LineData</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Whisker Tracing</td>
+<td><p>MediaData</p>
+<p>MaskData (optional)</p></td>
+<td>LineData</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Point Particle Filter</td>
+<td><p>PointData</p>
+<p>MaskData</p></td>
+<td>PointData</td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tableview-computers" class="level3">
+<h3 class="anchored" data-anchor-id="tableview-computers">Tableview Computers</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 35%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Input</th>
+<th>Time</th>
+<th>Output</th>
+<th>Params</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Analog Slice Gatherer</td>
+<td><p>AnalogTimeSeries</p>
+<p>DigitalIntervalSeries</p></td>
+<td>TimeFrameIndex</td>
+<td><p>std::vector&lt;std::vector&lt;float&gt;&gt;</p>
+<p>std::vector&lt;&gt; within digital interval series</p></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>AnalogTimestampOffsetMultiComputer</td>
+<td>AnalogTimeSeries</td>
+<td>TimeFrameIndex</td>
+<td>std::vector&lt;FixedSizeArray&gt;</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>EventInIntervalComputer</td>
+<td>DigitalEventSeries</td>
+<td>DigitalIntervalSeries</td>
+<td><p>Presence - bool</p>
+<p>Count - int</p>
+<p>Gather - std::vector&lt;float&gt;</p>
+<p>GatherCenter - std::vector&lt;float&gt;</p>
+<p>all of these also provide std::Vector&lt;EntityIDs&gt;</p></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>IntervalOverlapComputer</td>
+<td>DigitalIntervalSeries</td>
+<td>DigitalIntervalSeries</td>
+<td><p>AssignID - int</p>
+<p>CounterOverlaps - int</p>
+<p>AssignID_Start - int</p>
+<p>AssignID_End - int</p>
+<p>all of these also provide std::Vector&lt;EntityIDs&gt;</p></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>IntervalPropertyComputer</td>
+<td>DigitalIntervalSeries</td>
+<td>DigitalIntervalSeries</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>IntervalReductionComputer</td>
+<td>AnalogTimeSeries</td>
+<td>DigitalIntervalSeries</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>LineLengthComputer</td>
+<td>LineData</td>
+<td>TimeFrameIndex</td>
+<td>AnalogTimeSeries (Ragged)</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>LIneSamplingMultiComputer</td>
+<td>LineData</td>
+<td>TimeFrameIndex</td>
+<td>PointData?<br>
+AnalogTimeSeries(FixedSize)</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>LineTimestampComputer</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>TimestampInIntervalComputer</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>TimestampValueComputer</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

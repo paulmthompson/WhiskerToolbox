@@ -180,6 +180,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Building</span></a>
   </div>
@@ -222,14 +228,32 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Image Processing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -254,6 +278,12 @@ ul.task-list li input[type="checkbox"] {
   <div class="sidebar-item-container"> 
   <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Table View</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -309,6 +339,17 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<p>Welcome to the developer documentation for Neuralyzer. This is a C++ project for data analysis and visualization focused on the multi-modal data found in Systems Neuroscience. While higher level languages like MATLAB or Python are more common in our field, C++ was selected for this package to hide the programming aspects from the average user so that it “just works”. However, if you are here, you most likely want to try to modify Neuralyzer in some way. If you are new to C++, I have collected resouces that helped me to learn in the <a href="../developer/intro_to_c.html">Intro to C++ section</a>.</p>
+<p>The <a href="../developer/building.html">Build Instructions</a> section has a guide with getting an operational, developmental version of Neuralyzer on your own machine.</p>
+<p>Once you have a working version of Neuralyzer, I recommend checking out the <a href="../developer/contributing_code.html">design guidelines and code quality</a> section. It contains the design specifications and rules for writing C++ code for this project. It also contains descriptions of some of the tooling that can do most of this for you.</p>
+<p>For starting projects, I recommend looking into four separate initiatives to ensure Neuralyzer remains performant and robust. These are good starting points to learn more about how Neuralyzer works under the hood:</p>
+<ul>
+<li><a href="../developer/testing/testing.html">Testing</a>: Unit tests are critical for ensuring that code changes do not break existing functionality. This section describes the testing framework and guidelines for writing tests.</li>
+<li><a href="../developer/benchmark/benchmarking.html">Profiling and Performance</a>: Profiling tools can help identify performance bottlenecks in the code. This section describes how to use profiling tools to optimize code performance.</li>
+<li><a href="../developer/analysis/static_analysis.html">Static Analysis</a>: Static analysis tools can help identify potential issues in the code before they become problems. This section describes how to use static analysis tools to improve code quality.</li>
+<li><a href="../developer/fuzz/fuzzing.html">Fuzzing</a>: Fuzzing is a technique for testing software by providing random inputs to the program. This section describes how to use fuzzing to identify bugs in the code or unexpected edge cases in complex algorithms.</li>
+</ul>
+<p>To view how specific parts of Neuralyzer work under the hood, please view the implementation documentation.</p>
 
 
 

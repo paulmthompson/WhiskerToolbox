@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Image Processing – Neuralyzer</title>
+<title>Fuzz Testing – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,23 +23,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -69,7 +69,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-sidebar docked nav-fixed">
@@ -79,7 +79,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -90,7 +90,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -99,7 +99,7 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
@@ -110,11 +110,11 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../labeling/keypoint.html">
+    <a class="dropdown-item" href="../../labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../labeling/mask.html">
+    <a class="dropdown-item" href="../../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
   </li>  
     </ul>
@@ -125,15 +125,15 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../user_guide/index.html">
+    <a class="dropdown-item" href="../../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../developer/index.html">
+    <a class="dropdown-item" href="../../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../api_reference.html">
+    <a class="dropdown-item" href="../../api_reference.html">
  <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
@@ -160,7 +160,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/image_processing.html">Image Processing</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/fuzz/fuzzing.html">Fuzz Testing</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -174,127 +174,127 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Documentation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Profiling and Performance</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/building.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Building</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/code_quality.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/copilot.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">C++ Development Tools Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Contributing Code</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
+  <a href="../../api_reference.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">API Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/data_manager.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Manager</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Fuzz Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../developer/image_processing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Image Processing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Introduction to C++</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/media_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Media Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Manager Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Transform Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Viewer Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/table_view.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Table View</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/transforms.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/transforms.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">transforms</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
+            <a href="../../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Features</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
@@ -303,7 +303,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Collapsible Widget</span></a>
   </div>
 </li>
@@ -314,15 +314,25 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#procedure" id="toc-procedure" class="nav-link" data-scroll-target="#procedure">Procedure</a></li>
+  <li><a href="#structured-fuzzing-and-corpora" id="toc-structured-fuzzing-and-corpora" class="nav-link" data-scroll-target="#structured-fuzzing-and-corpora">Structured Fuzzing and Corpora</a></li>
+  <li><a href="#neuralyzer-and-chaining-transformations" id="toc-neuralyzer-and-chaining-transformations" class="nav-link" data-scroll-target="#neuralyzer-and-chaining-transformations">Neuralyzer and Chaining Transformations</a></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">Implementation</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Image Processing</h1>
+<h1 class="title">Fuzz Testing</h1>
 </div>
 
 
@@ -339,8 +349,31 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>Fuzz testing is a way that we can test programs with random inputs. This is a technique that allows us to test many interesting edge cases very efficiently and really harden our program against failing.</p>
+</section>
+<section id="procedure" class="level2">
+<h2 class="anchored" data-anchor-id="procedure">Procedure</h2>
+<p>The procedure might look like this: Imagine we have an input file for some kind of processing. In fuzz testing, we could randomly generate text and feed it to our transformation function, and we could do this many, many times. We consider a success in this case to be if the program doesn’t crash.</p>
+<p>In our circumstance with <strong>Neuralyzer</strong> we could imagine that for loading data, we could randomly generate lots and lots of data and see if those loading functions crash whenever we try to load it. Alternatively, we could randomly generate different specification files or configuration files to load that data and see if it crashes. If we forget a semicolon or something that causes a critical failure, does it crash, or does it fail gracefully and give some kind of useful message to the user?</p>
+</section>
+<section id="structured-fuzzing-and-corpora" class="level2">
+<h2 class="anchored" data-anchor-id="structured-fuzzing-and-corpora">Structured Fuzzing and Corpora</h2>
+<p>We also can try to add some structure to our fuzzing in what is referred to as a <strong>corpus</strong> for our fuzz test. In a corpus, we specify a range of parameter values, and we can vary some parameters within that range and see if the output changes. This can help us catch things that are more specific than just random crashes. By changing values to be within the ranges that we would expect and doing this many times over many different parameters, we may be able to catch things that we wouldn’t see otherwise.</p>
+</section>
+<section id="neuralyzer-and-chaining-transformations" class="level2">
+<h2 class="anchored" data-anchor-id="neuralyzer-and-chaining-transformations">Neuralyzer and Chaining Transformations</h2>
+<p>We also might be able to test how we chain together different types of transformations. In <strong>Neuralyzer</strong>, we have the ability to chain together different types of data transformations. By chaining together data transformations in a random way, we might be able to ensure our processing pipelines are robust in this type of variability.</p>
+<p>The goal of Neuralyzer is to be able to have as many of the specifications as we can in a format that can be read from JSON files. This is facilitated with a reflection library known as <code>Reflect CPP</code>. The more things that we have in JSON specifications, the easier it is for us to use a corpus to load those and test them with fuzzing.</p>
+</section>
+<section id="implementation" class="level2">
+<h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
+<p>Fuzz testing in this library can be specified with the fuzz test library made by Google: <a href="https://github.com/google/fuzztest" class="uri">https://github.com/google/fuzztest</a>.</p>
+<p>Whenever we use the fuzz testing library for a translation unit, we should specify that library for that file with the name of the translation unit. We can specify a fuzzing file as <code>.fuzz.cpp</code> in our library, and then we can add it to the fuzz test driver. Again, these should be written in such a way that if expectations are not met, it will flag what the state was from the random state there, help us understand why this test may have failed, and repeat it with those more specific parameters.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

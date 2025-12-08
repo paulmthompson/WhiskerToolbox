@@ -214,6 +214,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Building</span></a>
   </div>
@@ -256,14 +262,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Image Processing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -288,6 +312,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Table View</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -332,7 +362,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   <li><a href="#quick-reference" id="toc-quick-reference" class="nav-link" data-scroll-target="#quick-reference">Quick Reference</a></li>
   <li><a href="#build-location" id="toc-build-location" class="nav-link" data-scroll-target="#build-location">Build Location</a></li>
-  <li><a href="#fuzz-testing-with-google-fuzztest" id="toc-fuzz-testing-with-google-fuzztest" class="nav-link" data-scroll-target="#fuzz-testing-with-google-fuzztest">Fuzz Testing with Google FuzzTest</a></li>
   </ul>
 </nav>
     </div>
@@ -522,10 +551,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="summary">Summary</h2>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 20%">
-<col style="width: 31%">
-<col style="width: 20%">
-<col style="width: 27%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -599,55 +628,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The project uses the <strong>linux-clang-release</strong> CMake preset with build artifacts located at:</p>
 <pre><code>out/build/Clang/Release</code></pre>
 <p>This directory contains: - <code>compile_commands.json</code> - Compilation database for analysis tools - <code>WhiskerToolbox</code> - Main executable - Various shared libraries (.so files) - Build artifacts and intermediate files</p>
-<hr>
-</section>
-<section id="fuzz-testing-with-google-fuzztest" class="level2">
-<h2 class="anchored" data-anchor-id="fuzz-testing-with-google-fuzztest">Fuzz Testing with Google FuzzTest</h2>
-<p><strong>Purpose:</strong> Automated testing that generates random inputs to discover edge cases, crashes, and unexpected behaviors. Uses coverage-guided fuzzing to systematically explore code paths.</p>
-<p><strong>Requirements:</strong> - Clang compiler (required for instrumentation) - CMake option: <code>-DENABLE_FUZZ_TESTING=ON</code></p>
-<p><strong>Location:</strong> <code>tests/fuzz/</code></p>
-<p><strong>Command Line Usage:</strong></p>
-<p>Build with fuzz testing enabled:</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> linux-clang-release <span class="at">-DENABLE_FUZZ_TESTING</span><span class="op">=</span>ON <span class="at">-DENABLE_ORTOOLS</span><span class="op">=</span>OFF</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> linux-clang-release</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Run all fuzz tests via CTest:</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">-R</span> fuzz <span class="at">--output-on-failure</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Run specific fuzz test directly:</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Digital Event Series JSON fuzzing</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./out/build/Clang/Release/tests/fuzz/unit/DataManager/DigitalTimeSeries/fuzz_digital_event_series_json</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Transform Pipeline fuzzing</span></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./out/build/Clang/Release/tests/fuzz/integration/fuzz_transform_pipeline</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Run with specific fuzz options:</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run for specific duration</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./fuzz_test</span> <span class="at">--fuzz_for</span><span class="op">=</span>60s</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific fuzz test within suite</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./fuzz_test</span> <span class="at">--fuzz</span><span class="op">=</span>MySuite.MyFuzzTest</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduce a specific crash</span></span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="ex">./fuzz_test</span> <span class="at">--fuzz_reproduce_finding</span><span class="op">=</span>crash-reproducer-file</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>Available Fuzz Tests:</strong></p>
-<ol type="1">
-<li><strong>Digital Event Series JSON</strong> (<code>tests/fuzz/unit/DataManager/DigitalTimeSeries/</code>)
-<ul>
-<li>Tests JSON parsing robustness</li>
-<li>Fuzzes format types, parameters, and data values</li>
-<li>Validates error handling for corrupted inputs</li>
-</ul></li>
-<li><strong>Transform Pipeline</strong> (<code>tests/fuzz/integration/</code>)
-<ul>
-<li>Fuzzes pipeline configurations</li>
-<li>Tests variable substitution</li>
-<li>Validates multi-phase execution</li>
-<li>Tests with random transform combinations</li>
-</ul></li>
-</ol>
-<p><strong>Corpus Management:</strong></p>
-<p>Seed inputs located in <code>tests/fuzz/corpus/</code>: - <code>unit/</code> - Unit test seeds (JSON configurations, data files) - <code>integration/</code> - Integration test seeds (pipeline configurations)</p>
-<p>The fuzzer uses these seeds as starting points and mutates them to discover new test cases.</p>
-<p><strong>Use Cases:</strong> - Discover parsing bugs and edge cases - Validate error handling for invalid inputs - Test robustness of data loaders - Find crashes and undefined behavior - Continuous integration smoke testing</p>
-<p><strong>Documentation:</strong> - Full documentation: <code>tests/fuzz/README.md</code> - Corpus information: <code>tests/fuzz/corpus/README.md</code></p>
 
 
 </section>
