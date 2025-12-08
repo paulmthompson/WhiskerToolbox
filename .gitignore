@@ -20,5 +20,4 @@ vcpkg_cache
 tools
 ninja-build/ninja
 
-# Distribution files
 dist

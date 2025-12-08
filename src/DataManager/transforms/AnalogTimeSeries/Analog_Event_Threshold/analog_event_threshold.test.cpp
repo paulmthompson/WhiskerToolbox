@@ -12,7 +12,8 @@
 #include "transforms/TransformRegistry.hpp"
 #include "transforms/ParameterFactory.hpp"
 
-#include "fixtures/AnalogEventThresholdTestFixture.hpp"
+// Builder-based test fixtures
+#include "fixtures/scenarios/analog/threshold_scenarios.hpp"
 
 #include <vector>
 #include <memory>
@@ -23,7 +24,7 @@
 
 // Using Catch::Matchers::Equals for vectors of floats.
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event Threshold - Happy Path", "[transforms][analog_event_threshold]") {
+TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][analog_event_threshold]") {
     std::shared_ptr<DigitalEventSeries> result_events;
     ThresholdParams params;
     std::vector<TimeFrameIndex> expected_events;
@@ -35,7 +36,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     };
 
     SECTION("Positive threshold, no lockout") {
-        auto ats = m_test_signals["positive_no_lockout"];
+        auto ats = analog_scenarios::positive_threshold_no_lockout();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
@@ -53,7 +54,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Positive threshold, with lockout") {
-        auto ats = m_test_signals["positive_with_lockout"];
+        auto ats = analog_scenarios::positive_threshold_with_lockout();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 150.0;
@@ -71,7 +72,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Negative threshold, no lockout") {
-        auto ats = m_test_signals["negative_no_lockout"];
+        auto ats = analog_scenarios::negative_threshold_no_lockout();
         params.thresholdValue = -1.0;
         params.direction = ThresholdParams::ThresholdDirection::NEGATIVE;
         params.lockoutTime = 0.0;
@@ -82,7 +83,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Negative threshold, with lockout") {
-        auto ats = m_test_signals["negative_with_lockout"];
+        auto ats = analog_scenarios::negative_threshold_with_lockout();
         params.thresholdValue = -1.0;
         params.direction = ThresholdParams::ThresholdDirection::NEGATIVE;
         params.lockoutTime = 150.0;
@@ -93,7 +94,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Absolute threshold, no lockout") {
-        auto ats = m_test_signals["absolute_no_lockout"];
+        auto ats = analog_scenarios::absolute_threshold_no_lockout();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::ABSOLUTE;
         params.lockoutTime = 0.0;
@@ -104,7 +105,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Absolute threshold, with lockout") {
-        auto ats = m_test_signals["absolute_with_lockout"];
+        auto ats = analog_scenarios::absolute_threshold_with_lockout();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::ABSOLUTE;
         params.lockoutTime = 150.0;
@@ -115,7 +116,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("No events expected (threshold too high)") {
-        auto ats = m_test_signals["no_events_high_threshold"];
+        auto ats = analog_scenarios::no_events_high_threshold();
         params.thresholdValue = 10.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
@@ -125,7 +126,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("All events expected (threshold very low, no lockout)") {
-        auto ats = m_test_signals["all_events_low_threshold"];
+        auto ats = analog_scenarios::all_events_low_threshold();
         params.thresholdValue = 0.1;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
@@ -136,7 +137,8 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Progress callback detailed check") {
-        auto ats = m_test_signals["progress_callback_check"];
+        // Uses same data as positive_threshold_no_lockout
+        auto ats = analog_scenarios::positive_threshold_no_lockout();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
@@ -159,7 +161,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 }
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event Threshold - Error and Edge Cases", "[transforms][analog_event_threshold]") {
+TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[transforms][analog_event_threshold]") {
     std::shared_ptr<DigitalEventSeries> result_events;
     ThresholdParams params;
     volatile int progress_val = -1;
@@ -189,7 +191,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Empty AnalogTimeSeries (no timestamps/values)") {
-        auto ats = m_test_signals["empty_signal"];
+        auto ats = analog_scenarios::empty_signal();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
@@ -208,7 +210,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Lockout time larger than series duration or any interval") {
-        auto ats = m_test_signals["lockout_larger_than_duration"];
+        auto ats = analog_scenarios::lockout_larger_than_duration();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 500.0;
@@ -219,7 +221,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Events exactly at threshold value") {
-        auto ats = m_test_signals["events_at_threshold"];
+        auto ats = analog_scenarios::events_at_threshold();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
@@ -236,7 +238,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Timestamps are zero or start from zero") {
-        auto ats = m_test_signals["zero_based_timestamps"];
+        auto ats = analog_scenarios::zero_based_timestamps();
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 5.0;
@@ -247,7 +249,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
     }
 
     SECTION("Unknown threshold direction (should return empty and log error)") {
-        auto ats = m_test_signals["positive_no_lockout"];
+        auto ats = analog_scenarios::positive_threshold_no_lockout();
         params.thresholdValue = 1.0;
         params.direction = static_cast<ThresholdParams::ThresholdDirection>(99); // Invalid enum
 
@@ -257,7 +259,12 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
 }
 
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event Threshold - JSON pipeline", "[transforms][analog_event_threshold][json]") {
+TEST_CASE("Data Transform: Analog Event Threshold - JSON pipeline", "[transforms][analog_event_threshold][json]") {
+    // Set up DataManager with scenario data
+    DataManager dm;
+    auto signal = analog_scenarios::positive_threshold_no_lockout();
+    dm.setData("positive_no_lockout", signal, TimeKey("positive_no_lockout_time"));
+
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "threshold_step_1"},
@@ -274,12 +281,12 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
 
     TransformRegistry registry;
 
-    TransformPipeline pipeline(getDataManager(), &registry);
+    TransformPipeline pipeline(&dm, &registry);
     pipeline.loadFromJson(json_config);
     pipeline.execute();
 
     // Verify the results
-    auto event_series = getDataManager()->getData<DigitalEventSeries>("DetectedEvents");
+    auto event_series = dm.getData<DigitalEventSeries>("DetectedEvents");
     REQUIRE(event_series != nullptr);
 
     std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
@@ -311,7 +318,12 @@ TEST_CASE("Data Transform: Analog Event Threshold - Parameter Factory", "[transf
     REQUIRE(params->lockoutTime == 123.45);
 }
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event Threshold - load_data_from_json_config", "[transforms][analog_event_threshold][json_config]") {
+TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config", "[transforms][analog_event_threshold][json_config]") {
+    // Set up DataManager with scenario data
+    DataManager dm;
+    auto signal = analog_scenarios::positive_threshold_no_lockout();
+    dm.setData("positive_no_lockout", signal, TimeKey("positive_no_lockout_time"));
+
     const char* json_config_tmpl =
         "[\n"
         "{\n"
@@ -353,9 +365,9 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture, "Data Transform: Analog Event 
         json_file.close();
     }
     
-    auto data_info_list = load_data_from_json_config(getDataManager(), json_filepath.string());
+    auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
     
-    auto result_events = getDataManager()->getData<DigitalEventSeries>("detected_events");
+    auto result_events = dm.getData<DigitalEventSeries>("detected_events");
     REQUIRE(result_events != nullptr);
     
     std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
