@@ -132,6 +132,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="dropdown-item" href="../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item compact">
@@ -182,8 +186,26 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -312,6 +334,103 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="columns">Columns</h2>
 <p>The columns may represent simple double or floating-point values, but also could take the form of different types like Booleans, counting numbers, or even arrays of values. Columns also may be data that is not directly in the Data Manager, but come as the result of some processing similar to the transformation infrastructure in the Data Manager. Some of these transformations may be redundant. I imagine transformations done for the <code>TableView</code> may be out of convenience or for data that you don’t necessarily care about saving as its own type, but just need for some additional processing.</p>
 <p>The transformations done on data for a column need not necessarily come from the Data Manager, but also could come from other columns in the <code>TableView</code>. For instance, if we compute some kind of transformation and hold it in a column, we could then choose to z-score it.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column Computer Name</th>
+<th>Description</th>
+<th>Test?</th>
+<th>Documentation?</th>
+<th>Benchmarking?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Analog Slice Gatherer</td>
+<td>Gets analog data within intervals</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Analog Timestamp Offsets</td>
+<td>column where rows are offset by some value from timestamp selector</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Event In Interval</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Interval Overlap</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Interval Property</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Interval Reduction</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Line Sampling</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Standardize</td>
+<td></td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Timestamp In Interval</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Timestamp Value</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="rows" class="level2">
 <h2 class="anchored" data-anchor-id="rows">Rows</h2>
