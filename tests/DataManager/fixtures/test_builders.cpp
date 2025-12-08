@@ -120,7 +120,7 @@ TEST_CASE("MaskDataBuilder basic construction", "[fixtures][builders][mask]") {
         REQUIRE(mask_data != nullptr);
         auto masks = mask_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(masks.size() == 1);
-        // Circle with radius 5 should have approximately 78 pixels (π*r²)
+        // Circle with radius 5 should have approximately 79 pixels (pi * r^2 ≈ 78.5)
         REQUIRE(masks[0].size() > 70);
         REQUIRE(masks[0].size() < 85);
     }

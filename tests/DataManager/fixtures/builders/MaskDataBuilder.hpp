@@ -4,6 +4,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "constants.hpp"
 
 #include <memory>
 #include <vector>
@@ -41,12 +42,19 @@ inline Mask2D box(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
 inline Mask2D circle(uint32_t center_x, uint32_t center_y, uint32_t radius) {
     std::vector<uint32_t> xs, ys;
     int r_sq = static_cast<int>(radius * radius);
+    int center_x_int = static_cast<int>(center_x);
+    int center_y_int = static_cast<int>(center_y);
     
     for (int dy = -static_cast<int>(radius); dy <= static_cast<int>(radius); ++dy) {
         for (int dx = -static_cast<int>(radius); dx <= static_cast<int>(radius); ++dx) {
             if (dx * dx + dy * dy <= r_sq) {
-                xs.push_back(static_cast<uint32_t>(static_cast<int>(center_x) + dx));
-                ys.push_back(static_cast<uint32_t>(static_cast<int>(center_y) + dy));
+                int x = center_x_int + dx;
+                int y = center_y_int + dy;
+                // Only add points with non-negative coordinates
+                if (x >= 0 && y >= 0) {
+                    xs.push_back(static_cast<uint32_t>(x));
+                    ys.push_back(static_cast<uint32_t>(y));
+                }
             }
         }
     }
@@ -237,8 +245,8 @@ public:
 
 private:
     std::map<TimeFrameIndex, std::vector<Mask2D>> m_masks_by_time;
-    uint32_t m_image_width = 800;
-    uint32_t m_image_height = 600;
+    uint32_t m_image_width = test_fixture_constants::DEFAULT_IMAGE_WIDTH;
+    uint32_t m_image_height = test_fixture_constants::DEFAULT_IMAGE_HEIGHT;
     bool m_has_image_size = false;
 };
 

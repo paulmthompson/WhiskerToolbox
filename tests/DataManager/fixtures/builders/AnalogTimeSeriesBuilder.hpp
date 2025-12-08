@@ -119,12 +119,12 @@ public:
      * @brief Create a sine wave
      * @param start_time Starting time index
      * @param end_time Ending time index (inclusive)
-     * @param frequency Frequency parameter (cycles per time unit)
+     * @param frequency Frequency in cycles per (end_time - start_time) period
      * @param amplitude Amplitude of the wave
      * @param phase Phase offset in radians
      */
     AnalogTimeSeriesBuilder& withSineWave(int start_time, int end_time, 
-                                          float frequency = 0.01f, 
+                                          float frequency = 0.01f,  // 1 cycle per 100 time units
                                           float amplitude = 100.0f, 
                                           float phase = 0.0f) {
         m_values.clear();

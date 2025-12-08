@@ -5,6 +5,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "constants.hpp"
 
 #include <memory>
 #include <vector>
@@ -265,8 +266,8 @@ public:
 
 private:
     std::map<TimeFrameIndex, std::vector<Line2D>> m_lines_by_time;
-    uint32_t m_image_width = 800;
-    uint32_t m_image_height = 600;
+    uint32_t m_image_width = test_fixture_constants::DEFAULT_IMAGE_WIDTH;
+    uint32_t m_image_height = test_fixture_constants::DEFAULT_IMAGE_HEIGHT;
     bool m_has_image_size = false;
 };
 
