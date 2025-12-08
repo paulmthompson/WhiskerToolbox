@@ -7,20 +7,19 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "transforms/data_transforms.hpp"
 
-#include "fixtures/AnalogIntervalPeakTestFixture.hpp"
+#include "fixtures/scenarios/analog/analog_interval_peak_scenarios.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 #include <memory>
 #include <vector>
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Maximum Within Intervals", "[transforms][analog_interval_peak]") {
+TEST_CASE("Data Transform: Analog Interval Peak - Maximum Within Intervals", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
     AnalogIntervalPeakOperation operation;
 
     SECTION("Basic maximum detection within intervals") {
-        auto ats = m_test_analog_signals["basic_max_within"];
-        auto dis = m_test_interval_series["basic_max_within_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::basic_max_within();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -39,8 +38,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Maximum detection with progress callback") {
-        auto ats = m_test_analog_signals["max_with_progress"];
-        auto dis = m_test_interval_series["max_with_progress_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::max_with_progress();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -60,8 +58,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Multiple intervals with varying peak locations") {
-        auto ats = m_test_analog_signals["multiple_intervals_varying"];
-        auto dis = m_test_interval_series["multiple_intervals_varying_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::multiple_intervals_varying();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -78,12 +75,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Minimum Within Intervals", "[transforms][analog_interval_peak]") {
+TEST_CASE("Data Transform: Analog Interval Peak - Minimum Within Intervals", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Basic minimum detection within intervals") {
-        auto ats = m_test_analog_signals["basic_min_within"];
-        auto dis = m_test_interval_series["basic_min_within_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::basic_min_within();
 
         params.peak_type = IntervalPeakParams::PeakType::MINIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -99,8 +95,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Minimum with negative values") {
-        auto ats = m_test_analog_signals["min_with_negative"];
-        auto dis = m_test_interval_series["min_with_negative_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::min_with_negative();
 
         params.peak_type = IntervalPeakParams::PeakType::MINIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -116,12 +111,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Between Interval Starts", "[transforms][analog_interval_peak]") {
+TEST_CASE("Data Transform: Analog Interval Peak - Between Interval Starts", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Maximum between interval starts") {
-        auto ats = m_test_analog_signals["max_between_starts"];
-        auto dis = m_test_interval_series["max_between_starts_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::max_between_starts();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::BETWEEN_INTERVAL_STARTS;
@@ -142,8 +136,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Minimum between interval starts") {
-        auto ats = m_test_analog_signals["min_between_starts"];
-        auto dis = m_test_interval_series["min_between_starts_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::min_between_starts();
 
         params.peak_type = IntervalPeakParams::PeakType::MINIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::BETWEEN_INTERVAL_STARTS;
@@ -164,12 +157,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Edge Cases", "[transforms][analog_interval_peak]") {
+TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Empty intervals - no events") {
-        auto ats = m_test_analog_signals["empty_intervals"];
-        auto dis = m_test_interval_series["empty_intervals_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::empty_intervals();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -181,7 +173,6 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Null analog time series") {
-        auto dis = m_test_interval_series["empty_intervals_intervals"];
         std::vector<Interval> intervals = {{0, 10}};
         auto dis_with_data = std::make_shared<DigitalIntervalSeries>(intervals);
 
@@ -195,7 +186,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Null interval series") {
-        auto ats = m_test_analog_signals["simple_signal"];
+        auto ats = analog_interval_peak_scenarios::simple_signal();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -207,8 +198,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Interval with no corresponding analog data") {
-        auto ats = m_test_analog_signals["no_data_interval"];
-        auto dis = m_test_interval_series["no_data_interval_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::no_data_interval();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -221,8 +211,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Single data point interval") {
-        auto ats = m_test_analog_signals["single_point"];
-        auto dis = m_test_interval_series["single_point_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::single_point();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -237,8 +226,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Multiple intervals, some without data") {
-        auto ats = m_test_analog_signals["mixed_data_availability"];
-        auto dis = m_test_interval_series["mixed_data_availability_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::mixed_data_availability();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -255,12 +243,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - TimeFrame Conversion", "[transforms][analog_interval_peak]") {
+TEST_CASE("Data Transform: Analog Interval Peak - TimeFrame Conversion", "[transforms][analog_interval_peak]") {
     IntervalPeakParams params;
 
     SECTION("Different timeframes - conversion required") {
-        auto ats = m_test_analog_signals["different_timeframes"];
-        auto dis = m_test_interval_series["different_timeframes_intervals"];
+        auto [ats, dis, signal_tf, interval_tf] = analog_interval_peak_scenarios::different_timeframes();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -278,8 +265,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("Same timeframe - no conversion needed") {
-        auto ats = m_test_analog_signals["same_timeframe"];
-        auto dis = m_test_interval_series["same_timeframe_intervals"];
+        auto [ats, dis, tf] = analog_interval_peak_scenarios::same_timeframe();
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
         params.search_mode = IntervalPeakParams::SearchMode::WITHIN_INTERVALS;
@@ -294,7 +280,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval Peak - Operation Interface", "[transforms][analog_interval_peak]") {
+TEST_CASE("Data Transform: Analog Interval Peak - Operation Interface", "[transforms][analog_interval_peak]") {
     AnalogIntervalPeakOperation operation;
 
     SECTION("getName returns correct name") {
@@ -333,8 +319,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("execute with valid input") {
-        auto ats = m_test_analog_signals["operation_interface"];
-        auto dis = m_test_interval_series["operation_interface_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::operation_interface();
 
         IntervalPeakParams params;
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;
@@ -355,7 +340,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("execute with null parameters uses defaults") {
-        auto ats = m_test_analog_signals["simple_signal"];
+        auto ats = analog_interval_peak_scenarios::simple_signal();
 
         DataTypeVariant input_variant = ats;
         DataTypeVariant result_variant = operation.execute(input_variant, nullptr);
@@ -368,8 +353,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "Data Transform: Analog Interval
     }
 
     SECTION("execute with progress callback") {
-        auto ats = m_test_analog_signals["operation_progress"];
-        auto dis = m_test_interval_series["operation_progress_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::operation_progress();
 
         IntervalPeakParams params;
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;

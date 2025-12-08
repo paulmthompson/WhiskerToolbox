@@ -8,7 +8,7 @@
 #include "TimeFrame/interval_data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include "fixtures/AnalogIntervalPeakTestFixture.hpp"
+#include "fixtures/scenarios/analog/analog_interval_peak_scenarios.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
@@ -17,12 +17,11 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[transforms][v2][analog_interval_peak]") {
+TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[transforms][v2][analog_interval_peak]") {
     auto& registry = ElementRegistry::instance();
     
     SECTION("Basic maximum detection within intervals") {
-        auto ats = m_test_analog_signals["basic_max_within"];
-        auto dis = m_test_interval_series["basic_max_within_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::basic_max_within();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -50,8 +49,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Maximum detection with progress callback") {
-        auto ats = m_test_analog_signals["max_with_progress"];
-        auto dis = m_test_interval_series["max_with_progress_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::max_with_progress();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -82,8 +80,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Multiple intervals with varying peak locations") {
-        auto ats = m_test_analog_signals["multiple_intervals_varying"];
-        auto dis = m_test_interval_series["multiple_intervals_varying_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::multiple_intervals_varying();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -109,12 +106,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval Peak - Minimum Within Intervals", "[transforms][v2][analog_interval_peak]") {
+TEST_CASE("TransformsV2: Analog Interval Peak - Minimum Within Intervals", "[transforms][v2][analog_interval_peak]") {
     auto& registry = ElementRegistry::instance();
     
     SECTION("Basic minimum detection within intervals") {
-        auto ats = m_test_analog_signals["basic_min_within"];
-        auto dis = m_test_interval_series["basic_min_within_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::basic_min_within();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "minimum";
@@ -139,8 +135,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Minimum with negative values") {
-        auto ats = m_test_analog_signals["min_with_negative"];
-        auto dis = m_test_interval_series["min_with_negative_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::min_with_negative();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "minimum";
@@ -165,12 +160,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval Peak - Between Interval Starts", "[transforms][v2][analog_interval_peak]") {
+TEST_CASE("TransformsV2: Analog Interval Peak - Between Interval Starts", "[transforms][v2][analog_interval_peak]") {
     auto& registry = ElementRegistry::instance();
     
     SECTION("Maximum between interval starts") {
-        auto ats = m_test_analog_signals["max_between_starts"];
-        auto dis = m_test_interval_series["max_between_starts_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::max_between_starts();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -200,8 +194,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Minimum between interval starts") {
-        auto ats = m_test_analog_signals["min_between_starts"];
-        auto dis = m_test_interval_series["min_between_starts_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::min_between_starts();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "minimum";
@@ -231,12 +224,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][analog_interval_peak]") {
+TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][analog_interval_peak]") {
     auto& registry = ElementRegistry::instance();
     
     SECTION("Empty intervals - no events") {
-        auto ats = m_test_analog_signals["empty_intervals"];
-        auto dis = m_test_interval_series["empty_intervals_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::empty_intervals();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -257,8 +249,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Interval with no corresponding analog data") {
-        auto ats = m_test_analog_signals["no_data_interval"];
-        auto dis = m_test_interval_series["no_data_interval_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::no_data_interval();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -280,8 +271,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Single data point interval") {
-        auto ats = m_test_analog_signals["single_point"];
-        auto dis = m_test_interval_series["single_point_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::single_point();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -305,8 +295,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Multiple intervals, some without data") {
-        auto ats = m_test_analog_signals["mixed_data_availability"];
-        auto dis = m_test_interval_series["mixed_data_availability_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::mixed_data_availability();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -332,12 +321,11 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval Peak - TimeFrame Conversion", "[transforms][v2][analog_interval_peak]") {
+TEST_CASE("TransformsV2: Analog Interval Peak - TimeFrame Conversion", "[transforms][v2][analog_interval_peak]") {
     auto& registry = ElementRegistry::instance();
     
     SECTION("Different timeframes - conversion required") {
-        auto ats = m_test_analog_signals["different_timeframes"];
-        auto dis = m_test_interval_series["different_timeframes_intervals"];
+        auto [ats, dis, signal_tf, interval_tf] = analog_interval_peak_scenarios::different_timeframes();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -364,8 +352,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("Same timeframe - no conversion needed") {
-        auto ats = m_test_analog_signals["same_timeframe"];
-        auto dis = m_test_interval_series["same_timeframe_intervals"];
+        auto [ats, dis, tf] = analog_interval_peak_scenarios::same_timeframe();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -389,7 +376,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
 }
 
-TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval Peak - Operation Interface", "[transforms][v2][analog_interval_peak]") {
+TEST_CASE("TransformsV2: Analog Interval Peak - Operation Interface", "[transforms][v2][analog_interval_peak]") {
     auto& registry = ElementRegistry::instance();
     
     SECTION("Transform is registered") {
@@ -407,8 +394,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("execute with valid input") {
-        auto ats = m_test_analog_signals["operation_interface"];
-        auto dis = m_test_interval_series["operation_interface_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::operation_interface();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
@@ -433,8 +419,7 @@ TEST_CASE_METHOD(AnalogIntervalPeakTestFixture, "TransformsV2: Analog Interval P
     }
     
     SECTION("execute with progress callback") {
-        auto ats = m_test_analog_signals["operation_progress"];
-        auto dis = m_test_interval_series["operation_progress_intervals"];
+        auto [ats, dis] = analog_interval_peak_scenarios::operation_progress();
         
         AnalogIntervalPeakParams params;
         params.peak_type = "maximum";
