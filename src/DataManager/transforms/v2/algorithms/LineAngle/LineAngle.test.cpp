@@ -12,7 +12,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-#include "fixtures/LineAngleTestFixture.hpp"
+#include "fixtures/scenarios/line/geometry_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -44,17 +44,16 @@ static Line2D getLineAt(LineData const* line_data, TimeFrameIndex time) {
 }
 
 // ============================================================================
-// Tests: Algorithm Correctness (using fixture)
+// Tests: Algorithm Correctness (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(LineAngleTestFixture,
-                 "V2 Element Transform: LineAngle - Core Functionality",
-                 "[transforms][v2][element][line_angle]") {
+TEST_CASE("V2 Element Transform: LineAngle - Core Functionality",
+          "[transforms][v2][element][line_angle]") {
     
     LineAngleParams params;
     
     SECTION("Horizontal line - 0 degrees") {
-        auto line_data = m_line_data["horizontal_line"];
+        auto line_data = line_scenarios::horizontal_line();
         TimeFrameIndex timestamp(10);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -67,7 +66,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Vertical line - 90 degrees") {
-        auto line_data = m_line_data["vertical_line"];
+        auto line_data = line_scenarios::vertical_line();
         TimeFrameIndex timestamp(20);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -80,7 +79,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("45-degree diagonal line") {
-        auto line_data = m_line_data["diagonal_45_degrees"];
+        auto line_data = line_scenarios::diagonal_45_degrees();
         TimeFrameIndex timestamp(30);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -93,7 +92,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Polynomial fit on parabola") {
-        auto line_data = m_line_data["parabola"];
+        auto line_data = line_scenarios::parabola();
         TimeFrameIndex timestamp(70);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -110,7 +109,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Different polynomial orders produce different results") {
-        auto line_data = m_line_data["smooth_curve"];
+        auto line_data = line_scenarios::smooth_curve();
         TimeFrameIndex timestamp(80);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -146,12 +145,11 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
 }
 
-TEST_CASE_METHOD(LineAngleTestFixture,
-                 "V2 Element Transform: LineAngle - Reference Vector",
-                 "[transforms][v2][element][line_angle]") {
+TEST_CASE("V2 Element Transform: LineAngle - Reference Vector",
+          "[transforms][v2][element][line_angle]") {
     
     SECTION("Horizontal reference (default)") {
-        auto line_data = m_line_data["diagonal_for_reference"];
+        auto line_data = line_scenarios::diagonal_for_reference();
         TimeFrameIndex timestamp(110);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -166,7 +164,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Vertical reference") {
-        auto line_data = m_line_data["diagonal_for_reference"];
+        auto line_data = line_scenarios::diagonal_for_reference();
         TimeFrameIndex timestamp(110);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -181,7 +179,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("45-degree reference") {
-        auto line_data = m_line_data["horizontal_for_reference"];
+        auto line_data = line_scenarios::horizontal_for_reference();
         TimeFrameIndex timestamp(130);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -196,7 +194,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Reference vector with polynomial fit - 90 degree difference") {
-        auto line_data = m_line_data["parabola_for_reference"];
+        auto line_data = line_scenarios::parabola_for_reference();
         TimeFrameIndex timestamp(140);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -228,15 +226,14 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
 }
 
-TEST_CASE_METHOD(LineAngleTestFixture,
-                 "V2 Element Transform: LineAngle - Edge Cases",
-                 "[transforms][v2][element][line_angle][edge]") {
+TEST_CASE("V2 Element Transform: LineAngle - Edge Cases",
+          "[transforms][v2][element][line_angle][edge]") {
     
     LineAngleParams params;
     params.position = 0.5f;
     
     SECTION("Single point line returns NaN") {
-        auto line_data = m_line_data["single_point_line"];
+        auto line_data = line_scenarios::single_point_line();
         TimeFrameIndex timestamp(10);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -254,7 +251,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Two-point line works correctly") {
-        auto line_data = m_line_data["two_point_diagonal"];
+        auto line_data = line_scenarios::two_point_diagonal();
         TimeFrameIndex timestamp(20);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -264,7 +261,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Polynomial fallback with too few points") {
-        auto line_data = m_line_data["two_point_line"];
+        auto line_data = line_scenarios::two_point_line();
         TimeFrameIndex timestamp(40);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -278,7 +275,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Vertical collinear line") {
-        auto line_data = m_line_data["vertical_collinear"];
+        auto line_data = line_scenarios::vertical_collinear();
         TimeFrameIndex timestamp(50);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -292,7 +289,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Zero reference vector defaults to x-axis") {
-        auto line_data = m_line_data["diagonal_45_degrees"];
+        auto line_data = line_scenarios::diagonal_45_degrees();
         TimeFrameIndex timestamp(30);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -305,7 +302,7 @@ TEST_CASE_METHOD(LineAngleTestFixture,
     }
     
     SECTION("Large line (stress test)") {
-        auto line_data = m_line_data["large_diagonal_line"];
+        auto line_data = line_scenarios::large_diagonal_line();
         TimeFrameIndex timestamp(70);
         auto line = getLineAt(line_data.get(), timestamp);
         
@@ -422,11 +419,22 @@ TEST_CASE("V2 Element Transform: LineAngle Registry Integration",
 // Tests: DataManager Integration via load_data_from_json_config_v2
 // ============================================================================
 
-TEST_CASE_METHOD(LineAngleTestFixture,
-                 "V2 DataManager Integration: LineAngle via load_data_from_json_config_v2",
-                 "[transforms][v2][datamanager][line_angle]") {
+TEST_CASE("V2 DataManager Integration: LineAngle via load_data_from_json_config_v2",
+          "[transforms][v2][datamanager][line_angle]") {
     
-    DataManager* dm = getDataManager();
+    // Create DataManager and populate with test data
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Populate with scenario data
+    auto two_timesteps_data = line_scenarios::json_pipeline_two_timesteps();
+    two_timesteps_data->setTimeFrame(time_frame);
+    dm.setData("json_pipeline_two_timesteps_line", two_timesteps_data, TimeKey("default"));
+    
+    auto multiple_angles_data = line_scenarios::json_pipeline_multiple_angles();
+    multiple_angles_data->setTimeFrame(time_frame);
+    dm.setData("json_pipeline_multiple_angles_line", multiple_angles_data, TimeKey("default"));
     
     // Create temporary directory for JSON config files
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "line_angle_v2_test";
@@ -466,11 +474,11 @@ TEST_CASE_METHOD(LineAngleTestFixture,
         }
         
         // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // Verify the transformation was executed and results are available
         // LineData is ragged, so output is RaggedAnalogTimeSeries
-        auto result_angles = dm->getData<RaggedAnalogTimeSeries>("v2_line_angles");
+        auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_line_angles");
         REQUIRE(result_angles != nullptr);
         
         // Check we have 2 results (t=100 and t=200)
@@ -527,10 +535,10 @@ TEST_CASE_METHOD(LineAngleTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // LineData is ragged, so output is RaggedAnalogTimeSeries
-        auto result_angles = dm->getData<RaggedAnalogTimeSeries>("v2_multiple_angles");
+        auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_multiple_angles");
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 3);
         
@@ -588,10 +596,10 @@ TEST_CASE_METHOD(LineAngleTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // LineData is ragged, so output is RaggedAnalogTimeSeries
-        auto result_angles = dm->getData<RaggedAnalogTimeSeries>("v2_poly_angles");
+        auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_poly_angles");
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 2);
         
@@ -647,10 +655,10 @@ TEST_CASE_METHOD(LineAngleTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // LineData is ragged, so output is RaggedAnalogTimeSeries
-        auto result_angles = dm->getData<RaggedAnalogTimeSeries>("v2_vertical_ref_angles");
+        auto result_angles = dm.getData<RaggedAnalogTimeSeries>("v2_vertical_ref_angles");
         REQUIRE(result_angles != nullptr);
         REQUIRE(result_angles->getNumTimePoints() == 2);
         

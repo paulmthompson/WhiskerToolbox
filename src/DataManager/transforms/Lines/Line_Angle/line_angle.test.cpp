@@ -9,7 +9,7 @@
 #include <cmath>
 #include <nlohmann/json.hpp>
 
-#include "fixtures/LineAngleTestFixture.hpp"
+#include "fixtures/scenarios/line/geometry_scenarios.hpp"
 
 // ============================================================================
 // Helper Function
@@ -25,13 +25,13 @@ static Line2D getLineAt(LineData const* line_data, TimeFrameIndex time) {
 }
 
 // ============================================================================
-// Core Functionality Tests (using fixture)
+// Core Functionality Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functionality", "[line][angle][transform]") {
+TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transform]") {
     
     SECTION("Calculating angle from empty line data") {
-        auto line_data = m_line_data["empty_line_data"];
+        auto line_data = line_scenarios::empty_line_data();
         auto params = std::make_unique<LineAngleParameters>();
         auto result = line_angle(line_data.get(), params.get());
 
@@ -40,7 +40,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Direct angle calculation - Horizontal line") {
-        auto line_data = m_line_data["horizontal_line"];
+        auto line_data = line_scenarios::horizontal_line();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.33f;
@@ -59,7 +59,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Direct angle calculation - Vertical line") {
-        auto line_data = m_line_data["vertical_line"];
+        auto line_data = line_scenarios::vertical_line();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.25f;
@@ -78,7 +78,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Direct angle calculation - Diagonal line (45 degrees)") {
-        auto line_data = m_line_data["diagonal_45_degrees"];
+        auto line_data = line_scenarios::diagonal_45_degrees();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.50f;
@@ -97,7 +97,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Direct angle calculation - Multiple time points") {
-        auto line_data = m_line_data["multiple_timesteps"];
+        auto line_data = line_scenarios::multiple_timesteps();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -125,7 +125,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Polynomial angle calculation - Simple line") {
-        auto line_data = m_line_data["parabola"];
+        auto line_data = line_scenarios::parabola();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.4f;
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Different polynomial orders") {
-        auto line_data = m_line_data["smooth_curve"];
+        auto line_data = line_scenarios::smooth_curve();
 
         auto position = 0.5f;
 
@@ -188,7 +188,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Verify returned AnalogTimeSeries structure") {
-        auto line_data = m_line_data["horizontal_at_origin"];
+        auto line_data = line_scenarios::horizontal_at_origin();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -205,7 +205,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Reference vector - Horizontal reference") {
-        auto line_data = m_line_data["diagonal_for_reference"];
+        auto line_data = line_scenarios::diagonal_for_reference();
 
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
@@ -217,7 +217,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Reference vector - Vertical reference") {
-        auto line_data = m_line_data["diagonal_for_reference"];
+        auto line_data = line_scenarios::diagonal_for_reference();
 
         auto params2 = std::make_unique<LineAngleParameters>();
         params2->position = 0.5f;
@@ -229,7 +229,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Reference vector - 45-degree reference") {
-        auto line_data = m_line_data["horizontal_for_reference"];
+        auto line_data = line_scenarios::horizontal_for_reference();
 
         auto params3 = std::make_unique<LineAngleParameters>();
         params3->position = 0.5f;
@@ -241,7 +241,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
     }
 
     SECTION("Reference vector with polynomial fit") {
-        auto line_data = m_line_data["parabola_for_reference"];
+        auto line_data = line_scenarios::parabola_for_reference();
 
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
@@ -269,13 +269,13 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Core functional
 }
 
 // ============================================================================
-// Edge Cases Tests (using fixture)
+// Edge Cases Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and error handling", "[line][angle][transform][edge]") {
+TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angle][transform][edge]") {
 
     SECTION("Line with only one point") {
-        auto line_data = m_line_data["single_point_line"];
+        auto line_data = line_scenarios::single_point_line();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -286,7 +286,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Position out of range") {
-        auto line_data = m_line_data["two_point_diagonal"];
+        auto line_data = line_scenarios::two_point_diagonal();
 
         auto params_low = std::make_unique<LineAngleParameters>();
         params_low->position = -0.5f;
@@ -307,7 +307,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Polynomial fit with too few points") {
-        auto line_data = m_line_data["two_point_line"];
+        auto line_data = line_scenarios::two_point_line();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -321,7 +321,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Polynomial fit with collinear points") {
-        auto line_data = m_line_data["vertical_collinear"];
+        auto line_data = line_scenarios::vertical_collinear();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -337,7 +337,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Null parameters") {
-        auto line_data = m_line_data["simple_diagonal"];
+        auto line_data = line_scenarios::simple_diagonal();
 
         auto result = line_angle(line_data.get(), nullptr);
 
@@ -347,7 +347,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Large number of points") {
-        auto line_data = m_line_data["large_diagonal_line"];
+        auto line_data = line_scenarios::large_diagonal_line();
 
         auto params_direct = std::make_unique<LineAngleParameters>();
         params_direct->position = 0.5f;
@@ -368,7 +368,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Zero reference vector") {
-        auto line_data = m_line_data["diagonal_45_degrees"];
+        auto line_data = line_scenarios::diagonal_45_degrees();
 
         auto params = std::make_unique<LineAngleParameters>();
         params->position = 0.5f;
@@ -380,7 +380,7 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Normalizing reference vector") {
-        auto line_data = m_line_data["horizontal_for_normalization"];
+        auto line_data = line_scenarios::horizontal_for_normalization();
 
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = 0.5f;
@@ -398,8 +398,8 @@ TEST_CASE_METHOD(LineAngleTestFixture, "Line angle calculation - Edge cases and 
     }
 
     SECTION("Specific problematic 2-point lines with negative reference vector") {
-        auto line_data1 = m_line_data["problematic_line_1"];
-        auto line_data2 = m_line_data["problematic_line_2"];
+        auto line_data1 = line_scenarios::problematic_line_1();
+        auto line_data2 = line_scenarios::problematic_line_2();
         
         // Combine them into one LineData for testing
         auto combined_line_data = std::make_shared<LineData>();
