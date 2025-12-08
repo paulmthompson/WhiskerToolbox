@@ -105,7 +105,7 @@ public:
      * @param end Interval end time
      */
     DigitalIntervalSeriesBuilder& withInterval(TimeFrameIndex start, TimeFrameIndex end) {
-        m_intervals.emplace_back(start, end);
+        m_intervals.emplace_back(start.getValue(), end.getValue());
         return *this;
     }
 

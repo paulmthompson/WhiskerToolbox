@@ -30,8 +30,10 @@ inline std::shared_ptr<MaskData> empty_mask_data() {
  * Expected area: 3.0 pixels
  */
 inline std::shared_ptr<MaskData> single_mask_single_timestamp() {
+    std::vector<uint32_t> xs = {1, 2, 3};
+    std::vector<uint32_t> ys = {1, 2, 3};
     return MaskDataBuilder()
-        .atTime(10, Mask2D({1, 2, 3}, {1, 2, 3}))
+        .atTime(10, Mask2D(xs, ys))
         .build();
 }
 
@@ -45,9 +47,13 @@ inline std::shared_ptr<MaskData> single_mask_single_timestamp() {
  * V2 Expected: [3.0, 5.0] (individual areas)
  */
 inline std::shared_ptr<MaskData> multiple_masks_single_timestamp() {
+    std::vector<uint32_t> xs1 = {1, 2, 3};
+    std::vector<uint32_t> ys1 = {1, 2, 3};
+    std::vector<uint32_t> xs2 = {4, 5, 6, 7, 8};
+    std::vector<uint32_t> ys2 = {4, 5, 6, 7, 8};
     return MaskDataBuilder()
-        .atTime(20, Mask2D({1, 2, 3}, {1, 2, 3}))
-        .atTime(20, Mask2D({4, 5, 6, 7, 8}, {4, 5, 6, 7, 8}))
+        .atTime(20, Mask2D(xs1, ys1))
+        .atTime(20, Mask2D(xs2, ys2))
         .build();
 }
 
@@ -62,10 +68,16 @@ inline std::shared_ptr<MaskData> multiple_masks_single_timestamp() {
  * V2 Expected: {30: [2.0], 40: [3.0, 4.0]}
  */
 inline std::shared_ptr<MaskData> masks_multiple_timestamps() {
+    std::vector<uint32_t> xs1 = {1, 2};
+    std::vector<uint32_t> ys1 = {1, 2};
+    std::vector<uint32_t> xs2 = {1, 2, 3};
+    std::vector<uint32_t> ys2 = {1, 2, 3};
+    std::vector<uint32_t> xs3 = {4, 5, 6, 7};
+    std::vector<uint32_t> ys3 = {4, 5, 6, 7};
     return MaskDataBuilder()
-        .atTime(30, Mask2D({1, 2}, {1, 2}))
-        .atTime(40, Mask2D({1, 2, 3}, {1, 2, 3}))
-        .atTime(40, Mask2D({4, 5, 6, 7}, {4, 5, 6, 7}))
+        .atTime(30, Mask2D(xs1, ys1))
+        .atTime(40, Mask2D(xs2, ys2))
+        .atTime(40, Mask2D(xs3, ys3))
         .build();
 }
 
@@ -118,9 +130,11 @@ inline std::shared_ptr<MaskData> empty_mask_at_timestamp() {
  * V2 Expected: [0.0, 5.0]
  */
 inline std::shared_ptr<MaskData> mixed_empty_nonempty() {
+    std::vector<uint32_t> xs = {1, 2, 3, 4, 5};
+    std::vector<uint32_t> ys = {1, 2, 3, 4, 5};
     return MaskDataBuilder()
         .withEmpty(80)
-        .atTime(80, Mask2D({1, 2, 3, 4, 5}, {1, 2, 3, 4, 5}))
+        .atTime(80, Mask2D(xs, ys))
         .build();
 }
 
@@ -151,9 +165,13 @@ inline std::shared_ptr<MaskData> large_mask_count() {
  * Mask at t=110: 6 pixels
  */
 inline std::shared_ptr<MaskData> json_pipeline_basic() {
+    std::vector<uint32_t> xs1 = {1, 2, 3, 4};
+    std::vector<uint32_t> ys1 = {1, 2, 3, 4};
+    std::vector<uint32_t> xs2 = {1, 2, 3, 4, 5, 6};
+    std::vector<uint32_t> ys2 = {1, 2, 3, 4, 5, 6};
     return MaskDataBuilder()
-        .atTime(100, Mask2D({1, 2, 3, 4}, {1, 2, 3, 4}))
-        .atTime(110, Mask2D({1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}))
+        .atTime(100, Mask2D(xs1, ys1))
+        .atTime(110, Mask2D(xs2, ys2))
         .build();
 }
 
@@ -164,10 +182,16 @@ inline std::shared_ptr<MaskData> json_pipeline_basic() {
  * Each with varying pixel counts
  */
 inline std::shared_ptr<MaskData> json_pipeline_multi_timestamp() {
+    std::vector<uint32_t> xs1 = {1, 2};
+    std::vector<uint32_t> ys1 = {1, 2};
+    std::vector<uint32_t> xs2 = {1, 2, 3, 4};
+    std::vector<uint32_t> ys2 = {1, 2, 3, 4};
+    std::vector<uint32_t> xs3 = {1, 2, 3};
+    std::vector<uint32_t> ys3 = {1, 2, 3};
     return MaskDataBuilder()
-        .atTime(120, Mask2D({1, 2}, {1, 2}))
-        .atTime(130, Mask2D({1, 2, 3, 4}, {1, 2, 3, 4}))
-        .atTime(140, Mask2D({1, 2, 3}, {1, 2, 3}))
+        .atTime(120, Mask2D(xs1, ys1))
+        .atTime(130, Mask2D(xs2, ys2))
+        .atTime(140, Mask2D(xs3, ys3))
         .build();
 }
 
@@ -177,10 +201,16 @@ inline std::shared_ptr<MaskData> json_pipeline_multi_timestamp() {
  * 3 masks at t=150 with different sizes
  */
 inline std::shared_ptr<MaskData> json_pipeline_multi_mask() {
+    std::vector<uint32_t> xs1 = {1, 2};
+    std::vector<uint32_t> ys1 = {1, 2};
+    std::vector<uint32_t> xs2 = {3, 4, 5};
+    std::vector<uint32_t> ys2 = {3, 4, 5};
+    std::vector<uint32_t> xs3 = {6, 7, 8, 9};
+    std::vector<uint32_t> ys3 = {6, 7, 8, 9};
     return MaskDataBuilder()
-        .atTime(150, Mask2D({1, 2}, {1, 2}))
-        .atTime(150, Mask2D({3, 4, 5}, {3, 4, 5}))
-        .atTime(150, Mask2D({6, 7, 8, 9}, {6, 7, 8, 9}))
+        .atTime(150, Mask2D(xs1, ys1))
+        .atTime(150, Mask2D(xs2, ys2))
+        .atTime(150, Mask2D(xs3, ys3))
         .build();
 }
 

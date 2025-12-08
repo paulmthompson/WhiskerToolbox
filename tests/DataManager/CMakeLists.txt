@@ -25,6 +25,9 @@ add_executable(test_data_manager
         test_tableview.cpp
         test_data_manager_fixtures.cpp
         test_entitygroupmanager.cpp
+        
+        # Builder tests
+        fixtures/test_builders.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/Observer/Observer_Data.test.cpp
 

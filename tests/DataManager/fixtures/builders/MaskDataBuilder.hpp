@@ -90,14 +90,18 @@ inline Mask2D line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2) {
  * @param y Y coordinate
  */
 inline Mask2D point(uint32_t x, uint32_t y) {
-    return Mask2D({x}, {y});
+    std::vector<uint32_t> xs = {x};
+    std::vector<uint32_t> ys = {y};
+    return Mask2D(xs, ys);
 }
 
 /**
  * @brief Create an empty mask
  */
 inline Mask2D empty() {
-    return Mask2D({}, {});
+    std::vector<uint32_t> xs;
+    std::vector<uint32_t> ys;
+    return Mask2D(xs, ys);
 }
 
 } // namespace mask_shapes
