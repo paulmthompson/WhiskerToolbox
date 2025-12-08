@@ -1,7 +1,7 @@
 #ifndef THRESHOLD_SCENARIOS_HPP
 #define THRESHOLD_SCENARIOS_HPP
 
-#include "builders/AnalogTimeSeriesBuilder.hpp"
+#include "fixtures/builders/AnalogTimeSeriesBuilder.hpp"
 #include <memory>
 
 /**

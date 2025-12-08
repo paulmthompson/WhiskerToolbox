@@ -1,6 +1,7 @@
 #include "AnalogEventThreshold.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
@@ -10,7 +11,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-#include "fixtures/AnalogEventThresholdTestFixture.hpp"
+// Builder-based test fixtures
+#include "fixtures/scenarios/analog/threshold_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -42,11 +44,10 @@ namespace {
 }
 
 // ============================================================================
-// Tests: Algorithm Correctness (using v1 fixture)
+// Tests: Algorithm Correctness (using builder-based scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture, 
-                 "V2 Container Transform: Analog Event Threshold - Happy Path", 
+TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path", 
                  "[transforms][v2][container][analog_event_threshold]") {
     
     auto& registry = ElementRegistry::instance();
@@ -64,7 +65,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     };
     
     SECTION("Positive threshold, no lockout") {
-        auto ats = m_test_signals["positive_no_lockout"];
+        auto ats = analog_scenarios::positive_threshold_no_lockout();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -81,7 +82,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Positive threshold, with lockout") {
-        auto ats = m_test_signals["positive_with_lockout"];
+        auto ats = analog_scenarios::positive_threshold_with_lockout();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 150.0f;
@@ -94,7 +95,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Negative threshold, no lockout") {
-        auto ats = m_test_signals["negative_no_lockout"];
+        auto ats = analog_scenarios::negative_threshold_no_lockout();
         params.threshold_value = -1.0f;
         params.direction = "negative";
         params.lockout_time = 0.0f;
@@ -107,7 +108,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Negative threshold, with lockout") {
-        auto ats = m_test_signals["negative_with_lockout"];
+        auto ats = analog_scenarios::negative_threshold_with_lockout();
         params.threshold_value = -1.0f;
         params.direction = "negative";
         params.lockout_time = 150.0f;
@@ -120,7 +121,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Absolute threshold, no lockout") {
-        auto ats = m_test_signals["absolute_no_lockout"];
+        auto ats = analog_scenarios::absolute_threshold_no_lockout();
         params.threshold_value = 1.0f;
         params.direction = "absolute";
         params.lockout_time = 0.0f;
@@ -133,7 +134,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Absolute threshold, with lockout") {
-        auto ats = m_test_signals["absolute_with_lockout"];
+        auto ats = analog_scenarios::absolute_threshold_with_lockout();
         params.threshold_value = 1.0f;
         params.direction = "absolute";
         params.lockout_time = 150.0f;
@@ -146,7 +147,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("No events expected (threshold too high)") {
-        auto ats = m_test_signals["no_events_high_threshold"];
+        auto ats = analog_scenarios::no_events_high_threshold();
         params.threshold_value = 10.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -158,7 +159,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("All events expected (threshold very low, no lockout)") {
-        auto ats = m_test_signals["all_events_low_threshold"];
+        auto ats = analog_scenarios::all_events_low_threshold();
         params.threshold_value = 0.1f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -172,8 +173,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
 }
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
-                 "V2 Container Transform: Analog Event Threshold - Edge Cases",
+TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
                  "[transforms][v2][container][analog_event_threshold]") {
     
     auto& registry = ElementRegistry::instance();
@@ -182,7 +182,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     ComputeContext ctx;
     
     SECTION("Empty analog time series") {
-        auto ats = m_test_signals["empty_signal"];
+        auto ats = analog_scenarios::empty_signal();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -195,7 +195,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Lockout time larger than series duration") {
-        auto ats = m_test_signals["lockout_larger_than_duration"];
+        auto ats = analog_scenarios::lockout_larger_than_duration();
         params.threshold_value = 1.0f;
         params.direction = "positive";
         params.lockout_time = 1000.0f;  // Much larger than series
@@ -208,7 +208,7 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
     }
     
     SECTION("Cancellation support") {
-        auto ats = m_test_signals["all_events_low_threshold"];
+        auto ats = analog_scenarios::all_events_low_threshold();
         params.threshold_value = 0.1f;
         params.direction = "positive";
         params.lockout_time = 0.0f;
@@ -343,14 +343,44 @@ TEST_CASE("V2 Container Transform: Registry Integration",
 // Tests: DataManager Integration via load_data_from_json_config_v2
 // ============================================================================
 
-TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
-                 "V2 Container Transform: AnalogEventThreshold - load_data_from_json_config_v2",
+namespace {
+    // Helper to set up DataManager with all threshold test scenarios
+    void populateDataManagerWithThresholdScenarios(DataManager& dm) {
+        dm.setData("positive_no_lockout", analog_scenarios::positive_threshold_no_lockout(), 
+                   TimeKey("positive_no_lockout_time"));
+        dm.setData("positive_with_lockout", analog_scenarios::positive_threshold_with_lockout(), 
+                   TimeKey("positive_with_lockout_time"));
+        dm.setData("negative_no_lockout", analog_scenarios::negative_threshold_no_lockout(), 
+                   TimeKey("negative_no_lockout_time"));
+        dm.setData("negative_with_lockout", analog_scenarios::negative_threshold_with_lockout(), 
+                   TimeKey("negative_with_lockout_time"));
+        dm.setData("absolute_no_lockout", analog_scenarios::absolute_threshold_no_lockout(), 
+                   TimeKey("absolute_no_lockout_time"));
+        dm.setData("absolute_with_lockout", analog_scenarios::absolute_threshold_with_lockout(), 
+                   TimeKey("absolute_with_lockout_time"));
+        dm.setData("no_events_high_threshold", analog_scenarios::no_events_high_threshold(), 
+                   TimeKey("no_events_high_threshold_time"));
+        dm.setData("all_events_low_threshold", analog_scenarios::all_events_low_threshold(), 
+                   TimeKey("all_events_low_threshold_time"));
+        dm.setData("empty_signal", analog_scenarios::empty_signal(), 
+                   TimeKey("empty_signal_time"));
+        dm.setData("lockout_larger_than_duration", analog_scenarios::lockout_larger_than_duration(), 
+                   TimeKey("lockout_larger_than_duration_time"));
+        dm.setData("events_at_threshold", analog_scenarios::events_at_threshold(), 
+                   TimeKey("events_at_threshold_time"));
+        dm.setData("zero_based_timestamps", analog_scenarios::zero_based_timestamps(), 
+                   TimeKey("zero_based_timestamps_time"));
+    }
+}
+
+TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_config_v2",
                  "[transforms][v2][container][analog_event_threshold][json_config]") {
     
     using namespace WhiskerToolbox::Transforms::V2;
     
-    // Get DataManager from fixture
-    DataManager* dm = getDataManager();
+    // Set up DataManager with scenario data
+    DataManager dm;
+    populateDataManagerWithThresholdScenarios(dm);
     
     // Create temporary directory for JSON config files
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "analog_event_threshold_v2_test";
@@ -393,10 +423,10 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
         }
         
         // Execute the V2 transformation pipeline
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
         // Verify the transformation was executed and results are available
-        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events");
+        auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events");
         REQUIRE(result_events != nullptr);
         
         // Verify the event detection results
@@ -439,9 +469,9 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_lockout");
+        auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_lockout");
         REQUIRE(result_events != nullptr);
         
         // With lockout of 150, event at 300 should be skipped
@@ -484,9 +514,9 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_negative");
+        auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_negative");
         REQUIRE(result_events != nullptr);
         
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
@@ -528,9 +558,9 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_absolute");
+        auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_absolute");
         REQUIRE(result_events != nullptr);
         
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
@@ -572,9 +602,9 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_high");
+        auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_high");
         REQUIRE(result_events != nullptr);
         REQUIRE(result_events->getEventSeries().empty());
     }
@@ -614,9 +644,9 @@ TEST_CASE_METHOD(AnalogEventThresholdTestFixture,
             json_file.close();
         }
         
-        auto data_info_list = load_data_from_json_config_v2(dm, json_filepath.string());
+        auto data_info_list = load_data_from_json_config_v2(&dm, json_filepath.string());
         
-        auto result_events = dm->getData<DigitalEventSeries>("v2_detected_events_empty");
+        auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_empty");
         REQUIRE(result_events != nullptr);
         REQUIRE(result_events->getEventSeries().empty());
     }
