@@ -3,9 +3,6 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include "CoreGeometry/points.hpp"
-#include "CoreGeometry/lines.hpp"
-
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -32,38 +29,6 @@ struct MaskToLineParameters : public TransformParametersBase {
     bool should_smooth_line = false; // Smooth the final line using polynomial fit
     float output_resolution = 5.0f; // Approximate spacing in pixels between output points
 };
-
-///////////////////////////////////////////////////////////////////////////////
-
-std::vector<double> fit_polynomial_to_points(Line2D const & points, int order);
-
-struct ParametricCoefficients {
-    std::vector<double> x_coeffs;
-    std::vector<double> y_coeffs;
-    bool success = false;
-};
-
-ParametricCoefficients fit_parametric_polynomials(Line2D const & points, int order);
-
-Line2D generate_smoothed_line(
-        Line2D const & original_points,// Used to estimate total length
-        std::vector<double> const & x_coeffs,
-        std::vector<double> const & y_coeffs,
-        int order,
-        float target_spacing);
-
-std::vector<float> calculate_fitting_errors(Line2D const & points,
-                                            std::vector<double> const & x_coeffs,
-                                            std::vector<double> const & y_coeffs);
-
-Line2D remove_outliers_recursive(Line2D const & points,
-                                                      float error_threshold_squared,
-                                                      int polynomial_order,
-                                                      int max_iterations = 10);
-
-Line2D remove_outliers(Line2D const & points,
-                                            float error_threshold,
-                                            int polynomial_order);
 
 ///////////////////////////////////////////////////////////////////////////////
 
