@@ -3,9 +3,6 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include "CoreGeometry/lines.hpp"
-#include "CoreGeometry/points.hpp"
-
 #include <memory>   // std::shared_ptr
 #include <optional> // std::optional
 #include <string>   // std::string
@@ -31,12 +28,6 @@ struct LinePointExtractionParameters : public TransformParametersBase {
     // For direct method
     bool use_interpolation = true;   // Interpolate between points vs. use nearest point
 };
-
-///////////////////////////////////////////////////////////////////////////////
-
-std::optional<Point2D<float>> extract_parametric_point(Line2D const & line,
-                                                       float position,
-                                                       int polynomial_order);
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -15,63 +15,6 @@
 #include <vector>
 
 
-/**
- * @brief Extract point using parametric polynomial interpolation
- */
-std::optional<Point2D<float>> extract_parametric_point(
-        Line2D const & line,
-        float position,
-        int polynomial_order) {
-    
-    if (line.empty()) {
-        return std::nullopt;
-    }
-    
-    if (line.size() == 1) {
-        return line[0];
-    }
-    
-    // Ensure valid range
-    position = std::max(0.0f, std::min(1.0f, position));
-    
-    // Need enough points for polynomial fitting
-    if (line.size() < static_cast<size_t>(polynomial_order + 1)) {
-        // Fall back to direct method
-        return point_at_fractional_position(line, position, true);
-    }
-    
-    // Compute t-values for the entire line
-    std::vector<double> t_values = compute_t_values(line);
-    if (t_values.empty()) {
-        return point_at_fractional_position(line, position, true);
-    }
-    
-    // Extract coordinates
-    std::vector<double> x_coords, y_coords;
-    x_coords.reserve(line.size());
-    y_coords.reserve(line.size());
-    
-    for (auto const & point : line) {
-        x_coords.push_back(static_cast<double>(point.x));
-        y_coords.push_back(static_cast<double>(point.y));
-    }
-    
-    // Fit parametric polynomials
-    std::vector<double> x_coeffs = fit_single_dimension_polynomial_internal(x_coords, t_values, polynomial_order);
-    std::vector<double> y_coeffs = fit_single_dimension_polynomial_internal(y_coords, t_values, polynomial_order);
-    
-    if (x_coeffs.empty() || y_coeffs.empty()) {
-        // Fall back to direct method if fitting failed
-        return point_at_fractional_position(line, position, true);
-    }
-    
-    // Evaluate polynomials at the specified position
-    double t_eval = static_cast<double>(position);
-    double x = evaluate_polynomial(x_coeffs, t_eval);
-    double y = evaluate_polynomial(y_coeffs, t_eval);
-    
-    return Point2D<float>{static_cast<float>(x), static_cast<float>(y)};
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 

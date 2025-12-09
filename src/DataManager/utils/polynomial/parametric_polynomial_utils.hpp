@@ -1,20 +1,21 @@
 #ifndef PARAMETRIC_POLYNOMIAL_UTILS_HPP
 #define PARAMETRIC_POLYNOMIAL_UTILS_HPP
 
-#include "CoreGeometry/lines.hpp" // For Point2D
+#include "CoreGeometry/points.hpp"// For Point2D
 
 #include <optional>
 #include <vector>
 
+class Line2D;
 
 // Helper function to compute t-values based on cumulative distance
 std::vector<double> compute_t_values(Line2D const & line);
 
 // Helper function to fit a single dimension (x or y) of a parametric polynomial.
 std::vector<double> fit_single_dimension_polynomial_internal(
-    const std::vector<double>& dimension_coords,
-    const std::vector<double>& t_values,
-    int order);
+        std::vector<double> const & dimension_coords,
+        std::vector<double> const & t_values,
+        int order);
 
 /**
  * @brief Calculate the curvature of a line at a specific position using polynomial fitting
@@ -31,4 +32,8 @@ std::optional<float> calculate_polynomial_curvature(
         int polynomial_order,
         float fitting_window_percentage);
 
-#endif // PARAMETRIC_POLYNOMIAL_UTILS_HPP 
+std::optional<Point2D<float>> extract_parametric_point(Line2D const & line,
+                                                       float position,
+                                                       int polynomial_order);
+
+#endif// PARAMETRIC_POLYNOMIAL_UTILS_HPP
