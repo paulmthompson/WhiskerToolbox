@@ -5,15 +5,17 @@
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include "fixtures/scenarios/line/base_flip_scenarios.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <memory>
 
 TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
     auto transform = std::make_unique<LineBaseFlipTransform>();
-    auto line_data = std::make_shared<LineData>();
 
     SECTION("CanApplyToLineData") {
+        auto line_data = std::make_shared<LineData>();
         DataTypeVariant variant = line_data;
         REQUIRE(transform->canApply(variant));
     }
@@ -26,14 +28,8 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
     }
 
     SECTION("FlipLineBasedOnReferencePoint") {
-        // Create a simple line from (0,0) to (10,0)
-        Line2D original_line;
-        original_line.push_back(Point2D<float>{0.0f, 0.0f});  // Base point
-        original_line.push_back(Point2D<float>{5.0f, 0.0f});
-        original_line.push_back(Point2D<float>{10.0f, 0.0f}); // End point
-
-        // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), original_line, NotifyObservers::No);
+        // Create a simple line from (0,0) to (10,0) using scenario
+        auto line_data = line_base_flip_scenarios::simple_horizontal_line();
 
         // Set reference point closer to the end (10,0) than the base (0,0)
         Point2D<float> reference_point{12.0f, 0.0f};
@@ -61,14 +57,8 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
     }
 
     SECTION("DoNotFlipWhenBaseIsCloser") {
-        // Create a simple line from (0,0) to (10,0)
-        Line2D original_line;
-        original_line.push_back(Point2D<float>{0.0f, 0.0f});  // Base point
-        original_line.push_back(Point2D<float>{5.0f, 0.0f});
-        original_line.push_back(Point2D<float>{10.0f, 0.0f}); // End point
-
-        // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), original_line, NotifyObservers::No);
+        // Create a simple line from (0,0) to (10,0) using scenario
+        auto line_data = line_base_flip_scenarios::simple_horizontal_line();
 
         // Set reference point closer to the base (0,0) than the end (10,0)
         Point2D<float> reference_point{-2.0f, 0.0f};
@@ -96,12 +86,8 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
     }
 
     SECTION("HandleSinglePointLine") {
-        // Create a line with only one point
-        Line2D single_point_line;
-        single_point_line.push_back(Point2D<float>{5.0f, 5.0f});
-
-        // Add line to frame 0
-        line_data->addAtTime(TimeFrameIndex(0), single_point_line, NotifyObservers::No);
+        // Create a line with only one point using scenario
+        auto line_data = line_base_flip_scenarios::single_point_line();
 
         Point2D<float> reference_point{0.0f, 0.0f};
         LineBaseFlipParameters params(reference_point);
@@ -122,18 +108,8 @@ TEST_CASE("Data Transform: Line Base Flip", "[LineBaseFlip]") {
     }
 
     SECTION("ProcessMultipleFrames") {
-        // Create lines for multiple frames
-        Line2D line1;
-        line1.push_back(Point2D<float>{0.0f, 0.0f});
-        line1.push_back(Point2D<float>{10.0f, 0.0f});
-
-        Line2D line2;
-        line2.push_back(Point2D<float>{0.0f, 10.0f});
-        line2.push_back(Point2D<float>{10.0f, 10.0f});
-
-        // Add lines to different frames
-        line_data->addAtTime(TimeFrameIndex(0), line1, NotifyObservers::No);
-        line_data->addAtTime(TimeFrameIndex(1), line2, NotifyObservers::No);
+        // Create lines for multiple frames using scenario
+        auto line_data = line_base_flip_scenarios::multiple_frames();
 
         // Reference point closer to end points
         Point2D<float> reference_point{12.0f, 5.0f};
