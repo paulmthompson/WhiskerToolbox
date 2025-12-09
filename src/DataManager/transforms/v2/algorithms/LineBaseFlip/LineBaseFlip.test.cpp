@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/point_geometry.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
@@ -144,21 +145,21 @@ TEST_CASE("V2 LineBaseFlip - calc_distance2 function",
     }
 }
 
-TEST_CASE("V2 LineBaseFlip - shouldFlipLine function", 
+TEST_CASE("V2 LineBaseFlip - is_distal_end_closer function", 
           "[transforms][v2][element][line_base_flip]") {
     
     SECTION("Empty line - should not flip") {
         Line2D empty_line;
         Point2D<float> ref{0.0f, 0.0f};
         
-        REQUIRE_FALSE(shouldFlipLine(empty_line, ref));
+        REQUIRE_FALSE(is_distal_end_closer(empty_line, ref));
     }
     
     SECTION("Single point line - should not flip") {
         Line2D single_point{{Point2D<float>{5.0f, 5.0f}}};
         Point2D<float> ref{0.0f, 0.0f};
         
-        REQUIRE_FALSE(shouldFlipLine(single_point, ref));
+        REQUIRE_FALSE(is_distal_end_closer(single_point, ref));
     }
     
     SECTION("Base closer to reference - should not flip") {
@@ -168,7 +169,7 @@ TEST_CASE("V2 LineBaseFlip - shouldFlipLine function",
         Line2D line{{Point2D<float>{0.0f, 0.0f}, Point2D<float>{10.0f, 0.0f}}};
         Point2D<float> ref{-2.0f, 0.0f};
         
-        REQUIRE_FALSE(shouldFlipLine(line, ref));
+        REQUIRE_FALSE(is_distal_end_closer(line, ref));
     }
     
     SECTION("End closer to reference - should flip") {
@@ -178,7 +179,7 @@ TEST_CASE("V2 LineBaseFlip - shouldFlipLine function",
         Line2D line{{Point2D<float>{0.0f, 0.0f}, Point2D<float>{10.0f, 0.0f}}};
         Point2D<float> ref{12.0f, 0.0f};
         
-        REQUIRE(shouldFlipLine(line, ref));
+        REQUIRE(is_distal_end_closer(line, ref));
     }
     
     SECTION("Equal distances - should not flip (keeps original)") {
@@ -187,23 +188,23 @@ TEST_CASE("V2 LineBaseFlip - shouldFlipLine function",
         Line2D line{{Point2D<float>{0.0f, 0.0f}, Point2D<float>{10.0f, 0.0f}}};
         Point2D<float> ref{5.0f, 0.0f};
         
-        REQUIRE_FALSE(shouldFlipLine(line, ref));
+        REQUIRE_FALSE(is_distal_end_closer(line, ref));
     }
 }
 
-TEST_CASE("V2 LineBaseFlip - flipLine function", 
+TEST_CASE("V2 LineBaseFlip - reverse_line function", 
           "[transforms][v2][element][line_base_flip]") {
     
     SECTION("Empty line") {
         Line2D empty_line;
-        auto flipped = flipLine(empty_line);
+        auto flipped = reverse_line(empty_line);
         
         REQUIRE(flipped.empty());
     }
     
     SECTION("Two point line") {
         Line2D line{{Point2D<float>{0.0f, 0.0f}, Point2D<float>{10.0f, 0.0f}}};
-        auto flipped = flipLine(line);
+        auto flipped = reverse_line(line);
         
         REQUIRE(flipped.size() == 2);
         REQUIRE_THAT(flipped.front().x, WithinAbs(10.0f, 0.001f));
@@ -218,7 +219,7 @@ TEST_CASE("V2 LineBaseFlip - flipLine function",
             Point2D<float>{5.0f, 0.0f}, 
             Point2D<float>{10.0f, 0.0f}
         }};
-        auto flipped = flipLine(line);
+        auto flipped = reverse_line(line);
         
         REQUIRE(flipped.size() == 3);
         REQUIRE_THAT(flipped[0].x, WithinAbs(10.0f, 0.001f));

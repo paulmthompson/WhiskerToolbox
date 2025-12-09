@@ -1,11 +1,9 @@
 #include "line_base_flip.hpp"
 
 #include "Lines/Line_Data.hpp"
-#include "CoreGeometry/lines.hpp"
-#include "CoreGeometry/point_geometry.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 
-#include <algorithm>
 #include <cmath>
 
 bool LineBaseFlipTransform::canApply(DataTypeVariant const & dataVariant) const {
@@ -64,8 +62,8 @@ DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVaria
             }
             
             Line2D processed_line;
-            if (shouldFlipLine(line, params->reference_point)) {
-                processed_line = flipLine(line);
+            if (is_distal_end_closer(line, params->reference_point)) {
+                processed_line = reverse_line(line);
             } else {
                 processed_line = line;
             }
@@ -86,38 +84,4 @@ DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVaria
 
     progressCallback(100);
     return output_line_data;
-}
-
-bool LineBaseFlipTransform::shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point) {
-    if (line.empty() || line.size() < 2) {
-        return false; // Can't flip a line with less than 2 points
-    }
-
-    // Get the current base (first point) and end (last point)
-    Point2D<float> const current_base = line.front();
-    Point2D<float> const current_end = line.back();
-
-    // Calculate squared distances to avoid expensive sqrt operations
-    float const base_distance_sq = calc_distance2(current_base, reference_point);
-    float const end_distance_sq = calc_distance2(current_end, reference_point);
-
-    // Flip if the current base is farther from reference than the end
-    return base_distance_sq > end_distance_sq;
-}
-
-Line2D LineBaseFlipTransform::flipLine(Line2D const & line) {
-    if (line.empty()) {
-        return line;
-    }
-
-    // Create a new line with points in reverse order
-    std::vector<Point2D<float>> flipped_points;
-    flipped_points.reserve(line.size());
-
-    // Add points in reverse order
-    for (auto it = line.end() - 1; it >= line.begin(); --it) {
-        flipped_points.push_back(*it);
-    }
-
-    return Line2D{std::move(flipped_points)};
 }

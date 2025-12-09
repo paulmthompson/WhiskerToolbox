@@ -158,4 +158,28 @@ Line2D clip_line_at_intersection(
 
 float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & line);
 
+/**
+ * @brief Reverse the order of points in a line
+ * 
+ * Creates a new line with points in reverse order, so the first point becomes
+ * the last and vice versa. Useful for normalizing line orientation.
+ * 
+ * @param line The line to reverse
+ * @return A new Line2D with points in reversed order, or empty if input is empty
+ */
+Line2D reverse_line(Line2D const & line);
+
+/**
+ * @brief Determine if the distal (last) point of a line is closer to a reference point
+ * 
+ * Compares the squared distance from both endpoints to the reference point.
+ * Returns true if the last point is strictly closer than the first point.
+ * 
+ * @param line The line to evaluate
+ * @param reference_point The point to measure distance to
+ * @return true if the last point is closer to reference_point than the first point
+ * @return false if the first point is closer or equal, or if line has fewer than 2 points
+ */
+bool is_distal_end_closer(Line2D const & line, Point2D<float> const & reference_point);
+
 #endif// LINE_GEOMETRY_HPP

@@ -93,30 +93,6 @@ Line2D flipLineBaseWithContext(
         LineBaseFlipParams const & params,
         ComputeContext const & ctx);
 
-// ============================================================================
-// Helper Functions (exposed for testing)
-// ============================================================================
-
-/**
- * @brief Calculate squared distance between two points (avoids sqrt for performance)
- */
-float distanceSquared(Point2D<float> const & p1, Point2D<float> const & p2);
-
-/**
- * @brief Determine if a line should be flipped based on reference point
- * @param line The line to evaluate
- * @param reference_point The reference point
- * @return true if the line should be flipped, false otherwise
- */
-bool shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point);
-
-/**
- * @brief Flip a line by reversing the order of its points
- * @param line The line to flip
- * @return The flipped line
- */
-Line2D flipLine(Line2D const & line);
-
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
 #endif// WHISKERTOOLBOX_V2_LINE_BASE_FLIP_TRANSFORM_HPP

@@ -586,3 +586,29 @@ float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & l
 
     return min_distance;
 }
+
+Line2D reverse_line(Line2D const & line) {
+    if (line.empty()) {
+        return line;
+    }
+
+    std::vector<Point2D<float>> reversed_points;
+    reversed_points.reserve(line.size());
+
+    for (size_t i = line.size(); i > 0; --i) {
+        reversed_points.push_back(line[i - 1]);
+    }
+
+    return Line2D{std::move(reversed_points)};
+}
+
+bool is_distal_end_closer(Line2D const & line, Point2D<float> const & reference_point) {
+    if (line.size() < 2) {
+        return false;
+    }
+
+    float const proximal_distance_sq = calc_distance2(line.front(), reference_point);
+    float const distal_distance_sq = calc_distance2(line.back(), reference_point);
+
+    return distal_distance_sq < proximal_distance_sq;
+}
