@@ -4,6 +4,7 @@
 
 #include "transforms/data_transforms.hpp"
 
+#include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/lines.hpp"
@@ -33,12 +34,6 @@ enum class LineAlignmentOutputMode {
     ALIGNED_VERTICES,   // Return aligned line vertices (normal mode)
     FWHM_PROFILE_EXTENTS// Return FWHM profile extents for debugging/analysis
 };
-
-
-template<typename T>
-T get_pixel_value(Point2D<float> const & point,
-                  std::vector<T> const & image_data,
-                  ImageSize const & image_size);
 
 
 struct LineAlignmentParameters : public TransformParametersBase {
@@ -179,14 +174,6 @@ public:
                             TransformParametersBase const * transformParameters,
                             ProgressCallback progressCallback) override;
 };
-
-extern template uint8_t get_pixel_value<uint8_t>(Point2D<float> const & point,
-                                                 std::vector<uint8_t> const & image_data,
-                                                 ImageSize const & image_size);
-
-extern template float get_pixel_value<float>(Point2D<float> const & point,
-                                             std::vector<float> const & image_data,
-                                             ImageSize const & image_size);
 
 
 extern template Point2D<float> calculate_fwhm_center<uint8_t>(Point2D<float> const & vertex,

@@ -3,6 +3,8 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "CoreGeometry/line_geometry.hpp"
+#include "CoreGeometry/point_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
@@ -30,22 +32,6 @@ float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & l
     }
 
     return min_distance;
-}
-
-// Helper function to scale a point from one image size to another
-Point2D<float> scale_point(Point2D<float> const & point, ImageSize const & from_size, ImageSize const & to_size) {
-    // Handle invalid image sizes
-    if (from_size.width <= 0 || from_size.height <= 0 ||
-        to_size.width <= 0 || to_size.height <= 0) {
-        return point;// Return original point if any dimension is invalid
-    }
-
-    float scale_x = static_cast<float>(to_size.width) / static_cast<float>(from_size.width);
-    float scale_y = static_cast<float>(to_size.height) / static_cast<float>(from_size.height);
-
-    return Point2D<float>{
-            point.x * scale_x,
-            point.y * scale_y};
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -205,39 +191,4 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
 
     if (progressCallback) progressCallback(100);// Final progress update
     return std::make_shared<AnalogTimeSeries>(distances);
-}
-
-float point_to_line_segment_distance2(
-        Point2D<float> const & point,
-        Point2D<float> const & line_start,
-        Point2D<float> const & line_end) {
-
-    // If start and end are the same point, just return distance to that point
-    if (line_start.x == line_end.x && line_start.y == line_end.y) {
-        float dx = point.x - line_start.x;
-        float dy = point.y - line_start.y;
-        return dx * dx + dy * dy;
-    }
-
-    // Calculate the squared length of the line segment
-    float line_length_squared = (line_end.x - line_start.x) * (line_end.x - line_start.x) +
-                                (line_end.y - line_start.y) * (line_end.y - line_start.y);
-
-    // Calculate the projection of point onto the line segment
-    float t = ((point.x - line_start.x) * (line_end.x - line_start.x) +
-               (point.y - line_start.y) * (line_end.y - line_start.y)) /
-              line_length_squared;
-
-    // Clamp t to range [0, 1] to ensure we get distance to a point on the segment
-    t = std::max(0.0f, std::min(1.0f, t));
-
-    // Calculate the closest point on the segment
-    float closest_x = line_start.x + t * (line_end.x - line_start.x);
-    float closest_y = line_start.y + t * (line_end.y - line_start.y);
-
-    // Calculate the distance from original point to closest point
-    float dx = point.x - closest_x;
-    float dy = point.y - closest_y;
-
-    return dx * dx + dy * dy;
 }

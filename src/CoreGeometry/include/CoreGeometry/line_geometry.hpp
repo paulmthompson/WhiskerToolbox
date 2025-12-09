@@ -105,4 +105,28 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
  */
 Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index);
 
+/**
+ * @brief Calculate the squared distance from a point to a line segment
+ * @param point The point to measure distance from
+ * @param line_start Start point of the line segment
+ * @param line_end End point of the line segment
+ * @return Squared distance from the point to the nearest point on the segment
+ */
+float point_to_line_segment_distance2(
+        Point2D<float> const & point,
+        Point2D<float> const & line_start,
+        Point2D<float> const & line_end);
+
+/**
+ * @brief Find the intersection point between two line segments
+ * @param p1 First point of first segment
+ * @param p2 Second point of first segment
+ * @param p3 First point of second segment
+ * @param p4 Second point of second segment
+ * @return The intersection point if it exists, or std::nullopt if segments don't intersect
+ */
+std::optional<Point2D<float>> line_segment_intersection(
+    Point2D<float> const & p1, Point2D<float> const & p2,
+    Point2D<float> const & p3, Point2D<float> const & p4);
+
 #endif// LINE_GEOMETRY_HPP

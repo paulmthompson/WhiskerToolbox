@@ -2,6 +2,7 @@
 #define POINT_GEOMETRY_HPP
 
 #include "CoreGeometry/points.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <cmath>
 
@@ -19,6 +20,15 @@ template <typename T>
 Point2D<T> interpolate_point(Point2D<T> const & p1, Point2D<T> const & p2, float t) {
     return {p1.x + (p2.x - p1.x) * t, p1.y + (p2.y - p1.y) * t};
 }
+
+/**
+ * @brief Scale a point from one image size to another
+ * @param point The point to scale
+ * @param from_size The source image size
+ * @param to_size The target image size
+ * @return The scaled point
+ */
+Point2D<float> scale_point(Point2D<float> const & point, ImageSize const & from_size, ImageSize const & to_size);
 
 
 extern template float calc_distance2(Point2D<float> const & p1, Point2D<float> const & p2);

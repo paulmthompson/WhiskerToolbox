@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
+#include "CoreGeometry/point_geometry.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
@@ -103,14 +104,14 @@ TEST_CASE("V2 LineBaseFlipParams - getReferencePoint helper",
 // Tests: Helper Functions
 // ============================================================================
 
-TEST_CASE("V2 LineBaseFlip - distanceSquared function", 
+TEST_CASE("V2 LineBaseFlip - calc_distance2 function", 
           "[transforms][v2][element][line_base_flip]") {
     
     SECTION("Same point - zero distance") {
         Point2D<float> p1{5.0f, 5.0f};
         Point2D<float> p2{5.0f, 5.0f};
         
-        float dist_sq = distanceSquared(p1, p2);
+        float dist_sq = calc_distance2(p1, p2);
         
         REQUIRE_THAT(dist_sq, WithinAbs(0.0f, 0.001f));
     }
@@ -119,7 +120,7 @@ TEST_CASE("V2 LineBaseFlip - distanceSquared function",
         Point2D<float> p1{0.0f, 0.0f};
         Point2D<float> p2{3.0f, 0.0f};
         
-        float dist_sq = distanceSquared(p1, p2);
+        float dist_sq = calc_distance2(p1, p2);
         
         REQUIRE_THAT(dist_sq, WithinAbs(9.0f, 0.001f));  // 3^2 = 9
     }
@@ -128,7 +129,7 @@ TEST_CASE("V2 LineBaseFlip - distanceSquared function",
         Point2D<float> p1{0.0f, 0.0f};
         Point2D<float> p2{0.0f, 4.0f};
         
-        float dist_sq = distanceSquared(p1, p2);
+        float dist_sq = calc_distance2(p1, p2);
         
         REQUIRE_THAT(dist_sq, WithinAbs(16.0f, 0.001f));  // 4^2 = 16
     }
@@ -137,7 +138,7 @@ TEST_CASE("V2 LineBaseFlip - distanceSquared function",
         Point2D<float> p1{0.0f, 0.0f};
         Point2D<float> p2{3.0f, 4.0f};
         
-        float dist_sq = distanceSquared(p1, p2);
+        float dist_sq = calc_distance2(p1, p2);
         
         REQUIRE_THAT(dist_sq, WithinAbs(25.0f, 0.001f));  // 3^2 + 4^2 = 25
     }

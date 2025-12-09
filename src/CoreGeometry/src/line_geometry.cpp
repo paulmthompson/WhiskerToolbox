@@ -424,4 +424,76 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
     }
 }
 
+float point_to_line_segment_distance2(
+        Point2D<float> const & point,
+        Point2D<float> const & line_start,
+        Point2D<float> const & line_end) {
+
+    // If start and end are the same point, just return distance to that point
+    if (line_start.x == line_end.x && line_start.y == line_end.y) {
+        float dx = point.x - line_start.x;
+        float dy = point.y - line_start.y;
+        return dx * dx + dy * dy;
+    }
+
+    // Calculate the squared length of the line segment
+    float line_length_squared = (line_end.x - line_start.x) * (line_end.x - line_start.x) +
+                                (line_end.y - line_start.y) * (line_end.y - line_start.y);
+
+    // Calculate the projection of point onto the line segment
+    float t = ((point.x - line_start.x) * (line_end.x - line_start.x) +
+               (point.y - line_start.y) * (line_end.y - line_start.y)) /
+              line_length_squared;
+
+    // Clamp t to range [0, 1] to ensure we get distance to a point on the segment
+    t = std::max(0.0f, std::min(1.0f, t));
+
+    // Calculate the closest point on the segment
+    float closest_x = line_start.x + t * (line_end.x - line_start.x);
+    float closest_y = line_start.y + t * (line_end.y - line_start.y);
+
+    // Calculate the distance from original point to closest point
+    float dx = point.x - closest_x;
+    float dy = point.y - closest_y;
+
+    return dx * dx + dy * dy;
+}
+
+std::optional<Point2D<float>> line_segment_intersection(
+    Point2D<float> const & p1, Point2D<float> const & p2,
+    Point2D<float> const & p3, Point2D<float> const & p4) {
+    
+    // Calculate direction vectors
+    float d1x = p2.x - p1.x;
+    float d1y = p2.y - p1.y;
+    float d2x = p4.x - p3.x;
+    float d2y = p4.y - p3.y;
+    
+    // Calculate the denominator for the intersection calculation
+    float denominator = d1x * d2y - d1y * d2x;
+    
+    // Check if lines are parallel (denominator is zero)
+    if (std::abs(denominator) < 1e-10f) {
+        return std::nullopt;
+    }
+    
+    // Calculate parameters for intersection point
+    float dx = p3.x - p1.x;
+    float dy = p3.y - p1.y;
+    
+    float t1 = (dx * d2y - dy * d2x) / denominator;
+    float t2 = (dx * d1y - dy * d1x) / denominator;
+    
+    // Check if intersection point lies within both line segments
+    if (t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f) {
+        // Calculate intersection point
+        Point2D<float> intersection;
+        intersection.x = p1.x + t1 * d1x;
+        intersection.y = p1.y + t1 * d1y;
+        
+        return intersection;
+    }
+    
+    return std::nullopt;
+}
 

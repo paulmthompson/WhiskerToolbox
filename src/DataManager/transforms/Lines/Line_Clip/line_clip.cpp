@@ -1,49 +1,12 @@
 #include "line_clip.hpp"
 
 #include "Lines/Line_Data.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 
 #include <cmath>
 #include <iostream>
 #include <vector>
-
-std::optional<Point2D<float>> line_segment_intersection(
-    Point2D<float> const & p1, Point2D<float> const & p2,
-    Point2D<float> const & p3, Point2D<float> const & p4) {
-    
-    // Calculate direction vectors
-    float d1x = p2.x - p1.x;
-    float d1y = p2.y - p1.y;
-    float d2x = p4.x - p3.x;
-    float d2y = p4.y - p3.y;
-    
-    // Calculate the denominator for the intersection calculation
-    float denominator = d1x * d2y - d1y * d2x;
-    
-    // Check if lines are parallel (denominator is zero)
-    if (std::abs(denominator) < 1e-10f) {
-        return std::nullopt;
-    }
-    
-    // Calculate parameters for intersection point
-    float dx = p3.x - p1.x;
-    float dy = p3.y - p1.y;
-    
-    float t1 = (dx * d2y - dy * d2x) / denominator;
-    float t2 = (dx * d1y - dy * d1x) / denominator;
-    
-    // Check if intersection point lies within both line segments
-    if (t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f) {
-        // Calculate intersection point
-        Point2D<float> intersection;
-        intersection.x = p1.x + t1 * d1x;
-        intersection.y = p1.y + t1 * d1y;
-        
-        return intersection;
-    }
-    
-    return std::nullopt;
-}
 
 std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
     Line2D const & line, Line2D const & reference_line) {
