@@ -5,238 +5,199 @@
 #include "Masks/Mask_Data.hpp"
 #include "DataManagerTypes.hpp"
 
-TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
-    
-    SECTION("fills holes in simple rectangular mask") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({10, 10});
-        
-        // Create a hollow rectangle with hole in the middle
-        std::vector<Point2D<uint32_t>> hollow_rect;
-        
-        // Outer border
-        for (uint32_t row = 2; row < 8; ++row) {
-            for (uint32_t col = 2; col < 8; ++col) {
-                if (row == 2 || row == 7 || col == 2 || col == 7) {
-                    hollow_rect.emplace_back(col, row);
-                }
-            }
-        }
-        
-        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(hollow_rect), NotifyObservers::No);
-        
-        MaskHoleFillingParameters params;
-        auto result = fill_mask_holes(mask_data.get(), &params);
-        
-        REQUIRE(result);
-        REQUIRE(result->getTimesWithData().size() == 1);
-        
-        auto filled_masks = result->getAtTime(TimeFrameIndex(0));
-        REQUIRE(filled_masks.size() == 1);
-        
-        // The hole should now be filled - should have more points than original
-        REQUIRE(filled_masks[0].size() > hollow_rect.size());
-        
-        // Check that interior points are now present
-        bool found_interior = false;
-        for (auto const& point : filled_masks[0]) {
-            if (point.x == 4 && point.y == 4) { // Center should be filled
-                found_interior = true;
-                break;
-            }
-        }
-        REQUIRE(found_interior);
-    }
-    
-    SECTION("preserves solid masks without holes") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({8, 8});
-        
-        // Create a solid 3x3 square
-        std::vector<Point2D<uint32_t>> solid_square;
-        for (uint32_t row = 2; row < 5; ++row) {
-            for (uint32_t col = 2; col < 5; ++col) {
-                solid_square.emplace_back(col, row);
-            }
-        }
+#include "fixtures/scenarios/mask/hole_filling_scenarios.hpp"
 
-        mask_data->addAtTime(TimeFrameIndex(1), Mask2D(solid_square), NotifyObservers::No);
+// ============================================================================
+// Core Functionality Tests (using scenarios)
+// ============================================================================
 
-        MaskHoleFillingParameters params;
-        auto result = fill_mask_holes(mask_data.get(), &params);
-        
-        REQUIRE(result);
-        REQUIRE(result->getTimesWithData().size() == 1);
-        
-        auto result_masks = result->getAtTime(TimeFrameIndex(1));
-        REQUIRE(result_masks.size() == 1);
-        
-        // Should have same number of points (no holes to fill)
-        REQUIRE(result_masks[0].size() == solid_square.size());
-    }
+TEST_CASE("MaskHoleFilling - Fills holes in hollow rectangle",
+          "[mask_hole_filling][transform][scenario]") {
+    auto mask_data = mask_scenarios::hollow_rectangle_6x6();
     
-    SECTION("handles multiple masks at same time") {
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({12, 8});
-        
-        // First mask: hollow rectangle (4x4 with hole in middle)
-        std::vector<Point2D<uint32_t>> hollow_rect;
-        for (uint32_t row = 1; row < 5; ++row) {
-            for (uint32_t col = 1; col < 5; ++col) {
-                if (row == 1 || row == 4 || col == 1 || col == 4) {
-                    hollow_rect.emplace_back(col, row);
-                }
-            }
-        }
-        mask_data->addAtTime(TimeFrameIndex(2), Mask2D(hollow_rect), NotifyObservers::No);
-        
-        // Second mask: small solid 2x2 square
-        std::vector<Point2D<uint32_t>> solid_square;
-        for (uint32_t row = 1; row < 3; ++row) {
-            for (uint32_t col = 7; col < 9; ++col) {
-                solid_square.emplace_back(col, row);
-            }
-        }
-        mask_data->addAtTime(TimeFrameIndex(2), Mask2D(solid_square), NotifyObservers::No);
-        
-        MaskHoleFillingParameters params;
-        auto result = fill_mask_holes(mask_data.get(), &params);
-        
-        REQUIRE(result);
-        auto result_masks = result->getAtTime(TimeFrameIndex(2));
-        REQUIRE(result_masks.size() == 2);
-        
-        // Verify we have the expected sizes
-        std::vector<size_t> mask_sizes;
-        for (auto const& mask : result_masks) {
-            mask_sizes.push_back(mask.size());
-        }
-        std::sort(mask_sizes.begin(), mask_sizes.end());
-        
-        // Should have one mask with 4 points (unchanged 2x2) and one with 16 points (filled 4x4)
-        REQUIRE(mask_sizes[0] == 4);  // Small solid square unchanged
-        REQUIRE(mask_sizes[1] == 16); // Hollow rectangle filled to solid 4x4
-    }
+    // Get original size for comparison
+    auto original_masks = mask_data->getAtTime(TimeFrameIndex(0));
+    REQUIRE(original_masks.size() == 1);
+    size_t original_size = original_masks[0].size();
     
-    SECTION("handles empty mask data") {
-        auto mask_data = std::make_shared<MaskData>();
-        
-        MaskHoleFillingParameters params;
-        auto result = fill_mask_holes(mask_data.get(), &params);
-        
-        REQUIRE(result);
-        REQUIRE(result->getTimesWithData().empty());
-    }
+    MaskHoleFillingParameters params;
+    auto result = fill_mask_holes(mask_data.get(), &params);
     
-    SECTION("handles null input") {
-        MaskHoleFillingParameters params;
-        auto result = fill_mask_holes(nullptr, &params);
-        
-        REQUIRE(result);
-        REQUIRE(result->getTimesWithData().empty());
+    REQUIRE(result);
+    REQUIRE(result->getTimesWithData().size() == 1);
+    
+    auto filled_masks = result->getAtTime(TimeFrameIndex(0));
+    REQUIRE(filled_masks.size() == 1);
+    
+    // The hole should now be filled - should have more points than original
+    REQUIRE(filled_masks[0].size() > original_size);
+    
+    // Check that interior points are now present
+    bool found_interior = false;
+    for (auto const& point : filled_masks[0]) {
+        if (point.x == 4 && point.y == 4) { // Center should be filled
+            found_interior = true;
+            break;
+        }
     }
+    REQUIRE(found_interior);
 }
 
-TEST_CASE("MaskHoleFillingOperation interface tests", "[mask_hole_filling][operation]") {
+TEST_CASE("MaskHoleFilling - Preserves solid masks without holes",
+          "[mask_hole_filling][transform][scenario]") {
+    auto mask_data = mask_scenarios::solid_square_3x3();
     
-    SECTION("operation metadata") {
-        MaskHoleFillingOperation op;
-        
-        REQUIRE(op.getName() == "Fill Mask Holes");
-        REQUIRE(op.getTargetInputTypeIndex() == std::type_index(typeid(std::shared_ptr<MaskData>)));
-        
-        auto default_params = op.getDefaultParameters();
-        REQUIRE(default_params != nullptr);
-        auto hole_filling_params = dynamic_cast<MaskHoleFillingParameters*>(default_params.get());
-        REQUIRE(hole_filling_params != nullptr);
-    }
+    // Get original size for comparison
+    auto original_masks = mask_data->getAtTime(TimeFrameIndex(1));
+    REQUIRE(original_masks.size() == 1);
+    size_t original_size = original_masks[0].size();
     
-    SECTION("canApply method") {
-        MaskHoleFillingOperation op;
-        
-        // Test with valid MaskData
-        auto mask_data = std::make_shared<MaskData>();
-        DataTypeVariant valid_variant = mask_data;
-        REQUIRE(op.canApply(valid_variant));
-        
-        // Test with null MaskData
-        std::shared_ptr<MaskData> null_mask_data = nullptr;
-        DataTypeVariant null_variant = null_mask_data;
-        REQUIRE_FALSE(op.canApply(null_variant));
-        
-    }
+    MaskHoleFillingParameters params;
+    auto result = fill_mask_holes(mask_data.get(), &params);
     
-    SECTION("execute with valid input") {
-        MaskHoleFillingOperation op;
-        
-        auto mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize({6, 6});
-        
-        // Create a donut shape (outer ring)
-        std::vector<Point2D<uint32_t>> donut;
-        for (uint32_t row = 1; row < 5; ++row) {
-            for (uint32_t col = 1; col < 5; ++col) {
-                if (row == 1 || row == 4 || col == 1 || col == 4) {
-                    donut.emplace_back(col, row);
-                }
-            }
-        }
-        mask_data->addAtTime(TimeFrameIndex(0), Mask2D(donut), NotifyObservers::No);
-        
-        DataTypeVariant input_variant = mask_data;
-        MaskHoleFillingParameters params;
-        
-        auto result_variant = op.execute(input_variant, &params, [](int){});
-        
-        REQUIRE(std::holds_alternative<std::shared_ptr<MaskData>>(result_variant));
-        
-        auto result_mask_data = std::get<std::shared_ptr<MaskData>>(result_variant);
-        REQUIRE(result_mask_data);
-        
-        auto result_masks = result_mask_data->getAtTime(TimeFrameIndex(0));
-        REQUIRE(result_masks.size() == 1);
-        
-        // Should have filled the hole (16 points total for 4x4 square)
-        REQUIRE(result_masks[0].size() == 16);
-    }
+    REQUIRE(result);
+    REQUIRE(result->getTimesWithData().size() == 1);
+    
+    auto result_masks = result->getAtTime(TimeFrameIndex(1));
+    REQUIRE(result_masks.size() == 1);
+    
+    // Should have same number of points (no holes to fill)
+    REQUIRE(result_masks[0].size() == original_size);
 }
+
+TEST_CASE("MaskHoleFilling - Handles multiple masks at same time",
+          "[mask_hole_filling][transform][scenario]") {
+    auto mask_data = mask_scenarios::multiple_masks_hollow_and_solid();
+    
+    MaskHoleFillingParameters params;
+    auto result = fill_mask_holes(mask_data.get(), &params);
+    
+    REQUIRE(result);
+    auto result_masks = result->getAtTime(TimeFrameIndex(2));
+    REQUIRE(result_masks.size() == 2);
+    
+    // Verify we have the expected sizes
+    std::vector<size_t> mask_sizes;
+    for (auto const& mask : result_masks) {
+        mask_sizes.push_back(mask.size());
+    }
+    std::sort(mask_sizes.begin(), mask_sizes.end());
+    
+    // Should have one mask with 4 points (unchanged 2x2) and one with 16 points (filled 4x4)
+    REQUIRE(mask_sizes[0] == 4);  // Small solid square unchanged
+    REQUIRE(mask_sizes[1] == 16); // Hollow rectangle filled to solid 4x4
+}
+
+// ============================================================================
+// Edge Cases (using scenarios)
+// ============================================================================
+
+TEST_CASE("MaskHoleFilling - Handles empty mask data",
+          "[mask_hole_filling][transform][edge][scenario]") {
+    auto mask_data = mask_scenarios::empty_mask_data();
+    
+    MaskHoleFillingParameters params;
+    auto result = fill_mask_holes(mask_data.get(), &params);
+    
+    REQUIRE(result);
+    REQUIRE(result->getTimesWithData().empty());
+}
+
+TEST_CASE("MaskHoleFilling - Handles null input",
+          "[mask_hole_filling][transform][edge]") {
+    MaskHoleFillingParameters params;
+    auto result = fill_mask_holes(nullptr, &params);
+    
+    REQUIRE(result);
+    REQUIRE(result->getTimesWithData().empty());
+}
+
+// ============================================================================
+// Operation Interface Tests
+// ============================================================================
+
+TEST_CASE("MaskHoleFillingOperation - Operation metadata",
+          "[mask_hole_filling][operation]") {
+    MaskHoleFillingOperation op;
+    
+    REQUIRE(op.getName() == "Fill Mask Holes");
+    REQUIRE(op.getTargetInputTypeIndex() == std::type_index(typeid(std::shared_ptr<MaskData>)));
+    
+    auto default_params = op.getDefaultParameters();
+    REQUIRE(default_params != nullptr);
+    auto hole_filling_params = dynamic_cast<MaskHoleFillingParameters*>(default_params.get());
+    REQUIRE(hole_filling_params != nullptr);
+}
+
+TEST_CASE("MaskHoleFillingOperation - Can apply to valid MaskData",
+          "[mask_hole_filling][operation][scenario]") {
+    MaskHoleFillingOperation op;
+    auto mask_data = mask_scenarios::hollow_rectangle_6x6();
+    DataTypeVariant valid_variant = mask_data;
+    REQUIRE(op.canApply(valid_variant));
+}
+
+TEST_CASE("MaskHoleFillingOperation - Cannot apply to null MaskData",
+          "[mask_hole_filling][operation]") {
+    MaskHoleFillingOperation op;
+    std::shared_ptr<MaskData> null_mask_data = nullptr;
+    DataTypeVariant null_variant = null_mask_data;
+    REQUIRE_FALSE(op.canApply(null_variant));
+}
+
+TEST_CASE("MaskHoleFillingOperation - Execute with valid input",
+          "[mask_hole_filling][operation][scenario]") {
+    MaskHoleFillingOperation op;
+    auto mask_data = mask_scenarios::donut_shape_4x4();
+    
+    DataTypeVariant input_variant = mask_data;
+    MaskHoleFillingParameters params;
+    
+    auto result_variant = op.execute(input_variant, &params, [](int){});
+    
+    REQUIRE(std::holds_alternative<std::shared_ptr<MaskData>>(result_variant));
+    
+    auto result_mask_data = std::get<std::shared_ptr<MaskData>>(result_variant);
+    REQUIRE(result_mask_data);
+    
+    auto result_masks = result_mask_data->getAtTime(TimeFrameIndex(0));
+    REQUIRE(result_masks.size() == 1);
+    
+    // Should have filled the hole (16 points total for 4x4 square)
+    REQUIRE(result_masks[0].size() == 16);
+}
+
+// ============================================================================
+// JSON Pipeline Tests
+// ============================================================================
 
 #include "DataManager.hpp"
 #include "IO/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "transforms/ParameterFactory.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mask_hole_filling][json]") {
-    // Create DataManager and populate it with MaskData in code
+TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline",
+          "[transforms][mask_hole_filling][json][scenario]") {
+    // Create DataManager with time frame
     DataManager dm;
-
-    // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test mask data in code - a hollow rectangle with hole in the middle
-    auto test_mask = std::make_shared<MaskData>();
-    test_mask->setImageSize({10, 10});
+    // Add test data from scenario
+    auto test_mask = mask_scenarios::json_pipeline_hollow_rectangle_hole_filling();
     test_mask->setTimeFrame(time_frame);
-    
-    // Create a hollow rectangle (6x6 with hole in middle)
-    std::vector<Point2D<uint32_t>> hollow_rect;
-    for (uint32_t row = 2; row < 8; ++row) {
-        for (uint32_t col = 2; col < 8; ++col) {
-            if (row == 2 || row == 7 || col == 2 || col == 7) {
-                hollow_rect.emplace_back(col, row);
-            }
-        }
-    }
-    test_mask->addAtTime(TimeFrameIndex(0), Mask2D(hollow_rect), NotifyObservers::No);
-    
-    // Store the mask data in DataManager with a known key
     dm.setData("test_mask", test_mask, TimeKey("default"));
+    
+    // Get original size for comparison
+    auto original_masks = test_mask->getAtTime(TimeFrameIndex(0));
+    REQUIRE(original_masks.size() == 1);
+    size_t original_size = original_masks[0].size();
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -286,7 +247,7 @@ TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mas
     REQUIRE(result_masks.size() == 1);
     
     // The hole should now be filled - should have more points than original
-    REQUIRE(result_masks[0].size() > hollow_rect.size());
+    REQUIRE(result_masks[0].size() > original_size);
     
     // Check that interior points are now present (the hole should be filled)
     bool found_interior = false;
@@ -298,31 +259,24 @@ TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mas
     }
     REQUIRE(found_interior);
     
-    // Test another pipeline with multiple masks
-    auto test_mask_multi = std::make_shared<MaskData>();
-    test_mask_multi->setImageSize({12, 8});
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE("Data Transform: Mask Hole Filling - Multi-mask JSON pipeline",
+          "[transforms][mask_hole_filling][json][scenario]") {
+    // Create DataManager with time frame
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Add test data from scenario
+    auto test_mask_multi = mask_scenarios::json_pipeline_multi_mask_hole_filling();
     test_mask_multi->setTimeFrame(time_frame);
-    
-    // First mask: hollow rectangle (4x4 with hole in middle)
-    std::vector<Point2D<uint32_t>> hollow_rect_small;
-    for (uint32_t row = 1; row < 5; ++row) {
-        for (uint32_t col = 1; col < 5; ++col) {
-            if (row == 1 || row == 4 || col == 1 || col == 4) {
-                hollow_rect_small.emplace_back(col, row);
-            }
-        }
-    }
-    test_mask_multi->addAtTime(TimeFrameIndex(0), Mask2D(hollow_rect_small), NotifyObservers::No);
-    
-    // Second mask: small solid 2x2 square
-    std::vector<Point2D<uint32_t>> solid_square;
-    for (uint32_t row = 1; row < 3; ++row) {
-        for (uint32_t col = 7; col < 9; ++col) {
-            solid_square.emplace_back(col, row);
-        }
-    }
-    test_mask_multi->addAtTime(TimeFrameIndex(0), Mask2D(solid_square), NotifyObservers::No);
-    
     dm.setData("test_mask_multi", test_mask_multi, TimeKey("default"));
     
     const char* json_config_multi = 
@@ -347,6 +301,10 @@ TEST_CASE("Data Transform: Mask Hole Filling - JSON pipeline", "[transforms][mas
         "    }\n"
         "}\n"
         "]";
+    
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_hole_filling_multi_test";
+    std::filesystem::create_directories(test_dir);
     
     std::filesystem::path json_filepath_multi = test_dir / "pipeline_config_multi.json";
     {
