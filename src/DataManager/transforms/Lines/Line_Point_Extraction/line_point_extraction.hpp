@@ -34,10 +34,6 @@ struct LinePointExtractionParameters : public TransformParametersBase {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-std::optional<Point2D<float>> extract_direct_point(Line2D const & line,
-                                                   float position,
-                                                   bool use_interpolation);
-
 std::optional<Point2D<float>> extract_parametric_point(Line2D const & line,
                                                        float position,
                                                        int polynomial_order);

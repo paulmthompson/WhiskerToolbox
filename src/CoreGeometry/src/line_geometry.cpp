@@ -499,3 +499,90 @@ std::optional<Point2D<float>> line_segment_intersection(
     return std::nullopt;
 }
 
+
+std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
+    Line2D const & line, Line2D const & reference_line) {
+    
+    if (line.size() < 2 || reference_line.size() < 2) {
+        return std::nullopt;
+    }
+    
+    // Check each segment of the main line against each segment of the reference line
+    for (size_t i = 0; i < line.size() - 1; ++i) {
+        for (size_t j = 0; j < reference_line.size() - 1; ++j) {
+            auto intersection = line_segment_intersection(
+                line[i], line[i + 1],
+                reference_line[j], reference_line[j + 1]
+            );
+            
+            if (intersection.has_value()) {
+                return std::make_pair(intersection.value(), i);
+            }
+        }
+    }
+    
+    return std::nullopt;
+}
+
+Line2D clip_line_at_intersection(
+    Line2D const & line, 
+    Line2D const & reference_line, 
+    ClipSide clip_side) {
+    
+    if (line.size() < 2) {
+        return line; // Return original line if too short
+    }
+    
+    auto intersection_result = find_line_intersection(line, reference_line);
+    
+    if (!intersection_result.has_value()) {
+        // No intersection found, return original line
+        return line;
+    }
+
+    Point2D<float> const intersection_point = intersection_result->first;
+    size_t const segment_index = intersection_result->second;
+
+    Line2D clipped_line;
+    
+    if (clip_side == ClipSide::KeepBase) {
+        // Keep from start to intersection
+        for (size_t i = 0; i <= segment_index; ++i) {
+            clipped_line.push_back(line[i]);
+        }
+        // Add intersection point if it's not the same as the last point
+        if (clipped_line.empty() || 
+            (std::abs(clipped_line.back().x - intersection_point.x) > 1e-6f ||
+             std::abs(clipped_line.back().y - intersection_point.y) > 1e-6f)) {
+            clipped_line.push_back(intersection_point);
+        }
+    } else { // ClipSide::KeepDistal
+        // Keep from intersection to end
+        clipped_line.push_back(intersection_point);
+        for (size_t i = segment_index + 1; i < line.size(); ++i) {
+            clipped_line.push_back(line[i]);
+        }
+    }
+    
+    return clipped_line;
+}
+
+float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & line) {
+    if (line.size() < 2) {
+        // If the line has fewer than 2 points, it's not a valid line
+        return std::numeric_limits<float>::max();
+    }
+
+    float min_distance = std::numeric_limits<float>::max();
+
+    // Check each segment of the line
+    for (size_t i = 0; i < line.size() - 1; ++i) {
+        Point2D<float> const & segment_start = line[i];
+        Point2D<float> const & segment_end = line[i + 1];
+
+        float distance = point_to_line_segment_distance2(point, segment_start, segment_end);
+        min_distance = std::min(min_distance, distance);
+    }
+
+    return min_distance;
+}

@@ -14,17 +14,6 @@
 #include <optional>
 #include <vector>
 
-/**
- * @brief Extract point using direct point selection based on distance
- */
-std::optional<Point2D<float>> extract_direct_point(
-        Line2D const & line,
-        float position,
-        bool use_interpolation) {
-    
-    // Use the new distance-based utility function
-    return point_at_fractional_position(line, position, use_interpolation);
-}
 
 /**
  * @brief Extract point using parametric polynomial interpolation
@@ -48,13 +37,13 @@ std::optional<Point2D<float>> extract_parametric_point(
     // Need enough points for polynomial fitting
     if (line.size() < static_cast<size_t>(polynomial_order + 1)) {
         // Fall back to direct method
-        return extract_direct_point(line, position, true);
+        return point_at_fractional_position(line, position, true);
     }
     
     // Compute t-values for the entire line
     std::vector<double> t_values = compute_t_values(line);
     if (t_values.empty()) {
-        return extract_direct_point(line, position, true);
+        return point_at_fractional_position(line, position, true);
     }
     
     // Extract coordinates
@@ -73,7 +62,7 @@ std::optional<Point2D<float>> extract_parametric_point(
     
     if (x_coeffs.empty() || y_coeffs.empty()) {
         // Fall back to direct method if fitting failed
-        return extract_direct_point(line, position, true);
+        return point_at_fractional_position(line, position, true);
     }
     
     // Evaluate polynomials at the specified position
@@ -128,7 +117,7 @@ std::shared_ptr<PointData> extract_line_point(
                 std::optional<Point2D<float>> extracted_point;
                 
                 if (params.method == PointExtractionMethod::Direct) {
-                    extracted_point = extract_direct_point(
+                    extracted_point = point_at_fractional_position(
                         line,
                         params.position,
                         params.use_interpolation

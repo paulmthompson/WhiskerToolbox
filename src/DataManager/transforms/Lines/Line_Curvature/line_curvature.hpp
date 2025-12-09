@@ -25,14 +25,6 @@ struct LineCurvatureParameters : public TransformParametersBase {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-std::optional<float> calculate_polynomial_curvature(
-        Line2D const & line,
-        float t_position,
-        int polynomial_order,
-        float fitting_window_percentage);
-
-///////////////////////////////////////////////////////////////////////////////
-
 std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
                                                  LineCurvatureParameters const * params);
 

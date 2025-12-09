@@ -14,16 +14,6 @@ class AnalogTimeSeries;
 class LineData;
 class PointData;
 
-float point_to_line_segment_distance2(
-        Point2D<float> const & point,
-        Point2D<float> const & line_start,
-        Point2D<float> const & line_end);
-
-Point2D<float> scale_point(Point2D<float> const & point, 
-                           ImageSize const & from_size, 
-                           ImageSize const & to_size);
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data,

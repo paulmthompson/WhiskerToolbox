@@ -13,26 +13,6 @@
 #include <limits>
 #include <map>
 
-// Calculate the minimum distance^2 from a point to any segment of a line
-float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & line) {
-    if (line.size() < 2) {
-        // If the line has fewer than 2 points, it's not a valid line
-        return std::numeric_limits<float>::max();
-    }
-
-    float min_distance = std::numeric_limits<float>::max();
-
-    // Check each segment of the line
-    for (size_t i = 0; i < line.size() - 1; ++i) {
-        Point2D<float> const & segment_start = line[i];
-        Point2D<float> const & segment_end = line[i + 1];
-
-        float distance = point_to_line_segment_distance2(point, segment_start, segment_end);
-        min_distance = std::min(min_distance, distance);
-    }
-
-    return min_distance;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 
