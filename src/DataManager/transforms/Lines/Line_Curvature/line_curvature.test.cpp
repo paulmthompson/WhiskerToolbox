@@ -6,14 +6,14 @@
 #include "transforms/Lines/Line_Curvature/line_curvature.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
-#include <vector>
-#include <memory> // std::make_shared
-#include <functional> // std::function
+#include "fixtures/builders/LineDataBuilder.hpp"
+#include "fixtures/scenarios/line/curvature_scenarios.hpp"
 
-// Using Catch::Matchers::Equals for vectors of floats.
+#include <vector>
+#include <memory>
+#include <functional>
 
 TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms][line_curvature]") {
-    std::shared_ptr<LineData> line_data;
     std::shared_ptr<AnalogTimeSeries> result_curvature;
     LineCurvatureParameters params;
     volatile int progress_val = -1; // Volatile to prevent optimization issues in test
@@ -24,19 +24,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms]
     };
 
     SECTION("Simple curved line with polynomial fit") {
-        // Create a simple curved line (parabola-like)
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::parabola();
         
-        // Create a curved line with points forming a parabola
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f}; // y = x^2
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.position = 0.5f; // Middle of the line
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
@@ -56,18 +45,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms]
     }
 
     SECTION("Straight line (should have low curvature)") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::straight_line();
         
-        // Create a straight line
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f}; // y = x (straight line)
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
@@ -83,18 +62,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms]
     }
 
     SECTION("Different positions along the line") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::parabola();
         
-        // Create a curved line
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
@@ -122,17 +91,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms]
     }
 
     SECTION("Different polynomial orders") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::parabola();
         
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.fitting_window_percentage = 0.1f;
@@ -155,17 +115,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms]
     }
 
     SECTION("Different fitting window percentages") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::parabola();
         
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
@@ -189,7 +140,6 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Happy Path", "[transforms]
 }
 
 TEST_CASE("Data Transform: Calculate Line Curvature - Error and Edge Cases", "[transforms][line_curvature]") {
-    std::shared_ptr<LineData> line_data;
     std::shared_ptr<AnalogTimeSeries> result_curvature;
     LineCurvatureParameters params;
     volatile int progress_val = -1;
@@ -200,21 +150,19 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Error and Edge Cases", "[t
     };
 
     SECTION("Null input LineData") {
-        line_data = nullptr; // Deliberately null
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
 
-        result_curvature = line_curvature(line_data.get(), &params);
+        result_curvature = line_curvature(nullptr, &params);
         REQUIRE(result_curvature != nullptr);
         REQUIRE(result_curvature->getAnalogTimeSeries().empty());
-
     }
 
     SECTION("Empty LineData (no lines)") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> empty_data;
-        line_data = std::make_shared<LineData>(empty_data);
+        auto line_data = curvature_scenarios::empty();
+        
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
@@ -234,18 +182,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Error and Edge Cases", "[t
     }
 
     SECTION("Line with insufficient points for polynomial fit") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::two_point_line();
         
-        // Create a line with only 2 points (insufficient for polynomial fit)
-        std::vector<float> x_coords = {0.0f, 1.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f};
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
@@ -258,17 +196,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Error and Edge Cases", "[t
     }
 
     SECTION("Position outside valid range") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::parabola();
         
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.polynomial_order = 3;
         params.fitting_window_percentage = 0.1f;
@@ -286,17 +215,8 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Error and Edge Cases", "[t
     }
 
     SECTION("Invalid polynomial order") {
-        std::map<TimeFrameIndex, std::vector<Line2D>> data;
-        std::vector<Line2D> lines;
+        auto line_data = curvature_scenarios::parabola();
         
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f};
-        
-        Line2D line = create_line(x_coords, y_coords);
-        lines.push_back(line);
-        data[TimeFrameIndex(100)] = lines;
-        
-        line_data = std::make_shared<LineData>(data);
         params.position = 0.5f;
         params.method = CurvatureCalculationMethod::PolynomialFit;
         params.fitting_window_percentage = 0.1f;
@@ -345,19 +265,12 @@ TEST_CASE("Data Transform: Calculate Line Curvature - JSON pipeline", "[transfor
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test line data
-    std::map<TimeFrameIndex, std::vector<Line2D>> line_data_map;
-    std::vector<Line2D> lines;
-    
-    // Create a curved line (parabola)
-    std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-    std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f}; // y = x^2
-    
-    Line2D line = create_line(x_coords, y_coords);
-    lines.push_back(line);
-    line_data_map[TimeFrameIndex(100)] = lines;
-    
-    auto line_data = std::make_shared<LineData>(line_data_map);
+    // Create test line data using builder
+    auto line_data = LineDataBuilder()
+        .withCoords(100, 
+            {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f},
+            {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f})  // y = x^2
+        .build();
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLine.line1", line_data, TimeKey("default"));
 
@@ -406,26 +319,19 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Parameter Factory", "[tran
 }
 
 TEST_CASE("Data Transform: Calculate Line Curvature - load_data_from_json_config", "[transforms][line_curvature][json_config]") {
-    // Create DataManager and populate it with LineData in code
+    // Create DataManager and populate it with LineData using builder
     DataManager dm;
 
     // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test line data in code
-    std::map<TimeFrameIndex, std::vector<Line2D>> line_data_map;
-    std::vector<Line2D> lines;
-    
-    // Create a curved line (parabola)
-    std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-    std::vector<float> y_coords = {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f}; // y = x^2
-    
-    Line2D line = create_line(x_coords, y_coords);
-    lines.push_back(line);
-    line_data_map[TimeFrameIndex(100)] = lines;
-    
-    auto test_line_data = std::make_shared<LineData>(line_data_map);
+    // Create test line data using builder (parabola)
+    auto test_line_data = LineDataBuilder()
+        .withCoords(100, 
+            {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f},
+            {0.0f, 1.0f, 4.0f, 9.0f, 16.0f, 25.0f})  // y = x^2
+        .build();
     test_line_data->setTimeFrame(time_frame);
     
     // Store the line data in DataManager with a known key
