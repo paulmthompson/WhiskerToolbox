@@ -6,6 +6,8 @@
 #include "transforms/Masks/Mask_To_Line/mask_to_line.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
+#include "fixtures/scenarios/mask/mask_to_line_scenarios.hpp"
+
 #include <vector>
 #include <memory> // std::make_shared
 #include <functional> // std::function
@@ -24,18 +26,8 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
     };
 
     SECTION("Skeletonize method - simple mask") {
-        // Create a simple rectangular mask
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-            {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
-            {10, 13}, {11, 13}, {12, 13}, {13, 13}, {14, 13},
-            {10, 14}, {11, 14}, {12, 14}, {13, 14}, {14, 14}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        // Create a simple rectangular mask using scenario
+        mask_data = mask_to_line_scenarios::simple_rectangle();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -59,19 +51,8 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
     }
 
     SECTION("Nearest to Reference method - simple mask") {
-        // Create a simple L-shaped mask
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-            {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
-            {10, 13}, {11, 13}, {12, 13}, {13, 13}, {14, 13},
-            {10, 14}, {11, 14}, {12, 14}, {13, 14}, {14, 14},
-            {15, 14}, {16, 14}, {17, 14}, {18, 14}, {19, 14}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        // Create a simple L-shaped mask using scenario
+        mask_data = mask_to_line_scenarios::l_shaped_mask();
         
         params.method = LinePointSelectionMethod::NearestToReference;
         params.reference_x = 5.0f;
@@ -89,16 +70,8 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
     }
 
     SECTION("Smoothing enabled") {
-        // Create a simple mask
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-            {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        // Create a simple mask using scenario
+        mask_data = mask_to_line_scenarios::thin_rectangle();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -114,21 +87,8 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
     }
 
     SECTION("Multiple time frames") {
-        // Create masks at multiple time frames
-        Mask2D mask_points_1 = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11}
-        };
-        
-        Mask2D mask_points_2 = {
-            {20, 20}, {21, 20}, {22, 20}, {23, 20}, {24, 20},
-            {20, 21}, {21, 21}, {22, 21}, {23, 21}, {24, 21}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points_1, NotifyObservers::No);
-        mask_data->addAtTime(TimeFrameIndex(200), mask_points_2, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        // Create masks at multiple time frames using scenario
+        mask_data = mask_to_line_scenarios::multiple_time_frames();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -144,16 +104,8 @@ TEST_CASE("Data Transform: Mask To Line - Happy Path", "[transforms][mask_to_lin
     }
 
     SECTION("Progress callback detailed check") {
-        // Create a simple mask
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-            {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        // Create a simple mask using scenario
+        mask_data = mask_to_line_scenarios::thin_rectangle();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -214,8 +166,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("Empty MaskData (no masks)") {
-        mask_data = std::make_shared<MaskData>();
-        mask_data->setImageSize(ImageSize{100, 100});
+        mask_data = mask_to_line_scenarios::empty_mask_data();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -239,11 +190,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("Very small mask (single point)") {
-        Mask2D mask_points = {{10, 10}};
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        mask_data = mask_to_line_scenarios::single_point();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -259,13 +206,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("High polynomial order with few points") {
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        mask_data = mask_to_line_scenarios::horizontal_line_mask();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 10; // Higher than number of points
@@ -281,14 +222,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("Zero error threshold") {
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        mask_data = mask_to_line_scenarios::thin_mask_few_points();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -304,15 +238,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
     }
 
     SECTION("High subsample factor") {
-        Mask2D mask_points = {
-            {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-            {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-            {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12}
-        };
-        
-        mask_data = std::make_shared<MaskData>();
-        mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-        mask_data->setImageSize(ImageSize{100, 100});
+        mask_data = mask_to_line_scenarios::subsample_test_mask();
         
         params.method = LinePointSelectionMethod::Skeletonize;
         params.polynomial_order = 3;
@@ -364,18 +290,8 @@ TEST_CASE("Data Transform: Mask To Line - JSON pipeline", "[transforms][mask_to_
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test mask data
-    Mask2D mask_points = {
-        {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-        {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-        {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
-        {10, 13}, {11, 13}, {12, 13}, {13, 13}, {14, 13},
-        {10, 14}, {11, 14}, {12, 14}, {13, 14}, {14, 14}
-    };
-    
-    auto mask_data = std::make_shared<MaskData>();
-    mask_data->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-    mask_data->setImageSize(ImageSize{100, 100});
+    // Create test mask data using scenario
+    auto mask_data = mask_to_line_scenarios::json_pipeline_mask();
     mask_data->setTimeFrame(time_frame);
     dm.setData("TestMask", mask_data, TimeKey("default"));
 
@@ -430,25 +346,15 @@ TEST_CASE("Data Transform: Mask To Line - Parameter Factory", "[transforms][mask
 }
 
 TEST_CASE("Data Transform: Mask To Line - load_data_from_json_config", "[transforms][mask_to_line][json_config]") {
-    // Create DataManager and populate it with MaskData in code
+    // Create DataManager and populate it with MaskData using scenario
     DataManager dm;
 
     // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test mask data in code
-    Mask2D mask_points = {
-        {10, 10}, {11, 10}, {12, 10}, {13, 10}, {14, 10},
-        {10, 11}, {11, 11}, {12, 11}, {13, 11}, {14, 11},
-        {10, 12}, {11, 12}, {12, 12}, {13, 12}, {14, 12},
-        {10, 13}, {11, 13}, {12, 13}, {13, 13}, {14, 13},
-        {10, 14}, {11, 14}, {12, 14}, {13, 14}, {14, 14}
-    };
-    
-    auto test_mask = std::make_shared<MaskData>();
-    test_mask->addAtTime(TimeFrameIndex(100), mask_points, NotifyObservers::No);
-    test_mask->setImageSize(ImageSize{100, 100});
+    // Create test mask data using scenario
+    auto test_mask = mask_to_line_scenarios::json_pipeline_mask();
     test_mask->setTimeFrame(time_frame);
     
     // Store the mask data in DataManager with a known key
