@@ -1,6 +1,7 @@
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
@@ -14,6 +15,7 @@
 #include "transforms/v2/algorithms/LineResample/LineResample.hpp"
 #include "transforms/v2/algorithms/LineSubsegment/LineSubsegment.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
+#include "transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
@@ -37,6 +39,7 @@ namespace {
 bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<NoParams>();
     registerPipelineStepFactoryFor<MaskAreaParams>();
+    registerPipelineStepFactoryFor<MaskCentroidParams>();
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
@@ -93,6 +96,44 @@ auto const register_mask_area_ctx = RegisterContextTransform<Mask2D, float, Mask
                 .input_type_name = "Mask2D",
                 .output_type_name = "float",
                 .params_type_name = "MaskAreaParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register MaskCentroidTransform
+auto const register_mask_centroid = RegisterTransform<Mask2D, Point2D<float>, MaskCentroidParams>(
+        "CalculateMaskCentroid",
+        calculateMaskCentroid,
+        TransformMetadata{
+                .name = "CalculateMaskCentroid",
+                .description = "Calculate the centroid (center of mass) of a mask",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Point2D<float>),
+                .params_type = typeid(MaskCentroidParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Point2D<float>",
+                .params_type_name = "MaskCentroidParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of MaskCentroid
+auto const register_mask_centroid_ctx = RegisterContextTransform<Mask2D, Point2D<float>, MaskCentroidParams>(
+        "CalculateMaskCentroidWithContext",
+        calculateMaskCentroidWithContext,
+        TransformMetadata{
+                .name = "CalculateMaskCentroidWithContext",
+                .description = "Calculate the centroid of a mask with progress reporting",
+                .category = "Image Processing",
+                .input_type = typeid(Mask2D),
+                .output_type = typeid(Point2D<float>),
+                .params_type = typeid(MaskCentroidParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Mask2D",
+                .output_type_name = "Point2D<float>",
+                .params_type_name = "MaskCentroidParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});

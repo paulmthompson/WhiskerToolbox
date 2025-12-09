@@ -127,6 +127,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineResample/LineResample.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineSubsegment/LineSubsegment.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskCentroid/MaskCentroid.test.cpp
 
 )
 
