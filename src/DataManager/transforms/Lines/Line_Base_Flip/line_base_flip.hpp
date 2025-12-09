@@ -62,14 +62,14 @@ private:
      * @param reference_point The manually placed reference point
      * @return true if the line should be flipped, false otherwise
      */
-    bool shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point);
+    static bool shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point);
 
     /**
      * @brief Flip a line by reversing the order of its points
      * @param line The line to flip
      * @return The flipped line
      */
-    Line2D flipLine(Line2D const & line);
+    static Line2D flipLine(Line2D const & line);
 };
 
 #endif // LINE_BASE_FLIP_HPP

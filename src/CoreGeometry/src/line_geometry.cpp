@@ -2,6 +2,8 @@
 
 #include "CoreGeometry/point_geometry.hpp"
 
+#include <optional>
+
 float calc_length(Line2D const & line) {
     if (line.size() < 2) {
         return 0.0f;

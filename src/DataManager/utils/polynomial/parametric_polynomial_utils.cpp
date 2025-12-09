@@ -3,7 +3,7 @@
 
 #include "armadillo" // For arma::mat, arma::vec, arma::solve, arma::conv_to
 
-#include <cmath> // For std::sqrt, std::pow, std::isnan, std::isinf
+#include <cmath>     // For std::sqrt, std::pow, std::isnan, std::isinf
 #include <optional>
 #include <vector>
 
