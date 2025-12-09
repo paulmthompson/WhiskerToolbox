@@ -2,6 +2,7 @@
 
 #include "Lines/Line_Data.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/point_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
@@ -87,12 +88,6 @@ DataTypeVariant LineBaseFlipTransform::execute(DataTypeVariant const & dataVaria
     return output_line_data;
 }
 
-float LineBaseFlipTransform::distanceSquared(Point2D<float> const & p1, Point2D<float> const & p2) {
-    float const dx = p1.x - p2.x;
-    float const dy = p1.y - p2.y;
-    return dx * dx + dy * dy;
-}
-
 bool LineBaseFlipTransform::shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point) {
     if (line.empty() || line.size() < 2) {
         return false; // Can't flip a line with less than 2 points
@@ -103,8 +98,8 @@ bool LineBaseFlipTransform::shouldFlipLine(Line2D const & line, Point2D<float> c
     Point2D<float> const current_end = line.back();
 
     // Calculate squared distances to avoid expensive sqrt operations
-    float const base_distance_sq = distanceSquared(current_base, reference_point);
-    float const end_distance_sq = distanceSquared(current_end, reference_point);
+    float const base_distance_sq = calc_distance2(current_base, reference_point);
+    float const end_distance_sq = calc_distance2(current_end, reference_point);
 
     // Flip if the current base is farther from reference than the end
     return base_distance_sq > end_distance_sq;

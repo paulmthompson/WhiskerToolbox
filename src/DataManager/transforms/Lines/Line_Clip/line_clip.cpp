@@ -1,116 +1,13 @@
 #include "line_clip.hpp"
 
 #include "Lines/Line_Data.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 
 #include <cmath>
 #include <iostream>
 #include <vector>
 
-std::optional<Point2D<float>> line_segment_intersection(
-    Point2D<float> const & p1, Point2D<float> const & p2,
-    Point2D<float> const & p3, Point2D<float> const & p4) {
-    
-    // Calculate direction vectors
-    float d1x = p2.x - p1.x;
-    float d1y = p2.y - p1.y;
-    float d2x = p4.x - p3.x;
-    float d2y = p4.y - p3.y;
-    
-    // Calculate the denominator for the intersection calculation
-    float denominator = d1x * d2y - d1y * d2x;
-    
-    // Check if lines are parallel (denominator is zero)
-    if (std::abs(denominator) < 1e-10f) {
-        return std::nullopt;
-    }
-    
-    // Calculate parameters for intersection point
-    float dx = p3.x - p1.x;
-    float dy = p3.y - p1.y;
-    
-    float t1 = (dx * d2y - dy * d2x) / denominator;
-    float t2 = (dx * d1y - dy * d1x) / denominator;
-    
-    // Check if intersection point lies within both line segments
-    if (t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f) {
-        // Calculate intersection point
-        Point2D<float> intersection;
-        intersection.x = p1.x + t1 * d1x;
-        intersection.y = p1.y + t1 * d1y;
-        
-        return intersection;
-    }
-    
-    return std::nullopt;
-}
-
-std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
-    Line2D const & line, Line2D const & reference_line) {
-    
-    if (line.size() < 2 || reference_line.size() < 2) {
-        return std::nullopt;
-    }
-    
-    // Check each segment of the main line against each segment of the reference line
-    for (size_t i = 0; i < line.size() - 1; ++i) {
-        for (size_t j = 0; j < reference_line.size() - 1; ++j) {
-            auto intersection = line_segment_intersection(
-                line[i], line[i + 1],
-                reference_line[j], reference_line[j + 1]
-            );
-            
-            if (intersection.has_value()) {
-                return std::make_pair(intersection.value(), i);
-            }
-        }
-    }
-    
-    return std::nullopt;
-}
-
-Line2D clip_line_at_intersection(
-    Line2D const & line, 
-    Line2D const & reference_line, 
-    ClipSide clip_side) {
-    
-    if (line.size() < 2) {
-        return line; // Return original line if too short
-    }
-    
-    auto intersection_result = find_line_intersection(line, reference_line);
-    
-    if (!intersection_result.has_value()) {
-        // No intersection found, return original line
-        return line;
-    }
-
-    Point2D<float> const intersection_point = intersection_result->first;
-    size_t const segment_index = intersection_result->second;
-
-    Line2D clipped_line;
-    
-    if (clip_side == ClipSide::KeepBase) {
-        // Keep from start to intersection
-        for (size_t i = 0; i <= segment_index; ++i) {
-            clipped_line.push_back(line[i]);
-        }
-        // Add intersection point if it's not the same as the last point
-        if (clipped_line.empty() || 
-            (std::abs(clipped_line.back().x - intersection_point.x) > 1e-6f ||
-             std::abs(clipped_line.back().y - intersection_point.y) > 1e-6f)) {
-            clipped_line.push_back(intersection_point);
-        }
-    } else { // ClipSide::KeepDistal
-        // Keep from intersection to end
-        clipped_line.push_back(intersection_point);
-        for (size_t i = segment_index + 1; i < line.size(); ++i) {
-            clipped_line.push_back(line[i]);
-        }
-    }
-    
-    return clipped_line;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -2,9 +2,44 @@
 #define WHISKERTOOLBOX_IMAGE_HPP
 
 #include "ImageSize.hpp"
+#include "points.hpp"
 
+#include <cmath>
 #include <cstdint>
 #include <vector>
+
+/**
+ * @brief Get pixel value from image data at a specified point
+ * 
+ * This template function retrieves the pixel value at a given point in an image,
+ * using row-major order indexing. The point coordinates are rounded to the nearest
+ * integer pixel location.
+ * 
+ * @tparam T The pixel data type (e.g., uint8_t, float)
+ * @param point The point coordinates to sample
+ * @param image_data The image pixel data in row-major order
+ * @param image_size The dimensions of the image
+ * @return The pixel value at the specified point, or 0 if out of bounds
+ */
+template<typename T>
+T get_pixel_value(Point2D<float> const & point,
+                  std::vector<T> const & image_data,
+                  ImageSize const & image_size) {
+    int x = static_cast<int>(std::round(point.x));
+    int y = static_cast<int>(std::round(point.y));
+
+    // Check bounds
+    if (x < 0 || x >= image_size.width || y < 0 || y >= image_size.height) {
+        return 0;
+    }
+
+    size_t index = static_cast<size_t>(y * image_size.width + x);
+    if (index < image_data.size()) {
+        return image_data[index];
+    }
+
+    return 0;
+}
 
 /**
  * @brief A binary image structure containing pixel data and dimensions.

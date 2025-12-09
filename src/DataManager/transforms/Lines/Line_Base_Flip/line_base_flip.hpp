@@ -57,11 +57,6 @@ public:
 
 private:
     /**
-     * @brief Calculate squared distance between two points (avoids sqrt for performance)
-     */
-    static float distanceSquared(Point2D<float> const & p1, Point2D<float> const & p2);
-
-    /**
      * @brief Determine if a line should be flipped based on reference point
      * @param line The line to evaluate
      * @param reference_point The manually placed reference point

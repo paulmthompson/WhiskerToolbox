@@ -1,6 +1,7 @@
 #include "LineBaseFlip.hpp"
 
 #include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/point_geometry.hpp"
 #include "transforms/v2/core/ComputeContext.hpp"
 
 #include <algorithm>
@@ -13,12 +14,6 @@ namespace WhiskerToolbox::Transforms::V2::Examples {
 // Helper Functions Implementation
 // ============================================================================
 
-float distanceSquared(Point2D<float> const & p1, Point2D<float> const & p2) {
-    float const dx = p1.x - p2.x;
-    float const dy = p1.y - p2.y;
-    return dx * dx + dy * dy;
-}
-
 bool shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point) {
     if (line.empty() || line.size() < 2) {
         return false; // Can't flip a line with less than 2 points
@@ -29,8 +24,8 @@ bool shouldFlipLine(Line2D const & line, Point2D<float> const & reference_point)
     Point2D<float> const current_end = line.back();
 
     // Calculate squared distances to avoid expensive sqrt operations
-    float const base_distance_sq = distanceSquared(current_base, reference_point);
-    float const end_distance_sq = distanceSquared(current_end, reference_point);
+    float const base_distance_sq = calc_distance2(current_base, reference_point);
+    float const end_distance_sq = calc_distance2(current_end, reference_point);
 
     // Flip if the current base is farther from reference than the end
     return base_distance_sq > end_distance_sq;

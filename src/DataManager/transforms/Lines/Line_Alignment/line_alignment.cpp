@@ -3,6 +3,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "CoreGeometry/Image.hpp"
 #include "transforms/utils/variant_type_check.hpp"
 
 #include <algorithm>
@@ -13,27 +14,6 @@
 #include <ranges>
 #include <vector>
 
-
-template<typename T>
-T get_pixel_value(Point2D<float> const & point,
-                  std::vector<T> const & image_data,
-                  ImageSize const & image_size) {
-    int x = static_cast<int>(std::round(point.x));
-    int y = static_cast<int>(std::round(point.y));
-
-    // Check bounds
-    if (x < 0 || x >= image_size.width || y < 0 || y >= image_size.height) {
-        return 0;
-    }
-
-    size_t index = static_cast<size_t>(y * image_size.width + x);
-    //size_t index = static_cast<size_t>(x * image_size.height + y);
-    if (index < image_data.size()) {
-        return image_data[index];
-    }
-
-    return 0;
-}
 
 // Calculate FWHM center point for a single vertex
 template<typename T>
@@ -623,15 +603,6 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
     if (progressCallback) progressCallback(100);
     return aligned_line_data;
 }
-
-template uint8_t get_pixel_value<uint8_t>(Point2D<float> const & point,
-                                          std::vector<uint8_t> const & image_data,
-                                          ImageSize const & image_size);
-
-template float get_pixel_value<float>(Point2D<float> const & point,
-                                      std::vector<float> const & image_data,
-                                      ImageSize const & image_size);
-
 
 template Point2D<float> calculate_fwhm_center<uint8_t>(Point2D<float> const & vertex,
                                                        Point2D<float> const & perpendicular_dir,

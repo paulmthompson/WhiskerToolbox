@@ -3,7 +3,13 @@
 
 #include "CoreGeometry/lines.hpp"
 
+
 #include <optional>
+
+enum class ClipSide {
+    KeepBase, // Keep the portion from line start to intersection
+    KeepDistal// Keep the portion from intersection to line end
+};
 
 /**
  * @brief Calculate the total calc_length of a line using Euclidean distance
@@ -104,5 +110,52 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
  * @note For internal vertices, averages perpendiculars from both adjacent segments
  */
 Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index);
+
+/**
+ * @brief Calculate the squared distance from a point to a line segment
+ * @param point The point to measure distance from
+ * @param line_start Start point of the line segment
+ * @param line_end End point of the line segment
+ * @return Squared distance from the point to the nearest point on the segment
+ */
+float point_to_line_segment_distance2(
+        Point2D<float> const & point,
+        Point2D<float> const & line_start,
+        Point2D<float> const & line_end);
+
+/**
+ * @brief Find the intersection point between two line segments
+ * @param p1 First point of first segment
+ * @param p2 Second point of first segment
+ * @param p3 First point of second segment
+ * @param p4 Second point of second segment
+ * @return The intersection point if it exists, or std::nullopt if segments don't intersect
+ */
+std::optional<Point2D<float>> line_segment_intersection(
+        Point2D<float> const & p1, Point2D<float> const & p2,
+        Point2D<float> const & p3, Point2D<float> const & p4);
+
+/**
+ * @brief Find the first intersection between a line and a reference line
+ * @param line The line to check for intersections
+ * @param reference_line The reference line to intersect with
+ * @return Intersection point and segment index if found, nullopt otherwise
+ */
+std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
+        Line2D const & line, Line2D const & reference_line);
+
+/**
+ * @brief Clip a line at the intersection with a reference line
+ * @param line The line to clip
+ * @param reference_line The reference line to clip against
+ * @param clip_side Which side of the intersection to keep
+ * @return Clipped line, or original line if no intersection found
+ */
+Line2D clip_line_at_intersection(
+        Line2D const & line,
+        Line2D const & reference_line,
+        ClipSide clip_side);
+
+float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & line);
 
 #endif// LINE_GEOMETRY_HPP
