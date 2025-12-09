@@ -5,14 +5,15 @@
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/data_transforms.hpp"// For ProgressCallback
 
-#include <functional>// std::function
-#include <memory>    // std::make_shared
+#include "fixtures/scenarios/line/resample_scenarios.hpp"
+
+#include <functional>
+#include <memory>
 #include <vector>
 
 // Using Catch::Matchers::Equals for vectors of floats.
 
 TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resample]") {
-    std::shared_ptr<LineData> line_data;
     std::shared_ptr<LineData> result_data;
     LineResampleParameters params;
     int volatile progress_val = -1;// Volatile to prevent optimization issues in test
@@ -23,19 +24,7 @@ TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resam
     };
 
     SECTION("FixedSpacing algorithm") {
-        // Create test line data with multiple lines at different times
-        line_data = std::make_shared<LineData>();
-        line_data->setImageSize(ImageSize(1000, 1000));
-
-        // Add a simple line at time 100
-        std::vector<float> x1 = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-        std::vector<float> y1 = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x1, y1);
-
-        // Add another line at time 200
-        std::vector<float> x2 = {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f};
-        std::vector<float> y2 = {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(200), x2, y2);
+        auto line_data = resample_scenarios::two_diagonal_lines();
 
         params.algorithm = LineSimplificationAlgorithm::FixedSpacing;
         params.target_spacing = 15.0f;
@@ -60,14 +49,7 @@ TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resam
     }
 
     SECTION("DouglasPeucker algorithm") {
-        // Create test line data with a complex line
-        line_data = std::make_shared<LineData>();
-        line_data->setImageSize(ImageSize(1000, 1000));
-
-        // Add a line with many points that can be simplified
-        std::vector<float> x = {10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f};
-        std::vector<float> y = {10.0f, 10.1f, 10.2f, 10.3f, 10.4f, 10.5f, 10.6f, 10.7f, 10.8f, 10.9f, 11.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x, y);
+        auto line_data = resample_scenarios::dense_nearly_straight_line();
 
         params.algorithm = LineSimplificationAlgorithm::DouglasPeucker;
         params.target_spacing = 5.0f;
@@ -91,8 +73,7 @@ TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resam
     }
 
     SECTION("Empty line data") {
-        line_data = std::make_shared<LineData>();
-        line_data->setImageSize(ImageSize(1000, 1000));
+        auto line_data = resample_scenarios::empty();
 
         params.algorithm = LineSimplificationAlgorithm::FixedSpacing;
         params.target_spacing = 10.0f;
@@ -105,18 +86,7 @@ TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resam
     }
 
     SECTION("Line with empty lines") {
-        line_data = std::make_shared<LineData>();
-        line_data->setImageSize(ImageSize(1000, 1000));
-
-        // Add a normal line
-        std::vector<float> x1 = {10.0f, 20.0f, 30.0f};
-        std::vector<float> y1 = {10.0f, 20.0f, 30.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x1, y1);
-
-        // Add an empty line
-        std::vector<float> x2 = {};
-        std::vector<float> y2 = {};
-        line_data->emplaceAtTime(TimeFrameIndex(200), x2, y2);
+        auto line_data = resample_scenarios::diagonal_with_empty();
 
         params.algorithm = LineSimplificationAlgorithm::FixedSpacing;
         params.target_spacing = 10.0f;
@@ -143,7 +113,6 @@ TEST_CASE("Data Transform: Line Resample - Happy Path", "[transforms][line_resam
 }
 
 TEST_CASE("Data Transform: Line Resample - Error and Edge Cases", "[transforms][line_resample]") {
-    std::shared_ptr<LineData> line_data;
     std::shared_ptr<LineData> result_data;
     LineResampleParameters params;
     int volatile progress_val = -1;
@@ -154,12 +123,7 @@ TEST_CASE("Data Transform: Line Resample - Error and Edge Cases", "[transforms][
     };
 
     SECTION("Single point line") {
-        line_data = std::make_shared<LineData>();
-        line_data->setImageSize(ImageSize(1000, 1000));
-
-        std::vector<float> x = {10.0f};
-        std::vector<float> y = {10.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x, y);
+        auto line_data = resample_scenarios::single_point();
 
         params.algorithm = LineSimplificationAlgorithm::FixedSpacing;
         params.target_spacing = 10.0f;
@@ -194,19 +158,16 @@ TEST_CASE("Data Transform: Line Resample - JSON pipeline", "[transforms][line_re
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test line data
-    auto line_data = std::make_shared<LineData>();
-    line_data->setImageSize(ImageSize(1000, 1000));
-
-    // Add test lines at different times
-    std::vector<float> x1 = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-    std::vector<float> y1 = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-    line_data->emplaceAtTime(TimeFrameIndex(100), x1, y1);
-
-    std::vector<float> x2 = {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f};
-    std::vector<float> y2 = {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f};
-    line_data->emplaceAtTime(TimeFrameIndex(200), x2, y2);
-
+    // Create test line data using builder
+    auto line_data = LineDataBuilder()
+        .withCoords(100, 
+            {10.0f, 20.0f, 30.0f, 40.0f, 50.0f},
+            {10.0f, 20.0f, 30.0f, 40.0f, 50.0f})
+        .withCoords(200,
+            {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f},
+            {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f})
+        .withImageSize(1000, 1000)
+        .build();
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLines.channel1", line_data, TimeKey("default"));
 
@@ -254,26 +215,23 @@ TEST_CASE("Data Transform: Line Resample - Parameter Factory", "[transforms][lin
 }
 
 TEST_CASE("Data Transform: Line Resample - load_data_from_json_config", "[transforms][line_resample][json_config]") {
-    // Create DataManager and populate it with LineData in code
+    // Create DataManager and populate it with LineData using builder
     DataManager dm;
 
     // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test line data in code
-    auto test_lines = std::make_shared<LineData>();
-    test_lines->setImageSize(ImageSize(1000, 1000));
-
-    // Add test lines at different times
-    std::vector<float> x1 = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-    std::vector<float> y1 = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-    test_lines->emplaceAtTime(TimeFrameIndex(100), x1, y1);
-
-    std::vector<float> x2 = {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f};
-    std::vector<float> y2 = {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f};
-    test_lines->emplaceAtTime(TimeFrameIndex(200), x2, y2);
-
+    // Create test line data using builder
+    auto test_lines = LineDataBuilder()
+        .withCoords(100, 
+            {10.0f, 20.0f, 30.0f, 40.0f, 50.0f},
+            {10.0f, 20.0f, 30.0f, 40.0f, 50.0f})
+        .withCoords(200,
+            {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f},
+            {100.0f, 110.0f, 120.0f, 130.0f, 140.0f, 150.0f})
+        .withImageSize(1000, 1000)
+        .build();
     test_lines->setTimeFrame(time_frame);
 
     // Store the line data in DataManager with a known key

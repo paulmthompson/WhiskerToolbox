@@ -6,12 +6,13 @@
 #include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
+#include "fixtures/scenarios/line/subsegment_scenarios.hpp"
+
 #include <vector>
-#include <memory> // std::make_shared
-#include <functional> // std::function
+#include <memory>
+#include <functional>
 
 TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][line_subsegment]") {
-    std::shared_ptr<LineData> line_data;
     std::shared_ptr<LineData> result_subsegments;
     LineSubsegmentParameters params;
     volatile int progress_val = -1; // Volatile to prevent optimization issues in test
@@ -22,10 +23,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
     };
 
     SECTION("Direct method - middle subsegment") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_5_points();
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -65,10 +63,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
     }
 
     SECTION("Direct method - full line") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(200), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_4_points_at_200();
         
         params.start_position = 0.0f;
         params.end_position = 1.0f;
@@ -92,10 +87,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
     }
 
     SECTION("Parametric method - middle subsegment") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(300), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_5_points_at_300();
         
         params.start_position = 0.3f;
         params.end_position = 0.7f;
@@ -128,10 +120,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
     }
 
     SECTION("Parametric method - small subsegment") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(400), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_5_points_at_400();
         
         params.start_position = 0.45f;
         params.end_position = 0.55f;
@@ -164,10 +153,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
     }
 
     SECTION("Progress callback detailed check") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(500), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_5_points_at_500();
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -194,7 +180,6 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Happy Path", "[transforms][
 }
 
 TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[transforms][line_subsegment]") {
-    std::shared_ptr<LineData> line_data;
     std::shared_ptr<LineData> result_subsegments;
     LineSubsegmentParameters params;
     volatile int progress_val = -1;
@@ -205,18 +190,17 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     };
 
     SECTION("Null input LineData") {
-        line_data = nullptr; // Deliberately null
         params.start_position = 0.2f;
         params.end_position = 0.8f;
         params.method = SubsegmentExtractionMethod::Direct;
 
-        result_subsegments = extract_line_subsegment(line_data.get(), params);
+        result_subsegments = extract_line_subsegment(nullptr, params);
         REQUIRE(result_subsegments != nullptr);
         REQUIRE(result_subsegments->getTimesWithData().empty());
 
         progress_val = -1;
         call_count = 0;
-        result_subsegments = extract_line_subsegment(line_data.get(), params, cb);
+        result_subsegments = extract_line_subsegment(nullptr, params, cb);
         REQUIRE(result_subsegments != nullptr);
         REQUIRE(result_subsegments->getTimesWithData().empty());
         REQUIRE(progress_val == 100);
@@ -224,7 +208,8 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     }
 
     SECTION("Empty LineData (no lines)") {
-        line_data = std::make_shared<LineData>();
+        auto line_data = subsegment_scenarios::empty();
+        
         params.start_position = 0.2f;
         params.end_position = 0.8f;
         params.method = SubsegmentExtractionMethod::Direct;
@@ -243,10 +228,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     }
 
     SECTION("Single point line") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {1.0f};
-        std::vector<float> y_coords = {2.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::single_point();
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -263,10 +245,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     }
 
     SECTION("Invalid position range (start >= end)") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_4_points();
         
         params.start_position = 0.8f;
         params.end_position = 0.2f; // Invalid: start > end
@@ -280,10 +259,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     }
 
     SECTION("Position values clamped to valid range") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::diagonal_4_points();
         
         params.start_position = -0.5f; // Invalid: negative
         params.end_position = 1.5f;    // Invalid: > 1.0
@@ -305,10 +281,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     }
 
     SECTION("Parametric method with insufficient points") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {0.0f, 1.0f}; // Only 2 points
-        std::vector<float> y_coords = {0.0f, 1.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::two_point_line();
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -327,10 +300,7 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Error and Edge Cases", "[tr
     }
 
     SECTION("Zero-length line") {
-        line_data = std::make_shared<LineData>();
-        std::vector<float> x_coords = {1.0f, 1.0f, 1.0f}; // All same point
-        std::vector<float> y_coords = {2.0f, 2.0f, 2.0f};
-        line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+        auto line_data = subsegment_scenarios::zero_length_line();
         
         params.start_position = 0.2f;
         params.end_position = 0.8f;
@@ -378,11 +348,12 @@ TEST_CASE("Data Transform: Extract Line Subsegment - JSON pipeline", "[transform
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test line data
-    auto line_data = std::make_shared<LineData>();
-    std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-    std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-    line_data->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    // Create test line data using builder
+    auto line_data = LineDataBuilder()
+        .withCoords(100, 
+            {0.0f, 1.0f, 2.0f, 3.0f, 4.0f},
+            {0.0f, 1.0f, 2.0f, 3.0f, 4.0f})
+        .build();
     line_data->setTimeFrame(time_frame);
     dm.setData("TestLine.line1", line_data, TimeKey("default"));
 
@@ -449,18 +420,19 @@ TEST_CASE("Data Transform: Extract Line Subsegment - Parameter Factory", "[trans
 }
 
 TEST_CASE("Data Transform: Extract Line Subsegment - load_data_from_json_config", "[transforms][line_subsegment][json_config]") {
-    // Create DataManager and populate it with LineData in code
+    // Create DataManager and populate it with LineData using builder
     DataManager dm;
 
     // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test line data in code
-    auto test_line = std::make_shared<LineData>();
-    std::vector<float> x_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-    std::vector<float> y_coords = {0.0f, 1.0f, 2.0f, 3.0f, 4.0f};
-    test_line->emplaceAtTime(TimeFrameIndex(100), x_coords, y_coords);
+    // Create test line data using builder
+    auto test_line = LineDataBuilder()
+        .withCoords(100, 
+            {0.0f, 1.0f, 2.0f, 3.0f, 4.0f},
+            {0.0f, 1.0f, 2.0f, 3.0f, 4.0f})
+        .build();
     test_line->setTimeFrame(time_frame);
     
     // Store the line data in DataManager with a known key
