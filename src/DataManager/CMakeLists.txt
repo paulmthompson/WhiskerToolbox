@@ -235,6 +235,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp
         transforms/v2/algorithms/LineAngle/LineAngle.hpp
         transforms/v2/algorithms/LineAngle/LineAngle.cpp
+        transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp
+        transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.cpp
 
         Lineage/LineageTypes.hpp
         Lineage/LineageRegistry.hpp

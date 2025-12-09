@@ -91,6 +91,66 @@ inline std::shared_ptr<LineData> empty_line_data() {
     return LineDataBuilder().build();
 }
 
+// ============================================================================
+// JSON Pipeline Test Scenarios
+// ============================================================================
+
+/**
+ * @brief Two timesteps with lines that should and shouldn't flip
+ * 
+ * Line at t=100: (0,0) -> (5,0) -> (10,0) - horizontal, base at left
+ * Line at t=200: (0,0) -> (5,5) -> (10,10) - diagonal, base at origin
+ * 
+ * With reference at (12,0):
+ * - t=100: should flip (end closer to reference)
+ * - t=200: should flip (end (10,10) is closer to (12,0) than base (0,0))
+ */
+inline std::shared_ptr<LineData> json_pipeline_two_timesteps() {
+    return LineDataBuilder()
+        .withCoords(100, {0.0f, 5.0f, 10.0f}, {0.0f, 0.0f, 0.0f})
+        .withCoords(200, {0.0f, 5.0f, 10.0f}, {0.0f, 5.0f, 10.0f})
+        .build();
+}
+
+/**
+ * @brief Three timesteps with different flip outcomes
+ * 
+ * Line at t=100: (0,0) -> (10,0) - horizontal, base at origin
+ * Line at t=200: (10,0) -> (0,0) - horizontal reversed (base at right)
+ * Line at t=300: (5,0) -> (5,8) - vertical, base at bottom
+ * 
+ * With reference at (12,5):
+ * - t=100: should flip (end at (10,0) closer to (12,5))
+ *   Base (0,0) to (12,5): sqrt(144+25) = sqrt(169) = 13
+ *   End (10,0) to (12,5): sqrt(4+25) = sqrt(29) ≈ 5.4
+ * - t=200: should NOT flip (base at (10,0) already closer to (12,5))
+ *   Base (10,0) to (12,5): sqrt(4+25) = sqrt(29) ≈ 5.4
+ *   End (0,0) to (12,5): sqrt(144+25) = sqrt(169) = 13
+ * - t=300: should flip (end at (5,8) closer to (12,5) than base at (5,0))
+ *   Base (5,0) to (12,5): sqrt(49+25) = sqrt(74) ≈ 8.6
+ *   End (5,8) to (12,5): sqrt(49+9) = sqrt(58) ≈ 7.6
+ */
+inline std::shared_ptr<LineData> json_pipeline_mixed_outcomes() {
+    return LineDataBuilder()
+        .withCoords(100, {0.0f, 10.0f}, {0.0f, 0.0f})
+        .withCoords(200, {10.0f, 0.0f}, {0.0f, 0.0f})
+        .withCoords(300, {5.0f, 5.0f}, {0.0f, 8.0f})
+        .build();
+}
+
+/**
+ * @brief Edge cases for JSON pipeline testing
+ * 
+ * Line at t=100: Single point (5,5) - should not change
+ * Line at t=200: Two points (0,0) -> (10,10) - should flip with ref at (15,15)
+ */
+inline std::shared_ptr<LineData> json_pipeline_edge_cases() {
+    return LineDataBuilder()
+        .withCoords(100, {5.0f}, {5.0f})
+        .withCoords(200, {0.0f, 10.0f}, {0.0f, 10.0f})
+        .build();
+}
+
 } // namespace line_base_flip_scenarios
 
 #endif // BASE_FLIP_SCENARIOS_HPP

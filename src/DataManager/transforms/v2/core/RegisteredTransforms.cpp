@@ -9,6 +9,7 @@
 #include "transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
 #include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "transforms/v2/algorithms/LineAngle/LineAngle.hpp"
+#include "transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
@@ -36,6 +37,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<MaskAreaParams>();
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineAngleParams>();
+    registerPipelineStepFactoryFor<LineBaseFlipParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
@@ -192,6 +194,44 @@ auto const register_line_angle_ctx = RegisterContextTransform<Line2D, float, Lin
                 .input_type_name = "Line2D",
                 .output_type_name = "float",
                 .params_type_name = "LineAngleParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register LineBaseFlipTransform (Unary - takes Line2D, returns Line2D)
+auto const register_line_base_flip = RegisterTransform<Line2D, Line2D, LineBaseFlipParams>(
+        "FlipLineBase",
+        flipLineBase,
+        TransformMetadata{
+                .name = "FlipLineBase",
+                .description = "Flip line orientation based on distance to a reference point",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(LineBaseFlipParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "Line2D",
+                .params_type_name = "LineBaseFlipParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of LineBaseFlip
+auto const register_line_base_flip_ctx = RegisterContextTransform<Line2D, Line2D, LineBaseFlipParams>(
+        "FlipLineBaseWithContext",
+        flipLineBaseWithContext,
+        TransformMetadata{
+                .name = "FlipLineBaseWithContext",
+                .description = "Flip line orientation based on distance to a reference point with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(LineBaseFlipParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "Line2D",
+                .params_type_name = "LineBaseFlipParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});

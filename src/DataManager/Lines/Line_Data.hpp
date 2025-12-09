@@ -66,6 +66,9 @@ public:
      */
     explicit LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data);
 
+    // Inherit range constructor from base class for view-based construction
+    using RaggedTimeSeries<Line2D>::RaggedTimeSeries;
+
     // ========== Image Size ==========
 
     /**

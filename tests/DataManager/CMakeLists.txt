@@ -124,6 +124,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineAngle/LineAngle.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
 
 )
 

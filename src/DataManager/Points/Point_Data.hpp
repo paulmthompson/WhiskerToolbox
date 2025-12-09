@@ -67,6 +67,9 @@ public:
      */
     explicit PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data);
 
+    // Inherit range constructor from base class for view-based construction
+    using RaggedTimeSeries<Point2D<float>>::RaggedTimeSeries;
+
     // ========== Image Size ==========
     /*
     Image size is used to store the size of the image that the points belong to.
