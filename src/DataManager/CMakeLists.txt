@@ -237,6 +237,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/LineAngle/LineAngle.cpp
         transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp
         transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.cpp
+        transforms/v2/algorithms/LineResample/LineResample.hpp
+        transforms/v2/algorithms/LineResample/LineResample.cpp
 
         Lineage/LineageTypes.hpp
         Lineage/LineageRegistry.hpp
