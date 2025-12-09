@@ -11,21 +11,21 @@
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "transforms/ParameterFactory.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
-#include "fixtures/MaskConnectedComponentTestFixture.hpp"
+#include "fixtures/scenarios/mask/connected_component_scenarios.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
 // ============================================================================
-// Core Functionality Tests (using fixture)
+// Core Functionality Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponent - removes small components while preserving large ones",
-                 "[mask_connected_component][fixture]") {
-    auto mask_data = m_test_masks["large_and_small_components"];
+TEST_CASE("MaskConnectedComponent - removes small components while preserving large ones",
+          "[mask_connected_component][scenario]") {
+    auto mask_data = mask_scenarios::large_and_small_components();
     
     // Set threshold to 5 - should keep the 9-pixel component, remove the 1 and 2-pixel components
     auto params = std::make_unique<MaskConnectedComponentParameters>();
@@ -51,10 +51,9 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     REQUIRE(preserved_mask.size() == 9);
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponent - preserves all components when threshold is 1",
-                 "[mask_connected_component][fixture]") {
-    auto mask_data = m_test_masks["multiple_small_components"];
+TEST_CASE("MaskConnectedComponent - preserves all components when threshold is 1",
+          "[mask_connected_component][scenario]") {
+    auto mask_data = mask_scenarios::multiple_small_components();
     
     auto params = std::make_unique<MaskConnectedComponentParameters>();
     params->threshold = 1;
@@ -76,10 +75,9 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     REQUIRE(total_pixels == 4);
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponent - removes all components when threshold is too high",
-                 "[mask_connected_component][fixture]") {
-    auto mask_data = m_test_masks["medium_components"];
+TEST_CASE("MaskConnectedComponent - removes all components when threshold is too high",
+          "[mask_connected_component][scenario]") {
+    auto mask_data = mask_scenarios::medium_components();
     
     // Set threshold higher than any component (max is 3 pixels)
     auto params = std::make_unique<MaskConnectedComponentParameters>();
@@ -98,10 +96,9 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     REQUIRE(times.empty());
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponent - handles empty mask data",
-                 "[mask_connected_component][fixture]") {
-    auto mask_data = m_test_masks["empty_mask_data"];
+TEST_CASE("MaskConnectedComponent - handles empty mask data",
+          "[mask_connected_component][scenario]") {
+    auto mask_data = mask_scenarios::empty_mask_data();
     
     auto params = std::make_unique<MaskConnectedComponentParameters>();
     params->threshold = 5;
@@ -112,10 +109,9 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     REQUIRE(result->getTimesWithData().empty());
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponent - handles multiple time points",
-                 "[mask_connected_component][fixture]") {
-    auto mask_data = m_test_masks["multiple_timestamps"];
+TEST_CASE("MaskConnectedComponent - handles multiple time points",
+          "[mask_connected_component][scenario]") {
+    auto mask_data = mask_scenarios::multiple_timestamps();
     
     auto params = std::make_unique<MaskConnectedComponentParameters>();
     params->threshold = 4;
@@ -148,19 +144,18 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
 }
 
 // ============================================================================
-// Operation Interface Tests (using fixture)
+// Operation Interface Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponentOperation - name and type checking",
-                 "[mask_connected_component][operation][fixture]") {
+TEST_CASE("MaskConnectedComponentOperation - name and type checking",
+          "[mask_connected_component][operation][scenario]") {
     MaskConnectedComponentOperation op;
     
     REQUIRE(op.getName() == "Remove Small Connected Components");
     REQUIRE(op.getTargetInputTypeIndex() == typeid(std::shared_ptr<MaskData>));
     
     // Test canApply with correct type
-    auto mask_data = m_test_masks["large_and_small_components"];
+    auto mask_data = mask_scenarios::large_and_small_components();
     DataTypeVariant valid_variant = mask_data;
     REQUIRE(op.canApply(valid_variant));
     
@@ -170,9 +165,8 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     REQUIRE_FALSE(op.canApply(null_variant));
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponentOperation - default parameters",
-                 "[mask_connected_component][operation][fixture]") {
+TEST_CASE("MaskConnectedComponentOperation - default parameters",
+          "[mask_connected_component][operation][scenario]") {
     MaskConnectedComponentOperation op;
     auto params = op.getDefaultParameters();
     
@@ -183,10 +177,9 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     REQUIRE(mask_params->threshold == 10);
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "MaskConnectedComponentOperation - execute operation",
-                 "[mask_connected_component][operation][fixture]") {
-    auto mask_data = m_test_masks["operation_test_data"];
+TEST_CASE("MaskConnectedComponentOperation - execute operation",
+          "[mask_connected_component][operation][scenario]") {
+    auto mask_data = mask_scenarios::operation_test_data();
     
     MaskConnectedComponentOperation op;
     DataTypeVariant input_variant = mask_data;
@@ -205,13 +198,19 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
 } 
 
 // ============================================================================
-// JSON Pipeline Tests (using fixture)
+// JSON Pipeline Tests (using scenarios)
 // ============================================================================
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "Data Transform: Mask Connected Component - JSON pipeline",
-                 "[transforms][mask_connected_component][json][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Connected Component - JSON pipeline",
+          "[transforms][mask_connected_component][json][scenario]") {
+    // Create DataManager and register test data
+    auto dm = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm->setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::json_pipeline_mixed();
+    mask_data->setTimeFrame(time_frame);
+    dm->setData("json_pipeline_mixed", mask_data, TimeKey("default"));
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -252,7 +251,7 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     }
     
     // Execute the transformation pipeline using load_data_from_json_config
-    auto data_info_list = load_data_from_json_config(dm, json_filepath.string());
+    auto data_info_list = load_data_from_json_config(dm.get(), json_filepath.string());
     
     // Verify the transformation was executed and results are available
     auto result_mask = dm->getData<MaskData>("filtered_mask");
@@ -277,10 +276,16 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "Data Transform: Mask Connected Component - strict threshold JSON pipeline",
-                 "[transforms][mask_connected_component][json][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Connected Component - strict threshold JSON pipeline",
+          "[transforms][mask_connected_component][json][scenario]") {
+    // Create DataManager and register test data
+    auto dm = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm->setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::json_pipeline_mixed();
+    mask_data->setTimeFrame(time_frame);
+    dm->setData("json_pipeline_mixed", mask_data, TimeKey("default"));
     
     // Test pipeline with higher threshold (should remove more components)
     const char* json_config_strict = 
@@ -321,7 +326,7 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     }
     
     // Execute the strict filtering pipeline
-    auto data_info_list_strict = load_data_from_json_config(dm, json_filepath_strict.string());
+    auto data_info_list_strict = load_data_from_json_config(dm.get(), json_filepath_strict.string());
     
     // Verify the strict filtering results
     auto result_mask_strict = dm->getData<MaskData>("strictly_filtered_mask");
@@ -339,10 +344,16 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
-                 "Data Transform: Mask Connected Component - permissive threshold JSON pipeline",
-                 "[transforms][mask_connected_component][json][fixture]") {
-    auto dm = getDataManager();
+TEST_CASE("Data Transform: Mask Connected Component - permissive threshold JSON pipeline",
+          "[transforms][mask_connected_component][json][scenario]") {
+    // Create DataManager and register test data
+    auto dm = std::make_unique<DataManager>();
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm->setTime(TimeKey("default"), time_frame);
+    
+    auto mask_data = mask_scenarios::json_pipeline_mixed();
+    mask_data->setTimeFrame(time_frame);
+    dm->setData("json_pipeline_mixed", mask_data, TimeKey("default"));
     
     // Test pipeline with very low threshold (should preserve all components)
     const char* json_config_permissive = 
@@ -383,7 +394,7 @@ TEST_CASE_METHOD(MaskConnectedComponentTestFixture,
     }
     
     // Execute the permissive filtering pipeline
-    auto data_info_list_permissive = load_data_from_json_config(dm, json_filepath_permissive.string());
+    auto data_info_list_permissive = load_data_from_json_config(dm.get(), json_filepath_permissive.string());
     
     // Verify the permissive filtering results
     auto result_mask_permissive = dm->getData<MaskData>("permissive_filtered_mask");
