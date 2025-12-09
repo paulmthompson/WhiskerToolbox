@@ -9,94 +9,46 @@
 #include <memory> // std::make_shared
 #include <functional> // std::function
 
-// Using Catch::Matchers::Equals for vectors of floats.
+#include "fixtures/scenarios/mask/skeletonize_scenarios.hpp"
 
-TEST_CASE("Data Transform: Mask Skeletonize - Happy Path", "[transforms][mask_skeletonize]") {
-    std::shared_ptr<MaskData> mask_data;
-    std::shared_ptr<MaskData> result_skeletonized;
+// ============================================================================
+// Core Functionality Tests (using scenarios)
+// ============================================================================
+
+TEST_CASE("Mask Skeletonize - Simple rectangular mask",
+          "[transforms][mask_skeletonize][scenario]") {
+    auto mask_data = mask_scenarios::rectangular_mask_10x10();
     MaskSkeletonizeParameters params;
-    volatile int progress_val = -1; // Volatile to prevent optimization issues in test
-    volatile int call_count = 0;    // Volatile for the same reason
-    ProgressCallback cb = [&](int p) {
-        progress_val = p;
-        call_count = call_count + 1;
-    };
 
-    SECTION("Simple rectangular mask") {
-        // Create a simple rectangular mask
-        mask_data = std::make_shared<MaskData>();
-        
-        // Create a 10x10 rectangular mask at time 100 - all points in one mask
-        std::vector<uint32_t> x_coords;
-        std::vector<uint32_t> y_coords;
-        
-        // Build all points for a 10x10 rectangle
-        for (uint32_t row = 1; row <= 10; ++row) {
-            for (uint32_t col = 1; col <= 10; ++col) {
-                x_coords.push_back(col);
-                y_coords.push_back(row);
-            }
-        }
-        
-        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
-
-        result_skeletonized = skeletonize_mask(mask_data.get(), &params);
-        REQUIRE(result_skeletonized != nullptr);
-        
-        // Verify that skeletonization produced a result (should be thinner than original)
-        auto original_masks = mask_data->getAtTime(TimeFrameIndex(100));
-        auto skeletonized_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
-        
-        REQUIRE(!original_masks.empty());
-        REQUIRE(!skeletonized_masks.empty());
-        
-        // The skeletonized version should have fewer points than the original
-        size_t original_points = 0;
-        for (const auto& mask : original_masks) {
-            original_points += mask.size();
-        }
-        
-        size_t skeletonized_points = 0;
-        for (const auto& mask : skeletonized_masks) {
-            skeletonized_points += mask.size();
-        }
-        
-        REQUIRE(skeletonized_points < original_points);
-
-        // Test with progress callback
-        progress_val = -1;
-        call_count = 0;
-        result_skeletonized = skeletonize_mask(mask_data.get(), &params, cb);
-        REQUIRE(result_skeletonized != nullptr);
-        REQUIRE(progress_val == 100);
-        REQUIRE(call_count > 0);
+    auto result_skeletonized = skeletonize_mask(mask_data.get(), &params);
+    REQUIRE(result_skeletonized != nullptr);
+    
+    // Verify that skeletonization produced a result (should be thinner than original)
+    auto original_masks = mask_data->getAtTime(TimeFrameIndex(100));
+    auto skeletonized_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
+    
+    REQUIRE(!original_masks.empty());
+    REQUIRE(!skeletonized_masks.empty());
+    
+    // The skeletonized version should have fewer points than the original
+    size_t original_points = 0;
+    for (const auto& mask : original_masks) {
+        original_points += mask.size();
     }
-
-    SECTION("Empty mask data") {
-        mask_data = std::make_shared<MaskData>();
-        
-        result_skeletonized = skeletonize_mask(mask_data.get(), &params);
-        REQUIRE(result_skeletonized != nullptr);
-        
-        // Should return empty result for empty input
-        auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
-        REQUIRE(result_masks.empty());
+    
+    size_t skeletonized_points = 0;
+    for (const auto& mask : skeletonized_masks) {
+        skeletonized_points += mask.size();
     }
-
-    SECTION("Null mask data") {
-        result_skeletonized = skeletonize_mask(nullptr, &params);
-        REQUIRE(result_skeletonized != nullptr);
-        
-        // Should return empty result for null input
-        auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
-        REQUIRE(result_masks.empty());
-    }
+    
+    REQUIRE(skeletonized_points < original_points);
 }
 
-TEST_CASE("Data Transform: Mask Skeletonize - Error and Edge Cases", "[transforms][mask_skeletonize]") {
-    std::shared_ptr<MaskData> mask_data;
-    std::shared_ptr<MaskData> result_skeletonized;
+TEST_CASE("Mask Skeletonize - With progress callback",
+          "[transforms][mask_skeletonize][scenario]") {
+    auto mask_data = mask_scenarios::rectangular_mask_10x10();
     MaskSkeletonizeParameters params;
+    
     volatile int progress_val = -1;
     volatile int call_count = 0;
     ProgressCallback cb = [&](int p) {
@@ -104,63 +56,87 @@ TEST_CASE("Data Transform: Mask Skeletonize - Error and Edge Cases", "[transform
         call_count = call_count + 1;
     };
 
-    SECTION("Single point mask") {
-        mask_data = std::make_shared<MaskData>();
-        
-        // Create a single point mask
-        std::vector<uint32_t> x_coords = {5};
-        std::vector<uint32_t> y_coords = {5};
-        mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
-
-        result_skeletonized = skeletonize_mask(mask_data.get(), &params);
-        REQUIRE(result_skeletonized != nullptr);
-        
-        // Single point should remain a single point after skeletonization
-        auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
-        REQUIRE(!result_masks.empty());
-        REQUIRE(result_masks[0].size() == 1);
-    }
-
-    SECTION("Multiple time frames") {
-        mask_data = std::make_shared<MaskData>();
-        
-        // Create masks at multiple time frames
-        for (int time = 100; time <= 105; time += 5) {
-            // Create a 5x5 square mask at each time frame
-            std::vector<uint32_t> x_coords;
-            std::vector<uint32_t> y_coords;
-            
-            for (uint32_t row = 1; row <= 5; ++row) {
-                for (uint32_t col = 1; col <= 5; ++col) {
-                    x_coords.push_back(col);
-                    y_coords.push_back(row);
-                }
-            }
-            
-            mask_data->addAtTime(TimeFrameIndex(time), Mask2D(x_coords, y_coords), NotifyObservers::No);
-        }
-
-        result_skeletonized = skeletonize_mask(mask_data.get(), &params);
-        REQUIRE(result_skeletonized != nullptr);
-        
-        // Should process all time frames
-        for (int time = 100; time <= 105; time += 5) {
-            auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(time));
-            REQUIRE(!result_masks.empty());
-        }
-    }
+    auto result_skeletonized = skeletonize_mask(mask_data.get(), &params, cb);
+    REQUIRE(result_skeletonized != nullptr);
+    REQUIRE(progress_val == 100);
+    REQUIRE(call_count > 0);
 }
+
+TEST_CASE("Mask Skeletonize - Empty mask data",
+          "[transforms][mask_skeletonize][edge][scenario]") {
+    auto mask_data = mask_scenarios::empty_mask_data();
+    MaskSkeletonizeParameters params;
+    
+    auto result_skeletonized = skeletonize_mask(mask_data.get(), &params);
+    REQUIRE(result_skeletonized != nullptr);
+    
+    // Should return empty result for empty input
+    auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
+    REQUIRE(result_masks.empty());
+}
+
+TEST_CASE("Mask Skeletonize - Null mask data",
+          "[transforms][mask_skeletonize][edge]") {
+    MaskSkeletonizeParameters params;
+    
+    auto result_skeletonized = skeletonize_mask(nullptr, &params);
+    REQUIRE(result_skeletonized != nullptr);
+    
+    // Should return empty result for null input
+    auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
+    REQUIRE(result_masks.empty());
+}
+
+// ============================================================================
+// Edge Cases (using scenarios)
+// ============================================================================
+
+TEST_CASE("Mask Skeletonize - Single point mask",
+          "[transforms][mask_skeletonize][edge][scenario]") {
+    auto mask_data = mask_scenarios::single_point_mask_skeletonize();
+    MaskSkeletonizeParameters params;
+
+    auto result_skeletonized = skeletonize_mask(mask_data.get(), &params);
+    REQUIRE(result_skeletonized != nullptr);
+    
+    // Single point should remain a single point after skeletonization
+    auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
+    REQUIRE(!result_masks.empty());
+    REQUIRE(result_masks[0].size() == 1);
+}
+
+TEST_CASE("Mask Skeletonize - Multiple time frames",
+          "[transforms][mask_skeletonize][scenario]") {
+    auto mask_data = mask_scenarios::multi_frame_masks_skeletonize();
+    MaskSkeletonizeParameters params;
+
+    auto result_skeletonized = skeletonize_mask(mask_data.get(), &params);
+    REQUIRE(result_skeletonized != nullptr);
+    
+    // Should process all time frames
+    auto result_masks_100 = result_skeletonized->getAtTime(TimeFrameIndex(100));
+    auto result_masks_105 = result_skeletonized->getAtTime(TimeFrameIndex(105));
+    REQUIRE(!result_masks_100.empty());
+    REQUIRE(!result_masks_105.empty());
+}
+
+// ============================================================================
+// JSON Pipeline Tests
+// ============================================================================
 
 #include "DataManager.hpp"
 #include "IO/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
+#include "transforms/ParameterFactory.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-TEST_CASE("Data Transform: Mask Skeletonize - JSON pipeline", "[transforms][mask_skeletonize][json]") {
+TEST_CASE("Mask Skeletonize - JSON pipeline with TransformPipeline",
+          "[transforms][mask_skeletonize][json][scenario]") {
     const nlohmann::json json_config = {
         {"steps", {{
             {"step_id", "skeletonize_step_1"},
@@ -179,23 +155,8 @@ TEST_CASE("Data Transform: Mask Skeletonize - JSON pipeline", "[transforms][mask
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
 
-    // Create test mask data
-    auto mask_data = std::make_shared<MaskData>();
-    
-    // Create a simple rectangular mask - all points in one mask
-    std::vector<uint32_t> x_coords;
-    std::vector<uint32_t> y_coords;
-    
-    // Build all points for a 10x10 rectangle
-    for (uint32_t row = 1; row <= 10; ++row) {
-        for (uint32_t col = 1; col <= 10; ++col) {
-            x_coords.push_back(col);
-            y_coords.push_back(row);
-        }
-    }
-
-    mask_data->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
-
+    // Add test data from scenario
+    auto mask_data = mask_scenarios::json_pipeline_rectangular_skeletonize();
     mask_data->setTimeFrame(time_frame);
     dm.setData("TestMask", mask_data, TimeKey("default"));
 
@@ -228,10 +189,8 @@ TEST_CASE("Data Transform: Mask Skeletonize - JSON pipeline", "[transforms][mask
     REQUIRE(skeletonized_points < original_points);
 }
 
-#include "transforms/ParameterFactory.hpp"
-#include "transforms/TransformRegistry.hpp"
-
-TEST_CASE("Data Transform: Mask Skeletonize - Parameter Factory", "[transforms][mask_skeletonize][factory]") {
+TEST_CASE("Mask Skeletonize - Parameter Factory",
+          "[transforms][mask_skeletonize][factory]") {
     auto& factory = ParameterFactory::getInstance();
     factory.initializeDefaultSetters();
 
@@ -251,35 +210,24 @@ TEST_CASE("Data Transform: Mask Skeletonize - Parameter Factory", "[transforms][
     REQUIRE(params != nullptr);
 }
 
-TEST_CASE("Data Transform: Mask Skeletonize - load_data_from_json_config", "[transforms][mask_skeletonize][json_config]") {
-    // Create DataManager and populate it with MaskData in code
+TEST_CASE("Mask Skeletonize - JSON config with load_data_from_json_config",
+          "[transforms][mask_skeletonize][json][scenario]") {
+    // Create DataManager with time frame
     DataManager dm;
-
-    // Create a TimeFrame for our data
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
     
-    // Create test mask data in code
-    auto test_mask = std::make_shared<MaskData>();
-    
-    // Create a simple rectangular mask - all points in one mask
-    std::vector<uint32_t> x_coords;
-    std::vector<uint32_t> y_coords;
-    
-    // Build all points for a 10x10 rectangle
-    for (uint32_t row = 1; row <= 10; ++row) {
-        for (uint32_t col = 1; col <= 10; ++col) {
-            x_coords.push_back(col);
-            y_coords.push_back(row);
-        }
-    }
-
-    test_mask->addAtTime(TimeFrameIndex(100), Mask2D(x_coords, y_coords), NotifyObservers::No);
-
+    // Add test data from scenario
+    auto test_mask = mask_scenarios::json_pipeline_rectangular_skeletonize();
     test_mask->setTimeFrame(time_frame);
-    
-    // Store the mask data in DataManager with a known key
     dm.setData("test_mask", test_mask, TimeKey("default"));
+    
+    // Get original size for comparison
+    auto original_masks = test_mask->getAtTime(TimeFrameIndex(100));
+    size_t original_points = 0;
+    for (const auto& mask : original_masks) {
+        original_points += mask.size();
+    }
     
     // Create JSON configuration for transformation pipeline using unified format
     const char* json_config = 
@@ -325,18 +273,12 @@ TEST_CASE("Data Transform: Mask Skeletonize - load_data_from_json_config", "[tra
     REQUIRE(result_skeletonized != nullptr);
     
     // Verify the skeletonization results
-    auto original_masks = test_mask->getAtTime(TimeFrameIndex(100));
     auto result_masks = result_skeletonized->getAtTime(TimeFrameIndex(100));
     
     REQUIRE(!original_masks.empty());
     REQUIRE(!result_masks.empty());
     
     // The skeletonized version should have fewer points than the original
-    size_t original_points = 0;
-    for (const auto& mask : original_masks) {
-        original_points += mask.size();
-    }
-    
     size_t skeletonized_points = 0;
     for (const auto& mask : result_masks) {
         skeletonized_points += mask.size();
@@ -344,7 +286,26 @@ TEST_CASE("Data Transform: Mask Skeletonize - load_data_from_json_config", "[tra
     
     REQUIRE(skeletonized_points < original_points);
     
-    // Test another pipeline with multiple time frames
+    // Cleanup
+    try {
+        std::filesystem::remove_all(test_dir);
+    } catch (const std::exception& e) {
+        std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
+    }
+}
+
+TEST_CASE("Mask Skeletonize - Multi-frame JSON pipeline",
+          "[transforms][mask_skeletonize][json][scenario]") {
+    // Create DataManager with time frame
+    DataManager dm;
+    auto time_frame = std::make_shared<TimeFrame>();
+    dm.setTime(TimeKey("default"), time_frame);
+    
+    // Add test data from scenario
+    auto test_mask = mask_scenarios::multi_frame_masks_skeletonize();
+    test_mask->setTimeFrame(time_frame);
+    dm.setData("test_mask", test_mask, TimeKey("default"));
+    
     const char* json_config_multiframe = 
         "[\n"
         "{\n"
@@ -368,6 +329,10 @@ TEST_CASE("Data Transform: Mask Skeletonize - load_data_from_json_config", "[tra
         "}\n"
         "]";
     
+    // Create temporary directory and write JSON config to file
+    std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "mask_skeletonize_multi_test";
+    std::filesystem::create_directories(test_dir);
+    
     std::filesystem::path json_filepath_multiframe = test_dir / "pipeline_config_multiframe.json";
     {
         std::ofstream json_file(json_filepath_multiframe);
@@ -383,8 +348,11 @@ TEST_CASE("Data Transform: Mask Skeletonize - load_data_from_json_config", "[tra
     auto result_skeletonized_multiframe = dm.getData<MaskData>("skeletonized_mask_multiframe");
     REQUIRE(result_skeletonized_multiframe != nullptr);
     
-    auto result_masks_multiframe = result_skeletonized_multiframe->getAtTime(TimeFrameIndex(100));
-    REQUIRE(!result_masks_multiframe.empty());
+    // Both time frames should have results
+    auto result_masks_100 = result_skeletonized_multiframe->getAtTime(TimeFrameIndex(100));
+    auto result_masks_105 = result_skeletonized_multiframe->getAtTime(TimeFrameIndex(105));
+    REQUIRE(!result_masks_100.empty());
+    REQUIRE(!result_masks_105.empty());
     
     // Cleanup
     try {
