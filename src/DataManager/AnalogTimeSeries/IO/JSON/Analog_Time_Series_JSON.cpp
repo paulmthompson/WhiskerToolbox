@@ -12,7 +12,8 @@
 using namespace WhiskerToolbox::Reflection;
 
 AnalogDataType stringToAnalogDataType(std::string const & data_type_str) {
-    if (data_type_str == "int16") return AnalogDataType::int16;
+    // "binary" is the preferred format name, "int16" kept for backward compatibility
+    if (data_type_str == "binary") return AnalogDataType::Binary;
     if (data_type_str == "csv") return AnalogDataType::csv;
     return AnalogDataType::Unknown;
 }
@@ -32,7 +33,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
     AnalogDataType const data_type = stringToAnalogDataType(data_type_str);
 
     switch (data_type) {
-        case AnalogDataType::int16: {
+        case AnalogDataType::Binary: {
 
             // Try reflected version with validation first
             auto opts_result = parseJson<BinaryAnalogLoaderOptions>(item);
@@ -40,7 +41,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
             if (opts_result) {
                 // Successfully parsed with reflect-cpp, use validated options
                 auto opts = opts_result.value();
-                opts.filename = file_path;
+                opts.filepath = file_path;
                 analog_time_series = load(opts);
             } else {
                 // Fall back to manual parsing for backward compatibility

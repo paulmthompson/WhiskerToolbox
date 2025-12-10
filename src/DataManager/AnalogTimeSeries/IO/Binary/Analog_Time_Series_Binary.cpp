@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
 
     // Memory-mapped loading path
     if (opts.getUseMemoryMapped()) {
-        std::filesystem::path file_path = opts.filename;
+        std::filesystem::path file_path = opts.filepath;
         if (!file_path.is_absolute()) {
             file_path = std::filesystem::path(opts.getParentDir()) / file_path;
         }
@@ -46,7 +46,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
             config.header_size = static_cast<size_t>(opts.getHeaderSize());
             config.offset = opts.getOffset() + channel;  // Start at channel offset
             config.stride = opts.getStride() * opts.getNumChannels();  // Stride accounts for all channels
-            config.data_type = stringToMmapDataType(opts.getDataType());
+            config.data_type = stringToMmapDataType(opts.getBinaryDataType());
             config.scale_factor = opts.getScaleFactor();
             config.offset_value = opts.getOffsetValue();
             config.num_samples = opts.getNumSamples();
@@ -71,7 +71,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
     }
 
     // Traditional in-memory loading path
-    auto binary_loader_opts = Loader::BinaryAnalogOptions{.file_path = opts.filename,
+    auto binary_loader_opts = Loader::BinaryAnalogOptions{.file_path = opts.filepath,
                                                           .header_size_bytes = static_cast<size_t>(opts.getHeaderSize()),
                                                           .num_channels = static_cast<size_t>(opts.getNumChannels())};
 

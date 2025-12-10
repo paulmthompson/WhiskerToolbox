@@ -8,8 +8,8 @@
 #include <vector>
 
 enum class AnalogDataType {
-    int16,
-    csv,
+    Binary,  // Binary file format (uses binary_data_type for actual data type: int16, float32, etc.)
+    csv,     // CSV text format
     Unknown
 };
 

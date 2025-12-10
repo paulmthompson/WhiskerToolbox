@@ -1,6 +1,8 @@
 #ifndef ANALOG_TIME_SERIES_CSV_HPP
 #define ANALOG_TIME_SERIES_CSV_HPP
 
+#include "utils/LoaderOptionsConcepts.hpp"
+
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -16,6 +18,8 @@ class AnalogTimeSeries;
  * Uses reflect-cpp for automatic JSON serialization/deserialization
  * and includes validators to ensure data integrity.
  * Optional fields can be omitted from JSON and will use default values.
+ * 
+ * @note This struct conforms to ValidLoaderOptions concept.
  */
 struct CSVAnalogLoaderOptions {
     std::string filepath;
@@ -37,6 +41,10 @@ struct CSVAnalogLoaderOptions {
     int getTimeColumn() const { return time_column.has_value() ? time_column.value().value() : 0; }
     int getDataColumn() const { return data_column.has_value() ? data_column.value().value() : 1; }
 };
+
+// Compile-time validation that CSVAnalogLoaderOptions conforms to loader requirements
+static_assert(WhiskerToolbox::ValidLoaderOptions<CSVAnalogLoaderOptions>,
+    "CSVAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 /**
  * @brief load_analog_series_from_csv

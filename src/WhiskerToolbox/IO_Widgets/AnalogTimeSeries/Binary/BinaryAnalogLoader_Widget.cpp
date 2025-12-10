@@ -44,7 +44,7 @@ void BinaryAnalogLoader_Widget::_onLoadButtonClicked() {
     }
 
     BinaryAnalogLoaderOptions options;
-    options.filename = filePath.toStdString();
+    options.filepath = filePath.toStdString();
     options.header_size = ui->header_size_spinbox->value();
     options.num_channels = ui->num_channels_spinbox->value();
 

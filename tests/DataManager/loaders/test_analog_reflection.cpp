@@ -63,14 +63,14 @@ TEST_CASE("Reflect-cpp basic functionality", "[reflection][basic]") {
 
 TEST_CASE("BinaryAnalogLoaderOptions - Default Values1", "[reflection][analog][binary]") {
     nlohmann::json json_obj = {
-        {"filename", "test.bin"},
+        {"filepath", "test.bin"},
         {"parent_dir", "/data"},
         {"header_size", 256},
         {"num_channels", 4},
         {"use_memory_mapped", true},
         {"offset", 100},
         {"stride", 2},
-        {"data_type", "int16"},
+        {"binary_data_type", "int16"},
         {"scale_factor", 0.5f},
         {"offset_value", -1.0f},
         {"num_samples", 10000}
@@ -81,14 +81,14 @@ TEST_CASE("BinaryAnalogLoaderOptions - Default Values1", "[reflection][analog][b
     REQUIRE(result);
     
     auto opts = result.value();
-    REQUIRE(opts.filename == "test.bin");
+    REQUIRE(opts.filepath == "test.bin");
     REQUIRE(opts.parent_dir.value_or("") == "/data");
     REQUIRE(opts.header_size.value().value() == 256);
     REQUIRE(opts.num_channels.value().value() == 4);
     REQUIRE(opts.use_memory_mapped.value_or(false) == true);
     REQUIRE(opts.offset.value().value() == 100);
     REQUIRE(opts.stride.value().value() == 2);
-    REQUIRE(opts.data_type.value_or("") == "int16");
+    REQUIRE(opts.binary_data_type.value_or("") == "int16");
     REQUIRE(opts.scale_factor.value_or(0.0f) == 0.5f);
     REQUIRE(opts.offset_value.value_or(0.0f) == -1.0f);
     REQUIRE(opts.num_samples.value_or(0) == 10000);
@@ -96,7 +96,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - Default Values1", "[reflection][analog][b
 
 TEST_CASE("BinaryAnalogLoaderOptions - Default Values2", "[reflection][analog][binary]") {
     nlohmann::json json_obj = {
-        {"filename", "minimal.bin"}
+        {"filepath", "minimal.bin"}
         // All other fields should use their default values
     };
     
@@ -120,7 +120,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - Default Values2", "[reflection][analog][b
     REQUIRE(result);
     
     auto opts = result.value();
-    REQUIRE(opts.filename == "minimal.bin");
+    REQUIRE(opts.filepath == "minimal.bin");
     // Optional fields should either not be set or use defaults via toLegacy()
     REQUIRE((!opts.parent_dir.has_value() || opts.parent_dir.value() == "."));
     REQUIRE((!opts.header_size.has_value() || opts.header_size.value().value() == 0));
@@ -128,7 +128,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - Default Values2", "[reflection][analog][b
     REQUIRE((!opts.use_memory_mapped.has_value() || opts.use_memory_mapped.value() == false));
     REQUIRE((!opts.offset.has_value() || opts.offset.value().value() == 0));
     REQUIRE((!opts.stride.has_value() || opts.stride.value().value() == 1));
-    REQUIRE((!opts.data_type.has_value() || opts.data_type.value() == "int16"));
+    REQUIRE((!opts.binary_data_type.has_value() || opts.binary_data_type.value() == "int16"));
     REQUIRE((!opts.scale_factor.has_value() || opts.scale_factor.value() == 1.0f));
     REQUIRE((!opts.offset_value.has_value() || opts.offset_value.value() == 0.0f));
     REQUIRE((!opts.num_samples.has_value() || opts.num_samples.value() == 0));
@@ -137,7 +137,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - Default Values2", "[reflection][analog][b
 TEST_CASE("BinaryAnalogLoaderOptions - Validation", "[reflection][analog][binary]") {
     SECTION("Negative header_size should fail") {
         nlohmann::json json_obj = {
-            {"filename", "test.bin"},
+            {"filepath", "test.bin"},
             {"header_size", -10}
         };
         
@@ -147,7 +147,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - Validation", "[reflection][analog][binary
     
     SECTION("Zero num_channels should fail") {
         nlohmann::json json_obj = {
-            {"filename", "test.bin"},
+            {"filepath", "test.bin"},
             {"num_channels", 0}
         };
         
@@ -157,7 +157,7 @@ TEST_CASE("BinaryAnalogLoaderOptions - Validation", "[reflection][analog][binary
     
     SECTION("Zero stride should fail") {
         nlohmann::json json_obj = {
-            {"filename", "test.bin"},
+            {"filepath", "test.bin"},
             {"stride", 0}
         };
         
@@ -165,28 +165,28 @@ TEST_CASE("BinaryAnalogLoaderOptions - Validation", "[reflection][analog][binary
         REQUIRE_FALSE(result);
     }
     
-    SECTION("Invalid data_type should fail") {
+    SECTION("Invalid binary_data_type should fail") {
         nlohmann::json json_obj = {
-            {"filename", "test.bin"},
-            {"data_type", "invalid_type"}
+            {"filepath", "test.bin"},
+            {"binary_data_type", "invalid_type"}
         };
         
         auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
         REQUIRE_FALSE(result);
     }
     
-    SECTION("Valid data types should pass") {
+    SECTION("Valid binary_data_type types should pass") {
         std::vector<std::string> valid_types = {"int16", "float32", "int8", "uint16", "float64"};
         
         for (const auto& type : valid_types) {
             nlohmann::json json_obj = {
-                {"filename", "test.bin"},
-                {"data_type", type}
+                {"filepath", "test.bin"},
+                {"binary_data_type", type}
             };
             
             auto result = parseJson<BinaryAnalogLoaderOptions>(json_obj);
             REQUIRE(result);
-            REQUIRE(result.value().data_type == type);
+            REQUIRE(result.value().binary_data_type == type);
         }
     }
 }
@@ -194,14 +194,14 @@ TEST_CASE("BinaryAnalogLoaderOptions - Validation", "[reflection][analog][binary
 TEST_CASE("BinaryAnalogLoaderOptions - Serialization Round-trip", "[reflection][analog][binary]") {
     // Create JSON directly with all fields
     nlohmann::json json_obj = {
-        {"filename", "roundtrip.bin"},
+        {"filepath", "roundtrip.bin"},
         {"parent_dir", "/test"},
         {"header_size", 512},
         {"num_channels", 8},
         {"use_memory_mapped", true},
         {"offset", 200},
         {"stride", 4},
-        {"data_type", "float32"},
+        {"binary_data_type", "float32"},
         {"scale_factor", 2.5f},
         {"offset_value", 1.5f},
         {"num_samples", 5000}
@@ -221,14 +221,14 @@ TEST_CASE("BinaryAnalogLoaderOptions - Serialization Round-trip", "[reflection][
     REQUIRE(result2);
     
     auto parsed = result2.value();
-    REQUIRE(parsed.filename == original.filename);
+    REQUIRE(parsed.filepath == original.filepath);
     REQUIRE(parsed.parent_dir == original.parent_dir);
     REQUIRE(parsed.header_size == original.header_size);
     REQUIRE(parsed.num_channels == original.num_channels);
     REQUIRE(parsed.use_memory_mapped == original.use_memory_mapped);
     REQUIRE(parsed.offset == original.offset);
     REQUIRE(parsed.stride == original.stride);
-    REQUIRE(parsed.data_type == original.data_type);
+    REQUIRE(parsed.binary_data_type == original.binary_data_type);
     REQUIRE(parsed.scale_factor == original.scale_factor);
     REQUIRE(parsed.offset_value == original.offset_value);
     REQUIRE(parsed.num_samples == original.num_samples);
