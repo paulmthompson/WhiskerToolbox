@@ -13,6 +13,7 @@
 #include "transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "transforms/v2/algorithms/LineCurvature/LineCurvature.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
+#include "transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.hpp"
 #include "transforms/v2/algorithms/LineResample/LineResample.hpp"
 #include "transforms/v2/algorithms/LineSubsegment/LineSubsegment.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
@@ -46,6 +47,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
     registerPipelineStepFactoryFor<LineCurvatureParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
+    registerPipelineStepFactoryFor<LinePointExtractionParams>();
     registerPipelineStepFactoryFor<LineResampleParams>();
     registerPipelineStepFactoryFor<LineSubsegmentParams>();
     registerPipelineStepFactoryFor<AnalogEventThresholdParams>();
@@ -393,6 +395,44 @@ auto const register_line_subsegment_ctx = RegisterContextTransform<Line2D, Line2
                 .input_type_name = "Line2D",
                 .output_type_name = "Line2D",
                 .params_type_name = "LineSubsegmentParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register LinePointExtraction (Unary - takes Line2D, returns Point2D<float>)
+auto const register_line_point_extraction = RegisterTransform<Line2D, Point2D<float>, LinePointExtractionParams>(
+        "ExtractLinePoint",
+        extractLinePoint,
+        TransformMetadata{
+                .name = "ExtractLinePoint",
+                .description = "Extract a point at a specified fractional position along a line",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(Point2D<float>),
+                .params_type = typeid(LinePointExtractionParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "Point2D<float>",
+                .params_type_name = "LinePointExtractionParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of LinePointExtraction
+auto const register_line_point_extraction_ctx = RegisterContextTransform<Line2D, Point2D<float>, LinePointExtractionParams>(
+        "ExtractLinePointWithContext",
+        extractLinePointWithContext,
+        TransformMetadata{
+                .name = "ExtractLinePointWithContext",
+                .description = "Extract a point at a specified position along a line with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(Point2D<float>),
+                .params_type = typeid(LinePointExtractionParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "Point2D<float>",
+                .params_type_name = "LinePointExtractionParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
