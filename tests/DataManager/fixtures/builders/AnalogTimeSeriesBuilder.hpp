@@ -8,6 +8,8 @@
 #include <memory>
 #include <cmath>
 #include <functional>
+#include <fstream>
+#include <cstdint>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -246,9 +248,93 @@ public:
         return m_time_indices;
     }
 
+    /**
+     * @brief Write data to binary file as int16
+     * @param filepath Path to write the binary file
+     * @param header_size Number of bytes to write as header (filled with zeros)
+     * @param num_channels Number of channels to write (if > 1, data is interleaved)
+     * @return true if write succeeded, false otherwise
+     */
+    bool writeToBinaryInt16(std::string const& filepath, size_t header_size = 0, size_t num_channels = 1) const;
+
+    /**
+     * @brief Write data to binary file as float32
+     * @param filepath Path to write the binary file
+     * @param header_size Number of bytes to write as header (filled with zeros)
+     * @param num_channels Number of channels to write (if > 1, data is interleaved)
+     * @return true if write succeeded, false otherwise
+     */
+    bool writeToBinaryFloat32(std::string const& filepath, size_t header_size = 0, size_t num_channels = 1) const;
+
 private:
     std::vector<float> m_values;
     std::vector<TimeFrameIndex> m_time_indices;
 };
+
+// Implementation of binary write methods
+inline bool AnalogTimeSeriesBuilder::writeToBinaryInt16(std::string const& filepath, size_t header_size, size_t num_channels) const {
+    std::ofstream file(filepath, std::ios::binary);
+    if (!file) {
+        return false;
+    }
+
+    // Write header (zeros)
+    if (header_size > 0) {
+        std::vector<char> header(header_size, 0);
+        file.write(header.data(), header_size);
+    }
+
+    // Write data
+    if (num_channels == 1) {
+        // Single channel - write sequentially
+        for (float val : m_values) {
+            int16_t int_val = static_cast<int16_t>(val);
+            file.write(reinterpret_cast<char const*>(&int_val), sizeof(int16_t));
+        }
+    } else {
+        // Multiple channels - repeat the same data for each channel (interleaved)
+        // This simulates multiple channels with identical data
+        for (float val : m_values) {
+            for (size_t ch = 0; ch < num_channels; ++ch) {
+                int16_t int_val = static_cast<int16_t>(val + static_cast<float>(ch));
+                file.write(reinterpret_cast<char const*>(&int_val), sizeof(int16_t));
+            }
+        }
+    }
+
+    return file.good();
+}
+
+inline bool AnalogTimeSeriesBuilder::writeToBinaryFloat32(std::string const& filepath, size_t header_size, size_t num_channels) const {
+    std::ofstream file(filepath, std::ios::binary);
+    if (!file) {
+        return false;
+    }
+
+    // Write header (zeros)
+    if (header_size > 0) {
+        std::vector<char> header(header_size, 0);
+        file.write(header.data(), header_size);
+    }
+
+    // Write data
+    if (num_channels == 1) {
+        // Single channel - write sequentially
+        for (float val : m_values) {
+            file.write(reinterpret_cast<char const*>(&val), sizeof(float));
+        }
+    } else {
+        // Multiple channels - repeat the same data for each channel (interleaved)
+        // This simulates multiple channels with distinct data
+        for (float val : m_values) {
+            for (size_t ch = 0; ch < num_channels; ++ch) {
+                float channel_val = val + static_cast<float>(ch);
+                file.write(reinterpret_cast<char const*>(&channel_val), sizeof(float));
+            }
+        }
+    }
+
+    return file.good();
+}
 
 #endif // ANALOG_TIME_SERIES_BUILDER_HPP

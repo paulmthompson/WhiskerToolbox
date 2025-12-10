@@ -41,6 +41,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
                 // Successfully parsed with reflect-cpp, use validated options
                 auto opts = opts_result.value();
                 opts.filename = file_path;
+                opts.binary_data_type = "int16";  // Set based on the format selected
                 analog_time_series = load(opts);
             } else {
                 // Fall back to manual parsing for backward compatibility

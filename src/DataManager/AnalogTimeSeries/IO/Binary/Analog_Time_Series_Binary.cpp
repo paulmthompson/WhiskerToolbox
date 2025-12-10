@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
 
     // Memory-mapped loading path
     if (opts.getUseMemoryMapped()) {
-        std::filesystem::path file_path = opts.filename;
+        std::filesystem::path file_path = opts.getFilename();
         if (!file_path.is_absolute()) {
             file_path = std::filesystem::path(opts.getParentDir()) / file_path;
         }
@@ -71,7 +71,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
     }
 
     // Traditional in-memory loading path
-    auto binary_loader_opts = Loader::BinaryAnalogOptions{.file_path = opts.filename,
+    auto binary_loader_opts = Loader::BinaryAnalogOptions{.file_path = opts.getFilename(),
                                                           .header_size_bytes = static_cast<size_t>(opts.getHeaderSize()),
                                                           .num_channels = static_cast<size_t>(opts.getNumChannels())};
 

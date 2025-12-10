@@ -34,7 +34,7 @@ struct ValidDataType {
  * Optional fields can be omitted from JSON and will use default values.
  */
 struct BinaryAnalogLoaderOptions {
-    std::string filename;
+    std::optional<std::string> filename;  // Made optional since it's set by the loader
     std::optional<std::string> parent_dir;
     
     // Validate header_size is non-negative
@@ -51,21 +51,23 @@ struct BinaryAnalogLoaderOptions {
     // Validate stride is at least 1
     std::optional<rfl::Validator<size_t, rfl::Minimum<1>>> stride;
     
-    // Data type with custom validator
-    std::optional<rfl::Validator<std::string, ValidDataType>> data_type;
-    
     std::optional<float> scale_factor;
     std::optional<float> offset_value;
     std::optional<size_t> num_samples;
     
+    // Binary data type - set programmatically by the loader, not from JSON
+    // This avoids conflicts with DataManager's "data_type" field
+    rfl::Skip<std::string> binary_data_type = "int16";
+    
     // Helper methods to get values with defaults
+    std::string getFilename() const { return filename.value_or(""); }
     std::string getParentDir() const { return parent_dir.value_or("."); }
     int getHeaderSize() const { return header_size.has_value() ? header_size.value().value() : 0; }
     int getNumChannels() const { return num_channels.has_value() ? num_channels.value().value() : 1; }
     bool getUseMemoryMapped() const { return use_memory_mapped.value_or(false); }
     size_t getOffset() const { return offset.has_value() ? offset.value().value() : 0; }
     size_t getStride() const { return stride.has_value() ? stride.value().value() : 1; }
-    std::string getDataType() const { return data_type.has_value() ? data_type.value().value() : "int16"; }
+    std::string getDataType() const { return binary_data_type.value(); }
     float getScaleFactor() const { return scale_factor.value_or(1.0f); }
     float getOffsetValue() const { return offset_value.value_or(0.0f); }
     size_t getNumSamples() const { return num_samples.value_or(0); }

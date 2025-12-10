@@ -19,6 +19,7 @@ set(analog_subdirectory_sources
 
 set(analog_test_sources
     Analog_Time_Series.test.cpp
+    IO/Binary/Analog_Time_Series_Binary.test.cpp
     IO/CSV/Analog_Time_Series_CSV.test.cpp
     utils/statistics.test.cpp)
 
