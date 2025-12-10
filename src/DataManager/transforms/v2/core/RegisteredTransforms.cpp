@@ -11,6 +11,7 @@
 #include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "transforms/v2/algorithms/LineAngle/LineAngle.hpp"
 #include "transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp"
+#include "transforms/v2/algorithms/LineCurvature/LineCurvature.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "transforms/v2/algorithms/LineResample/LineResample.hpp"
 #include "transforms/v2/algorithms/LineSubsegment/LineSubsegment.hpp"
@@ -43,6 +44,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
+    registerPipelineStepFactoryFor<LineCurvatureParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<LineResampleParams>();
     registerPipelineStepFactoryFor<LineSubsegmentParams>();
@@ -239,6 +241,44 @@ auto const register_line_angle_ctx = RegisterContextTransform<Line2D, float, Lin
                 .input_type_name = "Line2D",
                 .output_type_name = "float",
                 .params_type_name = "LineAngleParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register LineCurvatureTransform (Unary - takes Line2D, returns float)
+auto const register_line_curvature = RegisterTransform<Line2D, float, LineCurvatureParams>(
+        "CalculateLineCurvature",
+        calculateLineCurvature,
+        TransformMetadata{
+                .name = "CalculateLineCurvature",
+                .description = "Calculate the curvature at a position along a line using polynomial fit",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineCurvatureParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineCurvatureParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of LineCurvature
+auto const register_line_curvature_ctx = RegisterContextTransform<Line2D, float, LineCurvatureParams>(
+        "CalculateLineCurvatureWithContext",
+        calculateLineCurvatureWithContext,
+        TransformMetadata{
+                .name = "CalculateLineCurvatureWithContext",
+                .description = "Calculate the curvature at a position along a line with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineCurvatureParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineCurvatureParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
