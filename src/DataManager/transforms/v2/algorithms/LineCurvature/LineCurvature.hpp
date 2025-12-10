@@ -1,8 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_CURVATURE_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_CURVATURE_TRANSFORM_HPP
 
-#include "transforms/v2/core/ElementTransform.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
