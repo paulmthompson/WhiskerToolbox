@@ -565,6 +565,24 @@ auto executeBinaryTransformImpl(
             return DataTypeVariant{output};
         }
 
+        // Handle Line2D output type (for binary transforms like LineClip)
+        if (meta->output_type == typeid(Line2D)) {
+            auto output = std::make_shared<LineData>();
+            if (data1_ptr->getTimeFrame()) {
+                output->setTimeFrame(data1_ptr->getTimeFrame());
+            }
+
+            for (auto const & [time, result_variant] : result_view) {
+                if (auto const * val = std::get_if<Line2D>(&result_variant)) {
+                    if (!val->empty()) {
+                        output->addAtTime(time, *val, NotifyObservers::No);
+                    }
+                }
+            }
+
+            return DataTypeVariant{output};
+        }
+
         // Add more output type handlers as needed
         std::cerr << "Unsupported output type for multi-input transform" << std::endl;
         return std::nullopt;

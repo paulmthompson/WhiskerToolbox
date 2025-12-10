@@ -10,6 +10,7 @@
 #include "transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
 #include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "transforms/v2/algorithms/LineAngle/LineAngle.hpp"
+#include "transforms/v2/algorithms/LineClip/LineClip.hpp"
 #include "transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "transforms/v2/algorithms/LineCurvature/LineCurvature.hpp"
 #include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
@@ -45,6 +46,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<SumReductionParams>();
     registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
+    registerPipelineStepFactoryFor<LineClipParams>();
     registerPipelineStepFactoryFor<LineCurvatureParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<LinePointExtractionParams>();
@@ -204,6 +206,32 @@ auto const register_line_min_point_dist = RegisterBinaryTransform<
                 .input_type_name = "std::tuple<Line2D, Point2D<float>>",
                 .output_type_name = "float",
                 .params_type_name = "LineMinPointDistParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false,
+        });
+
+// Register LineClipTransform (Binary - takes two Line2D inputs)
+auto const register_line_clip = RegisterBinaryTransform<
+        Line2D,
+        Line2D,
+        Line2D,
+        LineClipParams>(
+        "ClipLineAtReference",
+        clipLineAtReference,
+        TransformMetadata{
+                .name = "ClipLineAtReference",
+                .description = "Clip a line at its intersection with a reference line",
+                .category = "Geometry",
+                .input_type = typeid(std::tuple<Line2D, Line2D>),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(LineClipParams),
+                .is_multi_input = true,
+                .input_arity = 2,
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "std::tuple<Line2D, Line2D>",
+                .output_type_name = "Line2D",
+                .params_type_name = "LineClipParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = false,
