@@ -46,7 +46,6 @@ QString SVGExporter::exportToSVG() {
             addDigitalIntervalSeries(
                 key,
                 interval_data.series,
-                interval_data.time_frame,
                 *interval_data.display_options,
                 static_cast<float>(start_time),
                 static_cast<float>(end_time));
@@ -269,7 +268,6 @@ void SVGExporter::addDigitalEventSeries(
 void SVGExporter::addDigitalIntervalSeries(
         std::string const & key,
         std::shared_ptr<DigitalIntervalSeries> const & series,
-        std::shared_ptr<TimeFrame> const & time_frame,
         NewDigitalIntervalSeriesDisplayOptions const & display_options,
         float start_time,
         float end_time) {
@@ -307,8 +305,8 @@ void SVGExporter::addDigitalIntervalSeries(
         // IMPORTANT: Convert interval times from series time frame to master time frame
         // The interval.start and interval.end are in the series' time frame indices
         // We need to convert them to actual time values in the master time frame for rendering
-        auto const interval_start = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.start)));
-        auto const interval_end = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.end)));
+        auto const interval_start = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.start)));
+        auto const interval_end = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.end)));
 
         // Clip the interval to the visible range (same as OpenGL rendering)
         float const clipped_start = std::max(interval_start, start_time);

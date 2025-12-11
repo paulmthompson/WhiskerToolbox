@@ -162,7 +162,6 @@ private:
     void addDigitalIntervalSeries(
             std::string const & key,
             std::shared_ptr<DigitalIntervalSeries> const & series,
-            std::shared_ptr<TimeFrame> const & time_frame,
             NewDigitalIntervalSeriesDisplayOptions const & display_options,
             float start_time,
             float end_time);

@@ -418,7 +418,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         // Add to plotting manager first
         _plotting_manager->addDigitalIntervalSeries(key, series, color);
 
-        ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
+        ui->openGLWidget->addDigitalIntervalSeries(key, series, color);
 
     } else {
         std::cout << "Feature type not supported: " << convert_data_type_to_string(data_type) << std::endl;
@@ -852,7 +852,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
         _plotting_manager->addDigitalIntervalSeries(key, series, color);
-        ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
+        ui->openGLWidget->addDigitalIntervalSeries(key, series, color);
 
     } else {
         std::cout << "Feature type not supported: " << convert_data_type_to_string(data_type) << std::endl;

@@ -52,7 +52,6 @@ struct DigitalEventSeriesData {
 
 struct DigitalIntervalSeriesData {
     std::shared_ptr<DigitalIntervalSeries> series;
-    std::shared_ptr<TimeFrame> time_frame;
     std::unique_ptr<NewDigitalIntervalSeriesDisplayOptions> display_options;
 };
 
@@ -93,7 +92,6 @@ public:
     void addDigitalIntervalSeries(
             std::string const & key,
             std::shared_ptr<DigitalIntervalSeries> series,
-            std::shared_ptr<TimeFrame> time_frame,
             std::string const & color = "");
     void removeDigitalIntervalSeries(std::string const & key);
     void clearSeries();
