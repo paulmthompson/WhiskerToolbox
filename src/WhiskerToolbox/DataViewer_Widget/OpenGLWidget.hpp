@@ -41,7 +41,6 @@ struct PlottingManager;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
-    std::shared_ptr<TimeFrame> time_frame;
     std::unique_ptr<NewAnalogTimeSeriesDisplayOptions> display_options;
 };
 
@@ -81,7 +80,6 @@ public:
     void addAnalogTimeSeries(
             std::string const & key,
             std::shared_ptr<AnalogTimeSeries> series,
-            std::shared_ptr<TimeFrame> time_frame,
             std::string const & color = "");
     void removeAnalogTimeSeries(std::string const & key);
     void addDigitalEventSeries(

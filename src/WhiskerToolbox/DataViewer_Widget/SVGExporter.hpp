@@ -122,7 +122,6 @@ private:
     void addAnalogSeries(
             std::string const & key,
             std::shared_ptr<AnalogTimeSeries> const & series,
-            std::shared_ptr<TimeFrame> const & time_frame,
             NewAnalogTimeSeriesDisplayOptions const & display_options,
             int start_time,
             int end_time);

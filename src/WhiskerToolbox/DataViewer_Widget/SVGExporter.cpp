@@ -59,7 +59,6 @@ QString SVGExporter::exportToSVG() {
             addAnalogSeries(
                 key,
                 analog_data.series,
-                analog_data.time_frame,
                 *analog_data.display_options,
                 start_time,
                 end_time);
@@ -114,7 +113,6 @@ QString SVGExporter::colorToHex(int r, int g, int b) {
 void SVGExporter::addAnalogSeries(
         std::string const & key,
         std::shared_ptr<AnalogTimeSeries> const & series,
-        std::shared_ptr<TimeFrame> const & time_frame,
         NewAnalogTimeSeriesDisplayOptions const & display_options,
         int start_time,
         int end_time) {
@@ -125,12 +123,11 @@ void SVGExporter::addAnalogSeries(
     auto const series_start_index = getTimeIndexForSeries(
         TimeFrameIndex(start_time),
         gl_widget_->getMasterTimeFrame().get(),
-        time_frame.get());
+        series->getTimeFrame().get());
     auto const series_end_index = getTimeIndexForSeries(
         TimeFrameIndex(end_time),
         gl_widget_->getMasterTimeFrame().get(),
-        time_frame.get());
-
+        series->getTimeFrame().get());
     auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(
         series_start_index, series_end_index);
 
@@ -165,7 +162,7 @@ void SVGExporter::addAnalogSeries(
     QStringList points;
     auto time_iter = analog_range.time_indices.begin();
     for (size_t i = 0; i < analog_range.values.size(); i++) {
-        auto const x_data = time_frame->getTimeAtIndex(**time_iter);
+        auto const x_data = series->getTimeFrame()->getTimeAtIndex(**time_iter);
         auto const y_data = analog_range.values[i];
 
         glm::vec4 const vertex(x_data, y_data, 0.0f, 1.0f);

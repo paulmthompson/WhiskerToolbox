@@ -375,7 +375,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         // Add to plotting manager first
         _plotting_manager->addAnalogSeries(key, series, color);
 
-        ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
+        ui->openGLWidget->addAnalogTimeSeries(key, series, color);
         std::cout << "Successfully added analog series to PlottingManager and OpenGL widget" << std::endl;
 
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -820,7 +820,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
 
         // Register with plotting manager for later allocation (single call)
         _plotting_manager->addAnalogSeries(key, series, color);
-        ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
+        ui->openGLWidget->addAnalogTimeSeries(key, series, color);
 
     } else if (data_type == DM_DataType::DigitalEvent) {
         auto series = _data_manager->getData<DigitalEventSeries>(key);

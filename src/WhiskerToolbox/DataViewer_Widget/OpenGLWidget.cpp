@@ -731,11 +731,6 @@ void OpenGLWidget::drawAnalogSeries() {
     for (auto const & [key, analog_data]: _analog_series) {
         auto const & series = analog_data.series;
         auto const & data = series->getAnalogTimeSeries();
-        //if (!series->hasTimeFrameV2()) {
-        //    continue;
-        //}
-        //auto time_frame = series->getTimeFrameV2().value();
-        auto time_frame = analog_data.time_frame;
 
         auto const & display_options = analog_data.display_options;
 
@@ -793,8 +788,12 @@ void OpenGLWidget::drawAnalogSeries() {
 
         m_vertices.clear();
 
-        auto series_start_index = getTimeIndexForSeries(start_time, _master_time_frame.get(), time_frame.get());
-        auto series_end_index = getTimeIndexForSeries(end_time, _master_time_frame.get(), time_frame.get());
+        auto series_start_index = getTimeIndexForSeries(start_time,
+                                                        _master_time_frame.get(),
+                                                        series->getTimeFrame().get());
+        auto series_end_index = getTimeIndexForSeries(end_time,
+                                                      _master_time_frame.get(),
+                                                      series->getTimeFrame().get());
 
         // === MVP MATRIX SETUP ===
 
@@ -821,8 +820,8 @@ void OpenGLWidget::drawAnalogSeries() {
         if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {
 
             m_vertices.clear();
-            for (auto const& [time_idx, value] : analog_range) {
-                auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
+            for (auto const & [time_idx, value]: analog_range) {
+                auto const xCanvasPos = series->getTimeFrame()->getTimeAtIndex(time_idx);
                 auto const yCanvasPos = value;
 
                 m_vertices.push_back(xCanvasPos);
@@ -830,12 +829,12 @@ void OpenGLWidget::drawAnalogSeries() {
                 m_vertices.push_back(0.0f);// z coordinate
                 m_vertices.push_back(1.0f);// w coordinate
             }
-            
+
             if (m_vertices.empty()) {
                 i++;
                 continue;
             }
-            
+
             m_vbo.bind();
             m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
             m_vbo.release();
@@ -848,12 +847,12 @@ void OpenGLWidget::drawAnalogSeries() {
             // Draw multiple line segments, breaking at gaps
             // Set line thickness before drawing segments
             glLineWidth(static_cast<float>(display_options->line_thickness));
-            _drawAnalogSeriesWithGapDetection(time_frame, analog_range,
+            _drawAnalogSeriesWithGapDetection(series->getTimeFrame(), analog_range,
                                               display_options->gap_threshold);
 
         } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
             // Draw individual markers instead of lines
-            _drawAnalogSeriesAsMarkers(time_frame, analog_range);
+            _drawAnalogSeriesAsMarkers(series->getTimeFrame(), analog_range);
         }
 
 
@@ -873,7 +872,7 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::shared_ptr<TimeFrame> 
     int prev_index = -1;
     bool first_point = true;
 
-    for (auto const& [time_idx, value] : analog_range) {
+    for (auto const & [time_idx, value]: analog_range) {
         auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
         auto const yCanvasPos = value;
 
@@ -928,7 +927,7 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::shared_ptr<TimeFrame> const &
                                               AnalogTimeSeries::TimeValueRangeView analog_range) {
     m_vertices.clear();
 
-    for (auto const& [time_idx, value] : analog_range) {
+    for (auto const & [time_idx, value]: analog_range) {
         auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
         auto const yCanvasPos = value;
 
@@ -1036,7 +1035,6 @@ void OpenGLWidget::drawAxis() {
 void OpenGLWidget::addAnalogTimeSeries(
         std::string const & key,
         std::shared_ptr<AnalogTimeSeries> series,
-        std::shared_ptr<TimeFrame> time_frame,
         std::string const & color) {
 
     auto display_options = std::make_unique<NewAnalogTimeSeriesDisplayOptions>();
@@ -1054,7 +1052,7 @@ void OpenGLWidget::addAnalogTimeSeries(
     display_options->scale_factor = display_options->cached_std_dev * 5.0f;
     display_options->user_scale_factor = 1.0f;// Default user scale
 
-    if (time_frame->getTotalFrameCount() / 5 > series->getNumSamples()) {
+    if (series->getTimeFrame()->getTotalFrameCount() / 5 > series->getNumSamples()) {
         display_options->gap_handling = AnalogGapHandling::AlwaysConnect;
         display_options->enable_gap_detection = false;
 
@@ -1062,13 +1060,12 @@ void OpenGLWidget::addAnalogTimeSeries(
         display_options->enable_gap_detection = true;
         display_options->gap_handling = AnalogGapHandling::DetectGaps;
         // Set gap threshold to 0.1% of total frames, with a minimum floor of 2 to work with integer time frames
-        float const calculated_threshold = static_cast<float>(time_frame->getTotalFrameCount()) / 1000.0f;
+        float const calculated_threshold = static_cast<float>(series->getTimeFrame()->getTotalFrameCount()) / 1000.0f;
         display_options->gap_threshold = std::max(2.0f, calculated_threshold);
     }
 
     _analog_series[key] = AnalogSeriesData{
             std::move(series),
-            std::move(time_frame),
             std::move(display_options)};
 
     updateCanvas(_time);
@@ -1573,7 +1570,7 @@ void OpenGLWidget::finishIntervalDrag() {
     }
 
     auto const & series = it->second.series;
-    
+
     try {
         // Convert all coordinates to series time frame for data operations
         int64_t original_start_series, original_end_series, new_start_series, new_end_series;
