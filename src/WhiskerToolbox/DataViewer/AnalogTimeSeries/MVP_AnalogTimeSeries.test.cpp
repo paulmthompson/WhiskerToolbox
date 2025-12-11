@@ -114,8 +114,17 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         REQUIRE(manager.viewport_y_max == 1.0f);
         
         // Test adding series
-        int series1_idx = manager.addAnalogSeries();
-        int series2_idx = manager.addAnalogSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        std::vector<float> data(100, 0.0f);
+        std::vector<TimeFrameIndex> time_indices;
+        for(int i=0; i<100; ++i) time_indices.emplace_back(i);
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
+
+        int series1_idx = manager.addAnalogSeries("s1", series, time_frame);
+        int series2_idx = manager.addAnalogSeries("s2", series, time_frame);
         
         REQUIRE(series1_idx == 0);
         REQUIRE(series2_idx == 1);
@@ -160,7 +169,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         
         // Set up plotting manager for single series
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         manager.setVisibleDataRange(1, 10000); // Show points 1-10000 as specified
         
         // Set up display options with default scaling
@@ -219,9 +231,18 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         PlottingManager manager;
         
         // Add three analog series
-        int series1 = manager.addAnalogSeries();
-        int series2 = manager.addAnalogSeries(); 
-        int series3 = manager.addAnalogSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        std::vector<float> data(100, 0.0f);
+        std::vector<TimeFrameIndex> time_indices;
+        for(int i=0; i<100; ++i) time_indices.emplace_back(i);
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
+
+        int series1 = manager.addAnalogSeries("s1", series, time_frame);
+        int series2 = manager.addAnalogSeries("s2", series, time_frame); 
+        int series3 = manager.addAnalogSeries("s3", series, time_frame);
         
         REQUIRE(manager.total_analog_series == 3);
         
@@ -256,7 +277,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         float std_dev = calculateStdDev(data);
         
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         
         // Test user scaling factor
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -317,7 +341,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         
         // Set up plotting manager for single series
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(10000);
+        for(size_t i=0; i<10000; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         manager.setVisibleDataRange(1, 1000);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -377,7 +404,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto test_data = generateGaussianData(num_points, 0.0f, 5.0f, 999);
         auto time_series = std::make_shared<AnalogTimeSeries>(test_data, time_vector);
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         manager.setVisibleDataRange(1, 1000);
         
         // Set up display options
@@ -455,9 +485,13 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto time_series3 = std::make_shared<AnalogTimeSeries>(data3, time_vector);
 
         PlottingManager manager;
-        int series1_idx = manager.addAnalogSeries();
-        int series2_idx = manager.addAnalogSeries(); 
-        int series3_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+
+        int series1_idx = manager.addAnalogSeries("s1", time_series1, time_frame);
+        int series2_idx = manager.addAnalogSeries("s2", time_series2, time_frame); 
+        int series3_idx = manager.addAnalogSeries("s3", time_series3, time_frame);
         manager.setVisibleDataRange(1, 1000);
         
         // Set up display options for all series
@@ -533,7 +567,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto test_data = generateGaussianData(num_points, 0.0f, 1.0f, 444);
         auto time_series = std::make_shared<AnalogTimeSeries>(test_data, time_vector);
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         manager.setVisibleDataRange(1, 1000);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -601,7 +638,10 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         REQUIRE_THAT(std_dev, WithinRel(0.0f, 0.01f));
         
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -634,7 +674,10 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         float std_dev = calculateStdDev(data);
         
         PlottingManager manager;
-        int series_idx = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;

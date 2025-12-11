@@ -130,8 +130,17 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         PlottingManager manager;
 
         // Add series in order: Gaussian analog, Uniform analog, Digital intervals
-        int gaussian_series = manager.addAnalogSeries();
-        int uniform_series = manager.addAnalogSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        std::vector<float> data(100, 0.0f);
+        std::vector<TimeFrameIndex> time_indices;
+        for(int i=0; i<100; ++i) time_indices.emplace_back(i);
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
+
+        int gaussian_series = manager.addAnalogSeries("s1", series, time_frame);
+        int uniform_series = manager.addAnalogSeries("s2", series, time_frame);
         int interval_series = manager.addDigitalIntervalSeries();
 
         // Verify series indices and counts
@@ -322,8 +331,17 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         PlottingManager manager;
 
         // Add 2 analog series and 2 digital event series
-        int analog1 = manager.addAnalogSeries();
-        int analog2 = manager.addAnalogSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        std::vector<float> data(100, 0.0f);
+        std::vector<TimeFrameIndex> time_indices;
+        for(int i=0; i<100; ++i) time_indices.emplace_back(i);
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
+
+        int analog1 = manager.addAnalogSeries("s1", series, time_frame);
+        int analog2 = manager.addAnalogSeries("s2", series, time_frame);
         int event1 = manager.addDigitalEventSeries();
         int event2 = manager.addDigitalEventSeries();
 
@@ -474,7 +492,10 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         
         // Set up plotting manager with analog series
         PlottingManager manager;
-        int series_index = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_index = manager.addAnalogSeries("s1", time_series, time_frame);
         
         // Configure display options
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -663,7 +684,10 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         auto time_series = std::make_shared<AnalogTimeSeries>(test_data, time_vector);
         
         PlottingManager manager;
-        int series_index = manager.addAnalogSeries();
+        std::vector<int> times(video_length);
+        for(size_t i=0; i<video_length; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_index = manager.addAnalogSeries("s1", time_series, time_frame);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -1140,7 +1164,10 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         auto time_series = std::make_shared<AnalogTimeSeries>(data, time_vector);
         
         PlottingManager manager;
-        int series_index = manager.addAnalogSeries();
+        std::vector<int> times(num_points);
+        for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_index = manager.addAnalogSeries("s1", time_series, time_frame);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;

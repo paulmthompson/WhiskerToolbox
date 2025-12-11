@@ -2,6 +2,8 @@
 
 #include "DigitalIntervalSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -206,7 +208,16 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         PlottingManager manager;
 
         // Add mixed series types
-        int analog_series = manager.addAnalogSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        std::vector<float> data(100, 0.0f);
+        std::vector<TimeFrameIndex> time_indices;
+        for(int i=0; i<100; ++i) time_indices.emplace_back(i);
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
+
+        int analog_series = manager.addAnalogSeries("s1", series, time_frame);
         int interval_series1 = manager.addDigitalIntervalSeries();
         int interval_series2 = manager.addDigitalIntervalSeries();
 

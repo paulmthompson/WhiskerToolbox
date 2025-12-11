@@ -95,15 +95,7 @@ struct PlottingManager {
      */
     void setVisibleDataRange(int start_index, int end_index);
 
-    /**
-     * @brief Add an analog series to the plotting manager
-     * 
-     * Registers a new analog series and updates internal bookkeeping
-     * for coordinate allocation.
-     * 
-     * @return Series index for the newly added series
-     */
-    int addAnalogSeries();
+
 
     /**
      * @brief Add a digital interval series to the plotting manager

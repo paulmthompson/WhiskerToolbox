@@ -29,11 +29,7 @@ void PlottingManager::setVisibleDataRange(int start_index, int end_index) {
     total_data_points = end_index - start_index;
 }
 
-int PlottingManager::addAnalogSeries() {
-    int series_index = total_analog_series;
-    total_analog_series++;
-    return series_index;
-}
+
 
 int PlottingManager::addDigitalIntervalSeries() {
     int series_index = total_digital_series;
