@@ -4,11 +4,12 @@
 #include "CoreGeometry/boundingbox.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
-#include "ViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "Visualizers/RenderingContext.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
+
 #include <QOpenGLWidget>
 #include <QString>
 
@@ -82,7 +83,7 @@ public:
      * 
      * @return The view state
      */
-    ViewState & getViewState() { return _view_state; }
+    CorePlotting::ViewState & getViewState() { return _view_state; }
 
     /**
      * @brief Get the view state
@@ -91,7 +92,7 @@ public:
      * 
      * @return The view state
      */
-    [[nodiscard]] ViewState const & getViewState() const { return _view_state; }
+    [[nodiscard]] CorePlotting::ViewState const & getViewState() const { return _view_state; }
 
     // Selection management
     virtual void setSelectionMode(SelectionMode mode);
@@ -179,7 +180,7 @@ protected:
 
     // View state (encapsulates zoom, pan, bounds, etc.)
     // Widget dimensions are mutable as they're not part of logical state
-    mutable ViewState _view_state;
+    mutable CorePlotting::ViewState _view_state;
 
     // View and projection matrices
     QMatrix4x4 _model_matrix;

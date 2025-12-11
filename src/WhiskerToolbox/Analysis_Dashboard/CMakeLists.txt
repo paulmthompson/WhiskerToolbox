@@ -26,8 +26,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/Common/BasePlotOpenGLWidget.cpp
     Widgets/Common/TooltipManager.hpp
     Widgets/Common/TooltipManager.cpp
-    Widgets/Common/ViewState.hpp
-    Widgets/Common/ViewState.cpp
 
 
     # Plots
@@ -152,6 +150,7 @@ target_link_libraries(Analysis_Dashboard PRIVATE Feature_Table_Widget)
 target_link_libraries(Analysis_Dashboard PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Analysis_Dashboard PRIVATE GroupManagementWidget)
 target_link_libraries(Analysis_Dashboard PRIVATE GroupContextMenu)
+target_link_libraries(Analysis_Dashboard PRIVATE CorePlotting)
 
 # Include directories
 target_include_directories(Analysis_Dashboard PUBLIC

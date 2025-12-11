@@ -3,6 +3,13 @@ find_package(glm CONFIG REQUIRED)
 
 set(COREPLOTTING_SOURCES
     DataTypes/DigitalEventSeries/EventRow.hpp
+    SceneGraph/RenderablePrimitives.hpp
+    CoordinateTransform/Matrices.hpp
+    CoordinateTransform/Matrices.cpp
+    CoordinateTransform/ScreenToWorld.hpp
+    CoordinateTransform/ScreenToWorld.cpp
+    CoordinateTransform/ViewState.hpp
+    CoordinateTransform/ViewState.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}

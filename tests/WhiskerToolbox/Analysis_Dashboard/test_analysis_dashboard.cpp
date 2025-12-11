@@ -19,7 +19,6 @@
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp"
-#include "Analysis_Dashboard/Widgets/Common/ViewState.hpp"
 
 #include "DockManager.h"
 #include <QApplication>
@@ -819,7 +818,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Properties panel switches 
 
     // Now enable the same dataset in plot 2
     // Record plot 1 view state to ensure it remains unchanged after enabling on plot 2
-    ViewState vs1_before = plot1->getOpenGLWidget()->getViewState();
+    auto vs1_before = plot1->getOpenGLWidget()->getViewState();
     QTest::mouseClick(spatial_contents[1], Qt::LeftButton);
     QApplication::processEvents();
     second_props = get_current_properties_widget();
@@ -858,7 +857,7 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Properties panel switches 
 
     // Assert plot 1's view state is unchanged
     {
-        ViewState vs1_after = plot1->getOpenGLWidget()->getViewState();
+        auto vs1_after = plot1->getOpenGLWidget()->getViewState();
         REQUIRE(vs1_after.zoom_level_x == Catch::Approx(vs1_before.zoom_level_x));
         REQUIRE(vs1_after.zoom_level_y == Catch::Approx(vs1_before.zoom_level_y));
         REQUIRE(vs1_after.pan_offset_x == Catch::Approx(vs1_before.pan_offset_x));
@@ -935,8 +934,8 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Properties panel switches 
         if (plot1->getOpenGLWidget()) {
             auto const & vs1e = plot1->getOpenGLWidget()->getViewState();
             // Just assert it remains a valid state (data_bounds_valid set by view update)
-            REQUIRE(vs1e.widget_width > 0);
-            REQUIRE(vs1e.widget_height > 0);
+            REQUIRE(vs1e.viewport_width > 0);
+            REQUIRE(vs1e.viewport_height > 0);
         }
     }
 

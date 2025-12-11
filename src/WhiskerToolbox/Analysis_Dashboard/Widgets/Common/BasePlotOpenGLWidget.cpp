@@ -9,6 +9,9 @@
 #include "TooltipManager.hpp"
 #include "widget_utilities.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <QApplication>
 #include <QDebug>
 #include <QKeyEvent>
@@ -94,19 +97,19 @@ void BasePlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 QVector2D BasePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     // Update view state dimensions for accurate conversion
-    _view_state.widget_width = width();
-    _view_state.widget_height = height();
+    _view_state.viewport_width = width();
+    _view_state.viewport_height = height();
 
-    auto world_point = ViewUtils::screenToWorld(_view_state, screen_pos.x(), screen_pos.y());
+    auto world_point = CorePlotting::screenToWorld(_view_state, screen_pos.x(), screen_pos.y());
     return {world_point.x, world_point.y};
 }
 
 QPoint BasePlotOpenGLWidget::worldToScreen(float world_x, float world_y) const {
     // Update view state dimensions for accurate conversion
-    _view_state.widget_width = width();
-    _view_state.widget_height = height();
+    _view_state.viewport_width = width();
+    _view_state.viewport_height = height();
 
-    auto screen_point = ViewUtils::worldToScreen(_view_state, world_x, world_y);
+    auto screen_point = CorePlotting::worldToScreen(_view_state, world_x, world_y);
     return QPoint{static_cast<int>(screen_point.x), static_cast<int>(screen_point.y)};
 }
 
@@ -115,10 +118,10 @@ void BasePlotOpenGLWidget::resetView() {
     auto data_bounds = getDataBounds();
     _view_state.data_bounds = data_bounds;
     _view_state.data_bounds_valid = true;
-    _view_state.widget_width = width();
-    _view_state.widget_height = height();
+    _view_state.viewport_width = width();
+    _view_state.viewport_height = height();
 
-    ViewUtils::resetView(_view_state);
+    CorePlotting::resetView(_view_state);
     updateViewMatrices();
     requestThrottledUpdate();
 }
@@ -403,8 +406,8 @@ void BasePlotOpenGLWidget::updateViewMatrices() {
     // Update ViewState with current data bounds and widget dimensions
     _view_state.data_bounds = data_bounds;
     _view_state.data_bounds_valid = true;
-    _view_state.widget_width = width();
-    _view_state.widget_height = height();
+    _view_state.viewport_width = width();
+    _view_state.viewport_height = height();
 
     if (width() <= 0 || height() <= 0) {
         _view_matrix.setToIdentity();
@@ -412,27 +415,27 @@ void BasePlotOpenGLWidget::updateViewMatrices() {
         return;
     }
 
-    // Compute camera center and world-space visible extents
-    float cx, cy, w_world, h_world;
-    computeCameraWorldView(cx, cy, w_world, h_world);
+    // Use CorePlotting to compute matrices
+    glm::mat4 view, proj;
+    CorePlotting::computeMatricesFromViewState(_view_state, view, proj);
 
-    // View matrix encodes pan/zoom
-    _view_matrix.setToIdentity();
-    float aspect = static_cast<float>(width()) / static_cast<float>(std::max(1, height()));
-    float scale_x = (w_world > 0.0f) ? ((2.0f * aspect) / w_world) : 1.0f;
-    float scale_y = (h_world > 0.0f) ? (2.0f / h_world) : 1.0f;
-    _view_matrix.scale(scale_x, scale_y, 1.0f);
-    _view_matrix.translate(-cx, -cy, 0.0f);
+    // Convert glm::mat4 to QMatrix4x4 (glm is column-major, QMatrix4x4 constructor takes row-major elements)
+    // So we pass m[0][0], m[1][0], m[2][0], m[3][0] etc.
+    auto glmToQt = [](const glm::mat4& m) {
+        return QMatrix4x4(
+            m[0][0], m[1][0], m[2][0], m[3][0],
+            m[0][1], m[1][1], m[2][1], m[3][1],
+            m[0][2], m[1][2], m[2][2], m[3][2],
+            m[0][3], m[1][3], m[2][3], m[3][3]
+        );
+    };
 
-    // Projection handles aspect only
-    _projection_matrix.setToIdentity();
-    float left = -aspect;
-    float right = aspect;
-    float bottom = -1.0f;
-    float top = 1.0f;
-    _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _view_matrix = glmToQt(view);
+    _projection_matrix = glmToQt(proj);
 
     // Emit the current visible world bounds
+    float cx, cy, w_world, h_world;
+    computeCameraWorldView(cx, cy, w_world, h_world);
     float half_w = w_world * 0.5f;
     float half_h = h_world * 0.5f;
     BoundingBox view_bounds(cx - half_w, cy - half_h, cx + half_w, cy + half_h);
@@ -465,7 +468,11 @@ bool BasePlotOpenGLWidget::initializeRendering() {
 
 void BasePlotOpenGLWidget::computeCameraWorldView(float & center_x, float & center_y,
                                                   float & world_width, float & world_height) const {
-    ViewUtils::computeCameraWorldView(_view_state, center_x, center_y, world_width, world_height);
+    auto bounds = CorePlotting::calculateVisibleWorldBounds(_view_state);
+    center_x = bounds.center_x();
+    center_y = bounds.center_y();
+    world_width = bounds.width();
+    world_height = bounds.height();
 }
 
 bool BasePlotOpenGLWidget::validateOpenGLContext() const {
