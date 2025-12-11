@@ -395,7 +395,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         }
 
         // Add to plotting manager first
-        _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
+        _plotting_manager->addDigitalEventSeries(key, series, color);
 
         ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
 
@@ -835,7 +835,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
             return;
         }
-        _plotting_manager->addDigitalEventSeries(key, series, time_frame, color);
+        _plotting_manager->addDigitalEventSeries(key, series, color);
         ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalInterval) {

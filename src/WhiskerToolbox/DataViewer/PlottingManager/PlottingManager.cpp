@@ -46,13 +46,11 @@ int PlottingManager::addAnalogSeries(std::string const & key,
 
 int PlottingManager::addDigitalEventSeries(std::string const & key,
                                            std::shared_ptr<DigitalEventSeries> series,
-                                           std::shared_ptr<TimeFrame> time_frame,
                                            std::string const & color) {
     int series_index = total_event_series;
     
     DigitalEventSeriesInfo info;
     info.series = series;
-    info.time_frame = time_frame;
     info.key = key;
     info.color = color.empty() ? generateDefaultColor(total_analog_series + series_index) : color;
     info.visible = true;

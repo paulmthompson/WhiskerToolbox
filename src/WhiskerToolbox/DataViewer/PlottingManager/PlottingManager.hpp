@@ -50,7 +50,6 @@ struct PlottingManager {
 
     struct DigitalEventSeriesInfo {
         std::shared_ptr<DigitalEventSeries> series;
-        std::shared_ptr<TimeFrame> time_frame;
         std::string key;
         std::string color;
         bool visible{true};
@@ -107,7 +106,6 @@ struct PlottingManager {
      */
     int addDigitalEventSeries(std::string const & key,
                               std::shared_ptr<DigitalEventSeries> series,
-                              std::shared_ptr<TimeFrame> time_frame,
                               std::string const & color = "");
 
     /**

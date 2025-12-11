@@ -343,8 +343,9 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         int analog1 = manager.addAnalogSeries("s1", series, time_frame);
         int analog2 = manager.addAnalogSeries("s2", series, time_frame);
         auto event_series = std::make_shared<DigitalEventSeries>();
-        int event1 = manager.addDigitalEventSeries("e1", event_series, time_frame);
-        int event2 = manager.addDigitalEventSeries("e2", event_series, time_frame);
+        event_series->setTimeFrame(time_frame);
+        int event1 = manager.addDigitalEventSeries("e1", event_series);
+        int event2 = manager.addDigitalEventSeries("e2", event_series);
 
         // Verify series indices and counts
         REQUIRE(analog1 == 0);
