@@ -33,7 +33,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("MVP transforms yield NDC Y within lane (two stacked events)") {
         PlottingManager manager;
-        manager.setVisibleDataRange(0, 1000);
 
         // Two stacked series
         std::vector<int> times(100);
@@ -99,7 +98,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("MVP transforms produce non-overlapping lanes for three stacked events") {
         PlottingManager manager;
-        manager.setVisibleDataRange(0, 1200);
 
         std::vector<int> times(100);
         for(int i=0; i<100; ++i) times[i] = i;
@@ -212,8 +210,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         REQUIRE(event_series == 0);
         REQUIRE(manager.total_event_series == 1);
 
-        manager.setVisibleDataRange(1, 1000);
-
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::FullCanvas;
         options.margin_factor = 0.95f;
@@ -249,8 +245,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
         int event_series = manager.addDigitalEventSeries("e1", series, time_frame);
 
-        manager.setVisibleDataRange(1, 1000);
-
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::Stacked;
         options.allocated_y_center = -0.5f;// Simulate allocation in lower half
@@ -274,7 +268,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Event panning behavior comparison") {
         PlottingManager manager;
-        manager.setVisibleDataRange(1, 1000);
 
         // Setup two event series with different modes
         NewDigitalEventSeriesDisplayOptions full_canvas_options;
@@ -421,9 +414,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         REQUIRE_THAT(center2, Catch::Matchers::WithinAbs(expected_center2, 0.01f));
         REQUIRE_THAT(center3, WithinRel(expected_center3, 0.01f));
 
-        // Test that stacked mode uses the allocated space correctly
-        manager.setVisibleDataRange(1, 1000);
-
         NewDigitalEventSeriesDisplayOptions options1, options2, options3;
         options1.plotting_mode = EventPlottingMode::Stacked;
         options2.plotting_mode = EventPlottingMode::Stacked;
@@ -466,7 +456,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Panning behavior - FullCanvas mode (viewport-pinned)") {
         PlottingManager manager;
-        manager.setVisibleDataRange(1, 1000);
 
         std::vector<int> times(100);
         for(int i=0; i<100; ++i) times[i] = i;
@@ -519,7 +508,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Panning behavior - Stacked mode (content-following)") {
         PlottingManager manager;
-        manager.setVisibleDataRange(1, 1000);
 
         std::vector<int> times(100);
         for(int i=0; i<100; ++i) times[i] = i;
@@ -570,7 +558,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Panning behavior - Multiple stacked series") {
         PlottingManager manager;
-        manager.setVisibleDataRange(1, 1000);
 
         // Add 3 stacked event series
         std::vector<int> times(100);
@@ -628,7 +615,6 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Mixed panning behavior - FullCanvas vs Stacked") {
         PlottingManager manager;
-        manager.setVisibleDataRange(1, 1000);
 
         // Simulate having both types (though they'd typically be separate series)
         NewDigitalEventSeriesDisplayOptions fullcanvas_options;

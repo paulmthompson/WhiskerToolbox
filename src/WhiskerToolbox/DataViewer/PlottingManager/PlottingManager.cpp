@@ -23,18 +23,6 @@ void PlottingManager::calculateAnalogSeriesAllocation(int series_index,
     allocated_center = viewport_y_min + allocated_height * (static_cast<float>(series_index) + 0.5f);
 }
 
-void PlottingManager::setVisibleDataRange(int start_index, int end_index) {
-    visible_start_index = start_index;
-    visible_end_index = end_index;
-    total_data_points = end_index - start_index;
-}
-
-
-
-
-
-
-
 int PlottingManager::addAnalogSeries(std::string const & key,
                                      std::shared_ptr<AnalogTimeSeries> series,
                                      std::shared_ptr<TimeFrame> time_frame,

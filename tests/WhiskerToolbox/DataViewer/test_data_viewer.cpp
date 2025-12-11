@@ -153,8 +153,6 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         REQUIRE(manager.total_analog_series == 2);
         REQUIRE(manager.total_digital_series == 1);
 
-        // Set visible data range
-        manager.setVisibleDataRange(1, 10000);
 
         // Generate test data
         constexpr size_t num_points = 10000;
@@ -356,9 +354,6 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         REQUIRE(manager.total_analog_series == 2);
         REQUIRE(manager.total_event_series == 2);
 
-        // Set visible data range
-        manager.setVisibleDataRange(1, 10000);
-
         // Generate test data
         constexpr size_t num_points = 10000;
         std::vector<TimeFrameIndex> time_vector;
@@ -510,7 +505,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         
         // Test Case 1: Set x-axis to the entirety of the data range
         INFO("Testing full range display");
-        manager.setVisibleDataRange(static_cast<int>(data_start), static_cast<int>(data_end));
         
         // Generate MVP matrices for full range
         glm::mat4 model_full = new_getAnalogModelMat(display_options, 
@@ -557,9 +551,7 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         INFO("Testing normal window display");
         constexpr int64_t normal_start = 45000;
         constexpr int64_t normal_end = 55000;
-        
-        manager.setVisibleDataRange(static_cast<int>(normal_start), static_cast<int>(normal_end));
-        
+                
         // Generate MVP matrices for normal range
         glm::mat4 model_normal = new_getAnalogModelMat(display_options, 
                                                       display_options.cached_std_dev, 
@@ -620,9 +612,7 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         // Go to a very small range
         constexpr int64_t tiny_start = 50000;
         constexpr int64_t tiny_end = 50010;  // Only 10 data points
-        
-        manager.setVisibleDataRange(static_cast<int>(tiny_start), static_cast<int>(tiny_end));
-        
+                
         glm::mat4 projection_tiny = new_getAnalogProjectionMat(TimeFrameIndex(tiny_start), 
                                                               TimeFrameIndex(tiny_end), 
                                                               -400.0f, 400.0f, 
@@ -642,9 +632,7 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         REQUIRE(std::isfinite(point_50005_tiny.x));
         REQUIRE(std::isfinite(point_50005_tiny.y));
         
-        // Go back to full range to verify system recovery
-        manager.setVisibleDataRange(static_cast<int>(data_start), static_cast<int>(data_end));
-        
+        // Go back to full range to verify system recovery        
         glm::mat4 projection_recovery = new_getAnalogProjectionMat(TimeFrameIndex(data_start), 
                                                                   TimeFrameIndex(data_end), 
                                                                   -400.0f, 400.0f, 
@@ -713,7 +701,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         REQUIRE(x_axis.getEnd() <= data_max);
         
         // Verify MVP matrices are valid at full range
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         glm::mat4 projection_full = new_getAnalogProjectionMat(
             TimeFrameIndex(x_axis.getStart()), 
             TimeFrameIndex(x_axis.getEnd()), 
@@ -735,7 +722,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         REQUIRE(x_axis.getStart() >= data_min);
         REQUIRE(x_axis.getEnd() <= data_max);
         
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         glm::mat4 projection_tiny = new_getAnalogProjectionMat(
             TimeFrameIndex(x_axis.getStart()), 
             TimeFrameIndex(x_axis.getEnd()), 
@@ -765,7 +751,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         REQUIRE(x_axis.getStart() >= data_min);
         REQUIRE(x_axis.getEnd() <= data_max);
         
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         glm::mat4 projection_2samples = new_getAnalogProjectionMat(
             TimeFrameIndex(x_axis.getStart()), 
             TimeFrameIndex(x_axis.getEnd()), 
@@ -805,7 +790,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
             REQUIRE(x_axis.getStart() < x_axis.getEnd());
             
             // Verify MVP matrices remain valid throughout rapid changes
-            manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
             glm::mat4 projection = new_getAnalogProjectionMat(
                 TimeFrameIndex(x_axis.getStart()), 
                 TimeFrameIndex(x_axis.getEnd()), 
@@ -885,31 +869,24 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         
         // Create plotting manager and set it to match XAxis
         PlottingManager manager;
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         
         // Test synchronized range changes
         INFO("Testing synchronized XAxis and PlottingManager range changes");
         
         // Change to full range
         x_axis.setVisibleRange(data_min, data_max);
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         
         REQUIRE(x_axis.getStart() == data_min);
         REQUIRE(x_axis.getEnd() == data_max);
-        REQUIRE(manager.visible_start_index == static_cast<int>(data_min));
-        REQUIRE(manager.visible_end_index == static_cast<int>(data_max));
         
         // Change to middle range
         constexpr int64_t mid_start = 40000;
         constexpr int64_t mid_end = 60000;
         
         x_axis.setVisibleRange(mid_start, mid_end);
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         
         REQUIRE(x_axis.getStart() == mid_start);
         REQUIRE(x_axis.getEnd() == mid_end);
-        REQUIRE(manager.visible_start_index == static_cast<int>(mid_start));
-        REQUIRE(manager.visible_end_index == static_cast<int>(mid_end));
         
         // Test zoom functionality with feedback
         INFO("Testing zoom functionality with range feedback");
@@ -918,7 +895,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         int64_t const zoom_range = 2000;
         
         int64_t actual_range = x_axis.setCenterAndZoomWithFeedback(zoom_center, zoom_range);
-        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
         
         // Verify zoom worked as expected
         REQUIRE(actual_range > 0);
@@ -1194,9 +1170,7 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         // Test Case 1: Extremely large range (potential overflow)
         constexpr int64_t huge_start = -1000000000LL;
         constexpr int64_t huge_end = 1000000000LL;
-        
-        manager.setVisibleDataRange(static_cast<int>(huge_start), static_cast<int>(huge_end));
-        
+                
         auto model_huge = new_getAnalogModelMat(display_options, 
                                                display_options.cached_std_dev, 
                                                display_options.cached_mean, 
@@ -1214,9 +1188,7 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         // Test Case 2: Zero or near-zero range (potential division by zero)
         constexpr int64_t tiny_start = 1000;
         constexpr int64_t tiny_end = 1001;  // Range of 1
-        
-        manager.setVisibleDataRange(static_cast<int>(tiny_start), static_cast<int>(tiny_end));
-        
+                
         auto model_tiny = new_getAnalogModelMat(display_options, 
                                                display_options.cached_std_dev, 
                                                display_options.cached_mean, 
@@ -1234,9 +1206,7 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         // Test Case 3: Inverted range (end < start)
         constexpr int64_t inv_start = 1000;
         constexpr int64_t inv_end = 500;  // Invalid: end < start
-        
-        manager.setVisibleDataRange(static_cast<int>(inv_start), static_cast<int>(inv_end));
-        
+                
         auto model_inv = new_getAnalogModelMat(display_options, 
                                               display_options.cached_std_dev, 
                                               display_options.cached_mean, 
@@ -1261,7 +1231,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         setAnalogIntrinsicProperties(constant_series.get(), constant_options);
         
         // Reset to normal range for this test
-        manager.setVisibleDataRange(0, 999);
         
         auto model_zero_std = new_getAnalogModelMat(constant_options, 
                                                    constant_options.cached_std_dev,  // Should be ~0
@@ -1280,7 +1249,6 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         INFO("Testing that matrices remain valid after returning to normal range");
         
         // Test Case 5: Return to normal range after extreme cases
-        manager.setVisibleDataRange(100, 200);
         
         auto model_recovery = new_getAnalogModelMat(display_options, 
                                                    display_options.cached_std_dev, 

@@ -143,10 +143,6 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         REQUIRE_THAT(center1, WithinRel(-0.5f, 0.01f)); // -1.0 + 1.0/2 = -0.5
         REQUIRE_THAT(center2, WithinRel(0.5f, 0.01f));  // -1.0 + 1.5*1.0 = 0.5
         
-        // Test visible data range
-        manager.setVisibleDataRange(1, 10000);
-        REQUIRE(manager.visible_start_index == 1);
-        REQUIRE(manager.visible_end_index == 10000);
     }
     
     SECTION("Single Gaussian series MVP transformation - Gold Standard Test") {
@@ -173,7 +169,6 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
         int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
-        manager.setVisibleDataRange(1, 10000); // Show points 1-10000 as specified
         
         // Set up display options with default scaling
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -345,7 +340,6 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(size_t i=0; i<10000; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
         int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
-        manager.setVisibleDataRange(1, 1000);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -408,7 +402,6 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
         int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
-        manager.setVisibleDataRange(1, 1000);
         
         // Set up display options
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -492,7 +485,6 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         int series1_idx = manager.addAnalogSeries("s1", time_series1, time_frame);
         int series2_idx = manager.addAnalogSeries("s2", time_series2, time_frame); 
         int series3_idx = manager.addAnalogSeries("s3", time_series3, time_frame);
-        manager.setVisibleDataRange(1, 1000);
         
         // Set up display options for all series
         NewAnalogTimeSeriesDisplayOptions display_options1, display_options2, display_options3;
@@ -571,7 +563,6 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
         int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
-        manager.setVisibleDataRange(1, 1000);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -707,7 +698,6 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
     
     SECTION("Invalid data index ranges") {
         PlottingManager manager;
-        manager.setVisibleDataRange(1, 10000);
         
         // Test projection with invalid ranges
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(10000), TimeFrameIndex(1), -1.0f, 1.0f, manager);
@@ -727,7 +717,6 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         constexpr int large_start = 1000000;
         constexpr int large_end = 2000000;
         
-        manager.setVisibleDataRange(large_start, large_end);
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(large_start), TimeFrameIndex(large_end), -100.0f, 100.0f, manager);
         
         // Should handle large numbers without overflow

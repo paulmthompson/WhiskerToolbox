@@ -32,11 +32,6 @@ struct PlottingManager {
     float viewport_y_min{-1.0f};///< Minimum Y coordinate of viewport in NDC
     float viewport_y_max{1.0f}; ///< Maximum Y coordinate of viewport in NDC
 
-    // Data coordinate system
-    int total_data_points{0};  ///< Total number of data points in the dataset
-    int visible_start_index{0};///< Start index of visible data range
-    int visible_end_index{0};  ///< End index of visible data range
-
     // Series management
     int total_analog_series{0}; ///< Number of analog series being displayed
     int total_digital_series{0};///< Number of digital series being displayed
@@ -86,16 +81,6 @@ struct PlottingManager {
     void calculateAnalogSeriesAllocation(int series_index,
                                          float & allocated_center,
                                          float & allocated_height) const;
-
-    /**
-     * @brief Set the visible data range for projection calculations
-     * 
-     * @param start_index Start index of visible data
-     * @param end_index End index of visible data
-     */
-    void setVisibleDataRange(int start_index, int end_index);
-
-
 
     /**
      * @brief Add an analog series with DataManager integration

@@ -158,7 +158,6 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         for(int i=0; i<100; ++i) times[i] = i;
         auto time_frame = std::make_shared<TimeFrame>(times);
         int series_idx = manager.addDigitalIntervalSeries("s1", series, time_frame);
-        manager.setVisibleDataRange(1, 10000);// Show time range 1-10000
 
         // Set up display options
         NewDigitalIntervalSeriesDisplayOptions display_options;
@@ -316,7 +315,6 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         for(int i=0; i<100; ++i) times[i] = i;
         auto time_frame = std::make_shared<TimeFrame>(times);
         int series_idx = manager.addDigitalIntervalSeries("s1", series, time_frame);
-        manager.setVisibleDataRange(1, 10000);
 
         // Set up display options
         NewDigitalIntervalSeriesDisplayOptions display_options;
