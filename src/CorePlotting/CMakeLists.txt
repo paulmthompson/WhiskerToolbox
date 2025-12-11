@@ -1,0 +1,40 @@
+
+find_package(glm CONFIG REQUIRED)
+
+set(COREPLOTTING_SOURCES
+    DataTypes/DigitalEventSeries/EventRow.hpp
+)
+
+add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
+    )
+
+target_include_directories(CorePlotting PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    )
+
+target_link_libraries(CorePlotting PUBLIC NEURALYZER_GEOMETRY)
+target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::ObserverData)
+target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::TimeFrame)
+target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::Entity)
+target_link_libraries(CorePlotting PUBLIC DataManager)
+
+target_link_libraries(CorePlotting PUBLIC glm::glm)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(CorePlotting PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(CorePlotting PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(CorePlotting PRIVATE ${MSVC_WARNINGS})
+endif()
+
+set_target_properties(CorePlotting PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
