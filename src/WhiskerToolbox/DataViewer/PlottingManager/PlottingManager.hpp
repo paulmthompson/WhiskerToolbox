@@ -95,15 +95,7 @@ struct PlottingManager {
      */
     void setVisibleDataRange(int start_index, int end_index);
 
-    /**
-     * @brief Add a digital event series to the plotting manager
-     * 
-     * Registers a new digital event series and updates internal bookkeeping
-     * for coordinate allocation. Event behavior depends on plotting mode.
-     * 
-     * @return Series index for the newly added digital event series
-     */
-    int addDigitalEventSeries();
+
 
     /**
      * @brief Add an analog series with DataManager integration

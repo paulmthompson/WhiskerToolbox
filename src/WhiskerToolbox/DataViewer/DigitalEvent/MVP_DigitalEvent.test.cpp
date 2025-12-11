@@ -4,6 +4,7 @@
 #include "PlottingManager/PlottingManager.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -35,8 +36,14 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         manager.setVisibleDataRange(0, 1000);
 
         // Two stacked series
-        int e0 = manager.addDigitalEventSeries();
-        int e1 = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int e0 = manager.addDigitalEventSeries("e0", series, time_frame);
+        int e1 = manager.addDigitalEventSeries("e1", series, time_frame);
         REQUIRE(e0 == 0);
         REQUIRE(e1 == 1);
 
@@ -94,9 +101,15 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         PlottingManager manager;
         manager.setVisibleDataRange(0, 1200);
 
-        int e0 = manager.addDigitalEventSeries();
-        int e1 = manager.addDigitalEventSeries();
-        int e2 = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int e0 = manager.addDigitalEventSeries("e0", series, time_frame);
+        int e1 = manager.addDigitalEventSeries("e1", series, time_frame);
+        int e2 = manager.addDigitalEventSeries("e2", series, time_frame);
 
         float c0, h0, c1, h1, c2, h2;
         manager.calculateDigitalEventSeriesAllocation(e0, c0, h0);
@@ -189,7 +202,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Event MVP matrices - FullCanvas mode") {
         PlottingManager manager;
-        int event_series = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event_series = manager.addDigitalEventSeries("e1", series, time_frame);
         REQUIRE(event_series == 0);
         REQUIRE(manager.total_event_series == 1);
 
@@ -222,7 +241,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Event MVP matrices - Stacked mode") {
         PlottingManager manager;
-        int event_series = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event_series = manager.addDigitalEventSeries("e1", series, time_frame);
 
         manager.setVisibleDataRange(1, 1000);
 
@@ -279,9 +304,15 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         PlottingManager manager;
 
         // Test adding multiple event series
-        int event1 = manager.addDigitalEventSeries();
-        int event2 = manager.addDigitalEventSeries();
-        int event3 = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event1 = manager.addDigitalEventSeries("e1", series, time_frame);
+        int event2 = manager.addDigitalEventSeries("e2", series, time_frame);
+        int event3 = manager.addDigitalEventSeries("e3", series, time_frame);
 
         REQUIRE(event1 == 0);
         REQUIRE(event2 == 1);
@@ -312,7 +343,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         PlottingManager manager;
 
         // Single event series should get full canvas allocation
-        int event_series = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event_series = manager.addDigitalEventSeries("e1", series, time_frame);
         REQUIRE(manager.total_event_series == 1);
 
         float center, height;
@@ -345,9 +382,15 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         PlottingManager manager;
 
         // Add 3 event series
-        int event1 = manager.addDigitalEventSeries();
-        int event2 = manager.addDigitalEventSeries();
-        int event3 = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event1 = manager.addDigitalEventSeries("e1", series, time_frame);
+        int event2 = manager.addDigitalEventSeries("e2", series, time_frame);
+        int event3 = manager.addDigitalEventSeries("e3", series, time_frame);
 
         REQUIRE(event1 == 0);
         REQUIRE(event2 == 1);
@@ -425,7 +468,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         PlottingManager manager;
         manager.setVisibleDataRange(1, 1000);
 
-        int event_series = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event_series = manager.addDigitalEventSeries("e1", series, time_frame);
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::FullCanvas;
@@ -472,7 +521,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         PlottingManager manager;
         manager.setVisibleDataRange(1, 1000);
 
-        int event_series = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event_series = manager.addDigitalEventSeries("e1", series, time_frame);
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::Stacked;
@@ -518,9 +573,15 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         manager.setVisibleDataRange(1, 1000);
 
         // Add 3 stacked event series
-        int event1 = manager.addDigitalEventSeries();
-        int event2 = manager.addDigitalEventSeries();
-        int event3 = manager.addDigitalEventSeries();
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        
+        auto series = std::make_shared<DigitalEventSeries>();
+
+        int event1 = manager.addDigitalEventSeries("e1", series, time_frame);
+        int event2 = manager.addDigitalEventSeries("e2", series, time_frame);
+        int event3 = manager.addDigitalEventSeries("e3", series, time_frame);
 
         // Get allocations for each series
         float center1, height1, center2, height2, center3, height3;

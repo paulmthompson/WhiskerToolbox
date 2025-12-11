@@ -33,11 +33,7 @@ void PlottingManager::setVisibleDataRange(int start_index, int end_index) {
 
 
 
-int PlottingManager::addDigitalEventSeries() {
-    int series_index = total_event_series;
-    total_event_series++;
-    return series_index;
-}
+
 
 int PlottingManager::addAnalogSeries(std::string const & key,
                                      std::shared_ptr<AnalogTimeSeries> series,
