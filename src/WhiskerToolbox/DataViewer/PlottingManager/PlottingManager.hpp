@@ -57,7 +57,6 @@ struct PlottingManager {
 
     struct DigitalIntervalSeriesInfo {
         std::shared_ptr<DigitalIntervalSeries> series;
-        std::shared_ptr<TimeFrame> time_frame;
         std::string key;
         std::string color;
         bool visible{true};
@@ -119,7 +118,6 @@ struct PlottingManager {
      */
     int addDigitalIntervalSeries(std::string const & key,
                                  std::shared_ptr<DigitalIntervalSeries> series,
-                                 std::shared_ptr<TimeFrame> time_frame,
                                  std::string const & color = "");
 
     /**

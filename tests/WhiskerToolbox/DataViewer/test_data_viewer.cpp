@@ -144,7 +144,8 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         
         std::vector<Interval> intervals;
         auto interval_series_ptr = std::make_shared<DigitalIntervalSeries>(intervals);
-        int interval_series = manager.addDigitalIntervalSeries("i1", interval_series_ptr, time_frame);
+        interval_series_ptr->setTimeFrame(time_frame);
+        int interval_series = manager.addDigitalIntervalSeries("i1", interval_series_ptr);
 
         // Verify series indices and counts
         REQUIRE(gaussian_series == 0);
