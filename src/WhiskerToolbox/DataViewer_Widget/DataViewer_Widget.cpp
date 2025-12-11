@@ -373,7 +373,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         std::cout << "Time frame has " << time_frame->getTotalFrameCount() << " frames" << std::endl;
 
         // Add to plotting manager first
-        _plotting_manager->addAnalogSeries(key, series, time_frame, color);
+        _plotting_manager->addAnalogSeries(key, series, color);
 
         ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
         std::cout << "Successfully added analog series to PlottingManager and OpenGL widget" << std::endl;
@@ -819,7 +819,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
         }
 
         // Register with plotting manager for later allocation (single call)
-        _plotting_manager->addAnalogSeries(key, series, time_frame, color);
+        _plotting_manager->addAnalogSeries(key, series, color);
         ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
 
     } else if (data_type == DM_DataType::DigitalEvent) {

@@ -40,7 +40,6 @@ struct PlottingManager {
     // Series storage for DataManager integration
     struct AnalogSeriesInfo {
         std::shared_ptr<AnalogTimeSeries> series;
-        std::shared_ptr<TimeFrame> time_frame;
         std::string key;
         std::string color;
         bool visible{true};
@@ -85,13 +84,11 @@ struct PlottingManager {
      * 
      * @param key Unique key for the series
      * @param series Shared pointer to AnalogTimeSeries data
-     * @param time_frame Shared pointer to TimeFrame for the series
      * @param color Color string for rendering (hex format)
      * @return Series index for the newly added series
      */
     int addAnalogSeries(std::string const & key,
                         std::shared_ptr<AnalogTimeSeries> series,
-                        std::shared_ptr<TimeFrame> time_frame,
                         std::string const & color = "");
 
     /**
@@ -99,7 +96,6 @@ struct PlottingManager {
      * 
      * @param key Unique key for the series
      * @param series Shared pointer to DigitalEventSeries data
-     * @param time_frame Shared pointer to TimeFrame for the series
      * @param color Color string for rendering (hex format)
      * @return Series index for the newly added series
      */
@@ -112,7 +108,6 @@ struct PlottingManager {
      * 
      * @param key Unique key for the series
      * @param series Shared pointer to DigitalIntervalSeries data
-     * @param time_frame Shared pointer to TimeFrame for the series
      * @param color Color string for rendering (hex format)
      * @return Series index for the newly added series
      */

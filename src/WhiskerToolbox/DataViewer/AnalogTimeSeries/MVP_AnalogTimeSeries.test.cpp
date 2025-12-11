@@ -123,8 +123,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(int i=0; i<100; ++i) time_indices.emplace_back(i);
         auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
 
-        int series1_idx = manager.addAnalogSeries("s1", series, time_frame);
-        int series2_idx = manager.addAnalogSeries("s2", series, time_frame);
+        series->setTimeFrame(time_frame);
+
+        int series1_idx = manager.addAnalogSeries("s1", series);
+        int series2_idx = manager.addAnalogSeries("s2", series);
         
         REQUIRE(series1_idx == 0);
         REQUIRE(series2_idx == 1);
@@ -168,7 +170,9 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         std::vector<int> times(num_points);
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         // Set up display options with default scaling
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -235,9 +239,11 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(int i=0; i<100; ++i) time_indices.emplace_back(i);
         auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
 
-        int series1 = manager.addAnalogSeries("s1", series, time_frame);
-        int series2 = manager.addAnalogSeries("s2", series, time_frame); 
-        int series3 = manager.addAnalogSeries("s3", series, time_frame);
+        series->setTimeFrame(time_frame);
+
+        int series1 = manager.addAnalogSeries("s1", series);
+        int series2 = manager.addAnalogSeries("s2", series); 
+        int series3 = manager.addAnalogSeries("s3", series);
         
         REQUIRE(manager.total_analog_series == 3);
         
@@ -275,7 +281,9 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         std::vector<int> times(num_points);
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         // Test user scaling factor
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -339,7 +347,9 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         std::vector<int> times(10000);
         for(size_t i=0; i<10000; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -401,7 +411,9 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         std::vector<int> times(num_points);
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         // Set up display options
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -482,9 +494,13 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
 
-        int series1_idx = manager.addAnalogSeries("s1", time_series1, time_frame);
-        int series2_idx = manager.addAnalogSeries("s2", time_series2, time_frame); 
-        int series3_idx = manager.addAnalogSeries("s3", time_series3, time_frame);
+        time_series1->setTimeFrame(time_frame);
+        time_series2->setTimeFrame(time_frame);
+        time_series3->setTimeFrame(time_frame);
+
+        int series1_idx = manager.addAnalogSeries("s1", time_series1);
+        int series2_idx = manager.addAnalogSeries("s2", time_series2); 
+        int series3_idx = manager.addAnalogSeries("s3", time_series3);
         
         // Set up display options for all series
         NewAnalogTimeSeriesDisplayOptions display_options1, display_options2, display_options3;
@@ -562,7 +578,9 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         std::vector<int> times(num_points);
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -632,7 +650,9 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         std::vector<int> times(num_points);
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -668,7 +688,9 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         std::vector<int> times(num_points);
         for(size_t i=0; i<num_points; ++i) times[i] = static_cast<int>(i);
         auto time_frame = std::make_shared<TimeFrame>(times);
-        int series_idx = manager.addAnalogSeries("s1", time_series, time_frame);
+
+        time_series->setTimeFrame(time_frame);
+        int series_idx = manager.addAnalogSeries("s1", time_series);
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;

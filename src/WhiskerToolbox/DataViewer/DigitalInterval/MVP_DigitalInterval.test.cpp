@@ -230,7 +230,9 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         for(int i=0; i<100; ++i) time_indices.emplace_back(i);
         auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
 
-        int analog_series = manager.addAnalogSeries("s1", series, time_frame);
+        series->setTimeFrame(time_frame);
+
+        int analog_series = manager.addAnalogSeries("s1", series);
         
         std::vector<Interval> intervals;
         auto interval_series = std::make_shared<DigitalIntervalSeries>(intervals);

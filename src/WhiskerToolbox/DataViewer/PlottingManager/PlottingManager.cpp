@@ -25,13 +25,11 @@ void PlottingManager::calculateAnalogSeriesAllocation(int series_index,
 
 int PlottingManager::addAnalogSeries(std::string const & key,
                                      std::shared_ptr<AnalogTimeSeries> series,
-                                     std::shared_ptr<TimeFrame> time_frame,
                                      std::string const & color) {
     int series_index = total_analog_series;
     
     AnalogSeriesInfo info;
     info.series = series;
-    info.time_frame = time_frame;
     info.key = key;
     info.color = color.empty() ? generateDefaultColor(series_index) : color;
     info.visible = true;
