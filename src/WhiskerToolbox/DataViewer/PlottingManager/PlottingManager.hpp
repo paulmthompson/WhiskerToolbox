@@ -13,7 +13,6 @@
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
-class TimeFrame;
 
 /**
  * @brief Plotting manager for coordinating multiple data series visualization

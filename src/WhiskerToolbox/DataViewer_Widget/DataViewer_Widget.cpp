@@ -397,7 +397,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         // Add to plotting manager first
         _plotting_manager->addDigitalEventSeries(key, series, color);
 
-        ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
+        ui->openGLWidget->addDigitalEventSeries(key, series, color);
 
     } else if (data_type == DM_DataType::DigitalInterval) {
 
@@ -836,7 +836,7 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
         _plotting_manager->addDigitalEventSeries(key, series, color);
-        ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
+        ui->openGLWidget->addDigitalEventSeries(key, series, color);
 
     } else if (data_type == DM_DataType::DigitalInterval) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);

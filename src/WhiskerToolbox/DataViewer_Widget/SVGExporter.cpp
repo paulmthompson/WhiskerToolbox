@@ -74,7 +74,6 @@ QString SVGExporter::exportToSVG() {
             addDigitalEventSeries(
                 key,
                 event_data.series,
-                event_data.time_frame,
                 *event_data.display_options,
                 start_time,
                 end_time);
@@ -192,7 +191,6 @@ void SVGExporter::addAnalogSeries(
 void SVGExporter::addDigitalEventSeries(
         std::string const & key,
         std::shared_ptr<DigitalEventSeries> const & series,
-        std::shared_ptr<TimeFrame> const & time_frame,
         NewDigitalEventSeriesDisplayOptions const & display_options,
         int start_time,
         int end_time) {
@@ -203,12 +201,11 @@ void SVGExporter::addDigitalEventSeries(
     auto const series_start = getTimeIndexForSeries(
         TimeFrameIndex(start_time),
         gl_widget_->getMasterTimeFrame().get(),
-        time_frame.get());
+        series->getTimeFrame().get());
     auto const series_end = getTimeIndexForSeries(
         TimeFrameIndex(end_time),
         gl_widget_->getMasterTimeFrame().get(),
-        time_frame.get());
-
+        series->getTimeFrame().get());
     auto visible_events = series->getEventsInRange(series_start, series_end);
 
     // Build MVP matrices using same logic as OpenGL rendering
@@ -232,7 +229,7 @@ void SVGExporter::addDigitalEventSeries(
     int event_count = 0;
     for (auto const & event_index : visible_events) {
         event_count++;
-        auto const event_time = time_frame->getTimeAtIndex(TimeFrameIndex(event_index));
+        auto const event_time = series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(event_index));
 
         // Create vertical line using same coordinates as OpenGL
         // Events extend based on display mode (Stacked or FullCanvas)

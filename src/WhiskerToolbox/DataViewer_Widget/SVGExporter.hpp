@@ -135,7 +135,6 @@ private:
      * 
      * @param key Series identifier
      * @param series Digital event series data
-     * @param time_frame Time frame for the series
      * @param display_options Display configuration (color, visibility, stacking)
      * @param start_time Visible range start time
      * @param end_time Visible range end time
@@ -143,7 +142,6 @@ private:
     void addDigitalEventSeries(
             std::string const & key,
             std::shared_ptr<DigitalEventSeries> const & series,
-            std::shared_ptr<TimeFrame> const & time_frame,
             NewDigitalEventSeriesDisplayOptions const & display_options,
             int start_time,
             int end_time);

@@ -437,7 +437,6 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
-        auto const & time_frame = event_data.time_frame;
         auto const & display_options = event_data.display_options;
 
         if (!display_options->is_visible) continue;
@@ -502,12 +501,12 @@ void OpenGLWidget::drawDigitalEventSeries() {
         for (auto const & event: visible_events) {
             // Calculate X position in master time frame coordinates for consistent rendering
             float xCanvasPos;
-            if (time_frame.get() == _master_time_frame.get()) {
+            if (series->getTimeFrame().get() == _master_time_frame.get()) {
                 // Same time frame - event is already in correct coordinates
                 xCanvasPos = static_cast<float>(event.getValue());
             } else {
                 // Different time frames - convert event index to time, then to master time frame
-                float event_time = static_cast<float>(time_frame->getTimeAtIndex(event));
+                float event_time = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(event));
                 xCanvasPos = event_time;// This should work if both time frames use the same time units
             }
 
@@ -1087,7 +1086,6 @@ void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
 void OpenGLWidget::addDigitalEventSeries(
         std::string const & key,
         std::shared_ptr<DigitalEventSeries> series,
-        std::shared_ptr<TimeFrame> time_frame,
         std::string const & color) {
 
     auto display_options = std::make_unique<NewDigitalEventSeriesDisplayOptions>();
@@ -1098,7 +1096,6 @@ void OpenGLWidget::addDigitalEventSeries(
 
     _digital_event_series[key] = DigitalEventSeriesData{
             std::move(series),
-            std::move(time_frame),
             std::move(display_options)};
 
     updateCanvas(_time);
