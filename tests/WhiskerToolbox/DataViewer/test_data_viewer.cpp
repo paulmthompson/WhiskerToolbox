@@ -141,7 +141,10 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
 
         int gaussian_series = manager.addAnalogSeries("s1", series, time_frame);
         int uniform_series = manager.addAnalogSeries("s2", series, time_frame);
-        int interval_series = manager.addDigitalIntervalSeries();
+        
+        std::vector<Interval> intervals;
+        auto interval_series_ptr = std::make_shared<DigitalIntervalSeries>(intervals);
+        int interval_series = manager.addDigitalIntervalSeries("i1", interval_series_ptr, time_frame);
 
         // Verify series indices and counts
         REQUIRE(gaussian_series == 0);
@@ -161,12 +164,11 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         }
         auto gaussian_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
         auto uniform_data = generateUniformDataIntegration(num_points, 0.0f, 1.0f, 123);
-        auto intervals = generateTestIntervalData(10, 10000.0f, 200.0f, 800.0f, 456);
+        auto intervals_data = generateTestIntervalData(10, 10000.0f, 200.0f, 800.0f, 456);
 
         auto gaussian_time_series = std::make_shared<AnalogTimeSeries>(gaussian_data, time_vector);
         auto uniform_time_series = std::make_shared<AnalogTimeSeries>(uniform_data, time_vector);
-        auto intervals_time_series = std::make_shared<DigitalIntervalSeries>(intervals);
-
+        auto intervals_time_series = std::make_shared<DigitalIntervalSeries>(intervals_data);
         // Set up analog series display options
         NewAnalogTimeSeriesDisplayOptions gaussian_options;
         NewAnalogTimeSeriesDisplayOptions uniform_options;

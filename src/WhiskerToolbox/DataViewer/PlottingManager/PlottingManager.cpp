@@ -31,11 +31,7 @@ void PlottingManager::setVisibleDataRange(int start_index, int end_index) {
 
 
 
-int PlottingManager::addDigitalIntervalSeries() {
-    int series_index = total_digital_series;
-    total_digital_series++;
-    return series_index;
-}
+
 
 int PlottingManager::addDigitalEventSeries() {
     int series_index = total_event_series;

@@ -3,6 +3,7 @@
 #include "DigitalIntervalSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -97,8 +98,14 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         PlottingManager manager;
 
         // Test adding digital interval series
-        int series1_idx = manager.addDigitalIntervalSeries();
-        int series2_idx = manager.addDigitalIntervalSeries();
+        std::vector<Interval> intervals;
+        auto series = std::make_shared<DigitalIntervalSeries>(intervals);
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+
+        int series1_idx = manager.addDigitalIntervalSeries("s1", series, time_frame);
+        int series2_idx = manager.addDigitalIntervalSeries("s2", series, time_frame);
 
         REQUIRE(series1_idx == 0);
         REQUIRE(series2_idx == 1);
@@ -146,7 +153,11 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
 
         // Set up plotting manager for single digital interval series
         PlottingManager manager;
-        int series_idx = manager.addDigitalIntervalSeries();
+        auto series = std::make_shared<DigitalIntervalSeries>(intervals);
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addDigitalIntervalSeries("s1", series, time_frame);
         manager.setVisibleDataRange(1, 10000);// Show time range 1-10000
 
         // Set up display options
@@ -218,8 +229,11 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         auto series = std::make_shared<AnalogTimeSeries>(data, time_indices);
 
         int analog_series = manager.addAnalogSeries("s1", series, time_frame);
-        int interval_series1 = manager.addDigitalIntervalSeries();
-        int interval_series2 = manager.addDigitalIntervalSeries();
+        
+        std::vector<Interval> intervals;
+        auto interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
+        int interval_series1 = manager.addDigitalIntervalSeries("i1", interval_series, time_frame);
+        int interval_series2 = manager.addDigitalIntervalSeries("i2", interval_series, time_frame);
 
         // Verify series counts
         REQUIRE(manager.total_analog_series == 1);
@@ -247,7 +261,12 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
 
     SECTION("Panning integration with digital intervals") {
         PlottingManager manager;
-        int series_idx = manager.addDigitalIntervalSeries();
+        std::vector<Interval> intervals;
+        auto series = std::make_shared<DigitalIntervalSeries>(intervals);
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addDigitalIntervalSeries("s1", series, time_frame);
 
         // Test initial state (no panning)
         REQUIRE(manager.getPanOffset() == 0.0f);
@@ -291,7 +310,12 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
 
     SECTION("Digital intervals always extend full view height during panning - CORRECTED BEHAVIOR") {
         PlottingManager manager;
-        int series_idx = manager.addDigitalIntervalSeries();
+        std::vector<Interval> intervals;
+        auto series = std::make_shared<DigitalIntervalSeries>(intervals);
+        std::vector<int> times(100);
+        for(int i=0; i<100; ++i) times[i] = i;
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        int series_idx = manager.addDigitalIntervalSeries("s1", series, time_frame);
         manager.setVisibleDataRange(1, 10000);
 
         // Set up display options
