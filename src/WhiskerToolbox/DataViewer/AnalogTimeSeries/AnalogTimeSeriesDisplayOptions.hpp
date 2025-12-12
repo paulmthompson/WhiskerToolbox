@@ -1,6 +1,10 @@
 #ifndef DATAVIEWER_ANALOGTIMESERIESDISPLAYOPTIONS_HPP
 #define DATAVIEWER_ANALOGTIMESERIESDISPLAYOPTIONS_HPP
 
+#include "CorePlotting/DataTypes/SeriesStyle.hpp"
+#include "CorePlotting/DataTypes/SeriesLayoutResult.hpp"
+#include "CorePlotting/DataTypes/SeriesDataCache.hpp"
+
 #include <string>
 
 enum class AnalogGapHandling {
@@ -35,13 +39,29 @@ struct AnalogScalingConfig {
  *
  * Comprehensive configuration for analog series display including scaling,
  * positioning, and visual properties.
+ * 
+ * ARCHITECTURE NOTE (Phase 0 Cleanup):
+ * This struct has been refactored to use CorePlotting's separated concerns:
+ * - `style`: Pure visual configuration (color, alpha, thickness) - user-settable
+ * - `layout`: Positioning output from LayoutEngine - read-only computed values
+ * - `data_cache`: Expensive statistical calculations - mutable cache
+ * 
+ * This separation clarifies ownership and prevents conflation of concerns.
+ * See CorePlotting/DESIGN.md and ROADMAP.md Phase 0 for details.
  */
 struct NewAnalogTimeSeriesDisplayOptions {
-    // Visual properties
-    std::string hex_color{"#007bff"};
-    float alpha{1.0f};
-    bool is_visible{true};
-    int line_thickness{1};
+    // ========== Separated Concerns (Phase 0 Refactoring) ==========
+    
+    /// Pure rendering style (user-configurable)
+    CorePlotting::SeriesStyle style;
+    
+    /// Layout output (computed by PlottingManager/LayoutEngine)
+    CorePlotting::SeriesLayoutResult layout;
+    
+    /// Cached statistical data (mutable, invalidated on data change)
+    CorePlotting::SeriesDataCache data_cache;
+    
+    // ========== Analog-Specific Configuration ==========
 
     // Scaling configuration
     AnalogScalingConfig scaling;
@@ -53,16 +73,40 @@ struct NewAnalogTimeSeriesDisplayOptions {
     AnalogGapHandling gap_handling{AnalogGapHandling::AlwaysConnect};///< Gap handling mode
     bool enable_gap_detection{false};                                ///< Enable automatic gap detection
     float gap_threshold{5.0f};                                       ///< Threshold for gap detection
-
-    // Positioning allocated by PlottingManager
-    float allocated_y_center{0.0f};///< Y-coordinate center allocated by plotting manager
-    float allocated_height{1.0f};  ///< Height allocated by plotting manager
-
-    // Data range information (for optimization)
-    mutable float cached_std_dev{0.0f};
-    mutable bool std_dev_cache_valid{false};
-    mutable float cached_mean{0.0f};
-    mutable bool mean_cache_valid{false};
+    
+    // ========== Legacy Accessors (for backward compatibility) ==========
+    
+    // Visual properties - forward to style
+    [[nodiscard]] std::string const& hex_color() const { return style.hex_color; }
+    [[nodiscard]] float alpha() const { return style.alpha; }
+    [[nodiscard]] bool is_visible() const { return style.is_visible; }
+    [[nodiscard]] int line_thickness() const { return style.line_thickness; }
+    
+    // Mutable setters for style
+    void set_hex_color(std::string color) { style.hex_color = std::move(color); }
+    void set_alpha(float a) { style.alpha = a; }
+    void set_visible(bool visible) { style.is_visible = visible; }
+    void set_line_thickness(int thickness) { style.line_thickness = thickness; }
+    
+    // Layout properties - forward to layout
+    [[nodiscard]] float allocated_y_center() const { return layout.allocated_y_center; }
+    [[nodiscard]] float allocated_height() const { return layout.allocated_height; }
+    
+    void set_allocated_y_center(float y) { layout.allocated_y_center = y; }
+    void set_allocated_height(float h) { layout.allocated_height = h; }
+    
+    // Cache properties - forward to data_cache
+    [[nodiscard]] float cached_std_dev() const { return data_cache.cached_std_dev; }
+    [[nodiscard]] bool std_dev_cache_valid() const { return data_cache.std_dev_cache_valid; }
+    [[nodiscard]] float cached_mean() const { return data_cache.cached_mean; }
+    [[nodiscard]] bool mean_cache_valid() const { return data_cache.mean_cache_valid; }
+    
+    void set_cached_std_dev(float val) const { data_cache.cached_std_dev = val; }
+    void set_std_dev_cache_valid(bool valid) const { data_cache.std_dev_cache_valid = valid; }
+    void set_cached_mean(float val) const { data_cache.cached_mean = val; }
+    void set_mean_cache_valid(bool valid) const { data_cache.mean_cache_valid = valid; }
+    
+    void invalidate_cache() { data_cache.invalidate(); }
 };
 
 

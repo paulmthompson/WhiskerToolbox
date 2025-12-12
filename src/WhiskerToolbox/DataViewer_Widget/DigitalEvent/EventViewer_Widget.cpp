@@ -43,7 +43,7 @@ void EventViewer_Widget::setActiveKey(std::string const & key) {
     if (!key.empty()) {
         auto config = _opengl_widget->getDigitalEventConfig(key);
         if (config.has_value()) {
-            _updateColorDisplay(QString::fromStdString(config.value()->hex_color));
+            _updateColorDisplay(QString::fromStdString(config.value()->style.hex_color));
 
             // Set display mode controls
             ui->mode_combo->setCurrentIndex(static_cast<int>(config.value()->display_mode));
@@ -69,7 +69,7 @@ void EventViewer_Widget::_openColorDialog() {
     QColor currentColor;
     auto config = _opengl_widget->getDigitalEventConfig(_active_key);
     if (config.has_value()) {
-        currentColor = QColor(QString::fromStdString(config.value()->hex_color));
+        currentColor = QColor(QString::fromStdString(config.value()->style.hex_color));
     } else {
         currentColor = QColor("#FF0000");
     }
@@ -95,7 +95,7 @@ void EventViewer_Widget::_setEventColor(QString const & hex_color) {
     if (!_active_key.empty()) {
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
-            config.value()->hex_color = hex_color.toStdString();
+            config.value()->style.hex_color = hex_color.toStdString();
             emit colorChanged(_active_key, hex_color.toStdString());
             // Trigger immediate repaint
             _opengl_widget->update();
@@ -108,7 +108,7 @@ void EventViewer_Widget::_setEventAlpha(int alpha) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
         auto config = _opengl_widget->getDigitalEventConfig(_active_key);
         if (config.has_value()) {
-            config.value()->alpha = alpha_float;
+            config.value()->style.alpha = alpha_float;
             emit alphaChanged(_active_key, alpha_float);
             // Trigger immediate repaint
             _opengl_widget->update();

@@ -46,13 +46,13 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
     if (!key.empty()) {
         auto config = _opengl_widget->getAnalogConfig(key);
         if (config.has_value()) {
-            _updateColorDisplay(QString::fromStdString(config.value()->hex_color));
+            _updateColorDisplay(QString::fromStdString(config.value()->style.hex_color));
             
             // Set scale factor from the scaling config (not legacy user_scale_factor)
             ui->scale_spinbox->setValue(static_cast<double>(config.value()->scaling.user_scale_factor));
             
             // Set line thickness
-            ui->line_thickness_spinbox->setValue(config.value()->line_thickness);
+            ui->line_thickness_spinbox->setValue(config.value()->style.line_thickness);
             
             // Set gap handling controls
             ui->gap_mode_combo->setCurrentIndex(static_cast<int>(config.value()->gap_handling));
@@ -78,7 +78,7 @@ void AnalogViewer_Widget::_openColorDialog() {
     QColor currentColor;
     auto config = _opengl_widget->getAnalogConfig(_active_key);
     if (config.has_value()) {
-        currentColor = QColor(QString::fromStdString(config.value()->hex_color));
+        currentColor = QColor(QString::fromStdString(config.value()->style.hex_color));
     } else {
         currentColor = QColor("#0000FF");
     }
@@ -104,7 +104,7 @@ void AnalogViewer_Widget::_setAnalogColor(const QString& hex_color) {
     if (!_active_key.empty()) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
-            config.value()->hex_color = hex_color.toStdString();
+            config.value()->style.hex_color = hex_color.toStdString();
             emit colorChanged(_active_key, hex_color.toStdString());
             // Trigger immediate repaint
             _opengl_widget->update();
@@ -117,7 +117,7 @@ void AnalogViewer_Widget::_setAnalogAlpha(int alpha) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
-            config.value()->alpha = alpha_float;
+            config.value()->style.alpha = alpha_float;
             emit alphaChanged(_active_key, alpha_float);
             // Trigger immediate repaint
             _opengl_widget->update();
@@ -143,7 +143,7 @@ void AnalogViewer_Widget::_setLineThickness(int thickness) {
     if (!_active_key.empty()) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
-            config.value()->line_thickness = thickness;
+            config.value()->style.line_thickness = thickness;
             // Trigger immediate repaint
             _opengl_widget->update();
         }

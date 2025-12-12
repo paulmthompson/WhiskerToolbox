@@ -12,9 +12,9 @@ TEST_CASE("PointDisplayOptions - Default Values", "[PointDisplayOptions]") {
     REQUIRE(options.point_size == 5);
     REQUIRE(options.marker_shape == DefaultDisplayValues::POINT_MARKER_SHAPE);
     REQUIRE(options.marker_shape == PointMarkerShape::Circle);
-    REQUIRE(options.hex_color == DefaultDisplayValues::COLOR);
-    REQUIRE(options.alpha == DefaultDisplayValues::ALPHA);
-    REQUIRE(options.is_visible == DefaultDisplayValues::VISIBLE);
+    REQUIRE(options.style.hex_color == DefaultDisplayValues::COLOR);
+    REQUIRE(options.style.alpha == DefaultDisplayValues::ALPHA);
+    REQUIRE(options.style.is_visible == DefaultDisplayValues::VISIBLE);
 }
 
 TEST_CASE("PointDisplayOptions - Configurable Values", "[PointDisplayOptions]") {
@@ -62,28 +62,28 @@ TEST_CASE("PointMarkerShape Enum Values", "[PointMarkerShape]") {
 TEST_CASE("LineDisplayOptions - Default Values", "[LineDisplayOptions]") {
     LineDisplayOptions options;
     
-    REQUIRE(options.line_thickness == DefaultDisplayValues::LINE_THICKNESS);
-    REQUIRE(options.line_thickness == 2);
+    REQUIRE(options.style.line_thickness == DefaultDisplayValues::LINE_THICKNESS);
+    REQUIRE(options.style.line_thickness == 2);
     REQUIRE(options.show_points == DefaultDisplayValues::SHOW_POINTS);
     REQUIRE(options.show_points == false);
     REQUIRE(options.edge_snapping == false);
-    REQUIRE(options.hex_color == DefaultDisplayValues::COLOR);
-    REQUIRE(options.alpha == DefaultDisplayValues::ALPHA);
-    REQUIRE(options.is_visible == DefaultDisplayValues::VISIBLE);
+    REQUIRE(options.style.hex_color == DefaultDisplayValues::COLOR);
+    REQUIRE(options.style.alpha == DefaultDisplayValues::ALPHA);
+    REQUIRE(options.style.is_visible == DefaultDisplayValues::VISIBLE);
 }
 
 TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
     LineDisplayOptions options;
     
     SECTION("Line thickness configuration") {
-        options.line_thickness = 1;
-        REQUIRE(options.line_thickness == 1);
+        options.style.line_thickness = 1;
+        REQUIRE(options.style.line_thickness == 1);
         
-        options.line_thickness = 10;
-        REQUIRE(options.line_thickness == 10);
+        options.style.line_thickness = 10;
+        REQUIRE(options.style.line_thickness == 10);
         
-        options.line_thickness = 20;
-        REQUIRE(options.line_thickness == 20);
+        options.style.line_thickness = 20;
+        REQUIRE(options.style.line_thickness == 20);
     }
     
     SECTION("Show points configuration") {
@@ -121,7 +121,7 @@ TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
 
     SECTION("LineDisplayOptions configurable values") {
         LineDisplayOptions line_opts;
-        line_opts.line_thickness = 5;
+        line_opts.style.line_thickness = 5;
         line_opts.show_points = true;
         line_opts.show_position_marker = true;
         line_opts.position_percentage = 50;
@@ -129,7 +129,7 @@ TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
         line_opts.segment_start_percentage = 25;
         line_opts.segment_end_percentage = 75;
         
-        REQUIRE(line_opts.line_thickness == 5);
+        REQUIRE(line_opts.style.line_thickness == 5);
         REQUIRE(line_opts.show_points == true);
         REQUIRE(line_opts.show_position_marker == true);
         REQUIRE(line_opts.position_percentage == 50);
@@ -142,9 +142,9 @@ TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
 TEST_CASE("MaskDisplayOptions - Default Values", "[MaskDisplayOptions]") {
     MaskDisplayOptions options;
     
-    REQUIRE(options.hex_color == DefaultDisplayValues::COLOR);
-    REQUIRE(options.alpha == DefaultDisplayValues::ALPHA);
-    REQUIRE(options.is_visible == DefaultDisplayValues::VISIBLE);
+    REQUIRE(options.style.hex_color == DefaultDisplayValues::COLOR);
+    REQUIRE(options.style.alpha == DefaultDisplayValues::ALPHA);
+    REQUIRE(options.style.is_visible == DefaultDisplayValues::VISIBLE);
     REQUIRE(options.show_bounding_box == false);
 }
 
@@ -153,13 +153,13 @@ TEST_CASE("MaskDisplayOptions - Configurable Values", "[MaskDisplayOptions]") {
     
     SECTION("MaskDisplayOptions configurable values") {
         options.show_bounding_box = true;
-        options.hex_color = "#ff0000";
-        options.alpha = 0.8f;
-        options.is_visible = true;
+        options.style.hex_color = "#ff0000";
+        options.style.alpha = 0.8f;
+        options.style.is_visible = true;
         
         REQUIRE(options.show_bounding_box == true);
-        REQUIRE(options.hex_color == "#ff0000");
-        REQUIRE(options.alpha == 0.8f);
-        REQUIRE(options.is_visible == true);
+        REQUIRE(options.style.hex_color == "#ff0000");
+        REQUIRE(options.style.alpha == 0.8f);
+        REQUIRE(options.style.is_visible == true);
     }
 } 

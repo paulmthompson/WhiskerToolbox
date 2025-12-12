@@ -183,14 +183,14 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         // Calculate series allocation
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         
         // Set intrinsic properties for the data
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Generate MVP matrices
-        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         glm::mat4 view = new_getAnalogViewMat(manager);
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
         
@@ -297,17 +297,17 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         
         // Set intrinsic properties for the test data
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
-        glm::mat4 model_2x = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model_2x = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         
         // Compare with 1x scaling
         display_options.scaling.user_scale_factor = 1.0f;
-        glm::mat4 model_1x = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model_1x = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         
         // The 2x model should scale Y coordinates by factor of 2
         glm::vec4 test_point(100.0f, 10.0f, 0.0f, 1.0f);
@@ -361,14 +361,14 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         
         // Set intrinsic properties for the uniform data
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Generate MVP matrices
-        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         glm::mat4 view = new_getAnalogViewMat(manager);
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
@@ -385,8 +385,8 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         std::cout << "  Min value (0.0) maps to Y = " << min_point.y << std::endl;
         std::cout << "  Max value (1.0) maps to Y = " << max_point.y << std::endl;
         std::cout << "  Allocated center: " << allocated_center << std::endl;
-        std::cout << "  Cached mean: " << display_options.cached_mean << std::endl;
-        std::cout << "  Cached std dev: " << display_options.cached_std_dev << std::endl;
+        std::cout << "  Cached mean: " << display_options.data_cache.cached_mean << std::endl;
+        std::cout << "  Cached std dev: " << display_options.data_cache.cached_std_dev << std::endl;
         
         // NEW BEHAVIOR: With mean-centered scaling, the data mean (≈0.5) should map to allocated_center
         REQUIRE_THAT(mean_point.y, WithinRel(allocated_center, 0.05f));
@@ -427,15 +427,15 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Test initial state (no panning)
         REQUIRE(manager.getPanOffset() == 0.0f);
         
         // Generate MVP matrices without panning
-        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         glm::mat4 view_no_pan = new_getAnalogViewMat(manager);
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
@@ -519,29 +519,29 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         manager.calculateAnalogSeriesAllocation(series2_idx, center2, height2);
         manager.calculateAnalogSeriesAllocation(series3_idx, center3, height3);
         
-        display_options1.allocated_y_center = center1;
-        display_options1.allocated_height = height1;
+        display_options1.layout.allocated_y_center = center1;
+        display_options1.layout.allocated_height = height1;
         setAnalogIntrinsicProperties(time_series1.get(), display_options1);
         
-        display_options2.allocated_y_center = center2;
-        display_options2.allocated_height = height2;
+        display_options2.layout.allocated_y_center = center2;
+        display_options2.layout.allocated_height = height2;
         setAnalogIntrinsicProperties(time_series2.get(), display_options2);
         
-        display_options3.allocated_y_center = center3;
-        display_options3.allocated_height = height3;
+        display_options3.layout.allocated_y_center = center3;
+        display_options3.layout.allocated_height = height3;
         setAnalogIntrinsicProperties(time_series3.get(), display_options3);
         
         // Generate models for all series
-        glm::mat4 model1 = new_getAnalogModelMat(display_options1, display_options1.cached_std_dev, display_options1.cached_mean, manager);
-        glm::mat4 model2 = new_getAnalogModelMat(display_options2, display_options2.cached_std_dev, display_options2.cached_mean, manager);
-        glm::mat4 model3 = new_getAnalogModelMat(display_options3, display_options3.cached_std_dev, display_options3.cached_mean, manager);
+        glm::mat4 model1 = new_getAnalogModelMat(display_options1, display_options1.data_cache.cached_std_dev, display_options1.data_cache.cached_mean, manager);
+        glm::mat4 model2 = new_getAnalogModelMat(display_options2, display_options2.data_cache.cached_std_dev, display_options2.data_cache.cached_mean, manager);
+        glm::mat4 model3 = new_getAnalogModelMat(display_options3, display_options3.data_cache.cached_std_dev, display_options3.data_cache.cached_mean, manager);
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
         // Test reference points without panning
         glm::mat4 view_no_pan = new_getAnalogViewMat(manager);
-        glm::vec2 ref1 = applyMVPTransformation(500, display_options1.cached_mean, model1, view_no_pan, projection);
-        glm::vec2 ref2 = applyMVPTransformation(500, display_options2.cached_mean, model2, view_no_pan, projection);
-        glm::vec2 ref3 = applyMVPTransformation(500, display_options3.cached_mean, model3, view_no_pan, projection);
+        glm::vec2 ref1 = applyMVPTransformation(500, display_options1.data_cache.cached_mean, model1, view_no_pan, projection);
+        glm::vec2 ref2 = applyMVPTransformation(500, display_options2.data_cache.cached_mean, model2, view_no_pan, projection);
+        glm::vec2 ref3 = applyMVPTransformation(500, display_options3.data_cache.cached_mean, model3, view_no_pan, projection);
         
         // Verify initial relative positions
         float initial_spacing12 = ref2.y - ref1.y;
@@ -553,9 +553,9 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         glm::mat4 view_with_pan = new_getAnalogViewMat(manager);
         
         // Test points with panning
-        glm::vec2 pan1 = applyMVPTransformation(500, display_options1.cached_mean, model1, view_with_pan, projection);
-        glm::vec2 pan2 = applyMVPTransformation(500, display_options2.cached_mean, model2, view_with_pan, projection);
-        glm::vec2 pan3 = applyMVPTransformation(500, display_options3.cached_mean, model3, view_with_pan, projection);
+        glm::vec2 pan1 = applyMVPTransformation(500, display_options1.data_cache.cached_mean, model1, view_with_pan, projection);
+        glm::vec2 pan2 = applyMVPTransformation(500, display_options2.data_cache.cached_mean, model2, view_with_pan, projection);
+        glm::vec2 pan3 = applyMVPTransformation(500, display_options3.data_cache.cached_mean, model3, view_with_pan, projection);
         
         // All series should be panned by the same amount
         REQUIRE_THAT(pan1.y, WithinRel(ref1.y + pan_amount, 0.01f));
@@ -595,11 +595,11 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
-        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
         // Pan so far upward that data goes above the visible area
@@ -607,7 +607,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         manager.setPanOffset(extreme_pan_up);
         glm::mat4 view_extreme_up = new_getAnalogViewMat(manager);
         
-        glm::vec2 out_of_view_up = applyMVPTransformation(500, display_options.cached_mean, model, view_extreme_up, projection);
+        glm::vec2 out_of_view_up = applyMVPTransformation(500, display_options.data_cache.cached_mean, model, view_extreme_up, projection);
         
         // Data should be well above the normal NDC range [-1, 1]
         REQUIRE(out_of_view_up.y > 2.0f);
@@ -617,7 +617,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         manager.setPanOffset(extreme_pan_down);
         glm::mat4 view_extreme_down = new_getAnalogViewMat(manager);
         
-        glm::vec2 out_of_view_down = applyMVPTransformation(500, display_options.cached_mean, model, view_extreme_down, projection);
+        glm::vec2 out_of_view_down = applyMVPTransformation(500, display_options.data_cache.cached_mean, model, view_extreme_down, projection);
         
         // Data should be well below the normal NDC range [-1, 1]
         REQUIRE(out_of_view_down.y < -2.0f);
@@ -668,14 +668,14 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         
         // Set intrinsic properties (will be mean=5.0, std_dev=0.0)
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Should not crash with zero std_dev (division by zero protection)
-        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         
         // Matrix should be valid (not NaN or infinite)
         for (int i = 0; i < 4; ++i) {
@@ -707,19 +707,19 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         
         // Set intrinsic properties for the test data
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Test very large scaling factor
         display_options.scaling.user_scale_factor = 1000.0f;
-        glm::mat4 model_large = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model_large = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         
         // Test very small scaling factor
         display_options.scaling.user_scale_factor = 0.001f;
-        glm::mat4 model_small = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 model_small = new_getAnalogModelMat(display_options, display_options.data_cache.cached_std_dev, display_options.data_cache.cached_mean, manager);
         
         // Both matrices should be finite
         for (int i = 0; i < 4; ++i) {

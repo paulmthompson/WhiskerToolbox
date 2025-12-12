@@ -1,6 +1,9 @@
 #ifndef DATAVIEWER_DIGITALEVENTSERIESDISPLAYOPTIONS_HPP
 #define DATAVIEWER_DIGITALEVENTSERIESDISPLAYOPTIONS_HPP
 
+#include "CorePlotting/DataTypes/SeriesStyle.hpp"
+#include "CorePlotting/DataTypes/SeriesLayoutResult.hpp"
+
 #include <string>
 
 /**
@@ -30,13 +33,25 @@ enum class EventDisplayMode {
  * Configuration for digital event series display including visual properties,
  * positioning, plotting mode, and rendering options. Events are rendered as
  * vertical lines extending either across full canvas or within allocated space.
+ * 
+ * ARCHITECTURE NOTE (Phase 0 Cleanup):
+ * This struct has been refactored to use CorePlotting's separated concerns:
+ * - `style`: Pure visual configuration (color, alpha, thickness) - user-settable
+ * - `layout`: Positioning output from LayoutEngine - read-only computed values
+ * 
+ * This separation clarifies ownership and prevents conflation of concerns.
+ * See CorePlotting/DESIGN.md and ROADMAP.md Phase 0 for details.
  */
 struct NewDigitalEventSeriesDisplayOptions {
-    // Visual properties
-    std::string hex_color{"#ff9500"};///< Color of the events (default: orange)
-    float alpha{0.8f};               ///< Alpha transparency for events (default: 80%)
-    bool is_visible{true};           ///< Whether events are visible
-    int line_thickness{2};           ///< Thickness of event lines
+    // ========== Separated Concerns (Phase 0 Refactoring) ==========
+    
+    /// Pure rendering style (user-configurable)
+    CorePlotting::SeriesStyle style{CorePlotting::SeriesStyle{"#ff9500", 0.8f}};
+    
+    /// Layout output (computed by PlottingManager/LayoutEngine)
+    CorePlotting::SeriesLayoutResult layout{0.0f, 2.0f}; // Default height 2.0
+    
+    // ========== Event-Specific Configuration ==========
 
     // Plotting mode configuration
     EventPlottingMode plotting_mode{EventPlottingMode::FullCanvas};///< How events should be plotted
@@ -50,12 +65,29 @@ struct NewDigitalEventSeriesDisplayOptions {
     float global_zoom{1.0f};          ///< Global zoom factor
     float global_vertical_scale{1.0f};///< Global vertical scale factor
 
-    // Positioning allocated by PlottingManager (used in Stacked mode)
-    float allocated_y_center{0.0f};///< Y-coordinate center allocated by plotting manager
-    float allocated_height{2.0f};  ///< Height allocated by plotting manager
-
     // Rendering options
     float margin_factor{0.95f};///< Margin factor for event height (0.95 = 95% of allocated space)
+    
+    // ========== Legacy Accessors (for backward compatibility) ==========
+    
+    // Visual properties - forward to style
+    [[nodiscard]] std::string const& hex_color() const { return style.hex_color; }
+    [[nodiscard]] float alpha() const { return style.alpha; }
+    [[nodiscard]] bool is_visible() const { return style.is_visible; }
+    [[nodiscard]] int line_thickness() const { return style.line_thickness; }
+    
+    // Mutable setters for style
+    void set_hex_color(std::string color) { style.hex_color = std::move(color); }
+    void set_alpha(float a) { style.alpha = a; }
+    void set_visible(bool visible) { style.is_visible = visible; }
+    void set_line_thickness(int thickness) { style.line_thickness = thickness; }
+    
+    // Layout properties - forward to layout
+    [[nodiscard]] float allocated_y_center() const { return layout.allocated_y_center; }
+    [[nodiscard]] float allocated_height() const { return layout.allocated_height; }
+    
+    void set_allocated_y_center(float y) { layout.allocated_y_center = y; }
+    void set_allocated_height(float h) { layout.allocated_height = h; }
 };
 
 #endif// DATAVIEWER_DIGITALEVENTSERIESDISPLAYOPTIONS_HPP

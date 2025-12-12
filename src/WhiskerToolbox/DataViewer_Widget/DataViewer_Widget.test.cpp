@@ -526,7 +526,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
         auto cfg = widget.getAnalogConfig(key);
         REQUIRE(cfg.has_value());
         REQUIRE(cfg.value() != nullptr);
-        REQUIRE(cfg.value()->is_visible);
+        REQUIRE(cfg.value()->style.is_visible);
 
         // Gather centers and heights for all enabled series so far
         std::vector<float> centers;
@@ -538,8 +538,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
             auto c = widget.getAnalogConfig(keys[j]);
             REQUIRE(c.has_value());
             REQUIRE(c.value() != nullptr);
-            centers.push_back(static_cast<float>(c.value()->allocated_y_center));
-            heights.push_back(static_cast<float>(c.value()->allocated_height));
+            centers.push_back(static_cast<float>(c.value()->layout.allocated_y_center));
+            heights.push_back(static_cast<float>(c.value()->layout.allocated_height));
         }
 
         std::sort(centers.begin(), centers.end());
@@ -623,7 +623,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
         auto cfg = widget.getAnalogConfig(key);
         REQUIRE(cfg.has_value());
         REQUIRE(cfg.value() != nullptr);
-        REQUIRE(cfg.value()->is_visible);
+        REQUIRE(cfg.value()->style.is_visible);
     }
 }
 
@@ -677,7 +677,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
         auto cfg = widget.getAnalogConfig(key);
         REQUIRE(cfg.has_value());
         REQUIRE(cfg.value() != nullptr);
-        REQUIRE(cfg.value()->is_visible);
+        REQUIRE(cfg.value()->style.is_visible);
     }
 
     // 2) Disable the whole group
@@ -688,7 +688,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     for (auto const & key: keys) {
         auto cfg = widget.getAnalogConfig(key);
         if (cfg.has_value() && cfg.value() != nullptr) {
-            REQUIRE_FALSE(cfg.value()->is_visible);
+            REQUIRE_FALSE(cfg.value()->style.is_visible);
         }
     }
 
@@ -708,10 +708,10 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     auto cfg_single = widget.getAnalogConfig(single_key);
     REQUIRE(cfg_single.has_value());
     REQUIRE(cfg_single.value() != nullptr);
-    REQUIRE(cfg_single.value()->is_visible);
+    REQUIRE(cfg_single.value()->style.is_visible);
 
-    float const center = static_cast<float>(cfg_single.value()->allocated_y_center);
-    float const height = static_cast<float>(cfg_single.value()->allocated_height);
+    float const center = static_cast<float>(cfg_single.value()->layout.allocated_y_center);
+    float const height = static_cast<float>(cfg_single.value()->layout.allocated_height);
 
     // Center should be near 0.0
     REQUIRE(std::abs(center - 0.0f) <= 0.25f);
@@ -723,7 +723,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     for (size_t i = 1; i < keys.size(); ++i) {
         auto cfg = widget.getAnalogConfig(keys[i]);
         if (cfg.has_value() && cfg.value() != nullptr) {
-            REQUIRE_FALSE(cfg.value()->is_visible);
+            REQUIRE_FALSE(cfg.value()->style.is_visible);
         }
     }
 }
@@ -754,7 +754,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
     for (size_t i = 0; i < 4; ++i) {
         auto c = widget.getAnalogConfig(keys[i]);
         REQUIRE(c.has_value());
-        centers_before.emplace_back(keys[i], static_cast<float>(c.value()->allocated_y_center));
+        centers_before.emplace_back(keys[i], static_cast<float>(c.value()->layout.allocated_y_center));
     }
 
     // Build a small spikesorter configuration text with distinct y values
@@ -781,7 +781,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
     for (size_t i = 0; i < 4; ++i) {
         auto c = widget.getAnalogConfig(keys[i]);
         REQUIRE(c.has_value());
-        key_center.emplace_back(keys[i], static_cast<float>(c.value()->allocated_y_center));
+        key_center.emplace_back(keys[i], static_cast<float>(c.value()->layout.allocated_y_center));
     }
     // Capture centers after
     std::vector<std::pair<std::string, float>> centers_after = key_center;
@@ -906,7 +906,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
     // Verify the enabled set is visible and others are not present/visible
     auto isVisible = [&](std::string const & k) {
         auto cfg = widget.getAnalogConfig(k);
-        return cfg.has_value() && cfg.value() != nullptr && cfg.value()->is_visible;
+        return cfg.has_value() && cfg.value() != nullptr && cfg.value()->style.is_visible;
     };
 
     REQUIRE(isVisible(keys[0]));
@@ -914,9 +914,9 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
     REQUIRE(isVisible(keys[4]));
     // Not enabled yet: may be nullopt or not visible
     auto c1 = widget.getAnalogConfig(keys[1]);
-    if (c1.has_value()) REQUIRE_FALSE(c1.value()->is_visible);
+    if (c1.has_value()) REQUIRE_FALSE(c1.value()->style.is_visible);
     auto c3 = widget.getAnalogConfig(keys[3]);
-    if (c3.has_value()) REQUIRE_FALSE(c3.value()->is_visible);
+    if (c3.has_value()) REQUIRE_FALSE(c3.value()->style.is_visible);
 
     // Add a new DigitalIntervalSeries to the DataManager (should NOT clear visible analog series)
     auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -933,9 +933,9 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
 
     // Still not enabled ones should remain not visible
     c1 = widget.getAnalogConfig(keys[1]);
-    if (c1.has_value()) REQUIRE_FALSE(c1.value()->is_visible);
+    if (c1.has_value()) REQUIRE_FALSE(c1.value()->style.is_visible);
     c3 = widget.getAnalogConfig(keys[3]);
-    if (c3.has_value()) REQUIRE_FALSE(c3.value()->is_visible);
+    if (c3.has_value()) REQUIRE_FALSE(c3.value()->style.is_visible);
 }
 
 TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Adding digital interval does not change analog gain", "[DataViewer_Widget][Analog][DigitalInterval][Regression]") {
@@ -964,8 +964,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     auto cfg_a1_before = widget.getAnalogConfig(keys[1]);
     REQUIRE(cfg_a0_before.has_value());
     REQUIRE(cfg_a1_before.has_value());
-    float const h0_before = static_cast<float>(cfg_a0_before.value()->allocated_height);
-    float const h1_before = static_cast<float>(cfg_a1_before.value()->allocated_height);
+    float const h0_before = static_cast<float>(cfg_a0_before.value()->layout.allocated_height);
+    float const h1_before = static_cast<float>(cfg_a1_before.value()->layout.allocated_height);
     // Sanity: they should be similar (two-lane stacking)
     if (std::min(h0_before, h1_before) > 0.0f) {
         REQUIRE((std::max(h0_before, h1_before) / std::min(h0_before, h1_before)) <= 1.4f);
@@ -992,17 +992,17 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     auto cfg_interval = widget.getDigitalIntervalConfig(interval_key);
     REQUIRE(cfg_interval.has_value());
     REQUIRE(cfg_interval.value() != nullptr);
-    REQUIRE(cfg_interval.value()->is_visible);
-    REQUIRE(cfg_interval.value()->allocated_height >= 1.6f);
-    REQUIRE(cfg_interval.value()->allocated_height <= 2.2f);
+    REQUIRE(cfg_interval.value()->style.is_visible);
+    REQUIRE(cfg_interval.value()->layout.allocated_height >= 1.6f);
+    REQUIRE(cfg_interval.value()->layout.allocated_height <= 2.2f);
 
     // Re-capture analog heights after enabling the interval
     auto cfg_a0_after = widget.getAnalogConfig(keys[0]);
     auto cfg_a1_after = widget.getAnalogConfig(keys[1]);
     REQUIRE(cfg_a0_after.has_value());
     REQUIRE(cfg_a1_after.has_value());
-    float const h0_after = static_cast<float>(cfg_a0_after.value()->allocated_height);
-    float const h1_after = static_cast<float>(cfg_a1_after.value()->allocated_height);
+    float const h0_after = static_cast<float>(cfg_a0_after.value()->layout.allocated_height);
+    float const h1_after = static_cast<float>(cfg_a1_after.value()->layout.allocated_height);
 
     INFO("h0_before=" << h0_before << ", h0_after=" << h0_after);
     INFO("h1_before=" << h1_before << ", h1_after=" << h1_after);
@@ -1173,7 +1173,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Ena
         auto cfg = widget.getDigitalEventConfig(key);
         REQUIRE(cfg.has_value());
         REQUIRE(cfg.value() != nullptr);
-        REQUIRE(cfg.value()->is_visible);
+        REQUIRE(cfg.value()->style.is_visible);
 
         std::vector<float> centers;
         std::vector<float> heights;
@@ -1184,8 +1184,8 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Ena
             auto c = widget.getDigitalEventConfig(keys[j]);
             REQUIRE(c.has_value());
             REQUIRE(c.value() != nullptr);
-            centers.push_back(static_cast<float>(c.value()->allocated_y_center));
-            heights.push_back(static_cast<float>(c.value()->allocated_height));
+            centers.push_back(static_cast<float>(c.value()->layout.allocated_y_center));
+            heights.push_back(static_cast<float>(c.value()->layout.allocated_height));
         }
 
         std::sort(centers.begin(), centers.end());
@@ -1329,14 +1329,14 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
     for (auto const & k: analog) {
         auto c = widget.getAnalogConfig(k);
         REQUIRE(c.has_value());
-        REQUIRE(c.value()->is_visible);
-        items.push_back(Item{static_cast<float>(c.value()->allocated_y_center), static_cast<float>(c.value()->allocated_height), false, k});
+        REQUIRE(c.value()->style.is_visible);
+        items.push_back(Item{static_cast<float>(c.value()->layout.allocated_y_center), static_cast<float>(c.value()->layout.allocated_height), false, k});
     }
     for (auto const & k: ev) {
         auto c = widget.getDigitalEventConfig(k);
         REQUIRE(c.has_value());
-        REQUIRE(c.value()->is_visible);
-        items.push_back(Item{static_cast<float>(c.value()->allocated_y_center), static_cast<float>(c.value()->allocated_height), true, k});
+        REQUIRE(c.value()->style.is_visible);
+        items.push_back(Item{static_cast<float>(c.value()->layout.allocated_y_center), static_cast<float>(c.value()->layout.allocated_height), true, k});
     }
 
     REQUIRE(items.size() == 5);
@@ -1369,7 +1369,7 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
         auto cfg = widget.getDigitalEventConfig(k);
         REQUIRE(cfg.has_value());
         float const lane = expected_height;
-        float const eff_model_height = std::min(cfg.value()->event_height, cfg.value()->allocated_height) * cfg.value()->margin_factor * cfg.value()->global_vertical_scale;
+        float const eff_model_height = std::min(cfg.value()->event_height, cfg.value()->layout.allocated_height) * cfg.value()->margin_factor * cfg.value()->global_vertical_scale;
         REQUIRE(eff_model_height <= lane * 1.1f);
         REQUIRE(eff_model_height < 1.8f);// definitely not full canvas
     }
@@ -1433,12 +1433,12 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
     REQUIRE(cfg_stacked.has_value());
 
     // FullCanvas should be centered and nearly full height
-    REQUIRE(std::abs(cfg_full.value()->allocated_y_center - 0.0f) <= 0.25f);
-    REQUIRE(cfg_full.value()->allocated_height >= 1.6f);
-    REQUIRE(cfg_full.value()->allocated_height <= 2.2f);
+    REQUIRE(std::abs(cfg_full.value()->layout.allocated_y_center - 0.0f) <= 0.25f);
+    REQUIRE(cfg_full.value()->layout.allocated_height >= 1.6f);
+    REQUIRE(cfg_full.value()->layout.allocated_height <= 2.2f);
 
     // Stacked should be a lane with significantly smaller height
-    REQUIRE(cfg_stacked.value()->allocated_height < cfg_full.value()->allocated_height);
+    REQUIRE(cfg_stacked.value()->layout.allocated_height < cfg_full.value()->layout.allocated_height);
 }
 
 // -----------------------------------------------------------------------------
@@ -1471,7 +1471,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Two
         auto cfg = widget.getDigitalEventConfig(keys[i]);
         REQUIRE(cfg.has_value());
         // Effective model height derived from configuration (assumes unit global vertical scale)
-        float const eff_model_height = std::min(cfg.value()->event_height, cfg.value()->allocated_height) * cfg.value()->margin_factor * cfg.value()->global_vertical_scale;
+        float const eff_model_height = std::min(cfg.value()->event_height, cfg.value()->layout.allocated_height) * cfg.value()->margin_factor * cfg.value()->global_vertical_scale;
         // Should be substantially smaller than lane height (default event height 0.05 << lane=1.0)
         REQUIRE(eff_model_height <= lane * 0.5f);
         REQUIRE(eff_model_height > 0.0f);

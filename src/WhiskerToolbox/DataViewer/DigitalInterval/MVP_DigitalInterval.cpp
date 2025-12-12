@@ -23,15 +23,15 @@ glm::mat4 new_getIntervalModelMat(NewDigitalIntervalSeriesDisplayOptions const &
     // The allocated_height represents the total height available for this series
     if (display_options.extend_full_canvas) {
         // Scale to use the full allocated height with margin factor
-        float const height_scale = display_options.allocated_height * display_options.margin_factor * 0.5f;
+        float const height_scale = display_options.layout.allocated_height * display_options.margin_factor * 0.5f;
         Model = glm::scale(Model, glm::vec3(1.0f, height_scale * global_scale, 1.0f));
 
         // Translate to allocated center position
-        Model = glm::translate(Model, glm::vec3(0.0f, display_options.allocated_y_center, 0.0f));
+        Model = glm::translate(Model, glm::vec3(0.0f, display_options.layout.allocated_y_center, 0.0f));
     } else {
         // Apply standard scaling and positioning
         Model = glm::scale(Model, glm::vec3(1.0f, global_scale, 1.0f));
-        Model = glm::translate(Model, glm::vec3(0.0f, display_options.allocated_y_center, 0.0f));
+        Model = glm::translate(Model, glm::vec3(0.0f, display_options.layout.allocated_y_center, 0.0f));
     }
 
     return Model;

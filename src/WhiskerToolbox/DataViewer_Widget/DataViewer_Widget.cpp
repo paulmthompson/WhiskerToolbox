@@ -666,19 +666,19 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
     if (type == DM_DataType::Analog) {
         auto config = ui->openGLWidget->getAnalogConfig(feature_key);
         if (config.has_value()) {
-            config.value()->hex_color = hex_color;
+            config.value()->style.hex_color = hex_color;
         }
 
     } else if (type == DM_DataType::DigitalEvent) {
         auto config = ui->openGLWidget->getDigitalEventConfig(feature_key);
         if (config.has_value()) {
-            config.value()->hex_color = hex_color;
+            config.value()->style.hex_color = hex_color;
         }
 
     } else if (type == DM_DataType::DigitalInterval) {
         auto config = ui->openGLWidget->getDigitalIntervalConfig(feature_key);
         if (config.has_value()) {
-            config.value()->hex_color = hex_color;
+            config.value()->style.hex_color = hex_color;
         }
     }
 
@@ -929,7 +929,7 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
             if (!in_group) {
                 // Check if this series is currently visible
                 auto config = ui->openGLWidget->getAnalogConfig(key);
-                if (config.has_value() && config.value()->is_visible) {
+                if (config.has_value() && config.value()->style.is_visible) {
                     total_visible_analog_series++;
                 }
             }
@@ -1035,7 +1035,7 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
             if (!in_group) {
                 // Check if this series is currently visible
                 auto config = ui->openGLWidget->getDigitalEventConfig(key);
-                if (config.has_value() && config.value()->is_visible) {
+                if (config.has_value() && config.value()->style.is_visible) {
                     total_visible_event_series++;
                 }
             }
@@ -1180,7 +1180,7 @@ void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & seri
             std::vector<std::string> visible_keys;
             auto const & analog_series_map = ui->openGLWidget->getAnalogSeriesMap();
             for (auto const & [key, data] : analog_series_map) {
-                if (data.display_options->is_visible) {
+                if (data.display_options->style.is_visible) {
                     visible_keys.push_back(key);
                 }
             }
@@ -1191,8 +1191,8 @@ void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & seri
                 series_key, visible_keys, allocated_center, allocated_height);
             
             if (has_allocation) {
-                config.value()->allocated_y_center = allocated_center;
-                config.value()->allocated_height = allocated_height;
+                config.value()->layout.allocated_y_center = allocated_center;
+                config.value()->layout.allocated_height = allocated_height;
                 std::cout << "  Updated allocation for '" << series_key 
                           << "': center=" << allocated_center 
                           << ", height=" << allocated_height << std::endl;
@@ -1370,7 +1370,7 @@ void DataViewer_Widget::_autoFillCanvas() {
         // Apply optimal height to all visible digital event series
         for (auto const & key: event_keys) {
             auto config = ui->openGLWidget->getDigitalEventConfig(key);
-            if (config.has_value() && config.value()->is_visible) {
+            if (config.has_value() && config.value()->style.is_visible) {
                 config.value()->event_height = optimal_event_height;
                 config.value()->display_mode = EventDisplayMode::Stacked;// Ensure stacked mode
                 std::cout << "  Applied event height " << optimal_event_height
@@ -1390,7 +1390,7 @@ void DataViewer_Widget::_autoFillCanvas() {
         // Apply optimal height to all visible digital interval series
         for (auto const & key: interval_keys) {
             auto config = ui->openGLWidget->getDigitalIntervalConfig(key);
-            if (config.has_value() && config.value()->is_visible) {
+            if (config.has_value() && config.value()->style.is_visible) {
                 config.value()->interval_height = optimal_interval_height;
                 std::cout << "  Applied interval height " << optimal_interval_height
                           << " to series '" << key << "'" << std::endl;
@@ -1409,7 +1409,7 @@ void DataViewer_Widget::_autoFillCanvas() {
             if (sampled >= 5) break;
 
             auto config = ui->openGLWidget->getAnalogConfig(key);
-            if (config.has_value() && config.value()->is_visible) {
+            if (config.has_value() && config.value()->style.is_visible) {
                 auto series = _data_manager->getData<AnalogTimeSeries>(key);
                 if (series) {
                     float std_dev = calculate_std_dev_approximate(*series);

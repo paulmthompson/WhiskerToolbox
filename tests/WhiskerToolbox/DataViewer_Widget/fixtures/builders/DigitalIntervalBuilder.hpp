@@ -169,17 +169,17 @@ class DigitalIntervalDisplayOptionsBuilder {
 public:
     DigitalIntervalDisplayOptionsBuilder() {
         // Set reasonable defaults
-        _options.alpha = 0.3f;
-        _options.is_visible = true;
+        _options.style.alpha = 0.3f;
+        _options.style.is_visible = true;
     }
 
     DigitalIntervalDisplayOptionsBuilder& withAlpha(float alpha) {
-        _options.alpha = alpha;
+        _options.style.alpha = alpha;
         return *this;
     }
 
     DigitalIntervalDisplayOptionsBuilder& withVisibility(bool visible) {
-        _options.is_visible = visible;
+        _options.style.is_visible = visible;
         return *this;
     }
 
@@ -210,13 +210,13 @@ public:
 
         // Adjust alpha based on overlap density
         if (max_overlap > 5) {
-            _options.alpha = 0.15f;
+            _options.style.alpha = 0.15f;
         } else if (max_overlap > 2) {
-            _options.alpha = 0.2f;
+            _options.style.alpha = 0.2f;
         } else if (max_overlap > 0) {
-            _options.alpha = 0.25f;
+            _options.style.alpha = 0.25f;
         } else {
-            _options.alpha = 0.3f;
+            _options.style.alpha = 0.3f;
         }
 
         return *this;

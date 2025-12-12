@@ -25,14 +25,14 @@ glm::mat4 new_getEventModelMat(NewDigitalEventSeriesDisplayOptions const & displ
         // Prefer explicit event height if provided, but never exceed allocated lane
         float const desired_height = (display_options.event_height > 0.0f)
                                      ? display_options.event_height
-                                     : display_options.allocated_height;
-        float const height_scale = std::min(desired_height, display_options.allocated_height) * display_options.margin_factor;
+                                     : display_options.layout.allocated_height;
+        float const height_scale = std::min(desired_height, display_options.layout.allocated_height) * display_options.margin_factor;
 
         // Apply scaling for allocated height
         Model[1][1] = height_scale * 0.5f;// Half scale because we'll map [-1,1] to allocated height
 
         // Apply translation to allocated center
-        Model[3][1] = display_options.allocated_y_center;
+        Model[3][1] = display_options.layout.allocated_y_center;
     }
 
     // Apply global scaling factors

@@ -111,11 +111,11 @@ public:
         // Set reasonable defaults
         _options.plotting_mode = EventPlottingMode::Stacked;
         _options.display_mode = EventDisplayMode::Stacked;
-        _options.alpha = 0.8f;
-        _options.line_thickness = 2;
+        _options.style.alpha = 0.8f;
+        _options.style.line_thickness = 2;
         _options.event_height = 0.1f;
         _options.margin_factor = 0.95f;
-        _options.is_visible = true;
+        _options.style.is_visible = true;
     }
 
     DigitalEventDisplayOptionsBuilder& withStackedMode() {
@@ -129,8 +129,8 @@ public:
     }
 
     DigitalEventDisplayOptionsBuilder& withAllocation(float center, float height) {
-        _options.allocated_y_center = center;
-        _options.allocated_height = height;
+        _options.layout.allocated_y_center = center;
+        _options.layout.allocated_height = height;
         return *this;
     }
 
@@ -140,12 +140,12 @@ public:
     }
 
     DigitalEventDisplayOptionsBuilder& withAlpha(float alpha) {
-        _options.alpha = alpha;
+        _options.style.alpha = alpha;
         return *this;
     }
 
     DigitalEventDisplayOptionsBuilder& withLineThickness(int thickness) {
-        _options.line_thickness = thickness;
+        _options.style.line_thickness = thickness;
         return *this;
     }
 
@@ -155,7 +155,7 @@ public:
     }
 
     DigitalEventDisplayOptionsBuilder& withVisibility(bool visible) {
-        _options.is_visible = visible;
+        _options.style.is_visible = visible;
         return *this;
     }
 
@@ -174,12 +174,12 @@ public:
         // Reduce alpha for dense event series to prevent visual clutter
         if (num_events > 100) {
             float const density_factor = std::min(1.0f, 100.0f / static_cast<float>(num_events));
-            _options.alpha = std::max(0.2f, 0.8f * density_factor);
+            _options.style.alpha = std::max(0.2f, 0.8f * density_factor);
         }
 
         // Reduce line thickness for very dense series
         if (num_events > 200) {
-            _options.line_thickness = 1;
+            _options.style.line_thickness = 1;
         }
 
         return *this;

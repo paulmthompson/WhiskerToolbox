@@ -109,7 +109,7 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
         QString series_info = "";
         if (!_analog_series.empty()) {
             for (auto const & [key, data]: _analog_series) {
-                if (data.display_options->is_visible) {
+                if (data.display_options->style.is_visible) {
                     float const analog_value = canvasYToAnalogValue(canvas_y, key);
                     series_info = QString("Series: %1, Value: %2").arg(QString::fromStdString(key)).arg(analog_value, 0, 'f', 3);
                     break;
@@ -176,7 +176,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (!_analog_series.empty()) {
         // For now, use the first visible analog series for Y coordinate conversion
         for (auto const & [key, data]: _analog_series) {
-            if (data.display_options->is_visible) {
+            if (data.display_options->style.is_visible) {
                 float const analog_value = canvasYToAnalogValue(canvas_y, key);
                 series_info = QString("Series: %1, Value: %2").arg(QString::fromStdString(key)).arg(analog_value, 0, 'f', 3);
                 break;
@@ -409,7 +409,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
     // Count visible event series for stacked positioning
     int visible_event_count = 0;
     for (auto const & [key, event_data]: _digital_event_series) {
-        if (event_data.display_options->is_visible) {
+        if (event_data.display_options->style.is_visible) {
             visible_event_count++;
         }
     }
@@ -424,19 +424,19 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
     int visible_series_index = 0;// counts all visible event series (for iteration)
     int stacked_series_index = 0;// index among stacked-mode event series only
-    
+
     // Count visible analog series from our own storage
     int total_analog_visible = 0;
     for (auto const & [key, analog_data]: _analog_series) {
-        if (analog_data.display_options->is_visible) {
+        if (analog_data.display_options->style.is_visible) {
             total_analog_visible++;
         }
     }
-    
+
     // Count stacked-mode events (exclude FullCanvas from stackable count)
     int stacked_event_count = 0;
     for (auto const & [key, event_data]: _digital_event_series) {
-        if (event_data.display_options->is_visible &&
+        if (event_data.display_options->style.is_visible &&
             event_data.display_options->display_mode == EventDisplayMode::Stacked) {
             stacked_event_count++;
         }
@@ -447,13 +447,13 @@ void OpenGLWidget::drawDigitalEventSeries() {
         auto const & series = event_data.series;
         auto const & display_options = event_data.display_options;
 
-        if (!display_options->is_visible) continue;
+        if (!display_options->style.is_visible) continue;
 
-        hexToRGB(display_options->hex_color, r, g, b);
+        hexToRGB(display_options->style.hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = display_options->alpha;
+        float const alpha = display_options->style.alpha;
 
         auto visible_events = series->getEventsInRange(TimeFrameIndex(start_time),
                                                        TimeFrameIndex(end_time),
@@ -485,8 +485,8 @@ void OpenGLWidget::drawDigitalEventSeries() {
             allocated_height = _plotting_manager->viewport_y_max - _plotting_manager->viewport_y_min;
         }
 
-        display_options->allocated_y_center = allocated_y_center;
-        display_options->allocated_height = allocated_height;
+        display_options->layout.allocated_y_center = allocated_y_center;
+        display_options->layout.allocated_height = allocated_height;
 
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
@@ -504,7 +504,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
         glUniform1f(m_alphaLoc, alpha);
 
         // Set line thickness from display options
-        glLineWidth(static_cast<float>(display_options->line_thickness));
+        glLineWidth(static_cast<float>(display_options->style.line_thickness));
 
         for (auto const & event: visible_events) {
             // Calculate X position in master time frame coordinates for consistent rendering
@@ -564,7 +564,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         auto const & series = interval_data.series;
         auto const & display_options = interval_data.display_options;
 
-        if (!display_options->is_visible) continue;
+        if (!display_options->style.is_visible) continue;
 
         // Get only the intervals that overlap with the visible range
         // These will be
@@ -573,12 +573,11 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                 TimeFrameIndex(static_cast<int64_t>(end_time)),
                 *_master_time_frame);
 
-        hexToRGB(display_options->hex_color, r, g, b);
+        hexToRGB(display_options->style.hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = display_options->alpha;
-
+        float const alpha = display_options->style.alpha;
         // === MVP MATRIX SETUP ===
 
         // We need to check if we have a PlottingManager reference
@@ -592,8 +591,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         float allocated_y_center, allocated_height;
         _plotting_manager->calculateDigitalIntervalSeriesAllocation(0, allocated_y_center, allocated_height);
 
-        display_options->allocated_y_center = allocated_y_center;
-        display_options->allocated_height = allocated_height;
+        display_options->layout.allocated_y_center = allocated_y_center;
+        display_options->layout.allocated_height = allocated_height;
 
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
@@ -742,7 +741,7 @@ void OpenGLWidget::drawAnalogSeries() {
 
         auto const & display_options = analog_data.display_options;
 
-        if (!display_options->is_visible) continue;
+        if (!display_options->style.is_visible) continue;
 
         // Calculate coordinate allocation from PlottingManager
         // For now, we'll use the analog series index to allocate coordinates
@@ -759,7 +758,7 @@ void OpenGLWidget::drawAnalogSeries() {
         // Count stacked-mode events (exclude FullCanvas)
         int stacked_event_count = 0;
         for (auto const & [ekey, edata]: _digital_event_series) {
-            if (edata.display_options->is_visible && edata.display_options->display_mode == EventDisplayMode::Stacked) {
+            if (edata.display_options->style.is_visible && edata.display_options->display_mode == EventDisplayMode::Stacked) {
                 stacked_event_count++;
             }
         }
@@ -767,7 +766,7 @@ void OpenGLWidget::drawAnalogSeries() {
         // Get all visible analog keys
         std::vector<std::string> visible_analog_keys;
         for (auto const & [k, data]: _analog_series) {
-            if (data.display_options->is_visible) {
+            if (data.display_options->style.is_visible) {
                 visible_analog_keys.push_back(k);
             }
         }
@@ -775,13 +774,13 @@ void OpenGLWidget::drawAnalogSeries() {
         // Use spike sorter configuration only if no stacked events (pure analog stacking)
         bool use_config = (stacked_event_count == 0);
         bool has_config_allocation = false;
-        
+
         if (use_config) {
             // Try to get allocation from PlottingManager considering spike sorter configuration
             has_config_allocation = _plotting_manager->getAnalogSeriesAllocationForKey(
-                key, visible_analog_keys, allocated_y_center, allocated_height);
+                    key, visible_analog_keys, allocated_y_center, allocated_height);
         }
-        
+
         if (!has_config_allocation) {
             // Use global stacked allocation for mixed analog + digital event stacking
             int const total_stackable_series = static_cast<int>(visible_analog_keys.size()) + stacked_event_count;
@@ -794,11 +793,11 @@ void OpenGLWidget::drawAnalogSeries() {
             }
         }
 
-        display_options->allocated_y_center = allocated_y_center;
-        display_options->allocated_height = allocated_height;
+        display_options->layout.allocated_y_center = allocated_y_center;
+        display_options->layout.allocated_height = allocated_height;
 
         // Set the color for the current series
-        hexToRGB(display_options->hex_color, r, g, b);
+        hexToRGB(display_options->style.hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
@@ -817,7 +816,10 @@ void OpenGLWidget::drawAnalogSeries() {
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
 
-        auto Model = new_getAnalogModelMat(*display_options, display_options->cached_std_dev, display_options->cached_mean, *_plotting_manager);
+        auto Model = new_getAnalogModelMat(*display_options,
+                                           display_options->data_cache.cached_std_dev,
+                                           display_options->data_cache.cached_mean,
+                                           *_plotting_manager);
         auto View = new_getAnalogViewMat(*_plotting_manager);
         auto Projection = new_getAnalogProjectionMat(start_time, end_time, _yMin, _yMax, *_plotting_manager);
 
@@ -857,13 +859,13 @@ void OpenGLWidget::drawAnalogSeries() {
             m_vbo.release();
 
             // Set line thickness from display options
-            glLineWidth(static_cast<float>(display_options->line_thickness));
+            glLineWidth(static_cast<float>(display_options->style.line_thickness));
             glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 4));
 
         } else if (display_options->gap_handling == AnalogGapHandling::DetectGaps) {
             // Draw multiple line segments, breaking at gaps
             // Set line thickness before drawing segments
-            glLineWidth(static_cast<float>(display_options->line_thickness));
+            glLineWidth(static_cast<float>(display_options->style.line_thickness));
             _drawAnalogSeriesWithGapDetection(series->getTimeFrame(), analog_range,
                                               display_options->gap_threshold);
 
@@ -1057,8 +1059,8 @@ void OpenGLWidget::addAnalogTimeSeries(
     auto display_options = std::make_unique<NewAnalogTimeSeriesDisplayOptions>();
 
     // Set color
-    display_options->hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_analog_series.size()) : color;
-    display_options->is_visible = true;
+    display_options->style.hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_analog_series.size()) : color;
+    display_options->style.is_visible = true;
 
     // Calculate scale factor based on standard deviation
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -1066,7 +1068,7 @@ void OpenGLWidget::addAnalogTimeSeries(
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
-    display_options->scale_factor = display_options->cached_std_dev * 5.0f;
+    display_options->scale_factor = display_options->data_cache.cached_std_dev * 5.0f;
     display_options->user_scale_factor = 1.0f;// Default user scale
 
     if (series->getTimeFrame()->getTotalFrameCount() / 5 > series->getNumSamples()) {
@@ -1104,8 +1106,8 @@ void OpenGLWidget::addDigitalEventSeries(
     auto display_options = std::make_unique<NewDigitalEventSeriesDisplayOptions>();
 
     // Set color
-    display_options->hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_event_series.size()) : color;
-    display_options->is_visible = true;
+    display_options->style.hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_event_series.size()) : color;
+    display_options->style.is_visible = true;
 
     _digital_event_series[key] = DigitalEventSeriesData{
             std::move(series),
@@ -1130,8 +1132,8 @@ void OpenGLWidget::addDigitalIntervalSeries(
     auto display_options = std::make_unique<NewDigitalIntervalSeriesDisplayOptions>();
 
     // Set color
-    display_options->hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_interval_series.size()) : color;
-    display_options->is_visible = true;
+    display_options->style.hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_interval_series.size()) : color;
+    display_options->style.is_visible = true;
 
     _digital_interval_series[key] = DigitalIntervalSeriesData{
             std::move(series),
@@ -1286,7 +1288,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     auto const & display_options = analog_it->second.display_options;
 
     // Check if this series uses VerticalSpaceManager positioning
-    if (display_options->y_offset != 0.0f && display_options->allocated_height > 0.0f) {
+    if (display_options->y_offset != 0.0f && display_options->layout.allocated_height > 0.0f) {
         // VerticalSpaceManager mode: series is positioned at y_offset with its own scaling
         float const series_local_y = view_y - display_options->y_offset;
 
@@ -1296,7 +1298,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
         auto const user_scale_combined = display_options->user_scale_factor * _global_zoom;
 
         // Calculate the same scaling factors used in rendering
-        float const usable_height = display_options->allocated_height * 0.8f;
+        float const usable_height = display_options->layout.allocated_height * 0.8f;
         float const base_amplitude_scale = 1.0f / stdDev;
         float const height_scale = usable_height / 1.0f;
         float const amplitude_scale = base_amplitude_scale * height_scale * user_scale_combined;
@@ -1700,7 +1702,7 @@ void OpenGLWidget::drawDraggedInterval() {
 
     // Get colors
     int r, g, b;
-    hexToRGB(display_options->hex_color, r, g, b);
+    hexToRGB(display_options->style.hex_color, r, g, b);
     float const rNorm = static_cast<float>(r) / 255.0f;
     float const gNorm = static_cast<float>(g) / 255.0f;
     float const bNorm = static_cast<float>(b) / 255.0f;
@@ -1768,7 +1770,7 @@ void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
         // For now, use the first visible digital interval series
         // TODO: Improve this to detect which series based on Y coordinate
         for (auto const & [series_key, data]: _digital_interval_series) {
-            if (data.display_options->is_visible) {
+            if (data.display_options->style.is_visible) {
                 startNewIntervalCreation(series_key, event->pos());
                 return;
             }
@@ -2017,7 +2019,7 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
 
     // Get colors
     int r, g, b;
-    hexToRGB(display_options->hex_color, r, g, b);
+    hexToRGB(display_options->style.hex_color, r, g, b);
     float const rNorm = static_cast<float>(r) / 255.0f;
     float const gNorm = static_cast<float>(g) / 255.0f;
     float const bNorm = static_cast<float>(b) / 255.0f;
@@ -2076,13 +2078,13 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     // Check analog series first (in stacked mode)
     int analog_index = 0;
     for (auto const & [key, analog_data]: _analog_series) {
-        if (!analog_data.display_options->is_visible) {
+        if (!analog_data.display_options->style.is_visible) {
             continue;
         }
 
         // Get the allocated space for this series
-        float allocated_center = analog_data.display_options->allocated_y_center;
-        float allocated_height = analog_data.display_options->allocated_height;
+        float allocated_center = analog_data.display_options->layout.allocated_y_center;
+        float allocated_height = analog_data.display_options->layout.allocated_height;
 
         // Calculate bounds for this series
         float const series_y_min = allocated_center - allocated_height * 0.5f;
@@ -2099,7 +2101,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     // Check digital event series (only those in stacked mode)
     int event_index = 0;
     for (auto const & [key, event_data]: _digital_event_series) {
-        if (!event_data.display_options->is_visible) {
+        if (!event_data.display_options->style.is_visible) {
             continue;
         }
 
@@ -2109,8 +2111,8 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
         }
 
         // Get the allocated space for this series
-        float allocated_center = event_data.display_options->allocated_y_center;
-        float allocated_height = event_data.display_options->allocated_height;
+        float allocated_center = event_data.display_options->layout.allocated_y_center;
+        float allocated_height = event_data.display_options->layout.allocated_height;
 
         // Calculate bounds for this series
         float const series_y_min = allocated_center - allocated_height * 0.5f;

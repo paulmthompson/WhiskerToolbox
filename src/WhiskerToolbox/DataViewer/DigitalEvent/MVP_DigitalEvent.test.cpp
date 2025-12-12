@@ -58,8 +58,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         NewDigitalEventSeriesDisplayOptions o0, o1;
         o0.plotting_mode = EventPlottingMode::Stacked;
         o1.plotting_mode = EventPlottingMode::Stacked;
-        o0.allocated_y_center = c0; o0.allocated_height = h0; o0.margin_factor = 0.95f;
-        o1.allocated_y_center = c1; o1.allocated_height = h1; o1.margin_factor = 0.95f;
+        o0.layout.allocated_y_center = c0; o0.layout.allocated_height = h0; o0.margin_factor = 0.95f;
+        o1.layout.allocated_y_center = c1; o1.layout.allocated_height = h1; o1.margin_factor = 0.95f;
 
         // Use default event_height; ensure it does not exceed lane
         glm::mat4 m0 = new_getEventModelMat(o0, manager);
@@ -124,8 +124,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto make_opts = [](float c, float h) {
             NewDigitalEventSeriesDisplayOptions o;
             o.plotting_mode = EventPlottingMode::Stacked;
-            o.allocated_y_center = c;
-            o.allocated_height = h;
+            o.layout.allocated_y_center = c;
+            o.layout.allocated_height = h;
             o.margin_factor = 0.95f;
             return o;
         };
@@ -186,29 +186,29 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto options_empty = DigitalEventDisplayOptionsBuilder()
             .withIntrinsicProperties(empty_events)
             .build();
-        REQUIRE(options_empty.alpha == 0.8f);// Should remain unchanged
+        REQUIRE(options_empty.style.alpha == 0.8f);// Should remain unchanged
 
         // Test with few events
         auto few_events = digital_event_scenarios::few_events();
         auto options_few = DigitalEventDisplayOptionsBuilder()
             .withIntrinsicProperties(few_events)
             .build();
-        REQUIRE(options_few.alpha == 0.8f);      // Should remain unchanged
-        REQUIRE(options_few.line_thickness == 2);// Should remain unchanged
+        REQUIRE(options_few.style.alpha == 0.8f);      // Should remain unchanged
+        REQUIRE(options_few.style.line_thickness == 2);// Should remain unchanged
 
         // Test with many events (should reduce alpha)
         auto many_events = digital_event_scenarios::many_events();
         auto options_many = DigitalEventDisplayOptionsBuilder()
             .withIntrinsicProperties(many_events)
             .build();
-        REQUIRE(options_many.alpha < 0.8f);// Should be reduced
+        REQUIRE(options_many.style.alpha < 0.8f);// Should be reduced
 
         // Test with very many events (should reduce line thickness too)
         auto very_many_events = digital_event_scenarios::very_dense_events();
         auto options_dense = DigitalEventDisplayOptionsBuilder()
             .withIntrinsicProperties(very_many_events)
             .build();
-        REQUIRE(options_dense.line_thickness < 2);// Should be reduced
+        REQUIRE(options_dense.style.line_thickness < 2);// Should be reduced
     }
 
     SECTION("Event MVP matrices - FullCanvas mode") {
@@ -232,8 +232,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         float center, height;
         manager.calculateDigitalEventSeriesAllocation(event_series, center, height);
 
-        options.allocated_y_center = center;
-        options.allocated_height = height;
+        options.layout.allocated_y_center = center;
+        options.layout.allocated_height = height;
 
         // Generate MVP matrices
         glm::mat4 model = new_getEventModelMat(options, manager);
@@ -264,8 +264,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::Stacked;
-        options.allocated_y_center = -0.5f;// Simulate allocation in lower half
-        options.allocated_height = 1.0f;   // Half of total height
+        options.layout.allocated_y_center = -0.5f;// Simulate allocation in lower half
+        options.layout.allocated_height = 1.0f;   // Half of total height
         options.margin_factor = 0.9f;
 
         // Generate MVP matrices
@@ -289,13 +289,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         // Setup two event series with different modes
         NewDigitalEventSeriesDisplayOptions full_canvas_options;
         full_canvas_options.plotting_mode = EventPlottingMode::FullCanvas;
-        full_canvas_options.allocated_y_center = 0.0f;
-        full_canvas_options.allocated_height = 2.0f;
+        full_canvas_options.layout.allocated_y_center = 0.0f;
+        full_canvas_options.layout.allocated_height = 2.0f;
 
         NewDigitalEventSeriesDisplayOptions stacked_options;
         stacked_options.plotting_mode = EventPlottingMode::Stacked;
-        stacked_options.allocated_y_center = -0.5f;
-        stacked_options.allocated_height = 1.0f;
+        stacked_options.layout.allocated_y_center = -0.5f;
+        stacked_options.layout.allocated_height = 1.0f;
 
         // Test with panning
         manager.setPanOffset(1.0f);
@@ -387,9 +387,9 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
             .build();
 
         // Should reduce both alpha and line thickness for very dense data
-        REQUIRE(options.alpha < 0.8f);
-        REQUIRE(options.line_thickness < 3);
-        REQUIRE(options.line_thickness >= 1);// Should not go below 1
+        REQUIRE(options.style.alpha < 0.8f);
+        REQUIRE(options.style.line_thickness < 3);
+        REQUIRE(options.style.line_thickness >= 1);// Should not go below 1
     }
 
     SECTION("Multiple event series stacked allocation") {
@@ -442,12 +442,12 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         options2.plotting_mode = EventPlottingMode::Stacked;
         options3.plotting_mode = EventPlottingMode::Stacked;
 
-        options1.allocated_y_center = center1;
-        options1.allocated_height = height1;
-        options2.allocated_y_center = center2;
-        options2.allocated_height = height2;
-        options3.allocated_y_center = center3;
-        options3.allocated_height = height3;
+        options1.layout.allocated_y_center = center1;
+        options1.layout.allocated_height = height1;
+        options2.layout.allocated_y_center = center2;
+        options2.layout.allocated_height = height2;
+        options3.layout.allocated_y_center = center3;
+        options3.layout.allocated_height = height3;
 
         // Generate model matrices for each series
         glm::mat4 model1 = new_getEventModelMat(options1, manager);
@@ -467,8 +467,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         // Scaling should match single-series scale due to capped event height
         NewDigitalEventSeriesDisplayOptions single_options;
         single_options.plotting_mode = EventPlottingMode::Stacked;
-        single_options.allocated_y_center = 0.0f;
-        single_options.allocated_height = 2.0f;// Full canvas
+        single_options.layout.allocated_y_center = 0.0f;
+        single_options.layout.allocated_height = 2.0f;// Full canvas
         glm::mat4 single_model = new_getEventModelMat(single_options, manager);
 
         float expected_scale = single_model[1][1];
@@ -495,8 +495,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
         float center, height;
         manager.calculateDigitalEventSeriesAllocation(event_series, center, height);
-        options.allocated_y_center = center;
-        options.allocated_height = height;
+        options.layout.allocated_y_center = center;
+        options.layout.allocated_height = height;
 
         // Test without panning (baseline)
         glm::mat4 model_no_pan = new_getEventModelMat(options, manager);
@@ -546,8 +546,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::Stacked;
-        options.allocated_y_center = -0.3f;// Simulate specific allocation
-        options.allocated_height = 1.2f;
+        options.layout.allocated_y_center = -0.3f;// Simulate specific allocation
+        options.layout.allocated_height = 1.2f;
 
         // Test without panning (baseline)
         glm::mat4 model_no_pan = new_getEventModelMat(options, manager);
@@ -610,12 +610,12 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         options2.plotting_mode = EventPlottingMode::Stacked;
         options3.plotting_mode = EventPlottingMode::Stacked;
 
-        options1.allocated_y_center = center1;
-        options1.allocated_height = height1;
-        options2.allocated_y_center = center2;
-        options2.allocated_height = height2;
-        options3.allocated_y_center = center3;
-        options3.allocated_height = height3;
+        options1.layout.allocated_y_center = center1;
+        options1.layout.allocated_height = height1;
+        options2.layout.allocated_y_center = center2;
+        options2.layout.allocated_height = height2;
+        options3.layout.allocated_y_center = center3;
+        options3.layout.allocated_height = height3;
 
         // Test without panning
         glm::mat4 view1_no_pan = new_getEventViewMat(options1, manager);
@@ -648,13 +648,13 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         // Simulate having both types (though they'd typically be separate series)
         NewDigitalEventSeriesDisplayOptions fullcanvas_options;
         fullcanvas_options.plotting_mode = EventPlottingMode::FullCanvas;
-        fullcanvas_options.allocated_y_center = 0.0f;
-        fullcanvas_options.allocated_height = 2.0f;
+        fullcanvas_options.layout.allocated_y_center = 0.0f;
+        fullcanvas_options.layout.allocated_height = 2.0f;
 
         NewDigitalEventSeriesDisplayOptions stacked_options;
         stacked_options.plotting_mode = EventPlottingMode::Stacked;
-        stacked_options.allocated_y_center = -0.5f;
-        stacked_options.allocated_height = 1.0f;
+        stacked_options.layout.allocated_y_center = -0.5f;
+        stacked_options.layout.allocated_height = 1.0f;
 
         // Apply panning
         float pan_offset = 1.0f;

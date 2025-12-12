@@ -42,7 +42,7 @@ QString SVGExporter::exportToSVG() {
     // 1. Export digital interval series (rendered as background)
     auto const & interval_series_map = gl_widget_->getDigitalIntervalSeriesMap();
     for (auto const & [key, interval_data] : interval_series_map) {
-        if (interval_data.display_options->is_visible) {
+        if (interval_data.display_options->style.is_visible) {
             addDigitalIntervalSeries(
                 key,
                 interval_data.series,
@@ -55,7 +55,7 @@ QString SVGExporter::exportToSVG() {
     // 2. Export analog time series
     auto const & analog_series_map = gl_widget_->getAnalogSeriesMap();
     for (auto const & [key, analog_data] : analog_series_map) {
-        if (analog_data.display_options->is_visible) {
+        if (analog_data.display_options->style.is_visible) {
             addAnalogSeries(
                 key,
                 analog_data.series,
@@ -68,7 +68,7 @@ QString SVGExporter::exportToSVG() {
     // 3. Export digital event series
     auto const & event_series_map = gl_widget_->getDigitalEventSeriesMap();
     for (auto const & [key, event_data] : event_series_map) {
-        if (event_data.display_options->is_visible) {
+        if (event_data.display_options->style.is_visible) {
             addDigitalEventSeries(
                 key,
                 event_data.series,
@@ -139,8 +139,8 @@ void SVGExporter::addAnalogSeries(
     // Build MVP matrices using same logic as OpenGL rendering
     auto const Model = new_getAnalogModelMat(
         display_options,
-        display_options.cached_std_dev,
-        display_options.cached_mean,
+        display_options.data_cache.cached_std_dev,
+        display_options.data_cache.cached_mean,
         *plotting_manager_);
     auto const View = new_getAnalogViewMat(*plotting_manager_);
     auto const Projection = new_getAnalogProjectionMat(
@@ -154,7 +154,7 @@ void SVGExporter::addAnalogSeries(
 
     // Convert color
     int r, g, b;
-    hexToRGB(display_options.hex_color, r, g, b);
+    hexToRGB(display_options.style.hex_color, r, g, b);
     QString const color = colorToHex(r, g, b);
 
     // Build polyline path
@@ -173,7 +173,7 @@ void SVGExporter::addAnalogSeries(
     }
 
     // Create SVG polyline element
-    QString const line_thickness = QString::number(display_options.line_thickness);
+    QString const line_thickness = QString::number(display_options.style.line_thickness);
     QString const polyline = QString(
         R"(<polyline points="%1" fill="none" stroke="%2" stroke-width="%3" stroke-linejoin="round" stroke-linecap="round"/>)")
         .arg(points.join(" "))
@@ -218,7 +218,7 @@ void SVGExporter::addDigitalEventSeries(
 
     // Convert color
     int r, g, b;
-    hexToRGB(display_options.hex_color, r, g, b);
+    hexToRGB(display_options.style.hex_color, r, g, b);
     QString const color = colorToHex(r, g, b);
 
     // Draw each event as a vertical line
@@ -232,8 +232,8 @@ void SVGExporter::addDigitalEventSeries(
         float y_bottom, y_top;
         if (display_options.display_mode == EventDisplayMode::Stacked) {
             // Use allocated bounds with event height
-            y_bottom = display_options.allocated_y_center - display_options.event_height / 2.0f;
-            y_top = display_options.allocated_y_center + display_options.event_height / 2.0f;
+            y_bottom = display_options.layout.allocated_y_center - display_options.event_height / 2.0f;
+            y_top = display_options.layout.allocated_y_center + display_options.event_height / 2.0f;
         } else {
             // Full canvas mode
             y_bottom = gl_widget_->getYMin();
@@ -246,7 +246,7 @@ void SVGExporter::addDigitalEventSeries(
         glm::vec2 const svg_bottom = transformVertexToSVG(bottom_vertex, mvp);
         glm::vec2 const svg_top = transformVertexToSVG(top_vertex, mvp);
 
-        QString const line_thickness = QString::number(display_options.line_thickness);
+        QString const line_thickness = QString::number(display_options.style.line_thickness);
         QString const line = QString(
             R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="%5" stroke-width="%6"/>)")
             .arg(svg_bottom.x)
@@ -291,7 +291,7 @@ void SVGExporter::addDigitalIntervalSeries(
 
     // Convert color
     int r, g, b;
-    hexToRGB(display_options.hex_color, r, g, b);
+    hexToRGB(display_options.style.hex_color, r, g, b);
     QString const color = colorToHex(r, g, b);
 
     // Draw each interval as a filled rectangle
@@ -333,7 +333,7 @@ void SVGExporter::addDigitalIntervalSeries(
             .arg(svg_width)
             .arg(svg_height)
             .arg(color)
-            .arg(display_options.alpha);
+            .arg(display_options.style.alpha);
 
         svg_elements_.append(rect);
     }

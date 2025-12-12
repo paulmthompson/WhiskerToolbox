@@ -136,11 +136,11 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
     SECTION("Digital interval display options configuration") {
         // Test default options
         NewDigitalIntervalSeriesDisplayOptions options;
-        REQUIRE(options.hex_color == "#ff6b6b");
-        REQUIRE(options.alpha == 0.3f);
-        REQUIRE(options.is_visible);
+        REQUIRE(options.style.hex_color == "#ff6b6b");
+        REQUIRE(options.style.alpha == 0.3f);
+        REQUIRE(options.style.is_visible);
         REQUIRE(options.extend_full_canvas);
-        REQUIRE(options.allocated_height == 2.0f);
+        REQUIRE(options.layout.allocated_height == 2.0f);
         REQUIRE(options.margin_factor == 0.95f);
 
         // Test intrinsic properties setting
@@ -152,7 +152,7 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
             .build();
 
         // Should adjust alpha for many intervals
-        REQUIRE(updated_options.alpha < 0.3f);// Should be reduced due to large number of intervals
+        REQUIRE(updated_options.style.alpha < 0.3f);// Should be reduced due to large number of intervals
     }
 
     SECTION("Single interval series MVP transformation - Gold Standard Test") {
@@ -178,15 +178,15 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         // Calculate series allocation (should be full canvas)
         float allocated_center, allocated_height;
         manager.calculateDigitalIntervalSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
 
         // Set intrinsic properties
         display_options = DigitalIntervalDisplayOptionsBuilder()
             .withIntrinsicProperties(intervals)
             .build();
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
 
         // Generate MVP matrices
         glm::mat4 model = new_getIntervalModelMat(display_options, manager);
@@ -304,8 +304,8 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         NewDigitalIntervalSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateDigitalIntervalSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
 
         glm::mat4 model = new_getIntervalModelMat(display_options, manager);
         glm::mat4 view = new_getIntervalViewMat(manager);
@@ -347,8 +347,8 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         NewDigitalIntervalSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateDigitalIntervalSeriesAllocation(series_idx, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
 
         // Test with no panning first (baseline)
         {

@@ -11,19 +11,19 @@
 void setAnalogIntrinsicProperties(AnalogTimeSeries const * analog,
                                   NewAnalogTimeSeriesDisplayOptions & display_options) {
     if (!analog) {
-        display_options.cached_mean = 0.0f;
-        display_options.cached_std_dev = 0.0f;
-        display_options.mean_cache_valid = true;
-        display_options.std_dev_cache_valid = true;
+        display_options.data_cache.cached_mean = 0.0f;
+        display_options.data_cache.cached_std_dev = 0.0f;
+        display_options.data_cache.mean_cache_valid = true;
+        display_options.data_cache.std_dev_cache_valid = true;
         return;
     }
 
     // Calculate mean
-    display_options.cached_mean = calculate_mean(*analog);
-    display_options.mean_cache_valid = true;
+    display_options.data_cache.cached_mean = calculate_mean(*analog);
+    display_options.data_cache.mean_cache_valid = true;
 
-    display_options.cached_std_dev = calculate_std_dev_approximate(*analog);
-    display_options.std_dev_cache_valid = true;
+    display_options.data_cache.cached_std_dev = calculate_std_dev_approximate(*analog);
+    display_options.data_cache.std_dev_cache_valid = true;
 }
 
 
@@ -48,7 +48,7 @@ glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & displa
 
     // Scale to fit within allocated height (use 80% of allocated space for safety)
     // This means ±3*std_dev (from mean) will span ±80% of the allocated height
-    float const height_scale = display_options.allocated_height * 0.8f;
+    float const height_scale = display_options.layout.allocated_height * 0.8f;
     float const final_y_scale = total_y_scale * height_scale;
 
     // Build the transformation to achieve: (data_value - data_mean) * scale + allocated_center
@@ -59,7 +59,7 @@ glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & displa
     // This can be written as: y_out = y_in * final_y_scale - data_mean * final_y_scale + allocated_center
     // So: y_out = y_in * final_y_scale + (allocated_center - data_mean * final_y_scale)
 
-    float const y_offset = display_options.allocated_y_center - data_mean * final_y_scale;
+    float const y_offset = display_options.layout.allocated_y_center - data_mean * final_y_scale;
 
     // Use explicit matrix construction to avoid confusion with GLM order
     // We want the transformation: y_out = y_in * final_y_scale + y_offset
@@ -198,14 +198,14 @@ glm::mat4 new_getAnalogProjectionMat(TimeFrameIndex start_data_index,
 
 
 float getCachedStdDev(AnalogTimeSeries const & series, NewAnalogTimeSeriesDisplayOptions & display_options) {
-    if (!display_options.std_dev_cache_valid) {
+    if (!display_options.data_cache.std_dev_cache_valid) {
         // Calculate and cache the standard deviation
-        display_options.cached_std_dev = calculate_std_dev(series);
-        display_options.std_dev_cache_valid = true;
+        display_options.data_cache.cached_std_dev = calculate_std_dev(series);
+        display_options.data_cache.std_dev_cache_valid = true;
     }
-    return display_options.cached_std_dev;
+    return display_options.data_cache.cached_std_dev;
 }
 
 void invalidateDisplayCache(NewAnalogTimeSeriesDisplayOptions & display_options) {
-    display_options.std_dev_cache_valid = false;
+    display_options.data_cache.std_dev_cache_valid = false;
 }

@@ -202,12 +202,12 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         REQUIRE_THAT(interval_center, Catch::Matchers::WithinAbs(0.0f, 0.01f));// Center of canvas
 
         // Configure display options with allocated coordinates
-        gaussian_options.allocated_y_center = gaussian_center;
-        gaussian_options.allocated_height = gaussian_height;
-        uniform_options.allocated_y_center = uniform_center;
-        uniform_options.allocated_height = uniform_height;
-        interval_options.allocated_y_center = interval_center;
-        interval_options.allocated_height = interval_height;
+        gaussian_options.layout.allocated_y_center = gaussian_center;
+        gaussian_options.layout.allocated_height = gaussian_height;
+        uniform_options.layout.allocated_y_center = uniform_center;
+        uniform_options.layout.allocated_height = uniform_height;
+        interval_options.layout.allocated_y_center = interval_center;
+        interval_options.layout.allocated_height = interval_height;
 
         // Set intrinsic properties
         setAnalogIntrinsicProperties(gaussian_time_series.get(), gaussian_options);
@@ -215,17 +215,17 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         interval_options = DigitalIntervalDisplayOptionsBuilder()
             .withIntrinsicProperties(intervals_data)
             .build();
-        interval_options.allocated_y_center = interval_center;
-        interval_options.allocated_height = interval_height;
+        interval_options.layout.allocated_y_center = interval_center;
+        interval_options.layout.allocated_height = interval_height;
 
         // Test coordinate allocation without panning
         {
             // Generate MVP matrices for all series
-            glm::mat4 gaussian_model = new_getAnalogModelMat(gaussian_options, gaussian_options.cached_std_dev, gaussian_options.cached_mean, manager);
+            glm::mat4 gaussian_model = new_getAnalogModelMat(gaussian_options, gaussian_options.data_cache.cached_std_dev, gaussian_options.data_cache.cached_mean, manager);
             glm::mat4 gaussian_view = new_getAnalogViewMat(manager);
             glm::mat4 gaussian_projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
-            glm::mat4 uniform_model = new_getAnalogModelMat(uniform_options, uniform_options.cached_std_dev, uniform_options.cached_mean, manager);
+            glm::mat4 uniform_model = new_getAnalogModelMat(uniform_options, uniform_options.data_cache.cached_std_dev, uniform_options.data_cache.cached_mean, manager);
             glm::mat4 uniform_view = new_getAnalogViewMat(manager);
             glm::mat4 uniform_projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
@@ -235,11 +235,11 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
 
             // Test Gaussian series: ±3σ should extend for half the canvas vertically
             // Mean=0 should map to gaussian_center, ±3σ should span allocated height
-            glm::vec2 gaussian_mean_point = applyMVPTransformationIntegration(5000, gaussian_options.cached_mean, gaussian_model, gaussian_view, gaussian_projection);
+            glm::vec2 gaussian_mean_point = applyMVPTransformationIntegration(5000, gaussian_options.data_cache.cached_mean, gaussian_model, gaussian_view, gaussian_projection);
 
             // Use actual ±3σ values based on cached statistics
-            float const actual_plus_3sigma = gaussian_options.cached_mean + 3.0f * gaussian_options.cached_std_dev;
-            float const actual_minus_3sigma = gaussian_options.cached_mean - 3.0f * gaussian_options.cached_std_dev;
+            float const actual_plus_3sigma = gaussian_options.data_cache.cached_mean + 3.0f * gaussian_options.data_cache.cached_std_dev;
+            float const actual_minus_3sigma = gaussian_options.data_cache.cached_mean - 3.0f * gaussian_options.data_cache.cached_std_dev;
 
             glm::vec2 gaussian_plus_3sigma = applyMVPTransformationIntegration(5000, actual_plus_3sigma, gaussian_model, gaussian_view, gaussian_projection);
             glm::vec2 gaussian_minus_3sigma = applyMVPTransformationIntegration(5000, actual_minus_3sigma, gaussian_model, gaussian_view, gaussian_projection);
@@ -278,11 +278,11 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
 
         {
             // Generate MVP matrices with panning applied
-            glm::mat4 gaussian_model_panned = new_getAnalogModelMat(gaussian_options, gaussian_options.cached_std_dev, gaussian_options.cached_mean, manager);
+            glm::mat4 gaussian_model_panned = new_getAnalogModelMat(gaussian_options, gaussian_options.data_cache.cached_std_dev, gaussian_options.data_cache.cached_mean, manager);
             glm::mat4 gaussian_view_panned = new_getAnalogViewMat(manager);
             glm::mat4 gaussian_projection_panned = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
-            glm::mat4 uniform_model_panned = new_getAnalogModelMat(uniform_options, uniform_options.cached_std_dev, uniform_options.cached_mean, manager);
+            glm::mat4 uniform_model_panned = new_getAnalogModelMat(uniform_options, uniform_options.data_cache.cached_std_dev, uniform_options.data_cache.cached_mean, manager);
             glm::mat4 uniform_view_panned = new_getAnalogViewMat(manager);
             glm::mat4 uniform_projection_panned = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
@@ -313,7 +313,7 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         manager.setPanOffset(-0.8f);
 
         {
-            glm::mat4 gaussian_model_neg = new_getAnalogModelMat(gaussian_options, gaussian_options.cached_std_dev, gaussian_options.cached_mean, manager);
+            glm::mat4 gaussian_model_neg = new_getAnalogModelMat(gaussian_options, gaussian_options.data_cache.cached_std_dev, gaussian_options.data_cache.cached_mean, manager);
             glm::mat4 gaussian_view_neg = new_getAnalogViewMat(manager);
             glm::mat4 gaussian_projection_neg = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
@@ -429,14 +429,14 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         REQUIRE_THAT(event2_center, WithinRel(expected_event2_center, 0.01f));
 
         // Configure display options with allocated coordinates
-        analog1_options.allocated_y_center = analog1_center;
-        analog1_options.allocated_height = analog1_height;
-        analog2_options.allocated_y_center = analog2_center;
-        analog2_options.allocated_height = analog2_height;
-        event1_options.allocated_y_center = event1_center;
-        event1_options.allocated_height = event1_height;
-        event2_options.allocated_y_center = event2_center;
-        event2_options.allocated_height = event2_height;
+        analog1_options.layout.allocated_y_center = analog1_center;
+        analog1_options.layout.allocated_height = analog1_height;
+        analog2_options.layout.allocated_y_center = analog2_center;
+        analog2_options.layout.allocated_height = analog2_height;
+        event1_options.layout.allocated_y_center = event1_center;
+        event1_options.layout.allocated_height = event1_height;
+        event2_options.layout.allocated_y_center = event2_center;
+        event2_options.layout.allocated_height = event2_height;
 
         // Set intrinsic properties
         setAnalogIntrinsicProperties(analog1_time_series.get(), analog1_options);
@@ -453,17 +453,17 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
             .build();
 
         // Test MVP matrix generation
-        glm::mat4 analog1_model = new_getAnalogModelMat(analog1_options, analog1_options.cached_std_dev, analog1_options.cached_mean, manager);
-        glm::mat4 analog2_model = new_getAnalogModelMat(analog2_options, analog2_options.cached_std_dev, analog2_options.cached_mean, manager);
+        glm::mat4 analog1_model = new_getAnalogModelMat(analog1_options, analog1_options.data_cache.cached_std_dev, analog1_options.data_cache.cached_mean, manager);
+        glm::mat4 analog2_model = new_getAnalogModelMat(analog2_options, analog2_options.data_cache.cached_std_dev, analog2_options.data_cache.cached_mean, manager);
         glm::mat4 event1_model = new_getEventModelMat(event1_options, manager);
         glm::mat4 event2_model = new_getEventModelMat(event2_options, manager);
 
         // Verify that analog series are positioned at their allocated centers
         // For analog series, the mean should map to the allocated center
-        glm::vec2 analog1_mean_point = applyMVPTransformationIntegration(5000, analog1_options.cached_mean, analog1_model,
+        glm::vec2 analog1_mean_point = applyMVPTransformationIntegration(5000, analog1_options.data_cache.cached_mean, analog1_model,
                                                                          new_getAnalogViewMat(manager),
                                                                          new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager));
-        glm::vec2 analog2_mean_point = applyMVPTransformationIntegration(5000, analog2_options.cached_mean, analog2_model,
+        glm::vec2 analog2_mean_point = applyMVPTransformationIntegration(5000, analog2_options.data_cache.cached_mean, analog2_model,
                                                                          new_getAnalogViewMat(manager),
                                                                          new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager));
 
@@ -527,8 +527,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_index, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Test Case 1: Set x-axis to the entirety of the data range
@@ -536,8 +536,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         
         // Generate MVP matrices for full range
         glm::mat4 model_full = new_getAnalogModelMat(display_options, 
-                                                    display_options.cached_std_dev, 
-                                                    display_options.cached_mean, 
+                                                    display_options.data_cache.cached_std_dev, 
+                                                    display_options.data_cache.cached_mean, 
                                                     manager);
         glm::mat4 view_full = new_getAnalogViewMat(manager);
         glm::mat4 projection_full = new_getAnalogProjectionMat(TimeFrameIndex(data_start), 
@@ -582,8 +582,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
                 
         // Generate MVP matrices for normal range
         glm::mat4 model_normal = new_getAnalogModelMat(display_options, 
-                                                      display_options.cached_std_dev, 
-                                                      display_options.cached_mean, 
+                                                      display_options.data_cache.cached_std_dev, 
+                                                      display_options.data_cache.cached_mean, 
                                                       manager);
         glm::mat4 view_normal = new_getAnalogViewMat(manager);
         glm::mat4 projection_normal = new_getAnalogProjectionMat(TimeFrameIndex(normal_start), 
@@ -714,8 +714,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_index, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         INFO("Testing short video (704 frames) extreme zoom cycles");
@@ -1184,8 +1184,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
         manager.calculateAnalogSeriesAllocation(series_index, allocated_center, allocated_height);
-        display_options.allocated_y_center = allocated_center;
-        display_options.allocated_height = allocated_height;
+        display_options.layout.allocated_y_center = allocated_center;
+        display_options.layout.allocated_height = allocated_height;
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         auto test_matrix_validity = [](glm::mat4 const& matrix, std::string const& name) {
@@ -1205,8 +1205,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         constexpr int64_t huge_end = 1000000000LL;
                 
         auto model_huge = new_getAnalogModelMat(display_options, 
-                                               display_options.cached_std_dev, 
-                                               display_options.cached_mean, 
+                                               display_options.data_cache.cached_std_dev, 
+                                               display_options.data_cache.cached_mean, 
                                                manager);
         auto view_huge = new_getAnalogViewMat(manager);
         auto projection_huge = new_getAnalogProjectionMat(TimeFrameIndex(huge_start), 
@@ -1223,8 +1223,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         constexpr int64_t tiny_end = 1001;  // Range of 1
                 
         auto model_tiny = new_getAnalogModelMat(display_options, 
-                                               display_options.cached_std_dev, 
-                                               display_options.cached_mean, 
+                                               display_options.data_cache.cached_std_dev, 
+                                               display_options.data_cache.cached_mean, 
                                                manager);
         auto view_tiny = new_getAnalogViewMat(manager);
         auto projection_tiny = new_getAnalogProjectionMat(TimeFrameIndex(tiny_start), 
@@ -1241,8 +1241,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         constexpr int64_t inv_end = 500;  // Invalid: end < start
                 
         auto model_inv = new_getAnalogModelMat(display_options, 
-                                              display_options.cached_std_dev, 
-                                              display_options.cached_mean, 
+                                              display_options.data_cache.cached_std_dev, 
+                                              display_options.data_cache.cached_mean, 
                                               manager);
         auto view_inv = new_getAnalogViewMat(manager);
         auto projection_inv = new_getAnalogProjectionMat(TimeFrameIndex(inv_start), 
@@ -1259,15 +1259,15 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         auto constant_series = std::make_shared<AnalogTimeSeries>(constant_data, time_vector);
         
         NewAnalogTimeSeriesDisplayOptions constant_options;
-        constant_options.allocated_y_center = allocated_center;
-        constant_options.allocated_height = allocated_height;
+        constant_options.layout.allocated_y_center = allocated_center;
+        constant_options.layout.allocated_height = allocated_height;
         setAnalogIntrinsicProperties(constant_series.get(), constant_options);
         
         // Reset to normal range for this test
         
         auto model_zero_std = new_getAnalogModelMat(constant_options, 
-                                                   constant_options.cached_std_dev,  // Should be ~0
-                                                   constant_options.cached_mean, 
+                                                   constant_options.data_cache.cached_std_dev,  // Should be ~0
+                                                   constant_options.data_cache.cached_mean, 
                                                    manager);
         auto view_zero_std = new_getAnalogViewMat(manager);
         auto projection_zero_std = new_getAnalogProjectionMat(TimeFrameIndex(0), 
@@ -1284,8 +1284,8 @@ TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_r
         // Test Case 5: Return to normal range after extreme cases
         
         auto model_recovery = new_getAnalogModelMat(display_options, 
-                                                   display_options.cached_std_dev, 
-                                                   display_options.cached_mean, 
+                                                   display_options.data_cache.cached_std_dev, 
+                                                   display_options.data_cache.cached_mean, 
                                                    manager);
         auto view_recovery = new_getAnalogViewMat(manager);
         auto projection_recovery = new_getAnalogProjectionMat(TimeFrameIndex(100), 
