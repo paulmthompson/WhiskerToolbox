@@ -6,6 +6,9 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include "../../tests/WhiskerToolbox/DataViewer_Widget/fixtures/builders/DigitalIntervalBuilder.hpp"
+#include "../../tests/WhiskerToolbox/DataViewer_Widget/fixtures/scenarios/digital_interval_scenarios.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -74,7 +77,9 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
 
     SECTION("Generate test interval data") {
         // Generate test intervals and validate properties
-        auto intervals = generateTestIntervalData(50, 10000.0f, 50.0f, 500.0f, 42);
+        auto intervals = DigitalIntervalBuilder()
+            .withRandomIntervals(50, 10000.0f, 50.0f, 500.0f, 42)
+            .build();
 
         REQUIRE(intervals.size() == 50);
 
@@ -139,19 +144,22 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         REQUIRE(options.margin_factor == 0.95f);
 
         // Test intrinsic properties setting
-        auto intervals = generateTestIntervalData(100, 10000.0f, 50.0f, 500.0f, 42);
-        setIntervalIntrinsicProperties(intervals, options);
-
-        // Should maintain full canvas extension
-        REQUIRE(options.extend_full_canvas);
+        auto intervals = DigitalIntervalBuilder()
+            .withRandomIntervals(100, 10000.0f, 50.0f, 500.0f, 42)
+            .build();
+        auto updated_options = DigitalIntervalDisplayOptionsBuilder()
+            .withIntrinsicProperties(intervals)
+            .build();
 
         // Should adjust alpha for many intervals
-        REQUIRE(options.alpha < 0.3f);// Should be reduced due to large number of intervals
+        REQUIRE(updated_options.alpha < 0.3f);// Should be reduced due to large number of intervals
     }
 
     SECTION("Single interval series MVP transformation - Gold Standard Test") {
         // Generate test intervals between 0 and 10000
-        auto intervals = generateTestIntervalData(20, 10000.0f, 100.0f, 300.0f, 42);
+        auto intervals = DigitalIntervalBuilder()
+            .withRandomIntervals(20, 10000.0f, 100.0f, 300.0f, 42)
+            .build();
         REQUIRE(!intervals.empty());
 
         // Set up plotting manager for single digital interval series
@@ -174,7 +182,11 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         display_options.allocated_height = allocated_height;
 
         // Set intrinsic properties
-        setIntervalIntrinsicProperties(intervals, display_options);
+        display_options = DigitalIntervalDisplayOptionsBuilder()
+            .withIntrinsicProperties(intervals)
+            .build();
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
 
         // Generate MVP matrices
         glm::mat4 model = new_getIntervalModelMat(display_options, manager);

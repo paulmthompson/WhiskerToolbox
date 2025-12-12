@@ -12,6 +12,7 @@
 #include "XAxis.hpp"
 
 #include "../DataViewer_Widget/fixtures/builders/DigitalEventBuilder.hpp"
+#include "../DataViewer_Widget/fixtures/builders/DigitalIntervalBuilder.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -168,7 +169,9 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         }
         auto gaussian_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
         auto uniform_data = generateUniformDataIntegration(num_points, 0.0f, 1.0f, 123);
-        auto intervals_data = generateTestIntervalData(10, 10000.0f, 200.0f, 800.0f, 456);
+        auto intervals_data = DigitalIntervalBuilder()
+            .withRandomIntervals(10, 10000.0f, 200.0f, 800.0f, 456)
+            .build();
 
         auto gaussian_time_series = std::make_shared<AnalogTimeSeries>(gaussian_data, time_vector);
         auto uniform_time_series = std::make_shared<AnalogTimeSeries>(uniform_data, time_vector);
@@ -209,7 +212,11 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         // Set intrinsic properties
         setAnalogIntrinsicProperties(gaussian_time_series.get(), gaussian_options);
         setAnalogIntrinsicProperties(uniform_time_series.get(), uniform_options);
-        setIntervalIntrinsicProperties(intervals, interval_options);
+        interval_options = DigitalIntervalDisplayOptionsBuilder()
+            .withIntrinsicProperties(intervals_data)
+            .build();
+        interval_options.allocated_y_center = interval_center;
+        interval_options.allocated_height = interval_height;
 
         // Test coordinate allocation without panning
         {

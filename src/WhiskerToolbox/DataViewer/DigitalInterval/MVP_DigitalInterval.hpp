@@ -55,35 +55,4 @@ glm::mat4 new_getIntervalProjectionMat(int start_data_index,
                                        float y_max,
                                        PlottingManager const & plotting_manager);
 
-/**
- * @brief Generate test digital interval data
- * 
- * Creates a vector of intervals with start and end times between 0 and max_time.
- * Intervals are ordered by start time and guarantee end > start for each interval.
- * 
- * @param num_intervals Number of intervals to generate
- * @param max_time Maximum time value for interval generation
- * @param min_duration Minimum duration for each interval
- * @param max_duration Maximum duration for each interval
- * @param seed Random seed for reproducibility
- * @return Vector of generated interval data
- */
-std::vector<Interval> generateTestIntervalData(size_t num_intervals,
-                                               float max_time = 10000.0f,
-                                               float min_duration = 50.0f,
-                                               float max_duration = 500.0f,
-                                               unsigned int seed = 42);
-
-/**
- * @brief Set intrinsic properties for digital interval display options
- * 
- * Analyzes interval data and configures display options with appropriate
- * scaling and positioning for optimal visualization.
- * 
- * @param intervals Vector of interval data to analyze
- * @param display_options Display options to configure
- */
-void setIntervalIntrinsicProperties(std::vector<Interval> const & intervals,
-                                    NewDigitalIntervalSeriesDisplayOptions & display_options);
-
 #endif// MVP_DIGITALINTERVAL_HPP

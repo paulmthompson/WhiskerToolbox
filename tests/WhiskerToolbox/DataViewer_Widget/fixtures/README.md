@@ -20,8 +20,8 @@ Each builder focuses on a single data type and provides fluent APIs for construc
 ```
 builders/
 ├── DigitalEventBuilder.hpp          # EventData and display options construction
+├── DigitalIntervalBuilder.hpp       # Interval and display options construction
 ├── (Future) AnalogSeriesBuilder.hpp # Analog time series test data
-├── (Future) DigitalIntervalBuilder.hpp
 └── (Future) PlottingManagerBuilder.hpp
 ```
 
@@ -33,6 +33,7 @@ organized by data type and testing domain.
 ```
 scenarios/
 ├── digital_event_scenarios.hpp      # Digital event MVP and rendering tests
+├── digital_interval_scenarios.hpp   # Digital interval MVP and rendering tests
 ├── (Future) analog_scenarios.hpp    # Analog MVP and stacking tests
 └── (Future) mixed_stacking_scenarios.hpp
 ```
@@ -115,12 +116,16 @@ TEST_CASE("Stacked mode allocation") {
 ## Migration from Implementation Files
 
 Previously, test data generation functions were embedded in implementation files:
-- `generateTestEventData()` in MVP_DigitalEvent.cpp
-- `setEventIntrinsicProperties()` in MVP_DigitalEvent.cpp
+- `generateTestEventData()` in MVP_DigitalEvent.cpp → migrated
+- `setEventIntrinsicProperties()` in MVP_DigitalEvent.cpp → migrated
+- `generateTestIntervalData()` in MVP_DigitalInterval.cpp → migrated
+- `setIntervalIntrinsicProperties()` in MVP_DigitalInterval.cpp → migrated
 
 These have been migrated to:
 - `DigitalEventBuilder::withRandomEvents()` - replaces generateTestEventData()
 - `DigitalEventDisplayOptionsBuilder::withIntrinsicProperties()` - replaces setEventIntrinsicProperties()
+- `DigitalIntervalBuilder::withRandomIntervals()` - replaces generateTestIntervalData()
+- `DigitalIntervalDisplayOptionsBuilder::withIntrinsicProperties()` - replaces setIntervalIntrinsicProperties()
 
 **Old Pattern:**
 ```cpp
@@ -145,7 +150,7 @@ auto events = DigitalEventBuilder()
 
 ### Planned Builders
 1. **AnalogSeriesBuilder**: For analog time series test data
-2. **DigitalIntervalBuilder**: For interval series test data
+2. ~~**DigitalIntervalBuilder**: For interval series test data~~ ✅ Complete
 3. **PlottingManagerBuilder**: For configuring PlottingManager state
 4. **ViewStateBuilder**: For coordinate transform tests
 
@@ -155,9 +160,9 @@ auto events = DigitalEventBuilder()
 3. **interaction_scenarios.hpp**: Zoom, pan, selection test cases
 
 ### Migration Roadmap
-1. **Phase 1 (Current)**: Digital event builder and scenarios
-2. **Phase 2**: Analog time series builders
-3. **Phase 3**: Digital interval builders
+1. ~~**Phase 1**: Digital event builder and scenarios~~ ✅ Complete
+2. ~~**Phase 2**: Digital interval builder and scenarios~~ ✅ Complete
+3. **Phase 3**: Analog time series builders
 4. **Phase 4**: Mixed stacking scenarios
 5. **Phase 5**: Complete removal of test helpers from implementation files
 
