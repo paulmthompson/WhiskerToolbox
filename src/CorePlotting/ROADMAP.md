@@ -26,10 +26,13 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - `PlottingManager` is now a pure layout calculator (no data storage)
     - Added `getAnalogSeriesAllocationForKey()` to support spike sorter configuration
     
-- [ ] **Split DisplayOptions structs**:
-    - Extract `SeriesStyle` (color, alpha, thickness) — pure configuration
-    - Extract `SeriesLayoutResult` (allocated_y_center, allocated_height) — layout output
-    - Keep cached values (std_dev, mean) in separate cache struct
+- [x] **Split DisplayOptions structs**:
+    - Created `CorePlotting::SeriesStyle` (color, alpha, thickness, visibility) — pure configuration
+    - Created `CorePlotting::SeriesLayoutResult` (allocated_y_center, allocated_height) — layout output
+    - Created `CorePlotting::SeriesDataCache` (cached std_dev, mean) — mutable cache
+    - Updated all three DisplayOptions structs to use nested members
+    - Updated all MVP functions, SVGExporter, and test code
+    - All tests passing ✓
     
 - [ ] **Rename PlottingManager → LayoutCalculator**:
     - Makes the single responsibility clear
