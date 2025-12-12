@@ -87,31 +87,4 @@ glm::mat4 new_getEventProjectionMat(int start_data_index,
                                     float y_max,
                                     PlottingManager const & plotting_manager);
 
-/**
- * @brief Generate test digital event data
- * 
- * Creates a vector of events with times between 0 and max_time.
- * Events are ordered by time for optimal visualization.
- * 
- * @param num_events Number of events to generate
- * @param max_time Maximum time value for event generation
- * @param seed Random seed for reproducibility
- * @return Vector of generated event data
- */
-std::vector<EventData> generateTestEventData(size_t num_events,
-                                             float max_time = 10000.0f,
-                                             unsigned int seed = 42);
-
-/**
- * @brief Set intrinsic properties for digital event display options
- * 
- * Analyzes event data and configures display options with appropriate
- * settings for optimal visualization.
- * 
- * @param events Vector of event data to analyze
- * @param display_options Display options to configure
- */
-void setEventIntrinsicProperties(std::vector<EventData> const & events,
-                                 NewDigitalEventSeriesDisplayOptions & display_options);
-
 #endif// MVP_DIGITALEVENT_HPP

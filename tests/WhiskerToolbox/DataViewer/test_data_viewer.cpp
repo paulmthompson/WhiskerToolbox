@@ -11,6 +11,8 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "XAxis.hpp"
 
+#include "../DataViewer_Widget/fixtures/builders/DigitalEventBuilder.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -370,8 +372,8 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         }
         auto analog1_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
         auto analog2_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 123);
-        auto events1 = generateTestEventData(50, 10000.0f, 456);
-        auto events2 = generateTestEventData(30, 10000.0f, 789);
+        auto events1 = DigitalEventBuilder().withRandomEvents(50, 10000.0f, 456).build();
+        auto events2 = DigitalEventBuilder().withRandomEvents(30, 10000.0f, 789).build();
 
         auto analog1_time_series = std::make_shared<AnalogTimeSeries>(analog1_data, time_vector);
         auto analog2_time_series = std::make_shared<AnalogTimeSeries>(analog2_data, time_vector);
@@ -432,8 +434,16 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         // Set intrinsic properties
         setAnalogIntrinsicProperties(analog1_time_series.get(), analog1_options);
         setAnalogIntrinsicProperties(analog2_time_series.get(), analog2_options);
-        setEventIntrinsicProperties(events1, event1_options);
-        setEventIntrinsicProperties(events2, event2_options);
+        event1_options = DigitalEventDisplayOptionsBuilder()
+            .withStackedMode()
+            .withAllocation(event1_center, event1_height)
+            .withIntrinsicProperties(events1)
+            .build();
+        event2_options = DigitalEventDisplayOptionsBuilder()
+            .withStackedMode()
+            .withAllocation(event2_center, event2_height)
+            .withIntrinsicProperties(events2)
+            .build();
 
         // Test MVP matrix generation
         glm::mat4 analog1_model = new_getAnalogModelMat(analog1_options, analog1_options.cached_std_dev, analog1_options.cached_mean, manager);

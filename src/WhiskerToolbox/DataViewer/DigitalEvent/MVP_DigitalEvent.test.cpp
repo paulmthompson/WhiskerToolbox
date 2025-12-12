@@ -6,6 +6,9 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include "../../tests/WhiskerToolbox/DataViewer_Widget/fixtures/builders/DigitalEventBuilder.hpp"
+#include "../../tests/WhiskerToolbox/DataViewer_Widget/fixtures/scenarios/digital_event_scenarios.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -158,7 +161,9 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         REQUIRE(b1 <= a2 + 0.05f);
     }
     SECTION("Event test data generation") {
-        auto events = generateTestEventData(10, 100.0f, 42);
+        auto events = DigitalEventBuilder()
+            .withRandomEvents(10, 100.0f, 42)
+            .build();
 
         REQUIRE(events.size() == 10);
 
@@ -176,30 +181,34 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
     }
 
     SECTION("Event intrinsic properties") {
-        NewDigitalEventSeriesDisplayOptions options;
-
         // Test with empty events
         std::vector<EventData> empty_events;
-
-        setEventIntrinsicProperties(empty_events, options);
-        REQUIRE(options.alpha == 0.8f);// Should remain unchanged
+        auto options_empty = DigitalEventDisplayOptionsBuilder()
+            .withIntrinsicProperties(empty_events)
+            .build();
+        REQUIRE(options_empty.alpha == 0.8f);// Should remain unchanged
 
         // Test with few events
-        auto few_events = generateTestEventData(10, 100.0f, 42);
-        setEventIntrinsicProperties(few_events, options);
-        REQUIRE(options.alpha == 0.8f);      // Should remain unchanged
-        REQUIRE(options.line_thickness == 2);// Should remain unchanged
+        auto few_events = digital_event_scenarios::few_events();
+        auto options_few = DigitalEventDisplayOptionsBuilder()
+            .withIntrinsicProperties(few_events)
+            .build();
+        REQUIRE(options_few.alpha == 0.8f);      // Should remain unchanged
+        REQUIRE(options_few.line_thickness == 2);// Should remain unchanged
 
         // Test with many events (should reduce alpha)
-        auto many_events = generateTestEventData(150, 100.0f, 42);
-        setEventIntrinsicProperties(many_events, options);
-        REQUIRE(options.alpha < 0.8f);// Should be reduced
+        auto many_events = digital_event_scenarios::many_events();
+        auto options_many = DigitalEventDisplayOptionsBuilder()
+            .withIntrinsicProperties(many_events)
+            .build();
+        REQUIRE(options_many.alpha < 0.8f);// Should be reduced
 
         // Test with very many events (should reduce line thickness too)
-        auto very_many_events = generateTestEventData(250, 100.0f, 42);
-        options.line_thickness = 2;// Reset
-        setEventIntrinsicProperties(very_many_events, options);
-        REQUIRE(options.line_thickness < 2);// Should be reduced
+        auto very_many_events = digital_event_scenarios::very_dense_events();
+        auto options_dense = DigitalEventDisplayOptionsBuilder()
+            .withIntrinsicProperties(very_many_events)
+            .build();
+        REQUIRE(options_dense.line_thickness < 2);// Should be reduced
     }
 
     SECTION("Event MVP matrices - FullCanvas mode") {
@@ -370,12 +379,12 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
     SECTION("Event rendering optimization") {
         // Test alpha reduction for dense event series
-        std::vector<EventData> dense_events = generateTestEventData(500, 1000.0f, 123);
-        NewDigitalEventSeriesDisplayOptions options;
-        options.alpha = 0.8f;
-        options.line_thickness = 3;
-
-        setEventIntrinsicProperties(dense_events, options);
+        auto dense_events = digital_event_scenarios::dense_events_for_rendering();
+        auto options = DigitalEventDisplayOptionsBuilder()
+            .withAlpha(0.8f)
+            .withLineThickness(3)
+            .withIntrinsicProperties(dense_events)
+            .build();
 
         // Should reduce both alpha and line thickness for very dense data
         REQUIRE(options.alpha < 0.8f);
