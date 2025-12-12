@@ -506,8 +506,7 @@ void MainWindow::openDataViewer() {
     if (!_widgets.contains(key)) {
         auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
                 _data_manager,
-                _time_scrollbar,
-                this);
+                _time_scrollbar);
 
         DataViewerWidget->setObjectName(key);
         

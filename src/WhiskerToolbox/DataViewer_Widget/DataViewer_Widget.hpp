@@ -44,7 +44,6 @@ class DataViewer_Widget : public QWidget {
 public:
     DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                       TimeScrollBar * time_scrollbar,
-                      MainWindow * main_window,
                       QWidget * parent = nullptr);
 
     ~DataViewer_Widget() override;
@@ -111,7 +110,6 @@ private slots:
 private:
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar * _time_scrollbar;
-    MainWindow * _main_window;
     Ui::DataViewer_Widget * ui;
 
     std::shared_ptr<TimeFrame> _time_frame;
