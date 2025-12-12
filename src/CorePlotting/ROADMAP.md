@@ -2,56 +2,178 @@
 
 This document outlines the roadmap for consolidating the plotting architecture in WhiskerToolbox. The goal is to move from parallel, coupled implementations (DataViewer, Analysis Dashboard, SVGExporter) to a layered architecture centered around `CorePlotting`.
 
+## Current State Analysis
+
+### DataViewer Widget Issues
+- **XAxis isolation**: Manages time range without TimeFrame integration
+- **Duplicate storage**: Both PlottingManager and OpenGLWidget store series maps
+- **DisplayOptions conflation**: Mixes style, layout output, and cached data
+- **Per-frame vertex generation**: Rebuilds geometry every render
+
+### What Works Well (to preserve)
+- **SpatialOverlayOpenGLWidget**: Clean ViewState integration, single MVP
+- **MVP_*.cpp functions**: Correct Model matrix logic per series type
+- **PlottingManager allocation**: Good layout algorithms
+
+---
+
+## Phase 0: Immediate Cleanup (No Architecture Change)
+**Goal:** Remove duplication and clarify responsibilities before refactoring.
+
+- [ ] **Eliminate duplicate series storage**:
+    - Remove `PlottingManager::analog_series_map` (and event/interval maps)
+    - Keep series storage in `OpenGLWidget` only
+    - `PlottingManager` becomes pure layout calculator (no data storage)
+    
+- [ ] **Split DisplayOptions structs**:
+    - Extract `SeriesStyle` (color, alpha, thickness) — pure configuration
+    - Extract `SeriesLayoutResult` (allocated_y_center, allocated_height) — layout output
+    - Keep cached values (std_dev, mean) in separate cache struct
+    
+- [ ] **Rename PlottingManager → LayoutCalculator**:
+    - Makes the single responsibility clear
+    - Remove series storage methods (`addAnalogSeries`, etc.)
+
+---
+
 ## Phase 1: Core Abstractions (The "Brain")
 **Goal:** Centralize math, layout, and querying logic. No Qt, No OpenGL.
 
-- [ ] **Consolidate MVP Logic**: 
-    - Move matrix calculation logic from `MVP_*.hpp` (DataViewer) and `SVGExporter` into `CorePlotting/CoordinateTransform`.
-    - Ensure `SVGExporter` and `OpenGLWidget` can both use these same functions.
-- [ ] **Define Renderable Primitives**:
-    - Create `RenderableScene`, `RenderablePolyLine`, `RenderableGlyph` structs.
-    - These should be POD (Plain Old Data) types optimized for easy consumption by renderers.
-- [ ] **Implement Data Transformers**:
-    - `GapDetector`: `AnalogTimeSeries` -> `std::vector<RenderablePolyLine>`.
-    - `EpochAligner`: `AnalogTimeSeries` + `DigitalEventSeries` -> `std::vector<RenderablePolyLine>`.
-- [ ] **Unified Spatial Indexing**:
-    - Finalize `QuadTree<EntityId>` implementation.
-    - Create adapters for `PointData` and `DigitalEventSeries`.
-    - **New**: Create adapter for `RenderablePolyLine` (using bounding boxes) to support selection of aligned analog traces.
-- [ ] **Layout Engine**:
-    - Implement `EventRow` and `EventRowLayout` structs.
-    - Create a `LayoutManager` (evolution of `PlottingManager`) that outputs a "Scene Description" (pure data) rather than drawing directly.
+### 1.1 TimeRange Integration
+- [ ] **Create `TimeRange` struct** in `CorePlotting/CoordinateTransform/`:
+    - Port logic from `XAxis` but add TimeFrame awareness
+    - Methods: `fromTimeFrame()`, `setCenterAndZoom()` with bounds enforcement
+    - Integrate with `ViewState` for time-series plots
+    
+- [ ] **Create `TimeSeriesViewState`**:
+    - Extends `ViewState` with `TimeRange` for X-axis
+    - Standard `ViewState` zoom/pan applies to Y-axis only
+    - X-axis controlled through `TimeRange` methods
+
+### 1.2 MVP Matrix Consolidation
+- [ ] **Move matrix logic to CorePlotting**:
+    - `MVP_AnalogTimeSeries.cpp` → `CorePlotting/CoordinateTransform/SeriesMatrices.cpp`
+    - `MVP_DigitalEvent.cpp` → same location
+    - `MVP_DigitalInterval.cpp` → same location
+    - Update `OpenGLWidget` and `SVGExporter` to use new location
+
+- [ ] **Document MVP strategy**:
+    - **Model**: Per-series (vertical positioning, scaling)
+    - **View**: Shared (global pan)
+    - **Projection**: Shared (time range → NDC)
+
+### 1.3 Layout Engine
+- [ ] **Create `LayoutEngine`** (evolution of PlottingManager):
+    - Pure functions that take series count/configuration → layout positions
+    - No data storage, no global state
+    - Input: `LayoutRequest` (series types, counts, viewport bounds)
+    - Output: `std::vector<SeriesLayoutResult>`
+    
+- [ ] **Implement layout strategies**:
+    - `StackedLayoutStrategy`: DataViewer-style vertical stacking
+    - `RowLayoutStrategy`: Raster plot-style horizontal rows
+
+### 1.4 Renderable Primitives
+- [ ] **Finalize `RenderableScene` struct**:
+    - Each batch contains its own Model matrix
+    - Scene contains shared View + Projection matrices
+    - Add `SceneBuilder` helper class
+
+- [ ] **Implement Transformers**:
+    - `GapDetector`: `AnalogTimeSeries` → segmented `RenderablePolyLineBatch`
+    - `RasterBuilder`: `DigitalEventSeries` + row layout → `RenderableGlyphBatch`
+
+### 1.5 Spatial Indexing
+- [ ] **Finalize `QuadTree<EntityId>` implementation**
+- [ ] **Create spatial adapters**:
+    - `EventSpatialAdapter`: DigitalEventSeries → QuadTree
+    - `PointSpatialAdapter`: PointData → QuadTree
+    - `PolyLineSpatialAdapter`: RenderablePolyLineBatch → QuadTree (bounding boxes)
+
+---
 
 ## Phase 2: Rendering Strategies (The "Painter")
-**Goal:** Create a library for rendering the "Scene Description" using OpenGL (and eventually others).
+**Goal:** Create a library for rendering the "Scene Description" using OpenGL.
 
-- [ ] **Create `PlottingOpenGL` Library**:
-    - Implement `SeriesRenderer` classes (e.g., `OpenGLAnalogRenderer`, `OpenGLEventRenderer`) that take `CorePlotting` data structures and draw them.
-    - **Strategy**: Use `glDrawArrays` for simple cases, and instanced rendering for "Many Lines" (Epoch plots).
-    - Refactor `OpenGLWidget` to delegate drawing to these renderers.
-- [ ] **Refactor SVG Exporter**:
-    - Update `SVGExporter` to consume `RenderableScene`.
-    - It will simply iterate over `poly_lines` and `glyphs` and write SVG tags.
+- [ ] **Create `PlottingOpenGL` library** (or folder in WhiskerToolbox):
+    - `BatchRenderer` base class
+    - `PolyLineRenderer`: Takes `RenderablePolyLineBatch`, issues draw calls
+    - `GlyphRenderer`: Takes `RenderableGlyphBatch`, uses instancing
+    - `RectangleRenderer`: Takes `RenderableRectangleBatch`
+
+- [ ] **Refactor `OpenGLWidget` to use renderers**:
+    - Replace inline vertex generation with `RenderableScene` consumption
+    - Shader management stays in widget (or moves to renderer)
+
+- [ ] **Refactor `SVGExporter`**:
+    - Consume `RenderableScene` instead of querying OpenGLWidget
+    - Iterate batches → write SVG elements
+    - Same coordinate transforms as OpenGL (validates correctness)
+
+---
 
 ## Phase 3: Interaction & Qt Integration (The "Controller")
 **Goal:** Handle user input and bridge it to CorePlotting queries.
 
-- [ ] **Create `QtPlotting` Library**:
-    - Implement `InteractionController` (generalizing `PlotInteractionController` from Analysis Dashboard).
-    - Handle mouse events (Zoom/Pan/Hover) and translate them into `CorePlotting` queries (e.g., `screenToWorld` -> `QuadTree::query`).
-    - **Selection**: Use `CorePlotting` spatial index for selection (CPU-based), removing the dependency on OpenGL 4.3 Compute Shaders for Mac compatibility.
-    - Implement a generic `TooltipOverlay` that takes an `EntityId` and resolves it to text/widgets.
+- [ ] **Port `PlotInteractionController`** patterns to DataViewer:
+    - Generalize for time-series context (TimeRange-aware zoom/pan)
+    - Handle interval dragging through same abstraction
+
+- [ ] **Adopt `ViewState` in DataViewer**:
+    - Replace `_verticalPanOffset`, `_yMin`, `_yMax` with ViewState
+    - Use `TimeSeriesViewState` for integrated time + Y management
+
+- [ ] **Implement spatial queries for DataViewer**:
+    - Build QuadTree from visible series
+    - Use for tooltip/hover detection
+    - Use for selection (replaces current linear search)
+
+---
 
 ## Phase 4: Widget Migration
 **Goal:** Update existing widgets to use the new stack.
 
-- [ ] **Migrate DataViewer**:
-    - Replace internal `PlottingManager` with `CorePlotting` layout.
-    - Use `PlottingOpenGL` for rendering.
-- [ ] **Migrate Analysis Dashboard**:
-    - Refactor `EventPlotWidget` (Raster) to use `CorePlotting` (treating trials as stacked rows).
-    - Refactor `SpatialOverlayWidget` to use `CorePlotting` for PointData.
+### 4.1 DataViewer Migration
+- [ ] Replace internal layout logic with `LayoutEngine`
+- [ ] Replace inline rendering with `PlottingOpenGL` renderers
+- [ ] Replace XAxis with `TimeSeriesViewState` + `TimeRange`
+- [ ] Add spatial indexing for hover/selection
+
+### 4.2 Analysis Dashboard Updates
+- [ ] `EventPlotWidget` (Raster): Use `CorePlotting` row layout
+- [ ] `SpatialOverlayWidget`: Already using ViewState, add CorePlotting transformers
+- [ ] Shared tooltip infrastructure across widgets
+
+---
 
 ## Open Questions & Risks
-- **Performance**: Will the abstraction layer introduce overhead for high-frequency real-time updates? (Mitigation: Keep `CorePlotting` structs POD and cache-friendly).
-- **Legacy Compatibility**: How to handle legacy `DataViewer` features (like specific gap detection logic) during the transition?
+
+### Performance
+- **Risk**: Abstraction layer introduces overhead for real-time updates
+- **Mitigation**: Keep `Renderable*` structs POD, cache geometry in VBOs, only rebuild on data change
+
+### Legacy Compatibility  
+- **Risk**: Breaking existing DataViewer features during transition
+- **Mitigation**: Phase 0 cleanup maintains behavior, Phase 1+ uses adapter pattern
+
+### TimeFrame Integration
+- **Question**: Should `TimeRange` hold a weak reference to `TimeFrame`, or just copy bounds?
+- **Recommendation**: Copy bounds at construction, provide `updateFromTimeFrame()` for refresh
+
+### Coordinate System Consistency
+- **Question**: How to ensure QuadTree coordinates match Model matrix transforms?
+- **Solution**: Both use `SeriesLayoutResult.allocated_y_center` — single source of truth
+
+---
+
+## Migration Checklist (Per Widget)
+
+```
+[ ] Widget uses CorePlotting LayoutEngine for positioning
+[ ] Widget uses CorePlotting ViewState (or TimeSeriesViewState)
+[ ] Widget renders via RenderableScene (not inline vertex generation)
+[ ] Widget uses spatial index for hit testing
+[ ] SVG export works via same RenderableScene
+[ ] Unit tests for layout calculations
+[ ] Unit tests for coordinate transforms
+```

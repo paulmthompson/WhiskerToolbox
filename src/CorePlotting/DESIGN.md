@@ -26,6 +26,39 @@ WhiskerToolbox currently has three parallel implementations for event-like visua
 2.  **Unified MVP Logic**: OpenGL and SVG use the exact same matrix calculation functions.
 3.  **Universal Interaction**: Hover/Click detection works via `EntityId` lookup across all plot types.
 
+## Current Architecture Pain Points
+
+### DataViewer Issues
+
+1. **XAxis isolation**: The current `XAxis` class manages time range independently, without knowledge of `TimeFrame` objects. It should integrate with `ViewState` and respect the bounds of the underlying `TimeFrame` to prevent scrolling/zooming beyond valid data ranges.
+
+2. **Duplicate series storage**: Both `PlottingManager` and `OpenGLWidget` maintain their own maps of series data (`analog_series_map` vs `_analog_series`). This redundancy leads to synchronization bugs.
+
+3. **DisplayOptions conflation**: `NewAnalogTimeSeriesDisplayOptions` mixes:
+   - **Rendering style**: `hex_color`, `alpha`, `line_thickness`
+   - **Layout output**: `allocated_y_center`, `allocated_height` (computed by layout engine)
+   - **Cached calculations**: `cached_std_dev`, `cached_mean`
+   
+   These should be separate structs with clear ownership.
+
+4. **Per-draw-call vertex generation**: Each render frame, `OpenGLWidget` rebuilds vertex arrays inline. This should be separated into data preparation (CorePlotting) and rendering (OpenGL).
+
+### Matrix Architecture Comparison
+
+The two main plotting widgets use different MVP strategies:
+
+| Widget | Model Matrix | View Matrix | Projection Matrix |
+|--------|--------------|-------------|-------------------|
+| **SpatialOverlayOpenGLWidget** | Identity (shared) | Pan/Zoom (shared) | Ortho from ViewState (shared) |
+| **DataViewer OpenGLWidget** | Per-series (scaling, positioning) | Global pan (shared) | Time range ortho (shared) |
+
+**Key insight**: For spatial data (points, masks, lines), all data shares one coordinate system, so a single MVP suffices. For time-series data with stacked layouts, each series needs its own **Model matrix** to position it vertically, while **View** (pan) and **Projection** (time range → NDC) remain shared.
+
+This is the correct pattern:
+- **Model**: Per-series (positions series in world space, handles series-specific scaling)
+- **View**: Shared (global camera pan/zoom)
+- **Projection**: Shared (maps world coordinates to NDC)
+
 ## Dependencies
 
 ```
@@ -33,11 +66,152 @@ CorePlotting
     ├── DataManager (DigitalEventSeries, PointData, EntityId, TimeFrameIndex)
     ├── SpatialIndex (QuadTree)
     ├── Entity (EntityId, EntityRegistry)
-    ├── TimeFrame (TimeFrameIndex)
+    ├── TimeFrame (TimeFrameIndex, TimeFrame)
     └── glm (matrix math)
 ```
 
 **Note**: CorePlotting does NOT depend on Qt or OpenGL. It provides pure data structures and algorithms that Qt-based widgets consume.
+
+## Key Architectural Concepts
+
+### Relationship: PlottingManager → LayoutEngine → SceneGraph
+
+The current `PlottingManager` in DataViewer conflates three responsibilities:
+
+1. **Series Registry**: Storing which series are loaded (`analog_series_map`, etc.)
+2. **Layout Calculation**: Computing vertical positions (`calculateAnalogSeriesAllocation()`)
+3. **Global State**: Managing zoom, pan offsets, viewport bounds
+
+In the new architecture, these responsibilities are separated:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CorePlotting                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐  │
+│  │   ViewState     │     │  LayoutEngine    │     │   RenderableScene   │  │
+│  │  (TimeRange +   │────▶│  (allocates Y    │────▶│   (batched prims    │  │
+│  │   Camera)       │     │   positions)     │     │   + MVP matrices)   │  │
+│  └─────────────────┘     └──────────────────┘     └─────────────────────┘  │
+│         │                        │                          │               │
+│         │                        │                          │               │
+│         ▼                        ▼                          ▼               │
+│  ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐  │
+│  │  TimeRange      │     │  SeriesLayout    │     │  Consumed by:       │  │
+│  │  (bounds-aware  │     │  (per-series     │     │  - OpenGL Renderer  │  │
+│  │   scrolling)    │     │   Model params)  │     │  - SVG Exporter     │  │
+│  └─────────────────┘     └──────────────────┘     │  - Hit Testing      │  │
+│                                                    └─────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**SceneGraph vs LayoutEngine:**
+- **LayoutEngine**: Pure calculation of "where things go" (Y positions, heights). Outputs `SeriesLayout` structs.
+- **SceneGraph/RenderableScene**: The complete description of "what to draw" — geometry batches + transformation matrices. The LayoutEngine's output feeds into the Model matrices stored in the SceneGraph.
+
+The `RenderableScene` is the **output** of the layout process, not a replacement for layout calculation.
+
+### TimeRange: Bounds-Aware X-Axis
+
+The current `XAxis` class is isolated and doesn't interact with `TimeFrame` objects. The new `TimeRange` integrates with `ViewState` and respects data bounds:
+
+```cpp
+// CorePlotting/CoordinateTransform/TimeRange.hpp
+
+/**
+ * @brief Bounds-aware time range for X-axis display
+ * 
+ * Integrates with TimeFrame to enforce valid data bounds.
+ * Prevents scrolling/zooming beyond the available data range.
+ */
+struct TimeRange {
+    // Current visible range
+    int64_t start;
+    int64_t end;
+    
+    // Hard limits from TimeFrame
+    int64_t min_bound;  // First valid time index
+    int64_t max_bound;  // Last valid time index
+    
+    /**
+     * @brief Construct from a TimeFrame's valid range
+     */
+    static TimeRange fromTimeFrame(TimeFrame const& tf);
+    
+    /**
+     * @brief Set visible range with automatic clamping
+     */
+    void setVisibleRange(int64_t new_start, int64_t new_end);
+    
+    /**
+     * @brief Zoom centered on a point, respecting bounds
+     * @return Actual range achieved (may differ due to clamping)
+     */
+    int64_t setCenterAndZoom(int64_t center, int64_t range_width);
+    
+    /**
+     * @brief Get visible range width
+     */
+    [[nodiscard]] int64_t getWidth() const { return end - start; }
+};
+```
+
+**Integration with ViewState:**
+
+```cpp
+// Extended ViewState for time-series plots
+struct TimeSeriesViewState : ViewState {
+    TimeRange time_range;           // X-axis bounds (time-aware)
+    
+    // Overrides from ViewState apply to Y-axis only
+    // X-axis zoom/pan is handled through time_range
+};
+```
+
+**Usage Example:**
+
+```cpp
+// In DataViewer initialization
+void DataViewer_Widget::setMasterTimeFrame(std::shared_ptr<TimeFrame> tf) {
+    _master_time_frame = tf;
+    
+    // Initialize TimeRange from TimeFrame bounds
+    _view_state.time_range = TimeRange::fromTimeFrame(*tf);
+    
+    // Set initial visible range (e.g., first 1000 samples)
+    _view_state.time_range.setCenterAndZoom(500, 1000);
+}
+
+// In mouse wheel handler
+void DataViewer_Widget::handleZoom(int delta, int64_t center_time) {
+    int64_t current_width = _view_state.time_range.getWidth();
+    int64_t new_width = (delta > 0) ? current_width / 2 : current_width * 2;
+    
+    // This automatically clamps to TimeFrame bounds
+    int64_t actual_width = _view_state.time_range.setCenterAndZoom(center_time, new_width);
+    
+    // If actual_width != new_width, we hit bounds
+    updatePlot();
+}
+
+// In scroll handler  
+void DataViewer_Widget::handleScroll(int64_t delta) {
+    int64_t new_start = _view_state.time_range.start + delta;
+    int64_t new_end = _view_state.time_range.end + delta;
+    
+    // This automatically clamps - user can't scroll past data bounds
+    _view_state.time_range.setVisibleRange(new_start, new_end);
+    
+    updatePlot();
+}
+```
+
+This design ensures:
+1. User cannot scroll beyond the data's time bounds
+2. Zooming respects minimum/maximum visible ranges
+3. The relationship between `TimeFrameIndex` and display coordinates is explicit
+4. TimeRange is decoupled from Qt/OpenGL but aware of TimeFrame semantics
 
 ## Architecture Layers
 
@@ -77,6 +251,9 @@ struct RenderablePolyLineBatch {
     // Global Attributes
     float thickness{1.0f};
     glm::vec4 global_color{1,1,1,1};
+    
+    // Model matrix for this batch (positions in world space)
+    glm::mat4 model_matrix{1.0f};
 };
 
 /**
@@ -85,7 +262,7 @@ struct RenderablePolyLineBatch {
  * Designed for Instanced Rendering.
  */
 struct RenderableGlyphBatch {
-    // Instance Data: {x, y} positions
+    // Instance Data: {x, y} positions in world space
     std::vector<glm::vec2> positions;
     
     // Per-Glyph Attributes
@@ -93,8 +270,12 @@ struct RenderableGlyphBatch {
     std::vector<EntityId> entity_ids;
 
     // Global Attributes
-    int glyph_type; // Enum: Circle, Square, Tick, etc.
+    enum class GlyphType { Circle, Square, Tick, Cross };
+    GlyphType glyph_type{GlyphType::Circle};
     float size{5.0f};
+    
+    // Model matrix for this batch
+    glm::mat4 model_matrix{1.0f};
 };
 
 /**
@@ -103,61 +284,164 @@ struct RenderableGlyphBatch {
  * Designed for Instanced Rendering.
  */
 struct RenderableRectangleBatch {
-    // Instance Data: {x, y, width, height} per rectangle
+    // Instance Data: {x, y, width, height} per rectangle in world space
     std::vector<glm::vec4> bounds;
     
     // Per-Rectangle Attributes
     std::vector<glm::vec4> colors;
     std::vector<EntityId> entity_ids;
-};
-
-struct RenderableScene {
-    std::vector<RenderablePolyLineBatch> poly_line_batches;
-    std::vector<RenderableRectangleBatch> rectangle_batches;
-    std::vector<RenderableGlyphBatch> glyph_batches;
     
-    // Global State
-    glm::mat4 view_matrix;
-    glm::mat4 projection_matrix;
-};
-
-## Rendering Abstraction (PlottingOpenGL)
-
-The `CorePlotting` layer produces `Renderable*Batch` structures. The `PlottingOpenGL` layer consumes them. This separation allows us to swap rendering strategies without changing the data generation logic.
-
-We define abstract Renderers. Concrete implementations handle hardware specifics:
-
-- **StandardPolyLineRenderer** (OpenGL 3.3/4.1): Uses `glMultiDrawArrays` or simple loops. Compatible with macOS. Ideal for `DataViewer` (fewer, longer lines).
-- **ComputePolyLineRenderer** (OpenGL 4.3+): Uses SSBOs and Compute Shaders for advanced culling/selection. Ideal for `Analysis Dashboard` (100k+ short lines).
-
-The *Application* chooses the renderer at runtime based on hardware capabilities and use case.  float size{5.0f};
+    // Model matrix for this batch
+    glm::mat4 model_matrix{1.0f};
 };
 
 /**
- * @brief A batch of rectangles (e.g., DigitalIntervalSeries)
+ * @brief Complete scene description for a frame
  * 
- * Designed for Instanced Rendering.
+ * Contains all primitives and shared transformation matrices.
+ * Produced by LayoutEngine, consumed by Renderers.
  */
-struct RenderableRectangleBatch {
-    // Instance Data: {x, y, width, height} per rectangle
-    std::vector<glm::vec4> bounds;
-    
-    // Per-Rectangle Attributes
-    std::vector<glm::vec4> colors;
-    std::vector<EntityId> entity_ids;
-};
-
 struct RenderableScene {
+    // Primitive batches (each has its own Model matrix)
     std::vector<RenderablePolyLineBatch> poly_line_batches;
     std::vector<RenderableRectangleBatch> rectangle_batches;
     std::vector<RenderableGlyphBatch> glyph_batches;
     
-    // Global State
-    glm::mat4 view_matrix;
-    glm::mat4 projection_matrix;
+    // Shared transformation matrices (apply to all batches)
+    glm::mat4 view_matrix{1.0f};        // Camera pan/zoom
+    glm::mat4 projection_matrix{1.0f};  // World → NDC mapping
+    
+    // Spatial index for hit testing (built from same layout as primitives)
+    std::unique_ptr<QuadTree<EntityId>> spatial_index;
 };
+```
 
-## Rendering Abstraction (PlottingOpenGL)
+### 2. LayoutEngine vs SceneGraph: Clarifying Responsibilities
+
+**LayoutEngine** and **SceneGraph (RenderableScene)** serve different purposes:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           Data Flow                                          │
+│                                                                              │
+│  ┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐  │
+│  │ Series Data │───▶│LayoutEngine  │───▶│ SceneGraph  │───▶│  Renderer   │  │
+│  │ (Analog,    │    │ (positioning)│    │ (geometry + │    │ (OpenGL/SVG)│  │
+│  │  Events)    │    │              │    │  matrices)  │    │             │  │
+│  └─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘  │
+│                            │                   │                             │
+│                            ▼                   ▼                             │
+│                    ┌──────────────┐    ┌─────────────┐                       │
+│                    │SeriesLayout  │    │Renderable   │                       │
+│                    │ Results      │    │ Batches +   │                       │
+│                    │(Y positions) │    │ QuadTree    │                       │
+│                    │              │    │             │                       │
+│                    └──────────────┘    └─────────────┘                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Component | Input | Output | Responsibility |
+|-----------|-------|--------|----------------|
+| **LayoutEngine** | Series count, types, viewport | `SeriesLayoutResult[]` | "Where does each series go?" |
+| **Transformers** | Series data + layout results | `Renderable*Batch` | "What geometry for this series?" |
+| **SceneGraph** | All batches + V/P matrices | `RenderableScene` | "Complete frame description" |
+| **Renderer** | `RenderableScene` | OpenGL draw calls | "How to draw it" |
+| **Interaction** | `RenderableScene.spatial_index` | EntityId | "What did user click?" |
+
+### QuadTree Ownership
+
+The **QuadTree lives inside `RenderableScene`** for a critical reason: **synchronization**.
+
+Both the rendering primitives and the spatial index are built from the same `SeriesLayoutResult` data. By bundling them together:
+
+1. **Single Source of Truth**: When layout changes, both geometry and index are rebuilt together
+2. **No Sync Bugs**: Impossible for QuadTree coordinates to drift from rendered positions
+3. **Clear Lifecycle**: Scene owns the index; when scene is replaced, old index is automatically cleaned up
+
+```cpp
+// SceneBuilder creates both primitives AND spatial index from same layout
+RenderableScene buildScene(
+    std::vector<SeriesData> const& series,
+    std::vector<SeriesLayoutResult> const& layouts,
+    ViewState const& view_state)
+{
+    RenderableScene scene;
+    
+    // Build rendering primitives using layout results
+    for (size_t i = 0; i < series.size(); ++i) {
+        auto batch = buildBatchForSeries(series[i], layouts[i]);
+        scene.poly_line_batches.push_back(std::move(batch));
+    }
+    
+    // Build spatial index using SAME layout results
+    scene.spatial_index = buildSpatialIndex(series, layouts);
+    
+    // Set shared matrices
+    scene.view_matrix = computeViewMatrix(view_state);
+    scene.projection_matrix = computeProjectionMatrix(view_state);
+    
+    return scene;
+}
+```
+
+**Query flow with scene-owned index:**
+```cpp
+// In widget's mouse handler
+std::optional<EntityId> handleClick(QPoint screen_pos) {
+    // Convert screen → world using scene's V/P matrices
+    glm::vec2 world_pos = screenToWorld(
+        screen_pos, 
+        _scene.view_matrix, 
+        _scene.projection_matrix
+    );
+    
+    // Query the scene's spatial index
+    return _scene.spatial_index->findNearest(world_pos.x, world_pos.y, tolerance);
+}
+```
+
+**Key insight**: The `LayoutEngine` doesn't know about vertices or geometry. It only knows about **positioning** (Y centers, heights). The **Transformers** take this layout information plus the actual data and produce geometry batches with Model matrices. The **SceneGraph** is simply the container for all these batches plus the shared View/Projection matrices.
+
+This separation allows:
+1. Changing layout without touching rendering code
+2. Reusing transformers across different layout strategies
+3. Testing layout logic independently from OpenGL
+
+### 3. MVP Matrix Strategy
+
+Different plot types require different MVP strategies:
+
+#### Spatial Plots (SpatialOverlayOpenGLWidget pattern)
+All data shares one coordinate system:
+```cpp
+// Single MVP for all data
+glm::mat4 mvp = projection * view * model;  // model = identity
+viz->render(mvp);  // Same matrix for points, masks, lines
+```
+
+#### Time-Series Plots (DataViewer pattern)
+Each series needs its own vertical positioning:
+```cpp
+// Shared V and P, per-series M
+glm::mat4 view = new_getAnalogViewMat(plotting_manager);      // Global pan
+glm::mat4 proj = new_getAnalogProjectionMat(time_range, ...); // Time→NDC
+
+for (auto& series : analog_series) {
+    glm::mat4 model = new_getAnalogModelMat(series.display_options, 
+                                             series.std_dev, 
+                                             series.mean, 
+                                             layout);
+    // model handles: vertical position, scaling, mean-centering
+    drawSeries(model * view * proj, series.vertices);
+}
+```
+
+**The key principle**: 
+- **Model** = per-series positioning and scaling (what makes this series unique)
+- **View** = global camera state (shared across all series)  
+- **Projection** = coordinate system mapping (shared across all series)
+
+### 3. Rendering Abstraction (PlottingOpenGL)
 
 The `CorePlotting` layer produces `Renderable*Batch` structures. The `PlottingOpenGL` layer consumes them. This separation allows us to swap rendering strategies without changing the data generation logic.
 
@@ -167,9 +451,8 @@ We define abstract Renderers. Concrete implementations handle hardware specifics
 - **ComputePolyLineRenderer** (OpenGL 4.3+): Uses SSBOs and Compute Shaders for advanced culling/selection. Ideal for `Analysis Dashboard` (100k+ short lines).
 
 The *Application* chooses the renderer at runtime based on hardware capabilities and use case.
-```
 
-### 2. Data Transformers (The "Pipeline")
+### 4. Data Transformers (The "Pipeline")
 
 To populate the `RenderableScene`, we use **Transformers**. These pure functions convert complex data relationships into the batched primitives defined above.
 
@@ -202,15 +485,37 @@ src/CorePlotting/
 ├── ROADMAP.md                     # Implementation roadmap
 ├── README.md                      # Quick start guide
 │
-├── SceneGraph/                    # The "What to Draw"
-│   ├── RenderableScene.hpp
-│   ├── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, etc.)
-│   └── SceneBuilder.hpp
+├── SceneGraph/                    # The "What to Draw" (output of layout)
+│   ├── RenderableScene.hpp        # Complete frame description
+│   ├── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, Glyph)
+│   └── SceneBuilder.hpp           # Helpers to construct scenes
 │
-├── Transformers/                  # The "How to Create It"
-│   ├── GapDetector.hpp            # Analog -> PolyLineBatch
+├── Layout/                        # The "Where Things Go" (positioning logic)
+│   ├── LayoutEngine.hpp           # Main layout coordinator
+│   ├── SeriesLayout.hpp           # Per-series layout result
+│   ├── StackedLayoutStrategy.hpp  # Vertical stacking algorithm
+│   └── RowLayoutStrategy.hpp      # Horizontal row layout (raster plots)
+│
+├── Transformers/                  # The "How to Create Geometry"
+│   ├── GapDetector.hpp            # Analog -> segmented PolyLineBatch
 │   ├── EpochAligner.hpp           # Analog + Events -> PolyLineBatch
 │   └── RasterBuilder.hpp          # Events -> GlyphBatch
+│
+├── CoordinateTransform/           # MVP matrix utilities
+│   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
+│   ├── TimeRange.hpp              # TimeFrame-aware X-axis bounds
+│   ├── Matrices.hpp               # Matrix construction helpers
+│   ├── ScreenToWorld.hpp          # Inverse VP transform for queries
+│   └── SeriesMatrices.hpp         # Per-series Model matrix builders
+│
+├── DataTypes/                     # Style and configuration structs
+│   ├── SeriesStyle.hpp            # Color, alpha, thickness (rendering)
+│   └── DigitalEventSeries/        # Event-specific types
+│
+├── SpatialAdapter/                # Bridges data types to QuadTree
+│   ├── EventSpatialAdapter.hpp    # DigitalEventSeries → QuadTree
+│   ├── PointSpatialAdapter.hpp    # PointData → QuadTree
+│   └── ISpatiallyIndexed.hpp      # Common interface
 │
 ├── EventRow/                      # Row-based event model
 │   ├── EventRow.hpp               # Data description of an event row
@@ -218,19 +523,10 @@ src/CorePlotting/
 │   ├── PlacedEventRow.hpp         # Combined: data + layout
 │   └── EventRowBuilder.hpp        # Factory functions for common patterns
 │
-├── SpatialAdapter/                # Bridges data types to QuadTree
-│   ├── EventSpatialAdapter.hpp    # DigitalEventSeries → QuadTree
-│   ├── PointSpatialAdapter.hpp    # PointData → QuadTree
-│   └── ISpatiallyIndexed.hpp      # Common interface
-│
-├── CoordinateTransform/           # MVP matrix utilities
-│   ├── WorldCoordinates.hpp       # World space types and helpers
-│   ├── ScreenToWorld.hpp          # Inverse VP transform for queries
-│   └── ToleranceCalculation.hpp   # Screen pixels → world tolerance
-│
 └── tests/                         # Catch2 unit tests
     ├── EventRow.test.cpp
-    ├── EventSpatialAdapter.test.cpp
+    ├── TimeRange.test.cpp
+    ├── LayoutEngine.test.cpp
     └── CoordinateTransform.test.cpp
 ```
 
@@ -563,15 +859,61 @@ TEST_CASE("Model matrix and QuadTree use same Y coordinate") {
 
 ## Summary
 
-CorePlotting provides:
+### Component Overview
 
-| Component | Purpose |
-|-----------|---------|
-| `EventRow` | Logical description: series + center time |
-| `EventRowLayout` | Rendering position: y_center + row_height |
-| `PlacedEventRow` | Combined: ready for indexing and rendering |
-| `buildEventSpatialIndex()` | Creates QuadTree from placed rows |
-| `getEventModelMatrix()` | Creates M matrix using same layout values |
-| `ISpatiallyIndexed` | Common query interface for widgets |
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `TimeRange` | `CoordinateTransform/` | TimeFrame-aware X-axis bounds management |
+| `TimeSeriesViewState` | `CoordinateTransform/` | Combined time + Y-axis camera state |
+| `LayoutEngine` | `Layout/` | Calculates vertical positions for stacked series |
+| `SeriesLayoutResult` | `Layout/` | Output: y_center + allocated_height per series |
+| `RenderableScene` | `SceneGraph/` | Complete frame description (batches + V/P matrices + QuadTree) |
+| `Renderable*Batch` | `SceneGraph/` | GPU-ready geometry + Model matrix per batch |
+| `Transformers` | `Transformers/` | Convert data + layout → geometry batches |
+| `QuadTree` | Owned by `RenderableScene` | Spatial index for hit testing (built alongside geometry) |
+| `ISpatiallyIndexed` | `SpatialAdapter/` | Common query interface for hit testing |
 
-The key invariant: **QuadTree Y coordinates = Model matrix Y translation**. This ensures spatial queries and rendering are always synchronized without complex coordinate bookkeeping.
+### Data Flow Summary
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Complete Data Flow                                  │
+│                                                                             │
+│   TimeFrame ──────▶ TimeRange ──────▶ Projection Matrix                    │
+│       │                                      │                              │
+│       │                                      ▼                              │
+│   Series Data ──▶ LayoutEngine ──▶ SeriesLayoutResult ──▶ Model Matrix     │
+│                                              │                    │         │
+│                                              ▼                    ▼         │
+│                                        Transformer ──────▶ RenderableBatch  │
+│                                                                   │         │
+│   ViewState ────────────────────────────────────────────▶ View Matrix       │
+│       │                                                           │         │
+│       ▼                                                           ▼         │
+│   Camera Pan/Zoom                                        RenderableScene    │
+│                                                                   │         │
+│                                              ┌────────────────────┴───────┐ │
+│                                              ▼                            ▼ │
+│                                       OpenGL Renderer              SVG Export│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Invariants
+
+1. **QuadTree Y = Model matrix Y**: Spatial queries and rendering use identical coordinates
+2. **TimeRange respects TimeFrame bounds**: User cannot scroll/zoom beyond valid data
+3. **Model = per-series, View/Projection = shared**: Consistent MVP pattern for time-series
+4. **RenderableScene is renderer-agnostic**: Same scene feeds OpenGL and SVG export
+
+### Migration from Current Architecture
+
+| Current (DataViewer) | New (CorePlotting) |
+|---------------------|---------------------|
+| `XAxis` | `TimeRange` (TimeFrame-aware) |
+| `PlottingManager` series storage | Removed (single source in widget) |
+| `PlottingManager` allocation methods | `LayoutEngine` |
+| `NewAnalogTimeSeriesDisplayOptions` | Split into `SeriesStyle` + `SeriesLayoutResult` |
+| `MVP_*.cpp` in `DataViewer/` | `SeriesMatrices.cpp` in `CorePlotting/` |
+| Inline vertex generation | `Transformers` → `RenderableBatch` |
+| `_verticalPanOffset`, `_yMin`, `_yMax` | `ViewState` |
+
