@@ -23,162 +23,15 @@ void PlottingManager::calculateAnalogSeriesAllocation(int series_index,
     allocated_center = viewport_y_min + allocated_height * (static_cast<float>(series_index) + 0.5f);
 }
 
-int PlottingManager::addAnalogSeries(std::string const & key,
-                                     std::shared_ptr<AnalogTimeSeries> series,
-                                     std::string const & color) {
-    int series_index = total_analog_series;
-    
-    AnalogSeriesInfo info;
-    info.series = series;
-    info.key = key;
-    info.color = color.empty() ? generateDefaultColor(series_index) : color;
-    info.visible = true;
-    // Extract group and channel id from key pattern name_idx
-    _extractGroupAndChannel(key, info.group_name, info.channel_id);
-    
-    analog_series_map[key] = std::move(info);
-    total_analog_series++;
-    
-    return series_index;
-}
+void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
+                                                               float & allocated_center,
+                                                               float & allocated_height) const {
 
-int PlottingManager::addDigitalEventSeries(std::string const & key,
-                                           std::shared_ptr<DigitalEventSeries> series,
-                                           std::string const & color) {
-    int series_index = total_event_series;
-    
-    DigitalEventSeriesInfo info;
-    info.series = series;
-    info.key = key;
-    info.color = color.empty() ? generateDefaultColor(total_analog_series + series_index) : color;
-    info.visible = true;
-    
-    digital_event_series_map[key] = std::move(info);
-    total_event_series++;
-    
-    return series_index;
-}
+    static_cast<void>(series_index);
 
-int PlottingManager::addDigitalIntervalSeries(std::string const & key,
-                                              std::shared_ptr<DigitalIntervalSeries> series,
-                                              std::string const & color) {
-    int series_index = total_digital_series;
-    
-    DigitalIntervalSeriesInfo info;
-    info.series = series;
-    info.key = key;
-    info.color = color.empty() ? generateDefaultColor(total_analog_series + total_event_series + series_index) : color;
-    info.visible = true;
-    
-    digital_interval_series_map[key] = std::move(info);
-    total_digital_series++;
-    
-    return series_index;
-}
-
-bool PlottingManager::removeAnalogSeries(std::string const & key) {
-    auto it = analog_series_map.find(key);
-    if (it != analog_series_map.end()) {
-        analog_series_map.erase(it);
-        updateSeriesCounts();
-        return true;
-    }
-    return false;
-}
-
-bool PlottingManager::removeDigitalEventSeries(std::string const & key) {
-    auto it = digital_event_series_map.find(key);
-    if (it != digital_event_series_map.end()) {
-        digital_event_series_map.erase(it);
-        updateSeriesCounts();
-        return true;
-    }
-    return false;
-}
-
-bool PlottingManager::removeDigitalIntervalSeries(std::string const & key) {
-    auto it = digital_interval_series_map.find(key);
-    if (it != digital_interval_series_map.end()) {
-        digital_interval_series_map.erase(it);
-        updateSeriesCounts();
-        return true;
-    }
-    return false;
-}
-
-void PlottingManager::clearAllSeries() {
-    analog_series_map.clear();
-    digital_event_series_map.clear();
-    digital_interval_series_map.clear();
-    total_analog_series = 0;
-    total_event_series = 0;
-    total_digital_series = 0;
-}
-
-PlottingManager::AnalogSeriesInfo * PlottingManager::getAnalogSeriesInfo(std::string const & key) {
-    auto it = analog_series_map.find(key);
-    return (it != analog_series_map.end()) ? &it->second : nullptr;
-}
-
-PlottingManager::DigitalEventSeriesInfo * PlottingManager::getDigitalEventSeriesInfo(std::string const & key) {
-    auto it = digital_event_series_map.find(key);
-    return (it != digital_event_series_map.end()) ? &it->second : nullptr;
-}
-
-PlottingManager::DigitalIntervalSeriesInfo * PlottingManager::getDigitalIntervalSeriesInfo(std::string const & key) {
-    auto it = digital_interval_series_map.find(key);
-    return (it != digital_interval_series_map.end()) ? &it->second : nullptr;
-}
-
-void PlottingManager::setSeriesVisibility(std::string const & key, bool visible) {
-    // Check all series types and update visibility
-    auto analog_it = analog_series_map.find(key);
-    if (analog_it != analog_series_map.end()) {
-        analog_it->second.visible = visible;
-        return;
-    }
-    
-    auto event_it = digital_event_series_map.find(key);
-    if (event_it != digital_event_series_map.end()) {
-        event_it->second.visible = visible;
-        return;
-    }
-    
-    auto interval_it = digital_interval_series_map.find(key);
-    if (interval_it != digital_interval_series_map.end()) {
-        interval_it->second.visible = visible;
-        return;
-    }
-}
-
-std::vector<std::string> PlottingManager::getVisibleAnalogSeriesKeys() const {
-    std::vector<std::string> visible_keys;
-    for (auto const & [key, info] : analog_series_map) {
-        if (info.visible) {
-            visible_keys.push_back(key);
-        }
-    }
-    return visible_keys;
-}
-
-std::vector<std::string> PlottingManager::getVisibleDigitalEventSeriesKeys() const {
-    std::vector<std::string> visible_keys;
-    for (auto const & [key, info] : digital_event_series_map) {
-        if (info.visible) {
-            visible_keys.push_back(key);
-        }
-    }
-    return visible_keys;
-}
-
-std::vector<std::string> PlottingManager::getVisibleDigitalIntervalSeriesKeys() const {
-    std::vector<std::string> visible_keys;
-    for (auto const & [key, info] : digital_interval_series_map) {
-        if (info.visible) {
-            visible_keys.push_back(key);
-        }
-    }
-    return visible_keys;
+    // Digital intervals use the full canvas height by default
+    allocated_center = (viewport_y_min + viewport_y_max) * 0.5f;// Center of viewport
+    allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height
 }
 
 void PlottingManager::setGlobalZoom(float zoom) {
@@ -195,17 +48,6 @@ void PlottingManager::setGlobalVerticalScale(float scale) {
 
 float PlottingManager::getGlobalVerticalScale() const {
     return global_vertical_scale;
-}
-
-void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
-                                                               float & allocated_center,
-                                                               float & allocated_height) const {
-
-    static_cast<void>(series_index);
-
-    // Digital intervals use the full canvas height by default
-    allocated_center = (viewport_y_min + viewport_y_max) * 0.5f;// Center of viewport
-    allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height
 }
 
 void PlottingManager::calculateDigitalEventSeriesAllocation(int series_index,
@@ -271,19 +113,13 @@ void PlottingManager::resetPan() {
     vertical_pan_offset = 0.0f;
 }
 
-void PlottingManager::updateSeriesCounts() {
-    // Count only visible series
-    total_analog_series = static_cast<int>(std::count_if(
-        analog_series_map.begin(), analog_series_map.end(),
-        [](auto const & pair) { return pair.second.visible; }));
-    
-    total_event_series = static_cast<int>(std::count_if(
-        digital_event_series_map.begin(), digital_event_series_map.end(),
-        [](auto const & pair) { return pair.second.visible; }));
-    
-    total_digital_series = static_cast<int>(std::count_if(
-        digital_interval_series_map.begin(), digital_interval_series_map.end(),
-        [](auto const & pair) { return pair.second.visible; }));
+void PlottingManager::loadAnalogSpikeSorterConfiguration(std::string const & group_name,
+                                                        std::vector<AnalogGroupChannelPosition> const & positions) {
+    _analog_group_configs[group_name] = positions;
+}
+
+void PlottingManager::clearAnalogGroupConfiguration(std::string const & group_name) {
+    _analog_group_configs.erase(group_name);
 }
 
 bool PlottingManager::_extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id) {
@@ -304,27 +140,20 @@ bool PlottingManager::_extractGroupAndChannel(std::string const & key, std::stri
     return true;
 }
 
-void PlottingManager::loadAnalogSpikeSorterConfiguration(std::string const & group_name,
-                                                        std::vector<AnalogGroupChannelPosition> const & positions) {
-    _analog_group_configs[group_name] = positions;
-}
-
-void PlottingManager::clearAnalogGroupConfiguration(std::string const & group_name) {
-    _analog_group_configs.erase(group_name);
-}
-
-std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig() const {
+std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const {
     // Group visible analog series by group_name
     struct Item { std::string key; std::string group; int channel; };
     std::vector<Item> items;
-    items.reserve(analog_series_map.size());
-    for (auto const & [key, info] : analog_series_map) {
-        if (!info.visible) continue;
-        Item it{key, info.group_name, info.channel_id};
+    items.reserve(visible_keys.size());
+    for (auto const & key : visible_keys) {
+        std::string group_name;
+        int channel_id;
+        _extractGroupAndChannel(key, group_name, channel_id);
+        Item it{key, group_name, channel_id};
         items.push_back(std::move(it));
     }
 
-    // Sort with configuration: by group; within group, if config present, by descending y; else by channel id
+    // Sort with configuration: by group; within group, if config present, by ascending y; else by channel id
     std::stable_sort(items.begin(), items.end(), [&](Item const & a, Item const & b) {
         if (a.group != b.group) return a.group < b.group;
         auto cfg_it = _analog_group_configs.find(a.group);
@@ -334,7 +163,8 @@ std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig() co
         auto const & cfg = cfg_it->second;
         auto find_y = [&](int ch) {
             for (auto const & p : cfg) if (p.channel_id == ch) return p.y;
-            return 0.0f; };
+            return 0.0f;
+        };
         float ya = find_y(a.channel);
         float yb = find_y(b.channel);
         if (ya == yb) return a.channel < b.channel;
@@ -348,10 +178,11 @@ std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig() co
 }
 
 bool PlottingManager::getAnalogSeriesAllocationForKey(std::string const & key,
+                                                     std::vector<std::string> const & visible_keys,
                                                      float & allocated_center,
                                                      float & allocated_height) const {
     // Build ordered visible list considering configuration
-    auto ordered = _orderedVisibleAnalogKeysByConfig();
+    auto ordered = _orderedVisibleAnalogKeysByConfig(visible_keys);
     if (ordered.empty()) {
         allocated_center = 0.0f;
         allocated_height = viewport_y_max - viewport_y_min;
@@ -370,47 +201,4 @@ bool PlottingManager::getAnalogSeriesAllocationForKey(std::string const & key,
     allocated_height = (viewport_y_max - viewport_y_min) / total;
     allocated_center = viewport_y_min + allocated_height * (static_cast<float>(index) + 0.5f);
     return true;
-}
-
-std::string PlottingManager::generateDefaultColor(int series_index) const {
-    // Generate a nice color palette for series
-    // Use HSV color space with fixed saturation and value, varying hue
-    constexpr int num_colors = 12;
-    float hue = (static_cast<float>(series_index % num_colors) / static_cast<float>(num_colors)) * 360.0f;
-    
-    // Convert HSV to RGB
-    constexpr float saturation = 0.8f;
-    constexpr float value = 0.9f;
-    
-    float c = value * saturation;
-    float x = c * (1.0f - std::abs(std::fmod(hue / 60.0f, 2.0f) - 1.0f));
-    float m = value - c;
-    
-    float r, g, b;
-    if (hue >= 0 && hue < 60) {
-        r = c; g = x; b = 0;
-    } else if (hue >= 60 && hue < 120) {
-        r = x; g = c; b = 0;
-    } else if (hue >= 120 && hue < 180) {
-        r = 0; g = c; b = x;
-    } else if (hue >= 180 && hue < 240) {
-        r = 0; g = x; b = c;
-    } else if (hue >= 240 && hue < 300) {
-        r = x; g = 0; b = c;
-    } else {
-        r = c; g = 0; b = x;
-    }
-    
-    // Convert to 0-255 range and create hex string
-    int red = static_cast<int>((r + m) * 255);
-    int green = static_cast<int>((g + m) * 255);
-    int blue = static_cast<int>((b + m) * 255);
-    
-    std::ostringstream ss;
-    ss << "#" << std::hex << std::setfill('0') 
-       << std::setw(2) << red 
-       << std::setw(2) << green 
-       << std::setw(2) << blue;
-    
-    return ss.str();
 }

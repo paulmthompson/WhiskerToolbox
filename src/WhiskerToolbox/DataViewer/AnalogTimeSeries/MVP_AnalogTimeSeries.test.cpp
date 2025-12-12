@@ -125,8 +125,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
 
         series->setTimeFrame(time_frame);
 
-        int series1_idx = manager.addAnalogSeries("s1", series);
-        int series2_idx = manager.addAnalogSeries("s2", series);
+        // Set series count directly (PlottingManager no longer stores series data)
+        manager.total_analog_series = 2;
+        int series1_idx = 0;
+        int series2_idx = 1;
         
         REQUIRE(series1_idx == 0);
         REQUIRE(series2_idx == 1);
@@ -172,7 +174,8 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         // Set up display options with default scaling
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -241,9 +244,11 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
 
         series->setTimeFrame(time_frame);
 
-        int series1 = manager.addAnalogSeries("s1", series);
-        int series2 = manager.addAnalogSeries("s2", series); 
-        int series3 = manager.addAnalogSeries("s3", series);
+        // Set series count directly (PlottingManager no longer stores series data)
+        manager.total_analog_series = 3;
+        int series1 = 0;
+        int series2 = 1;
+        int series3 = 2;
         
         REQUIRE(manager.total_analog_series == 3);
         
@@ -283,7 +288,8 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         // Test user scaling factor
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -349,7 +355,8 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -413,7 +420,8 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         // Set up display options
         NewAnalogTimeSeriesDisplayOptions display_options;
@@ -498,9 +506,10 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         time_series2->setTimeFrame(time_frame);
         time_series3->setTimeFrame(time_frame);
 
-        int series1_idx = manager.addAnalogSeries("s1", time_series1);
-        int series2_idx = manager.addAnalogSeries("s2", time_series2); 
-        int series3_idx = manager.addAnalogSeries("s3", time_series3);
+        manager.total_analog_series = 3;
+        int series1_idx = 0;
+        int series2_idx = 1;
+        int series3_idx = 2;
         
         // Set up display options for all series
         NewAnalogTimeSeriesDisplayOptions display_options1, display_options2, display_options3;
@@ -580,7 +589,8 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -652,7 +662,8 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;
@@ -690,7 +701,8 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         auto time_frame = std::make_shared<TimeFrame>(times);
 
         time_series->setTimeFrame(time_frame);
-        int series_idx = manager.addAnalogSeries("s1", time_series);
+        manager.total_analog_series = 1;
+        int series_idx = 0;
         
         NewAnalogTimeSeriesDisplayOptions display_options;
         float allocated_center, allocated_height;

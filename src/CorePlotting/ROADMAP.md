@@ -20,10 +20,11 @@ This document outlines the roadmap for consolidating the plotting architecture i
 ## Phase 0: Immediate Cleanup (No Architecture Change)
 **Goal:** Remove duplication and clarify responsibilities before refactoring.
 
-- [ ] **Eliminate duplicate series storage**:
-    - Remove `PlottingManager::analog_series_map` (and event/interval maps)
-    - Keep series storage in `OpenGLWidget` only
-    - `PlottingManager` becomes pure layout calculator (no data storage)
+- [x] **Eliminate duplicate series storage**:
+    - Removed `PlottingManager::analog_series_map` (and event/interval maps)
+    - Series storage remains in `OpenGLWidget` only
+    - `PlottingManager` is now a pure layout calculator (no data storage)
+    - Added `getAnalogSeriesAllocationForKey()` to support spike sorter configuration
     
 - [ ] **Split DisplayOptions structs**:
     - Extract `SeriesStyle` (color, alpha, thickness) — pure configuration

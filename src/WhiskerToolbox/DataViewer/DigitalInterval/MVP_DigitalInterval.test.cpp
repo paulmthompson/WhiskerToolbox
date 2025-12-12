@@ -106,8 +106,9 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
 
         series->setTimeFrame(time_frame);
 
-        int series1_idx = manager.addDigitalIntervalSeries("s1", series);
-        int series2_idx = manager.addDigitalIntervalSeries("s2", series);
+        manager.total_digital_series = 2;
+        int series1_idx = 0;
+        int series2_idx = 1;
 
         REQUIRE(series1_idx == 0);
         REQUIRE(series2_idx == 1);
@@ -160,7 +161,8 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         for(int i=0; i<100; ++i) times[i] = i;
         auto time_frame = std::make_shared<TimeFrame>(times);
         series->setTimeFrame(time_frame);
-        int series_idx = manager.addDigitalIntervalSeries("s1", series);
+        manager.total_digital_series = 1;
+        int series_idx = 0;
 
         // Set up display options
         NewDigitalIntervalSeriesDisplayOptions display_options;
@@ -232,14 +234,16 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
 
         series->setTimeFrame(time_frame);
 
-        int analog_series = manager.addAnalogSeries("s1", series);
+        manager.total_analog_series = 1;
+        int analog_series = 0;
         
         std::vector<Interval> intervals;
         auto interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
 
         interval_series->setTimeFrame(time_frame);
-        int interval_series1 = manager.addDigitalIntervalSeries("i1", interval_series);
-        int interval_series2 = manager.addDigitalIntervalSeries("i2", interval_series);
+        manager.total_digital_series = 2;
+        int interval_series1 = 0;
+        int interval_series2 = 1;
 
         // Verify series counts
         REQUIRE(manager.total_analog_series == 1);
@@ -273,7 +277,8 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         for(int i=0; i<100; ++i) times[i] = i;
         auto time_frame = std::make_shared<TimeFrame>(times);
         series->setTimeFrame(time_frame);
-        int series_idx = manager.addDigitalIntervalSeries("s1", series);
+        manager.total_digital_series = 1;
+        int series_idx = 0;
 
         // Test initial state (no panning)
         REQUIRE(manager.getPanOffset() == 0.0f);
@@ -323,7 +328,8 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         for(int i=0; i<100; ++i) times[i] = i;
         auto time_frame = std::make_shared<TimeFrame>(times);
         series->setTimeFrame(time_frame);
-        int series_idx = manager.addDigitalIntervalSeries("s1", series);
+        manager.total_digital_series = 1;
+        int series_idx = 0;
 
         // Set up display options
         NewDigitalIntervalSeriesDisplayOptions display_options;

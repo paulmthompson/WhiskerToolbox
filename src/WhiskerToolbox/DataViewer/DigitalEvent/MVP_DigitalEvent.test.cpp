@@ -42,8 +42,9 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int e0 = manager.addDigitalEventSeries("e0", series);
-        int e1 = manager.addDigitalEventSeries("e1", series);
+        manager.total_event_series = 2;
+        int e0 = 0;
+        int e1 = 1;
         REQUIRE(e0 == 0);
         REQUIRE(e1 == 1);
 
@@ -107,9 +108,10 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int e0 = manager.addDigitalEventSeries("e0", series);
-        int e1 = manager.addDigitalEventSeries("e1", series);
-        int e2 = manager.addDigitalEventSeries("e2", series);
+        manager.total_event_series = 3;
+        int e0 = 0;
+        int e1 = 1;
+        int e2 = 2;
 
         float c0, h0, c1, h1, c2, h2;
         manager.calculateDigitalEventSeriesAllocation(e0, c0, h0);
@@ -209,7 +211,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event_series = manager.addDigitalEventSeries("e1", series);
+        manager.total_event_series = 1;
+        int event_series = 0;
         REQUIRE(event_series == 0);
         REQUIRE(manager.total_event_series == 1);
 
@@ -247,7 +250,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event_series = manager.addDigitalEventSeries("e1", series);
+        manager.total_event_series = 1;
+        int event_series = 0;
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::Stacked;
@@ -308,9 +312,10 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event1 = manager.addDigitalEventSeries("e1", series);
-        int event2 = manager.addDigitalEventSeries("e2", series);
-        int event3 = manager.addDigitalEventSeries("e3", series);
+        manager.total_event_series = 3;
+        int event1 = 0;
+        int event2 = 1;
+        int event3 = 2;
 
         REQUIRE(event1 == 0);
         REQUIRE(event2 == 1);
@@ -348,7 +353,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event_series = manager.addDigitalEventSeries("e1", series);
+        manager.total_event_series = 1;
+        int event_series = 0;
         REQUIRE(manager.total_event_series == 1);
 
         float center, height;
@@ -388,9 +394,10 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event1 = manager.addDigitalEventSeries("e1", series);
-        int event2 = manager.addDigitalEventSeries("e2", series);
-        int event3 = manager.addDigitalEventSeries("e3", series);
+        manager.total_event_series = 3;
+        int event1 = 0;
+        int event2 = 1;
+        int event3 = 2;
 
         REQUIRE(event1 == 0);
         REQUIRE(event2 == 1);
@@ -471,7 +478,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event_series = manager.addDigitalEventSeries("e1", series);
+        manager.total_event_series = 1;
+        int event_series = 0;
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::FullCanvas;
@@ -524,7 +532,8 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event_series = manager.addDigitalEventSeries("e1", series);
+        manager.total_event_series = 1;
+        int event_series = 0;
 
         NewDigitalEventSeriesDisplayOptions options;
         options.plotting_mode = EventPlottingMode::Stacked;
@@ -576,9 +585,10 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         auto series = std::make_shared<DigitalEventSeries>();
         series->setTimeFrame(time_frame);
 
-        int event1 = manager.addDigitalEventSeries("e1", series);
-        int event2 = manager.addDigitalEventSeries("e2", series);
-        int event3 = manager.addDigitalEventSeries("e3", series);
+        manager.total_event_series = 3;
+        int event1 = 0;
+        int event2 = 1;
+        int event3 = 2;
 
         // Get allocations for each series
         float center1, height1, center2, height2, center3, height3;

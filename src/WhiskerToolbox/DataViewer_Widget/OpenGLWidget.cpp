@@ -424,7 +424,15 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
     int visible_series_index = 0;// counts all visible event series (for iteration)
     int stacked_series_index = 0;// index among stacked-mode event series only
-    int const total_analog_visible = static_cast<int>(_plotting_manager->getVisibleAnalogSeriesKeys().size());
+    
+    // Count visible analog series from our own storage
+    int total_analog_visible = 0;
+    for (auto const & [key, analog_data]: _analog_series) {
+        if (analog_data.display_options->is_visible) {
+            total_analog_visible++;
+        }
+    }
+    
     // Count stacked-mode events (exclude FullCanvas from stackable count)
     int stacked_event_count = 0;
     for (auto const & [key, event_data]: _digital_event_series) {
@@ -744,19 +752,9 @@ void OpenGLWidget::drawAnalogSeries() {
             continue;
         }
 
-        // Compute global stacked allocation so analog shares space with stacked events
+        // Compute allocation
         float allocated_y_center = 0.0f;
         float allocated_height = 0.0f;
-
-        // Determine analog index among visible analogs using current analog-only allocation
-        int const analog_visible_count = static_cast<int>(_plotting_manager->getVisibleAnalogSeriesKeys().size());
-        int analog_index = i;
-        float tmp_center = 0.0f;
-        float tmp_height = 0.0f;
-        if (_plotting_manager->getAnalogSeriesAllocationForKey(key, tmp_center, tmp_height) && tmp_height > 0.0f) {
-            float const idxf = (tmp_center - _plotting_manager->viewport_y_min) / tmp_height - 0.5f;
-            analog_index = std::clamp(static_cast<int>(std::round(idxf)), 0, std::max(0, analog_visible_count - 1));
-        }
 
         // Count stacked-mode events (exclude FullCanvas)
         int stacked_event_count = 0;
@@ -765,14 +763,33 @@ void OpenGLWidget::drawAnalogSeries() {
                 stacked_event_count++;
             }
         }
-        int const total_stackable_series = analog_visible_count + stacked_event_count;
 
-        if (total_stackable_series > 0) {
-            _plotting_manager->calculateGlobalStackedAllocation(analog_index, -1, total_stackable_series,
-                                                                allocated_y_center, allocated_height);
-        } else {
-            // Fallback to analog-only allocation
-            if (!_plotting_manager->getAnalogSeriesAllocationForKey(key, allocated_y_center, allocated_height)) {
+        // Get all visible analog keys
+        std::vector<std::string> visible_analog_keys;
+        for (auto const & [k, data]: _analog_series) {
+            if (data.display_options->is_visible) {
+                visible_analog_keys.push_back(k);
+            }
+        }
+
+        // Use spike sorter configuration only if no stacked events (pure analog stacking)
+        bool use_config = (stacked_event_count == 0);
+        bool has_config_allocation = false;
+        
+        if (use_config) {
+            // Try to get allocation from PlottingManager considering spike sorter configuration
+            has_config_allocation = _plotting_manager->getAnalogSeriesAllocationForKey(
+                key, visible_analog_keys, allocated_y_center, allocated_height);
+        }
+        
+        if (!has_config_allocation) {
+            // Use global stacked allocation for mixed analog + digital event stacking
+            int const total_stackable_series = static_cast<int>(visible_analog_keys.size()) + stacked_event_count;
+
+            if (total_stackable_series > 0) {
+                _plotting_manager->calculateGlobalStackedAllocation(i, -1, total_stackable_series,
+                                                                    allocated_y_center, allocated_height);
+            } else {
                 _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
             }
         }
