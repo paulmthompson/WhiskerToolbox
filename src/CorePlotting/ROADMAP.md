@@ -46,15 +46,18 @@ This document outlines the roadmap for consolidating the plotting architecture i
 **Goal:** Centralize math, layout, and querying logic. No Qt, No OpenGL.
 
 ### 1.1 TimeRange Integration
-- [ ] **Create `TimeRange` struct** in `CorePlotting/CoordinateTransform/`:
+- [x] **Create `TimeRange` struct** in `CorePlotting/CoordinateTransform/`:
     - Port logic from `XAxis` but add TimeFrame awareness
     - Methods: `fromTimeFrame()`, `setCenterAndZoom()` with bounds enforcement
     - Integrate with `ViewState` for time-series plots
+    - Location: [TimeRange.hpp](CoordinateTransform/TimeRange.hpp)
+    - Tests: [TimeRange.test.cpp](/tests/CorePlotting/TimeRange.test.cpp)
     
-- [ ] **Create `TimeSeriesViewState`**:
+- [x] **Create `TimeSeriesViewState`**:
     - Extends `ViewState` with `TimeRange` for X-axis
     - Standard `ViewState` zoom/pan applies to Y-axis only
     - X-axis controlled through `TimeRange` methods
+    - Defined in: [TimeRange.hpp](CoordinateTransform/TimeRange.hpp)
 
 ### 1.2 MVP Matrix Consolidation
 - [ ] **Move matrix logic to CorePlotting**:
