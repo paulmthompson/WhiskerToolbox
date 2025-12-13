@@ -37,7 +37,8 @@ class DigitalIntervalSeries;
 struct NewDigitalIntervalSeriesDisplayOptions;
 class TimeFrame;
 class QMouseEvent;
-struct PlottingManager;
+struct LayoutCalculator;
+using PlottingManager = LayoutCalculator;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;

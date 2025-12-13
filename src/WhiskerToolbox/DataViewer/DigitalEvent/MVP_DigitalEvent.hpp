@@ -7,7 +7,8 @@
 #include <vector>
 
 struct NewDigitalEventSeriesDisplayOptions;
-struct PlottingManager;
+struct LayoutCalculator;
+using PlottingManager = LayoutCalculator;  // Legacy alias
 
 /**
  * @brief Event data representing a single time point

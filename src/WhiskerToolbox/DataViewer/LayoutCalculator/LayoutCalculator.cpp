@@ -1,4 +1,4 @@
-#include "PlottingManager.hpp"
+#include "LayoutCalculator.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iomanip>
 
-void PlottingManager::calculateAnalogSeriesAllocation(int series_index,
+void LayoutCalculator::calculateAnalogSeriesAllocation(int series_index,
                                                       float & allocated_center,
                                                       float & allocated_height) const {
     if (total_analog_series <= 0) {
@@ -23,7 +23,7 @@ void PlottingManager::calculateAnalogSeriesAllocation(int series_index,
     allocated_center = viewport_y_min + allocated_height * (static_cast<float>(series_index) + 0.5f);
 }
 
-void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
+void LayoutCalculator::calculateDigitalIntervalSeriesAllocation(int series_index,
                                                                float & allocated_center,
                                                                float & allocated_height) const {
 
@@ -34,23 +34,23 @@ void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
     allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height
 }
 
-void PlottingManager::setGlobalZoom(float zoom) {
+void LayoutCalculator::setGlobalZoom(float zoom) {
     global_zoom = std::max(0.01f, zoom); // Prevent negative or zero zoom
 }
 
-float PlottingManager::getGlobalZoom() const {
+float LayoutCalculator::getGlobalZoom() const {
     return global_zoom;
 }
 
-void PlottingManager::setGlobalVerticalScale(float scale) {
+void LayoutCalculator::setGlobalVerticalScale(float scale) {
     global_vertical_scale = std::max(0.01f, scale); // Prevent negative or zero scale
 }
 
-float PlottingManager::getGlobalVerticalScale() const {
+float LayoutCalculator::getGlobalVerticalScale() const {
     return global_vertical_scale;
 }
 
-void PlottingManager::calculateDigitalEventSeriesAllocation(int series_index,
+void LayoutCalculator::calculateDigitalEventSeriesAllocation(int series_index,
                                                             float & allocated_center,
                                                             float & allocated_height) const {
     // For now, assume stacked mode allocation (like analog series)
@@ -69,7 +69,7 @@ void PlottingManager::calculateDigitalEventSeriesAllocation(int series_index,
     allocated_center = viewport_y_min + allocated_height * (static_cast<float>(series_index) + 0.5f);
 }
 
-void PlottingManager::calculateGlobalStackedAllocation(int analog_series_index,
+void LayoutCalculator::calculateGlobalStackedAllocation(int analog_series_index,
                                                        int event_series_index,
                                                        int total_stackable_series,
                                                        float & allocated_center,
@@ -97,32 +97,32 @@ void PlottingManager::calculateGlobalStackedAllocation(int analog_series_index,
     allocated_center = viewport_y_min + allocated_height * (static_cast<float>(global_series_index) + 0.5f);
 }
 
-void PlottingManager::setPanOffset(float pan_offset) {
+void LayoutCalculator::setPanOffset(float pan_offset) {
     vertical_pan_offset = pan_offset;
 }
 
-void PlottingManager::applyPanDelta(float pan_delta) {
+void LayoutCalculator::applyPanDelta(float pan_delta) {
     vertical_pan_offset += pan_delta;
 }
 
-float PlottingManager::getPanOffset() const {
+float LayoutCalculator::getPanOffset() const {
     return vertical_pan_offset;
 }
 
-void PlottingManager::resetPan() {
+void LayoutCalculator::resetPan() {
     vertical_pan_offset = 0.0f;
 }
 
-void PlottingManager::loadAnalogSpikeSorterConfiguration(std::string const & group_name,
+void LayoutCalculator::loadAnalogSpikeSorterConfiguration(std::string const & group_name,
                                                         std::vector<AnalogGroupChannelPosition> const & positions) {
     _analog_group_configs[group_name] = positions;
 }
 
-void PlottingManager::clearAnalogGroupConfiguration(std::string const & group_name) {
+void LayoutCalculator::clearAnalogGroupConfiguration(std::string const & group_name) {
     _analog_group_configs.erase(group_name);
 }
 
-bool PlottingManager::_extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id) {
+bool LayoutCalculator::_extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id) {
     channel_id = -1;
     group.clear();
     auto const pos = key.rfind('_');
@@ -140,7 +140,7 @@ bool PlottingManager::_extractGroupAndChannel(std::string const & key, std::stri
     return true;
 }
 
-std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const {
+std::vector<std::string> LayoutCalculator::_orderedVisibleAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const {
     // Group visible analog series by group_name
     struct Item { std::string key; std::string group; int channel; };
     std::vector<Item> items;
@@ -177,7 +177,7 @@ std::vector<std::string> PlottingManager::_orderedVisibleAnalogKeysByConfig(std:
     return keys;
 }
 
-bool PlottingManager::getAnalogSeriesAllocationForKey(std::string const & key,
+bool LayoutCalculator::getAnalogSeriesAllocationForKey(std::string const & key,
                                                      std::vector<std::string> const & visible_keys,
                                                      float & allocated_center,
                                                      float & allocated_height) const {

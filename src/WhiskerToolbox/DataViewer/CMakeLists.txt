@@ -3,8 +3,9 @@ find_package(glm CONFIG REQUIRED)
 
 set(DATAVIEWER_SOURCES
     XAxis.hpp
+    LayoutCalculator/LayoutCalculator.hpp
+    LayoutCalculator/LayoutCalculator.cpp
     PlottingManager/PlottingManager.hpp
-    PlottingManager/PlottingManager.cpp
 
     AnalogTimeSeries/MVP_AnalogTimeSeries.hpp
     AnalogTimeSeries/MVP_AnalogTimeSeries.cpp

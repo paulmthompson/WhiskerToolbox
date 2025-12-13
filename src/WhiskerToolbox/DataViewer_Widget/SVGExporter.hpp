@@ -9,7 +9,8 @@
 #include <string>
 
 class OpenGLWidget;
-struct PlottingManager;
+struct LayoutCalculator;
+using PlottingManager = LayoutCalculator;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;

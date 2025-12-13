@@ -8,7 +8,8 @@
 #include <vector>
 
 struct NewDigitalIntervalSeriesDisplayOptions;
-struct PlottingManager;
+struct LayoutCalculator;
+using PlottingManager = LayoutCalculator;  // Legacy alias
 
 /**
  * @brief Create new Model matrix for digital interval series positioning and scaling

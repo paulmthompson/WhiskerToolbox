@@ -8,7 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 class AnalogTimeSeries;
-struct PlottingManager;
+struct LayoutCalculator;
+using PlottingManager = LayoutCalculator;  // Legacy alias
 
 /**
  * @brief Create new Model matrix for analog series positioning and scaling

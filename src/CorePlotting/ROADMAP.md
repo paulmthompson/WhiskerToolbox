@@ -34,9 +34,11 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Updated all MVP functions, SVGExporter, and test code
     - All tests passing ✓
     
-- [ ] **Rename PlottingManager → LayoutCalculator**:
-    - Makes the single responsibility clear
-    - Remove series storage methods (`addAnalogSeries`, etc.)
+- [x] **Rename PlottingManager → LayoutCalculator**:
+    - Renamed struct to `LayoutCalculator` to reflect single responsibility
+    - Created compatibility header with type alias `using PlottingManager = LayoutCalculator;`
+    - Updated all forward declarations across codebase
+    - All tests passing ✓
 
 ---
 
