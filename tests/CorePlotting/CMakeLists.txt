@@ -17,10 +17,12 @@ find_package(glm CONFIG REQUIRED)
 # Create CorePlotting test executable
 add_executable(test_coreplotting
     TimeRange.test.cpp
+    SeriesMatrices.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 
     Catch2::Catch2WithMain
+    CorePlotting
     WhiskerToolbox::TimeFrame
     NEURALYZER_GEOMETRY
     glm::glm

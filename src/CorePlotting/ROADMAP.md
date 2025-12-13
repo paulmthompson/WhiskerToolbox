@@ -60,16 +60,20 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Defined in: [TimeRange.hpp](CoordinateTransform/TimeRange.hpp)
 
 ### 1.2 MVP Matrix Consolidation
-- [ ] **Move matrix logic to CorePlotting**:
-    - `MVP_AnalogTimeSeries.cpp` → `CorePlotting/CoordinateTransform/SeriesMatrices.cpp`
-    - `MVP_DigitalEvent.cpp` → same location
-    - `MVP_DigitalInterval.cpp` → same location
-    - Update `OpenGLWidget` and `SVGExporter` to use new location
+- [x] **Move matrix logic to CorePlotting**:
+    - `MVP_AnalogTimeSeries.cpp` → `CorePlotting/CoordinateTransform/SeriesMatrices.cpp` ✓
+    - `MVP_DigitalEvent.cpp` → same location ✓
+    - `MVP_DigitalInterval.cpp` → same location ✓
+    - Location: [SeriesMatrices.hpp](CoordinateTransform/SeriesMatrices.hpp), [SeriesMatrices.cpp](CoordinateTransform/SeriesMatrices.cpp)
+    - Tests: [SeriesMatrices.test.cpp](/tests/CorePlotting/SeriesMatrices.test.cpp) — 177 assertions passing
+    - Fixed user_vertical_offset bug (was using glm::translate incorrectly)
+    - Update `OpenGLWidget` and `SVGExporter` to use new location (pending)
 
-- [ ] **Document MVP strategy**:
+- [x] **Document MVP strategy**:
     - **Model**: Per-series (vertical positioning, scaling)
     - **View**: Shared (global pan)
     - **Projection**: Shared (time range → NDC)
+    - Documented in SeriesMatrices.hpp header
 
 ### 1.3 Layout Engine
 - [ ] **Create `LayoutEngine`** (evolution of PlottingManager):

@@ -10,6 +10,9 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/ScreenToWorld.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
+    CoordinateTransform/TimeRange.hpp
+    CoordinateTransform/SeriesMatrices.hpp
+    CoordinateTransform/SeriesMatrices.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}

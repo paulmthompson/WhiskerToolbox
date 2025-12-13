@@ -1,0 +1,299 @@
+#ifndef COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
+#define COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
+
+#include "TimeFrame/TimeFrame.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+namespace CorePlotting {
+
+// Forward declarations for display options structs
+struct SeriesStyle;
+struct SeriesLayoutResult;
+struct SeriesDataCache;
+
+/**
+ * @file SeriesMatrices.hpp
+ * @brief MVP (Model-View-Projection) matrix construction for time-series plotting
+ * 
+ * This module consolidates matrix generation logic from DataViewer into CorePlotting,
+ * implementing the standard MVP strategy for time-series visualizations:
+ * 
+ * **Model Matrix**: Per-series positioning and scaling
+ *   - Vertical positioning based on layout allocation
+ *   - Series-specific scaling (intrinsic, user, global)
+ *   - Data centering around mean value
+ * 
+ * **View Matrix**: Shared global camera transformations
+ *   - Global vertical panning
+ *   - Mode-dependent behavior (FullCanvas vs Stacked)
+ * 
+ * **Projection Matrix**: Shared coordinate system mapping
+ *   - Maps time indices to screen X coordinates
+ *   - Maps data space to screen Y coordinates
+ *   - Enforces valid ranges to prevent NaN/Infinity
+ * 
+ * The separation of these three matrices allows independent control of:
+ * - Per-series layout and scaling (Model)
+ * - User camera state (View)  
+ * - Data-to-screen mapping (Projection)
+ */
+
+/**
+ * @brief Helper struct for analog series matrix parameters
+ * 
+ * Bundles the parameters needed for analog series matrix generation.
+ * This struct is passed to matrix functions instead of individual parameters
+ * to reduce coupling and improve testability.
+ */
+struct AnalogSeriesMatrixParams {
+    // Layout parameters (from SeriesLayoutResult)
+    float allocated_y_center{0.0f};
+    float allocated_height{1.0f};
+    
+    // Scaling parameters (from SeriesStyle)
+    float intrinsic_scale{1.0f};
+    float user_scale_factor{1.0f};
+    float global_zoom{1.0f};
+    float user_vertical_offset{0.0f};
+    
+    // Data statistics (from SeriesDataCache)
+    float data_mean{0.0f};
+    float std_dev{1.0f};
+    
+    // Global parameters
+    float global_vertical_scale{1.0f};
+};
+
+/**
+ * @brief Helper struct for event series matrix parameters
+ * 
+ * Parameters for digital event series MVP matrix generation.
+ */
+struct EventSeriesMatrixParams {
+    // Layout parameters
+    float allocated_y_center{0.0f};
+    float allocated_height{1.0f};
+    
+    // Event-specific parameters
+    float event_height{0.0f};  ///< Desired height for events (0 = use allocated)
+    float margin_factor{0.8f}; ///< Vertical margin (0-1)
+    float global_vertical_scale{1.0f};
+    
+    // Viewport bounds (for FullCanvas mode)
+    float viewport_y_min{-1.0f};
+    float viewport_y_max{1.0f};
+    
+    // Mode flag
+    enum class PlottingMode {
+        FullCanvas,  ///< Events extend full viewport height
+        Stacked      ///< Events positioned within allocated space
+    };
+    PlottingMode plotting_mode{PlottingMode::Stacked};
+};
+
+/**
+ * @brief Helper struct for interval series matrix parameters
+ */
+struct IntervalSeriesMatrixParams {
+    // Layout parameters
+    float allocated_y_center{0.0f};
+    float allocated_height{1.0f};
+    
+    // Interval-specific parameters
+    float margin_factor{1.0f};
+    float global_zoom{1.0f};
+    float global_vertical_scale{1.0f};
+    
+    // Mode flag
+    bool extend_full_canvas{true};
+};
+
+/**
+ * @brief Helper struct for shared view/projection parameters
+ */
+struct ViewProjectionParams {
+    // Viewport bounds
+    float viewport_y_min{-1.0f};
+    float viewport_y_max{1.0f};
+    
+    // Panning state
+    float vertical_pan_offset{0.0f};
+    
+    // Global scaling
+    float global_zoom{1.0f};
+    float global_vertical_scale{1.0f};
+};
+
+// ============================================================================
+// Analog Time Series MVP Matrices
+// ============================================================================
+
+/**
+ * @brief Create Model matrix for analog series positioning and scaling
+ *
+ * Implements three-tier scaling system:
+ * 1. Intrinsic scaling (3*std_dev → ±1.0)
+ * 2. User-specified scaling
+ * 3. Global zoom
+ * 
+ * Centers data around mean value for proper visual centering.
+ *
+ * @param params Combined parameters for matrix generation
+ * @return Model transformation matrix
+ */
+glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const& params);
+
+/**
+ * @brief Create View matrix for analog series global transformations
+ *
+ * Applies view-level transformations to all analog series.
+ * Handles global vertical panning.
+ *
+ * @param params View/projection parameters
+ * @return View transformation matrix
+ */
+glm::mat4 getAnalogViewMatrix(ViewProjectionParams const& params);
+
+/**
+ * @brief Create Projection matrix for analog series coordinate mapping
+ *
+ * Maps data coordinates to normalized device coordinates [-1, 1].
+ * Includes robust validation to prevent OpenGL state corruption.
+ *
+ * @param start_time_index Start of visible time range
+ * @param end_time_index End of visible time range  
+ * @param y_min Minimum Y coordinate in data space
+ * @param y_max Maximum Y coordinate in data space
+ * @return Projection transformation matrix
+ */
+glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
+                                   TimeFrameIndex end_time_index,
+                                   float y_min,
+                                   float y_max);
+
+// ============================================================================
+// Digital Event Series MVP Matrices
+// ============================================================================
+
+/**
+ * @brief Create Model matrix for digital event series
+ *
+ * Handles both plotting modes:
+ * - FullCanvas: Events extend from top to bottom of entire viewport
+ * - Stacked: Events are positioned within allocated space
+ *
+ * @param params Event-specific parameters
+ * @return Model transformation matrix
+ */
+glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const& params);
+
+/**
+ * @brief Create View matrix for digital event series
+ *
+ * Behavior depends on plotting mode:
+ * - FullCanvas: No panning (events stay viewport-pinned)
+ * - Stacked: Applies panning (events move with content)
+ *
+ * @param params Event-specific parameters
+ * @param view_params View/projection parameters  
+ * @return View transformation matrix
+ */
+glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const& params,
+                             ViewProjectionParams const& view_params);
+
+/**
+ * @brief Create Projection matrix for digital event series
+ *
+ * Maps time indices and data coordinates to NDC.
+ * Behavior is consistent across both plotting modes.
+ *
+ * @param start_time_index Start of visible time range
+ * @param end_time_index End of visible time range
+ * @param y_min Minimum Y coordinate in data space  
+ * @param y_max Maximum Y coordinate in data space
+ * @return Projection transformation matrix
+ */
+glm::mat4 getEventProjectionMatrix(TimeFrameIndex start_time_index,
+                                   TimeFrameIndex end_time_index,
+                                   float y_min,
+                                   float y_max);
+
+// ============================================================================
+// Digital Interval Series MVP Matrices
+// ============================================================================
+
+/**
+ * @brief Create Model matrix for digital interval series
+ *
+ * Intervals are rendered as rectangles extending vertically.
+ * Supports full-canvas mode for background highlighting.
+ *
+ * @param params Interval-specific parameters
+ * @return Model transformation matrix
+ */
+glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const& params);
+
+/**
+ * @brief Create View matrix for digital interval series
+ *
+ * Intervals remain viewport-pinned (do not move with panning).
+ *
+ * @param params View/projection parameters
+ * @return View transformation matrix (typically identity)
+ */
+glm::mat4 getIntervalViewMatrix(ViewProjectionParams const& params);
+
+/**
+ * @brief Create Projection matrix for digital interval series
+ *
+ * Maps time indices to horizontal extent, viewport bounds to vertical.
+ *
+ * @param start_time_index Start of visible time range
+ * @param end_time_index End of visible time range
+ * @param viewport_y_min Bottom of viewport in world coordinates
+ * @param viewport_y_max Top of viewport in world coordinates  
+ * @return Projection transformation matrix
+ */
+glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
+                                     TimeFrameIndex end_time_index,
+                                     float viewport_y_min,
+                                     float viewport_y_max);
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * @brief Validate and sanitize orthographic projection parameters
+ *
+ * Ensures parameters produce valid matrices without NaN/Infinity.
+ * Applies minimum range constraints and clamps extreme values.
+ *
+ * @param left Left boundary (will be modified if invalid)
+ * @param right Right boundary (will be modified if invalid)
+ * @param bottom Bottom boundary (will be modified if invalid)
+ * @param top Top boundary (will be modified if invalid)
+ * @param context_name Name for debug messages (e.g., "Analog", "Event")
+ * @return true if parameters were valid, false if corrections were applied
+ */
+bool validateOrthoParams(float& left, float& right, 
+                        float& bottom, float& top,
+                        char const* context_name = "Matrix");
+
+/**
+ * @brief Validate that a matrix contains only finite values
+ *
+ * Checks all matrix elements for NaN or Infinity.
+ * Returns identity matrix if validation fails.
+ *
+ * @param matrix Matrix to validate
+ * @param context_name Name for debug messages
+ * @return Validated matrix (original or identity if invalid)
+ */
+glm::mat4 validateMatrix(glm::mat4 const& matrix, 
+                        char const* context_name = "Matrix");
+
+} // namespace CorePlotting
+
+#endif // COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
