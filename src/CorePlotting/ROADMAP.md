@@ -59,7 +59,7 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - X-axis controlled through `TimeRange` methods
     - Defined in: [TimeRange.hpp](CoordinateTransform/TimeRange.hpp)
 
-### 1.2 MVP Matrix Consolidation
+### 1.2 MVP Matrix Consolidation ✅
 - [x] **Move matrix logic to CorePlotting**:
     - `MVP_AnalogTimeSeries.cpp` → `CorePlotting/CoordinateTransform/SeriesMatrices.cpp` ✓
     - `MVP_DigitalEvent.cpp` → same location ✓
@@ -67,7 +67,7 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Location: [SeriesMatrices.hpp](CoordinateTransform/SeriesMatrices.hpp), [SeriesMatrices.cpp](CoordinateTransform/SeriesMatrices.cpp)
     - Tests: [SeriesMatrices.test.cpp](/tests/CorePlotting/SeriesMatrices.test.cpp) — 177 assertions passing
     - Fixed user_vertical_offset bug (was using glm::translate incorrectly)
-    - Update `OpenGLWidget` and `SVGExporter` to use new location (pending)
+    - ✓ Updated `OpenGLWidget` to use new CorePlotting functions
 
 - [x] **Document MVP strategy**:
     - **Model**: Per-series (vertical positioning, scaling)

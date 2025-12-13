@@ -1,13 +1,12 @@
 #include "OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
-#include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"  // For helper functions
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
 #include "DataViewer/PlottingManager/PlottingManager.hpp"
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -491,9 +490,25 @@ void OpenGLWidget::drawDigitalEventSeries() {
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
 
-        auto Model = new_getEventModelMat(*display_options, *_plotting_manager);
-        auto View = new_getEventViewMat(*display_options, *_plotting_manager);
-        auto Projection = new_getEventProjectionMat(start_time, end_time, _yMin, _yMax, *_plotting_manager);
+        // Build parameter structs for CorePlotting MVP functions
+        CorePlotting::EventSeriesMatrixParams model_params;
+        model_params.allocated_y_center = display_options->layout.allocated_y_center;
+        model_params.allocated_height = display_options->layout.allocated_height;
+        model_params.event_height = 0.0f;  // Use allocated height
+        model_params.margin_factor = display_options->margin_factor;
+        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        model_params.viewport_y_min = _yMin;
+        model_params.viewport_y_max = _yMax;
+        model_params.plotting_mode = (display_options->plotting_mode == EventPlottingMode::FullCanvas) 
+            ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas 
+            : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
+        
+        CorePlotting::ViewProjectionParams view_params;
+        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+        
+        auto Model = CorePlotting::getEventModelMatrix(model_params);
+        auto View = CorePlotting::getEventViewMatrix(model_params, view_params);
+        auto Projection = CorePlotting::getEventProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -597,9 +612,21 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
 
-        auto Model = new_getIntervalModelMat(*display_options, *_plotting_manager);
-        auto View = new_getIntervalViewMat(*_plotting_manager);
-        auto Projection = new_getIntervalProjectionMat(start_time, end_time, _yMin, _yMax, *_plotting_manager);
+        // Build parameter structs for CorePlotting MVP functions
+        CorePlotting::IntervalSeriesMatrixParams model_params;
+        model_params.allocated_y_center = display_options->layout.allocated_y_center;
+        model_params.allocated_height = display_options->layout.allocated_height;
+        model_params.margin_factor = display_options->margin_factor;
+        model_params.global_zoom = _plotting_manager->getGlobalZoom();
+        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        model_params.extend_full_canvas = display_options->extend_full_canvas;
+        
+        CorePlotting::ViewProjectionParams view_params;
+        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+        
+        auto Model = CorePlotting::getIntervalModelMatrix(model_params);
+        auto View = CorePlotting::getIntervalViewMatrix(view_params);
+        auto Projection = CorePlotting::getIntervalProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), _yMin, _yMax);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -816,12 +843,24 @@ void OpenGLWidget::drawAnalogSeries() {
         // Apply PlottingManager pan offset
         _plotting_manager->setPanOffset(_verticalPanOffset);
 
-        auto Model = new_getAnalogModelMat(*display_options,
-                                           display_options->data_cache.cached_std_dev,
-                                           display_options->data_cache.cached_mean,
-                                           *_plotting_manager);
-        auto View = new_getAnalogViewMat(*_plotting_manager);
-        auto Projection = new_getAnalogProjectionMat(start_time, end_time, _yMin, _yMax, *_plotting_manager);
+        // Build parameter structs for CorePlotting MVP functions
+        CorePlotting::AnalogSeriesMatrixParams model_params;
+        model_params.allocated_y_center = display_options->layout.allocated_y_center;
+        model_params.allocated_height = display_options->layout.allocated_height;
+        model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
+        model_params.user_scale_factor = display_options->user_scale_factor;
+        model_params.global_zoom = _plotting_manager->getGlobalZoom();
+        model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
+        model_params.data_mean = display_options->data_cache.cached_mean;
+        model_params.std_dev = display_options->data_cache.cached_std_dev;
+        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        
+        CorePlotting::ViewProjectionParams view_params;
+        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+        
+        auto Model = CorePlotting::getAnalogModelMatrix(model_params);
+        auto View = CorePlotting::getAnalogViewMatrix(view_params);
+        auto Projection = CorePlotting::getAnalogProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
