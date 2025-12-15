@@ -126,12 +126,16 @@ This document outlines the roadmap for consolidating the plotting architecture i
         - Multi-trial raster plot visualization
         - Time window filtering per row
 
-### 1.5 Spatial Indexing
-- [ ] **Finalize `QuadTree<EntityId>` implementation**
-- [ ] **Create spatial adapters**:
-    - `EventSpatialAdapter`: DigitalEventSeries → QuadTree
-    - `PointSpatialAdapter`: PointData → QuadTree
-    - `PolyLineSpatialAdapter`: RenderablePolyLineBatch → QuadTree (bounding boxes)
+### 1.5 Spatial Indexing ✅
+- [x] **Finalize `QuadTree<EntityId>` implementation** ✓
+- [x] **Create spatial adapters** ✓:
+    - `EventSpatialAdapter`: DigitalEventSeries → QuadTree (stacked/raster/explicit positions) ✓
+    - `PointSpatialAdapter`: RenderableGlyphBatch → QuadTree ✓
+    - `PolyLineSpatialAdapter`: RenderablePolyLineBatch → QuadTree (vertices/bounding boxes/sampled points) ✓
+    - Location: [SpatialAdapter/](SpatialAdapter/)
+    - ISpatiallyIndexed interface for common query patterns
+    - All adapters use static factory methods returning `std::unique_ptr<QuadTree<EntityId>>`
+    - Tests: All 259 assertions passing ✓
 
 ---
 

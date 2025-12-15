@@ -511,9 +511,10 @@ src/CorePlotting/
 │   └── DigitalEventSeries/        # Event-specific types
 │
 ├── SpatialAdapter/                # Bridges data types to QuadTree
-│   ├── EventSpatialAdapter.hpp    # DigitalEventSeries → QuadTree
-│   ├── PointSpatialAdapter.hpp    # PointData → QuadTree
-│   └── ISpatiallyIndexed.hpp      # Common interface
+│   ├── ISpatiallyIndexed.hpp      # Common interface for spatial queries
+│   ├── EventSpatialAdapter.hpp    # DigitalEventSeries → QuadTree (stacked/raster)
+│   ├── PointSpatialAdapter.hpp    # RenderableGlyphBatch → QuadTree
+│   └── PolyLineSpatialAdapter.hpp # RenderablePolyLineBatch → QuadTree (3 strategies)
 │
 ├── EventRow/                      # Row-based event model
 │   ├── EventRow.hpp               # Data description of an event row
@@ -604,14 +605,22 @@ Returns: QuadTreePoint<EntityId>* → {x, y, entity_id}
 
 ### 4. Spatial Indexing Strategy
 
-A single `QuadTree<EntityId>` spans all rows for efficient queries:
+Spatial adapters provide multiple strategies for building `QuadTree<EntityId>` indexes from different data types.
+
+#### Event Spatial Indexing
 
 ```cpp
-std::unique_ptr<QuadTree<EntityId>> buildEventSpatialIndex(
-    std::vector<PlacedEventRow> const& placed_rows,
-    BoundingBox const& world_bounds)
-{
-    auto index = std::make_unique<QuadTree<EntityId>>(world_bounds);
+// For stacked events (DataViewer style - absolute time)
+auto index = EventSpatialAdapter::buildStacked(
+    event_series, time_frame, layout, bounds);
+
+// For raster plots (EventPlotWidget style - relative time per row)
+auto index = EventSpatialAdapter::buildRaster(
+    event_series, time_frame, row_layouts, row_centers, bounds);
+
+// For pre-computed positions
+auto index = EventSpatialAdapter::buildFromPositions(
+    positions, entity_ids, bounds);
     
     for (auto const& placed : placed_rows) {
         float y = placed.layout.y_center;  // World Y = same as Model matrix Y
@@ -626,6 +635,33 @@ std::unique_ptr<QuadTree<EntityId>> buildEventSpatialIndex(
     
     return index;
 }
+```
+
+#### PolyLine Spatial Indexing
+
+Polyline adapters provide three indexing strategies optimized for different use cases:
+
+```cpp
+// Strategy 1: Insert every vertex (best for sparse data)
+auto index = PolyLineSpatialAdapter::buildFromVertices(batch, bounds);
+
+// Strategy 2: Insert AABB corners + center (efficient for dense data)
+auto index = PolyLineSpatialAdapter::buildFromBoundingBoxes(batch, bounds);
+
+// Strategy 3: Uniformly sample points along lines (best for very long lines)
+auto index = PolyLineSpatialAdapter::buildFromSampledPoints(
+    batch, sample_interval, bounds);
+```
+
+#### Point/Glyph Spatial Indexing
+
+```cpp
+// Build from RenderableGlyphBatch (events, points)
+auto index = PointSpatialAdapter::buildFromGlyphs(glyph_batch, bounds);
+
+// Build from explicit positions
+auto index = PointSpatialAdapter::buildFromPositions(
+    positions, entity_ids, bounds);
 ```
 
 **Key insight**: The QuadTree Y coordinate uses the **same value** as the Model matrix's Y translation. This ensures rendering and queries are always synchronized.
@@ -779,27 +815,74 @@ public:
 };
 ```
 
-## Future Extensions
+## Spatial Adapters (Phase 1.5)
 
-### PointData Support
+Spatial adapters provide factory methods for building `QuadTree<EntityId>` indexes from different data sources.
 
-The same architecture applies to PointData visualization:
+### Event Spatial Indexing
 
 ```cpp
-struct PointDataSpatialAdapter {
-    static std::unique_ptr<QuadTree<EntityId>> buildFromPointData(
-        PointData const& points,
-        BoundingBox const& world_bounds);
-};
+// For stacked events (DataViewer style - absolute time)
+auto index = EventSpatialAdapter::buildStacked(
+    event_series, time_frame, layout, bounds);
+
+// For raster plots (EventPlotWidget style - relative time per row)
+auto index = EventSpatialAdapter::buildRaster(
+    event_series, time_frame, row_layouts, row_centers, bounds);
+
+// For pre-computed positions
+auto index = EventSpatialAdapter::buildFromPositions(
+    positions, entity_ids, bounds);
 ```
+
+### PolyLine Spatial Indexing
+
+Polyline adapters provide three indexing strategies:
+
+```cpp
+// Strategy 1: Insert every vertex (best for sparse data)
+auto index = PolyLineSpatialAdapter::buildFromVertices(batch, bounds);
+
+// Strategy 2: Insert AABB corners + center (efficient for dense data)
+auto index = PolyLineSpatialAdapter::buildFromBoundingBoxes(batch, bounds);
+
+// Strategy 3: Uniformly sample points along lines (best for very long lines)
+auto index = PolyLineSpatialAdapter::buildFromSampledPoints(
+    batch, sample_interval, bounds);
+```
+
+### Point/Glyph Spatial Indexing
+
+```cpp
+// Build from RenderableGlyphBatch (events, points)
+auto index = PointSpatialAdapter::buildFromGlyphs(glyph_batch, bounds);
+
+// Build from explicit positions
+auto index = PointSpatialAdapter::buildFromPositions(
+    positions, entity_ids, bounds);
+```
+
+**Architecture**: All adapters return `std::unique_ptr<QuadTree<EntityId>>` and use static factory methods. The QuadTree coordinates match the Model matrix coordinates, ensuring rendering and spatial queries are synchronized.
+
+```
+
+## Future Extensions
 
 ### Multi-Type Canvas
 
-A canvas could contain both events and points with separate QuadTrees or a unified index:
+A canvas can contain multiple data types with separate QuadTrees or a unified index:
 
 ```cpp
+// Build separate indexes for different data types
+auto event_index = EventSpatialAdapter::buildStacked(
+    event_series, time_frame, layout, bounds);
+auto polyline_index = PolyLineSpatialAdapter::buildFromVertices(
+    polyline_batch, bounds);
+
+// Store in scene or widget
 struct CanvasSpatialIndex {
     std::unique_ptr<QuadTree<EntityId>> event_index;
+    std::unique_ptr<QuadTree<EntityId>> polyline_index;
     std::unique_ptr<QuadTree<EntityId>> point_index;
     
     std::optional<EntityId> findNearest(float x, float y, float tolerance) const {
@@ -869,6 +952,7 @@ TEST_CASE("Model matrix and QuadTree use same Y coordinate") {
 | `Renderable*Batch` | `SceneGraph/` | GPU-ready geometry + Model matrix per batch |
 | `Transformers` | `Transformers/` | Convert data + layout → geometry batches |
 | `QuadTree` | Owned by `RenderableScene` | Spatial index for hit testing (built alongside geometry) |
+| `SpatialAdapter` | `SpatialAdapter/` | Factory methods for building QuadTree from data types |
 | `ISpatiallyIndexed` | `SpatialAdapter/` | Common query interface for hit testing |
 
 ### Data Flow Summary
