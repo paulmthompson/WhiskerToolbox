@@ -137,6 +137,44 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - All adapters use static factory methods returning `std::unique_ptr<QuadTree<EntityId>>`
     - Tests: All 259 assertions passing ✓
 
+### 1.6 Integration Tests
+**Goal:** Validate end-to-end workflows before moving to OpenGL rendering layer.
+
+- [x] **Raster Plot Integration Tests**:
+    - Multiple `DigitalEventSeries` representing trials/rows
+    - Events centered on reference times (negative/positive relative times)
+    - Combined QuadTree containing all events across all rows
+    - Test: simulated click at (x, y) → verify correct EntityId returned
+    - Location: [IntegrationTests.test.cpp](/tests/CorePlotting/IntegrationTests.test.cpp)
+
+- [x] **Stacked Events Integration Tests (DataViewer style)**:
+    - Multiple `DigitalEventSeries` in separate stacked rows
+    - Absolute time positioning (no centering)
+    - Combined QuadTree for all series
+    - Test: simulated click at various positions → verify correct series and EntityId
+
+- [x] **End-to-End Scene Building**:
+    - `LayoutEngine` → `RasterBuilder`/Transformer → QuadTree
+    - Validate QuadTree positions match glyph positions in batch
+
+- [x] **Coordinate Transform Round-Trip**:
+    - Screen → World → QuadTree query → verify EntityId
+    - Test with various zoom/pan states (ViewState)
+
+- [x] **TimeRange Bounds Enforcement**:
+    - Test TimeRange prevents scrolling/zooming beyond TimeFrame bounds
+    - Integration with ViewState for complete camera state management
+
+- [ ] **GapDetector + PolyLineSpatialAdapter Integration**:
+    - Analog series with gaps → segmented polylines
+    - Spatial index built from segments
+    - Query at various points within/between segments
+
+- [ ] **Mixed Series Scene**:
+    - Analog + Events + Intervals in one scene
+    - Verify layout positions are correct
+    - Verify spatial queries work across all types
+
 ---
 
 ## Phase 2: Rendering Strategies (The "Painter")

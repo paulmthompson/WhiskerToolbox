@@ -19,11 +19,13 @@ add_executable(test_coreplotting
     TimeRange.test.cpp
     SeriesMatrices.test.cpp
     LayoutEngine.test.cpp
+    IntegrationTests.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 
     Catch2::Catch2WithMain
     CorePlotting
+    DataManager
     WhiskerToolbox::TimeFrame
     NEURALYZER_GEOMETRY
     glm::glm
@@ -31,6 +33,7 @@ target_link_libraries(test_coreplotting PRIVATE
 
 target_include_directories(test_coreplotting PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CorePlotting>"
 )
 
 if (APPLE)
