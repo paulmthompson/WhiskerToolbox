@@ -26,6 +26,13 @@ set(COREPLOTTING_SOURCES
     Transformers/GapDetector.cpp
     Transformers/RasterBuilder.hpp
     Transformers/RasterBuilder.cpp
+    SpatialAdapter/ISpatiallyIndexed.hpp
+    SpatialAdapter/EventSpatialAdapter.hpp
+    SpatialAdapter/EventSpatialAdapter.cpp
+    SpatialAdapter/PointSpatialAdapter.hpp
+    SpatialAdapter/PointSpatialAdapter.cpp
+    SpatialAdapter/PolyLineSpatialAdapter.hpp
+    SpatialAdapter/PolyLineSpatialAdapter.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
