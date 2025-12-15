@@ -2,8 +2,10 @@
 #define COREPLOTTING_SCENEGRAPH_RENDERABLEPRIMITIVES_HPP
 
 #include "Entity/EntityTypes.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
 
 namespace CorePlotting {
@@ -38,6 +40,9 @@ struct RenderablePolyLineBatch {
     // Global Attributes
     float thickness{1.0f};
     glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
+    
+    // Model matrix for this batch (positions in world space)
+    glm::mat4 model_matrix{1.0f};
 };
 
 /**
@@ -62,6 +67,9 @@ struct RenderableGlyphBatch {
     };
     GlyphType glyph_type{GlyphType::Circle};
     float size{5.0f};
+    
+    // Model matrix for this batch
+    glm::mat4 model_matrix{1.0f};
 };
 
 /**
@@ -76,6 +84,9 @@ struct RenderableRectangleBatch {
     // Per-Rectangle Attributes
     std::vector<glm::vec4> colors;
     std::vector<EntityId> entity_ids;
+    
+    // Model matrix for this batch
+    glm::mat4 model_matrix{1.0f};
 };
 
 /**
@@ -83,15 +94,28 @@ struct RenderableRectangleBatch {
  * 
  * This struct contains all the primitives and global state required to draw a frame.
  * It is produced by the CorePlotting layout engine and consumed by the Renderer.
+ * 
+ * ARCHITECTURE:
+ * - Each batch has its own Model matrix (per-series positioning)
+ * - View and Projection matrices are shared (global camera state)
+ * - QuadTree lives here for synchronization (same layout as batches)
+ * 
+ * See DESIGN.md for the complete architecture discussion.
  */
 struct RenderableScene {
+    // Primitive batches (each has its own Model matrix)
     std::vector<RenderablePolyLineBatch> poly_line_batches;
     std::vector<RenderableRectangleBatch> rectangle_batches;
     std::vector<RenderableGlyphBatch> glyph_batches;
 
-    // Global State
-    glm::mat4 view_matrix{1.0f};
-    glm::mat4 projection_matrix{1.0f};
+    // Shared transformation matrices (apply to all batches)
+    glm::mat4 view_matrix{1.0f};        // Camera pan/zoom
+    glm::mat4 projection_matrix{1.0f};  // World → NDC mapping
+    
+    // Spatial index for hit testing
+    // Built alongside geometry to ensure synchronization
+    // Uses same world-space coordinates as Model matrices
+    std::unique_ptr<QuadTree<EntityId>> spatial_index;
 };
 
 }// namespace CorePlotting

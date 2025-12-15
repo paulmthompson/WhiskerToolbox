@@ -4,6 +4,8 @@ find_package(glm CONFIG REQUIRED)
 set(COREPLOTTING_SOURCES
     DataTypes/DigitalEventSeries/EventRow.hpp
     SceneGraph/RenderablePrimitives.hpp
+    SceneGraph/SceneBuilder.hpp
+    SceneGraph/SceneBuilder.cpp
     CoordinateTransform/Matrices.hpp
     CoordinateTransform/Matrices.cpp
     CoordinateTransform/ScreenToWorld.hpp
@@ -20,6 +22,10 @@ set(COREPLOTTING_SOURCES
     Layout/StackedLayoutStrategy.cpp
     Layout/RowLayoutStrategy.hpp
     Layout/RowLayoutStrategy.cpp
+    Transformers/GapDetector.hpp
+    Transformers/GapDetector.cpp
+    Transformers/RasterBuilder.hpp
+    Transformers/RasterBuilder.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
@@ -36,6 +42,7 @@ target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(CorePlotting PUBLIC DataManager)
+target_link_libraries(CorePlotting PUBLIC SpatialIndex)
 
 target_link_libraries(CorePlotting PUBLIC glm::glm)
 

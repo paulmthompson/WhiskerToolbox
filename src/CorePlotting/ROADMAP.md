@@ -104,14 +104,27 @@ This document outlines the roadmap for consolidating the plotting architecture i
         - Equal row heights for multi-trial visualization
 
 ### 1.4 Renderable Primitives
-- [ ] **Finalize `RenderableScene` struct**:
-    - Each batch contains its own Model matrix
-    - Scene contains shared View + Projection matrices
-    - Add `SceneBuilder` helper class
+- [x] **Finalize `RenderableScene` struct**:
+    - Each batch contains its own Model matrix ✓
+    - Scene contains shared View + Projection matrices ✓
+    - QuadTree integrated for spatial queries ✓
+    - Location: [RenderablePrimitives.hpp](SceneGraph/RenderablePrimitives.hpp)
+    - Updated to match DESIGN.md architecture
+    
+- [x] **Add `SceneBuilder` helper class**:
+    - Fluent interface for constructing scenes ✓
+    - Automatic spatial index building from batches ✓
+    - Location: [SceneBuilder.hpp](SceneGraph/SceneBuilder.hpp), [SceneBuilder.cpp](SceneGraph/SceneBuilder.cpp)
 
-- [ ] **Implement Transformers**:
-    - `GapDetector`: `AnalogTimeSeries` → segmented `RenderablePolyLineBatch`
-    - `RasterBuilder`: `DigitalEventSeries` + row layout → `RenderableGlyphBatch`
+- [x] **Implement Transformers**:
+    - `GapDetector`: `AnalogTimeSeries` → segmented `RenderablePolyLineBatch` ✓
+        - Location: [GapDetector.hpp](Transformers/GapDetector.hpp), [GapDetector.cpp](Transformers/GapDetector.cpp)
+        - Time and value-based gap detection
+        - Configurable minimum segment length
+    - `RasterBuilder`: `DigitalEventSeries` + row layout → `RenderableGlyphBatch` ✓
+        - Location: [RasterBuilder.hpp](Transformers/RasterBuilder.hpp), [RasterBuilder.cpp](Transformers/RasterBuilder.cpp)
+        - Multi-trial raster plot visualization
+        - Time window filtering per row
 
 ### 1.5 Spatial Indexing
 - [ ] **Finalize `QuadTree<EntityId>` implementation**
