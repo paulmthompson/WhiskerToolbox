@@ -1,8 +1,8 @@
 #include "LineDataVisualization.hpp"
 
 #include "DataManager/Lines/Line_Data.hpp"
-#include "ShaderManager/ShaderManager.hpp"
-#include "ShaderManager/ShaderSourceType.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderSourceType.hpp"
 
 #include "Selection/LineSelectionHandler.hpp"
 #include "Selection/NoneSelectionHandler.hpp"

@@ -33,8 +33,8 @@ class BoundingBox;
 class TimeFrameIndex;
 
 // Include necessary headers for the test fixtures
-#include "ShaderManager/ShaderManager.hpp"
-#include "ShaderManager/ShaderSourceType.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderSourceType.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"

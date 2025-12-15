@@ -145,7 +145,7 @@ target_link_libraries(Analysis_Dashboard PRIVATE qt6advanceddocking)
 target_link_libraries(Analysis_Dashboard PRIVATE TimeScrollBar)
 target_link_libraries(Analysis_Dashboard PRIVATE DataManager)
 target_link_libraries(Analysis_Dashboard PRIVATE NEURALYZER_GEOMETRY)
-target_link_libraries(Analysis_Dashboard PRIVATE ShaderManager)
+target_link_libraries(Analysis_Dashboard PRIVATE PlottingOpenGL)  # Contains ShaderManager
 target_link_libraries(Analysis_Dashboard PRIVATE Feature_Table_Widget)
 target_link_libraries(Analysis_Dashboard PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(Analysis_Dashboard PRIVATE GroupManagementWidget)

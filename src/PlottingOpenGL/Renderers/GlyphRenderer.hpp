@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 
+#include <string>
 #include <vector>
 
 namespace PlottingOpenGL {
@@ -25,6 +26,11 @@ namespace PlottingOpenGL {
  *   - Position and color can vary per instance
  *   - Model matrix from the batch positions the entire batch in world space
  * 
+ * Shader Loading:
+ *   - By default, uses ShaderManager with shaders from WhiskerToolbox/shaders/
+ *   - Can fall back to embedded shaders if shader files are not available
+ *   - Shader program name: "glyph_renderer"
+ * 
  * Supported Glyph Types:
  *   - Circle: Point primitive (GL_POINTS) with gl_PointSize
  *   - Square: Quad rendered as two triangles
@@ -35,7 +41,13 @@ namespace PlottingOpenGL {
  */
 class GlyphRenderer : public IBatchRenderer {
 public:
-    GlyphRenderer();
+    /**
+     * @brief Construct a GlyphRenderer with optional shader paths.
+     * 
+     * @param shader_base_path Base path to shader directory (e.g., "src/WhiskerToolbox/shaders/")
+     *                         If empty, uses embedded fallback shaders.
+     */
+    explicit GlyphRenderer(std::string shader_base_path = "");
     ~GlyphRenderer() override;
 
     // IBatchRenderer interface
@@ -61,12 +73,23 @@ public:
      */
     void setGlyphSize(float size);
 
+    /**
+     * @brief Check if using ShaderManager (vs embedded fallback).
+     */
+    [[nodiscard]] bool isUsingShaderManager() const { return m_use_shader_manager; }
+
 private:
-    bool compileShaders();
+    bool loadShadersFromManager();
+    bool compileEmbeddedShaders();
     void setupVertexAttributes();
     void createGlyphGeometry();
 
-    GLShaderProgram m_shader;
+    std::string m_shader_base_path;
+    bool m_use_shader_manager{false};
+    
+    // Only used when not using ShaderManager
+    GLShaderProgram m_embedded_shader;
+    
     GLVertexArray m_vao;
     GLBuffer m_geometry_vbo{GLBuffer::Type::Vertex};// Glyph shape vertices
     GLBuffer m_instance_vbo{GLBuffer::Type::Vertex};// Per-instance positions
@@ -87,85 +110,43 @@ private:
     glm::vec4 m_global_color{1.0f, 1.0f, 1.0f, 1.0f};
 
     bool m_initialized{false};
+    
+    // Shader program name for ShaderManager
+    static constexpr char const * SHADER_PROGRAM_NAME = "glyph_renderer";
 };
 
 /**
- * @brief Shader source code for the glyph renderer.
+ * @brief Embedded fallback shader source code for the glyph renderer.
  * 
- * Uses instanced rendering with per-instance position offset.
+ * These match the interface of WhiskerToolbox/shaders/point.vert and point.frag
+ * but are simplified for basic use cases.
  */
 namespace GlyphShaders {
 
-constexpr char const * VERTEX_SHADER = R"(
-#version 330 core
-
-// Per-vertex attributes (glyph shape)
-layout(location = 0) in vec2 aVertex;
-
-// Per-instance attributes
-layout(location = 1) in vec2 aInstancePosition;
-layout(location = 2) in vec4 aInstanceColor;
-
-uniform mat4 uMVP;
-uniform float uGlyphSize;
-uniform int uHasPerInstanceColors;
-
-out vec4 vColor;
-
-void main() {
-    // Scale the glyph shape and offset by instance position
-    vec2 worldPos = aInstancePosition + aVertex * uGlyphSize;
-    gl_Position = uMVP * vec4(worldPos, 0.0, 1.0);
-    
-    // For GL_POINTS (circle glyph), set point size
-    gl_PointSize = uGlyphSize;
-    
-    // Pass color to fragment shader
-    vColor = aInstanceColor;
-}
-)";
-
-constexpr char const * FRAGMENT_SHADER = R"(
-#version 330 core
-
-in vec4 vColor;
-
-out vec4 fragColor;
-
-void main() {
-    fragColor = vColor;
-}
-)";
-
-/**
- * @brief Point-based shader for circle glyphs.
- * 
- * Uses gl_PointCoord to create smooth circles from point sprites.
- */
 constexpr char const * POINT_VERTEX_SHADER = R"(
-#version 330 core
+#version 410 core
 
-layout(location = 0) in vec2 aPosition;
-layout(location = 1) in vec4 aColor;
+layout (location = 0) in vec2 a_position;
+layout (location = 1) in vec4 a_color;
 
-uniform mat4 uMVP;
-uniform float uGlyphSize;
+uniform mat4 u_mvp_matrix;
+uniform float u_point_size;
 
-out vec4 vColor;
+out vec4 v_color;
 
 void main() {
-    gl_Position = uMVP * vec4(aPosition, 0.0, 1.0);
-    gl_PointSize = uGlyphSize;
-    vColor = aColor;
+    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+    gl_PointSize = u_point_size;
+    v_color = a_color;
 }
 )";
 
 constexpr char const * POINT_FRAGMENT_SHADER = R"(
-#version 330 core
+#version 410 core
 
-in vec4 vColor;
+in vec4 v_color;
 
-out vec4 fragColor;
+out vec4 FragColor;
 
 void main() {
     // Create circular point by discarding fragments outside circle
@@ -177,7 +158,7 @@ void main() {
     
     // Smooth edge
     float alpha = 1.0 - smoothstep(0.4, 0.5, dist);
-    fragColor = vec4(vColor.rgb, vColor.a * alpha);
+    FragColor = vec4(v_color.rgb, v_color.a * alpha);
 }
 )";
 

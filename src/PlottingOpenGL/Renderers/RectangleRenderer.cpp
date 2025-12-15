@@ -1,10 +1,16 @@
 #include "RectangleRenderer.hpp"
 
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
+
+#include <iostream>
 
 namespace PlottingOpenGL {
 
-RectangleRenderer::RectangleRenderer() = default;
+RectangleRenderer::RectangleRenderer(std::string shader_base_path)
+    : m_shader_base_path(std::move(shader_base_path)) {
+}
 
 RectangleRenderer::~RectangleRenderer() {
     cleanup();
@@ -19,9 +25,24 @@ bool RectangleRenderer::initialize() {
         return false;
     }
 
-    // Compile shaders
-    if (!compileShaders()) {
-        return false;
+    // Try to load shaders from ShaderManager first
+    // Note: Rectangle shaders are specialized, we use embedded shaders
+    // unless external shader files are explicitly provided
+    if (!m_shader_base_path.empty()) {
+        if (loadShadersFromManager()) {
+            m_use_shader_manager = true;
+        } else {
+            std::cerr << "[RectangleRenderer] Failed to load shaders from ShaderManager, "
+                      << "falling back to embedded shaders" << std::endl;
+            if (!compileEmbeddedShaders()) {
+                return false;
+            }
+        }
+    } else {
+        // No shader path provided, use embedded shaders
+        if (!compileEmbeddedShaders()) {
+            return false;
+        }
     }
 
     // Create VAO and VBOs
@@ -56,8 +77,10 @@ void RectangleRenderer::cleanup() {
     m_bounds_vbo.destroy();
     m_quad_vbo.destroy();
     m_vao.destroy();
-    m_fill_shader.destroy();
-    m_border_shader.destroy();
+    if (!m_use_shader_manager) {
+        m_embedded_fill_shader.destroy();
+        m_embedded_border_shader.destroy();
+    }
     m_initialized = false;
     clearData();
 }
@@ -88,33 +111,67 @@ void RectangleRenderer::render(glm::mat4 const & view_matrix,
     gl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // --- Draw filled rectangles ---
-    if (!m_fill_shader.bind()) {
-        return;
+    ShaderProgram * fill_shader = nullptr;
+    if (m_use_shader_manager) {
+        fill_shader = ShaderManager::instance().getProgram(FILL_SHADER_NAME);
+        if (!fill_shader) {
+            std::cerr << "[RectangleRenderer] Fill shader program not found" << std::endl;
+            return;
+        }
+        fill_shader->use();
+        fill_shader->setUniform("u_mvp_matrix", mvp);
+    } else {
+        if (!m_embedded_fill_shader.bind()) {
+            return;
+        }
+        m_embedded_fill_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
     }
-    m_fill_shader.setUniformMatrix4("uMVP", glm::value_ptr(mvp));
 
     if (!m_vao.bind()) {
-        m_fill_shader.release();
+        if (!m_use_shader_manager) {
+            m_embedded_fill_shader.release();
+        }
         return;
     }
 
     // Draw instanced quads (4 vertices per quad, as triangle strip)
     glExtra->glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instance_count);
 
-    m_fill_shader.release();
+    if (!m_use_shader_manager) {
+        m_embedded_fill_shader.release();
+    }
 
     // --- Draw borders (optional) ---
     if (m_border_enabled) {
-        if (!m_border_shader.bind()) {
-            m_vao.release();
-            return;
-        }
-        m_border_shader.setUniformMatrix4("uMVP", glm::value_ptr(mvp));
-        m_border_shader.setUniformValue("uBorderColor",
+        ShaderProgram * border_shader = nullptr;
+        if (m_use_shader_manager) {
+            border_shader = ShaderManager::instance().getProgram(BORDER_SHADER_NAME);
+            if (!border_shader) {
+                m_vao.release();
+                return;
+            }
+            border_shader->use();
+            border_shader->setUniform("u_mvp_matrix", mvp);
+            auto * native = border_shader->getNativeProgram();
+            if (native) {
+                native->setUniformValue("u_border_color",
                                         m_border_color.r,
                                         m_border_color.g,
                                         m_border_color.b,
                                         m_border_color.a);
+            }
+        } else {
+            if (!m_embedded_border_shader.bind()) {
+                m_vao.release();
+                return;
+            }
+            m_embedded_border_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+            m_embedded_border_shader.setUniformValue("u_border_color",
+                                                     m_border_color.r,
+                                                     m_border_color.g,
+                                                     m_border_color.b,
+                                                     m_border_color.a);
+        }
 
         gl->glLineWidth(m_border_width);
 
@@ -126,7 +183,9 @@ void RectangleRenderer::render(glm::mat4 const & view_matrix,
             glExtra->glDrawArraysInstanced(GL_LINE_LOOP, 4, 4, 1);
         }
 
-        m_border_shader.release();
+        if (!m_use_shader_manager) {
+            m_embedded_border_shader.release();
+        }
     }
 
     m_vao.release();
@@ -182,16 +241,23 @@ void RectangleRenderer::setBorderWidth(float width) {
     m_border_width = width;
 }
 
-bool RectangleRenderer::compileShaders() {
+bool RectangleRenderer::loadShadersFromManager() {
+    // Rectangle shaders are specialized and not in the standard shader directory
+    // For now, we always use embedded shaders unless specific files are created
+    // This is a placeholder for future shader file support
+    return false;
+}
+
+bool RectangleRenderer::compileEmbeddedShaders() {
     // Compile fill shader
-    if (!m_fill_shader.createFromSource(RectangleShaders::VERTEX_SHADER,
-                                        RectangleShaders::FRAGMENT_SHADER)) {
+    if (!m_embedded_fill_shader.createFromSource(RectangleShaders::VERTEX_SHADER,
+                                                 RectangleShaders::FRAGMENT_SHADER)) {
         return false;
     }
 
     // Compile border shader
-    if (!m_border_shader.createFromSource(RectangleShaders::BORDER_VERTEX_SHADER,
-                                          RectangleShaders::BORDER_FRAGMENT_SHADER)) {
+    if (!m_embedded_border_shader.createFromSource(RectangleShaders::BORDER_VERTEX_SHADER,
+                                                   RectangleShaders::BORDER_FRAGMENT_SHADER)) {
         return false;
     }
 

@@ -8,8 +8,11 @@
 #   - PolyLineRenderer: For AnalogTimeSeries, segmented lines
 #   - GlyphRenderer: For DigitalEventSeries, point markers
 #   - RectangleRenderer: For DigitalIntervalSeries, filled regions
+#
+# Also includes the ShaderManager for centralized shader program management
+# with hot-reloading support during development.
 
-find_package(Qt6 REQUIRED COMPONENTS Core OpenGL OpenGLWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Core OpenGL OpenGLWidgets Gui Widgets)
 find_package(glm CONFIG REQUIRED)
 
 set(PLOTTINGOPENGL_SOURCES
@@ -24,6 +27,11 @@ set(PLOTTINGOPENGL_SOURCES
     Renderers/GlyphRenderer.hpp
     Renderers/RectangleRenderer.cpp
     Renderers/RectangleRenderer.hpp
+    ShaderManager/ShaderManager.cpp
+    ShaderManager/ShaderManager.hpp
+    ShaderManager/ShaderProgram.cpp
+    ShaderManager/ShaderProgram.hpp
+    ShaderManager/ShaderSourceType.hpp
 )
 
 add_library(PlottingOpenGL STATIC ${PLOTTINGOPENGL_SOURCES})

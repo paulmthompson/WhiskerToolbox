@@ -46,7 +46,7 @@ target_link_libraries(AnalysisDashboardTests
     qt6advanceddocking
     DataManager
     TimeScrollBar
-    ShaderManager
+    PlottingOpenGL  # Contains ShaderManager
     Feature_Table_Widget
     Catch2::Catch2WithMain
     Qt6::Widgets
@@ -63,7 +63,7 @@ target_include_directories(AnalysisDashboardTests PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/TimeScrollBar>"
-        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/ShaderManager>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/PlottingOpenGL>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/CoreGeometry>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/SpatialIndex>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Analysis_Dashboard>"

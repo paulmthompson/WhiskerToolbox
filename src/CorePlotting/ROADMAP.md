@@ -195,11 +195,12 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Replace inline vertex generation with `RenderableScene` consumption
     - Shader management stays in widget (or moves to renderer)
 
-- [ ] **Optional: Integrate with ShaderManager**:
-    - Add `initializeWithShaderManager()` method to renderers
-    - Allow external shader loading for hot-reload during development
-    - Maintain embedded shader fallback for deployment
-    - See `src/WhiskerToolbox/ShaderManager/shader_manager_design_doc.md`
+- [x] **Integrate ShaderManager into PlottingOpenGL** ✓:
+    - Moved ShaderManager from `src/WhiskerToolbox/ShaderManager/` to `src/PlottingOpenGL/ShaderManager/`
+    - All renderers support dual loading: embedded shaders (default) or ShaderManager (via constructor path)
+    - Uniform naming convention aligned with existing shaders (`u_mvp_matrix`, `u_color`)
+    - Existing battle-tested shaders remain in `src/WhiskerToolbox/shaders/`
+    - Hot-reload support available for development workflows
 
 - [ ] **Refactor `SVGExporter`**:
     - Consume `RenderableScene` instead of querying OpenGLWidget

@@ -25,7 +25,7 @@ target_link_libraries(test_data_viewer_widget PRIVATE
     DataViewer_Widget 
     DataViewer
     DataManager 
-    ShaderManager
+    PlottingOpenGL  # Contains ShaderManager
     Qt6::Widgets
     Qt6::Core
 )
@@ -34,7 +34,7 @@ target_include_directories(test_data_viewer_widget PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
-    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/ShaderManager>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/PlottingOpenGL>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
 )

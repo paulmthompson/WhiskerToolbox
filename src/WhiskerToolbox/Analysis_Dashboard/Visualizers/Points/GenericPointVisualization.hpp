@@ -6,7 +6,7 @@
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 #include "Selection/SelectionHandlers.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 
 #include <QMatrix4x4>

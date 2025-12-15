@@ -11,7 +11,7 @@
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QMouseEvent>

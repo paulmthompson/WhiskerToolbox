@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 
+#include <string>
 #include <vector>
 
 namespace PlottingOpenGL {
@@ -23,6 +24,11 @@ namespace PlottingOpenGL {
  *   - Supports per-line colors (if provided) or a global batch color
  *   - Model matrix from the batch is combined with provided View/Projection
  * 
+ * Shader Loading:
+ *   - By default, uses ShaderManager with shaders from WhiskerToolbox/shaders/
+ *   - Can fall back to embedded shaders if shader files are not available
+ *   - Shader program name: "polyline_renderer"
+ * 
  * For high-performance scenarios with 100,000+ short lines (e.g., raster plots),
  * consider using a ComputePolyLineRenderer with SSBOs instead.
  * 
@@ -34,7 +40,13 @@ namespace PlottingOpenGL {
  */
 class PolyLineRenderer : public IBatchRenderer {
 public:
-    PolyLineRenderer();
+    /**
+     * @brief Construct a PolyLineRenderer with optional shader paths.
+     * 
+     * @param shader_base_path Base path to shader directory (e.g., "src/WhiskerToolbox/shaders/")
+     *                         If empty, uses embedded fallback shaders.
+     */
+    explicit PolyLineRenderer(std::string shader_base_path = "");
     ~PolyLineRenderer() override;
 
     // IBatchRenderer interface
@@ -66,11 +78,22 @@ public:
      */
     void setLineThickness(float thickness);
 
+    /**
+     * @brief Check if using ShaderManager (vs embedded fallback).
+     */
+    [[nodiscard]] bool isUsingShaderManager() const { return m_use_shader_manager; }
+
 private:
-    bool compileShaders();
+    bool loadShadersFromManager();
+    bool compileEmbeddedShaders();
     void setupVertexAttributes();
 
-    GLShaderProgram m_shader;
+    std::string m_shader_base_path;
+    bool m_use_shader_manager{false};
+    
+    // Only used when not using ShaderManager
+    GLShaderProgram m_embedded_shader;
+    
     GLVertexArray m_vao;
     GLBuffer m_vbo{GLBuffer::Type::Vertex};
 
@@ -85,37 +108,40 @@ private:
     bool m_has_per_line_colors{false};
 
     bool m_initialized{false};
+    
+    // Shader program name for ShaderManager
+    static constexpr char const * SHADER_PROGRAM_NAME = "polyline_renderer";
 };
 
 /**
- * @brief Shader source code for the polyline renderer.
+ * @brief Embedded fallback shader source code for the polyline renderer.
  * 
- * These are embedded as string literals for simplicity. For more complex
- * shader management or hot-reloading, consider using the ShaderManager.
+ * These match the interface of WhiskerToolbox/shaders/line.vert and line.frag
+ * but are embedded for cases where shader files are not available.
  */
 namespace PolyLineShaders {
 
 constexpr char const * VERTEX_SHADER = R"(
-#version 330 core
+#version 410 core
 
-layout(location = 0) in vec2 aPosition;
+layout(location = 0) in vec2 a_position;
 
-uniform mat4 uMVP;
+uniform mat4 u_mvp_matrix;
 
 void main() {
-    gl_Position = uMVP * vec4(aPosition, 0.0, 1.0);
+    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
 }
 )";
 
 constexpr char const * FRAGMENT_SHADER = R"(
-#version 330 core
+#version 410 core
 
-uniform vec4 uColor;
+uniform vec4 u_color;
 
-out vec4 fragColor;
+out vec4 FragColor;
 
 void main() {
-    fragColor = uColor;
+    FragColor = u_color;
 }
 )";
 

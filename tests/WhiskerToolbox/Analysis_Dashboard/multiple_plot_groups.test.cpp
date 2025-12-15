@@ -28,7 +28,7 @@
 #include "DataManager/DataManager.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"

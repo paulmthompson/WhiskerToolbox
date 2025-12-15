@@ -1,6 +1,6 @@
 #include "EventPlotOpenGLWidget.hpp"
 #include "EventPointVisualization.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 
 #include <QDebug>

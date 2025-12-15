@@ -1,7 +1,7 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "DataViewer/XAxis.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 

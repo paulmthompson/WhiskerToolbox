@@ -2,7 +2,7 @@
 #define EVENTPLOTOPENGLWIDGET_HPP
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 
 #include <QMatrix4x4>

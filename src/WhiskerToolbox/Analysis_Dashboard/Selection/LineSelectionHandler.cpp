@@ -1,6 +1,6 @@
 #include "LineSelectionHandler.hpp"
 
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
 #include <QGuiApplication>

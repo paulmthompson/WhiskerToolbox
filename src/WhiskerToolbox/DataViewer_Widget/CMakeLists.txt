@@ -44,7 +44,7 @@ target_link_libraries(DataViewer_Widget PRIVATE DataManager)
 target_link_libraries(DataViewer_Widget PRIVATE glm::glm)
 target_link_libraries(DataViewer_Widget PRIVATE DataViewer)
 target_link_libraries(DataViewer_Widget PRIVATE Feature_Tree_Widget)
-target_link_libraries(DataViewer_Widget PRIVATE ShaderManager)
+target_link_libraries(DataViewer_Widget PRIVATE PlottingOpenGL)  # Contains ShaderManager
 target_link_libraries(DataViewer_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE TimeScrollBar)
 target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)

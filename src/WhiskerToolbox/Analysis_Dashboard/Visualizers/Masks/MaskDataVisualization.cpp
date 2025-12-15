@@ -8,7 +8,7 @@
 #include "Selection/NoneSelectionHandler.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
 #include <QOpenGLShaderProgram>

@@ -452,7 +452,7 @@ The *Application* chooses the renderer at runtime based on hardware capabilities
 
 ### 3.1 Shader Management Integration
 
-WhiskerToolbox includes a centralized `ShaderManager` singleton (located in `src/WhiskerToolbox/ShaderManager/`) that provides:
+The `ShaderManager` singleton is now consolidated into the `PlottingOpenGL` library (located in `src/PlottingOpenGL/ShaderManager/`). It provides:
 
 1. **Centralized Shader Registry**: All shader programs are loaded once and shared across widgets
 2. **Hot-Reloading**: File-based shaders can be modified at runtime during development
@@ -460,35 +460,28 @@ WhiskerToolbox includes a centralized `ShaderManager` singleton (located in `src
 4. **Qt Resource Loading**: Shaders can be embedded in Qt resources for deployment
 5. **Compute Shader Support**: Full support for compute shaders (OpenGL 4.3+)
 
-**Current PlottingOpenGL Approach:**
+**PlottingOpenGL Renderer Integration:**
 
-The initial PlottingOpenGL implementation embeds shaders as string literals in header files for simplicity. This approach:
-- ✅ Zero runtime dependencies (shaders are part of the binary)
-- ✅ Simple deployment
-- ❌ No hot-reloading for development
-- ❌ Cannot share shaders across renderers
-
-**Recommended Integration Path:**
-
-For production use, the `PlottingOpenGL` renderers should optionally integrate with `ShaderManager`:
+All PlottingOpenGL renderers (`PolyLineRenderer`, `GlyphRenderer`, `RectangleRenderer`) support dual shader loading modes:
 
 ```cpp
-// Option 1: Embedded shaders (current, simple)
-renderer.initialize();  // Uses embedded GLSL strings
+// Option 1: Embedded shaders (default, simple deployment)
+renderer.initialize();  // Uses embedded GLSL strings as fallback
 
 // Option 2: ShaderManager integration (recommended for development)
-renderer.initializeWithShaderManager(
-    "polyline_renderer",          // Program name
-    "shaders/polyline.vert",      // Vertex shader path
-    "shaders/polyline.frag"       // Fragment shader path
-);
+PolyLineRenderer renderer("shaders/line");  // Base path for .vert/.frag files
+renderer.initialize();  // Loads from ShaderManager with hot-reload support
 ```
 
-This allows developers to iterate on shaders with hot-reloading while keeping the embedded fallback for simple deployment.
+The renderers use the following uniform naming convention (matching existing shaders in `src/WhiskerToolbox/shaders/`):
+- `u_mvp_matrix`: Model-View-Projection matrix
+- `u_color`: RGBA color vector
 
 **ShaderManager API Reference:**
 
 ```cpp
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+
 // Load a shader program
 ShaderManager::instance().loadProgram(
     "plot_line",                        // Unique name
@@ -501,10 +494,10 @@ ShaderManager::instance().loadProgram(
 // Retrieve for use
 ShaderProgram* program = ShaderManager::instance().getProgram("plot_line");
 program->use();
-program->setUniform("u_MVP", mvp_matrix);
+program->setUniform("u_mvp_matrix", mvp_matrix);
 ```
 
-See `src/WhiskerToolbox/ShaderManager/shader_manager_design_doc.md` for the full design specification.
+Existing shaders are located in `src/WhiskerToolbox/shaders/` and include specialized variants for different OpenGL versions (4.1 for macOS compatibility, 4.3+ for compute shaders).
 
 ### 4. Data Transformers (The "Pipeline")
 

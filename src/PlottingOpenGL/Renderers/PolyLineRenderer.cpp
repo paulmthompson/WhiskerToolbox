@@ -1,10 +1,16 @@
 #include "PolyLineRenderer.hpp"
 
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
+
+#include <iostream>
 
 namespace PlottingOpenGL {
 
-PolyLineRenderer::PolyLineRenderer() = default;
+PolyLineRenderer::PolyLineRenderer(std::string shader_base_path)
+    : m_shader_base_path(std::move(shader_base_path)) {
+}
 
 PolyLineRenderer::~PolyLineRenderer() {
     cleanup();
@@ -19,9 +25,22 @@ bool PolyLineRenderer::initialize() {
         return false;
     }
 
-    // Compile shaders
-    if (!compileShaders()) {
-        return false;
+    // Try to load shaders from ShaderManager first
+    if (!m_shader_base_path.empty()) {
+        if (loadShadersFromManager()) {
+            m_use_shader_manager = true;
+        } else {
+            std::cerr << "[PolyLineRenderer] Failed to load shaders from ShaderManager, "
+                      << "falling back to embedded shaders" << std::endl;
+            if (!compileEmbeddedShaders()) {
+                return false;
+            }
+        }
+    } else {
+        // No shader path provided, use embedded shaders
+        if (!compileEmbeddedShaders()) {
+            return false;
+        }
     }
 
     // Create VAO and VBO
@@ -43,7 +62,9 @@ bool PolyLineRenderer::initialize() {
 void PolyLineRenderer::cleanup() {
     m_vbo.destroy();
     m_vao.destroy();
-    m_shader.destroy();
+    if (!m_use_shader_manager) {
+        m_embedded_shader.destroy();
+    }
     m_initialized = false;
     clearData();
 }
@@ -66,15 +87,28 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
     // Compute MVP = Projection * View * Model
     glm::mat4 mvp = projection_matrix * view_matrix * m_model_matrix;
 
-    // Bind shader and set uniforms
-    if (!m_shader.bind()) {
-        return;
+    // Get shader program (either from ShaderManager or embedded)
+    ShaderProgram * shader_program = nullptr;
+    if (m_use_shader_manager) {
+        shader_program = ShaderManager::instance().getProgram(SHADER_PROGRAM_NAME);
+        if (!shader_program) {
+            std::cerr << "[PolyLineRenderer] ShaderManager program not found" << std::endl;
+            return;
+        }
+        shader_program->use();
+        shader_program->setUniform("u_mvp_matrix", mvp);
+    } else {
+        if (!m_embedded_shader.bind()) {
+            return;
+        }
+        m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
     }
-    m_shader.setUniformMatrix4("uMVP", glm::value_ptr(mvp));
 
     // Bind VAO
     if (!m_vao.bind()) {
-        m_shader.release();
+        if (!m_use_shader_manager) {
+            m_embedded_shader.release();
+        }
         return;
     }
 
@@ -86,18 +120,37 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
         // Per-line colors
         for (size_t i = 0; i < m_line_start_indices.size(); ++i) {
             glm::vec4 const & color = m_line_colors[i];
-            m_shader.setUniformValue("uColor", color.r, color.g, color.b, color.a);
+            if (m_use_shader_manager) {
+                // ShaderProgram doesn't have a vec4 overload, use native program
+                auto * native = shader_program->getNativeProgram();
+                if (native) {
+                    native->setUniformValue("u_color", color.r, color.g, color.b, color.a);
+                }
+            } else {
+                m_embedded_shader.setUniformValue("u_color", color.r, color.g, color.b, color.a);
+            }
             gl->glDrawArrays(GL_LINE_STRIP,
                              m_line_start_indices[i],
                              m_line_vertex_counts[i]);
         }
     } else {
         // Global color for all lines
-        m_shader.setUniformValue("uColor",
-                                 m_global_color.r,
-                                 m_global_color.g,
-                                 m_global_color.b,
-                                 m_global_color.a);
+        if (m_use_shader_manager) {
+            auto * native = shader_program->getNativeProgram();
+            if (native) {
+                native->setUniformValue("u_color", 
+                                        m_global_color.r,
+                                        m_global_color.g,
+                                        m_global_color.b,
+                                        m_global_color.a);
+            }
+        } else {
+            m_embedded_shader.setUniformValue("u_color",
+                                              m_global_color.r,
+                                              m_global_color.g,
+                                              m_global_color.b,
+                                              m_global_color.a);
+        }
 
         for (size_t i = 0; i < m_line_start_indices.size(); ++i) {
             gl->glDrawArrays(GL_LINE_STRIP,
@@ -108,7 +161,9 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
 
     // Cleanup
     m_vao.release();
-    m_shader.release();
+    if (!m_use_shader_manager) {
+        m_embedded_shader.release();
+    }
 }
 
 bool PolyLineRenderer::hasData() const {
@@ -168,9 +223,22 @@ void PolyLineRenderer::setLineThickness(float thickness) {
     m_thickness = thickness;
 }
 
-bool PolyLineRenderer::compileShaders() {
-    return m_shader.createFromSource(PolyLineShaders::VERTEX_SHADER,
-                                     PolyLineShaders::FRAGMENT_SHADER);
+bool PolyLineRenderer::loadShadersFromManager() {
+    std::string const vertex_path = m_shader_base_path + "line.vert";
+    std::string const fragment_path = m_shader_base_path + "line.frag";
+    
+    return ShaderManager::instance().loadProgram(
+        SHADER_PROGRAM_NAME,
+        vertex_path,
+        fragment_path,
+        "",  // No geometry shader
+        ShaderSourceType::FileSystem
+    );
+}
+
+bool PolyLineRenderer::compileEmbeddedShaders() {
+    return m_embedded_shader.createFromSource(PolyLineShaders::VERTEX_SHADER,
+                                              PolyLineShaders::FRAGMENT_SHADER);
 }
 
 void PolyLineRenderer::setupVertexAttributes() {

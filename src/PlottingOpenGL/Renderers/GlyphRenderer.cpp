@@ -1,12 +1,17 @@
 #include "GlyphRenderer.hpp"
 
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include <cmath>
+#include <iostream>
 
 namespace PlottingOpenGL {
 
-GlyphRenderer::GlyphRenderer() = default;
+GlyphRenderer::GlyphRenderer(std::string shader_base_path)
+    : m_shader_base_path(std::move(shader_base_path)) {
+}
 
 GlyphRenderer::~GlyphRenderer() {
     cleanup();
@@ -21,9 +26,22 @@ bool GlyphRenderer::initialize() {
         return false;
     }
 
-    // Compile shaders (use point-based shaders for circle glyphs)
-    if (!compileShaders()) {
-        return false;
+    // Try to load shaders from ShaderManager first
+    if (!m_shader_base_path.empty()) {
+        if (loadShadersFromManager()) {
+            m_use_shader_manager = true;
+        } else {
+            std::cerr << "[GlyphRenderer] Failed to load shaders from ShaderManager, "
+                      << "falling back to embedded shaders" << std::endl;
+            if (!compileEmbeddedShaders()) {
+                return false;
+            }
+        }
+    } else {
+        // No shader path provided, use embedded shaders
+        if (!compileEmbeddedShaders()) {
+            return false;
+        }
     }
 
     // Create VAO and VBOs
@@ -55,7 +73,9 @@ void GlyphRenderer::cleanup() {
     m_instance_vbo.destroy();
     m_geometry_vbo.destroy();
     m_vao.destroy();
-    m_shader.destroy();
+    if (!m_use_shader_manager) {
+        m_embedded_shader.destroy();
+    }
     m_initialized = false;
     clearData();
 }
@@ -79,16 +99,33 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
     // Compute MVP = Projection * View * Model
     glm::mat4 mvp = projection_matrix * view_matrix * m_model_matrix;
 
-    // Bind shader and set uniforms
-    if (!m_shader.bind()) {
-        return;
+    // Get shader program (either from ShaderManager or embedded)
+    ShaderProgram * shader_program = nullptr;
+    if (m_use_shader_manager) {
+        shader_program = ShaderManager::instance().getProgram(SHADER_PROGRAM_NAME);
+        if (!shader_program) {
+            std::cerr << "[GlyphRenderer] ShaderManager program not found" << std::endl;
+            return;
+        }
+        shader_program->use();
+        shader_program->setUniform("u_mvp_matrix", mvp);
+        auto * native = shader_program->getNativeProgram();
+        if (native) {
+            native->setUniformValue("u_point_size", m_glyph_size);
+        }
+    } else {
+        if (!m_embedded_shader.bind()) {
+            return;
+        }
+        m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+        m_embedded_shader.setUniformValue("u_point_size", m_glyph_size);
     }
-    m_shader.setUniformMatrix4("uMVP", glm::value_ptr(mvp));
-    m_shader.setUniformValue("uGlyphSize", m_glyph_size);
 
     // Bind VAO
     if (!m_vao.bind()) {
-        m_shader.release();
+        if (!m_use_shader_manager) {
+            m_embedded_shader.release();
+        }
         return;
     }
 
@@ -128,7 +165,9 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
 
     // Cleanup
     m_vao.release();
-    m_shader.release();
+    if (!m_use_shader_manager) {
+        m_embedded_shader.release();
+    }
 }
 
 bool GlyphRenderer::hasData() const {
@@ -181,10 +220,26 @@ void GlyphRenderer::setGlyphSize(float size) {
     m_glyph_size = size;
 }
 
-bool GlyphRenderer::compileShaders() {
+bool GlyphRenderer::loadShadersFromManager() {
+    // The existing point shaders use a slightly different interface (with group_id support)
+    // For basic glyph rendering, we create a simplified version
+    // TODO: Consider creating dedicated glyph shaders or adapting the existing point shaders
+    std::string const vertex_path = m_shader_base_path + "point.vert";
+    std::string const fragment_path = m_shader_base_path + "point.frag";
+    
+    return ShaderManager::instance().loadProgram(
+        SHADER_PROGRAM_NAME,
+        vertex_path,
+        fragment_path,
+        "",  // No geometry shader
+        ShaderSourceType::FileSystem
+    );
+}
+
+bool GlyphRenderer::compileEmbeddedShaders() {
     // Use point-based shaders that work for both point sprites and instanced geometry
-    return m_shader.createFromSource(GlyphShaders::POINT_VERTEX_SHADER,
-                                     GlyphShaders::POINT_FRAGMENT_SHADER);
+    return m_embedded_shader.createFromSource(GlyphShaders::POINT_VERTEX_SHADER,
+                                              GlyphShaders::POINT_FRAGMENT_SHADER);
 }
 
 void GlyphRenderer::createGlyphGeometry() {

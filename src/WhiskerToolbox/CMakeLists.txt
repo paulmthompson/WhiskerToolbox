@@ -24,7 +24,7 @@ add_subdirectory(GroupManagementWidget)
 add_subdirectory(GroupContextMenu)
 add_subdirectory(MediaExport)
 add_subdirectory(DataViewer)
-add_subdirectory(ShaderManager)
+# ShaderManager moved to PlottingOpenGL library
 add_subdirectory(TimeScrollBar)
 add_subdirectory(Analysis_Dashboard)
 add_subdirectory(Feature_Table_Widget)
@@ -311,7 +311,7 @@ endif()
 
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
-target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)
+target_link_libraries(WhiskerToolbox PRIVATE PlottingOpenGL)  # Contains ShaderManager
 target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)

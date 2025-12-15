@@ -6,7 +6,7 @@
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeScrollBar.hpp"
-#include "ShaderManager/ShaderManager.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "Toolbox/ToolboxPanel.hpp"
 #include "Properties/PropertiesPanel.hpp"
