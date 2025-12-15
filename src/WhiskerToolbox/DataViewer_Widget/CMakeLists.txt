@@ -9,6 +9,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         DataViewer_Widget.ui
         OpenGLWidget.cpp
         OpenGLWidget.hpp
+        SceneBuildingHelpers.cpp
+        SceneBuildingHelpers.hpp
         SVGExporter.cpp
         SVGExporter.hpp
         AnalogTimeSeries/AnalogViewer_Widget.cpp

@@ -3,15 +3,17 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "DataManager/utils/color.hpp"
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
+#include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QMouseEvent>
@@ -252,6 +254,12 @@ void OpenGLWidget::cleanup() {
         m_dashedProgram = nullptr;
     }
 
+    // Cleanup PlottingOpenGL SceneRenderer
+    if (_scene_renderer) {
+        _scene_renderer->cleanup();
+        _scene_renderer.reset();
+    }
+
     m_vbo.destroy();
     m_vao.destroy();
 
@@ -361,6 +369,13 @@ void OpenGLWidget::initializeGL() {
     m_vbo.bind();
     m_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
     setupVertexAttribs();
+
+    // Initialize PlottingOpenGL SceneRenderer
+    _scene_renderer = std::make_unique<PlottingOpenGL::SceneRenderer>();
+    if (!_scene_renderer->initialize()) {
+        std::cerr << "Warning: Failed to initialize SceneRenderer" << std::endl;
+        _scene_renderer.reset();
+    }
 }
 
 void OpenGLWidget::setupVertexAttribs() {
@@ -494,18 +509,18 @@ void OpenGLWidget::drawDigitalEventSeries() {
         CorePlotting::EventSeriesMatrixParams model_params;
         model_params.allocated_y_center = display_options->layout.allocated_y_center;
         model_params.allocated_height = display_options->layout.allocated_height;
-        model_params.event_height = 0.0f;  // Use allocated height
+        model_params.event_height = 0.0f;// Use allocated height
         model_params.margin_factor = display_options->margin_factor;
         model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
         model_params.viewport_y_min = _yMin;
         model_params.viewport_y_max = _yMax;
-        model_params.plotting_mode = (display_options->plotting_mode == EventPlottingMode::FullCanvas) 
-            ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas 
-            : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
-        
+        model_params.plotting_mode = (display_options->plotting_mode == EventPlottingMode::FullCanvas)
+                                             ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
+                                             : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
+
         CorePlotting::ViewProjectionParams view_params;
         view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
-        
+
         auto Model = CorePlotting::getEventModelMatrix(model_params);
         auto View = CorePlotting::getEventViewMatrix(model_params, view_params);
         auto Projection = CorePlotting::getEventProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax);
@@ -620,10 +635,10 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         model_params.global_zoom = _plotting_manager->getGlobalZoom();
         model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
         model_params.extend_full_canvas = display_options->extend_full_canvas;
-        
+
         CorePlotting::ViewProjectionParams view_params;
         view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
-        
+
         auto Model = CorePlotting::getIntervalModelMatrix(model_params);
         auto View = CorePlotting::getIntervalViewMatrix(view_params);
         auto Projection = CorePlotting::getIntervalProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), _yMin, _yMax);
@@ -854,10 +869,10 @@ void OpenGLWidget::drawAnalogSeries() {
         model_params.data_mean = display_options->data_cache.cached_mean;
         model_params.std_dev = display_options->data_cache.cached_std_dev;
         model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
-        
+
         CorePlotting::ViewProjectionParams view_params;
         view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
-        
+
         auto Model = CorePlotting::getAnalogModelMatrix(model_params);
         auto View = CorePlotting::getAnalogViewMatrix(view_params);
         auto Projection = CorePlotting::getAnalogProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax);
@@ -1027,10 +1042,15 @@ void OpenGLWidget::paintGL() {
     // Update Y boundaries based on pan and zoom
     _updateYViewBoundaries();
 
-    // Draw the series
-    drawDigitalEventSeries();
-    drawDigitalIntervalSeries();
-    drawAnalogSeries();
+    // Choose rendering path
+    if (_use_scene_renderer && _scene_renderer && _scene_renderer->isInitialized()) {
+        renderWithSceneRenderer();
+    } else {
+        // Legacy inline rendering
+        drawDigitalEventSeries();
+        drawDigitalIntervalSeries();
+        drawAnalogSeries();
+    }
 
     drawAxis();
 
@@ -2196,5 +2216,301 @@ void OpenGLWidget::showSeriesInfoTooltip(QPoint const & pos) {
     } else {
         // No series under cursor, hide tooltip
         QToolTip::hideText();
+    }
+}
+///////////////////////////////////////////////////////////////////////////////
+// New SceneRenderer-based rendering methods
+///////////////////////////////////////////////////////////////////////////////
+
+void OpenGLWidget::renderWithSceneRenderer() {
+    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+        return;
+    }
+
+    auto const start_time = TimeFrameIndex(_xAxis.getStart());
+    auto const end_time = TimeFrameIndex(_xAxis.getEnd());
+
+    // Build shared View and Projection matrices
+    CorePlotting::ViewProjectionParams view_params;
+    view_params.vertical_pan_offset = _verticalPanOffset;
+
+    // Shared projection matrix (time range to NDC)
+    glm::mat4 projection = CorePlotting::getAnalogProjectionMatrix(start_time, end_time, _yMin, _yMax);
+
+    // Shared view matrix (global pan)
+    glm::mat4 view = CorePlotting::getAnalogViewMatrix(view_params);
+
+    // Clear previous scene data
+    _scene_renderer->clearScene();
+
+    // Upload batches for each series type
+    uploadAnalogBatches();
+    uploadEventBatches();
+    uploadIntervalBatches();
+
+    // Render all uploaded batches
+    _scene_renderer->render(view, projection);
+}
+
+void OpenGLWidget::uploadAnalogBatches() {
+    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+        return;
+    }
+
+    auto const start_time = TimeFrameIndex(_xAxis.getStart());
+    auto const end_time = TimeFrameIndex(_xAxis.getEnd());
+
+    // Count stacked-mode events (exclude FullCanvas from stackable count)
+    int stacked_event_count = 0;
+    for (auto const & [key, event_data]: _digital_event_series) {
+        if (event_data.display_options->style.is_visible &&
+            event_data.display_options->display_mode == EventDisplayMode::Stacked) {
+            stacked_event_count++;
+        }
+    }
+
+    // Get all visible analog keys
+    std::vector<std::string> visible_analog_keys;
+    for (auto const & [k, data]: _analog_series) {
+        if (data.display_options->style.is_visible) {
+            visible_analog_keys.push_back(k);
+        }
+    }
+
+    int const total_stackable_series = static_cast<int>(visible_analog_keys.size()) + stacked_event_count;
+    int i = 0;
+
+    for (auto const & [key, analog_data]: _analog_series) {
+        auto const & series = analog_data.series;
+        auto const & display_options = analog_data.display_options;
+
+        if (!display_options->style.is_visible) continue;
+
+        // Calculate coordinate allocation
+        float allocated_y_center = 0.0f;
+        float allocated_height = 0.0f;
+
+        bool use_config = (stacked_event_count == 0);
+        bool has_config_allocation = false;
+
+        if (use_config) {
+            has_config_allocation = _plotting_manager->getAnalogSeriesAllocationForKey(
+                    key, visible_analog_keys, allocated_y_center, allocated_height);
+        }
+
+        if (!has_config_allocation) {
+            if (total_stackable_series > 0) {
+                _plotting_manager->calculateGlobalStackedAllocation(i, -1, total_stackable_series,
+                                                                    allocated_y_center, allocated_height);
+            } else {
+                _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
+            }
+        }
+
+        display_options->layout.allocated_y_center = allocated_y_center;
+        display_options->layout.allocated_height = allocated_height;
+
+        // Apply PlottingManager pan offset
+        _plotting_manager->setPanOffset(_verticalPanOffset);
+
+        // Build parameter structs for CorePlotting MVP functions
+        CorePlotting::AnalogSeriesMatrixParams model_params;
+        model_params.allocated_y_center = display_options->layout.allocated_y_center;
+        model_params.allocated_height = display_options->layout.allocated_height;
+        model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
+        model_params.user_scale_factor = display_options->user_scale_factor;
+        model_params.global_zoom = _plotting_manager->getGlobalZoom();
+        model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
+        model_params.data_mean = display_options->data_cache.cached_mean;
+        model_params.std_dev = display_options->data_cache.cached_std_dev;
+        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+
+        CorePlotting::ViewProjectionParams view_params;
+        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+
+        // Parse color
+        int r, g, b;
+        hexToRGB(display_options->style.hex_color, r, g, b);
+
+        // Build batch parameters
+        DataViewerHelpers::AnalogBatchParams batch_params;
+        batch_params.start_time = start_time;
+        batch_params.end_time = end_time;
+        batch_params.gap_threshold = display_options->gap_threshold;
+        batch_params.detect_gaps = (display_options->gap_handling == AnalogGapHandling::DetectGaps);
+        batch_params.color = glm::vec4(
+                static_cast<float>(r) / 255.0f,
+                static_cast<float>(g) / 255.0f,
+                static_cast<float>(b) / 255.0f,
+                1.0f);
+        batch_params.thickness = static_cast<float>(display_options->style.line_thickness);
+
+        // Build and upload the batch
+        auto batch = DataViewerHelpers::buildAnalogSeriesBatch(
+                *series, _master_time_frame, batch_params, model_params, view_params);
+
+        if (!batch.vertices.empty()) {
+            _scene_renderer->polyLineRenderer().uploadData(batch);
+        }
+
+        i++;
+    }
+}
+
+void OpenGLWidget::uploadEventBatches() {
+    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+        return;
+    }
+
+    auto const start_time = TimeFrameIndex(_xAxis.getStart());
+    auto const end_time = TimeFrameIndex(_xAxis.getEnd());
+
+    // Count visible analog series
+    int total_analog_visible = 0;
+    for (auto const & [key, analog_data]: _analog_series) {
+        if (analog_data.display_options->style.is_visible) {
+            total_analog_visible++;
+        }
+    }
+
+    // Count stacked-mode events
+    int stacked_event_count = 0;
+    for (auto const & [key, event_data]: _digital_event_series) {
+        if (event_data.display_options->style.is_visible &&
+            event_data.display_options->display_mode == EventDisplayMode::Stacked) {
+            stacked_event_count++;
+        }
+    }
+    int const total_stackable_series = total_analog_visible + stacked_event_count;
+
+    int stacked_series_index = 0;
+
+    for (auto const & [key, event_data]: _digital_event_series) {
+        auto const & series = event_data.series;
+        auto const & display_options = event_data.display_options;
+
+        if (!display_options->style.is_visible) continue;
+
+        // Determine plotting mode
+        display_options->plotting_mode = (display_options->display_mode == EventDisplayMode::Stacked)
+                                                 ? EventPlottingMode::Stacked
+                                                 : EventPlottingMode::FullCanvas;
+
+        float allocated_y_center = 0.0f;
+        float allocated_height = 0.0f;
+        if (display_options->plotting_mode == EventPlottingMode::Stacked) {
+            _plotting_manager->calculateGlobalStackedAllocation(-1, stacked_series_index, total_stackable_series,
+                                                                allocated_y_center, allocated_height);
+            stacked_series_index++;
+        } else {
+            allocated_y_center = (_plotting_manager->viewport_y_min + _plotting_manager->viewport_y_max) * 0.5f;
+            allocated_height = _plotting_manager->viewport_y_max - _plotting_manager->viewport_y_min;
+        }
+
+        display_options->layout.allocated_y_center = allocated_y_center;
+        display_options->layout.allocated_height = allocated_height;
+
+        // Apply PlottingManager pan offset
+        _plotting_manager->setPanOffset(_verticalPanOffset);
+
+        // Build model params
+        CorePlotting::EventSeriesMatrixParams model_params;
+        model_params.allocated_y_center = display_options->layout.allocated_y_center;
+        model_params.allocated_height = display_options->layout.allocated_height;
+        model_params.event_height = 0.0f;
+        model_params.margin_factor = display_options->margin_factor;
+        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        model_params.viewport_y_min = _yMin;
+        model_params.viewport_y_max = _yMax;
+        model_params.plotting_mode = (display_options->plotting_mode == EventPlottingMode::FullCanvas)
+                                             ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
+                                             : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
+
+        CorePlotting::ViewProjectionParams view_params;
+        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+
+        // Parse color
+        int r, g, b;
+        hexToRGB(display_options->style.hex_color, r, g, b);
+
+        // Build batch parameters
+        DataViewerHelpers::EventBatchParams batch_params;
+        batch_params.start_time = start_time;
+        batch_params.end_time = end_time;
+        batch_params.color = glm::vec4(
+                static_cast<float>(r) / 255.0f,
+                static_cast<float>(g) / 255.0f,
+                static_cast<float>(b) / 255.0f,
+                display_options->style.alpha);
+        batch_params.glyph_size = static_cast<float>(display_options->style.line_thickness);
+        batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
+
+        // Build and upload the batch
+        auto batch = DataViewerHelpers::buildEventSeriesBatch(
+                *series, _master_time_frame, batch_params, model_params, view_params);
+
+        if (!batch.positions.empty()) {
+            _scene_renderer->glyphRenderer().uploadData(batch);
+        }
+    }
+}
+
+void OpenGLWidget::uploadIntervalBatches() {
+    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+        return;
+    }
+
+    auto const start_time = TimeFrameIndex(_xAxis.getStart());
+    auto const end_time = TimeFrameIndex(_xAxis.getEnd());
+
+    for (auto const & [key, interval_data]: _digital_interval_series) {
+        auto const & series = interval_data.series;
+        auto const & display_options = interval_data.display_options;
+
+        if (!display_options->style.is_visible) continue;
+
+        // Calculate coordinate allocation
+        float allocated_y_center, allocated_height;
+        _plotting_manager->calculateDigitalIntervalSeriesAllocation(0, allocated_y_center, allocated_height);
+
+        display_options->layout.allocated_y_center = allocated_y_center;
+        display_options->layout.allocated_height = allocated_height;
+
+        // Apply PlottingManager pan offset
+        _plotting_manager->setPanOffset(_verticalPanOffset);
+
+        // Build model params
+        CorePlotting::IntervalSeriesMatrixParams model_params;
+        model_params.allocated_y_center = display_options->layout.allocated_y_center;
+        model_params.allocated_height = display_options->layout.allocated_height;
+        model_params.margin_factor = display_options->margin_factor;
+        model_params.global_zoom = _plotting_manager->getGlobalZoom();
+        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        model_params.extend_full_canvas = display_options->extend_full_canvas;
+
+        CorePlotting::ViewProjectionParams view_params;
+        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+
+        // Parse color
+        int r, g, b;
+        hexToRGB(display_options->style.hex_color, r, g, b);
+
+        // Build batch parameters
+        DataViewerHelpers::IntervalBatchParams batch_params;
+        batch_params.start_time = start_time;
+        batch_params.end_time = end_time;
+        batch_params.color = glm::vec4(
+                static_cast<float>(r) / 255.0f,
+                static_cast<float>(g) / 255.0f,
+                static_cast<float>(b) / 255.0f,
+                display_options->style.alpha);
+
+        // Build and upload the batch
+        auto batch = DataViewerHelpers::buildIntervalSeriesBatch(
+                *series, _master_time_frame, batch_params, model_params, view_params);
+
+        if (!batch.bounds.empty()) {
+            _scene_renderer->rectangleRenderer().uploadData(batch);
+        }
     }
 }

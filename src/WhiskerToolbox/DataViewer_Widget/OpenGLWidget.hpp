@@ -1,20 +1,21 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
-#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-#include "DataViewer/XAxis.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataViewer/XAxis.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
+#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 //#include <QOpenGLFunctions_4_1_Core>
+#include <QEvent>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <QTimer>
 #include <QToolTip>
-#include <QEvent>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -329,7 +330,7 @@ public:
     }
 
     void setGlobalScale(float scale) {
-        
+
         std::cout << "Global zoom set to " << scale << std::endl;
         _global_zoom = scale;
         updateCanvas(_time);
@@ -338,6 +339,22 @@ public:
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
         return std::make_pair(width(), height());
     }
+
+    /**
+     * @brief Enable or disable the new SceneRenderer-based rendering.
+     * 
+     * When enabled, series are converted to CorePlotting RenderableBatch
+     * objects and rendered using the PlottingOpenGL renderers.
+     * When disabled, the legacy inline vertex generation is used.
+     * 
+     * @param enabled True to use new renderer system
+     */
+    void setUseSceneRenderer(bool enabled) {
+        _use_scene_renderer = enabled;
+        updateCanvas(_time);
+    }
+
+    [[nodiscard]] bool isUsingSceneRenderer() const { return _use_scene_renderer; }
 
     // Coordinate conversion methods
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
@@ -406,7 +423,31 @@ private:
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
-    
+
+    // New SceneRenderer-based rendering methods
+    /**
+     * @brief Render all series using the PlottingOpenGL SceneRenderer.
+     * 
+     * Converts series data to RenderableBatch objects and uses the new
+     * renderer system. Called when _use_scene_renderer is true.
+     */
+    void renderWithSceneRenderer();
+
+    /**
+     * @brief Build and upload batches for all visible analog series.
+     */
+    void uploadAnalogBatches();
+
+    /**
+     * @brief Build and upload batches for all visible digital event series.
+     */
+    void uploadEventBatches();
+
+    /**
+     * @brief Build and upload batches for all visible digital interval series.
+     */
+    void uploadIntervalBatches();
+
     // Tooltip helper methods
     /**
      * @brief Find the series under the mouse cursor
@@ -420,17 +461,17 @@ private:
      *         or nullopt if no series is under the cursor
      */
     std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
-    
+
     /**
      * @brief Show tooltip with series information after hover delay
      */
     void showSeriesInfoTooltip(QPoint const & pos);
-    
+
     /**
      * @brief Start the tooltip timer on mouse hover
      */
     void startTooltipTimer(QPoint const & pos);
-    
+
     /**
      * @brief Cancel the tooltip timer
      */
@@ -526,11 +567,20 @@ private:
     // GL lifecycle guards
     bool _gl_initialized{false};
     QMetaObject::Connection _ctxAboutToBeDestroyedConn;
-    
+
     // Tooltip state
     QTimer * _tooltip_timer{nullptr};
     QPoint _tooltip_hover_pos;
-    static constexpr int TOOLTIP_DELAY_MS = 1000; ///< Delay before showing tooltip (1 second)
+    static constexpr int TOOLTIP_DELAY_MS = 1000;///< Delay before showing tooltip (1 second)
+
+    // PlottingOpenGL Renderers
+    // These use the new CorePlotting RenderableBatch approach for rendering.
+    // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
+    std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
+
+    // Flag to enable/disable using the new renderer system
+    // Set to false by default for backwards compatibility during migration
+    bool _use_scene_renderer{false};
 };
 
 namespace TimeSeriesDefaultValues {

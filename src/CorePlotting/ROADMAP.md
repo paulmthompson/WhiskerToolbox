@@ -191,9 +191,13 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Uses Qt6's OpenGL wrappers (QOpenGLFunctions, QOpenGLExtraFunctions)
     - GLSL 330 shaders embedded in headers
 
-- [ ] **Refactor `OpenGLWidget` to use renderers**:
-    - Replace inline vertex generation with `RenderableScene` consumption
-    - Shader management stays in widget (or moves to renderer)
+- [x] **Refactor `OpenGLWidget` to use renderers** ✓:
+    - Added `SceneRenderer` member to `OpenGLWidget`
+    - Created `SceneBuildingHelpers.{hpp,cpp}` to convert series data to `RenderableBatch` objects
+    - `renderWithSceneRenderer()` method builds and uploads batches for all series types
+    - Toggle between legacy and new rendering via `setUseSceneRenderer(bool)`
+    - Legacy inline rendering preserved for backwards compatibility
+    - All existing tests passing ✓
 
 - [x] **Integrate ShaderManager into PlottingOpenGL** ✓:
     - Moved ShaderManager from `src/WhiskerToolbox/ShaderManager/` to `src/PlottingOpenGL/ShaderManager/`
