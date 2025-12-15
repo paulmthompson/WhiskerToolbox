@@ -18,6 +18,7 @@ find_package(glm CONFIG REQUIRED)
 add_executable(test_coreplotting
     TimeRange.test.cpp
     SeriesMatrices.test.cpp
+    LayoutEngine.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

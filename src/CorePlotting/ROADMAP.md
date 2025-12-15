@@ -87,15 +87,21 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - All tests passing (177 CorePlotting unit tests + 3 DataViewer integration tests) ✓
 
 ### 1.3 Layout Engine
-- [ ] **Create `LayoutEngine`** (evolution of PlottingManager):
+- [x] **Create `LayoutEngine`** (evolution of PlottingManager):
     - Pure functions that take series count/configuration → layout positions
     - No data storage, no global state
     - Input: `LayoutRequest` (series types, counts, viewport bounds)
     - Output: `std::vector<SeriesLayoutResult>`
+    - Location: [LayoutEngine.hpp](Layout/LayoutEngine.hpp), [LayoutEngine.cpp](Layout/LayoutEngine.cpp)
+    - Tests: [LayoutEngine.test.cpp](/tests/CorePlotting/LayoutEngine.test.cpp) — 82 assertions passing ✓
     
-- [ ] **Implement layout strategies**:
-    - `StackedLayoutStrategy`: DataViewer-style vertical stacking
-    - `RowLayoutStrategy`: Raster plot-style horizontal rows
+- [x] **Implement layout strategies**:
+    - `StackedLayoutStrategy`: DataViewer-style vertical stacking ✓
+        - Location: [StackedLayoutStrategy.hpp](Layout/StackedLayoutStrategy.hpp), [StackedLayoutStrategy.cpp](Layout/StackedLayoutStrategy.cpp)
+        - Handles mixed stackable (analog, stacked events) and full-canvas (intervals) series
+    - `RowLayoutStrategy`: Raster plot-style horizontal rows ✓
+        - Location: [RowLayoutStrategy.hpp](Layout/RowLayoutStrategy.hpp), [RowLayoutStrategy.cpp](Layout/RowLayoutStrategy.cpp)
+        - Equal row heights for multi-trial visualization
 
 ### 1.4 Renderable Primitives
 - [ ] **Finalize `RenderableScene` struct**:

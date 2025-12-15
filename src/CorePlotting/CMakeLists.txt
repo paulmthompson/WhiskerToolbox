@@ -13,6 +13,13 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/TimeRange.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
+    Layout/SeriesLayout.hpp
+    Layout/LayoutEngine.hpp
+    Layout/LayoutEngine.cpp
+    Layout/StackedLayoutStrategy.hpp
+    Layout/StackedLayoutStrategy.cpp
+    Layout/RowLayoutStrategy.hpp
+    Layout/RowLayoutStrategy.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
