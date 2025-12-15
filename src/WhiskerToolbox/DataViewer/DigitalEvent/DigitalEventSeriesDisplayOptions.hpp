@@ -68,26 +68,6 @@ struct NewDigitalEventSeriesDisplayOptions {
     // Rendering options
     float margin_factor{0.95f};///< Margin factor for event height (0.95 = 95% of allocated space)
     
-    // ========== Legacy Accessors (for backward compatibility) ==========
-    
-    // Visual properties - forward to style
-    [[nodiscard]] std::string const& hex_color() const { return style.hex_color; }
-    [[nodiscard]] float alpha() const { return style.alpha; }
-    [[nodiscard]] bool is_visible() const { return style.is_visible; }
-    [[nodiscard]] int line_thickness() const { return style.line_thickness; }
-    
-    // Mutable setters for style
-    void set_hex_color(std::string color) { style.hex_color = std::move(color); }
-    void set_alpha(float a) { style.alpha = a; }
-    void set_visible(bool visible) { style.is_visible = visible; }
-    void set_line_thickness(int thickness) { style.line_thickness = thickness; }
-    
-    // Layout properties - forward to layout
-    [[nodiscard]] float allocated_y_center() const { return layout.allocated_y_center; }
-    [[nodiscard]] float allocated_height() const { return layout.allocated_height; }
-    
-    void set_allocated_y_center(float y) { layout.allocated_y_center = y; }
-    void set_allocated_height(float h) { layout.allocated_height = h; }
 };
 
 #endif// DATAVIEWER_DIGITALEVENTSERIESDISPLAYOPTIONS_HPP

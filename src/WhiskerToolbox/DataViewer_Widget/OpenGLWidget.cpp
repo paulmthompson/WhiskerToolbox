@@ -4,10 +4,10 @@
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
-#include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"  // For helper functions
+#include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "DataViewer/PlottingManager/PlottingManager.hpp"
+#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"

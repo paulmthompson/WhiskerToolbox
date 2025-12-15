@@ -1,12 +1,18 @@
 #ifndef DIGITALEVENTBUILDER_HPP
 #define DIGITALEVENTBUILDER_HPP
 
-#include "../../../../../src/WhiskerToolbox/DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "../../../../../src/WhiskerToolbox/DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 
 #include <vector>
 #include <random>
 #include <algorithm>
+
+// Simple event data structure for testing
+struct EventData {
+    float time{0.0f};
+    
+    explicit EventData(float t = 0.0f) : time(t) {}
+};
 
 /**
  * @brief Builder for creating test EventData vectors

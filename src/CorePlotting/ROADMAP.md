@@ -75,6 +75,17 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - **Projection**: Shared (time range → NDC)
     - Documented in SeriesMatrices.hpp header
 
+- [x] **Phase 1.2 Cleanup — Remove legacy MVP files** ✅:
+    - Created `AnalogSeriesHelpers.{hpp,cpp}` for migrated helper functions (setAnalogIntrinsicProperties, getCachedStdDev, invalidateDisplayCache)
+    - Updated all consumers to use CorePlotting API:
+        - `SVGExporter.cpp`: Converted to parameter struct-based API ✓
+        - `OpenGLWidget.cpp`: Already using CorePlotting (previous session) ✓
+        - `test_data_viewer.cpp`: Updated 50+ function calls to parameter structs ✓
+    - Removed 9 legacy files: `MVP_AnalogTimeSeries.{cpp,hpp,test.cpp}`, `MVP_DigitalEvent.{cpp,hpp,test.cpp}`, `MVP_DigitalInterval.{cpp,hpp,test.cpp}` ✓
+    - Updated CMakeLists.txt files to reference new locations ✓
+    - Fixed test linking (added CorePlotting to test dependencies) ✓
+    - All tests passing (177 CorePlotting unit tests + 3 DataViewer integration tests) ✓
+
 ### 1.3 Layout Engine
 - [ ] **Create `LayoutEngine`** (evolution of PlottingManager):
     - Pure functions that take series count/configuration → layout positions

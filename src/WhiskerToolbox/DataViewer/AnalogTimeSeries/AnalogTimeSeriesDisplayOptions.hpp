@@ -74,39 +74,6 @@ struct NewAnalogTimeSeriesDisplayOptions {
     bool enable_gap_detection{false};                                ///< Enable automatic gap detection
     float gap_threshold{5.0f};                                       ///< Threshold for gap detection
     
-    // ========== Legacy Accessors (for backward compatibility) ==========
-    
-    // Visual properties - forward to style
-    [[nodiscard]] std::string const& hex_color() const { return style.hex_color; }
-    [[nodiscard]] float alpha() const { return style.alpha; }
-    [[nodiscard]] bool is_visible() const { return style.is_visible; }
-    [[nodiscard]] int line_thickness() const { return style.line_thickness; }
-    
-    // Mutable setters for style
-    void set_hex_color(std::string color) { style.hex_color = std::move(color); }
-    void set_alpha(float a) { style.alpha = a; }
-    void set_visible(bool visible) { style.is_visible = visible; }
-    void set_line_thickness(int thickness) { style.line_thickness = thickness; }
-    
-    // Layout properties - forward to layout
-    [[nodiscard]] float allocated_y_center() const { return layout.allocated_y_center; }
-    [[nodiscard]] float allocated_height() const { return layout.allocated_height; }
-    
-    void set_allocated_y_center(float y) { layout.allocated_y_center = y; }
-    void set_allocated_height(float h) { layout.allocated_height = h; }
-    
-    // Cache properties - forward to data_cache
-    [[nodiscard]] float cached_std_dev() const { return data_cache.cached_std_dev; }
-    [[nodiscard]] bool std_dev_cache_valid() const { return data_cache.std_dev_cache_valid; }
-    [[nodiscard]] float cached_mean() const { return data_cache.cached_mean; }
-    [[nodiscard]] bool mean_cache_valid() const { return data_cache.mean_cache_valid; }
-    
-    void set_cached_std_dev(float val) const { data_cache.cached_std_dev = val; }
-    void set_std_dev_cache_valid(bool valid) const { data_cache.std_dev_cache_valid = valid; }
-    void set_cached_mean(float val) const { data_cache.cached_mean = val; }
-    void set_mean_cache_valid(bool valid) const { data_cache.mean_cache_valid = valid; }
-    
-    void invalidate_cache() { data_cache.invalidate(); }
 };
 
 

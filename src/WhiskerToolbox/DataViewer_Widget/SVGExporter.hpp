@@ -10,7 +10,6 @@
 
 class OpenGLWidget;
 struct LayoutCalculator;
-using PlottingManager = LayoutCalculator;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;
@@ -38,9 +37,9 @@ public:
      * @brief Construct SVG exporter with references to plot state
      * 
      * @param gl_widget OpenGL widget containing plot data and state
-     * @param plotting_manager Plotting manager for coordinate allocation
+     * @param plotting_manager Layout calculator for coordinate allocation
      */
-    SVGExporter(OpenGLWidget * gl_widget, PlottingManager * plotting_manager);
+    SVGExporter(OpenGLWidget * gl_widget, LayoutCalculator * plotting_manager);
 
     /**
      * @brief Export current plot to SVG format
@@ -185,7 +184,7 @@ private:
     void addScalebar(float start_time, float end_time);
 
     OpenGLWidget * gl_widget_;
-    PlottingManager * plotting_manager_;
+    LayoutCalculator * plotting_manager_;
 
     // SVG canvas dimensions
     int svg_width_{1920};

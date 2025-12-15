@@ -38,7 +38,6 @@ struct NewDigitalIntervalSeriesDisplayOptions;
 class TimeFrame;
 class QMouseEvent;
 struct LayoutCalculator;
-using PlottingManager = LayoutCalculator;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
@@ -310,7 +309,7 @@ public:
      * 
      * @param plotting_manager Pointer to PlottingManager managed by DataViewer_Widget
      */
-    void setPlottingManager(PlottingManager * plotting_manager) {
+    void setPlottingManager(LayoutCalculator * plotting_manager) {
         _plotting_manager = plotting_manager;
     }
 
@@ -510,7 +509,7 @@ private:
     std::shared_ptr<TimeFrame> _master_time_frame;
 
     // PlottingManager for coordinate allocation
-    PlottingManager * _plotting_manager{nullptr};
+    LayoutCalculator * _plotting_manager{nullptr};
 
     // New interval creation state
     bool _is_creating_new_interval{false};

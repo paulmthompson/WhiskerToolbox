@@ -5,7 +5,7 @@
 #include <QPoint>
 
 #include "DataManager/DataManagerFwd.hpp"
-#include "DataViewer/PlottingManager/PlottingManager.hpp"
+#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 
 #include <memory>
 #include <string>
@@ -122,7 +122,7 @@ private:
     QList<int> _saved_splitter_sizes;
 
     // Plotting management
-    std::unique_ptr<PlottingManager> _plotting_manager;
+    std::unique_ptr<LayoutCalculator> _plotting_manager;
 
     // Model for Feature_Tree_Widget
     std::unique_ptr<Feature_Tree_Model> _feature_tree_model;
@@ -194,7 +194,7 @@ private:
     void cleanupDeletedData();
 
     // Parsing helper
-    static std::vector<PlottingManager::AnalogGroupChannelPosition> _parseSpikeSorterConfig(std::string const & text);
+    static std::vector<LayoutCalculator::AnalogGroupChannelPosition> _parseSpikeSorterConfig(std::string const & text);
 
     // Batch operations guard to suppress per-series auto-arrange/update thrash
     bool _is_batch_add{false};

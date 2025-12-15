@@ -198,6 +198,6 @@ private:
 };
 
 // Legacy type alias for backward compatibility during transition
-using PlottingManager = LayoutCalculator;
+//using PlottingManager = LayoutCalculator;
 
 #endif// DATAVIEWER_LAYOUTCALCULATOR_HPP

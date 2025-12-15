@@ -5,27 +5,19 @@ set(DATAVIEWER_SOURCES
     XAxis.hpp
     LayoutCalculator/LayoutCalculator.hpp
     LayoutCalculator/LayoutCalculator.cpp
-    PlottingManager/PlottingManager.hpp
 
-    AnalogTimeSeries/MVP_AnalogTimeSeries.hpp
-    AnalogTimeSeries/MVP_AnalogTimeSeries.cpp
+    AnalogTimeSeries/AnalogSeriesHelpers.hpp
+    AnalogTimeSeries/AnalogSeriesHelpers.cpp
     AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp
 
     DigitalEvent/DigitalEventSeriesDisplayOptions.hpp
-    DigitalEvent/MVP_DigitalEvent.cpp
-    DigitalEvent/MVP_DigitalEvent.hpp
 
     DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp
-    DigitalInterval/MVP_DigitalInterval.hpp
-    DigitalInterval/MVP_DigitalInterval.cpp
 )
 
 set_property(GLOBAL PROPERTY DATAVIEWER_TEST_SOURCES "")
 
 set(dataviewer_test_sources
-    AnalogTimeSeries/MVP_AnalogTimeSeries.test.cpp
-    DigitalEvent/MVP_DigitalEvent.test.cpp
-    DigitalInterval/MVP_DigitalInterval.test.cpp
     )
 
 add_tests_to_global(dataviewer_test_sources 

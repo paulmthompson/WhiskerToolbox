@@ -32,14 +32,12 @@ WhiskerToolbox currently has three parallel implementations for event-like visua
 
 1. **XAxis isolation**: The current `XAxis` class manages time range independently, without knowledge of `TimeFrame` objects. It should integrate with `ViewState` and respect the bounds of the underlying `TimeFrame` to prevent scrolling/zooming beyond valid data ranges.
 
-2. **Duplicate series storage**: Both `PlottingManager` and `OpenGLWidget` maintain their own maps of series data (`analog_series_map` vs `_analog_series`). This redundancy leads to synchronization bugs.
+2. ~~**Duplicate series storage**~~: ✅ **RESOLVED** — Eliminated `PlottingManager` series storage. Series data now lives only in `OpenGLWidget`. `LayoutCalculator` (renamed from `PlottingManager`) is now a pure layout calculator with no data storage.
 
-3. **DisplayOptions conflation**: `NewAnalogTimeSeriesDisplayOptions` mixes:
-   - **Rendering style**: `hex_color`, `alpha`, `line_thickness`
-   - **Layout output**: `allocated_y_center`, `allocated_height` (computed by layout engine)
-   - **Cached calculations**: `cached_std_dev`, `cached_mean`
-   
-   These should be separate structs with clear ownership.
+3. ~~**DisplayOptions conflation**~~: ✅ **RESOLVED** — Split `DisplayOptions` into three separate structs:
+   - `SeriesStyle`: Rendering properties (color, alpha, thickness)
+   - `SeriesLayoutResult`: Layout output (allocated_y_center, allocated_height)
+   - `SeriesDataCache`: Cached calculations (std_dev, mean)
 
 4. **Per-draw-call vertex generation**: Each render frame, `OpenGLWidget` rebuilds vertex arrays inline. This should be separated into data preparation (CorePlotting) and rendering (OpenGL).
 

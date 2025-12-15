@@ -1,13 +1,12 @@
 #include "SVGExporter.hpp"
 
 #include "OpenGLWidget.hpp"
-#include "DataViewer/PlottingManager/PlottingManager.hpp"
+#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
-#include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
+#include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -19,7 +18,7 @@
 
 #include <iostream>
 
-SVGExporter::SVGExporter(OpenGLWidget * gl_widget, PlottingManager * plotting_manager)
+SVGExporter::SVGExporter(OpenGLWidget * gl_widget, LayoutCalculator * plotting_manager)
     : gl_widget_(gl_widget),
       plotting_manager_(plotting_manager) {
 }
@@ -136,20 +135,24 @@ void SVGExporter::addAnalogSeries(
         return;
     }
 
-    // Build MVP matrices using same logic as OpenGL rendering
-    auto const Model = new_getAnalogModelMat(
-        display_options,
-        display_options.data_cache.cached_std_dev,
-        display_options.data_cache.cached_mean,
-        *plotting_manager_);
-    auto const View = new_getAnalogViewMat(*plotting_manager_);
-    auto const Projection = new_getAnalogProjectionMat(
-        TimeFrameIndex(start_time),
-        TimeFrameIndex(end_time),
-        gl_widget_->getYMin(),
-        gl_widget_->getYMax(),
-        *plotting_manager_);
-
+    // Build MVP matrices using CorePlotting
+    CorePlotting::AnalogSeriesMatrixParams model_params;
+    model_params.allocated_y_center = display_options.layout.allocated_y_center;
+    model_params.allocated_height = display_options.layout.allocated_height;
+    model_params.intrinsic_scale = display_options.scaling.intrinsic_scale;
+    model_params.user_scale_factor = display_options.user_scale_factor;
+    model_params.global_zoom = plotting_manager_->getGlobalZoom();
+    model_params.user_vertical_offset = display_options.scaling.user_vertical_offset;
+    model_params.data_mean = display_options.data_cache.cached_mean;
+    model_params.std_dev = display_options.data_cache.cached_std_dev;
+    model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
+    
+    CorePlotting::ViewProjectionParams view_params;
+    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    
+    auto Model = CorePlotting::getAnalogModelMatrix(model_params);
+    auto View = CorePlotting::getAnalogViewMatrix(view_params);
+    auto Projection = CorePlotting::getAnalogProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), gl_widget_->getYMin(), gl_widget_->getYMax());
     glm::mat4 const mvp = Projection * View * Model;
 
     // Convert color
@@ -204,16 +207,25 @@ void SVGExporter::addDigitalEventSeries(
         series->getTimeFrame().get());
     auto visible_events = series->getEventsInRange(series_start, series_end);
 
-    // Build MVP matrices using same logic as OpenGL rendering
-    auto const Model = new_getEventModelMat(display_options, *plotting_manager_);
-    auto const View = new_getEventViewMat(display_options, *plotting_manager_);
-    auto const Projection = new_getEventProjectionMat(
-        start_time,
-        end_time,
-        gl_widget_->getYMin(),
-        gl_widget_->getYMax(),
-        *plotting_manager_);
-
+    // Build MVP matrices using CorePlotting
+    CorePlotting::EventSeriesMatrixParams model_params;
+    model_params.allocated_y_center = display_options.layout.allocated_y_center;
+    model_params.allocated_height = display_options.layout.allocated_height;
+    model_params.event_height = 0.0f;  // Use allocated height
+    model_params.margin_factor = display_options.margin_factor;
+    model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
+    model_params.viewport_y_min = gl_widget_->getYMin();
+    model_params.viewport_y_max = gl_widget_->getYMax();
+    model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas) 
+        ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas 
+        : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
+    
+    CorePlotting::ViewProjectionParams view_params;
+    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    
+    auto Model = CorePlotting::getEventModelMatrix(model_params);
+    auto View = CorePlotting::getEventViewMatrix(model_params, view_params);
+    auto Projection = CorePlotting::getEventProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), gl_widget_->getYMin(), gl_widget_->getYMax());
     glm::mat4 const mvp = Projection * View * Model;
 
     // Convert color
@@ -277,16 +289,21 @@ void SVGExporter::addDigitalIntervalSeries(
         TimeFrameIndex(static_cast<int64_t>(end_time)),
         *(gl_widget_->getMasterTimeFrame()));
 
-    // Build MVP matrices using same logic as OpenGL rendering
-    auto const Model = new_getIntervalModelMat(display_options, *plotting_manager_);
-    auto const View = new_getIntervalViewMat(*plotting_manager_);
-    auto const Projection = new_getIntervalProjectionMat(
-        start_time,
-        end_time,
-        gl_widget_->getYMin(),
-        gl_widget_->getYMax(),
-        *plotting_manager_);
-
+    // Build MVP matrices using CorePlotting
+    CorePlotting::IntervalSeriesMatrixParams model_params;
+    model_params.allocated_y_center = display_options.layout.allocated_y_center;
+    model_params.allocated_height = display_options.layout.allocated_height;
+    model_params.margin_factor = display_options.margin_factor;
+    model_params.global_zoom = plotting_manager_->getGlobalZoom();
+    model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
+    model_params.extend_full_canvas = display_options.extend_full_canvas;
+    
+    CorePlotting::ViewProjectionParams view_params;
+    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    
+    auto Model = CorePlotting::getIntervalModelMatrix(model_params);
+    auto View = CorePlotting::getIntervalViewMatrix(view_params);
+    auto Projection = CorePlotting::getIntervalProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), gl_widget_->getYMin(), gl_widget_->getYMax());
     glm::mat4 const mvp = Projection * View * Model;
 
     // Convert color

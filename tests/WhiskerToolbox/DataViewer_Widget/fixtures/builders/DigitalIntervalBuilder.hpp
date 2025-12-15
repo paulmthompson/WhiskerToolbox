@@ -1,7 +1,6 @@
 #ifndef DIGITALINTERVALBUILDER_HPP
 #define DIGITALINTERVALBUILDER_HPP
 
-#include "../../../../../src/WhiskerToolbox/DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
 #include "../../../../../src/WhiskerToolbox/DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "../../../../../src/TimeFrame/interval_data.hpp"
 

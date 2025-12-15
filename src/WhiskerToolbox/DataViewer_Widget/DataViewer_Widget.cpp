@@ -8,11 +8,9 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
-#include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
@@ -51,7 +49,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->setupUi(this);
 
     // Initialize plotting manager with default viewport
-    _plotting_manager = std::make_unique<PlottingManager>();
+    _plotting_manager = std::make_unique<LayoutCalculator>();
 
     // Provide PlottingManager reference to OpenGL widget
     ui->openGLWidget->setPlottingManager(_plotting_manager.get());
@@ -1260,8 +1258,8 @@ void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) 
     ui->openGLWidget->updateCanvas();
 }
 
-std::vector<PlottingManager::AnalogGroupChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
-    std::vector<PlottingManager::AnalogGroupChannelPosition> out;
+std::vector<LayoutCalculator::AnalogGroupChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
+    std::vector<LayoutCalculator::AnalogGroupChannelPosition> out;
     std::istringstream ss(text);
     std::string line;
     bool first = true;
@@ -1279,7 +1277,7 @@ std::vector<PlottingManager::AnalogGroupChannelPosition> DataViewer_Widget::_par
         if (!(ls >> row >> ch >> x >> y)) continue;
         // SpikeSorter is 1-based; convert to 0-based for our program
         if (ch > 0) ch -= 1;
-        PlottingManager::AnalogGroupChannelPosition p;
+        LayoutCalculator::AnalogGroupChannelPosition p;
         p.channel_id = ch;
         p.x = x;
         p.y = y;
