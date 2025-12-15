@@ -109,7 +109,8 @@ RenderablePolyLineBatch GapDetector::transform(
             if (current_segment_vertices.size() >=
                 static_cast<size_t>(_config.min_segment_length * 2)) {
 
-                int32_t const start_index = static_cast<int32_t>(batch.vertices.size());
+                // start_index is the vertex index (not float index)
+                int32_t const start_index = static_cast<int32_t>(batch.vertices.size() / 2);
                 int32_t const vertex_count = static_cast<int32_t>(current_segment_vertices.size() / 2);
 
                 batch.line_start_indices.push_back(start_index);
@@ -134,7 +135,8 @@ RenderablePolyLineBatch GapDetector::transform(
     if (current_segment_vertices.size() >=
         static_cast<size_t>(_config.min_segment_length * 2)) {
 
-        int32_t const start_index = static_cast<int32_t>(batch.vertices.size());
+        // start_index is the vertex index (not float index)
+        int32_t const start_index = static_cast<int32_t>(batch.vertices.size() / 2);
         int32_t const vertex_count = static_cast<int32_t>(current_segment_vertices.size() / 2);
 
         batch.line_start_indices.push_back(start_index);

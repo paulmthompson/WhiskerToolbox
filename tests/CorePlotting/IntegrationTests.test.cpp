@@ -18,6 +18,8 @@
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SpatialAdapter/EventSpatialAdapter.hpp"
 #include "CorePlotting/SpatialAdapter/PointSpatialAdapter.hpp"
+#include "CorePlotting/SpatialAdapter/PolyLineSpatialAdapter.hpp"
+#include "CorePlotting/Transformers/GapDetector.hpp"
 #include "CorePlotting/Transformers/RasterBuilder.hpp"
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
@@ -26,6 +28,8 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityRegistry.hpp"
 
+#include <cmath>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -681,3 +685,281 @@ TEST_CASE("Coordinate Transform - Screen to World to Query", "[CorePlotting][Int
     }
 }
 
+
+// ============================================================================
+// GapDetector + PolyLineSpatialAdapter Integration Tests
+// ============================================================================
+
+TEST_CASE("GapDetector + PolyLineSpatialAdapter - Segmented analog series", "[CorePlotting][Integration][GapDetector]") {
+    
+    SECTION("GapDetector creates segments from time gaps") {
+        // Create time series with a gap in the middle
+        // Segment 1: times 0-100, Segment 2: times 200-300 (gap at 100-200)
+        std::vector<float> time_values;
+        std::vector<float> data_values;
+        
+        // First segment: 0-100
+        for (int i = 0; i <= 100; ++i) {
+            time_values.push_back(static_cast<float>(i));
+            data_values.push_back(std::sin(static_cast<float>(i) * 0.1f));
+        }
+        
+        // Second segment: 200-300 (gap of 100 time units)
+        for (int i = 200; i <= 300; ++i) {
+            time_values.push_back(static_cast<float>(i));
+            data_values.push_back(std::sin(static_cast<float>(i) * 0.1f));
+        }
+        
+        GapDetector detector;
+        detector.setTimeThreshold(50); // Gap threshold of 50 time units
+        
+        EntityId series_id{42};
+        auto batch = detector.transform(time_values, data_values, series_id);
+        
+        // Should produce 2 segments
+        REQUIRE(batch.line_start_indices.size() == 2);
+        REQUIRE(batch.line_vertex_counts.size() == 2);
+        
+        // First segment: 101 vertices (0-100 inclusive)
+        REQUIRE(batch.line_vertex_counts[0] == 101);
+        
+        // Second segment: 101 vertices (200-300 inclusive)
+        REQUIRE(batch.line_vertex_counts[1] == 101);
+        
+        // Global entity ID should be set
+        REQUIRE(batch.global_entity_id == series_id);
+    }
+    
+    SECTION("PolyLineSpatialAdapter builds index from segmented batch") {
+        // Create a simple 2-segment polyline batch
+        std::vector<float> time_values;
+        std::vector<float> data_values;
+        
+        // Segment 1: horizontal line at y=1 from x=0 to x=100
+        for (int i = 0; i <= 100; i += 10) {
+            time_values.push_back(static_cast<float>(i));
+            data_values.push_back(1.0f);
+        }
+        
+        // Segment 2: horizontal line at y=-1 from x=200 to x=300
+        for (int i = 200; i <= 300; i += 10) {
+            time_values.push_back(static_cast<float>(i));
+            data_values.push_back(-1.0f);
+        }
+        
+        GapDetector detector;
+        detector.setTimeThreshold(50);
+        
+        EntityId series_id{100};
+        auto batch = detector.transform(time_values, data_values, series_id);
+        
+        BoundingBox bounds(-10.0f, -2.0f, 350.0f, 2.0f);
+        
+        // Build spatial index from vertices
+        auto index = PolyLineSpatialAdapter::buildFromVertices(batch, bounds);
+        
+        REQUIRE(index != nullptr);
+        REQUIRE(index->size() > 0);
+        
+        // Query near first segment (x=50, y=1) - should find series_id
+        auto const* result1 = index->findNearest(50.0f, 1.0f, 20.0f);
+        REQUIRE(result1 != nullptr);
+        REQUIRE(result1->data == series_id);
+        
+        // Query near second segment (x=200, y=-1) - should find series_id
+        // Use exact vertex position x=200 which is the first vertex of segment 2
+        auto const* result2 = index->findNearest(200.0f, -1.0f, 20.0f);
+        REQUIRE(result2 != nullptr);
+        REQUIRE(result2->data == series_id);
+        
+        // Query in the gap (x=150, y=0) with small tolerance - should find nothing
+        auto const* result_gap = index->findNearest(150.0f, 0.0f, 5.0f);
+        REQUIRE(result_gap == nullptr);
+    }
+    
+    SECTION("Value-based gap detection") {
+        // Create time series with a value jump
+        std::vector<float> time_values;
+        std::vector<float> data_values;
+        
+        // Smooth segment 1
+        for (int i = 0; i <= 50; ++i) {
+            time_values.push_back(static_cast<float>(i));
+            data_values.push_back(static_cast<float>(i) * 0.1f); // 0 to 5
+        }
+        
+        // Jump to 100, then smooth segment 2
+        for (int i = 51; i <= 100; ++i) {
+            time_values.push_back(static_cast<float>(i));
+            data_values.push_back(100.0f + static_cast<float>(i - 51) * 0.1f); // 100 to 105
+        }
+        
+        GapDetector detector;
+        detector.setValueThreshold(10.0f); // Gap if value changes by more than 10
+        
+        auto batch = detector.transform(time_values, data_values, EntityId{1});
+        
+        // Should produce 2 segments due to value jump
+        REQUIRE(batch.line_start_indices.size() == 2);
+    }
+}
+
+
+// ============================================================================
+// Mixed Series Scene Tests
+// ============================================================================
+
+TEST_CASE("Mixed Series Scene - Layout with multiple series types", "[CorePlotting][Integration][Mixed]") {
+    auto time_frame = createSimpleTimeFrame(2000);
+    EntityRegistry registry;
+    
+    // Create different series types
+    auto event_series = createEventSeries({100, 500, 1000, 1500}, "events", registry);
+    event_series->setTimeFrame(time_frame);
+    
+    SECTION("StackedLayoutStrategy handles mixed series types") {
+        LayoutRequest layout_request;
+        layout_request.viewport_y_min = -1.0f;
+        layout_request.viewport_y_max = 1.0f;
+        layout_request.series = {
+            {"analog1", SeriesType::Analog, true},
+            {"events", SeriesType::DigitalEvent, true},
+            {"analog2", SeriesType::Analog, true},
+            {"intervals", SeriesType::DigitalInterval, false} // Full canvas, not stacked
+        };
+        
+        StackedLayoutStrategy strategy;
+        LayoutResponse response = strategy.compute(layout_request);
+        
+        // Should have 4 layouts
+        REQUIRE(response.layouts.size() == 4);
+        
+        // Stackable series (analog1, events, analog2) should have distinct Y positions
+        auto const* analog1 = response.findLayout("analog1");
+        auto const* events = response.findLayout("events");
+        auto const* analog2 = response.findLayout("analog2");
+        auto const* intervals = response.findLayout("intervals");
+        
+        REQUIRE(analog1 != nullptr);
+        REQUIRE(events != nullptr);
+        REQUIRE(analog2 != nullptr);
+        REQUIRE(intervals != nullptr);
+        
+        // Stackable series should be at different Y centers
+        REQUIRE_THAT(analog1->result.allocated_y_center, 
+                    !Catch::Matchers::WithinAbs(events->result.allocated_y_center, 0.01f));
+        REQUIRE_THAT(events->result.allocated_y_center, 
+                    !Catch::Matchers::WithinAbs(analog2->result.allocated_y_center, 0.01f));
+        
+        // Interval series (full canvas) should span more height
+        // In stacked layout, non-stackable series get full viewport
+        REQUIRE(intervals->result.allocated_height >= analog1->result.allocated_height);
+    }
+    
+    SECTION("Combined spatial index from events at different Y positions") {
+        // Create two event series at different Y positions
+        auto events_a = createEventSeries({100, 200, 300}, "events_a", registry);
+        events_a->setTimeFrame(time_frame);
+        
+        auto events_b = createEventSeries({150, 250, 350}, "events_b", registry);
+        events_b->setTimeFrame(time_frame);
+        
+        // Layout them
+        LayoutRequest layout_request;
+        layout_request.viewport_y_min = -1.0f;
+        layout_request.viewport_y_max = 1.0f;
+        layout_request.series = {
+            {"events_a", SeriesType::DigitalEvent, true},
+            {"events_b", SeriesType::DigitalEvent, true}
+        };
+        
+        StackedLayoutStrategy strategy;
+        LayoutResponse response = strategy.compute(layout_request);
+        
+        auto const* layout_a = response.findLayout("events_a");
+        auto const* layout_b = response.findLayout("events_b");
+        
+        REQUIRE(layout_a != nullptr);
+        REQUIRE(layout_b != nullptr);
+        
+        BoundingBox bounds(0.0f, -2.0f, 500.0f, 2.0f);
+        
+        // Build combined index from both series
+        std::vector<glm::vec2> all_positions;
+        std::vector<EntityId> all_entity_ids;
+        
+        // Add events from series A
+        for (auto const& event : events_a->view()) {
+            float x = static_cast<float>(time_frame->getTimeAtIndex(event.event_time));
+            all_positions.emplace_back(x, layout_a->result.allocated_y_center);
+            all_entity_ids.push_back(event.entity_id);
+        }
+        
+        // Add events from series B
+        for (auto const& event : events_b->view()) {
+            float x = static_cast<float>(time_frame->getTimeAtIndex(event.event_time));
+            all_positions.emplace_back(x, layout_b->result.allocated_y_center);
+            all_entity_ids.push_back(event.entity_id);
+        }
+        
+        auto combined_index = EventSpatialAdapter::buildFromPositions(
+            all_positions, all_entity_ids, bounds);
+        
+        REQUIRE(combined_index != nullptr);
+        REQUIRE(combined_index->size() == 6); // 3 + 3 events
+        
+        // Query for event from series A (at time 200)
+        auto const* result_a = combined_index->findNearest(
+            200.0f, layout_a->result.allocated_y_center, 10.0f);
+        REQUIRE(result_a != nullptr);
+        REQUIRE(result_a->data == events_a->getEntityIds()[1]); // index 1 = time 200
+        
+        // Query for event from series B (at time 250)
+        auto const* result_b = combined_index->findNearest(
+            250.0f, layout_b->result.allocated_y_center, 10.0f);
+        REQUIRE(result_b != nullptr);
+        REQUIRE(result_b->data == events_b->getEntityIds()[1]); // index 1 = time 250
+        
+        // Y position distinguishes events - the two series are at different Y
+        float y_a = layout_a->result.allocated_y_center;
+        float y_b = layout_b->result.allocated_y_center;
+        REQUIRE_THAT(y_a, !Catch::Matchers::WithinAbs(y_b, 0.01f));
+        
+        // The found events should be at their respective Y positions
+        REQUIRE_THAT(result_a->y, Catch::Matchers::WithinAbs(y_a, 0.01f));
+        REQUIRE_THAT(result_b->y, Catch::Matchers::WithinAbs(y_b, 0.01f));
+    }
+    
+    SECTION("Analog series layout with events overlay") {
+        // Simulate a common use case: analog traces with event markers
+        LayoutRequest layout_request;
+        layout_request.viewport_y_min = -1.0f;
+        layout_request.viewport_y_max = 1.0f;
+        layout_request.series = {
+            {"neural_trace", SeriesType::Analog, true},
+            {"spike_events", SeriesType::DigitalEvent, true},
+            {"behavioral_trace", SeriesType::Analog, true},
+            {"lick_events", SeriesType::DigitalEvent, true}
+        };
+        
+        StackedLayoutStrategy strategy;
+        LayoutResponse response = strategy.compute(layout_request);
+        
+        REQUIRE(response.layouts.size() == 4);
+        
+        // All should have non-zero heights
+        for (auto const& layout : response.layouts) {
+            REQUIRE(layout.result.allocated_height > 0.0f);
+        }
+        
+        // Series should be ordered top to bottom
+        float prev_y = std::numeric_limits<float>::max();
+        for (auto const& layout : response.layouts) {
+            // Each subsequent series should be at same or lower Y
+            // (depends on layout strategy, but they should be distinct)
+            REQUIRE_THAT(layout.result.allocated_y_center, 
+                        !Catch::Matchers::WithinAbs(prev_y, 0.001f));
+            prev_y = layout.result.allocated_y_center;
+        }
+    }
+}

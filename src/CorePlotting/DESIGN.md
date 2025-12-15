@@ -450,6 +450,62 @@ We define abstract Renderers. Concrete implementations handle hardware specifics
 
 The *Application* chooses the renderer at runtime based on hardware capabilities and use case.
 
+### 3.1 Shader Management Integration
+
+WhiskerToolbox includes a centralized `ShaderManager` singleton (located in `src/WhiskerToolbox/ShaderManager/`) that provides:
+
+1. **Centralized Shader Registry**: All shader programs are loaded once and shared across widgets
+2. **Hot-Reloading**: File-based shaders can be modified at runtime during development
+3. **Multi-Context Support**: Programs are managed per OpenGL context to avoid cross-context invalidation
+4. **Qt Resource Loading**: Shaders can be embedded in Qt resources for deployment
+5. **Compute Shader Support**: Full support for compute shaders (OpenGL 4.3+)
+
+**Current PlottingOpenGL Approach:**
+
+The initial PlottingOpenGL implementation embeds shaders as string literals in header files for simplicity. This approach:
+- ✅ Zero runtime dependencies (shaders are part of the binary)
+- ✅ Simple deployment
+- ❌ No hot-reloading for development
+- ❌ Cannot share shaders across renderers
+
+**Recommended Integration Path:**
+
+For production use, the `PlottingOpenGL` renderers should optionally integrate with `ShaderManager`:
+
+```cpp
+// Option 1: Embedded shaders (current, simple)
+renderer.initialize();  // Uses embedded GLSL strings
+
+// Option 2: ShaderManager integration (recommended for development)
+renderer.initializeWithShaderManager(
+    "polyline_renderer",          // Program name
+    "shaders/polyline.vert",      // Vertex shader path
+    "shaders/polyline.frag"       // Fragment shader path
+);
+```
+
+This allows developers to iterate on shaders with hot-reloading while keeping the embedded fallback for simple deployment.
+
+**ShaderManager API Reference:**
+
+```cpp
+// Load a shader program
+ShaderManager::instance().loadProgram(
+    "plot_line",                        // Unique name
+    "shaders/line.vert",                // Vertex shader
+    "shaders/line.frag",                // Fragment shader
+    "shaders/line.geom",                // Optional geometry shader
+    ShaderSourceType::FileSystem        // or ShaderSourceType::QtResource
+);
+
+// Retrieve for use
+ShaderProgram* program = ShaderManager::instance().getProgram("plot_line");
+program->use();
+program->setUniform("u_MVP", mvp_matrix);
+```
+
+See `src/WhiskerToolbox/ShaderManager/shader_manager_design_doc.md` for the full design specification.
+
 ### 4. Data Transformers (The "Pipeline")
 
 To populate the `RenderableScene`, we use **Transformers**. These pure functions convert complex data relationships into the batched primitives defined above.

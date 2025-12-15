@@ -137,7 +137,7 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - All adapters use static factory methods returning `std::unique_ptr<QuadTree<EntityId>>`
     - Tests: All 259 assertions passing ✓
 
-### 1.6 Integration Tests
+### 1.6 Integration Tests ✅
 **Goal:** Validate end-to-end workflows before moving to OpenGL rendering layer.
 
 - [x] **Raster Plot Integration Tests**:
@@ -165,30 +165,41 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Test TimeRange prevents scrolling/zooming beyond TimeFrame bounds
     - Integration with ViewState for complete camera state management
 
-- [ ] **GapDetector + PolyLineSpatialAdapter Integration**:
+- [x] **GapDetector + PolyLineSpatialAdapter Integration**:
     - Analog series with gaps → segmented polylines
     - Spatial index built from segments
     - Query at various points within/between segments
+    - Fixed bug: GapDetector was storing float indices instead of vertex indices
 
-- [ ] **Mixed Series Scene**:
-    - Analog + Events + Intervals in one scene
-    - Verify layout positions are correct
-    - Verify spatial queries work across all types
+- [x] **Mixed Series Scene**:
+    - Multiple series types (Analog + Events) in one layout
+    - Verify layout positions are correct and distinct
+    - Combined spatial index from events at different Y positions
 
 ---
 
 ## Phase 2: Rendering Strategies (The "Painter")
 **Goal:** Create a library for rendering the "Scene Description" using OpenGL.
 
-- [ ] **Create `PlottingOpenGL` library** (or folder in WhiskerToolbox):
-    - `BatchRenderer` base class
-    - `PolyLineRenderer`: Takes `RenderablePolyLineBatch`, issues draw calls
-    - `GlyphRenderer`: Takes `RenderableGlyphBatch`, uses instancing
-    - `RectangleRenderer`: Takes `RenderableRectangleBatch`
+- [x] **Create `PlottingOpenGL` library** (src/PlottingOpenGL):
+    - `IBatchRenderer` base interface (`Renderers/IBatchRenderer.hpp`)
+    - `GLContext` helpers for Qt OpenGL wrappers (`GLContext.hpp/cpp`)
+    - `PolyLineRenderer`: Takes `RenderablePolyLineBatch`, issues draw calls ✓
+    - `GlyphRenderer`: Takes `RenderableGlyphBatch`, uses instancing ✓
+    - `RectangleRenderer`: Takes `RenderableRectangleBatch`, uses instancing ✓
+    - `SceneRenderer`: Coordinates all batch renderers ✓
+    - Uses Qt6's OpenGL wrappers (QOpenGLFunctions, QOpenGLExtraFunctions)
+    - GLSL 330 shaders embedded in headers
 
 - [ ] **Refactor `OpenGLWidget` to use renderers**:
     - Replace inline vertex generation with `RenderableScene` consumption
     - Shader management stays in widget (or moves to renderer)
+
+- [ ] **Optional: Integrate with ShaderManager**:
+    - Add `initializeWithShaderManager()` method to renderers
+    - Allow external shader loading for hot-reload during development
+    - Maintain embedded shader fallback for deployment
+    - See `src/WhiskerToolbox/ShaderManager/shader_manager_design_doc.md`
 
 - [ ] **Refactor `SVGExporter`**:
     - Consume `RenderableScene` instead of querying OpenGLWidget

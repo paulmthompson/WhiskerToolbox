@@ -74,7 +74,7 @@ void ShaderProgram::setUniform(std::string const & name, glm::mat4 const & matri
 bool ShaderProgram::compileAndLink() {
     bool ok = true;
     QString errorLog;
-    
+
     // Handle compute shaders differently
     if (m_isComputeShader) {
         if (!m_computePath.empty()) {
@@ -106,80 +106,80 @@ bool ShaderProgram::compileAndLink() {
         // Traditional vertex/fragment/geometry shaders
         // Vertex shader
         if (!m_vertexPath.empty()) {
-        QString src;
-        if (m_sourceType == ShaderSourceType::FileSystem) {
-            std::string source;
-            if (!loadShaderSource(m_vertexPath, source)) {
-                std::cerr << "[ShaderProgram] Failed to load vertex shader: " << m_vertexPath << std::endl;
-                ok = false;
+            QString src;
+            if (m_sourceType == ShaderSourceType::FileSystem) {
+                std::string source;
+                if (!loadShaderSource(m_vertexPath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load vertex shader: " << m_vertexPath << std::endl;
+                    ok = false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
             } else {
-                src = QString::fromStdString(source);
+                std::string source;
+                if (!loadShaderSourceResource(m_vertexPath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load vertex shader resource: " << m_vertexPath << std::endl;
+                    ok = false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
             }
-        } else {
-            std::string source;
-            if (!loadShaderSourceResource(m_vertexPath, source)) {
-                std::cerr << "[ShaderProgram] Failed to load vertex shader resource: " << m_vertexPath << std::endl;
+            if (!m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, src)) {
+                errorLog += m_program->log();
                 ok = false;
-            } else {
-                src = QString::fromStdString(source);
-            }
-        }
-        if (!m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, src)) {
-            errorLog += m_program->log();
-            ok = false;
-        }
-    }
-    // Fragment shader
-    if (!m_fragmentPath.empty()) {
-        QString src;
-        if (m_sourceType == ShaderSourceType::FileSystem) {
-            std::string source;
-            if (!loadShaderSource(m_fragmentPath, source)) {
-                std::cerr << "[ShaderProgram] Failed to load fragment shader: " << m_fragmentPath << std::endl;
-                ok = false;
-            } else {
-                src = QString::fromStdString(source);
-            }
-        } else {
-            std::string source;
-            if (!loadShaderSourceResource(m_fragmentPath, source)) {
-                std::cerr << "[ShaderProgram] Failed to load fragment shader resource: " << m_fragmentPath << std::endl;
-                ok = false;
-            } else {
-                src = QString::fromStdString(source);
             }
         }
-        if (!m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, src)) {
-            errorLog += m_program->log();
-            ok = false;
-        }
-    }
-    // Geometry shader (optional)
-    if (!m_geometryPath.empty()) {
-        QString src;
-        if (m_sourceType == ShaderSourceType::FileSystem) {
-            std::string source;
-            if (!loadShaderSource(m_geometryPath, source)) {
-                std::cerr << "[ShaderProgram] Failed to load geometry shader: " << m_geometryPath << std::endl;
-                ok = false;
+        // Fragment shader
+        if (!m_fragmentPath.empty()) {
+            QString src;
+            if (m_sourceType == ShaderSourceType::FileSystem) {
+                std::string source;
+                if (!loadShaderSource(m_fragmentPath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load fragment shader: " << m_fragmentPath << std::endl;
+                    ok = false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
             } else {
-                src = QString::fromStdString(source);
+                std::string source;
+                if (!loadShaderSourceResource(m_fragmentPath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load fragment shader resource: " << m_fragmentPath << std::endl;
+                    ok = false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
             }
-        } else {
-            std::string source;
-            if (!loadShaderSourceResource(m_geometryPath, source)) {
-                std::cerr << "[ShaderProgram] Failed to load geometry shader resource: " << m_geometryPath << std::endl;
+            if (!m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, src)) {
+                errorLog += m_program->log();
                 ok = false;
-            } else {
-                src = QString::fromStdString(source);
             }
         }
-        if (!m_program->addShaderFromSourceCode(QOpenGLShader::Geometry, src)) {
-            errorLog += m_program->log();
-            ok = false;
+        // Geometry shader (optional)
+        if (!m_geometryPath.empty()) {
+            QString src;
+            if (m_sourceType == ShaderSourceType::FileSystem) {
+                std::string source;
+                if (!loadShaderSource(m_geometryPath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load geometry shader: " << m_geometryPath << std::endl;
+                    ok = false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
+            } else {
+                std::string source;
+                if (!loadShaderSourceResource(m_geometryPath, source)) {
+                    std::cerr << "[ShaderProgram] Failed to load geometry shader resource: " << m_geometryPath << std::endl;
+                    ok = false;
+                } else {
+                    src = QString::fromStdString(source);
+                }
+            }
+            if (!m_program->addShaderFromSourceCode(QOpenGLShader::Geometry, src)) {
+                errorLog += m_program->log();
+                ok = false;
+            }
         }
-    }
-    }  // End of else block for traditional shaders
+    }// End of else block for traditional shaders
     if (!ok) {
         std::cerr << "[ShaderProgram] Shader compile/link error: " << errorLog.toStdString() << std::endl;
         return false;
