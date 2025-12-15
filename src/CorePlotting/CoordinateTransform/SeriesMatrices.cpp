@@ -10,13 +10,13 @@ namespace CorePlotting {
 // Utility Functions
 // ============================================================================
 
-bool validateOrthoParams(float& left, float& right, 
-                        float& bottom, float& top,
-                        char const* context_name) {
+bool validateOrthoParams(float & left, float & right,
+                         float & bottom, float & top,
+                         char const * context_name) {
     bool was_valid = true;
-    constexpr float min_range = 1e-6f;  // Minimum range to prevent division by zero
-    constexpr float max_abs_value = 1e8f;  // Large but safe limit
-    
+    constexpr float min_range = 1e-6f;   // Minimum range to prevent division by zero
+    constexpr float max_abs_value = 1e8f;// Large but safe limit
+
     // 1. Ensure all values are finite
     if (!std::isfinite(left)) {
         std::cerr << "Warning [" << context_name << "]: Invalid left=" << left << ", using fallback\n";
@@ -38,44 +38,44 @@ bool validateOrthoParams(float& left, float& right,
         top = 1.0f;
         was_valid = false;
     }
-    
+
     // 2. Ensure X range is valid (left < right with minimum separation)
     if (right <= left) {
-        std::cerr << "Warning [" << context_name << "]: Invalid X range [" << left << ", " << right 
+        std::cerr << "Warning [" << context_name << "]: Invalid X range [" << left << ", " << right
                   << "], fixing to valid range\n";
         float center = (left + right) * 0.5f;
         left = center - min_range * 0.5f;
         right = center + min_range * 0.5f;
         was_valid = false;
     } else if ((right - left) < min_range) {
-        std::cerr << "Warning [" << context_name << "]: X range too small [" << left << ", " << right 
+        std::cerr << "Warning [" << context_name << "]: X range too small [" << left << ", " << right
                   << "], expanding to minimum safe range\n";
         float center = (left + right) * 0.5f;
         left = center - min_range * 0.5f;
         right = center + min_range * 0.5f;
         was_valid = false;
     }
-    
+
     // 3. Ensure Y range is valid
     if (top <= bottom) {
-        std::cerr << "Warning [" << context_name << "]: Invalid Y range [" << bottom << ", " << top 
+        std::cerr << "Warning [" << context_name << "]: Invalid Y range [" << bottom << ", " << top
                   << "], fixing to valid range\n";
         float center = (bottom + top) * 0.5f;
         bottom = center - min_range * 0.5f;
         top = center + min_range * 0.5f;
         was_valid = false;
     } else if ((top - bottom) < min_range) {
-        std::cerr << "Warning [" << context_name << "]: Y range too small [" << bottom << ", " << top 
+        std::cerr << "Warning [" << context_name << "]: Y range too small [" << bottom << ", " << top
                   << "], expanding to minimum safe range\n";
         float center = (bottom + top) * 0.5f;
         bottom = center - min_range * 0.5f;
         top = center + min_range * 0.5f;
         was_valid = false;
     }
-    
+
     // 4. Clamp extreme values for X range
     if (std::abs(left) > max_abs_value || std::abs(right) > max_abs_value) {
-        std::cerr << "Warning [" << context_name << "]: Extremely large X range [" << left << ", " << right 
+        std::cerr << "Warning [" << context_name << "]: Extremely large X range [" << left << ", " << right
                   << "], clamping to safe range\n";
         float range = right - left;
         if (range > 2 * max_abs_value) {
@@ -89,16 +89,16 @@ bool validateOrthoParams(float& left, float& right,
         }
         was_valid = false;
     }
-    
+
     return was_valid;
 }
 
-glm::mat4 validateMatrix(glm::mat4 const& matrix, char const* context_name) {
+glm::mat4 validateMatrix(glm::mat4 const & matrix, char const * context_name) {
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             if (!std::isfinite(matrix[i][j])) {
-                std::cerr << "Error [" << context_name << "]: Matrix contains invalid value at [" 
-                          << i << "][" << j << "]=" << matrix[i][j] 
+                std::cerr << "Error [" << context_name << "]: Matrix contains invalid value at ["
+                          << i << "][" << j << "]=" << matrix[i][j]
                           << ", using identity matrix\n";
                 return glm::mat4(1.0f);
             }
@@ -111,7 +111,7 @@ glm::mat4 validateMatrix(glm::mat4 const& matrix, char const* context_name) {
 // Analog Time Series MVP Matrices
 // ============================================================================
 
-glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const& params) {
+glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params) {
     // Calculate intrinsic scaling (3 standard deviations for full range)
     // This maps ±3*std_dev (from the mean) to ±1.0 in normalized space
     // Protect against division by zero
@@ -138,13 +138,13 @@ glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const& params) {
 
     // Construct affine transformation matrix
     glm::mat4 Model(1.0f);
-    Model[1][1] = final_y_scale;  // Y scaling
-    Model[3][1] = y_offset;        // Y translation (including user offset)
+    Model[1][1] = final_y_scale;// Y scaling
+    Model[3][1] = y_offset;     // Y translation (including user offset)
 
     return Model;
 }
 
-glm::mat4 getAnalogViewMatrix(ViewProjectionParams const& params) {
+glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params) {
     glm::mat4 View(1.0f);
 
     // Apply global vertical panning
@@ -156,9 +156,9 @@ glm::mat4 getAnalogViewMatrix(ViewProjectionParams const& params) {
 }
 
 glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
-                                   TimeFrameIndex end_time_index,
-                                   float y_min,
-                                   float y_max) {
+                                    TimeFrameIndex end_time_index,
+                                    float y_min,
+                                    float y_max) {
     float left = static_cast<float>(start_time_index.getValue());
     float right = static_cast<float>(end_time_index.getValue());
     float bottom = y_min;
@@ -178,26 +178,26 @@ glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
 // Digital Event Series MVP Matrices
 // ============================================================================
 
-glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const& params) {
+glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const & params) {
     glm::mat4 Model(1.0f);
 
     if (params.plotting_mode == EventSeriesMatrixParams::PlottingMode::FullCanvas) {
         // Full Canvas Mode: extend full viewport height, centered
         float const height_scale = (params.viewport_y_max - params.viewport_y_min) * params.margin_factor;
         float const center_y = (params.viewport_y_max + params.viewport_y_min) * 0.5f;
-        Model[1][1] = height_scale * 0.5f;  // map [-1,1] -> full height with margin
+        Model[1][1] = height_scale * 0.5f;// map [-1,1] -> full height with margin
         Model[3][1] = center_y;
 
-    } else {  // Stacked mode
+    } else {// Stacked mode
         // Events are positioned within allocated space (like analog series)
         // Prefer explicit event height if provided, but never exceed allocated lane
         float const desired_height = (params.event_height > 0.0f)
-                                     ? params.event_height
-                                     : params.allocated_height;
+                                             ? params.event_height
+                                             : params.allocated_height;
         float const height_scale = std::min(desired_height, params.allocated_height) * params.margin_factor;
 
         // Apply scaling for allocated height
-        Model[1][1] = height_scale * 0.5f;  // Half scale because we map [-1,1] to allocated height
+        Model[1][1] = height_scale * 0.5f;// Half scale because we map [-1,1] to allocated height
 
         // Apply translation to allocated center
         Model[3][1] = params.allocated_y_center;
@@ -209,8 +209,8 @@ glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const& params) {
     return Model;
 }
 
-glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const& params,
-                             ViewProjectionParams const& view_params) {
+glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const & params,
+                             ViewProjectionParams const & view_params) {
     glm::mat4 View(1.0f);
 
     // Panning behavior depends on plotting mode
@@ -218,7 +218,7 @@ glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const& params,
         // Full Canvas Mode: Events stay viewport-pinned (like digital intervals)
         // No panning applied - events remain fixed to viewport bounds
 
-    } else {  // Stacked mode
+    } else {// Stacked mode
         // Events move with content (like analog series)
         // Apply global vertical panning
         if (view_params.vertical_pan_offset != 0.0f) {
@@ -252,7 +252,7 @@ glm::mat4 getEventProjectionMatrix(TimeFrameIndex start_time_index,
 // Digital Interval Series MVP Matrices
 // ============================================================================
 
-glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const& params) {
+glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const & params) {
     glm::mat4 Model(1.0f);
 
     // Apply global zoom scaling
@@ -274,17 +274,17 @@ glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const& params) {
     return Model;
 }
 
-glm::mat4 getIntervalViewMatrix(ViewProjectionParams const& params) {
+glm::mat4 getIntervalViewMatrix(ViewProjectionParams const & params) {
     // Digital intervals remain viewport-pinned (do not move with panning)
     // They always extend from top to bottom of the current view
-    static_cast<void>(params);  // Unused
+    static_cast<void>(params);// Unused
     return glm::mat4(1.0f);
 }
 
 glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
-                                     TimeFrameIndex end_time_index,
-                                     float viewport_y_min,
-                                     float viewport_y_max) {
+                                      TimeFrameIndex end_time_index,
+                                      float viewport_y_min,
+                                      float viewport_y_max) {
     float left = static_cast<float>(start_time_index.getValue());
     float right = static_cast<float>(end_time_index.getValue());
     float bottom = viewport_y_min;
@@ -300,4 +300,4 @@ glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
     return validateMatrix(Projection, "IntervalProjection");
 }
 
-} // namespace CorePlotting
+}// namespace CorePlotting

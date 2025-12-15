@@ -1,10 +1,12 @@
 #ifndef COREPLOTTING_TRANSFORMERS_GAPDETECTOR_HPP
 #define COREPLOTTING_TRANSFORMERS_GAPDETECTOR_HPP
 
-#include "../SceneGraph/RenderablePrimitives.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "SceneGraph/RenderablePrimitives.hpp"
+
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
+class AnalogTimeSeries;
 
 namespace CorePlotting {
 
@@ -34,43 +36,43 @@ public:
     struct Config {
         /// Maximum allowed time between samples (in time frame units)
         /// If exceeded, a gap is inserted
-        int64_t time_threshold{-1};  // -1 = disabled
-        
+        int64_t time_threshold{-1};// -1 = disabled
+
         /// Maximum allowed value change between samples
         /// If exceeded, a gap is inserted
-        float value_threshold{-1.0f};  // -1 = disabled
-        
+        float value_threshold{-1.0f};// -1 = disabled
+
         /// Minimum segment length (in samples)
         /// Segments shorter than this are discarded
         int min_segment_length{2};
     };
 
     GapDetector() = default;
-    explicit GapDetector(Config const& config);
-    
+    explicit GapDetector(Config const & config);
+
     /**
      * @brief Set time-based gap threshold
      * @param threshold Maximum time between samples
      */
     void setTimeThreshold(int64_t threshold);
-    
+
     /**
      * @brief Set value-based gap threshold
      * @param threshold Maximum value change between samples
      */
     void setValueThreshold(float threshold);
-    
+
     /**
      * @brief Set minimum segment length
      * @param length Minimum number of samples per segment
      */
     void setMinSegmentLength(int length);
-    
+
     /**
      * @brief Get current configuration
      */
-    [[nodiscard]] Config const& getConfig() const { return _config; }
-    
+    [[nodiscard]] Config const & getConfig() const { return _config; }
+
     /**
      * @brief Transform analog time series into segmented poly-line batch
      * 
@@ -80,10 +82,10 @@ public:
      * @return Renderable batch with segmented geometry
      */
     [[nodiscard]] RenderablePolyLineBatch transform(
-        AnalogTimeSeries const& series,
-        TimeFrame const& time_frame,
-        EntityId entity_id = EntityId(0)) const;
-    
+            AnalogTimeSeries const & series,
+            TimeFrame const & time_frame,
+            EntityId entity_id = EntityId(0)) const;
+
     /**
      * @brief Transform with explicit time and value arrays
      * 
@@ -95,22 +97,22 @@ public:
      * @return Renderable batch with segmented geometry
      */
     [[nodiscard]] RenderablePolyLineBatch transform(
-        std::vector<float> const& time_values,
-        std::vector<float> const& data_values,
-        EntityId entity_id = EntityId(0)) const;
+            std::vector<float> const & time_values,
+            std::vector<float> const & data_values,
+            EntityId entity_id = EntityId(0)) const;
 
 private:
     Config _config;
-    
+
     /**
      * @brief Detect gap between two consecutive samples
      * @return true if gap should be inserted
      */
     [[nodiscard]] bool detectGap(
-        float time1, float time2,
-        float value1, float value2) const;
+            float time1, float time2,
+            float value1, float value2) const;
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_TRANSFORMERS_GAPDETECTOR_HPP
+#endif// COREPLOTTING_TRANSFORMERS_GAPDETECTOR_HPP

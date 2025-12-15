@@ -2,6 +2,7 @@
 #define COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
 
 #include "TimeFrame/TimeFrame.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -50,17 +51,17 @@ struct AnalogSeriesMatrixParams {
     // Layout parameters (from SeriesLayoutResult)
     float allocated_y_center{0.0f};
     float allocated_height{1.0f};
-    
+
     // Scaling parameters (from SeriesStyle)
     float intrinsic_scale{1.0f};
     float user_scale_factor{1.0f};
     float global_zoom{1.0f};
     float user_vertical_offset{0.0f};
-    
+
     // Data statistics (from SeriesDataCache)
     float data_mean{0.0f};
     float std_dev{1.0f};
-    
+
     // Global parameters
     float global_vertical_scale{1.0f};
 };
@@ -74,20 +75,20 @@ struct EventSeriesMatrixParams {
     // Layout parameters
     float allocated_y_center{0.0f};
     float allocated_height{1.0f};
-    
+
     // Event-specific parameters
-    float event_height{0.0f};  ///< Desired height for events (0 = use allocated)
-    float margin_factor{0.8f}; ///< Vertical margin (0-1)
+    float event_height{0.0f}; ///< Desired height for events (0 = use allocated)
+    float margin_factor{0.8f};///< Vertical margin (0-1)
     float global_vertical_scale{1.0f};
-    
+
     // Viewport bounds (for FullCanvas mode)
     float viewport_y_min{-1.0f};
     float viewport_y_max{1.0f};
-    
+
     // Mode flag
     enum class PlottingMode {
-        FullCanvas,  ///< Events extend full viewport height
-        Stacked      ///< Events positioned within allocated space
+        FullCanvas,///< Events extend full viewport height
+        Stacked    ///< Events positioned within allocated space
     };
     PlottingMode plotting_mode{PlottingMode::Stacked};
 };
@@ -99,12 +100,12 @@ struct IntervalSeriesMatrixParams {
     // Layout parameters
     float allocated_y_center{0.0f};
     float allocated_height{1.0f};
-    
+
     // Interval-specific parameters
     float margin_factor{1.0f};
     float global_zoom{1.0f};
     float global_vertical_scale{1.0f};
-    
+
     // Mode flag
     bool extend_full_canvas{true};
 };
@@ -116,10 +117,10 @@ struct ViewProjectionParams {
     // Viewport bounds
     float viewport_y_min{-1.0f};
     float viewport_y_max{1.0f};
-    
+
     // Panning state
     float vertical_pan_offset{0.0f};
-    
+
     // Global scaling
     float global_zoom{1.0f};
     float global_vertical_scale{1.0f};
@@ -142,7 +143,7 @@ struct ViewProjectionParams {
  * @param params Combined parameters for matrix generation
  * @return Model transformation matrix
  */
-glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const& params);
+glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params);
 
 /**
  * @brief Create View matrix for analog series global transformations
@@ -153,7 +154,7 @@ glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const& params);
  * @param params View/projection parameters
  * @return View transformation matrix
  */
-glm::mat4 getAnalogViewMatrix(ViewProjectionParams const& params);
+glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params);
 
 /**
  * @brief Create Projection matrix for analog series coordinate mapping
@@ -168,9 +169,9 @@ glm::mat4 getAnalogViewMatrix(ViewProjectionParams const& params);
  * @return Projection transformation matrix
  */
 glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
-                                   TimeFrameIndex end_time_index,
-                                   float y_min,
-                                   float y_max);
+                                    TimeFrameIndex end_time_index,
+                                    float y_min,
+                                    float y_max);
 
 // ============================================================================
 // Digital Event Series MVP Matrices
@@ -186,7 +187,7 @@ glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
  * @param params Event-specific parameters
  * @return Model transformation matrix
  */
-glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const& params);
+glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const & params);
 
 /**
  * @brief Create View matrix for digital event series
@@ -199,8 +200,8 @@ glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const& params);
  * @param view_params View/projection parameters  
  * @return View transformation matrix
  */
-glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const& params,
-                             ViewProjectionParams const& view_params);
+glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const & params,
+                             ViewProjectionParams const & view_params);
 
 /**
  * @brief Create Projection matrix for digital event series
@@ -232,7 +233,7 @@ glm::mat4 getEventProjectionMatrix(TimeFrameIndex start_time_index,
  * @param params Interval-specific parameters
  * @return Model transformation matrix
  */
-glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const& params);
+glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const & params);
 
 /**
  * @brief Create View matrix for digital interval series
@@ -242,7 +243,7 @@ glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const& params);
  * @param params View/projection parameters
  * @return View transformation matrix (typically identity)
  */
-glm::mat4 getIntervalViewMatrix(ViewProjectionParams const& params);
+glm::mat4 getIntervalViewMatrix(ViewProjectionParams const & params);
 
 /**
  * @brief Create Projection matrix for digital interval series
@@ -256,9 +257,9 @@ glm::mat4 getIntervalViewMatrix(ViewProjectionParams const& params);
  * @return Projection transformation matrix
  */
 glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
-                                     TimeFrameIndex end_time_index,
-                                     float viewport_y_min,
-                                     float viewport_y_max);
+                                      TimeFrameIndex end_time_index,
+                                      float viewport_y_min,
+                                      float viewport_y_max);
 
 // ============================================================================
 // Utility Functions
@@ -277,9 +278,9 @@ glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
  * @param context_name Name for debug messages (e.g., "Analog", "Event")
  * @return true if parameters were valid, false if corrections were applied
  */
-bool validateOrthoParams(float& left, float& right, 
-                        float& bottom, float& top,
-                        char const* context_name = "Matrix");
+bool validateOrthoParams(float & left, float & right,
+                         float & bottom, float & top,
+                         char const * context_name = "Matrix");
 
 /**
  * @brief Validate that a matrix contains only finite values
@@ -291,9 +292,9 @@ bool validateOrthoParams(float& left, float& right,
  * @param context_name Name for debug messages
  * @return Validated matrix (original or identity if invalid)
  */
-glm::mat4 validateMatrix(glm::mat4 const& matrix, 
-                        char const* context_name = "Matrix");
+glm::mat4 validateMatrix(glm::mat4 const & matrix,
+                         char const * context_name = "Matrix");
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
+#endif// COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP

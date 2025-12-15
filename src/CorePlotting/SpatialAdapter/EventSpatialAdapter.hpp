@@ -1,13 +1,17 @@
 #ifndef COREPLOTTING_SPATIALADAPTER_EVENTSPATIALADAPTER_HPP
 #define COREPLOTTING_SPATIALADAPTER_EVENTSPATIALADAPTER_HPP
 
-#include "SpatialIndex/QuadTree.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "Entity/EntityTypes.hpp"
+#include "Layout/SeriesLayout.hpp"
+
 #include "CoreGeometry/boundingbox.hpp"
-#include "../Layout/SeriesLayout.hpp"
+#include "Entity/EntityTypes.hpp"
+#include "SpatialIndex/QuadTree.hpp"
+
+
 #include <glm/glm.hpp>
+
+class DigitalEventSeries;
+class TimeFrame;
 
 namespace CorePlotting {
 
@@ -50,10 +54,10 @@ public:
      * @return Spatial index with all events
      */
     static std::unique_ptr<QuadTree<EntityId>> buildStacked(
-        DigitalEventSeries const& series,
-        TimeFrame const& time_frame,
-        SeriesLayout const& layout,
-        BoundingBox const& bounds);
+            DigitalEventSeries const & series,
+            TimeFrame const & time_frame,
+            SeriesLayout const & layout,
+            BoundingBox const & bounds);
 
     /**
      * @brief Build spatial index for raster plot visualization
@@ -70,11 +74,11 @@ public:
      * @return Spatial index with events positioned across rows
      */
     static std::unique_ptr<QuadTree<EntityId>> buildRaster(
-        DigitalEventSeries const& series,
-        TimeFrame const& time_frame,
-        std::vector<SeriesLayout> const& row_layouts,
-        std::vector<int64_t> const& row_centers,
-        BoundingBox const& bounds);
+            DigitalEventSeries const & series,
+            TimeFrame const & time_frame,
+            std::vector<SeriesLayout> const & row_layouts,
+            std::vector<int64_t> const & row_centers,
+            BoundingBox const & bounds);
 
     /**
      * @brief Build spatial index from explicit coordinates
@@ -87,11 +91,11 @@ public:
      * @return Spatial index
      */
     static std::unique_ptr<QuadTree<EntityId>> buildFromPositions(
-        std::vector<glm::vec2> const& positions,
-        std::vector<EntityId> const& entity_ids,
-        BoundingBox const& bounds);
+            std::vector<glm::vec2> const & positions,
+            std::vector<EntityId> const & entity_ids,
+            BoundingBox const & bounds);
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_SPATIALADAPTER_EVENTSPATIALADAPTER_HPP
+#endif// COREPLOTTING_SPATIALADAPTER_EVENTSPATIALADAPTER_HPP

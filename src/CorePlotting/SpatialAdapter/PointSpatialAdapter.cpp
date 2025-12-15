@@ -1,4 +1,5 @@
 #include "PointSpatialAdapter.hpp"
+
 #include <glm/glm.hpp>
 
 namespace CorePlotting {

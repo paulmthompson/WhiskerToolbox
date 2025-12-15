@@ -1,10 +1,12 @@
 #ifndef COREPLOTTING_TRANSFORMERS_RASTERBUILDER_HPP
 #define COREPLOTTING_TRANSFORMERS_RASTERBUILDER_HPP
 
-#include "../SceneGraph/RenderablePrimitives.hpp"
-#include "../Layout/LayoutEngine.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Layout/LayoutEngine.hpp"
+#include "SceneGraph/RenderablePrimitives.hpp"
+
 #include "TimeFrame/TimeFrame.hpp"
+
+class DigitalEventSeries;
 
 namespace CorePlotting {
 
@@ -41,13 +43,13 @@ public:
     struct Config {
         /// Glyph type for events
         RenderableGlyphBatch::GlyphType glyph_type{RenderableGlyphBatch::GlyphType::Tick};
-        
+
         /// Glyph size
         float glyph_size{5.0f};
-        
+
         /// Default color for events (if not using per-event colors)
         glm::vec4 default_color{1.0f, 1.0f, 1.0f, 1.0f};
-        
+
         /// Time window relative to each row center
         /// Events outside [center + window_start, center + window_end] are excluded
         int64_t window_start{-1000};
@@ -55,28 +57,28 @@ public:
     };
 
     RasterBuilder() = default;
-    explicit RasterBuilder(Config const& config);
-    
+    explicit RasterBuilder(Config const & config);
+
     /**
      * @brief Set glyph type
      */
     void setGlyphType(RenderableGlyphBatch::GlyphType type);
-    
+
     /**
      * @brief Set glyph size
      */
     void setGlyphSize(float size);
-    
+
     /**
      * @brief Set time window
      */
     void setTimeWindow(int64_t start, int64_t end);
-    
+
     /**
      * @brief Get current configuration
      */
-    [[nodiscard]] Config const& getConfig() const { return _config; }
-    
+    [[nodiscard]] Config const & getConfig() const { return _config; }
+
     /**
      * @brief Transform event series into raster glyph batch
      * 
@@ -87,11 +89,11 @@ public:
      * @return Renderable glyph batch
      */
     [[nodiscard]] RenderableGlyphBatch transform(
-        DigitalEventSeries const& series,
-        TimeFrame const& time_frame,
-        std::vector<SeriesLayout> const& row_layouts,
-        std::vector<int64_t> const& row_centers) const;
-    
+            DigitalEventSeries const & series,
+            TimeFrame const & time_frame,
+            std::vector<SeriesLayout> const & row_layouts,
+            std::vector<int64_t> const & row_centers) const;
+
     /**
      * @brief Transform with explicit event times and entity IDs
      * 
@@ -104,20 +106,20 @@ public:
      * @return Renderable glyph batch
      */
     [[nodiscard]] RenderableGlyphBatch transform(
-        std::vector<int64_t> const& event_times,
-        std::vector<EntityId> const& event_ids,
-        std::vector<SeriesLayout> const& row_layouts,
-        std::vector<int64_t> const& row_centers) const;
+            std::vector<int64_t> const & event_times,
+            std::vector<EntityId> const & event_ids,
+            std::vector<SeriesLayout> const & row_layouts,
+            std::vector<int64_t> const & row_centers) const;
 
 private:
     Config _config;
-    
+
     /**
      * @brief Check if event time is within window relative to row center
      */
     [[nodiscard]] bool isInWindow(int64_t event_time, int64_t row_center) const;
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_TRANSFORMERS_RASTERBUILDER_HPP
+#endif// COREPLOTTING_TRANSFORMERS_RASTERBUILDER_HPP

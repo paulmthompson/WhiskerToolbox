@@ -1,9 +1,9 @@
 #ifndef COREPLOTTING_SCENEGRAPH_SCENEBUILDER_HPP
 #define COREPLOTTING_SCENEGRAPH_SCENEBUILDER_HPP
 
+#include "CoordinateTransform/ViewState.hpp"
+#include "Layout/LayoutEngine.hpp"
 #include "RenderablePrimitives.hpp"
-#include "../CoordinateTransform/ViewState.hpp"
-#include "../Layout/LayoutEngine.hpp"
 
 namespace CorePlotting {
 
@@ -28,64 +28,64 @@ namespace CorePlotting {
 class SceneBuilder {
 public:
     SceneBuilder() = default;
-    
+
     /**
      * @brief Set View and Projection matrices from ViewState
      * @param state Current camera/viewport state
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& setViewState(ViewState const& state);
-    
+    SceneBuilder & setViewState(ViewState const & state);
+
     /**
      * @brief Manually set View and Projection matrices
      * @param view View matrix
      * @param projection Projection matrix
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& setMatrices(glm::mat4 const& view, glm::mat4 const& projection);
-    
+    SceneBuilder & setMatrices(glm::mat4 const & view, glm::mat4 const & projection);
+
     /**
      * @brief Add a polyline batch to the scene
      * @param batch Batch to add (will be copied)
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addPolyLineBatch(RenderablePolyLineBatch const& batch);
-    
+    SceneBuilder & addPolyLineBatch(RenderablePolyLineBatch const & batch);
+
     /**
      * @brief Add a polyline batch to the scene (move version)
      * @param batch Batch to add (will be moved)
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addPolyLineBatch(RenderablePolyLineBatch&& batch);
-    
+    SceneBuilder & addPolyLineBatch(RenderablePolyLineBatch && batch);
+
     /**
      * @brief Add a glyph batch to the scene
      * @param batch Batch to add (will be copied)
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addGlyphBatch(RenderableGlyphBatch const& batch);
-    
+    SceneBuilder & addGlyphBatch(RenderableGlyphBatch const & batch);
+
     /**
      * @brief Add a glyph batch to the scene (move version)
      * @param batch Batch to add (will be moved)
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addGlyphBatch(RenderableGlyphBatch&& batch);
-    
+    SceneBuilder & addGlyphBatch(RenderableGlyphBatch && batch);
+
     /**
      * @brief Add a rectangle batch to the scene
      * @param batch Batch to add (will be copied)
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addRectangleBatch(RenderableRectangleBatch const& batch);
-    
+    SceneBuilder & addRectangleBatch(RenderableRectangleBatch const & batch);
+
     /**
      * @brief Add a rectangle batch to the scene (move version)
      * @param batch Batch to add (will be moved)
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addRectangleBatch(RenderableRectangleBatch&& batch);
-    
+    SceneBuilder & addRectangleBatch(RenderableRectangleBatch && batch);
+
     /**
      * @brief Build spatial index from all batches
      * 
@@ -95,8 +95,8 @@ public:
      * @param bounds World-space bounds for the QuadTree
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& buildSpatialIndex(BoundingBox const& bounds);
-    
+    SceneBuilder & buildSpatialIndex(BoundingBox const & bounds);
+
     /**
      * @brief Finalize and return the constructed scene
      * 
@@ -106,7 +106,7 @@ public:
      * @return Complete RenderableScene ready for rendering
      */
     RenderableScene build();
-    
+
     /**
      * @brief Reset builder to empty state
      * 
@@ -119,6 +119,6 @@ private:
     bool _has_matrices{false};
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_SCENEGRAPH_SCENEBUILDER_HPP
+#endif// COREPLOTTING_SCENEGRAPH_SCENEBUILDER_HPP

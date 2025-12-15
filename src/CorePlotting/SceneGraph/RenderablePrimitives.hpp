@@ -3,8 +3,10 @@
 
 #include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
-#include <cstdint>
+
 #include <glm/glm.hpp>
+
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -40,7 +42,7 @@ struct RenderablePolyLineBatch {
     // Global Attributes
     float thickness{1.0f};
     glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
-    
+
     // Model matrix for this batch (positions in world space)
     glm::mat4 model_matrix{1.0f};
 };
@@ -67,7 +69,7 @@ struct RenderableGlyphBatch {
     };
     GlyphType glyph_type{GlyphType::Circle};
     float size{5.0f};
-    
+
     // Model matrix for this batch
     glm::mat4 model_matrix{1.0f};
 };
@@ -84,7 +86,7 @@ struct RenderableRectangleBatch {
     // Per-Rectangle Attributes
     std::vector<glm::vec4> colors;
     std::vector<EntityId> entity_ids;
-    
+
     // Model matrix for this batch
     glm::mat4 model_matrix{1.0f};
 };
@@ -109,9 +111,9 @@ struct RenderableScene {
     std::vector<RenderableGlyphBatch> glyph_batches;
 
     // Shared transformation matrices (apply to all batches)
-    glm::mat4 view_matrix{1.0f};        // Camera pan/zoom
-    glm::mat4 projection_matrix{1.0f};  // World → NDC mapping
-    
+    glm::mat4 view_matrix{1.0f};      // Camera pan/zoom
+    glm::mat4 projection_matrix{1.0f};// World → NDC mapping
+
     // Spatial index for hit testing
     // Built alongside geometry to ensure synchronization
     // Uses same world-space coordinates as Model matrices

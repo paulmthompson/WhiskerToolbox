@@ -1,4 +1,5 @@
 #include "Matrices.hpp"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace CorePlotting {

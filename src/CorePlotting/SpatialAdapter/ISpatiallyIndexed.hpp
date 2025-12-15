@@ -3,6 +3,7 @@
 
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+
 #include <optional>
 
 namespace CorePlotting {
@@ -40,9 +41,9 @@ public:
      * @return EntityId if found, std::nullopt otherwise
      */
     virtual std::optional<EntityId> findEntityAtPosition(
-        float world_x, 
-        float world_y, 
-        float tolerance) const = 0;
+            float world_x,
+            float world_y,
+            float tolerance) const = 0;
 
     /**
      * @brief Find all entities within a rectangular region
@@ -54,8 +55,8 @@ public:
      * @return Vector of EntityIds within the region
      */
     virtual std::vector<EntityId> findEntitiesInRegion(
-        float min_x, float max_x,
-        float min_y, float max_y) const = 0;
+            float min_x, float max_x,
+            float min_y, float max_y) const = 0;
 
     /**
      * @brief Get source time for an entity
@@ -76,6 +77,6 @@ public:
     virtual bool hasSpatialIndex() const = 0;
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_SPATIALADAPTER_ISPATIALLYINDEXED_HPP
+#endif// COREPLOTTING_SPATIALADAPTER_ISPATIALLYINDEXED_HPP

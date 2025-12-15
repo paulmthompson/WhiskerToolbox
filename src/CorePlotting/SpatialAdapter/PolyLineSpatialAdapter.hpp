@@ -1,9 +1,13 @@
-#pragma once
+#ifndef COREPLOTTING_SPATIALADAPTER_POLYLINESPATIALADAPTER_HPP
+#define COREPLOTTING_SPATIALADAPTER_POLYLINESPATIALADAPTER
+
+#include "SceneGraph/RenderablePrimitives.hpp"
 
 #include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
-#include "SceneGraph/RenderablePrimitives.hpp"
+
 #include <glm/glm.hpp>
+
 #include <memory>
 #include <vector>
 
@@ -28,9 +32,9 @@ public:
      * @return QuadTree with (x,y) = vertex positions, data = EntityId
      */
     static std::unique_ptr<QuadTree<EntityId>> buildFromVertices(
-        RenderablePolyLineBatch const& batch,
-        BoundingBox const& bounds);
-    
+            RenderablePolyLineBatch const & batch,
+            BoundingBox const & bounds);
+
     /**
      * @brief Build spatial index from polyline batch using bounding boxes
      * 
@@ -42,9 +46,9 @@ public:
      * @return QuadTree with (x,y) = AABB corners, data = EntityId
      */
     static std::unique_ptr<QuadTree<EntityId>> buildFromBoundingBoxes(
-        RenderablePolyLineBatch const& batch,
-        BoundingBox const& bounds);
-    
+            RenderablePolyLineBatch const & batch,
+            BoundingBox const & bounds);
+
     /**
      * @brief Build spatial index from polyline batch using uniform sampling
      * 
@@ -57,9 +61,11 @@ public:
      * @return QuadTree with (x,y) = sampled positions, data = EntityId
      */
     static std::unique_ptr<QuadTree<EntityId>> buildFromSampledPoints(
-        RenderablePolyLineBatch const& batch,
-        float sample_interval,
-        BoundingBox const& bounds);
+            RenderablePolyLineBatch const & batch,
+            float sample_interval,
+            BoundingBox const & bounds);
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
+
+#endif// COREPLOTTING_SPATIALADAPTER_POLYLINESPATIALADAPTER_HPP

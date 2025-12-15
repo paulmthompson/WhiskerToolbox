@@ -1,9 +1,13 @@
-#pragma once
+#ifndef COREPLOTTING_SPATIALADAPTER_POINTSPATIALADAPTER_HPP
+#define COREPLOTTING_SPATIALADAPTER_POINTSPATIALADAPTER_HPP
+
+#include "SceneGraph/RenderablePrimitives.hpp"
 
 #include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
-#include "../SceneGraph/RenderablePrimitives.hpp"
+
 #include <glm/glm.hpp>
+
 #include <memory>
 #include <vector>
 
@@ -24,9 +28,9 @@ public:
      * @return QuadTree with (x,y) = positions, data = EntityId
      */
     static std::unique_ptr<QuadTree<EntityId>> buildFromGlyphs(
-        RenderableGlyphBatch const& batch,
-        BoundingBox const& bounds);
-    
+            RenderableGlyphBatch const & batch,
+            BoundingBox const & bounds);
+
     /**
      * @brief Build spatial index from explicit coordinates
      * 
@@ -36,9 +40,11 @@ public:
      * @return QuadTree with (x,y) = positions, data = EntityId
      */
     static std::unique_ptr<QuadTree<EntityId>> buildFromPositions(
-        std::vector<glm::vec2> const& positions,
-        std::vector<EntityId> const& entity_ids,
-        BoundingBox const& bounds);
+            std::vector<glm::vec2> const & positions,
+            std::vector<EntityId> const & entity_ids,
+            BoundingBox const & bounds);
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
+
+#endif// COREPLOTTING_SPATIALADAPTER_POINTSPATIALADAPTER_HPP

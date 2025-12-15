@@ -36,7 +36,7 @@ public:
      * @param request Layout parameters and series list
      * @return Layout positions for each series (one row per series)
      */
-    LayoutResponse compute(LayoutRequest const& request) const override;
+    LayoutResponse compute(LayoutRequest const & request) const override;
 
 private:
     /**
@@ -49,12 +49,12 @@ private:
      * @return Computed layout for this row
      */
     [[nodiscard]] SeriesLayout computeRowLayout(
-        SeriesInfo const& series_info,
-        int row_index,
-        int total_rows,
-        LayoutRequest const& request) const;
+            SeriesInfo const & series_info,
+            int row_index,
+            int total_rows,
+            LayoutRequest const & request) const;
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_LAYOUT_ROWLAYOUTSTRATEGY_HPP
+#endif// COREPLOTTING_LAYOUT_ROWLAYOUTSTRATEGY_HPP

@@ -31,7 +31,7 @@ public:
      * @param request Layout parameters and series list
      * @return Layout positions for each series
      */
-    LayoutResponse compute(LayoutRequest const& request) const override;
+    LayoutResponse compute(LayoutRequest const & request) const override;
 
 private:
     /**
@@ -51,11 +51,11 @@ private:
      * @return Computed layout for this series
      */
     [[nodiscard]] SeriesLayout computeStackableLayout(
-        SeriesInfo const& series_info,
-        int series_index,
-        int stackable_index,
-        int total_stackable,
-        LayoutRequest const& request) const;
+            SeriesInfo const & series_info,
+            int series_index,
+            int stackable_index,
+            int total_stackable,
+            LayoutRequest const & request) const;
 
     /**
      * @brief Calculate layout for full-canvas series
@@ -72,11 +72,11 @@ private:
      * @return Computed layout for this series
      */
     [[nodiscard]] SeriesLayout computeFullCanvasLayout(
-        SeriesInfo const& series_info,
-        int series_index,
-        LayoutRequest const& request) const;
+            SeriesInfo const & series_info,
+            int series_index,
+            LayoutRequest const & request) const;
 };
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_LAYOUT_STACKEDLAYOUTSTRATEGY_HPP
+#endif// COREPLOTTING_LAYOUT_STACKEDLAYOUTSTRATEGY_HPP
