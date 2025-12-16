@@ -1,5 +1,6 @@
 #include "SVGPrimitives.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
