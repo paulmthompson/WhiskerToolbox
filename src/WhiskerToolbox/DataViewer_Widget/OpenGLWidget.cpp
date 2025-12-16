@@ -8,7 +8,6 @@
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
-#include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
@@ -33,29 +32,6 @@
 #include <iostream>
 #include <ranges>
 
-
-// This was a helpful resource for making a dashed line:
-//https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
-
-/*
-
-Currently this is pretty hacky OpenGL code that will be refactored to take advantage of
-OpenGL.
-
-I will establish a Model-View-Projection matrix framework.
-
-1) model matrix (object to world space)
-    - can be used to shift data up or down?
-2) view matrix (world space to camera space)
-    - Camera panning
-3) projection matrix (camera space to clip space)
-    - orthographic projection
-    - zooming and visible area definition
-
-I will also only select the data that is present
-
-
-*/
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
@@ -266,26 +242,6 @@ void OpenGLWidget::cleanup() {
     doneCurrent();
 
     _gl_initialized = false;
-}
-
-QOpenGLShaderProgram * create_shader_program(char const * vertexShaderSource,
-                                             char const * fragmentShaderSource) {
-    auto prog = new QOpenGLShaderProgram;
-    prog->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    prog->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
-
-    prog->link();
-
-    return prog;
-}
-
-// Replace the old create_shader_program with a new version that loads from resource files for the dashed shader
-QOpenGLShaderProgram * create_shader_program_from_resource(QString const & vertexResource, QString const & fragmentResource) {
-    auto prog = new QOpenGLShaderProgram;
-    prog->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexResource);
-    prog->addShaderFromSourceFile(QOpenGLShader::Fragment, fragmentResource);
-    prog->link();
-    return prog;
 }
 
 void OpenGLWidget::initializeGL() {
@@ -1207,18 +1163,6 @@ void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
         _digital_interval_series.erase(item);
     }
     updateCanvas(_time);
-}
-
-void OpenGLWidget::_addSeries(std::string const & key) {
-    static_cast<void>(key);
-    //auto item = _series_y_position.find(key);
-}
-
-void OpenGLWidget::_removeSeries(std::string const & key) {
-    auto item = _series_y_position.find(key);
-    if (item != _series_y_position.end()) {
-        _series_y_position.erase(item);
-    }
 }
 
 void OpenGLWidget::clearSeries() {

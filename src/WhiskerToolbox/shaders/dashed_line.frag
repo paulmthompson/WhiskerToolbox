@@ -1,4 +1,6 @@
 #version 410 core
+//This was a helpful resource for making a dashed line:
+//https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
 flat in vec3 startPos;
 in vec3 vertPos;
 out vec4 fragColor;

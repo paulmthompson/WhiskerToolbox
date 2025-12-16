@@ -233,37 +233,649 @@ This document outlines the roadmap for consolidating the plotting architecture i
 
 ---
 
-## Phase 3: Interaction & Qt Integration (The "Controller")
-**Goal:** Handle user input and bridge it to CorePlotting queries.
+## Phase 3: Coordinate Transform Utilities (Screen ↔ World ↔ Time)
+**Goal:** Create testable, Qt-independent coordinate conversion functions that replace inline calculations in OpenGLWidget.
 
-- [ ] **Port `PlotInteractionController`** patterns to DataViewer:
-    - Generalize for time-series context (TimeRange-aware zoom/pan)
-    - Handle interval dragging through same abstraction
+### 3.1 Time-Axis Coordinate Transforms
+**Current Problem:** `OpenGLWidget::canvasXToTime()` does inline math with widget-specific state.
 
-- [ ] **Adopt `ViewState` in DataViewer**:
-    - Replace `_verticalPanOffset`, `_yMin`, `_yMax` with ViewState
-    - Use `TimeSeriesViewState` for integrated time + Y management
+- [ ] **Create `TimeAxisCoordinates` utility** in `CorePlotting/CoordinateTransform/`:
+    ```cpp
+    struct TimeAxisParams {
+        int64_t time_start;      // From TimeRange
+        int64_t time_end;        // From TimeRange
+        int viewport_width_px;   // Canvas width in pixels
+    };
+    
+    // Canvas X pixel → Time coordinate (float for sub-frame precision)
+    float canvasXToTime(float canvas_x, TimeAxisParams const& params);
+    
+    // Time coordinate → Canvas X pixel
+    float timeToCanvasX(float time, TimeAxisParams const& params);
+    
+    // Time coordinate → Normalized Device Coordinate [-1, 1]
+    float timeToNDC(float time, TimeAxisParams const& params);
+    ```
+    - Location: `CoordinateTransform/TimeAxisCoordinates.hpp`
+    - Tests: Round-trip verification, edge cases at bounds
 
-- [ ] **Implement spatial queries for DataViewer**:
-    - Build QuadTree from visible series
-    - Use for tooltip/hover detection
-    - Use for selection (replaces current linear search)
+- [ ] **Integrate with `TimeRange`**:
+    - Add convenience method `TimeRange::toAxisParams(int viewport_width)`
+    - Ensures consistent parameter bundling
+
+### 3.2 World-to-Series Coordinate Queries
+**Current Problem:** `canvasYToAnalogValue()` has 70 lines duplicating state from multiple sources.
+
+**Better Approach:** Query through the existing hierarchy, not a flattened param struct.
+
+- [ ] **Create `SeriesCoordinateQuery` in `CorePlotting/CoordinateTransform/`**:
+    ```cpp
+    /**
+     * @brief Query interface for converting world Y to series-local coordinates.
+     * 
+     * Instead of duplicating LayoutEngine and ViewState data into a flat struct,
+     * this function queries the existing objects directly.
+     */
+    struct SeriesQueryResult {
+        std::string series_key;
+        float local_y;              // Y coordinate in series-local space
+        float distance_from_center; // How far from series center (for "closest" logic)
+        bool is_within_bounds;      // Whether point is within allocated region
+    };
+    
+    // Given world Y, find which series (if any) contains it
+    std::optional<SeriesQueryResult> findSeriesAtWorldY(
+        float world_y,
+        LayoutResponse const& layout,
+        float tolerance = 0.0f);
+    
+    // Given world Y and a specific series, convert to series-local Y
+    // This is essentially: (world_y - allocated_y_center) 
+    // The data object itself handles any further conversion to data values
+    float worldYToSeriesLocalY(
+        float world_y,
+        SeriesLayout const& series_layout);
+    ```
+
+- [ ] **Let data objects handle their own value conversion**:
+    - `AnalogTimeSeries` knows its own statistics (mean, std_dev)
+    - The series-local Y coordinate is passed to the data object
+    - Data object applies its own scaling/offset interpretation
+    - This respects that not all series are mean-centered
+
+- [ ] **Flow for "canvas Y → data value"**:
+    ```
+    canvas_y 
+      → screenToWorld(canvas_y, view_matrix, proj_matrix) 
+      → findSeriesAtWorldY(world_y, layout_response)
+      → worldYToSeriesLocalY(world_y, series_layout)
+      → [data object interprets local_y based on its properties]
+    ```
+
+### 3.3 Unified Hit Testing Architecture
+**Current Problem:** Multiple ad-hoc functions (`findIntervalAtTime`, `findSeriesAtPosition`, etc.) with inconsistent approaches.
+
+**Better Approach:** A hit tester that orchestrates multiple query strategies through the SceneGraph.
+
+- [ ] **Create `HitTestResult` with flexible payload**:
+    ```cpp
+    struct HitTestResult {
+        enum class HitType { 
+            None,
+            AnalogSeries,      // Hit a region owned by an analog series (no EntityId)
+            DigitalEvent,      // Hit a discrete event (has EntityId)
+            IntervalBody,      // Inside an interval (has EntityId)
+            IntervalEdgeLeft,  // Near left edge of interval
+            IntervalEdgeRight, // Near right edge of interval
+        };
+        
+        HitType hit_type{HitType::None};
+        std::string series_key;           // Always present if hit_type != None
+        std::optional<EntityId> entity_id; // Present for events/intervals
+        float world_x;                    // Query point in world coords
+        float world_y;
+        float distance;                   // Distance from hit target
+    };
+    ```
+
+- [ ] **Create `SceneHitTester` that queries RenderableScene**:
+    ```cpp
+    class SceneHitTester {
+    public:
+        /**
+         * @brief Perform hit test using all available strategies.
+         * 
+         * Strategies are tried based on what's in the scene:
+         * 1. QuadTree query for events (RenderableGlyphBatch)
+         * 2. Time-based containment for intervals (RenderableRectangleBatch)
+         * 3. Y-offset checking for analog series regions
+         * 
+         * Returns the closest/best match across all strategies.
+         */
+        HitTestResult hitTest(
+            float world_x, 
+            float world_y,
+            RenderableScene const& scene,
+            LayoutResponse const& layout,
+            float tolerance = 5.0f) const;
+        
+        /**
+         * @brief Specialized query for interval edges (drag handles).
+         */
+        std::optional<HitTestResult> findIntervalEdge(
+            float world_x,
+            RenderableScene const& scene,
+            std::map<std::string, std::pair<int64_t, int64_t>> const& selected_intervals,
+            float edge_tolerance = 10.0f) const;
+            
+    private:
+        // Strategy implementations
+        std::optional<HitTestResult> queryQuadTree(float x, float y, 
+            RenderableScene const& scene, float tolerance) const;
+        std::optional<HitTestResult> queryIntervalContainment(float x,
+            RenderableScene const& scene) const;
+        std::optional<HitTestResult> querySeriesRegion(float y,
+            LayoutResponse const& layout) const;
+    };
+    ```
+
+- [ ] **Strategy details**:
+    - **QuadTree**: For `RenderableGlyphBatch` (events, points). Returns EntityId.
+    - **Interval containment**: For `RenderableRectangleBatch`. Check if world_x is within [start, end]. Returns EntityId.
+    - **Series region**: For analog series. Check if world_y is within series' allocated region. Returns series_key only (no EntityId for continuous data).
+
+- [ ] **"Closest match" logic**:
+    - Run all applicable strategies
+    - Compare distances
+    - Return best match (e.g., event point beats analog region if both are close)
+
+### 3.4 Interval Dragging State Machine
+**Current Problem:** `startIntervalDrag()`, `updateIntervalDrag()`, `finishIntervalDrag()` spread across 400+ lines.
+
+- [ ] **Create `IntervalDragController`** in `CorePlotting/Interaction/`:
+    ```cpp
+    struct IntervalDragState {
+        std::string series_key;
+        bool is_left_edge;
+        int64_t original_start;
+        int64_t original_end;
+        int64_t current_start;
+        int64_t current_end;
+        int64_t min_allowed;        // Constraint: can't cross other edge
+        int64_t max_allowed;
+        bool is_active{false};
+    };
+    
+    class IntervalDragController {
+    public:
+        // Returns true if drag started, false if no valid target
+        bool tryStartDrag(HitTestResult const& hit, 
+                         int64_t current_start, int64_t current_end);
+        
+        // Update position given world X coordinate
+        int64_t updateDrag(float world_x);
+        
+        // Commit or cancel
+        std::optional<std::pair<int64_t, int64_t>> finishDrag();
+        void cancelDrag();
+        
+        IntervalDragState const& getState() const;
+    };
+    ```
+    - Location: `CorePlotting/Interaction/IntervalDragController.hpp`
+    - Testable without Qt: just pass world coordinates
+    - Widget only calls these methods, doesn't manage state
+
+- [ ] **Create `IntervalCreationController`** for double-click-to-create workflow
+
+### 3.5 Integration Tests: Real Data Types, Plain Language Scenarios
+**Goal:** Verify the complete pipeline from data → layout → scene → hit test using real types.
+
+These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This gives us high confidence before touching any widget code.
+
+#### Test Scenario 1: Stacked Analog + Events (DataViewer Style)
+```cpp
+TEST_CASE("DataViewer-style stacked layout with hit testing") {
+    // === ARRANGE: Create real data types ===
+    auto analog1 = std::make_shared<AnalogTimeSeries>();
+    analog1->setData({0.5f, 1.2f, -0.3f, 0.8f, 0.1f});  // 5 samples
+    
+    auto analog2 = std::make_shared<AnalogTimeSeries>();
+    analog2->setData({-0.2f, 0.4f, 0.9f, -0.1f, 0.6f});
+    
+    auto events = std::make_shared<DigitalEventSeries>();
+    events->addEvent(TimeFrameIndex(1), EntityId(100));
+    events->addEvent(TimeFrameIndex(3), EntityId(101));
+    
+    // === ARRANGE: Build layout (3 stacked series) ===
+    LayoutRequest request;
+    request.series = {
+        {"analog1", SeriesType::Analog, true},
+        {"analog2", SeriesType::Analog, true},
+        {"events",  SeriesType::DigitalEvent, true}  // Stacked mode
+    };
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+    
+    LayoutEngine engine(std::make_unique<StackedLayoutStrategy>());
+    auto layout = engine.compute(request);
+    
+    // Verify layout positions are distinct
+    REQUIRE(layout.layouts[0].allocated_y_center != layout.layouts[1].allocated_y_center);
+    REQUIRE(layout.layouts[1].allocated_y_center != layout.layouts[2].allocated_y_center);
+    
+    // === ARRANGE: Build scene with spatial index ===
+    auto scene = SceneBuilder()
+        .addEventBatch("events", *events, layout.findLayout("events"))
+        .withTimeRange(0, 5)
+        .buildWithSpatialIndex();
+    
+    // === ACT & ASSERT: Hit test at various world coordinates ===
+    SceneHitTester tester;
+    
+    // Click on event at time=1 (should hit EntityId 100)
+    float event_y = layout.findLayout("events")->allocated_y_center;
+    auto hit1 = tester.hitTest(1.0f, event_y, scene, layout);
+    REQUIRE(hit1.hit_type == HitTestResult::HitType::DigitalEvent);
+    REQUIRE(hit1.entity_id == EntityId(100));
+    REQUIRE(hit1.series_key == "events");
+    
+    // Click in analog1's region (no EntityId, just series_key)
+    float analog1_y = layout.findLayout("analog1")->allocated_y_center;
+    auto hit2 = tester.hitTest(2.0f, analog1_y, scene, layout);
+    REQUIRE(hit2.hit_type == HitTestResult::HitType::AnalogSeries);
+    REQUIRE(hit2.series_key == "analog1");
+    REQUIRE_FALSE(hit2.entity_id.has_value());
+    
+    // Click between series (should return closest or None)
+    float between_y = (analog1_y + analog2_y) / 2.0f;
+    auto hit3 = tester.hitTest(2.0f, between_y, scene, layout, /*tolerance=*/0.0f);
+    REQUIRE(hit3.hit_type == HitTestResult::HitType::None);
+}
+```
+
+#### Test Scenario 2: Interval Selection and Edge Detection
+```cpp
+TEST_CASE("Interval hit testing with edge detection for drag handles") {
+    // === ARRANGE: Create interval series ===
+    auto intervals = std::make_shared<DigitalIntervalSeries>();
+    intervals->addInterval(10, 30, EntityId(200));  // Interval [10, 30]
+    intervals->addInterval(50, 80, EntityId(201));  // Interval [50, 80]
+    
+    // Layout: intervals use full canvas
+    LayoutRequest request;
+    request.series = {{"intervals", SeriesType::DigitalInterval, false}};
+    
+    LayoutEngine engine(std::make_unique<StackedLayoutStrategy>());
+    auto layout = engine.compute(request);
+    
+    auto scene = SceneBuilder()
+        .addIntervalBatch("intervals", *intervals, layout.findLayout("intervals"))
+        .withTimeRange(0, 100)
+        .buildWithSpatialIndex();
+    
+    SceneHitTester tester;
+    
+    // === Click inside interval body ===
+    auto hit_body = tester.hitTest(20.0f, 0.0f, scene, layout);
+    REQUIRE(hit_body.hit_type == HitTestResult::HitType::IntervalBody);
+    REQUIRE(hit_body.entity_id == EntityId(200));
+    
+    // === Click near left edge (drag handle) ===
+    // Mark this interval as selected for edge detection
+    std::map<std::string, std::pair<int64_t, int64_t>> selected = {
+        {"intervals", {10, 30}}
+    };
+    auto hit_edge = tester.findIntervalEdge(10.5f, scene, selected, /*tolerance=*/2.0f);
+    REQUIRE(hit_edge.has_value());
+    REQUIRE(hit_edge->hit_type == HitTestResult::HitType::IntervalEdgeLeft);
+    
+    // === Click outside any interval ===
+    auto hit_miss = tester.hitTest(40.0f, 0.0f, scene, layout);
+    REQUIRE(hit_miss.hit_type == HitTestResult::HitType::None);
+}
+```
+
+#### Test Scenario 3: Raster Plot (Multi-Row Events)
+```cpp
+TEST_CASE("Raster plot with row-based event layout") {
+    // === ARRANGE: Multiple trials as separate event series ===
+    auto trial1 = std::make_shared<DigitalEventSeries>();
+    trial1->addEvent(TimeFrameIndex(5), EntityId(1));
+    trial1->addEvent(TimeFrameIndex(15), EntityId(2));
+    
+    auto trial2 = std::make_shared<DigitalEventSeries>();
+    trial2->addEvent(TimeFrameIndex(8), EntityId(3));
+    trial2->addEvent(TimeFrameIndex(12), EntityId(4));
+    
+    // Use RowLayoutStrategy for raster-style rows
+    LayoutRequest request;
+    request.series = {
+        {"trial1", SeriesType::DigitalEvent, true},
+        {"trial2", SeriesType::DigitalEvent, true}
+    };
+    
+    LayoutEngine engine(std::make_unique<RowLayoutStrategy>());
+    auto layout = engine.compute(request);
+    
+    // Build with RasterBuilder
+    auto scene = SceneBuilder()
+        .addEventBatch("trial1", *trial1, layout.findLayout("trial1"))
+        .addEventBatch("trial2", *trial2, layout.findLayout("trial2"))
+        .withTimeRange(0, 20)
+        .buildWithSpatialIndex();
+    
+    SceneHitTester tester;
+    
+    // Hit event in trial1
+    float trial1_y = layout.findLayout("trial1")->allocated_y_center;
+    auto hit = tester.hitTest(5.0f, trial1_y, scene, layout);
+    REQUIRE(hit.entity_id == EntityId(1));
+    REQUIRE(hit.series_key == "trial1");
+    
+    // Hit event in trial2 (different row)
+    float trial2_y = layout.findLayout("trial2")->allocated_y_center;
+    auto hit2 = tester.hitTest(8.0f, trial2_y, scene, layout);
+    REQUIRE(hit2.entity_id == EntityId(3));
+    REQUIRE(hit2.series_key == "trial2");
+}
+```
+
+#### Test Scenario 4: Coordinate Transform Round-Trip
+```cpp
+TEST_CASE("Screen → World → Hit → Verify coordinates") {
+    // Setup: 800x600 canvas, time range [0, 1000]
+    TimeAxisParams time_params{0, 1000, 800};
+    
+    // Create a scene with known event at time=500
+    auto events = std::make_shared<DigitalEventSeries>();
+    events->addEvent(TimeFrameIndex(500), EntityId(42));
+    
+    // ... build layout and scene ...
+    
+    // Simulate: User clicks at canvas pixel (400, 300)
+    // Step 1: Canvas X → Time
+    float time = canvasXToTime(400.0f, time_params);
+    REQUIRE(time == Approx(500.0f));  // Mid-screen = mid-time
+    
+    // Step 2: Canvas → World (using matrices)
+    glm::mat4 view = CorePlotting::getEventViewMatrix(...);
+    glm::mat4 proj = CorePlotting::getEventProjectionMatrix(...);
+    auto world = screenToWorld({400, 300}, {800, 600}, view, proj);
+    
+    // Step 3: World → Hit test
+    auto hit = tester.hitTest(world.x, world.y, scene, layout);
+    REQUIRE(hit.entity_id == EntityId(42));
+    
+    // Step 4: Reverse - Entity position → Screen (for tooltip placement)
+    auto screen = worldToScreen({500.0f, event_y}, {800, 600}, view, proj);
+    REQUIRE(screen.x == Approx(400.0f));
+}
+```
+
+#### Test Scenario 5: Mixed Series Priority (Event Beats Analog)
+```cpp
+TEST_CASE("When event overlaps analog region, event takes priority") {
+    // Analog series fills region Y=[-0.5, 0.5]
+    // Event at time=100 is placed at Y=0.0 (overlapping analog)
+    
+    // ... setup with FullCanvas events overlapping analog ...
+    
+    // Click at (100, 0) - both analog region and event are candidates
+    auto hit = tester.hitTest(100.0f, 0.0f, scene, layout, /*tolerance=*/5.0f);
+    
+    // Event should win (more specific/discrete)
+    REQUIRE(hit.hit_type == HitTestResult::HitType::DigitalEvent);
+    REQUIRE(hit.entity_id.has_value());
+}
+```
+
+#### Why This Testing Approach Works
+
+1. **Real Data Types**: Uses actual `DigitalEventSeries`, `AnalogTimeSeries`, etc.
+2. **Real Layout**: Uses `LayoutEngine` with real strategies
+3. **Real Scene Graph**: Uses `SceneBuilder` and `RenderableScene`
+4. **Real Spatial Index**: QuadTree built from actual batch data
+5. **No Mocks**: Everything is the production code path
+6. **Plain Language**: Each test describes a real user scenario
+7. **Backend Agnostic**: No Qt, no OpenGL, no widget code
+
+#### Test Scenario 6: IntervalDragController State Machine
+```cpp
+TEST_CASE("Interval drag controller enforces constraints") {
+    IntervalDragController controller;
+    
+    // Setup: interval [100, 200], dragging left edge
+    HitTestResult hit;
+    hit.hit_type = HitTestResult::HitType::IntervalEdgeLeft;
+    hit.series_key = "my_intervals";
+    
+    REQUIRE(controller.tryStartDrag(hit, 100, 200));
+    REQUIRE(controller.getState().is_active);
+    REQUIRE(controller.getState().is_left_edge == true);
+    
+    // Drag left edge to 150 (valid)
+    auto new_pos = controller.updateDrag(150.0f);
+    REQUIRE(new_pos == 150);
+    REQUIRE(controller.getState().current_start == 150);
+    
+    // Try to drag past right edge (should clamp)
+    new_pos = controller.updateDrag(250.0f);
+    REQUIRE(new_pos < 200);  // Clamped to stay left of right edge
+    
+    // Finish drag
+    auto result = controller.finishDrag();
+    REQUIRE(result.has_value());
+    REQUIRE(result->first < result->second);  // Valid interval
+    REQUIRE_FALSE(controller.getState().is_active);
+}
+
+TEST_CASE("Interval drag cancel restores original") {
+    IntervalDragController controller;
+    // ... start drag ...
+    controller.updateDrag(150.0f);  // Move somewhere
+    controller.cancelDrag();
+    
+    REQUIRE_FALSE(controller.getState().is_active);
+    // Original values available for UI to restore
+}
+```
 
 ---
 
-## Phase 4: Widget Migration
-**Goal:** Update existing widgets to use the new stack.
+## Phase 4: Widget Migration (DataViewer OpenGLWidget)
+**Goal:** Systematically replace inline code with CorePlotting/PlottingOpenGL calls.
 
-### 4.1 DataViewer Migration
-- [ ] Replace internal layout logic with `LayoutEngine`
-- [ ] Replace inline rendering with `PlottingOpenGL` renderers
-- [ ] Replace XAxis with `TimeSeriesViewState` + `TimeRange`
-- [ ] Add spatial indexing for hover/selection
+### 4.1 Prerequisites Analysis
 
-### 4.2 Analysis Dashboard Updates
-- [ ] `EventPlotWidget` (Raster): Use `CorePlotting` row layout
-- [ ] `SpatialOverlayWidget`: Already using ViewState, add CorePlotting transformers
-- [ ] Shared tooltip infrastructure across widgets
+**Current `OpenGLWidget` Entanglements:**
+| Function | Lines | Responsibilities | Target Module |
+|----------|-------|------------------|---------------|
+| `drawDigitalEventSeries()` | ~160 | Visibility counting, MVP setup, TimeFrame conversion, GL calls, per-event buffer | SceneBuildingHelpers + SceneRenderer |
+| `drawDigitalIntervalSeries()` | ~180 | MVP setup, TimeFrame conversion, interval highlight, GL calls | SceneBuildingHelpers + SceneRenderer |
+| `drawAnalogSeries()` | ~180 | Layout config (spike sorter), MVP setup, gap mode dispatch, GL calls | SceneBuildingHelpers + SceneRenderer |
+| `_drawAnalogSeriesWithGapDetection()` | ~60 | Segment-by-segment GL upload | GapDetector (already exists) |
+| `_drawAnalogSeriesAsMarkers()` | ~25 | Point rendering | RenderableGlyphBatch |
+| `canvasXToTime()` | ~10 | Canvas X → Time | TimeAxisCoordinates |
+| `canvasYToAnalogValue()` | ~70 | Canvas Y → Data value | SeriesYCoordinates |
+| `findIntervalAtTime()` | ~40 | Time → Interval | TimeSeriesHitTester |
+| `findIntervalEdgeAtPosition()` | ~40 | Canvas pos → Edge | TimeSeriesHitTester |
+| `startIntervalDrag()` | ~25 | State init | IntervalDragController |
+| `updateIntervalDrag()` | ~110 | Constraint logic | IntervalDragController |
+| `finishIntervalDrag()` | ~70 | Commit changes | IntervalDragController |
+| `drawDraggedInterval()` | ~90 | Visual feedback | SceneRenderer (overlay batch) |
+
+### 4.2 Migration Step 1: Replace Coordinate Functions (Low Risk)
+**Goal:** Replace `canvasXToTime()` with CorePlotting; refactor `canvasYToAnalogValue()` to query through hierarchy.
+
+- [ ] **Add `TimeAxisCoordinates` to CorePlotting** (Phase 3.1)
+- [ ] **Update `OpenGLWidget::canvasXToTime()`**:
+    ```cpp
+    float OpenGLWidget::canvasXToTime(float canvas_x) const {
+        CorePlotting::TimeAxisParams params{
+            _xAxis.getStart(), _xAxis.getEnd(), width()
+        };
+        return CorePlotting::canvasXToTime(canvas_x, params);
+    }
+    ```
+- [ ] **Refactor `canvasYToAnalogValue()` to use query flow**:
+    ```cpp
+    float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const& series_key) const {
+        // 1. Screen → World
+        auto world_pos = CorePlotting::screenToWorld(
+            {canvas_x, canvas_y}, {width(), height()}, 
+            _current_view_matrix, _current_proj_matrix);
+        
+        // 2. Get series layout from LayoutEngine result (cached)
+        auto* layout = _cached_layout.findLayout(series_key);
+        if (!layout) return 0.0f;
+        
+        // 3. World Y → Series-local Y
+        float local_y = CorePlotting::worldYToSeriesLocalY(world_pos.y, *layout);
+        
+        // 4. Let the data object interpret local_y
+        // (series knows its own scaling/offset)
+        return _analog_series[series_key].series->localYToDataValue(local_y, *layout);
+    }
+    ```
+- [ ] **Verify:** All existing tests pass, hover behavior unchanged
+
+### 4.3 Migration Step 2: Replace Hit Testing (Medium Risk)
+**Goal:** Replace manual iteration with `SceneHitTester` queries through SceneGraph.
+
+- [ ] **Add `SceneHitTester` to CorePlotting** (Phase 3.3)
+- [ ] **Cache `LayoutResponse` in OpenGLWidget** (rebuilt on series add/remove)
+- [ ] **Replace `findIntervalAtTime()`**:
+    ```cpp
+    std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(
+        std::string const& series_key, float time_coord) const 
+    {
+        auto hit = _hit_tester.hitTest(time_coord, 0.0f, _current_scene, _cached_layout);
+        if (hit.hit_type == HitTestResult::HitType::IntervalBody && 
+            hit.series_key == series_key) {
+            // Get interval bounds from the interval series
+            return getIntervalBoundsForEntity(hit.entity_id.value());
+        }
+        return std::nullopt;
+    }
+    ```
+- [ ] **Replace `findIntervalEdgeAtPosition()`** with `_hit_tester.findIntervalEdge()`
+- [ ] **Replace `findSeriesAtPosition()`** with layout region query
+- [ ] **Verify:** Click-to-select intervals still works
+
+### 4.4 Migration Step 3: Replace Interval Dragging (Medium Risk)
+**Goal:** Extract state machine from widget into testable controller.
+
+- [ ] **Add `IntervalDragController` to CorePlotting** (Phase 3.4)
+- [ ] **Add `_interval_drag_controller` member to OpenGLWidget**
+- [ ] **Simplify `mousePressEvent()`**:
+    ```cpp
+    if (auto hit = _hit_tester.findIntervalEdge(canvas_x, canvas_y)) {
+        auto interval = getSelectedInterval(hit->series_key);
+        if (interval && _interval_drag_controller.tryStartDrag(*hit, interval->first, interval->second)) {
+            // Dragging active
+        }
+    }
+    ```
+- [ ] **Simplify `mouseMoveEvent()`**:
+    ```cpp
+    if (_interval_drag_controller.getState().is_active) {
+        _interval_drag_controller.updateDrag(canvas_x, getTimeAxisParams());
+        update();
+    }
+    ```
+- [ ] **Simplify `mouseReleaseEvent()`**:
+    ```cpp
+    if (auto result = _interval_drag_controller.finishDrag()) {
+        // Apply interval change
+        emit intervalEdgeChanged(...);
+    }
+    ```
+- [ ] **Verify:** Drag behavior unchanged
+
+### 4.5 Migration Step 4: Unify Rendering Path (Higher Risk)
+**Goal:** Remove legacy draw functions, use only SceneRenderer path.
+
+- [ ] **Ensure `SceneBuildingHelpers` handles all cases**:
+    - [x] `buildAnalogSeriesBatch()` — basic polyline ✓
+    - [ ] Gap detection mode (use GapDetector)
+    - [ ] Marker mode (use GlyphBatch instead of PolyLineBatch)
+    - [x] `buildEventSeriesBatch()` — basic events ✓
+    - [ ] Stacked vs FullCanvas modes
+    - [x] `buildIntervalSeriesBatch()` — basic intervals ✓
+    - [ ] Selection highlight overlays
+
+- [ ] **Update `paintGL()` to only use scene path**:
+    ```cpp
+    void OpenGLWidget::paintGL() {
+        // ... clear, time setup ...
+        
+        // Build scene (should be cached and only rebuilt on data change)
+        auto scene = buildCurrentScene();
+        _scene_renderer->render(scene);
+        
+        // Overlay elements (drag preview, selection)
+        renderOverlays();
+        
+        drawAxis();
+        drawGridLines();
+    }
+    ```
+
+- [ ] **Remove legacy functions**:
+    - `drawDigitalEventSeries()` → delete
+    - `drawDigitalIntervalSeries()` → delete
+    - `drawAnalogSeries()` → delete
+    - `_drawAnalogSeriesWithGapDetection()` → delete
+    - `_drawAnalogSeriesAsMarkers()` → delete
+
+- [ ] **Verify:** All visual output identical
+
+### 4.6 Migration Step 5: Replace XAxis with TimeSeriesViewState
+**Goal:** Use unified camera state instead of separate `_xAxis` + `_yMin/_yMax/_verticalPanOffset`.
+
+- [ ] **Add `_view_state` member** (type: `TimeSeriesViewState`)
+- [ ] **Replace `_xAxis` calls**:
+    - `_xAxis.getStart()` → `_view_state.time_range.start`
+    - `_xAxis.getEnd()` → `_view_state.time_range.end`
+    - `_xAxis.setCenterAndZoom()` → `_view_state.time_range.setCenterAndZoom()`
+- [ ] **Replace Y-axis state**:
+    - `_yMin, _yMax` → `_view_state.view_state.data_bounds`
+    - `_verticalPanOffset` → `_view_state.view_state.pan_offset_y`
+- [ ] **Update `setMasterTimeFrame()`**:
+    ```cpp
+    void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> tf) {
+        _master_time_frame = tf;
+        _view_state.time_range = TimeRange::fromTimeFrame(*tf);
+    }
+    ```
+- [ ] **Verify:** Zoom/pan behavior unchanged
+
+### 4.7 Final Cleanup
+- [ ] Remove `_plotting_manager` dependency (replaced by LayoutEngine)
+- [ ] Remove `m_vertices` class member (batches own their data)
+- [ ] Remove per-series `_series_y_position` map (use LayoutEngine results)
+- [ ] Update tests to use CorePlotting types directly
+- [ ] Document new architecture in header comments
+
+---
+
+## Phase 5: Analysis Dashboard Updates
+**Goal:** Apply same patterns to EventPlotWidget and other dashboard components.
+
+### 5.1 EventPlotWidget (Raster Plot)
+- [ ] Replace `vector<vector<float>>` data format with `DigitalEventSeries`
+- [ ] Use `RowLayoutStrategy` from CorePlotting
+- [ ] Add EntityId support for hover/click
+
+### 5.2 SpatialOverlayWidget
+- [ ] Already using ViewState ✓
+- [ ] Add CorePlotting transformers for line/point data
+- [ ] Unify tooltip infrastructure
+
+### 5.3 Shared Infrastructure
+- [ ] Create `PlotTooltipManager` that works with QuadTree results
+- [ ] Standardize cursor change on hover (edge detection)
 
 ---
 

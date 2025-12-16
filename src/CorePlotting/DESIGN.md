@@ -478,6 +478,223 @@ for (auto& series : analog_series) {
 - **View** = global camera state (shared across all series)  
 - **Projection** = coordinate system mapping (shared across all series)
 
+### 3.5 Coordinate Transform Utilities (Screen ↔ World ↔ Time)
+
+While the forward path (Data → MVP → NDC → Screen) is handled by the Model/View/Projection matrices,
+user interaction requires the **inverse** path: Screen → World → Data. This is more complex for
+time-series plots because:
+
+1. **X-axis**: Screen pixels → Time coordinates (requires TimeRange)
+2. **Y-axis**: Screen pixels → Data values (requires per-series Model matrix inversion)
+
+#### Time Axis Transforms
+
+```cpp
+// CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp
+
+struct TimeAxisParams {
+    int64_t time_start;      // From TimeRange.start
+    int64_t time_end;        // From TimeRange.end  
+    int viewport_width_px;   // Canvas width in pixels
+};
+
+// Forward: Time → Screen pixel X
+float timeToCanvasX(float time, TimeAxisParams const& params) {
+    float t = (time - params.time_start) / 
+              static_cast<float>(params.time_end - params.time_start);
+    return t * params.viewport_width_px;
+}
+
+// Inverse: Screen pixel X → Time
+float canvasXToTime(float canvas_x, TimeAxisParams const& params) {
+    float t = canvas_x / params.viewport_width_px;
+    return params.time_start + t * (params.time_end - params.time_start);
+}
+```
+
+#### Series Y-Axis Queries (Through the Hierarchy)
+
+The Y-axis is more complex because each series has its own coordinate space. **Instead of
+flattening all parameters into a struct, we query through the existing hierarchy:**
+
+```
+canvas_y 
+  → screenToWorld(view_matrix, proj_matrix)  // Generic inverse VP
+  → findSeriesAtWorldY(layout_response)       // LayoutEngine knows series regions
+  → worldYToSeriesLocalY(series_layout)       // Simple offset subtraction
+  → [data object interprets local_y]          // Series knows its own scaling
+```
+
+```cpp
+// CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp
+
+struct SeriesQueryResult {
+    std::string series_key;
+    float local_y;              // Y in series-local space (0 = center)
+    float distance_from_center; // Absolute distance from allocated_y_center
+    bool is_within_bounds;      // Whether point is in allocated region
+};
+
+// Query the LayoutResponse to find which series (if any) contains world_y
+std::optional<SeriesQueryResult> findSeriesAtWorldY(
+    float world_y,
+    LayoutResponse const& layout,
+    float tolerance = 0.0f);
+
+// Convert world Y to series-local Y (simple subtraction)
+float worldYToSeriesLocalY(float world_y, SeriesLayout const& layout) {
+    return world_y - layout.allocated_y_center;
+}
+```
+
+**Key insight**: The data object itself handles conversion from `local_y` to actual data values.
+This respects that:
+- Not all series are mean-centered
+- Different series may have different normalization strategies
+- The series object is the single source of truth for its own scaling
+
+### 3.6 Hit Testing Architecture
+
+Hit testing answers: "What did the user click on?" For time-series plots, we need **multiple
+query strategies** because different data types have different spatial representations:
+
+| Data Type | Query Strategy | Returns EntityId? |
+|-----------|---------------|-------------------|
+| DigitalEventSeries | QuadTree point query | ✅ Yes |
+| DigitalIntervalSeries | Time range containment | ✅ Yes |
+| AnalogTimeSeries | Y-region containment | ❌ No (continuous) |
+
+```cpp
+// CorePlotting/Interaction/HitTestResult.hpp
+
+struct HitTestResult {
+    enum class HitType { 
+        None,
+        AnalogSeries,       // Hit region owned by analog series (no EntityId)
+        DigitalEvent,       // Hit discrete event point (has EntityId)
+        IntervalBody,       // Inside interval bounds (has EntityId)
+        IntervalEdgeLeft,   // Near left edge (for drag handles)
+        IntervalEdgeRight,  // Near right edge
+    };
+    
+    HitType hit_type{HitType::None};
+    std::string series_key;             // Always present if hit
+    std::optional<EntityId> entity_id;  // Only for events/intervals
+    float world_x, world_y;             // Query point
+    float distance;                     // Distance from target
+};
+```
+
+#### SceneHitTester: Orchestrating Multiple Strategies
+
+```cpp
+// CorePlotting/Interaction/SceneHitTester.hpp
+
+class SceneHitTester {
+public:
+    /**
+     * @brief Perform hit test using all applicable strategies.
+     * 
+     * Queries in priority order:
+     * 1. QuadTree (events) - most precise
+     * 2. Interval containment - time-based
+     * 3. Series region - Y-based fallback
+     * 
+     * Returns closest/best match.
+     */
+    HitTestResult hitTest(
+        float world_x, 
+        float world_y,
+        RenderableScene const& scene,
+        LayoutResponse const& layout,
+        float tolerance = 5.0f) const;
+
+private:
+    // Individual strategies
+    std::optional<HitTestResult> queryQuadTree(
+        float x, float y, 
+        RenderableScene const& scene,
+        float tolerance) const;
+        
+    std::optional<HitTestResult> queryIntervalContainment(
+        float x,
+        RenderableScene const& scene) const;
+        
+    std::optional<HitTestResult> querySeriesRegion(
+        float y,
+        LayoutResponse const& layout) const;
+};
+```
+
+**Data flow:**
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        Hit Testing Data Flow                                 │
+│                                                                              │
+│  Mouse Event (canvas_x, canvas_y)                                            │
+│         │                                                                    │
+│         ▼                                                                    │
+│  screenToWorld(view_matrix, proj_matrix) ──▶ (world_x, world_y)              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌─────────────────────────────────────────────────────────────┐             │
+│  │ SceneHitTester.hitTest(world_x, world_y, scene, layout)     │             │
+│  │                                                             │             │
+│  │  ┌─────────────┐  ┌──────────────────┐  ┌───────────────┐   │             │
+│  │  │ QuadTree    │  │ Interval         │  │ Series Region │   │             │
+│  │  │ (events)    │  │ Containment      │  │ (analog Y)    │   │             │
+│  │  │ → EntityId  │  │ → EntityId       │  │ → series_key  │   │             │
+│  │  └─────────────┘  └──────────────────┘  └───────────────┘   │             │
+│  │         │                  │                    │           │             │
+│  │         └──────────────────┼────────────────────┘           │             │
+│  │                            ▼                                │             │
+│  │                   Compare distances                         │             │
+│  │                   Return best match                         │             │
+│  └─────────────────────────────────────────────────────────────┘             │
+│         │                                                                    │
+│         ▼                                                                    │
+│  HitTestResult { series_key, entity_id?, hit_type, distance }                │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.7 Interaction Controllers (State Machines)
+
+Complex interactions like interval dragging involve state that persists across multiple
+mouse events. Instead of spreading this state across widget member variables, we
+encapsulate it in controller objects:
+
+```cpp
+// CorePlotting/Interaction/IntervalDragController.hpp
+
+class IntervalDragController {
+public:
+    struct State {
+        std::string series_key;
+        bool is_left_edge;
+        int64_t original_start, original_end;
+        int64_t current_start, current_end;
+        int64_t min_allowed, max_allowed;  // Constraints
+        bool is_active{false};
+    };
+    
+    bool tryStartDrag(HitTestResult const& hit, 
+                      int64_t current_start, int64_t current_end);
+    int64_t updateDrag(float canvas_x, TimeAxisParams const& params);
+    std::optional<std::pair<int64_t, int64_t>> finishDrag();
+    void cancelDrag();
+    
+    State const& getState() const { return _state; }
+    
+private:
+    State _state;
+};
+```
+
+**Benefits**:
+1. **Testable**: Pass coordinates to controller, verify state changes
+2. **Reusable**: Same controller works for any widget with intervals
+3. **Encapsulated**: Widget doesn't manage drag state directly
+
 ### 3. Rendering Abstraction (PlottingOpenGL)
 
 The `CorePlotting` layer produces `Renderable*Batch` structures. The `PlottingOpenGL` layer consumes them. This separation allows us to swap rendering strategies without changing the data generation logic.
@@ -587,12 +804,20 @@ src/CorePlotting/
 │   ├── EpochAligner.hpp           # Analog + Events -> PolyLineBatch
 │   └── RasterBuilder.hpp          # Events -> GlyphBatch
 │
-├── CoordinateTransform/           # MVP matrix utilities
+├── CoordinateTransform/           # MVP matrix utilities + inverse transforms
 │   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
 │   ├── TimeRange.hpp              # TimeFrame-aware X-axis bounds
+│   ├── TimeAxisCoordinates.hpp    # Canvas X ↔ Time conversions
+│   ├── SeriesCoordinateQuery.hpp  # World Y → Series lookup (queries LayoutResponse)
 │   ├── Matrices.hpp               # Matrix construction helpers
-│   ├── ScreenToWorld.hpp          # Inverse VP transform for queries
+│   ├── ScreenToWorld.hpp          # Generic inverse VP transform
 │   └── SeriesMatrices.hpp         # Per-series Model matrix builders
+│
+├── Interaction/                   # Hit testing and interaction controllers
+│   ├── HitTestResult.hpp          # Result struct with optional EntityId
+│   ├── SceneHitTester.hpp         # Multi-strategy hit testing through SceneGraph
+│   ├── IntervalDragController.hpp # State machine for interval edge dragging
+│   └── IntervalCreationController.hpp # State machine for new interval creation
 │
 ├── DataTypes/                     # Style and configuration structs
 │   ├── SeriesStyle.hpp            # Color, alpha, thickness (rendering)
@@ -609,6 +834,10 @@ src/CorePlotting/
 │   ├── EventRowLayout.hpp         # Layout/positioning information
 │   ├── PlacedEventRow.hpp         # Combined: data + layout
 │   └── EventRowBuilder.hpp        # Factory functions for common patterns
+│
+├── Export/                        # SVG and other export formats
+│   ├── SVGPrimitives.hpp          # Batch → SVG element conversion
+│   └── SVGPrimitives.cpp
 │
 └── tests/                         # Catch2 unit tests
     ├── EventRow.test.cpp

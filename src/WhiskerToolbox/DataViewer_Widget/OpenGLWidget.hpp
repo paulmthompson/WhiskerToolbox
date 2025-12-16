@@ -409,9 +409,6 @@ protected:
 
 private:
     void setupVertexAttribs();
-    //void generateRandomValues(int count);
-    //void generateAndAddFakeData(int count);
-    //void adjustFakeData();
     void drawDigitalEventSeries();
     void drawDigitalIntervalSeries();
     void drawAnalogSeries();
@@ -420,8 +417,6 @@ private:
     void drawDashedLine(LineParameters const & params);
     void drawDraggedInterval();
     void drawNewIntervalBeingCreated();
-    void _addSeries(std::string const & key);
-    void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
 
     // New SceneRenderer-based rendering methods
