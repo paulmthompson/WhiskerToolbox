@@ -1254,36 +1254,34 @@ src/CorePlotting/
 ├── CMakeLists.txt
 ├── DESIGN.md                      # This document
 ├── ROADMAP.md                     # Implementation roadmap
-├── README.md                      # Quick start guide
 │
-├── Mappers/                       # Visualization-specific position mapping (NEW)
-│   ├── MappedPositions.hpp        # Common output types (positions[], entity_ids[])
+├── Mappers/                       # Visualization-specific position mapping
+│   ├── MappedElement.hpp          # Common element types (MappedElement, MappedRectElement, MappedVertex)
+│   ├── MappedLineView.hpp         # Line view type for multi-line ranges
+│   ├── MapperConcepts.hpp         # C++20 concepts for range requirements
 │   ├── TimeSeriesMapper.hpp       # DataViewer: events→time, intervals→time, analog→time
 │   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y
-│   ├── RasterMapper.hpp           # Raster/PSTH: events→relative time
-│   └── ScatterMapper.hpp          # Scatter plots: series_a→X, series_b→Y
+│   └── RasterMapper.hpp           # Raster/PSTH: events→relative time
 │
 ├── SceneGraph/                    # Generic scene assembly (position-agnostic)
-│   ├── RenderableScene.hpp        # Complete frame description
 │   ├── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, Glyph)
-│   └── SceneBuilder.hpp           # Takes positions[], builds batches + QuadTree
+│   └── SceneBuilder.hpp           # Range-based builder: positions[] → batches + QuadTree
 │
 ├── Layout/                        # Plot-type-specific layout strategies
 │   ├── LayoutEngine.hpp           # Strategy pattern coordinator
-│   ├── SeriesLayout.hpp           # Per-series layout transforms
+│   ├── SeriesLayout.hpp           # Per-series layout result
 │   ├── StackedLayoutStrategy.hpp  # DataViewer: vertical stacking
 │   ├── RowLayoutStrategy.hpp      # Raster: equal-height rows
-│   └── SpatialLayoutStrategy.hpp  # SpatialOverlay: bounds fitting (NEW)
+│   └── SpatialLayoutStrategy.hpp  # SpatialOverlay: bounds fitting
 │
 ├── Transformers/                  # Data-to-geometry converters (low-level)
-│   ├── GapDetector.hpp            # Analog → segmented PolyLineBatch
-│   ├── EpochAligner.hpp           # Analog + Events → PolyLineBatch
-│   └── RasterBuilder.hpp          # Events → GlyphBatch (legacy, being superseded by Mappers)
+│   └── GapDetector.hpp            # Analog → segmented PolyLineBatch
 │
 ├── CoordinateTransform/           # MVP matrix utilities + inverse transforms
 │   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
 │   ├── TimeRange.hpp              # TimeFrame-aware X-axis bounds
 │   ├── TimeAxisCoordinates.hpp    # Canvas X ↔ Time conversions
+│   ├── TimeFrameAdapters.hpp      # C++20 range adapters for TimeFrame conversion
 │   ├── SeriesCoordinateQuery.hpp  # World Y → Series lookup (queries LayoutResponse)
 │   ├── Matrices.hpp               # Matrix construction helpers
 │   ├── ScreenToWorld.hpp          # Generic inverse VP transform
@@ -1292,87 +1290,20 @@ src/CorePlotting/
 ├── Interaction/                   # Hit testing and interaction controllers
 │   ├── HitTestResult.hpp          # Result struct with optional EntityId
 │   ├── SceneHitTester.hpp         # Multi-strategy hit testing through SceneGraph
-│   ├── IntervalDragController.hpp # State machine for interval edge dragging
-│   └── IntervalCreationController.hpp # State machine for new interval creation
+│   └── IntervalDragController.hpp # State machine for interval edge dragging
 │
 ├── DataTypes/                     # Style and configuration structs
 │   ├── SeriesStyle.hpp            # Color, alpha, thickness (rendering)
-│   └── DigitalEventSeries/        # Event-specific types
+│   ├── SeriesLayoutResult.hpp     # Layout output (y_center, height)
+│   └── SeriesDataCache.hpp        # Cached statistics (std_dev, mean)
 │
-├── SpatialAdapter/                # Bridges data types to QuadTree
-│   ├── ISpatiallyIndexed.hpp      # Common interface for spatial queries
-│   ├── EventSpatialAdapter.hpp    # DigitalEventSeries → QuadTree (stacked/raster)
-│   ├── PointSpatialAdapter.hpp    # RenderableGlyphBatch → QuadTree
-│   └── PolyLineSpatialAdapter.hpp # RenderablePolyLineBatch → QuadTree (3 strategies)
-│
-├── EventRow/                      # Row-based event model
-│   ├── EventRow.hpp               # Data description of an event row
-│   ├── EventRowLayout.hpp         # Layout/positioning information
-│   ├── PlacedEventRow.hpp         # Combined: data + layout
-│   └── EventRowBuilder.hpp        # Factory functions for common patterns
-│
-├── Export/                        # SVG and other export formats
-│   ├── SVGPrimitives.hpp          # Batch → SVG element conversion
-│   └── SVGPrimitives.cpp
-│
-└── tests/                         # Catch2 unit tests
-    ├── TimeSeriesMapper.test.cpp  # NEW
-    ├── SpatialMapper.test.cpp     # NEW
-    ├── EventRow.test.cpp
-    ├── TimeRange.test.cpp
-    ├── LayoutEngine.test.cpp
-    └── CoordinateTransform.test.cpp
+└── Export/                        # SVG and other export formats
+    └── SVGPrimitives.hpp          # Batch → SVG element conversion
 ```
 
 ## Core Concepts
 
-### 1. The Row Model
-
-A **row** represents a horizontal band of events on a canvas. Each row:
-- Contains events from a single `DigitalEventSeries`
-- Has a **center time** defining the x-axis origin for display
-- Is positioned at a **y-coordinate** in world space
-
-```cpp
-/**
- * @brief Pure data description of an event row
- * 
- * Contains only the logical relationship: which series, what x-offset.
- * Does NOT know about rendering position.
- */
-struct EventRow {
-    DigitalEventSeries const* series;   // Source data (not owned)
-    TimeFrameIndex center_time;          // X-axis origin for this row
-};
-```
-
-### 2. Layout vs Data Separation
-
-Layout information is computed by a PlottingManager or equivalent and kept separate from the data:
-
-```cpp
-/**
- * @brief Layout information for a row on the canvas
- * 
- * Computed by PlottingManager. This IS the "Model transform"
- * expressed as simple values rather than a matrix.
- */
-struct EventRowLayout {
-    float y_center;     // World Y coordinate for row center
-    float row_height;   // Height allocated to this row in world coords
-};
-
-/**
- * @brief Combined: data + layout = ready for rendering and indexing
- */
-struct PlacedEventRow {
-    EventRow row;
-    EventRowLayout layout;
-    int row_index;      // For identification (which row was clicked)
-};
-```
-
-### 3. Coordinate Spaces & Interaction Strategy
+### 1. Coordinate Spaces & Interaction Strategy
 
 We adopt the **World Space Strategy** successfully used by `SpatialOverlayOpenGLWidget`.
 
@@ -1398,70 +1329,7 @@ QuadTree.findNearest(world_x, world_y, world_tolerance)
 Returns: QuadTreePoint<EntityId>* → {x, y, entity_id}
 ```
 
-### 4. Spatial Indexing Strategy
-
-Spatial adapters provide multiple strategies for building `QuadTree<EntityId>` indexes from different data types.
-
-#### Event Spatial Indexing
-
-```cpp
-// For stacked events (DataViewer style - absolute time)
-auto index = EventSpatialAdapter::buildStacked(
-    event_series, time_frame, layout, bounds);
-
-// For raster plots (EventPlotWidget style - relative time per row)
-auto index = EventSpatialAdapter::buildRaster(
-    event_series, time_frame, row_layouts, row_centers, bounds);
-
-// For pre-computed positions
-auto index = EventSpatialAdapter::buildFromPositions(
-    positions, entity_ids, bounds);
-    
-    for (auto const& placed : placed_rows) {
-        float y = placed.layout.y_center;  // World Y = same as Model matrix Y
-        
-        for (auto const& event : placed.row.series->view()) {
-            float x = static_cast<float>(
-                event.time.getValue() - placed.row.center_time.getValue()
-            );
-            index->insert(x, y, event.entity_id);
-        }
-    }
-    
-    return index;
-}
-```
-
-#### PolyLine Spatial Indexing
-
-Polyline adapters provide three indexing strategies optimized for different use cases:
-
-```cpp
-// Strategy 1: Insert every vertex (best for sparse data)
-auto index = PolyLineSpatialAdapter::buildFromVertices(batch, bounds);
-
-// Strategy 2: Insert AABB corners + center (efficient for dense data)
-auto index = PolyLineSpatialAdapter::buildFromBoundingBoxes(batch, bounds);
-
-// Strategy 3: Uniformly sample points along lines (best for very long lines)
-auto index = PolyLineSpatialAdapter::buildFromSampledPoints(
-    batch, sample_interval, bounds);
-```
-
-#### Point/Glyph Spatial Indexing
-
-```cpp
-// Build from RenderableGlyphBatch (events, points)
-auto index = PointSpatialAdapter::buildFromGlyphs(glyph_batch, bounds);
-
-// Build from explicit positions
-auto index = PointSpatialAdapter::buildFromPositions(
-    positions, entity_ids, bounds);
-```
-
-**Key insight**: The QuadTree Y coordinate uses the **same value** as the Model matrix's Y translation. This ensures rendering and queries are always synchronized.
-
-### 5. EntityID as Complete Reference
+### 2. EntityID as Complete Reference
 
 When the user hovers over or selects an event, the QuadTree returns an `EntityId`. This is sufficient to:
 
@@ -1469,269 +1337,29 @@ When the user hovers over or selects an event, the QuadTree returns an `EntityId
 2. **Group coloring**: Query GroupManager for color
 3. **Selection tracking**: Store EntityId in selection set
 
-No reverse transformation (adding back center times) is needed — the EntityId directly references the original event.
+No reverse transformation is needed — the EntityId directly references the original event.
 
-## Usage Patterns
+### 3. Spatial Indexing via SceneBuilder
 
-### DataViewer Stacked Events
-
-All rows share the same center (typically 0), displaying absolute time:
+The `SceneBuilder` automatically builds spatial indexes when discrete elements (glyphs, rectangles) are added:
 
 ```cpp
-std::vector<PlacedEventRow> buildDataViewerRows(
-    std::vector<std::pair<std::string, DigitalEventSeries const*>> const& series_list,
-    PlottingManager const& manager)
-{
-    std::vector<PlacedEventRow> rows;
-    
-    for (int i = 0; i < series_list.size(); ++i) {
-        auto const& [key, series] = series_list[i];
-        
-        float y_center, row_height;
-        manager.calculateDigitalEventSeriesAllocation(i, y_center, row_height);
-        
-        rows.push_back({
-            .row = {
-                .series = series,
-                .center_time = TimeFrameIndex(0)  // All same center
-            },
-            .layout = {
-                .y_center = y_center,
-                .row_height = row_height
-            },
-            .row_index = i
-        });
-    }
-    
-    return rows;
+// Build scene with automatic spatial indexing
+RenderableScene scene = SceneBuilder()
+    .setBounds(bounds)
+    .addGlyphs("events", TimeSeriesMapper::mapEvents(events, layout, tf))
+    .addRectangles("intervals", TimeSeriesMapper::mapIntervals(intervals, layout, tf))
+    .build();
+
+// The scene.spatial_index is automatically populated
+auto const* hit = scene.spatial_index->findNearest(world_x, world_y, tolerance);
+if (hit) {
+    EntityId entity_id = hit->data;
+    // Use entity_id for frame jump, selection, etc.
 }
 ```
 
-### Raster Plot (EventPlotWidget)
-
-Each row represents a trial with its own center time:
-
-```cpp
-std::vector<PlacedEventRow> buildRasterRows(
-    DigitalEventSeries const* event_series,
-    std::vector<TimeFrameIndex> const& trial_centers,
-    float row_height)
-{
-    std::vector<PlacedEventRow> rows;
-    
-    for (int i = 0; i < trial_centers.size(); ++i) {
-        rows.push_back({
-            .row = {
-                .series = event_series,          // Same series for all rows!
-                .center_time = trial_centers[i]  // Different center per row
-            },
-            .layout = {
-                .y_center = static_cast<float>(i),  // Row index as Y
-                .row_height = row_height
-            },
-            .row_index = i
-        });
-    }
-    
-    return rows;
-}
-```
-
-**Note**: The same `DigitalEventSeries` appears in every row with different centers. The same EntityId may appear at different (x, y) positions across rows.
-
-## Query Flow
-
-```
-User hovers at screen (px, py)
-         │
-         ▼
-Screen → World transform: inverse(P * V) applied to NDC coords
-         │
-         ▼
-QuadTree.findNearest(world_x, world_y, world_tolerance)
-         │
-         ▼
-Returns: QuadTreePoint<EntityId>* → {x, y, entity_id}
-         │
-         ▼
-EntityId used for:
-  - Frame jump: series->getDataByEntityId(entity_id) → TimeFrameIndex
-  - Highlight: add to selection set
-  - Group color: GroupManager lookup
-```
-
-## Model Matrix Construction
-
-The Model matrix uses the same layout values as the QuadTree:
-
-```cpp
-glm::mat4 getEventModelMatrix(PlacedEventRow const& placed) {
-    glm::mat4 M(1.0f);
-    
-    // Scale: tick marks span [-1, +1] in model space
-    // Scale to fit allocated height with margin
-    M[1][1] = placed.layout.row_height * 0.5f * 0.9f;
-    
-    // Translate: move row center to world position
-    M[3][1] = placed.layout.y_center;  // SAME value used in QuadTree
-    
-    return M;
-}
-```
-
-## Interface: ISpatiallyIndexed
-
-Common interface for widgets that support spatial queries:
-
-```cpp
-/**
- * @brief Interface for spatially-indexed visualizations
- */
-class ISpatiallyIndexed {
-public:
-    virtual ~ISpatiallyIndexed() = default;
-    
-    /**
-     * @brief Find entity at screen position
-     */
-    virtual std::optional<EntityId> findEntityAtPosition(
-        float screen_x, float screen_y) const = 0;
-    
-    /**
-     * @brief Find entities within screen-space box
-     */
-    virtual std::vector<EntityId> findEntitiesInBox(
-        BoundingBox const& screen_box) const = 0;
-    
-    /**
-     * @brief Get source time for entity (for frame jump)
-     */
-    virtual std::optional<TimeFrameIndex> getSourceTime(EntityId id) const = 0;
-};
-```
-
-## Spatial Adapters (Phase 1.5)
-
-Spatial adapters provide factory methods for building `QuadTree<EntityId>` indexes from different data sources.
-
-### Event Spatial Indexing
-
-```cpp
-// For stacked events (DataViewer style - absolute time)
-auto index = EventSpatialAdapter::buildStacked(
-    event_series, time_frame, layout, bounds);
-
-// For raster plots (EventPlotWidget style - relative time per row)
-auto index = EventSpatialAdapter::buildRaster(
-    event_series, time_frame, row_layouts, row_centers, bounds);
-
-// For pre-computed positions
-auto index = EventSpatialAdapter::buildFromPositions(
-    positions, entity_ids, bounds);
-```
-
-### PolyLine Spatial Indexing
-
-Polyline adapters provide three indexing strategies:
-
-```cpp
-// Strategy 1: Insert every vertex (best for sparse data)
-auto index = PolyLineSpatialAdapter::buildFromVertices(batch, bounds);
-
-// Strategy 2: Insert AABB corners + center (efficient for dense data)
-auto index = PolyLineSpatialAdapter::buildFromBoundingBoxes(batch, bounds);
-
-// Strategy 3: Uniformly sample points along lines (best for very long lines)
-auto index = PolyLineSpatialAdapter::buildFromSampledPoints(
-    batch, sample_interval, bounds);
-```
-
-### Point/Glyph Spatial Indexing
-
-```cpp
-// Build from RenderableGlyphBatch (events, points)
-auto index = PointSpatialAdapter::buildFromGlyphs(glyph_batch, bounds);
-
-// Build from explicit positions
-auto index = PointSpatialAdapter::buildFromPositions(
-    positions, entity_ids, bounds);
-```
-
-**Architecture**: All adapters return `std::unique_ptr<QuadTree<EntityId>>` and use static factory methods. The QuadTree coordinates match the Model matrix coordinates, ensuring rendering and spatial queries are synchronized.
-
-```
-
-## Future Extensions
-
-### Multi-Type Canvas
-
-A canvas can contain multiple data types with separate QuadTrees or a unified index:
-
-```cpp
-// Build separate indexes for different data types
-auto event_index = EventSpatialAdapter::buildStacked(
-    event_series, time_frame, layout, bounds);
-auto polyline_index = PolyLineSpatialAdapter::buildFromVertices(
-    polyline_batch, bounds);
-
-// Store in scene or widget
-struct CanvasSpatialIndex {
-    std::unique_ptr<QuadTree<EntityId>> event_index;
-    std::unique_ptr<QuadTree<EntityId>> polyline_index;
-    std::unique_ptr<QuadTree<EntityId>> point_index;
-    
-    std::optional<EntityId> findNearest(float x, float y, float tolerance) const {
-        // Query both, return closest
-    }
-};
-```
-
-## Testing Strategy
-
-### Layer 1: Pure Geometry (No Qt/OpenGL)
-
-Test coordinate transformations and layout calculations:
-
-```cpp
-TEST_CASE("EventRow coordinate transform") {
-    DigitalEventSeries series;
-    series.addEvent(TimeFrameIndex(150));
-    
-    EventRow row{&series, TimeFrameIndex(100)};  // center = 100
-    
-    // Event at time 150 should display at x = 50
-    auto x = computeDisplayX(row, TimeFrameIndex(150));
-    REQUIRE(x == 50.0f);
-}
-```
-
-### Layer 2: Spatial Index Integration
-
-Test QuadTree building and queries:
-
-```cpp
-TEST_CASE("buildEventSpatialIndex creates correct index") {
-    // Setup series with known events and EntityIds
-    // Build index
-    // Verify findNearest returns correct EntityId
-}
-```
-
-### Layer 3: MVP Coordination
-
-Test that Model matrix Y matches QuadTree Y:
-
-```cpp
-TEST_CASE("Model matrix and QuadTree use same Y coordinate") {
-    PlacedEventRow placed = /* ... */;
-    
-    auto M = getEventModelMatrix(placed);
-    float model_y = M[3][1];  // Y translation
-    
-    REQUIRE(model_y == placed.layout.y_center);
-    // Same value used when inserting into QuadTree
-}
-```
+**Key insight**: The QuadTree and the render buffers are built from the **same position data** (output of Mappers), ensuring they are always synchronized.
 
 ## Summary
 

@@ -9,11 +9,15 @@ set(COREPLOTTING_SOURCES
     Mappers/TimeSeriesMapper.hpp
     Mappers/SpatialMapper.hpp
     Mappers/RasterMapper.hpp
-    # DataTypes
-    DataTypes/DigitalEventSeries/EventRow.hpp
+    # DataTypes (style, layout result, cache - used by widgets)
+    DataTypes/SeriesStyle.hpp
+    DataTypes/SeriesLayoutResult.hpp
+    DataTypes/SeriesDataCache.hpp
+    # SceneGraph
     SceneGraph/RenderablePrimitives.hpp
     SceneGraph/SceneBuilder.hpp
     SceneGraph/SceneBuilder.cpp
+    # CoordinateTransform
     CoordinateTransform/Matrices.hpp
     CoordinateTransform/Matrices.cpp
     CoordinateTransform/ScreenToWorld.hpp
@@ -26,6 +30,7 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/SeriesCoordinateQuery.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
+    # Layout
     Layout/SeriesLayout.hpp
     Layout/LayoutEngine.hpp
     Layout/LayoutEngine.cpp
@@ -35,20 +40,14 @@ set(COREPLOTTING_SOURCES
     Layout/RowLayoutStrategy.cpp
     Layout/SpatialLayoutStrategy.hpp
     Layout/SpatialLayoutStrategy.cpp
+    # Transformers
     Transformers/GapDetector.hpp
     Transformers/GapDetector.cpp
-    Transformers/RasterBuilder.hpp
-    Transformers/RasterBuilder.cpp
-    SpatialAdapter/ISpatiallyIndexed.hpp
-    SpatialAdapter/EventSpatialAdapter.hpp
-    SpatialAdapter/EventSpatialAdapter.cpp
-    SpatialAdapter/PointSpatialAdapter.hpp
-    SpatialAdapter/PointSpatialAdapter.cpp
-    SpatialAdapter/PolyLineSpatialAdapter.hpp
-    SpatialAdapter/PolyLineSpatialAdapter.cpp
+    # Interaction
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.hpp
     Interaction/IntervalDragController.hpp
+    # Export
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp
 )

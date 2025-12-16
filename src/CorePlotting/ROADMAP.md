@@ -138,40 +138,27 @@ This document outlines the roadmap for consolidating the plotting architecture i
         - Location: [GapDetector.hpp](Transformers/GapDetector.hpp), [GapDetector.cpp](Transformers/GapDetector.cpp)
         - Time and value-based gap detection
         - Configurable minimum segment length
-    - `RasterBuilder`: `DigitalEventSeries` + row layout → `RenderableGlyphBatch` ✓
-        - Location: [RasterBuilder.hpp](Transformers/RasterBuilder.hpp), [RasterBuilder.cpp](Transformers/RasterBuilder.cpp)
-        - Multi-trial raster plot visualization
-        - Time window filtering per row
+    - ~~`RasterBuilder`~~: Superseded by `RasterMapper` in Mappers/ (Phase 3.7)
 
 ### 1.5 Spatial Indexing ✅
 - [x] **Finalize `QuadTree<EntityId>` implementation** ✓
-- [x] **Create spatial adapters** ✓:
-    - `EventSpatialAdapter`: DigitalEventSeries → QuadTree (stacked/raster/explicit positions) ✓
-    - `PointSpatialAdapter`: RenderableGlyphBatch → QuadTree ✓
-    - `PolyLineSpatialAdapter`: RenderablePolyLineBatch → QuadTree (vertices/bounding boxes/sampled points) ✓
-    - Location: [SpatialAdapter/](SpatialAdapter/)
-    - ISpatiallyIndexed interface for common query patterns
-    - All adapters use static factory methods returning `std::unique_ptr<QuadTree<EntityId>>`
-    - Tests: All 259 assertions passing ✓
+- [x] ~~**Create spatial adapters**~~: Superseded by Mappers + SceneBuilder (Phase 3.7)
+    - Spatial indexing now handled by `SceneBuilder.addGlyphs()` / `addRectangles()` which build QuadTree automatically
+    - See `TimeSeriesMapper`, `SpatialMapper`, `RasterMapper` for position generation
 
 ### 1.6 Integration Tests ✅
 **Goal:** Validate end-to-end workflows before moving to OpenGL rendering layer.
 
-- [x] **Raster Plot Integration Tests**:
-    - Multiple `DigitalEventSeries` representing trials/rows
-    - Events centered on reference times (negative/positive relative times)
-    - Combined QuadTree containing all events across all rows
-    - Test: simulated click at (x, y) → verify correct EntityId returned
-    - Location: [IntegrationTests.test.cpp](/tests/CorePlotting/IntegrationTests.test.cpp)
+*Note: Original integration tests in IntegrationTests.test.cpp were removed in favor of Phase3_5_IntegrationTests.test.cpp which uses the Mappers architecture.*
 
 - [x] **Stacked Events Integration Tests (DataViewer style)**:
     - Multiple `DigitalEventSeries` in separate stacked rows
-    - Absolute time positioning (no centering)
+    - Absolute time positioning
     - Combined QuadTree for all series
     - Test: simulated click at various positions → verify correct series and EntityId
 
 - [x] **End-to-End Scene Building**:
-    - `LayoutEngine` → `RasterBuilder`/Transformer → QuadTree
+    - `LayoutEngine` → `Mapper` → `SceneBuilder` → QuadTree
     - Validate QuadTree positions match glyph positions in batch
 
 - [x] **Coordinate Transform Round-Trip**:
@@ -182,11 +169,9 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Test TimeRange prevents scrolling/zooming beyond TimeFrame bounds
     - Integration with ViewState for complete camera state management
 
-- [x] **GapDetector + PolyLineSpatialAdapter Integration**:
+- [x] **GapDetector Integration**:
     - Analog series with gaps → segmented polylines
-    - Spatial index built from segments
     - Query at various points within/between segments
-    - Fixed bug: GapDetector was storing float indices instead of vertex indices
 
 - [x] **Mixed Series Scene**:
     - Multiple series types (Analog + Events) in one layout
@@ -363,7 +348,7 @@ These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This g
 - Uses real `DigitalEventSeries`, `DigitalIntervalSeries`, `TimeFrame` types
 - Uses real `LayoutEngine` with `StackedLayoutStrategy` and `RowLayoutStrategy`
 - Uses real `SceneHitTester` and `IntervalDragController`
-- Uses real QuadTree spatial indexing via `EventSpatialAdapter` and `SceneBuilder`
+- Uses real QuadTree spatial indexing via `SceneBuilder`
 - No mocks — all production code paths
 - 157 assertions across 9 test cases
 

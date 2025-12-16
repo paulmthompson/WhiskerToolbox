@@ -27,14 +27,12 @@
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
-#include "CorePlotting/SpatialAdapter/EventSpatialAdapter.hpp"
-#include "CorePlotting/SpatialAdapter/PointSpatialAdapter.hpp"
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Interaction/IntervalDragController.hpp"
-#include "CorePlotting/Transformers/RasterBuilder.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 
 // DataManager includes
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -118,18 +116,37 @@ std::unique_ptr<QuadTree<EntityId>> buildCombinedEventIndex(
         TimeFrame const& time_frame,
         BoundingBox const& bounds) {
     
-    std::vector<glm::vec2> all_positions;
-    std::vector<EntityId> all_entity_ids;
+    auto tree = std::make_unique<QuadTree<EntityId>>(bounds);
     
     for (auto const& [series, layout] : series_layouts) {
         for (auto const& event : series->view()) {
             float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
-            all_positions.emplace_back(x, layout->result.allocated_y_center);
-            all_entity_ids.push_back(event.entity_id);
+            float y = layout->result.allocated_y_center;
+            tree->insert(x, y, event.entity_id);
         }
     }
     
-    return EventSpatialAdapter::buildFromPositions(all_positions, all_entity_ids, bounds);
+    return tree;
+}
+
+/**
+ * @brief Build a QuadTree from a single stacked event series
+ */
+std::unique_ptr<QuadTree<EntityId>> buildStackedEventIndex(
+        DigitalEventSeries const& series,
+        TimeFrame const& time_frame,
+        SeriesLayout const& layout,
+        BoundingBox const& bounds) {
+    
+    auto tree = std::make_unique<QuadTree<EntityId>>(bounds);
+    float y = layout.result.allocated_y_center;
+    
+    for (auto const& event : series.view()) {
+        float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
+        tree->insert(x, y, event.entity_id);
+    }
+    
+    return tree;
 }
 
 /**
@@ -213,7 +230,7 @@ TEST_CASE("Scenario 1: DataViewer-style stacked layout with hit testing",
         REQUIRE(event_layout != nullptr);
         
         BoundingBox bounds(0.0f, -2.0f, 1000.0f, 2.0f);
-        auto index = EventSpatialAdapter::buildStacked(
+        auto index = buildStackedEventIndex(
             *events, *time_frame, *event_layout, bounds);
         
         // Create scene with spatial index
@@ -488,7 +505,7 @@ TEST_CASE("Scenario 4: Screen → World → Hit → Verify coordinates",
     REQUIRE(event_layout != nullptr);
     
     BoundingBox bounds(0.0f, -1.0f, 1000.0f, 1.0f);
-    auto index = EventSpatialAdapter::buildStacked(*events, *time_frame, *event_layout, bounds);
+    auto index = buildStackedEventIndex(*events, *time_frame, *event_layout, bounds);
     
     SECTION("TimeAxisParams converts screen X to time correctly") {
         // Setup: 800px wide canvas, time range [0, 1000]
@@ -626,7 +643,7 @@ TEST_CASE("Scenario 5: When event overlaps analog region, event takes priority",
     SECTION("Discrete element takes priority over region at same position") {
         // Create scene where event is at same X as point in analog region
         BoundingBox bounds(0.0f, -2.0f, 1000.0f, 2.0f);
-        auto index = EventSpatialAdapter::buildStacked(*events, *time_frame, *event_layout, bounds);
+        auto index = buildStackedEventIndex(*events, *time_frame, *event_layout, bounds);
         
         RenderableScene scene;
         scene.spatial_index = std::move(index);

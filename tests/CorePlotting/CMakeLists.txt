@@ -21,7 +21,6 @@ add_executable(test_coreplotting
     SeriesCoordinateQuery.test.cpp
     SeriesMatrices.test.cpp
     LayoutEngine.test.cpp
-    IntegrationTests.test.cpp
     Phase3_5_IntegrationTests.test.cpp
     TimeFrameAdapters.test.cpp
     HitTestResult.test.cpp

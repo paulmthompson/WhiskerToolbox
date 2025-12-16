@@ -2,7 +2,6 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
-#include "CorePlotting/SpatialAdapter/EventSpatialAdapter.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 

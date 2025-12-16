@@ -15,7 +15,8 @@ The Layout Engine is responsible for calculating spatial positioning for multipl
 │                                                         │
 │   Processing: ILayoutStrategy                           │
 │     ├─ StackedLayoutStrategy (vertical stacking)       │
-│     └─ RowLayoutStrategy (raster plots)                 │
+│     ├─ RowLayoutStrategy (raster plots)                 │
+│     └─ SpatialLayoutStrategy (2D spatial data)          │
 │                                                         │
 │   Output: LayoutResponse                                │
 │     └─ SeriesLayout[] (y_center, height per series)    │
@@ -57,6 +58,13 @@ Raster plot-style horizontal rows. All series treated equally:
 - Each series gets one row
 - Equal row heights
 - Top-to-bottom ordering
+
+#### SpatialLayoutStrategy
+2D spatial layout for overlay-style plots (whiskers, masks, points on images):
+- Transforms both X and Y coordinates (not just vertical stacking)
+- Modes: **Fit** (uniform scale, preserves aspect), **Fill** (non-uniform), **Identity** (1:1)
+- Returns `SpatialTransform` with scale + offset for coordinate mapping
+- Supports padding around data bounds
 
 ## Usage Examples
 
@@ -118,7 +126,7 @@ The Layout Engine outputs `SeriesLayoutResult` which feeds into:
    - Uses `allocated_y_center` for vertical positioning
    - Uses `allocated_height` for scaling
 
-2. **SVG Export** (`SVGExporter.cpp`)
+2. **SVG Export** (`SVGPrimitives.cpp`)
    - Same layout logic for consistent rendering
 
 3. **Spatial Indexing** (`QuadTree`)
@@ -137,12 +145,25 @@ Run tests:
 ctest --preset linux-clang-release -R test_coreplotting
 ```
 
+## Integration with Mappers
+
+The Layout Engine works alongside Mappers to render data:
+
+```
+Data → Mapper → Visual Elements → Layout → Positioned Scene
+```
+
+1. **Mappers** (`TimeSeriesMapper`, `SpatialMapper`, `RasterMapper`) transform data into visual elements with normalized coordinates
+2. **Layout Engine** determines where each series is positioned in the viewport
+3. **SceneBuilder** combines mapper output with layout information to build the final scene
+
+Mappers handle **what** to draw (shapes, colors, sizes). Layout handles **where** to draw (y-center, height, coordinate transforms).
+
 ## Future Extensions
 
 ### Potential Strategies
 - **GridLayoutStrategy**: Tile series in 2D grid
 - **ProportionalLayoutStrategy**: Variable heights based on data range
-- **OverlayLayoutStrategy**: All series at same position (z-ordering)
 
 ### Potential Features
 - Spacing/padding between series
