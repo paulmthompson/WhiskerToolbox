@@ -445,6 +445,26 @@ This doesn't generalize to:
     template<typename R>
     concept MappedVertexRange = std::ranges::input_range<R> &&
         std::same_as<std::ranges::range_value_t<R>, MappedVertex>;
+    
+    // For multi-line data (LineData, event-aligned traces)
+    template<typename R>
+    concept MappedLineRange = std::ranges::input_range<R> &&
+        requires(std::ranges::range_value_t<R> line) {
+            { line.entity_id } -> std::convertible_to<EntityId>;
+            { line.vertices() } -> std::ranges::input_range;
+        };
+    ```
+
+- [ ] **Create `MappedLineView.hpp`** for multi-line ranges:
+    ```cpp
+    // View over a single mapped line with lazy vertex iteration
+    struct MappedLineView {
+        EntityId entity_id;
+        
+        // Returns transformed vertices as a range (lazy, zero-copy)
+        // Implementation holds reference to source data + transform closure
+        auto vertices() const -> /* range of glm::vec2 */;
+    };
     ```
 
 - [ ] **Create `TimeSeriesMapper.hpp`** returning ranges:
@@ -481,10 +501,11 @@ This doesn't generalize to:
             TimeFrameIndex at_time,
             SeriesLayout const& layout) -> /* MappedElementRange */;
         
+        // Returns MappedLineRange - each line has entity_id + vertices sub-range
         auto mapLines(
             LineData const& lines,
             TimeFrameIndex at_time,
-            SeriesLayout const& layout) -> /* MappedVertexRange */;
+            SeriesLayout const& layout) -> /* MappedLineRange */;
     }
     ```
 
@@ -501,6 +522,53 @@ This doesn't generalize to:
     }
     ```
 
+- [ ] **Create `EventAlignedMapper.hpp`** for event-aligned analog traces (PSTH-style):
+    ```cpp
+    namespace EventAlignedMapper {
+        enum class TrialLayoutMode {
+            Overlaid,   // All trials at same Y, differentiated by color/alpha
+            Stacked,    // Each trial gets vertical offset (waterfall plot)
+            Averaged    // Compute mean ± SEM, single line with error band
+        };
+        
+        // Each alignment event produces one polyline (one "trial")
+        // X = relative time from alignment event
+        // Y = analog value (optionally stacked per trial)
+        auto mapTrials(
+            AnalogTimeSeries const& series,
+            DigitalEventSeries const& align_events,
+            TimeFrame const& analog_tf,
+            TimeFrame const& events_tf,
+            float window_before,      // e.g., 0.5 seconds before event
+            float window_after,       // e.g., 1.0 seconds after event
+            TrialLayoutMode layout_mode,
+            SeriesLayout const& layout) -> /* MappedLineRange */;
+    }
+    ```
+    
+    **Implementation approach:**
+    ```cpp
+    auto mapTrials(...) {
+        return align_events.getAllEvents()
+             | std::views::transform([&](auto const& event) {
+                   auto event_abs_time = events_tf.getTimeAtIndex(event.time);
+                   auto start_idx = analog_tf.getIndexAtTime(event_abs_time - window_before);
+                   auto end_idx = analog_tf.getIndexAtTime(event_abs_time + window_after);
+                   
+                   return MappedLineView{
+                       .entity_id = event.entity_id,  // Trial identified by alignment event
+                       ._vertices = series.getSamplesInRange(start_idx, end_idx)
+                           | std::views::transform([&](auto const& sample) {
+                                 float rel_time = analog_tf.getTimeAtIndex(sample.index) - event_abs_time;
+                                 float x = layout.x_transform.apply(rel_time);
+                                 float y = layout.y_transform.apply(sample.value);
+                                 return glm::vec2{x, y};
+                             })
+                   };
+               });
+    }
+    ```
+
 - [ ] **Consider adding mapped views to DataManager types** (optional optimization):
     ```cpp
     // In PointData - single traversal yielding {x, y, entity_id}
@@ -514,7 +582,7 @@ This doesn't generalize to:
 
 - [ ] **Add range-consuming methods to SceneBuilder**:
     ```cpp
-    // NEW: Range-based API - consumes directly into GPU buffer + QuadTree
+    // NEW: Range-based API - consumes directly into GPU buffer + spatial index
     template<MappedElementRange R>
     SceneBuilder& addGlyphs(
         std::string const& key,
@@ -533,6 +601,42 @@ This doesn't generalize to:
         R&& vertices,
         EntityId line_entity_id,  // Single EntityId for entire line
         PolyLineStyle const& style = {});
+    
+    // For multi-line data (LineData, event-aligned traces)
+    // NOTE: No spatial index insertion - use compute shader for hit testing
+    template<MappedLineRange R>
+    SceneBuilder& addPolyLines(
+        std::string const& key,
+        R&& lines,
+        PolyLineStyle const& style = {});
+    ```
+
+- [ ] **Implementation for addPolyLines (no spatial index)**:
+    ```cpp
+    template<MappedLineRange R>
+    SceneBuilder& SceneBuilder::addPolyLines(std::string const& key, R&& lines, PolyLineStyle const& style) {
+        RenderablePolyLineBatch batch;
+        batch.key = key;
+        
+        for (auto const& line : lines) {
+            size_t start_vertex = batch.vertices.size() / 2;
+            
+            for (auto const& v : line.vertices()) {
+                batch.vertices.push_back(v.x);
+                batch.vertices.push_back(v.y);
+            }
+            
+            size_t vertex_count = (batch.vertices.size() / 2) - start_vertex;
+            batch.line_lengths.push_back(static_cast<int32_t>(vertex_count));
+            batch.entity_ids.push_back(line.entity_id);
+            
+            // NOTE: No QuadTree insertion for dense line data
+            // Hit testing handled by compute shader at widget layer
+        }
+        
+        _scene.polyline_batches.push_back(std::move(batch));
+        return *this;
+    }
     ```
 
 - [ ] **Implementation populates both targets in single traversal**:
@@ -871,16 +975,18 @@ This doesn't generalize to:
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | `MappedElement.hpp` | `Mappers/` | Element types yielded by ranges |
+| `MappedLineView.hpp` | `Mappers/` | Line view type for multi-line ranges (`MappedLineView`, `MappedLineRange`) |
 | `MapperConcepts.hpp` | `Mappers/` | C++20 concepts for range requirements |
 | `TimeSeriesMapper` | `Mappers/` | DataViewer: events→time, analog→time (returns ranges) |
-| `SpatialMapper` | `Mappers/` | SpatialOverlay: points→x/y (returns ranges) |
+| `SpatialMapper` | `Mappers/` | SpatialOverlay: points→x/y, lines→MappedLineRange |
 | `RasterMapper` | `Mappers/` | Raster: events→relative time (returns ranges) |
+| `EventAlignedMapper` | `Mappers/` | Event-aligned analog traces: analog+events→MappedLineRange |
 | `SpatialLayoutStrategy` | `Layout/` | Simple bounds-fitting layout |
 
 ### Components to Modify
 | Component | Change |
 |-----------|--------|
-| `SceneBuilder` | Add range-consuming `addGlyphs<R>(range)`, `addRectangles<R>(range)`, `addPolyLine<R>(range)` |
+| `SceneBuilder` | Add range-consuming `addGlyphs<R>()`, `addRectangles<R>()`, `addPolyLine<R>()`, `addPolyLines<R>()` |
 | `SceneBuilder` | Keep span overloads for legacy/test code |
 | `SceneBuilder` | Deprecate `addEventSeries(series, layout, tf)`, `addIntervalSeries(...)` |
 | `SceneBuildingHelpers` | Use Mappers returning ranges, pass directly to SceneBuilder |
@@ -893,13 +999,32 @@ This doesn't generalize to:
 |-----------|--------|
 | `LayoutEngine`, strategies | Already outputs SeriesLayout (transforms), not positions |
 | `RenderablePrimitives` | Already position-based |
-| `SceneHitTester` | Queries QuadTree by position, data-type-agnostic |
+| `SceneHitTester` | Queries QuadTree by position, data-type-agnostic (for sparse data) |
 | `PlottingOpenGL` renderers | Consume batches, don't care about data origin |
 | `SVGPrimitives` | Consume batches, don't care about data origin |
 
-### Key Architectural Principle
+### Key Architectural Principles
 
-**The Mapper is the boundary between "data semantics" and "geometry":**
+**1. Mappers are visualization-centric, not data-centric:**
+
+| Visualization | Mapper | Input Data | Output |
+|---------------|--------|------------|--------|
+| Spatial whiskers | `SpatialMapper::mapLines` | `LineData` | `MappedLineRange` |
+| Time-series trace | `TimeSeriesMapper::mapAnalog` | `AnalogTimeSeries` | `MappedVertexRange` (single line) |
+| Event-aligned traces | `EventAlignedMapper::mapTrials` | `AnalogTimeSeries + DigitalEventSeries` | `MappedLineRange` (many lines) |
+| Raster plot | `RasterMapper::mapEvents` | `DigitalEventSeries` | `MappedElementRange` |
+
+**2. Hit testing strategy is data-type-dependent:**
+
+| Data Type | Hit Test Strategy | Reason |
+|-----------|-------------------|--------|
+| Events (discrete, sparse) | QuadTree | O(log n) lookup, low element count |
+| Points (discrete, sparse) | QuadTree | O(log n) lookup, low element count |
+| Intervals | Time range query | 1D containment test on time axis |
+| Lines (dense, 100k+) | **Compute Shader** | GPU parallelism beats QuadTree for dense data |
+| Event-aligned traces | **Compute Shader** | Many polylines, same as LineData |
+
+**3. The Mapper is the boundary between "data semantics" and "geometry":**
 
 ```
 DataManager Types ──▶ Mapper (viz-specific) ──▶ positions[] ──▶ SceneBuilder (generic) ──▶ RenderableScene
@@ -912,7 +1037,8 @@ This enables:
 1. Adding new visualization types by writing a new Mapper (no SceneBuilder changes)
 2. Adding new data types by extending relevant Mappers (no SceneBuilder changes)
 3. Testing Mappers independently from rendering
-4. Reusing SceneBuilder, renderers, and hit testing across all visualizations
+4. Reusing SceneBuilder, renderers across all visualizations
+5. Choosing hit testing strategy appropriate to data density
 
 ---
 
@@ -924,7 +1050,10 @@ This enables:
 [ ] Widget uses position-based SceneBuilder API
 [ ] Widget uses CorePlotting ViewState (or TimeSeriesViewState)
 [ ] Widget renders via RenderableScene (not inline vertex generation)
-[ ] Widget uses spatial index for hit testing
+[ ] Widget uses appropriate hit testing strategy:
+    [ ] QuadTree for sparse discrete data (events, points)
+    [ ] Compute shader for dense line data (LineData, event-aligned traces)
+    [ ] Time range query for intervals
 [ ] SVG export works via same Mapper → SceneBuilder flow
 [ ] Unit tests for Mapper output
 [ ] Unit tests for layout calculations

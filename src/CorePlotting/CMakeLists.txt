@@ -2,6 +2,14 @@
 find_package(glm CONFIG REQUIRED)
 
 set(COREPLOTTING_SOURCES
+    # Mappers (visualization-specific coordinate mapping)
+    Mappers/MappedElement.hpp
+    Mappers/MappedLineView.hpp
+    Mappers/MapperConcepts.hpp
+    Mappers/TimeSeriesMapper.hpp
+    Mappers/SpatialMapper.hpp
+    Mappers/RasterMapper.hpp
+    # DataTypes
     DataTypes/DigitalEventSeries/EventRow.hpp
     SceneGraph/RenderablePrimitives.hpp
     SceneGraph/SceneBuilder.hpp

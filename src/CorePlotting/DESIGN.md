@@ -168,6 +168,22 @@ struct MappedVertex {
     float y;
     // Note: EntityId typically per-line, not per-vertex
 };
+
+// For multi-line data (LineData, event-aligned traces)
+// A view over a single mapped line with lazy vertex iteration
+struct MappedLineView {
+    EntityId entity_id;
+    // Returns transformed vertices as a range (lazy, zero-copy)
+    auto vertices() const -> /* range of glm::vec2 */;
+};
+
+// Concept for line ranges (range of MappedLineView)
+template<typename R>
+concept MappedLineRange = std::ranges::input_range<R> &&
+    requires(std::ranges::range_value_t<R> line) {
+        { line.entity_id } -> std::convertible_to<EntityId>;
+        { line.vertices() } -> std::ranges::input_range;
+    };
 ```
 
 #### Range-Based Mapper API
@@ -203,11 +219,11 @@ namespace SpatialMapper {
         TimeFrameIndex at_time,
         SeriesLayout const& layout) -> /* range of MappedElement */;
     
-    // Returns range of vertices from line data
+    // Returns range of MappedLineView (each line has entity_id + vertices sub-range)
     auto mapLines(
         LineData const& lines,
         TimeFrameIndex at_time,
-        SeriesLayout const& layout) -> /* range of MappedVertex */;
+        SeriesLayout const& layout) -> /* MappedLineRange */;
 }
 
 // RasterMapper - relative time positioning
@@ -219,6 +235,28 @@ namespace RasterMapper {
         int64_t reference_time,
         float time_window,
         SeriesLayout const& layout) -> /* range of MappedElement */;
+}
+
+// EventAlignedMapper - analog traces aligned to events (PSTH-style line plots)
+namespace EventAlignedMapper {
+    enum class TrialLayoutMode {
+        Overlaid,   // All trials at same Y, differentiated by color/alpha
+        Stacked,    // Each trial gets vertical offset (waterfall plot)
+        Averaged    // Compute mean ± SEM, single line with error band
+    };
+    
+    // Each alignment event produces one polyline (one "trial")
+    // X = relative time from alignment event
+    // Y = analog value (optionally stacked per trial)
+    auto mapTrials(
+        AnalogTimeSeries const& series,
+        DigitalEventSeries const& align_events,
+        TimeFrame const& analog_tf,
+        TimeFrame const& events_tf,
+        float window_before,      // e.g., 0.5 seconds before event
+        float window_after,       // e.g., 1.0 seconds after event
+        TrialLayoutMode layout_mode,
+        SeriesLayout const& layout) -> /* MappedLineRange */;
 }
 ```
 
@@ -332,15 +370,77 @@ for (size_t i = 0; i < trials.size(); ++i) {
 auto scene = builder.build();
 ```
 
+**Event-Aligned Analog Traces (PSTH-style line plot):**
+```cpp
+// 1. Layout for trial stacking (or overlaid)
+auto layout = RowLayout().compute(num_events, -1.0f, 1.0f);  // Stacked
+// auto layout = SpatialLayout().compute(...);  // Overlaid
+
+// 2. Build scene - EventAlignedMapper produces MappedLineRange
+//    Each alignment event becomes one polyline (trial)
+//    X = relative time from event, Y = analog value
+RenderableScene scene = SceneBuilder()
+    .setBounds(plot_bounds)
+    .addPolyLines("aligned_traces",
+                  EventAlignedMapper::mapTrials(
+                      analog_series, stimulus_events,
+                      analog_tf, events_tf,
+                      /*window_before=*/0.5f, /*window_after=*/1.0f,
+                      EventAlignedMapper::TrialLayoutMode::Stacked,
+                      layout))
+    .build();
+
+// Hit testing: Use compute shader approach (same as LineData)
+// Many polylines benefit from GPU-parallel intersection testing
+```
+
+**SpatialOverlay with Dense Lines (LineData):**
+```cpp
+// 1. Spatial layout fits data bounds to viewport
+auto layout = SpatialLayout().compute(data_bounds, viewport_bounds);
+
+// 2. Build scene - SpatialMapper::mapLines returns MappedLineRange
+//    Each Line2D becomes one entry with entity_id + vertices sub-range
+RenderableScene scene = SceneBuilder()
+    .setBounds(viewport_bounds)
+    .addPolyLines("whiskers",
+                  SpatialMapper::mapLines(whisker_lines, current_frame, layout))
+    .build();
+
+// Hit testing: Compute shader (100k+ lines)
+// See LineDataVisualization for reference implementation
+```
+
 ### Key Design Principles
 
 1. **SceneBuilder consumes ranges, never vectors** — no intermediate allocations
-2. **Single traversal for x, y, entity_id** — data flows directly to GPU buffer + QuadTree
+2. **Single traversal for x, y, entity_id** — data flows directly to GPU buffer + spatial index
 3. **Data objects can provide mapped views** — `points.viewAtTime(frame, layout)` short-circuits the Mapper
-4. **Each plot type has coordinate extraction logic** — encapsulated in Mappers or data object methods
+4. **Mappers are visualization-centric, not data-centric** — e.g., `EventAlignedMapper` takes `AnalogTimeSeries` + `DigitalEventSeries` and outputs `MappedLineRange`
 5. **Layout engines are plot-type specific** — but share a common output format (`SeriesLayout`)
 6. **Data type coupling is acceptable** — CorePlotting knows about DataManager types; this is intentional
-7. **QuadTree uses the same positions as rendering** — both populated from same range traversal
+7. **Hit testing strategy is data-type-dependent** — see below
+
+### Hit Testing Strategies
+
+**Spatial indexing is optional and depends on data characteristics:**
+
+| Data Type | Hit Test Strategy | Reason |
+|-----------|-------------------|--------|
+| Events (discrete, sparse) | QuadTree | O(log n) lookup, low element count |
+| Points (discrete, sparse) | QuadTree | O(log n) lookup, low element count |
+| Intervals | Time range query | 1D containment test on time axis |
+| Lines (dense, 100k+) | **Compute Shader** | GPU parallelism beats QuadTree for dense data |
+| Event-aligned traces | **Compute Shader** | Many polylines, same as LineData |
+| Analog series | Region + interpolate | Y region check + X interpolation |
+
+**For dense polyline data** (LineData, event-aligned traces), the existing `LineDataVisualization` pattern is preferred:
+- All vertices stored in flat GPU buffer
+- Line ranges tracked separately (`start_vertex`, `vertex_count` per line)
+- Compute shader performs line-line intersection in NDC space
+- Selection/visibility via GPU mask buffers (SSBOs)
+
+This approach handles 100k+ lines efficiently where QuadTree would struggle.
 
 ### Directory Structure Update
 
@@ -348,9 +448,11 @@ auto scene = builder.build();
 src/CorePlotting/
 ├── Mappers/                       # Visualization-specific coordinate mapping
 │   ├── MappedElement.hpp          # Common element types (MappedElement, MappedRectElement, MappedVertex)
+│   ├── MappedLineView.hpp         # Line view type for multi-line ranges (MappedLineView, MappedLineRange)
 │   ├── TimeSeriesMapper.hpp       # DataViewer: events→time, intervals→time, analog→time
-│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y
+│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y (returns MappedLineRange)
 │   ├── RasterMapper.hpp           # Raster/PSTH: events→relative time
+│   ├── EventAlignedMapper.hpp     # Event-aligned traces: analog+events→MappedLineRange
 │   └── MapperConcepts.hpp         # C++20 concepts for range requirements
 │
 ├── Layout/                        # Plot-type-specific layout strategies
