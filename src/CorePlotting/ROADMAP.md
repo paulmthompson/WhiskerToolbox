@@ -305,258 +305,61 @@ This document outlines the roadmap for consolidating the plotting architecture i
 
 - [ ] **Create `IntervalCreationController`** for double-click-to-create workflow (Phase 4)
 
-### 3.5 Integration Tests: Real Data Types, Plain Language Scenarios
+### 3.5 Integration Tests: Real Data Types, Plain Language Scenarios ✅
 **Goal:** Verify the complete pipeline from data → layout → scene → hit test using real types.
 
 These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This gives us high confidence before touching any widget code.
 
-#### Test Scenario 1: Stacked Analog + Events (DataViewer Style)
-```cpp
-TEST_CASE("DataViewer-style stacked layout with hit testing") {
-    // === ARRANGE: Create real data types ===
-    auto analog1 = std::make_shared<AnalogTimeSeries>();
-    analog1->setData({0.5f, 1.2f, -0.3f, 0.8f, 0.1f});  // 5 samples
-    
-    auto analog2 = std::make_shared<AnalogTimeSeries>();
-    analog2->setData({-0.2f, 0.4f, 0.9f, -0.1f, 0.6f});
-    
-    auto events = std::make_shared<DigitalEventSeries>();
-    events->addEvent(TimeFrameIndex(1), EntityId(100));
-    events->addEvent(TimeFrameIndex(3), EntityId(101));
-    
-    // === ARRANGE: Build layout (3 stacked series) ===
-    LayoutRequest request;
-    request.series = {
-        {"analog1", SeriesType::Analog, true},
-        {"analog2", SeriesType::Analog, true},
-        {"events",  SeriesType::DigitalEvent, true}  // Stacked mode
-    };
-    request.viewport_y_min = -1.0f;
-    request.viewport_y_max = 1.0f;
-    
-    LayoutEngine engine(std::make_unique<StackedLayoutStrategy>());
-    auto layout = engine.compute(request);
-    
-    // Verify layout positions are distinct
-    REQUIRE(layout.layouts[0].allocated_y_center != layout.layouts[1].allocated_y_center);
-    REQUIRE(layout.layouts[1].allocated_y_center != layout.layouts[2].allocated_y_center);
-    
-    // === ARRANGE: Build scene with spatial index ===
-    auto scene = SceneBuilder()
-        .addEventBatch("events", *events, layout.findLayout("events"))
-        .withTimeRange(0, 5)
-        .buildWithSpatialIndex();
-    
-    // === ACT & ASSERT: Hit test at various world coordinates ===
-    SceneHitTester tester;
-    
-    // Click on event at time=1 (should hit EntityId 100)
-    float event_y = layout.findLayout("events")->allocated_y_center;
-    auto hit1 = tester.hitTest(1.0f, event_y, scene, layout);
-    REQUIRE(hit1.hit_type == HitTestResult::HitType::DigitalEvent);
-    REQUIRE(hit1.entity_id == EntityId(100));
-    REQUIRE(hit1.series_key == "events");
-    
-    // Click in analog1's region (no EntityId, just series_key)
-    float analog1_y = layout.findLayout("analog1")->allocated_y_center;
-    auto hit2 = tester.hitTest(2.0f, analog1_y, scene, layout);
-    REQUIRE(hit2.hit_type == HitTestResult::HitType::AnalogSeries);
-    REQUIRE(hit2.series_key == "analog1");
-    REQUIRE_FALSE(hit2.entity_id.has_value());
-    
-    // Click between series (should return closest or None)
-    float between_y = (analog1_y + analog2_y) / 2.0f;
-    auto hit3 = tester.hitTest(2.0f, between_y, scene, layout, /*tolerance=*/0.0f);
-    REQUIRE(hit3.hit_type == HitTestResult::HitType::None);
-}
-```
+**Implementation:** [Phase3_5_IntegrationTests.test.cpp](/tests/CorePlotting/Phase3_5_IntegrationTests.test.cpp)
 
-#### Test Scenario 2: Interval Selection and Edge Detection
-```cpp
-TEST_CASE("Interval hit testing with edge detection for drag handles") {
-    // === ARRANGE: Create interval series ===
-    auto intervals = std::make_shared<DigitalIntervalSeries>();
-    intervals->addInterval(10, 30, EntityId(200));  // Interval [10, 30]
-    intervals->addInterval(50, 80, EntityId(201));  // Interval [50, 80]
-    
-    // Layout: intervals use full canvas
-    LayoutRequest request;
-    request.series = {{"intervals", SeriesType::DigitalInterval, false}};
-    
-    LayoutEngine engine(std::make_unique<StackedLayoutStrategy>());
-    auto layout = engine.compute(request);
-    
-    auto scene = SceneBuilder()
-        .addIntervalBatch("intervals", *intervals, layout.findLayout("intervals"))
-        .withTimeRange(0, 100)
-        .buildWithSpatialIndex();
-    
-    SceneHitTester tester;
-    
-    // === Click inside interval body ===
-    auto hit_body = tester.hitTest(20.0f, 0.0f, scene, layout);
-    REQUIRE(hit_body.hit_type == HitTestResult::HitType::IntervalBody);
-    REQUIRE(hit_body.entity_id == EntityId(200));
-    
-    // === Click near left edge (drag handle) ===
-    // Mark this interval as selected for edge detection
-    std::map<std::string, std::pair<int64_t, int64_t>> selected = {
-        {"intervals", {10, 30}}
-    };
-    auto hit_edge = tester.findIntervalEdge(10.5f, scene, selected, /*tolerance=*/2.0f);
-    REQUIRE(hit_edge.has_value());
-    REQUIRE(hit_edge->hit_type == HitTestResult::HitType::IntervalEdgeLeft);
-    
-    // === Click outside any interval ===
-    auto hit_miss = tester.hitTest(40.0f, 0.0f, scene, layout);
-    REQUIRE(hit_miss.hit_type == HitTestResult::HitType::None);
-}
-```
+- [x] **Scenario 1: Stacked Analog + Events (DataViewer Style)**
+    - Verifies stacked layout produces distinct Y positions for multiple series
+    - Tests hit detection on discrete events returns correct EntityId
+    - Tests hit detection on analog regions returns series_key without EntityId
+    - Tests hit detection outside bounds returns no hit
 
-#### Test Scenario 3: Raster Plot (Multi-Row Events)
-```cpp
-TEST_CASE("Raster plot with row-based event layout") {
-    // === ARRANGE: Multiple trials as separate event series ===
-    auto trial1 = std::make_shared<DigitalEventSeries>();
-    trial1->addEvent(TimeFrameIndex(5), EntityId(1));
-    trial1->addEvent(TimeFrameIndex(15), EntityId(2));
-    
-    auto trial2 = std::make_shared<DigitalEventSeries>();
-    trial2->addEvent(TimeFrameIndex(8), EntityId(3));
-    trial2->addEvent(TimeFrameIndex(12), EntityId(4));
-    
-    // Use RowLayoutStrategy for raster-style rows
-    LayoutRequest request;
-    request.series = {
-        {"trial1", SeriesType::DigitalEvent, true},
-        {"trial2", SeriesType::DigitalEvent, true}
-    };
-    
-    LayoutEngine engine(std::make_unique<RowLayoutStrategy>());
-    auto layout = engine.compute(request);
-    
-    // Build with RasterBuilder
-    auto scene = SceneBuilder()
-        .addEventBatch("trial1", *trial1, layout.findLayout("trial1"))
-        .addEventBatch("trial2", *trial2, layout.findLayout("trial2"))
-        .withTimeRange(0, 20)
-        .buildWithSpatialIndex();
-    
-    SceneHitTester tester;
-    
-    // Hit event in trial1
-    float trial1_y = layout.findLayout("trial1")->allocated_y_center;
-    auto hit = tester.hitTest(5.0f, trial1_y, scene, layout);
-    REQUIRE(hit.entity_id == EntityId(1));
-    REQUIRE(hit.series_key == "trial1");
-    
-    // Hit event in trial2 (different row)
-    float trial2_y = layout.findLayout("trial2")->allocated_y_center;
-    auto hit2 = tester.hitTest(8.0f, trial2_y, scene, layout);
-    REQUIRE(hit2.entity_id == EntityId(3));
-    REQUIRE(hit2.series_key == "trial2");
-}
-```
+- [x] **Scenario 2: Interval Selection and Edge Detection**
+    - Creates DigitalIntervalSeries with known intervals and EntityIds
+    - Tests click inside interval body returns IntervalBody hit with correct bounds
+    - Tests click near left/right edges returns IntervalEdgeLeft/Right for drag handles
+    - Tests click outside intervals returns no hit
 
-#### Test Scenario 4: Coordinate Transform Round-Trip
-```cpp
-TEST_CASE("Screen → World → Hit → Verify coordinates") {
-    // Setup: 800x600 canvas, time range [0, 1000]
-    TimeAxisParams time_params{0, 1000, 800};
-    
-    // Create a scene with known event at time=500
-    auto events = std::make_shared<DigitalEventSeries>();
-    events->addEvent(TimeFrameIndex(500), EntityId(42));
-    
-    // ... build layout and scene ...
-    
-    // Simulate: User clicks at canvas pixel (400, 300)
-    // Step 1: Canvas X → Time
-    float time = canvasXToTime(400.0f, time_params);
-    REQUIRE(time == Approx(500.0f));  // Mid-screen = mid-time
-    
-    // Step 2: Canvas → World (using matrices)
-    glm::mat4 view = CorePlotting::getEventViewMatrix(...);
-    glm::mat4 proj = CorePlotting::getEventProjectionMatrix(...);
-    auto world = screenToWorld({400, 300}, {800, 600}, view, proj);
-    
-    // Step 3: World → Hit test
-    auto hit = tester.hitTest(world.x, world.y, scene, layout);
-    REQUIRE(hit.entity_id == EntityId(42));
-    
-    // Step 4: Reverse - Entity position → Screen (for tooltip placement)
-    auto screen = worldToScreen({500.0f, event_y}, {800, 600}, view, proj);
-    REQUIRE(screen.x == Approx(400.0f));
-}
-```
+- [x] **Scenario 3: Raster Plot (Multi-Row Events)**
+    - Uses RowLayoutStrategy for equal-height rows
+    - Builds combined QuadTree from multiple event series at different Y positions
+    - Tests Y position distinguishes events at similar times from different trials
 
-#### Test Scenario 5: Mixed Series Priority (Event Beats Analog)
-```cpp
-TEST_CASE("When event overlaps analog region, event takes priority") {
-    // Analog series fills region Y=[-0.5, 0.5]
-    // Event at time=100 is placed at Y=0.0 (overlapping analog)
-    
-    // ... setup with FullCanvas events overlapping analog ...
-    
-    // Click at (100, 0) - both analog region and event are candidates
-    auto hit = tester.hitTest(100.0f, 0.0f, scene, layout, /*tolerance=*/5.0f);
-    
-    // Event should win (more specific/discrete)
-    REQUIRE(hit.hit_type == HitTestResult::HitType::DigitalEvent);
-    REQUIRE(hit.entity_id.has_value());
-}
-```
+- [x] **Scenario 4: Coordinate Transform Round-Trip**
+    - Tests TimeAxisParams converts screen X ↔ time correctly
+    - Tests ViewState screenToWorld transforms work with various zoom/pan states
+    - Tests complete pipeline: screen → world → QuadTree query → EntityId
+    - Tests panned view correctly offsets coordinate transforms
 
-#### Why This Testing Approach Works
+- [x] **Scenario 5: Mixed Series Priority (Event Beats Analog)**
+    - Verifies discrete elements (events) take priority over region hits
+    - Tests SceneHitTester prioritize_discrete configuration
+    - Tests fallback to region hit when no discrete element nearby
 
-1. **Real Data Types**: Uses actual `DigitalEventSeries`, `AnalogTimeSeries`, etc.
-2. **Real Layout**: Uses `LayoutEngine` with real strategies
-3. **Real Scene Graph**: Uses `SceneBuilder` and `RenderableScene`
-4. **Real Spatial Index**: QuadTree built from actual batch data
-5. **No Mocks**: Everything is the production code path
-6. **Plain Language**: Each test describes a real user scenario
-7. **Backend Agnostic**: No Qt, no OpenGL, no widget code
+- [x] **Scenario 6: IntervalDragController State Machine**
+    - Tests basic drag workflow: start → update → finish
+    - Tests minimum width constraint prevents interval collapse
+    - Tests time bounds constraint prevents exceeding limits
+    - Tests cancel restores original values
+    - Tests edge swap behavior when allowed
+    - Tests only interval edge hits can start drag
 
-#### Test Scenario 6: IntervalDragController State Machine
-```cpp
-TEST_CASE("Interval drag controller enforces constraints") {
-    IntervalDragController controller;
-    
-    // Setup: interval [100, 200], dragging left edge
-    HitTestResult hit;
-    hit.hit_type = HitTestResult::HitType::IntervalEdgeLeft;
-    hit.series_key = "my_intervals";
-    
-    REQUIRE(controller.tryStartDrag(hit, 100, 200));
-    REQUIRE(controller.getState().is_active);
-    REQUIRE(controller.getState().is_left_edge == true);
-    
-    // Drag left edge to 150 (valid)
-    auto new_pos = controller.updateDrag(150.0f);
-    REQUIRE(new_pos == 150);
-    REQUIRE(controller.getState().current_start == 150);
-    
-    // Try to drag past right edge (should clamp)
-    new_pos = controller.updateDrag(250.0f);
-    REQUIRE(new_pos < 200);  // Clamped to stay left of right edge
-    
-    // Finish drag
-    auto result = controller.finishDrag();
-    REQUIRE(result.has_value());
-    REQUIRE(result->first < result->second);  // Valid interval
-    REQUIRE_FALSE(controller.getState().is_active);
-}
+- [x] **TimeRange Bounds Integration**
+    - Tests fromTimeFrame captures bounds correctly
+    - Tests zoom/scroll operations respect TimeFrame bounds
+    - Tests setCenterAndZoom maintains center when possible, shifts near edges
 
-TEST_CASE("Interval drag cancel restores original") {
-    IntervalDragController controller;
-    // ... start drag ...
-    controller.updateDrag(150.0f);  // Move somewhere
-    controller.cancelDrag();
-    
-    REQUIRE_FALSE(controller.getState().is_active);
-    // Original values available for UI to restore
-}
-```
+**Test Characteristics:**
+- Uses real `DigitalEventSeries`, `DigitalIntervalSeries`, `TimeFrame` types
+- Uses real `LayoutEngine` with `StackedLayoutStrategy` and `RowLayoutStrategy`
+- Uses real `SceneHitTester` and `IntervalDragController`
+- Uses real QuadTree spatial indexing via `EventSpatialAdapter`
+- No mocks — all production code paths
+- 123 assertions across 7 test cases
 
 ---
 
