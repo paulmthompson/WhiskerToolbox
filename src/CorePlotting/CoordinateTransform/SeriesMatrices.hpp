@@ -295,6 +295,44 @@ bool validateOrthoParams(float & left, float & right,
 glm::mat4 validateMatrix(glm::mat4 const & matrix,
                          char const * context_name = "Matrix");
 
+// ============================================================================
+// Inverse Transform Utilities
+// ============================================================================
+
+/**
+ * @brief Convert world Y coordinate to analog data value
+ * 
+ * Inverts the Model matrix transformation applied in getAnalogModelMatrix().
+ * Use this to convert mouse cursor position (after screen→world transform)
+ * to the corresponding data value for the series.
+ * 
+ * The forward transform is:
+ *   y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
+ * 
+ * This function computes the inverse:
+ *   y_data = (y_world - allocated_y_center - user_offset) / scale + data_mean
+ * 
+ * @param world_y Y coordinate in world space (post-View transform)
+ * @param params Same parameters used to create the Model matrix
+ * @return Corresponding data value in the analog series
+ * 
+ * @note The world_y should have View transforms already applied (i.e., pan offset
+ *       should be accounted for before calling this function).
+ */
+[[nodiscard]] float worldYToAnalogValue(float world_y, AnalogSeriesMatrixParams const & params);
+
+/**
+ * @brief Convert analog data value to world Y coordinate
+ * 
+ * Forward transform from data space to world space.
+ * This is the analytical equivalent of applying the Model matrix.
+ * 
+ * @param data_value Value in the analog series
+ * @param params Same parameters used to create the Model matrix
+ * @return Corresponding Y coordinate in world space
+ */
+[[nodiscard]] float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params);
+
 }// namespace CorePlotting
 
 #endif// COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP

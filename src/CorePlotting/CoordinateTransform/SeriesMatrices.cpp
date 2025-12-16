@@ -300,4 +300,58 @@ glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
     return validateMatrix(Projection, "IntervalProjection");
 }
 
+// ============================================================================
+// Inverse Transform Utilities
+// ============================================================================
+
+namespace {
+/**
+ * @brief Calculate the combined Y scale factor for analog series
+ * 
+ * This is extracted to avoid duplication between forward and inverse transforms.
+ */
+float calculateAnalogYScale(AnalogSeriesMatrixParams const & params) {
+    // Calculate intrinsic scaling (same as getAnalogModelMatrix)
+    float const safe_std_dev = (params.std_dev > 1e-6f) ? params.std_dev : 1.0f;
+    float const intrinsic_scale = 1.0f / (3.0f * safe_std_dev);
+
+    // Combine all scaling factors
+    float const total_y_scale = intrinsic_scale *
+                                params.intrinsic_scale *
+                                params.user_scale_factor *
+                                params.global_zoom *
+                                params.global_vertical_scale;
+
+    // Scale to fit within allocated height (80% margin)
+    float const height_scale = params.allocated_height * 0.8f;
+    return total_y_scale * height_scale;
+}
+} // anonymous namespace
+
+float worldYToAnalogValue(float world_y, AnalogSeriesMatrixParams const & params) {
+    float const final_y_scale = calculateAnalogYScale(params);
+    
+    // Guard against division by zero
+    if (std::abs(final_y_scale) < 1e-10f) {
+        return params.data_mean;
+    }
+    
+    // Inverse of: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
+    // Solving for y_data:
+    //   y_world - allocated_y_center - user_offset = (y_data - data_mean) * scale
+    //   (y_world - allocated_y_center - user_offset) / scale = y_data - data_mean
+    //   y_data = (y_world - allocated_y_center - user_offset) / scale + data_mean
+    
+    float const y_offset = params.allocated_y_center + params.user_vertical_offset;
+    return (world_y - y_offset) / final_y_scale + params.data_mean;
+}
+
+float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params) {
+    float const final_y_scale = calculateAnalogYScale(params);
+    
+    // Forward transform: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
+    float const y_offset = params.allocated_y_center + params.user_vertical_offset;
+    return (data_value - params.data_mean) * final_y_scale + y_offset;
+}
+
 }// namespace CorePlotting

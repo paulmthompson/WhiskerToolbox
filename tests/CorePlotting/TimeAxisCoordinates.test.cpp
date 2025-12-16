@@ -311,3 +311,173 @@ TEST_CASE("Practical scenario: hit tolerance calculation", "[CorePlotting][TimeA
     // 5 pixels * 1.25 = 6.25 time units
     REQUIRE_THAT(time_tolerance, WithinAbs(6.25f, 0.001f));
 }
+
+// ============================================================================
+// Y-Axis Coordinate Tests
+// ============================================================================
+
+TEST_CASE("YAxisParams construction", "[CorePlotting][TimeAxisCoordinates]") {
+    SECTION("Default constructor") {
+        YAxisParams params;
+        REQUIRE_THAT(params.world_y_min, WithinAbs(-1.0f, 0.001f));
+        REQUIRE_THAT(params.world_y_max, WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(params.pan_offset, WithinAbs(0.0f, 0.001f));
+        REQUIRE(params.viewport_height_px == 1);
+    }
+    
+    SECTION("Explicit value constructor") {
+        YAxisParams params(-2.0f, 2.0f, 600, 0.5f);
+        REQUIRE_THAT(params.world_y_min, WithinAbs(-2.0f, 0.001f));
+        REQUIRE_THAT(params.world_y_max, WithinAbs(2.0f, 0.001f));
+        REQUIRE_THAT(params.pan_offset, WithinAbs(0.5f, 0.001f));
+        REQUIRE(params.viewport_height_px == 600);
+    }
+    
+    SECTION("getEffectiveRange with pan offset") {
+        YAxisParams params(-1.0f, 1.0f, 600, 0.5f);
+        auto [y_min, y_max] = params.getEffectiveRange();
+        REQUIRE_THAT(y_min, WithinAbs(-0.5f, 0.001f));
+        REQUIRE_THAT(y_max, WithinAbs(1.5f, 0.001f));
+    }
+}
+
+TEST_CASE("canvasYToWorldY conversion", "[CorePlotting][TimeAxisCoordinates]") {
+    SECTION("Simple range [-1, 1] with 600px canvas") {
+        YAxisParams params(-1.0f, 1.0f, 600);
+        
+        // Top of canvas (y=0) -> world_y_max (1.0)
+        REQUIRE_THAT(canvasYToWorldY(0.0f, params), WithinAbs(1.0f, 0.001f));
+        
+        // Bottom of canvas (y=600) -> world_y_min (-1.0)
+        REQUIRE_THAT(canvasYToWorldY(600.0f, params), WithinAbs(-1.0f, 0.001f));
+        
+        // Middle (y=300) -> 0.0
+        REQUIRE_THAT(canvasYToWorldY(300.0f, params), WithinAbs(0.0f, 0.001f));
+    }
+    
+    SECTION("Asymmetric range [0, 10]") {
+        YAxisParams params(0.0f, 10.0f, 500);
+        
+        // Top -> 10.0
+        REQUIRE_THAT(canvasYToWorldY(0.0f, params), WithinAbs(10.0f, 0.001f));
+        
+        // Bottom -> 0.0
+        REQUIRE_THAT(canvasYToWorldY(500.0f, params), WithinAbs(0.0f, 0.001f));
+        
+        // Middle -> 5.0
+        REQUIRE_THAT(canvasYToWorldY(250.0f, params), WithinAbs(5.0f, 0.001f));
+    }
+    
+    SECTION("With pan offset") {
+        YAxisParams params(-1.0f, 1.0f, 600, 0.5f);  // Pan up by 0.5
+        
+        // Effective range is [-0.5, 1.5]
+        // Top of canvas -> 1.5
+        REQUIRE_THAT(canvasYToWorldY(0.0f, params), WithinAbs(1.5f, 0.001f));
+        
+        // Bottom of canvas -> -0.5
+        REQUIRE_THAT(canvasYToWorldY(600.0f, params), WithinAbs(-0.5f, 0.001f));
+        
+        // Middle -> 0.5
+        REQUIRE_THAT(canvasYToWorldY(300.0f, params), WithinAbs(0.5f, 0.001f));
+    }
+    
+    SECTION("Edge case: zero height viewport") {
+        YAxisParams params(-1.0f, 1.0f, 0);
+        // Should return world_y_min to avoid division by zero
+        REQUIRE_THAT(canvasYToWorldY(100.0f, params), WithinAbs(-1.0f, 0.001f));
+    }
+}
+
+TEST_CASE("worldYToCanvasY conversion", "[CorePlotting][TimeAxisCoordinates]") {
+    SECTION("Simple range [-1, 1] with 600px canvas") {
+        YAxisParams params(-1.0f, 1.0f, 600);
+        
+        // world_y_max (1.0) -> top of canvas (0)
+        REQUIRE_THAT(worldYToCanvasY(1.0f, params), WithinAbs(0.0f, 0.001f));
+        
+        // world_y_min (-1.0) -> bottom of canvas (600)
+        REQUIRE_THAT(worldYToCanvasY(-1.0f, params), WithinAbs(600.0f, 0.001f));
+        
+        // 0.0 -> middle (300)
+        REQUIRE_THAT(worldYToCanvasY(0.0f, params), WithinAbs(300.0f, 0.001f));
+    }
+}
+
+TEST_CASE("Y-axis round-trip conversion", "[CorePlotting][TimeAxisCoordinates]") {
+    YAxisParams params(-1.0f, 1.0f, 600, 0.25f);
+    
+    // Various canvas positions
+    for (float canvas_y : {0.0f, 100.0f, 300.0f, 500.0f, 600.0f}) {
+        float world_y = canvasYToWorldY(canvas_y, params);
+        float back_to_canvas = worldYToCanvasY(world_y, params);
+        REQUIRE_THAT(back_to_canvas, WithinAbs(canvas_y, 0.01f));
+    }
+    
+    // Various world positions
+    for (float world_y : {-0.75f, -0.25f, 0.0f, 0.5f, 1.25f}) {
+        float canvas_y = worldYToCanvasY(world_y, params);
+        float back_to_world = canvasYToWorldY(canvas_y, params);
+        REQUIRE_THAT(back_to_world, WithinAbs(world_y, 0.001f));
+    }
+}
+
+TEST_CASE("worldYToNDC conversion", "[CorePlotting][TimeAxisCoordinates]") {
+    SECTION("Simple range") {
+        YAxisParams params(-1.0f, 1.0f, 600);
+        
+        // world_y_min -> -1 NDC
+        REQUIRE_THAT(worldYToNDC(-1.0f, params), WithinAbs(-1.0f, 0.001f));
+        
+        // world_y_max -> +1 NDC
+        REQUIRE_THAT(worldYToNDC(1.0f, params), WithinAbs(1.0f, 0.001f));
+        
+        // Center -> 0 NDC
+        REQUIRE_THAT(worldYToNDC(0.0f, params), WithinAbs(0.0f, 0.001f));
+    }
+    
+    SECTION("With pan offset") {
+        YAxisParams params(-1.0f, 1.0f, 600, 0.5f);
+        // Effective range is [-0.5, 1.5]
+        
+        // Bottom of effective range -> -1 NDC
+        REQUIRE_THAT(worldYToNDC(-0.5f, params), WithinAbs(-1.0f, 0.001f));
+        
+        // Top of effective range -> +1 NDC
+        REQUIRE_THAT(worldYToNDC(1.5f, params), WithinAbs(1.0f, 0.001f));
+        
+        // Center of effective range (0.5) -> 0 NDC
+        REQUIRE_THAT(worldYToNDC(0.5f, params), WithinAbs(0.0f, 0.001f));
+    }
+}
+
+TEST_CASE("ndcToWorldY conversion", "[CorePlotting][TimeAxisCoordinates]") {
+    SECTION("Simple range") {
+        YAxisParams params(-1.0f, 1.0f, 600);
+        
+        REQUIRE_THAT(ndcToWorldY(-1.0f, params), WithinAbs(-1.0f, 0.001f));
+        REQUIRE_THAT(ndcToWorldY(1.0f, params), WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(ndcToWorldY(0.0f, params), WithinAbs(0.0f, 0.001f));
+    }
+}
+
+TEST_CASE("Practical scenario: mouse hover Y conversion", "[CorePlotting][TimeAxisCoordinates]") {
+    // Simulate a DataViewer scenario:
+    // - World Y range [-1, 1] 
+    // - Canvas height 600 pixels
+    // - User panned up by 0.3
+    // - Mouse is at pixel 150 (25% from top)
+    
+    YAxisParams params(-1.0f, 1.0f, 600, 0.3f);
+    
+    float mouse_y = 150.0f;
+    float world_y = canvasYToWorldY(mouse_y, params);
+    
+    // Effective range is [-0.7, 1.3] (shifted up by 0.3)
+    // At 25% from top: 1.3 - 0.25 * 2.0 = 1.3 - 0.5 = 0.8
+    REQUIRE_THAT(world_y, WithinAbs(0.8f, 0.001f));
+    
+    // The inverse should give us back our mouse position
+    float back_to_pixel = worldYToCanvasY(world_y, params);
+    REQUIRE_THAT(back_to_pixel, WithinAbs(150.0f, 0.01f));
+}

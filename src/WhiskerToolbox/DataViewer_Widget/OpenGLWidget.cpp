@@ -2,6 +2,9 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
+#include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
+#include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
+#include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
@@ -1260,78 +1263,40 @@ void OpenGLWidget::_updateYViewBoundaries() {
 }
 
 float OpenGLWidget::canvasXToTime(float canvas_x) const {
-    // Convert canvas pixel coordinate to time coordinate
-    float const canvas_width = static_cast<float>(width());
-    float const normalized_x = canvas_x / canvas_width;// 0.0 to 1.0
-
-    auto const start_time = static_cast<float>(_xAxis.getStart());
-    auto const end_time = static_cast<float>(_xAxis.getEnd());
-
-    return start_time + normalized_x * (end_time - start_time);
+    // Use CorePlotting coordinate transform
+    CorePlotting::TimeAxisParams params(_xAxis.getStart(), _xAxis.getEnd(), width());
+    return CorePlotting::canvasXToTime(canvas_x, params);
 }
 
 float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & series_key) const {
-    // Get canvas dimensions
-    auto [canvas_width, canvas_height] = getCanvasSize();
-
-    // Convert canvas Y to normalized coordinates [0, 1] where 0 is bottom, 1 is top
-    float const normalized_y = 1.0f - (canvas_y / static_cast<float>(canvas_height));
-
-    // Convert to view coordinates using current viewport bounds (accounting for pan offset)
-    float const dynamic_min_y = _yMin + _verticalPanOffset;
-    float const dynamic_max_y = _yMax + _verticalPanOffset;
-    float const view_y = dynamic_min_y + normalized_y * (dynamic_max_y - dynamic_min_y);
-
-    // Find the series configuration to get positioning info
+    // Find the series
     auto const analog_it = _analog_series.find(series_key);
     if (analog_it == _analog_series.end()) {
-        return 0.0f;// Series not found
+        return 0.0f;  // Series not found
     }
 
+    auto const & series = analog_it->second.series;
     auto const & display_options = analog_it->second.display_options;
 
-    // Check if this series uses VerticalSpaceManager positioning
-    if (display_options->y_offset != 0.0f && display_options->layout.allocated_height > 0.0f) {
-        // VerticalSpaceManager mode: series is positioned at y_offset with its own scaling
-        float const series_local_y = view_y - display_options->y_offset;
+    // Step 1: Convert canvas Y to world Y using CorePlotting
+    CorePlotting::YAxisParams y_params(_yMin, _yMax, height(), _verticalPanOffset);
+    float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
 
-        // Apply inverse of the scaling used in rendering to get actual analog value
-        auto const series = analog_it->second.series;
-        auto const stdDev = getCachedStdDev(*series, *display_options);
-        auto const user_scale_combined = display_options->user_scale_factor * _global_zoom;
+    // Step 2: Build the same AnalogSeriesMatrixParams used for rendering
+    // This ensures we use the exact same transform for the inverse
+    CorePlotting::AnalogSeriesMatrixParams model_params;
+    model_params.allocated_y_center = display_options->layout.allocated_y_center;
+    model_params.allocated_height = display_options->layout.allocated_height;
+    model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
+    model_params.user_scale_factor = display_options->user_scale_factor;
+    model_params.global_zoom = _plotting_manager ? _plotting_manager->getGlobalZoom() : 1.0f;
+    model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
+    model_params.data_mean = display_options->data_cache.cached_mean;
+    model_params.std_dev = display_options->data_cache.cached_std_dev;
+    model_params.global_vertical_scale = _plotting_manager ? _plotting_manager->getGlobalVerticalScale() : 1.0f;
 
-        // Calculate the same scaling factors used in rendering
-        float const usable_height = display_options->layout.allocated_height * 0.8f;
-        float const base_amplitude_scale = 1.0f / stdDev;
-        float const height_scale = usable_height / 1.0f;
-        float const amplitude_scale = base_amplitude_scale * height_scale * user_scale_combined;
-
-        // Apply inverse scaling to get actual data value
-        return series_local_y / amplitude_scale;
-    } else {
-        // Legacy mode: use corrected calculation
-        float const adjusted_y = view_y;// No pan offset adjustment needed since it's in projection
-
-        // Calculate series center and scaling for legacy mode
-        auto series_pos_it = _series_y_position.find(series_key);
-        if (series_pos_it == _series_y_position.end()) {
-            // Series not found in position map, return 0 as fallback
-            return 0.0f;
-        }
-        int const series_index = series_pos_it->second;
-        float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
-        float const series_y_offset = static_cast<float>(series_index) * _ySpacing + center_coord;
-
-        float const relative_y = adjusted_y - series_y_offset;
-
-        // Use corrected scaling calculation
-        auto const series = analog_it->second.series;
-        auto const stdDev = getCachedStdDev(*series, *display_options);
-        auto const user_scale_combined = display_options->user_scale_factor * _global_zoom;
-        float const legacy_amplitude_scale = (1.0f / stdDev) * user_scale_combined;
-
-        return relative_y / legacy_amplitude_scale;
-    }
+    // Step 3: Use CorePlotting inverse transform to get data value
+    return CorePlotting::worldYToAnalogValue(world_y, model_params);
 }
 
 // Interval selection methods

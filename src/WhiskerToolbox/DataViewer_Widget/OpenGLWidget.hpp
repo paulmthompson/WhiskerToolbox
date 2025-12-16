@@ -484,7 +484,6 @@ private:
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
     std::unordered_map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
-    std::unordered_map<std::string, int> _series_y_position;
 
     XAxis _xAxis;
     int _time{0};

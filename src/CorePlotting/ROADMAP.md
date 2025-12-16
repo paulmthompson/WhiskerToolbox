@@ -538,40 +538,55 @@ This doesn't generalize to:
 | `finishIntervalDrag()` | ~70 | Commit changes | IntervalDragController |
 | `drawDraggedInterval()` | ~90 | Visual feedback | SceneRenderer (overlay batch) |
 
-### 4.2 Migration Step 1: Replace Coordinate Functions (Low Risk)
+### 4.2 Migration Step 1: Replace Coordinate Functions (Low Risk) ✅
 **Goal:** Replace `canvasXToTime()` with CorePlotting; refactor `canvasYToAnalogValue()` to query through hierarchy.
 
-- [ ] **Add `TimeAxisCoordinates` to CorePlotting** (Phase 3.1)
-- [ ] **Update `OpenGLWidget::canvasXToTime()`**:
+- [x] **Add `TimeAxisCoordinates` to CorePlotting** (Phase 3.1) ✓
+    - Added `YAxisParams` struct for Y-axis coordinate conversions
+    - Added `canvasYToWorldY()` and `worldYToCanvasY()` functions
+    - Added `worldYToNDC()` and `ndcToWorldY()` functions
+    - Location: [TimeAxisCoordinates.hpp](CoordinateTransform/TimeAxisCoordinates.hpp)
+    
+- [x] **Add inverse transform utilities to SeriesMatrices** ✓
+    - Added `worldYToAnalogValue()` — inverts Model matrix transform
+    - Added `analogValueToWorldY()` — forward transform for completeness
+    - Location: [SeriesMatrices.hpp](CoordinateTransform/SeriesMatrices.hpp)
+    
+- [x] **Update `OpenGLWidget::canvasXToTime()`** ✓:
     ```cpp
     float OpenGLWidget::canvasXToTime(float canvas_x) const {
-        CorePlotting::TimeAxisParams params{
-            _xAxis.getStart(), _xAxis.getEnd(), width()
-        };
+        CorePlotting::TimeAxisParams params(_xAxis.getStart(), _xAxis.getEnd(), width());
         return CorePlotting::canvasXToTime(canvas_x, params);
     }
     ```
-- [ ] **Refactor `canvasYToAnalogValue()` to use query flow**:
+    
+- [x] **Refactor `canvasYToAnalogValue()` to use CorePlotting** ✓:
+    - Removed dead "legacy mode" code path (~30 lines, `_series_y_position` was never populated)
+    - Simplified to clean 3-step approach using CorePlotting utilities:
     ```cpp
     float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const& series_key) const {
-        // 1. Screen → World
-        auto world_pos = CorePlotting::screenToWorld(
-            {canvas_x, canvas_y}, {width(), height()}, 
-            _current_view_matrix, _current_proj_matrix);
+        // Step 1: Canvas Y → World Y (using CorePlotting::YAxisParams)
+        CorePlotting::YAxisParams y_params(_yMin, _yMax, height(), _verticalPanOffset);
+        float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
         
-        // 2. Get series layout from LayoutEngine result (cached)
-        auto* layout = _cached_layout.findLayout(series_key);
-        if (!layout) return 0.0f;
+        // Step 2: Build AnalogSeriesMatrixParams from display options
+        CorePlotting::AnalogSeriesMatrixParams model_params = /* ... from series */;
         
-        // 3. World Y → Series-local Y
-        float local_y = CorePlotting::worldYToSeriesLocalY(world_pos.y, *layout);
-        
-        // 4. Let the data object interpret local_y
-        // (series knows its own scaling/offset)
-        return _analog_series[series_key].series->localYToDataValue(local_y, *layout);
+        // Step 3: Use CorePlotting inverse transform
+        return CorePlotting::worldYToAnalogValue(world_y, model_params);
     }
     ```
-- [ ] **Verify:** All existing tests pass, hover behavior unchanged
+    
+- [x] **Remove dead code** ✓:
+    - Removed unused `_series_y_position` map from `OpenGLWidget.hpp`
+    - Removed legacy mode branch (was never executed)
+    
+- [x] **Add comprehensive unit tests** ✓:
+    - Y-axis coordinate conversion tests in [TimeAxisCoordinates.test.cpp](/tests/CorePlotting/TimeAxisCoordinates.test.cpp)
+    - Inverse transform tests in [SeriesMatrices.test.cpp](/tests/CorePlotting/SeriesMatrices.test.cpp)
+    - ~260 lines of new test coverage
+    
+- [x] **Verify:** All existing tests pass, hover behavior unchanged ✓
 
 ### 4.3 Migration Step 2: Replace Hit Testing (Medium Risk)
 **Goal:** Replace manual iteration with `SceneHitTester` queries through SceneGraph.

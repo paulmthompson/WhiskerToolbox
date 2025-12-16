@@ -348,3 +348,175 @@ TEST_CASE("MVP matrix composition", "[CorePlotting][SeriesMatrices]") {
         }
     }
 }
+
+// ============================================================================
+// Inverse Transform Tests
+// ============================================================================
+
+TEST_CASE("worldYToAnalogValue basic functionality", "[CorePlotting][SeriesMatrices]") {
+    SECTION("Identity case - data at allocated center maps to data mean") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.5f;
+        params.allocated_height = 1.0f;
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 1.0f;
+        params.global_zoom = 1.0f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 10.0f;  // Non-zero mean
+        params.std_dev = 1.0f;
+        params.user_vertical_offset = 0.0f;
+        
+        // World Y at allocated center should map to data mean
+        float data_value = worldYToAnalogValue(0.5f, params);
+        REQUIRE_THAT(data_value, Catch::Matchers::WithinAbs(10.0f, 0.001f));
+    }
+    
+    SECTION("Scaled data - 3 std devs above mean") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.0f;
+        params.allocated_height = 2.0f;  // Height of 2.0
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 1.0f;
+        params.global_zoom = 1.0f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 0.0f;
+        params.std_dev = 1.0f;
+        params.user_vertical_offset = 0.0f;
+        
+        // Forward: (data=3.0 - mean=0) * scale + center
+        // scale = (1/3) * 1 * 1 * 1 * 1 * (2.0 * 0.8) = 0.533...
+        // So 3.0 * 0.533 = 1.6
+        float world_y = analogValueToWorldY(3.0f, params);
+        
+        // Inverse should give us back 3.0
+        float data_back = worldYToAnalogValue(world_y, params);
+        REQUIRE_THAT(data_back, Catch::Matchers::WithinAbs(3.0f, 0.01f));
+    }
+    
+    SECTION("With user vertical offset") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.0f;
+        params.allocated_height = 1.0f;
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 1.0f;
+        params.global_zoom = 1.0f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 0.0f;
+        params.std_dev = 1.0f;
+        params.user_vertical_offset = 0.5f;  // Shifted up
+        
+        // World Y at (center + offset) = 0.5 should map to data mean
+        float data_value = worldYToAnalogValue(0.5f, params);
+        REQUIRE_THAT(data_value, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+    
+    SECTION("Protection against zero std_dev") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.0f;
+        params.allocated_height = 1.0f;
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 1.0f;
+        params.global_zoom = 1.0f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 5.0f;
+        params.std_dev = 0.0f;  // Zero std dev
+        params.user_vertical_offset = 0.0f;
+        
+        // Should not crash, should use fallback std_dev of 1.0
+        float data_value = worldYToAnalogValue(0.0f, params);
+        REQUIRE(std::isfinite(data_value));
+    }
+}
+
+TEST_CASE("analogValueToWorldY basic functionality", "[CorePlotting][SeriesMatrices]") {
+    SECTION("Data mean maps to allocated center plus offset") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.5f;
+        params.allocated_height = 1.0f;
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 1.0f;
+        params.global_zoom = 1.0f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 10.0f;
+        params.std_dev = 1.0f;
+        params.user_vertical_offset = 0.2f;
+        
+        // Data mean should map to allocated_y_center + user_vertical_offset
+        float world_y = analogValueToWorldY(10.0f, params);
+        REQUIRE_THAT(world_y, Catch::Matchers::WithinAbs(0.7f, 0.001f));  // 0.5 + 0.2
+    }
+}
+
+TEST_CASE("Round-trip: worldYToAnalogValue <-> analogValueToWorldY", "[CorePlotting][SeriesMatrices]") {
+    SECTION("Various data values round-trip correctly") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.3f;
+        params.allocated_height = 0.5f;
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 2.0f;
+        params.global_zoom = 1.5f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 100.0f;
+        params.std_dev = 25.0f;
+        params.user_vertical_offset = 0.1f;
+        
+        // Test various data values
+        for (float data_value : {50.0f, 75.0f, 100.0f, 125.0f, 150.0f}) {
+            float world_y = analogValueToWorldY(data_value, params);
+            float back_to_data = worldYToAnalogValue(world_y, params);
+            REQUIRE_THAT(back_to_data, Catch::Matchers::WithinRel(data_value, 0.001f));
+        }
+    }
+    
+    SECTION("Various world Y values round-trip correctly") {
+        AnalogSeriesMatrixParams params;
+        params.allocated_y_center = 0.0f;
+        params.allocated_height = 1.0f;
+        params.intrinsic_scale = 1.0f;
+        params.user_scale_factor = 1.0f;
+        params.global_zoom = 1.0f;
+        params.global_vertical_scale = 1.0f;
+        params.data_mean = 0.0f;
+        params.std_dev = 1.0f;
+        params.user_vertical_offset = 0.0f;
+        
+        // Test various world Y values
+        for (float world_y : {-0.5f, -0.25f, 0.0f, 0.25f, 0.5f}) {
+            float data_value = worldYToAnalogValue(world_y, params);
+            float back_to_world = analogValueToWorldY(data_value, params);
+            REQUIRE_THAT(back_to_world, Catch::Matchers::WithinAbs(world_y, 0.001f));
+        }
+    }
+}
+
+TEST_CASE("Practical scenario: mouse hover Y to analog value", "[CorePlotting][SeriesMatrices]") {
+    // Simulate a DataViewer scenario:
+    // - Series positioned at y_center = 0.3 with height 0.4
+    // - Data has mean 50.0, std_dev 10.0
+    // - User has scaled to 1.5x
+    // - Global zoom at 1.0
+    // - Mouse hovers at world_y = 0.3 (exactly at series center)
+    
+    AnalogSeriesMatrixParams params;
+    params.allocated_y_center = 0.3f;
+    params.allocated_height = 0.4f;
+    params.intrinsic_scale = 1.0f;
+    params.user_scale_factor = 1.5f;
+    params.global_zoom = 1.0f;
+    params.global_vertical_scale = 1.0f;
+    params.data_mean = 50.0f;
+    params.std_dev = 10.0f;
+    params.user_vertical_offset = 0.0f;
+    
+    // Mouse at series center should give data mean
+    float hover_value = worldYToAnalogValue(0.3f, params);
+    REQUIRE_THAT(hover_value, Catch::Matchers::WithinAbs(50.0f, 0.01f));
+    
+    // Mouse slightly above center should give value above mean
+    float hover_value_above = worldYToAnalogValue(0.35f, params);
+    REQUIRE(hover_value_above > 50.0f);
+    
+    // Mouse slightly below center should give value below mean
+    float hover_value_below = worldYToAnalogValue(0.25f, params);
+    REQUIRE(hover_value_below < 50.0f);
+}

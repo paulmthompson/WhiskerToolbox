@@ -966,32 +966,71 @@ struct TimeAxisParams {
     int viewport_width_px;   // Canvas width in pixels
 };
 
+struct YAxisParams {
+    float world_y_min;       // Bottom of world space (default -1.0)
+    float world_y_max;       // Top of world space (default 1.0)
+    float pan_offset;        // Vertical pan offset
+    int viewport_height_px;  // Canvas height in pixels
+};
+
 // Forward: Time → Screen pixel X
-float timeToCanvasX(float time, TimeAxisParams const& params) {
-    float t = (time - params.time_start) / 
-              static_cast<float>(params.time_end - params.time_start);
-    return t * params.viewport_width_px;
-}
+float timeToCanvasX(float time, TimeAxisParams const& params);
 
 // Inverse: Screen pixel X → Time
-float canvasXToTime(float canvas_x, TimeAxisParams const& params) {
-    float t = canvas_x / params.viewport_width_px;
-    return params.time_start + t * (params.time_end - params.time_start);
-}
+float canvasXToTime(float canvas_x, TimeAxisParams const& params);
+
+// Forward: World Y → Canvas pixel Y
+float worldYToCanvasY(float world_y, YAxisParams const& params);
+
+// Inverse: Canvas pixel Y → World Y (accounts for Y-flip: canvas 0=top, world y_max=top)
+float canvasYToWorldY(float canvas_y, YAxisParams const& params);
 ```
 
 #### Series Y-Axis Queries (Through the Hierarchy)
 
-The Y-axis is more complex because each series has its own coordinate space. **Instead of
-flattening all parameters into a struct, we query through the existing hierarchy:**
+The Y-axis is more complex because each series has its own coordinate space. The implementation
+uses a three-step approach:
 
 ```
 canvas_y 
-  → screenToWorld(view_matrix, proj_matrix)  // Generic inverse VP
-  → findSeriesAtWorldY(layout_response)       // LayoutEngine knows series regions
-  → worldYToSeriesLocalY(series_layout)       // Simple offset subtraction
-  → [data object interprets local_y]          // Series knows its own scaling
+  → canvasYToWorldY(y_params)                 // Canvas → World (accounts for Y-flip)
+  → worldYToAnalogValue(model_params)         // Inverts Model matrix scaling/offset
+  → data_value                                // Actual value in series units
 ```
+
+**Actual Implementation (December 2025):**
+
+```cpp
+// Step 1: Canvas Y → World Y (using YAxisParams)
+// Handles the Y-flip: canvas 0=top, world y_max=top
+CorePlotting::YAxisParams y_params(world_y_min, world_y_max, viewport_height, pan_offset);
+float world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
+
+// Step 2: Build AnalogSeriesMatrixParams from display options
+// Same params used to create the Model matrix for rendering
+CorePlotting::AnalogSeriesMatrixParams model_params{
+    .allocated_y_center = layout_result.allocated_y_center,
+    .allocated_height = layout_result.allocated_height,
+    .intrinsic_scale = style.intrinsic_scale,
+    .user_scale_factor = style.user_scale_factor,
+    .global_zoom = style.global_zoom,
+    .user_vertical_offset = style.user_vertical_offset,
+    .data_mean = data_cache.mean,
+    .std_dev = data_cache.std_dev,
+    .global_vertical_scale = global_vertical_scale
+};
+
+// Step 3: Invert the Model matrix transform
+// Forward: y_world = (y_data - mean) * scale + y_center + offset
+// Inverse: y_data = (y_world - y_center - offset) / scale + mean
+float data_value = CorePlotting::worldYToAnalogValue(world_y, model_params);
+```
+
+**Key insight**: The inverse transform is computed analytically (not via matrix inversion).
+The `AnalogSeriesMatrixParams` struct is reused from the rendering path, ensuring the forward
+and inverse transforms are always consistent.
+
+For series identification (finding which series the cursor is over), see `SeriesCoordinateQuery.hpp`:
 
 ```cpp
 // CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp
@@ -1008,18 +1047,7 @@ std::optional<SeriesQueryResult> findSeriesAtWorldY(
     float world_y,
     LayoutResponse const& layout,
     float tolerance = 0.0f);
-
-// Convert world Y to series-local Y (simple subtraction)
-float worldYToSeriesLocalY(float world_y, SeriesLayout const& layout) {
-    return world_y - layout.allocated_y_center;
-}
 ```
-
-**Key insight**: The data object itself handles conversion from `local_y` to actual data values.
-This respects that:
-- Not all series are mean-centered
-- Different series may have different normalization strategies
-- The series object is the single source of truth for its own scaling
 
 ### 3.6 Hit Testing Architecture
 
@@ -1280,12 +1308,16 @@ src/CorePlotting/
 ├── CoordinateTransform/           # MVP matrix utilities + inverse transforms
 │   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
 │   ├── TimeRange.hpp              # TimeFrame-aware X-axis bounds
-│   ├── TimeAxisCoordinates.hpp    # Canvas X ↔ Time conversions
+│   ├── TimeAxisCoordinates.hpp    # Canvas X ↔ Time, Canvas Y ↔ World Y conversions
+│   │                              # Includes: TimeAxisParams, YAxisParams,
+│   │                              # canvasXToTime, timeToCanvasX, canvasYToWorldY,
+│   │                              # worldYToCanvasY, worldYToNDC, ndcToWorldY
 │   ├── TimeFrameAdapters.hpp      # C++20 range adapters for TimeFrame conversion
 │   ├── SeriesCoordinateQuery.hpp  # World Y → Series lookup (queries LayoutResponse)
 │   ├── Matrices.hpp               # Matrix construction helpers
 │   ├── ScreenToWorld.hpp          # Generic inverse VP transform
-│   └── SeriesMatrices.hpp         # Per-series Model matrix builders
+│   └── SeriesMatrices.hpp         # Per-series Model matrix builders + inverse transforms
+│                                   # Includes: worldYToAnalogValue, analogValueToWorldY
 │
 ├── Interaction/                   # Hit testing and interaction controllers
 │   ├── HitTestResult.hpp          # Result struct with optional EntityId
