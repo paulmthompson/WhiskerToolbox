@@ -59,6 +59,23 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - X-axis controlled through `TimeRange` methods
     - Defined in: [TimeRange.hpp](CoordinateTransform/TimeRange.hpp)
 
+- [x] **Create TimeFrame Range Adapters** ✅:
+    - C++20 range adapters for TimeFrameIndex ↔ absolute time conversion
+    - Location: [TimeFrameAdapters.hpp](CoordinateTransform/TimeFrameAdapters.hpp)
+    - Tests: [TimeFrameAdapters.test.cpp](/tests/CorePlotting/TimeFrameAdapters.test.cpp) — 71 assertions passing
+    - **Forward conversion** (`toAbsoluteTime`): TimeFrameIndex → absolute time (int)
+        - Works with `std::pair<TimeFrameIndex, T>` (AnalogTimeSeries ranges)
+        - Works with bare `TimeFrameIndex` (DigitalEventSeries ranges)
+        - Works with `Interval` and `TimeFrameInterval`
+        - Works with `EventWithId`-like types (has `.event_time`)
+        - Works with `IntervalWithId`-like types (has `.interval`)
+    - **Inverse conversion** (`toTimeFrameIndex`): absolute time → TimeFrameIndex
+        - For mouse hover: screen X → time → TimeFrameIndex
+    - **Cross-TimeFrame conversion** (`toTargetFrame`, `convertTimeFrameIndex`):
+        - Convert indices between different TimeFrames (e.g., series → master)
+    - **TimeFrameConverter context class**: Bidirectional conversion helper
+    - Pipe operator support: `series.getAllSamples() | toAbsoluteTime(tf)`
+
 ### 1.2 MVP Matrix Consolidation ✅
 - [x] **Move matrix logic to CorePlotting**:
     - `MVP_AnalogTimeSeries.cpp` → `CorePlotting/CoordinateTransform/SeriesMatrices.cpp` ✓

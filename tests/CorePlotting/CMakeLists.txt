@@ -20,6 +20,7 @@ add_executable(test_coreplotting
     SeriesMatrices.test.cpp
     LayoutEngine.test.cpp
     IntegrationTests.test.cpp
+    TimeFrameAdapters.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

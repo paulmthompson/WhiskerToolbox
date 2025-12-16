@@ -211,7 +211,46 @@ This design ensures:
 3. The relationship between `TimeFrameIndex` and display coordinates is explicit
 4. TimeRange is decoupled from Qt/OpenGL but aware of TimeFrame semantics
 
+### TimeFrame Range Adapters
+
+Different data sources (video, neural signals, analog sensors) often have different TimeFrames with different sampling rates. The `TimeFrameAdapters` provide C++20 range adapters for converting TimeFrameIndex values to/from absolute time:
+
+```cpp
+// CorePlotting/CoordinateTransform/TimeFrameAdapters.hpp
+
+// Forward conversion: TimeFrameIndex → absolute time
+// Works with AnalogTimeSeries::TimeValueRangeView (pair<TimeFrameIndex, float>)
+for (auto [abs_time, value] : series.getTimeValueRangeInTimeFrameIndexRange(start, end)
+                              | toAbsoluteTime(series.getTimeFrame().get())) {
+    vertices.push_back(static_cast<float>(abs_time));  // X coordinate
+    vertices.push_back(value);                          // Y coordinate
+}
+
+// Works with DigitalEventSeries (bare TimeFrameIndex)
+for (int abs_time : events.getEventsInRange(start, end)
+                    | toAbsoluteTime(events.getTimeFrame().get())) {
+    drawEventAt(abs_time);
+}
+
+// Inverse conversion: absolute time → TimeFrameIndex (for mouse interaction)
+float mouse_x_time = screenXToTime(mouse_pos.x());
+TimeFrameIndex hover_idx = toTimeFrameIndex(mouse_x_time, master_time_frame);
+
+// Cross-TimeFrame conversion (series → master coordinate system)
+for (auto [master_idx, value] : series.getAllSamples()
+                                | toTargetFrame(series_tf, master_tf)) {
+    // master_idx is now in master TimeFrame coordinates
+}
+```
+
+**Key Features:**
+- **Type-aware**: Automatically handles `pair<TimeFrameIndex, T>`, bare `TimeFrameIndex`, `Interval`, `EventWithId`, `IntervalWithId`
+- **Pipe-friendly**: Works with C++20 ranges and `std::views::filter`, etc.
+- **Bidirectional**: Forward (index→time) for rendering, inverse (time→index) for interaction
+- **Cross-frame**: Align data from different sources to a master TimeFrame
+
 ## Architecture Layers
+
 
 ### 1. The Scene Description (CorePlotting)
 

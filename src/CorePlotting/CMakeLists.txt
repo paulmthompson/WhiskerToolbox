@@ -13,6 +13,7 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/TimeRange.hpp
+    CoordinateTransform/TimeFrameAdapters.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
     Layout/SeriesLayout.hpp
