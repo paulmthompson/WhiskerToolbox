@@ -396,29 +396,29 @@ Both the rendering primitives and the spatial index are built from the same `Ser
 3. **Clear Lifecycle**: Scene owns the index; when scene is replaced, old index is automatically cleaned up
 
 ```cpp
-// SceneBuilder creates both primitives AND spatial index from same layout
-RenderableScene buildScene(
-    std::vector<SeriesData> const& series,
-    std::vector<SeriesLayoutResult> const& layouts,
-    ViewState const& view_state)
-{
-    RenderableScene scene;
-    
-    // Build rendering primitives using layout results
-    for (size_t i = 0; i < series.size(); ++i) {
-        auto batch = buildBatchForSeries(series[i], layouts[i]);
-        scene.poly_line_batches.push_back(std::move(batch));
-    }
-    
-    // Build spatial index using SAME layout results
-    scene.spatial_index = buildSpatialIndex(series, layouts);
-    
-    // Set shared matrices
-    scene.view_matrix = computeViewMatrix(view_state);
-    scene.projection_matrix = computeProjectionMatrix(view_state);
-    
-    return scene;
-}
+// SceneBuilder creates both primitives AND spatial index from same source data
+// High-level API: setBounds + addEventSeries/addIntervalSeries → automatic spatial indexing
+RenderableScene scene = SceneBuilder()
+    .setBounds(bounds)               // Required for spatial indexing
+    .setViewState(view_state)        // Optional: set V/P matrices
+    .addEventSeries("trial1", series1, layout1, time_frame)  // Creates GlyphBatch + spatial entry
+    .addEventSeries("trial2", series2, layout2, time_frame)  // Creates GlyphBatch + spatial entry
+    .addIntervalSeries("stim", intervals, interval_layout, time_frame)  // Creates RectangleBatch
+    .build();  // Automatically builds spatial index from all discrete elements
+
+// The scene now contains:
+// - glyph_batches with positioned events
+// - rectangle_batches with positioned intervals
+// - spatial_index (QuadTree) built from all discrete elements
+// - view_matrix, projection_matrix
+
+// For custom geometry, low-level batch methods are still available:
+SceneBuilder builder;
+builder.setBounds(bounds)
+       .addPolyLineBatch(custom_polyline_batch)
+       .addGlyphBatch(custom_glyph_batch)
+       .buildSpatialIndex(bounds);  // Manual spatial index for low-level batches
+auto scene = builder.build();
 ```
 
 **Query flow with scene-owned index:**
@@ -791,7 +791,7 @@ src/CorePlotting/
 ├── SceneGraph/                    # The "What to Draw" (output of layout)
 │   ├── RenderableScene.hpp        # Complete frame description
 │   ├── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, Glyph)
-│   └── SceneBuilder.hpp           # Helpers to construct scenes
+│   └── SceneBuilder.hpp           # Fluent builder with high-level data series methods
 │
 ├── Layout/                        # The "Where Things Go" (positioning logic)
 │   ├── LayoutEngine.hpp           # Main layout coordinator

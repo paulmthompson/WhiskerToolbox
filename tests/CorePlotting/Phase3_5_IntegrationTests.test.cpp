@@ -23,6 +23,7 @@
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
+#include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/SpatialAdapter/EventSpatialAdapter.hpp"
 #include "CorePlotting/SpatialAdapter/PointSpatialAdapter.hpp"
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp"
@@ -850,6 +851,209 @@ TEST_CASE("TimeRange integration with TimeFrame bounds",
         REQUIRE(range.end <= range.max_bound);
         REQUIRE(range.start >= range.min_bound);
         REQUIRE(range.getWidth() == 200);
+    }
+}
+
+
+// ============================================================================
+// Test Scenario 7: SceneBuilder High-Level API
+// ============================================================================
+
+TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial index",
+          "[CorePlotting][Integration][Phase3.5][SceneBuilder]") {
+    
+    auto time_frame = createSimpleTimeFrame(1000);
+    EntityRegistry registry;
+    
+    auto events1 = createEventSeries({100, 200, 300}, "series1", registry);
+    events1->setTimeFrame(time_frame);
+    
+    auto events2 = createEventSeries({150, 250}, "series2", registry);
+    events2->setTimeFrame(time_frame);
+    
+    // Layout the series
+    LayoutRequest request;
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+    request.series = {
+        {"series1", SeriesType::DigitalEvent, true},
+        {"series2", SeriesType::DigitalEvent, true}
+    };
+    
+    RowLayoutStrategy strategy;
+    LayoutResponse layout = strategy.compute(request);
+    
+    auto const* layout1 = layout.findLayout("series1");
+    auto const* layout2 = layout.findLayout("series2");
+    REQUIRE(layout1 != nullptr);
+    REQUIRE(layout2 != nullptr);
+    
+    SECTION("SceneBuilder creates batches and spatial index automatically") {
+        BoundingBox bounds(0.0f, -2.0f, 500.0f, 2.0f);
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .setMatrices(glm::mat4(1.0f), glm::mat4(1.0f))
+            .addEventSeries("series1", *events1, *layout1, *time_frame)
+            .addEventSeries("series2", *events2, *layout2, *time_frame)
+            .build();
+        
+        // Verify glyph batches were created
+        REQUIRE(scene.glyph_batches.size() == 2);
+        REQUIRE(scene.glyph_batches[0].positions.size() == 3);  // 3 events in series1
+        REQUIRE(scene.glyph_batches[1].positions.size() == 2);  // 2 events in series2
+        
+        // Verify spatial index was built automatically
+        REQUIRE(scene.spatial_index != nullptr);
+        REQUIRE(scene.spatial_index->size() == 5);  // Total 5 events
+    }
+    
+    SECTION("Spatial index from SceneBuilder allows hit testing") {
+        BoundingBox bounds(0.0f, -2.0f, 500.0f, 2.0f);
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .setMatrices(glm::mat4(1.0f), glm::mat4(1.0f))
+            .addEventSeries("series1", *events1, *layout1, *time_frame)
+            .addEventSeries("series2", *events2, *layout2, *time_frame)
+            .build();
+        
+        // Query for event at time 100 in series1's row
+        float y1 = layout1->result.allocated_y_center;
+        auto const* hit1 = scene.spatial_index->findNearest(100.0f, y1, 20.0f);
+        REQUIRE(hit1 != nullptr);
+        REQUIRE(hit1->data == events1->getEntityIds()[0]);
+        
+        // Query for event at time 150 in series2's row
+        float y2 = layout2->result.allocated_y_center;
+        auto const* hit2 = scene.spatial_index->findNearest(150.0f, y2, 20.0f);
+        REQUIRE(hit2 != nullptr);
+        REQUIRE(hit2->data == events2->getEntityIds()[0]);
+    }
+    
+    SECTION("SceneBuilder distinguishes rows by Y position") {
+        BoundingBox bounds(0.0f, -2.0f, 500.0f, 2.0f);
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .addEventSeries("series1", *events1, *layout1, *time_frame)
+            .addEventSeries("series2", *events2, *layout2, *time_frame)
+            .build();
+        
+        float y1 = layout1->result.allocated_y_center;
+        float y2 = layout2->result.allocated_y_center;
+        
+        // Event at time 200: only in series1
+        // Query at series1's Y should find it with small tolerance
+        float y_tolerance = std::abs(y1 - y2) / 4.0f;  // Less than half the row spacing
+        auto const* r1 = scene.spatial_index->findNearest(200.0f, y1, y_tolerance);
+        REQUIRE(r1 != nullptr);
+        REQUIRE(r1->data == events1->getEntityIds()[1]);
+        
+        // Query at series2's Y with small tolerance should find series2's event only
+        // series2 has events at 150, 250 - closest to 200 is either one
+        auto const* r2 = scene.spatial_index->findNearest(200.0f, y2, y_tolerance);
+        if (r2 != nullptr) {
+            // Should be from series2, not series1
+            bool is_series2_event = (r2->data == events2->getEntityIds()[0] || 
+                                     r2->data == events2->getEntityIds()[1]);
+            REQUIRE(is_series2_event);
+        }
+    }
+}
+
+
+TEST_CASE("Scenario 8: SceneBuilder with interval series",
+          "[CorePlotting][Integration][Phase3.5][SceneBuilder][Intervals]") {
+    
+    auto time_frame = createSimpleTimeFrame(1000);
+    EntityRegistry registry;
+    
+    auto intervals = createIntervalSeries(
+        {{100, 200}, {400, 600}},
+        "intervals",
+        registry
+    );
+    intervals->setTimeFrame(time_frame);
+    
+    // Layout
+    LayoutRequest request;
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+    request.series = {{"intervals", SeriesType::DigitalInterval, false}};
+    
+    StackedLayoutStrategy strategy;
+    LayoutResponse layout = strategy.compute(request);
+    
+    auto const* interval_layout = layout.findLayout("intervals");
+    REQUIRE(interval_layout != nullptr);
+    
+    SECTION("SceneBuilder creates rectangle batch for intervals") {
+        BoundingBox bounds(0.0f, -2.0f, 1000.0f, 2.0f);
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .addIntervalSeries("intervals", *intervals, *interval_layout, *time_frame)
+            .build();
+        
+        // Verify rectangle batch was created
+        REQUIRE(scene.rectangle_batches.size() == 1);
+        REQUIRE(scene.rectangle_batches[0].bounds.size() == 2);
+        
+        // Verify spatial index was built
+        REQUIRE(scene.spatial_index != nullptr);
+        REQUIRE(scene.spatial_index->size() == 2);
+    }
+    
+    SECTION("Interval rectangles have correct bounds") {
+        BoundingBox bounds(0.0f, -2.0f, 1000.0f, 2.0f);
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .addIntervalSeries("intervals", *intervals, *interval_layout, *time_frame)
+            .build();
+        
+        auto const& rect_batch = scene.rectangle_batches[0];
+        
+        // First interval [100, 200]
+        auto const& rect0 = rect_batch.bounds[0];  // {x, y, width, height}
+        REQUIRE_THAT(rect0.x, WithinAbs(100.0f, 0.1f));  // Start X
+        REQUIRE_THAT(rect0.z, WithinAbs(100.0f, 0.1f));  // Width = 200-100
+        
+        // Second interval [400, 600]
+        auto const& rect1 = rect_batch.bounds[1];
+        REQUIRE_THAT(rect1.x, WithinAbs(400.0f, 0.1f));  // Start X
+        REQUIRE_THAT(rect1.z, WithinAbs(200.0f, 0.1f));  // Width = 600-400
+    }
+    
+    SECTION("SceneBuilder provides batch key mapping") {
+        BoundingBox bounds(0.0f, -2.0f, 1000.0f, 2.0f);
+        
+        SceneBuilder builder;
+        builder.setBounds(bounds)
+               .addIntervalSeries("intervals", *intervals, *interval_layout, *time_frame);
+        
+        // Capture key map BEFORE build (it's cleared in build())
+        std::map<size_t, std::string> key_map = builder.getRectangleBatchKeyMap();
+        REQUIRE(key_map.size() == 1);
+        REQUIRE(key_map.at(0) == "intervals");
+        
+        // Build scene
+        auto scene = builder.build();
+        
+        // Use captured key map with SceneHitTester
+        SceneHitTester tester;
+        auto hit = tester.queryIntervals(150.0f, 0.0f, scene, key_map);
+        
+        REQUIRE(hit.hasHit());
+        REQUIRE(hit.series_key == "intervals");
+        REQUIRE(hit.interval_start.value() == 100);
+        REQUIRE(hit.interval_end.value() == 200);
     }
 }
 

@@ -353,13 +353,38 @@ These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This g
     - Tests zoom/scroll operations respect TimeFrame bounds
     - Tests setCenterAndZoom maintains center when possible, shifts near edges
 
+- [x] **Scenario 7-8: SceneBuilder High-Level API**
+    - Tests SceneBuilder.addEventSeries() creates glyph batches with correct positions
+    - Tests SceneBuilder.addIntervalSeries() creates rectangle batches with correct bounds
+    - Tests automatic spatial index construction from discrete series
+    - Tests batch key mapping for interval hit testing
+
 **Test Characteristics:**
 - Uses real `DigitalEventSeries`, `DigitalIntervalSeries`, `TimeFrame` types
 - Uses real `LayoutEngine` with `StackedLayoutStrategy` and `RowLayoutStrategy`
 - Uses real `SceneHitTester` and `IntervalDragController`
-- Uses real QuadTree spatial indexing via `EventSpatialAdapter`
+- Uses real QuadTree spatial indexing via `EventSpatialAdapter` and `SceneBuilder`
 - No mocks — all production code paths
-- 123 assertions across 7 test cases
+- 157 assertions across 9 test cases
+
+### 3.6 SceneBuilder Enhancement ✅
+**Goal:** Elevate SceneBuilder from low-level batch assembly to high-level data series API.
+
+**Problem:** Original tests bypassed SceneBuilder and manually built QuadTree spatial indices, creating an architectural gap where rendered geometry and spatial index could diverge.
+
+**Solution:** Enhanced SceneBuilder with:
+- `setBounds(BoundingBox)`: Required first step, defines QuadTree coverage
+- `addEventSeries(key, series, layout, time_frame)`: Creates GlyphBatch AND registers for spatial index
+- `addIntervalSeries(key, series, layout, time_frame)`: Creates RectangleBatch AND registers for spatial index
+- `build()`: Automatically constructs spatial index from all pending discrete series
+- `getRectangleBatchKeyMap()`: Returns batch index → series key mapping for hit testing
+
+**Key Insight:** Bounds are now a first-class input (not an afterthought). When discrete elements are added, the spatial index is built automatically in `build()`, ensuring perfect synchronization between rendered geometry and hit testing.
+
+**Implementation:**
+- [SceneBuilder.hpp](SceneGraph/SceneBuilder.hpp) - High-level API with PendingEventSeries/PendingIntervalSeries structs
+- [SceneBuilder.cpp](SceneGraph/SceneBuilder.cpp) - Implementation with automatic spatial index construction
+- [Phase3_5_IntegrationTests.test.cpp](/tests/CorePlotting/Phase3_5_IntegrationTests.test.cpp) - Scenarios 7-8 demonstrate new API
 
 ---
 
