@@ -404,263 +404,59 @@ This doesn't generalize to:
 
 **Solution:** Separate **coordinate mapping** (visualization-specific) from **scene building** (generic).
 
-### 3.7.1 Create Range-Based Mapper Infrastructure
+### 3.7.1 Create Range-Based Mapper Infrastructure ✅
 
 **Design Principle:** Mappers return **ranges/views**, not vectors. This enables:
 - Zero-copy: Data flows directly from source → GPU buffer + QuadTree
 - Single traversal: x, y, and entity_id extracted together in one pass
 - Data source controls iteration: Each data type knows how to efficiently access its storage
 
-- [ ] **Create `MappedElement.hpp`** in `CorePlotting/Mappers/`:
-    ```cpp
-    // Element types yielded by mapper ranges
-    struct MappedElement {
-        float x;
-        float y;
-        EntityId entity_id;
-    };
-    
-    struct MappedRectElement {
-        float x, y, width, height;
-        EntityId entity_id;
-    };
-    
-    struct MappedVertex {
-        float x;
-        float y;
-        // EntityId typically per-line, not per-vertex
-    };
-    ```
+**Implementation:** Located in `CorePlotting/Mappers/`
 
-- [ ] **Create `MapperConcepts.hpp`** with C++20 concepts:
-    ```cpp
-    template<typename R>
-    concept MappedElementRange = std::ranges::input_range<R> &&
-        std::same_as<std::ranges::range_value_t<R>, MappedElement>;
-    
-    template<typename R>
-    concept MappedRectRange = std::ranges::input_range<R> &&
-        std::same_as<std::ranges::range_value_t<R>, MappedRectElement>;
-    
-    template<typename R>
-    concept MappedVertexRange = std::ranges::input_range<R> &&
-        std::same_as<std::ranges::range_value_t<R>, MappedVertex>;
-    
-    // For multi-line data (LineData, event-aligned traces)
-    template<typename R>
-    concept MappedLineRange = std::ranges::input_range<R> &&
-        requires(std::ranges::range_value_t<R> line) {
-            { line.entity_id } -> std::convertible_to<EntityId>;
-            { line.vertices() } -> std::ranges::input_range;
-        };
-    ```
+- [x] **`MappedElement.hpp`** — Element types yielded by mapper ranges:
+    - `MappedElement` (x, y, entity_id) with `position()` → `glm::vec2`
+    - `MappedRectElement` (x0, y0, x1, y1, entity_id) with `bounds()` → `glm::vec4`
+    - `MappedVertex` (x, y) for line vertices
 
-- [ ] **Create `MappedLineView.hpp`** for multi-line ranges:
-    ```cpp
-    // View over a single mapped line with lazy vertex iteration
-    struct MappedLineView {
-        EntityId entity_id;
-        
-        // Returns transformed vertices as a range (lazy, zero-copy)
-        // Implementation holds reference to source data + transform closure
-        auto vertices() const -> /* range of glm::vec2 */;
-    };
-    ```
+- [x] **`MapperConcepts.hpp`** — C++20 concepts for type constraints:
+    - `MappedElementLike`, `MappedRectLike`, `MappedVertexLike` — element type detection
+    - `MappedLineViewLike` — multi-vertex line with entity_id
+    - `MappedElementRange`, `MappedRectRange`, `MappedLineRange` — range constraints
 
-- [ ] **Create `TimeSeriesMapper.hpp`** returning ranges:
-    ```cpp
-    namespace TimeSeriesMapper {
-        // Returns range of MappedElement (x=time, y=layout.y_center)
-        auto mapEvents(
-            DigitalEventSeries const& series,
-            TimeFrame const& time_frame,
-            SeriesLayout const& layout) -> /* MappedElementRange */;
-        
-        // Returns range of MappedRectElement
-        auto mapIntervals(
-            DigitalIntervalSeries const& series,
-            TimeFrame const& time_frame,
-            SeriesLayout const& layout) -> /* MappedRectRange */;
-        
-        // Returns range of MappedVertex
-        auto mapAnalog(
-            AnalogTimeSeries const& series,
-            TimeFrame const& time_frame,
-            SeriesLayout const& layout,
-            TimeFrameIndex start,
-            TimeFrameIndex end) -> /* MappedVertexRange */;
-    }
-    ```
+- [x] **`MappedLineView.hpp`** — Line view types for polyline data:
+    - `MappedLineView<R>` — generic wrapper over any vertex range
+    - `SpanLineView`, `OwningLineView` — concrete view types
+    - `TransformingLineView<T>` — lazy vertex transformation
+    - Factory functions: `makeLineView()`, `makeTimeSeriesLineView()`
 
-- [ ] **Create `SpatialMapper.hpp`** for direct x/y extraction:
-    ```cpp
-    namespace SpatialMapper {
-        // Returns range yielding {point.x, point.y, point.entity_id}
-        auto mapPoints(
-            PointData const& points,
-            TimeFrameIndex at_time,
-            SeriesLayout const& layout) -> /* MappedElementRange */;
-        
-        // Returns MappedLineRange - each line has entity_id + vertices sub-range
-        auto mapLines(
-            LineData const& lines,
-            TimeFrameIndex at_time,
-            SeriesLayout const& layout) -> /* MappedLineRange */;
-    }
-    ```
+- [x] **`TimeSeriesMapper.hpp`** — DataViewer-style time-series mapping:
+    - `mapEvents()`, `mapEventsInRange()` — DigitalEventSeries → MappedElement range
+    - `mapIntervals()`, `mapIntervalsInRange()` — DigitalIntervalSeries → MappedRectElement range
+    - `mapAnalogSeries()`, `mapAnalogSeriesFull()` — AnalogTimeSeries → MappedLineView
+    - Both lazy range versions and materialized `*ToVector()` versions
 
-- [ ] **Create `RasterMapper.hpp`** for relative-time mapping:
-    ```cpp
-    namespace RasterMapper {
-        // Returns range with x = relative_time(event, reference)
-        auto mapEventsRelative(
-            DigitalEventSeries const& series,
-            TimeFrame const& time_frame,
-            int64_t reference_time,
-            float time_window,
-            SeriesLayout const& layout) -> /* MappedElementRange */;
-    }
-    ```
+- [x] **`SpatialMapper.hpp`** — SpatialOverlay-style spatial mapping:
+    - `mapPointsAtTime()` — PointData → vector of MappedElement
+    - `mapPoint()`, `mapPoints()` — individual/range point mapping
+    - `mapLinesAtTime()`, `mapLine()`, `mapLineLazy()` — LineData → OwningLineView
+    - All functions support coordinate transformation (scale/offset)
 
-- [ ] **Create `EventAlignedMapper.hpp`** for event-aligned analog traces (PSTH-style):
-    ```cpp
-    namespace EventAlignedMapper {
-        enum class TrialLayoutMode {
-            Overlaid,   // All trials at same Y, differentiated by color/alpha
-            Stacked,    // Each trial gets vertical offset (waterfall plot)
-            Averaged    // Compute mean ± SEM, single line with error band
-        };
-        
-        // Each alignment event produces one polyline (one "trial")
-        // X = relative time from alignment event
-        // Y = analog value (optionally stacked per trial)
-        auto mapTrials(
-            AnalogTimeSeries const& series,
-            DigitalEventSeries const& align_events,
-            TimeFrame const& analog_tf,
-            TimeFrame const& events_tf,
-            float window_before,      // e.g., 0.5 seconds before event
-            float window_after,       // e.g., 1.0 seconds after event
-            TrialLayoutMode layout_mode,
-            SeriesLayout const& layout) -> /* MappedLineRange */;
-    }
-    ```
-    
-    **Implementation approach:**
-    ```cpp
-    auto mapTrials(...) {
-        return align_events.getAllEvents()
-             | std::views::transform([&](auto const& event) {
-                   auto event_abs_time = events_tf.getTimeAtIndex(event.time);
-                   auto start_idx = analog_tf.getIndexAtTime(event_abs_time - window_before);
-                   auto end_idx = analog_tf.getIndexAtTime(event_abs_time + window_after);
-                   
-                   return MappedLineView{
-                       .entity_id = event.entity_id,  // Trial identified by alignment event
-                       ._vertices = series.getSamplesInRange(start_idx, end_idx)
-                           | std::views::transform([&](auto const& sample) {
-                                 float rel_time = analog_tf.getTimeAtIndex(sample.index) - event_abs_time;
-                                 float x = layout.x_transform.apply(rel_time);
-                                 float y = layout.y_transform.apply(sample.value);
-                                 return glm::vec2{x, y};
-                             })
-                   };
-               });
-    }
-    ```
+- [x] **`RasterMapper.hpp`** — PSTH/raster plot relative time mapping:
+    - `mapEventsRelative()` — events relative to reference time
+    - `mapEventsInWindow()` — events within time window
+    - `mapTrials()` — event-aligned trial views
+    - `computeRowYCenter()`, `makeRowLayout()` — row positioning utilities
 
-- [ ] **Consider adding mapped views to DataManager types** (optional optimization):
-    ```cpp
-    // In PointData - single traversal yielding {x, y, entity_id}
-    auto PointData::viewAtTime(TimeFrameIndex time, SeriesLayout const& layout) const;
-    
-    // In DigitalEventSeries - yields {time, layout.y_center, entity_id}
-    auto DigitalEventSeries::viewMapped(TimeFrame const& tf, SeriesLayout const& layout) const;
-    ```
+**Tests:** [Mappers.test.cpp](/tests/CorePlotting/Mappers.test.cpp) — 19 test cases, 111 assertions ✓
 
 ### 3.7.2 Refactor SceneBuilder to Range-Based API
 
 - [ ] **Add range-consuming methods to SceneBuilder**:
-    ```cpp
-    // NEW: Range-based API - consumes directly into GPU buffer + spatial index
-    template<MappedElementRange R>
-    SceneBuilder& addGlyphs(
-        std::string const& key,
-        R&& elements,
-        GlyphStyle const& style = {});
-    
-    template<MappedRectRange R>
-    SceneBuilder& addRectangles(
-        std::string const& key,
-        R&& elements,
-        RectangleStyle const& style = {});
-    
-    template<MappedVertexRange R>
-    SceneBuilder& addPolyLine(
-        std::string const& key,
-        R&& vertices,
-        EntityId line_entity_id,  // Single EntityId for entire line
-        PolyLineStyle const& style = {});
-    
-    // For multi-line data (LineData, event-aligned traces)
-    // NOTE: No spatial index insertion - use compute shader for hit testing
-    template<MappedLineRange R>
-    SceneBuilder& addPolyLines(
-        std::string const& key,
-        R&& lines,
-        PolyLineStyle const& style = {});
-    ```
-
-- [ ] **Implementation for addPolyLines (no spatial index)**:
-    ```cpp
-    template<MappedLineRange R>
-    SceneBuilder& SceneBuilder::addPolyLines(std::string const& key, R&& lines, PolyLineStyle const& style) {
-        RenderablePolyLineBatch batch;
-        batch.key = key;
-        
-        for (auto const& line : lines) {
-            size_t start_vertex = batch.vertices.size() / 2;
-            
-            for (auto const& v : line.vertices()) {
-                batch.vertices.push_back(v.x);
-                batch.vertices.push_back(v.y);
-            }
-            
-            size_t vertex_count = (batch.vertices.size() / 2) - start_vertex;
-            batch.line_lengths.push_back(static_cast<int32_t>(vertex_count));
-            batch.entity_ids.push_back(line.entity_id);
-            
-            // NOTE: No QuadTree insertion for dense line data
-            // Hit testing handled by compute shader at widget layer
-        }
-        
-        _scene.polyline_batches.push_back(std::move(batch));
-        return *this;
-    }
-    ```
-
-- [ ] **Implementation populates both targets in single traversal**:
-    ```cpp
-    template<MappedElementRange R>
-    SceneBuilder& SceneBuilder::addGlyphs(std::string const& key, R&& elements, GlyphStyle const& style) {
-        RenderableGlyphBatch batch;
-        batch.glyph_type = style.glyph_type;
-        batch.size = style.size;
-        
-        for (auto const& elem : elements) {
-            // Single traversal populates BOTH rendering batch AND spatial index
-            batch.positions.emplace_back(elem.x, elem.y);
-            batch.entity_ids.push_back(elem.entity_id);
-            
-            if (_spatial_index) {
-                _spatial_index->insert(elem.x, elem.y, elem.entity_id);
-            }
-        }
-        
-        _scene.glyph_batches.push_back(std::move(batch));
-        return *this;
-    }
-    ```
+    - `addGlyphs<R>(key, elements, style)` — consumes `MappedElementRange`
+    - `addRectangles<R>(key, elements, style)` — consumes `MappedRectRange`
+    - `addPolyLine<R>(key, vertices, entity_id, style)` — single line from `MappedVertexRange`
+    - `addPolyLines<R>(key, lines, style)` — multiple lines from `MappedLineRange`
+    - Single traversal populates both GPU buffer and spatial index
 
 - [ ] **Deprecate data-type-specific methods**:
     - Mark `addEventSeries()`, `addIntervalSeries()` as `[[deprecated]]`
@@ -668,14 +464,7 @@ This doesn't generalize to:
     - Remove in Phase 5 after widget migration
 
 - [ ] **Keep span-based overloads for pre-materialized data**:
-    ```cpp
-    // For cases where vectors already exist (legacy code, test fixtures)
-    SceneBuilder& addGlyphs(
-        std::string const& key,
-        std::span<glm::vec2 const> positions,
-        std::span<EntityId const> entity_ids,
-        GlyphStyle const& style = {});
-    ```
+    - For legacy code and test fixtures with existing vectors
 
 ### 3.7.3 Create Plot-Type-Specific Layout Strategies
 
@@ -711,41 +500,18 @@ This doesn't generalize to:
 
 ### 3.7.5 Migration Path for Existing Code
 
-**SceneBuildingHelpers.cpp** currently uses the data-type-specific SceneBuilder API. Migration:
+**SceneBuildingHelpers.cpp** currently uses the data-type-specific SceneBuilder API. Migration approach:
 
-1. Replace `builder.addEventSeries(...)` with range-based call:
-   ```cpp
-   // OLD: Intermediate vectors
-   // auto positions = TimeSeriesMapper::mapEvents(series, time_frame, layout);
-   // builder.addGlyphs(key, positions.positions, positions.entity_ids, style);
-   
-   // NEW: Direct range consumption (zero-copy)
-   builder.addGlyphs(key, 
-                     TimeSeriesMapper::mapEvents(series, time_frame, layout),
-                     style);
-   ```
-
-2. Replace `builder.addIntervalSeries(...)` similarly:
-   ```cpp
-   builder.addRectangles(key,
-                         TimeSeriesMapper::mapIntervals(series, time_frame, layout),
-                         style);
-   ```
-
-3. For SpatialOverlay, leverage data object's mapped view:
-   ```cpp
-   // Optimal: PointData provides single-traversal iteration
-   builder.addGlyphs("whiskers", points.viewAtTime(current_frame, layout));
-   ```
-
-4. Update `Phase3_5_IntegrationTests.test.cpp` to use new API
+1. Replace `builder.addEventSeries(...)` with `builder.addGlyphs(key, TimeSeriesMapper::mapEvents(...), style)`
+2. Replace `builder.addIntervalSeries(...)` with `builder.addRectangles(key, TimeSeriesMapper::mapIntervals(...), style)`
+3. For SpatialOverlay, use `SpatialMapper::mapPointsAtTime()` or `mapLinesAtTime()`
+4. Update integration tests to use new Mapper → SceneBuilder flow
 
 **Benefits of range-based approach:**
 - **Zero-copy**: No intermediate `vector<glm::vec2>` or `vector<EntityId>`
 - **Single traversal**: x, y, entity_id extracted together, fed to both GPU buffer and QuadTree
 - **Composable**: Mappers can use `std::views::transform`, `std::views::filter`, etc.
 - **Gradual migration**: Old vector-based API still works via span overloads
-- **Data object optimization**: Types like PointData can provide highly efficient mapped views
 
 ---
 
@@ -971,15 +737,19 @@ This doesn't generalize to:
 
 ## Summary: What Changes with Position Mappers Architecture
 
-### Components to Create (Phase 3.7)
+### Components Created (Phase 3.7.1 ✅)
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| `MappedElement.hpp` | `Mappers/` | Element types yielded by ranges |
-| `MappedLineView.hpp` | `Mappers/` | Line view type for multi-line ranges (`MappedLineView`, `MappedLineRange`) |
-| `MapperConcepts.hpp` | `Mappers/` | C++20 concepts for range requirements |
-| `TimeSeriesMapper` | `Mappers/` | DataViewer: events→time, analog→time (returns ranges) |
-| `SpatialMapper` | `Mappers/` | SpatialOverlay: points→x/y, lines→MappedLineRange |
-| `RasterMapper` | `Mappers/` | Raster: events→relative time (returns ranges) |
+| `MappedElement.hpp` | `Mappers/` | Element types: `MappedElement`, `MappedRectElement`, `MappedVertex` |
+| `MappedLineView.hpp` | `Mappers/` | Line view types: `MappedLineView<R>`, `SpanLineView`, `OwningLineView` |
+| `MapperConcepts.hpp` | `Mappers/` | C++20 concepts: `MappedElementRange`, `MappedRectRange`, `MappedLineRange` |
+| `TimeSeriesMapper.hpp` | `Mappers/` | DataViewer: `mapEvents()`, `mapIntervals()`, `mapAnalogSeries()` |
+| `SpatialMapper.hpp` | `Mappers/` | SpatialOverlay: `mapPointsAtTime()`, `mapLinesAtTime()` |
+| `RasterMapper.hpp` | `Mappers/` | Raster: `mapEventsRelative()`, `mapTrials()` |
+
+### Components to Create (Phase 3.7.2+)
+| Component | Location | Purpose |
+|-----------|----------|---------|
 | `EventAlignedMapper` | `Mappers/` | Event-aligned analog traces: analog+events→MappedLineRange |
 | `SpatialLayoutStrategy` | `Layout/` | Simple bounds-fitting layout |
 
