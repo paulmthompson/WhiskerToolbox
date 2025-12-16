@@ -1105,6 +1105,7 @@ void OpenGLWidget::addAnalogTimeSeries(
             std::move(series),
             std::move(display_options)};
 
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
@@ -1113,6 +1114,7 @@ void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
     if (item != _analog_series.end()) {
         _analog_series.erase(item);
     }
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
@@ -1131,6 +1133,7 @@ void OpenGLWidget::addDigitalEventSeries(
             std::move(series),
             std::move(display_options)};
 
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
@@ -1139,6 +1142,7 @@ void OpenGLWidget::removeDigitalEventSeries(std::string const & key) {
     if (item != _digital_event_series.end()) {
         _digital_event_series.erase(item);
     }
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
@@ -1157,6 +1161,7 @@ void OpenGLWidget::addDigitalIntervalSeries(
             std::move(series),
             std::move(display_options)};
 
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
@@ -1165,11 +1170,13 @@ void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
     if (item != _digital_interval_series.end()) {
         _digital_interval_series.erase(item);
     }
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
 void OpenGLWidget::clearSeries() {
     _analog_series.clear();
+    _layout_response_dirty = true;
     updateCanvas(_time);
 }
 
@@ -1366,39 +1373,53 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
 
 // Interval edge dragging methods
 std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
+    // Phase 4.3 migration: Use CorePlotting TimeAxisCoordinates for coordinate conversion
+    
+    static_cast<void>(canvas_y);  // Y not used for edge detection
 
-    static_cast<void>(canvas_y);
-
-    float const time_coord = canvasXToTime(canvas_x);
+    // Use CorePlotting time axis utilities for coordinate conversion
+    CorePlotting::TimeAxisParams const time_params(
+        _xAxis.getStart(),
+        _xAxis.getEnd(),
+        width()
+    );
+    
+    // Convert canvas position to time using CorePlotting utility
+    float const time_coord = CorePlotting::canvasXToTime(canvas_x, time_params);
+    
+    // Configure hit test tolerance
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
+    
+    // Calculate time tolerance from pixel tolerance
+    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) / 
+                                  static_cast<float>(time_params.viewport_width_px);
+    float const time_tolerance = EDGE_TOLERANCE_PX * time_per_pixel;
 
     // Only check selected intervals
     for (auto const & [series_key, interval_bounds]: _selected_intervals) {
         auto const [start_time, end_time] = interval_bounds;
-
-        // Convert interval bounds to canvas coordinates
+        
         auto const start_time_f = static_cast<float>(start_time);
         auto const end_time_f = static_cast<float>(end_time);
 
-        // Check if we're within the interval's time range (with some tolerance)
-        if (time_coord >= start_time_f - EDGE_TOLERANCE_PX && time_coord <= end_time_f + EDGE_TOLERANCE_PX) {
-            // Convert time coordinates to canvas X positions for pixel-based tolerance
-            float const canvas_width = static_cast<float>(width());
-            auto const start_time_canvas = static_cast<float>(_xAxis.getStart());
-            auto const end_time_canvas = static_cast<float>(_xAxis.getEnd());
+        // Quick bounds check with tolerance (in time units)
+        if (time_coord < start_time_f - time_tolerance || 
+            time_coord > end_time_f + time_tolerance) {
+            continue;
+        }
 
-            float const start_canvas_x = (start_time_f - start_time_canvas) / (end_time_canvas - start_time_canvas) * canvas_width;
-            float const end_canvas_x = (end_time_f - start_time_canvas) / (end_time_canvas - start_time_canvas) * canvas_width;
+        // Convert interval edges to canvas coordinates using CorePlotting utility
+        float const start_canvas_x = CorePlotting::timeToCanvasX(start_time_f, time_params);
+        float const end_canvas_x = CorePlotting::timeToCanvasX(end_time_f, time_params);
 
-            // Check if we're close to the left edge
-            if (std::abs(canvas_x - start_canvas_x) <= EDGE_TOLERANCE_PX) {
-                return std::make_pair(series_key, true);// true = left edge
-            }
+        // Check if we're close to the left edge
+        if (std::abs(canvas_x - start_canvas_x) <= EDGE_TOLERANCE_PX) {
+            return std::make_pair(series_key, true);// true = left edge
+        }
 
-            // Check if we're close to the right edge
-            if (std::abs(canvas_x - end_canvas_x) <= EDGE_TOLERANCE_PX) {
-                return std::make_pair(series_key, false);// false = right edge
-            }
+        // Check if we're close to the right edge
+        if (std::abs(canvas_x - end_canvas_x) <= EDGE_TOLERANCE_PX) {
+            return std::make_pair(series_key, false);// false = right edge
         }
     }
 
@@ -2032,66 +2053,46 @@ void OpenGLWidget::cancelTooltipTimer() {
 }
 
 std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
-    if (!_plotting_manager) {
+    // Use CorePlotting SceneHitTester for series region queries (Phase 4.3 migration)
+    
+    // Rebuild layout if dirty (const_cast needed for lazy evaluation pattern)
+    // Note: This is safe because rebuildLayoutResponse only modifies cache state
+    if (_layout_response_dirty) {
+        const_cast<OpenGLWidget*>(this)->rebuildLayoutResponse();
+    }
+    
+    if (_cached_layout_response.layouts.empty()) {
         return std::nullopt;
     }
 
-    // Convert canvas Y to normalized device coordinates (NDC)
+    // Convert canvas Y to world Y coordinate
     // In OpenGL, Y is inverted: top of window is -1, bottom is +1 in our view
     float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) - canvas_y) / static_cast<float>(height());
 
     // Apply vertical pan offset to get the actual Y position in the coordinate system
-    float const adjusted_y = ndc_y - _verticalPanOffset;
-
-    // Check analog series first (in stacked mode)
-    int analog_index = 0;
-    for (auto const & [key, analog_data]: _analog_series) {
-        if (!analog_data.display_options->style.is_visible) {
-            continue;
+    float const world_y = ndc_y - _verticalPanOffset;
+    
+    // Use SceneHitTester to query series region
+    CorePlotting::HitTestResult result = _hit_tester.querySeriesRegion(
+        canvasXToTime(canvas_x),  // world_x (time coordinate, not used for Y region query)
+        world_y,
+        _cached_layout_response
+    );
+    
+    if (result.hasHit()) {
+        // Determine series type from the key by checking our series maps
+        std::string series_type;
+        if (_analog_series.find(result.series_key) != _analog_series.end()) {
+            series_type = "Analog";
+        } else if (_digital_event_series.find(result.series_key) != _digital_event_series.end()) {
+            series_type = "Event";
+        } else if (_digital_interval_series.find(result.series_key) != _digital_interval_series.end()) {
+            series_type = "Interval";
+        } else {
+            series_type = "Unknown";
         }
-
-        // Get the allocated space for this series
-        float allocated_center = analog_data.display_options->layout.allocated_y_center;
-        float allocated_height = analog_data.display_options->layout.allocated_height;
-
-        // Calculate bounds for this series
-        float const series_y_min = allocated_center - allocated_height * 0.5f;
-        float const series_y_max = allocated_center + allocated_height * 0.5f;
-
-        // Check if mouse Y is within this series' allocated space
-        if (adjusted_y >= series_y_min && adjusted_y <= series_y_max) {
-            return std::make_pair("Analog", key);
-        }
-
-        analog_index++;
-    }
-
-    // Check digital event series (only those in stacked mode)
-    int event_index = 0;
-    for (auto const & [key, event_data]: _digital_event_series) {
-        if (!event_data.display_options->style.is_visible) {
-            continue;
-        }
-
-        // Only check stacked events
-        if (event_data.display_options->display_mode != EventDisplayMode::Stacked) {
-            continue;
-        }
-
-        // Get the allocated space for this series
-        float allocated_center = event_data.display_options->layout.allocated_y_center;
-        float allocated_height = event_data.display_options->layout.allocated_height;
-
-        // Calculate bounds for this series
-        float const series_y_min = allocated_center - allocated_height * 0.5f;
-        float const series_y_max = allocated_center + allocated_height * 0.5f;
-
-        // Check if mouse Y is within this series' allocated space
-        if (adjusted_y >= series_y_min && adjusted_y <= series_y_max) {
-            return std::make_pair("Event", key);
-        }
-
-        event_index++;
+        
+        return std::make_pair(series_type, result.series_key);
     }
 
     return std::nullopt;
@@ -2422,4 +2423,77 @@ void OpenGLWidget::uploadIntervalBatches() {
             _scene_renderer->rectangleRenderer().uploadData(batch);
         }
     }
+}
+
+// =============================================================================
+// Hit Testing Infrastructure (Phase 4.3 Migration)
+// =============================================================================
+
+void OpenGLWidget::rebuildLayoutResponse() {
+    if (!_layout_response_dirty) {
+        return;
+    }
+    
+    _cached_layout_response.layouts.clear();
+    _rectangle_batch_key_map.clear();
+    
+    // Build layout from current series state
+    // Note: This mirrors the layout calculation logic from LayoutCalculator
+    // but produces a CorePlotting::LayoutResponse for use with SceneHitTester
+    
+    int series_index = 0;
+    
+    // Add analog series layouts
+    for (auto const & [key, analog_data] : _analog_series) {
+        if (!analog_data.display_options->style.is_visible) {
+            continue;
+        }
+        
+        CorePlotting::SeriesLayout layout;
+        layout.series_id = key;
+        layout.series_index = series_index++;
+        layout.result.allocated_y_center = analog_data.display_options->layout.allocated_y_center;
+        layout.result.allocated_height = analog_data.display_options->layout.allocated_height;
+        
+        _cached_layout_response.layouts.push_back(layout);
+    }
+    
+    // Add digital event series layouts (only stacked mode participates in layout)
+    for (auto const & [key, event_data] : _digital_event_series) {
+        if (!event_data.display_options->style.is_visible) {
+            continue;
+        }
+        
+        // Only stacked events have meaningful layout regions
+        if (event_data.display_options->display_mode == EventDisplayMode::Stacked) {
+            CorePlotting::SeriesLayout layout;
+            layout.series_id = key;
+            layout.series_index = series_index++;
+            layout.result.allocated_y_center = event_data.display_options->layout.allocated_y_center;
+            layout.result.allocated_height = event_data.display_options->layout.allocated_height;
+            
+            _cached_layout_response.layouts.push_back(layout);
+        }
+    }
+    
+    // Add digital interval series layouts and build batch key map
+    size_t batch_index = 0;
+    for (auto const & [key, interval_data] : _digital_interval_series) {
+        if (!interval_data.display_options->style.is_visible) {
+            continue;
+        }
+        
+        CorePlotting::SeriesLayout layout;
+        layout.series_id = key;
+        layout.series_index = series_index++;
+        layout.result.allocated_y_center = interval_data.display_options->layout.allocated_y_center;
+        layout.result.allocated_height = interval_data.display_options->layout.allocated_height;
+        
+        _cached_layout_response.layouts.push_back(layout);
+        
+        // Track batch index -> series key mapping for interval hit testing
+        _rectangle_batch_key_map[batch_index++] = key;
+    }
+    
+    _layout_response_dirty = false;
 }

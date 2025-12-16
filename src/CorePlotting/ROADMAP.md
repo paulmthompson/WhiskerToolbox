@@ -588,28 +588,36 @@ This doesn't generalize to:
     
 - [x] **Verify:** All existing tests pass, hover behavior unchanged ✓
 
-### 4.3 Migration Step 2: Replace Hit Testing (Medium Risk)
+### 4.3 Migration Step 2: Replace Hit Testing (Medium Risk) ✅
 **Goal:** Replace manual iteration with `SceneHitTester` queries through SceneGraph.
 
-- [ ] **Add `SceneHitTester` to CorePlotting** (Phase 3.3)
-- [ ] **Cache `LayoutResponse` in OpenGLWidget** (rebuilt on series add/remove)
-- [ ] **Replace `findIntervalAtTime()`**:
-    ```cpp
-    std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(
-        std::string const& series_key, float time_coord) const 
-    {
-        auto hit = _hit_tester.hitTest(time_coord, 0.0f, _current_scene, _cached_layout);
-        if (hit.hit_type == HitTestResult::HitType::IntervalBody && 
-            hit.series_key == series_key) {
-            // Get interval bounds from the interval series
-            return getIntervalBoundsForEntity(hit.entity_id.value());
-        }
-        return std::nullopt;
-    }
-    ```
-- [ ] **Replace `findIntervalEdgeAtPosition()`** with `_hit_tester.findIntervalEdge()`
-- [ ] **Replace `findSeriesAtPosition()`** with layout region query
-- [ ] **Verify:** Click-to-select intervals still works
+- [x] **Add `SceneHitTester` to CorePlotting** (Phase 3.3) ✓
+    - `SceneHitTester` already exists in `CorePlotting/Interaction/SceneHitTester.hpp`
+    - Added `_hit_tester` member to `OpenGLWidget`
+    
+- [x] **Cache `LayoutResponse` in OpenGLWidget** (rebuilt on series add/remove) ✓
+    - Added `_cached_layout_response` member
+    - Added `_layout_response_dirty` flag for lazy rebuild
+    - Added `rebuildLayoutResponse()` method that builds layout from DisplayOptions
+    - Series add/remove/clear functions now set `_layout_response_dirty = true`
+    
+- [x] **Replace `findSeriesAtPosition()`** with `SceneHitTester::querySeriesRegion()` ✓
+    - Uses `_hit_tester.querySeriesRegion()` with cached layout
+    - Determines series type from key lookup in series maps
+    - Lazy evaluation pattern for layout rebuild
+    
+- [x] **Replace `findIntervalEdgeAtPosition()`** with CorePlotting coordinate utilities ✓
+    - Uses `CorePlotting::TimeAxisParams` and `CorePlotting::timeToCanvasX()`
+    - Uses `CorePlotting::canvasXToTime()` for time conversion
+    - Calculates time tolerance from pixel tolerance
+    - Still operates on `_selected_intervals` (widget-specific state)
+    
+- [x] **Review `findIntervalAtTime()`** — kept as data query (not scene hit test) ✓
+    - This function queries underlying data series directly by key
+    - Different purpose from scene-based hit testing
+    - No changes needed — already clean and focused
+    
+- [x] **Verify:** All tests pass ✓
 
 ### 4.4 Migration Step 3: Replace Interval Dragging (Medium Risk)
 **Goal:** Extract state machine from widget into testable controller.

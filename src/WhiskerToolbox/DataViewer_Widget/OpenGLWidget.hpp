@@ -2,6 +2,8 @@
 #define OPENGLWIDGET_HPP
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/Interaction/SceneHitTester.hpp"
+#include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "DataViewer/XAxis.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
@@ -575,6 +577,26 @@ private:
     // Flag to enable/disable using the new renderer system
     // Set to false by default for backwards compatibility during migration
     bool _use_scene_renderer{false};
+
+    // CorePlotting hit testing infrastructure (Phase 4.3 migration)
+    // The hit tester provides unified hit testing via SceneHitTester
+    CorePlotting::SceneHitTester _hit_tester;
+    
+    // Cached layout response - rebuilt when series are added/removed
+    // Used by SceneHitTester for series region queries
+    CorePlotting::LayoutResponse _cached_layout_response;
+    bool _layout_response_dirty{true};
+    
+    // Mapping from rectangle batch index to series key (for interval hit testing)
+    std::map<size_t, std::string> _rectangle_batch_key_map;
+    
+    /**
+     * @brief Rebuild the cached LayoutResponse from current series state
+     * 
+     * Called when series are added/removed or layout changes.
+     * The LayoutResponse is used by SceneHitTester for series region queries.
+     */
+    void rebuildLayoutResponse();
 };
 
 namespace TimeSeriesDefaultValues {
