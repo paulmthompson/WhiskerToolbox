@@ -233,200 +233,77 @@ This document outlines the roadmap for consolidating the plotting architecture i
 
 ---
 
-## Phase 3: Coordinate Transform Utilities (Screen ↔ World ↔ Time)
+## Phase 3: Coordinate Transform Utilities (Screen ↔ World ↔ Time) ✅
 **Goal:** Create testable, Qt-independent coordinate conversion functions that replace inline calculations in OpenGLWidget.
 
-### 3.1 Time-Axis Coordinate Transforms
+### 3.1 Time-Axis Coordinate Transforms ✅
 **Current Problem:** `OpenGLWidget::canvasXToTime()` does inline math with widget-specific state.
 
-- [ ] **Create `TimeAxisCoordinates` utility** in `CorePlotting/CoordinateTransform/`:
-    ```cpp
-    struct TimeAxisParams {
-        int64_t time_start;      // From TimeRange
-        int64_t time_end;        // From TimeRange
-        int viewport_width_px;   // Canvas width in pixels
-    };
-    
-    // Canvas X pixel → Time coordinate (float for sub-frame precision)
-    float canvasXToTime(float canvas_x, TimeAxisParams const& params);
-    
-    // Time coordinate → Canvas X pixel
-    float timeToCanvasX(float time, TimeAxisParams const& params);
-    
-    // Time coordinate → Normalized Device Coordinate [-1, 1]
-    float timeToNDC(float time, TimeAxisParams const& params);
-    ```
-    - Location: `CoordinateTransform/TimeAxisCoordinates.hpp`
-    - Tests: Round-trip verification, edge cases at bounds
+- [x] **Create `TimeAxisCoordinates` utility** in `CorePlotting/CoordinateTransform/`:
+    - Location: [CoordinateTransform/TimeAxisCoordinates.hpp](CoordinateTransform/TimeAxisCoordinates.hpp)
+    - Tests: [TimeAxisCoordinates.test.cpp](/tests/CorePlotting/TimeAxisCoordinates.test.cpp)
+    - `TimeAxisParams` struct bundles time_start, time_end, viewport_width_px
+    - `canvasXToTime()`: Canvas X pixel → Time coordinate (float for sub-frame precision)
+    - `timeToCanvasX()`: Time coordinate → Canvas X pixel
+    - `timeToNDC()`: Time coordinate → Normalized Device Coordinate [-1, 1]
+    - `ndcToTime()`: NDC → Time coordinate
+    - `pixelsPerTimeUnit()` and `timeUnitsPerPixel()`: Scale helpers
 
-- [ ] **Integrate with `TimeRange`**:
-    - Add convenience method `TimeRange::toAxisParams(int viewport_width)`
+- [x] **Integration with `TimeRange`**:
+    - Added `TimeRange::toAxisParams(int viewport_width)` convenience method
     - Ensures consistent parameter bundling
 
-### 3.2 World-to-Series Coordinate Queries
+### 3.2 World-to-Series Coordinate Queries ✅
 **Current Problem:** `canvasYToAnalogValue()` has 70 lines duplicating state from multiple sources.
 
-**Better Approach:** Query through the existing hierarchy, not a flattened param struct.
+- [x] **Create `SeriesCoordinateQuery` in `CorePlotting/CoordinateTransform/`**:
+    - Location: [CoordinateTransform/SeriesCoordinateQuery.hpp](CoordinateTransform/SeriesCoordinateQuery.hpp)
+    - Tests: [SeriesCoordinateQuery.test.cpp](/tests/CorePlotting/SeriesCoordinateQuery.test.cpp)
+    - `SeriesQueryResult` struct with series_key, series_local_y, normalized_y, is_within_bounds, series_index
+    - `findSeriesAtWorldY()`: Given world Y, find which series (if any) contains it
+    - `findClosestSeriesAtWorldY()`: Always returns closest series (for gap handling)
+    - `worldYToSeriesLocalY()`: Convert world Y to series-local coordinate
+    - `getSeriesWorldBounds()`: Get allocated min/max Y for a series
+    - `worldYToNormalizedSeriesY()`: Convert world Y to [-1, +1] normalized coordinate
+    - `normalizedSeriesYToWorldY()`: Inverse of above
+    - `screenToWorld()`: Screen coordinates → world coordinates via inverse MVP
 
-- [ ] **Create `SeriesCoordinateQuery` in `CorePlotting/CoordinateTransform/`**:
-    ```cpp
-    /**
-     * @brief Query interface for converting world Y to series-local coordinates.
-     * 
-     * Instead of duplicating LayoutEngine and ViewState data into a flat struct,
-     * this function queries the existing objects directly.
-     */
-    struct SeriesQueryResult {
-        std::string series_key;
-        float local_y;              // Y coordinate in series-local space
-        float distance_from_center; // How far from series center (for "closest" logic)
-        bool is_within_bounds;      // Whether point is within allocated region
-    };
-    
-    // Given world Y, find which series (if any) contains it
-    std::optional<SeriesQueryResult> findSeriesAtWorldY(
-        float world_y,
-        LayoutResponse const& layout,
-        float tolerance = 0.0f);
-    
-    // Given world Y and a specific series, convert to series-local Y
-    // This is essentially: (world_y - allocated_y_center) 
-    // The data object itself handles any further conversion to data values
-    float worldYToSeriesLocalY(
-        float world_y,
-        SeriesLayout const& series_layout);
-    ```
-
-- [ ] **Let data objects handle their own value conversion**:
-    - `AnalogTimeSeries` knows its own statistics (mean, std_dev)
-    - The series-local Y coordinate is passed to the data object
-    - Data object applies its own scaling/offset interpretation
-    - This respects that not all series are mean-centered
-
-- [ ] **Flow for "canvas Y → data value"**:
-    ```
-    canvas_y 
-      → screenToWorld(canvas_y, view_matrix, proj_matrix) 
-      → findSeriesAtWorldY(world_y, layout_response)
-      → worldYToSeriesLocalY(world_y, series_layout)
-      → [data object interprets local_y based on its properties]
-    ```
-
-### 3.3 Unified Hit Testing Architecture
+### 3.3 Unified Hit Testing Architecture ✅
 **Current Problem:** Multiple ad-hoc functions (`findIntervalAtTime`, `findSeriesAtPosition`, etc.) with inconsistent approaches.
 
-**Better Approach:** A hit tester that orchestrates multiple query strategies through the SceneGraph.
+- [x] **Create `HitTestResult` with flexible payload**:
+    - Location: [Interaction/HitTestResult.hpp](Interaction/HitTestResult.hpp)
+    - Tests: [HitTestResult.test.cpp](/tests/CorePlotting/HitTestResult.test.cpp)
+    - `HitType` enum: None, DigitalEvent, IntervalBody, IntervalEdgeLeft, IntervalEdgeRight, AnalogSeries, Point, PolyLine, SeriesRegion
+    - Factory methods: `eventHit()`, `intervalBodyHit()`, `intervalEdgeHit()`, `analogSeriesHit()`, `pointHit()`, `polyLineHit()`, `seriesRegionHit()`
+    - Comparison operators for priority sorting
 
-- [ ] **Create `HitTestResult` with flexible payload**:
-    ```cpp
-    struct HitTestResult {
-        enum class HitType { 
-            None,
-            AnalogSeries,      // Hit a region owned by an analog series (no EntityId)
-            DigitalEvent,      // Hit a discrete event (has EntityId)
-            IntervalBody,      // Inside an interval (has EntityId)
-            IntervalEdgeLeft,  // Near left edge of interval
-            IntervalEdgeRight, // Near right edge of interval
-        };
-        
-        HitType hit_type{HitType::None};
-        std::string series_key;           // Always present if hit_type != None
-        std::optional<EntityId> entity_id; // Present for events/intervals
-        float world_x;                    // Query point in world coords
-        float world_y;
-        float distance;                   // Distance from hit target
-    };
-    ```
+- [x] **Create `SceneHitTester` that queries RenderableScene**:
+    - Location: [Interaction/SceneHitTester.hpp](Interaction/SceneHitTester.hpp)
+    - Tests: [SceneHitTester.test.cpp](/tests/CorePlotting/SceneHitTester.test.cpp)
+    - `HitTestConfig` struct with point_tolerance, edge_tolerance, prioritize_discrete flag
+    - `hitTest()`: Perform hit test using all available strategies
+    - `queryQuadTree()`: Query spatial index for discrete events
+    - `queryIntervals()`: Check time-based containment for intervals
+    - `findIntervalEdge()`: Specialized query for interval edges (drag handles)
+    - `querySeriesRegion()`: Check if Y is within series' allocated region
+    - `selectBestHit()`: Choose best result when multiple strategies match
 
-- [ ] **Create `SceneHitTester` that queries RenderableScene**:
-    ```cpp
-    class SceneHitTester {
-    public:
-        /**
-         * @brief Perform hit test using all available strategies.
-         * 
-         * Strategies are tried based on what's in the scene:
-         * 1. QuadTree query for events (RenderableGlyphBatch)
-         * 2. Time-based containment for intervals (RenderableRectangleBatch)
-         * 3. Y-offset checking for analog series regions
-         * 
-         * Returns the closest/best match across all strategies.
-         */
-        HitTestResult hitTest(
-            float world_x, 
-            float world_y,
-            RenderableScene const& scene,
-            LayoutResponse const& layout,
-            float tolerance = 5.0f) const;
-        
-        /**
-         * @brief Specialized query for interval edges (drag handles).
-         */
-        std::optional<HitTestResult> findIntervalEdge(
-            float world_x,
-            RenderableScene const& scene,
-            std::map<std::string, std::pair<int64_t, int64_t>> const& selected_intervals,
-            float edge_tolerance = 10.0f) const;
-            
-    private:
-        // Strategy implementations
-        std::optional<HitTestResult> queryQuadTree(float x, float y, 
-            RenderableScene const& scene, float tolerance) const;
-        std::optional<HitTestResult> queryIntervalContainment(float x,
-            RenderableScene const& scene) const;
-        std::optional<HitTestResult> querySeriesRegion(float y,
-            LayoutResponse const& layout) const;
-    };
-    ```
-
-- [ ] **Strategy details**:
-    - **QuadTree**: For `RenderableGlyphBatch` (events, points). Returns EntityId.
-    - **Interval containment**: For `RenderableRectangleBatch`. Check if world_x is within [start, end]. Returns EntityId.
-    - **Series region**: For analog series. Check if world_y is within series' allocated region. Returns series_key only (no EntityId for continuous data).
-
-- [ ] **"Closest match" logic**:
-    - Run all applicable strategies
-    - Compare distances
-    - Return best match (e.g., event point beats analog region if both are close)
-
-### 3.4 Interval Dragging State Machine
+### 3.4 Interval Dragging State Machine ✅
 **Current Problem:** `startIntervalDrag()`, `updateIntervalDrag()`, `finishIntervalDrag()` spread across 400+ lines.
 
-- [ ] **Create `IntervalDragController`** in `CorePlotting/Interaction/`:
-    ```cpp
-    struct IntervalDragState {
-        std::string series_key;
-        bool is_left_edge;
-        int64_t original_start;
-        int64_t original_end;
-        int64_t current_start;
-        int64_t current_end;
-        int64_t min_allowed;        // Constraint: can't cross other edge
-        int64_t max_allowed;
-        bool is_active{false};
-    };
-    
-    class IntervalDragController {
-    public:
-        // Returns true if drag started, false if no valid target
-        bool tryStartDrag(HitTestResult const& hit, 
-                         int64_t current_start, int64_t current_end);
-        
-        // Update position given world X coordinate
-        int64_t updateDrag(float world_x);
-        
-        // Commit or cancel
-        std::optional<std::pair<int64_t, int64_t>> finishDrag();
-        void cancelDrag();
-        
-        IntervalDragState const& getState() const;
-    };
-    ```
-    - Location: `CorePlotting/Interaction/IntervalDragController.hpp`
-    - Testable without Qt: just pass world coordinates
-    - Widget only calls these methods, doesn't manage state
+- [x] **Create `IntervalDragController`** in `CorePlotting/Interaction/`:
+    - Location: [Interaction/IntervalDragController.hpp](Interaction/IntervalDragController.hpp)
+    - Tests: [IntervalDragController.test.cpp](/tests/CorePlotting/IntervalDragController.test.cpp)
+    - `IntervalDragState` struct with series_key, is_left_edge, original/current start/end times, constraints
+    - `IntervalDragConfig` struct with min_interval_duration, snap_to_frame, enforce_bounds
+    - `startDrag()`: Initialize drag from HitTestResult
+    - `updateDrag()`: Update position given world X coordinate
+    - `finishDrag()`: Commit changes and return final interval
+    - `cancelDrag()`: Restore original values
+    - Constraint enforcement: minimum duration, bounds checking, snap-to-frame
 
-- [ ] **Create `IntervalCreationController`** for double-click-to-create workflow
+- [ ] **Create `IntervalCreationController`** for double-click-to-create workflow (Phase 4)
 
 ### 3.5 Integration Tests: Real Data Types, Plain Language Scenarios
 **Goal:** Verify the complete pipeline from data → layout → scene → hit test using real types.

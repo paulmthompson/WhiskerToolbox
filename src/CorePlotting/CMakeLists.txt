@@ -13,7 +13,9 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/TimeRange.hpp
+    CoordinateTransform/TimeAxisCoordinates.hpp
     CoordinateTransform/TimeFrameAdapters.hpp
+    CoordinateTransform/SeriesCoordinateQuery.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
     Layout/SeriesLayout.hpp
@@ -34,6 +36,9 @@ set(COREPLOTTING_SOURCES
     SpatialAdapter/PointSpatialAdapter.cpp
     SpatialAdapter/PolyLineSpatialAdapter.hpp
     SpatialAdapter/PolyLineSpatialAdapter.cpp
+    Interaction/HitTestResult.hpp
+    Interaction/SceneHitTester.hpp
+    Interaction/IntervalDragController.hpp
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp
 )
