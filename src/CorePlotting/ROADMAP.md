@@ -206,10 +206,13 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Existing battle-tested shaders remain in `src/WhiskerToolbox/shaders/`
     - Hot-reload support available for development workflows
 
-- [ ] **Refactor `SVGExporter`**:
-    - Consume `RenderableScene` instead of querying OpenGLWidget
-    - Iterate batches → write SVG elements
-    - Same coordinate transforms as OpenGL (validates correctness)
+- [x] **Refactor `SVGExporter`** ✓:
+    - Created `CorePlotting/Export/SVGPrimitives.{hpp,cpp}` with batch-to-SVG conversion functions
+    - `renderPolyLineBatchToSVG()`, `renderGlyphBatchToSVG()`, `renderRectangleBatchToSVG()`
+    - `renderSceneToSVG()` and `buildSVGDocument()` for complete scene export
+    - Refactored `SVGExporter` to build `RenderableScene` using `SceneBuildingHelpers`
+    - Same coordinate transforms as OpenGL rendering (validates correctness)
+    - All existing tests passing ✓
 
 ---
 

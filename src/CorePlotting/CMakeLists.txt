@@ -33,6 +33,8 @@ set(COREPLOTTING_SOURCES
     SpatialAdapter/PointSpatialAdapter.cpp
     SpatialAdapter/PolyLineSpatialAdapter.hpp
     SpatialAdapter/PolyLineSpatialAdapter.cpp
+    Export/SVGPrimitives.hpp
+    Export/SVGPrimitives.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}

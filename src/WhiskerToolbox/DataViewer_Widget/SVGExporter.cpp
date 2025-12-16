@@ -1,17 +1,19 @@
 #include "SVGExporter.hpp"
 
-#include "OpenGLWidget.hpp"
-#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
+#include "CorePlotting/Export/SVGPrimitives.hpp"
+#include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "OpenGLWidget.hpp"
+#include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "DataManager/utils/color.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -24,118 +26,123 @@ SVGExporter::SVGExporter(OpenGLWidget * gl_widget, LayoutCalculator * plotting_m
 }
 
 QString SVGExporter::exportToSVG() {
-    svg_elements_.clear();
-
     // Get current visible time range from OpenGL widget
     auto const x_axis = gl_widget_->getXAxis();
     auto const start_time = x_axis.getStart();
     auto const end_time = x_axis.getEnd();
+
+    std::cout << "SVG Export - Time range: " << start_time << " to " << end_time << std::endl;
+    std::cout << "SVG Export - Y range: " << gl_widget_->getYMin() << " to " << gl_widget_->getYMax() << std::endl;
+
+    // Build scene from current plot state
+    CorePlotting::RenderableScene scene = buildScene(start_time, end_time);
+
+    // Set up SVG export parameters
+    CorePlotting::SVGExportParams params;
+    params.canvas_width = svg_width_;
+    params.canvas_height = svg_height_;
+    params.background_color = gl_widget_->getBackgroundColor();
+
+    // Render scene to SVG
+    std::string svg_content = CorePlotting::buildSVGDocument(scene, params);
+
+    // If scalebar is enabled, we need to add it to the document
+    if (scalebar_enabled_) {
+        // Insert scalebar elements before the closing </svg> tag
+        auto scalebar_elements = CorePlotting::createScalebarSVG(
+                scalebar_length_,
+                static_cast<float>(start_time),
+                static_cast<float>(end_time),
+                params);
+
+        // Find position to insert (before </svg>)
+        size_t const close_tag_pos = svg_content.rfind("</svg>");
+        if (close_tag_pos != std::string::npos) {
+            std::string scalebar_content;
+            for (auto const & elem: scalebar_elements) {
+                scalebar_content += "  " + elem + "\n";
+            }
+            svg_content.insert(close_tag_pos, scalebar_content);
+        }
+    }
+
+    return QString::fromStdString(svg_content);
+}
+
+CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_time) const {
+    CorePlotting::RenderableScene scene;
+
     auto const y_min = gl_widget_->getYMin();
     auto const y_max = gl_widget_->getYMax();
 
-    std::cout << "SVG Export - Time range: " << start_time << " to " << end_time << std::endl;
-    std::cout << "SVG Export - Y range: " << y_min << " to " << y_max << std::endl;
+    // Build shared View and Projection matrices
+    CorePlotting::ViewProjectionParams view_params;
+    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
 
-    // Export in same order as OpenGL rendering: intervals first (background), then analog, then events
-    
-    // 1. Export digital interval series (rendered as background)
+    scene.view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
+    scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
+            TimeFrameIndex(start_time), TimeFrameIndex(end_time), y_min, y_max);
+
+    // 1. Build interval batches (rendered as background)
     auto const & interval_series_map = gl_widget_->getDigitalIntervalSeriesMap();
-    for (auto const & [key, interval_data] : interval_series_map) {
+    for (auto const & [key, interval_data]: interval_series_map) {
         if (interval_data.display_options->style.is_visible) {
-            addDigitalIntervalSeries(
-                key,
-                interval_data.series,
-                *interval_data.display_options,
-                static_cast<float>(start_time),
-                static_cast<float>(end_time));
+            auto batch = buildIntervalBatch(
+                    interval_data.series,
+                    *interval_data.display_options,
+                    static_cast<float>(start_time),
+                    static_cast<float>(end_time));
+            if (!batch.bounds.empty()) {
+                scene.rectangle_batches.push_back(std::move(batch));
+            }
         }
     }
 
-    // 2. Export analog time series
+    // 2. Build analog series batches
     auto const & analog_series_map = gl_widget_->getAnalogSeriesMap();
-    for (auto const & [key, analog_data] : analog_series_map) {
+    for (auto const & [key, analog_data]: analog_series_map) {
         if (analog_data.display_options->style.is_visible) {
-            addAnalogSeries(
-                key,
-                analog_data.series,
-                *analog_data.display_options,
-                start_time,
-                end_time);
+            auto batch = buildAnalogBatch(
+                    analog_data.series,
+                    *analog_data.display_options,
+                    start_time,
+                    end_time);
+            if (!batch.vertices.empty()) {
+                scene.poly_line_batches.push_back(std::move(batch));
+            }
         }
     }
 
-    // 3. Export digital event series
+    // 3. Build event series batches
     auto const & event_series_map = gl_widget_->getDigitalEventSeriesMap();
-    for (auto const & [key, event_data] : event_series_map) {
+    for (auto const & [key, event_data]: event_series_map) {
         if (event_data.display_options->style.is_visible) {
-            addDigitalEventSeries(
-                key,
-                event_data.series,
-                *event_data.display_options,
-                start_time,
-                end_time);
+            auto batch = buildEventBatch(
+                    event_data.series,
+                    *event_data.display_options,
+                    start_time,
+                    end_time);
+            if (!batch.positions.empty()) {
+                scene.glyph_batches.push_back(std::move(batch));
+            }
         }
     }
 
-    // 4. Add scalebar if enabled (drawn last so it's on top)
-    if (scalebar_enabled_) {
-        addScalebar(static_cast<float>(start_time), static_cast<float>(end_time));
-    }
+    std::cout << "SVG Export - Built scene with "
+              << scene.rectangle_batches.size() << " interval batches, "
+              << scene.poly_line_batches.size() << " polyline batches, "
+              << scene.glyph_batches.size() << " glyph batches" << std::endl;
 
-    return buildSVGDocument();
+    return scene;
 }
 
-glm::vec2 SVGExporter::transformVertexToSVG(glm::vec4 const & vertex, glm::mat4 const & mvp) const {
-    // Apply MVP transformation to get normalized device coordinates (NDC)
-    glm::vec4 ndc = mvp * vertex;
-    
-    // Perform perspective divide if w != 0
-    if (std::abs(ndc.w) > 1e-6f) {
-        ndc /= ndc.w;
-    }
-
-    // Map NDC [-1, 1] to SVG coordinates [0, width] × [0, height]
-    // Note: SVG Y-axis is inverted (top = 0, bottom = height)
-    float const svg_x = static_cast<float>(svg_width_) * (ndc.x + 1.0f) / 2.0f;
-    float const svg_y = static_cast<float>(svg_height_) * (1.0f - ndc.y) / 2.0f;
-
-    return glm::vec2(svg_x, svg_y);
-}
-
-QString SVGExporter::colorToHex(int r, int g, int b) {
-    return QString("#%1%2%3")
-        .arg(r, 2, 16, QChar('0'))
-        .arg(g, 2, 16, QChar('0'))
-        .arg(b, 2, 16, QChar('0'));
-}
-
-void SVGExporter::addAnalogSeries(
-        std::string const & key,
+CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
         std::shared_ptr<AnalogTimeSeries> const & series,
         NewAnalogTimeSeriesDisplayOptions const & display_options,
         int start_time,
-        int end_time) {
+        int end_time) const {
 
-    std::cout << "SVG Export - Adding analog series: " << key << std::endl;
-
-    // Get data in visible range
-    auto const series_start_index = getTimeIndexForSeries(
-        TimeFrameIndex(start_time),
-        gl_widget_->getMasterTimeFrame().get(),
-        series->getTimeFrame().get());
-    auto const series_end_index = getTimeIndexForSeries(
-        TimeFrameIndex(end_time),
-        gl_widget_->getMasterTimeFrame().get(),
-        series->getTimeFrame().get());
-    auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(
-        series_start_index, series_end_index);
-
-    if (analog_range.values.empty()) {
-        std::cout << "SVG Export - No data in range for " << key << std::endl;
-        return;
-    }
-
-    // Build MVP matrices using CorePlotting
+    // Build model params from display options
     CorePlotting::AnalogSeriesMatrixParams model_params;
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
     model_params.allocated_height = display_options.layout.allocated_height;
@@ -146,150 +153,97 @@ void SVGExporter::addAnalogSeries(
     model_params.data_mean = display_options.data_cache.cached_mean;
     model_params.std_dev = display_options.data_cache.cached_std_dev;
     model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
-    
+
     CorePlotting::ViewProjectionParams view_params;
     view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
-    
-    auto Model = CorePlotting::getAnalogModelMatrix(model_params);
-    auto View = CorePlotting::getAnalogViewMatrix(view_params);
-    auto Projection = CorePlotting::getAnalogProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), gl_widget_->getYMin(), gl_widget_->getYMax());
-    glm::mat4 const mvp = Projection * View * Model;
 
-    // Convert color
+    // Convert hex color to glm::vec4
     int r, g, b;
     hexToRGB(display_options.style.hex_color, r, g, b);
-    QString const color = colorToHex(r, g, b);
+    glm::vec4 const color(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
 
-    // Build polyline path
-    // TODO: Implement gap handling (DetectGaps, ShowMarkers) similar to OpenGL rendering
-    QStringList points;
-    auto time_iter = analog_range.time_indices.begin();
-    for (size_t i = 0; i < analog_range.values.size(); i++) {
-        auto const x_data = series->getTimeFrame()->getTimeAtIndex(**time_iter);
-        auto const y_data = analog_range.values[i];
+    // Set up batch params
+    DataViewerHelpers::AnalogBatchParams batch_params;
+    batch_params.start_time = TimeFrameIndex(start_time);
+    batch_params.end_time = TimeFrameIndex(end_time);
+    batch_params.color = color;
+    batch_params.thickness = display_options.style.line_thickness;
+    batch_params.detect_gaps = (display_options.gap_handling == AnalogGapHandling::DetectGaps);
+    batch_params.gap_threshold = display_options.gap_threshold;
 
-        glm::vec4 const vertex(x_data, y_data, 0.0f, 1.0f);
-        glm::vec2 const svg_pos = transformVertexToSVG(vertex, mvp);
-
-        points.append(QString("%1,%2").arg(svg_pos.x).arg(svg_pos.y));
-        ++(*time_iter);
-    }
-
-    // Create SVG polyline element
-    QString const line_thickness = QString::number(display_options.style.line_thickness);
-    QString const polyline = QString(
-        R"(<polyline points="%1" fill="none" stroke="%2" stroke-width="%3" stroke-linejoin="round" stroke-linecap="round"/>)")
-        .arg(points.join(" "))
-        .arg(color)
-        .arg(line_thickness);
-
-    svg_elements_.append(polyline);
-    std::cout << "SVG Export - Added " << points.size() << " points for " << key << std::endl;
+    // Use SceneBuildingHelpers to build the batch
+    return DataViewerHelpers::buildAnalogSeriesBatch(
+            *series,
+            gl_widget_->getMasterTimeFrame(),
+            batch_params,
+            model_params,
+            view_params);
 }
 
-void SVGExporter::addDigitalEventSeries(
-        std::string const & key,
+CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
         std::shared_ptr<DigitalEventSeries> const & series,
         NewDigitalEventSeriesDisplayOptions const & display_options,
         int start_time,
-        int end_time) {
+        int end_time) const {
 
-    std::cout << "SVG Export - Adding digital event series: " << key << std::endl;
-
-    // Get events in visible range
-    auto const series_start = getTimeIndexForSeries(
-        TimeFrameIndex(start_time),
-        gl_widget_->getMasterTimeFrame().get(),
-        series->getTimeFrame().get());
-    auto const series_end = getTimeIndexForSeries(
-        TimeFrameIndex(end_time),
-        gl_widget_->getMasterTimeFrame().get(),
-        series->getTimeFrame().get());
-    auto visible_events = series->getEventsInRange(series_start, series_end);
-
-    // Build MVP matrices using CorePlotting
+    // Build model params from display options
     CorePlotting::EventSeriesMatrixParams model_params;
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
     model_params.allocated_height = display_options.layout.allocated_height;
-    model_params.event_height = 0.0f;  // Use allocated height
+    model_params.event_height = display_options.event_height;
     model_params.margin_factor = display_options.margin_factor;
     model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
     model_params.viewport_y_min = gl_widget_->getYMin();
     model_params.viewport_y_max = gl_widget_->getYMax();
-    model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas) 
-        ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas 
-        : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
-    
+    model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas)
+                                         ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
+                                         : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
+
     CorePlotting::ViewProjectionParams view_params;
     view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
-    
-    auto Model = CorePlotting::getEventModelMatrix(model_params);
-    auto View = CorePlotting::getEventViewMatrix(model_params, view_params);
-    auto Projection = CorePlotting::getEventProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), gl_widget_->getYMin(), gl_widget_->getYMax());
-    glm::mat4 const mvp = Projection * View * Model;
 
-    // Convert color
+    // Convert hex color to glm::vec4
     int r, g, b;
     hexToRGB(display_options.style.hex_color, r, g, b);
-    QString const color = colorToHex(r, g, b);
+    glm::vec4 const color(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
 
-    // Draw each event as a vertical line
-    int event_count = 0;
-    for (auto const & event_index : visible_events) {
-        event_count++;
-        auto const event_time = series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(event_index));
+    // Set up batch params
+    DataViewerHelpers::EventBatchParams batch_params;
+    batch_params.start_time = TimeFrameIndex(start_time);
+    batch_params.end_time = TimeFrameIndex(end_time);
+    batch_params.color = color;
+    batch_params.glyph_size = display_options.style.line_thickness;
+    batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
-        // Create vertical line using same coordinates as OpenGL
-        // Events extend based on display mode (Stacked or FullCanvas)
-        float y_bottom, y_top;
-        if (display_options.display_mode == EventDisplayMode::Stacked) {
-            // Use allocated bounds with event height
-            y_bottom = display_options.layout.allocated_y_center - display_options.event_height / 2.0f;
-            y_top = display_options.layout.allocated_y_center + display_options.event_height / 2.0f;
-        } else {
-            // Full canvas mode
-            y_bottom = gl_widget_->getYMin();
-            y_top = gl_widget_->getYMax();
-        }
+    // Build the batch
+    auto batch = DataViewerHelpers::buildEventSeriesBatch(
+            *series,
+            gl_widget_->getMasterTimeFrame(),
+            batch_params,
+            model_params,
+            view_params);
 
-        glm::vec4 const bottom_vertex(event_time, y_bottom, 0.0f, 1.0f);
-        glm::vec4 const top_vertex(event_time, y_top, 0.0f, 1.0f);
+    // Set colors for all events (SceneBuildingHelpers doesn't set per-glyph colors)
+    batch.colors.resize(batch.positions.size(), color);
 
-        glm::vec2 const svg_bottom = transformVertexToSVG(bottom_vertex, mvp);
-        glm::vec2 const svg_top = transformVertexToSVG(top_vertex, mvp);
-
-        QString const line_thickness = QString::number(display_options.style.line_thickness);
-        QString const line = QString(
-            R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="%5" stroke-width="%6"/>)")
-            .arg(svg_bottom.x)
-            .arg(svg_bottom.y)
-            .arg(svg_top.x)
-            .arg(svg_top.y)
-            .arg(color)
-            .arg(line_thickness);
-
-        svg_elements_.append(line);
-    }
-
-    std::cout << "SVG Export - Added " << event_count << " events for " << key << std::endl;
+    return batch;
 }
 
-void SVGExporter::addDigitalIntervalSeries(
-        std::string const & key,
+CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
         std::shared_ptr<DigitalIntervalSeries> const & series,
         NewDigitalIntervalSeriesDisplayOptions const & display_options,
         float start_time,
-        float end_time) {
+        float end_time) const {
 
-    std::cout << "SVG Export - Adding digital interval series: " << key << std::endl;
-
-    // Get intervals that overlap with visible range
-    auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-        TimeFrameIndex(static_cast<int64_t>(start_time)),
-        TimeFrameIndex(static_cast<int64_t>(end_time)),
-        *(gl_widget_->getMasterTimeFrame()));
-
-    // Build MVP matrices using CorePlotting
+    // Build model params from display options
     CorePlotting::IntervalSeriesMatrixParams model_params;
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
     model_params.allocated_height = display_options.layout.allocated_height;
@@ -297,191 +251,30 @@ void SVGExporter::addDigitalIntervalSeries(
     model_params.global_zoom = plotting_manager_->getGlobalZoom();
     model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
     model_params.extend_full_canvas = display_options.extend_full_canvas;
-    
+
     CorePlotting::ViewProjectionParams view_params;
     view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
-    
-    auto Model = CorePlotting::getIntervalModelMatrix(model_params);
-    auto View = CorePlotting::getIntervalViewMatrix(view_params);
-    auto Projection = CorePlotting::getIntervalProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), gl_widget_->getYMin(), gl_widget_->getYMax());
-    glm::mat4 const mvp = Projection * View * Model;
 
-    // Convert color
+    // Convert hex color to glm::vec4 with alpha
     int r, g, b;
     hexToRGB(display_options.style.hex_color, r, g, b);
-    QString const color = colorToHex(r, g, b);
+    glm::vec4 const color(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            display_options.style.alpha);
 
-    // Draw each interval as a filled rectangle
-    int interval_count = 0;
-    for (auto const & interval : visible_intervals) {
-        interval_count++;
-        
-        // IMPORTANT: Convert interval times from series time frame to master time frame
-        // The interval.start and interval.end are in the series' time frame indices
-        // We need to convert them to actual time values in the master time frame for rendering
-        auto const interval_start = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.start)));
-        auto const interval_end = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.end)));
+    // Set up batch params
+    DataViewerHelpers::IntervalBatchParams batch_params;
+    batch_params.start_time = TimeFrameIndex(static_cast<int64_t>(start_time));
+    batch_params.end_time = TimeFrameIndex(static_cast<int64_t>(end_time));
+    batch_params.color = color;
 
-        // Clip the interval to the visible range (same as OpenGL rendering)
-        float const clipped_start = std::max(interval_start, start_time);
-        float const clipped_end = std::min(interval_end, end_time);
-
-        // Full canvas height for intervals
-        float const y_bottom = gl_widget_->getYMin();
-        float const y_top = gl_widget_->getYMax();
-
-        // Define rectangle corners using clipped times
-        glm::vec4 const bottom_left(clipped_start, y_bottom, 0.0f, 1.0f);
-        glm::vec4 const top_right(clipped_end, y_top, 0.0f, 1.0f);
-
-        glm::vec2 const svg_bottom_left = transformVertexToSVG(bottom_left, mvp);
-        glm::vec2 const svg_top_right = transformVertexToSVG(top_right, mvp);
-
-        // Calculate SVG rectangle parameters
-        float const svg_x = std::min(svg_bottom_left.x, svg_top_right.x);
-        float const svg_y = std::min(svg_bottom_left.y, svg_top_right.y);
-        float const svg_width = std::abs(svg_top_right.x - svg_bottom_left.x);
-        float const svg_height = std::abs(svg_top_right.y - svg_bottom_left.y);
-
-        QString const rect = QString(
-            R"(<rect x="%1" y="%2" width="%3" height="%4" fill="%5" fill-opacity="%6" stroke="none"/>)")
-            .arg(svg_x)
-            .arg(svg_y)
-            .arg(svg_width)
-            .arg(svg_height)
-            .arg(color)
-            .arg(display_options.style.alpha);
-
-        svg_elements_.append(rect);
-    }
-
-    std::cout << "SVG Export - Added " << interval_count << " intervals for " << key << std::endl;
-}
-
-QString SVGExporter::buildSVGDocument() const {
-    // Get background color from OpenGL widget
-    auto const bg_color = gl_widget_->getBackgroundColor();
-    
-    // Build SVG document with fixed canvas size and viewBox for scaling
-    QString svg_header = QString(
-        R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="%1" height="%2" viewBox="0 0 %1 %2" xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <desc>WhiskerToolbox DataViewer Export</desc>
-  <rect width="100%%" height="100%%" fill="%3"/>
-)")
-        .arg(svg_width_)
-        .arg(svg_height_)
-        .arg(QString::fromStdString(bg_color));
-
-    QString const svg_footer = "</svg>";
-
-    // Combine all elements
-    QString document = svg_header;
-    for (auto const & element : svg_elements_) {
-        document += "  " + element + "\n";
-    }
-    document += svg_footer;
-
-    return document;
-}
-
-void SVGExporter::addScalebar(float start_time, float end_time) {
-    std::cout << "SVG Export - Adding scalebar (length: " << scalebar_length_ << " time units)" << std::endl;
-
-    // Get the same MVP matrices used for rendering to ensure proper coordinate conversion
-    auto const y_min = gl_widget_->getYMin();
-    auto const y_max = gl_widget_->getYMax();
-
-    // We'll use a simple orthographic projection for the scalebar
-    // Place it in the bottom-right corner with some padding
-    int const padding = 50;  // pixels from edges
-    int const bar_height = 4; // pixels thick
-    
-    // Calculate the scalebar in data coordinates
-    // The scalebar represents scalebar_length_ time units
-    float const scalebar_start_time = end_time - static_cast<float>(scalebar_length_);
-    float const scalebar_end_time = end_time;
-    
-    // Position the scalebar at the bottom of the canvas (in data Y coordinates)
-    float const scalebar_y = y_min;
-    
-    // Create vertices for the scalebar endpoints in data space
-    glm::vec4 const start_vertex(scalebar_start_time, scalebar_y, 0.0f, 1.0f);
-    glm::vec4 const end_vertex(scalebar_end_time, scalebar_y, 0.0f, 1.0f);
-    
-    // Use identity matrices for simple coordinate transformation
-    // We need to transform from data coordinates to SVG coordinates
-    glm::mat4 const Model(1.0f);
-    glm::mat4 const View(1.0f);
-    
-    // Create projection matrix that maps [start_time, end_time] x [y_min, y_max] to NDC
-    float const x_range = end_time - start_time;
-    float const y_range = y_max - y_min;
-    
-    glm::mat4 Projection(1.0f);
-    // Scale from data range to [-1, 1]
-    Projection[0][0] = 2.0f / x_range;
-    Projection[1][1] = 2.0f / y_range;
-    // Translate to center the range at origin
-    Projection[3][0] = -1.0f - 2.0f * start_time / x_range;
-    Projection[3][1] = -1.0f - 2.0f * y_min / y_range;
-    
-    glm::mat4 const mvp = Projection * View * Model;
-    
-    // Transform the endpoints to SVG coordinates
-    glm::vec2 const svg_start = transformVertexToSVG(start_vertex, mvp);
-    glm::vec2 const svg_end = transformVertexToSVG(end_vertex, mvp);
-    
-    // Adjust the scalebar to be in the bottom-right corner
-    // Calculate the width of the scalebar in pixels
-    float const bar_width_pixels = std::abs(svg_end.x - svg_start.x);
-    
-    // Position in bottom-right corner
-    float const bar_x = static_cast<float>(svg_width_) - bar_width_pixels - static_cast<float>(padding);
-    float const bar_y = static_cast<float>(svg_height_) - static_cast<float>(padding);
-    
-    // Draw the scalebar as a black horizontal line
-    QString const scalebar_line = QString(
-        R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="#000000" stroke-width="%5" stroke-linecap="butt"/>)")
-        .arg(bar_x)
-        .arg(bar_y)
-        .arg(bar_x + bar_width_pixels)
-        .arg(bar_y)
-        .arg(bar_height);
-    
-    svg_elements_.append(scalebar_line);
-    
-    // Add small vertical ticks at the ends
-    int const tick_height = 8; // pixels
-    QString const left_tick = QString(
-        R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="#000000" stroke-width="2"/>)")
-        .arg(bar_x)
-        .arg(bar_y - tick_height / 2)
-        .arg(bar_x)
-        .arg(bar_y + tick_height / 2);
-    
-    QString const right_tick = QString(
-        R"(<line x1="%1" y1="%2" x2="%3" y2="%4" stroke="#000000" stroke-width="2"/>)")
-        .arg(bar_x + bar_width_pixels)
-        .arg(bar_y - tick_height / 2)
-        .arg(bar_x + bar_width_pixels)
-        .arg(bar_y + tick_height / 2);
-    
-    svg_elements_.append(left_tick);
-    svg_elements_.append(right_tick);
-    
-    // Add text label showing the length
-    QString const label_text = QString::number(scalebar_length_);
-    float const label_x = bar_x + bar_width_pixels / 2.0f;
-    float const label_y = bar_y - 10.0f; // Above the bar
-    
-    QString const label = QString(
-        R"(<text x="%1" y="%2" font-family="Arial, sans-serif" font-size="14" fill="#000000" text-anchor="middle">%3</text>)")
-        .arg(label_x)
-        .arg(label_y)
-        .arg(label_text);
-    
-    svg_elements_.append(label);
-    
-    std::cout << "SVG Export - Scalebar added at bottom-right corner" << std::endl;
+    // Use SceneBuildingHelpers to build the batch
+    return DataViewerHelpers::buildIntervalSeriesBatch(
+            *series,
+            gl_widget_->getMasterTimeFrame(),
+            batch_params,
+            model_params,
+            view_params);
 }
