@@ -22,6 +22,7 @@
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
+#include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/SpatialAdapter/EventSpatialAdapter.hpp"
@@ -895,8 +896,8 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
         RenderableScene scene = builder
             .setBounds(bounds)
             .setMatrices(glm::mat4(1.0f), glm::mat4(1.0f))
-            .addEventSeries("series1", *events1, *layout1, *time_frame)
-            .addEventSeries("series2", *events2, *layout2, *time_frame)
+            .addGlyphs("series1", TimeSeriesMapper::mapEvents(*events1, *layout1, *time_frame))
+            .addGlyphs("series2", TimeSeriesMapper::mapEvents(*events2, *layout2, *time_frame))
             .build();
         
         // Verify glyph batches were created
@@ -916,8 +917,8 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
         RenderableScene scene = builder
             .setBounds(bounds)
             .setMatrices(glm::mat4(1.0f), glm::mat4(1.0f))
-            .addEventSeries("series1", *events1, *layout1, *time_frame)
-            .addEventSeries("series2", *events2, *layout2, *time_frame)
+            .addGlyphs("series1", TimeSeriesMapper::mapEvents(*events1, *layout1, *time_frame))
+            .addGlyphs("series2", TimeSeriesMapper::mapEvents(*events2, *layout2, *time_frame))
             .build();
         
         // Query for event at time 100 in series1's row
@@ -939,8 +940,8 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
         SceneBuilder builder;
         RenderableScene scene = builder
             .setBounds(bounds)
-            .addEventSeries("series1", *events1, *layout1, *time_frame)
-            .addEventSeries("series2", *events2, *layout2, *time_frame)
+            .addGlyphs("series1", TimeSeriesMapper::mapEvents(*events1, *layout1, *time_frame))
+            .addGlyphs("series2", TimeSeriesMapper::mapEvents(*events2, *layout2, *time_frame))
             .build();
         
         float y1 = layout1->result.allocated_y_center;
@@ -997,7 +998,7 @@ TEST_CASE("Scenario 8: SceneBuilder with interval series",
         SceneBuilder builder;
         RenderableScene scene = builder
             .setBounds(bounds)
-            .addIntervalSeries("intervals", *intervals, *interval_layout, *time_frame)
+            .addRectangles("intervals", TimeSeriesMapper::mapIntervals(*intervals, *interval_layout, *time_frame))
             .build();
         
         // Verify rectangle batch was created
@@ -1015,7 +1016,7 @@ TEST_CASE("Scenario 8: SceneBuilder with interval series",
         SceneBuilder builder;
         RenderableScene scene = builder
             .setBounds(bounds)
-            .addIntervalSeries("intervals", *intervals, *interval_layout, *time_frame)
+            .addRectangles("intervals", TimeSeriesMapper::mapIntervals(*intervals, *interval_layout, *time_frame))
             .build();
         
         auto const& rect_batch = scene.rectangle_batches[0];
@@ -1036,7 +1037,7 @@ TEST_CASE("Scenario 8: SceneBuilder with interval series",
         
         SceneBuilder builder;
         builder.setBounds(bounds)
-               .addIntervalSeries("intervals", *intervals, *interval_layout, *time_frame);
+               .addRectangles("intervals", TimeSeriesMapper::mapIntervals(*intervals, *interval_layout, *time_frame));
         
         // Capture key map BEFORE build (it's cleared in build())
         std::map<size_t, std::string> key_map = builder.getRectangleBatchKeyMap();

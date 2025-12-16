@@ -3,9 +3,6 @@
 #include "CoordinateTransform/ViewState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 
 #include <stdexcept>
 
@@ -26,72 +23,6 @@ SceneBuilder & SceneBuilder::setMatrices(glm::mat4 const & view, glm::mat4 const
     _scene.view_matrix = view;
     _scene.projection_matrix = projection;
     _has_matrices = true;
-    return *this;
-}
-
-// ============================================================================
-// High-level series methods
-// ============================================================================
-
-SceneBuilder & SceneBuilder::addEventSeries(
-        std::string const & series_key,
-        DigitalEventSeries const & series,
-        SeriesLayout const & layout,
-        TimeFrame const & time_frame) {
-
-    // Create glyph batch for rendering
-    RenderableGlyphBatch batch;
-    batch.glyph_type = RenderableGlyphBatch::GlyphType::Circle;
-    batch.size = 4.0f;// Default glyph size
-    batch.model_matrix = glm::mat4(1.0f);
-
-    float const y_center = layout.result.allocated_y_center;
-
-    for (auto const & event: series.view()) {
-        float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
-        batch.positions.emplace_back(x, y_center);
-        batch.entity_ids.push_back(event.entity_id);
-    }
-
-    _scene.glyph_batches.push_back(std::move(batch));
-
-    // Store for spatial index construction
-    _pending_events.push_back({series_key, &series, &layout, &time_frame});
-
-    return *this;
-}
-
-SceneBuilder & SceneBuilder::addIntervalSeries(
-        std::string const & series_key,
-        DigitalIntervalSeries const & series,
-        SeriesLayout const & layout,
-        TimeFrame const & time_frame) {
-
-    // Create rectangle batch for rendering
-    RenderableRectangleBatch batch;
-    batch.model_matrix = glm::mat4(1.0f);
-
-    float const height = layout.result.allocated_height;
-    float const y_bottom = layout.result.allocated_y_center - height / 2.0f;
-
-    for (auto const & interval: series.view()) {
-        float x_start = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.start}));
-        float x_end = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.end}));
-        float width = x_end - x_start;
-
-        batch.bounds.push_back(glm::vec4(x_start, y_bottom, width, height));
-        batch.entity_ids.push_back(interval.entity_id);
-    }
-
-    // Track batch index -> series key mapping
-    size_t batch_index = _scene.rectangle_batches.size();
-    _rectangle_batch_key_map[batch_index] = series_key;
-
-    _scene.rectangle_batches.push_back(std::move(batch));
-
-    // Store for spatial index construction
-    _pending_intervals.push_back({series_key, &series, &layout, &time_frame});
-
     return *this;
 }
 
@@ -213,43 +144,23 @@ SceneBuilder & SceneBuilder::buildSpatialIndex(BoundingBox const & bounds) {
     return *this;
 }
 
-void SceneBuilder::buildSpatialIndexFromPendingSeries() {
+void SceneBuilder::buildSpatialIndexFromPending() {
     if (!_bounds.has_value()) {
         throw std::runtime_error("SceneBuilder: Cannot build spatial index - bounds not set");
     }
 
     _scene.spatial_index = std::make_unique<QuadTree<EntityId>>(_bounds.value());
 
-    // Insert events
-    for (auto const & pending: _pending_events) {
-        float const y_center = pending.layout->result.allocated_y_center;
-
-        for (auto const & event: pending.series->view()) {
-            float x = static_cast<float>(pending.time_frame->getTimeAtIndex(event.event_time));
-            _scene.spatial_index->insert(x, y_center, event.entity_id);
-        }
-    }
-
-    // Insert interval centers
-    for (auto const & pending: _pending_intervals) {
-        float const y_center = pending.layout->result.allocated_y_center;
-
-        for (auto const & interval: pending.series->view()) {
-            float x_start = static_cast<float>(pending.time_frame->getTimeAtIndex(
-                    TimeFrameIndex{interval.interval.start}));
-            float x_end = static_cast<float>(pending.time_frame->getTimeAtIndex(
-                    TimeFrameIndex{interval.interval.end}));
-            float x_center = (x_start + x_end) / 2.0f;
-
-            _scene.spatial_index->insert(x_center, y_center, interval.entity_id);
-        }
+    // Insert all pending positions
+    for (auto const & insert : _pending_spatial_inserts) {
+        _scene.spatial_index->insert(insert.x, insert.y, insert.entity_id);
     }
 }
 
 RenderableScene SceneBuilder::build() {
-    // Automatically build spatial index if we have pending discrete series
-    if (!_pending_events.empty() || !_pending_intervals.empty()) {
-        buildSpatialIndexFromPendingSeries();
+    // Automatically build spatial index if we have pending discrete elements
+    if (_has_discrete_elements && !_pending_spatial_inserts.empty()) {
+        buildSpatialIndexFromPending();
     }
 
     RenderableScene result = std::move(_scene);
@@ -260,10 +171,11 @@ RenderableScene SceneBuilder::build() {
 void SceneBuilder::reset() {
     _scene = RenderableScene{};
     _has_matrices = false;
+    _has_discrete_elements = false;
     _bounds.reset();
-    _pending_events.clear();
-    _pending_intervals.clear();
+    _pending_spatial_inserts.clear();
     _rectangle_batch_key_map.clear();
+    _glyph_batch_key_map.clear();
 }
 
 }// namespace CorePlotting

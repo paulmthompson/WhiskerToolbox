@@ -449,22 +449,28 @@ This doesn't generalize to:
 
 **Tests:** [Mappers.test.cpp](/tests/CorePlotting/Mappers.test.cpp) — 19 test cases, 111 assertions ✓
 
-### 3.7.2 Refactor SceneBuilder to Range-Based API
+### 3.7.2 Refactor SceneBuilder to Range-Based API ✅
 
-- [ ] **Add range-consuming methods to SceneBuilder**:
+- [x] **Add range-consuming methods to SceneBuilder**:
     - `addGlyphs<R>(key, elements, style)` — consumes `MappedElementRange`
     - `addRectangles<R>(key, elements, style)` — consumes `MappedRectRange`
     - `addPolyLine<R>(key, vertices, entity_id, style)` — single line from `MappedVertexRange`
     - `addPolyLines<R>(key, lines, style)` — multiple lines from `MappedLineRange`
     - Single traversal populates both GPU buffer and spatial index
 
-- [ ] **Deprecate data-type-specific methods**:
-    - Mark `addEventSeries()`, `addIntervalSeries()` as `[[deprecated]]`
-    - Internal implementation creates range adapter and calls new range-based methods
-    - Remove in Phase 5 after widget migration
+- [x] **Remove data-type-specific methods**:
+    - Removed `addEventSeries()`, `addIntervalSeries()` entirely
+    - Removed `PendingEventSeries`, `PendingIntervalSeries` structs
+    - Updated `buildSpatialIndexFromPending()` to use new `_pending_spatial_inserts` vector
 
-- [ ] **Keep span-based overloads for pre-materialized data**:
-    - For legacy code and test fixtures with existing vectors
+- [x] **Add style structs for new API**:
+    - `GlyphStyle` (glyph_type, size, color, model_matrix)
+    - `RectangleStyle` (color, model_matrix)
+    - `PolyLineStyle` (thickness, color, model_matrix)
+
+- [x] **Update integration tests to use new API**:
+    - Scenario 7 & 8 now use `TimeSeriesMapper::mapEvents()` + `addGlyphs()`
+    - Scenario 8 uses `TimeSeriesMapper::mapIntervals()` + `addRectangles()`
 
 ### 3.7.3 Create Plot-Type-Specific Layout Strategies
 
@@ -747,22 +753,28 @@ This doesn't generalize to:
 | `SpatialMapper.hpp` | `Mappers/` | SpatialOverlay: `mapPointsAtTime()`, `mapLinesAtTime()` |
 | `RasterMapper.hpp` | `Mappers/` | Raster: `mapEventsRelative()`, `mapTrials()` |
 
-### Components to Create (Phase 3.7.2+)
+### Components Created (Phase 3.7.2 ✅)
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `GlyphStyle` | `SceneBuilder.hpp` | Style struct for glyph batches (type, size, color, model_matrix) |
+| `RectangleStyle` | `SceneBuilder.hpp` | Style struct for rectangle batches (color, model_matrix) |
+| `PolyLineStyle` | `SceneBuilder.hpp` | Style struct for polyline batches (thickness, color, model_matrix) |
+
+### Components Modified (Phase 3.7.2 ✅)
+| Component | Change |
+|-----------|--------|
+| `SceneBuilder` | Added range-consuming `addGlyphs<R>()`, `addRectangles<R>()`, `addPolyLine<R>()`, `addPolyLines<R>()` |
+| `SceneBuilder` | Removed `addEventSeries()`, `addIntervalSeries()` (breaking change) |
+| `SceneBuilder` | Removed `PendingEventSeries`, `PendingIntervalSeries` structs |
+| `SceneBuilder` | Added `_pending_spatial_inserts` for unified spatial index building |
+| `SceneBuilder` | Added `getGlyphBatchKeyMap()` for symmetry with rectangle batch key map |
+| `Phase3_5_IntegrationTests` | Updated Scenarios 7-8 to use `TimeSeriesMapper` + new `addGlyphs`/`addRectangles` API |
+
+### Components to Create (Future)
 | Component | Location | Purpose |
 |-----------|----------|---------|
 | `EventAlignedMapper` | `Mappers/` | Event-aligned analog traces: analog+events→MappedLineRange |
 | `SpatialLayoutStrategy` | `Layout/` | Simple bounds-fitting layout |
-
-### Components to Modify
-| Component | Change |
-|-----------|--------|
-| `SceneBuilder` | Add range-consuming `addGlyphs<R>()`, `addRectangles<R>()`, `addPolyLine<R>()`, `addPolyLines<R>()` |
-| `SceneBuilder` | Keep span overloads for legacy/test code |
-| `SceneBuilder` | Deprecate `addEventSeries(series, layout, tf)`, `addIntervalSeries(...)` |
-| `SceneBuildingHelpers` | Use Mappers returning ranges, pass directly to SceneBuilder |
-| `Phase3_5_IntegrationTests` | Update to use Mapper → SceneBuilder range flow |
-| `PointData` (optional) | Add `viewAtTime(frame, layout)` returning mapped range |
-| `DigitalEventSeries` (optional) | Add `viewMapped(tf, layout)` returning mapped range |
 
 ### Components Unchanged
 | Component | Reason |
