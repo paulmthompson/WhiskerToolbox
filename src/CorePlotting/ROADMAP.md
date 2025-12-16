@@ -488,26 +488,31 @@ This doesn't generalize to:
     - `StackedLayoutStrategy`: Verified for DataViewer ✓
     - `RowLayoutStrategy`: Verified for raster plots ✓
 
-### 3.7.4 Update Integration Tests
+### 3.7.4 Update Integration Tests ✅
 
-- [ ] **Add Scenario 9: TimeSeriesMapper End-to-End**:
-    - Create events + analog series
-    - Map using `TimeSeriesMapper::mapEvents()` and `mapAnalog()`
+- [x] **Add Scenario 9: TimeSeriesMapper End-to-End**:
+    - Location: [Phase3_5_IntegrationTests.test.cpp](/tests/CorePlotting/Phase3_5_IntegrationTests.test.cpp)
+    - Create events + analog series with custom TimeFrame (index i → time i*10)
+    - Map using `TimeSeriesMapper::mapEvents()` and `mapAnalogSeries()`
     - Build scene with position-based `SceneBuilder::addGlyphs()`
     - Verify positions match expected TimeFrame conversions
-    - Verify hit testing works correctly
+    - Verify hit testing works correctly with `findNearest()`
 
-- [ ] **Add Scenario 10: SpatialMapper End-to-End**:
-    - Create PointData with known positions
-    - Map using `SpatialMapper::mapPoints()`
+- [x] **Add Scenario 10: SpatialMapper End-to-End**:
+    - Create PointData with known positions at specific time frames
+    - Map using `SpatialMapper::mapPointsAtTime()`
+    - Test scaling/offset transforms for NDC conversion
     - Build scene and verify QuadTree contains correct positions
     - Test hit testing with direct X/Y coordinates (no TimeFrame)
+    - Verify EntityIds are preserved through mapping
 
-- [ ] **Add Scenario 11: RasterMapper with Relative Time**:
+- [x] **Add Scenario 11: RasterMapper with Relative Time**:
     - Create events with absolute times
     - Map using `RasterMapper::mapEventsRelative()` with reference time
     - Verify output positions are relative to reference
-    - Test multiple rows with different reference times
+    - Test `mapEventsInWindow()` for window filtering
+    - Test multi-trial mapping with `mapTrials()` using different reference times
+    - Verify Y positions differ between trials
 
 ### 3.7.5 Migration Path for Existing Code
 

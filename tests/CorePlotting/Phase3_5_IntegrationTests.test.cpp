@@ -23,6 +23,8 @@
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
+#include "CorePlotting/Mappers/SpatialMapper.hpp"
+#include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CorePlotting/SpatialAdapter/EventSpatialAdapter.hpp"
@@ -37,6 +39,9 @@
 // DataManager includes
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityRegistry.hpp"
 
@@ -1058,3 +1063,380 @@ TEST_CASE("Scenario 8: SceneBuilder with interval series",
     }
 }
 
+
+// ============================================================================
+// Test Scenario 9: TimeSeriesMapper End-to-End
+// ============================================================================
+
+TEST_CASE("Scenario 9: TimeSeriesMapper end-to-end with events and analog",
+          "[CorePlotting][Integration][Phase3.5][Mappers][TimeSeriesMapper]") {
+    
+    // Create TimeFrame with 1:1 mapping (index i → time i*10)
+    std::vector<int> times;
+    for (int i = 0; i < 100; ++i) {
+        times.push_back(i * 10);  // Times: 0, 10, 20, 30, ...
+    }
+    auto time_frame = std::make_shared<TimeFrame>(times);
+    EntityRegistry registry;
+    
+    // Create event series at indices 10, 25, 50 (times 100, 250, 500)
+    auto events = createEventSeries({10, 25, 50}, "spike_events", registry);
+    events->setTimeFrame(time_frame);
+    
+    // Create analog series with known values
+    std::vector<float> analog_values;
+    std::vector<TimeFrameIndex> analog_times;
+    for (int i = 0; i < 100; ++i) {
+        analog_values.push_back(static_cast<float>(i) * 0.1f);  // Values: 0.0, 0.1, 0.2, ...
+        analog_times.push_back(TimeFrameIndex{i});
+    }
+    auto analog = std::make_shared<AnalogTimeSeries>(analog_values, analog_times);
+    analog->setTimeFrame(time_frame);
+    
+    // Build stacked layout
+    LayoutRequest request;
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+    request.series = {
+        {"spike_events", SeriesType::DigitalEvent, true},
+        {"analog_trace", SeriesType::Analog, true}
+    };
+    
+    StackedLayoutStrategy strategy;
+    LayoutResponse layout = strategy.compute(request);
+    
+    auto const* event_layout = layout.findLayout("spike_events");
+    auto const* analog_layout = layout.findLayout("analog_trace");
+    REQUIRE(event_layout != nullptr);
+    REQUIRE(analog_layout != nullptr);
+    
+    SECTION("Event positions match TimeFrame conversion") {
+        // Map events using TimeSeriesMapper
+        auto mapped_events = TimeSeriesMapper::mapEvents(*events, *event_layout, *time_frame);
+        
+        std::vector<MappedElement> event_vec;
+        for (auto const& elem : mapped_events) {
+            event_vec.push_back(elem);
+        }
+        
+        REQUIRE(event_vec.size() == 3);
+        
+        // Event at index 10 → time 100
+        REQUIRE_THAT(event_vec[0].x, WithinAbs(100.0f, 0.1f));
+        REQUIRE_THAT(event_vec[0].y, WithinAbs(event_layout->result.allocated_y_center, 0.001f));
+        
+        // Event at index 25 → time 250
+        REQUIRE_THAT(event_vec[1].x, WithinAbs(250.0f, 0.1f));
+        
+        // Event at index 50 → time 500
+        REQUIRE_THAT(event_vec[2].x, WithinAbs(500.0f, 0.1f));
+    }
+    
+    SECTION("SceneBuilder with mapped events enables hit testing") {
+        BoundingBox bounds(0.0f, -2.0f, 1000.0f, 2.0f);
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .addGlyphs("spike_events", TimeSeriesMapper::mapEvents(*events, *event_layout, *time_frame))
+            .build();
+        
+        REQUIRE(scene.glyph_batches.size() == 1);
+        REQUIRE(scene.glyph_batches[0].positions.size() == 3);
+        REQUIRE(scene.spatial_index != nullptr);
+        REQUIRE(scene.spatial_index->size() == 3);
+        
+        // Query near event at time 250
+        auto const* nearest = scene.spatial_index->findNearest(250.0f, event_layout->result.allocated_y_center, 10.0f);
+        REQUIRE(nearest != nullptr);
+        
+        // Verify EntityId matches
+        EntityId expected_id = events->view()[1].entity_id;  // Second event
+        REQUIRE(nearest->data == expected_id);
+    }
+    
+    SECTION("Analog mapping produces correct vertex positions") {
+        float const y_scale = 1.0f;  // No scaling for test
+        
+        // Map a subset of analog data
+        auto mapped_analog = TimeSeriesMapper::mapAnalogSeries(
+            *analog, *analog_layout, *time_frame, y_scale,
+            TimeFrameIndex{10}, TimeFrameIndex{15}
+        );
+        
+        std::vector<MappedVertex> vertices;
+        for (auto const& v : mapped_analog) {
+            vertices.push_back(v);
+        }
+        
+        // Should have 6 vertices (indices 10-15 inclusive)
+        REQUIRE(vertices.size() == 6);
+        
+        // First vertex: index 10 → time 100, value 1.0
+        REQUIRE_THAT(vertices[0].x, WithinAbs(100.0f, 0.1f));
+        REQUIRE_THAT(vertices[0].y, WithinAbs(1.0f + analog_layout->result.allocated_y_center, 0.01f));
+        
+        // Last vertex: index 15 → time 150, value 1.5
+        REQUIRE_THAT(vertices[5].x, WithinAbs(150.0f, 0.1f));
+    }
+}
+
+
+// ============================================================================
+// Test Scenario 10: SpatialMapper End-to-End
+// ============================================================================
+
+TEST_CASE("Scenario 10: SpatialMapper end-to-end with PointData",
+          "[CorePlotting][Integration][Phase3.5][Mappers][SpatialMapper]") {
+    
+    // Create PointData with known positions at specific times
+    PointData points;
+    EntityRegistry registry;
+    points.setIdentityContext("spatial_points", &registry);
+    
+    // Add points at time index 0: (100, 200), (300, 400)
+    std::vector<Point2D<float>> frame0_points = {{100.0f, 200.0f}, {300.0f, 400.0f}};
+    points.addAtTime(TimeFrameIndex{0}, frame0_points, NotifyObservers::No);
+    
+    // Add points at time index 1: (150, 250), (350, 450), (500, 100)
+    std::vector<Point2D<float>> frame1_points = {{150.0f, 250.0f}, {350.0f, 450.0f}, {500.0f, 100.0f}};
+    points.addAtTime(TimeFrameIndex{1}, frame1_points, NotifyObservers::No);
+    
+    points.rebuildAllEntityIds();
+    
+    SECTION("mapPointsAtTime extracts correct positions") {
+        auto mapped = SpatialMapper::mapPointsAtTime(points, TimeFrameIndex{0});
+        
+        REQUIRE(mapped.size() == 2);
+        REQUIRE_THAT(mapped[0].x, WithinAbs(100.0f, 0.001f));
+        REQUIRE_THAT(mapped[0].y, WithinAbs(200.0f, 0.001f));
+        REQUIRE_THAT(mapped[1].x, WithinAbs(300.0f, 0.001f));
+        REQUIRE_THAT(mapped[1].y, WithinAbs(400.0f, 0.001f));
+    }
+    
+    SECTION("mapPointsAtTime with scaling") {
+        // Scale to NDC-like coordinates (assuming 640x480 image)
+        float x_scale = 2.0f / 640.0f;
+        float y_scale = 2.0f / 480.0f;
+        float x_offset = -1.0f;
+        float y_offset = -1.0f;
+        
+        auto mapped = SpatialMapper::mapPointsAtTime(
+            points, TimeFrameIndex{0}, x_scale, y_scale, x_offset, y_offset
+        );
+        
+        REQUIRE(mapped.size() == 2);
+        
+        // Point (100, 200) → (100 * 2/640 - 1, 200 * 2/480 - 1) = (-0.6875, -0.1667)
+        float expected_x = 100.0f * x_scale + x_offset;
+        float expected_y = 200.0f * y_scale + y_offset;
+        REQUIRE_THAT(mapped[0].x, WithinAbs(expected_x, 0.001f));
+        REQUIRE_THAT(mapped[0].y, WithinAbs(expected_y, 0.001f));
+    }
+    
+    SECTION("SceneBuilder with spatial points enables hit testing") {
+        BoundingBox bounds(0.0f, 0.0f, 640.0f, 480.0f);
+        
+        auto mapped = SpatialMapper::mapPointsAtTime(points, TimeFrameIndex{1});
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .addGlyphs("spatial_points", mapped)
+            .build();
+        
+        REQUIRE(scene.glyph_batches.size() == 1);
+        REQUIRE(scene.glyph_batches[0].positions.size() == 3);
+        REQUIRE(scene.spatial_index != nullptr);
+        REQUIRE(scene.spatial_index->size() == 3);
+        
+        // Query near point at (350, 450)
+        auto const* nearest = scene.spatial_index->findNearest(350.0f, 450.0f, 10.0f);
+        REQUIRE(nearest != nullptr);
+        
+        // Query near point at (500, 100)
+        auto const* nearest2 = scene.spatial_index->findNearest(500.0f, 100.0f, 10.0f);
+        REQUIRE(nearest2 != nullptr);
+        
+        // Query at empty location (far from any point)
+        auto const* empty = scene.spatial_index->findNearest(0.0f, 0.0f, 5.0f);
+        REQUIRE(empty == nullptr);
+    }
+    
+    SECTION("EntityIds are preserved through mapping") {
+        auto mapped = SpatialMapper::mapPointsAtTime(points, TimeFrameIndex{0});
+        auto entity_ids = points.getEntityIdsAtTime(TimeFrameIndex{0});
+        
+        std::vector<EntityId> expected_ids;
+        for (auto id : entity_ids) {
+            expected_ids.push_back(id);
+        }
+        
+        REQUIRE(mapped.size() == expected_ids.size());
+        for (size_t i = 0; i < mapped.size(); ++i) {
+            REQUIRE(mapped[i].entity_id == expected_ids[i]);
+        }
+    }
+}
+
+
+// ============================================================================
+// Test Scenario 11: RasterMapper with Relative Time
+// ============================================================================
+
+TEST_CASE("Scenario 11: RasterMapper with relative time positioning",
+          "[CorePlotting][Integration][Phase3.5][Mappers][RasterMapper]") {
+    
+    // Create TimeFrame with 1:1 mapping
+    auto time_frame = createSimpleTimeFrame(1000);
+    EntityRegistry registry;
+    
+    // Create event series representing spikes in a trial
+    // Events at absolute times: 100, 150, 200, 300, 400
+    auto trial_events = createEventSeries({100, 150, 200, 300, 400}, "trial_spikes", registry);
+    trial_events->setTimeFrame(time_frame);
+    
+    // Reference time (e.g., stimulus onset) at time 200
+    TimeFrameIndex reference_time{200};
+    
+    // Build row layout (single row for this trial)
+    LayoutRequest request;
+    request.viewport_y_min = -1.0f;
+    request.viewport_y_max = 1.0f;
+    request.series = {{"trial_spikes", SeriesType::DigitalEvent, true}};
+    
+    RowLayoutStrategy row_strategy;
+    LayoutResponse layout = row_strategy.compute(request);
+    
+    auto const* trial_layout = layout.findLayout("trial_spikes");
+    REQUIRE(trial_layout != nullptr);
+    
+    SECTION("mapEventsRelative produces correct relative positions") {
+        auto mapped = RasterMapper::mapEventsRelative(
+            *trial_events, *trial_layout, *time_frame, reference_time
+        );
+        
+        std::vector<MappedElement> elements;
+        for (auto const& elem : mapped) {
+            elements.push_back(elem);
+        }
+        
+        REQUIRE(elements.size() == 5);
+        
+        // Event at 100 → relative = 100 - 200 = -100
+        REQUIRE_THAT(elements[0].x, WithinAbs(-100.0f, 0.1f));
+        
+        // Event at 150 → relative = 150 - 200 = -50
+        REQUIRE_THAT(elements[1].x, WithinAbs(-50.0f, 0.1f));
+        
+        // Event at 200 → relative = 200 - 200 = 0 (aligned to reference)
+        REQUIRE_THAT(elements[2].x, WithinAbs(0.0f, 0.1f));
+        
+        // Event at 300 → relative = 300 - 200 = 100
+        REQUIRE_THAT(elements[3].x, WithinAbs(100.0f, 0.1f));
+        
+        // Event at 400 → relative = 400 - 200 = 200
+        REQUIRE_THAT(elements[4].x, WithinAbs(200.0f, 0.1f));
+        
+        // All Y positions should be at trial layout center
+        for (auto const& elem : elements) {
+            REQUIRE_THAT(elem.y, WithinAbs(trial_layout->result.allocated_y_center, 0.001f));
+        }
+    }
+    
+    SECTION("mapEventsInWindow filters events correctly") {
+        // Window: 50 before to 150 after reference (200)
+        // Should include events at 150 (rel=-50), 200 (rel=0), 300 (rel=100)
+        // Excludes 100 (rel=-100 < -50) and 400 (rel=200 > 150)
+        
+        auto mapped = RasterMapper::mapEventsInWindow(
+            *trial_events, *trial_layout, *time_frame, reference_time,
+            50,  // window_before
+            150  // window_after
+        );
+        
+        std::vector<MappedElement> elements;
+        for (auto const& elem : mapped) {
+            elements.push_back(elem);
+        }
+        
+        REQUIRE(elements.size() == 3);
+        REQUIRE_THAT(elements[0].x, WithinAbs(-50.0f, 0.1f));   // Event at 150
+        REQUIRE_THAT(elements[1].x, WithinAbs(0.0f, 0.1f));     // Event at 200
+        REQUIRE_THAT(elements[2].x, WithinAbs(100.0f, 0.1f));   // Event at 300
+    }
+    
+    SECTION("Multi-trial mapping with different reference times") {
+        // Create second trial with different events
+        auto trial2_events = createEventSeries({500, 520, 550}, "trial2_spikes", registry);
+        trial2_events->setTimeFrame(time_frame);
+        
+        // Layout for 2 rows
+        LayoutRequest multi_request;
+        multi_request.viewport_y_min = -1.0f;
+        multi_request.viewport_y_max = 1.0f;
+        multi_request.series = {
+            {"trial1", SeriesType::DigitalEvent, true},
+            {"trial2", SeriesType::DigitalEvent, true}
+        };
+        
+        RowLayoutStrategy multi_strategy;
+        LayoutResponse multi_layout = multi_strategy.compute(multi_request);
+        
+        // Configure trials
+        std::vector<RasterMapper::TrialConfig> trials = {
+            {trial_events.get(), TimeFrameIndex{200}, *multi_layout.findLayout("trial1")},
+            {trial2_events.get(), TimeFrameIndex{510}, *multi_layout.findLayout("trial2")}
+        };
+        
+        auto mapped = RasterMapper::mapTrials(trials, *time_frame);
+        
+        // Trial 1: 5 events, Trial 2: 3 events = 8 total
+        REQUIRE(mapped.size() == 8);
+        
+        // Trial 1 events relative to 200
+        REQUIRE_THAT(mapped[0].x, WithinAbs(-100.0f, 0.1f));  // 100 - 200
+        REQUIRE_THAT(mapped[4].x, WithinAbs(200.0f, 0.1f));   // 400 - 200
+        
+        // Trial 2 events relative to 510
+        REQUIRE_THAT(mapped[5].x, WithinAbs(-10.0f, 0.1f));   // 500 - 510
+        REQUIRE_THAT(mapped[6].x, WithinAbs(10.0f, 0.1f));    // 520 - 510
+        REQUIRE_THAT(mapped[7].x, WithinAbs(40.0f, 0.1f));    // 550 - 510
+        
+        // Verify Y positions differ between trials
+        float y_trial1 = multi_layout.findLayout("trial1")->result.allocated_y_center;
+        float y_trial2 = multi_layout.findLayout("trial2")->result.allocated_y_center;
+        REQUIRE(y_trial1 != y_trial2);
+        
+        REQUIRE_THAT(mapped[0].y, WithinAbs(y_trial1, 0.001f));
+        REQUIRE_THAT(mapped[5].y, WithinAbs(y_trial2, 0.001f));
+    }
+    
+    SECTION("SceneBuilder with raster-mapped events") {
+        BoundingBox bounds(-200.0f, -2.0f, 300.0f, 2.0f);  // X range for relative time
+        
+        auto mapped = RasterMapper::mapEventsRelative(
+            *trial_events, *trial_layout, *time_frame, reference_time
+        );
+        
+        // Collect to vector for SceneBuilder
+        std::vector<MappedElement> mapped_vec;
+        for (auto const& elem : mapped) {
+            mapped_vec.push_back(elem);
+        }
+        
+        SceneBuilder builder;
+        RenderableScene scene = builder
+            .setBounds(bounds)
+            .addGlyphs("raster_events", mapped_vec)
+            .build();
+        
+        REQUIRE(scene.glyph_batches.size() == 1);
+        REQUIRE(scene.glyph_batches[0].positions.size() == 5);
+        REQUIRE(scene.spatial_index != nullptr);
+        
+        // Query at relative time 0 (the reference-aligned event)
+        auto const* nearest = scene.spatial_index->findNearest(0.0f, trial_layout->result.allocated_y_center, 10.0f);
+        REQUIRE(nearest != nullptr);
+    }
+}
