@@ -28,6 +28,7 @@ add_executable(test_coreplotting
     SceneHitTester.test.cpp
     IntervalDragController.test.cpp
     Mappers.test.cpp
+    SpatialLayoutStrategy.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

@@ -472,14 +472,19 @@ This doesn't generalize to:
     - Scenario 7 & 8 now use `TimeSeriesMapper::mapEvents()` + `addGlyphs()`
     - Scenario 8 uses `TimeSeriesMapper::mapIntervals()` + `addRectangles()`
 
-### 3.7.3 Create Plot-Type-Specific Layout Strategies
+### 3.7.3 Create Plot-Type-Specific Layout Strategies ✅
 
-- [ ] **Create `SpatialLayoutStrategy.hpp`**:
-    - Simple bounds-fitting layout for spatial plots
-    - Input: data bounds, viewport bounds, padding
-    - Output: SeriesLayout with identity or scaling transform
+- [x] **Create `SpatialLayoutStrategy.hpp`**:
+    - Location: [Layout/SpatialLayoutStrategy.hpp](Layout/SpatialLayoutStrategy.hpp)
+    - Tests: [SpatialLayoutStrategy.test.cpp](/tests/CorePlotting/SpatialLayoutStrategy.test.cpp)
+    - Three layout modes: `Fit` (uniform scale, preserves aspect ratio), `Fill` (non-uniform scale), `Identity`
+    - `SpatialTransform` struct with `apply(glm::vec2)`, `applyX(float)`, `applyY(float)` methods
+    - `SpatialSeriesLayout` combines standard `SeriesLayout` with `SpatialTransform`
+    - `SpatialLayoutResponse` with effective data bounds (includes padding) and viewport bounds
+    - Handles degenerate cases (zero-width/height bounds)
+    - 14 unit tests covering all modes and edge cases
 
-- [ ] **Ensure existing strategies are complete**:
+- [x] **Ensure existing strategies are complete**:
     - `StackedLayoutStrategy`: Verified for DataViewer ✓
     - `RowLayoutStrategy`: Verified for raster plots ✓
 

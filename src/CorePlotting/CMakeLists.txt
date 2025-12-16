@@ -33,6 +33,8 @@ set(COREPLOTTING_SOURCES
     Layout/StackedLayoutStrategy.cpp
     Layout/RowLayoutStrategy.hpp
     Layout/RowLayoutStrategy.cpp
+    Layout/SpatialLayoutStrategy.hpp
+    Layout/SpatialLayoutStrategy.cpp
     Transformers/GapDetector.hpp
     Transformers/GapDetector.cpp
     Transformers/RasterBuilder.hpp
