@@ -388,6 +388,263 @@ These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This g
 
 ---
 
+## Phase 3.7: Architectural Evolution — Position Mappers (NEW)
+
+**Problem Identified:** The current `SceneBuilder` API bakes DataViewer-specific coordinate logic into the "generic" scene building layer:
+
+```cpp
+// CURRENT (problematic): SceneBuilder knows about TimeFrame and computes positions
+builder.addEventSeries("events", series, layout, time_frame);  // Computes X from TimeFrame
+```
+
+This doesn't generalize to:
+- **SpatialOverlay**: X/Y come directly from PointData/LineData coordinates
+- **Scatter plots**: X from series_a value, Y from series_b value  
+- **Raster plots**: X from relative time (event - reference), not absolute time
+
+**Solution:** Separate **coordinate mapping** (visualization-specific) from **scene building** (generic).
+
+### 3.7.1 Create Range-Based Mapper Infrastructure
+
+**Design Principle:** Mappers return **ranges/views**, not vectors. This enables:
+- Zero-copy: Data flows directly from source → GPU buffer + QuadTree
+- Single traversal: x, y, and entity_id extracted together in one pass
+- Data source controls iteration: Each data type knows how to efficiently access its storage
+
+- [ ] **Create `MappedElement.hpp`** in `CorePlotting/Mappers/`:
+    ```cpp
+    // Element types yielded by mapper ranges
+    struct MappedElement {
+        float x;
+        float y;
+        EntityId entity_id;
+    };
+    
+    struct MappedRectElement {
+        float x, y, width, height;
+        EntityId entity_id;
+    };
+    
+    struct MappedVertex {
+        float x;
+        float y;
+        // EntityId typically per-line, not per-vertex
+    };
+    ```
+
+- [ ] **Create `MapperConcepts.hpp`** with C++20 concepts:
+    ```cpp
+    template<typename R>
+    concept MappedElementRange = std::ranges::input_range<R> &&
+        std::same_as<std::ranges::range_value_t<R>, MappedElement>;
+    
+    template<typename R>
+    concept MappedRectRange = std::ranges::input_range<R> &&
+        std::same_as<std::ranges::range_value_t<R>, MappedRectElement>;
+    
+    template<typename R>
+    concept MappedVertexRange = std::ranges::input_range<R> &&
+        std::same_as<std::ranges::range_value_t<R>, MappedVertex>;
+    ```
+
+- [ ] **Create `TimeSeriesMapper.hpp`** returning ranges:
+    ```cpp
+    namespace TimeSeriesMapper {
+        // Returns range of MappedElement (x=time, y=layout.y_center)
+        auto mapEvents(
+            DigitalEventSeries const& series,
+            TimeFrame const& time_frame,
+            SeriesLayout const& layout) -> /* MappedElementRange */;
+        
+        // Returns range of MappedRectElement
+        auto mapIntervals(
+            DigitalIntervalSeries const& series,
+            TimeFrame const& time_frame,
+            SeriesLayout const& layout) -> /* MappedRectRange */;
+        
+        // Returns range of MappedVertex
+        auto mapAnalog(
+            AnalogTimeSeries const& series,
+            TimeFrame const& time_frame,
+            SeriesLayout const& layout,
+            TimeFrameIndex start,
+            TimeFrameIndex end) -> /* MappedVertexRange */;
+    }
+    ```
+
+- [ ] **Create `SpatialMapper.hpp`** for direct x/y extraction:
+    ```cpp
+    namespace SpatialMapper {
+        // Returns range yielding {point.x, point.y, point.entity_id}
+        auto mapPoints(
+            PointData const& points,
+            TimeFrameIndex at_time,
+            SeriesLayout const& layout) -> /* MappedElementRange */;
+        
+        auto mapLines(
+            LineData const& lines,
+            TimeFrameIndex at_time,
+            SeriesLayout const& layout) -> /* MappedVertexRange */;
+    }
+    ```
+
+- [ ] **Create `RasterMapper.hpp`** for relative-time mapping:
+    ```cpp
+    namespace RasterMapper {
+        // Returns range with x = relative_time(event, reference)
+        auto mapEventsRelative(
+            DigitalEventSeries const& series,
+            TimeFrame const& time_frame,
+            int64_t reference_time,
+            float time_window,
+            SeriesLayout const& layout) -> /* MappedElementRange */;
+    }
+    ```
+
+- [ ] **Consider adding mapped views to DataManager types** (optional optimization):
+    ```cpp
+    // In PointData - single traversal yielding {x, y, entity_id}
+    auto PointData::viewAtTime(TimeFrameIndex time, SeriesLayout const& layout) const;
+    
+    // In DigitalEventSeries - yields {time, layout.y_center, entity_id}
+    auto DigitalEventSeries::viewMapped(TimeFrame const& tf, SeriesLayout const& layout) const;
+    ```
+
+### 3.7.2 Refactor SceneBuilder to Range-Based API
+
+- [ ] **Add range-consuming methods to SceneBuilder**:
+    ```cpp
+    // NEW: Range-based API - consumes directly into GPU buffer + QuadTree
+    template<MappedElementRange R>
+    SceneBuilder& addGlyphs(
+        std::string const& key,
+        R&& elements,
+        GlyphStyle const& style = {});
+    
+    template<MappedRectRange R>
+    SceneBuilder& addRectangles(
+        std::string const& key,
+        R&& elements,
+        RectangleStyle const& style = {});
+    
+    template<MappedVertexRange R>
+    SceneBuilder& addPolyLine(
+        std::string const& key,
+        R&& vertices,
+        EntityId line_entity_id,  // Single EntityId for entire line
+        PolyLineStyle const& style = {});
+    ```
+
+- [ ] **Implementation populates both targets in single traversal**:
+    ```cpp
+    template<MappedElementRange R>
+    SceneBuilder& SceneBuilder::addGlyphs(std::string const& key, R&& elements, GlyphStyle const& style) {
+        RenderableGlyphBatch batch;
+        batch.glyph_type = style.glyph_type;
+        batch.size = style.size;
+        
+        for (auto const& elem : elements) {
+            // Single traversal populates BOTH rendering batch AND spatial index
+            batch.positions.emplace_back(elem.x, elem.y);
+            batch.entity_ids.push_back(elem.entity_id);
+            
+            if (_spatial_index) {
+                _spatial_index->insert(elem.x, elem.y, elem.entity_id);
+            }
+        }
+        
+        _scene.glyph_batches.push_back(std::move(batch));
+        return *this;
+    }
+    ```
+
+- [ ] **Deprecate data-type-specific methods**:
+    - Mark `addEventSeries()`, `addIntervalSeries()` as `[[deprecated]]`
+    - Internal implementation creates range adapter and calls new range-based methods
+    - Remove in Phase 5 after widget migration
+
+- [ ] **Keep span-based overloads for pre-materialized data**:
+    ```cpp
+    // For cases where vectors already exist (legacy code, test fixtures)
+    SceneBuilder& addGlyphs(
+        std::string const& key,
+        std::span<glm::vec2 const> positions,
+        std::span<EntityId const> entity_ids,
+        GlyphStyle const& style = {});
+    ```
+
+### 3.7.3 Create Plot-Type-Specific Layout Strategies
+
+- [ ] **Create `SpatialLayoutStrategy.hpp`**:
+    - Simple bounds-fitting layout for spatial plots
+    - Input: data bounds, viewport bounds, padding
+    - Output: SeriesLayout with identity or scaling transform
+
+- [ ] **Ensure existing strategies are complete**:
+    - `StackedLayoutStrategy`: Verified for DataViewer ✓
+    - `RowLayoutStrategy`: Verified for raster plots ✓
+
+### 3.7.4 Update Integration Tests
+
+- [ ] **Add Scenario 9: TimeSeriesMapper End-to-End**:
+    - Create events + analog series
+    - Map using `TimeSeriesMapper::mapEvents()` and `mapAnalog()`
+    - Build scene with position-based `SceneBuilder::addGlyphs()`
+    - Verify positions match expected TimeFrame conversions
+    - Verify hit testing works correctly
+
+- [ ] **Add Scenario 10: SpatialMapper End-to-End**:
+    - Create PointData with known positions
+    - Map using `SpatialMapper::mapPoints()`
+    - Build scene and verify QuadTree contains correct positions
+    - Test hit testing with direct X/Y coordinates (no TimeFrame)
+
+- [ ] **Add Scenario 11: RasterMapper with Relative Time**:
+    - Create events with absolute times
+    - Map using `RasterMapper::mapEventsRelative()` with reference time
+    - Verify output positions are relative to reference
+    - Test multiple rows with different reference times
+
+### 3.7.5 Migration Path for Existing Code
+
+**SceneBuildingHelpers.cpp** currently uses the data-type-specific SceneBuilder API. Migration:
+
+1. Replace `builder.addEventSeries(...)` with range-based call:
+   ```cpp
+   // OLD: Intermediate vectors
+   // auto positions = TimeSeriesMapper::mapEvents(series, time_frame, layout);
+   // builder.addGlyphs(key, positions.positions, positions.entity_ids, style);
+   
+   // NEW: Direct range consumption (zero-copy)
+   builder.addGlyphs(key, 
+                     TimeSeriesMapper::mapEvents(series, time_frame, layout),
+                     style);
+   ```
+
+2. Replace `builder.addIntervalSeries(...)` similarly:
+   ```cpp
+   builder.addRectangles(key,
+                         TimeSeriesMapper::mapIntervals(series, time_frame, layout),
+                         style);
+   ```
+
+3. For SpatialOverlay, leverage data object's mapped view:
+   ```cpp
+   // Optimal: PointData provides single-traversal iteration
+   builder.addGlyphs("whiskers", points.viewAtTime(current_frame, layout));
+   ```
+
+4. Update `Phase3_5_IntegrationTests.test.cpp` to use new API
+
+**Benefits of range-based approach:**
+- **Zero-copy**: No intermediate `vector<glm::vec2>` or `vector<EntityId>`
+- **Single traversal**: x, y, entity_id extracted together, fed to both GPU buffer and QuadTree
+- **Composable**: Mappers can use `std::views::transform`, `std::views::filter`, etc.
+- **Gradual migration**: Old vector-based API still works via span overloads
+- **Data object optimization**: Types like PointData can provide highly efficient mapped views
+
+---
+
 ## Phase 4: Widget Migration (DataViewer OpenGLWidget)
 **Goal:** Systematically replace inline code with CorePlotting/PlottingOpenGL calls.
 
@@ -600,7 +857,62 @@ These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This g
 
 ### Coordinate System Consistency
 - **Question**: How to ensure QuadTree coordinates match Model matrix transforms?
-- **Solution**: Both use `SeriesLayoutResult.allocated_y_center` — single source of truth
+- **Solution**: Both built from same Mapper output — positions computed once, used for both rendering and indexing
+
+### Data Type Coupling
+- **Question**: Should CorePlotting know about DataManager types (DigitalEventSeries, AnalogTimeSeries, etc.)?
+- **Decision**: Yes, this is acceptable. CorePlotting is designed for WhiskerToolbox's data model. The Mappers explicitly couple to DataManager types; SceneBuilder and below remain data-type-agnostic.
+
+---
+
+## Summary: What Changes with Position Mappers Architecture
+
+### Components to Create (Phase 3.7)
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `MappedElement.hpp` | `Mappers/` | Element types yielded by ranges |
+| `MapperConcepts.hpp` | `Mappers/` | C++20 concepts for range requirements |
+| `TimeSeriesMapper` | `Mappers/` | DataViewer: events→time, analog→time (returns ranges) |
+| `SpatialMapper` | `Mappers/` | SpatialOverlay: points→x/y (returns ranges) |
+| `RasterMapper` | `Mappers/` | Raster: events→relative time (returns ranges) |
+| `SpatialLayoutStrategy` | `Layout/` | Simple bounds-fitting layout |
+
+### Components to Modify
+| Component | Change |
+|-----------|--------|
+| `SceneBuilder` | Add range-consuming `addGlyphs<R>(range)`, `addRectangles<R>(range)`, `addPolyLine<R>(range)` |
+| `SceneBuilder` | Keep span overloads for legacy/test code |
+| `SceneBuilder` | Deprecate `addEventSeries(series, layout, tf)`, `addIntervalSeries(...)` |
+| `SceneBuildingHelpers` | Use Mappers returning ranges, pass directly to SceneBuilder |
+| `Phase3_5_IntegrationTests` | Update to use Mapper → SceneBuilder range flow |
+| `PointData` (optional) | Add `viewAtTime(frame, layout)` returning mapped range |
+| `DigitalEventSeries` (optional) | Add `viewMapped(tf, layout)` returning mapped range |
+
+### Components Unchanged
+| Component | Reason |
+|-----------|--------|
+| `LayoutEngine`, strategies | Already outputs SeriesLayout (transforms), not positions |
+| `RenderablePrimitives` | Already position-based |
+| `SceneHitTester` | Queries QuadTree by position, data-type-agnostic |
+| `PlottingOpenGL` renderers | Consume batches, don't care about data origin |
+| `SVGPrimitives` | Consume batches, don't care about data origin |
+
+### Key Architectural Principle
+
+**The Mapper is the boundary between "data semantics" and "geometry":**
+
+```
+DataManager Types ──▶ Mapper (viz-specific) ──▶ positions[] ──▶ SceneBuilder (generic) ──▶ RenderableScene
+```
+
+- **Left of Mapper**: Knows about TimeFrame, DigitalEventSeries, AnalogTimeSeries, PointData
+- **Right of Mapper**: Only knows about positions, entity_ids, styles
+
+This enables:
+1. Adding new visualization types by writing a new Mapper (no SceneBuilder changes)
+2. Adding new data types by extending relevant Mappers (no SceneBuilder changes)
+3. Testing Mappers independently from rendering
+4. Reusing SceneBuilder, renderers, and hit testing across all visualizations
 
 ---
 
@@ -608,10 +920,13 @@ These tests use **no Qt/OpenGL**—just CorePlotting + DataManager types. This g
 
 ```
 [ ] Widget uses CorePlotting LayoutEngine for positioning
+[ ] Widget uses appropriate Mapper for its visualization type
+[ ] Widget uses position-based SceneBuilder API
 [ ] Widget uses CorePlotting ViewState (or TimeSeriesViewState)
 [ ] Widget renders via RenderableScene (not inline vertex generation)
 [ ] Widget uses spatial index for hit testing
-[ ] SVG export works via same RenderableScene
+[ ] SVG export works via same Mapper → SceneBuilder flow
+[ ] Unit tests for Mapper output
 [ ] Unit tests for layout calculations
 [ ] Unit tests for coordinate transforms
 ```

@@ -1,11 +1,11 @@
 #ifndef COREPLOTTING_INTERACTION_SCENEHITTESTER_HPP
 #define COREPLOTTING_INTERACTION_SCENEHITTESTER_HPP
 
-#include "HitTestResult.hpp"
-#include "../SceneGraph/RenderablePrimitives.hpp"
-#include "../Layout/LayoutEngine.hpp"
 #include "../CoordinateTransform/ScreenToWorld.hpp"
 #include "../CoordinateTransform/SeriesCoordinateQuery.hpp"
+#include "../Layout/LayoutEngine.hpp"
+#include "../SceneGraph/RenderablePrimitives.hpp"
+#include "HitTestResult.hpp"
 
 #include <glm/glm.hpp>
 
@@ -22,13 +22,13 @@ namespace CorePlotting {
 struct HitTestConfig {
     /// Tolerance in world units for point/event proximity
     float point_tolerance{5.0f};
-    
+
     /// Tolerance in world units for interval edge detection
     float edge_tolerance{5.0f};
-    
+
     /// Whether to prioritize discrete elements (events) over regions (analog)
     bool prioritize_discrete{true};
-    
+
     /// Default configuration with reasonable values
     static HitTestConfig defaultConfig() {
         return HitTestConfig{};
@@ -72,28 +72,28 @@ public:
      * @brief Construct with default configuration
      */
     SceneHitTester() = default;
-    
+
     /**
      * @brief Construct with custom configuration
      * @param config Hit testing configuration
      */
     explicit SceneHitTester(HitTestConfig config)
         : _config(std::move(config)) {}
-    
+
     /**
      * @brief Set hit testing configuration
      */
     void setConfig(HitTestConfig config) {
         _config = std::move(config);
     }
-    
+
     /**
      * @brief Get current configuration
      */
-    [[nodiscard]] HitTestConfig const& getConfig() const {
+    [[nodiscard]] HitTestConfig const & getConfig() const {
         return _config;
     }
-    
+
     /**
      * @brief Perform a hit test at the given world coordinates
      * 
@@ -108,11 +108,11 @@ public:
      * @return HitTestResult describing what was hit (or NoHit if nothing)
      */
     [[nodiscard]] HitTestResult hitTest(
-        float world_x,
-        float world_y,
-        RenderableScene const& scene,
-        LayoutResponse const& layout) const;
-    
+            float world_x,
+            float world_y,
+            RenderableScene const & scene,
+            LayoutResponse const & layout) const;
+
     /**
      * @brief Query only the QuadTree spatial index for discrete elements
      * 
@@ -124,10 +124,10 @@ public:
      * @return HitTestResult if an element is within tolerance, NoHit otherwise
      */
     [[nodiscard]] HitTestResult queryQuadTree(
-        float world_x,
-        float world_y,
-        RenderableScene const& scene) const;
-    
+            float world_x,
+            float world_y,
+            RenderableScene const & scene) const;
+
     /**
      * @brief Query for intervals at a given time coordinate
      * 
@@ -141,11 +141,11 @@ public:
      * @return HitTestResult for the closest matching interval
      */
     [[nodiscard]] HitTestResult queryIntervals(
-        float world_x,
-        float world_y,
-        RenderableScene const& scene,
-        std::map<size_t, std::string> const& series_key_map) const;
-    
+            float world_x,
+            float world_y,
+            RenderableScene const & scene,
+            std::map<size_t, std::string> const & series_key_map) const;
+
     /**
      * @brief Find interval edge at a given position
      * 
@@ -159,11 +159,11 @@ public:
      * @return HitTestResult with IntervalEdgeLeft/Right if within edge tolerance
      */
     [[nodiscard]] HitTestResult findIntervalEdge(
-        float world_x,
-        RenderableScene const& scene,
-        std::map<std::string, std::pair<int64_t, int64_t>> const& selected_intervals,
-        std::map<size_t, std::string> const& series_key_map) const;
-    
+            float world_x,
+            RenderableScene const & scene,
+            std::map<std::string, std::pair<int64_t, int64_t>> const & selected_intervals,
+            std::map<size_t, std::string> const & series_key_map) const;
+
     /**
      * @brief Query which series region contains the given point
      * 
@@ -176,17 +176,17 @@ public:
      * @return HitTestResult with AnalogSeries type if within a series region
      */
     [[nodiscard]] HitTestResult querySeriesRegion(
-        float world_x,
-        float world_y,
-        LayoutResponse const& layout) const;
+            float world_x,
+            float world_y,
+            LayoutResponse const & layout) const;
 
 private:
     HitTestConfig _config;
-    
+
     // Helper to merge multiple hit results, keeping the best one
     [[nodiscard]] HitTestResult selectBestHit(
-        HitTestResult const& a,
-        HitTestResult const& b) const;
+            HitTestResult const & a,
+            HitTestResult const & b) const;
 };
 
 // ============================================================================
@@ -194,91 +194,87 @@ private:
 // ============================================================================
 
 inline HitTestResult SceneHitTester::hitTest(
-    float world_x,
-    float world_y,
-    RenderableScene const& scene,
-    LayoutResponse const& layout) const
-{
+        float world_x,
+        float world_y,
+        RenderableScene const & scene,
+        LayoutResponse const & layout) const {
     HitTestResult best_result = HitTestResult::noHit();
-    
+
     // Strategy 1: Query QuadTree for discrete elements (events, points)
     if (scene.spatial_index) {
         HitTestResult quad_result = queryQuadTree(world_x, world_y, scene);
         best_result = selectBestHit(best_result, quad_result);
     }
-    
+
     // Strategy 2: Query rectangle batches for intervals
     // Note: For a complete implementation, the caller should provide the series_key_map
     // For now, we use a simple index-based approach
     // (In practice, the widget maintains this mapping when building the scene)
-    
+
     // Strategy 3: Query series regions (always do this as fallback)
     HitTestResult region_result = querySeriesRegion(world_x, world_y, layout);
-    
+
     // If we have a discrete hit, it takes priority over region hits
     if (_config.prioritize_discrete && best_result.isDiscrete()) {
         return best_result;
     }
-    
+
     return selectBestHit(best_result, region_result);
 }
 
 inline HitTestResult SceneHitTester::queryQuadTree(
-    float world_x,
-    float world_y,
-    RenderableScene const& scene) const
-{
+        float world_x,
+        float world_y,
+        RenderableScene const & scene) const {
     if (!scene.spatial_index) {
         return HitTestResult::noHit();
     }
-    
+
     // Query the QuadTree for the nearest point within tolerance
-    auto* nearest = scene.spatial_index->findNearest(world_x, world_y, _config.point_tolerance);
-    
+    auto * nearest = scene.spatial_index->findNearest(world_x, world_y, _config.point_tolerance);
+
     if (nearest) {
         float dx = nearest->x - world_x;
         float dy = nearest->y - world_y;
         float dist = std::sqrt(dx * dx + dy * dy);
-        
+
         // Create an event hit result (QuadTree stores data as EntityId)
         return HitTestResult::eventHit(
-            "",  // Series key would need to be stored in QuadTree or looked up separately
-            nearest->data,  // QuadTree<EntityId> stores EntityId in .data
-            dist,
-            nearest->x,
-            nearest->y
-        );
+                "",           // Series key would need to be stored in QuadTree or looked up separately
+                nearest->data,// QuadTree<EntityId> stores EntityId in .data
+                dist,
+                nearest->x,
+                nearest->y);
     }
-    
+
     return HitTestResult::noHit();
 }
 
 inline HitTestResult SceneHitTester::queryIntervals(
-    float world_x,
-    float world_y,
-    RenderableScene const& scene,
-    std::map<size_t, std::string> const& series_key_map) const
-{
+        float world_x,
+        float world_y,
+        RenderableScene const & scene,
+        std::map<size_t, std::string> const & series_key_map) const {
     HitTestResult best = HitTestResult::noHit();
-    
+
     for (size_t batch_idx = 0; batch_idx < scene.rectangle_batches.size(); ++batch_idx) {
-        auto const& batch = scene.rectangle_batches[batch_idx];
-        
+        auto const & batch = scene.rectangle_batches[batch_idx];
+
         // Get series key for this batch
         std::string series_key;
         auto key_it = series_key_map.find(batch_idx);
         if (key_it != series_key_map.end()) {
             series_key = key_it->second;
         }
-        
+
         // Check each rectangle in the batch
         for (size_t i = 0; i < batch.bounds.size(); ++i) {
-            auto const& rect = batch.bounds[i];
+            auto const & rect = batch.bounds[i];
             float rect_x = rect.x;
             float rect_y = rect.y;
             float rect_w = rect.z;
             float rect_h = rect.w;
-            
+
             // Check if world_x is within interval time range
             if (world_x >= rect_x && world_x <= (rect_x + rect_w)) {
                 // Calculate distance (for Y, check if within height)
@@ -288,61 +284,59 @@ inline HitTestResult SceneHitTester::queryIntervals(
                 } else if (world_y > rect_y + rect_h) {
                     y_dist = world_y - (rect_y + rect_h);
                 }
-                
-                float dist = y_dist; // For intervals, X is always inside
-                
+
+                float dist = y_dist;// For intervals, X is always inside
+
                 EntityId entity_id{0};
                 if (i < batch.entity_ids.size()) {
                     entity_id = batch.entity_ids[i];
                 }
-                
+
                 auto result = HitTestResult::intervalBodyHit(
-                    series_key,
-                    entity_id,
-                    static_cast<int64_t>(rect_x),
-                    static_cast<int64_t>(rect_x + rect_w),
-                    dist
-                );
-                
+                        series_key,
+                        entity_id,
+                        static_cast<int64_t>(rect_x),
+                        static_cast<int64_t>(rect_x + rect_w),
+                        dist);
+
                 best = selectBestHit(best, result);
             }
         }
     }
-    
+
     return best;
 }
 
 inline HitTestResult SceneHitTester::findIntervalEdge(
-    float world_x,
-    RenderableScene const& scene,
-    std::map<std::string, std::pair<int64_t, int64_t>> const& selected_intervals,
-    std::map<size_t, std::string> const& series_key_map) const
-{
+        float world_x,
+        RenderableScene const & scene,
+        std::map<std::string, std::pair<int64_t, int64_t>> const & selected_intervals,
+        std::map<size_t, std::string> const & series_key_map) const {
     HitTestResult best = HitTestResult::noHit();
-    
+
     for (size_t batch_idx = 0; batch_idx < scene.rectangle_batches.size(); ++batch_idx) {
-        auto const& batch = scene.rectangle_batches[batch_idx];
-        
+        auto const & batch = scene.rectangle_batches[batch_idx];
+
         // Get series key for this batch
         std::string series_key;
         auto key_it = series_key_map.find(batch_idx);
         if (key_it != series_key_map.end()) {
             series_key = key_it->second;
         }
-        
+
         // Check if this series has a selected interval
         auto sel_it = selected_intervals.find(series_key);
         if (sel_it == selected_intervals.end() && !selected_intervals.empty()) {
-            continue; // Only check selected intervals if any are selected
+            continue;// Only check selected intervals if any are selected
         }
-        
+
         for (size_t i = 0; i < batch.bounds.size(); ++i) {
-            auto const& rect = batch.bounds[i];
+            auto const & rect = batch.bounds[i];
             float rect_x = rect.x;
             float rect_w = rect.z;
             float left_edge = rect_x;
             float right_edge = rect_x + rect_w;
-            
+
             // If we have selected intervals, only check matching ones
             if (sel_it != selected_intervals.end()) {
                 if (static_cast<int64_t>(rect_x) != sel_it->second.first ||
@@ -350,88 +344,83 @@ inline HitTestResult SceneHitTester::findIntervalEdge(
                     continue;
                 }
             }
-            
+
             EntityId entity_id{0};
             if (i < batch.entity_ids.size()) {
                 entity_id = batch.entity_ids[i];
             }
-            
+
             // Check left edge
             float left_dist = std::abs(world_x - left_edge);
             if (left_dist <= _config.edge_tolerance) {
                 auto result = HitTestResult::intervalEdgeHit(
-                    series_key,
-                    entity_id,
-                    true, // is_left_edge
-                    static_cast<int64_t>(rect_x),
-                    static_cast<int64_t>(right_edge),
-                    left_edge,
-                    left_dist
-                );
+                        series_key,
+                        entity_id,
+                        true,// is_left_edge
+                        static_cast<int64_t>(rect_x),
+                        static_cast<int64_t>(right_edge),
+                        left_edge,
+                        left_dist);
                 best = selectBestHit(best, result);
             }
-            
+
             // Check right edge
             float right_dist = std::abs(world_x - right_edge);
             if (right_dist <= _config.edge_tolerance) {
                 auto result = HitTestResult::intervalEdgeHit(
-                    series_key,
-                    entity_id,
-                    false, // is_left_edge (right edge)
-                    static_cast<int64_t>(rect_x),
-                    static_cast<int64_t>(right_edge),
-                    right_edge,
-                    right_dist
-                );
+                        series_key,
+                        entity_id,
+                        false,// is_left_edge (right edge)
+                        static_cast<int64_t>(rect_x),
+                        static_cast<int64_t>(right_edge),
+                        right_edge,
+                        right_dist);
                 best = selectBestHit(best, result);
             }
         }
     }
-    
+
     return best;
 }
 
 inline HitTestResult SceneHitTester::querySeriesRegion(
-    float world_x,
-    float world_y,
-    LayoutResponse const& layout) const
-{
+        float world_x,
+        float world_y,
+        LayoutResponse const & layout) const {
     auto series_result = findSeriesAtWorldY(world_y, layout);
-    
+
     if (series_result.has_value()) {
         return HitTestResult::analogSeriesHit(
-            series_result->series_key,
-            world_x,
-            world_y,
-            series_result->is_within_bounds ? 0.0f : std::abs(series_result->series_local_y)
-        );
+                series_result->series_key,
+                world_x,
+                world_y,
+                series_result->is_within_bounds ? 0.0f : std::abs(series_result->series_local_y));
     }
-    
+
     return HitTestResult::noHit();
 }
 
 inline HitTestResult SceneHitTester::selectBestHit(
-    HitTestResult const& a,
-    HitTestResult const& b) const
-{
+        HitTestResult const & a,
+        HitTestResult const & b) const {
     // If one is no-hit, return the other
     if (!a.hasHit()) return b;
     if (!b.hasHit()) return a;
-    
+
     // Prioritize discrete elements if configured
     if (_config.prioritize_discrete) {
         if (a.isDiscrete() && !b.isDiscrete()) return a;
         if (b.isDiscrete() && !a.isDiscrete()) return b;
     }
-    
+
     // Prioritize interval edges over bodies (for drag detection)
     if (a.isIntervalEdge() && !b.isIntervalEdge()) return a;
     if (b.isIntervalEdge() && !a.isIntervalEdge()) return b;
-    
+
     // Otherwise, return the closest one
     return a.isCloserThan(b) ? a : b;
 }
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_INTERACTION_SCENEHITTESTER_HPP
+#endif// COREPLOTTING_INTERACTION_SCENEHITTESTER_HPP

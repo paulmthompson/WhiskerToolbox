@@ -22,9 +22,9 @@ namespace CorePlotting {
  */
 struct PendingEventSeries {
     std::string series_key;
-    DigitalEventSeries const* series;
-    SeriesLayout const* layout;
-    TimeFrame const* time_frame;
+    DigitalEventSeries const * series;
+    SeriesLayout const * layout;
+    TimeFrame const * time_frame;
 };
 
 /**
@@ -32,9 +32,9 @@ struct PendingEventSeries {
  */
 struct PendingIntervalSeries {
     std::string series_key;
-    DigitalIntervalSeries const* series;
-    SeriesLayout const* layout;
-    TimeFrame const* time_frame;
+    DigitalIntervalSeries const * series;
+    SeriesLayout const * layout;
+    TimeFrame const * time_frame;
 };
 
 /**
@@ -72,7 +72,7 @@ public:
      * @param bounds World-space bounding box
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& setBounds(BoundingBox const& bounds);
+    SceneBuilder & setBounds(BoundingBox const & bounds);
 
     /**
      * @brief Set View and Projection matrices from ViewState
@@ -105,11 +105,11 @@ public:
      * @param time_frame Time frame for converting indices to absolute time
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addEventSeries(
-        std::string const& series_key,
-        DigitalEventSeries const& series,
-        SeriesLayout const& layout,
-        TimeFrame const& time_frame);
+    SceneBuilder & addEventSeries(
+            std::string const & series_key,
+            DigitalEventSeries const & series,
+            SeriesLayout const & layout,
+            TimeFrame const & time_frame);
 
     /**
      * @brief Add an interval series to the scene
@@ -123,11 +123,11 @@ public:
      * @param time_frame Time frame for converting indices to absolute time
      * @return Reference to this builder for chaining
      */
-    SceneBuilder& addIntervalSeries(
-        std::string const& series_key,
-        DigitalIntervalSeries const& series,
-        SeriesLayout const& layout,
-        TimeFrame const& time_frame);
+    SceneBuilder & addIntervalSeries(
+            std::string const & series_key,
+            DigitalIntervalSeries const & series,
+            SeriesLayout const & layout,
+            TimeFrame const & time_frame);
 
     // ========================================================================
     // Low-level batch methods (for custom geometry)
@@ -210,24 +210,24 @@ public:
      * Useful for SceneHitTester::queryIntervals which needs to map
      * batch indices back to series identifiers.
      */
-    [[nodiscard]] std::map<size_t, std::string> const& getRectangleBatchKeyMap() const {
+    [[nodiscard]] std::map<size_t, std::string> const & getRectangleBatchKeyMap() const {
         return _rectangle_batch_key_map;
     }
 
 private:
     RenderableScene _scene;
     bool _has_matrices{false};
-    
+
     // Bounds for spatial indexing
     std::optional<BoundingBox> _bounds;
-    
+
     // Pending series for spatial index construction
     std::vector<PendingEventSeries> _pending_events;
     std::vector<PendingIntervalSeries> _pending_intervals;
-    
+
     // Mapping from batch index to series key
     std::map<size_t, std::string> _rectangle_batch_key_map;
-    
+
     // Internal helper to build spatial index from pending series
     void buildSpatialIndexFromPendingSeries();
 };

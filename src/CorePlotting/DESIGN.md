@@ -7,8 +7,387 @@ CorePlotting is the foundational, Qt-independent C++ library for the WhiskerTool
 The ultimate goal is to de-complect the current parallel implementations (DataViewer, Analysis Dashboard, SVG Exporter) into a layered architecture:
 
 1.  **CorePlotting** (This Library): Data structures, Layout engines, Coordinate transforms (MVP), Spatial Indexing. (No Qt, No OpenGL).
-2.  **PlottingOpenGL** (Future): Rendering strategies that consume CorePlotting descriptions and issue OpenGL commands.
+2.  **PlottingOpenGL**: Rendering strategies that consume CorePlotting descriptions and issue OpenGL commands.
 3.  **QtPlotting** (Future): Qt widgets, Input handling, Tooltips, bridging user events to CorePlotting queries.
+
+---
+
+## Architectural Evolution: Position Mappers (December 2025)
+
+### The Problem: Coordinate Mapping is Visualization-Specific
+
+The initial design baked DataViewer-specific coordinate logic into `SceneBuilder`:
+
+```cpp
+// PROBLEM: This is DataViewer-specific, not general
+SceneBuilder::addEventSeries(series, layout, time_frame) {
+    float x = time_frame.getTimeAtIndex(event.time);  // X = absolute time
+    float y = layout.allocated_y_center;               // Y = stacked position
+}
+```
+
+This doesn't work for other visualizations:
+
+| Visualization | X Coordinate Source | Y Coordinate Source |
+|---------------|---------------------|---------------------|
+| **DataViewer Events** | `TimeFrame[event.time]` | `layout.y_center` (constant) |
+| **DataViewer Analog** | `TimeFrame[sample.index]` | `layout.apply(sample.value)` |
+| **SpatialOverlay Points** | `point.x` | `point.y` |
+| **Raster Plot** | `relative_time(event, center)` | `row.y_center` |
+| **Scatter Plot** | `series_a.value[i]` | `series_b.value[i]` |
+| **Line Event Plot** | `relative_time(sample, trigger)` | `layout.apply(sample.value)` |
+
+### The Solution: Separate Extraction, Layout, and Scene Building
+
+The architecture now follows a **three-layer model**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     Visualization-Specific Layer                            │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────────┐   │
+│  │ TimeSeriesMapper │  │  SpatialMapper   │  │   ScatterMapper          │   │
+│  │ (DataViewer)     │  │ (SpatialOverlay) │  │   (Future)               │   │
+│  │                  │  │                  │  │                          │   │
+│  │ Knows: TimeFrame │  │ Knows: Direct    │  │ Knows: Two series +      │   │
+│  │ + LayoutEngine   │  │ X/Y from data    │  │ TimeFrameIndex sync      │   │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────────┬─────────────┘   │
+│           │                     │                         │                 │
+│           ▼                     ▼                         ▼                 │
+│     positions[]           positions[]               positions[]             │
+│     entity_ids[]          entity_ids[]              entity_ids[]            │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CorePlotting (General)                               │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         SceneBuilder                                 │   │
+│  │  • addGlyphs(key, positions[], entity_ids[])                        │   │
+│  │  • addRectangles(key, bounds[], entity_ids[])                       │   │
+│  │  • addPolyLine(vertices[], entity_ids[])                            │   │
+│  │  • setBounds() / setViewState() / build()                           │   │
+│  │                                                                      │   │
+│  │  Does NOT know about TimeFrame, specific data types, or extractors  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│                                    ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                       RenderableScene                                │   │
+│  │  • glyph_batches[], rectangle_batches[], polyline_batches[]         │   │
+│  │  • spatial_index (QuadTree<EntityId>)                               │   │
+│  │  • view_matrix, projection_matrix                                   │   │
+│  │  • batch_key_maps (embedded)                                        │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The General Model
+
+Every data element's position follows this formula:
+
+```
+Position = LayoutTransform( X_Extractor(data, index), Y_Extractor(data, index) )
+```
+
+Where:
+- **Extractor**: Function that pulls a raw coordinate from a data element
+- **LayoutTransform**: Maps raw coordinates → world coordinates
+
+### Axis Bindings
+
+Each axis can bind to different data sources:
+
+```cpp
+struct AxisBinding {
+    enum class Source {
+        TimeFrameAbsolute,   // TimeFrameIndex → absolute time via TimeFrame
+        TimeFrameRelative,   // TimeFrameIndex → time relative to reference
+        DataFieldX,          // Extract X field from spatial data (Point, Line)
+        DataFieldY,          // Extract Y field from spatial data
+        DataValue,           // Extract primary value (AnalogTimeSeries sample)
+        LayoutOnly           // Position comes entirely from layout (no data extraction)
+    };
+    
+    Source source;
+    std::shared_ptr<TimeFrame> time_frame;           // For TimeFrame sources
+    std::optional<int64_t> reference_time;           // For relative time
+    std::optional<float> normalization_factor;       // For normalized coordinates
+};
+```
+
+### Layout Transforms
+
+Layout transforms convert raw extracted values to world coordinates:
+
+```cpp
+struct LayoutTransform {
+    float offset{0.0f};      // Added after scaling
+    float scale{1.0f};       // Applied to raw value
+    float allocated_min{0.0f};
+    float allocated_max{0.0f};
+    
+    [[nodiscard]] float apply(float raw_value) const {
+        return raw_value * scale + offset;
+    }
+};
+
+struct SeriesLayout {
+    std::string key;
+    LayoutTransform x_transform;  // Usually identity for time-series
+    LayoutTransform y_transform;  // Vertical positioning and scaling
+};
+```
+
+### Position Mappers: Range-Based Design
+
+Mappers return **range views**, not vectors. This enables:
+1. **Zero-copy**: Data flows directly from source → GPU buffer + QuadTree
+2. **Single traversal**: x, y, and entity_id extracted together
+3. **Data source controls iteration**: Each data type knows how to efficiently access its own storage
+
+#### The MappedElement Concept
+
+```cpp
+// Common element type yielded by all mappers
+struct MappedElement {
+    float x;
+    float y;
+    EntityId entity_id;
+};
+
+// For rectangles (intervals)
+struct MappedRectElement {
+    float x, y, width, height;
+    EntityId entity_id;
+};
+
+// For polylines (analog series, lines)
+struct MappedVertex {
+    float x;
+    float y;
+    // Note: EntityId typically per-line, not per-vertex
+};
+```
+
+#### Range-Based Mapper API
+
+```cpp
+// TimeSeriesMapper - returns ranges, not vectors
+namespace TimeSeriesMapper {
+    // Returns range of MappedElement (x=time, y=layout.y_center)
+    auto mapEvents(
+        DigitalEventSeries const& series,
+        TimeFrame const& time_frame,
+        SeriesLayout const& layout) -> /* range of MappedElement */;
+    
+    // Returns range of MappedRectElement
+    auto mapIntervals(
+        DigitalIntervalSeries const& series,
+        TimeFrame const& time_frame,
+        SeriesLayout const& layout) -> /* range of MappedRectElement */;
+    
+    // Returns range of MappedVertex + line metadata
+    auto mapAnalog(
+        AnalogTimeSeries const& series,
+        TimeFrame const& time_frame,
+        SeriesLayout const& layout,
+        TimeFrameIndex start, TimeFrameIndex end) -> /* range of MappedVertex */;
+}
+
+// SpatialMapper - direct x/y from data
+namespace SpatialMapper {
+    // Returns range yielding {point.x, point.y, point.entity_id}
+    auto mapPoints(
+        PointData const& points,
+        TimeFrameIndex at_time,
+        SeriesLayout const& layout) -> /* range of MappedElement */;
+    
+    // Returns range of vertices from line data
+    auto mapLines(
+        LineData const& lines,
+        TimeFrameIndex at_time,
+        SeriesLayout const& layout) -> /* range of MappedVertex */;
+}
+
+// RasterMapper - relative time positioning
+namespace RasterMapper {
+    // Returns range with x = relative_time(event, reference)
+    auto mapEventsRelative(
+        DigitalEventSeries const& series,
+        TimeFrame const& time_frame,
+        int64_t reference_time,
+        float time_window,
+        SeriesLayout const& layout) -> /* range of MappedElement */;
+}
+```
+
+#### Ideal: Data Objects Provide Iteration
+
+The cleanest design has data objects provide their own mapping views:
+
+```cpp
+// PointData provides efficient iteration with layout applied
+for (auto [x, y, entity_id] : points.viewAtTime(current_frame, layout)) {
+    // Single traversal, no intermediate storage
+}
+
+// DigitalEventSeries with TimeFrame conversion + layout
+for (auto [x, y, entity_id] : events.viewMapped(time_frame, layout)) {
+    // x = time_frame.getTimeAtIndex(event.time)
+    // y = layout.y_transform.apply(0)  // events have no intrinsic Y
+}
+
+// AnalogTimeSeries with TimeFrame + layout
+for (auto [x, y] : analog.viewMapped(time_frame, layout, start, end)) {
+    // x = time_frame.getTimeAtIndex(sample.index)
+    // y = layout.y_transform.apply(sample.value)
+}
+```
+
+This "short-circuits" the Mapper layer entirely for simple cases—the data object itself knows how to yield mapped coordinates efficiently.
+
+### Layout Engines by Plot Type
+
+Different plot types need different layout strategies:
+
+```cpp
+// Stacked time-series (DataViewer)
+class StackedTimeSeriesLayout {
+    LayoutResponse compute(std::vector<SeriesRequest> const& series,
+                           float viewport_y_min, float viewport_y_max);
+};
+
+// Spatial plots (SpatialOverlay) - simple viewport fitting
+class SpatialLayout {
+    SeriesLayout compute(BoundingBox const& data_bounds,
+                         BoundingBox const& viewport_bounds,
+                         float padding = 0.1f);
+};
+
+// Row-based layout (Raster plots)
+class RowLayout {
+    LayoutResponse compute(int num_rows,
+                           float viewport_y_min, float viewport_y_max);
+};
+```
+
+### Example Usage Patterns
+
+**DataViewer (time-series):**
+```cpp
+// 1. Compute layout
+auto layout = StackedTimeSeriesLayout().compute(series_requests, -1.0f, 1.0f);
+
+// 2. Build scene - Mapper returns range, SceneBuilder consumes directly
+RenderableScene scene = SceneBuilder()
+    .setBounds(data_bounds)
+    .addGlyphs("events", 
+               TimeSeriesMapper::mapEvents(events, *master_tf, *layout.findLayout("events")))
+    .addPolyLine("analog",
+                 TimeSeriesMapper::mapAnalog(analog, *master_tf, *layout.findLayout("analog"), start, end),
+                 analog.getEntityId())
+    .build();
+
+// Or with data object providing mapped view directly:
+RenderableScene scene = SceneBuilder()
+    .setBounds(data_bounds)
+    .addGlyphs("events", events.viewMapped(*master_tf, *layout.findLayout("events")))
+    .build();
+```
+
+**SpatialOverlay (spatial data):**
+```cpp
+// 1. Simple spatial layout (fits bounds to viewport)
+auto layout = SpatialLayout().compute(data_bounds, viewport_bounds);
+
+// 2. Build scene - PointData yields {x, y, entity_id} directly
+RenderableScene scene = SceneBuilder()
+    .setBounds(viewport_bounds)
+    .addGlyphs("whiskers", points.viewAtTime(current_frame, layout))
+    .build();
+
+// Single traversal: PointData → GPU buffer + QuadTree
+// No intermediate vector<glm::vec2> or vector<EntityId>
+```
+
+**Raster Plot:**
+```cpp
+// 1. Row layout for trials
+auto layout = RowLayout().compute(trials.size(), -1.0f, 1.0f);
+
+// 2. Build scene with range-based API
+SceneBuilder builder;
+builder.setBounds(plot_bounds);
+
+for (size_t i = 0; i < trials.size(); ++i) {
+    // Mapper returns range, consumed directly by addGlyphs
+    builder.addGlyphs(
+        "trial_" + std::to_string(i),
+        RasterMapper::mapEventsRelative(
+            *trials[i].events, *trials[i].time_frame,
+            trials[i].align_time, time_window, layout.layouts[i]));
+}
+
+auto scene = builder.build();
+```
+
+### Key Design Principles
+
+1. **SceneBuilder consumes ranges, never vectors** — no intermediate allocations
+2. **Single traversal for x, y, entity_id** — data flows directly to GPU buffer + QuadTree
+3. **Data objects can provide mapped views** — `points.viewAtTime(frame, layout)` short-circuits the Mapper
+4. **Each plot type has coordinate extraction logic** — encapsulated in Mappers or data object methods
+5. **Layout engines are plot-type specific** — but share a common output format (`SeriesLayout`)
+6. **Data type coupling is acceptable** — CorePlotting knows about DataManager types; this is intentional
+7. **QuadTree uses the same positions as rendering** — both populated from same range traversal
+
+### Directory Structure Update
+
+```
+src/CorePlotting/
+├── Mappers/                       # Visualization-specific coordinate mapping
+│   ├── MappedElement.hpp          # Common element types (MappedElement, MappedRectElement, MappedVertex)
+│   ├── TimeSeriesMapper.hpp       # DataViewer: events→time, intervals→time, analog→time
+│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y
+│   ├── RasterMapper.hpp           # Raster/PSTH: events→relative time
+│   └── MapperConcepts.hpp         # C++20 concepts for range requirements
+│
+├── Layout/                        # Plot-type-specific layout strategies
+│   ├── StackedTimeSeriesLayout.hpp
+│   ├── SpatialLayout.hpp
+│   ├── RowLayout.hpp
+│   └── SeriesLayout.hpp           # Common layout result type
+│
+├── SceneGraph/                    # Generic scene assembly (range-based API)
+│   ├── SceneBuilder.hpp           # Fluent builder consuming ranges
+│   ├── RenderableScene.hpp
+│   └── RenderablePrimitives.hpp
+│
+└── ... (existing directories)
+```
+
+**Note on Data Object Integration:**
+
+For optimal efficiency, data objects in DataManager can provide mapped views directly:
+
+```cpp
+// In DataManager/PointData/PointData.hpp
+class PointData {
+    // Returns range yielding {x, y, entity_id} with layout applied
+    auto viewAtTime(TimeFrameIndex time, SeriesLayout const& layout) const;
+};
+
+// In DataManager/DigitalTimeSeries/Digital_Event_Series.hpp  
+class DigitalEventSeries {
+    // Returns range yielding {x=time, y=layout.y_center, entity_id}
+    auto viewMapped(TimeFrame const& tf, SeriesLayout const& layout) const;
+};
+```
+
+This keeps Mappers thin (or eliminates them for simple cases) while ensuring single-traversal efficiency.
+
+---
 
 ## Motivation
 
@@ -355,89 +734,76 @@ struct RenderableScene {
 
 ### 2. LayoutEngine vs SceneGraph: Clarifying Responsibilities
 
-**LayoutEngine** and **SceneGraph (RenderableScene)** serve different purposes:
+**LayoutEngine**, **Mappers**, and **SceneGraph (RenderableScene)** serve different purposes:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                           Data Flow                                          │
 │                                                                              │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐  │
-│  │ Series Data │───▶│LayoutEngine  │───▶│ SceneGraph  │───▶│  Renderer   │  │
-│  │ (Analog,    │    │ (positioning)│    │ (geometry + │    │ (OpenGL/SVG)│  │
-│  │  Events)    │    │              │    │  matrices)  │    │             │  │
+│  │ Series Info │───▶│LayoutEngine  │───▶│ Mapper      │───▶│ SceneBuilder│  │
+│  │ (counts,    │    │ (Y positions)│    │ (positions) │    │ (geometry)  │  │
+│  │  types)     │    │              │    │             │    │             │  │
 │  └─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘  │
-│                            │                   │                             │
-│                            ▼                   ▼                             │
-│                    ┌──────────────┐    ┌─────────────┐                       │
-│                    │SeriesLayout  │    │Renderable   │                       │
-│                    │ Results      │    │ Batches +   │                       │
-│                    │(Y positions) │    │ QuadTree    │                       │
-│                    │              │    │             │                       │
-│                    └──────────────┘    └─────────────┘                       │
+│                            │                   │                  │          │
+│                            ▼                   ▼                  ▼          │
+│                    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐   │
+│                    │SeriesLayout  │    │MappedPos[]  │    │Renderable   │   │
+│                    │ (transforms) │    │entity_ids[] │    │Scene +      │   │
+│                    │              │    │             │    │QuadTree     │   │
+│                    └──────────────┘    └─────────────┘    └─────────────┘   │
+│                                                                   │          │
+│                                              ┌────────────────────┴───────┐  │
+│                                              ▼                            ▼  │
+│                                       OpenGL Renderer              SVG Export│
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Component | Input | Output | Responsibility |
 |-----------|-------|--------|----------------|
-| **LayoutEngine** | Series count, types, viewport | `SeriesLayoutResult[]` | "Where does each series go?" |
-| **Transformers** | Series data + layout results | `Renderable*Batch` | "What geometry for this series?" |
-| **SceneGraph** | All batches + V/P matrices | `RenderableScene` | "Complete frame description" |
+| **LayoutEngine** | Series count, types, viewport | `SeriesLayout[]` | "What transforms apply to each series?" |
+| **Mappers** | Series data + layout + TimeFrame | `positions[], entity_ids[]` | "What are the world coordinates?" |
+| **SceneBuilder** | `positions[], entity_ids[]` | `RenderableScene` | "Package into GPU-ready batches + QuadTree" |
 | **Renderer** | `RenderableScene` | OpenGL draw calls | "How to draw it" |
 | **Interaction** | `RenderableScene.spatial_index` | EntityId | "What did user click?" |
+
+**Key insight**: The Mapper is the visualization-specific component. Different visualizations (DataViewer, SpatialOverlay, Raster) use different Mappers but share the same SceneBuilder and Renderer.
 
 ### QuadTree Ownership
 
 The **QuadTree lives inside `RenderableScene`** for a critical reason: **synchronization**.
 
-Both the rendering primitives and the spatial index are built from the same `SeriesLayoutResult` data. By bundling them together:
+Both the rendering primitives and the spatial index are built from the same position data. By bundling them together:
 
-1. **Single Source of Truth**: When layout changes, both geometry and index are rebuilt together
+1. **Single Source of Truth**: When positions change, both geometry and index are rebuilt together
 2. **No Sync Bugs**: Impossible for QuadTree coordinates to drift from rendered positions
 3. **Clear Lifecycle**: Scene owns the index; when scene is replaced, old index is automatically cleaned up
 
 ```cpp
-// SceneBuilder creates both primitives AND spatial index from same source data
-// High-level API: setBounds + addEventSeries/addIntervalSeries → automatic spatial indexing
+// SceneBuilder creates both primitives AND spatial index from same position data
+// The builder receives PRE-COMPUTED positions from visualization-specific mappers
+
+// Example: DataViewer building a scene
+auto event_positions = TimeSeriesMapper::mapEvents(events, time_frame, layout);
+auto analog_line = TimeSeriesMapper::mapAnalog(analog, time_frame, layout, start, end);
+
 RenderableScene scene = SceneBuilder()
-    .setBounds(bounds)               // Required for spatial indexing
-    .setViewState(view_state)        // Optional: set V/P matrices
-    .addEventSeries("trial1", series1, layout1, time_frame)  // Creates GlyphBatch + spatial entry
-    .addEventSeries("trial2", series2, layout2, time_frame)  // Creates GlyphBatch + spatial entry
-    .addIntervalSeries("stim", intervals, interval_layout, time_frame)  // Creates RectangleBatch
+    .setBounds(bounds)
+    .setViewState(view_state)
+    .addGlyphs("events", event_positions.positions, event_positions.entity_ids)
+    .addPolyLine("analog", analog_line.vertices, {analog_line.entity_id})
     .build();  // Automatically builds spatial index from all discrete elements
 
-// The scene now contains:
-// - glyph_batches with positioned events
-// - rectangle_batches with positioned intervals
-// - spatial_index (QuadTree) built from all discrete elements
-// - view_matrix, projection_matrix
+// Example: SpatialOverlay building a scene
+auto point_positions = SpatialMapper::mapPoints(points, current_frame, layout);
 
-// For custom geometry, low-level batch methods are still available:
-SceneBuilder builder;
-builder.setBounds(bounds)
-       .addPolyLineBatch(custom_polyline_batch)
-       .addGlyphBatch(custom_glyph_batch)
-       .buildSpatialIndex(bounds);  // Manual spatial index for low-level batches
-auto scene = builder.build();
+RenderableScene scene = SceneBuilder()
+    .setBounds(viewport_bounds)
+    .addGlyphs("whisker_points", point_positions.positions, point_positions.entity_ids)
+    .build();
 ```
 
-**Query flow with scene-owned index:**
-```cpp
-// In widget's mouse handler
-std::optional<EntityId> handleClick(QPoint screen_pos) {
-    // Convert screen → world using scene's V/P matrices
-    glm::vec2 world_pos = screenToWorld(
-        screen_pos, 
-        _scene.view_matrix, 
-        _scene.projection_matrix
-    );
-    
-    // Query the scene's spatial index
-    return _scene.spatial_index->findNearest(world_pos.x, world_pos.y, tolerance);
-}
-```
-
-**Key insight**: The `LayoutEngine` doesn't know about vertices or geometry. It only knows about **positioning** (Y centers, heights). The **Transformers** take this layout information plus the actual data and produce geometry batches with Model matrices. The **SceneGraph** is simply the container for all these batches plus the shared View/Projection matrices.
+**Key insight**: `SceneBuilder` doesn't know about `TimeFrame`, `DigitalEventSeries`, or any specific data types. It only knows about positions and entity IDs. The **Mappers** (visualization-specific) handle coordinate extraction and layout application. The **SceneBuilder** (generic) handles geometry batching and spatial indexing.
 
 This separation allows:
 1. Changing layout without touching rendering code
@@ -788,21 +1154,29 @@ src/CorePlotting/
 ├── ROADMAP.md                     # Implementation roadmap
 ├── README.md                      # Quick start guide
 │
-├── SceneGraph/                    # The "What to Draw" (output of layout)
+├── Mappers/                       # Visualization-specific position mapping (NEW)
+│   ├── MappedPositions.hpp        # Common output types (positions[], entity_ids[])
+│   ├── TimeSeriesMapper.hpp       # DataViewer: events→time, intervals→time, analog→time
+│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y
+│   ├── RasterMapper.hpp           # Raster/PSTH: events→relative time
+│   └── ScatterMapper.hpp          # Scatter plots: series_a→X, series_b→Y
+│
+├── SceneGraph/                    # Generic scene assembly (position-agnostic)
 │   ├── RenderableScene.hpp        # Complete frame description
 │   ├── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, Glyph)
-│   └── SceneBuilder.hpp           # Fluent builder with high-level data series methods
+│   └── SceneBuilder.hpp           # Takes positions[], builds batches + QuadTree
 │
-├── Layout/                        # The "Where Things Go" (positioning logic)
-│   ├── LayoutEngine.hpp           # Main layout coordinator
-│   ├── SeriesLayout.hpp           # Per-series layout result
-│   ├── StackedLayoutStrategy.hpp  # Vertical stacking algorithm
-│   └── RowLayoutStrategy.hpp      # Horizontal row layout (raster plots)
+├── Layout/                        # Plot-type-specific layout strategies
+│   ├── LayoutEngine.hpp           # Strategy pattern coordinator
+│   ├── SeriesLayout.hpp           # Per-series layout transforms
+│   ├── StackedLayoutStrategy.hpp  # DataViewer: vertical stacking
+│   ├── RowLayoutStrategy.hpp      # Raster: equal-height rows
+│   └── SpatialLayoutStrategy.hpp  # SpatialOverlay: bounds fitting (NEW)
 │
-├── Transformers/                  # The "How to Create Geometry"
-│   ├── GapDetector.hpp            # Analog -> segmented PolyLineBatch
-│   ├── EpochAligner.hpp           # Analog + Events -> PolyLineBatch
-│   └── RasterBuilder.hpp          # Events -> GlyphBatch
+├── Transformers/                  # Data-to-geometry converters (low-level)
+│   ├── GapDetector.hpp            # Analog → segmented PolyLineBatch
+│   ├── EpochAligner.hpp           # Analog + Events → PolyLineBatch
+│   └── RasterBuilder.hpp          # Events → GlyphBatch (legacy, being superseded by Mappers)
 │
 ├── CoordinateTransform/           # MVP matrix utilities + inverse transforms
 │   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
@@ -840,6 +1214,8 @@ src/CorePlotting/
 │   └── SVGPrimitives.cpp
 │
 └── tests/                         # Catch2 unit tests
+    ├── TimeSeriesMapper.test.cpp  # NEW
+    ├── SpatialMapper.test.cpp     # NEW
     ├── EventRow.test.cpp
     ├── TimeRange.test.cpp
     ├── LayoutEngine.test.cpp
@@ -1257,49 +1633,71 @@ TEST_CASE("Model matrix and QuadTree use same Y coordinate") {
 
 ## Summary
 
-### Component Overview
+### Component Overview (Updated with Position Mappers)
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
+| **Mappers** | `Mappers/` | **Visualization-specific**: Convert data + layout → positions[] |
+| `TimeSeriesMapper` | `Mappers/` | DataViewer: events/intervals/analog → time-based positions |
+| `SpatialMapper` | `Mappers/` | SpatialOverlay: points/lines → direct X/Y positions |
+| `RasterMapper` | `Mappers/` | Raster/PSTH: events → relative-time positions |
+| **SceneBuilder** | `SceneGraph/` | **Generic**: positions[] + entity_ids[] → RenderableScene |
 | `TimeRange` | `CoordinateTransform/` | TimeFrame-aware X-axis bounds management |
 | `TimeSeriesViewState` | `CoordinateTransform/` | Combined time + Y-axis camera state |
-| `LayoutEngine` | `Layout/` | Calculates vertical positions for stacked series |
-| `SeriesLayoutResult` | `Layout/` | Output: y_center + allocated_height per series |
+| `LayoutEngine` | `Layout/` | Calculates layout transforms for series positioning |
+| `SeriesLayout` | `Layout/` | Output: X/Y transforms (offset, scale, bounds) |
 | `RenderableScene` | `SceneGraph/` | Complete frame description (batches + V/P matrices + QuadTree) |
 | `Renderable*Batch` | `SceneGraph/` | GPU-ready geometry + Model matrix per batch |
-| `Transformers` | `Transformers/` | Convert data + layout → geometry batches |
-| `QuadTree` | Owned by `RenderableScene` | Spatial index for hit testing (built alongside geometry) |
-| `SpatialAdapter` | `SpatialAdapter/` | Factory methods for building QuadTree from data types |
-| `ISpatiallyIndexed` | `SpatialAdapter/` | Common query interface for hit testing |
+| `QuadTree` | Owned by `RenderableScene` | Spatial index for hit testing (built from same positions as rendering) |
+| `SceneHitTester` | `Interaction/` | Multi-strategy hit testing through SceneGraph |
 
-### Data Flow Summary
+### Data Flow Summary (Updated)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         Complete Data Flow                                  │
 │                                                                             │
-│   TimeFrame ──────▶ TimeRange ──────▶ Projection Matrix                    │
-│       │                                      │                              │
-│       │                                      ▼                              │
-│   Series Data ──▶ LayoutEngine ──▶ SeriesLayoutResult ──▶ Model Matrix     │
-│                                              │                    │         │
-│                                              ▼                    ▼         │
-│                                        Transformer ──────▶ RenderableBatch  │
-│                                                                   │         │
-│   ViewState ────────────────────────────────────────────▶ View Matrix       │
-│       │                                                           │         │
-│       ▼                                                           ▼         │
-│   Camera Pan/Zoom                                        RenderableScene    │
-│                                                                   │         │
-│                                              ┌────────────────────┴───────┐ │
-│                                              ▼                            ▼ │
-│                                       OpenGL Renderer              SVG Export│
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                    Visualization-Specific Layer                      │   │
+│   │                                                                      │   │
+│   │   Series Data ──▶ LayoutEngine ──▶ SeriesLayout (transforms)        │   │
+│   │        │                              │                              │   │
+│   │        │                              ▼                              │   │
+│   │        └──────────────▶ Mapper ──▶ positions[], entity_ids[]        │   │
+│   │                                       │                              │   │
+│   │   (TimeSeriesMapper, SpatialMapper, RasterMapper, etc.)             │   │
+│   └───────────────────────────────────────┼──────────────────────────────┘   │
+│                                           ▼                                  │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │                       Generic Layer                                  │   │
+│   │                                                                      │   │
+│   │   positions[] ──▶ SceneBuilder ──▶ RenderableScene                  │   │
+│   │                         │                  │                         │   │
+│   │                         │       ┌──────────┴──────────┐              │   │
+│   │                         │       ▼                     ▼              │   │
+│   │                         ▼   QuadTree          Renderable*Batches     │   │
+│   │                   (both use same                                     │   │
+│   │                    positions[])                                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                           │                                  │
+│                              ┌────────────┴────────────┐                    │
+│                              ▼                         ▼                    │
+│                       OpenGL Renderer            SVG Exporter               │
+│                       (PlottingOpenGL)           (CorePlotting/Export)      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Key Architectural Principles
+
+1. **Mapper is the boundary**: Left of mapper = data semantics, Right of mapper = geometry
+2. **SceneBuilder is data-type-agnostic**: Only knows positions[], entity_ids[], not TimeFrame or series types
+3. **Positions computed once, used twice**: Same positions[] feed both rendering batches and QuadTree
+4. **Each visualization type has its own Mapper**: DataViewer, SpatialOverlay, Raster use different mappers
+5. **Layout + Mapper = Complete Position**: LayoutEngine provides transforms, Mapper applies them to data
+
 ### Key Invariants
 
-1. **QuadTree Y = Model matrix Y**: Spatial queries and rendering use identical coordinates
+1. **QuadTree positions = Rendered positions**: Both built from same Mapper output
 2. **TimeRange respects TimeFrame bounds**: User cannot scroll/zoom beyond valid data
 3. **Model = per-series, View/Projection = shared**: Consistent MVP pattern for time-series
 4. **RenderableScene is renderer-agnostic**: Same scene feeds OpenGL and SVG export
@@ -1310,9 +1708,10 @@ TEST_CASE("Model matrix and QuadTree use same Y coordinate") {
 |---------------------|---------------------|
 | `XAxis` | `TimeRange` (TimeFrame-aware) |
 | `PlottingManager` series storage | Removed (single source in widget) |
-| `PlottingManager` allocation methods | `LayoutEngine` |
-| `NewAnalogTimeSeriesDisplayOptions` | Split into `SeriesStyle` + `SeriesLayoutResult` |
+| `PlottingManager` allocation methods | `LayoutEngine` → `SeriesLayout` |
+| `NewAnalogTimeSeriesDisplayOptions` | Split into `SeriesStyle` + `SeriesLayout` |
 | `MVP_*.cpp` in `DataViewer/` | `SeriesMatrices.cpp` in `CorePlotting/` |
-| Inline vertex generation | `Transformers` → `RenderableBatch` |
+| Inline vertex generation | `Mapper` → `SceneBuilder` → `RenderableBatch` |
+| `SceneBuilder.addEventSeries(series, tf)` | `Mapper.mapEvents()` → `SceneBuilder.addGlyphs(positions)` |
 | `_verticalPanOffset`, `_yMin`, `_yMax` | `ViewState` |
 
