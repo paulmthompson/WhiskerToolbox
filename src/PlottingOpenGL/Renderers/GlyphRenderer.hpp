@@ -99,15 +99,26 @@ private:
     std::vector<float> m_glyph_vertices;
     int m_glyph_vertex_count{0};
 
-    // Instance data
-    std::vector<glm::vec2> m_positions;
-    std::vector<glm::vec4> m_colors;
-    glm::mat4 m_model_matrix{1.0f};
+    // Multi-batch support: store per-batch instance data
+    struct BatchData {
+        std::vector<glm::vec2> positions;
+        std::vector<glm::vec4> colors;
+        glm::mat4 model_matrix{1.0f};
+        float glyph_size{5.0f};
+        CorePlotting::RenderableGlyphBatch::GlyphType glyph_type{
+                CorePlotting::RenderableGlyphBatch::GlyphType::Circle};
+        bool has_per_instance_colors{false};
+    };
+    std::vector<BatchData> m_batches;
+
+    // Combined instance data for GPU upload
+    std::vector<glm::vec2> m_all_positions;
+    std::vector<glm::vec4> m_all_colors;
+    
+    // Default glyph settings (for setGlyphSize API and geometry creation)
     float m_glyph_size{5.0f};
-    CorePlotting::RenderableGlyphBatch::GlyphType m_glyph_type{
+    CorePlotting::RenderableGlyphBatch::GlyphType m_current_glyph_type{
             CorePlotting::RenderableGlyphBatch::GlyphType::Circle};
-    bool m_has_per_instance_colors{false};
-    glm::vec4 m_global_color{1.0f, 1.0f, 1.0f, 1.0f};
 
     bool m_initialized{false};
     

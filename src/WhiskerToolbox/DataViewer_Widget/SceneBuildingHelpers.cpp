@@ -255,4 +255,94 @@ CorePlotting::RenderableRectangleBatch buildIntervalHighlightBatch(
     return batch;
 }
 
+CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
+        int64_t start_time,
+        int64_t end_time,
+        glm::vec4 const & highlight_color,
+        float border_thickness,
+        glm::mat4 const & model_matrix) {
+    
+    CorePlotting::RenderablePolyLineBatch batch;
+    batch.model_matrix = model_matrix;
+    batch.global_color = highlight_color;
+    batch.thickness = border_thickness;
+    
+    float const x_start = static_cast<float>(start_time);
+    float const x_end = static_cast<float>(end_time);
+    float const y_min = -1.0f;
+    float const y_max = 1.0f;
+    
+    // Build 4 line segments for the rectangle border
+    // Bottom edge
+    batch.vertices.push_back(x_start); batch.vertices.push_back(y_min);
+    batch.vertices.push_back(x_end);   batch.vertices.push_back(y_min);
+    batch.line_start_indices.push_back(0);
+    batch.line_vertex_counts.push_back(2);
+    
+    // Top edge
+    batch.vertices.push_back(x_start); batch.vertices.push_back(y_max);
+    batch.vertices.push_back(x_end);   batch.vertices.push_back(y_max);
+    batch.line_start_indices.push_back(2);
+    batch.line_vertex_counts.push_back(2);
+    
+    // Left edge
+    batch.vertices.push_back(x_start); batch.vertices.push_back(y_min);
+    batch.vertices.push_back(x_start); batch.vertices.push_back(y_max);
+    batch.line_start_indices.push_back(4);
+    batch.line_vertex_counts.push_back(2);
+    
+    // Right edge
+    batch.vertices.push_back(x_end);   batch.vertices.push_back(y_min);
+    batch.vertices.push_back(x_end);   batch.vertices.push_back(y_max);
+    batch.line_start_indices.push_back(6);
+    batch.line_vertex_counts.push_back(2);
+    
+    return batch;
+}
+
+CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatch(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        AnalogBatchParams const & params,
+        CorePlotting::AnalogSeriesMatrixParams const & model_params,
+        [[maybe_unused]] CorePlotting::ViewProjectionParams const & view_params) {
+    
+    CorePlotting::RenderableGlyphBatch batch;
+    batch.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
+    batch.size = params.thickness * 2.0f; // Use thickness to determine marker size
+    
+    // Build Model matrix
+    batch.model_matrix = CorePlotting::getAnalogModelMatrix(model_params);
+    
+    if (!master_time_frame) {
+        return batch;
+    }
+    
+    // Get time range in series time frame
+    auto series_start_idx = convertToSeriesTimeFrame(
+            params.start_time,
+            master_time_frame.get(),
+            series.getTimeFrame().get());
+    auto series_end_idx = convertToSeriesTimeFrame(
+            params.end_time,
+            master_time_frame.get(),
+            series.getTimeFrame().get());
+    
+    // Get data range
+    auto analog_range = series.getTimeValueRangeInTimeFrameIndexRange(
+            series_start_idx, series_end_idx);
+    
+    // Reserve estimated space
+    batch.positions.reserve(1000); // Reasonable initial estimate
+    
+    for (auto const & [time_idx, value] : analog_range) {
+        auto const x_pos = static_cast<float>(series.getTimeFrame()->getTimeAtIndex(time_idx));
+        auto const y_pos = value;
+        
+        batch.positions.emplace_back(x_pos, y_pos);
+    }
+    
+    return batch;
+}
+
 }// namespace DataViewerHelpers

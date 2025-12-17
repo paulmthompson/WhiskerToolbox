@@ -75,7 +75,7 @@ bool PolyLineRenderer::isInitialized() const {
 
 void PolyLineRenderer::render(glm::mat4 const & view_matrix,
                               glm::mat4 const & projection_matrix) {
-    if (!m_initialized || m_total_vertices == 0) {
+    if (!m_initialized || m_total_vertices == 0 || m_batches.empty()) {
         return;
     }
 
@@ -83,9 +83,6 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
     if (!gl) {
         return;
     }
-
-    // Compute MVP = Projection * View * Model
-    glm::mat4 mvp = projection_matrix * view_matrix * m_model_matrix;
 
     // Get shader program (either from ShaderManager or embedded)
     ShaderProgram * shader_program = nullptr;
@@ -96,12 +93,10 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
             return;
         }
         shader_program->use();
-        shader_program->setUniform("u_mvp_matrix", mvp);
     } else {
         if (!m_embedded_shader.bind()) {
             return;
         }
-        m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
     }
 
     // Bind VAO
@@ -112,50 +107,63 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
-    // Set line width (may be clamped by driver)
-    gl->glLineWidth(m_thickness);
+    // Render each batch with its own model matrix
+    for (auto const & batch : m_batches) {
+        if (batch.total_vertices == 0) continue;
 
-    // Draw each polyline segment
-    if (m_has_per_line_colors && m_line_colors.size() == m_line_start_indices.size()) {
-        // Per-line colors
-        for (size_t i = 0; i < m_line_start_indices.size(); ++i) {
-            glm::vec4 const & color = m_line_colors[i];
-            if (m_use_shader_manager) {
-                // ShaderProgram doesn't have a vec4 overload, use native program
-                auto * native = shader_program->getNativeProgram();
-                if (native) {
-                    native->setUniformValue("u_color", color.r, color.g, color.b, color.a);
-                }
-            } else {
-                m_embedded_shader.setUniformValue("u_color", color.r, color.g, color.b, color.a);
-            }
-            gl->glDrawArrays(GL_LINE_STRIP,
-                             m_line_start_indices[i],
-                             m_line_vertex_counts[i]);
-        }
-    } else {
-        // Global color for all lines
+        // Compute MVP = Projection * View * Model (per-batch model matrix)
+        glm::mat4 mvp = projection_matrix * view_matrix * batch.model_matrix;
+
         if (m_use_shader_manager) {
-            auto * native = shader_program->getNativeProgram();
-            if (native) {
-                native->setUniformValue("u_color", 
-                                        m_global_color.r,
-                                        m_global_color.g,
-                                        m_global_color.b,
-                                        m_global_color.a);
+            shader_program->setUniform("u_mvp_matrix", mvp);
+        } else {
+            m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+        }
+
+        // Set line width (may be clamped by driver)
+        gl->glLineWidth(batch.thickness);
+
+        // Draw each polyline segment in this batch
+        if (batch.has_per_line_colors && batch.line_colors.size() == batch.line_start_indices.size()) {
+            // Per-line colors
+            for (size_t i = 0; i < batch.line_start_indices.size(); ++i) {
+                glm::vec4 const & color = batch.line_colors[i];
+                if (m_use_shader_manager) {
+                    auto * native = shader_program->getNativeProgram();
+                    if (native) {
+                        native->setUniformValue("u_color", color.r, color.g, color.b, color.a);
+                    }
+                } else {
+                    m_embedded_shader.setUniformValue("u_color", color.r, color.g, color.b, color.a);
+                }
+                gl->glDrawArrays(GL_LINE_STRIP,
+                                 batch.vertex_offset + batch.line_start_indices[i],
+                                 batch.line_vertex_counts[i]);
             }
         } else {
-            m_embedded_shader.setUniformValue("u_color",
-                                              m_global_color.r,
-                                              m_global_color.g,
-                                              m_global_color.b,
-                                              m_global_color.a);
-        }
+            // Global color for all lines in this batch
+            if (m_use_shader_manager) {
+                auto * native = shader_program->getNativeProgram();
+                if (native) {
+                    native->setUniformValue("u_color", 
+                                            batch.global_color.r,
+                                            batch.global_color.g,
+                                            batch.global_color.b,
+                                            batch.global_color.a);
+                }
+            } else {
+                m_embedded_shader.setUniformValue("u_color",
+                                                  batch.global_color.r,
+                                                  batch.global_color.g,
+                                                  batch.global_color.b,
+                                                  batch.global_color.a);
+            }
 
-        for (size_t i = 0; i < m_line_start_indices.size(); ++i) {
-            gl->glDrawArrays(GL_LINE_STRIP,
-                             m_line_start_indices[i],
-                             m_line_vertex_counts[i]);
+            for (size_t i = 0; i < batch.line_start_indices.size(); ++i) {
+                gl->glDrawArrays(GL_LINE_STRIP,
+                                 batch.vertex_offset + batch.line_start_indices[i],
+                                 batch.line_vertex_counts[i]);
+            }
         }
     }
 
@@ -171,13 +179,9 @@ bool PolyLineRenderer::hasData() const {
 }
 
 void PolyLineRenderer::clearData() {
-    m_line_start_indices.clear();
-    m_line_vertex_counts.clear();
-    m_line_colors.clear();
+    m_batches.clear();
+    m_all_vertices.clear();
     m_total_vertices = 0;
-    m_has_per_line_colors = false;
-    m_model_matrix = glm::mat4{1.0f};
-    m_global_color = glm::vec4{1.0f};
 }
 
 void PolyLineRenderer::uploadData(CorePlotting::RenderablePolyLineBatch const & batch) {
@@ -185,36 +189,38 @@ void PolyLineRenderer::uploadData(CorePlotting::RenderablePolyLineBatch const & 
         return;
     }
 
-    // Clear previous data
-    clearData();
-
     if (batch.vertices.empty()) {
         return;
     }
 
-    // Copy topology data
-    m_line_start_indices = batch.line_start_indices;
-    m_line_vertex_counts = batch.line_vertex_counts;
-
-    // Copy color data
-    m_has_per_line_colors = !batch.colors.empty();
-    if (m_has_per_line_colors) {
-        m_line_colors = batch.colors;
+    // Create new batch data
+    BatchData batch_data;
+    batch_data.line_start_indices = batch.line_start_indices;
+    batch_data.line_vertex_counts = batch.line_vertex_counts;
+    batch_data.has_per_line_colors = !batch.colors.empty();
+    if (batch_data.has_per_line_colors) {
+        batch_data.line_colors = batch.colors;
     }
-    m_global_color = batch.global_color;
+    batch_data.global_color = batch.global_color;
+    batch_data.model_matrix = batch.model_matrix;
+    batch_data.thickness = batch.thickness;
+    
+    // Track vertex offset for this batch (in vertex count, not floats)
+    batch_data.vertex_offset = m_total_vertices;
+    batch_data.total_vertices = static_cast<int>(batch.vertices.size()) / 2;
 
-    // Copy transform data
-    m_model_matrix = batch.model_matrix;
-    m_thickness = batch.thickness;
+    // Append vertices to combined buffer
+    m_all_vertices.insert(m_all_vertices.end(), batch.vertices.begin(), batch.vertices.end());
+    m_total_vertices += batch_data.total_vertices;
 
-    // Calculate total vertices (vertices are {x, y} pairs)
-    m_total_vertices = static_cast<int>(batch.vertices.size()) / 2;
+    // Store batch metadata
+    m_batches.push_back(std::move(batch_data));
 
-    // Upload vertex data to GPU
+    // Upload all vertex data to GPU
     (void) m_vao.bind();
     (void) m_vbo.bind();
-    m_vbo.allocate(batch.vertices.data(),
-                   static_cast<int>(batch.vertices.size() * sizeof(float)));
+    m_vbo.allocate(m_all_vertices.data(),
+                   static_cast<int>(m_all_vertices.size() * sizeof(float)));
     m_vbo.release();
     m_vao.release();
 }

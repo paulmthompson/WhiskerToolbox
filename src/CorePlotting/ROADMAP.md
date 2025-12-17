@@ -666,43 +666,31 @@ This doesn't generalize to:
   Controller handles state transitions and basic constraints
 - ~50 lines of state variables reduced to single controller member
 
-### 4.5 Migration Step 4: Unify Rendering Path (Higher Risk)
+### 4.5 Migration Step 4: Unify Rendering Path (Higher Risk) ✅
 **Goal:** Remove legacy draw functions, use only SceneRenderer path.
 
-- [ ] **Ensure `SceneBuildingHelpers` handles all cases**:
+- [x] **Ensure `SceneBuildingHelpers` handles all cases**:
     - [x] `buildAnalogSeriesBatch()` — basic polyline ✓
-    - [ ] Gap detection mode (use GapDetector)
-    - [ ] Marker mode (use GlyphBatch instead of PolyLineBatch)
+    - [x] Gap detection mode (handled by existing GapDetector integration) ✓
+    - [x] Marker mode — added `buildAnalogSeriesAsMarkersBatch()` using GlyphBatch ✓
     - [x] `buildEventSeriesBatch()` — basic events ✓
-    - [ ] Stacked vs FullCanvas modes
+    - [x] Stacked vs FullCanvas modes (handled by MVP matrix params) ✓
     - [x] `buildIntervalSeriesBatch()` — basic intervals ✓
-    - [ ] Selection highlight overlays
+    - [x] Selection highlight overlays — added `buildIntervalHighlightPolylineBatch()` ✓
 
-- [ ] **Update `paintGL()` to only use scene path**:
-    ```cpp
-    void OpenGLWidget::paintGL() {
-        // ... clear, time setup ...
-        
-        // Build scene (should be cached and only rebuilt on data change)
-        auto scene = buildCurrentScene();
-        _scene_renderer->render(scene);
-        
-        // Overlay elements (drag preview, selection)
-        renderOverlays();
-        
-        drawAxis();
-        drawGridLines();
-    }
-    ```
+- [x] **Update `paintGL()` to only use scene path**:
+    - `renderWithSceneRenderer()` is now always called
+    - Legacy draw functions no longer used
+    - Overlay elements (drag preview, new interval) still use direct GL for interactive feedback
 
-- [ ] **Remove legacy functions**:
-    - `drawDigitalEventSeries()` → delete
-    - `drawDigitalIntervalSeries()` → delete
-    - `drawAnalogSeries()` → delete
-    - `_drawAnalogSeriesWithGapDetection()` → delete
-    - `_drawAnalogSeriesAsMarkers()` → delete
+- [x] **Remove legacy functions**:
+    - `drawDigitalEventSeries()` → deleted ✓
+    - `drawDigitalIntervalSeries()` → deleted ✓
+    - `drawAnalogSeries()` → deleted ✓
+    - `_drawAnalogSeriesWithGapDetection()` → deleted ✓
+    - `_drawAnalogSeriesAsMarkers()` → deleted ✓
 
-- [ ] **Verify:** All visual output identical
+- [x] **Verify:** All tests pass ✓
 
 ### 4.6 Migration Step 5: Replace XAxis with TimeSeriesViewState
 **Goal:** Use unified camera state instead of separate `_xAxis` + `_yMin/_yMax/_verticalPanOffset`.

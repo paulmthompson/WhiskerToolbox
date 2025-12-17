@@ -109,10 +109,13 @@ private:
     GLBuffer m_bounds_vbo{GLBuffer::Type::Vertex};// Per-instance bounds
     GLBuffer m_color_vbo{GLBuffer::Type::Vertex}; // Per-instance colors
 
-    // Instance data
-    std::vector<glm::vec4> m_bounds;// {x, y, width, height}
-    std::vector<glm::vec4> m_colors;
-    glm::mat4 m_model_matrix{1.0f};
+    // Multi-batch support
+    struct BatchData {
+        std::vector<glm::vec4> bounds;  // {x, y, width, height}
+        std::vector<glm::vec4> colors;
+        glm::mat4 model_matrix{1.0f};
+    };
+    std::vector<BatchData> m_batches;
 
     // Border settings
     bool m_border_enabled{false};

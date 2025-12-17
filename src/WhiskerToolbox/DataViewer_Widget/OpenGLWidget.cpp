@@ -354,634 +354,9 @@ void OpenGLWidget::setupVertexAttribs() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief OpenGLWidget::drawDigitalEventSeries
- *
- * Each event is specified by a single time point.
- * We can find which of the time points are within the visible time frame
- * After those are found, we will draw a vertical line at that time point
- * 
- * Now supports two display modes:
- * - Stacked: Events are positioned in separate horizontal lanes with configurable spacing
- * - Full Canvas: Events stretch from top to bottom of the canvas (original behavior)
- */
-void OpenGLWidget::drawDigitalEventSeries() {
-    int r, g, b;
-    auto const start_time = _xAxis.getStart();
-    auto const end_time = _xAxis.getEnd();
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) glUseProgram(axesProgram->getProgramId());
-
-    auto const min_y = _yMin;
-    auto const max_y = _yMax;
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
-    setupVertexAttribs();
-
-    // Count visible event series for stacked positioning
-    int visible_event_count = 0;
-    for (auto const & [key, event_data]: _digital_event_series) {
-        if (event_data.display_options->style.is_visible) {
-            visible_event_count++;
-        }
-    }
-
-    if (visible_event_count == 0 || !_master_time_frame) {
-        glUseProgram(0);
-        return;
-    }
-
-    // Calculate center coordinate for stacked mode (similar to analog series)
-    //float const center_coord = -0.5f * 0.1f * (static_cast<float>(visible_event_count - 1));// Use default spacing for center calculation
-
-    int visible_series_index = 0;// counts all visible event series (for iteration)
-    int stacked_series_index = 0;// index among stacked-mode event series only
-
-    // Count visible analog series from our own storage
-    int total_analog_visible = 0;
-    for (auto const & [key, analog_data]: _analog_series) {
-        if (analog_data.display_options->style.is_visible) {
-            total_analog_visible++;
-        }
-    }
-
-    // Count stacked-mode events (exclude FullCanvas from stackable count)
-    int stacked_event_count = 0;
-    for (auto const & [key, event_data]: _digital_event_series) {
-        if (event_data.display_options->style.is_visible &&
-            event_data.display_options->display_mode == EventDisplayMode::Stacked) {
-            stacked_event_count++;
-        }
-    }
-    int const total_stackable_series = total_analog_visible + stacked_event_count;
-
-    for (auto const & [key, event_data]: _digital_event_series) {
-        auto const & series = event_data.series;
-        auto const & display_options = event_data.display_options;
-
-        if (!display_options->style.is_visible) continue;
-
-        hexToRGB(display_options->style.hex_color, r, g, b);
-        float const rNorm = static_cast<float>(r) / 255.0f;
-        float const gNorm = static_cast<float>(g) / 255.0f;
-        float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = display_options->style.alpha;
-
-        auto visible_events = series->getEventsInRange(TimeFrameIndex(start_time),
-                                                       TimeFrameIndex(end_time),
-                                                       *_master_time_frame);
-
-        // === MVP MATRIX SETUP ===
-
-        // We need to check if we have a PlottingManager reference
-        if (!_plotting_manager) {
-            std::cerr << "Warning: PlottingManager not set in OpenGLWidget" << std::endl;
-            continue;
-        }
-
-        // Determine plotting mode and allocate accordingly
-        display_options->plotting_mode = (display_options->display_mode == EventDisplayMode::Stacked)
-                                                 ? EventPlottingMode::Stacked
-                                                 : EventPlottingMode::FullCanvas;
-
-        float allocated_y_center = 0.0f;
-        float allocated_height = 0.0f;
-        if (display_options->plotting_mode == EventPlottingMode::Stacked) {
-            // Use global stacked allocation across analog + stacked events
-            _plotting_manager->calculateGlobalStackedAllocation(-1, stacked_series_index, total_stackable_series,
-                                                                allocated_y_center, allocated_height);
-            stacked_series_index++;
-        } else {
-            // Full canvas allocation
-            allocated_y_center = (_plotting_manager->viewport_y_min + _plotting_manager->viewport_y_max) * 0.5f;
-            allocated_height = _plotting_manager->viewport_y_max - _plotting_manager->viewport_y_min;
-        }
-
-        display_options->layout.allocated_y_center = allocated_y_center;
-        display_options->layout.allocated_height = allocated_height;
-
-        // Apply PlottingManager pan offset
-        _plotting_manager->setPanOffset(_verticalPanOffset);
-
-        // Build parameter structs for CorePlotting MVP functions
-        CorePlotting::EventSeriesMatrixParams model_params;
-        model_params.allocated_y_center = display_options->layout.allocated_y_center;
-        model_params.allocated_height = display_options->layout.allocated_height;
-        model_params.event_height = 0.0f;// Use allocated height
-        model_params.margin_factor = display_options->margin_factor;
-        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
-        model_params.viewport_y_min = _yMin;
-        model_params.viewport_y_max = _yMax;
-        model_params.plotting_mode = (display_options->plotting_mode == EventPlottingMode::FullCanvas)
-                                             ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
-                                             : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
-
-        CorePlotting::ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
-
-        auto Model = CorePlotting::getEventModelMatrix(model_params);
-        auto View = CorePlotting::getEventViewMatrix(model_params, view_params);
-        auto Projection = CorePlotting::getEventProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax);
-
-        glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
-        glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
-        glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
-
-        // Set color and alpha uniforms
-        glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
-        glUniform1f(m_alphaLoc, alpha);
-
-        // Set line thickness from display options
-        glLineWidth(static_cast<float>(display_options->style.line_thickness));
-
-        for (auto const & event: visible_events) {
-            // Calculate X position in master time frame coordinates for consistent rendering
-            float xCanvasPos;
-            if (series->getTimeFrame().get() == _master_time_frame.get()) {
-                // Same time frame - event is already in correct coordinates
-                xCanvasPos = static_cast<float>(event.getValue());
-            } else {
-                // Different time frames - convert event index to time, then to master time frame
-                float event_time = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(event));
-                xCanvasPos = event_time;// This should work if both time frames use the same time units
-            }
-
-            // Provide local [-1, 1] vertical endpoints; Model handles placement/scale
-            std::array<GLfloat, 8> vertices = {
-                    xCanvasPos, -1.0f, 0.0f, 1.0f,
-                    xCanvasPos, 1.0f, 0.0f, 1.0f};
-
-            glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
-            m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
-
-            GLint const first = 0;  // Starting index of enabled array
-            GLsizei const count = 2;// number of vertices to render
-            glDrawArrays(GL_LINES, first, count);
-        }
-
-        visible_series_index++;
-    }
-
-    // Reset line width to default
-    glLineWidth(1.0f);
-    glUseProgram(0);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-void OpenGLWidget::drawDigitalIntervalSeries() {
-    int r, g, b;
-    auto const start_time = static_cast<float>(_xAxis.getStart());
-    auto const end_time = static_cast<float>(_xAxis.getEnd());
-
-    //auto const min_y = _yMin;
-    //auto const max_y = _yMax;
-
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) glUseProgram(axesProgram->getProgramId());
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
-    setupVertexAttribs();
-
-    if (!_master_time_frame) {
-        glUseProgram(0);
-        return;
-    }
-
-    for (auto const & [key, interval_data]: _digital_interval_series) {
-        auto const & series = interval_data.series;
-        auto const & display_options = interval_data.display_options;
-
-        if (!display_options->style.is_visible) continue;
-
-        // Get only the intervals that overlap with the visible range
-        // These will be
-        auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                TimeFrameIndex(static_cast<int64_t>(start_time)),
-                TimeFrameIndex(static_cast<int64_t>(end_time)),
-                *_master_time_frame);
-
-        hexToRGB(display_options->style.hex_color, r, g, b);
-        float const rNorm = static_cast<float>(r) / 255.0f;
-        float const gNorm = static_cast<float>(g) / 255.0f;
-        float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = display_options->style.alpha;
-        // === MVP MATRIX SETUP ===
-
-        // We need to check if we have a PlottingManager reference
-        if (!_plotting_manager) {
-            std::cerr << "Warning: PlottingManager not set in OpenGLWidget" << std::endl;
-            continue;
-        }
-
-        // Calculate coordinate allocation from PlottingManager
-        // Digital intervals typically use full canvas allocation
-        float allocated_y_center, allocated_height;
-        _plotting_manager->calculateDigitalIntervalSeriesAllocation(0, allocated_y_center, allocated_height);
-
-        display_options->layout.allocated_y_center = allocated_y_center;
-        display_options->layout.allocated_height = allocated_height;
-
-        // Apply PlottingManager pan offset
-        _plotting_manager->setPanOffset(_verticalPanOffset);
-
-        // Build parameter structs for CorePlotting MVP functions
-        CorePlotting::IntervalSeriesMatrixParams model_params;
-        model_params.allocated_y_center = display_options->layout.allocated_y_center;
-        model_params.allocated_height = display_options->layout.allocated_height;
-        model_params.margin_factor = display_options->margin_factor;
-        model_params.global_zoom = _plotting_manager->getGlobalZoom();
-        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
-        model_params.extend_full_canvas = display_options->extend_full_canvas;
-
-        CorePlotting::ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
-
-        auto Model = CorePlotting::getIntervalModelMatrix(model_params);
-        auto View = CorePlotting::getIntervalViewMatrix(view_params);
-        auto Projection = CorePlotting::getIntervalProjectionMatrix(TimeFrameIndex(static_cast<int64_t>(start_time)), TimeFrameIndex(static_cast<int64_t>(end_time)), _yMin, _yMax);
-
-        glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
-        glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
-        glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
-
-        // Set color and alpha uniforms
-        glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
-        glUniform1f(m_alphaLoc, alpha);
-
-        for (auto const & interval: visible_intervals) {
-
-            std::cout << "interval.start:" << interval.start << "interval.end:" << interval.end << std::endl;
-
-            auto start = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.start)));
-            auto end = static_cast<float>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.end)));
-
-            //Clip the interval to the visible range
-            start = std::max(start, start_time);
-            end = std::min(end, end_time);
-
-            float const xStart = start;
-            float const xEnd = end;
-
-            // Use normalized coordinates for intervals
-            // The Model matrix will handle positioning and scaling
-            float const interval_y_min = -1.0f;// Bottom of interval in local coordinates
-            float const interval_y_max = +1.0f;// Top of interval in local coordinates
-
-            // Create 4D vertices (x, y, 0, 1) to match the shader expectations
-            std::array<GLfloat, 16> vertices = {
-                    xStart, interval_y_min, 0.0f, 1.0f,
-                    xEnd, interval_y_min, 0.0f, 1.0f,
-                    xEnd, interval_y_max, 0.0f, 1.0f,
-                    xStart, interval_y_max, 0.0f, 1.0f};
-
-            m_vbo.bind();
-            m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
-            m_vbo.release();
-
-            GLint const first = 0;  // Starting index of enabled array
-            GLsizei const count = 4;// number of indexes to render
-            glDrawArrays(GL_TRIANGLE_FAN, first, count);
-        }
-
-        // Draw highlighting for selected intervals
-        auto selected_interval = getSelectedInterval(key);
-        auto const & drag_state = _interval_drag_controller.getState();
-        if (selected_interval.has_value() && !(_interval_drag_controller.isActive() && drag_state.series_key == key)) {
-            auto const [sel_start_time, sel_end_time] = selected_interval.value();
-
-            // Check if the selected interval overlaps with visible range
-            if (sel_end_time >= static_cast<int64_t>(start_time) && sel_start_time <= static_cast<int64_t>(end_time)) {
-                // Clip the selected interval to the visible range
-                float const highlighted_start = std::max(static_cast<float>(sel_start_time), start_time);
-                float const highlighted_end = std::min(static_cast<float>(sel_end_time), end_time);
-
-                // Draw a thick border around the selected interval
-                // Use a brighter version of the same color for highlighting
-                float const highlight_rNorm = std::min(1.0f, rNorm + 0.3f);
-                float const highlight_gNorm = std::min(1.0f, gNorm + 0.3f);
-                float const highlight_bNorm = std::min(1.0f, bNorm + 0.3f);
-
-                // Set line width for highlighting
-                glLineWidth(4.0f);
-
-                // Draw the four border lines of the rectangle
-                // Set highlight color uniforms
-                glUniform3f(m_colorLoc, highlight_rNorm, highlight_gNorm, highlight_bNorm);
-                glUniform1f(m_alphaLoc, 1.0f);
-
-                // Bottom edge
-                std::array<GLfloat, 8> bottom_edge = {
-                        highlighted_start, -1.0f, 0.0f, 1.0f,
-                        highlighted_end, -1.0f, 0.0f, 1.0f};
-                m_vbo.bind();
-                m_vbo.allocate(bottom_edge.data(), bottom_edge.size() * sizeof(GLfloat));
-                m_vbo.release();
-                glDrawArrays(GL_LINES, 0, 2);
-
-                // Top edge
-                std::array<GLfloat, 8> top_edge = {
-                        highlighted_start, 1.0f, 0.0f, 1.0f,
-                        highlighted_end, 1.0f, 0.0f, 1.0f};
-                m_vbo.bind();
-                m_vbo.allocate(top_edge.data(), top_edge.size() * sizeof(GLfloat));
-                m_vbo.release();
-                glDrawArrays(GL_LINES, 0, 2);
-
-                // Left edge
-                std::array<GLfloat, 8> left_edge = {
-                        highlighted_start, -1.0f, 0.0f, 1.0f,
-                        highlighted_start, 1.0f, 0.0f, 1.0f};
-                m_vbo.bind();
-                m_vbo.allocate(left_edge.data(), left_edge.size() * sizeof(GLfloat));
-                m_vbo.release();
-                glDrawArrays(GL_LINES, 0, 2);
-
-                // Right edge
-                std::array<GLfloat, 8> right_edge = {
-                        highlighted_end, -1.0f, 0.0f, 1.0f,
-                        highlighted_end, 1.0f, 0.0f, 1.0f};
-                m_vbo.bind();
-                m_vbo.allocate(right_edge.data(), right_edge.size() * sizeof(GLfloat));
-                m_vbo.release();
-                glDrawArrays(GL_LINES, 0, 2);
-
-                // Reset line width
-                glLineWidth(1.0f);
-            }
-        }
-    }
-
-    glUseProgram(0);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-void OpenGLWidget::drawAnalogSeries() {
-    int r, g, b;
-
-    auto const start_time = TimeFrameIndex(_xAxis.getStart());
-    auto const end_time = TimeFrameIndex(_xAxis.getEnd());
-
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) glUseProgram(axesProgram->getProgramId());
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-    setupVertexAttribs();
-
-    if (!_master_time_frame) {
-        glUseProgram(0);
-        return;
-    }
-
-    int i = 0;
-
-    for (auto const & [key, analog_data]: _analog_series) {
-        auto const & series = analog_data.series;
-        auto const & data = series->getAnalogTimeSeries();
-
-        auto const & display_options = analog_data.display_options;
-
-        if (!display_options->style.is_visible) continue;
-
-        // Calculate coordinate allocation from PlottingManager
-        // For now, we'll use the analog series index to allocate coordinates
-        // This is a temporary bridge until we fully migrate series management to PlottingManager
-        if (!_plotting_manager) {
-            std::cerr << "Warning: PlottingManager not set in OpenGLWidget" << std::endl;
-            continue;
-        }
-
-        // Compute allocation
-        float allocated_y_center = 0.0f;
-        float allocated_height = 0.0f;
-
-        // Count stacked-mode events (exclude FullCanvas)
-        int stacked_event_count = 0;
-        for (auto const & [ekey, edata]: _digital_event_series) {
-            if (edata.display_options->style.is_visible && edata.display_options->display_mode == EventDisplayMode::Stacked) {
-                stacked_event_count++;
-            }
-        }
-
-        // Get all visible analog keys
-        std::vector<std::string> visible_analog_keys;
-        for (auto const & [k, data]: _analog_series) {
-            if (data.display_options->style.is_visible) {
-                visible_analog_keys.push_back(k);
-            }
-        }
-
-        // Use spike sorter configuration only if no stacked events (pure analog stacking)
-        bool use_config = (stacked_event_count == 0);
-        bool has_config_allocation = false;
-
-        if (use_config) {
-            // Try to get allocation from PlottingManager considering spike sorter configuration
-            has_config_allocation = _plotting_manager->getAnalogSeriesAllocationForKey(
-                    key, visible_analog_keys, allocated_y_center, allocated_height);
-        }
-
-        if (!has_config_allocation) {
-            // Use global stacked allocation for mixed analog + digital event stacking
-            int const total_stackable_series = static_cast<int>(visible_analog_keys.size()) + stacked_event_count;
-
-            if (total_stackable_series > 0) {
-                _plotting_manager->calculateGlobalStackedAllocation(i, -1, total_stackable_series,
-                                                                    allocated_y_center, allocated_height);
-            } else {
-                _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
-            }
-        }
-
-        display_options->layout.allocated_y_center = allocated_y_center;
-        display_options->layout.allocated_height = allocated_height;
-
-        // Set the color for the current series
-        hexToRGB(display_options->style.hex_color, r, g, b);
-        float const rNorm = static_cast<float>(r) / 255.0f;
-        float const gNorm = static_cast<float>(g) / 255.0f;
-        float const bNorm = static_cast<float>(b) / 255.0f;
-
-        m_vertices.clear();
-
-        auto series_start_index = getTimeIndexForSeries(start_time,
-                                                        _master_time_frame.get(),
-                                                        series->getTimeFrame().get());
-        auto series_end_index = getTimeIndexForSeries(end_time,
-                                                      _master_time_frame.get(),
-                                                      series->getTimeFrame().get());
-
-        // === MVP MATRIX SETUP ===
-
-        // Apply PlottingManager pan offset
-        _plotting_manager->setPanOffset(_verticalPanOffset);
-
-        // Build parameter structs for CorePlotting MVP functions
-        CorePlotting::AnalogSeriesMatrixParams model_params;
-        model_params.allocated_y_center = display_options->layout.allocated_y_center;
-        model_params.allocated_height = display_options->layout.allocated_height;
-        model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
-        model_params.user_scale_factor = display_options->user_scale_factor;
-        model_params.global_zoom = _plotting_manager->getGlobalZoom();
-        model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
-        model_params.data_mean = display_options->data_cache.cached_mean;
-        model_params.std_dev = display_options->data_cache.cached_std_dev;
-        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
-
-        CorePlotting::ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
-
-        auto Model = CorePlotting::getAnalogModelMatrix(model_params);
-        auto View = CorePlotting::getAnalogViewMatrix(view_params);
-        auto Projection = CorePlotting::getAnalogProjectionMatrix(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax);
-
-        glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
-        glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
-        glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
-
-        // Set color and alpha uniforms
-        glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
-        glUniform1f(m_alphaLoc, 1.0f);
-
-        // Use iterator-based approach which automatically uses fast path (span/pointer)
-        // for contiguous data and slow path for non-contiguous (memory-mapped with stride)
-        auto analog_range = series->getTimeValueRangeInTimeFrameIndexRange(series_start_index,
-                                                                           series_end_index);
-
-        if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {
-
-            m_vertices.clear();
-            for (auto const & [time_idx, value]: analog_range) {
-                auto const xCanvasPos = series->getTimeFrame()->getTimeAtIndex(time_idx);
-                auto const yCanvasPos = value;
-
-                m_vertices.push_back(xCanvasPos);
-                m_vertices.push_back(yCanvasPos);
-                m_vertices.push_back(0.0f);// z coordinate
-                m_vertices.push_back(1.0f);// w coordinate
-            }
-
-            if (m_vertices.empty()) {
-                i++;
-                continue;
-            }
-
-            m_vbo.bind();
-            m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
-            m_vbo.release();
-
-            // Set line thickness from display options
-            glLineWidth(static_cast<float>(display_options->style.line_thickness));
-            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 4));
-
-        } else if (display_options->gap_handling == AnalogGapHandling::DetectGaps) {
-            // Draw multiple line segments, breaking at gaps
-            // Set line thickness before drawing segments
-            glLineWidth(static_cast<float>(display_options->style.line_thickness));
-            _drawAnalogSeriesWithGapDetection(series->getTimeFrame(), analog_range,
-                                              display_options->gap_threshold);
-
-        } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
-            // Draw individual markers instead of lines
-            _drawAnalogSeriesAsMarkers(series->getTimeFrame(), analog_range);
-        }
-
-
-        i++;
-    }
-
-    // Reset line width to default
-    glLineWidth(1.0f);
-    glUseProgram(0);
-}
-
-void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::shared_ptr<TimeFrame> const & time_frame,
-                                                     AnalogTimeSeries::TimeValueRangeView analog_range,
-                                                     float gap_threshold) {
-
-    std::vector<GLfloat> segment_vertices;
-    int prev_index = -1;
-    bool first_point = true;
-
-    for (auto const & [time_idx, value]: analog_range) {
-        auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
-        auto const yCanvasPos = value;
-
-        // Check for gap if this isn't the first point
-        if (!first_point) {
-            int const current_index = time_idx.getValue();
-            int const gap_size = current_index - prev_index;
-
-            if (gap_size > static_cast<int>(gap_threshold)) {
-                // Gap detected - draw current segment and start new one
-                if (segment_vertices.size() >= 4) {// At least 1 point (4 floats)
-                    m_vbo.bind();
-                    m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
-                    m_vbo.release();
-
-                    if (segment_vertices.size() >= 8) {// At least 2 points (8 floats)
-                        glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 4));
-                    } else {// Single point - draw as a small marker
-                        glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 4));
-                    }
-                }
-                segment_vertices.clear();
-            }
-        }
-
-        // Add current point to segment (4D coordinates: x, y, 0, 1)
-        segment_vertices.push_back(xCanvasPos);
-        segment_vertices.push_back(yCanvasPos);
-        segment_vertices.push_back(0.0f);// z coordinate
-        segment_vertices.push_back(1.0f);// w coordinate
-
-        prev_index = time_idx.getValue();
-        first_point = false;
-    }
-
-    // Draw final segment
-    if (segment_vertices.size() >= 4) {// At least 1 point (4 floats)
-        m_vbo.bind();
-        m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
-        m_vbo.release();
-
-        if (segment_vertices.size() >= 8) {// At least 2 points (8 floats)
-            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 4));
-        } else {
-            // Single point - draw as a small marker
-            glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 4));
-        }
-    }
-}
-
-void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::shared_ptr<TimeFrame> const & time_frame,
-                                              AnalogTimeSeries::TimeValueRangeView analog_range) {
-    m_vertices.clear();
-
-    for (auto const & [time_idx, value]: analog_range) {
-        auto const xCanvasPos = time_frame->getTimeAtIndex(time_idx);
-        auto const yCanvasPos = value;
-
-        m_vertices.push_back(xCanvasPos);
-        m_vertices.push_back(yCanvasPos);
-        m_vertices.push_back(0.0f);// z coordinate
-        m_vertices.push_back(1.0f);// w coordinate
-    }
-
-    if (!m_vertices.empty()) {
-        m_vbo.bind();
-        m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
-        m_vbo.release();
-
-        // Set point size for better visibility
-        //glPointSize(3.0f);
-        glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 4));
-        //glPointSize(1.0f); // Reset to default
-    }
-}
-
+// Legacy draw functions removed in Phase 4.5 migration
+// All series rendering now uses SceneRenderer path via renderWithSceneRenderer()
+// See SceneBuildingHelpers for batch construction and PlottingOpenGL for rendering
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::paintGL() {
@@ -1002,20 +377,19 @@ void OpenGLWidget::paintGL() {
     // Update Y boundaries based on pan and zoom
     _updateYViewBoundaries();
 
-    // Choose rendering path
-    if (_use_scene_renderer && _scene_renderer && _scene_renderer->isInitialized()) {
+    // Use the SceneRenderer path for all series rendering
+    // The _use_scene_renderer flag is kept for backwards compatibility
+    // but the legacy path is no longer maintained (Phase 4.5 migration)
+    if (_scene_renderer && _scene_renderer->isInitialized()) {
         renderWithSceneRenderer();
-    } else {
-        // Legacy inline rendering
-        drawDigitalEventSeries();
-        drawDigitalIntervalSeries();
-        drawAnalogSeries();
     }
 
     drawAxis();
 
     drawGridLines();
 
+    // Overlay rendering for interactive states (uses legacy shader path)
+    // These are temporary overlays during user interaction
     drawDraggedInterval();
     drawNewIntervalBeingCreated();
 }
@@ -2278,13 +1652,27 @@ void OpenGLWidget::uploadAnalogBatches() {
                 static_cast<float>(b) / 255.0f,
                 1.0f);
         batch_params.thickness = static_cast<float>(display_options->style.line_thickness);
+        
+        // Choose render mode based on gap handling setting
+        if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
+            batch_params.render_mode = DataViewerHelpers::AnalogRenderMode::Markers;
+        } else {
+            batch_params.render_mode = DataViewerHelpers::AnalogRenderMode::Line;
+        }
 
-        // Build and upload the batch
-        auto batch = DataViewerHelpers::buildAnalogSeriesBatch(
-                *series, _master_time_frame, batch_params, model_params, view_params);
-
-        if (!batch.vertices.empty()) {
-            _scene_renderer->polyLineRenderer().uploadData(batch);
+        // Build and upload the batch based on render mode
+        if (batch_params.render_mode == DataViewerHelpers::AnalogRenderMode::Markers) {
+            auto batch = DataViewerHelpers::buildAnalogSeriesMarkerBatch(
+                    *series, _master_time_frame, batch_params, model_params, view_params);
+            if (!batch.positions.empty()) {
+                _scene_renderer->glyphRenderer().uploadData(batch);
+            }
+        } else {
+            auto batch = DataViewerHelpers::buildAnalogSeriesBatch(
+                    *series, _master_time_frame, batch_params, model_params, view_params);
+            if (!batch.vertices.empty()) {
+                _scene_renderer->polyLineRenderer().uploadData(batch);
+            }
         }
 
         i++;
@@ -2445,6 +1833,40 @@ void OpenGLWidget::uploadIntervalBatches() {
 
         if (!batch.bounds.empty()) {
             _scene_renderer->rectangleRenderer().uploadData(batch);
+        }
+        
+        // Draw selection highlight if this series has a selected interval
+        // (and we're not currently dragging it)
+        auto selected_interval = getSelectedInterval(key);
+        auto const & drag_state = _interval_drag_controller.getState();
+        if (selected_interval.has_value() && !(_interval_drag_controller.isActive() && drag_state.series_key == key)) {
+            auto const [sel_start_time, sel_end_time] = selected_interval.value();
+            
+            // Check if the selected interval overlaps with visible range
+            if (sel_end_time >= _xAxis.getStart() && sel_start_time <= _xAxis.getEnd()) {
+                // Clip to visible range
+                int64_t const highlighted_start = std::max(sel_start_time, static_cast<int64_t>(_xAxis.getStart()));
+                int64_t const highlighted_end = std::min(sel_end_time, static_cast<int64_t>(_xAxis.getEnd()));
+                
+                // Create a brighter version of the color for highlighting
+                glm::vec4 highlight_color(
+                        std::min(1.0f, static_cast<float>(r) / 255.0f + 0.3f),
+                        std::min(1.0f, static_cast<float>(g) / 255.0f + 0.3f),
+                        std::min(1.0f, static_cast<float>(b) / 255.0f + 0.3f),
+                        1.0f);
+                
+                // Build model matrix for highlight (same as interval series)
+                auto highlight_model = CorePlotting::getIntervalModelMatrix(model_params);
+                
+                // Build and upload highlight border
+                auto highlight_batch = DataViewerHelpers::buildIntervalHighlightBorderBatch(
+                        highlighted_start, highlighted_end,
+                        highlight_color, 4.0f, highlight_model);
+                
+                if (!highlight_batch.vertices.empty()) {
+                    _scene_renderer->polyLineRenderer().uploadData(highlight_batch);
+                }
+            }
         }
     }
 }

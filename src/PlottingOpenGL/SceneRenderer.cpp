@@ -52,25 +52,19 @@ void SceneRenderer::uploadScene(CorePlotting::RenderableScene const& scene) {
     // Clear previous data
     clearScene();
 
-    // Upload polyline batches
-    // Note: Current implementation only supports one batch per renderer
-    // For multiple batches, we'd need to render them in sequence
-    // or combine them into a single batch
-    if (!scene.poly_line_batches.empty()) {
-        // For now, upload the first batch. 
-        // TODO: Support multiple batches by storing a vector in the renderer
-        // or rendering multiple batches in sequence
-        m_poly_line_renderer.uploadData(scene.poly_line_batches[0]);
+    // Upload all polyline batches
+    for (auto const& batch : scene.poly_line_batches) {
+        m_poly_line_renderer.uploadData(batch);
     }
 
-    // Upload glyph batches
-    if (!scene.glyph_batches.empty()) {
-        m_glyph_renderer.uploadData(scene.glyph_batches[0]);
+    // Upload all glyph batches
+    for (auto const& batch : scene.glyph_batches) {
+        m_glyph_renderer.uploadData(batch);
     }
 
-    // Upload rectangle batches
-    if (!scene.rectangle_batches.empty()) {
-        m_rectangle_renderer.uploadData(scene.rectangle_batches[0]);
+    // Upload all rectangle batches
+    for (auto const& batch : scene.rectangle_batches) {
+        m_rectangle_renderer.uploadData(batch);
     }
 }
 

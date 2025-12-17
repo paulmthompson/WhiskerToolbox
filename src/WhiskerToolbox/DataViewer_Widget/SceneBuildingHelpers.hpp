@@ -38,6 +38,14 @@ struct NewDigitalIntervalSeriesDisplayOptions;
 namespace DataViewerHelpers {
 
 /**
+ * @brief Rendering mode for analog series.
+ */
+enum class AnalogRenderMode {
+    Line,   ///< Render as connected line strip (default)
+    Markers ///< Render as individual point markers
+};
+
+/**
  * @brief Parameters for building an analog series batch.
  */
 struct AnalogBatchParams {
@@ -47,6 +55,7 @@ struct AnalogBatchParams {
     bool detect_gaps{true};   ///< Whether to break lines at gaps
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     float thickness{1.0f};
+    AnalogRenderMode render_mode{AnalogRenderMode::Line}; ///< How to render the series
 };
 
 /**
@@ -63,6 +72,26 @@ struct AnalogBatchParams {
  * @return A batch ready for upload to PolyLineRenderer
  */
 CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        AnalogBatchParams const & params,
+        CorePlotting::AnalogSeriesMatrixParams const & model_params,
+        CorePlotting::ViewProjectionParams const & view_params);
+
+/**
+ * @brief Build a RenderableGlyphBatch for an AnalogTimeSeries in marker mode.
+ * 
+ * Converts the analog data into individual point markers instead of a connected line.
+ * Used when gap_handling is set to ShowMarkers.
+ * 
+ * @param series The analog time series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_params Parameters for building the Model matrix
+ * @param view_params Parameters for building the View matrix
+ * @return A batch ready for upload to GlyphRenderer
+ */
+CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatch(
         AnalogTimeSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,
         AnalogBatchParams const & params,
@@ -145,6 +174,26 @@ CorePlotting::RenderableRectangleBatch buildIntervalHighlightBatch(
         int64_t start_time,
         int64_t end_time,
         glm::vec4 const & highlight_color,
+        glm::mat4 const & model_matrix);
+
+/**
+ * @brief Build highlight border polylines for a selected interval.
+ * 
+ * Creates a polyline batch containing the four edges of the selection rectangle.
+ * This is drawn on top of the filled rectangle for visual emphasis.
+ * 
+ * @param start_time Start time of the interval (master time frame)
+ * @param end_time End time of the interval (master time frame)
+ * @param highlight_color Color for the border (typically brighter than fill)
+ * @param border_thickness Line width for the border
+ * @param model_matrix Model matrix from the parent interval series
+ * @return A batch containing the four border lines
+ */
+CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
+        int64_t start_time,
+        int64_t end_time,
+        glm::vec4 const & highlight_color,
+        float border_thickness,
         glm::mat4 const & model_matrix);
 
 }// namespace DataViewerHelpers

@@ -86,7 +86,7 @@ bool GlyphRenderer::isInitialized() const {
 
 void GlyphRenderer::render(glm::mat4 const & view_matrix,
                            glm::mat4 const & projection_matrix) {
-    if (!m_initialized || m_positions.empty()) {
+    if (!m_initialized || m_batches.empty()) {
         return;
     }
 
@@ -95,9 +95,6 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
     if (!gl || !glExtra) {
         return;
     }
-
-    // Compute MVP = Projection * View * Model
-    glm::mat4 mvp = projection_matrix * view_matrix * m_model_matrix;
 
     // Get shader program (either from ShaderManager or embedded)
     ShaderProgram * shader_program = nullptr;
@@ -108,17 +105,10 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
             return;
         }
         shader_program->use();
-        shader_program->setUniform("u_mvp_matrix", mvp);
-        auto * native = shader_program->getNativeProgram();
-        if (native) {
-            native->setUniformValue("u_point_size", m_glyph_size);
-        }
     } else {
         if (!m_embedded_shader.bind()) {
             return;
         }
-        m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
-        m_embedded_shader.setUniformValue("u_point_size", m_glyph_size);
     }
 
     // Bind VAO
@@ -129,38 +119,69 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
-    // Enable point size program control for circle glyphs
-    if (m_glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle) {
-        gl->glEnable(GL_PROGRAM_POINT_SIZE);
-    }
+    // Render each batch separately (each may have different model matrix and glyph type)
+    for (auto const & batch : m_batches) {
+        if (batch.positions.empty()) continue;
 
-    // Draw based on glyph type
-    int const instance_count = static_cast<int>(m_positions.size());
+        // Compute MVP = Projection * View * Model (per-batch model matrix)
+        glm::mat4 mvp = projection_matrix * view_matrix * batch.model_matrix;
 
-    switch (m_glyph_type) {
-        case CorePlotting::RenderableGlyphBatch::GlyphType::Circle:
-            // Draw as points (one point per instance)
-            gl->glDrawArrays(GL_POINTS, 0, instance_count);
-            break;
+        if (m_use_shader_manager) {
+            shader_program->setUniform("u_mvp_matrix", mvp);
+            auto * native = shader_program->getNativeProgram();
+            if (native) {
+                native->setUniformValue("u_point_size", batch.glyph_size);
+            }
+        } else {
+            m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+            m_embedded_shader.setUniformValue("u_point_size", batch.glyph_size);
+        }
 
-        case CorePlotting::RenderableGlyphBatch::GlyphType::Tick:
-            // Draw vertical lines (2 vertices per tick, instanced)
-            glExtra->glDrawArraysInstanced(GL_LINES, 0, m_glyph_vertex_count, instance_count);
-            break;
+        // Upload positions for this batch
+        (void) m_instance_vbo.bind();
+        m_instance_vbo.allocate(batch.positions.data(),
+                                static_cast<int>(batch.positions.size() * sizeof(glm::vec2)));
+        m_instance_vbo.release();
 
-        case CorePlotting::RenderableGlyphBatch::GlyphType::Square:
-            // Draw quads as triangle strip (4 vertices)
-            glExtra->glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, m_glyph_vertex_count, instance_count);
-            break;
+        // Upload colors for this batch
+        (void) m_color_vbo.bind();
+        m_color_vbo.allocate(batch.colors.data(),
+                             static_cast<int>(batch.colors.size() * sizeof(glm::vec4)));
+        m_color_vbo.release();
 
-        case CorePlotting::RenderableGlyphBatch::GlyphType::Cross:
-            // Draw two perpendicular lines (4 vertices)
-            glExtra->glDrawArraysInstanced(GL_LINES, 0, m_glyph_vertex_count, instance_count);
-            break;
-    }
+        // Enable point size program control for circle glyphs
+        if (batch.glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle) {
+            gl->glEnable(GL_PROGRAM_POINT_SIZE);
+        }
 
-    if (m_glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle) {
-        gl->glDisable(GL_PROGRAM_POINT_SIZE);
+        // Draw based on glyph type
+        int const instance_count = static_cast<int>(batch.positions.size());
+
+        switch (batch.glyph_type) {
+            case CorePlotting::RenderableGlyphBatch::GlyphType::Circle:
+                // Draw as points (one point per instance)
+                gl->glDrawArrays(GL_POINTS, 0, instance_count);
+                break;
+
+            case CorePlotting::RenderableGlyphBatch::GlyphType::Tick:
+                // Draw vertical lines (2 vertices per tick, instanced)
+                glExtra->glDrawArraysInstanced(GL_LINES, 0, m_glyph_vertex_count, instance_count);
+                break;
+
+            case CorePlotting::RenderableGlyphBatch::GlyphType::Square:
+                // Draw quads as triangle strip (4 vertices)
+                glExtra->glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, m_glyph_vertex_count, instance_count);
+                break;
+
+            case CorePlotting::RenderableGlyphBatch::GlyphType::Cross:
+                // Draw two perpendicular lines (4 vertices)
+                glExtra->glDrawArraysInstanced(GL_LINES, 0, m_glyph_vertex_count, instance_count);
+                break;
+        }
+
+        if (batch.glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle) {
+            gl->glDisable(GL_PROGRAM_POINT_SIZE);
+        }
     }
 
     // Cleanup
@@ -171,16 +192,15 @@ void GlyphRenderer::render(glm::mat4 const & view_matrix,
 }
 
 bool GlyphRenderer::hasData() const {
-    return !m_positions.empty();
+    return !m_batches.empty();
 }
 
 void GlyphRenderer::clearData() {
-    m_positions.clear();
-    m_colors.clear();
+    m_batches.clear();
+    m_all_positions.clear();
+    m_all_colors.clear();
     m_glyph_vertices.clear();
     m_glyph_vertex_count = 0;
-    m_has_per_instance_colors = false;
-    m_model_matrix = glm::mat4{1.0f};
 }
 
 void GlyphRenderer::uploadData(CorePlotting::RenderableGlyphBatch const & batch) {
@@ -188,31 +208,35 @@ void GlyphRenderer::uploadData(CorePlotting::RenderableGlyphBatch const & batch)
         return;
     }
 
-    clearData();
-
     if (batch.positions.empty()) {
         return;
     }
 
-    // Store batch properties
-    m_glyph_type = batch.glyph_type;
-    m_glyph_size = batch.size;
-    m_model_matrix = batch.model_matrix;
-    m_positions = batch.positions;
-    m_has_per_instance_colors = !batch.colors.empty();
+    // Create new batch data
+    BatchData batch_data;
+    batch_data.glyph_type = batch.glyph_type;
+    batch_data.glyph_size = batch.size;
+    batch_data.model_matrix = batch.model_matrix;
+    batch_data.positions = batch.positions;
+    batch_data.has_per_instance_colors = !batch.colors.empty();
 
     // Prepare colors - if no per-instance colors, create a buffer with global color
-    if (m_has_per_instance_colors) {
-        m_colors = batch.colors;
+    if (batch_data.has_per_instance_colors) {
+        batch_data.colors = batch.colors;
     } else {
         // Create uniform color array for all instances
-        m_colors.resize(batch.positions.size(), glm::vec4{1.0f, 1.0f, 1.0f, 1.0f});
+        batch_data.colors.resize(batch.positions.size(), glm::vec4{1.0f, 1.0f, 1.0f, 1.0f});
     }
 
-    // Create glyph geometry based on type
-    createGlyphGeometry();
+    // Store batch
+    m_batches.push_back(std::move(batch_data));
 
-    // Setup vertex attributes based on glyph type
+    // Create glyph geometry if needed (for non-point glyph types)
+    if (m_glyph_vertices.empty()) {
+        createGlyphGeometry();
+    }
+
+    // Setup vertex attributes
     setupVertexAttributes();
 }
 
@@ -248,7 +272,7 @@ void GlyphRenderer::createGlyphGeometry() {
     // Glyph shapes are defined in normalized coordinates [-0.5, 0.5]
     // They will be scaled by uGlyphSize in the shader
 
-    switch (m_glyph_type) {
+    switch (m_current_glyph_type) {
         case CorePlotting::RenderableGlyphBatch::GlyphType::Circle:
             // For circles, we use GL_POINTS, no geometry needed
             m_glyph_vertex_count = 1;
@@ -297,67 +321,36 @@ void GlyphRenderer::setupVertexAttributes() {
 
     (void) m_vao.bind();
 
-    if (m_glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle) {
-        // For circle (point) glyphs, use position directly as attribute 0
-        // and color as attribute 1 (interleaved in same buffer or separate buffers)
+    // For circle (point) glyphs, setup position as attribute 0 and color as attribute 1
+    // For other glyphs, use instanced rendering with geometry VBO
+    // Since we support per-batch glyph types, we set up all attributes but only use
+    // the appropriate ones during rendering
+    
+    // Setup geometry VBO for non-circle glyphs
+    if (!m_glyph_vertices.empty()) {
+        (void) m_geometry_vbo.bind();
+        m_geometry_vbo.allocate(m_glyph_vertices.data(),
+                                static_cast<int>(m_glyph_vertices.size() * sizeof(float)));
 
-        // Upload positions to instance VBO
-        (void) m_instance_vbo.bind();
-        m_instance_vbo.allocate(m_positions.data(),
-                                static_cast<int>(m_positions.size() * sizeof(glm::vec2)));
-
-        // Position attribute (location = 0)
-        gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
+        // Vertex attribute (location = 0) - per-vertex shape
+        gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
         gl->glEnableVertexAttribArray(0);
-        m_instance_vbo.release();
-
-        // Upload colors to color VBO
-        (void) m_color_vbo.bind();
-        m_color_vbo.allocate(m_colors.data(),
-                             static_cast<int>(m_colors.size() * sizeof(glm::vec4)));
-
-        // Color attribute (location = 1)
-        gl->glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
-        gl->glEnableVertexAttribArray(1);
-        m_color_vbo.release();
-
-    } else {
-        // For other glyphs, use instanced rendering
-
-        // Upload glyph geometry to geometry VBO
-        if (!m_glyph_vertices.empty()) {
-            (void) m_geometry_vbo.bind();
-            m_geometry_vbo.allocate(m_glyph_vertices.data(),
-                                    static_cast<int>(m_glyph_vertices.size() * sizeof(float)));
-
-            // Vertex attribute (location = 0) - per-vertex shape
-            gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-            gl->glEnableVertexAttribArray(0);
-            m_geometry_vbo.release();
-        }
-
-        // Upload instance positions
-        (void) m_instance_vbo.bind();
-        m_instance_vbo.allocate(m_positions.data(),
-                                static_cast<int>(m_positions.size() * sizeof(glm::vec2)));
-
-        // Instance position attribute (location = 1) - per-instance
-        gl->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
-        gl->glEnableVertexAttribArray(1);
-        glExtra->glVertexAttribDivisor(1, 1);// Advance once per instance
-        m_instance_vbo.release();
-
-        // Upload instance colors
-        (void) m_color_vbo.bind();
-        m_color_vbo.allocate(m_colors.data(),
-                             static_cast<int>(m_colors.size() * sizeof(glm::vec4)));
-
-        // Instance color attribute (location = 2) - per-instance
-        gl->glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
-        gl->glEnableVertexAttribArray(2);
-        glExtra->glVertexAttribDivisor(2, 1);// Advance once per instance
-        m_color_vbo.release();
+        m_geometry_vbo.release();
     }
+
+    // Setup instance VBO for positions (will be uploaded per-batch in render)
+    (void) m_instance_vbo.bind();
+    gl->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
+    gl->glEnableVertexAttribArray(1);
+    glExtra->glVertexAttribDivisor(1, 1);// Advance once per instance
+    m_instance_vbo.release();
+
+    // Setup color VBO (will be uploaded per-batch in render)
+    (void) m_color_vbo.bind();
+    gl->glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
+    gl->glEnableVertexAttribArray(2);
+    glExtra->glVertexAttribDivisor(2, 1);// Advance once per instance
+    m_color_vbo.release();
 
     m_vao.release();
 }

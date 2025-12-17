@@ -97,15 +97,24 @@ private:
     GLVertexArray m_vao;
     GLBuffer m_vbo{GLBuffer::Type::Vertex};
 
-    // Cached batch data for rendering
-    std::vector<int32_t> m_line_start_indices;
-    std::vector<int32_t> m_line_vertex_counts;
-    std::vector<glm::vec4> m_line_colors;
-    glm::vec4 m_global_color{1.0f, 1.0f, 1.0f, 1.0f};
-    glm::mat4 m_model_matrix{1.0f};
-    float m_thickness{1.0f};
+    // Cached batch data for rendering - supports multiple batches
+    struct BatchData {
+        std::vector<int32_t> line_start_indices;
+        std::vector<int32_t> line_vertex_counts;
+        std::vector<glm::vec4> line_colors;
+        glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
+        glm::mat4 model_matrix{1.0f};
+        float thickness{1.0f};
+        int vertex_offset{0};  // Offset in VBO for this batch
+        int total_vertices{0};
+        bool has_per_line_colors{false};
+    };
+    std::vector<BatchData> m_batches;
+    std::vector<float> m_all_vertices;  // Combined vertex data for all batches
     int m_total_vertices{0};
-    bool m_has_per_line_colors{false};
+    
+    // Default line thickness (used by setLineThickness API for backwards compatibility)
+    float m_thickness{1.0f};
 
     bool m_initialized{false};
     

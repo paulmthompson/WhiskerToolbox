@@ -91,7 +91,7 @@ bool RectangleRenderer::isInitialized() const {
 
 void RectangleRenderer::render(glm::mat4 const & view_matrix,
                                glm::mat4 const & projection_matrix) {
-    if (!m_initialized || m_bounds.empty()) {
+    if (!m_initialized || m_batches.empty()) {
         return;
     }
 
@@ -101,91 +101,117 @@ void RectangleRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
-    // Compute MVP = Projection * View * Model
-    glm::mat4 mvp = projection_matrix * view_matrix * m_model_matrix;
-
-    int const instance_count = static_cast<int>(m_bounds.size());
-
     // Enable blending for transparent rectangles
     gl->glEnable(GL_BLEND);
     gl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // --- Draw filled rectangles ---
+    // Get fill shader
     ShaderProgram * fill_shader = nullptr;
     if (m_use_shader_manager) {
         fill_shader = ShaderManager::instance().getProgram(FILL_SHADER_NAME);
         if (!fill_shader) {
             std::cerr << "[RectangleRenderer] Fill shader program not found" << std::endl;
+            gl->glDisable(GL_BLEND);
             return;
         }
         fill_shader->use();
-        fill_shader->setUniform("u_mvp_matrix", mvp);
     } else {
         if (!m_embedded_fill_shader.bind()) {
+            gl->glDisable(GL_BLEND);
             return;
         }
-        m_embedded_fill_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
     }
 
     if (!m_vao.bind()) {
         if (!m_use_shader_manager) {
             m_embedded_fill_shader.release();
         }
+        gl->glDisable(GL_BLEND);
         return;
     }
 
-    // Draw instanced quads (4 vertices per quad, as triangle strip)
-    glExtra->glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instance_count);
+    // Render each batch
+    for (auto const & batch : m_batches) {
+        if (batch.bounds.empty()) continue;
+
+        // Compute MVP = Projection * View * Model (per-batch model matrix)
+        glm::mat4 mvp = projection_matrix * view_matrix * batch.model_matrix;
+        int const instance_count = static_cast<int>(batch.bounds.size());
+
+        // Upload bounds for this batch
+        (void) m_bounds_vbo.bind();
+        m_bounds_vbo.allocate(batch.bounds.data(),
+                              static_cast<int>(batch.bounds.size() * sizeof(glm::vec4)));
+        m_bounds_vbo.release();
+
+        // Upload colors for this batch
+        (void) m_color_vbo.bind();
+        m_color_vbo.allocate(batch.colors.data(),
+                             static_cast<int>(batch.colors.size() * sizeof(glm::vec4)));
+        m_color_vbo.release();
+
+        if (m_use_shader_manager) {
+            fill_shader->setUniform("u_mvp_matrix", mvp);
+        } else {
+            m_embedded_fill_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+        }
+
+        // Draw instanced quads (4 vertices per quad, as triangle strip)
+        glExtra->glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instance_count);
+
+        // --- Draw borders (optional) ---
+        if (m_border_enabled) {
+            if (!m_use_shader_manager) {
+                m_embedded_fill_shader.release();
+            }
+
+            ShaderProgram * border_shader = nullptr;
+            if (m_use_shader_manager) {
+                border_shader = ShaderManager::instance().getProgram(BORDER_SHADER_NAME);
+                if (!border_shader) {
+                    continue;
+                }
+                border_shader->use();
+                border_shader->setUniform("u_mvp_matrix", mvp);
+                auto * native = border_shader->getNativeProgram();
+                if (native) {
+                    native->setUniformValue("u_border_color",
+                                            m_border_color.r,
+                                            m_border_color.g,
+                                            m_border_color.b,
+                                            m_border_color.a);
+                }
+            } else {
+                if (!m_embedded_border_shader.bind()) {
+                    continue;
+                }
+                m_embedded_border_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+                m_embedded_border_shader.setUniformValue("u_border_color",
+                                                         m_border_color.r,
+                                                         m_border_color.g,
+                                                         m_border_color.b,
+                                                         m_border_color.a);
+            }
+
+            gl->glLineWidth(m_border_width);
+
+            // Draw each rectangle border as LINE_LOOP
+            for (int i = 0; i < instance_count; ++i) {
+                glExtra->glDrawArraysInstanced(GL_LINE_LOOP, 4, 4, 1);
+            }
+
+            if (!m_use_shader_manager) {
+                m_embedded_border_shader.release();
+                // Re-bind fill shader for next batch
+                (void) m_embedded_fill_shader.bind();
+            } else {
+                fill_shader->use();
+            }
+        }
+    }
 
     if (!m_use_shader_manager) {
         m_embedded_fill_shader.release();
-    }
-
-    // --- Draw borders (optional) ---
-    if (m_border_enabled) {
-        ShaderProgram * border_shader = nullptr;
-        if (m_use_shader_manager) {
-            border_shader = ShaderManager::instance().getProgram(BORDER_SHADER_NAME);
-            if (!border_shader) {
-                m_vao.release();
-                return;
-            }
-            border_shader->use();
-            border_shader->setUniform("u_mvp_matrix", mvp);
-            auto * native = border_shader->getNativeProgram();
-            if (native) {
-                native->setUniformValue("u_border_color",
-                                        m_border_color.r,
-                                        m_border_color.g,
-                                        m_border_color.b,
-                                        m_border_color.a);
-            }
-        } else {
-            if (!m_embedded_border_shader.bind()) {
-                m_vao.release();
-                return;
-            }
-            m_embedded_border_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
-            m_embedded_border_shader.setUniformValue("u_border_color",
-                                                     m_border_color.r,
-                                                     m_border_color.g,
-                                                     m_border_color.b,
-                                                     m_border_color.a);
-        }
-
-        gl->glLineWidth(m_border_width);
-
-        // Draw each rectangle border as LINE_LOOP
-        // We need to switch to the border quad vertices (corners in order)
-        for (int i = 0; i < instance_count; ++i) {
-            // For LINE_LOOP, we need 4 corner vertices
-            // We'll draw each rectangle separately
-            glExtra->glDrawArraysInstanced(GL_LINE_LOOP, 4, 4, 1);
-        }
-
-        if (!m_use_shader_manager) {
-            m_embedded_border_shader.release();
-        }
     }
 
     m_vao.release();
@@ -193,13 +219,11 @@ void RectangleRenderer::render(glm::mat4 const & view_matrix,
 }
 
 bool RectangleRenderer::hasData() const {
-    return !m_bounds.empty();
+    return !m_batches.empty();
 }
 
 void RectangleRenderer::clearData() {
-    m_bounds.clear();
-    m_colors.clear();
-    m_model_matrix = glm::mat4{1.0f};
+    m_batches.clear();
 }
 
 void RectangleRenderer::uploadData(CorePlotting::RenderableRectangleBatch const & batch) {
@@ -207,25 +231,27 @@ void RectangleRenderer::uploadData(CorePlotting::RenderableRectangleBatch const 
         return;
     }
 
-    clearData();
-
     if (batch.bounds.empty()) {
         return;
     }
 
-    // Store batch properties
-    m_bounds = batch.bounds;
-    m_model_matrix = batch.model_matrix;
+    // Create new batch data
+    BatchData batch_data;
+    batch_data.bounds = batch.bounds;
+    batch_data.model_matrix = batch.model_matrix;
 
     // Prepare colors
     if (!batch.colors.empty()) {
-        m_colors = batch.colors;
+        batch_data.colors = batch.colors;
     } else {
         // Default to white if no colors provided
-        m_colors.resize(batch.bounds.size(), glm::vec4{1.0f, 1.0f, 1.0f, 0.5f});
+        batch_data.colors.resize(batch.bounds.size(), glm::vec4{1.0f, 1.0f, 1.0f, 0.5f});
     }
 
-    // Setup vertex attributes
+    // Store batch
+    m_batches.push_back(std::move(batch_data));
+
+    // Setup vertex attributes (only needed once, but safe to call multiple times)
     setupVertexAttributes();
 }
 
@@ -296,23 +322,17 @@ void RectangleRenderer::setupVertexAttributes() {
     gl->glEnableVertexAttribArray(0);
     m_quad_vbo.release();
 
-    // Upload instance bounds
+    // Setup bounds attribute (location = 1) - per-instance
+    // Data will be uploaded per-batch in render()
     (void) m_bounds_vbo.bind();
-    m_bounds_vbo.allocate(m_bounds.data(),
-                          static_cast<int>(m_bounds.size() * sizeof(glm::vec4)));
-
-    // Bounds attribute (location = 1) - per-instance
     gl->glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
     gl->glEnableVertexAttribArray(1);
     glExtra->glVertexAttribDivisor(1, 1);// Advance once per instance
     m_bounds_vbo.release();
 
-    // Upload instance colors
+    // Setup color attribute (location = 2) - per-instance
+    // Data will be uploaded per-batch in render()
     (void) m_color_vbo.bind();
-    m_color_vbo.allocate(m_colors.data(),
-                         static_cast<int>(m_colors.size() * sizeof(glm::vec4)));
-
-    // Color attribute (location = 2) - per-instance
     gl->glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), nullptr);
     gl->glEnableVertexAttribArray(2);
     glExtra->glVertexAttribDivisor(2, 1);// Advance once per instance
