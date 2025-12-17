@@ -5,6 +5,7 @@
 #include "MappedLineView.hpp"
 #include "MapperConcepts.hpp"
 #include "Layout/SeriesLayout.hpp"
+#include "Layout/LayoutTransform.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -42,7 +43,7 @@ namespace RasterMapper {
  * 
  * Transforms events into (x, y, entity_id) where:
  * - X = event_time - reference_time (relative offset)
- * - Y = layout.result.allocated_y_center (row center)
+ * - Y = layout.y_transform.offset (row center)
  * 
  * @param series Event series to map
  * @param layout Layout allocation for Y positioning (from RowLayoutStrategy)
@@ -56,7 +57,7 @@ namespace RasterMapper {
     TimeFrame const & time_frame,
     TimeFrameIndex reference_time
 ) {
-    float const y_center = layout.result.allocated_y_center;
+    float const y_center = layout.y_transform.offset;
     int const ref_abs_time = time_frame.getTimeAtIndex(reference_time);
     
     return series.view()
@@ -88,7 +89,7 @@ namespace RasterMapper {
     int window_before,
     int window_after
 ) {
-    float const y_center = layout.result.allocated_y_center;
+    float const y_center = layout.y_transform.offset;
     int const ref_abs_time = time_frame.getTimeAtIndex(reference_time);
     int const window_start = ref_abs_time - window_before;
     int const window_end = ref_abs_time + window_after;
@@ -239,10 +240,11 @@ struct TrialConfig {
     float const total_height = y_max - y_min;
     float const row_height = total_height / static_cast<float>(total_rows);
     float const y_center = computeRowYCenter(row_index, total_rows, y_min, y_max);
+    float const half_height = row_height / 2.0f;
     
     return SeriesLayout{
-        SeriesLayoutResult{y_center, row_height},
         std::move(series_id),
+        LayoutTransform{y_center, half_height},
         row_index
     };
 }

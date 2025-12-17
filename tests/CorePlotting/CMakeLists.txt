@@ -51,5 +51,18 @@ if (APPLE)
     )
 endif ()
 
-# Register with CTest
-catch_discover_tests(test_coreplotting)
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_coreplotting
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_coreplotting)
+    endif()
+else()
+    add_test(NAME test_coreplotting_all
+        COMMAND test_coreplotting
+        )
+endif()

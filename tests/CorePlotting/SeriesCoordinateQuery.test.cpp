@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 
 using namespace CorePlotting;
 using Catch::Matchers::WithinAbs;
@@ -16,13 +17,14 @@ LayoutResponse makeTestLayout() {
     // Series 0: center at +0.5, height 0.6  (top)
     // Series 1: center at  0.0, height 0.6  (middle)
     // Series 2: center at -0.5, height 0.6  (bottom)
+    // y_transform: offset=center, gain=half_height
     
     response.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(0.5f, 0.6f), "series_top", 0));
+        "series_top", LayoutTransform(0.5f, 0.3f), 0));  // center=0.5, half_height=0.3
     response.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(0.0f, 0.6f), "series_mid", 1));
+        "series_mid", LayoutTransform(0.0f, 0.3f), 1));  // center=0.0, half_height=0.3
     response.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(-0.5f, 0.6f), "series_bot", 2));
+        "series_bot", LayoutTransform(-0.5f, 0.3f), 2)); // center=-0.5, half_height=0.3
     
     return response;
 }
@@ -92,13 +94,14 @@ TEST_CASE("findSeriesAtWorldY gap between series", "[CorePlotting][SeriesCoordin
     
     SECTION("Query in gap (outside all series)") {
         // Create layout with actual gaps
+        // y_transform: offset=center, gain=half_height
         LayoutResponse gapped;
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.75f, 0.4f), "top", 0));  // [0.55, 0.95]
+            "top", LayoutTransform(0.75f, 0.2f), 0));  // [0.55, 0.95]
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.0f, 0.4f), "mid", 1));   // [-0.2, 0.2]
+            "mid", LayoutTransform(0.0f, 0.2f), 1));   // [-0.2, 0.2]
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(-0.75f, 0.4f), "bot", 2)); // [-0.95, -0.55]
+            "bot", LayoutTransform(-0.75f, 0.2f), 2)); // [-0.95, -0.55]
         
         // Query at 0.4 (in gap between top and mid)
         auto result = findSeriesAtWorldY(0.4f, gapped);
@@ -108,9 +111,9 @@ TEST_CASE("findSeriesAtWorldY gap between series", "[CorePlotting][SeriesCoordin
     SECTION("Query in gap with tolerance") {
         LayoutResponse gapped;
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.75f, 0.4f), "top", 0));  // [0.55, 0.95]
+            "top", LayoutTransform(0.75f, 0.2f), 0));  // [0.55, 0.95]
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.0f, 0.4f), "mid", 1));   // [-0.2, 0.2]
+            "mid", LayoutTransform(0.0f, 0.2f), 1));   // [-0.2, 0.2]
         
         // Query at 0.35 with tolerance 0.2 should hit mid (top edge at 0.2 + 0.2 = 0.4)
         auto result = findSeriesAtWorldY(0.35f, gapped, 0.2f);
@@ -154,9 +157,9 @@ TEST_CASE("findClosestSeriesAtWorldY", "[CorePlotting][SeriesCoordinateQuery]") 
     SECTION("Query in gap - returns closest") {
         LayoutResponse gapped;
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.75f, 0.4f), "top", 0));
+            "top", LayoutTransform(0.75f, 0.2f), 0));  // [0.55, 0.95]
         gapped.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.0f, 0.4f), "mid", 1));
+            "mid", LayoutTransform(0.0f, 0.2f), 1));   // [-0.2, 0.2]
         
         // Query at 0.4 is closer to top (center 0.75, distance 0.35) 
         // than mid (center 0.0, distance 0.4)
@@ -181,7 +184,7 @@ TEST_CASE("findClosestSeriesAtWorldY", "[CorePlotting][SeriesCoordinateQuery]") 
 }
 
 TEST_CASE("worldYToSeriesLocalY", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(0.5f, 0.6f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(0.5f, 0.3f), 0);  // center=0.5, half_height=0.3
     
     SECTION("At center") {
         float local = worldYToSeriesLocalY(0.5f, series);
@@ -200,7 +203,7 @@ TEST_CASE("worldYToSeriesLocalY", "[CorePlotting][SeriesCoordinateQuery]") {
 }
 
 TEST_CASE("seriesLocalYToWorldY", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(0.5f, 0.6f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(0.5f, 0.3f), 0);  // center=0.5, half_height=0.3
     
     SECTION("At center") {
         float world = seriesLocalYToWorldY(0.0f, series);
@@ -214,7 +217,7 @@ TEST_CASE("seriesLocalYToWorldY", "[CorePlotting][SeriesCoordinateQuery]") {
 }
 
 TEST_CASE("Round-trip local <-> world Y", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(-0.3f, 0.8f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(-0.3f, 0.4f), 0);  // center=-0.3, half_height=0.4
     
     for (float world_y : {-0.7f, -0.3f, 0.0f, 0.1f}) {
         float local = worldYToSeriesLocalY(world_y, series);
@@ -224,7 +227,7 @@ TEST_CASE("Round-trip local <-> world Y", "[CorePlotting][SeriesCoordinateQuery]
 }
 
 TEST_CASE("getSeriesWorldBounds", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(0.5f, 0.6f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(0.5f, 0.3f), 0);  // center=0.5, half_height=0.3
     
     auto [y_min, y_max] = getSeriesWorldBounds(series);
     
@@ -234,7 +237,7 @@ TEST_CASE("getSeriesWorldBounds", "[CorePlotting][SeriesCoordinateQuery]") {
 }
 
 TEST_CASE("isWithinSeriesBounds", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(0.5f, 0.6f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(0.5f, 0.3f), 0);  // center=0.5, half_height=0.3
     // Bounds: [0.2, 0.8]
     
     SECTION("Inside bounds") {
@@ -255,8 +258,7 @@ TEST_CASE("isWithinSeriesBounds", "[CorePlotting][SeriesCoordinateQuery]") {
 }
 
 TEST_CASE("normalizedSeriesYToWorldY", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(0.5f, 0.6f), "test", 0);
-    // half_height = 0.3
+    SeriesLayout series("test", LayoutTransform(0.5f, 0.3f), 0);  // center=0.5, half_height=0.3
     
     SECTION("Center (normalized 0)") {
         float world = normalizedSeriesYToWorldY(0.0f, series);
@@ -280,7 +282,7 @@ TEST_CASE("normalizedSeriesYToWorldY", "[CorePlotting][SeriesCoordinateQuery]") 
 }
 
 TEST_CASE("worldYToNormalizedSeriesY", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(0.5f, 0.6f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(0.5f, 0.3f), 0);  // center=0.5, half_height=0.3
     
     SECTION("Center") {
         float norm = worldYToNormalizedSeriesY(0.5f, series);
@@ -298,14 +300,14 @@ TEST_CASE("worldYToNormalizedSeriesY", "[CorePlotting][SeriesCoordinateQuery]") 
     }
     
     SECTION("Zero height series") {
-        SeriesLayout zero_height(SeriesLayoutResult(0.5f, 0.0f), "zero", 0);
+        SeriesLayout zero_height("zero", LayoutTransform(0.5f, 0.0f), 0);
         float norm = worldYToNormalizedSeriesY(0.5f, zero_height);
         REQUIRE_THAT(norm, WithinAbs(0.0f, 0.001f));
     }
 }
 
 TEST_CASE("Round-trip normalized <-> world Y", "[CorePlotting][SeriesCoordinateQuery]") {
-    SeriesLayout series(SeriesLayoutResult(-0.2f, 0.8f), "test", 0);
+    SeriesLayout series("test", LayoutTransform(-0.2f, 0.4f), 0);  // center=-0.2, half_height=0.4
     
     for (float norm : {-1.0f, -0.5f, 0.0f, 0.5f, 1.0f}) {
         float world = normalizedSeriesYToWorldY(norm, series);
@@ -319,11 +321,11 @@ TEST_CASE("Practical scenario: DataViewer hover", "[CorePlotting][SeriesCoordina
     // Viewport is [-1, +1] in Y
     LayoutResponse layout;
     layout.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(0.6f, 0.5f), "EMG_signal", 0));
+        "EMG_signal", LayoutTransform(0.6f, 0.25f), 0));     // center=0.6, half_height=0.25 → [0.35, 0.85]
     layout.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(0.0f, 0.5f), "LFP_channel1", 1));
+        "LFP_channel1", LayoutTransform(0.0f, 0.25f), 1));   // center=0.0, half_height=0.25 → [-0.25, 0.25]
     layout.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(-0.6f, 0.5f), "Breathing", 2));
+        "Breathing", LayoutTransform(-0.6f, 0.25f), 2));     // center=-0.6, half_height=0.25 → [-0.85, -0.35]
     
     SECTION("User hovers over LFP channel") {
         // World Y = 0.1 (slightly above center of middle series)
@@ -339,8 +341,8 @@ TEST_CASE("Practical scenario: DataViewer hover", "[CorePlotting][SeriesCoordina
     
     SECTION("User hovers in gap between series") {
         // World Y = 0.36 (just inside EMG bottom edge, which is at 0.35)
-        // EMG: center=0.6, height=0.5, bounds [0.35, 0.85]
-        // LFP: center=0.0, height=0.5, bounds [-0.25, 0.25]
+        // EMG: center=0.6, half_height=0.25, bounds [0.35, 0.85]
+        // LFP: center=0.0, half_height=0.25, bounds [-0.25, 0.25]
         // Gap is from 0.25 to 0.35
         auto result = findSeriesAtWorldY(0.36f, layout);
         REQUIRE(result.has_value());

@@ -118,26 +118,144 @@ struct AxisBinding {
 
 ### Layout Transforms
 
-Layout transforms convert raw extracted values to world coordinates:
+Layout transforms convert raw values to world coordinates using a simple affine model:
 
 ```cpp
-struct LayoutTransform {
-    float offset{0.0f};      // Added after scaling
-    float scale{1.0f};       // Applied to raw value
-    float allocated_min{0.0f};
-    float allocated_max{0.0f};
-    
-    [[nodiscard]] float apply(float raw_value) const {
-        return raw_value * scale + offset;
-    }
-};
+// Core/Layout/LayoutTransform.hpp
 
-struct SeriesLayout {
-    std::string key;
-    LayoutTransform x_transform;  // Usually identity for time-series
-    LayoutTransform y_transform;  // Vertical positioning and scaling
+/**
+ * @brief Pure geometric transform: output = input * gain + offset
+ * 
+ * This is the fundamental building block for positioning data in world space.
+ * The LayoutEngine outputs these, and they become part of the Model matrix.
+ * 
+ * Key insight: Layout is purely geometric (offset + gain). Data normalization
+ * (z-score, peak-to-peak, etc.) is widget-specific and computed via helper functions.
+ */
+struct LayoutTransform {
+    float offset{0.0f};  ///< Translation (applied after scaling)
+    float gain{1.0f};    ///< Scale factor
+    
+    /// Apply transform: output = input * gain + offset
+    [[nodiscard]] float apply(float value) const {
+        return value * gain + offset;
+    }
+    
+    /// Inverse transform: recover original value
+    [[nodiscard]] float inverse(float transformed) const;
+    
+    /// Compose transforms: result applies this AFTER other
+    [[nodiscard]] LayoutTransform compose(LayoutTransform const& other) const {
+        return { other.offset * gain + offset, other.gain * gain };
+    }
+    
+    /// Convert to 4x4 Model matrix for Y-axis transform
+    [[nodiscard]] glm::mat4 toModelMatrixY() const;
+    
+    /// Convert to 4x4 Model matrix for X-axis transform
+    [[nodiscard]] glm::mat4 toModelMatrixX() const;
+    
+    [[nodiscard]] static LayoutTransform identity() { return {0.0f, 1.0f}; }
 };
 ```
+
+#### Normalization Helpers
+
+Data normalization (z-score, peak-to-peak, etc.) is **widget-specific**—the layout layer
+should not know about standard deviations or data ranges. Instead, normalization is
+computed separately and composed with layout transforms:
+
+```cpp
+// Core/Layout/NormalizationHelpers.hpp
+
+namespace NormalizationHelpers {
+    /// Z-score normalization: centers on mean, scales by std_dev
+    /// Result: (value - mean) / std_dev
+    [[nodiscard]] LayoutTransform forZScore(float mean, float std_dev);
+    
+    /// Peak-to-peak normalization: maps [min, max] → [target_min, target_max]
+    [[nodiscard]] LayoutTransform forPeakToPeak(float min, float max,
+                                                 float target_min = -1.0f,
+                                                 float target_max = 1.0f);
+    
+    /// Standard deviation range: maps mean ± num_std_devs*std → [-1, +1]
+    [[nodiscard]] LayoutTransform forStdDevRange(float mean, float std_dev,
+                                                  float num_std_devs = 3.0f);
+    
+    /// Unit range normalization: maps [min, max] → [0, 1]
+    [[nodiscard]] LayoutTransform forUnitRange(float min, float max);
+    
+    /// Percentile range normalization  
+    [[nodiscard]] LayoutTransform forPercentileRange(float p_low_value, float p_high_value,
+                                                      float target_min = -1.0f,
+                                                      float target_max = 1.0f);
+    
+    /// Centered normalization: subtracts center, no scaling
+    [[nodiscard]] LayoutTransform forCentered(float center);
+    
+    /// Manual gain/offset
+    [[nodiscard]] LayoutTransform manual(float offset, float gain);
+}
+```
+
+#### Usage Pattern: Composing Transforms
+
+The widget computes the final transform by composing normalization with layout:
+
+```cpp
+// Widget code (DataViewer style)
+void buildAnalogSeriesBatch(series_key, series_data, layout, view_state) {
+    // 1. Get layout transform from LayoutEngine
+    SeriesLayout const& series_layout = layout_response.findLayout(series_key);
+    
+    // 2. Compute data normalization (widget-specific)
+    float mean = series_config.data_cache.cached_mean;
+    float std_dev = series_config.data_cache.cached_std_dev;
+    LayoutTransform data_norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
+    
+    // 3. Apply user adjustments
+    LayoutTransform user_adj = NormalizationHelpers::manual(
+        series_config.user_vertical_offset,
+        series_config.user_scale_factor);
+    
+    // 4. Compose: data_norm → user_adj → layout
+    LayoutTransform final_transform = series_layout.y_transform
+        .compose(user_adj)
+        .compose(data_norm);
+    
+    // 5. Create model matrix directly
+    glm::mat4 model_matrix = final_transform.toModelMatrixY();
+    
+    // 6. Build batch with model matrix
+    PolyLineStyle style { model_matrix, config.color, config.thickness };
+    builder.addPolyLine(key, mapped_vertices, style);
+}
+```
+
+#### SeriesLayout Structure
+
+```cpp
+// Core/Layout/SeriesLayout.hpp
+
+/**
+ * @brief Complete layout specification for a single series
+ */
+struct SeriesLayout {
+    std::string series_id;              ///< Unique identifier
+    LayoutTransform y_transform;        ///< Y-axis transform (offset=center, gain=half_height)
+    LayoutTransform x_transform;        ///< X-axis transform (usually identity)
+    int series_index{0};                ///< Index for ordering
+    
+    /// Convenience: compute Y model matrix from y_transform
+    [[nodiscard]] glm::mat4 computeModelMatrix() const {
+        return y_transform.toModelMatrixY();
+    }
+};
+```
+
+**Convention for y_transform:**
+- `offset` = center Y position in world coordinates
+- `gain` = half-height of allocated region (so normalized [-1,+1] maps to allocated height)
 
 ### Position Mappers: Range-Based Design
 

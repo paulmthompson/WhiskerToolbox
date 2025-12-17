@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 
@@ -33,10 +34,11 @@ LayoutResponse makeTestLayout() {
     LayoutResponse layout;
     
     // Two series: one at y=0.5, one at y=-0.3
+    // y_transform: offset=center, gain=half_height
     layout.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(0.5f, 0.6f), "series_top", 0));
+        "series_top", LayoutTransform(0.5f, 0.3f), 0));  // center=0.5, half_height=0.3
     layout.layouts.push_back(SeriesLayout(
-        SeriesLayoutResult(-0.3f, 0.6f), "series_bot", 1));
+        "series_bot", LayoutTransform(-0.3f, 0.3f), 1)); // center=-0.3, half_height=0.3
     
     return layout;
 }
@@ -263,7 +265,7 @@ TEST_CASE("SceneHitTester selectBestHit priority", "[CorePlotting][SceneHitTeste
         
         LayoutResponse layout;
         layout.layouts.push_back(SeriesLayout(
-            SeriesLayoutResult(0.5f, 0.6f), "analog", 0));
+            "analog", LayoutTransform(0.5f, 0.3f), 0));  // center=0.5, half_height=0.3
         
         auto result = tester.hitTest(100.0f, 0.5f, scene, layout);
         

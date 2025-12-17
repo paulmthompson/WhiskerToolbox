@@ -1,4 +1,5 @@
 #include "StackedLayoutStrategy.hpp"
+#include "LayoutTransform.hpp"
 
 #include <algorithm>
 
@@ -48,8 +49,10 @@ SeriesLayout StackedLayoutStrategy::computeStackableLayout(
 
     // Handle edge case: no stackable series
     if (total_stackable <= 0) {
-        SeriesLayoutResult result(0.0f, request.viewport_y_max - request.viewport_y_min);
-        return SeriesLayout(result, series_info.id, series_index);
+        float const viewport_height = request.viewport_y_max - request.viewport_y_min;
+        // Identity gain, offset to center of viewport
+        LayoutTransform y_transform(0.0f, viewport_height);
+        return SeriesLayout(series_info.id, y_transform, series_index);
     }
 
     // Calculate equal height allocation for each stackable series
@@ -62,8 +65,15 @@ SeriesLayout StackedLayoutStrategy::computeStackableLayout(
     float const allocated_center =
             request.viewport_y_min + allocated_height * (static_cast<float>(stackable_index) + 0.5f);
 
-    SeriesLayoutResult result(allocated_center, allocated_height);
-    return SeriesLayout(result, series_info.id, series_index);
+    // Create Y transform that:
+    // - Scales data to fit allocated height (assumes normalized [-1,1] input maps to allocated_height)
+    // - Translates to the allocated center position
+    // Transform: y_world = y_normalized * (allocated_height / 2) + allocated_center
+    float const gain = allocated_height * 0.5f;  // Map [-1,1] to allocated height
+    float const offset = allocated_center;
+    
+    LayoutTransform y_transform(offset, gain);
+    return SeriesLayout(series_info.id, y_transform, series_index);
 }
 
 SeriesLayout StackedLayoutStrategy::computeFullCanvasLayout(
@@ -74,10 +84,13 @@ SeriesLayout StackedLayoutStrategy::computeFullCanvasLayout(
     // Full-canvas series span entire viewport
     float const viewport_height = request.viewport_y_max - request.viewport_y_min;
     float const allocated_center = (request.viewport_y_min + request.viewport_y_max) * 0.5f;
-    float const allocated_height = viewport_height;
 
-    SeriesLayoutResult result(allocated_center, allocated_height);
-    return SeriesLayout(result, series_info.id, series_index);
+    // Transform: y_world = y_normalized * (viewport_height / 2) + allocated_center
+    float const gain = viewport_height * 0.5f;
+    float const offset = allocated_center;
+    
+    LayoutTransform y_transform(offset, gain);
+    return SeriesLayout(series_info.id, y_transform, series_index);
 }
 
 }// namespace CorePlotting

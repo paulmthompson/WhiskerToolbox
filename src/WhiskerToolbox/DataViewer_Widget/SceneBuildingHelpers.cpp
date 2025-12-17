@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/Layout/SeriesLayout.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "CorePlotting/Transformers/GapDetector.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -20,14 +21,14 @@ namespace {
 /**
  * @brief Create a local-space layout for model-matrix rendering
  * 
- * Returns a SeriesLayout with y_center=0 and height=2, representing
+ * Returns a SeriesLayout with y_center=0 and gain=1.0, representing
  * the local-space [-1, 1] coordinate system. The model matrix is
  * responsible for positioning in world space.
  */
 [[nodiscard]] CorePlotting::SeriesLayout makeLocalSpaceLayout() {
     return CorePlotting::SeriesLayout{
-        CorePlotting::SeriesLayoutResult{0.0f, 2.0f},
         "",
+        CorePlotting::LayoutTransform{0.0f, 1.0f},  // center=0, half_height=1 (maps [-1,1])
         0
     };
 }

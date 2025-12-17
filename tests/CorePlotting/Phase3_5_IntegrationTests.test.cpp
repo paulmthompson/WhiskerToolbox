@@ -121,7 +121,7 @@ std::unique_ptr<QuadTree<EntityId>> buildCombinedEventIndex(
     for (auto const& [series, layout] : series_layouts) {
         for (auto const& event : series->view()) {
             float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
-            float y = layout->result.allocated_y_center;
+            float y = layout->y_transform.offset;
             tree->insert(x, y, event.entity_id);
         }
     }
@@ -139,7 +139,7 @@ std::unique_ptr<QuadTree<EntityId>> buildStackedEventIndex(
         BoundingBox const& bounds) {
     
     auto tree = std::make_unique<QuadTree<EntityId>>(bounds);
-    float y = layout.result.allocated_y_center;
+    float y = layout.y_transform.offset;
     
     for (auto const& event : series.view()) {
         float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
@@ -164,8 +164,9 @@ RenderableScene createIntervalScene(
         float x_start = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.start}));
         float x_end = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.end}));
         float width = x_end - x_start;
-        float height = layout.result.allocated_height;
-        float y = layout.result.allocated_y_center - height / 2.0f;
+        // y_transform: offset=center, gain=half_height
+        float height = layout.y_transform.gain * 2.0f;
+        float y = layout.y_transform.offset - height / 2.0f;
         
         batch.bounds.push_back(glm::vec4(x_start, y, width, height));
         batch.entity_ids.push_back(interval.entity_id);
@@ -215,9 +216,9 @@ TEST_CASE("Scenario 1: DataViewer-style stacked layout with hit testing",
     REQUIRE(layout.layouts.size() == 3);
     
     SECTION("Layout positions are distinct") {
-        float y0 = layout.layouts[0].result.allocated_y_center;
-        float y1 = layout.layouts[1].result.allocated_y_center;
-        float y2 = layout.layouts[2].result.allocated_y_center;
+        float y0 = layout.layouts[0].y_transform.offset;
+        float y1 = layout.layouts[1].y_transform.offset;
+        float y2 = layout.layouts[2].y_transform.offset;
         
         // All Y positions should be different
         REQUIRE_THAT(y0, !WithinAbs(y1, 0.01f));
@@ -242,7 +243,7 @@ TEST_CASE("Scenario 1: DataViewer-style stacked layout with hit testing",
         SceneHitTester tester;
         
         // Click on event at time=300 (should hit EntityId for event at index 1)
-        float event_y = event_layout->result.allocated_y_center;
+        float event_y = event_layout->y_transform.offset;
         auto hit = tester.hitTest(300.0f, event_y, scene, layout);
         
         REQUIRE(hit.hasHit());
@@ -262,7 +263,7 @@ TEST_CASE("Scenario 1: DataViewer-style stacked layout with hit testing",
         SceneHitTester tester;
         
         // Click in analog1's region
-        float analog1_y = analog1_layout->result.allocated_y_center;
+        float analog1_y = analog1_layout->y_transform.offset;
         auto hit = tester.hitTest(500.0f, analog1_y, scene, layout);
         
         REQUIRE(hit.hasHit());
@@ -421,8 +422,8 @@ TEST_CASE("Scenario 3: Raster plot with row-based event layout",
     REQUIRE(trial2_layout != nullptr);
     
     SECTION("Rows have equal heights") {
-        REQUIRE_THAT(trial1_layout->result.allocated_height,
-                    WithinAbs(trial2_layout->result.allocated_height, 0.001f));
+        REQUIRE_THAT(trial1_layout->y_transform.gain * 2.0f,
+                    WithinAbs(trial2_layout->y_transform.gain * 2.0f, 0.001f));
     }
     
     SECTION("Build combined spatial index from multiple trials") {
@@ -438,13 +439,13 @@ TEST_CASE("Scenario 3: Raster plot with row-based event layout",
         REQUIRE(combined_index->size() == 4);  // 2 + 2 events
         
         // Query for event in trial1
-        float trial1_y = trial1_layout->result.allocated_y_center;
+        float trial1_y = trial1_layout->y_transform.offset;
         auto const* hit1 = combined_index->findNearest(50.0f, trial1_y, 10.0f);
         REQUIRE(hit1 != nullptr);
         REQUIRE(hit1->data == trial1->getEntityIds()[0]);
         
         // Query for event in trial2 (different row)
-        float trial2_y = trial2_layout->result.allocated_y_center;
+        float trial2_y = trial2_layout->y_transform.offset;
         auto const* hit2 = combined_index->findNearest(80.0f, trial2_y, 10.0f);
         REQUIRE(hit2 != nullptr);
         REQUIRE(hit2->data == trial2->getEntityIds()[0]);
@@ -462,8 +463,8 @@ TEST_CASE("Scenario 3: Raster plot with row-based event layout",
         // Both trials have events around time 120-150 range
         // Query at Y positions should return correct trial's event
         
-        float trial1_y = trial1_layout->result.allocated_y_center;
-        float trial2_y = trial2_layout->result.allocated_y_center;
+        float trial1_y = trial1_layout->y_transform.offset;
+        float trial2_y = trial2_layout->y_transform.offset;
         
         // Event at time 150 is only in trial1
         auto const* r1 = combined_index->findNearest(150.0f, trial1_y, 10.0f);
@@ -653,7 +654,7 @@ TEST_CASE("Scenario 5: When event overlaps analog region, event takes priority",
         SceneHitTester tester;
         
         // Query at event position - should return event, not analog region
-        float event_y = event_layout->result.allocated_y_center;
+        float event_y = event_layout->y_transform.offset;
         auto hit = tester.hitTest(500.0f, event_y, scene, layout);
         
         REQUIRE(hit.hasHit());
@@ -670,7 +671,7 @@ TEST_CASE("Scenario 5: When event overlaps analog region, event takes priority",
         SceneHitTester tester;
         
         // Query in analog region
-        float analog_y = analog_layout->result.allocated_y_center;
+        float analog_y = analog_layout->y_transform.offset;
         auto hit = tester.hitTest(200.0f, analog_y, scene, layout);
         
         REQUIRE(hit.hasHit());
@@ -690,13 +691,13 @@ TEST_CASE("Scenario 5: When event overlaps analog region, event takes priority",
         
         // Add event to spatial index
         auto tree = std::make_unique<QuadTree<EntityId>>(bounds);
-        tree->insert(500.0f, event_layout->result.allocated_y_center, EntityId{42});
+        tree->insert(500.0f, event_layout->y_transform.offset, EntityId{42});
         scene.spatial_index = std::move(tree);
         scene.view_matrix = glm::mat4(1.0f);
         scene.projection_matrix = glm::mat4(1.0f);
         
         // Query where event exists - should return event
-        auto hit = tester.hitTest(500.0f, event_layout->result.allocated_y_center, scene, layout);
+        auto hit = tester.hitTest(500.0f, event_layout->y_transform.offset, scene, layout);
         
         REQUIRE(hit.hit_type == HitType::DigitalEvent);
     }
@@ -944,13 +945,13 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
             .build();
         
         // Query for event at time 100 in series1's row
-        float y1 = layout1->result.allocated_y_center;
+        float y1 = layout1->y_transform.offset;
         auto const* hit1 = scene.spatial_index->findNearest(100.0f, y1, 20.0f);
         REQUIRE(hit1 != nullptr);
         REQUIRE(hit1->data == events1->getEntityIds()[0]);
         
         // Query for event at time 150 in series2's row
-        float y2 = layout2->result.allocated_y_center;
+        float y2 = layout2->y_transform.offset;
         auto const* hit2 = scene.spatial_index->findNearest(150.0f, y2, 20.0f);
         REQUIRE(hit2 != nullptr);
         REQUIRE(hit2->data == events2->getEntityIds()[0]);
@@ -966,8 +967,8 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
             .addGlyphs("series2", TimeSeriesMapper::mapEvents(*events2, *layout2, *time_frame))
             .build();
         
-        float y1 = layout1->result.allocated_y_center;
-        float y2 = layout2->result.allocated_y_center;
+        float y1 = layout1->y_transform.offset;
+        float y2 = layout2->y_transform.offset;
         
         // Event at time 200: only in series1
         // Query at series1's Y should find it with small tolerance
@@ -1140,7 +1141,7 @@ TEST_CASE("Scenario 9: TimeSeriesMapper end-to-end with events and analog",
         
         // Event at index 10 → time 100
         REQUIRE_THAT(event_vec[0].x, WithinAbs(100.0f, 0.1f));
-        REQUIRE_THAT(event_vec[0].y, WithinAbs(event_layout->result.allocated_y_center, 0.001f));
+        REQUIRE_THAT(event_vec[0].y, WithinAbs(event_layout->y_transform.offset, 0.001f));
         
         // Event at index 25 → time 250
         REQUIRE_THAT(event_vec[1].x, WithinAbs(250.0f, 0.1f));
@@ -1164,7 +1165,7 @@ TEST_CASE("Scenario 9: TimeSeriesMapper end-to-end with events and analog",
         REQUIRE(scene.spatial_index->size() == 3);
         
         // Query near event at time 250
-        auto const* nearest = scene.spatial_index->findNearest(250.0f, event_layout->result.allocated_y_center, 10.0f);
+        auto const* nearest = scene.spatial_index->findNearest(250.0f, event_layout->y_transform.offset, 10.0f);
         REQUIRE(nearest != nullptr);
         
         // Verify EntityId matches
@@ -1191,7 +1192,7 @@ TEST_CASE("Scenario 9: TimeSeriesMapper end-to-end with events and analog",
         
         // First vertex: index 10 → time 100, value 1.0
         REQUIRE_THAT(vertices[0].x, WithinAbs(100.0f, 0.1f));
-        REQUIRE_THAT(vertices[0].y, WithinAbs(1.0f + analog_layout->result.allocated_y_center, 0.01f));
+        REQUIRE_THAT(vertices[0].y, WithinAbs(1.0f + analog_layout->y_transform.offset, 0.01f));
         
         // Last vertex: index 15 → time 150, value 1.5
         REQUIRE_THAT(vertices[5].x, WithinAbs(150.0f, 0.1f));
@@ -1357,7 +1358,7 @@ TEST_CASE("Scenario 11: RasterMapper with relative time positioning",
         
         // All Y positions should be at trial layout center
         for (auto const& elem : elements) {
-            REQUIRE_THAT(elem.y, WithinAbs(trial_layout->result.allocated_y_center, 0.001f));
+            REQUIRE_THAT(elem.y, WithinAbs(trial_layout->y_transform.offset, 0.001f));
         }
     }
     
@@ -1421,8 +1422,8 @@ TEST_CASE("Scenario 11: RasterMapper with relative time positioning",
         REQUIRE_THAT(mapped[7].x, WithinAbs(40.0f, 0.1f));    // 550 - 510
         
         // Verify Y positions differ between trials
-        float y_trial1 = multi_layout.findLayout("trial1")->result.allocated_y_center;
-        float y_trial2 = multi_layout.findLayout("trial2")->result.allocated_y_center;
+        float y_trial1 = multi_layout.findLayout("trial1")->y_transform.offset;
+        float y_trial2 = multi_layout.findLayout("trial2")->y_transform.offset;
         REQUIRE(y_trial1 != y_trial2);
         
         REQUIRE_THAT(mapped[0].y, WithinAbs(y_trial1, 0.001f));
@@ -1453,7 +1454,7 @@ TEST_CASE("Scenario 11: RasterMapper with relative time positioning",
         REQUIRE(scene.spatial_index != nullptr);
         
         // Query at relative time 0 (the reference-aligned event)
-        auto const* nearest = scene.spatial_index->findNearest(0.0f, trial_layout->result.allocated_y_center, 10.0f);
+        auto const* nearest = scene.spatial_index->findNearest(0.0f, trial_layout->y_transform.offset, 10.0f);
         REQUIRE(nearest != nullptr);
     }
 }

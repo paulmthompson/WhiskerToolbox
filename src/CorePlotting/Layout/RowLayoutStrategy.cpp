@@ -1,4 +1,5 @@
 #include "RowLayoutStrategy.hpp"
+#include "LayoutTransform.hpp"
 
 namespace CorePlotting {
 
@@ -29,8 +30,9 @@ SeriesLayout RowLayoutStrategy::computeRowLayout(
 
     // Handle edge case: no rows
     if (total_rows <= 0) {
-        SeriesLayoutResult result(0.0f, request.viewport_y_max - request.viewport_y_min);
-        return SeriesLayout(result, series_info.id, row_index);
+        float const viewport_height = request.viewport_y_max - request.viewport_y_min;
+        LayoutTransform y_transform(0.0f, viewport_height);
+        return SeriesLayout(series_info.id, y_transform, row_index);
     }
 
     // Calculate equal height allocation for each row
@@ -43,8 +45,12 @@ SeriesLayout RowLayoutStrategy::computeRowLayout(
     float const row_center =
             request.viewport_y_min + row_height * (static_cast<float>(row_index) + 0.5f);
 
-    SeriesLayoutResult result(row_center, row_height);
-    return SeriesLayout(result, series_info.id, row_index);
+    // Transform: y_world = y_normalized * (row_height / 2) + row_center
+    float const gain = row_height * 0.5f;
+    float const offset = row_center;
+    
+    LayoutTransform y_transform(offset, gain);
+    return SeriesLayout(series_info.id, y_transform, row_index);
 }
 
 }// namespace CorePlotting

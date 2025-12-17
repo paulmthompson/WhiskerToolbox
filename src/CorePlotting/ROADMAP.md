@@ -108,7 +108,7 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - Pure functions that take series count/configuration → layout positions
     - No data storage, no global state
     - Input: `LayoutRequest` (series types, counts, viewport bounds)
-    - Output: `std::vector<SeriesLayoutResult>`
+    - Output: `std::vector<SeriesLayout>` with `LayoutTransform` for each series
     - Location: [LayoutEngine.hpp](Layout/LayoutEngine.hpp), [LayoutEngine.cpp](Layout/LayoutEngine.cpp)
     - Tests: [LayoutEngine.test.cpp](/tests/CorePlotting/LayoutEngine.test.cpp) — 82 assertions passing ✓
     
@@ -119,6 +119,17 @@ This document outlines the roadmap for consolidating the plotting architecture i
     - `RowLayoutStrategy`: Raster plot-style horizontal rows ✓
         - Location: [RowLayoutStrategy.hpp](Layout/RowLayoutStrategy.hpp), [RowLayoutStrategy.cpp](Layout/RowLayoutStrategy.cpp)
         - Equal row heights for multi-trial visualization
+
+- [x] **Create `LayoutTransform` abstraction** (Phase 4.13):
+    - Pure geometric transform: `output = input * gain + offset`
+    - Location: [LayoutTransform.hpp](Layout/LayoutTransform.hpp)
+    - Methods: `apply()`, `inverse()`, `compose()`, `toModelMatrixY()`, `toModelMatrixX()`
+    - Separates layout (geometry) from data normalization (widget-specific)
+
+- [x] **Create `NormalizationHelpers`** (Phase 4.13):
+    - Widget-specific data normalization to LayoutTransform conversion
+    - Location: [NormalizationHelpers.hpp](Layout/NormalizationHelpers.hpp)
+    - Functions: `forZScore()`, `forPeakToPeak()`, `forStdDevRange()`, `forUnitRange()`, etc.
 
 ### 1.4 Renderable Primitives
 - [x] **Finalize `RenderableScene` struct**:
@@ -893,43 +904,221 @@ different from spatial hit testing for mouse interaction.
 - Single source of truth for gap algorithm
 - Range-based API for efficient integration with TimeSeriesMapper
 
-### 4.13 Clean Up Model Matrix Parameter Construction (Low Effort)
-**Goal:** Reduce boilerplate when building MVP matrix parameters.
+### 4.13 Eliminate Intermediate Param Structs (Architectural Cleanup) — PHASE 1 COMPLETE ✅
+**Goal:** Refactor OpenGLWidget to use CorePlotting APIs directly, eliminating DataViewer-specific intermediate structs.
 
-**Current Problem:** Matrix params built inline with 8-10 fields manually populated:
+#### Phase 1: LayoutTransform Architecture (Complete) ✅
 
-```cpp
-// OpenGLWidget.cpp - repeated ~3 times for different series types
-CorePlotting::AnalogSeriesMatrixParams model_params;
-model_params.allocated_y_center = display_options->layout.allocated_y_center;
-model_params.allocated_height = display_options->layout.allocated_height;
-model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
-model_params.user_scale_factor = display_options->user_scale_factor;
-model_params.global_zoom = _view_state.global_zoom;
-model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
-model_params.data_mean = display_options->data_cache.cached_mean;
-model_params.std_dev = display_options->data_cache.cached_std_dev;
-model_params.global_vertical_scale = _view_state.global_vertical_scale;
+**Problem Solved:** The old design conflated layout positioning with data normalization. `SeriesLayoutResult` stored `allocated_y_center` and `allocated_height`, but widgets also needed to track mean, std_dev, and scaling factors separately. This led to the bloated `AnalogSeriesMatrixParams` struct.
+
+**Solution Implemented:** Clean separation between **layout** (pure geometry) and **normalization** (widget-specific):
+
+1. **Created `LayoutTransform` struct** (`Layout/LayoutTransform.hpp`):
+   - Simple affine transform: `output = input * gain + offset`
+   - `apply()`, `inverse()`, `compose()` methods
+   - `toModelMatrixY()` and `toModelMatrixX()` for direct matrix generation
+   - No knowledge of data statistics
+
+2. **Created `NormalizationHelpers` namespace** (`Layout/NormalizationHelpers.hpp`):
+   - `forZScore(mean, std_dev)` — centers on mean, scales by std_dev
+   - `forPeakToPeak(min, max, target_min, target_max)` — range mapping
+   - `forStdDevRange(mean, std_dev, num_std_devs)` — ±N std_devs → [-1,+1]
+   - `forUnitRange(min, max)` — [min,max] → [0,1]
+   - `forPercentileRange()` — percentile-based scaling
+   - `forCentered(center)` — subtract center only
+   - `manual(offset, gain)` — direct control
+
+3. **Refactored `SeriesLayout`** (`Layout/SeriesLayout.hpp`):
+   - Now contains `LayoutTransform y_transform` instead of `SeriesLayoutResult result`
+   - Convention: `y_transform.offset = center`, `y_transform.gain = half_height`
+   - Added `computeModelMatrix()` helper
+
+4. **Updated all layout strategies**:
+   - `StackedLayoutStrategy` — produces `LayoutTransform(center, half_height)`
+   - `RowLayoutStrategy` — same pattern
+   - `SpatialLayoutStrategy` — produces spatial-aware transforms
+
+5. **Added simplified API to `SeriesMatrices.hpp`**:
+   - `createModelMatrix(LayoutTransform)` — single-axis
+   - `createModelMatrix(x_transform, y_transform)` — dual-axis
+   - `createViewMatrix(vertical_pan)` — view transformation
+   - `createProjectionMatrix(start_time, end_time, y_min, y_max)` — orthographic projection
+
+6. **Updated dependent code**:
+   - `SeriesCoordinateQuery.hpp` — uses `y_transform.offset`/`y_transform.gain`
+   - `TimeSeriesMapper.hpp/cpp` — updated to new layout structure
+   - `RasterMapper.hpp` — updated to use LayoutTransform
+   - All integration tests updated
+
+**Files Created:**
+- `src/CorePlotting/Layout/LayoutTransform.hpp` — 125 lines
+- `src/CorePlotting/Layout/NormalizationHelpers.hpp` — 140 lines
+
+**Files Modified:**
+- `src/CorePlotting/Layout/SeriesLayout.hpp`
+- `src/CorePlotting/Layout/StackedLayoutStrategy.cpp`
+- `src/CorePlotting/Layout/RowLayoutStrategy.cpp`
+- `src/CorePlotting/Layout/SpatialLayoutStrategy.cpp`
+- `src/CorePlotting/Layout/LayoutEngine.hpp`
+- `src/CorePlotting/CoordinateTransform/SeriesMatrices.hpp/cpp`
+- `src/CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp`
+- `src/CorePlotting/Mappers/TimeSeriesMapper.hpp/cpp`
+- `src/CorePlotting/Mappers/RasterMapper.hpp`
+- `src/CorePlotting/SceneGraph/SceneBuildingHelpers.cpp`
+- Tests: `LayoutEngine.test.cpp`, `SeriesCoordinateQuery.test.cpp`, `SpatialLayoutStrategy.test.cpp`, `Phase3_5_IntegrationTests.test.cpp`
+
+**All tests passing** ✓
+
+#### Phase 2: Widget Migration (Remaining)
+
+**Remaining work to complete 4.13:**
+
+- [ ] **Simplify DisplayOptions → SeriesConfig**:
+    - Remove global_zoom, global_vertical_scale from per-series config
+    - Remove layout result storage (computed on-demand by LayoutEngine)
+    - Keep only: style, gap_handling, intrinsic/user scaling, data_cache
+
+- [ ] **Update OpenGLWidget render path to use LayoutTransform composition**:
+    ```cpp
+    // New pattern:
+    LayoutTransform data_norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
+    LayoutTransform user_adj = NormalizationHelpers::manual(user_offset, user_scale);
+    LayoutTransform final = layout.y_transform.compose(user_adj).compose(data_norm);
+    glm::mat4 model = createModelMatrix(final);
+    ```
+
+- [ ] **Eliminate SceneBuildingHelpers entirely** (or reduce to utilities):
+    - Move batch building directly into OpenGLWidget render methods
+    - Use TimeSeriesMapper → SceneBuilder flow directly
+
+- [ ] **Remove `AnalogSeriesMatrixParams`, `EventSeriesMatrixParams`, `IntervalSeriesMatrixParams`**:
+    - These intermediate structs are no longer needed
+    - Matrix functions can take LayoutTransform directly
+
+- [ ] **Update SVGExporter to use same simplified flow**
+
+**Current Problem (remaining):**
+
+```
+DisplayOptions (style, layout, scaling, data_cache, gap_handling, ...)
+       ↓
+AnalogSeriesMatrixParams (copies fields from DisplayOptions + ViewState)
+       ↓
+SceneBuildingHelpers::buildAnalogSeriesBatch(...)
+       ↓
+CorePlotting::getAnalogModelMatrix(params) → model_matrix
+       ↓
+PolyLineStyle { model_matrix, color, thickness }
+       ↓
+SceneBuilder.addPolyLineBatch(batch)
 ```
 
-- [ ] **Add factory methods to matrix param structs**:
-    - `AnalogSeriesMatrixParams::fromDisplayOptions(options, view_state, layout)`
-    - `EventSeriesMatrixParams::fromDisplayOptions(options, view_state, layout)`
-    - `IntervalSeriesMatrixParams::fromDisplayOptions(options, view_state, layout)`
-    
-- [ ] **Update SceneBuildingHelpers to use factories**:
-    - Replace inline construction with single factory call
-    - Pass ViewState and layout as parameters
-    
-- [ ] **Consider builder pattern for complex params**:
-    - For cases where not all fields come from single source
-    
-- [ ] **Verify:** All tests pass, visual output unchanged
+**Duplicated state:**
+- `global_zoom` in: ViewState, AnalogScalingConfig, AnalogSeriesMatrixParams
+- `global_vertical_scale` in: ViewState, AnalogScalingConfig, AnalogSeriesMatrixParams  
+- Layout values copied: DisplayOptions.layout → AnalogSeriesMatrixParams → model matrix
+
+**Target Architecture:**
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ OpenGLWidget State (single source of truth)                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ TimeSeriesViewState _view_state;  // global zoom, pan, viewport bounds       │
+│ LayoutEngine _layout_engine;       // computes layouts on demand             │
+│                                                                              │
+│ struct AnalogSeriesConfig {        // series-specific config only            │
+│     SeriesStyle style;             // color, alpha, thickness, visibility    │
+│     AnalogGapHandling gap_handling;                                          │
+│     float gap_threshold;                                                     │
+│     float intrinsic_scale;         // computed from data (3*std_dev)         │
+│     float user_scale_factor;       // user adjustment                        │
+│     float user_vertical_offset;    // user adjustment                        │
+│     SeriesDataCache data_cache;    // cached mean, std_dev                   │
+│ };                                                                           │
+│                                                                              │
+│ struct EventSeriesConfig {                                                   │
+│     SeriesStyle style;                                                       │
+│     EventPlottingMode plotting_mode;                                         │
+│     float margin_factor;                                                     │
+│ };                                                                           │
+│                                                                              │
+│ struct IntervalSeriesConfig {                                                │
+│     SeriesStyle style;                                                       │
+│     bool extend_full_canvas;                                                 │
+│     float margin_factor;                                                     │
+│ };                                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Render Flow (no intermediate param structs)                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ 1. LayoutEngine.compute(series_infos, _view_state) → LayoutResponse          │
+│                                                                              │
+│ 2. For each series:                                                          │
+│    - Get layout from LayoutResponse                                          │
+│    - Compute model_matrix = CorePlotting::getAnalogModelMatrix(              │
+│          layout, config, _view_state)  // direct from layout + config        │
+│    - Build PolyLineStyle { model_matrix, config.style.color, ... }           │
+│    - Map data: TimeSeriesMapper::mapAnalogSeries(series, time_frame, ...)    │
+│    - builder.addPolyLine(key, mapped_vertices, style)                        │
+│                                                                              │
+│ 3. scene = builder.build()                                                   │
+│ 4. _scene_renderer->uploadScene(scene)                                       │
+│ 5. _scene_renderer->render(view_matrix, projection_matrix)                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Changes:**
+
+- [ ] **Simplify DisplayOptions → SeriesConfig**:
+    - Remove global_zoom, global_vertical_scale from per-series config
+    - Remove layout result storage (computed on-demand by LayoutEngine)
+    - Keep only: style, gap_handling, intrinsic/user scaling, data_cache
+
+- [ ] **Add CorePlotting matrix functions that take simpler inputs**:
+    ```cpp
+    // New overload: layout + series config + view state → model matrix
+    glm::mat4 getAnalogModelMatrix(
+        SeriesLayoutResult const& layout,
+        float intrinsic_scale,
+        float user_scale_factor,
+        float user_vertical_offset,
+        float data_mean,
+        float std_dev,
+        TimeSeriesViewState const& view_state);
+    ```
+
+- [ ] **Eliminate SceneBuildingHelpers entirely** (or reduce to utilities):
+    - Move batch building directly into OpenGLWidget render methods
+    - Use TimeSeriesMapper → SceneBuilder flow directly
+    - Style structs (PolyLineStyle, GlyphStyle, RectangleStyle) are sufficient
+
+- [ ] **Update SVGExporter to use same simplified flow**:
+    - Gets ViewState and LayoutResponse from OpenGLWidget
+    - Builds scene using same CorePlotting APIs
+
+**Migration Steps:**
+
+1. [ ] Create simplified `AnalogSeriesConfig`, `EventSeriesConfig`, `IntervalSeriesConfig`
+2. [ ] Add matrix function overloads that take layout + config + view_state directly
+3. [ ] Refactor `addAnalogBatchesToBuilder()` to use new flow:
+   - Get layout from cached LayoutResponse
+   - Build model matrix directly
+   - Create PolyLineStyle with matrix
+   - Use TimeSeriesMapper + builder.addPolyLine()
+4. [ ] Repeat for event and interval series
+5. [ ] Remove old DisplayOptions structs and AnalogSeriesMatrixParams
+6. [ ] Update SVGExporter
+7. [ ] Verify all tests pass
 
 **Benefits:**
-- Reduced boilerplate
-- Centralized param construction (easier to update)
-- Clear dependencies (what data is needed to build matrices)
+- Single source of truth for global state (ViewState)
+- No intermediate param struct copying
+- Direct use of CorePlotting types
+- Clearer data flow
+- Easier to maintain and extend
 
 ---
 
@@ -942,7 +1131,7 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 | 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) | ✅ Complete |
 | 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) | ✅ Complete |
 | 4.12 | Integrate GapDetector | Low | 4.8 (can do together) | ✅ Complete |
-| 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) | Not Started |
+| 4.13 | Eliminate Intermediate Param Structs | Medium-High | 4.9, 4.10 | 🔄 Phase 1 Complete |
 
 **Completed:**
 - ✅ 4.8 (TimeSeriesMapper) — Range-based mappers integrated into SceneBuildingHelpers
@@ -950,8 +1139,9 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 - ✅ 4.10 (SceneBuilder) — Fluent API for scene construction
 - ✅ 4.11 (SceneHitTester) — Unified hit testing through cached scene
 - ✅ 4.12 (GapDetector) — Range-based gap detection integrated into batch building
+- ✅ 4.13 Phase 1 — LayoutTransform + NormalizationHelpers architecture
 
-**Remaining:** 4.13 (Matrix param cleanup)
+**Remaining:** 4.13 Phase 2 (Widget migration - remove intermediate structs, use LayoutTransform composition)
 
 ---
 

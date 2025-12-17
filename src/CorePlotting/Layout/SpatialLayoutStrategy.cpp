@@ -1,5 +1,7 @@
 #include "SpatialLayoutStrategy.hpp"
 
+#include "LayoutTransform.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -46,8 +48,10 @@ SpatialLayoutResponse SpatialLayoutStrategy::compute(
     float const viewport_center_y = (viewport_bounds.min_y + viewport_bounds.max_y) / 2.0f;
     float const viewport_height = viewport_bounds.height();
     
-    SeriesLayoutResult layout_result(viewport_center_y, viewport_height);
-    SeriesLayout series_layout(layout_result, "spatial", 0);
+    // For spatial layout, gain maps data range to viewport height
+    // offset centers the output at viewport center
+    LayoutTransform const y_transform(viewport_center_y, viewport_height * 0.5f);
+    SeriesLayout series_layout("spatial", y_transform, 0);
     
     response.layout = SpatialSeriesLayout(series_layout, transform);
     
@@ -64,8 +68,8 @@ LayoutResponse SpatialLayoutStrategy::computeFromRequest(LayoutRequest const& re
     
     for (size_t i = 0; i < request.series.size(); ++i) {
         SeriesInfo const& series_info = request.series[i];
-        SeriesLayoutResult result(viewport_center, viewport_height);
-        SeriesLayout layout(result, series_info.id, static_cast<int>(i));
+        LayoutTransform const y_transform(viewport_center, viewport_height * 0.5f);
+        SeriesLayout layout(series_info.id, y_transform, static_cast<int>(i));
         response.layouts.push_back(layout);
     }
     

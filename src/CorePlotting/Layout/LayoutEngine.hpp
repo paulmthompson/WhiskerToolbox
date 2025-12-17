@@ -1,7 +1,6 @@
 #ifndef COREPLOTTING_LAYOUT_LAYOUTENGINE_HPP
 #define COREPLOTTING_LAYOUT_LAYOUTENGINE_HPP
 
-#include "../DataTypes/SeriesLayoutResult.hpp"
 #include "SeriesLayout.hpp"
 
 #include <functional>

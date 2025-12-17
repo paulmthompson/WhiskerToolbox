@@ -2028,24 +2028,24 @@ void OpenGLWidget::computeAndApplyLayout() {
         // Find and update analog series
         auto analog_it = _analog_series.find(layout.series_id);
         if (analog_it != _analog_series.end()) {
-            analog_it->second.display_options->layout.allocated_y_center = layout.result.allocated_y_center;
-            analog_it->second.display_options->layout.allocated_height = layout.result.allocated_height;
+            analog_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
+            analog_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
             continue;
         }
         
         // Find and update digital event series
         auto event_it = _digital_event_series.find(layout.series_id);
         if (event_it != _digital_event_series.end()) {
-            event_it->second.display_options->layout.allocated_y_center = layout.result.allocated_y_center;
-            event_it->second.display_options->layout.allocated_height = layout.result.allocated_height;
+            event_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
+            event_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
             continue;
         }
         
         // Find and update digital interval series
         auto interval_it = _digital_interval_series.find(layout.series_id);
         if (interval_it != _digital_interval_series.end()) {
-            interval_it->second.display_options->layout.allocated_y_center = layout.result.allocated_y_center;
-            interval_it->second.display_options->layout.allocated_height = layout.result.allocated_height;
+            interval_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
+            interval_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
             continue;
         }
     }

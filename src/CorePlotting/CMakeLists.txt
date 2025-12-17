@@ -31,6 +31,8 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
     # Layout
+    Layout/LayoutTransform.hpp
+    Layout/NormalizationHelpers.hpp
     Layout/SeriesLayout.hpp
     Layout/LayoutEngine.hpp
     Layout/LayoutEngine.cpp

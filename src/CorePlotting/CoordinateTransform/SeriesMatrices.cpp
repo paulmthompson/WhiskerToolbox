@@ -1,4 +1,5 @@
 #include "SeriesMatrices.hpp"
+#include "Layout/LayoutTransform.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -352,6 +353,29 @@ float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & par
     // Forward transform: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
     float const y_offset = params.allocated_y_center + params.user_vertical_offset;
     return (data_value - params.data_mean) * final_y_scale + y_offset;
+}
+
+// ============================================================================
+// Simplified LayoutTransform-based API
+// ============================================================================
+
+glm::mat4 createProjectionMatrix(TimeFrameIndex start_time,
+                                 TimeFrameIndex end_time,
+                                 float y_min,
+                                 float y_max) {
+    float left = static_cast<float>(start_time.getValue());
+    float right = static_cast<float>(end_time.getValue());
+    float bottom = y_min;
+    float top = y_max;
+
+    // Validate and fix parameters
+    validateOrthoParams(left, right, bottom, top, "Projection");
+
+    // Create orthographic projection matrix
+    glm::mat4 Projection = glm::ortho(left, right, bottom, top);
+
+    // Final validation
+    return validateMatrix(Projection, "Projection");
 }
 
 }// namespace CorePlotting

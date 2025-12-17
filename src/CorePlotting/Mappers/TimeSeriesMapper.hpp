@@ -72,7 +72,7 @@ namespace TimeSeriesMapper {
  * 
  * Transforms DigitalEventSeries events into (x, y, entity_id) tuples where:
  * - X = absolute time from TimeFrame
- * - Y = layout.result.allocated_y_center (constant for all events)
+ * - Y = layout.y_transform.offset (constant for all events)
  * 
  * Returns a lazy range over ALL events. For visible-window filtering,
  * use mapEventsInRange() instead.
@@ -90,7 +90,7 @@ namespace TimeSeriesMapper {
     SeriesLayout const & layout,
     TimeFrame const & time_frame
 ) {
-    float const y_center = layout.result.allocated_y_center;
+    float const y_center = layout.y_transform.offset;
     
     return series.view() 
         | std::views::transform([&time_frame, y_center](auto const & event_with_id) {
@@ -126,7 +126,7 @@ namespace TimeSeriesMapper {
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
 ) {
-    float const y_center = layout.result.allocated_y_center;
+    float const y_center = layout.y_transform.offset;
     auto const * series_tf = series.getTimeFrame().get();
     
     // views::all on an rvalue vector creates an owning_view
@@ -147,8 +147,8 @@ namespace TimeSeriesMapper {
  * Transforms DigitalIntervalSeries into (x, y, width, height, entity_id) tuples where:
  * - X = absolute start time from TimeFrame
  * - Width = absolute end time - start time
- * - Y = layout.result.allocated_y_center - height/2
- * - Height = layout.result.allocated_height
+ * - Y = layout.y_transform.offset - height/2
+ * - Height = layout.y_transform.gain * 2 (full allocated height)
  * 
  * @param series Interval series to map
  * @param layout Layout allocation for Y positioning and height
@@ -163,8 +163,8 @@ namespace TimeSeriesMapper {
     SeriesLayout const & layout,
     TimeFrame const & time_frame
 ) {
-    float const y_center = layout.result.allocated_y_center;
-    float const height = layout.result.allocated_height;
+    float const y_center = layout.y_transform.offset;
+    float const height = layout.y_transform.gain * 2.0f;  // gain is half-height
     float const y_bottom = y_center - height / 2.0f;
     
     return series.view()
@@ -203,8 +203,8 @@ namespace TimeSeriesMapper {
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
 ) {
-    float const y_center = layout.result.allocated_y_center;
-    float const height = layout.result.allocated_height;
+    float const y_center = layout.y_transform.offset;
+    float const height = layout.y_transform.gain * 2.0f;  // gain is half-height
     float const y_bottom = y_center - height / 2.0f;
     
     float const start_time_f = static_cast<float>(query_time_frame.getTimeAtIndex(start_time));
@@ -270,7 +270,7 @@ namespace TimeSeriesMapper {
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
 ) {
-    float const y_offset = layout.result.allocated_y_center;
+    float const y_offset = layout.y_transform.offset;
     
     return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time)
         | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
@@ -300,7 +300,7 @@ namespace TimeSeriesMapper {
     TimeFrame const & time_frame,
     float y_scale
 ) {
-    float const y_offset = layout.result.allocated_y_center;
+    float const y_offset = layout.y_transform.offset;
     
     return series.view()
         | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
@@ -335,7 +335,7 @@ namespace TimeSeriesMapper {
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
 ) {
-    float const y_offset = layout.result.allocated_y_center;
+    float const y_offset = layout.y_transform.offset;
     
     return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time)
         | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {

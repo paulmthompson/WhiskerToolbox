@@ -2,6 +2,7 @@
 #define COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
 
 #include "TimeFrame/TimeFrame.hpp"
+#include "Layout/LayoutTransform.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -332,6 +333,76 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix,
  * @return Corresponding Y coordinate in world space
  */
 [[nodiscard]] float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params);
+
+// ============================================================================
+// Simplified LayoutTransform-based API
+// ============================================================================
+// These functions work with composed LayoutTransforms instead of param structs.
+// The caller is responsible for computing the final transform by composing:
+//   1. Data normalization (from NormalizationHelpers)
+//   2. Layout positioning (from LayoutEngine)
+//   3. Any user adjustments
+
+/**
+ * @brief Create Model matrix from a LayoutTransform
+ * 
+ * This is the preferred API for creating Model matrices.
+ * The LayoutTransform encapsulates all the Y-axis positioning and scaling.
+ * 
+ * @param y_transform Combined transform for Y axis (data normalization + layout + user adjustments)
+ * @return Model matrix that applies the transform
+ */
+[[nodiscard]] inline glm::mat4 createModelMatrix(LayoutTransform const& y_transform) {
+    return y_transform.toModelMatrixY();
+}
+
+/**
+ * @brief Create Model matrix from separate X and Y transforms
+ * 
+ * For spatial data where both axes need transformation.
+ * 
+ * @param x_transform Transform for X axis
+ * @param y_transform Transform for Y axis
+ * @return Model matrix applying both transforms
+ */
+[[nodiscard]] inline glm::mat4 createModelMatrix(LayoutTransform const& x_transform,
+                                                  LayoutTransform const& y_transform) {
+    glm::mat4 m(1.0f);
+    m[0][0] = x_transform.gain;    // X scale
+    m[1][1] = y_transform.gain;    // Y scale
+    m[3][0] = x_transform.offset;  // X translation
+    m[3][1] = y_transform.offset;  // Y translation
+    return m;
+}
+
+/**
+ * @brief Create View matrix for vertical panning
+ * 
+ * @param vertical_pan Y offset for panning
+ * @return View matrix with translation
+ */
+[[nodiscard]] inline glm::mat4 createViewMatrix(float vertical_pan = 0.0f) {
+    glm::mat4 v(1.0f);
+    v[3][1] = vertical_pan;
+    return v;
+}
+
+/**
+ * @brief Create standard time-series Projection matrix
+ * 
+ * Maps time range to X and viewport range to Y.
+ * Includes validation to prevent invalid matrices.
+ * 
+ * @param start_time Start of visible time range
+ * @param end_time End of visible time range
+ * @param y_min Bottom of viewport
+ * @param y_max Top of viewport
+ * @return Orthographic projection matrix
+ */
+[[nodiscard]] glm::mat4 createProjectionMatrix(TimeFrameIndex start_time,
+                                               TimeFrameIndex end_time,
+                                               float y_min,
+                                               float y_max);
 
 }// namespace CorePlotting
 

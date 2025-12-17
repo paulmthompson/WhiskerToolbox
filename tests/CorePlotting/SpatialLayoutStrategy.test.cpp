@@ -303,6 +303,7 @@ TEST_CASE("SpatialLayoutStrategy - computeFromRequest compatibility", "[CorePlot
     REQUIRE(response.layouts[0].series_id == "spatial_data");
     
     // Should fill viewport height
-    REQUIRE_THAT(response.layouts[0].result.allocated_y_center, WithinAbs(0.0f, 0.001f));
-    REQUIRE_THAT(response.layouts[0].result.allocated_height, WithinAbs(2.0f, 0.001f));
+    // y_transform: offset = center, gain = half_height
+    REQUIRE_THAT(response.layouts[0].y_transform.offset, WithinAbs(0.0f, 0.001f));
+    REQUIRE_THAT(response.layouts[0].y_transform.gain * 2.0f, WithinAbs(2.0f, 0.001f));
 }

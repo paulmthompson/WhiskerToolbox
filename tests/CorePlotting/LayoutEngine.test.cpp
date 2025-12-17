@@ -4,8 +4,19 @@
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 
 using namespace CorePlotting;
+
+// Helper to get allocated_height from y_transform (for test compatibility)
+inline float getAllocatedHeight(SeriesLayout const& layout) {
+    return layout.y_transform.gain * 2.0f;
+}
+
+// Helper to get allocated_y_center from y_transform (for test compatibility)
+inline float getAllocatedYCenter(SeriesLayout const& layout) {
+    return layout.y_transform.offset;
+}
 
 TEST_CASE("LayoutRequest - countSeriesOfType", "[CorePlotting][Layout]") {
     LayoutRequest request;
@@ -36,17 +47,18 @@ TEST_CASE("LayoutRequest - countStackableSeries", "[CorePlotting][Layout]") {
 
 TEST_CASE("LayoutResponse - findLayout", "[CorePlotting][Layout]") {
     LayoutResponse response;
+    // Create layouts with y_transform: offset=center, gain=half_height
     response.layouts = {
-        {SeriesLayoutResult(0.5f, 1.0f), "series1", 0},
-        {SeriesLayoutResult(1.5f, 1.0f), "series2", 1},
-        {SeriesLayoutResult(2.5f, 1.0f), "series3", 2}
+        {"series1", LayoutTransform(0.5f, 0.5f), 0},  // center=0.5, height=1.0
+        {"series2", LayoutTransform(1.5f, 0.5f), 1},  // center=1.5, height=1.0
+        {"series3", LayoutTransform(2.5f, 0.5f), 2}   // center=2.5, height=1.0
     };
     
     SECTION("Find existing series") {
         auto const* layout = response.findLayout("series2");
         REQUIRE(layout != nullptr);
         REQUIRE(layout->series_id == "series2");
-        REQUIRE_THAT(layout->result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(*layout), 
                      Catch::Matchers::WithinAbs(1.5f, 0.001f));
     }
     
@@ -72,9 +84,9 @@ TEST_CASE("StackedLayoutStrategy - Single analog series", "[CorePlotting][Layout
     REQUIRE(layout.series_index == 0);
     
     // Single series should get full viewport height
-    REQUIRE_THAT(layout.result.allocated_y_center, 
+    REQUIRE_THAT(getAllocatedYCenter(layout), 
                  Catch::Matchers::WithinAbs(0.0f, 0.001f));
-    REQUIRE_THAT(layout.result.allocated_height, 
+    REQUIRE_THAT(getAllocatedHeight(layout), 
                  Catch::Matchers::WithinAbs(2.0f, 0.001f));
 }
 
@@ -99,30 +111,30 @@ TEST_CASE("StackedLayoutStrategy - Multiple analog series", "[CorePlotting][Layo
     SECTION("First series at top") {
         auto const& layout = response.layouts[0];
         REQUIRE(layout.series_id == "analog1");
-        REQUIRE_THAT(layout.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(layout), 
                      Catch::Matchers::WithinAbs(expected_height, 0.001f));
         // Center at -1.0 + height/2 = -1.0 + 0.333 = -0.667
-        REQUIRE_THAT(layout.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(layout), 
                      Catch::Matchers::WithinAbs(-0.667f, 0.01f));
     }
     
     SECTION("Second series in middle") {
         auto const& layout = response.layouts[1];
         REQUIRE(layout.series_id == "analog2");
-        REQUIRE_THAT(layout.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(layout), 
                      Catch::Matchers::WithinAbs(expected_height, 0.001f));
         // Center at -1.0 + height * 1.5 = -1.0 + 1.0 = 0.0
-        REQUIRE_THAT(layout.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(layout), 
                      Catch::Matchers::WithinAbs(0.0f, 0.01f));
     }
     
     SECTION("Third series at bottom") {
         auto const& layout = response.layouts[2];
         REQUIRE(layout.series_id == "analog3");
-        REQUIRE_THAT(layout.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(layout), 
                      Catch::Matchers::WithinAbs(expected_height, 0.001f));
         // Center at -1.0 + height * 2.5 = -1.0 + 1.667 = 0.667
-        REQUIRE_THAT(layout.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(layout), 
                      Catch::Matchers::WithinAbs(0.667f, 0.01f));
     }
 }
@@ -147,32 +159,32 @@ TEST_CASE("StackedLayoutStrategy - Mixed stackable and full-canvas series", "[Co
         // Two stackable series: each gets height = 2.0 / 2 = 1.0
         auto const& analog1 = response.layouts[0];
         REQUIRE(analog1.series_id == "analog1");
-        REQUIRE_THAT(analog1.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(analog1), 
                      Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        REQUIRE_THAT(analog1.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(analog1), 
                      Catch::Matchers::WithinAbs(-0.5f, 0.001f));
         
         auto const& analog2 = response.layouts[2];
         REQUIRE(analog2.series_id == "analog2");
-        REQUIRE_THAT(analog2.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(analog2), 
                      Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        REQUIRE_THAT(analog2.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(analog2), 
                      Catch::Matchers::WithinAbs(0.5f, 0.001f));
     }
     
     SECTION("Full-canvas series span entire viewport") {
         auto const& interval = response.layouts[1];
         REQUIRE(interval.series_id == "interval1");
-        REQUIRE_THAT(interval.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(interval), 
                      Catch::Matchers::WithinAbs(2.0f, 0.001f));
-        REQUIRE_THAT(interval.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(interval), 
                      Catch::Matchers::WithinAbs(0.0f, 0.001f));
         
         auto const& event = response.layouts[3];
         REQUIRE(event.series_id == "event1");
-        REQUIRE_THAT(event.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(event), 
                      Catch::Matchers::WithinAbs(2.0f, 0.001f));
-        REQUIRE_THAT(event.result.allocated_y_center, 
+        REQUIRE_THAT(getAllocatedYCenter(event), 
                      Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 }
@@ -204,9 +216,9 @@ TEST_CASE("RowLayoutStrategy - Single series", "[CorePlotting][Layout]") {
     REQUIRE(layout.series_index == 0);
     
     // Single row should get full viewport height
-    REQUIRE_THAT(layout.result.allocated_y_center, 
+    REQUIRE_THAT(getAllocatedYCenter(layout), 
                  Catch::Matchers::WithinAbs(0.0f, 0.001f));
-    REQUIRE_THAT(layout.result.allocated_height, 
+    REQUIRE_THAT(getAllocatedHeight(layout), 
                  Catch::Matchers::WithinAbs(2.0f, 0.001f));
 }
 
@@ -232,12 +244,12 @@ TEST_CASE("RowLayoutStrategy - Multiple rows", "[CorePlotting][Layout]") {
     SECTION("Row spacing is uniform") {
         for (int i = 0; i < 4; ++i) {
             auto const& layout = response.layouts[i];
-            REQUIRE_THAT(layout.result.allocated_height, 
+            REQUIRE_THAT(getAllocatedHeight(layout), 
                          Catch::Matchers::WithinAbs(expected_height, 0.001f));
             
             // Center at -1.0 + height * (i + 0.5)
             float const expected_center = -1.0f + expected_height * (static_cast<float>(i) + 0.5f);
-            REQUIRE_THAT(layout.result.allocated_y_center, 
+            REQUIRE_THAT(getAllocatedYCenter(layout), 
                          Catch::Matchers::WithinAbs(expected_center, 0.001f));
         }
     }
@@ -249,12 +261,12 @@ TEST_CASE("RowLayoutStrategy - Multiple rows", "[CorePlotting][Layout]") {
         REQUIRE(response.layouts[3].series_id == "trial4");
         
         // Y centers should decrease from top to bottom
-        REQUIRE(response.layouts[0].result.allocated_y_center < 
-                response.layouts[1].result.allocated_y_center);
-        REQUIRE(response.layouts[1].result.allocated_y_center < 
-                response.layouts[2].result.allocated_y_center);
-        REQUIRE(response.layouts[2].result.allocated_y_center < 
-                response.layouts[3].result.allocated_y_center);
+        REQUIRE(getAllocatedYCenter(response.layouts[0]) < 
+                getAllocatedYCenter(response.layouts[1]));
+        REQUIRE(getAllocatedYCenter(response.layouts[1]) < 
+                getAllocatedYCenter(response.layouts[2]));
+        REQUIRE(getAllocatedYCenter(response.layouts[2]) < 
+                getAllocatedYCenter(response.layouts[3]));
     }
 }
 
@@ -278,7 +290,7 @@ TEST_CASE("RowLayoutStrategy - Ignores is_stackable flag", "[CorePlotting][Layou
     float const expected_height = 2.0f / 3.0f;
     
     for (auto const& layout : response.layouts) {
-        REQUIRE_THAT(layout.result.allocated_height, 
+        REQUIRE_THAT(getAllocatedHeight(layout), 
                      Catch::Matchers::WithinAbs(expected_height, 0.001f));
     }
 }
@@ -316,9 +328,9 @@ TEST_CASE("LayoutEngine - Strategy switching", "[CorePlotting][Layout]") {
         REQUIRE(response.layouts.size() == 2);
         
         // Results should be identical for this case (both strategies do same thing)
-        REQUIRE_THAT(response.layouts[0].result.allocated_height,
+        REQUIRE_THAT(getAllocatedHeight(response.layouts[0]),
                      Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        REQUIRE_THAT(response.layouts[1].result.allocated_height,
+        REQUIRE_THAT(getAllocatedHeight(response.layouts[1]),
                      Catch::Matchers::WithinAbs(1.0f, 0.001f));
     }
 }
@@ -350,15 +362,15 @@ TEST_CASE("StackedLayoutStrategy - Custom viewport bounds", "[CorePlotting][Layo
     REQUIRE(response.layouts.size() == 2);
     
     // Each series should get height = 100 / 2 = 50
-    REQUIRE_THAT(response.layouts[0].result.allocated_height, 
+    REQUIRE_THAT(getAllocatedHeight(response.layouts[0]), 
                  Catch::Matchers::WithinAbs(50.0f, 0.001f));
-    REQUIRE_THAT(response.layouts[1].result.allocated_height, 
+    REQUIRE_THAT(getAllocatedHeight(response.layouts[1]), 
                  Catch::Matchers::WithinAbs(50.0f, 0.001f));
     
     // Centers at 25 and 75
-    REQUIRE_THAT(response.layouts[0].result.allocated_y_center, 
+    REQUIRE_THAT(getAllocatedYCenter(response.layouts[0]), 
                  Catch::Matchers::WithinAbs(25.0f, 0.001f));
-    REQUIRE_THAT(response.layouts[1].result.allocated_y_center, 
+    REQUIRE_THAT(getAllocatedYCenter(response.layouts[1]), 
                  Catch::Matchers::WithinAbs(75.0f, 0.001f));
 }
 
@@ -378,14 +390,14 @@ TEST_CASE("RowLayoutStrategy - Custom viewport bounds", "[CorePlotting][Layout]"
     REQUIRE(response.layouts.size() == 2);
     
     // Each row should get height = 10 / 2 = 5
-    REQUIRE_THAT(response.layouts[0].result.allocated_height, 
+    REQUIRE_THAT(getAllocatedHeight(response.layouts[0]), 
                  Catch::Matchers::WithinAbs(5.0f, 0.001f));
-    REQUIRE_THAT(response.layouts[1].result.allocated_height, 
+    REQUIRE_THAT(getAllocatedHeight(response.layouts[1]), 
                  Catch::Matchers::WithinAbs(5.0f, 0.001f));
     
     // Centers at 12.5 and 17.5
-    REQUIRE_THAT(response.layouts[0].result.allocated_y_center, 
+    REQUIRE_THAT(getAllocatedYCenter(response.layouts[0]), 
                  Catch::Matchers::WithinAbs(12.5f, 0.001f));
-    REQUIRE_THAT(response.layouts[1].result.allocated_y_center, 
+    REQUIRE_THAT(getAllocatedYCenter(response.layouts[1]), 
                  Catch::Matchers::WithinAbs(17.5f, 0.001f));
 }

@@ -71,8 +71,9 @@ struct SeriesQueryResult {
     float tolerance = 0.0f)
 {
     for (auto const& series_layout : layout_response.layouts) {
-        float const y_center = series_layout.result.allocated_y_center;
-        float const half_height = series_layout.result.allocated_height / 2.0f;
+        // y_transform: offset = center, gain = half_height
+        float const y_center = series_layout.y_transform.offset;
+        float const half_height = series_layout.y_transform.gain;
         
         float const y_min = y_center - half_height - tolerance;
         float const y_max = y_center + half_height + tolerance;
@@ -132,7 +133,7 @@ struct SeriesQueryResult {
     float min_distance = std::numeric_limits<float>::max();
     
     for (auto const& series_layout : layout_response.layouts) {
-        float const distance = std::abs(world_y - series_layout.result.allocated_y_center);
+        float const distance = std::abs(world_y - series_layout.y_transform.offset);
         if (distance < min_distance) {
             min_distance = distance;
             closest = &series_layout;
@@ -143,8 +144,9 @@ struct SeriesQueryResult {
         return std::nullopt;
     }
     
-    float const y_center = closest->result.allocated_y_center;
-    float const half_height = closest->result.allocated_height / 2.0f;
+    // y_transform: offset = center, gain = half_height
+    float const y_center = closest->y_transform.offset;
+    float const half_height = closest->y_transform.gain;
     float const local_y = world_y - y_center;
     float const normalized = (half_height > 0.0f) ? local_y / half_height : 0.0f;
     
@@ -184,7 +186,7 @@ struct SeriesQueryResult {
     float world_y,
     SeriesLayout const& series_layout)
 {
-    return world_y - series_layout.result.allocated_y_center;
+    return world_y - series_layout.y_transform.offset;
 }
 
 /**
@@ -200,7 +202,7 @@ struct SeriesQueryResult {
     float local_y,
     SeriesLayout const& series_layout)
 {
-    return local_y + series_layout.result.allocated_y_center;
+    return local_y + series_layout.y_transform.offset;
 }
 
 /**
@@ -214,8 +216,9 @@ struct SeriesQueryResult {
 [[nodiscard]] inline std::pair<float, float> getSeriesWorldBounds(
     SeriesLayout const& series_layout)
 {
-    float const y_center = series_layout.result.allocated_y_center;
-    float const half_height = series_layout.result.allocated_height / 2.0f;
+    // y_transform: offset = center, gain = half_height
+    float const y_center = series_layout.y_transform.offset;
+    float const half_height = series_layout.y_transform.gain;
     return {y_center - half_height, y_center + half_height};
 }
 
@@ -250,8 +253,9 @@ struct SeriesQueryResult {
     float normalized_y,
     SeriesLayout const& series_layout)
 {
-    float const half_height = series_layout.result.allocated_height / 2.0f;
-    return series_layout.result.allocated_y_center + normalized_y * half_height;
+    // y_transform: offset = center, gain = half_height
+    float const half_height = series_layout.y_transform.gain;
+    return series_layout.y_transform.offset + normalized_y * half_height;
 }
 
 /**
@@ -267,11 +271,12 @@ struct SeriesQueryResult {
     float world_y,
     SeriesLayout const& series_layout)
 {
-    float const half_height = series_layout.result.allocated_height / 2.0f;
+    // y_transform: offset = center, gain = half_height
+    float const half_height = series_layout.y_transform.gain;
     if (half_height <= 0.0f) {
         return 0.0f;
     }
-    float const local_y = world_y - series_layout.result.allocated_y_center;
+    float const local_y = world_y - series_layout.y_transform.offset;
     return local_y / half_height;
 }
 

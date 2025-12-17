@@ -9,6 +9,7 @@
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 
 #include "CorePlotting/Layout/SeriesLayout.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -45,9 +46,10 @@ std::shared_ptr<TimeFrame> createLinearTimeFrame(int count, int step = 10) {
  * @brief Create a simple layout with given center and height
  */
 SeriesLayout createLayout(float y_center, float height, std::string id = "test", int index = 0) {
+    // y_transform: offset=center, gain=half_height
     return SeriesLayout{
-        SeriesLayoutResult{y_center, height},
         std::move(id),
+        LayoutTransform{y_center, height / 2.0f},
         index
     };
 }
@@ -466,11 +468,12 @@ TEST_CASE("RasterMapper::makeRowLayout", "[Mappers][RasterMapper]") {
     
     REQUIRE(layout.series_id == "trial_1");
     REQUIRE(layout.series_index == 1);
-    REQUIRE(layout.result.allocated_height == 0.5f);  // 2.0 / 4
+    // y_transform.gain is half_height, so height = gain * 2
+    REQUIRE(layout.y_transform.gain * 2.0f == 0.5f);  // 2.0 / 4
     
     // Y center for row 1 of 4 in [-1, 1]
     float expected_y = RasterMapper::computeRowYCenter(1, 4, -1.0f, 1.0f);
-    REQUIRE_THAT(layout.result.allocated_y_center, WithinAbs(expected_y, 0.001));
+    REQUIRE_THAT(layout.y_transform.offset, WithinAbs(expected_y, 0.001));
 }
 
 TEST_CASE("RasterMapper::mapTrials", "[Mappers][RasterMapper]") {
