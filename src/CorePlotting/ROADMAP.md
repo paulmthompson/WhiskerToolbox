@@ -759,6 +759,304 @@ This doesn't generalize to:
     
 - [x] **Verify:** All tests pass ✓
 
+### 4.8 Adopt TimeSeriesMapper in SceneBuildingHelpers (Medium Effort)
+**Goal:** Replace manual coordinate mapping in SceneBuildingHelpers with TimeSeriesMapper ranges.
+
+**Current Problem:** `SceneBuildingHelpers.cpp` reimplements coordinate mapping logic that already exists in `TimeSeriesMapper`:
+
+```cpp
+// SceneBuildingHelpers.cpp - duplicates TimeSeriesMapper logic
+for (auto const & [time_idx, value]: analog_range) {
+    auto const x_pos = static_cast<float>(series.getTimeFrame()->getTimeAtIndex(time_idx));
+    auto const y_pos = value;
+    // ... manual gap detection and segment building
+}
+```
+
+**Library Capability:** `TimeSeriesMapper::mapAnalogSeries()`, `mapEvents()`, `mapIntervals()` provide range-based position mapping with zero-copy semantics.
+
+- [ ] **Refactor `buildEventSeriesBatch()`**:
+    - Replace manual iteration with `TimeSeriesMapper::mapEventsInRange()`
+    - Map returns `MappedElement` with (x, y, entity_id) already computed
+    - Extract positions and entity_ids from range
+    
+- [ ] **Refactor `buildIntervalSeriesBatch()`**:
+    - Replace manual iteration with `TimeSeriesMapper::mapIntervalsInRange()`
+    - Map returns `MappedRectElement` with bounds already computed
+    
+- [ ] **Refactor `buildAnalogSeriesBatch()`**:
+    - Replace manual iteration with `TimeSeriesMapper::mapAnalogSeries()`
+    - Integrate with existing gap detection via `GapDetector` (see Phase 4.12)
+    - Map returns `MappedVertex` stream for polyline vertices
+    
+- [ ] **Update batch param structs**:
+    - `AnalogBatchParams`, `EventBatchParams`, `IntervalBatchParams` may need adjustment
+    - Consider passing `SeriesLayout` directly instead of unpacking fields
+    
+- [ ] **Verify:** Visual output unchanged, all tests pass
+
+**Benefits:**
+- Single source of truth for coordinate mapping
+- Zero-copy when ranges feed directly to batch construction
+- Easier maintenance when TimeFrame logic changes
+
+### 4.9 Unify Layout Systems (Medium-High Effort)
+**Goal:** Replace dual layout systems (LayoutCalculator + manual LayoutResponse rebuild) with single LayoutEngine.
+
+**Current Problem:** OpenGLWidget maintains two parallel layout representations:
+1. `LayoutCalculator` (`_plotting_manager`) for actual layout computation
+2. `CorePlotting::LayoutResponse` (`_cached_layout_response`) for hit testing, manually rebuilt in `rebuildLayoutResponse()`
+
+```cpp
+// OpenGLWidget.cpp - manually rebuilds LayoutResponse duplicating LayoutCalculator logic
+void OpenGLWidget::rebuildLayoutResponse() {
+    for (auto const & [key, analog_data] : _analog_series) {
+        CorePlotting::SeriesLayout layout;
+        layout.result.allocated_y_center = analog_data.display_options->layout.allocated_y_center;
+        // ... duplicates data that should come from LayoutEngine
+    }
+}
+```
+
+**Library Capability:** `LayoutEngine` with `StackedLayoutStrategy` provides identical stacked layout in Qt-independent, testable form.
+
+- [ ] **Create `LayoutEngine` instance in OpenGLWidget**:
+    - Replace `LayoutCalculator* _plotting_manager` with `std::unique_ptr<CorePlotting::LayoutEngine> _layout_engine`
+    - Initialize with `StackedLayoutStrategy`
+    
+- [ ] **Build `LayoutRequest` from series state**:
+    - Create `SeriesInfo` entries for each visible series
+    - Pass viewport bounds and global zoom/scale from `_view_state`
+    
+- [ ] **Use `LayoutResponse` as single source of truth**:
+    - Call `_layout_engine->compute(request)` when layout is dirty
+    - Store result in `_cached_layout_response`
+    - Remove `rebuildLayoutResponse()` manual rebuild logic
+    
+- [ ] **Update DisplayOptions to store only configuration**:
+    - Remove `layout.allocated_y_center` and `layout.allocated_height` from DisplayOptions
+    - Layout results come from `LayoutResponse`, not cached in DisplayOptions
+    - DisplayOptions keeps only: style, user_scale_factor, gap handling, etc.
+    
+- [ ] **Update batch building to use LayoutResponse**:
+    - `uploadAnalogBatches()` etc. get layout from `_cached_layout_response.findLayout(key)`
+    - Remove LayoutCalculator allocation calls
+    
+- [ ] **Handle spike sorter configuration**:
+    - `StackedLayoutStrategy` may need extension for spike sorter grouping
+    - Or create `SpikeSorterLayoutStrategy` that extends stacking logic
+    
+- [ ] **Remove LayoutCalculator dependency**:
+    - Delete `_plotting_manager` member
+    - Remove `LayoutCalculator.hpp` include
+    - Remove `LayoutCalculator` forward declaration
+    
+- [ ] **Verify:** All tests pass, layout behavior unchanged
+
+**Benefits:**
+- Single source of truth for layout
+- Layout logic is testable independently
+- Cleaner DisplayOptions (configuration only, no cached state)
+
+### 4.10 Adopt SceneBuilder Fluent API (Medium Effort)
+**Goal:** Replace direct renderer upload with SceneBuilder-based scene construction.
+
+**Current Problem:** OpenGLWidget uploads batches directly to renderers:
+
+```cpp
+// Current approach - manual renderer management
+_scene_renderer->glyphRenderer().uploadData(batch);
+_scene_renderer->rectangleRenderer().uploadData(batch);
+_scene_renderer->polyLineRenderer().uploadData(batch);
+```
+
+**Library Capability:** `SceneBuilder` provides fluent API that simultaneously builds rendering geometry AND spatial index:
+
+```cpp
+// SceneBuilder approach - unified scene construction
+RenderableScene scene = SceneBuilder()
+    .setBounds(bounds)
+    .addGlyphs("events", TimeSeriesMapper::mapEvents(events, layout, tf), style)
+    .addRectangles("intervals", TimeSeriesMapper::mapIntervals(intervals, layout, tf), style)
+    .addPolyLine("analog", TimeSeriesMapper::mapAnalogSeries(...), entity_id, style)
+    .build();  // Automatically builds QuadTree
+```
+
+- [ ] **Refactor `renderWithSceneRenderer()` to use SceneBuilder**:
+    - Create `SceneBuilder` at start of render
+    - Set bounds from visible time range
+    - Set view/projection matrices
+    
+- [ ] **Replace `uploadAnalogBatches()` with SceneBuilder calls**:
+    - For each analog series: `builder.addPolyLine(key, vertices, entity_id, style)`
+    - Style includes model matrix, color, thickness
+    
+- [ ] **Replace `uploadEventBatches()` with SceneBuilder calls**:
+    - For each event series: `builder.addGlyphs(key, mapped_events, style)`
+    - Use `TimeSeriesMapper::mapEventsInRange()` for positions
+    
+- [ ] **Replace `uploadIntervalBatches()` with SceneBuilder calls**:
+    - For each interval series: `builder.addRectangles(key, mapped_intervals, style)`
+    - Use `TimeSeriesMapper::mapIntervalsInRange()` for positions
+    
+- [ ] **Build scene and pass to SceneRenderer**:
+    - Call `scene = builder.build()`
+    - `SceneRenderer::render(scene)` or upload batches from scene
+    
+- [ ] **Remove manual `_rectangle_batch_key_map` tracking**:
+    - SceneBuilder maintains batch key maps internally
+    - Use `builder.getRectangleBatchKeyMap()` for hit testing
+    
+- [ ] **Verify:** Visual output unchanged, all tests pass
+
+**Benefits:**
+- Spatial index built automatically with geometry
+- Guaranteed synchronization between rendering and hit testing
+- Cleaner separation: OpenGLWidget describes scene, SceneBuilder constructs it
+
+### 4.11 Complete SceneHitTester Integration (Medium Effort)
+**Goal:** Route all hit testing through SceneHitTester, removing ad-hoc implementations.
+
+**Current Problem:** Multiple ad-hoc hit testing functions exist alongside `_hit_tester`:
+
+```cpp
+// Ad-hoc implementations that duplicate SceneHitTester functionality
+std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(...)  // ~40 lines
+std::optional<std::pair<std::string, bool>> findIntervalEdgeAtPosition(...)  // ~50 lines
+std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(...)  // ~40 lines
+```
+
+**Library Capability:** `SceneHitTester` provides unified hit testing with configurable tolerances, priority sorting, and multiple query strategies:
+- `queryQuadTree()` for discrete events
+- `queryIntervals()` for interval containment
+- `findIntervalEdge()` for drag handles
+- `querySeriesRegion()` for analog series
+
+- [ ] **Extend SceneHitTester with interval data query**:
+    - Add method that queries underlying interval series data (not just rendered geometry)
+    - Similar to current `findIntervalAtTime()` but integrated into HitTester
+    
+- [ ] **Replace `findIntervalEdgeAtPosition()` with SceneHitTester**:
+    - Use `SceneHitTester::findIntervalEdge()` configured with tolerance
+    - Returns `HitTestResult` with edge info
+    - Remove inline implementation (~50 lines)
+    
+- [ ] **Integrate `findSeriesAtPosition()` fully**:
+    - Already uses `_hit_tester.querySeriesRegion()` ✓
+    - Consider returning `HitTestResult` directly instead of pair
+    
+- [ ] **Route event click detection through QuadTree**:
+    - When user clicks, use `SceneHitTester::queryQuadTree()` 
+    - Currently only used for tooltips, extend to click handling
+    
+- [ ] **Configure hit test priorities**:
+    - `HitTestConfig::prioritize_discrete = true` for events over analog regions
+    - Adjust tolerances for edge detection vs body detection
+    
+- [ ] **Verify:** Click/hover behavior unchanged, all tests pass
+
+**Benefits:**
+- Unified hit testing logic (testable, maintainable)
+- Consistent tolerance handling
+- Priority-based hit resolution
+
+### 4.12 Integrate GapDetector (Low Effort)
+**Goal:** Replace inline gap detection with CorePlotting GapDetector.
+
+**Current Problem:** Gap detection reimplemented in `SceneBuildingHelpers::buildAnalogSeriesBatch()`:
+
+```cpp
+// SceneBuildingHelpers.cpp - inline gap detection
+if (gap_size > static_cast<int>(params.gap_threshold)) {
+    // Gap detected - finalize current segment
+    if (segment_vertices.size() >= 4) {
+        batch.line_start_indices.push_back(current_line_start);
+        batch.line_vertex_counts.push_back(vertex_count);
+        // ...
+    }
+}
+```
+
+**Library Capability:** `GapDetector` in `CorePlotting/Transformers/GapDetector.hpp` provides tested, configurable gap detection.
+
+- [ ] **Use `GapDetector::detectGaps()` in buildAnalogSeriesBatch**:
+    - Pass time-value range to GapDetector
+    - Returns segment boundaries
+    
+- [ ] **Simplify batch building**:
+    - Iterate segments returned by GapDetector
+    - Build polyline batch with segment info
+    
+- [ ] **Consolidate gap threshold configuration**:
+    - Use `GapDetector::Config` struct
+    - Map from `AnalogBatchParams::gap_threshold`
+    
+- [ ] **Verify:** Gap handling behavior unchanged, all tests pass
+
+**Benefits:**
+- Tested gap detection logic
+- Single source of truth for gap algorithm
+- Easier to extend (e.g., value-based gaps)
+
+### 4.13 Clean Up Model Matrix Parameter Construction (Low Effort)
+**Goal:** Reduce boilerplate when building MVP matrix parameters.
+
+**Current Problem:** Matrix params built inline with 8-10 fields manually populated:
+
+```cpp
+// OpenGLWidget.cpp - repeated ~3 times for different series types
+CorePlotting::AnalogSeriesMatrixParams model_params;
+model_params.allocated_y_center = display_options->layout.allocated_y_center;
+model_params.allocated_height = display_options->layout.allocated_height;
+model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
+model_params.user_scale_factor = display_options->user_scale_factor;
+model_params.global_zoom = _view_state.global_zoom;
+model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
+model_params.data_mean = display_options->data_cache.cached_mean;
+model_params.std_dev = display_options->data_cache.cached_std_dev;
+model_params.global_vertical_scale = _view_state.global_vertical_scale;
+```
+
+- [ ] **Add factory methods to matrix param structs**:
+    - `AnalogSeriesMatrixParams::fromDisplayOptions(options, view_state, layout)`
+    - `EventSeriesMatrixParams::fromDisplayOptions(options, view_state, layout)`
+    - `IntervalSeriesMatrixParams::fromDisplayOptions(options, view_state, layout)`
+    
+- [ ] **Update SceneBuildingHelpers to use factories**:
+    - Replace inline construction with single factory call
+    - Pass ViewState and layout as parameters
+    
+- [ ] **Consider builder pattern for complex params**:
+    - For cases where not all fields come from single source
+    
+- [ ] **Verify:** All tests pass, visual output unchanged
+
+**Benefits:**
+- Reduced boilerplate
+- Centralized param construction (easier to update)
+- Clear dependencies (what data is needed to build matrices)
+
+---
+
+## Phase 4 Summary: Remaining Work
+
+| Phase | Task | Effort | Dependencies |
+|-------|------|--------|--------------|
+| 4.8 | Adopt TimeSeriesMapper in SceneBuildingHelpers | Medium | Phase 3.7 (Mappers) |
+| 4.9 | Unify Layout Systems | Medium-High | None |
+| 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) |
+| 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) |
+| 4.12 | Integrate GapDetector | Low | 4.8 (can do together) |
+| 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) |
+
+**Recommended Order:**
+1. **4.12** (GapDetector) — Low risk, quick win
+2. **4.8** (TimeSeriesMapper) — Validates Mapper API against real usage
+3. **4.9** (LayoutEngine) — Major architectural cleanup
+4. **4.13** (Matrix params) — Benefits from 4.9 layout changes
+5. **4.10** (SceneBuilder) — Requires 4.8 for range input
+6. **4.11** (SceneHitTester) — Final integration, depends on unified layout
+
 ---
 
 ## Phase 5: Analysis Dashboard Updates
