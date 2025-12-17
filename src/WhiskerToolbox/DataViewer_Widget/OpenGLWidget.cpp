@@ -103,7 +103,7 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
-    if (_is_dragging_interval) {
+    if (_interval_drag_controller.isActive()) {
         // Update interval drag
         updateIntervalDrag(event->pos());
         cancelTooltipTimer();// Cancel tooltip during drag
@@ -171,7 +171,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        if (_is_dragging_interval) {
+        if (_interval_drag_controller.isActive()) {
             finishIntervalDrag();
         } else if (_is_creating_new_interval) {
             finishNewIntervalCreation();
@@ -647,7 +647,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
         // Draw highlighting for selected intervals
         auto selected_interval = getSelectedInterval(key);
-        if (selected_interval.has_value() && !(_is_dragging_interval && _dragging_series_key == key)) {
+        auto const & drag_state = _interval_drag_controller.getState();
+        if (selected_interval.has_value() && !(_interval_drag_controller.isActive() && drag_state.series_key == key)) {
             auto const [sel_start_time, sel_end_time] = selected_interval.value();
 
             // Check if the selected interval overlaps with visible range
@@ -1434,32 +1435,59 @@ void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_lef
 
     auto const [start_time, end_time] = selected_interval.value();
 
-    _is_dragging_interval = true;
-    _dragging_series_key = series_key;
-    _dragging_left_edge = is_left_edge;
-    _original_start_time = start_time;
-    _original_end_time = end_time;
-    _dragged_start_time = start_time;
-    _dragged_end_time = end_time;
-    _drag_start_pos = start_pos;
+    // Create HitTestResult for the IntervalDragController
+    auto hit_result = CorePlotting::HitTestResult::intervalEdgeHit(
+        series_key,
+        EntityId{0},  // EntityId not used for edge drag, could be enhanced later
+        is_left_edge,
+        start_time,
+        end_time,
+        is_left_edge ? static_cast<float>(start_time) : static_cast<float>(end_time),
+        0.0f  // distance not relevant here
+    );
+
+    // Configure the drag controller with time frame bounds if available
+    CorePlotting::IntervalDragConfig config;
+    config.min_width = 1;
+    config.snap_to_integer = true;
+    config.allow_edge_swap = false;
+    
+    // Set time bounds from master time frame if available
+    if (_master_time_frame && _master_time_frame->getTotalFrameCount() > 0) {
+        config.min_time = static_cast<int64_t>(_master_time_frame->getTimeAtIndex(TimeFrameIndex(0)));
+        config.max_time = static_cast<int64_t>(_master_time_frame->getTimeAtIndex(
+            TimeFrameIndex(static_cast<int64_t>(_master_time_frame->getTotalFrameCount() - 1))));
+    }
+    
+    _interval_drag_controller.setConfig(config);
+
+    // Start the drag
+    if (!_interval_drag_controller.startDrag(hit_result)) {
+        return;
+    }
 
     // Disable normal mouse interactions during drag
     setCursor(Qt::SizeHorCursor);
 
     std::cout << "Started dragging " << (is_left_edge ? "left" : "right")
               << " edge of interval [" << start_time << ", " << end_time << "]" << std::endl;
+    
+    static_cast<void>(start_pos);  // start_pos no longer needed with controller
 }
 
 void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
-    if (!_is_dragging_interval) {
+    if (!_interval_drag_controller.isActive()) {
         return;
     }
+
+    auto const & state = _interval_drag_controller.getState();
+    std::string const & series_key = state.series_key;
 
     // Convert mouse position to time coordinate (in master time frame)
     float const current_time_master = canvasXToTime(static_cast<float>(current_pos.x()));
 
     // Get the series data
-    auto it = _digital_interval_series.find(_dragging_series_key);
+    auto it = _digital_interval_series.find(series_key);
     if (it == _digital_interval_series.end()) {
         // Series not found - abort drag
         cancelIntervalDrag();
@@ -1468,7 +1496,7 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
 
     auto const & series = it->second.series;
 
-    // Convert master time coordinate to series time frame index
+    // Convert master time coordinate to series time frame index for collision detection
     int64_t current_time_series_index;
     if (series->getTimeFrame().get() == _master_time_frame.get()) {
         // Same time frame - use time coordinate directly
@@ -1478,29 +1506,26 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         current_time_series_index = series->getTimeFrame()->getIndexAtTime(current_time_master).getValue();
     }
 
-    // Convert original interval bounds to series time frame for constraints
+    // Convert original interval bounds to series time frame for collision detection
     int64_t original_start_series, original_end_series;
     if (series->getTimeFrame().get() == _master_time_frame.get()) {
         // Same time frame
-        original_start_series = _original_start_time;
-        original_end_series = _original_end_time;
+        original_start_series = state.original_start;
+        original_end_series = state.original_end;
     } else {
         // Convert master time coordinates to series time frame indices
-        original_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_original_start_time)).getValue();
-        original_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_original_end_time)).getValue();
+        original_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(state.original_start)).getValue();
+        original_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(state.original_end)).getValue();
     }
 
-    // Perform dragging logic in series time frame
-    int64_t new_start_series, new_end_series;
+    // Perform collision detection in series time frame
+    int64_t constrained_time = current_time_series_index;
+    bool const is_dragging_left = (state.edge == CorePlotting::DraggedEdge::Left);
 
-    if (_dragging_left_edge) {
-        // Dragging left edge - constrain to not pass right edge
-        new_start_series = std::min(current_time_series_index, original_end_series - 1);
-        new_end_series = original_end_series;
-
-        // Check for collision with other intervals in series time frame
+    if (is_dragging_left) {
+        // Dragging left edge - check for collision with other intervals
         auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                new_start_series, new_start_series);
+                constrained_time, constrained_time);
 
         for (auto const & interval: overlapping_intervals) {
             // Skip the interval we're currently editing
@@ -1509,19 +1534,15 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
             }
 
             // If we would overlap with another interval, stop 1 index after it
-            if (new_start_series <= interval.end) {
-                new_start_series = interval.end + 1;
+            if (constrained_time <= interval.end) {
+                constrained_time = interval.end + 1;
                 break;
             }
         }
     } else {
-        // Dragging right edge - constrain to not pass left edge
-        new_start_series = original_start_series;
-        new_end_series = std::max(current_time_series_index, original_start_series + 1);
-
-        // Check for collision with other intervals in series time frame
+        // Dragging right edge - check for collision with other intervals
         auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                new_end_series, new_end_series);
+                constrained_time, constrained_time);
 
         for (auto const & interval: overlapping_intervals) {
             // Skip the interval we're currently editing
@@ -1530,29 +1551,20 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
             }
 
             // If we would overlap with another interval, stop 1 index before it
-            if (new_end_series >= interval.start) {
-                new_end_series = interval.start - 1;
+            if (constrained_time >= interval.start) {
+                constrained_time = interval.start - 1;
                 break;
             }
         }
     }
 
-    // Validate the new interval bounds
-    if (new_start_series >= new_end_series) {
-        // Invalid bounds - keep current drag state
-        return;
-    }
-
-    // Convert back to master time frame for display
+    // Convert constrained time back to master time frame for the controller
+    float world_x_for_controller;
     if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        // Same time frame
-        _dragged_start_time = new_start_series;
-        _dragged_end_time = new_end_series;
+        world_x_for_controller = static_cast<float>(constrained_time);
     } else {
-        // Convert series indices back to master time coordinates
         try {
-            _dragged_start_time = static_cast<int64_t>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(new_start_series)));
-            _dragged_end_time = static_cast<int64_t>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(new_end_series)));
+            world_x_for_controller = series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(constrained_time));
         } catch (...) {
             // Conversion failed - abort drag
             cancelIntervalDrag();
@@ -1560,24 +1572,39 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         }
     }
 
+    // Update the controller with collision-constrained position
+    _interval_drag_controller.updateDrag(world_x_for_controller);
+
     // Trigger redraw to show the dragged interval
     updateCanvas(_time);
 }
 
 void OpenGLWidget::finishIntervalDrag() {
-    if (!_is_dragging_interval) {
+    if (!_interval_drag_controller.isActive()) {
         return;
     }
 
+    // Get final state from controller
+    auto final_state = _interval_drag_controller.finishDrag();
+    std::string const & series_key = final_state.series_key;
+
     // Get the series data
-    auto it = _digital_interval_series.find(_dragging_series_key);
+    auto it = _digital_interval_series.find(series_key);
     if (it == _digital_interval_series.end()) {
-        // Series not found - abort drag
-        cancelIntervalDrag();
+        // Series not found - just reset cursor
+        setCursor(Qt::ArrowCursor);
+        updateCanvas(_time);
         return;
     }
 
     auto const & series = it->second.series;
+
+    // Only apply changes if the interval was actually modified
+    if (!final_state.hasChanged()) {
+        setCursor(Qt::ArrowCursor);
+        updateCanvas(_time);
+        return;
+    }
 
     try {
         // Convert all coordinates to series time frame for data operations
@@ -1585,16 +1612,16 @@ void OpenGLWidget::finishIntervalDrag() {
 
         if (series->getTimeFrame().get() == _master_time_frame.get()) {
             // Same time frame - use coordinates directly
-            original_start_series = _original_start_time;
-            original_end_series = _original_end_time;
-            new_start_series = _dragged_start_time;
-            new_end_series = _dragged_end_time;
+            original_start_series = final_state.original_start;
+            original_end_series = final_state.original_end;
+            new_start_series = final_state.current_start;
+            new_end_series = final_state.current_end;
         } else {
             // Convert master time coordinates to series time frame indices
-            original_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_original_start_time)).getValue();
-            original_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_original_end_time)).getValue();
-            new_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_dragged_start_time)).getValue();
-            new_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_dragged_end_time)).getValue();
+            original_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.original_start)).getValue();
+            original_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.original_end)).getValue();
+            new_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.current_start)).getValue();
+            new_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.current_end)).getValue();
         }
 
         // Validate converted coordinates
@@ -1613,38 +1640,33 @@ void OpenGLWidget::finishIntervalDrag() {
         series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
 
         // Update the selection to the new interval (stored in master time frame coordinates)
-        setSelectedInterval(_dragging_series_key, _dragged_start_time, _dragged_end_time);
+        setSelectedInterval(series_key, final_state.current_start, final_state.current_end);
 
         std::cout << "Finished dragging interval. Original: ["
-                  << _original_start_time << ", " << _original_end_time
-                  << "] -> New: [" << _dragged_start_time << ", " << _dragged_end_time << "]" << std::endl;
+                  << final_state.original_start << ", " << final_state.original_end
+                  << "] -> New: [" << final_state.current_start << ", " << final_state.current_end << "]" << std::endl;
 
     } catch (...) {
-        // Error occurred during conversion or data update - abort drag
+        // Error occurred during conversion or data update
         std::cout << "Error during interval drag completion - keeping original interval" << std::endl;
-        cancelIntervalDrag();
-        return;
     }
 
-    // Reset drag state
-    _is_dragging_interval = false;
-    _dragging_series_key.clear();
+    // Reset cursor and redraw
     setCursor(Qt::ArrowCursor);
-
-    // Trigger final redraw
     updateCanvas(_time);
 }
 
 void OpenGLWidget::cancelIntervalDrag() {
-    if (!_is_dragging_interval) {
+    if (!_interval_drag_controller.isActive()) {
         return;
     }
 
     std::cout << "Cancelled interval drag" << std::endl;
 
-    // Reset drag state without applying changes
-    _is_dragging_interval = false;
-    _dragging_series_key.clear();
+    // Cancel the drag in the controller
+    _interval_drag_controller.cancelDrag();
+    
+    // Reset cursor
     setCursor(Qt::ArrowCursor);
 
     // Trigger redraw to remove the dragged interval visualization
@@ -1652,12 +1674,14 @@ void OpenGLWidget::cancelIntervalDrag() {
 }
 
 void OpenGLWidget::drawDraggedInterval() {
-    if (!_is_dragging_interval) {
+    if (!_interval_drag_controller.isActive()) {
         return;
     }
 
+    auto const & drag_state = _interval_drag_controller.getState();
+
     // Get the series data for rendering
-    auto it = _digital_interval_series.find(_dragging_series_key);
+    auto it = _digital_interval_series.find(drag_state.series_key);
     if (it == _digital_interval_series.end()) {
         return;
     }
@@ -1670,7 +1694,7 @@ void OpenGLWidget::drawDraggedInterval() {
     auto const max_y = _yMax;
 
     // Check if the dragged interval is visible
-    if (_dragged_end_time < static_cast<int64_t>(start_time) || _dragged_start_time > static_cast<int64_t>(end_time)) {
+    if (drag_state.current_end < static_cast<int64_t>(start_time) || drag_state.current_start > static_cast<int64_t>(end_time)) {
         return;
     }
 
@@ -1697,12 +1721,12 @@ void OpenGLWidget::drawDraggedInterval() {
     float const bNorm = static_cast<float>(b) / 255.0f;
 
     // Clip the dragged interval to visible range
-    float const dragged_start = std::max(static_cast<float>(_dragged_start_time), start_time);
-    float const dragged_end = std::min(static_cast<float>(_dragged_end_time), end_time);
+    float const dragged_start = std::max(static_cast<float>(drag_state.current_start), start_time);
+    float const dragged_end = std::min(static_cast<float>(drag_state.current_end), end_time);
 
     // Draw the original interval dimmed (alpha = 0.2)
-    float const original_start = std::max(static_cast<float>(_original_start_time), start_time);
-    float const original_end = std::min(static_cast<float>(_original_end_time), end_time);
+    float const original_start = std::max(static_cast<float>(drag_state.original_start), start_time);
+    float const original_end = std::min(static_cast<float>(drag_state.original_end), end_time);
 
     // Set color and alpha uniforms for original interval (dimmed)
     glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
@@ -1771,7 +1795,7 @@ void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 
 void OpenGLWidget::startNewIntervalCreation(std::string const & series_key, QPoint const & start_pos) {
     // Don't start if we're already dragging an interval
-    if (_is_dragging_interval || _is_creating_new_interval) {
+    if (_interval_drag_controller.isActive() || _is_creating_new_interval) {
         return;
     }
 

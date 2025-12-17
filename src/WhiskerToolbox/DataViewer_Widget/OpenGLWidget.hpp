@@ -2,6 +2,7 @@
 #define OPENGLWIDGET_HPP
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/Interaction/IntervalDragController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "DataViewer/XAxis.hpp"
@@ -238,7 +239,7 @@ public:
      */
     void cancelIntervalDrag();
 
-    [[nodiscard]] bool isDraggingInterval() const { return _is_dragging_interval; }
+    [[nodiscard]] bool isDraggingInterval() const { return _interval_drag_controller.isActive(); }
 
     // New interval creation controls
 
@@ -532,15 +533,8 @@ private:
     // Interval selection tracking
     std::unordered_map<std::string, std::pair<int64_t, int64_t>> _selected_intervals;
 
-    // Interval dragging state
-    bool _is_dragging_interval{false};
-    std::string _dragging_series_key;
-    bool _dragging_left_edge{false};// true for left edge, false for right edge
-    int64_t _original_start_time{0};
-    int64_t _original_end_time{0};
-    int64_t _dragged_start_time{0};
-    int64_t _dragged_end_time{0};
-    QPoint _drag_start_pos;
+    // Interval dragging state (uses CorePlotting::IntervalDragController)
+    CorePlotting::IntervalDragController _interval_drag_controller;
 
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;

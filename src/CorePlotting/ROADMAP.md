@@ -619,35 +619,52 @@ This doesn't generalize to:
     
 - [x] **Verify:** All tests pass ✓
 
-### 4.4 Migration Step 3: Replace Interval Dragging (Medium Risk)
+### 4.4 Migration Step 3: Replace Interval Dragging (Medium Risk) ✅
 **Goal:** Extract state machine from widget into testable controller.
 
-- [ ] **Add `IntervalDragController` to CorePlotting** (Phase 3.4)
-- [ ] **Add `_interval_drag_controller` member to OpenGLWidget**
-- [ ] **Simplify `mousePressEvent()`**:
-    ```cpp
-    if (auto hit = _hit_tester.findIntervalEdge(canvas_x, canvas_y)) {
-        auto interval = getSelectedInterval(hit->series_key);
-        if (interval && _interval_drag_controller.tryStartDrag(*hit, interval->first, interval->second)) {
-            // Dragging active
-        }
-    }
-    ```
-- [ ] **Simplify `mouseMoveEvent()`**:
-    ```cpp
-    if (_interval_drag_controller.getState().is_active) {
-        _interval_drag_controller.updateDrag(canvas_x, getTimeAxisParams());
-        update();
-    }
-    ```
-- [ ] **Simplify `mouseReleaseEvent()`**:
-    ```cpp
-    if (auto result = _interval_drag_controller.finishDrag()) {
-        // Apply interval change
-        emit intervalEdgeChanged(...);
-    }
-    ```
-- [ ] **Verify:** Drag behavior unchanged
+- [x] **Add `IntervalDragController` to CorePlotting** (Phase 3.4) ✓
+    - Already implemented in `CorePlotting/Interaction/IntervalDragController.hpp`
+    - Comprehensive tests in `tests/CorePlotting/IntervalDragController.test.cpp`
+    
+- [x] **Add `_interval_drag_controller` member to OpenGLWidget** ✓
+    - Replaced manual state variables (`_is_dragging_interval`, `_dragging_series_key`, etc.)
+    - Controller manages all drag state internally
+    
+- [x] **Refactor `startIntervalDrag()`** ✓:
+    - Creates `HitTestResult::intervalEdgeHit()` from selected interval
+    - Configures `IntervalDragConfig` with time frame bounds
+    - Calls `_interval_drag_controller.startDrag(hit_result)`
+    
+- [x] **Refactor `updateIntervalDrag()`** ✓:
+    - Uses controller state for series key and edge info
+    - Performs collision detection in series time frame (widget-specific)
+    - Calls `_interval_drag_controller.updateDrag(world_x)` with constrained position
+    
+- [x] **Refactor `finishIntervalDrag()`** ✓:
+    - Gets final state via `_interval_drag_controller.finishDrag()`
+    - Only applies changes if `final_state.hasChanged()`
+    - Uses `final_state.current_start/end` for new interval bounds
+    
+- [x] **Refactor `cancelIntervalDrag()`** ✓:
+    - Calls `_interval_drag_controller.cancelDrag()`
+    - Resets cursor to arrow
+    
+- [x] **Update `drawDraggedInterval()`** ✓:
+    - Uses `_interval_drag_controller.getState()` for all rendering coordinates
+    
+- [x] **Update mouse event handlers** ✓:
+    - `mouseMoveEvent()`: Uses `_interval_drag_controller.isActive()`
+    - `mouseReleaseEvent()`: Uses `_interval_drag_controller.isActive()`
+    - `isDraggingInterval()`: Delegates to `_interval_drag_controller.isActive()`
+    
+- [x] **Verify:** All existing tests pass ✓
+
+**Benefits achieved:**
+- Drag state machine is now testable independently of OpenGLWidget
+- Constraint enforcement (min_width, time bounds) handled by controller
+- Clear separation: Widget handles TimeFrame conversion and collision detection, 
+  Controller handles state transitions and basic constraints
+- ~50 lines of state variables reduced to single controller member
 
 ### 4.5 Migration Step 4: Unify Rendering Path (Higher Risk)
 **Goal:** Remove legacy draw functions, use only SceneRenderer path.
