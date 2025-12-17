@@ -2,9 +2,6 @@
 find_package(glm CONFIG REQUIRED)
 
 set(DATAVIEWER_SOURCES
-    #XAxis.hpp
-    LayoutCalculator/LayoutCalculator.hpp
-    LayoutCalculator/LayoutCalculator.cpp
 
     AnalogTimeSeries/AnalogSeriesHelpers.hpp
     AnalogTimeSeries/AnalogSeriesHelpers.cpp
