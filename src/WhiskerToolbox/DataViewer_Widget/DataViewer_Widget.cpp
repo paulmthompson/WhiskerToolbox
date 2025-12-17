@@ -48,11 +48,8 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     ui->setupUi(this);
 
-    // Initialize plotting manager with default viewport
-    _plotting_manager = std::make_unique<LayoutCalculator>();
-
-    // Provide PlottingManager reference to OpenGL widget
-    ui->openGLWidget->setPlottingManager(_plotting_manager.get());
+    // Note: Layout computation is now handled by OpenGLWidget's internal LayoutEngine
+    // (Phase 4.9 migration - unified layout system)
 
     // Initialize feature tree model
     _feature_tree_model = std::make_unique<Feature_Tree_Model>(this);
@@ -343,14 +340,9 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     auto data_type = _data_manager->getType(key);
     std::cout << "Feature type: " << convert_data_type_to_string(data_type) << std::endl;
 
-    // Register with plotting manager for coordinated positioning
-    if (_plotting_manager) {
-        std::cout << "Registering series with plotting manager: " << key << std::endl;
-    }
-
     if (data_type == DM_DataType::Analog) {
 
-        std::cout << "Adding << " << key << " to PlottingManager and OpenGLWidget" << std::endl;
+        std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<AnalogTimeSeries>(key);
         if (!series) {
             std::cerr << "Error: failed to get AnalogTimeSeries for key: " << key << std::endl;
@@ -368,17 +360,14 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
 
         std::cout << "Time frame has " << time_frame->getTotalFrameCount() << " frames" << std::endl;
 
-        // Add series to OpenGL widget
+        // Add series to OpenGL widget (LayoutEngine computes layout automatically)
         ui->openGLWidget->addAnalogTimeSeries(key, series, color);
         
-        // Update PlottingManager series count
-        _plotting_manager->total_analog_series = static_cast<int>(ui->openGLWidget->getAnalogSeriesMap().size());
-        
-        std::cout << "Successfully added analog series to PlottingManager and OpenGL widget" << std::endl;
+        std::cout << "Successfully added analog series to OpenGL widget" << std::endl;
 
     } else if (data_type == DM_DataType::DigitalEvent) {
 
-        std::cout << "Adding << " << key << " to PlottingManager and OpenGLWidget" << std::endl;
+        std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<DigitalEventSeries>(key);
         if (!series) {
             std::cerr << "Error: failed to get DigitalEventSeries for key: " << key << std::endl;
@@ -392,15 +381,12 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
             return;
         }
 
-        // Add series to OpenGL widget
+        // Add series to OpenGL widget (LayoutEngine computes layout automatically)
         ui->openGLWidget->addDigitalEventSeries(key, series, color);
-        
-        // Update PlottingManager series count
-        _plotting_manager->total_event_series = static_cast<int>(ui->openGLWidget->getDigitalEventSeriesMap().size());
 
     } else if (data_type == DM_DataType::DigitalInterval) {
 
-        std::cout << "Adding << " << key << " to PlottingManager and OpenGLWidget" << std::endl;
+        std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         if (!series) {
             std::cerr << "Error: failed to get DigitalIntervalSeries for key: " << key << std::endl;
@@ -414,20 +400,12 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
             return;
         }
 
-        // Add series to OpenGL widget
+        // Add series to OpenGL widget (LayoutEngine computes layout automatically)
         ui->openGLWidget->addDigitalIntervalSeries(key, series, color);
-        
-        // Update PlottingManager series count
-        _plotting_manager->total_digital_series = static_cast<int>(ui->openGLWidget->getDigitalIntervalSeriesMap().size());
 
     } else {
         std::cout << "Feature type not supported: " << convert_data_type_to_string(data_type) << std::endl;
         return;
-    }
-
-    // Apply coordinated plotting manager allocation after adding to OpenGL widget
-    if (_plotting_manager) {
-        _applyPlottingManagerAllocation(key);
     }
 
     // Auto-arrange and auto-fill canvas to make optimal use of space
@@ -466,22 +444,13 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
 
     auto data_type = _data_manager->getType(key);
 
-    // Remove from OpenGL widget first, then update PlottingManager counts
+    // Remove from OpenGL widget (LayoutEngine recomputes layout automatically)
     if (data_type == DM_DataType::Analog) {
         ui->openGLWidget->removeAnalogTimeSeries(key);
-        if (_plotting_manager) {
-            _plotting_manager->total_analog_series = static_cast<int>(ui->openGLWidget->getAnalogSeriesMap().size());
-        }
     } else if (data_type == DM_DataType::DigitalEvent) {
         ui->openGLWidget->removeDigitalEventSeries(key);
-        if (_plotting_manager) {
-            _plotting_manager->total_event_series = static_cast<int>(ui->openGLWidget->getDigitalEventSeriesMap().size());
-        }
     } else if (data_type == DM_DataType::DigitalInterval) {
         ui->openGLWidget->removeDigitalIntervalSeries(key);
-        if (_plotting_manager) {
-            _plotting_manager->total_digital_series = static_cast<int>(ui->openGLWidget->getDigitalIntervalSeriesMap().size());
-        }
     } else {
         std::cout << "Feature type not supported for removal: " << convert_data_type_to_string(data_type) << std::endl;
         return;
@@ -580,29 +549,12 @@ void DataViewer_Widget::updateXAxisSamples(int value) {
 }
 
 void DataViewer_Widget::_updateGlobalScale(double scale) {
+    // Update global zoom in OpenGLWidget's ViewState
+    // LayoutEngine will pick up the new value when computing layout
     ui->openGLWidget->setGlobalScale(static_cast<float>(scale));
-
-    // Also update PlottingManager zoom factor
-    if (_plotting_manager) {
-        _plotting_manager->setGlobalZoom(static_cast<float>(scale));
-
-        // Apply updated positions to all registered series
-        auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: analog_keys) {
-            _applyPlottingManagerAllocation(key);
-        }
-        auto event_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: event_keys) {
-            _applyPlottingManagerAllocation(key);
-        }
-        auto interval_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: interval_keys) {
-            _applyPlottingManagerAllocation(key);
-        }
-
-        // Trigger canvas update
-        ui->openGLWidget->updateCanvas();
-    }
+    
+    // Trigger canvas update (layout recomputed automatically when dirty)
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
@@ -756,29 +708,13 @@ void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
 void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
     ui->openGLWidget->setVerticalSpacing(static_cast<float>(spacing));
 
-    // Also update PlottingManager vertical scale
-    if (_plotting_manager) {
-        // Convert spacing to a scale factor relative to default (0.1f)
-        float const scale_factor = static_cast<float>(spacing) / 0.1f;
-        _plotting_manager->setGlobalVerticalScale(scale_factor);
+    // Update ViewState vertical scale (which is then used by computeAndApplyLayout)
+    // Convert spacing to a scale factor relative to default (0.1f)
+    float const scale_factor = static_cast<float>(spacing) / 0.1f;
+    ui->openGLWidget->setGlobalVerticalScale(scale_factor);
 
-        // Apply updated positions to all registered series
-        auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: analog_keys) {
-            _applyPlottingManagerAllocation(key);
-        }
-        auto event_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: event_keys) {
-            _applyPlottingManagerAllocation(key);
-        }
-        auto interval_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: interval_keys) {
-            _applyPlottingManagerAllocation(key);
-        }
-
-        // Trigger canvas update
-        ui->openGLWidget->updateCanvas();
-    }
+    // Trigger canvas update - layout will be recomputed automatically
+    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {
@@ -816,9 +752,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
         }
 
         // Add to OpenGL widget (which stores the series data)
+        // Layout will be recomputed during render via computeAndApplyLayout()
         ui->openGLWidget->addAnalogTimeSeries(key, series, color);
-        // Update plotting manager count
-        _plotting_manager->total_analog_series++;
 
     } else if (data_type == DM_DataType::DigitalEvent) {
         auto series = _data_manager->getData<DigitalEventSeries>(key);
@@ -834,9 +769,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
         // Add to OpenGL widget (which stores the series data)
+        // Layout will be recomputed during render via computeAndApplyLayout()
         ui->openGLWidget->addDigitalEventSeries(key, series, color);
-        // Update plotting manager count
-        _plotting_manager->total_event_series++;
 
     } else if (data_type == DM_DataType::DigitalInterval) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
@@ -852,9 +786,8 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
             return;
         }
         // Add to OpenGL widget (which stores the series data)
+        // Layout will be recomputed during render via computeAndApplyLayout()
         ui->openGLWidget->addDigitalIntervalSeries(key, series, color);
-        // Update plotting manager count
-        _plotting_manager->total_digital_series++;
 
     } else {
         std::cout << "Feature type not supported: " << convert_data_type_to_string(data_type) << std::endl;
@@ -880,17 +813,7 @@ void DataViewer_Widget::_removeSelectedFeatureWithoutUpdate(std::string const & 
 
     auto data_type = _data_manager->getType(key);
 
-    // Also unregister from the plotting manager so counts and ordering stay consistent
-    if (_plotting_manager) {
-        if (data_type == DM_DataType::Analog) {
-            // Count will be updated after removing from OpenGLWidget
-        } else if (data_type == DM_DataType::DigitalEvent) {
-            // Count will be updated after removing from OpenGLWidget
-        } else if (data_type == DM_DataType::DigitalInterval) {
-            // Count will be updated after removing from OpenGLWidget
-        }
-    }
-
+    // Remove from OpenGLWidget - layout will be recomputed during next render
     if (data_type == DM_DataType::Analog) {
         ui->openGLWidget->removeAnalogTimeSeries(key);
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -1088,47 +1011,27 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
 }
 
 void DataViewer_Widget::autoArrangeVerticalSpacing() {
-    std::cout << "DataViewer_Widget: Auto-arranging with plotting manager..." << std::endl;
-
-    // Update dimensions first
-    _updatePlottingManagerDimensions();
-
-    // Apply new allocations to all registered series
-    auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-    auto event_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-    auto interval_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-
-    for (auto const & key: analog_keys) {
-        _applyPlottingManagerAllocation(key);
-    }
-    for (auto const & key: event_keys) {
-        _applyPlottingManagerAllocation(key);
-    }
-    for (auto const & key: interval_keys) {
-        _applyPlottingManagerAllocation(key);
-    }
+    std::cout << "DataViewer_Widget: Auto-arranging layout..." << std::endl;
 
     // Calculate and apply optimal scaling to fill the canvas
     _autoFillCanvas();
 
-    // Update OpenGL widget view bounds based on content height
-    _updateViewBounds();
-
-    // Trigger canvas update to show new positions
+    // Trigger canvas update - layout will be recomputed via computeAndApplyLayout()
     ui->openGLWidget->updateCanvas();
 
-    auto total_keys = analog_keys.size() + event_keys.size() + interval_keys.size();
+    // Count total keys for logging
+    auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
+    auto const & event_map = ui->openGLWidget->getDigitalEventSeriesMap();
+    auto const & interval_map = ui->openGLWidget->getDigitalIntervalSeriesMap();
+    auto total_keys = analog_map.size() + event_map.size() + interval_map.size();
+    
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
 }
 
 void DataViewer_Widget::_updateViewBounds() {
-    if (!_plotting_manager) {
-        return;
-    }
-
-    // PlottingManager uses normalized coordinates, so view bounds are typically -1 to +1
-    // For now, use standard bounds but this enables future enhancement
-    std::cout << "DataViewer_Widget: Using standard view bounds with PlottingManager" << std::endl;
+    // OpenGLWidget now uses its internal _view_state for view bounds
+    // This function is kept for API compatibility but no longer needs to do anything
+    std::cout << "DataViewer_Widget: Using standard view bounds from ViewState" << std::endl;
 }
 
 std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
@@ -1149,70 +1052,18 @@ std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
 }
 
 void DataViewer_Widget::_updatePlottingManagerDimensions() {
-    if (!_plotting_manager) {
-        return;
-    }
-
-    // Get current canvas dimensions from OpenGL widget
+    // Deprecated - dimensions are now handled by OpenGLWidget's ViewState
+    // This function is kept for API compatibility
     auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
-
-    // PlottingManager works in normalized device coordinates, so no specific dimension update needed
-    // But we could update viewport bounds if needed in the future
-
-    std::cout << "DataViewer_Widget: Updated plotting manager dimensions: "
+    std::cout << "DataViewer_Widget: Canvas dimensions: "
               << canvas_width << "x" << canvas_height << " pixels" << std::endl;
 }
 
 void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & series_key) {
-    if (!_plotting_manager) {
-        return;
-    }
-
-    auto data_type = _data_manager->getType(series_key);
-
-    std::cout << "DataViewer_Widget: Applying plotting manager allocation for '" << series_key << "'" << std::endl;
-
-    // Apply positioning based on data type
-    if (data_type == DM_DataType::Analog) {
-        auto config = ui->openGLWidget->getAnalogConfig(series_key);
-        if (config.has_value()) {
-            // Get all visible analog series keys from OpenGLWidget
-            std::vector<std::string> visible_keys;
-            auto const & analog_series_map = ui->openGLWidget->getAnalogSeriesMap();
-            for (auto const & [key, data] : analog_series_map) {
-                if (data.display_options->style.is_visible) {
-                    visible_keys.push_back(key);
-                }
-            }
-            
-            // Get allocation considering spike sorter configuration
-            float allocated_center, allocated_height;
-            bool has_allocation = _plotting_manager->getAnalogSeriesAllocationForKey(
-                series_key, visible_keys, allocated_center, allocated_height);
-            
-            if (has_allocation) {
-                config.value()->layout.allocated_y_center = allocated_center;
-                config.value()->layout.allocated_height = allocated_height;
-                std::cout << "  Updated allocation for '" << series_key 
-                          << "': center=" << allocated_center 
-                          << ", height=" << allocated_height << std::endl;
-            }
-        }
-
-    } else if (data_type == DM_DataType::DigitalEvent) {
-        auto config = ui->openGLWidget->getDigitalEventConfig(series_key);
-        if (config.has_value()) {
-            // Basic allocation - will be properly implemented when OpenGL widget is updated
-            std::cout << "  Applied basic allocation to event '" << series_key << "'" << std::endl;
-        }
-
-    } else if (data_type == DM_DataType::DigitalInterval) {
-        auto config = ui->openGLWidget->getDigitalIntervalConfig(series_key);
-        if (config.has_value()) {
-            // Basic allocation - will be properly implemented when OpenGL widget is updated
-            std::cout << "  Applied basic allocation to interval '" << series_key << "'" << std::endl;
-        }
-    }
+    // Deprecated - layout allocation is now computed by OpenGLWidget::computeAndApplyLayout()
+    // This function is kept for API compatibility but no longer does anything
+    std::cout << "DataViewer_Widget: Layout allocation for '" << series_key 
+              << "' now handled by OpenGLWidget" << std::endl;
 }
 
 // ===== Context menu and configuration handling =====
@@ -1233,35 +1084,34 @@ void DataViewer_Widget::_showGroupContextMenu(std::string const & group_name, QP
 }
 
 void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & group_name) {
-    // For now, use a test constant string or file dialog; here we open a file dialog
-    QString path = QFileDialog::getOpenFileName(this, QString("Load spikesorter configuration for %1").arg(group_name), QString(), "Text Files (*.txt *.cfg *.conf);;All Files (*)");
+    // Open file dialog to select spike sorter configuration file
+    QString path = QFileDialog::getOpenFileName(
+        this, 
+        QString("Load spikesorter configuration for %1").arg(group_name), 
+        QString(), 
+        "Text Files (*.txt *.cfg *.conf);;All Files (*)");
     if (path.isEmpty()) return;
+    
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    
     QByteArray data = file.readAll();
     auto positions = _parseSpikeSorterConfig(data.toStdString());
     if (positions.empty()) return;
-    _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
-
-    // Re-apply allocation to visible analog keys and update
-    auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-    for (auto const & key: analog_keys) {
-        _applyPlottingManagerAllocation(key);
-    }
+    
+    // Load configuration into OpenGLWidget - layout will be recomputed on next render
+    ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
     ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) {
-    _plotting_manager->clearAnalogGroupConfiguration(group_name.toStdString());
-    auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-    for (auto const & key: analog_keys) {
-        _applyPlottingManagerAllocation(key);
-    }
+    // Clear configuration in OpenGLWidget - layout will be recomputed on next render
+    ui->openGLWidget->clearSpikeSorterConfiguration(group_name.toStdString());
     ui->openGLWidget->updateCanvas();
 }
 
-std::vector<LayoutCalculator::AnalogGroupChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
-    std::vector<LayoutCalculator::AnalogGroupChannelPosition> out;
+std::vector<ChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
+    std::vector<ChannelPosition> out;
     std::istringstream ss(text);
     std::string line;
     bool first = true;
@@ -1279,7 +1129,7 @@ std::vector<LayoutCalculator::AnalogGroupChannelPosition> DataViewer_Widget::_pa
         if (!(ls >> row >> ch >> x >> y)) continue;
         // SpikeSorter is 1-based; convert to 0-based for our program
         if (ch > 0) ch -= 1;
-        LayoutCalculator::AnalogGroupChannelPosition p;
+        ChannelPosition p;
         p.channel_id = ch;
         p.x = x;
         p.y = y;
@@ -1294,37 +1144,44 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
         std::cout << "No positions found in spike sorter configuration" << std::endl;
         return;
     }
-    _plotting_manager->loadAnalogSpikeSorterConfiguration(group_name.toStdString(), positions);
     
-    // Get all analog keys from OpenGLWidget and update their allocations
-    auto const & analog_series_map = ui->openGLWidget->getAnalogSeriesMap();
-    std::vector<std::string> analog_keys;
-    for (auto const & [key, data] : analog_series_map) {
-        analog_keys.push_back(key);
-    }
-    
-    for (auto const & key: analog_keys) {
-        _applyPlottingManagerAllocation(key);
-    }
+    // Load configuration into OpenGLWidget - layout will be recomputed on next render
+    ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
     ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_autoFillCanvas() {
-    std::cout << "DataViewer_Widget: Auto-filling canvas with PlottingManager..." << std::endl;
-
-    if (!_plotting_manager) {
-        std::cout << "No plotting manager available" << std::endl;
-        return;
-    }
+    std::cout << "DataViewer_Widget: Auto-filling canvas..." << std::endl;
 
     // Get current canvas dimensions
     auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
     std::cout << "Canvas size: " << canvas_width << "x" << canvas_height << " pixels" << std::endl;
 
-    // Count visible series using PlottingManager
-    auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-    auto event_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-    auto interval_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
+    // Count visible series from OpenGLWidget
+    auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
+    auto const & event_map = ui->openGLWidget->getDigitalEventSeriesMap();
+    auto const & interval_map = ui->openGLWidget->getDigitalIntervalSeriesMap();
+
+    // Collect visible keys
+    std::vector<std::string> analog_keys;
+    std::vector<std::string> event_keys;
+    std::vector<std::string> interval_keys;
+    
+    for (auto const & [key, data] : analog_map) {
+        if (data.display_options->style.is_visible) {
+            analog_keys.push_back(key);
+        }
+    }
+    for (auto const & [key, data] : event_map) {
+        if (data.display_options->style.is_visible) {
+            event_keys.push_back(key);
+        }
+    }
+    for (auto const & [key, data] : interval_map) {
+        if (data.display_options->style.is_visible) {
+            interval_keys.push_back(key);
+        }
+    }
 
     int visible_analog_count = static_cast<int>(analog_keys.size());
     int visible_event_count = static_cast<int>(event_keys.size());
@@ -1457,27 +1314,27 @@ void DataViewer_Widget::cleanupDeletedData() {
         return;
     }
 
-    // Collect keys that no longer exist in DataManager
+    // Collect keys that no longer exist in DataManager from OpenGLWidget's series maps
     std::vector<std::string> keys_to_cleanup;
 
-    if (_plotting_manager) {
-        auto analog_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: analog_keys) {
-            if (!_data_manager->getData<AnalogTimeSeries>(key)) {
-                keys_to_cleanup.push_back(key);
-            }
+    auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
+    for (auto const & [key, data] : analog_map) {
+        if (!_data_manager->getData<AnalogTimeSeries>(key)) {
+            keys_to_cleanup.push_back(key);
         }
-        auto event_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: event_keys) {
-            if (!_data_manager->getData<DigitalEventSeries>(key)) {
-                keys_to_cleanup.push_back(key);
-            }
+    }
+    
+    auto const & event_map = ui->openGLWidget->getDigitalEventSeriesMap();
+    for (auto const & [key, data] : event_map) {
+        if (!_data_manager->getData<DigitalEventSeries>(key)) {
+            keys_to_cleanup.push_back(key);
         }
-        auto interval_keys = std::vector<std::string>();  // TODO: Get from OpenGLWidget;
-        for (auto const & key: interval_keys) {
-            if (!_data_manager->getData<DigitalIntervalSeries>(key)) {
-                keys_to_cleanup.push_back(key);
-            }
+    }
+    
+    auto const & interval_map = ui->openGLWidget->getDigitalIntervalSeriesMap();
+    for (auto const & [key, data] : interval_map) {
+        if (!_data_manager->getData<DigitalIntervalSeries>(key)) {
+            keys_to_cleanup.push_back(key);
         }
     }
 
@@ -1501,16 +1358,7 @@ void DataViewer_Widget::cleanupDeletedData() {
             } }, Qt::QueuedConnection);
     }
 
-    // Remove from PlottingManager defensively (all types) on our thread
-    if (_plotting_manager) {
-        for (auto const & key: keys_to_cleanup) {
-            // Count will be updated after removing from OpenGLWidget
-            // Count will be updated after removing from OpenGLWidget
-            // Count will be updated after removing from OpenGLWidget
-        }
-    }
-
-    // Re-arrange remaining data
+    // Re-arrange remaining data - layout will be recomputed via computeAndApplyLayout()
     autoArrangeVerticalSpacing();
 }
 
@@ -1572,8 +1420,8 @@ void DataViewer_Widget::_exportToSVG() {
     }
 
     try {
-        // Create SVG exporter with current plot state
-        SVGExporter exporter(ui->openGLWidget, _plotting_manager.get());
+        // Create SVG exporter with current plot state (OpenGLWidget has all needed state)
+        SVGExporter exporter(ui->openGLWidget);
 
         // Configure scalebar if requested
         if (ui->svg_scalebar_checkbox->isChecked()) {

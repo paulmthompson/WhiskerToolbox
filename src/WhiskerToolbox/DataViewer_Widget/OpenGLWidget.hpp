@@ -18,10 +18,11 @@
  * - Y-axis: y_min/y_max viewport bounds + vertical_pan_offset
  * - Global scaling: global_zoom and global_vertical_scale applied to all series
  * 
- * **Layer 3: Layout (LayoutCalculator)**
- * - Calculates vertical positioning for stacked series
- * - Supports spike sorter configuration for grouped channels
- * - Optional - can be null for simple single-series displays
+ * **Layer 3: Layout (CorePlotting::LayoutEngine)**
+ * - Computes vertical positioning for all series via StackedLayoutStrategy
+ * - Produces LayoutResponse used for both rendering and hit testing
+ * - Replaces the legacy LayoutCalculator with pure CorePlotting API
+ * - Supports spike sorter configuration via series ordering in LayoutRequest
  * 
  * **Layer 4: Rendering (PlottingOpenGL::SceneRenderer)**
  * - Converts series data + layout to RenderableBatch objects
@@ -33,18 +34,16 @@
  * - Series region queries for tooltips and selection
  * - Coordinate transforms (screen ↔ world ↔ time)
  * 
- * @section Phase47Migration Phase 4.7 Migration Notes
+ * @section Phase49Migration Phase 4.9 Migration Notes
  * 
- * The Y-axis state was migrated from separate members (_yMin, _yMax, _verticalPanOffset,
- * _global_zoom) to the unified _view_state (CorePlotting::TimeSeriesViewState).
+ * The layout system was unified to use CorePlotting::LayoutEngine exclusively.
+ * The legacy LayoutCalculator is no longer used. Key changes:
  * 
- * - Global zoom/scale: _view_state.global_zoom, _view_state.global_vertical_scale
- * - Y viewport: _view_state.y_min, _view_state.y_max
- * - Vertical pan: _view_state.vertical_pan_offset
- * - X-axis: _view_state.time_range (bounds-aware from TimeFrame)
- * 
- * LayoutCalculator is still used for layout calculations but no longer as source
- * of truth for zoom/pan parameters.
+ * - _layout_engine replaces _plotting_manager for all layout computation
+ * - buildLayoutRequest() creates LayoutRequest from current series state
+ * - computeAndApplyLayout() computes layout and updates display options
+ * - _cached_layout_response is computed directly by LayoutEngine, no manual rebuild
+ * - Spike sorter configuration is applied via series ordering in LayoutRequest
  * 
  * @see CorePlotting/DESIGN.md for full architecture details
  * @see CorePlotting/ROADMAP.md for migration history
@@ -55,6 +54,7 @@
 #include "CorePlotting/Interaction/IntervalDragController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
+#include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 
@@ -72,7 +72,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <array>
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -90,7 +92,18 @@ class DigitalIntervalSeries;
 struct NewDigitalIntervalSeriesDisplayOptions;
 class TimeFrame;
 class QMouseEvent;
-struct LayoutCalculator;
+
+/**
+ * @brief Channel position for spike sorter configuration
+ * 
+ * Used to specify custom ordering of analog series based on physical
+ * electrode positions from spike sorting software.
+ */
+struct ChannelPosition {
+    int channel_id{0};  ///< Channel identifier (0-based)
+    float x{0.0f};      ///< X position (unused for vertical stacking)
+    float y{0.0f};      ///< Y position (used for ordering)
+};
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
@@ -376,13 +389,23 @@ public:
     void setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame);
 
     /**
-     * @brief Set the PlottingManager reference for coordinate allocation
+     * @brief Load spike sorter configuration for a group of analog series
      * 
-     * @param plotting_manager Pointer to PlottingManager managed by DataViewer_Widget
+     * Applies custom ordering to analog series within a group based on
+     * physical electrode positions from spike sorting software.
+     * Series are ordered by Y position (ascending) for vertical stacking.
+     * 
+     * @param group_name Group identifier (series keys should be "groupname_N")
+     * @param positions Vector of channel positions for ordering
      */
-    void setPlottingManager(LayoutCalculator * plotting_manager) {
-        _plotting_manager = plotting_manager;
-    }
+    void loadSpikeSorterConfiguration(std::string const & group_name,
+                                      std::vector<ChannelPosition> const & positions);
+    
+    /**
+     * @brief Clear spike sorter configuration for a group
+     * @param group_name Group identifier to clear
+     */
+    void clearSpikeSorterConfiguration(std::string const & group_name);
 
     /**
      * @brief Change the visible range width by a delta amount
@@ -596,8 +619,15 @@ private:
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;
 
-    // PlottingManager for coordinate allocation
-    LayoutCalculator * _plotting_manager{nullptr};
+    // Layout engine for coordinate allocation (Phase 4.9 migration)
+    // Uses StackedLayoutStrategy for DataViewer-style vertical stacking
+    CorePlotting::LayoutEngine _layout_engine{
+        std::make_unique<CorePlotting::StackedLayoutStrategy>()
+    };
+    
+    // Spike sorter configuration for custom series ordering
+    // Maps group_name -> vector of channel positions
+    std::unordered_map<std::string, std::vector<ChannelPosition>> _spike_sorter_configs;
 
     // New interval creation state
     bool _is_creating_new_interval{false};
@@ -629,8 +659,8 @@ private:
     // The hit tester provides unified hit testing via SceneHitTester
     CorePlotting::SceneHitTester _hit_tester;
     
-    // Cached layout response - rebuilt when series are added/removed
-    // Used by SceneHitTester for series region queries
+    // Cached layout response - computed by LayoutEngine when dirty
+    // Used for both rendering (updating display options) and hit testing
     CorePlotting::LayoutResponse _cached_layout_response;
     bool _layout_response_dirty{true};
     
@@ -638,29 +668,86 @@ private:
     std::map<size_t, std::string> _rectangle_batch_key_map;
     
     /**
-     * @brief Rebuild the cached LayoutResponse from current series state
+     * @brief Build a LayoutRequest from current series state
      * 
-     * Called when series are added/removed or layout changes.
-     * The LayoutResponse is used by SceneHitTester for series region queries.
+     * Creates a LayoutRequest with all visible series, applying spike sorter
+     * configuration for custom ordering when present.
+     * 
+     * @return LayoutRequest ready for LayoutEngine::compute()
      */
-    void rebuildLayoutResponse();
+    [[nodiscard]] CorePlotting::LayoutRequest buildLayoutRequest() const;
+    
+    /**
+     * @brief Compute layout and apply results to display options
+     * 
+     * Recomputes _cached_layout_response using LayoutEngine and updates
+     * all series display_options->layout fields with computed positions.
+     * Called automatically when _layout_response_dirty is true.
+     */
+    void computeAndApplyLayout();
+    
+    /**
+     * @brief Extract group name and channel ID from a series key
+     * 
+     * Parses keys in the format "groupname_N" where N is the channel number.
+     * Used for spike sorter configuration ordering.
+     * 
+     * @param key Series key to parse
+     * @param group Output: group name portion
+     * @param channel_id Output: channel ID (0-based, parsed from 1-based in key)
+     * @return true if parsing succeeded, false otherwise
+     */
+    static bool extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id);
+    
+    /**
+     * @brief Order visible analog series keys according to spike sorter configuration
+     * 
+     * Returns series keys sorted by group name, then by Y position within groups
+     * that have spike sorter configuration. Series without configuration are
+     * sorted by channel ID.
+     * 
+     * @param visible_keys Keys of all visible analog series
+     * @return Ordered vector of keys
+     */
+    [[nodiscard]] std::vector<std::string> orderAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const;
 };
 
+/**
+ * @brief Default values and utilities for time series display configuration
+ */
 namespace TimeSeriesDefaultValues {
-
-std::vector<std::string> const DEFAULT_COLORS = {
-        "#ff0000",// Red
-        "#008000",// Green
-        "#0000ff",// Blue
-        "#ff00ff",// Magenta
-        "#ffff00",// Yellow
-        "#00ffff",// Cyan
-        "#ffa500",// Orange
-        "#800080" // Purple
+    
+inline constexpr std::array<char const *, 8> DEFAULT_COLORS = {
+    "#0000ff",// Blue
+    "#ff0000",// Red
+    "#00ff00",// Green
+    "#ff00ff",// Magenta
+    "#ffff00",// Yellow
+    "#00ffff",// Cyan
+    "#ffa500",// Orange
+    "#800080" // Purple
 };
 
-// Get color from index, returns random color if index exceeds DEFAULT_COLORS size
-std::string getColorForIndex(size_t index);
+/**
+ * @brief Get color from index, returns hash-based color if index exceeds DEFAULT_COLORS size
+ * @param index Index of the color to retrieve
+ * @return Hex color string
+ */
+inline std::string getColorForIndex(size_t index) {
+    if (index < DEFAULT_COLORS.size()) {
+        return DEFAULT_COLORS[index];
+    }
+    // Generate a pseudo-random color based on index
+    unsigned int const hash = static_cast<unsigned int>(index) * 2654435761u;
+    int const r = static_cast<int>((hash >> 16) & 0xFF);
+    int const g = static_cast<int>((hash >> 8) & 0xFF);
+    int const b = static_cast<int>(hash & 0xFF);
+    
+    char hex_buffer[8];
+    std::snprintf(hex_buffer, sizeof(hex_buffer), "#%02x%02x%02x", r, g, b);
+    return std::string(hex_buffer);
+}
+
 }// namespace TimeSeriesDefaultValues
 
 #endif//OPENGLWIDGET_HPP

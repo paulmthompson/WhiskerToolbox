@@ -805,63 +805,47 @@ for (auto const& event : mapped_events) { ... }  // materialize at call site
 - Materialization happens at boundary where needed (SceneBuildingHelpers)
 - Clean separation: Mapper returns range, caller decides when to materialize
 
-### 4.9 Unify Layout Systems (Medium-High Effort)
+### 4.9 Unify Layout Systems ✅
 **Goal:** Replace dual layout systems (LayoutCalculator + manual LayoutResponse rebuild) with single LayoutEngine.
 
-**Current Problem:** OpenGLWidget maintains two parallel layout representations:
-1. `LayoutCalculator` (`_plotting_manager`) for actual layout computation
-2. `CorePlotting::LayoutResponse` (`_cached_layout_response`) for hit testing, manually rebuilt in `rebuildLayoutResponse()`
+**Problem Solved:** OpenGLWidget maintained two parallel layout representations—`LayoutCalculator` for computation and manually-rebuilt `LayoutResponse` for hit testing—causing code duplication and potential inconsistencies.
 
-```cpp
-// OpenGLWidget.cpp - manually rebuilds LayoutResponse duplicating LayoutCalculator logic
-void OpenGLWidget::rebuildLayoutResponse() {
-    for (auto const & [key, analog_data] : _analog_series) {
-        CorePlotting::SeriesLayout layout;
-        layout.result.allocated_y_center = analog_data.display_options->layout.allocated_y_center;
-        // ... duplicates data that should come from LayoutEngine
-    }
-}
-```
+**Solution:** Unified under `CorePlotting::LayoutEngine`:
 
-**Library Capability:** `LayoutEngine` with `StackedLayoutStrategy` provides identical stacked layout in Qt-independent, testable form.
+- [x] **Added `LayoutEngine` instance to OpenGLWidget**:
+    - Replaced `LayoutCalculator* _plotting_manager` with `CorePlotting::LayoutEngine _layout_engine`
+    - Initialized with `StackedLayoutStrategy`
+    
+- [x] **Implemented `buildLayoutRequest()` and `computeAndApplyLayout()`**:
+    - Builds `LayoutRequest` from all visible series
+    - Computes layout via `_layout_engine.compute(request)`
+    - Updates DisplayOptions->layout fields with computed positions
+    - Called automatically during render when `_layout_response_dirty`
+    
+- [x] **Moved spike sorter configuration to OpenGLWidget**:
+    - Added `_spike_sorter_configs` map for electrode positions
+    - Added `loadSpikeSorterConfiguration()` / `clearSpikeSorterConfiguration()` methods
+    - `orderAnalogKeysByConfig()` sorts series by Y position when building LayoutRequest
+    
+- [x] **Removed LayoutCalculator dependency from DataViewer_Widget**:
+    - Removed `_plotting_manager` member and all references
+    - Spike sorter config now loads via `ui->openGLWidget->loadSpikeSorterConfiguration()`
+    - Auto-fill and cleanup functions now query series maps directly from OpenGLWidget
+    
+- [x] **Updated SVGExporter to use OpenGLWidget API**:
+    - Gets `getGlobalZoom()`, `getGlobalVerticalScale()`, `getVerticalPanOffset()` from OpenGLWidget
+    - Removed LayoutCalculator constructor parameter
+    
+- [x] **Fixed `updateCanvas()` to mark layout dirty**:
+    - Ensures layout recomputes when display options change externally
+    
+- [x] **Verify:** All tests pass ✓
 
-- [ ] **Create `LayoutEngine` instance in OpenGLWidget**:
-    - Replace `LayoutCalculator* _plotting_manager` with `std::unique_ptr<CorePlotting::LayoutEngine> _layout_engine`
-    - Initialize with `StackedLayoutStrategy`
-    
-- [ ] **Build `LayoutRequest` from series state**:
-    - Create `SeriesInfo` entries for each visible series
-    - Pass viewport bounds and global zoom/scale from `_view_state`
-    
-- [ ] **Use `LayoutResponse` as single source of truth**:
-    - Call `_layout_engine->compute(request)` when layout is dirty
-    - Store result in `_cached_layout_response`
-    - Remove `rebuildLayoutResponse()` manual rebuild logic
-    
-- [ ] **Update DisplayOptions to store only configuration**:
-    - Remove `layout.allocated_y_center` and `layout.allocated_height` from DisplayOptions
-    - Layout results come from `LayoutResponse`, not cached in DisplayOptions
-    - DisplayOptions keeps only: style, user_scale_factor, gap handling, etc.
-    
-- [ ] **Update batch building to use LayoutResponse**:
-    - `uploadAnalogBatches()` etc. get layout from `_cached_layout_response.findLayout(key)`
-    - Remove LayoutCalculator allocation calls
-    
-- [ ] **Handle spike sorter configuration**:
-    - `StackedLayoutStrategy` may need extension for spike sorter grouping
-    - Or create `SpikeSorterLayoutStrategy` that extends stacking logic
-    
-- [ ] **Remove LayoutCalculator dependency**:
-    - Delete `_plotting_manager` member
-    - Remove `LayoutCalculator.hpp` include
-    - Remove `LayoutCalculator` forward declaration
-    
-- [ ] **Verify:** All tests pass, layout behavior unchanged
-
-**Benefits:**
-- Single source of truth for layout
-- Layout logic is testable independently
-- Cleaner DisplayOptions (configuration only, no cached state)
+**Benefits Achieved:**
+- Single source of truth for layout computation
+- LayoutEngine is Qt-independent and testable
+- DisplayOptions remain configuration-only (layout fields computed on demand)
+- DataViewer_Widget is simpler (no layout management responsibility)
 
 ### 4.10 Adopt SceneBuilder Fluent API (Medium Effort)
 **Goal:** Replace direct renderer upload with SceneBuilder-based scene construction.

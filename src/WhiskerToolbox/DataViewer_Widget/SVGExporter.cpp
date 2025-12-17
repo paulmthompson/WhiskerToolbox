@@ -8,7 +8,6 @@
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "OpenGLWidget.hpp"
@@ -20,9 +19,8 @@
 
 #include <iostream>
 
-SVGExporter::SVGExporter(OpenGLWidget * gl_widget, LayoutCalculator * plotting_manager)
-    : gl_widget_(gl_widget),
-      plotting_manager_(plotting_manager) {
+SVGExporter::SVGExporter(OpenGLWidget * gl_widget)
+    : gl_widget_(gl_widget) {
 }
 
 QString SVGExporter::exportToSVG() {
@@ -76,8 +74,9 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
     auto const y_max = gl_widget_->getYMax();
 
     // Build shared View and Projection matrices
+    // Get view state parameters from OpenGLWidget (Phase 4.7+ migration)
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
 
     scene.view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
     scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
@@ -148,14 +147,14 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
     model_params.allocated_height = display_options.layout.allocated_height;
     model_params.intrinsic_scale = display_options.scaling.intrinsic_scale;
     model_params.user_scale_factor = display_options.user_scale_factor;
-    model_params.global_zoom = plotting_manager_->getGlobalZoom();
+    model_params.global_zoom = gl_widget_->getGlobalZoom();
     model_params.user_vertical_offset = display_options.scaling.user_vertical_offset;
     model_params.data_mean = display_options.data_cache.cached_mean;
     model_params.std_dev = display_options.data_cache.cached_std_dev;
-    model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
+    model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
 
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -196,7 +195,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     model_params.allocated_height = display_options.layout.allocated_height;
     model_params.event_height = display_options.event_height;
     model_params.margin_factor = display_options.margin_factor;
-    model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
+    model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
     model_params.viewport_y_min = gl_widget_->getYMin();
     model_params.viewport_y_max = gl_widget_->getYMax();
     model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas)
@@ -204,7 +203,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
                                          : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
 
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -248,12 +247,12 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
     model_params.allocated_height = display_options.layout.allocated_height;
     model_params.margin_factor = display_options.margin_factor;
-    model_params.global_zoom = plotting_manager_->getGlobalZoom();
-    model_params.global_vertical_scale = plotting_manager_->getGlobalVerticalScale();
+    model_params.global_zoom = gl_widget_->getGlobalZoom();
+    model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
     model_params.extend_full_canvas = display_options.extend_full_canvas;
 
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = plotting_manager_->getPanOffset();
+    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
 
     // Convert hex color to glm::vec4 with alpha
     int r, g, b;

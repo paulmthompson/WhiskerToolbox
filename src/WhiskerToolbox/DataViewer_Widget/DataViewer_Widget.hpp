@@ -5,7 +5,6 @@
 #include <QPoint>
 
 #include "DataManager/DataManagerFwd.hpp"
-#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 
 #include <memory>
 #include <string>
@@ -28,6 +27,7 @@ enum class PlotTheme;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;
+struct ChannelPosition;
 
 enum class ZoomScalingMode {
     Fixed,  // Original fixed zoom factor
@@ -121,9 +121,6 @@ private:
     bool _properties_panel_collapsed{false};
     QList<int> _saved_splitter_sizes;
 
-    // Plotting management
-    std::unique_ptr<LayoutCalculator> _plotting_manager;
-
     // Model for Feature_Tree_Widget
     std::unique_ptr<Feature_Tree_Model> _feature_tree_model;
 
@@ -194,7 +191,7 @@ private:
     void cleanupDeletedData();
 
     // Parsing helper
-    static std::vector<LayoutCalculator::AnalogGroupChannelPosition> _parseSpikeSorterConfig(std::string const & text);
+    static std::vector<ChannelPosition> _parseSpikeSorterConfig(std::string const & text);
 
     // Batch operations guard to suppress per-series auto-arrange/update thrash
     bool _is_batch_add{false};

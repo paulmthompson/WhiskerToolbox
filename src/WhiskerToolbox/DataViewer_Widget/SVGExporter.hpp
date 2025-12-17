@@ -12,7 +12,6 @@
 #include <string>
 
 class OpenGLWidget;
-struct LayoutCalculator;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;
@@ -45,10 +44,9 @@ public:
     /**
      * @brief Construct SVG exporter with references to plot state
      * 
-     * @param gl_widget OpenGL widget containing plot data and state
-     * @param plotting_manager Layout calculator for coordinate allocation
+     * @param gl_widget OpenGL widget containing plot data and state (including view state parameters)
      */
-    SVGExporter(OpenGLWidget * gl_widget, LayoutCalculator * plotting_manager);
+    explicit SVGExporter(OpenGLWidget * gl_widget);
 
     /**
      * @brief Export current plot to SVG format
@@ -135,7 +133,6 @@ private:
             float end_time) const;
 
     OpenGLWidget * gl_widget_;
-    LayoutCalculator * plotting_manager_;
 
     // SVG canvas dimensions
     int svg_width_{1920};

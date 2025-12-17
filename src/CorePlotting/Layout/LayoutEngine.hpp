@@ -4,6 +4,7 @@
 #include "../DataTypes/SeriesLayoutResult.hpp"
 #include "SeriesLayout.hpp"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,11 +27,21 @@ struct SeriesInfo {
     std::string id;   ///< Series identifier
     SeriesType type;  ///< Type of series
     bool is_stackable;///< Whether series participates in stacking (vs full-canvas)
+    
+    /// Optional custom layout index (for spike sorter config etc.)
+    /// If >= 0, overrides computed stacking order for this series.
+    int custom_stack_index{-1};
 
     SeriesInfo(std::string series_id, SeriesType series_type, bool stackable = true)
         : id(std::move(series_id)),
           type(series_type),
           is_stackable(stackable) {}
+    
+    SeriesInfo(std::string series_id, SeriesType series_type, bool stackable, int stack_index)
+        : id(std::move(series_id)),
+          type(series_type),
+          is_stackable(stackable),
+          custom_stack_index(stack_index) {}
 };
 
 /**

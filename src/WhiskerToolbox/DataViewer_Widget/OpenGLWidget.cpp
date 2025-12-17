@@ -5,12 +5,12 @@
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
+#include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "DataViewer/LayoutCalculator/LayoutCalculator.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
@@ -59,6 +59,9 @@ OpenGLWidget::~OpenGLWidget() {
 
 void OpenGLWidget::updateCanvas(int time) {
     _time = time;
+    // Mark layout as dirty since external changes may have occurred
+    // (e.g., display_mode changes, series visibility changes)
+    _layout_response_dirty = true;
     //std::cout << "Redrawing at " << _time << std::endl;
     update();
 }
@@ -1171,16 +1174,6 @@ void OpenGLWidget::drawDraggedInterval() {
     glUseProgram(0);
 }
 
-namespace TimeSeriesDefaultValues {
-std::string getColorForIndex(size_t index) {
-    if (index < DEFAULT_COLORS.size()) {
-        return DEFAULT_COLORS[index];
-    } else {
-        return generateRandomColor();
-    }
-}
-}// namespace TimeSeriesDefaultValues
-
 void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         // Check if we're double-clicking over a digital interval series
@@ -1487,10 +1480,10 @@ void OpenGLWidget::cancelTooltipTimer() {
 std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
     // Use CorePlotting SceneHitTester for series region queries 
     
-    // Rebuild layout if dirty (const_cast needed for lazy evaluation pattern)
-    // Note: This is safe because rebuildLayoutResponse only modifies cache state
+    // Compute layout if dirty (const_cast needed for lazy evaluation pattern)
+    // Note: This is safe because computeAndApplyLayout only modifies cache state
     if (_layout_response_dirty) {
-        const_cast<OpenGLWidget*>(this)->rebuildLayoutResponse();
+        const_cast<OpenGLWidget*>(this)->computeAndApplyLayout();
     }
     
     if (_cached_layout_response.layouts.empty()) {
@@ -1565,9 +1558,13 @@ void OpenGLWidget::showSeriesInfoTooltip(QPoint const & pos) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::renderWithSceneRenderer() {
-    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+    if (!_scene_renderer || !_master_time_frame) {
         return;
     }
+
+    // Compute layout if dirty - this updates _cached_layout_response
+    // and all display_options->layout fields
+    computeAndApplyLayout();
 
     auto const start_time = TimeFrameIndex(_view_state.time_range.start);
     auto const end_time = TimeFrameIndex(_view_state.time_range.end);
@@ -1595,32 +1592,15 @@ void OpenGLWidget::renderWithSceneRenderer() {
 }
 
 void OpenGLWidget::uploadAnalogBatches() {
-    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+    if (!_scene_renderer || !_master_time_frame) {
         return;
     }
 
     auto const start_time = TimeFrameIndex(_view_state.time_range.start);
     auto const end_time = TimeFrameIndex(_view_state.time_range.end);
 
-    // Count stacked-mode events (exclude FullCanvas from stackable count)
-    int stacked_event_count = 0;
-    for (auto const & [key, event_data]: _digital_event_series) {
-        if (event_data.display_options->style.is_visible &&
-            event_data.display_options->display_mode == EventDisplayMode::Stacked) {
-            stacked_event_count++;
-        }
-    }
-
-    // Get all visible analog keys
-    std::vector<std::string> visible_analog_keys;
-    for (auto const & [k, data]: _analog_series) {
-        if (data.display_options->style.is_visible) {
-            visible_analog_keys.push_back(k);
-        }
-    }
-
-    int const total_stackable_series = static_cast<int>(visible_analog_keys.size()) + stacked_event_count;
-    int i = 0;
+    // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
+    // Each series' display_options->layout fields are up-to-date
 
     for (auto const & [key, analog_data]: _analog_series) {
         auto const & series = analog_data.series;
@@ -1628,34 +1608,8 @@ void OpenGLWidget::uploadAnalogBatches() {
 
         if (!display_options->style.is_visible) continue;
 
-        // Calculate coordinate allocation
-        float allocated_y_center = 0.0f;
-        float allocated_height = 0.0f;
-
-        bool use_config = (stacked_event_count == 0);
-        bool has_config_allocation = false;
-
-        if (use_config) {
-            has_config_allocation = _plotting_manager->getAnalogSeriesAllocationForKey(
-                    key, visible_analog_keys, allocated_y_center, allocated_height);
-        }
-
-        if (!has_config_allocation) {
-            if (total_stackable_series > 0) {
-                _plotting_manager->calculateGlobalStackedAllocation(i, -1, total_stackable_series,
-                                                                    allocated_y_center, allocated_height);
-            } else {
-                _plotting_manager->calculateAnalogSeriesAllocation(i, allocated_y_center, allocated_height);
-            }
-        }
-
-        display_options->layout.allocated_y_center = allocated_y_center;
-        display_options->layout.allocated_height = allocated_height;
-
-        // Apply PlottingManager pan offset (using _view_state as source of truth)
-        _plotting_manager->setPanOffset(_view_state.vertical_pan_offset);
-
         // Build parameter structs for CorePlotting MVP functions
+        // Layout values come from computeAndApplyLayout()
         CorePlotting::AnalogSeriesMatrixParams model_params;
         model_params.allocated_y_center = display_options->layout.allocated_y_center;
         model_params.allocated_height = display_options->layout.allocated_height;
@@ -1708,38 +1662,19 @@ void OpenGLWidget::uploadAnalogBatches() {
                 _scene_renderer->polyLineRenderer().uploadData(batch);
             }
         }
-
-        i++;
     }
 }
 
 void OpenGLWidget::uploadEventBatches() {
-    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+    if (!_scene_renderer || !_master_time_frame) {
         return;
     }
 
     auto const start_time = TimeFrameIndex(_view_state.time_range.start);
     auto const end_time = TimeFrameIndex(_view_state.time_range.end);
 
-    // Count visible analog series
-    int total_analog_visible = 0;
-    for (auto const & [key, analog_data]: _analog_series) {
-        if (analog_data.display_options->style.is_visible) {
-            total_analog_visible++;
-        }
-    }
-
-    // Count stacked-mode events
-    int stacked_event_count = 0;
-    for (auto const & [key, event_data]: _digital_event_series) {
-        if (event_data.display_options->style.is_visible &&
-            event_data.display_options->display_mode == EventDisplayMode::Stacked) {
-            stacked_event_count++;
-        }
-    }
-    int const total_stackable_series = total_analog_visible + stacked_event_count;
-
-    int stacked_series_index = 0;
+    // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
+    // Each series' display_options->layout fields are up-to-date
 
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
@@ -1747,29 +1682,12 @@ void OpenGLWidget::uploadEventBatches() {
 
         if (!display_options->style.is_visible) continue;
 
-        // Determine plotting mode
+        // Determine plotting mode based on display mode
         display_options->plotting_mode = (display_options->display_mode == EventDisplayMode::Stacked)
                                                  ? EventPlottingMode::Stacked
                                                  : EventPlottingMode::FullCanvas;
 
-        float allocated_y_center = 0.0f;
-        float allocated_height = 0.0f;
-        if (display_options->plotting_mode == EventPlottingMode::Stacked) {
-            _plotting_manager->calculateGlobalStackedAllocation(-1, stacked_series_index, total_stackable_series,
-                                                                allocated_y_center, allocated_height);
-            stacked_series_index++;
-        } else {
-            allocated_y_center = (_plotting_manager->viewport_y_min + _plotting_manager->viewport_y_max) * 0.5f;
-            allocated_height = _plotting_manager->viewport_y_max - _plotting_manager->viewport_y_min;
-        }
-
-        display_options->layout.allocated_y_center = allocated_y_center;
-        display_options->layout.allocated_height = allocated_height;
-
-        // Apply PlottingManager pan offset (using _view_state as source of truth)
-        _plotting_manager->setPanOffset(_view_state.vertical_pan_offset);
-
-        // Build model params
+        // Build model params - layout values come from computeAndApplyLayout()
         CorePlotting::EventSeriesMatrixParams model_params;
         model_params.allocated_y_center = display_options->layout.allocated_y_center;
         model_params.allocated_height = display_options->layout.allocated_height;
@@ -1812,12 +1730,15 @@ void OpenGLWidget::uploadEventBatches() {
 }
 
 void OpenGLWidget::uploadIntervalBatches() {
-    if (!_scene_renderer || !_master_time_frame || !_plotting_manager) {
+    if (!_scene_renderer || !_master_time_frame) {
         return;
     }
 
     auto const start_time = TimeFrameIndex(_view_state.time_range.start);
     auto const end_time = TimeFrameIndex(_view_state.time_range.end);
+
+    // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
+    // Each series' display_options->layout fields are up-to-date
 
     for (auto const & [key, interval_data]: _digital_interval_series) {
         auto const & series = interval_data.series;
@@ -1825,17 +1746,7 @@ void OpenGLWidget::uploadIntervalBatches() {
 
         if (!display_options->style.is_visible) continue;
 
-        // Calculate coordinate allocation
-        float allocated_y_center, allocated_height;
-        _plotting_manager->calculateDigitalIntervalSeriesAllocation(0, allocated_y_center, allocated_height);
-
-        display_options->layout.allocated_y_center = allocated_y_center;
-        display_options->layout.allocated_height = allocated_height;
-
-        // Apply PlottingManager pan offset (using _view_state as source of truth)
-        _plotting_manager->setPanOffset(_view_state.vertical_pan_offset);
-
-        // Build model params
+        // Build model params - layout values come from computeAndApplyLayout()
         CorePlotting::IntervalSeriesMatrixParams model_params;
         model_params.allocated_y_center = display_options->layout.allocated_y_center;
         model_params.allocated_height = display_options->layout.allocated_height;
@@ -1906,74 +1817,168 @@ void OpenGLWidget::uploadIntervalBatches() {
 }
 
 // =============================================================================
-// Hit Testing Infrastructure (Phase 4.3 Migration)
+// Layout System (Phase 4.9 Migration - Unified LayoutEngine)
 // =============================================================================
 
-void OpenGLWidget::rebuildLayoutResponse() {
+bool OpenGLWidget::extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id) {
+    channel_id = -1;
+    group.clear();
+    auto const pos = key.rfind('_');
+    if (pos == std::string::npos || pos + 1 >= key.size()) {
+        return false;
+    }
+    group = key.substr(0, pos);
+    try {
+        int const parsed = std::stoi(key.substr(pos + 1));
+        channel_id = parsed > 0 ? parsed - 1 : parsed;
+    } catch (...) {
+        channel_id = -1;
+        return false;
+    }
+    return true;
+}
+
+std::vector<std::string> OpenGLWidget::orderAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const {
+    // Group visible analog series by group_name
+    struct Item { std::string key; std::string group; int channel; };
+    std::vector<Item> items;
+    items.reserve(visible_keys.size());
+    for (auto const & key : visible_keys) {
+        std::string group_name;
+        int channel_id;
+        extractGroupAndChannel(key, group_name, channel_id);
+        Item it{key, group_name, channel_id};
+        items.push_back(std::move(it));
+    }
+
+    // Sort with configuration: by group; within group, if config present, by ascending y; else by channel id
+    std::stable_sort(items.begin(), items.end(), [&](Item const & a, Item const & b) {
+        if (a.group != b.group) return a.group < b.group;
+        auto cfg_it = _spike_sorter_configs.find(a.group);
+        if (cfg_it == _spike_sorter_configs.end()) {
+            return a.channel < b.channel;
+        }
+        auto const & cfg = cfg_it->second;
+        auto find_y = [&](int ch) {
+            for (auto const & p : cfg) if (p.channel_id == ch) return p.y;
+            return 0.0f;
+        };
+        float ya = find_y(a.channel);
+        float yb = find_y(b.channel);
+        if (ya == yb) return a.channel < b.channel;
+        return ya < yb; // ascending by y so larger y get larger index (top)
+    });
+
+    std::vector<std::string> keys;
+    keys.reserve(items.size());
+    for (auto const & it : items) keys.push_back(it.key);
+    return keys;
+}
+
+CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
+    CorePlotting::LayoutRequest request;
+    request.viewport_y_min = _view_state.y_min;
+    request.viewport_y_max = _view_state.y_max;
+    request.global_zoom = _view_state.global_zoom;
+    request.global_vertical_scale = _view_state.global_vertical_scale;
+    request.vertical_pan_offset = _view_state.vertical_pan_offset;
+
+    // Collect visible analog series keys and order by spike sorter config
+    std::vector<std::string> visible_analog_keys;
+    for (auto const & [key, data] : _analog_series) {
+        if (data.display_options->style.is_visible) {
+            visible_analog_keys.push_back(key);
+        }
+    }
+    
+    // Apply spike sorter ordering if any configs exist
+    if (!_spike_sorter_configs.empty()) {
+        visible_analog_keys = orderAnalogKeysByConfig(visible_analog_keys);
+    }
+    
+    // Add analog series in order
+    for (auto const & key : visible_analog_keys) {
+        request.series.emplace_back(key, CorePlotting::SeriesType::Analog, true);
+    }
+
+    // Add digital event series (stacked events after analog series, full-canvas events as non-stackable)
+    for (auto const & [key, data] : _digital_event_series) {
+        if (!data.display_options->style.is_visible) continue;
+        
+        bool is_stacked = (data.display_options->display_mode == EventDisplayMode::Stacked);
+        request.series.emplace_back(key, CorePlotting::SeriesType::DigitalEvent, is_stacked);
+    }
+
+    // Add digital interval series (always full-canvas, non-stackable)
+    for (auto const & [key, data] : _digital_interval_series) {
+        if (!data.display_options->style.is_visible) continue;
+        
+        request.series.emplace_back(key, CorePlotting::SeriesType::DigitalInterval, false);
+    }
+
+    return request;
+}
+
+void OpenGLWidget::computeAndApplyLayout() {
     if (!_layout_response_dirty) {
         return;
     }
+
+    // Build layout request from current series state
+    CorePlotting::LayoutRequest request = buildLayoutRequest();
     
-    _cached_layout_response.layouts.clear();
+    // Compute layout using LayoutEngine
+    _cached_layout_response = _layout_engine.compute(request);
+    
+    // Apply computed layout to display options
+    // This updates each series' allocated_y_center and allocated_height
+    for (auto const & layout : _cached_layout_response.layouts) {
+        // Find and update analog series
+        auto analog_it = _analog_series.find(layout.series_id);
+        if (analog_it != _analog_series.end()) {
+            analog_it->second.display_options->layout.allocated_y_center = layout.result.allocated_y_center;
+            analog_it->second.display_options->layout.allocated_height = layout.result.allocated_height;
+            continue;
+        }
+        
+        // Find and update digital event series
+        auto event_it = _digital_event_series.find(layout.series_id);
+        if (event_it != _digital_event_series.end()) {
+            event_it->second.display_options->layout.allocated_y_center = layout.result.allocated_y_center;
+            event_it->second.display_options->layout.allocated_height = layout.result.allocated_height;
+            continue;
+        }
+        
+        // Find and update digital interval series
+        auto interval_it = _digital_interval_series.find(layout.series_id);
+        if (interval_it != _digital_interval_series.end()) {
+            interval_it->second.display_options->layout.allocated_y_center = layout.result.allocated_y_center;
+            interval_it->second.display_options->layout.allocated_height = layout.result.allocated_height;
+            continue;
+        }
+    }
+    
+    // Build rectangle batch key map for interval hit testing
     _rectangle_batch_key_map.clear();
-    
-    // Build layout from current series state
-    // Note: This mirrors the layout calculation logic from LayoutCalculator
-    // but produces a CorePlotting::LayoutResponse for use with SceneHitTester
-    
-    int series_index = 0;
-    
-    // Add analog series layouts
-    for (auto const & [key, analog_data] : _analog_series) {
-        if (!analog_data.display_options->style.is_visible) {
-            continue;
-        }
-        
-        CorePlotting::SeriesLayout layout;
-        layout.series_id = key;
-        layout.series_index = series_index++;
-        layout.result.allocated_y_center = analog_data.display_options->layout.allocated_y_center;
-        layout.result.allocated_height = analog_data.display_options->layout.allocated_height;
-        
-        _cached_layout_response.layouts.push_back(layout);
-    }
-    
-    // Add digital event series layouts (only stacked mode participates in layout)
-    for (auto const & [key, event_data] : _digital_event_series) {
-        if (!event_data.display_options->style.is_visible) {
-            continue;
-        }
-        
-        // Only stacked events have meaningful layout regions
-        if (event_data.display_options->display_mode == EventDisplayMode::Stacked) {
-            CorePlotting::SeriesLayout layout;
-            layout.series_id = key;
-            layout.series_index = series_index++;
-            layout.result.allocated_y_center = event_data.display_options->layout.allocated_y_center;
-            layout.result.allocated_height = event_data.display_options->layout.allocated_height;
-            
-            _cached_layout_response.layouts.push_back(layout);
-        }
-    }
-    
-    // Add digital interval series layouts and build batch key map
     size_t batch_index = 0;
     for (auto const & [key, interval_data] : _digital_interval_series) {
-        if (!interval_data.display_options->style.is_visible) {
-            continue;
+        if (interval_data.display_options->style.is_visible) {
+            _rectangle_batch_key_map[batch_index++] = key;
         }
-        
-        CorePlotting::SeriesLayout layout;
-        layout.series_id = key;
-        layout.series_index = series_index++;
-        layout.result.allocated_y_center = interval_data.display_options->layout.allocated_y_center;
-        layout.result.allocated_height = interval_data.display_options->layout.allocated_height;
-        
-        _cached_layout_response.layouts.push_back(layout);
-        
-        // Track batch index -> series key mapping for interval hit testing
-        _rectangle_batch_key_map[batch_index++] = key;
     }
-    
+
     _layout_response_dirty = false;
+}
+
+void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
+                                                 std::vector<ChannelPosition> const & positions) {
+    _spike_sorter_configs[group_name] = positions;
+    _layout_response_dirty = true;
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::clearSpikeSorterConfiguration(std::string const & group_name) {
+    _spike_sorter_configs.erase(group_name);
+    _layout_response_dirty = true;
+    updateCanvas(_time);
 }
