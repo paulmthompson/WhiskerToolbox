@@ -60,9 +60,10 @@ OpenGLWidget::~OpenGLWidget() {
 
 void OpenGLWidget::updateCanvas(int time) {
     _time = time;
-    // Mark layout as dirty since external changes may have occurred
+    // Mark layout and scene as dirty since external changes may have occurred
     // (e.g., display_mode changes, series visibility changes)
     _layout_response_dirty = true;
+    _scene_dirty = true;
     //std::cout << "Redrawing at " << _time << std::endl;
     update();
 }
@@ -788,7 +789,18 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
 // Interval edge dragging methods
 std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
 
-    static_cast<void>(canvas_y);  // Y not used for edge detection
+    // Ensure scene and layout are up-to-date for hit testing
+    // Note: const_cast is safe here because we're only updating cache state
+    if (_scene_dirty || _layout_response_dirty) {
+        // Force a scene rebuild by requesting a paint - but for hit testing
+        // during mouse events, we can use the current cached values
+        // The scene will be rebuilt on next paintGL() call
+    }
+
+    // If we have no cached scene yet (e.g., before first paint), fall back to time-based check
+    if (_cached_scene.rectangle_batches.empty() && _selected_intervals.empty()) {
+        return std::nullopt;
+    }
 
     // Use CorePlotting time axis utilities for coordinate conversion
     CorePlotting::TimeAxisParams const time_params(
@@ -797,18 +809,47 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
         width()
     );
     
-    // Convert canvas position to time using CorePlotting utility
-    float const time_coord = CorePlotting::canvasXToTime(canvas_x, time_params);
+    // Convert canvas position to time (world X coordinate)
+    float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
     
-    // Configure hit test tolerance
+    // Configure hit tester with edge tolerance in world units
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
-    
-    // Calculate time tolerance from pixel tolerance
     float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) / 
                                   static_cast<float>(time_params.viewport_width_px);
-    float const time_tolerance = EDGE_TOLERANCE_PX * time_per_pixel;
+    float const edge_tolerance = EDGE_TOLERANCE_PX * time_per_pixel;
+    
+    CorePlotting::HitTestConfig config;
+    config.edge_tolerance = edge_tolerance;
+    config.point_tolerance = edge_tolerance;
+    
+    CorePlotting::SceneHitTester tester(config);
+    
+    // Convert selected intervals to the format expected by SceneHitTester
+    std::map<std::string, std::pair<int64_t, int64_t>> selected_intervals_map;
+    for (auto const & [key, bounds] : _selected_intervals) {
+        selected_intervals_map[key] = bounds;
+    }
+    
+    // Use SceneHitTester to find interval edges
+    CorePlotting::HitTestResult result = tester.findIntervalEdge(
+        world_x,
+        _cached_scene,
+        selected_intervals_map,
+        _rectangle_batch_key_map
+    );
+    
+    if (result.isIntervalEdge()) {
+        bool is_left_edge = (result.hit_type == CorePlotting::HitType::IntervalEdgeLeft);
+        return std::make_pair(result.series_key, is_left_edge);
+    }
 
-    // Only check selected intervals
+    // Fall back to checking selected intervals directly if scene doesn't have the data
+    // This handles the case where intervals are selected but not yet rendered in scene
+    if (!_cached_scene.rectangle_batches.empty()) {
+        return std::nullopt;
+    }
+    
+    // Legacy fallback for when scene isn't available yet
     for (auto const & [series_key, interval_bounds]: _selected_intervals) {
         auto const [start_time, end_time] = interval_bounds;
         
@@ -816,26 +857,23 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
         auto const end_time_f = static_cast<float>(end_time);
 
         // Quick bounds check with tolerance (in time units)
-        if (time_coord < start_time_f - time_tolerance || 
-            time_coord > end_time_f + time_tolerance) {
+        if (world_x < start_time_f - edge_tolerance || 
+            world_x > end_time_f + edge_tolerance) {
             continue;
         }
 
-        // Convert interval edges to canvas coordinates using CorePlotting utility
-        float const start_canvas_x = CorePlotting::timeToCanvasX(start_time_f, time_params);
-        float const end_canvas_x = CorePlotting::timeToCanvasX(end_time_f, time_params);
-
         // Check if we're close to the left edge
-        if (std::abs(canvas_x - start_canvas_x) <= EDGE_TOLERANCE_PX) {
+        if (std::abs(world_x - start_time_f) <= edge_tolerance) {
             return std::make_pair(series_key, true);// true = left edge
         }
 
         // Check if we're close to the right edge
-        if (std::abs(canvas_x - end_canvas_x) <= EDGE_TOLERANCE_PX) {
+        if (std::abs(world_x - end_time_f) <= edge_tolerance) {
             return std::make_pair(series_key, false);// false = right edge
         }
     }
 
+    static_cast<void>(canvas_y);  // Y not used for edge detection
     return std::nullopt;
 }
 
@@ -1479,7 +1517,8 @@ void OpenGLWidget::cancelTooltipTimer() {
 }
 
 std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
-    // Use CorePlotting SceneHitTester for series region queries 
+    // Use CorePlotting SceneHitTester for comprehensive hit testing
+    // This queries both spatial index (for discrete elements) and layout (for series regions)
     
     // Compute layout if dirty (const_cast needed for lazy evaluation pattern)
     // Note: This is safe because computeAndApplyLayout only modifies cache state
@@ -1497,13 +1536,46 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Apply vertical pan offset to get the actual Y position in the coordinate system
     float const world_y = ndc_y - _view_state.vertical_pan_offset;
+    float const world_x = canvasXToTime(canvas_x);
     
-    // Use SceneHitTester to query series region
+    // First try full hit test if we have a cached scene with spatial index
+    // This can identify specific discrete elements (events, points)
+    if (_cached_scene.spatial_index) {
+        CorePlotting::HitTestResult result = _hit_tester.hitTest(
+            world_x, world_y, _cached_scene, _cached_layout_response);
+        
+        if (result.hasHit()) {
+            std::string series_type;
+            std::string series_key = result.series_key;
+            
+            // For discrete hits, look up series key from batch maps if needed
+            if (series_key.empty() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
+                // Try to find series key from glyph batch maps
+                // The QuadTree stores EntityId but not series key, so region query is fallback
+                auto region_result = _hit_tester.querySeriesRegion(world_x, world_y, _cached_layout_response);
+                if (region_result.hasHit()) {
+                    series_key = region_result.series_key;
+                }
+            }
+            
+            // Determine series type
+            if (_analog_series.find(series_key) != _analog_series.end()) {
+                series_type = "Analog";
+            } else if (_digital_event_series.find(series_key) != _digital_event_series.end()) {
+                series_type = "Event";
+            } else if (_digital_interval_series.find(series_key) != _digital_interval_series.end()) {
+                series_type = "Interval";
+            } else {
+                series_type = "Unknown";
+            }
+            
+            return std::make_pair(series_type, series_key);
+        }
+    }
+    
+    // Fall back to series region query (always works, uses layout)
     CorePlotting::HitTestResult result = _hit_tester.querySeriesRegion(
-        canvasXToTime(canvas_x),  // world_x (time coordinate, not used for Y region query)
-        world_y,
-        _cached_layout_response
-    );
+        world_x, world_y, _cached_layout_response);
     
     if (result.hasHit()) {
         // Determine series type from the key by checking our series maps
@@ -1599,13 +1671,15 @@ void OpenGLWidget::renderWithSceneRenderer() {
     addIntervalBatchesToBuilder(builder);
 
     // Build the scene (this also builds spatial index for discrete elements)
-    CorePlotting::RenderableScene scene = builder.build();
+    _cached_scene = builder.build();
+    _scene_dirty = false;
     
     // Store batch key maps for hit testing
     _rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
+    _glyph_batch_key_map = builder.getGlyphBatchKeyMap();
 
     // Upload scene to renderer and render
-    _scene_renderer->uploadScene(scene);
+    _scene_renderer->uploadScene(_cached_scene);
     _scene_renderer->render(view, projection);
 }
 

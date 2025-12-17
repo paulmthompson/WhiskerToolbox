@@ -666,9 +666,14 @@ private:
     // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
     std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
 
-    // CorePlotting hit testing infrastructure (Phase 4.3 migration)
+    // CorePlotting hit testing infrastructure (Phase 4.11 - Complete SceneHitTester Integration)
     // The hit tester provides unified hit testing via SceneHitTester
     CorePlotting::SceneHitTester _hit_tester;
+    
+    // Cached scene for hit testing - stores the last rendered scene for spatial queries
+    // This is populated in renderWithSceneRenderer() and used by findIntervalEdgeAtPosition()
+    CorePlotting::RenderableScene _cached_scene;
+    bool _scene_dirty{true};  ///< True when scene needs to be rebuilt before hit testing
     
     // Cached layout response - computed by LayoutEngine when dirty
     // Used for both rendering (updating display options) and hit testing
@@ -677,6 +682,9 @@ private:
     
     // Mapping from rectangle batch index to series key (for interval hit testing)
     std::map<size_t, std::string> _rectangle_batch_key_map;
+    
+    // Mapping from glyph batch index to series key (for event hit testing)
+    std::map<size_t, std::string> _glyph_batch_key_map;
     
     /**
      * @brief Build a LayoutRequest from current series state

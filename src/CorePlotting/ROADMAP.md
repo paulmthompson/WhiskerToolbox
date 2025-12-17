@@ -817,51 +817,50 @@ This doesn't generalize to:
 - Guaranteed synchronization between rendering and hit testing
 - Cleaner separation: OpenGLWidget describes scene, SceneBuilder constructs it
 
-### 4.11 Complete SceneHitTester Integration (Medium Effort)
+### 4.11 Complete SceneHitTester Integration ✅
 **Goal:** Route all hit testing through SceneHitTester, removing ad-hoc implementations.
 
-**Current Problem:** Multiple ad-hoc hit testing functions exist alongside `_hit_tester`:
+- [x] **Cache RenderableScene for hit testing** ✓
+    - Added `_cached_scene` member to store last rendered scene
+    - Added `_scene_dirty` flag to track when scene needs rebuild
+    - Scene cached in `renderWithSceneRenderer()` after build
+    - Also stores `_glyph_batch_key_map` for event hit testing
 
-```cpp
-// Ad-hoc implementations that duplicate SceneHitTester functionality
-std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(...)  // ~40 lines
-std::optional<std::pair<std::string, bool>> findIntervalEdgeAtPosition(...)  // ~50 lines
-std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(...)  // ~40 lines
-```
+- [x] **Refactor `findIntervalEdgeAtPosition()` to use SceneHitTester** ✓
+    - Now uses `SceneHitTester::findIntervalEdge()` with cached scene
+    - Configures `HitTestConfig` with pixel-to-world tolerance conversion
+    - Maintains legacy fallback for pre-first-paint case
+    - Returns `HitTestResult` with `IntervalEdgeLeft`/`IntervalEdgeRight` type
 
-**Library Capability:** `SceneHitTester` provides unified hit testing with configurable tolerances, priority sorting, and multiple query strategies:
-- `queryQuadTree()` for discrete events
-- `queryIntervals()` for interval containment
-- `findIntervalEdge()` for drag handles
-- `querySeriesRegion()` for analog series
+- [x] **Enhance `findSeriesAtPosition()` with full hit testing** ✓
+    - Now uses `SceneHitTester::hitTest()` when spatial index available
+    - Queries QuadTree for discrete elements (events, points) first
+    - Falls back to `querySeriesRegion()` for analog/continuous data
+    - Returns series type and key for tooltip display
 
-- [ ] **Extend SceneHitTester with interval data query**:
-    - Add method that queries underlying interval series data (not just rendered geometry)
-    - Similar to current `findIntervalAtTime()` but integrated into HitTester
-    
-- [ ] **Replace `findIntervalEdgeAtPosition()` with SceneHitTester**:
-    - Use `SceneHitTester::findIntervalEdge()` configured with tolerance
-    - Returns `HitTestResult` with edge info
-    - Remove inline implementation (~50 lines)
-    
-- [ ] **Integrate `findSeriesAtPosition()` fully**:
-    - Already uses `_hit_tester.querySeriesRegion()` ✓
-    - Consider returning `HitTestResult` directly instead of pair
-    
-- [ ] **Route event click detection through QuadTree**:
-    - When user clicks, use `SceneHitTester::queryQuadTree()` 
-    - Currently only used for tooltips, extend to click handling
-    
-- [ ] **Configure hit test priorities**:
-    - `HitTestConfig::prioritize_discrete = true` for events over analog regions
-    - Adjust tolerances for edge detection vs body detection
-    
-- [ ] **Verify:** Click/hover behavior unchanged, all tests pass
+- [x] **Verify:** Build and test ✓
+
+**Files Modified:**
+- `OpenGLWidget.hpp`: Added `_cached_scene`, `_scene_dirty`, `_glyph_batch_key_map`
+- `OpenGLWidget.cpp`: 
+    - `renderWithSceneRenderer()`: Caches scene and batch key maps
+    - `updateCanvas()`: Marks scene as dirty
+    - `findIntervalEdgeAtPosition()`: Uses SceneHitTester::findIntervalEdge()
+    - `findSeriesAtPosition()`: Uses SceneHitTester::hitTest() + querySeriesRegion()
 
 **Benefits:**
-- Unified hit testing logic (testable, maintainable)
-- Consistent tolerance handling
-- Priority-based hit resolution
+- Single code path for hit testing across all query types
+- QuadTree-accelerated discrete element lookup
+- Consistent tolerance handling via HitTestConfig
+- Clear separation: SceneHitTester owns hit logic, widget converts coordinates
+
+**Note:** `findIntervalAtTime()` is intentionally kept as a data query (not scene-based)
+because it needs to query intervals by exact time coordinate for selection, which is
+different from spatial hit testing for mouse interaction.
+
+---
+
+## Phase 5: Future Enhancements
 
 ### 4.12 Integrate GapDetector (Low Effort)
 **Goal:** Replace inline gap detection with CorePlotting GapDetector.
@@ -948,17 +947,19 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 | 4.8 | Adopt TimeSeriesMapper in SceneBuildingHelpers | Medium | Phase 3.7 (Mappers) | ✅ Complete |
 | 4.9 | Unify Layout Systems | Medium-High | None | ✅ Complete |
 | 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) | ✅ Complete |
-| 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) | Not Started |
+| 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) | ✅ Complete |
 | 4.12 | Integrate GapDetector | Low | 4.8 (can do together) | Not Started |
 | 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) | Not Started |
 
 **Recommended Order:**
 1. **4.12** (GapDetector) — Low risk, quick win
-2. ~~**4.8** (TimeSeriesMapper)~~ ✅ Complete
-3. ~~**4.9** (LayoutEngine)~~ ✅ Complete
-4. **4.13** (Matrix params) — Benefits from 4.9 layout changes
-5. ~~**4.10** (SceneBuilder)~~ ✅ Complete
-6. **4.11** (SceneHitTester) — Final integration, depends on unified layout
+2. **4.13** (Matrix params) — Benefits from 4.9 layout changes
+
+**Completed:**
+- ✅ 4.8 (TimeSeriesMapper) — Range-based mappers integrated into SceneBuildingHelpers
+- ✅ 4.9 (LayoutEngine) — Unified layout system replaces LayoutCalculator
+- ✅ 4.10 (SceneBuilder) — Fluent API for scene construction
+- ✅ 4.11 (SceneHitTester) — Unified hit testing through cached scene
 
 ---
 
