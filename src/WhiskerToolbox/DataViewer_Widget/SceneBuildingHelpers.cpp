@@ -1,6 +1,8 @@
 #include "SceneBuildingHelpers.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/Layout/SeriesLayout.hpp"
+#include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
@@ -12,20 +14,24 @@
 
 namespace DataViewerHelpers {
 
-// Helper function to get time index in series time frame from master time frame
 namespace {
-TimeFrameIndex convertToSeriesTimeFrame(
-        TimeFrameIndex const & master_idx,
-        TimeFrame const * master_tf,
-        TimeFrame const * series_tf) {
-    if (master_tf == series_tf || !master_tf || !series_tf) {
-        return master_idx;
-    }
-    // Convert master time frame index to absolute time, then to series time frame index
-    auto const absolute_time = master_tf->getTimeAtIndex(master_idx);
-    return series_tf->getIndexAtTime(absolute_time);
+
+/**
+ * @brief Create a local-space layout for model-matrix rendering
+ * 
+ * Returns a SeriesLayout with y_center=0 and height=2, representing
+ * the local-space [-1, 1] coordinate system. The model matrix is
+ * responsible for positioning in world space.
+ */
+[[nodiscard]] CorePlotting::SeriesLayout makeLocalSpaceLayout() {
+    return CorePlotting::SeriesLayout{
+        CorePlotting::SeriesLayoutResult{0.0f, 2.0f},
+        "",
+        0
+    };
 }
-}// anonymous namespace
+
+} // anonymous namespace
 
 CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
         AnalogTimeSeries const & series,
@@ -45,35 +51,24 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
         return batch;
     }
 
-    // Get time range in series time frame
-    auto series_start_idx = convertToSeriesTimeFrame(
-            params.start_time,
-            master_time_frame.get(),
-            series.getTimeFrame().get());
-    auto series_end_idx = convertToSeriesTimeFrame(
-            params.end_time,
-            master_time_frame.get(),
-            series.getTimeFrame().get());
-
-    // Get data range
-    auto analog_range = series.getTimeValueRangeInTimeFrameIndexRange(
-            series_start_idx, series_end_idx);
+    // Use local-space layout (Y=raw value, model matrix handles positioning)
+    auto const local_layout = makeLocalSpaceLayout();
+    
+    // Use range-based mapper with indices for gap detection, materialize here
+    auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
+            series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time);
 
     std::vector<float> segment_vertices;
-    int prev_index = -1;
+    int64_t prev_index = -1;
     bool first_point = true;
     int current_line_start = 0;
 
-    for (auto const & [time_idx, value]: analog_range) {
-        auto const x_pos = static_cast<float>(series.getTimeFrame()->getTimeAtIndex(time_idx));
-        auto const y_pos = value;
-
+    for (auto const & vertex : mapped_range) {
         // Check for gap if this isn't the first point and gap detection is enabled
         if (!first_point && params.detect_gaps) {
-            int const current_index = time_idx.getValue();
-            int const gap_size = current_index - prev_index;
+            int64_t const gap_size = vertex.time_index - prev_index;
 
-            if (gap_size > static_cast<int>(params.gap_threshold)) {
+            if (gap_size > static_cast<int64_t>(params.gap_threshold)) {
                 // Gap detected - finalize current segment
                 if (segment_vertices.size() >= 4) {// At least 2 vertices
                     // Record this segment
@@ -94,10 +89,10 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
         }
 
         // Add vertex to current segment
-        segment_vertices.push_back(x_pos);
-        segment_vertices.push_back(y_pos);
+        segment_vertices.push_back(vertex.x);
+        segment_vertices.push_back(vertex.y);
 
-        prev_index = time_idx.getValue();
+        prev_index = vertex.time_index;
         first_point = false;
     }
 
@@ -142,37 +137,22 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatch(
         return batch;
     }
 
-    // Get visible events with IDs in the time range
-    auto visible_events = series.getEventsWithIdsInRange(
-            params.start_time,
-            params.end_time,
-            *master_time_frame);
+    // Use local-space layout (Y=0, model matrix handles positioning)
+    auto const local_layout = makeLocalSpaceLayout();
+    
+    // Use range-based mapper - returns materialized vector for cross-TimeFrame support
+    auto mapped_events = CorePlotting::TimeSeriesMapper::mapEventsInRange(
+            series, local_layout, *master_time_frame, params.start_time, params.end_time);
 
     // Reserve space
-    batch.positions.reserve(visible_events.size());
-    batch.entity_ids.reserve(visible_events.size());
+    batch.positions.reserve(mapped_events.size());
+    batch.entity_ids.reserve(mapped_events.size());
 
-    for (auto const & event: visible_events) {
-        // Calculate X position in master time frame coordinates
-        float x_pos;
-        if (series.getTimeFrame().get() == master_time_frame.get()) {
-            // Same time frame - event is already in correct coordinates
-            x_pos = static_cast<float>(event.event_time.getValue());
-        } else {
-            // Different time frames - convert event index to time
-            x_pos = static_cast<float>(series.getTimeFrame()->getTimeAtIndex(event.event_time));
-        }
-
-        // Y position is 0 (center of normalized space [-1, 1])
-        // The Model matrix will position this correctly in the layout
-        batch.positions.emplace_back(x_pos, 0.0f);
-
-        // Store entity ID for hit testing
+    // Extract positions and entity IDs from mapped elements
+    for (auto const & event : mapped_events) {
+        batch.positions.emplace_back(event.x, event.y);
         batch.entity_ids.push_back(event.entity_id);
     }
-
-    // Set global color (same for all events in this batch)
-    // Per-instance colors could be added if needed for group coloring
 
     return batch;
 }
@@ -193,42 +173,23 @@ CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatch(
         return batch;
     }
 
-    // Get visible intervals with IDs (overlapping with time range)
-    // Use the iterator interface which provides IntervalWithId
-    auto visible_intervals = series.getIntervalsWithIdsInRange(
-            params.start_time,
-            params.end_time,
-            *master_time_frame);
+    // Use local-space layout (Y fills [-1,1], model matrix handles positioning)
+    auto const local_layout = makeLocalSpaceLayout();
+    
+    // Use range-based mapper - returns materialized vector for cross-TimeFrame support
+    auto mapped_intervals = CorePlotting::TimeSeriesMapper::mapIntervalsInRange(
+            series, local_layout, *master_time_frame, params.start_time, params.end_time);
 
     // Reserve space
-    batch.bounds.reserve(visible_intervals.size());
-    batch.colors.reserve(visible_intervals.size());
-    batch.entity_ids.reserve(visible_intervals.size());
+    batch.bounds.reserve(mapped_intervals.size());
+    batch.colors.reserve(mapped_intervals.size());
+    batch.entity_ids.reserve(mapped_intervals.size());
 
-    float const start_time_f = static_cast<float>(params.start_time.getValue());
-    float const end_time_f = static_cast<float>(params.end_time.getValue());
-
-    for (auto const & interval_with_id: visible_intervals) {
-        // Convert to master time frame coordinates
-        auto start = static_cast<float>(
-                series.getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.start)));
-        auto end = static_cast<float>(
-                series.getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.end)));
-
-        // Clip to visible range
-        start = std::max(start, start_time_f);
-        end = std::min(end, end_time_f);
-
-        float const width = end - start;
-
-        // Normalized Y coordinates [-1, 1] - Model matrix handles positioning
-        float const y_min = -1.0f;
-        float const height = 2.0f;
-
-        // bounds = {x, y, width, height}
-        batch.bounds.emplace_back(start, y_min, width, height);
+    // Extract bounds, colors, and entity IDs from mapped elements
+    for (auto const & interval : mapped_intervals) {
+        batch.bounds.emplace_back(interval.x, interval.y, interval.width, interval.height);
         batch.colors.push_back(params.color);
-        batch.entity_ids.push_back(interval_with_id.entity_id);
+        batch.entity_ids.push_back(interval.entity_id);
     }
 
     return batch;
@@ -318,28 +279,16 @@ CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatch(
         return batch;
     }
     
-    // Get time range in series time frame
-    auto series_start_idx = convertToSeriesTimeFrame(
-            params.start_time,
-            master_time_frame.get(),
-            series.getTimeFrame().get());
-    auto series_end_idx = convertToSeriesTimeFrame(
-            params.end_time,
-            master_time_frame.get(),
-            series.getTimeFrame().get());
+    // Use local-space layout (Y=raw value, model matrix handles positioning)
+    auto const local_layout = makeLocalSpaceLayout();
     
-    // Get data range
-    auto analog_range = series.getTimeValueRangeInTimeFrameIndexRange(
-            series_start_idx, series_end_idx);
+    // Use range-based mapper, materialize here
+    auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeries(
+            series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time);
     
-    // Reserve estimated space
-    batch.positions.reserve(1000); // Reasonable initial estimate
-    
-    for (auto const & [time_idx, value] : analog_range) {
-        auto const x_pos = static_cast<float>(series.getTimeFrame()->getTimeAtIndex(time_idx));
-        auto const y_pos = value;
-        
-        batch.positions.emplace_back(x_pos, y_pos);
+    // Materialize and convert to positions
+    for (auto const & vertex : mapped_range) {
+        batch.positions.emplace_back(vertex.x, vertex.y);
     }
     
     return batch;

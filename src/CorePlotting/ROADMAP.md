@@ -759,46 +759,51 @@ This doesn't generalize to:
     
 - [x] **Verify:** All tests pass ✓
 
-### 4.8 Adopt TimeSeriesMapper in SceneBuildingHelpers (Medium Effort)
+### 4.8 Adopt TimeSeriesMapper in SceneBuildingHelpers ✅
 **Goal:** Replace manual coordinate mapping in SceneBuildingHelpers with TimeSeriesMapper ranges.
 
-**Current Problem:** `SceneBuildingHelpers.cpp` reimplements coordinate mapping logic that already exists in `TimeSeriesMapper`:
+**Problem Solved:** `SceneBuildingHelpers.cpp` reimplemented coordinate mapping logic that already existed in `TimeSeriesMapper`.
+
+**Solution:** Refactored to use range-based TimeSeriesMapper API with "local-space layout" pattern:
 
 ```cpp
-// SceneBuildingHelpers.cpp - duplicates TimeSeriesMapper logic
-for (auto const & [time_idx, value]: analog_range) {
-    auto const x_pos = static_cast<float>(series.getTimeFrame()->getTimeAtIndex(time_idx));
-    auto const y_pos = value;
-    // ... manual gap detection and segment building
-}
+// New pattern in SceneBuildingHelpers.cpp
+auto local_layout = makeLocalSpaceLayout();  // y_center=0, height=2
+auto mapped_events = mapEventsInRange(series, local_layout, *tf, start, end);
+for (auto const& event : mapped_events) { ... }  // materialize at call site
 ```
 
-**Library Capability:** `TimeSeriesMapper::mapAnalogSeries()`, `mapEvents()`, `mapIntervals()` provide range-based position mapping with zero-copy semantics.
+- [x] **Refactor `buildEventSeriesBatch()`**:
+    - Uses `TimeSeriesMapper::mapEventsInRange()` (returns owning range)
+    - Local-space layout with `y_center=0`, model matrix handles positioning
+    
+- [x] **Refactor `buildIntervalSeriesBatch()`**:
+    - Uses `TimeSeriesMapper::mapIntervalsInRange()` (returns owning range)
+    - Local-space layout with `y_center=0, height=2` for [-1,1] range
+    
+- [x] **Refactor `buildAnalogSeriesBatch()`**:
+    - Uses `TimeSeriesMapper::mapAnalogSeriesWithIndices()` for gap detection
+    - `MappedAnalogVertex` includes `time_index` for gap detection logic
+    
+- [x] **Refactor `buildAnalogSeriesMarkerBatch()`**:
+    - Uses `TimeSeriesMapper::mapAnalogSeries()` 
+    - Materializes at call site for glyph positions
+    
+- [x] **Enhanced TimeSeriesMapper API**:
+    - Fixed `mapEventsInRange()` to return owning range (not vector)
+    - Fixed `mapIntervalsInRange()` to return owning range (not vector)
+    - Added `MappedAnalogVertex` struct with `time_index` for gap detection
+    - Added `mapAnalogSeriesWithIndices()` for gap detection support
+    - Removed "Model-Matrix Compatible Variants" section (~200 lines)
+    - Added comprehensive `@see` tags and API documentation
+    
+- [x] **Verify:** All tests pass ✓
 
-- [ ] **Refactor `buildEventSeriesBatch()`**:
-    - Replace manual iteration with `TimeSeriesMapper::mapEventsInRange()`
-    - Map returns `MappedElement` with (x, y, entity_id) already computed
-    - Extract positions and entity_ids from range
-    
-- [ ] **Refactor `buildIntervalSeriesBatch()`**:
-    - Replace manual iteration with `TimeSeriesMapper::mapIntervalsInRange()`
-    - Map returns `MappedRectElement` with bounds already computed
-    
-- [ ] **Refactor `buildAnalogSeriesBatch()`**:
-    - Replace manual iteration with `TimeSeriesMapper::mapAnalogSeries()`
-    - Integrate with existing gap detection via `GapDetector` (see Phase 4.12)
-    - Map returns `MappedVertex` stream for polyline vertices
-    
-- [ ] **Update batch param structs**:
-    - `AnalogBatchParams`, `EventBatchParams`, `IntervalBatchParams` may need adjustment
-    - Consider passing `SeriesLayout` directly instead of unpacking fields
-    
-- [ ] **Verify:** Visual output unchanged, all tests pass
-
-**Benefits:**
+**Benefits Achieved:**
 - Single source of truth for coordinate mapping
-- Zero-copy when ranges feed directly to batch construction
-- Easier maintenance when TimeFrame logic changes
+- All mappers return ranges (consistent API)
+- Materialization happens at boundary where needed (SceneBuildingHelpers)
+- Clean separation: Mapper returns range, caller decides when to materialize
 
 ### 4.9 Unify Layout Systems (Medium-High Effort)
 **Goal:** Replace dual layout systems (LayoutCalculator + manual LayoutResponse rebuild) with single LayoutEngine.
@@ -1040,21 +1045,21 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 
 ## Phase 4 Summary: Remaining Work
 
-| Phase | Task | Effort | Dependencies |
-|-------|------|--------|--------------|
-| 4.8 | Adopt TimeSeriesMapper in SceneBuildingHelpers | Medium | Phase 3.7 (Mappers) |
-| 4.9 | Unify Layout Systems | Medium-High | None |
-| 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) |
-| 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) |
-| 4.12 | Integrate GapDetector | Low | 4.8 (can do together) |
-| 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) |
+| Phase | Task | Effort | Dependencies | Status |
+|-------|------|--------|--------------|--------|
+| 4.8 | Adopt TimeSeriesMapper in SceneBuildingHelpers | Medium | Phase 3.7 (Mappers) | ✅ Complete |
+| 4.9 | Unify Layout Systems | Medium-High | None | Not Started |
+| 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) | Not Started |
+| 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) | Not Started |
+| 4.12 | Integrate GapDetector | Low | 4.8 (can do together) | Not Started |
+| 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) | Not Started |
 
 **Recommended Order:**
 1. **4.12** (GapDetector) — Low risk, quick win
-2. **4.8** (TimeSeriesMapper) — Validates Mapper API against real usage
+2. ~~**4.8** (TimeSeriesMapper)~~ ✅ Complete
 3. **4.9** (LayoutEngine) — Major architectural cleanup
 4. **4.13** (Matrix params) — Benefits from 4.9 layout changes
-5. **4.10** (SceneBuilder) — Requires 4.8 for range input
+5. **4.10** (SceneBuilder) — Requires 4.8 for range input ✅
 6. **4.11** (SceneHitTester) — Final integration, depends on unified layout
 
 ---
