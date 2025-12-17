@@ -2,10 +2,10 @@
 #define OPENGLWIDGET_HPP
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
 #include "CorePlotting/Interaction/IntervalDragController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
-#include "DataViewer/XAxis.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 
@@ -281,12 +281,30 @@ public:
 
     [[nodiscard]] bool isCreatingNewInterval() const { return _is_creating_new_interval; }
 
-    void setXLimit(int xmax) {
-        _xAxis.setMax(xmax);
-    };
+    /**
+     * @brief Set the maximum X-axis bound (typically from TimeFrame count)
+     * @param xmax Maximum value for time range (typically total frame count - 1)
+     */
+    void setXLimit(int xmax);
 
-    // Accessors for SVG export
-    [[nodiscard]] XAxis const & getXAxis() const { return _xAxis; }
+
+    // Accessors for SVG export and external queries
+    /**
+     * @brief Get the current time range (visible window and bounds)
+     * @return Reference to CorePlotting::TimeRange with current state
+     */
+    [[nodiscard]] CorePlotting::TimeRange const & getTimeRange() const { return _view_state.time_range; }
+    
+    /**
+     * @brief Get the current visible time range start (in TimeFrameIndex units)
+     */
+    [[nodiscard]] int64_t getVisibleStart() const { return _view_state.time_range.start; }
+    
+    /**
+     * @brief Get the current visible time range end (in TimeFrameIndex units)
+     */
+    [[nodiscard]] int64_t getVisibleEnd() const { return _view_state.time_range.end; }
+    
     [[nodiscard]] float getYMin() const { return _yMin; }
     [[nodiscard]] float getYMax() const { return _yMax; }
     [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
@@ -302,11 +320,11 @@ public:
      * Individual data series may have different time frames that need to be
      * converted to/from the master time frame for proper synchronization.
      * 
+     * Also initializes the TimeRange bounds from the TimeFrame extent.
+     * 
      * @param master_time_frame Shared pointer to the master time frame
      */
-    void setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame) {
-        _master_time_frame = master_time_frame;
-    }
+    void setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame);
 
     /**
      * @brief Set the PlottingManager reference for coordinate allocation
@@ -317,20 +335,18 @@ public:
         _plotting_manager = plotting_manager;
     }
 
-    void changeRangeWidth(int64_t range_delta) {
-        int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
-        int64_t const current_range = _xAxis.getEnd() - _xAxis.getStart();
-        int64_t const new_range = current_range + range_delta;// Add delta to current range
-        _xAxis.setCenterAndZoom(center, new_range);
-        updateCanvas(_time);
-    }
+    /**
+     * @brief Change the visible range width by a delta amount
+     * @param range_delta Amount to add to current range (negative = zoom in)
+     */
+    void changeRangeWidth(int64_t range_delta);
 
-    int64_t setRangeWidth(int64_t range_width) {
-        int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
-        int64_t const actual_range = _xAxis.setCenterAndZoomWithFeedback(center, range_width);
-        updateCanvas(_time);
-        return actual_range;// Return the actual range width achieved
-    }
+    /**
+     * @brief Set the visible range width to a specific value
+     * @param range_width Desired range width
+     * @return Actual range width achieved (may differ due to bounds clamping)
+     */
+    int64_t setRangeWidth(int64_t range_width);
 
     void setGlobalScale(float scale) {
 
@@ -476,7 +492,9 @@ private:
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
     std::unordered_map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
 
-    XAxis _xAxis;
+    // X-axis state using CorePlotting TimeSeriesViewState (Phase 4.6 migration)
+    // Replaces legacy XAxis class with bounds-aware TimeRange + unified ViewState
+    CorePlotting::TimeSeriesViewState _view_state;
     int _time{0};
 
     QOpenGLShaderProgram * m_program{nullptr};

@@ -692,30 +692,47 @@ This doesn't generalize to:
 
 - [x] **Verify:** All tests pass ✓
 
-### 4.6 Migration Step 5: Replace XAxis with TimeSeriesViewState
+### 4.6 Migration Step 5: Replace XAxis with TimeSeriesViewState ✅
 **Goal:** Use unified camera state instead of separate `_xAxis` + `_yMin/_yMax/_verticalPanOffset`.
 
-- [ ] **Add `_view_state` member** (type: `TimeSeriesViewState`)
-- [ ] **Replace `_xAxis` calls**:
+- [x] **Add `_view_state` member** (type: `TimeSeriesViewState`) ✓
+    - Replaced `XAxis _xAxis` with `CorePlotting::TimeSeriesViewState _view_state`
+    - Added include for `CorePlotting/CoordinateTransform/TimeRange.hpp`
+    
+- [x] **Replace `_xAxis` calls** ✓:
     - `_xAxis.getStart()` → `_view_state.time_range.start`
     - `_xAxis.getEnd()` → `_view_state.time_range.end`
     - `_xAxis.setCenterAndZoom()` → `_view_state.time_range.setCenterAndZoom()`
-- [ ] **Replace Y-axis state**:
+    - Updated all 25 usages in OpenGLWidget.cpp
+    
+- [x] **Update public API** ✓:
+    - Removed `getXAxis()` accessor (returned legacy XAxis reference)
+    - Added `getTimeRange()` returning `CorePlotting::TimeRange const&`
+    - Added `getVisibleStart()` and `getVisibleEnd()` convenience methods
+    - `setXLimit()` now updates `_view_state.time_range.max_bound`
+    - `changeRangeWidth()` and `setRangeWidth()` now use TimeRange methods
+    
+- [x] **Update `setMasterTimeFrame()`** ✓:
+    - Initializes TimeRange from TimeFrame bounds
+    - Sets reasonable initial visible range (10,000 samples max, not entire dataset)
+    - Prevents performance issues with million-sample datasets
+    
+- [x] **Update dependent code** ✓:
+    - SVGExporter: Uses `getTimeRange()` instead of `getXAxis()`
+    - DataViewer_Widget: Updated `_updateLabels()` and wheel zoom handler
+    - DataViewer_Widget.test.cpp: Updated all test cases to use new API
+    
+- [ ] **Replace Y-axis state** (deferred to Phase 4.7):
     - `_yMin, _yMax` → `_view_state.view_state.data_bounds`
     - `_verticalPanOffset` → `_view_state.view_state.pan_offset_y`
-- [ ] **Update `setMasterTimeFrame()`**:
-    ```cpp
-    void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> tf) {
-        _master_time_frame = tf;
-        _view_state.time_range = TimeRange::fromTimeFrame(*tf);
-    }
-    ```
-- [ ] **Verify:** Zoom/pan behavior unchanged
+    
+- [x] **Verify:** All tests pass ✓
 
 ### 4.7 Final Cleanup
 - [ ] Remove `_plotting_manager` dependency (replaced by LayoutEngine)
 - [ ] Remove `m_vertices` class member (batches own their data)
 - [ ] Remove per-series `_series_y_position` map (use LayoutEngine results)
+- [ ] Migrate Y-axis state to ViewState (deferred from 4.6)
 - [ ] Update tests to use CorePlotting types directly
 - [ ] Document new architecture in header comments
 

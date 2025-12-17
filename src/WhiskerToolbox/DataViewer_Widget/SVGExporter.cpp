@@ -26,10 +26,10 @@ SVGExporter::SVGExporter(OpenGLWidget * gl_widget, LayoutCalculator * plotting_m
 }
 
 QString SVGExporter::exportToSVG() {
-    // Get current visible time range from OpenGL widget
-    auto const x_axis = gl_widget_->getXAxis();
-    auto const start_time = x_axis.getStart();
-    auto const end_time = x_axis.getEnd();
+    // Get current visible time range from OpenGL widget (Phase 4.6 migration)
+    auto const & time_range = gl_widget_->getTimeRange();
+    auto const start_time = time_range.start;
+    auto const end_time = time_range.end;
 
     std::cout << "SVG Export - Time range: " << start_time << " to " << end_time << std::endl;
     std::cout << "SVG Export - Y range: " << gl_widget_->getYMin() << " to " << gl_widget_->getYMax() << std::endl;

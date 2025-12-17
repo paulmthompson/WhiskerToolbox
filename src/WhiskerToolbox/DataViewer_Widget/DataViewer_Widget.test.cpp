@@ -858,9 +858,10 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     REQUIRE(invoked);
     QApplication::processEvents();
 
-    auto x_before = glw->getXAxis();
-    auto const start_before = x_before.getStart();
-    auto const end_before = x_before.getEnd();
+    // Phase 4.6 migration: use getTimeRange() instead of getXAxis()
+    auto const & time_range_before = glw->getTimeRange();
+    auto const start_before = time_range_before.start;
+    auto const end_before = time_range_before.end;
 
     // Change global gain via the private slot and re-draw
     double const new_gain = 2.0;
@@ -872,9 +873,9 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     REQUIRE(invoked);
     QApplication::processEvents();
 
-    auto x_after = glw->getXAxis();
-    auto const start_after = x_after.getStart();
-    auto const end_after = x_after.getEnd();
+    auto const & time_range_after = glw->getTimeRange();
+    auto const start_after = time_range_after.start;
+    auto const end_after = time_range_after.end;
 
     // Verify X window did not change
     REQUIRE(start_before == start_after);
@@ -1593,6 +1594,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     INFO("Testing short video (704 frames) extreme zoom regression");
     
+    // Phase 4.6 migration: use getTimeRange() instead of getXAxis()
     // Cycle 1: Start with a reasonable range (100 samples)
     INFO("Cycle 1: Set range to 100 samples");
     invoked = QMetaObject::invokeMethod(
@@ -1603,8 +1605,8 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     REQUIRE(invoked);
     QApplication::processEvents();
     
-    auto x_axis = glw->getXAxis();
-    int64_t range_1 = x_axis.getEnd() - x_axis.getStart();
+    auto const & time_range_1 = glw->getTimeRange();
+    int64_t range_1 = time_range_1.getWidth();
     INFO("Cycle 1: Achieved range = " << range_1);
     REQUIRE(range_1 > 0);
     REQUIRE(range_1 <= 704);
@@ -1619,8 +1621,8 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     REQUIRE(invoked);
     QApplication::processEvents();
     
-    x_axis = glw->getXAxis();
-    int64_t range_2 = x_axis.getEnd() - x_axis.getStart();
+    auto const & time_range_2 = glw->getTimeRange();
+    int64_t range_2 = time_range_2.getWidth();
     INFO("Cycle 2: Achieved range = " << range_2);
     REQUIRE(range_2 > 0);
     REQUIRE(range_2 <= 704);
@@ -1635,8 +1637,8 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     REQUIRE(invoked);
     QApplication::processEvents();
     
-    x_axis = glw->getXAxis();
-    int64_t range_3 = x_axis.getEnd() - x_axis.getStart();
+    auto const & time_range_3 = glw->getTimeRange();
+    int64_t range_3 = time_range_3.getWidth();
     INFO("Cycle 3: Achieved range = " << range_3);
     REQUIRE(range_3 > 0);
     REQUIRE(range_3 <= 704);
@@ -1651,8 +1653,8 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     REQUIRE(invoked);
     QApplication::processEvents();
     
-    x_axis = glw->getXAxis();
-    int64_t range_4 = x_axis.getEnd() - x_axis.getStart();
+    auto const & time_range_4 = glw->getTimeRange();
+    int64_t range_4 = time_range_4.getWidth();
     INFO("Cycle 4: Achieved range = " << range_4);
     REQUIRE(range_4 > 0);
     REQUIRE(range_4 <= 704);
@@ -1667,8 +1669,8 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     REQUIRE(invoked);
     QApplication::processEvents();
     
-    x_axis = glw->getXAxis();
-    int64_t range_5 = x_axis.getEnd() - x_axis.getStart();
+    auto const & time_range_5 = glw->getTimeRange();
+    int64_t range_5 = time_range_5.getWidth();
     INFO("Cycle 5: After requesting 200 samples, achieved range = " << range_5);
     
     // This is the regression test: we should be able to zoom out
@@ -1690,17 +1692,17 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
         REQUIRE(invoked);
         QApplication::processEvents();
         
-        x_axis = glw->getXAxis();
-        int64_t achieved_range = x_axis.getEnd() - x_axis.getStart();
+        auto const & time_range = glw->getTimeRange();
+        int64_t achieved_range = time_range.getWidth();
         
         INFO("Rapid cycle " << i << ": requested=" << requested_range << ", achieved=" << achieved_range);
         
         // Basic validity checks
         REQUIRE(achieved_range > 0);
         REQUIRE(achieved_range <= 704);
-        REQUIRE(x_axis.getStart() >= 0);
-        REQUIRE(x_axis.getEnd() <= 704);  // XAxis uses half-open range [start, end), so end can be 704
-        REQUIRE(x_axis.getStart() < x_axis.getEnd());
+        REQUIRE(time_range.start >= 0);
+        REQUIRE(time_range.end <= 703);  // TimeRange uses inclusive range [start, end], max is 703 for 704 frames
+        REQUIRE(time_range.start <= time_range.end);
         
         // The range should be reasonably close to what we requested
         // (allow up to 20% difference for boundary clamping)
@@ -1722,8 +1724,8 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     REQUIRE(invoked);
     QApplication::processEvents();
     
-    x_axis = glw->getXAxis();
-    int64_t final_range = x_axis.getEnd() - x_axis.getStart();
+    auto const & time_range_final = glw->getTimeRange();
+    int64_t final_range = time_range_final.getWidth();
     INFO("Cycle 7: Final range = " << final_range);
     
     REQUIRE(final_range >= 650);  // Should be close to full 704
