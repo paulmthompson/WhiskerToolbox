@@ -17,8 +17,6 @@ message(STATUS "DATAVIEWER_TEST_SOURCES_TEMP: ${DATAVIEWER_TEST_SOURCES_TEMP}")
 
 add_executable(test_data_viewer
 
-        test_data_viewer.cpp
-
         ${DATAVIEWER_TEST_SOURCES_TEMP}
 )
 

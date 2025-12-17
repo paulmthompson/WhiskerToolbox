@@ -356,6 +356,7 @@ namespace RasterMapper {
 }
 
 // EventAlignedMapper - analog traces aligned to events (PSTH-style line plots)
+// **PLANNED** - Not yet implemented. See Mappers/ for available mappers.
 namespace EventAlignedMapper {
     enum class TrialLayoutMode {
         Overlaid,   // All trials at same Y, differentiated by color/alpha
@@ -560,31 +561,73 @@ RenderableScene scene = SceneBuilder()
 
 This approach handles 100k+ lines efficiently where QuadTree would struggle.
 
-### Directory Structure Update
+### Directory Structure
 
 ```
 src/CorePlotting/
+├── CMakeLists.txt
+├── DESIGN.md                      # This document
+├── ROADMAP.md                     # Implementation roadmap
+│
 ├── Mappers/                       # Visualization-specific coordinate mapping
 │   ├── MappedElement.hpp          # Common element types (MappedElement, MappedRectElement, MappedVertex)
-│   ├── MappedLineView.hpp         # Line view type for multi-line ranges (MappedLineView, MappedLineRange)
+│   ├── MappedLineView.hpp         # Line view type for multi-line ranges
+│   ├── MapperConcepts.hpp         # C++20 concepts for range requirements
 │   ├── TimeSeriesMapper.hpp       # DataViewer: events→time, intervals→time, analog→time
-│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y (returns MappedLineRange)
-│   ├── RasterMapper.hpp           # Raster/PSTH: events→relative time
-│   ├── EventAlignedMapper.hpp     # Event-aligned traces: analog+events→MappedLineRange
-│   └── MapperConcepts.hpp         # C++20 concepts for range requirements
+│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y
+│   └── RasterMapper.hpp           # Raster/PSTH: events→relative time
+│   # PLANNED: EventAlignedMapper.hpp — Event-aligned traces: analog+events→MappedLineRange
 │
 ├── Layout/                        # Plot-type-specific layout strategies
-│   ├── StackedTimeSeriesLayout.hpp
-│   ├── SpatialLayout.hpp
-│   ├── RowLayout.hpp
-│   └── SeriesLayout.hpp           # Common layout result type
+│   ├── LayoutEngine.hpp           # Strategy pattern coordinator
+│   ├── LayoutEngine.cpp
+│   ├── SeriesLayout.hpp           # Per-series layout result
+│   ├── LayoutTransform.hpp        # Affine transform: output = input * gain + offset
+│   ├── NormalizationHelpers.hpp   # Data normalization → LayoutTransform
+│   ├── StackedLayoutStrategy.hpp  # DataViewer: vertical stacking
+│   ├── StackedLayoutStrategy.cpp
+│   ├── RowLayoutStrategy.hpp      # Raster: equal-height rows
+│   ├── RowLayoutStrategy.cpp
+│   ├── SpatialLayoutStrategy.hpp  # SpatialOverlay: bounds fitting
+│   ├── SpatialLayoutStrategy.cpp
+│   └── README.md
 │
 ├── SceneGraph/                    # Generic scene assembly (range-based API)
 │   ├── SceneBuilder.hpp           # Fluent builder consuming ranges
-│   ├── RenderableScene.hpp
-│   └── RenderablePrimitives.hpp
+│   ├── SceneBuilder.cpp
+│   └── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, Glyph) + RenderableScene
 │
-└── ... (existing directories)
+├── CoordinateTransform/           # MVP matrix utilities + inverse transforms
+│   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
+│   ├── ViewState.cpp
+│   ├── TimeRange.hpp              # TimeFrame-aware X-axis bounds
+│   ├── TimeAxisCoordinates.hpp    # Canvas X ↔ Time, Canvas Y ↔ World Y conversions
+│   ├── TimeFrameAdapters.hpp      # C++20 range adapters for TimeFrame conversion
+│   ├── SeriesCoordinateQuery.hpp  # World Y → Series lookup
+│   ├── Matrices.hpp               # Matrix construction helpers
+│   ├── Matrices.cpp
+│   ├── ScreenToWorld.hpp          # Generic inverse VP transform
+│   ├── ScreenToWorld.cpp
+│   ├── SeriesMatrices.hpp         # Per-series Model matrix builders + inverse
+│   └── SeriesMatrices.cpp
+│
+├── Interaction/                   # Hit testing and interaction controllers
+│   ├── HitTestResult.hpp          # Result struct with optional EntityId
+│   ├── SceneHitTester.hpp         # Multi-strategy hit testing
+│   └── IntervalDragController.hpp # State machine for interval edge dragging
+│
+├── DataTypes/                     # Style and configuration structs
+│   ├── SeriesStyle.hpp            # Color, alpha, thickness (rendering)
+│   ├── SeriesLayoutResult.hpp     # Layout output (y_center, height)
+│   └── SeriesDataCache.hpp        # Cached statistics (std_dev, mean)
+│
+├── Transformers/                  # Data-to-geometry converters
+│   ├── GapDetector.hpp            # Analog → segmented PolyLineBatch
+│   └── GapDetector.cpp
+│
+└── Export/                        # SVG and other export formats
+    ├── SVGPrimitives.hpp          # Batch → SVG element conversion
+    └── SVGPrimitives.cpp
 ```
 
 **Note on Data Object Integration:**
@@ -625,20 +668,22 @@ WhiskerToolbox currently has three parallel implementations for event-like visua
 2.  **Unified MVP Logic**: OpenGL and SVG use the exact same matrix calculation functions.
 3.  **Universal Interaction**: Hover/Click detection works via `EntityId` lookup across all plot types.
 
-## Current Architecture Pain Points
+## Architecture Status
 
-### DataViewer Issues
+### Completed Migrations
 
-1. **XAxis isolation**: The current `XAxis` class manages time range independently, without knowledge of `TimeFrame` objects. It should integrate with `ViewState` and respect the bounds of the underlying `TimeFrame` to prevent scrolling/zooming beyond valid data ranges.
+The following architectural improvements have been completed:
 
-2. ~~**Duplicate series storage**~~: ✅ **RESOLVED** — Eliminated `PlottingManager` series storage. Series data now lives only in `OpenGLWidget`. `LayoutCalculator` (renamed from `PlottingManager`) is now a pure layout calculator with no data storage.
+1. ✅ **TimeRange replaces XAxis**: The legacy `XAxis` class has been replaced with `TimeRange`, which integrates with `TimeFrame` to enforce valid data bounds and prevent scrolling/zooming beyond the available data range.
 
-3. ~~**DisplayOptions conflation**~~: ✅ **RESOLVED** — Split `DisplayOptions` into three separate structs:
+2. ✅ **Unified series storage**: Eliminated duplicate series storage. Series data now lives only in `OpenGLWidget`. Layout computation is handled by `LayoutEngine` with no data storage.
+
+3. ✅ **DisplayOptions split**: Split `DisplayOptions` into three separate structs:
    - `SeriesStyle`: Rendering properties (color, alpha, thickness)
    - `SeriesLayoutResult`: Layout output (allocated_y_center, allocated_height)
    - `SeriesDataCache`: Cached calculations (std_dev, mean)
 
-4. **Per-draw-call vertex generation**: Each render frame, `OpenGLWidget` rebuilds vertex arrays inline. This should be separated into data preparation (CorePlotting) and rendering (OpenGL).
+4. ✅ **Scene-based rendering**: `OpenGLWidget` now uses `SceneBuilder` to construct `RenderableScene` objects, separating data preparation from rendering.
 
 ### Matrix Architecture Comparison
 
@@ -711,7 +756,7 @@ The `RenderableScene` is the **output** of the layout process, not a replacement
 
 ### TimeRange: Bounds-Aware X-Axis
 
-The current `XAxis` class is isolated and doesn't interact with `TimeFrame` objects. The new `TimeRange` integrates with `ViewState` and respects data bounds:
+`TimeRange` integrates with `ViewState` and respects data bounds:
 
 ```cpp
 // CorePlotting/CoordinateTransform/TimeRange.hpp
@@ -1395,61 +1440,7 @@ RenderablePolyLineBatch createEpochs(
 
 ## Directory Structure
 
-```
-src/CorePlotting/
-├── CMakeLists.txt
-├── DESIGN.md                      # This document
-├── ROADMAP.md                     # Implementation roadmap
-│
-├── Mappers/                       # Visualization-specific position mapping
-│   ├── MappedElement.hpp          # Common element types (MappedElement, MappedRectElement, MappedVertex)
-│   ├── MappedLineView.hpp         # Line view type for multi-line ranges
-│   ├── MapperConcepts.hpp         # C++20 concepts for range requirements
-│   ├── TimeSeriesMapper.hpp       # DataViewer: events→time, intervals→time, analog→time
-│   ├── SpatialMapper.hpp          # SpatialOverlay: points→x/y, lines→x/y
-│   └── RasterMapper.hpp           # Raster/PSTH: events→relative time
-│
-├── SceneGraph/                    # Generic scene assembly (position-agnostic)
-│   ├── RenderablePrimitives.hpp   # Batches (PolyLine, Rect, Glyph)
-│   └── SceneBuilder.hpp           # Range-based builder: positions[] → batches + QuadTree
-│
-├── Layout/                        # Plot-type-specific layout strategies
-│   ├── LayoutEngine.hpp           # Strategy pattern coordinator
-│   ├── SeriesLayout.hpp           # Per-series layout result
-│   ├── StackedLayoutStrategy.hpp  # DataViewer: vertical stacking
-│   ├── RowLayoutStrategy.hpp      # Raster: equal-height rows
-│   └── SpatialLayoutStrategy.hpp  # SpatialOverlay: bounds fitting
-│
-├── Transformers/                  # Data-to-geometry converters (low-level)
-│   └── GapDetector.hpp            # Analog → segmented PolyLineBatch
-│
-├── CoordinateTransform/           # MVP matrix utilities + inverse transforms
-│   ├── ViewState.hpp              # Camera state (zoom, pan, bounds)
-│   ├── TimeRange.hpp              # TimeFrame-aware X-axis bounds
-│   ├── TimeAxisCoordinates.hpp    # Canvas X ↔ Time, Canvas Y ↔ World Y conversions
-│   │                              # Includes: TimeAxisParams, YAxisParams,
-│   │                              # canvasXToTime, timeToCanvasX, canvasYToWorldY,
-│   │                              # worldYToCanvasY, worldYToNDC, ndcToWorldY
-│   ├── TimeFrameAdapters.hpp      # C++20 range adapters for TimeFrame conversion
-│   ├── SeriesCoordinateQuery.hpp  # World Y → Series lookup (queries LayoutResponse)
-│   ├── Matrices.hpp               # Matrix construction helpers
-│   ├── ScreenToWorld.hpp          # Generic inverse VP transform
-│   └── SeriesMatrices.hpp         # Per-series Model matrix builders + inverse transforms
-│                                   # Includes: worldYToAnalogValue, analogValueToWorldY
-│
-├── Interaction/                   # Hit testing and interaction controllers
-│   ├── HitTestResult.hpp          # Result struct with optional EntityId
-│   ├── SceneHitTester.hpp         # Multi-strategy hit testing through SceneGraph
-│   └── IntervalDragController.hpp # State machine for interval edge dragging
-│
-├── DataTypes/                     # Style and configuration structs
-│   ├── SeriesStyle.hpp            # Color, alpha, thickness (rendering)
-│   ├── SeriesLayoutResult.hpp     # Layout output (y_center, height)
-│   └── SeriesDataCache.hpp        # Cached statistics (std_dev, mean)
-│
-└── Export/                        # SVG and other export formats
-    └── SVGPrimitives.hpp          # Batch → SVG element conversion
-```
+See the "Directory Structure" subsection in "Architectural Evolution: Position Mappers" above for the complete, up-to-date directory listing.
 
 ## Core Concepts
 
@@ -1522,7 +1513,7 @@ if (hit) {
 | `SpatialMapper` | `Mappers/` | SpatialOverlay: points/lines → direct X/Y positions |
 | `RasterMapper` | `Mappers/` | Raster/PSTH: events → relative-time positions |
 | **SceneBuilder** | `SceneGraph/` | **Generic**: positions[] + entity_ids[] → RenderableScene |
-| `TimeRange` | `CoordinateTransform/` | TimeFrame-aware X-axis bounds management |
+| `TimeRange` | `CoordinateTransform/` | TimeFrame-aware X-axis bounds (replaces legacy XAxis) |
 | `TimeSeriesViewState` | `CoordinateTransform/` | Combined time + Y-axis camera state |
 | `LayoutEngine` | `Layout/` | Calculates layout transforms for series positioning |
 | `SeriesLayout` | `Layout/` | Output: X/Y transforms (offset, scale, bounds) |
@@ -1582,16 +1573,16 @@ if (hit) {
 3. **Model = per-series, View/Projection = shared**: Consistent MVP pattern for time-series
 4. **RenderableScene is renderer-agnostic**: Same scene feeds OpenGL and SVG export
 
-### Migration from Current Architecture
+### Completed Migrations
 
-| Current (DataViewer) | New (CorePlotting) |
-|---------------------|---------------------|
-| `XAxis` | `TimeRange` (TimeFrame-aware) |
-| `PlottingManager` series storage | Removed (single source in widget) |
-| `PlottingManager` allocation methods | `LayoutEngine` → `SeriesLayout` |
-| `NewAnalogTimeSeriesDisplayOptions` | Split into `SeriesStyle` + `SeriesLayout` |
-| `MVP_*.cpp` in `DataViewer/` | `SeriesMatrices.cpp` in `CorePlotting/` |
-| Inline vertex generation | `Mapper` → `SceneBuilder` → `RenderableBatch` |
-| `SceneBuilder.addEventSeries(series, tf)` | `Mapper.mapEvents()` → `SceneBuilder.addGlyphs(positions)` |
-| `_verticalPanOffset`, `_yMin`, `_yMax` | `ViewState` |
+| Legacy Component | New (CorePlotting) | Status |
+|------------------|---------------------|--------|
+| `XAxis` | `TimeRange` (TimeFrame-aware) | ✅ Complete |
+| `PlottingManager` series storage | Removed (single source in widget) | ✅ Complete |
+| `PlottingManager` allocation methods | `LayoutEngine` → `SeriesLayout` | ✅ Complete |
+| `NewAnalogTimeSeriesDisplayOptions` | Split into `SeriesStyle` + `SeriesLayout` | ✅ Complete |
+| `MVP_*.cpp` in `DataViewer/` | `SeriesMatrices.cpp` in `CorePlotting/` | ✅ Complete |
+| Inline vertex generation | `Mapper` → `SceneBuilder` → `RenderableBatch` | ✅ Complete |
+| `SceneBuilder.addEventSeries(series, tf)` | `Mapper.mapEvents()` → `SceneBuilder.addGlyphs(positions)` | ✅ Complete |
+| `_verticalPanOffset`, `_yMin`, `_yMax` | `TimeSeriesViewState` | ✅ Complete |
 

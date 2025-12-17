@@ -2,7 +2,7 @@
 find_package(glm CONFIG REQUIRED)
 
 set(DATAVIEWER_SOURCES
-    XAxis.hpp
+    #XAxis.hpp
     LayoutCalculator/LayoutCalculator.hpp
     LayoutCalculator/LayoutCalculator.cpp
 
