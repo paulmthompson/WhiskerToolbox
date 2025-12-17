@@ -222,10 +222,29 @@ private:
  * 
  * This separation allows independent control of spatial (Y) and
  * temporal (X) visualization parameters.
+ * 
+ * Y-AXIS STATE (Phase 4.7):
+ * The y_min, y_max, and vertical_pan_offset fields replace the legacy
+ * OpenGLWidget::_yMin, _yMax, _verticalPanOffset members. These are
+ * used for:
+ * - Projection matrix Y bounds (y_min, y_max in NDC)
+ * - Pan offset for interactive vertical scrolling
+ * - Global scaling factors applied uniformly to all series
  */
 struct TimeSeriesViewState {
-    ViewState view_state;     ///< Y-axis camera state
+    ViewState view_state;     ///< Y-axis camera state (general)
     TimeRange time_range;     ///< X-axis time bounds
+    
+    // Y-axis viewport bounds (typically -1 to +1 in NDC)
+    float y_min{-1.0f};       ///< Minimum Y in normalized device coordinates
+    float y_max{1.0f};        ///< Maximum Y in normalized device coordinates
+    
+    // Y-axis pan offset (interactive vertical scrolling)
+    float vertical_pan_offset{0.0f};  ///< Vertical pan in NDC units
+    
+    // Global scale factors (applied uniformly to all series)
+    float global_zoom{1.0f};           ///< Global zoom factor for all series
+    float global_vertical_scale{1.0f}; ///< Global vertical scaling factor
     
     /**
      * @brief Construct with default ViewState and TimeRange
@@ -240,6 +259,35 @@ struct TimeSeriesViewState {
      */
     explicit TimeSeriesViewState(TimeFrame const& tf)
         : time_range(TimeRange::fromTimeFrame(tf)) {}
+    
+    /**
+     * @brief Apply vertical pan delta
+     * 
+     * Adjusts the vertical_pan_offset by the given amount.
+     * Positive values pan upward, negative values pan downward.
+     * 
+     * @param delta Change in pan offset (in NDC units)
+     */
+    void applyVerticalPanDelta(float delta) {
+        vertical_pan_offset += delta;
+    }
+    
+    /**
+     * @brief Reset vertical pan to centered
+     */
+    void resetVerticalPan() {
+        vertical_pan_offset = 0.0f;
+    }
+    
+    /**
+     * @brief Get effective Y bounds after pan offset
+     * 
+     * Returns the Y range accounting for the current pan offset.
+     * Used for computing the actual visible Y region.
+     */
+    [[nodiscard]] std::pair<float, float> getEffectiveYBounds() const {
+        return {y_min - vertical_pan_offset, y_max - vertical_pan_offset};
+    }
 };
 
 } // namespace CorePlotting

@@ -1,6 +1,55 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
+/**
+ * @file OpenGLWidget.hpp
+ * @brief OpenGL-based time-series data visualization widget
+ * 
+ * @section Architecture
+ * 
+ * This widget uses a layered architecture separating data, layout, and rendering:
+ * 
+ * **Layer 1: Data Storage**
+ * - Series data stored in typed maps (_analog_series, _digital_event_series, _digital_interval_series)
+ * - Each series has associated DisplayOptions controlling appearance and layout
+ * 
+ * **Layer 2: View State (CorePlotting::TimeSeriesViewState)**
+ * - X-axis: TimeRange with bounds-aware scrolling/zooming
+ * - Y-axis: y_min/y_max viewport bounds + vertical_pan_offset
+ * - Global scaling: global_zoom and global_vertical_scale applied to all series
+ * 
+ * **Layer 3: Layout (LayoutCalculator)**
+ * - Calculates vertical positioning for stacked series
+ * - Supports spike sorter configuration for grouped channels
+ * - Optional - can be null for simple single-series displays
+ * 
+ * **Layer 4: Rendering (PlottingOpenGL::SceneRenderer)**
+ * - Converts series data + layout to RenderableBatch objects
+ * - Handles polylines (analog), glyphs (events), rectangles (intervals)
+ * - Model/View/Projection matrix computation via CorePlotting functions
+ * 
+ * **Layer 5: Interaction (CorePlotting::IntervalDragController, SceneHitTester)**
+ * - Interval edge dragging with constraint enforcement
+ * - Series region queries for tooltips and selection
+ * - Coordinate transforms (screen ↔ world ↔ time)
+ * 
+ * @section Phase47Migration Phase 4.7 Migration Notes
+ * 
+ * The Y-axis state was migrated from separate members (_yMin, _yMax, _verticalPanOffset,
+ * _global_zoom) to the unified _view_state (CorePlotting::TimeSeriesViewState).
+ * 
+ * - Global zoom/scale: _view_state.global_zoom, _view_state.global_vertical_scale
+ * - Y viewport: _view_state.y_min, _view_state.y_max
+ * - Vertical pan: _view_state.vertical_pan_offset
+ * - X-axis: _view_state.time_range (bounds-aware from TimeFrame)
+ * 
+ * LayoutCalculator is still used for layout calculations but no longer as source
+ * of truth for zoom/pan parameters.
+ * 
+ * @see CorePlotting/DESIGN.md for full architecture details
+ * @see CorePlotting/ROADMAP.md for migration history
+ */
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp"
 #include "CorePlotting/Interaction/IntervalDragController.hpp"
@@ -305,8 +354,8 @@ public:
      */
     [[nodiscard]] int64_t getVisibleEnd() const { return _view_state.time_range.end; }
     
-    [[nodiscard]] float getYMin() const { return _yMin; }
-    [[nodiscard]] float getYMax() const { return _yMax; }
+    [[nodiscard]] float getYMin() const { return _view_state.y_min; }
+    [[nodiscard]] float getYMax() const { return _view_state.y_max; }
     [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
     [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
     [[nodiscard]] auto const & getAnalogSeriesMap() const { return _analog_series; }
@@ -351,29 +400,40 @@ public:
     void setGlobalScale(float scale) {
 
         std::cout << "Global zoom set to " << scale << std::endl;
-        _global_zoom = scale;
+        _view_state.global_zoom = scale;
         updateCanvas(_time);
     }
+    
+    /**
+     * @brief Set global vertical scale factor
+     * @param scale Vertical scale factor (1.0 = normal)
+     */
+    void setGlobalVerticalScale(float scale) {
+        _view_state.global_vertical_scale = scale;
+        updateCanvas(_time);
+    }
+    
+    /**
+     * @brief Get current global zoom factor
+     * @return Global zoom value
+     */
+    [[nodiscard]] float getGlobalZoom() const { return _view_state.global_zoom; }
+    
+    /**
+     * @brief Get current global vertical scale
+     * @return Global vertical scale value
+     */
+    [[nodiscard]] float getGlobalVerticalScale() const { return _view_state.global_vertical_scale; }
+    
+    /**
+     * @brief Get current vertical pan offset
+     * @return Vertical pan offset in NDC units
+     */
+    [[nodiscard]] float getVerticalPanOffset() const { return _view_state.vertical_pan_offset; }
 
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
         return std::make_pair(width(), height());
     }
-
-    /**
-     * @brief Enable or disable the new SceneRenderer-based rendering.
-     * 
-     * When enabled, series are converted to CorePlotting RenderableBatch
-     * objects and rendered using the PlottingOpenGL renderers.
-     * When disabled, the legacy inline vertex generation is used.
-     * 
-     * @param enabled True to use new renderer system
-     */
-    void setUseSceneRenderer(bool enabled) {
-        _use_scene_renderer = enabled;
-        updateCanvas(_time);
-    }
-
-    [[nodiscard]] bool isUsingSceneRenderer() const { return _use_scene_renderer; }
 
     // Coordinate conversion methods
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
@@ -433,14 +493,11 @@ private:
     void drawDashedLine(LineParameters const & params);
     void drawDraggedInterval();
     void drawNewIntervalBeingCreated();
-    void _updateYViewBoundaries();
 
     // New SceneRenderer-based rendering methods
     /**
      * @brief Render all series using the PlottingOpenGL SceneRenderer.
      * 
-     * Converts series data to RenderableBatch objects and uses the new
-     * renderer system. Called when _use_scene_renderer is true.
      */
     void renderWithSceneRenderer();
 
@@ -516,19 +573,13 @@ private:
     int m_dashedResolutionLoc{};
     int m_dashedDashSizeLoc{};
     int m_dashedGapSizeLoc{};
-
-    float _global_zoom{1.0f};
-    float _verticalPanOffset{0.0f};
+    
     QPoint _lastMousePos{};
     bool _isPanning{false};
-    float _yMin{-1.0f};
-    float _yMax{1.0f};
-    float _ySpacing{0.1f};
+    float _ySpacing{0.1f};  ///< Vertical spacing factor for series
 
     std::string m_background_color{"#000000"};// black
     std::string m_axis_color{"#FFFFFF"};      // white (for dark theme)
-
-    std::vector<GLfloat> m_vertices;// for testing
 
     PlotTheme _plot_theme{PlotTheme::Dark};
 
@@ -573,10 +624,6 @@ private:
     // These use the new CorePlotting RenderableBatch approach for rendering.
     // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
     std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
-
-    // Flag to enable/disable using the new renderer system
-    // Set to false by default for backwards compatibility during migration
-    bool _use_scene_renderer{false};
 
     // CorePlotting hit testing infrastructure (Phase 4.3 migration)
     // The hit tester provides unified hit testing via SceneHitTester

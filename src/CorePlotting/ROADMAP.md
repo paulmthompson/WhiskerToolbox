@@ -722,19 +722,42 @@ This doesn't generalize to:
     - DataViewer_Widget: Updated `_updateLabels()` and wheel zoom handler
     - DataViewer_Widget.test.cpp: Updated all test cases to use new API
     
-- [ ] **Replace Y-axis state** (deferred to Phase 4.7):
-    - `_yMin, _yMax` → `_view_state.view_state.data_bounds`
-    - `_verticalPanOffset` → `_view_state.view_state.pan_offset_y`
+- [x] **Replace Y-axis state** ✓ (completed in Phase 4.7):
+    - `_yMin, _yMax` → `_view_state.y_min, _view_state.y_max`
+    - `_verticalPanOffset` → `_view_state.vertical_pan_offset`
+    - `_global_zoom` → `_view_state.global_zoom`
     
 - [x] **Verify:** All tests pass ✓
 
-### 4.7 Final Cleanup
-- [ ] Remove `_plotting_manager` dependency (replaced by LayoutEngine)
-- [ ] Remove `m_vertices` class member (batches own their data)
-- [ ] Remove per-series `_series_y_position` map (use LayoutEngine results)
-- [ ] Migrate Y-axis state to ViewState (deferred from 4.6)
-- [ ] Update tests to use CorePlotting types directly
-- [ ] Document new architecture in header comments
+### 4.7 Final Cleanup ✅
+- [x] **Migrate Y-axis state to ViewState** ✓:
+    - Extended `TimeSeriesViewState` with y_min, y_max, vertical_pan_offset, global_zoom, global_vertical_scale
+    - Removed legacy `_yMin`, `_yMax`, `_verticalPanOffset`, `_global_zoom` members from OpenGLWidget
+    - All rendering code now uses `_view_state.*` for Y-axis parameters
+    - Added `applyVerticalPanDelta()`, `resetVerticalPan()`, `getEffectiveYBounds()` helpers
+    
+- [x] **Remove `m_vertices` class member** ✓:
+    - Removed unused `std::vector<GLfloat> m_vertices` from OpenGLWidget
+    - Batches now own their own vertex data
+    
+- [x] **Remove per-series `_series_y_position` map** ✓:
+    - Already removed in earlier phase (no changes needed)
+    
+- [x] **Add public accessors for ViewState parameters** ✓:
+    - Added `getGlobalZoom()`, `getGlobalVerticalScale()`, `getVerticalPanOffset()`
+    - Added `setGlobalVerticalScale()` for DataViewer_Widget control
+    
+- [x] **Document new architecture** ✓:
+    - Added comprehensive header documentation to OpenGLWidget.hpp
+    - Documents layer architecture: Data → ViewState → Layout → Rendering → Interaction
+    - Documents Phase 4.7 migration notes
+    
+- [x] **Partial removal of _plotting_manager dependency** ✓:
+    - Global zoom/scale/pan parameters now read from `_view_state`, not `_plotting_manager`
+    - LayoutCalculator still used for layout calculations (stacking, spike sorter config)
+    - `_plotting_manager->setPanOffset()` calls kept for LayoutCalculator sync
+    
+- [x] **Verify:** All tests pass ✓
 
 ---
 

@@ -26,7 +26,6 @@
 #include <QPointer>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtx/transform.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -125,8 +124,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         // A positive deltaY (moving down) should move the view up
         float const normalizedDeltaY = -1.0f * static_cast<float>(deltaY) / static_cast<float>(height()) * 2.0f;
 
-        // Adjust vertical offset based on movement
-        _verticalPanOffset += normalizedDeltaY;
+        // Adjust vertical offset based on movement using ViewState method
+        _view_state.applyVerticalPanDelta(normalizedDeltaY);
 
         _lastMousePos = event->pos();
         update();            // Request redraw
@@ -354,7 +353,6 @@ void OpenGLWidget::setupVertexAttribs() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Legacy draw functions removed in Phase 4.5 migration
 // All series rendering now uses SceneRenderer path via renderWithSceneRenderer()
 // See SceneBuildingHelpers for batch construction and PlottingOpenGL for rendering
 ///////////////////////////////////////////////////////////////////////////////
@@ -375,12 +373,6 @@ void OpenGLWidget::paintGL() {
     int64_t const zoom = _view_state.time_range.getWidth();
     _view_state.time_range.setCenterAndZoom(currentTime, zoom);
 
-    // Update Y boundaries based on pan and zoom
-    _updateYViewBoundaries();
-
-    // Use the SceneRenderer path for all series rendering
-    // The _use_scene_renderer flag is kept for backwards compatibility
-    // but the legacy path is no longer maintained (Phase 4.5 migration)
     if (_scene_renderer && _scene_renderer->isInitialized()) {
         renderWithSceneRenderer();
     }
@@ -435,8 +427,8 @@ void OpenGLWidget::drawAxis() {
 
     // Draw horizontal line at x=0 with 4D coordinates (x, y, 0, 1)
     std::array<GLfloat, 8> lineVertices = {
-            0.0f, _yMin, 0.0f, 1.0f,
-            0.0f, _yMax, 0.0f, 1.0f};
+            0.0f, _view_state.y_min, 0.0f, 1.0f,
+            0.0f, _view_state.y_max, 0.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
@@ -623,8 +615,8 @@ void OpenGLWidget::drawGridLines() {
         LineParameters gridLine;
         gridLine.xStart = normalized_x;
         gridLine.xEnd = normalized_x;
-        gridLine.yStart = _yMin;
-        gridLine.yEnd = _yMax;
+        gridLine.yStart = _view_state.y_min;
+        gridLine.yEnd = _view_state.y_max;
         gridLine.dashLength = 3.0f;// Shorter dashes for grid lines
         gridLine.gapLength = 3.0f; // Shorter gaps for grid lines
 
@@ -632,21 +624,8 @@ void OpenGLWidget::drawGridLines() {
     }
 }
 
-void OpenGLWidget::_updateYViewBoundaries() {
-    /*
-    float viewHeight = 2.0f;
-
-    // Calculate center point (adjusted by vertical pan)
-    float centerY = _verticalPanOffset;
-    
-    // Calculate min and max values
-    _yMin = centerY - (viewHeight / 2.0f);
-    _yMax = centerY + (viewHeight / 2.0f);
-     */
-}
-
 ///////////////////////////////////////////////////////////////////////////////
-// TimeRange / ViewState Methods (Phase 4.6 Migration)
+// TimeRange / ViewState Methods
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::setXLimit(int xmax) {
@@ -717,7 +696,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     auto const & display_options = analog_it->second.display_options;
 
     // Step 1: Convert canvas Y to world Y using CorePlotting
-    CorePlotting::YAxisParams y_params(_yMin, _yMax, height(), _verticalPanOffset);
+    CorePlotting::YAxisParams y_params(_view_state.y_min, _view_state.y_max, height(), _view_state.vertical_pan_offset);
     float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
 
     // Step 2: Build the same AnalogSeriesMatrixParams used for rendering
@@ -727,11 +706,11 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     model_params.allocated_height = display_options->layout.allocated_height;
     model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
     model_params.user_scale_factor = display_options->user_scale_factor;
-    model_params.global_zoom = _plotting_manager ? _plotting_manager->getGlobalZoom() : 1.0f;
+    model_params.global_zoom = _view_state.global_zoom;
     model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
     model_params.data_mean = display_options->data_cache.cached_mean;
     model_params.std_dev = display_options->data_cache.cached_std_dev;
-    model_params.global_vertical_scale = _plotting_manager ? _plotting_manager->getGlobalVerticalScale() : 1.0f;
+    model_params.global_vertical_scale = _view_state.global_vertical_scale;
 
     // Step 3: Use CorePlotting inverse transform to get data value
     return CorePlotting::worldYToAnalogValue(world_y, model_params);
@@ -804,8 +783,7 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
 
 // Interval edge dragging methods
 std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
-    // Phase 4.3 migration: Use CorePlotting TimeAxisCoordinates for coordinate conversion
-    
+
     static_cast<void>(canvas_y);  // Y not used for edge detection
 
     // Use CorePlotting time axis utilities for coordinate conversion
@@ -1120,8 +1098,8 @@ void OpenGLWidget::drawDraggedInterval() {
 
     auto const start_time = static_cast<float>(_view_state.time_range.start);
     auto const end_time = static_cast<float>(_view_state.time_range.end);
-    auto const min_y = _yMin;
-    auto const max_y = _yMax;
+    auto const min_y = _view_state.y_min;
+    auto const max_y = _view_state.y_max;
 
     // Check if the dragged interval is visible
     if (drag_state.current_end < static_cast<int64_t>(start_time) || drag_state.current_start > static_cast<int64_t>(end_time)) {
@@ -1437,8 +1415,8 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
 
     auto const start_time = static_cast<float>(_view_state.time_range.start);
     auto const end_time = static_cast<float>(_view_state.time_range.end);
-    auto const min_y = _yMin;
-    auto const max_y = _yMax;
+    auto const min_y = _view_state.y_min;
+    auto const max_y = _view_state.y_max;
 
     // Check if the new interval is visible
     if (_new_interval_end_time < static_cast<int64_t>(start_time) || _new_interval_start_time > static_cast<int64_t>(end_time)) {
@@ -1507,7 +1485,7 @@ void OpenGLWidget::cancelTooltipTimer() {
 }
 
 std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
-    // Use CorePlotting SceneHitTester for series region queries (Phase 4.3 migration)
+    // Use CorePlotting SceneHitTester for series region queries 
     
     // Rebuild layout if dirty (const_cast needed for lazy evaluation pattern)
     // Note: This is safe because rebuildLayoutResponse only modifies cache state
@@ -1524,7 +1502,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     float const ndc_y = -1.0f + 2.0f * (static_cast<float>(height()) - canvas_y) / static_cast<float>(height());
 
     // Apply vertical pan offset to get the actual Y position in the coordinate system
-    float const world_y = ndc_y - _verticalPanOffset;
+    float const world_y = ndc_y - _view_state.vertical_pan_offset;
     
     // Use SceneHitTester to query series region
     CorePlotting::HitTestResult result = _hit_tester.querySeriesRegion(
@@ -1596,10 +1574,10 @@ void OpenGLWidget::renderWithSceneRenderer() {
 
     // Build shared View and Projection matrices
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = _verticalPanOffset;
+    view_params.vertical_pan_offset = _view_state.vertical_pan_offset;
 
     // Shared projection matrix (time range to NDC)
-    glm::mat4 projection = CorePlotting::getAnalogProjectionMatrix(start_time, end_time, _yMin, _yMax);
+    glm::mat4 projection = CorePlotting::getAnalogProjectionMatrix(start_time, end_time, _view_state.y_min, _view_state.y_max);
 
     // Shared view matrix (global pan)
     glm::mat4 view = CorePlotting::getAnalogViewMatrix(view_params);
@@ -1674,8 +1652,8 @@ void OpenGLWidget::uploadAnalogBatches() {
         display_options->layout.allocated_y_center = allocated_y_center;
         display_options->layout.allocated_height = allocated_height;
 
-        // Apply PlottingManager pan offset
-        _plotting_manager->setPanOffset(_verticalPanOffset);
+        // Apply PlottingManager pan offset (using _view_state as source of truth)
+        _plotting_manager->setPanOffset(_view_state.vertical_pan_offset);
 
         // Build parameter structs for CorePlotting MVP functions
         CorePlotting::AnalogSeriesMatrixParams model_params;
@@ -1683,14 +1661,14 @@ void OpenGLWidget::uploadAnalogBatches() {
         model_params.allocated_height = display_options->layout.allocated_height;
         model_params.intrinsic_scale = display_options->scaling.intrinsic_scale;
         model_params.user_scale_factor = display_options->user_scale_factor;
-        model_params.global_zoom = _plotting_manager->getGlobalZoom();
+        model_params.global_zoom = _view_state.global_zoom;
         model_params.user_vertical_offset = display_options->scaling.user_vertical_offset;
         model_params.data_mean = display_options->data_cache.cached_mean;
         model_params.std_dev = display_options->data_cache.cached_std_dev;
-        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        model_params.global_vertical_scale = _view_state.global_vertical_scale;
 
         CorePlotting::ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+        view_params.vertical_pan_offset = _view_state.vertical_pan_offset;
 
         // Parse color
         int r, g, b;
@@ -1788,8 +1766,8 @@ void OpenGLWidget::uploadEventBatches() {
         display_options->layout.allocated_y_center = allocated_y_center;
         display_options->layout.allocated_height = allocated_height;
 
-        // Apply PlottingManager pan offset
-        _plotting_manager->setPanOffset(_verticalPanOffset);
+        // Apply PlottingManager pan offset (using _view_state as source of truth)
+        _plotting_manager->setPanOffset(_view_state.vertical_pan_offset);
 
         // Build model params
         CorePlotting::EventSeriesMatrixParams model_params;
@@ -1797,15 +1775,15 @@ void OpenGLWidget::uploadEventBatches() {
         model_params.allocated_height = display_options->layout.allocated_height;
         model_params.event_height = 0.0f;
         model_params.margin_factor = display_options->margin_factor;
-        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
-        model_params.viewport_y_min = _yMin;
-        model_params.viewport_y_max = _yMax;
+        model_params.global_vertical_scale = _view_state.global_vertical_scale;
+        model_params.viewport_y_min = _view_state.y_min;
+        model_params.viewport_y_max = _view_state.y_max;
         model_params.plotting_mode = (display_options->plotting_mode == EventPlottingMode::FullCanvas)
                                              ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
                                              : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
 
         CorePlotting::ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+        view_params.vertical_pan_offset = _view_state.vertical_pan_offset;
 
         // Parse color
         int r, g, b;
@@ -1854,20 +1832,20 @@ void OpenGLWidget::uploadIntervalBatches() {
         display_options->layout.allocated_y_center = allocated_y_center;
         display_options->layout.allocated_height = allocated_height;
 
-        // Apply PlottingManager pan offset
-        _plotting_manager->setPanOffset(_verticalPanOffset);
+        // Apply PlottingManager pan offset (using _view_state as source of truth)
+        _plotting_manager->setPanOffset(_view_state.vertical_pan_offset);
 
         // Build model params
         CorePlotting::IntervalSeriesMatrixParams model_params;
         model_params.allocated_y_center = display_options->layout.allocated_y_center;
         model_params.allocated_height = display_options->layout.allocated_height;
         model_params.margin_factor = display_options->margin_factor;
-        model_params.global_zoom = _plotting_manager->getGlobalZoom();
-        model_params.global_vertical_scale = _plotting_manager->getGlobalVerticalScale();
+        model_params.global_zoom = _view_state.global_zoom;
+        model_params.global_vertical_scale = _view_state.global_vertical_scale;
         model_params.extend_full_canvas = display_options->extend_full_canvas;
 
         CorePlotting::ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = _plotting_manager->getPanOffset();
+        view_params.vertical_pan_offset = _view_state.vertical_pan_offset;
 
         // Parse color
         int r, g, b;
