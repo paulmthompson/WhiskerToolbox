@@ -762,141 +762,55 @@ This doesn't generalize to:
 ### 4.8 Adopt TimeSeriesMapper in SceneBuildingHelpers ✅
 **Goal:** Replace manual coordinate mapping in SceneBuildingHelpers with TimeSeriesMapper ranges.
 
-**Problem Solved:** `SceneBuildingHelpers.cpp` reimplemented coordinate mapping logic that already existed in `TimeSeriesMapper`.
+**Summary:** Refactored `SceneBuildingHelpers.cpp` to use range-based `TimeSeriesMapper` API with "local-space layout" pattern. All batch building functions now use mappers (`mapEventsInRange()`, `mapIntervalsInRange()`, `mapAnalogSeriesWithIndices()`) instead of reimplementing coordinate logic.
 
-**Solution:** Refactored to use range-based TimeSeriesMapper API with "local-space layout" pattern:
-
-```cpp
-// New pattern in SceneBuildingHelpers.cpp
-auto local_layout = makeLocalSpaceLayout();  // y_center=0, height=2
-auto mapped_events = mapEventsInRange(series, local_layout, *tf, start, end);
-for (auto const& event : mapped_events) { ... }  // materialize at call site
-```
-
-- [x] **Refactor `buildEventSeriesBatch()`**:
-    - Uses `TimeSeriesMapper::mapEventsInRange()` (returns owning range)
-    - Local-space layout with `y_center=0`, model matrix handles positioning
-    
-- [x] **Refactor `buildIntervalSeriesBatch()`**:
-    - Uses `TimeSeriesMapper::mapIntervalsInRange()` (returns owning range)
-    - Local-space layout with `y_center=0, height=2` for [-1,1] range
-    
-- [x] **Refactor `buildAnalogSeriesBatch()`**:
-    - Uses `TimeSeriesMapper::mapAnalogSeriesWithIndices()` for gap detection
-    - `MappedAnalogVertex` includes `time_index` for gap detection logic
-    
-- [x] **Refactor `buildAnalogSeriesMarkerBatch()`**:
-    - Uses `TimeSeriesMapper::mapAnalogSeries()` 
-    - Materializes at call site for glyph positions
-    
-- [x] **Enhanced TimeSeriesMapper API**:
-    - Fixed `mapEventsInRange()` to return owning range (not vector)
-    - Fixed `mapIntervalsInRange()` to return owning range (not vector)
-    - Added `MappedAnalogVertex` struct with `time_index` for gap detection
-    - Added `mapAnalogSeriesWithIndices()` for gap detection support
-    - Removed "Model-Matrix Compatible Variants" section (~200 lines)
-    - Added comprehensive `@see` tags and API documentation
-    
-- [x] **Verify:** All tests pass ✓
-
-**Benefits Achieved:**
-- Single source of truth for coordinate mapping
-- All mappers return ranges (consistent API)
-- Materialization happens at boundary where needed (SceneBuildingHelpers)
-- Clean separation: Mapper returns range, caller decides when to materialize
+**Key Changes:**
+- `buildEventSeriesBatch()`, `buildIntervalSeriesBatch()`, `buildAnalogSeriesBatch()`, `buildAnalogSeriesMarkerBatch()` all use TimeSeriesMapper
+- Enhanced TimeSeriesMapper with `MappedAnalogVertex` (includes `time_index` for gap detection)
+- All mappers return ranges; materialization at call site
+- All tests pass ✓
 
 ### 4.9 Unify Layout Systems ✅
 **Goal:** Replace dual layout systems (LayoutCalculator + manual LayoutResponse rebuild) with single LayoutEngine.
 
-**Problem Solved:** OpenGLWidget maintained two parallel layout representations—`LayoutCalculator` for computation and manually-rebuilt `LayoutResponse` for hit testing—causing code duplication and potential inconsistencies.
+**Summary:** Replaced `LayoutCalculator* _plotting_manager` with `CorePlotting::LayoutEngine _layout_engine`. Layout computation is now centralized—`buildLayoutRequest()` and `computeAndApplyLayout()` build from visible series and update DisplayOptions->layout fields on demand.
 
-**Solution:** Unified under `CorePlotting::LayoutEngine`:
+**Key Changes:**
+- OpenGLWidget owns `LayoutEngine` with `StackedLayoutStrategy`
+- Spike sorter configuration moved from LayoutCalculator to OpenGLWidget
+- Removed `_plotting_manager` from DataViewer_Widget
+- SVGExporter gets view params from OpenGLWidget directly
+- All tests pass ✓
 
-- [x] **Added `LayoutEngine` instance to OpenGLWidget**:
-    - Replaced `LayoutCalculator* _plotting_manager` with `CorePlotting::LayoutEngine _layout_engine`
-    - Initialized with `StackedLayoutStrategy`
+### 4.10 Adopt SceneBuilder Fluent API ✅
+**Goal:** Replace direct renderer upload with SceneBuilder-based scene construction.
+
+**Solution:** Refactored `renderWithSceneRenderer()` to use `SceneBuilder` fluent API:
+
+- [x] **Refactor `renderWithSceneRenderer()` to use SceneBuilder** ✓
+    - Creates `SceneBuilder`, sets bounds from visible time range
+    - Sets view/projection matrices via `builder.setMatrices()`
     
-- [x] **Implemented `buildLayoutRequest()` and `computeAndApplyLayout()`**:
-    - Builds `LayoutRequest` from all visible series
-    - Computes layout via `_layout_engine.compute(request)`
-    - Updates DisplayOptions->layout fields with computed positions
-    - Called automatically during render when `_layout_response_dirty`
+- [x] **Replace upload methods with builder pattern** ✓
+    - Renamed `uploadAnalogBatches()` → `addAnalogBatchesToBuilder(SceneBuilder&)`
+    - Renamed `uploadEventBatches()` → `addEventBatchesToBuilder(SceneBuilder&)`
+    - Renamed `uploadIntervalBatches()` → `addIntervalBatchesToBuilder(SceneBuilder&)`
+    - Methods now call `builder.addPolyLineBatch()`, `builder.addGlyphBatch()`, `builder.addRectangleBatch()`
     
-- [x] **Moved spike sorter configuration to OpenGLWidget**:
-    - Added `_spike_sorter_configs` map for electrode positions
-    - Added `loadSpikeSorterConfiguration()` / `clearSpikeSorterConfiguration()` methods
-    - `orderAnalogKeysByConfig()` sorts series by Y position when building LayoutRequest
+- [x] **Build scene and upload to SceneRenderer** ✓
+    - Calls `builder.build()` to finalize scene
+    - Uses `_scene_renderer->uploadScene(scene)` then `render()`
     
-- [x] **Removed LayoutCalculator dependency from DataViewer_Widget**:
-    - Removed `_plotting_manager` member and all references
-    - Spike sorter config now loads via `ui->openGLWidget->loadSpikeSorterConfiguration()`
-    - Auto-fill and cleanup functions now query series maps directly from OpenGLWidget
-    
-- [x] **Updated SVGExporter to use OpenGLWidget API**:
-    - Gets `getGlobalZoom()`, `getGlobalVerticalScale()`, `getVerticalPanOffset()` from OpenGLWidget
-    - Removed LayoutCalculator constructor parameter
-    
-- [x] **Fixed `updateCanvas()` to mark layout dirty**:
-    - Ensures layout recomputes when display options change externally
+- [x] **Remove manual batch key map tracking** ✓
+    - Uses `builder.getRectangleBatchKeyMap()` for hit testing
+    - No longer manually populates `_rectangle_batch_key_map`
     
 - [x] **Verify:** All tests pass ✓
 
-**Benefits Achieved:**
-- Single source of truth for layout computation
-- LayoutEngine is Qt-independent and testable
-- DisplayOptions remain configuration-only (layout fields computed on demand)
-- DataViewer_Widget is simpler (no layout management responsibility)
-
-### 4.10 Adopt SceneBuilder Fluent API (Medium Effort)
-**Goal:** Replace direct renderer upload with SceneBuilder-based scene construction.
-
-**Current Problem:** OpenGLWidget uploads batches directly to renderers:
-
-```cpp
-// Current approach - manual renderer management
-_scene_renderer->glyphRenderer().uploadData(batch);
-_scene_renderer->rectangleRenderer().uploadData(batch);
-_scene_renderer->polyLineRenderer().uploadData(batch);
-```
-
-**Library Capability:** `SceneBuilder` provides fluent API that simultaneously builds rendering geometry AND spatial index:
-
-```cpp
-// SceneBuilder approach - unified scene construction
-RenderableScene scene = SceneBuilder()
-    .setBounds(bounds)
-    .addGlyphs("events", TimeSeriesMapper::mapEvents(events, layout, tf), style)
-    .addRectangles("intervals", TimeSeriesMapper::mapIntervals(intervals, layout, tf), style)
-    .addPolyLine("analog", TimeSeriesMapper::mapAnalogSeries(...), entity_id, style)
-    .build();  // Automatically builds QuadTree
-```
-
-- [ ] **Refactor `renderWithSceneRenderer()` to use SceneBuilder**:
-    - Create `SceneBuilder` at start of render
-    - Set bounds from visible time range
-    - Set view/projection matrices
-    
-- [ ] **Replace `uploadAnalogBatches()` with SceneBuilder calls**:
-    - For each analog series: `builder.addPolyLine(key, vertices, entity_id, style)`
-    - Style includes model matrix, color, thickness
-    
-- [ ] **Replace `uploadEventBatches()` with SceneBuilder calls**:
-    - For each event series: `builder.addGlyphs(key, mapped_events, style)`
-    - Use `TimeSeriesMapper::mapEventsInRange()` for positions
-    
-- [ ] **Replace `uploadIntervalBatches()` with SceneBuilder calls**:
-    - For each interval series: `builder.addRectangles(key, mapped_intervals, style)`
-    - Use `TimeSeriesMapper::mapIntervalsInRange()` for positions
-    
-- [ ] **Build scene and pass to SceneRenderer**:
-    - Call `scene = builder.build()`
-    - `SceneRenderer::render(scene)` or upload batches from scene
-    
-- [ ] **Remove manual `_rectangle_batch_key_map` tracking**:
-    - SceneBuilder maintains batch key maps internally
-    - Use `builder.getRectangleBatchKeyMap()` for hit testing
-    
-- [ ] **Verify:** Visual output unchanged, all tests pass
+**Files Modified:**
+- `OpenGLWidget.cpp`: Refactored render path to use SceneBuilder
+- `OpenGLWidget.hpp`: Updated method signatures
+- `CorePlotting/CMakeLists.txt`: Changed include directories from PRIVATE to PUBLIC
 
 **Benefits:**
 - Spatial index built automatically with geometry
@@ -1032,8 +946,8 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 | Phase | Task | Effort | Dependencies | Status |
 |-------|------|--------|--------------|--------|
 | 4.8 | Adopt TimeSeriesMapper in SceneBuildingHelpers | Medium | Phase 3.7 (Mappers) | ✅ Complete |
-| 4.9 | Unify Layout Systems | Medium-High | None | Not Started |
-| 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) | Not Started |
+| 4.9 | Unify Layout Systems | Medium-High | None | ✅ Complete |
+| 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) | ✅ Complete |
 | 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) | Not Started |
 | 4.12 | Integrate GapDetector | Low | 4.8 (can do together) | Not Started |
 | 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) | Not Started |
@@ -1041,9 +955,9 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 **Recommended Order:**
 1. **4.12** (GapDetector) — Low risk, quick win
 2. ~~**4.8** (TimeSeriesMapper)~~ ✅ Complete
-3. **4.9** (LayoutEngine) — Major architectural cleanup
+3. ~~**4.9** (LayoutEngine)~~ ✅ Complete
 4. **4.13** (Matrix params) — Benefits from 4.9 layout changes
-5. **4.10** (SceneBuilder) — Requires 4.8 for range input ✅
+5. ~~**4.10** (SceneBuilder)~~ ✅ Complete
 6. **4.11** (SceneHitTester) — Final integration, depends on unified layout
 
 ---

@@ -6,6 +6,7 @@
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
+#include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
@@ -1579,20 +1580,37 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // Shared view matrix (global pan)
     glm::mat4 view = CorePlotting::getAnalogViewMatrix(view_params);
 
-    // Clear previous scene data
-    _scene_renderer->clearScene();
+    // Create SceneBuilder and set bounds for spatial indexing
+    // Bounds are in world coordinates: X = [start_time, end_time], Y = [y_min, y_max]
+    BoundingBox scene_bounds(
+        static_cast<float>(start_time.getValue()),  // min_x
+        _view_state.y_min,                          // min_y
+        static_cast<float>(end_time.getValue()),    // max_x
+        _view_state.y_max                           // max_y
+    );
+    
+    CorePlotting::SceneBuilder builder;
+    builder.setBounds(scene_bounds);
+    builder.setMatrices(view, projection);
 
-    // Upload batches for each series type
-    uploadAnalogBatches();
-    uploadEventBatches();
-    uploadIntervalBatches();
+    // Add all series batches to the scene builder
+    addAnalogBatchesToBuilder(builder);
+    addEventBatchesToBuilder(builder);
+    addIntervalBatchesToBuilder(builder);
 
-    // Render all uploaded batches
+    // Build the scene (this also builds spatial index for discrete elements)
+    CorePlotting::RenderableScene scene = builder.build();
+    
+    // Store batch key maps for hit testing
+    _rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
+
+    // Upload scene to renderer and render
+    _scene_renderer->uploadScene(scene);
     _scene_renderer->render(view, projection);
 }
 
-void OpenGLWidget::uploadAnalogBatches() {
-    if (!_scene_renderer || !_master_time_frame) {
+void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builder) {
+    if (!_master_time_frame) {
         return;
     }
 
@@ -1648,25 +1666,25 @@ void OpenGLWidget::uploadAnalogBatches() {
             batch_params.render_mode = DataViewerHelpers::AnalogRenderMode::Line;
         }
 
-        // Build and upload the batch based on render mode
+        // Build and add batch to builder based on render mode
         if (batch_params.render_mode == DataViewerHelpers::AnalogRenderMode::Markers) {
             auto batch = DataViewerHelpers::buildAnalogSeriesMarkerBatch(
                     *series, _master_time_frame, batch_params, model_params, view_params);
             if (!batch.positions.empty()) {
-                _scene_renderer->glyphRenderer().uploadData(batch);
+                builder.addGlyphBatch(std::move(batch));
             }
         } else {
             auto batch = DataViewerHelpers::buildAnalogSeriesBatch(
                     *series, _master_time_frame, batch_params, model_params, view_params);
             if (!batch.vertices.empty()) {
-                _scene_renderer->polyLineRenderer().uploadData(batch);
+                builder.addPolyLineBatch(std::move(batch));
             }
         }
     }
 }
 
-void OpenGLWidget::uploadEventBatches() {
-    if (!_scene_renderer || !_master_time_frame) {
+void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder) {
+    if (!_master_time_frame) {
         return;
     }
 
@@ -1719,18 +1737,18 @@ void OpenGLWidget::uploadEventBatches() {
         batch_params.glyph_size = static_cast<float>(display_options->style.line_thickness);
         batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
-        // Build and upload the batch
+        // Build and add the batch to builder
         auto batch = DataViewerHelpers::buildEventSeriesBatch(
                 *series, _master_time_frame, batch_params, model_params, view_params);
 
         if (!batch.positions.empty()) {
-            _scene_renderer->glyphRenderer().uploadData(batch);
+            builder.addGlyphBatch(std::move(batch));
         }
     }
 }
 
-void OpenGLWidget::uploadIntervalBatches() {
-    if (!_scene_renderer || !_master_time_frame) {
+void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & builder) {
+    if (!_master_time_frame) {
         return;
     }
 
@@ -1772,12 +1790,12 @@ void OpenGLWidget::uploadIntervalBatches() {
                 static_cast<float>(b) / 255.0f,
                 display_options->style.alpha);
 
-        // Build and upload the batch
+        // Build and add the batch to builder
         auto batch = DataViewerHelpers::buildIntervalSeriesBatch(
                 *series, _master_time_frame, batch_params, model_params, view_params);
 
         if (!batch.bounds.empty()) {
-            _scene_renderer->rectangleRenderer().uploadData(batch);
+            builder.addRectangleBatch(std::move(batch));
         }
         
         // Draw selection highlight if this series has a selected interval
@@ -1803,13 +1821,13 @@ void OpenGLWidget::uploadIntervalBatches() {
                 // Build model matrix for highlight (same as interval series)
                 auto highlight_model = CorePlotting::getIntervalModelMatrix(model_params);
                 
-                // Build and upload highlight border
+                // Build and add highlight border to builder
                 auto highlight_batch = DataViewerHelpers::buildIntervalHighlightBorderBatch(
                         highlighted_start, highlighted_end,
                         highlight_color, 4.0f, highlight_model);
                 
                 if (!highlight_batch.vertices.empty()) {
-                    _scene_renderer->polyLineRenderer().uploadData(highlight_batch);
+                    builder.addPolyLineBatch(std::move(highlight_batch));
                 }
             }
         }
@@ -1958,14 +1976,8 @@ void OpenGLWidget::computeAndApplyLayout() {
         }
     }
     
-    // Build rectangle batch key map for interval hit testing
-    _rectangle_batch_key_map.clear();
-    size_t batch_index = 0;
-    for (auto const & [key, interval_data] : _digital_interval_series) {
-        if (interval_data.display_options->style.is_visible) {
-            _rectangle_batch_key_map[batch_index++] = key;
-        }
-    }
+    // Note: _rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()
+    // This ensures the batch key map stays synchronized with the actual rendered batches
 
     _layout_response_dirty = false;
 }

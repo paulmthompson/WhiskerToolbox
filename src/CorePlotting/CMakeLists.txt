@@ -55,7 +55,7 @@ set(COREPLOTTING_SOURCES
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
     )
 
-target_include_directories(CorePlotting PRIVATE
+target_include_directories(CorePlotting PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"

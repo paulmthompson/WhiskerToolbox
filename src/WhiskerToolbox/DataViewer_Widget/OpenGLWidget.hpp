@@ -58,6 +58,11 @@
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 
+// Forward declaration for SceneBuilder (full include in .cpp)
+namespace CorePlotting {
+class SceneBuilder;
+}
+
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 //#include <QOpenGLFunctions_4_1_Core>
@@ -521,23 +526,29 @@ private:
     /**
      * @brief Render all series using the PlottingOpenGL SceneRenderer.
      * 
+     * Uses SceneBuilder to construct a RenderableScene and uploads it
+     * to SceneRenderer for rendering. The batch key maps from SceneBuilder
+     * are preserved for hit testing.
      */
     void renderWithSceneRenderer();
 
     /**
-     * @brief Build and upload batches for all visible analog series.
+     * @brief Add batches for all visible analog series to the scene builder.
+     * @param builder The SceneBuilder to add batches to
      */
-    void uploadAnalogBatches();
+    void addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builder);
 
     /**
-     * @brief Build and upload batches for all visible digital event series.
+     * @brief Add batches for all visible digital event series to the scene builder.
+     * @param builder The SceneBuilder to add batches to
      */
-    void uploadEventBatches();
+    void addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder);
 
     /**
-     * @brief Build and upload batches for all visible digital interval series.
+     * @brief Add batches for all visible digital interval series to the scene builder.
+     * @param builder The SceneBuilder to add batches to
      */
-    void uploadIntervalBatches();
+    void addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & builder);
 
     // Tooltip helper methods
     /**
