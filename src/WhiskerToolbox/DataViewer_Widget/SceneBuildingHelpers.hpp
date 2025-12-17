@@ -196,6 +196,57 @@ CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
         float border_thickness,
         glm::mat4 const & model_matrix);
 
+// ============================================================================
+// Simplified API using LayoutTransform (Phase 4.13)
+// ============================================================================
+// These functions eliminate the intermediate param structs by taking 
+// a pre-composed LayoutTransform or Model matrix directly.
+
+/**
+ * @brief Simplified analog batch building with pre-composed model matrix
+ * 
+ * Uses a pre-composed Model matrix instead of AnalogSeriesMatrixParams.
+ * The caller computes the model matrix using CorePlotting::composeAnalogYTransform().
+ * 
+ * @param series The analog time series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters (time range, gap config, style)
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to PolyLineRenderer
+ */
+CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchSimplified(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        AnalogBatchParams const & params,
+        glm::mat4 const & model_matrix);
+
+/**
+ * @brief Simplified analog marker batch building with pre-composed model matrix
+ */
+CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatchSimplified(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        AnalogBatchParams const & params,
+        glm::mat4 const & model_matrix);
+
+/**
+ * @brief Simplified event batch building with pre-composed model matrix
+ */
+CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
+        DigitalEventSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        EventBatchParams const & params,
+        glm::mat4 const & model_matrix);
+
+/**
+ * @brief Simplified interval batch building with pre-composed model matrix
+ */
+CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
+        DigitalIntervalSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        IntervalBatchParams const & params,
+        glm::mat4 const & model_matrix);
+
 }// namespace DataViewerHelpers
 
 #endif// DATAVIEWER_WIDGET_SCENEBUILDINGHELPERS_HPP

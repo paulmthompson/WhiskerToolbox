@@ -18,10 +18,21 @@ struct SeriesDataCache;
  * @file SeriesMatrices.hpp
  * @brief MVP (Model-View-Projection) matrix construction for time-series plotting
  * 
- * This module consolidates matrix generation logic from DataViewer into CorePlotting,
- * implementing the standard MVP strategy for time-series visualizations:
+ * This module provides generic matrix generation utilities for CorePlotting.
+ * Widget-specific composition logic (combining data normalization, user adjustments,
+ * and layout positioning) should be done in the widget code using NormalizationHelpers
+ * and LayoutTransform::compose().
  * 
  * **Model Matrix**: Per-series positioning and scaling
+ *   - Create from LayoutTransform using createModelMatrix()
+ *   - Or use legacy AnalogSeriesMatrixParams for backwards compatibility
+ * 
+ * **View Matrix**: Shared global camera transformations
+ *   - Global vertical panning via createViewMatrix()
+ * 
+ * **Projection Matrix**: Shared coordinate system mapping
+ *   - Maps time indices to screen X coordinates
+ *   - Maps data space to screen Y coordinates
  *   - Vertical positioning based on layout allocation
  *   - Series-specific scaling (intrinsic, user, global)
  *   - Data centering around mean value

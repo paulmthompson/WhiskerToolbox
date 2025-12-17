@@ -2,7 +2,7 @@
 
 
 add_subdirectory(GroupManagementWidget)
-add_subdirectory(DataViewer)
+#add_subdirectory(DataViewer)
 add_subdirectory(Analysis_Dashboard)
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
