@@ -1,10 +1,14 @@
 #ifndef COREPLOTTING_TRANSFORMERS_GAPDETECTOR_HPP
 #define COREPLOTTING_TRANSFORMERS_GAPDETECTOR_HPP
 
+#include "CorePlotting/Mappers/MappedElement.hpp"
 #include "SceneGraph/RenderablePrimitives.hpp"
 
 #include "Entity/EntityTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+
+#include <ranges>
+#include <vector>
 
 class AnalogTimeSeries;
 
@@ -26,6 +30,12 @@ namespace CorePlotting {
  * GapDetector detector;
  * detector.setTimeThreshold(1000);  // 1000 time units
  * RenderablePolyLineBatch batch = detector.transform(series, time_frame, entity_id);
+ * ```
+ * 
+ * Or with range-based API for mapped vertices:
+ * ```cpp
+ * auto mapped = TimeSeriesMapper::mapAnalogSeriesWithIndices(series, layout, tf, 1.0f, start, end);
+ * auto batch = GapDetector::segmentByGaps(mapped, config);
  * ```
  */
 class GapDetector {
@@ -101,6 +111,36 @@ public:
             std::vector<float> const & data_values,
             EntityId entity_id = EntityId(0)) const;
 
+    /**
+     * @brief Segment a range of MappedAnalogVertex by detecting gaps
+     * 
+     * This is the preferred method for use with TimeSeriesMapper output.
+     * Uses the time_index field of MappedAnalogVertex for gap detection.
+     * 
+     * @tparam Range Input range type (must yield MappedAnalogVertex)
+     * @param vertices Range of MappedAnalogVertex to segment
+     * @param config Gap detection configuration
+     * @return Renderable batch with segmented geometry
+     */
+    template<std::ranges::input_range Range>
+        requires std::same_as<std::ranges::range_value_t<Range>, MappedAnalogVertex>
+    [[nodiscard]] static RenderablePolyLineBatch segmentByGaps(
+            Range && vertices,
+            Config const & config);
+
+    /**
+     * @brief Segment a vector of MappedAnalogVertex by detecting gaps
+     * 
+     * Convenience overload for materialized vectors.
+     * 
+     * @param vertices Vector of MappedAnalogVertex to segment
+     * @param config Gap detection configuration
+     * @return Renderable batch with segmented geometry
+     */
+    [[nodiscard]] static RenderablePolyLineBatch segmentByGaps(
+            std::vector<MappedAnalogVertex> const & vertices,
+            Config const & config);
+
 private:
     Config _config;
 
@@ -111,7 +151,68 @@ private:
     [[nodiscard]] bool detectGap(
             float time1, float time2,
             float value1, float value2) const;
+    
+    /**
+     * @brief Detect gap between two MappedAnalogVertex based on time_index
+     * @return true if gap should be inserted
+     */
+    [[nodiscard]] static bool detectGapByIndex(
+            MappedAnalogVertex const & prev,
+            MappedAnalogVertex const & curr,
+            Config const & config);
 };
+
+// ============================================================================
+// Template implementation
+// ============================================================================
+
+template<std::ranges::input_range Range>
+    requires std::same_as<std::ranges::range_value_t<Range>, MappedAnalogVertex>
+RenderablePolyLineBatch GapDetector::segmentByGaps(
+        Range && vertices,
+        Config const & config) {
+    
+    RenderablePolyLineBatch batch;
+    
+    std::vector<float> segment_vertices;
+    MappedAnalogVertex prev_vertex{};
+    bool first_point = true;
+    int current_line_start = 0;
+    
+    auto finalize_segment = [&]() {
+        if (segment_vertices.size() >= static_cast<size_t>(config.min_segment_length * 2)) {
+            int const vertex_count = static_cast<int>(segment_vertices.size()) / 2;
+            batch.line_start_indices.push_back(current_line_start);
+            batch.line_vertex_counts.push_back(vertex_count);
+            batch.vertices.insert(batch.vertices.end(),
+                                  segment_vertices.begin(),
+                                  segment_vertices.end());
+            current_line_start += vertex_count;
+        }
+        segment_vertices.clear();
+    };
+    
+    for (auto const & vertex : vertices) {
+        // Check for gap if not first point
+        if (!first_point && config.time_threshold > 0) {
+            if (detectGapByIndex(prev_vertex, vertex, config)) {
+                finalize_segment();
+            }
+        }
+        
+        // Add vertex to current segment
+        segment_vertices.push_back(vertex.x);
+        segment_vertices.push_back(vertex.y);
+        
+        prev_vertex = vertex;
+        first_point = false;
+    }
+    
+    // Finalize last segment
+    finalize_segment();
+    
+    return batch;
+}
 
 }// namespace CorePlotting
 

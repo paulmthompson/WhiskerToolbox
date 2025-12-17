@@ -1,6 +1,8 @@
 #include "GapDetector.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/Mappers/MappedElement.hpp"
+#include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 
 #include <cmath>
 
@@ -148,6 +150,78 @@ RenderablePolyLineBatch GapDetector::transform(
                 current_segment_vertices.end());
     }
 
+    return batch;
+}
+
+bool GapDetector::detectGapByIndex(
+        MappedAnalogVertex const & prev,
+        MappedAnalogVertex const & curr,
+        Config const & config) {
+    
+    // Check time index threshold
+    if (config.time_threshold > 0) {
+        int64_t const index_diff = curr.time_index - prev.time_index;
+        if (index_diff > config.time_threshold) {
+            return true;
+        }
+    }
+    
+    // Check value threshold
+    if (config.value_threshold > 0.0f) {
+        float const value_diff = std::abs(curr.y - prev.y);
+        if (value_diff > config.value_threshold) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+RenderablePolyLineBatch GapDetector::segmentByGaps(
+        std::vector<MappedAnalogVertex> const & vertices,
+        Config const & config) {
+    
+    RenderablePolyLineBatch batch;
+    
+    if (vertices.empty()) {
+        return batch;
+    }
+    
+    std::vector<float> segment_vertices;
+    segment_vertices.reserve(vertices.size() * 2);
+    int current_line_start = 0;
+    
+    auto finalize_segment = [&]() {
+        if (segment_vertices.size() >= static_cast<size_t>(config.min_segment_length * 2)) {
+            int const vertex_count = static_cast<int>(segment_vertices.size()) / 2;
+            batch.line_start_indices.push_back(current_line_start);
+            batch.line_vertex_counts.push_back(vertex_count);
+            batch.vertices.insert(batch.vertices.end(),
+                                  segment_vertices.begin(),
+                                  segment_vertices.end());
+            current_line_start += vertex_count;
+        }
+        segment_vertices.clear();
+    };
+    
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        auto const & vertex = vertices[i];
+        
+        // Check for gap if not first point
+        if (i > 0 && config.time_threshold > 0) {
+            if (detectGapByIndex(vertices[i - 1], vertex, config)) {
+                finalize_segment();
+            }
+        }
+        
+        // Add vertex to current segment
+        segment_vertices.push_back(vertex.x);
+        segment_vertices.push_back(vertex.y);
+    }
+    
+    // Finalize last segment
+    finalize_segment();
+    
     return batch;
 }
 

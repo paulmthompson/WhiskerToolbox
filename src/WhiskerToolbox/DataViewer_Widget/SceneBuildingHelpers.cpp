@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/Layout/SeriesLayout.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
+#include "CorePlotting/Transformers/GapDetector.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
@@ -54,65 +55,42 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
     // Use local-space layout (Y=raw value, model matrix handles positioning)
     auto const local_layout = makeLocalSpaceLayout();
     
-    // Use range-based mapper with indices for gap detection, materialize here
+    // Use range-based mapper with indices for gap detection
     auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
             series, local_layout, *master_time_frame, 1.0f, params.start_time, params.end_time);
 
-    std::vector<float> segment_vertices;
-    int64_t prev_index = -1;
-    bool first_point = true;
-    int current_line_start = 0;
-
-    for (auto const & vertex : mapped_range) {
-        // Check for gap if this isn't the first point and gap detection is enabled
-        if (!first_point && params.detect_gaps) {
-            int64_t const gap_size = vertex.time_index - prev_index;
-
-            if (gap_size > static_cast<int64_t>(params.gap_threshold)) {
-                // Gap detected - finalize current segment
-                if (segment_vertices.size() >= 4) {// At least 2 vertices
-                    // Record this segment
-                    int const vertex_count = static_cast<int>(segment_vertices.size()) / 2;
-                    if (vertex_count >= 2) {
-                        batch.line_start_indices.push_back(current_line_start);
-                        batch.line_vertex_counts.push_back(vertex_count);
-
-                        // Append segment vertices to batch
-                        batch.vertices.insert(batch.vertices.end(),
-                                              segment_vertices.begin(),
-                                              segment_vertices.end());
-                        current_line_start += vertex_count;
-                    }
-                }
-                segment_vertices.clear();
-            }
+    if (params.detect_gaps) {
+        // Use GapDetector for segmented rendering
+        CorePlotting::GapDetector::Config gap_config;
+        gap_config.time_threshold = static_cast<int64_t>(params.gap_threshold);
+        gap_config.min_segment_length = 2;
+        
+        // Materialize range and segment by gaps
+        std::vector<CorePlotting::MappedAnalogVertex> vertices;
+        for (auto const & v : mapped_range) {
+            vertices.push_back(v);
         }
-
-        // Add vertex to current segment
-        segment_vertices.push_back(vertex.x);
-        segment_vertices.push_back(vertex.y);
-
-        prev_index = vertex.time_index;
-        first_point = false;
-    }
-
-    // Finalize last segment
-    if (segment_vertices.size() >= 4) {
-        int const vertex_count = static_cast<int>(segment_vertices.size()) / 2;
-        if (vertex_count >= 2) {
-            batch.line_start_indices.push_back(current_line_start);
-            batch.line_vertex_counts.push_back(vertex_count);
-            batch.vertices.insert(batch.vertices.end(),
-                                  segment_vertices.begin(),
-                                  segment_vertices.end());
+        
+        batch = CorePlotting::GapDetector::segmentByGaps(vertices, gap_config);
+        
+        // Restore batch properties that segmentByGaps doesn't set
+        batch.global_color = params.color;
+        batch.thickness = params.thickness;
+        batch.model_matrix = CorePlotting::getAnalogModelMatrix(model_params);
+    } else {
+        // No gap detection - single continuous line
+        std::vector<float> all_vertices;
+        
+        for (auto const & vertex : mapped_range) {
+            all_vertices.push_back(vertex.x);
+            all_vertices.push_back(vertex.y);
         }
-    } else if (!params.detect_gaps && !segment_vertices.empty()) {
-        // No gap detection - single line with all vertices
-        int const vertex_count = static_cast<int>(segment_vertices.size()) / 2;
-        if (vertex_count >= 2) {
+        
+        if (all_vertices.size() >= 4) { // At least 2 vertices
+            int const vertex_count = static_cast<int>(all_vertices.size()) / 2;
             batch.line_start_indices.push_back(0);
             batch.line_vertex_counts.push_back(vertex_count);
-            batch.vertices = std::move(segment_vertices);
+            batch.vertices = std::move(all_vertices);
         }
     }
 

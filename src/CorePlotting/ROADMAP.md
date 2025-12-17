@@ -860,45 +860,38 @@ different from spatial hit testing for mouse interaction.
 
 ---
 
-## Phase 5: Future Enhancements
-
-### 4.12 Integrate GapDetector (Low Effort)
+### 4.12 Integrate GapDetector ✅
 **Goal:** Replace inline gap detection with CorePlotting GapDetector.
 
-**Current Problem:** Gap detection reimplemented in `SceneBuildingHelpers::buildAnalogSeriesBatch()`:
+**Solution:** Added range-based `GapDetector::segmentByGaps()` API and integrated into SceneBuildingHelpers.
 
-```cpp
-// SceneBuildingHelpers.cpp - inline gap detection
-if (gap_size > static_cast<int>(params.gap_threshold)) {
-    // Gap detected - finalize current segment
-    if (segment_vertices.size() >= 4) {
-        batch.line_start_indices.push_back(current_line_start);
-        batch.line_vertex_counts.push_back(vertex_count);
-        // ...
-    }
-}
-```
+- [x] **Add `segmentByGaps()` static method to GapDetector** ✓
+    - New template method works with `MappedAnalogVertex` ranges
+    - Added `detectGapByIndex()` static helper for index-based gap detection
+    - Moved `MappedAnalogVertex` to `MappedElement.hpp` for shared access
 
-**Library Capability:** `GapDetector` in `CorePlotting/Transformers/GapDetector.hpp` provides tested, configurable gap detection.
+- [x] **Use `GapDetector::segmentByGaps()` in buildAnalogSeriesBatch** ✓
+    - Replaced inline gap detection logic
+    - Now calls `GapDetector::segmentByGaps()` with time threshold config
+    - Iterates returned segments to build polyline batch
 
-- [ ] **Use `GapDetector::detectGaps()` in buildAnalogSeriesBatch**:
-    - Pass time-value range to GapDetector
-    - Returns segment boundaries
-    
-- [ ] **Simplify batch building**:
-    - Iterate segments returned by GapDetector
-    - Build polyline batch with segment info
-    
-- [ ] **Consolidate gap threshold configuration**:
-    - Use `GapDetector::Config` struct
-    - Map from `AnalogBatchParams::gap_threshold`
-    
-- [ ] **Verify:** Gap handling behavior unchanged, all tests pass
+- [x] **Consolidate gap threshold configuration** ✓
+    - Maps `AnalogBatchParams::gap_threshold` to `GapDetector::Config::time_threshold`
+    - Config struct enables future value-based gap detection
+
+- [x] **Verify:** All tests pass ✓
+
+**Files Modified:**
+- `CorePlotting/Mappers/MappedElement.hpp`: Added `MappedAnalogVertex` struct
+- `CorePlotting/Mappers/TimeSeriesMapper.hpp`: Removed duplicate `MappedAnalogVertex`
+- `CorePlotting/Transformers/GapDetector.hpp`: Added `segmentByGaps()`, `detectGapByIndex()`
+- `CorePlotting/Transformers/GapDetector.cpp`: Implemented new methods
+- `WhiskerToolbox/DataViewer_Widget/SceneBuildingHelpers.cpp`: Uses `GapDetector::segmentByGaps()`
 
 **Benefits:**
-- Tested gap detection logic
+- Tested gap detection logic in CorePlotting library
 - Single source of truth for gap algorithm
-- Easier to extend (e.g., value-based gaps)
+- Range-based API for efficient integration with TimeSeriesMapper
 
 ### 4.13 Clean Up Model Matrix Parameter Construction (Low Effort)
 **Goal:** Reduce boilerplate when building MVP matrix parameters.
@@ -940,7 +933,7 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 
 ---
 
-## Phase 4 Summary: Remaining Work
+## Phase 4 Summary
 
 | Phase | Task | Effort | Dependencies | Status |
 |-------|------|--------|--------------|--------|
@@ -948,18 +941,17 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 | 4.9 | Unify Layout Systems | Medium-High | None | ✅ Complete |
 | 4.10 | Adopt SceneBuilder Fluent API | Medium | 4.8 (Mappers integration) | ✅ Complete |
 | 4.11 | Complete SceneHitTester Integration | Medium | 4.9 (unified layout for region queries) | ✅ Complete |
-| 4.12 | Integrate GapDetector | Low | 4.8 (can do together) | Not Started |
+| 4.12 | Integrate GapDetector | Low | 4.8 (can do together) | ✅ Complete |
 | 4.13 | Clean Up Model Matrix Construction | Low | 4.9 (layout simplification) | Not Started |
-
-**Recommended Order:**
-1. **4.12** (GapDetector) — Low risk, quick win
-2. **4.13** (Matrix params) — Benefits from 4.9 layout changes
 
 **Completed:**
 - ✅ 4.8 (TimeSeriesMapper) — Range-based mappers integrated into SceneBuildingHelpers
 - ✅ 4.9 (LayoutEngine) — Unified layout system replaces LayoutCalculator
 - ✅ 4.10 (SceneBuilder) — Fluent API for scene construction
 - ✅ 4.11 (SceneHitTester) — Unified hit testing through cached scene
+- ✅ 4.12 (GapDetector) — Range-based gap detection integrated into batch building
+
+**Remaining:** 4.13 (Matrix param cleanup)
 
 ---
 
@@ -971,12 +963,12 @@ model_params.global_vertical_scale = _view_state.global_vertical_scale;
 - [ ] Use `RowLayoutStrategy` from CorePlotting
 - [ ] Add EntityId support for hover/click
 
-### 5.2 SpatialOverlayWidget
+### 5.3 SpatialOverlayWidget
 - [ ] Already using ViewState ✓
 - [ ] Add CorePlotting transformers for line/point data
 - [ ] Unify tooltip infrastructure
 
-### 5.3 Shared Infrastructure
+### 5.4 Shared Infrastructure
 - [ ] Create `PlotTooltipManager` that works with QuadTree results
 - [ ] Standardize cursor change on hover (edge detection)
 

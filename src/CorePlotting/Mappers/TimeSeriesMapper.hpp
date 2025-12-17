@@ -234,26 +234,7 @@ namespace TimeSeriesMapper {
 // Analog Mapping: AnalogTimeSeries → MappedVertex/MappedAnalogVertex range
 // ============================================================================
 
-/**
- * @brief Analog vertex with time frame index for gap detection
- * 
- * Extends MappedVertex with the original time frame index,
- * enabling gap detection based on index discontinuities.
- */
-struct MappedAnalogVertex {
-    float x;              ///< X position (absolute time)
-    float y;              ///< Y position (layout-transformed value)
-    int64_t time_index;   ///< Original time frame index for gap detection
-    
-    MappedAnalogVertex() = default;
-    MappedAnalogVertex(float x_, float y_, int64_t idx)
-        : x(x_), y(y_), time_index(idx) {}
-    
-    /// Convert to basic MappedVertex (drops time_index)
-    [[nodiscard]] MappedVertex toVertex() const {
-        return MappedVertex{x, y};
-    }
-};
+// MappedAnalogVertex is defined in MappedElement.hpp
 
 /**
  * @brief Map analog time series to polyline vertices
