@@ -144,10 +144,24 @@ void RectangleRenderer::render(glm::mat4 const & view_matrix,
                               static_cast<int>(batch.bounds.size() * sizeof(glm::vec4)));
         m_bounds_vbo.release();
 
-        // Upload colors for this batch
+        // Apply selection brightness boost to colors (CPU-side)
+        std::vector<glm::vec4> render_colors = batch.colors;
+        bool has_selection = false;
+        for (size_t i = 0; i < render_colors.size(); ++i) {
+            if (i < batch.selection_flags.size() && batch.selection_flags[i] != 0) {
+                has_selection = true;
+                // Apply brightness boost to selected rectangles
+                render_colors[i].r = std::min(1.0f, render_colors[i].r + m_selection_style.brightness_boost);
+                render_colors[i].g = std::min(1.0f, render_colors[i].g + m_selection_style.brightness_boost);
+                render_colors[i].b = std::min(1.0f, render_colors[i].b + m_selection_style.brightness_boost);
+                render_colors[i].a = 1.0f; // Make selected items fully opaque
+            }
+        }
+
+        // Upload colors for this batch (with selection brightness applied)
         (void) m_color_vbo.bind();
-        m_color_vbo.allocate(batch.colors.data(),
-                             static_cast<int>(batch.colors.size() * sizeof(glm::vec4)));
+        m_color_vbo.allocate(render_colors.data(),
+                             static_cast<int>(render_colors.size() * sizeof(glm::vec4)));
         m_color_vbo.release();
 
         if (m_use_shader_manager) {
@@ -159,8 +173,66 @@ void RectangleRenderer::render(glm::mat4 const & view_matrix,
         // Draw instanced quads (4 vertices per quad, as triangle strip)
         glExtra->glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instance_count);
 
-        // --- Draw borders (optional) ---
+        // --- Draw selection borders ---
+        if (has_selection && m_selection_style.draw_selection_border) {
+            if (!m_use_shader_manager) {
+                m_embedded_fill_shader.release();
+            }
+
+            ShaderProgram * border_shader = nullptr;
+            if (m_use_shader_manager) {
+                border_shader = ShaderManager::instance().getProgram(BORDER_SHADER_NAME);
+                if (border_shader) {
+                    border_shader->use();
+                    border_shader->setUniform("u_mvp_matrix", mvp);
+                    auto * native = border_shader->getNativeProgram();
+                    if (native) {
+                        native->setUniformValue("u_border_color",
+                                                m_selection_style.selection_border_color.r,
+                                                m_selection_style.selection_border_color.g,
+                                                m_selection_style.selection_border_color.b,
+                                                m_selection_style.selection_border_color.a);
+                    }
+                }
+            } else {
+                if (m_embedded_border_shader.bind()) {
+                    m_embedded_border_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+                    m_embedded_border_shader.setUniformValue("u_border_color",
+                                                             m_selection_style.selection_border_color.r,
+                                                             m_selection_style.selection_border_color.g,
+                                                             m_selection_style.selection_border_color.b,
+                                                             m_selection_style.selection_border_color.a);
+                }
+            }
+
+            gl->glLineWidth(m_selection_style.selection_border_width);
+
+            // Draw border only for selected rectangles
+            for (size_t i = 0; i < batch.selection_flags.size(); ++i) {
+                if (batch.selection_flags[i] != 0) {
+                    // Upload just this rectangle's bounds for border drawing
+                    (void) m_bounds_vbo.bind();
+                    m_bounds_vbo.allocate(&batch.bounds[i], sizeof(glm::vec4));
+                    m_bounds_vbo.release();
+                    glExtra->glDrawArraysInstanced(GL_LINE_LOOP, 4, 4, 1);
+                }
+            }
+
+            if (!m_use_shader_manager) {
+                m_embedded_border_shader.release();
+                (void) m_embedded_fill_shader.bind();
+            } else if (fill_shader) {
+                fill_shader->use();
+            }
+        }
+
+        // --- Draw borders (optional, for all rectangles) ---
         if (m_border_enabled) {
+            // Re-upload all bounds for regular border drawing
+            (void) m_bounds_vbo.bind();
+            m_bounds_vbo.allocate(batch.bounds.data(),
+                                  static_cast<int>(batch.bounds.size() * sizeof(glm::vec4)));
+            m_bounds_vbo.release();
             if (!m_use_shader_manager) {
                 m_embedded_fill_shader.release();
             }
@@ -248,6 +320,14 @@ void RectangleRenderer::uploadData(CorePlotting::RenderableRectangleBatch const 
         batch_data.colors.resize(batch.bounds.size(), glm::vec4{1.0f, 1.0f, 1.0f, 0.5f});
     }
 
+    // Copy selection flags
+    if (!batch.selection_flags.empty()) {
+        batch_data.selection_flags = batch.selection_flags;
+    } else {
+        // Default to unselected
+        batch_data.selection_flags.resize(batch.bounds.size(), 0);
+    }
+
     // Store batch
     m_batches.push_back(std::move(batch_data));
 
@@ -265,6 +345,10 @@ void RectangleRenderer::setBorderColor(glm::vec4 const & color) {
 
 void RectangleRenderer::setBorderWidth(float width) {
     m_border_width = width;
+}
+
+void RectangleRenderer::setSelectionStyle(SelectionStyle const & style) {
+    m_selection_style = style;
 }
 
 bool RectangleRenderer::loadShadersFromManager() {

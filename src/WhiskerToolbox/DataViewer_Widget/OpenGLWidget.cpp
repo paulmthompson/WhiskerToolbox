@@ -104,7 +104,8 @@ namespace {
         float global_vertical_scale) {
 
     // Events map [-1, 1] to allocated space with margin
-    float const half_height = layout.y_transform.gain * margin_factor * 0.5f * global_vertical_scale;
+    // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
+    float const half_height = layout.y_transform.gain * margin_factor * global_vertical_scale;
     float const center = layout.y_transform.offset;
 
     return CorePlotting::LayoutTransform{center, half_height};
@@ -136,7 +137,8 @@ namespace {
         float global_vertical_scale) {
 
     // Intervals map [-1, 1] to allocated space with margin and global scaling
-    float const half_height = layout.y_transform.gain * margin_factor * 0.5f *
+    // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
+    float const half_height = layout.y_transform.gain * margin_factor *
                               global_zoom * global_vertical_scale;
     float const center = layout.y_transform.offset;
 
@@ -168,12 +170,12 @@ OpenGLWidget::~OpenGLWidget() {
     cleanup();
 }
 
-void OpenGLWidget::updateCanvas(int time) {
+void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
     _time = time;
     
     // Update view state immediately so labels are correct before paintGL runs
     int64_t const zoom = _view_state.getTimeWidth();
-    _view_state.setTimeWindow(_time, zoom);
+    _view_state.setTimeWindow(_time.getValue(), zoom);
     
     // Mark layout and scene as dirty since external changes may have occurred
     // (e.g., display_mode changes, series visibility changes)
@@ -834,13 +836,119 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
 // Interval selection methods
 void OpenGLWidget::setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time) {
     _selected_intervals[series_key] = std::make_pair(start_time, end_time);
+    
+    // Also find and track the EntityId for this interval
+    auto it = _digital_interval_series.find(series_key);
+    if (it != _digital_interval_series.end()) {
+        auto const & series = it->second.series;
+        
+        // Convert master time coordinates to series time frame if needed
+        int64_t series_start, series_end;
+        if (series->getTimeFrame().get() == _master_time_frame.get()) {
+            series_start = start_time;
+            series_end = end_time;
+        } else {
+            series_start = series->getTimeFrame()->getIndexAtTime(static_cast<float>(start_time)).getValue();
+            series_end = series->getTimeFrame()->getIndexAtTime(static_cast<float>(end_time)).getValue();
+        }
+        
+        // Find intervals that match these bounds
+        auto intervals = series->getIntervalsWithIdsInRange(
+            TimeFrameIndex(series_start), TimeFrameIndex(series_end), *series->getTimeFrame());
+        
+        for (auto const & interval_with_id : intervals) {
+            // Check if this interval matches the selected bounds
+            if (interval_with_id.interval.start == series_start && 
+                interval_with_id.interval.end == series_end) {
+                _selected_entities.insert(interval_with_id.entity_id);
+                break;
+            }
+        }
+    }
+    
+    _scene_dirty = true;
     updateCanvas(_time);
 }
+
+// ========================================================================
+// EntityId-based Selection API
+// ========================================================================
+
+void OpenGLWidget::selectEntity(EntityId id) {
+    _selected_entities.insert(id);
+    _scene_dirty = true;
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::deselectEntity(EntityId id) {
+    _selected_entities.erase(id);
+    _scene_dirty = true;
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::toggleEntitySelection(EntityId id) {
+    if (_selected_entities.contains(id)) {
+        _selected_entities.erase(id);
+    } else {
+        _selected_entities.insert(id);
+    }
+    _scene_dirty = true;
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::clearEntitySelection() {
+    _selected_entities.clear();
+    _selected_intervals.clear(); // Also clear legacy tracking
+    _scene_dirty = true;
+    updateCanvas(_time);
+}
+
+bool OpenGLWidget::isEntitySelected(EntityId id) const {
+    return _selected_entities.contains(id);
+}
+
+std::unordered_set<EntityId> const & OpenGLWidget::getSelectedEntities() const {
+    return _selected_entities;
+}
+
+// ========================================================================
+// Legacy Interval Selection API  
+// ========================================================================
 
 void OpenGLWidget::clearSelectedInterval(std::string const & series_key) {
     auto it = _selected_intervals.find(series_key);
     if (it != _selected_intervals.end()) {
+        // Find and remove the EntityId for this interval from selection
+        auto series_it = _digital_interval_series.find(series_key);
+        if (series_it != _digital_interval_series.end()) {
+            auto const & series = series_it->second.series;
+            auto const [start_time, end_time] = it->second;
+            
+            // Convert master time coordinates to series time frame if needed
+            int64_t series_start, series_end;
+            if (series->getTimeFrame().get() == _master_time_frame.get()) {
+                series_start = start_time;
+                series_end = end_time;
+            } else {
+                series_start = series->getTimeFrame()->getIndexAtTime(static_cast<float>(start_time)).getValue();
+                series_end = series->getTimeFrame()->getIndexAtTime(static_cast<float>(end_time)).getValue();
+            }
+            
+            // Find and remove the matching EntityId
+            auto intervals = series->getIntervalsWithIdsInRange(
+                TimeFrameIndex(series_start), TimeFrameIndex(series_end), *series->getTimeFrame());
+            
+            for (auto const & interval_with_id : intervals) {
+                if (interval_with_id.interval.start == series_start && 
+                    interval_with_id.interval.end == series_end) {
+                    _selected_entities.erase(interval_with_id.entity_id);
+                    break;
+                }
+            }
+        }
+        
         _selected_intervals.erase(it);
+        _scene_dirty = true;
         updateCanvas(_time);
     }
 }
@@ -907,8 +1015,8 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
         // The scene will be rebuilt on next paintGL() call
     }
 
-    // If we have no cached scene yet (e.g., before first paint), fall back to time-based check
-    if (_cached_scene.rectangle_batches.empty() && _selected_intervals.empty()) {
+    // If we have no cached scene yet (e.g., before first paint) and no selection, nothing to check
+    if (_cached_scene.rectangle_batches.empty() && _selected_entities.empty()) {
         return std::nullopt;
     }
 
@@ -933,52 +1041,16 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
 
     CorePlotting::SceneHitTester tester(config);
 
-    // Convert selected intervals to the format expected by SceneHitTester
-    std::map<std::string, std::pair<int64_t, int64_t>> selected_intervals_map;
-    for (auto const & [key, bounds]: _selected_intervals) {
-        selected_intervals_map[key] = bounds;
-    }
-
-    // Use SceneHitTester to find interval edges
-    CorePlotting::HitTestResult result = tester.findIntervalEdge(
+    // Use EntityId-based hit testing for interval edges
+    CorePlotting::HitTestResult result = tester.findIntervalEdgeByEntityId(
             world_x,
             _cached_scene,
-            selected_intervals_map,
+            _selected_entities,
             _rectangle_batch_key_map);
 
     if (result.isIntervalEdge()) {
         bool is_left_edge = (result.hit_type == CorePlotting::HitType::IntervalEdgeLeft);
         return std::make_pair(result.series_key, is_left_edge);
-    }
-
-    // Fall back to checking selected intervals directly if scene doesn't have the data
-    // This handles the case where intervals are selected but not yet rendered in scene
-    if (!_cached_scene.rectangle_batches.empty()) {
-        return std::nullopt;
-    }
-
-    // Legacy fallback for when scene isn't available yet
-    for (auto const & [series_key, interval_bounds]: _selected_intervals) {
-        auto const [start_time, end_time] = interval_bounds;
-
-        auto const start_time_f = static_cast<float>(start_time);
-        auto const end_time_f = static_cast<float>(end_time);
-
-        // Quick bounds check with tolerance (in time units)
-        if (world_x < start_time_f - edge_tolerance ||
-            world_x > end_time_f + edge_tolerance) {
-            continue;
-        }
-
-        // Check if we're close to the left edge
-        if (std::abs(world_x - start_time_f) <= edge_tolerance) {
-            return std::make_pair(series_key, true);// true = left edge
-        }
-
-        // Check if we're close to the right edge
-        if (std::abs(world_x - end_time_f) <= edge_tolerance) {
-            return std::make_pair(series_key, false);// false = right edge
-        }
     }
 
     static_cast<void>(canvas_y);// Y not used for edge detection
@@ -1772,6 +1844,7 @@ void OpenGLWidget::renderWithSceneRenderer() {
     CorePlotting::SceneBuilder builder;
     builder.setBounds(scene_bounds);
     builder.setMatrices(view, projection);
+    builder.setSelectedEntities(_selected_entities);
 
     // Add all series batches to the scene builder
     addAnalogBatchesToBuilder(builder);
@@ -2010,40 +2083,10 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         auto batch = DataViewerHelpers::buildIntervalSeriesBatchSimplified(
                 *series, _master_time_frame, batch_params, model_matrix);
 
-        if (!batch.bounds.empty()) {
-            builder.addRectangleBatch(std::move(batch));
-        }
 
-        // Draw selection highlight if this series has a selected interval
-        // (and we're not currently dragging it)
-        auto selected_interval = getSelectedInterval(key);
-        auto const & drag_state = _interval_drag_controller.getState();
-        if (selected_interval.has_value() && !(_interval_drag_controller.isActive() && drag_state.series_key == key)) {
-            auto const [sel_start_time, sel_end_time] = selected_interval.value();
-
-            // Check if the selected interval overlaps with visible range
-            if (sel_end_time >= _view_state.time_start && sel_start_time <= _view_state.time_end) {
-                // Clip to visible range
-                int64_t const highlighted_start = std::max(sel_start_time, _view_state.time_start);
-                int64_t const highlighted_end = std::min(sel_end_time, _view_state.time_end);
-
-                // Create a brighter version of the color for highlighting
-                glm::vec4 highlight_color(
-                        std::min(1.0f, static_cast<float>(r) / 255.0f + 0.3f),
-                        std::min(1.0f, static_cast<float>(g) / 255.0f + 0.3f),
-                        std::min(1.0f, static_cast<float>(b) / 255.0f + 0.3f),
-                        1.0f);
-
-                // Build and add highlight border to builder (use same model matrix)
-                auto highlight_batch = DataViewerHelpers::buildIntervalHighlightBorderBatch(
-                        highlighted_start, highlighted_end,
-                        highlight_color, 4.0f, model_matrix);
-
-                if (!highlight_batch.vertices.empty()) {
-                    builder.addPolyLineBatch(std::move(highlight_batch));
-                }
-            }
-        }
+        // NOTE: Selection highlighting is now handled automatically by RectangleRenderer
+        // via selection_flags populated by SceneBuilder::setSelectedEntities()
+        // The legacy PolyLineBatch border rendering has been removed.
     }
 }
 

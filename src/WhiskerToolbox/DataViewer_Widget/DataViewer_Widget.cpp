@@ -7,15 +7,15 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "Feature_Tree_Model.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
-#include "SpikeSorterConfigLoader.hpp"
 #include "SVGExporter.hpp"
+#include "SpikeSorterConfigLoader.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -299,10 +299,15 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
 }
 
 void DataViewer_Widget::_updatePlot(int time) {
-    // Note: 'time' is a frame index from the scrollbar, not an actual time value.
-    // We keep it as an index because TimeSeriesViewState operates in index space.
-    // The labels will show indices, and data rendering uses indices for lookups.
-    ui->openGLWidget->updateCanvas(time);
+    // Note: 'time' is a frame index from the scrollbar, for the "time" time frame
+
+    if (_time_frame.get() != _data_manager->getTime(TimeKey("time")).get()) {
+        auto time_in_ticks = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));
+        TimeFrameIndex master_index = _time_frame->getIndexAtTime(static_cast<float>(time_in_ticks));
+        ui->openGLWidget->updateCanvas(master_index);
+    } else {
+        ui->openGLWidget->updateCanvas(TimeFrameIndex(time));
+    }
 
     _updateLabels();
 }
@@ -360,7 +365,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
 
         // Add series to OpenGL widget (LayoutEngine computes layout automatically)
         ui->openGLWidget->addAnalogTimeSeries(key, series, color);
-        
+
         std::cout << "Successfully added analog series to OpenGL widget" << std::endl;
 
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -550,7 +555,7 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
     // Update global zoom in OpenGLWidget's ViewState
     // LayoutEngine will pick up the new value when computing layout
     ui->openGLWidget->setGlobalScale(static_cast<float>(scale));
-    
+
     // Trigger canvas update (layout recomputed automatically when dirty)
     ui->openGLWidget->updateCanvas();
 }
@@ -1020,7 +1025,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     auto const & event_map = ui->openGLWidget->getDigitalEventSeriesMap();
     auto const & interval_map = ui->openGLWidget->getDigitalIntervalSeriesMap();
     auto total_keys = analog_map.size() + event_map.size() + interval_map.size();
-    
+
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
 }
 
@@ -1058,7 +1063,7 @@ void DataViewer_Widget::_updatePlottingManagerDimensions() {
 void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & series_key) {
     // Deprecated - layout allocation is now computed by OpenGLWidget::computeAndApplyLayout()
     // This function is kept for API compatibility but no longer does anything
-    std::cout << "DataViewer_Widget: Layout allocation for '" << series_key 
+    std::cout << "DataViewer_Widget: Layout allocation for '" << series_key
               << "' now handled by OpenGLWidget" << std::endl;
 }
 
@@ -1082,19 +1087,19 @@ void DataViewer_Widget::_showGroupContextMenu(std::string const & group_name, QP
 void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & group_name) {
     // Open file dialog to select spike sorter configuration file
     QString path = QFileDialog::getOpenFileName(
-        this, 
-        QString("Load spikesorter configuration for %1").arg(group_name), 
-        QString(), 
-        "Text Files (*.txt *.cfg *.conf);;All Files (*)");
+            this,
+            QString("Load spikesorter configuration for %1").arg(group_name),
+            QString(),
+            "Text Files (*.txt *.cfg *.conf);;All Files (*)");
     if (path.isEmpty()) return;
-    
+
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
-    
+
     QByteArray data = file.readAll();
     auto positions = _parseSpikeSorterConfig(data.toStdString());
     if (positions.empty()) return;
-    
+
     // Load configuration into OpenGLWidget - layout will be recomputed on next render
     ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
     ui->openGLWidget->updateCanvas();
@@ -1116,7 +1121,7 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
         std::cout << "No positions found in spike sorter configuration" << std::endl;
         return;
     }
-    
+
     // Load configuration into OpenGLWidget - layout will be recomputed on next render
     ui->openGLWidget->loadSpikeSorterConfiguration(group_name.toStdString(), positions);
     ui->openGLWidget->updateCanvas();
@@ -1138,18 +1143,18 @@ void DataViewer_Widget::_autoFillCanvas() {
     std::vector<std::string> analog_keys;
     std::vector<std::string> event_keys;
     std::vector<std::string> interval_keys;
-    
-    for (auto const & [key, data] : analog_map) {
+
+    for (auto const & [key, data]: analog_map) {
         if (data.display_options->style.is_visible) {
             analog_keys.push_back(key);
         }
     }
-    for (auto const & [key, data] : event_map) {
+    for (auto const & [key, data]: event_map) {
         if (data.display_options->style.is_visible) {
             event_keys.push_back(key);
         }
     }
-    for (auto const & [key, data] : interval_map) {
+    for (auto const & [key, data]: interval_map) {
         if (data.display_options->style.is_visible) {
             interval_keys.push_back(key);
         }
@@ -1290,21 +1295,21 @@ void DataViewer_Widget::cleanupDeletedData() {
     std::vector<std::string> keys_to_cleanup;
 
     auto const & analog_map = ui->openGLWidget->getAnalogSeriesMap();
-    for (auto const & [key, data] : analog_map) {
+    for (auto const & [key, data]: analog_map) {
         if (!_data_manager->getData<AnalogTimeSeries>(key)) {
             keys_to_cleanup.push_back(key);
         }
     }
-    
+
     auto const & event_map = ui->openGLWidget->getDigitalEventSeriesMap();
-    for (auto const & [key, data] : event_map) {
+    for (auto const & [key, data]: event_map) {
         if (!_data_manager->getData<DigitalEventSeries>(key)) {
             keys_to_cleanup.push_back(key);
         }
     }
-    
+
     auto const & interval_map = ui->openGLWidget->getDigitalIntervalSeriesMap();
-    for (auto const & [key, data] : interval_map) {
+    for (auto const & [key, data]: interval_map) {
         if (!_data_manager->getData<DigitalIntervalSeries>(key)) {
             keys_to_cleanup.push_back(key);
         }

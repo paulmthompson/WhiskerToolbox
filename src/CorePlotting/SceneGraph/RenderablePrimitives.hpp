@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace CorePlotting {
@@ -87,6 +88,10 @@ struct RenderableRectangleBatch {
     std::vector<glm::vec4> colors;
     std::vector<EntityId> entity_ids;
 
+    // Per-Rectangle Selection State (parallel to entity_ids)
+    // 0 = normal, 1 = selected. Used by renderer for visual highlighting.
+    std::vector<uint8_t> selection_flags;
+
     // Model matrix for this batch
     glm::mat4 model_matrix{1.0f};
 };
@@ -118,6 +123,27 @@ struct RenderableScene {
     // Built alongside geometry to ensure synchronization
     // Uses same world-space coordinates as Model matrices
     std::unique_ptr<QuadTree<EntityId>> spatial_index;
+
+    // Selection state (queryable from the scene)
+    // EntityIds of currently selected elements
+    std::unordered_set<EntityId> selected_entities;
+
+    /**
+     * @brief Check if an entity is selected
+     * @param id EntityId to check
+     * @return true if the entity is in the selection set
+     */
+    [[nodiscard]] bool isSelected(EntityId id) const {
+        return selected_entities.contains(id);
+    }
+
+    /**
+     * @brief Get the selection set
+     * @return Const reference to the selected entity set
+     */
+    [[nodiscard]] std::unordered_set<EntityId> const & getSelectedEntities() const {
+        return selected_entities;
+    }
 };
 
 }// namespace CorePlotting

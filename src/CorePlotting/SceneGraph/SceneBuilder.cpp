@@ -26,6 +26,16 @@ SceneBuilder & SceneBuilder::setMatrices(glm::mat4 const & view, glm::mat4 const
     return *this;
 }
 
+SceneBuilder & SceneBuilder::setSelectedEntities(std::unordered_set<EntityId> const & selected) {
+    _selected_entities = selected;
+    return *this;
+}
+
+SceneBuilder & SceneBuilder::setSelectedEntities(std::unordered_set<EntityId> && selected) {
+    _selected_entities = std::move(selected);
+    return *this;
+}
+
 // ============================================================================
 // Low-level batch methods
 // ============================================================================
@@ -163,6 +173,19 @@ RenderableScene SceneBuilder::build() {
         buildSpatialIndexFromPending();
     }
 
+    // Copy selection state to the scene (makes it queryable)
+    _scene.selected_entities = _selected_entities;
+
+    // Apply selection flags to all rectangle batches
+    for (auto & batch : _scene.rectangle_batches) {
+        batch.selection_flags.resize(batch.entity_ids.size(), 0);
+        for (size_t i = 0; i < batch.entity_ids.size(); ++i) {
+            if (_selected_entities.contains(batch.entity_ids[i])) {
+                batch.selection_flags[i] = 1;
+            }
+        }
+    }
+
     RenderableScene result = std::move(_scene);
     reset();
     return result;
@@ -176,6 +199,7 @@ void SceneBuilder::reset() {
     _pending_spatial_inserts.clear();
     _rectangle_batch_key_map.clear();
     _glyph_batch_key_map.clear();
+    _selected_entities.clear();
 }
 
 }// namespace CorePlotting

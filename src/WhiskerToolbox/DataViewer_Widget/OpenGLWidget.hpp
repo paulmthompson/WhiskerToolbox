@@ -57,6 +57,7 @@
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpikeSorterConfigLoader.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -85,7 +86,6 @@ class DigitalEventSeries;
 struct NewDigitalEventSeriesDisplayOptions;
 class DigitalIntervalSeries;
 struct NewDigitalIntervalSeriesDisplayOptions;
-class TimeFrame;
 class QEvent;
 class QMouseEvent;
 class QTimer;
@@ -171,6 +171,53 @@ public:
         updateCanvas(_time);
     }
     [[nodiscard]] float getVerticalSpacing() const { return _ySpacing; }
+
+    // ========================================================================
+    // EntityId-based Selection API (preferred for new code)
+    // ========================================================================
+
+    /**
+     * @brief Select an entity by its EntityId
+     * 
+     * Adds the entity to the selection set. Use with Ctrl+click for multi-select.
+     * 
+     * @param id EntityId to select
+     */
+    void selectEntity(EntityId id);
+
+    /**
+     * @brief Deselect an entity by its EntityId
+     * @param id EntityId to deselect
+     */
+    void deselectEntity(EntityId id);
+
+    /**
+     * @brief Toggle selection state of an entity
+     * @param id EntityId to toggle
+     */
+    void toggleEntitySelection(EntityId id);
+
+    /**
+     * @brief Clear all selected entities
+     */
+    void clearEntitySelection();
+
+    /**
+     * @brief Check if an entity is selected
+     * @param id EntityId to check
+     * @return true if the entity is in the selection set
+     */
+    [[nodiscard]] bool isEntitySelected(EntityId id) const;
+
+    /**
+     * @brief Get all selected entities
+     * @return Const reference to the selection set
+     */
+    [[nodiscard]] std::unordered_set<EntityId> const & getSelectedEntities() const;
+
+    // ========================================================================
+    // Legacy Interval Selection API (kept for compatibility with drag controller)
+    // ========================================================================
 
     // Interval selection and manipulation controls
 
@@ -441,7 +488,7 @@ public:
 
 public slots:
     void updateCanvas() { updateCanvas(_time); }
-    void updateCanvas(int time);
+    void updateCanvas(TimeFrameIndex time);
 
 signals:
     void mouseHover(float time_coordinate, float canvas_y, QString const & series_info);
@@ -533,7 +580,7 @@ private:
     // X-axis state using CorePlotting TimeSeriesViewState (Phase 4.6 migration)
     // Replaces legacy XAxis class with bounds-aware TimeRange + unified ViewState
     CorePlotting::TimeSeriesViewState _view_state;
-    int _time{0};
+    TimeFrameIndex _time{0};
 
     QOpenGLShaderProgram * m_program{nullptr};
     QOpenGLBuffer m_vbo;
@@ -568,7 +615,12 @@ private:
     bool _grid_lines_enabled{false};// Default to disabled
     int _grid_spacing{100};         // Default spacing of 100 time units
 
-    // Interval selection tracking
+    // EntityId-based selection state (multi-select supported)
+    // Used by SceneBuilder to apply selection_flags to rectangle batches
+    std::unordered_set<EntityId> _selected_entities;
+
+    // Legacy interval selection tracking (kept for drag controller compatibility)
+    // TODO: Migrate drag controller to use EntityId instead of time coordinates
     std::unordered_map<std::string, std::pair<int64_t, int64_t>> _selected_intervals;
 
     // Interval dragging state (uses CorePlotting::IntervalDragController)

@@ -11,6 +11,7 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -100,6 +101,24 @@ public:
      * @return Reference to this builder for chaining
      */
     SceneBuilder & setMatrices(glm::mat4 const & view, glm::mat4 const & projection);
+
+    /**
+     * @brief Set the selection state for the scene
+     * 
+     * Selected EntityIds will be stored in the scene and used to populate
+     * selection_flags in rectangle batches during build().
+     * 
+     * @param selected Set of selected EntityIds
+     * @return Reference to this builder for chaining
+     */
+    SceneBuilder & setSelectedEntities(std::unordered_set<EntityId> const & selected);
+
+    /**
+     * @brief Set the selection state for the scene (move version)
+     * @param selected Set of selected EntityIds (will be moved)
+     * @return Reference to this builder for chaining
+     */
+    SceneBuilder & setSelectedEntities(std::unordered_set<EntityId> && selected);
 
     // ========================================================================
     // Range-based API for mapped elements (preferred)
@@ -274,6 +293,9 @@ private:
     RenderableScene _scene;
     bool _has_matrices{false};
     bool _has_discrete_elements{false};
+
+    // Selection state to apply during build
+    std::unordered_set<EntityId> _selected_entities;
 
     // Bounds for spatial indexing
     std::optional<BoundingBox> _bounds;

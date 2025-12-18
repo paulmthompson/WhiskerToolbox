@@ -91,6 +91,27 @@ public:
      */
     [[nodiscard]] bool isUsingShaderManager() const { return m_use_shader_manager; }
 
+    /**
+     * @brief Visual style for selected rectangles
+     */
+    struct SelectionStyle {
+        float brightness_boost{0.3f};         ///< Amount to brighten selected rectangles
+        bool draw_selection_border{true};     ///< Whether to draw border around selected items
+        float selection_border_width{3.0f};   ///< Border width for selected items (pixels)
+        glm::vec4 selection_border_color{1.0f, 1.0f, 1.0f, 1.0f}; ///< Border color for selected items
+    };
+
+    /**
+     * @brief Set the visual style for selected rectangles
+     * @param style Selection style configuration
+     */
+    void setSelectionStyle(SelectionStyle const & style);
+
+    /**
+     * @brief Get the current selection style
+     */
+    [[nodiscard]] SelectionStyle const & getSelectionStyle() const { return m_selection_style; }
+
 private:
     bool loadShadersFromManager();
     bool compileEmbeddedShaders();
@@ -113,6 +134,7 @@ private:
     struct BatchData {
         std::vector<glm::vec4> bounds;  // {x, y, width, height}
         std::vector<glm::vec4> colors;
+        std::vector<uint8_t> selection_flags;  // 0 = normal, 1 = selected
         glm::mat4 model_matrix{1.0f};
     };
     std::vector<BatchData> m_batches;
@@ -121,6 +143,9 @@ private:
     bool m_border_enabled{false};
     glm::vec4 m_border_color{0.0f, 0.0f, 0.0f, 1.0f};
     float m_border_width{1.0f};
+
+    // Selection style
+    SelectionStyle m_selection_style;
 
     bool m_initialized{false};
     
