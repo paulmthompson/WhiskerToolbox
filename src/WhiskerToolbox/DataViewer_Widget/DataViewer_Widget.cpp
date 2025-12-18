@@ -302,9 +302,9 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
 }
 
 void DataViewer_Widget::_updatePlot(int time) {
-    //std::cout << "Time is " << time;
-    time = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));
-    //std::cout << ""
+    // Note: 'time' is a frame index from the scrollbar, not an actual time value.
+    // We keep it as an index because TimeSeriesViewState operates in index space.
+    // The labels will show indices, and data rendering uses indices for lookups.
     ui->openGLWidget->updateCanvas(time);
 
     _updateLabels();
