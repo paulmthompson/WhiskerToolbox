@@ -111,8 +111,7 @@ auto norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
 │                                                                     │
 │   Input: LayoutRequest                                              │
 │     ├─ Series metadata (type, ID, stackable)                       │
-│     ├─ Viewport bounds                                              │
-│     └─ Global settings (zoom, pan)                                  │
+│     └─ Viewport bounds (NDC)                                        │
 │                                                                     │
 │   Processing: ILayoutStrategy                                       │
 │     ├─ StackedLayoutStrategy (vertical stacking)                   │
@@ -123,6 +122,15 @@ auto norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
 │     └─ SeriesLayout[] (y_transform, x_transform per series)        │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+**Important**: User zoom/pan state is NOT part of LayoutRequest. The LayoutEngine
+computes *relative* series positions (Model matrices). Zoom and pan are handled by
+`ViewState` (CoordinateTransform/ViewState.hpp), which is the **single source of truth**
+for camera state and produces the View and Projection matrices.
+
+This separation means:
+- **Layout recalculation needed**: When series are added/removed or viewport bounds change
+- **No layout recalculation needed**: When user zooms or pans (only ViewState changes)
 
 ## Key Components
 
@@ -140,7 +148,8 @@ LayoutResponse response = engine.compute(request);
 Input specification containing:
 - **series**: Vector of `SeriesInfo` (ID, type, stackability)
 - **viewport_y_min/max**: Y-axis bounds in NDC (typically -1 to +1)
-- **global_zoom/scale/pan**: User-controlled transformations
+
+**Note**: User zoom/pan is intentionally NOT in LayoutRequest. See ViewState.
 
 ### SeriesLayout
 

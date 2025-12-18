@@ -48,6 +48,16 @@ struct SeriesInfo {
  * 
  * Contains all information needed by LayoutEngine to compute positions.
  * Immutable input to layout algorithms.
+ * 
+ * Note: User zoom/pan state is NOT part of LayoutRequest. That state belongs
+ * in ViewState (CoordinateTransform/ViewState.hpp), which is the single source
+ * of truth for camera state. The LayoutEngine computes relative series positions;
+ * ViewState handles the View and Projection matrices that apply zoom/pan.
+ * 
+ * MVP composition in widgets:
+ *   Model = SeriesLayout::computeModelMatrix()  // From LayoutEngine
+ *   View + Projection = computeMatricesFromViewState()  // From ViewState
+ *   Final = Projection * View * Model
  */
 struct LayoutRequest {
     /// Series to be laid out
@@ -56,11 +66,6 @@ struct LayoutRequest {
     /// Viewport bounds in NDC (typically -1 to +1)
     float viewport_y_min{-1.0f};
     float viewport_y_max{1.0f};
-
-    /// Global scaling factors (from user zoom/pan)
-    float global_zoom{1.0f};
-    float global_vertical_scale{1.0f};
-    float vertical_pan_offset{0.0f};
 
     /**
      * @brief Count series of a specific type

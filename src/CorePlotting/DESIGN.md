@@ -701,6 +701,41 @@ This is the correct pattern:
 - **View**: Shared (global camera pan/zoom)
 - **Projection**: Shared (maps world coordinates to NDC)
 
+### Single Source of Truth: ViewState for Camera State
+
+**Design Decision (December 2025)**: `ViewState` is the single source of truth for all
+zoom and pan state. The `LayoutEngine` does NOT contain zoom/pan fields.
+
+**Rationale**:
+- **ViewState** is already rendering-aware (viewport dimensions, projection matrices)
+- **LayoutEngine** computes *relative* series positioning (Model matrices), not camera state
+- **Separation of concerns**: Layout = "where is series N relative to series M", 
+  ViewState = "what part of world do we see"
+
+**MVP Composition in Widgets**:
+```cpp
+// 1. LayoutEngine computes series positions (no zoom/pan)
+LayoutResponse layout = _layout_engine.compute(request);
+
+// 2. ViewState handles zoom/pan → View/Projection matrices
+glm::mat4 view, proj;
+computeMatricesFromViewState(_view_state, view, proj);
+
+// 3. Compose for rendering
+for (auto const& series_layout : layout.layouts) {
+    glm::mat4 model = series_layout.computeModelMatrix();
+    glm::mat4 mvp = proj * view * model;
+    // Render with mvp...
+}
+```
+
+**When to Recalculate**:
+- **Layout recalculation**: Series added/removed, viewport bounds fundamentally change
+- **No layout recalculation**: User zooms or pans (only ViewState changes)
+
+This makes zoom/pan extremely cheap (just update ViewState and redraw), while
+layout changes are more expensive but rare.
+
 ## Dependencies
 
 ```

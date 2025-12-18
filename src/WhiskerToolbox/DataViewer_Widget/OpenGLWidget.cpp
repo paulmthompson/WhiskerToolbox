@@ -2132,9 +2132,6 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     CorePlotting::LayoutRequest request;
     request.viewport_y_min = _view_state.y_min;
     request.viewport_y_max = _view_state.y_max;
-    request.global_zoom = _view_state.global_zoom;
-    request.global_vertical_scale = _view_state.global_vertical_scale;
-    request.vertical_pan_offset = _view_state.vertical_pan_offset;
 
     // Collect visible analog series keys and order by spike sorter config
     std::vector<std::string> visible_analog_keys;
