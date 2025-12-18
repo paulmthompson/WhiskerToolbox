@@ -2,6 +2,7 @@
 #define COREPLOTTING_LAYOUT_LAYOUTTRANSFORM_HPP
 
 #include <glm/glm.hpp>
+
 #include <cmath>
 
 namespace CorePlotting {

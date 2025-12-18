@@ -2,6 +2,7 @@
 #define COREPLOTTING_LAYOUT_NORMALIZATIONHELPERS_HPP
 
 #include "LayoutTransform.hpp"
+
 #include <cmath>
 
 namespace CorePlotting {
