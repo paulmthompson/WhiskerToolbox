@@ -332,13 +332,6 @@ public:
 
     [[nodiscard]] bool isCreatingNewInterval() const { return _is_creating_new_interval; }
 
-    /**
-     * @brief Set the maximum X-axis bound (typically from TimeFrame count)
-     * @param xmax Maximum value for time range (typically total frame count - 1)
-     */
-    void setXLimit(int xmax);
-
-
     // Accessors for SVG export and external queries
     /**
      * @brief Get the current view state (time window and Y-axis state)

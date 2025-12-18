@@ -742,14 +742,6 @@ void OpenGLWidget::drawGridLines() {
 // TimeRange / ViewState Methods
 ///////////////////////////////////////////////////////////////////////////////
 
-void OpenGLWidget::setXLimit(int xmax) {
-    // With the simplified TimeSeriesViewState, we no longer enforce bounds.
-    // The time window simply defines what data is loaded into buffers.
-    // Areas outside the data range will render as blank space.
-    // This method is kept for API compatibility but is effectively a no-op.
-    (void)xmax;  // Unused - bounds enforcement removed
-}
-
 void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame) {
     _master_time_frame = master_time_frame;
 
