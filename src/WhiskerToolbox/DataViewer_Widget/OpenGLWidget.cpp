@@ -170,6 +170,11 @@ OpenGLWidget::~OpenGLWidget() {
 
 void OpenGLWidget::updateCanvas(int time) {
     _time = time;
+    
+    // Update view state immediately so labels are correct before paintGL runs
+    int64_t const zoom = _view_state.getTimeWidth();
+    _view_state.setTimeWindow(_time, zoom);
+    
     // Mark layout and scene as dirty since external changes may have occurred
     // (e.g., display_mode changes, series visibility changes)
     _layout_response_dirty = true;
@@ -481,13 +486,7 @@ void OpenGLWidget::paintGL() {
             static_cast<float>(b) / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //This has been converted to master coordinates
-    int const currentTime = _time;
-
-    // Keep the current zoom level (range width) and center on current time
-    int64_t const zoom = _view_state.getTimeWidth();
-    _view_state.setTimeWindow(currentTime, zoom);
-
+    // View state is already updated in updateCanvas() - just use it here
     if (_scene_renderer && _scene_renderer->isInitialized()) {
         renderWithSceneRenderer();
     }

@@ -346,9 +346,6 @@ public:
      */
     [[nodiscard]] CorePlotting::TimeSeriesViewState const & getViewState() const { return _view_state; }
 
-
-    [[nodiscard]] float getYMin() const { return _view_state.y_min; }
-    [[nodiscard]] float getYMax() const { return _view_state.y_max; }
     [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
     [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
     [[nodiscard]] auto const & getAnalogSeriesMap() const { return _analog_series; }

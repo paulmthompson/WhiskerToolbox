@@ -29,8 +29,13 @@ QString SVGExporter::exportToSVG() {
     auto const start_time = view_state.time_start;
     auto const end_time = view_state.time_end;
 
-    std::cout << "SVG Export - Time range: " << start_time << " to " << end_time << std::endl;
-    std::cout << "SVG Export - Y range: " << gl_widget_->getYMin() << " to " << gl_widget_->getYMax() << std::endl;
+    std::cout << "SVG Export - Time range: "
+              << start_time << " to "
+              << end_time << std::endl;
+    std::cout << "SVG Export - Y range: "
+              << view_state.y_min
+              << " to " << view_state.y_max
+              << std::endl;
 
     // Build scene from current plot state
     CorePlotting::RenderableScene scene = buildScene(start_time, end_time);
@@ -70,8 +75,10 @@ QString SVGExporter::exportToSVG() {
 CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_time) const {
     CorePlotting::RenderableScene scene;
 
-    auto const y_min = gl_widget_->getYMin();
-    auto const y_max = gl_widget_->getYMax();
+    auto const view_state = gl_widget_->getViewState();
+
+    auto const y_min = view_state.y_min;
+    auto const y_max = view_state.y_max;
 
     // Build shared View and Projection matrices
     // Get view state parameters from OpenGLWidget (Phase 4.7+ migration)
@@ -189,6 +196,11 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
         int start_time,
         int end_time) const {
 
+    auto const view_state = gl_widget_->getViewState();
+
+    auto const y_min = view_state.y_min;
+    auto const y_max = view_state.y_max;
+
     // Build model params from display options
     CorePlotting::EventSeriesMatrixParams model_params;
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
@@ -196,8 +208,8 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     model_params.event_height = display_options.event_height;
     model_params.margin_factor = display_options.margin_factor;
     model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
-    model_params.viewport_y_min = gl_widget_->getYMin();
-    model_params.viewport_y_max = gl_widget_->getYMax();
+    model_params.viewport_y_min = y_min;
+    model_params.viewport_y_max = y_max;
     model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas)
                                          ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
                                          : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
