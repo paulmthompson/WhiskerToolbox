@@ -327,29 +327,29 @@ float calculateAnalogYScale(AnalogSeriesMatrixParams const & params) {
     float const height_scale = params.allocated_height * 0.8f;
     return total_y_scale * height_scale;
 }
-} // anonymous namespace
+}// anonymous namespace
 
 float worldYToAnalogValue(float world_y, AnalogSeriesMatrixParams const & params) {
     float const final_y_scale = calculateAnalogYScale(params);
-    
+
     // Guard against division by zero
     if (std::abs(final_y_scale) < 1e-10f) {
         return params.data_mean;
     }
-    
+
     // Inverse of: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
     // Solving for y_data:
     //   y_world - allocated_y_center - user_offset = (y_data - data_mean) * scale
     //   (y_world - allocated_y_center - user_offset) / scale = y_data - data_mean
     //   y_data = (y_world - allocated_y_center - user_offset) / scale + data_mean
-    
+
     float const y_offset = params.allocated_y_center + params.user_vertical_offset;
     return (world_y - y_offset) / final_y_scale + params.data_mean;
 }
 
 float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params) {
     float const final_y_scale = calculateAnalogYScale(params);
-    
+
     // Forward transform: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
     float const y_offset = params.allocated_y_center + params.user_vertical_offset;
     return (data_value - params.data_mean) * final_y_scale + y_offset;

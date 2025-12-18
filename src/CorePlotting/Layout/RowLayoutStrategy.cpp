@@ -48,7 +48,7 @@ SeriesLayout RowLayoutStrategy::computeRowLayout(
     // Transform: y_world = y_normalized * (row_height / 2) + row_center
     float const gain = row_height * 0.5f;
     float const offset = row_center;
-    
+
     LayoutTransform y_transform(offset, gain);
     return SeriesLayout(series_info.id, y_transform, row_index);
 }

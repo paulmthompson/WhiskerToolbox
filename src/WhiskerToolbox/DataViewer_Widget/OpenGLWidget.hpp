@@ -362,15 +362,6 @@ public:
      */
     [[nodiscard]] CorePlotting::TimeRange const & getTimeRange() const { return _view_state.time_range; }
     
-    /**
-     * @brief Get the current visible time range start (in TimeFrameIndex units)
-     */
-    [[nodiscard]] int64_t getVisibleStart() const { return _view_state.time_range.start; }
-    
-    /**
-     * @brief Get the current visible time range end (in TimeFrameIndex units)
-     */
-    [[nodiscard]] int64_t getVisibleEnd() const { return _view_state.time_range.end; }
     
     [[nodiscard]] float getYMin() const { return _view_state.y_min; }
     [[nodiscard]] float getYMax() const { return _view_state.y_max; }

@@ -22,7 +22,7 @@ namespace NormalizationHelpers {
     float const safe_std = (std::abs(std_dev) > 1e-10f) ? std_dev : 1.0f;
     float const gain = 1.0f / safe_std;
     float const offset = -mean * gain;
-    return { offset, gain };
+    return {offset, gain};
 }
 
 /**
@@ -43,10 +43,10 @@ namespace NormalizationHelpers {
     float const data_range = data_max - data_min;
     float const target_range = target_max - target_min;
     float const safe_range = (std::abs(data_range) > 1e-10f) ? data_range : 1.0f;
-    
+
     float const gain = target_range / safe_range;
     float const offset = target_min - data_min * gain;
-    return { offset, gain };
+    return {offset, gain};
 }
 
 /**
@@ -65,7 +65,7 @@ namespace NormalizationHelpers {
     float const safe_std = (std::abs(std_dev) > 1e-10f) ? std_dev : 1.0f;
     float const gain = 1.0f / (num_std_devs * safe_std);
     float const offset = -mean * gain;
-    return { offset, gain };
+    return {offset, gain};
 }
 
 /**
@@ -110,7 +110,7 @@ namespace NormalizationHelpers {
  * @return Transform that centers at specified value
  */
 [[nodiscard]] inline LayoutTransform forCentered(float center, float gain = 1.0f) {
-    return { -center * gain, gain };
+    return {-center * gain, gain};
 }
 
 /**
@@ -123,10 +123,10 @@ namespace NormalizationHelpers {
  * @return Transform with specified gain and offset
  */
 [[nodiscard]] inline LayoutTransform manual(float gain, float offset) {
-    return { offset, gain };
+    return {offset, gain};
 }
 
-} // namespace NormalizationHelpers
-} // namespace CorePlotting
+}// namespace NormalizationHelpers
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_LAYOUT_NORMALIZATIONHELPERS_HPP
+#endif// COREPLOTTING_LAYOUT_NORMALIZATIONHELPERS_HPP

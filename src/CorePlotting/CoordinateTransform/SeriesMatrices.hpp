@@ -1,8 +1,8 @@
 #ifndef COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
 #define COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
 #include "Layout/LayoutTransform.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -363,7 +363,7 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix,
  * @param y_transform Combined transform for Y axis (data normalization + layout + user adjustments)
  * @return Model matrix that applies the transform
  */
-[[nodiscard]] inline glm::mat4 createModelMatrix(LayoutTransform const& y_transform) {
+[[nodiscard]] inline glm::mat4 createModelMatrix(LayoutTransform const & y_transform) {
     return y_transform.toModelMatrixY();
 }
 
@@ -376,13 +376,13 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix,
  * @param y_transform Transform for Y axis
  * @return Model matrix applying both transforms
  */
-[[nodiscard]] inline glm::mat4 createModelMatrix(LayoutTransform const& x_transform,
-                                                  LayoutTransform const& y_transform) {
+[[nodiscard]] inline glm::mat4 createModelMatrix(LayoutTransform const & x_transform,
+                                                 LayoutTransform const & y_transform) {
     glm::mat4 m(1.0f);
-    m[0][0] = x_transform.gain;    // X scale
-    m[1][1] = y_transform.gain;    // Y scale
-    m[3][0] = x_transform.offset;  // X translation
-    m[3][1] = y_transform.offset;  // Y translation
+    m[0][0] = x_transform.gain;  // X scale
+    m[1][1] = y_transform.gain;  // Y scale
+    m[3][0] = x_transform.offset;// X translation
+    m[3][1] = y_transform.offset;// Y translation
     return m;
 }
 
