@@ -83,7 +83,7 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
     // Build shared View and Projection matrices
     // Get view state parameters from OpenGLWidget (Phase 4.7+ migration)
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
+    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
 
     scene.view_matrix = CorePlotting::getAnalogViewMatrix(view_params);
     scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
@@ -148,20 +148,22 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
         int start_time,
         int end_time) const {
 
+    auto const view_state = gl_widget_->getViewState();
+
     // Build model params from display options
     CorePlotting::AnalogSeriesMatrixParams model_params;
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
     model_params.allocated_height = display_options.layout.allocated_height;
     model_params.intrinsic_scale = display_options.scaling.intrinsic_scale;
     model_params.user_scale_factor = display_options.user_scale_factor;
-    model_params.global_zoom = gl_widget_->getGlobalZoom();
+    model_params.global_zoom = view_state.global_zoom;
     model_params.user_vertical_offset = display_options.scaling.user_vertical_offset;
     model_params.data_mean = display_options.data_cache.cached_mean;
     model_params.std_dev = display_options.data_cache.cached_std_dev;
-    model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
+    model_params.global_vertical_scale = view_state.global_vertical_scale;
 
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
+    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -207,7 +209,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     model_params.allocated_height = display_options.layout.allocated_height;
     model_params.event_height = display_options.event_height;
     model_params.margin_factor = display_options.margin_factor;
-    model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
+    model_params.global_vertical_scale = view_state.global_vertical_scale;
     model_params.viewport_y_min = y_min;
     model_params.viewport_y_max = y_max;
     model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas)
@@ -215,7 +217,7 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
                                          : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
 
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
+    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -254,17 +256,19 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
         float start_time,
         float end_time) const {
 
+    auto const view_state = gl_widget_->getViewState();
+
     // Build model params from display options
     CorePlotting::IntervalSeriesMatrixParams model_params;
     model_params.allocated_y_center = display_options.layout.allocated_y_center;
     model_params.allocated_height = display_options.layout.allocated_height;
     model_params.margin_factor = display_options.margin_factor;
-    model_params.global_zoom = gl_widget_->getGlobalZoom();
-    model_params.global_vertical_scale = gl_widget_->getGlobalVerticalScale();
+    model_params.global_zoom = view_state.global_zoom;
+    model_params.global_vertical_scale = view_state.global_vertical_scale;
     model_params.extend_full_canvas = display_options.extend_full_canvas;
 
     CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = gl_widget_->getVerticalPanOffset();
+    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
 
     // Convert hex color to glm::vec4 with alpha
     int r, g, b;

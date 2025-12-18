@@ -406,24 +406,6 @@ public:
         updateCanvas(_time);
     }
 
-    /**
-     * @brief Get current global zoom factor
-     * @return Global zoom value
-     */
-    [[nodiscard]] float getGlobalZoom() const { return _view_state.global_zoom; }
-
-    /**
-     * @brief Get current global vertical scale
-     * @return Global vertical scale value
-     */
-    [[nodiscard]] float getGlobalVerticalScale() const { return _view_state.global_vertical_scale; }
-
-    /**
-     * @brief Get current vertical pan offset
-     * @return Vertical pan offset in NDC units
-     */
-    [[nodiscard]] float getVerticalPanOffset() const { return _view_state.vertical_pan_offset; }
-
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
         return std::make_pair(width(), height());
     }
