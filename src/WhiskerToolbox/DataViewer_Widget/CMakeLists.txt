@@ -11,6 +11,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         OpenGLWidget.hpp
         SceneBuildingHelpers.cpp
         SceneBuildingHelpers.hpp
+        SpikeSorterConfigLoader.cpp
+        SpikeSorterConfigLoader.hpp
         SVGExporter.cpp
         SVGExporter.hpp
         AnalogTimeSeries/AnalogViewer_Widget.cpp

@@ -1,9 +1,9 @@
 #include "OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
-#include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
@@ -22,12 +22,15 @@
 #include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <QEvent>
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLShader>
 #include <QPainter>
 #include <QPointer>
+#include <QTimer>
+#include <QToolTip>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -57,7 +60,7 @@ namespace {
  * 4. Global scaling (from ViewState)
  */
 [[nodiscard]] CorePlotting::LayoutTransform composeAnalogYTransform(
-        CorePlotting::SeriesLayout const& layout,
+        CorePlotting::SeriesLayout const & layout,
         float data_mean,
         float std_dev,
         float intrinsic_scale,
@@ -65,31 +68,28 @@ namespace {
         float user_vertical_offset,
         float global_zoom,
         float global_vertical_scale) {
-    
+
     // Use NormalizationHelpers to create the data normalization transform
     // forStdDevRange maps mean ± 3*std_dev to ±1
     auto data_norm = CorePlotting::NormalizationHelpers::forStdDevRange(data_mean, std_dev, 3.0f);
-    
+
     // User adjustments: additional scaling and offset
     auto user_adj = CorePlotting::NormalizationHelpers::manual(
-        intrinsic_scale * user_scale_factor,
-        user_vertical_offset
-    );
-    
+            intrinsic_scale * user_scale_factor,
+            user_vertical_offset);
+
     // Layout provides: offset = center, gain = half_height
     // Apply 80% margin factor within allocated space
     constexpr float margin_factor = 0.8f;
     CorePlotting::LayoutTransform layout_with_margin{
-        layout.y_transform.offset,
-        layout.y_transform.gain * margin_factor
-    };
-    
+            layout.y_transform.offset,
+            layout.y_transform.gain * margin_factor};
+
     // Global scaling
     auto global_adj = CorePlotting::NormalizationHelpers::manual(
-        global_zoom * global_vertical_scale,
-        0.0f
-    );
-    
+            global_zoom * global_vertical_scale,
+            0.0f);
+
     // Compose in order: data_norm -> user_adj -> layout -> global
     // Result = global.compose(layout.compose(user_adj.compose(data_norm)))
     return global_adj.compose(layout_with_margin.compose(user_adj.compose(data_norm)));
@@ -99,14 +99,14 @@ namespace {
  * @brief Compose Y transform for event series (stacked mode)
  */
 [[nodiscard]] CorePlotting::LayoutTransform composeEventYTransform(
-        CorePlotting::SeriesLayout const& layout,
+        CorePlotting::SeriesLayout const & layout,
         float margin_factor,
         float global_vertical_scale) {
-    
+
     // Events map [-1, 1] to allocated space with margin
     float const half_height = layout.y_transform.gain * margin_factor * 0.5f * global_vertical_scale;
     float const center = layout.y_transform.offset;
-    
+
     return CorePlotting::LayoutTransform{center, half_height};
 }
 
@@ -117,12 +117,12 @@ namespace {
         float viewport_y_min,
         float viewport_y_max,
         float margin_factor) {
-    
+
     // Full canvas: map [-1, 1] to viewport bounds with margin
     float const height = (viewport_y_max - viewport_y_min) * margin_factor;
     float const center = (viewport_y_max + viewport_y_min) * 0.5f;
     float const half_height = height * 0.5f;
-    
+
     return CorePlotting::LayoutTransform{center, half_height};
 }
 
@@ -130,20 +130,20 @@ namespace {
  * @brief Compose Y transform for interval series
  */
 [[nodiscard]] CorePlotting::LayoutTransform composeIntervalYTransform(
-        CorePlotting::SeriesLayout const& layout,
+        CorePlotting::SeriesLayout const & layout,
         float margin_factor,
         float global_zoom,
         float global_vertical_scale) {
-    
+
     // Intervals map [-1, 1] to allocated space with margin and global scaling
-    float const half_height = layout.y_transform.gain * margin_factor * 0.5f * 
-                             global_zoom * global_vertical_scale;
+    float const half_height = layout.y_transform.gain * margin_factor * 0.5f *
+                              global_zoom * global_vertical_scale;
     float const center = layout.y_transform.offset;
-    
+
     return CorePlotting::LayoutTransform{center, half_height};
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
@@ -747,27 +747,26 @@ void OpenGLWidget::setXLimit(int xmax) {
     // Update the TimeRange max bound
     // TimeRange uses inclusive bounds, so max_bound = xmax - 1 for total frame count
     _view_state.time_range.max_bound = xmax > 0 ? xmax - 1 : 0;
-    
+
     // Re-clamp current visible range to new bounds
     _view_state.time_range.setVisibleRange(
-        _view_state.time_range.start,
-        _view_state.time_range.end
-    );
+            _view_state.time_range.start,
+            _view_state.time_range.end);
 }
 
 void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame) {
     _master_time_frame = master_time_frame;
-    
+
     // Initialize TimeRange bounds from TimeFrame
     if (master_time_frame) {
         _view_state.time_range = CorePlotting::TimeRange::fromTimeFrame(*master_time_frame);
-        
+
         // Set a reasonable initial visible range (not the entire TimeFrame!)
         // Default to 10,000 samples or the full range if smaller
         constexpr int64_t DEFAULT_INITIAL_RANGE = 10000;
         int64_t const total_range = _view_state.time_range.getTotalBoundedWidth();
         int64_t const initial_range = std::min(DEFAULT_INITIAL_RANGE, total_range);
-        
+
         // Center at the beginning of the data
         int64_t const initial_center = _view_state.time_range.min_bound + initial_range / 2;
         _view_state.time_range.setCenterAndZoom(initial_center, initial_range);
@@ -777,19 +776,21 @@ void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_fra
     }
 }
 
+
 void OpenGLWidget::changeRangeWidth(int64_t range_delta) {
     int64_t const center = _view_state.time_range.getCenter();
     int64_t const current_range = _view_state.time_range.getWidth();
-    int64_t const new_range = current_range + range_delta;  // Add delta to current range
+    int64_t const new_range = current_range + range_delta;// Add delta to current range
     _view_state.time_range.setCenterAndZoom(center, new_range);
     updateCanvas(_time);
 }
+
 
 int64_t OpenGLWidget::setRangeWidth(int64_t range_width) {
     int64_t const center = _view_state.time_range.getCenter();
     int64_t const actual_range = _view_state.time_range.setCenterAndZoom(center, range_width);
     updateCanvas(_time);
-    return actual_range;  // Return the actual range width achieved
+    return actual_range;// Return the actual range width achieved
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -804,7 +805,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     // Find the series
     auto const analog_it = _analog_series.find(series_key);
     if (analog_it == _analog_series.end()) {
-        return 0.0f;  // Series not found
+        return 0.0f;// Series not found
     }
 
     auto const & display_options = analog_it->second.display_options;
@@ -821,13 +822,11 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     } else {
         // Fallback to display_options layout
         layout = CorePlotting::SeriesLayout{
-            series_key,
-            CorePlotting::LayoutTransform{
-                display_options->layout.allocated_y_center,
-                display_options->layout.allocated_height * 0.5f
-            },
-            0
-        };
+                series_key,
+                CorePlotting::LayoutTransform{
+                        display_options->layout.allocated_y_center,
+                        display_options->layout.allocated_height * 0.5f},
+                0};
     }
 
     // Step 3: Compose the same Y transform used for rendering
@@ -928,40 +927,38 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
 
     // Use CorePlotting time axis utilities for coordinate conversion
     CorePlotting::TimeAxisParams const time_params(
-        _view_state.time_range.start,
-        _view_state.time_range.end,
-        width()
-    );
-    
+            _view_state.time_range.start,
+            _view_state.time_range.end,
+            width());
+
     // Convert canvas position to time (world X coordinate)
     float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
-    
+
     // Configure hit tester with edge tolerance in world units
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
-    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) / 
-                                  static_cast<float>(time_params.viewport_width_px);
+    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) /
+                                 static_cast<float>(time_params.viewport_width_px);
     float const edge_tolerance = EDGE_TOLERANCE_PX * time_per_pixel;
-    
+
     CorePlotting::HitTestConfig config;
     config.edge_tolerance = edge_tolerance;
     config.point_tolerance = edge_tolerance;
-    
+
     CorePlotting::SceneHitTester tester(config);
-    
+
     // Convert selected intervals to the format expected by SceneHitTester
     std::map<std::string, std::pair<int64_t, int64_t>> selected_intervals_map;
-    for (auto const & [key, bounds] : _selected_intervals) {
+    for (auto const & [key, bounds]: _selected_intervals) {
         selected_intervals_map[key] = bounds;
     }
-    
+
     // Use SceneHitTester to find interval edges
     CorePlotting::HitTestResult result = tester.findIntervalEdge(
-        world_x,
-        _cached_scene,
-        selected_intervals_map,
-        _rectangle_batch_key_map
-    );
-    
+            world_x,
+            _cached_scene,
+            selected_intervals_map,
+            _rectangle_batch_key_map);
+
     if (result.isIntervalEdge()) {
         bool is_left_edge = (result.hit_type == CorePlotting::HitType::IntervalEdgeLeft);
         return std::make_pair(result.series_key, is_left_edge);
@@ -972,16 +969,16 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
     if (!_cached_scene.rectangle_batches.empty()) {
         return std::nullopt;
     }
-    
+
     // Legacy fallback for when scene isn't available yet
     for (auto const & [series_key, interval_bounds]: _selected_intervals) {
         auto const [start_time, end_time] = interval_bounds;
-        
+
         auto const start_time_f = static_cast<float>(start_time);
         auto const end_time_f = static_cast<float>(end_time);
 
         // Quick bounds check with tolerance (in time units)
-        if (world_x < start_time_f - edge_tolerance || 
+        if (world_x < start_time_f - edge_tolerance ||
             world_x > end_time_f + edge_tolerance) {
             continue;
         }
@@ -997,7 +994,7 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
         }
     }
 
-    static_cast<void>(canvas_y);  // Y not used for edge detection
+    static_cast<void>(canvas_y);// Y not used for edge detection
     return std::nullopt;
 }
 
@@ -1011,13 +1008,13 @@ void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_lef
 
     // Create HitTestResult for the IntervalDragController
     auto hit_result = CorePlotting::HitTestResult::intervalEdgeHit(
-        series_key,
-        EntityId{0},  // EntityId not used for edge drag, could be enhanced later
-        is_left_edge,
-        start_time,
-        end_time,
-        is_left_edge ? static_cast<float>(start_time) : static_cast<float>(end_time),
-        0.0f  // distance not relevant here
+            series_key,
+            EntityId{0},// EntityId not used for edge drag, could be enhanced later
+            is_left_edge,
+            start_time,
+            end_time,
+            is_left_edge ? static_cast<float>(start_time) : static_cast<float>(end_time),
+            0.0f// distance not relevant here
     );
 
     // Configure the drag controller with time frame bounds if available
@@ -1025,14 +1022,14 @@ void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_lef
     config.min_width = 1;
     config.snap_to_integer = true;
     config.allow_edge_swap = false;
-    
+
     // Set time bounds from master time frame if available
     if (_master_time_frame && _master_time_frame->getTotalFrameCount() > 0) {
         config.min_time = static_cast<int64_t>(_master_time_frame->getTimeAtIndex(TimeFrameIndex(0)));
         config.max_time = static_cast<int64_t>(_master_time_frame->getTimeAtIndex(
-            TimeFrameIndex(static_cast<int64_t>(_master_time_frame->getTotalFrameCount() - 1))));
+                TimeFrameIndex(static_cast<int64_t>(_master_time_frame->getTotalFrameCount() - 1))));
     }
-    
+
     _interval_drag_controller.setConfig(config);
 
     // Start the drag
@@ -1045,8 +1042,8 @@ void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_lef
 
     std::cout << "Started dragging " << (is_left_edge ? "left" : "right")
               << " edge of interval [" << start_time << ", " << end_time << "]" << std::endl;
-    
-    static_cast<void>(start_pos);  // start_pos no longer needed with controller
+
+    static_cast<void>(start_pos);// start_pos no longer needed with controller
 }
 
 void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
@@ -1239,7 +1236,7 @@ void OpenGLWidget::cancelIntervalDrag() {
 
     // Cancel the drag in the controller
     _interval_drag_controller.cancelDrag();
-    
+
     // Reset cursor
     setCursor(Qt::ArrowCursor);
 
@@ -1643,13 +1640,13 @@ void OpenGLWidget::cancelTooltipTimer() {
 std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
     // Use CorePlotting SceneHitTester for comprehensive hit testing
     // This queries both spatial index (for discrete elements) and layout (for series regions)
-    
+
     // Compute layout if dirty (const_cast needed for lazy evaluation pattern)
     // Note: This is safe because computeAndApplyLayout only modifies cache state
     if (_layout_response_dirty) {
-        const_cast<OpenGLWidget*>(this)->computeAndApplyLayout();
+        const_cast<OpenGLWidget *>(this)->computeAndApplyLayout();
     }
-    
+
     if (_cached_layout_response.layouts.empty()) {
         return std::nullopt;
     }
@@ -1661,17 +1658,17 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     // Apply vertical pan offset to get the actual Y position in the coordinate system
     float const world_y = ndc_y - _view_state.vertical_pan_offset;
     float const world_x = canvasXToTime(canvas_x);
-    
+
     // First try full hit test if we have a cached scene with spatial index
     // This can identify specific discrete elements (events, points)
     if (_cached_scene.spatial_index) {
         CorePlotting::HitTestResult result = _hit_tester.hitTest(
-            world_x, world_y, _cached_scene, _cached_layout_response);
-        
+                world_x, world_y, _cached_scene, _cached_layout_response);
+
         if (result.hasHit()) {
             std::string series_type;
             std::string series_key = result.series_key;
-            
+
             // For discrete hits, look up series key from batch maps if needed
             if (series_key.empty() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
                 // Try to find series key from glyph batch maps
@@ -1681,7 +1678,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
                     series_key = region_result.series_key;
                 }
             }
-            
+
             // Determine series type
             if (_analog_series.find(series_key) != _analog_series.end()) {
                 series_type = "Analog";
@@ -1692,15 +1689,15 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
             } else {
                 series_type = "Unknown";
             }
-            
+
             return std::make_pair(series_type, series_key);
         }
     }
-    
+
     // Fall back to series region query (always works, uses layout)
     CorePlotting::HitTestResult result = _hit_tester.querySeriesRegion(
-        world_x, world_y, _cached_layout_response);
-    
+            world_x, world_y, _cached_layout_response);
+
     if (result.hasHit()) {
         // Determine series type from the key by checking our series maps
         std::string series_type;
@@ -1713,7 +1710,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
         } else {
             series_type = "Unknown";
         }
-        
+
         return std::make_pair(series_type, result.series_key);
     }
 
@@ -1779,12 +1776,12 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // Create SceneBuilder and set bounds for spatial indexing
     // Bounds are in world coordinates: X = [start_time, end_time], Y = [y_min, y_max]
     BoundingBox scene_bounds(
-        static_cast<float>(start_time.getValue()),  // min_x
-        _view_state.y_min,                          // min_y
-        static_cast<float>(end_time.getValue()),    // max_x
-        _view_state.y_max                           // max_y
+            static_cast<float>(start_time.getValue()),// min_x
+            _view_state.y_min,                        // min_y
+            static_cast<float>(end_time.getValue()),  // max_x
+            _view_state.y_max                         // max_y
     );
-    
+
     CorePlotting::SceneBuilder builder;
     builder.setBounds(scene_bounds);
     builder.setMatrices(view, projection);
@@ -1797,7 +1794,7 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // Build the scene (this also builds spatial index for discrete elements)
     _cached_scene = builder.build();
     _scene_dirty = false;
-    
+
     // Store batch key maps for hit testing
     _rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
     _glyph_batch_key_map = builder.getGlyphBatchKeyMap();
@@ -1829,13 +1826,11 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         if (!series_layout) {
             // Fallback to display_options layout if not found (shouldn't happen)
             CorePlotting::SeriesLayout fallback_layout{
-                key,
-                CorePlotting::LayoutTransform{
-                    display_options->layout.allocated_y_center,
-                    display_options->layout.allocated_height * 0.5f
-                },
-                0
-            };
+                    key,
+                    CorePlotting::LayoutTransform{
+                            display_options->layout.allocated_y_center,
+                            display_options->layout.allocated_height * 0.5f},
+                    0};
             series_layout = &fallback_layout;
         }
 
@@ -1849,7 +1844,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 display_options->scaling.user_vertical_offset,
                 _view_state.global_zoom,
                 _view_state.global_vertical_scale);
-        
+
         // Create model matrix directly from the composed transform
         glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
@@ -1869,7 +1864,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 static_cast<float>(b) / 255.0f,
                 1.0f);
         batch_params.thickness = static_cast<float>(display_options->style.line_thickness);
-        
+
         // Choose render mode based on gap handling setting
         if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
             batch_params.render_mode = DataViewerHelpers::AnalogRenderMode::Markers;
@@ -1931,18 +1926,16 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
             } else {
                 // Fallback if layout not found
                 CorePlotting::SeriesLayout fallback{
-                    key,
-                    CorePlotting::LayoutTransform{
-                        display_options->layout.allocated_y_center,
-                        display_options->layout.allocated_height * 0.5f
-                    },
-                    0
-                };
+                        key,
+                        CorePlotting::LayoutTransform{
+                                display_options->layout.allocated_y_center,
+                                display_options->layout.allocated_height * 0.5f},
+                        0};
                 y_transform = composeEventYTransform(
                         fallback, display_options->margin_factor, _view_state.global_vertical_scale);
             }
         }
-        
+
         // Create model matrix from composed transform
         glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
@@ -1999,18 +1992,16 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         } else {
             // Fallback if layout not found
             CorePlotting::SeriesLayout fallback{
-                key,
-                CorePlotting::LayoutTransform{
-                    display_options->layout.allocated_y_center,
-                    display_options->layout.allocated_height * 0.5f
-                },
-                0
-            };
+                    key,
+                    CorePlotting::LayoutTransform{
+                            display_options->layout.allocated_y_center,
+                            display_options->layout.allocated_height * 0.5f},
+                    0};
             y_transform = composeIntervalYTransform(
                     fallback, display_options->margin_factor,
                     _view_state.global_zoom, _view_state.global_vertical_scale);
         }
-        
+
         // Create model matrix from composed transform
         glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
@@ -2035,32 +2026,32 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         if (!batch.bounds.empty()) {
             builder.addRectangleBatch(std::move(batch));
         }
-        
+
         // Draw selection highlight if this series has a selected interval
         // (and we're not currently dragging it)
         auto selected_interval = getSelectedInterval(key);
         auto const & drag_state = _interval_drag_controller.getState();
         if (selected_interval.has_value() && !(_interval_drag_controller.isActive() && drag_state.series_key == key)) {
             auto const [sel_start_time, sel_end_time] = selected_interval.value();
-            
+
             // Check if the selected interval overlaps with visible range
             if (sel_end_time >= _view_state.time_range.start && sel_start_time <= _view_state.time_range.end) {
                 // Clip to visible range
                 int64_t const highlighted_start = std::max(sel_start_time, _view_state.time_range.start);
                 int64_t const highlighted_end = std::min(sel_end_time, _view_state.time_range.end);
-                
+
                 // Create a brighter version of the color for highlighting
                 glm::vec4 highlight_color(
                         std::min(1.0f, static_cast<float>(r) / 255.0f + 0.3f),
                         std::min(1.0f, static_cast<float>(g) / 255.0f + 0.3f),
                         std::min(1.0f, static_cast<float>(b) / 255.0f + 0.3f),
                         1.0f);
-                
+
                 // Build and add highlight border to builder (use same model matrix)
                 auto highlight_batch = DataViewerHelpers::buildIntervalHighlightBorderBatch(
                         highlighted_start, highlighted_end,
                         highlight_color, 4.0f, model_matrix);
-                
+
                 if (!highlight_batch.vertices.empty()) {
                     builder.addPolyLineBatch(std::move(highlight_batch));
                 }
@@ -2073,61 +2064,6 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 // Layout System (Phase 4.9 Migration - Unified LayoutEngine)
 // =============================================================================
 
-bool OpenGLWidget::extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id) {
-    channel_id = -1;
-    group.clear();
-    auto const pos = key.rfind('_');
-    if (pos == std::string::npos || pos + 1 >= key.size()) {
-        return false;
-    }
-    group = key.substr(0, pos);
-    try {
-        int const parsed = std::stoi(key.substr(pos + 1));
-        channel_id = parsed > 0 ? parsed - 1 : parsed;
-    } catch (...) {
-        channel_id = -1;
-        return false;
-    }
-    return true;
-}
-
-std::vector<std::string> OpenGLWidget::orderAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const {
-    // Group visible analog series by group_name
-    struct Item { std::string key; std::string group; int channel; };
-    std::vector<Item> items;
-    items.reserve(visible_keys.size());
-    for (auto const & key : visible_keys) {
-        std::string group_name;
-        int channel_id;
-        extractGroupAndChannel(key, group_name, channel_id);
-        Item it{key, group_name, channel_id};
-        items.push_back(std::move(it));
-    }
-
-    // Sort with configuration: by group; within group, if config present, by ascending y; else by channel id
-    std::stable_sort(items.begin(), items.end(), [&](Item const & a, Item const & b) {
-        if (a.group != b.group) return a.group < b.group;
-        auto cfg_it = _spike_sorter_configs.find(a.group);
-        if (cfg_it == _spike_sorter_configs.end()) {
-            return a.channel < b.channel;
-        }
-        auto const & cfg = cfg_it->second;
-        auto find_y = [&](int ch) {
-            for (auto const & p : cfg) if (p.channel_id == ch) return p.y;
-            return 0.0f;
-        };
-        float ya = find_y(a.channel);
-        float yb = find_y(b.channel);
-        if (ya == yb) return a.channel < b.channel;
-        return ya < yb; // ascending by y so larger y get larger index (top)
-    });
-
-    std::vector<std::string> keys;
-    keys.reserve(items.size());
-    for (auto const & it : items) keys.push_back(it.key);
-    return keys;
-}
-
 CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     CorePlotting::LayoutRequest request;
     request.viewport_y_min = _view_state.y_min;
@@ -2135,34 +2071,34 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
 
     // Collect visible analog series keys and order by spike sorter config
     std::vector<std::string> visible_analog_keys;
-    for (auto const & [key, data] : _analog_series) {
+    for (auto const & [key, data]: _analog_series) {
         if (data.display_options->style.is_visible) {
             visible_analog_keys.push_back(key);
         }
     }
-    
+
     // Apply spike sorter ordering if any configs exist
     if (!_spike_sorter_configs.empty()) {
-        visible_analog_keys = orderAnalogKeysByConfig(visible_analog_keys);
+        visible_analog_keys = orderKeysBySpikeSorterConfig(visible_analog_keys, _spike_sorter_configs);
     }
-    
+
     // Add analog series in order
-    for (auto const & key : visible_analog_keys) {
+    for (auto const & key: visible_analog_keys) {
         request.series.emplace_back(key, CorePlotting::SeriesType::Analog, true);
     }
 
     // Add digital event series (stacked events after analog series, full-canvas events as non-stackable)
-    for (auto const & [key, data] : _digital_event_series) {
+    for (auto const & [key, data]: _digital_event_series) {
         if (!data.display_options->style.is_visible) continue;
-        
+
         bool is_stacked = (data.display_options->display_mode == EventDisplayMode::Stacked);
         request.series.emplace_back(key, CorePlotting::SeriesType::DigitalEvent, is_stacked);
     }
 
     // Add digital interval series (always full-canvas, non-stackable)
-    for (auto const & [key, data] : _digital_interval_series) {
+    for (auto const & [key, data]: _digital_interval_series) {
         if (!data.display_options->style.is_visible) continue;
-        
+
         request.series.emplace_back(key, CorePlotting::SeriesType::DigitalInterval, false);
     }
 
@@ -2176,13 +2112,13 @@ void OpenGLWidget::computeAndApplyLayout() {
 
     // Build layout request from current series state
     CorePlotting::LayoutRequest request = buildLayoutRequest();
-    
+
     // Compute layout using LayoutEngine
     _cached_layout_response = _layout_engine.compute(request);
-    
+
     // Apply computed layout to display options
     // This updates each series' allocated_y_center and allocated_height
-    for (auto const & layout : _cached_layout_response.layouts) {
+    for (auto const & layout: _cached_layout_response.layouts) {
         // Find and update analog series
         auto analog_it = _analog_series.find(layout.series_id);
         if (analog_it != _analog_series.end()) {
@@ -2190,7 +2126,7 @@ void OpenGLWidget::computeAndApplyLayout() {
             analog_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
             continue;
         }
-        
+
         // Find and update digital event series
         auto event_it = _digital_event_series.find(layout.series_id);
         if (event_it != _digital_event_series.end()) {
@@ -2198,7 +2134,7 @@ void OpenGLWidget::computeAndApplyLayout() {
             event_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
             continue;
         }
-        
+
         // Find and update digital interval series
         auto interval_it = _digital_interval_series.find(layout.series_id);
         if (interval_it != _digital_interval_series.end()) {
@@ -2207,7 +2143,7 @@ void OpenGLWidget::computeAndApplyLayout() {
             continue;
         }
     }
-    
+
     // Note: _rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()
     // This ensures the batch key map stays synchronized with the actual rendered batches
 
@@ -2215,7 +2151,7 @@ void OpenGLWidget::computeAndApplyLayout() {
 }
 
 void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
-                                                 std::vector<ChannelPosition> const & positions) {
+                                                std::vector<ChannelPosition> const & positions) {
     _spike_sorter_configs[group_name] = positions;
     _layout_response_dirty = true;
     updateCanvas(_time);

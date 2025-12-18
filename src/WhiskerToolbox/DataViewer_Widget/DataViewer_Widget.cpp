@@ -14,6 +14,7 @@
 #include "Feature_Tree_Model.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
+#include "SpikeSorterConfigLoader.hpp"
 #include "SVGExporter.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -1111,31 +1112,7 @@ void DataViewer_Widget::_clearConfigurationForGroup(QString const & group_name) 
 }
 
 std::vector<ChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {
-    std::vector<ChannelPosition> out;
-    std::istringstream ss(text);
-    std::string line;
-    bool first = true;
-    while (std::getline(ss, line)) {
-        if (line.empty()) continue;
-        if (first) {
-            first = false;
-            continue;
-        }// skip header row (electrode name)
-        std::istringstream ls(line);
-        int row = 0;
-        int ch = 0;
-        float x = 0.0f;
-        float y = 0.0f;
-        if (!(ls >> row >> ch >> x >> y)) continue;
-        // SpikeSorter is 1-based; convert to 0-based for our program
-        if (ch > 0) ch -= 1;
-        ChannelPosition p;
-        p.channel_id = ch;
-        p.x = x;
-        p.y = y;
-        out.push_back(p);
-    }
-    return out;
+    return parseSpikeSorterConfig(text);
 }
 
 void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text) {

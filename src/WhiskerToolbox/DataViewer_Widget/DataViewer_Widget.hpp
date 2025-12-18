@@ -5,6 +5,7 @@
 #include <QPoint>
 
 #include "DataManager/DataManagerFwd.hpp"
+#include "SpikeSorterConfigLoader.hpp"
 
 #include <memory>
 #include <string>
@@ -27,7 +28,6 @@ enum class PlotTheme;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;
-struct ChannelPosition;
 
 enum class ZoomScalingMode {
     Fixed,  // Original fixed zoom factor

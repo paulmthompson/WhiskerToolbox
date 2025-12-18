@@ -49,31 +49,21 @@
  * @see CorePlotting/ROADMAP.md for migration history
  */
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
+#include "CorePlotting/CoordinateTransform/TimeRange.hpp" // TimeSeriesViewState
 #include "CorePlotting/Interaction/IntervalDragController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-
-// Forward declaration for SceneBuilder (full include in .cpp)
-namespace CorePlotting {
-class SceneBuilder;
-}
+#include "SpikeSorterConfigLoader.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
-//#include <QOpenGLFunctions_4_1_Core>
-#include <QEvent>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
-#include <QTimer>
-#include <QToolTip>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -96,19 +86,13 @@ struct NewDigitalEventSeriesDisplayOptions;
 class DigitalIntervalSeries;
 struct NewDigitalIntervalSeriesDisplayOptions;
 class TimeFrame;
+class QEvent;
 class QMouseEvent;
+class QTimer;
 
-/**
- * @brief Channel position for spike sorter configuration
- * 
- * Used to specify custom ordering of analog series based on physical
- * electrode positions from spike sorting software.
- */
-struct ChannelPosition {
-    int channel_id{0};  ///< Channel identifier (0-based)
-    float x{0.0f};      ///< X position (unused for vertical stacking)
-    float y{0.0f};      ///< Y position (used for ordering)
-};
+namespace CorePlotting {
+class SceneBuilder;
+}
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
@@ -361,8 +345,8 @@ public:
      * @return Reference to CorePlotting::TimeRange with current state
      */
     [[nodiscard]] CorePlotting::TimeRange const & getTimeRange() const { return _view_state.time_range; }
-    
-    
+
+
     [[nodiscard]] float getYMin() const { return _view_state.y_min; }
     [[nodiscard]] float getYMax() const { return _view_state.y_max; }
     [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
@@ -396,7 +380,7 @@ public:
      */
     void loadSpikeSorterConfiguration(std::string const & group_name,
                                       std::vector<ChannelPosition> const & positions);
-    
+
     /**
      * @brief Clear spike sorter configuration for a group
      * @param group_name Group identifier to clear
@@ -422,7 +406,7 @@ public:
         _view_state.global_zoom = scale;
         updateCanvas(_time);
     }
-    
+
     /**
      * @brief Set global vertical scale factor
      * @param scale Vertical scale factor (1.0 = normal)
@@ -431,19 +415,19 @@ public:
         _view_state.global_vertical_scale = scale;
         updateCanvas(_time);
     }
-    
+
     /**
      * @brief Get current global zoom factor
      * @return Global zoom value
      */
     [[nodiscard]] float getGlobalZoom() const { return _view_state.global_zoom; }
-    
+
     /**
      * @brief Get current global vertical scale
      * @return Global vertical scale value
      */
     [[nodiscard]] float getGlobalVerticalScale() const { return _view_state.global_vertical_scale; }
-    
+
     /**
      * @brief Get current vertical pan offset
      * @return Vertical pan offset in NDC units
@@ -598,10 +582,10 @@ private:
     int m_dashedResolutionLoc{};
     int m_dashedDashSizeLoc{};
     int m_dashedGapSizeLoc{};
-    
+
     QPoint _lastMousePos{};
     bool _isPanning{false};
-    float _ySpacing{0.1f};  ///< Vertical spacing factor for series
+    float _ySpacing{0.1f};///< Vertical spacing factor for series
 
     std::string m_background_color{"#000000"};// black
     std::string m_axis_color{"#FFFFFF"};      // white (for dark theme)
@@ -624,12 +608,11 @@ private:
     // Layout engine for coordinate allocation (Phase 4.9 migration)
     // Uses StackedLayoutStrategy for DataViewer-style vertical stacking
     CorePlotting::LayoutEngine _layout_engine{
-        std::make_unique<CorePlotting::StackedLayoutStrategy>()
-    };
-    
+            std::make_unique<CorePlotting::StackedLayoutStrategy>()};
+
     // Spike sorter configuration for custom series ordering
     // Maps group_name -> vector of channel positions
-    std::unordered_map<std::string, std::vector<ChannelPosition>> _spike_sorter_configs;
+    SpikeSorterConfigMap _spike_sorter_configs;
 
     // New interval creation state
     bool _is_creating_new_interval{false};
@@ -660,23 +643,23 @@ private:
     // CorePlotting hit testing infrastructure (Phase 4.11 - Complete SceneHitTester Integration)
     // The hit tester provides unified hit testing via SceneHitTester
     CorePlotting::SceneHitTester _hit_tester;
-    
+
     // Cached scene for hit testing - stores the last rendered scene for spatial queries
     // This is populated in renderWithSceneRenderer() and used by findIntervalEdgeAtPosition()
     CorePlotting::RenderableScene _cached_scene;
-    bool _scene_dirty{true};  ///< True when scene needs to be rebuilt before hit testing
-    
+    bool _scene_dirty{true};///< True when scene needs to be rebuilt before hit testing
+
     // Cached layout response - computed by LayoutEngine when dirty
     // Used for both rendering (updating display options) and hit testing
     CorePlotting::LayoutResponse _cached_layout_response;
     bool _layout_response_dirty{true};
-    
+
     // Mapping from rectangle batch index to series key (for interval hit testing)
     std::map<size_t, std::string> _rectangle_batch_key_map;
-    
+
     // Mapping from glyph batch index to series key (for event hit testing)
     std::map<size_t, std::string> _glyph_batch_key_map;
-    
+
     /**
      * @brief Build a LayoutRequest from current series state
      * 
@@ -686,7 +669,7 @@ private:
      * @return LayoutRequest ready for LayoutEngine::compute()
      */
     [[nodiscard]] CorePlotting::LayoutRequest buildLayoutRequest() const;
-    
+
     /**
      * @brief Compute layout and apply results to display options
      * 
@@ -695,47 +678,23 @@ private:
      * Called automatically when _layout_response_dirty is true.
      */
     void computeAndApplyLayout();
-    
-    /**
-     * @brief Extract group name and channel ID from a series key
-     * 
-     * Parses keys in the format "groupname_N" where N is the channel number.
-     * Used for spike sorter configuration ordering.
-     * 
-     * @param key Series key to parse
-     * @param group Output: group name portion
-     * @param channel_id Output: channel ID (0-based, parsed from 1-based in key)
-     * @return true if parsing succeeded, false otherwise
-     */
-    static bool extractGroupAndChannel(std::string const & key, std::string & group, int & channel_id);
-    
-    /**
-     * @brief Order visible analog series keys according to spike sorter configuration
-     * 
-     * Returns series keys sorted by group name, then by Y position within groups
-     * that have spike sorter configuration. Series without configuration are
-     * sorted by channel ID.
-     * 
-     * @param visible_keys Keys of all visible analog series
-     * @return Ordered vector of keys
-     */
-    [[nodiscard]] std::vector<std::string> orderAnalogKeysByConfig(std::vector<std::string> const & visible_keys) const;
+
 };
 
 /**
  * @brief Default values and utilities for time series display configuration
  */
 namespace TimeSeriesDefaultValues {
-    
+
 inline constexpr std::array<char const *, 8> DEFAULT_COLORS = {
-    "#0000ff",// Blue
-    "#ff0000",// Red
-    "#00ff00",// Green
-    "#ff00ff",// Magenta
-    "#ffff00",// Yellow
-    "#00ffff",// Cyan
-    "#ffa500",// Orange
-    "#800080" // Purple
+        "#0000ff",// Blue
+        "#ff0000",// Red
+        "#00ff00",// Green
+        "#ff00ff",// Magenta
+        "#ffff00",// Yellow
+        "#00ffff",// Cyan
+        "#ffa500",// Orange
+        "#800080" // Purple
 };
 
 /**
@@ -752,7 +711,7 @@ inline std::string getColorForIndex(size_t index) {
     int const r = static_cast<int>((hash >> 16) & 0xFF);
     int const g = static_cast<int>((hash >> 8) & 0xFF);
     int const b = static_cast<int>(hash & 0xFF);
-    
+
     char hex_buffer[8];
     std::snprintf(hex_buffer, sizeof(hex_buffer), "#%02x%02x%02x", r, g, b);
     return std::string(hex_buffer);
