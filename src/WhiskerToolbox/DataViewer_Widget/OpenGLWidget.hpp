@@ -341,10 +341,10 @@ public:
 
     // Accessors for SVG export and external queries
     /**
-     * @brief Get the current time range (visible window and bounds)
-     * @return Reference to CorePlotting::TimeRange with current state
+     * @brief Get the current view state (time window and Y-axis state)
+     * @return Reference to CorePlotting::TimeSeriesViewState with current state
      */
-    [[nodiscard]] CorePlotting::TimeRange const & getTimeRange() const { return _view_state.time_range; }
+    [[nodiscard]] CorePlotting::TimeSeriesViewState const & getViewState() const { return _view_state; }
 
 
     [[nodiscard]] float getYMin() const { return _view_state.y_min; }

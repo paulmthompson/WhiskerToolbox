@@ -594,10 +594,9 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // Apply range delta and get the actual achieved range
     ui->openGLWidget->changeRangeWidth(range_delta);
 
-    // Get the actual range that was achieved (may be different due to clamping)
-    // (Phase 4.6 migration: use getTimeRange() instead of getXAxis())
-    auto const & time_range = ui->openGLWidget->getTimeRange();
-    auto const actual_range = static_cast<int>(time_range.getWidth());
+    // Get the actual range that was achieved
+    auto const & view_state = ui->openGLWidget->getViewState();
+    auto const actual_range = static_cast<int>(view_state.getTimeWidth());
 
     // Update spinbox with the actual achieved range (not the requested range)
     updateXAxisSamples(actual_range);
@@ -605,10 +604,9 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
 }
 
 void DataViewer_Widget::_updateLabels() {
-    // (Phase 4.6 migration: use getTimeRange() instead of getXAxis())
-    auto const & time_range = ui->openGLWidget->getTimeRange();
-    ui->neg_x_label->setText(QString::number(time_range.start));
-    ui->pos_x_label->setText(QString::number(time_range.end));
+    auto const & view_state = ui->openGLWidget->getViewState();
+    ui->neg_x_label->setText(QString::number(view_state.time_start));
+    ui->pos_x_label->setText(QString::number(view_state.time_end));
 }
 
 void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std::string const & hex_color) {

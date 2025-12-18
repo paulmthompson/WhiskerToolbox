@@ -789,60 +789,62 @@ In the new architecture, these responsibilities are separated:
 
 The `RenderableScene` is the **output** of the layout process, not a replacement for layout calculation.
 
-### TimeRange: Bounds-Aware X-Axis
+### TimeSeriesViewState: Real-Time Plotting View Model
 
-`TimeRange` integrates with `ViewState` and respects data bounds:
+`TimeSeriesViewState` is the view state model for time-series plotting widgets like DataViewer/OpenGLWidget. It is architecturally distinct from the general `ViewState` used for spatial plots:
+
+| Aspect         | ViewState (Spatial)     | TimeSeriesViewState (Real-time)  |
+|----------------|-------------------------|----------------------------------|
+| Buffer scope   | All data loaded once    | Only visible time window         |
+| X zoom         | MVP transform           | Triggers buffer rebuild          |
+| X pan          | MVP transform           | External (scrollbar, sync)       |
+| Y zoom/pan     | MVP transform           | MVP transform                    |
+| Bounds         | Data bounds enforced    | No bounds—blank areas allowed    |
 
 ```cpp
 // CorePlotting/CoordinateTransform/TimeRange.hpp
 
 /**
- * @brief Bounds-aware time range for X-axis display
+ * @brief View state for time-series plots with real-time/streaming paradigm
  * 
- * Integrates with TimeFrame to enforce valid data bounds.
- * Prevents scrolling/zooming beyond the available data range.
+ * The time window (time_start, time_end) defines what data is loaded into
+ * GPU buffers—not just what portion of pre-loaded data is visible.
+ * No bounds enforcement; areas outside the data range render as blank space.
  */
-struct TimeRange {
-    // Current visible range
-    int64_t start;
-    int64_t end;
+struct TimeSeriesViewState {
+    // Time window - defines buffer scope
+    int64_t time_start{0};
+    int64_t time_end{1000};
     
-    // Hard limits from TimeFrame
-    int64_t min_bound;  // First valid time index
-    int64_t max_bound;  // Last valid time index
+    // Y-axis viewport bounds
+    float y_min{-1.0f};
+    float y_max{1.0f};
+    float vertical_pan_offset{0.0f};
     
-    /**
-     * @brief Construct from a TimeFrame's valid range
-     */
-    static TimeRange fromTimeFrame(TimeFrame const& tf);
-    
-    /**
-     * @brief Set visible range with automatic clamping
-     */
-    void setVisibleRange(int64_t new_start, int64_t new_end);
+    // Global scale factors
+    float global_zoom{1.0f};
+    float global_vertical_scale{1.0f};
     
     /**
-     * @brief Zoom centered on a point, respecting bounds
-     * @return Actual range achieved (may differ due to clamping)
+     * @brief Get visible time window width
      */
-    int64_t setCenterAndZoom(int64_t center, int64_t range_width);
+    [[nodiscard]] int64_t getTimeWidth() const { return time_end - time_start + 1; }
     
     /**
-     * @brief Get visible range width
+     * @brief Get center of visible time window
      */
-    [[nodiscard]] int64_t getWidth() const { return end - start; }
-};
-```
-
-**Integration with ViewState:**
-
-```cpp
-// Extended ViewState for time-series plots
-struct TimeSeriesViewState : ViewState {
-    TimeRange time_range;           // X-axis bounds (time-aware)
+    [[nodiscard]] int64_t getTimeCenter() const;
     
-    // Overrides from ViewState apply to Y-axis only
-    // X-axis zoom/pan is handled through time_range
+    /**
+     * @brief Set time window centered on a point with specified width
+     * No bounds clamping—allows viewing any time range.
+     */
+    void setTimeWindow(int64_t center, int64_t width);
+    
+    /**
+     * @brief Set time window with explicit start and end
+     */
+    void setTimeRange(int64_t start, int64_t end);
 };
 ```
 
@@ -853,42 +855,34 @@ struct TimeSeriesViewState : ViewState {
 void DataViewer_Widget::setMasterTimeFrame(std::shared_ptr<TimeFrame> tf) {
     _master_time_frame = tf;
     
-    // Initialize TimeRange from TimeFrame bounds
-    _view_state.time_range = TimeRange::fromTimeFrame(*tf);
-    
-    // Set initial visible range (e.g., first 1000 samples)
-    _view_state.time_range.setCenterAndZoom(500, 1000);
+    // Set initial visible range (first 10,000 samples or full range if smaller)
+    int64_t total = tf->getTotalFrameCount();
+    int64_t initial_range = std::min(int64_t(10000), total);
+    _view_state.setTimeWindow(initial_range / 2, initial_range);
 }
 
-// In mouse wheel handler
-void DataViewer_Widget::handleZoom(int delta, int64_t center_time) {
-    int64_t current_width = _view_state.time_range.getWidth();
+// Zooming changes what data is loaded (triggers buffer rebuild)
+void DataViewer_Widget::handleZoom(int delta) {
+    int64_t center = _view_state.getTimeCenter();
+    int64_t current_width = _view_state.getTimeWidth();
     int64_t new_width = (delta > 0) ? current_width / 2 : current_width * 2;
     
-    // This automatically clamps to TimeFrame bounds
-    int64_t actual_width = _view_state.time_range.setCenterAndZoom(center_time, new_width);
+    // No clamping—can zoom to show blank areas beyond data bounds
+    _view_state.setTimeWindow(center, new_width);
     
-    // If actual_width != new_width, we hit bounds
+    // This changes buffer scope, triggering data reload
+    rebuildBuffers();
     updatePlot();
 }
 
-// In scroll handler  
-void DataViewer_Widget::handleScroll(int64_t delta) {
-    int64_t new_start = _view_state.time_range.start + delta;
-    int64_t new_end = _view_state.time_range.end + delta;
-    
-    // This automatically clamps - user can't scroll past data bounds
-    _view_state.time_range.setVisibleRange(new_start, new_end);
-    
-    updatePlot();
-}
+// X scrolling is typically controlled externally (scrollbar yoked to other widgets)
+// Not handled via TimeSeriesViewState methods in this widget
 ```
 
-This design ensures:
-1. User cannot scroll beyond the data's time bounds
-2. Zooming respects minimum/maximum visible ranges
-3. The relationship between `TimeFrameIndex` and display coordinates is explicit
-4. TimeRange is decoupled from Qt/OpenGL but aware of TimeFrame semantics
+This design enables:
+1. Real-time/streaming data visualization (load only what's needed)
+2. Blank areas shown when viewing times without data (no bounds enforcement)
+3. External synchronization of time position via scrollbar
 
 ### TimeFrame Range Adapters
 

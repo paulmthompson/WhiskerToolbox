@@ -22,9 +22,10 @@ TEST_CASE("TimeAxisParams construction", "[CorePlotting][TimeAxisCoordinates]") 
         REQUIRE(params.viewport_width_px == 800);
     }
     
-    SECTION("TimeRange constructor") {
-        TimeRange range(100, 500, 0, 1000);
-        TimeAxisParams params(range, 800);
+    SECTION("TimeSeriesViewState constructor") {
+        TimeSeriesViewState view_state;
+        view_state.setTimeRange(100, 500);
+        TimeAxisParams params(view_state, 800);
         REQUIRE(params.time_start == 100);
         REQUIRE(params.time_end == 500);
         REQUIRE(params.viewport_width_px == 800);
@@ -271,8 +272,9 @@ TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoo
 }
 
 TEST_CASE("makeTimeAxisParams helper", "[CorePlotting][TimeAxisCoordinates]") {
-    TimeRange range(100, 500, 0, 1000);
-    auto params = makeTimeAxisParams(range, 800);
+    TimeSeriesViewState view_state;
+    view_state.setTimeRange(100, 500);
+    auto params = makeTimeAxisParams(view_state, 800);
     
     REQUIRE(params.time_start == 100);
     REQUIRE(params.time_end == 500);

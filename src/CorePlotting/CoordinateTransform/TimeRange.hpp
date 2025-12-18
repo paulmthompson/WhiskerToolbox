@@ -1,264 +1,159 @@
 #ifndef COREPLOTTING_COORDINATETRANSFORM_TIMERANGE_HPP
 #define COREPLOTTING_COORDINATETRANSFORM_TIMERANGE_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
-#include "ViewState.hpp"
 #include <cstdint>
-#include <algorithm>
+#include <utility>
 
 namespace CorePlotting {
 
 /**
- * @brief Bounds-aware time range for X-axis display
+ * @brief View state for time-series plots with real-time/streaming paradigm
  * 
- * This struct manages the visible time window for time-series plots,
- * integrating with TimeFrame to enforce valid data bounds.
+ * This struct manages the visualization state for time-series plotting widgets
+ * like OpenGLWidget/DataViewer. It is fundamentally different from the general
+ * ViewState used for spatial plots:
  * 
- * Unlike the legacy XAxis class which operated independently,
- * TimeRange respects the underlying TimeFrame bounds to prevent
- * scrolling/zooming beyond the available data range.
+ * **Architectural Distinction:**
  * 
- * Key features:
- * - Automatic clamping to TimeFrame bounds during zoom/pan
- * - Centered zoom operations
- * - Width-based zoom control
- * - Immutable bounds (set at construction)
+ * | Aspect         | ViewState (Spatial)     | TimeSeriesViewState (Real-time)  |
+ * |----------------|-------------------------|----------------------------------|
+ * | Buffer scope   | All data loaded once    | Only visible time window         |
+ * | X zoom         | MVP transform           | Triggers buffer rebuild          |
+ * | X pan          | MVP transform           | External (scrollbar, sync)       |
+ * | Y zoom/pan     | MVP transform           | MVP transform                    |
+ * | Use case       | Static spatial data     | Real-time streaming              |
  * 
- * @note All time values are in TimeFrameIndex units (integer indices)
- */
-struct TimeRange {
-    /// Current visible range (can be modified)
-    int64_t start{0};
-    int64_t end{0};
-    
-    /// Hard limits from TimeFrame (immutable after construction)
-    int64_t min_bound{0};
-    int64_t max_bound{0};
-    
-    /**
-     * @brief Default constructor creates an empty range
-     */
-    TimeRange() = default;
-    
-    /**
-     * @brief Construct with explicit bounds
-     * 
-     * @param start_val Initial visible start
-     * @param end_val Initial visible end
-     * @param min_bound_val Minimum allowed value (inclusive)
-     * @param max_bound_val Maximum allowed value (inclusive)
-     */
-    TimeRange(int64_t start_val, int64_t end_val, 
-              int64_t min_bound_val, int64_t max_bound_val)
-        : start(start_val), end(end_val)
-        , min_bound(min_bound_val), max_bound(max_bound_val)
-    {
-        // Ensure initial range is valid
-        clampToValidRange();
-    }
-    
-    /**
-     * @brief Construct from a TimeFrame's valid range
-     * 
-     * Sets both visible range and bounds from the TimeFrame's extent.
-     * Initial visible range spans the entire TimeFrame.
-     * 
-     * @param tf TimeFrame to extract bounds from
-     * @return TimeRange initialized to show entire TimeFrame
-     */
-    static TimeRange fromTimeFrame(TimeFrame const& tf) {
-        int64_t count = tf.getTotalFrameCount();
-        // TimeFrame indices are 0-based, so valid range is [0, count-1]
-        return TimeRange(0, count - 1, 0, count - 1);
-    }
-    
-    /**
-     * @brief Set visible range with automatic clamping to bounds
-     * 
-     * The provided range will be adjusted to fit within [min_bound, max_bound].
-     * If the range is too wide, it will be clamped to the maximum available.
-     * If the range would extend beyond bounds, it will be shifted inward.
-     * 
-     * @param new_start Desired start of visible range
-     * @param new_end Desired end of visible range (inclusive)
-     */
-    void setVisibleRange(int64_t new_start, int64_t new_end) {
-        start = new_start;
-        end = new_end;
-        clampToValidRange();
-    }
-    
-    /**
-     * @brief Zoom centered on a point, respecting bounds
-     * 
-     * Attempts to set a new visible range of the specified width,
-     * centered on the given point. If the resulting range would
-     * exceed bounds, it is shifted and/or clamped.
-     * 
-     * @param center Center point for zoom (in TimeFrameIndex units)
-     * @param range_width Desired width of visible range
-     * @return Actual range width after bounds enforcement
-     * 
-     * @note If the requested range_width exceeds the total data bounds,
-     *       it will be clamped to show the entire available range.
-     */
-    int64_t setCenterAndZoom(int64_t center, int64_t range_width) {
-        // Ensure minimum width of 1
-        range_width = std::max(int64_t(1), range_width);
-        
-        // Clamp range_width to available data
-        int64_t max_width = max_bound - min_bound + 1;
-        range_width = std::min(range_width, max_width);
-        
-        // Calculate centered range
-        int64_t half_width = range_width / 2;
-        int64_t new_start = center - half_width;
-        int64_t new_end = new_start + range_width - 1;
-        
-        // Shift if we're outside bounds
-        if (new_start < min_bound) {
-            int64_t shift = min_bound - new_start;
-            new_start += shift;
-            new_end += shift;
-        } else if (new_end > max_bound) {
-            int64_t shift = new_end - max_bound;
-            new_start -= shift;
-            new_end -= shift;
-        }
-        
-        start = new_start;
-        end = new_end;
-        
-        // Final safety clamp
-        clampToValidRange();
-        
-        return getWidth();
-    }
-    
-    /**
-     * @brief Get visible range width
-     * @return Number of time indices in current visible range (inclusive count)
-     */
-    [[nodiscard]] int64_t getWidth() const { 
-        return end - start + 1; 
-    }
-    
-    /**
-     * @brief Get center of visible range
-     * @return Center time index (rounded down for odd widths)
-     */
-    [[nodiscard]] int64_t getCenter() const {
-        return start + (end - start) / 2;
-    }
-    
-    /**
-     * @brief Check if a time index is within the visible range
-     * @param time_index Index to check
-     * @return true if time_index is in [start, end] (inclusive)
-     */
-    [[nodiscard]] bool contains(int64_t time_index) const {
-        return time_index >= start && time_index <= end;
-    }
-    
-    /**
-     * @brief Check if the visible range is at the lower bound limit
-     */
-    [[nodiscard]] bool isAtMinBound() const {
-        return start <= min_bound;
-    }
-    
-    /**
-     * @brief Check if the visible range is at the upper bound limit
-     */
-    [[nodiscard]] bool isAtMaxBound() const {
-        return end >= max_bound;
-    }
-    
-    /**
-     * @brief Get the total available data range
-     * @return Width of the entire bounded region
-     */
-    [[nodiscard]] int64_t getTotalBoundedWidth() const {
-        return max_bound - min_bound + 1;
-    }
-
-private:
-    /**
-     * @brief Internal helper to enforce bounds invariants
-     * 
-     * Ensures that:
-     * 1. start >= min_bound
-     * 2. end <= max_bound
-     * 3. start <= end
-     * 4. If range too wide, clamp to full bounds
-     */
-    void clampToValidRange() {
-        // First ensure start and end are ordered
-        if (start > end) {
-            std::swap(start, end);
-        }
-        
-        // Clamp to hard bounds
-        start = std::clamp(start, min_bound, max_bound);
-        end = std::clamp(end, min_bound, max_bound);
-        
-        // If we still violate ordering (can happen if bounds are tight)
-        if (start > end) {
-            end = start;
-        }
-    }
-};
-
-/**
- * @brief Extended ViewState for time-series plots
+ * **Time Window (X-axis):**
+ * - `time_start` and `time_end` define which data is loaded into GPU buffers
+ * - Changing the time window triggers a buffer rebuild (not just MVP change)
+ * - No bounds enforcement—values outside data range simply show blank space
+ * - X panning is typically disabled in the widget (controlled externally)
  * 
- * Combines the standard ViewState (Y-axis camera control) with
- * TimeRange (X-axis time-aware bounds management).
+ * **Y-axis State:**
+ * - Y zoom/pan is purely MVP-based (no buffer changes)
+ * - `vertical_pan_offset` allows interactive scrolling
+ * - `global_zoom` and `global_vertical_scale` scale all series uniformly
  * 
- * Usage pattern:
- * - ViewState zoom/pan operations apply to Y-axis only
- * - X-axis zoom/pan handled through time_range methods
- * - Projection matrix incorporates both ViewState and TimeRange
- * 
- * This separation allows independent control of spatial (Y) and
- * temporal (X) visualization parameters.
- * 
- * Y-AXIS STATE (Phase 4.7):
- * The y_min, y_max, and vertical_pan_offset fields replace the legacy
- * OpenGLWidget::_yMin, _yMax, _verticalPanOffset members. These are
- * used for:
- * - Projection matrix Y bounds (y_min, y_max in NDC)
- * - Pan offset for interactive vertical scrolling
- * - Global scaling factors applied uniformly to all series
+ * @note Time values are in TimeFrameIndex units (integer indices into TimeFrame)
  */
 struct TimeSeriesViewState {
-    ViewState view_state;     ///< Y-axis camera state (general)
-    TimeRange time_range;     ///< X-axis time bounds
+    // =========================================================================
+    // Time Window (X-axis) - Defines buffer scope
+    // =========================================================================
     
-    // Y-axis viewport bounds (typically -1 to +1 in NDC)
-    float y_min{-1.0f};       ///< Minimum Y in normalized device coordinates
-    float y_max{1.0f};        ///< Maximum Y in normalized device coordinates
+    /// Start of visible time window (TimeFrameIndex units)
+    /// Determines left edge of data loaded into buffers
+    int64_t time_start{0};
     
-    // Y-axis pan offset (interactive vertical scrolling)
-    float vertical_pan_offset{0.0f};  ///< Vertical pan in NDC units
+    /// End of visible time window (TimeFrameIndex units, inclusive)
+    /// Determines right edge of data loaded into buffers
+    int64_t time_end{1000};
     
-    // Global scale factors (applied uniformly to all series)
-    float global_zoom{1.0f};           ///< Global zoom factor for all series
-    float global_vertical_scale{1.0f}; ///< Global vertical scaling factor
+    // =========================================================================
+    // Y-axis State (MVP-only, no buffer changes)
+    // =========================================================================
+    
+    /// Minimum Y in normalized device coordinates (bottom of viewport)
+    float y_min{-1.0f};
+    
+    /// Maximum Y in normalized device coordinates (top of viewport)
+    float y_max{1.0f};
+    
+    /// Vertical pan offset in NDC units (positive = pan up)
+    float vertical_pan_offset{0.0f};
+    
+    // =========================================================================
+    // Global Scale Factors
+    // =========================================================================
+    
+    /// Global zoom factor applied to all series (affects amplitude scaling)
+    float global_zoom{1.0f};
+    
+    /// Global vertical scale factor applied uniformly to all series
+    float global_vertical_scale{1.0f};
+    
+    // =========================================================================
+    // Constructors
+    // =========================================================================
     
     /**
-     * @brief Construct with default ViewState and TimeRange
+     * @brief Default constructor
+     * 
+     * Creates a view state with default time window [0, 1000] and
+     * standard Y bounds [-1, 1].
      */
     TimeSeriesViewState() = default;
     
     /**
-     * @brief Construct from TimeFrame
+     * @brief Construct with explicit time window
      * 
-     * Initializes time_range from TimeFrame bounds.
-     * ViewState must be configured separately based on Y-axis data.
+     * @param start Start of visible time window
+     * @param end End of visible time window (inclusive)
      */
-    explicit TimeSeriesViewState(TimeFrame const& tf)
-        : time_range(TimeRange::fromTimeFrame(tf)) {}
+    TimeSeriesViewState(int64_t start, int64_t end)
+        : time_start(start), time_end(end) {}
+    
+    // =========================================================================
+    // Time Window Methods
+    // =========================================================================
+    
+    /**
+     * @brief Get visible time window width
+     * @return Number of time indices in current visible range (inclusive count)
+     */
+    [[nodiscard]] int64_t getTimeWidth() const { 
+        return time_end - time_start + 1; 
+    }
+    
+    /**
+     * @brief Get center of visible time window
+     * @return Center time index (rounded down for odd widths)
+     */
+    [[nodiscard]] int64_t getTimeCenter() const {
+        return time_start + (time_end - time_start) / 2;
+    }
+    
+    /**
+     * @brief Set time window centered on a point with specified width
+     * 
+     * This is the primary method for changing the visible time range.
+     * Unlike the old TimeRange class, no bounds clamping is performed—
+     * if the window extends beyond available data, those areas simply
+     * render as blank space.
+     * 
+     * @param center Center point for the window
+     * @param width Desired width of visible range (minimum 1)
+     */
+    void setTimeWindow(int64_t center, int64_t width) {
+        // Ensure minimum width of 1
+        if (width < 1) {
+            width = 1;
+        }
+        
+        int64_t const half_width = width / 2;
+        time_start = center - half_width;
+        time_end = time_start + width - 1;
+    }
+    
+    /**
+     * @brief Set time window with explicit start and end
+     * 
+     * @param start Start of visible time window
+     * @param end End of visible time window (inclusive)
+     */
+    void setTimeRange(int64_t start, int64_t end) {
+        time_start = start;
+        time_end = end;
+        
+        // Ensure start <= end
+        if (time_start > time_end) {
+            std::swap(time_start, time_end);
+        }
+    }
+    
+    // =========================================================================
+    // Y-axis Methods
+    // =========================================================================
     
     /**
      * @brief Apply vertical pan delta

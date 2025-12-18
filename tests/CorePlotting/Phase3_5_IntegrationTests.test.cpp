@@ -823,61 +823,6 @@ TEST_CASE("Scenario 6: Interval drag controller enforces constraints",
 }
 
 
-// ============================================================================
-// Additional Integration Tests: TimeRange Bounds with TimeFrame
-// ============================================================================
-
-TEST_CASE("TimeRange integration with TimeFrame bounds",
-          "[CorePlotting][Integration][Phase3.5][TimeRange]") {
-    
-    auto time_frame = createSimpleTimeFrame(1000);  // Times 0-999
-    
-    SECTION("fromTimeFrame captures bounds correctly") {
-        TimeRange range = TimeRange::fromTimeFrame(*time_frame);
-        
-        REQUIRE(range.min_bound == 0);
-        REQUIRE(range.max_bound == 999);
-        REQUIRE(range.start == 0);
-        REQUIRE(range.end == 999);
-    }
-    
-    SECTION("Cannot zoom beyond data bounds") {
-        TimeRange range = TimeRange::fromTimeFrame(*time_frame);
-        
-        // Request full range
-        range.setCenterAndZoom(500, 2000);  // Width exceeds total
-        
-        REQUIRE(range.start >= range.min_bound);
-        REQUIRE(range.end <= range.max_bound);
-        REQUIRE(range.getWidth() == range.getTotalBoundedWidth());
-    }
-    
-    SECTION("Zoom in maintains center when possible") {
-        TimeRange range = TimeRange::fromTimeFrame(*time_frame);
-        
-        // Zoom to 100 units centered at 500
-        range.setCenterAndZoom(500, 100);
-        
-        REQUIRE(range.getWidth() == 100);
-        REQUIRE(range.contains(500));
-        // Center should be approximately at 500
-        int64_t center = range.getCenter();
-        REQUIRE(center >= 450);
-        REQUIRE(center <= 550);
-    }
-    
-    SECTION("Zoom near edge shifts to stay in bounds") {
-        TimeRange range = TimeRange::fromTimeFrame(*time_frame);
-        
-        // Zoom near right edge
-        range.setCenterAndZoom(950, 200);
-        
-        REQUIRE(range.end <= range.max_bound);
-        REQUIRE(range.start >= range.min_bound);
-        REQUIRE(range.getWidth() == 200);
-    }
-}
-
 
 // ============================================================================
 // Test Scenario 7: SceneBuilder High-Level API

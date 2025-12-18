@@ -485,8 +485,8 @@ void OpenGLWidget::paintGL() {
     int const currentTime = _time;
 
     // Keep the current zoom level (range width) and center on current time
-    int64_t const zoom = _view_state.time_range.getWidth();
-    _view_state.time_range.setCenterAndZoom(currentTime, zoom);
+    int64_t const zoom = _view_state.getTimeWidth();
+    _view_state.setTimeWindow(currentTime, zoom);
 
     if (_scene_renderer && _scene_renderer->isInitialized()) {
         renderWithSceneRenderer();
@@ -699,8 +699,8 @@ void OpenGLWidget::drawGridLines() {
         return;// Grid lines are disabled
     }
 
-    auto const start_time = _view_state.time_range.start;
-    auto const end_time = _view_state.time_range.end;
+    auto const start_time = _view_state.time_start;
+    auto const end_time = _view_state.time_end;
 
     // Calculate the range of time values
     auto const time_range = end_time - start_time;
@@ -744,60 +744,56 @@ void OpenGLWidget::drawGridLines() {
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::setXLimit(int xmax) {
-    // Update the TimeRange max bound
-    // TimeRange uses inclusive bounds, so max_bound = xmax - 1 for total frame count
-    _view_state.time_range.max_bound = xmax > 0 ? xmax - 1 : 0;
-
-    // Re-clamp current visible range to new bounds
-    _view_state.time_range.setVisibleRange(
-            _view_state.time_range.start,
-            _view_state.time_range.end);
+    // With the simplified TimeSeriesViewState, we no longer enforce bounds.
+    // The time window simply defines what data is loaded into buffers.
+    // Areas outside the data range will render as blank space.
+    // This method is kept for API compatibility but is effectively a no-op.
+    (void)xmax;  // Unused - bounds enforcement removed
 }
 
 void OpenGLWidget::setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame) {
     _master_time_frame = master_time_frame;
 
-    // Initialize TimeRange bounds from TimeFrame
+    // Initialize time window based on TimeFrame
     if (master_time_frame) {
-        _view_state.time_range = CorePlotting::TimeRange::fromTimeFrame(*master_time_frame);
+        int64_t const total_frames = master_time_frame->getTotalFrameCount();
 
         // Set a reasonable initial visible range (not the entire TimeFrame!)
         // Default to 10,000 samples or the full range if smaller
         constexpr int64_t DEFAULT_INITIAL_RANGE = 10000;
-        int64_t const total_range = _view_state.time_range.getTotalBoundedWidth();
-        int64_t const initial_range = std::min(DEFAULT_INITIAL_RANGE, total_range);
+        int64_t const initial_range = std::min(DEFAULT_INITIAL_RANGE, total_frames);
 
         // Center at the beginning of the data
-        int64_t const initial_center = _view_state.time_range.min_bound + initial_range / 2;
-        _view_state.time_range.setCenterAndZoom(initial_center, initial_range);
+        int64_t const initial_center = initial_range / 2;
+        _view_state.setTimeWindow(initial_center, initial_range);
     } else {
-        // Reset to default empty range
-        _view_state.time_range = CorePlotting::TimeRange();
+        // Reset to default time window
+        _view_state = CorePlotting::TimeSeriesViewState();
     }
 }
 
 
 void OpenGLWidget::changeRangeWidth(int64_t range_delta) {
-    int64_t const center = _view_state.time_range.getCenter();
-    int64_t const current_range = _view_state.time_range.getWidth();
+    int64_t const center = _view_state.getTimeCenter();
+    int64_t const current_range = _view_state.getTimeWidth();
     int64_t const new_range = current_range + range_delta;// Add delta to current range
-    _view_state.time_range.setCenterAndZoom(center, new_range);
+    _view_state.setTimeWindow(center, new_range);
     updateCanvas(_time);
 }
 
 
 int64_t OpenGLWidget::setRangeWidth(int64_t range_width) {
-    int64_t const center = _view_state.time_range.getCenter();
-    int64_t const actual_range = _view_state.time_range.setCenterAndZoom(center, range_width);
+    int64_t const center = _view_state.getTimeCenter();
+    _view_state.setTimeWindow(center, range_width);
     updateCanvas(_time);
-    return actual_range;// Return the actual range width achieved
+    return _view_state.getTimeWidth();// Return the actual range width
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 float OpenGLWidget::canvasXToTime(float canvas_x) const {
     // Use CorePlotting coordinate transform
-    CorePlotting::TimeAxisParams params(_view_state.time_range.start, _view_state.time_range.end, width());
+    CorePlotting::TimeAxisParams params(_view_state.time_start, _view_state.time_end, width());
     return CorePlotting::canvasXToTime(canvas_x, params);
 }
 
@@ -927,8 +923,8 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
 
     // Use CorePlotting time axis utilities for coordinate conversion
     CorePlotting::TimeAxisParams const time_params(
-            _view_state.time_range.start,
-            _view_state.time_range.end,
+            _view_state.time_start,
+            _view_state.time_end,
             width());
 
     // Convert canvas position to time (world X coordinate)
@@ -1259,8 +1255,8 @@ void OpenGLWidget::drawDraggedInterval() {
 
     auto const & display_options = it->second.display_options;
 
-    auto const start_time = static_cast<float>(_view_state.time_range.start);
-    auto const end_time = static_cast<float>(_view_state.time_range.end);
+    auto const start_time = static_cast<float>(_view_state.time_start);
+    auto const end_time = static_cast<float>(_view_state.time_end);
     auto const min_y = _view_state.y_min;
     auto const max_y = _view_state.y_max;
 
@@ -1566,8 +1562,8 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
 
     auto const & display_options = it->second.display_options;
 
-    auto const start_time = static_cast<float>(_view_state.time_range.start);
-    auto const end_time = static_cast<float>(_view_state.time_range.end);
+    auto const start_time = static_cast<float>(_view_state.time_start);
+    auto const end_time = static_cast<float>(_view_state.time_end);
     auto const min_y = _view_state.y_min;
     auto const max_y = _view_state.y_max;
 
@@ -1760,8 +1756,8 @@ void OpenGLWidget::renderWithSceneRenderer() {
     // and all display_options->layout fields
     computeAndApplyLayout();
 
-    auto const start_time = TimeFrameIndex(_view_state.time_range.start);
-    auto const end_time = TimeFrameIndex(_view_state.time_range.end);
+    auto const start_time = TimeFrameIndex(_view_state.time_start);
+    auto const end_time = TimeFrameIndex(_view_state.time_end);
 
     // Build shared View and Projection matrices
     CorePlotting::ViewProjectionParams view_params;
@@ -1809,8 +1805,8 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         return;
     }
 
-    auto const start_time = TimeFrameIndex(_view_state.time_range.start);
-    auto const end_time = TimeFrameIndex(_view_state.time_range.end);
+    auto const start_time = TimeFrameIndex(_view_state.time_start);
+    auto const end_time = TimeFrameIndex(_view_state.time_end);
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
@@ -1894,8 +1890,8 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
         return;
     }
 
-    auto const start_time = TimeFrameIndex(_view_state.time_range.start);
-    auto const end_time = TimeFrameIndex(_view_state.time_range.end);
+    auto const start_time = TimeFrameIndex(_view_state.time_start);
+    auto const end_time = TimeFrameIndex(_view_state.time_end);
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
@@ -1970,8 +1966,8 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         return;
     }
 
-    auto const start_time = TimeFrameIndex(_view_state.time_range.start);
-    auto const end_time = TimeFrameIndex(_view_state.time_range.end);
+    auto const start_time = TimeFrameIndex(_view_state.time_start);
+    auto const end_time = TimeFrameIndex(_view_state.time_end);
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
@@ -2035,10 +2031,10 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
             auto const [sel_start_time, sel_end_time] = selected_interval.value();
 
             // Check if the selected interval overlaps with visible range
-            if (sel_end_time >= _view_state.time_range.start && sel_start_time <= _view_state.time_range.end) {
+            if (sel_end_time >= _view_state.time_start && sel_start_time <= _view_state.time_end) {
                 // Clip to visible range
-                int64_t const highlighted_start = std::max(sel_start_time, _view_state.time_range.start);
-                int64_t const highlighted_end = std::min(sel_end_time, _view_state.time_range.end);
+                int64_t const highlighted_start = std::max(sel_start_time, _view_state.time_start);
+                int64_t const highlighted_end = std::min(sel_end_time, _view_state.time_end);
 
                 // Create a brighter version of the color for highlighting
                 glm::vec4 highlight_color(

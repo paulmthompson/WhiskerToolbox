@@ -11,13 +11,13 @@ namespace CorePlotting {
  * 
  * This struct bundles all necessary information for converting between
  * canvas pixel coordinates and time coordinates. It is designed to be
- * lightweight and easily constructed from TimeRange and viewport dimensions.
+ * lightweight and easily constructed from TimeSeriesViewState and viewport dimensions.
  * 
- * All time values are in the same units as TimeRange (typically TimeFrameIndex).
+ * All time values are in the same units as TimeSeriesViewState (typically TimeFrameIndex).
  */
 struct TimeAxisParams {
-    int64_t time_start{0};      ///< Start of visible time range (from TimeRange.start)
-    int64_t time_end{0};        ///< End of visible time range (from TimeRange.end)
+    int64_t time_start{0};      ///< Start of visible time range
+    int64_t time_end{0};        ///< End of visible time range
     int viewport_width_px{1};   ///< Canvas width in pixels
     
     /**
@@ -35,12 +35,12 @@ struct TimeAxisParams {
         : time_start(start), time_end(end), viewport_width_px(width) {}
     
     /**
-     * @brief Construct from TimeRange and viewport width
-     * @param range TimeRange providing visible time bounds
+     * @brief Construct from TimeSeriesViewState and viewport width
+     * @param view_state TimeSeriesViewState providing visible time bounds
      * @param width Viewport width in pixels
      */
-    TimeAxisParams(TimeRange const& range, int width)
-        : time_start(range.start), time_end(range.end), viewport_width_px(width) {}
+    TimeAxisParams(TimeSeriesViewState const& view_state, int width)
+        : time_start(view_state.time_start), time_end(view_state.time_end), viewport_width_px(width) {}
     
     /**
      * @brief Get the time span of the visible range
@@ -244,14 +244,14 @@ struct YAxisParams {
 }
 
 /**
- * @brief Convenience method to create TimeAxisParams from TimeRange
+ * @brief Convenience method to create TimeAxisParams from TimeSeriesViewState
  * 
- * @param range TimeRange containing visible time bounds
+ * @param view_state TimeSeriesViewState containing visible time window
  * @param viewport_width Viewport width in pixels
  * @return TimeAxisParams ready for coordinate conversion
  */
-[[nodiscard]] inline TimeAxisParams makeTimeAxisParams(TimeRange const& range, int viewport_width) {
-    return TimeAxisParams(range, viewport_width);
+[[nodiscard]] inline TimeAxisParams makeTimeAxisParams(TimeSeriesViewState const& view_state, int viewport_width) {
+    return TimeAxisParams(view_state, viewport_width);
 }
 
 // ============================================================================
