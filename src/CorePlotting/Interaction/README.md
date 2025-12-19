@@ -1,5 +1,10 @@
+# CorePlotting Interaction System
 
+This module provides a unified system for interactive glyph creation and modification across all plotting widgets.
 
+## Architecture Overview
+
+```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              Widget Layer                                    │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
@@ -20,15 +25,14 @@
 │  │ • Tracks geometric state    │  │  │  │ • rectangle_batches            │  │
 │  │ • Produces GlyphPreview     │──┼──▶  │ • glyph_batches                │  │
 │  └─────────────────────────────┘  │  │  ├────────────────────────────────┤  │
-│  ┌─────────────────────────────┐  │  │  │ NEW: Preview layer             │  │
-│  │ Concrete Controllers:       │  │  │  │ • preview_rectangles           │  │
-│  │ • RectangleController       │  │  │  │ • preview_lines                │  │
-│  │ • LineController            │  │  │  │ • preview_polygons             │  │
-│  │ • PointController           │  │  │  └────────────────────────────────┘  │
-│  │ • PolygonController         │  │  │  ┌────────────────────────────────┐  │
-│  └─────────────────────────────┘  │  │  │ Inverse Coordinate API         │  │
-└───────────────────────────────────┘  │  │ • canvasToWorld(x, y)          │  │
-                                       │  │ • worldToDataCoords(world, key)│  │
+│  ┌─────────────────────────────┐  │  │  │ Preview layer                  │  │
+│  │ Concrete Controllers:       │  │  │  │ • Rendered on top of scene     │  │
+│  │ • RectangleController       │  │  │  │ • Canvas coordinates           │  │
+│  │ • LineController            │  │  │  └────────────────────────────────┘  │
+│  │ • PointController           │  │  │  ┌────────────────────────────────┐  │
+│  │ • PolygonController         │  │  │  │ Inverse Coordinate API         │  │
+│  └─────────────────────────────┘  │  │  │ • canvasToWorld(x, y)          │  │
+└───────────────────────────────────┘  │  │ • previewToDataCoords(...)     │  │
                                        │  └────────────────────────────────┘  │
                                        └──────────────────────────────────────┘
                                                         │
@@ -38,120 +42,40 @@
                                        │  • Renders main batches              │
                                        │  • Renders preview layer on top      │
                                        └──────────────────────────────────────┘
+```
 
-Key Types
-In CorePlotting/Interaction
+## Key Design Decisions
 
-// GlyphPreview.hpp - Geometry in canvas coordinates for rendering
-struct GlyphPreview {
-    enum class Type { None, Point, Line, Rectangle, Polygon };
-    Type type{Type::None};
-    
-    // Canvas-space geometry
-    glm::vec2 point{0};
-    glm::vec2 line_start{0}, line_end{0};
-    glm::vec4 rectangle{0};  // {x, y, width, height} in canvas
-    std::vector<glm::vec2> polygon_vertices;
-    
-    // Optional "ghost" for modification (original position)
-    std::optional<glm::vec4> original_rectangle;
-    std::optional<std::pair<glm::vec2, glm::vec2>> original_line;
-    
-    // Styling
-    glm::vec4 fill_color{1, 1, 1, 0.3f};
-    glm::vec4 stroke_color{1, 1, 1, 1.0f};
-    float stroke_width{2.0f};
-};
+1. **Canvas Coordinates**: Controllers work entirely in canvas (pixel) coordinates. The Scene handles all coordinate transformations via inverse mappers.
 
-// IGlyphInteractionController.hpp - Canvas-coordinate controller
-class IGlyphInteractionController {
-public:
-    virtual ~IGlyphInteractionController() = default;
-    
-    // All coordinates in canvas pixels
-    virtual void start(float canvas_x, float canvas_y,
-                      std::string series_key,
-                      std::optional<EntityId> existing = std::nullopt) = 0;
-    virtual void update(float canvas_x, float canvas_y) = 0;
-    virtual void complete() = 0;
-    virtual void cancel() = 0;
-    
-    [[nodiscard]] virtual bool isActive() const = 0;
-    [[nodiscard]] virtual GlyphPreview getPreview() const = 0;
-    [[nodiscard]] virtual std::string const& getSeriesKey() const = 0;
-    [[nodiscard]] virtual std::optional<EntityId> getEntityId() const = 0;
-};
+2. **Widget-Driven Mode**: The widget manages interaction modes (Normal, CreateInterval, etc.) and pre-processes hit test results for modification operations.
 
-In CorePlotting/SceneGraph
+3. **Layout at Conversion Time**: Series layout transforms are passed to `previewToDataCoords()` at conversion time, keeping the Scene stateless.
 
-// Additions to RenderableScene
-struct RenderableScene {
-    // ... existing batches ...
-    
-    // Preview layer (rendered on top, canvas coordinates)
-    std::optional<GlyphPreview> active_preview;
-    
-    // Inverse coordinate transform API
-    // Requires view/projection to already be set
-    [[nodiscard]] glm::vec2 canvasToWorld(float canvas_x, float canvas_y, 
-                                          int viewport_width, int viewport_height) const;
-    
-    // For series-specific transforms (needs series layout info)
-    struct DataCoordinates {
-        std::string series_key;
-        std::optional<EntityId> entity_id;
-        
-        // Type-specific data coordinates
-        struct IntervalCoords { int64_t start; int64_t end; };
-        struct LineCoords { float x1, y1, x2, y2; };
-        struct PointCoords { float x, y; };
-        struct RectCoords { float x, y, w, h; };
-        
-        std::variant<IntervalCoords, LineCoords, PointCoords, RectCoords> coords;
-    };
-    
-    // Convert preview geometry to data coordinates for the target series
-    [[nodiscard]] DataCoordinates previewToDataCoords(
-        GlyphPreview const& preview,
-        int viewport_width, int viewport_height,
-        /* series layout info for Y transform */) const;
-};
+4. **Screen-Space Preview Rendering**: `PreviewRenderer` handles canvas→NDC conversion internally using orthographic projection.
 
-In PlottingOpenGL
+## Files
 
-// PreviewRenderer.hpp - Simple renderer for preview geometry
-class PreviewRenderer {
-public:
-    bool initialize();
-    void cleanup();
-    [[nodiscard]] bool isInitialized() const;
-    
-    // Renders preview in canvas coordinates (uses screen-space projection)
-    void render(GlyphPreview const& preview, int viewport_width, int viewport_height);
-    
-private:
-    // Uses simple 2D shaders for screen-space rendering
-    QOpenGLShaderProgram* m_rect_shader{nullptr};
-    QOpenGLShaderProgram* m_line_shader{nullptr};
-    // ... VAO/VBO for each primitive type ...
-};
+| File | Description |
+|------|-------------|
+| `GlyphPreview.hpp` | Preview geometry struct (canvas coordinates) |
+| `IGlyphInteractionController.hpp` | Abstract controller interface |
+| `RectangleInteractionController.hpp` | Intervals and selection boxes |
+| `LineInteractionController.hpp` | Line drawing |
+| `DataCoordinates.hpp` | Output type for data-space coordinates |
+| `HitTestResult.hpp` | Hit testing result type |
+| `SceneHitTester.hpp` | Hit testing utilities |
+| `IntervalDragController.hpp` | Legacy controller (being migrated) |
 
-// SceneRenderer additions
-class SceneRenderer {
-    // ... existing ...
-    
-    // Renders preview layer after main scene
-    void renderPreview(GlyphPreview const& preview, int viewport_width, int viewport_height);
-    
-private:
-    PreviewRenderer m_preview_renderer;
-};
+## See Also
 
-Usage Flow Example (Creating New Interval)
+- [ROADMAP.md](ROADMAP.md) - Detailed implementation plan
+- [../DESIGN.md](../DESIGN.md) - Overall CorePlotting architecture
 
-// In OpenGLWidget
+## Usage Example
 
-// 1. User enters "create interval" mode (toolbar button, hotkey, etc.)
+```cpp
+// 1. Widget enters interaction mode
 void OpenGLWidget::setInteractionMode(InteractionMode mode) {
     _interaction_mode = mode;
     if (mode == InteractionMode::CreateInterval) {
@@ -159,24 +83,16 @@ void OpenGLWidget::setInteractionMode(InteractionMode mode) {
     }
 }
 
-// 2. Mouse press starts the interaction
+// 2. Mouse press starts interaction (canvas coordinates)
 void OpenGLWidget::mousePressEvent(QMouseEvent* event) {
-    if (_interaction_mode == InteractionMode::CreateInterval && 
-        event->button() == Qt::LeftButton) {
-        
-        // Find target series (e.g., first visible interval series)
-        std::string target_series = findTargetIntervalSeries();
-        
-        _active_controller->start(
-            event->pos().x(), event->pos().y(),
-            target_series,
-            std::nullopt  // Creating new, not modifying
-        );
+    if (_active_controller && _interaction_mode != InteractionMode::Normal) {
+        _active_controller->start(event->pos().x(), event->pos().y(),
+                                  findTargetSeries(), std::nullopt);
         update();
     }
 }
 
-// 3. Mouse move updates the preview
+// 3. Mouse move updates preview
 void OpenGLWidget::mouseMoveEvent(QMouseEvent* event) {
     if (_active_controller && _active_controller->isActive()) {
         _active_controller->update(event->pos().x(), event->pos().y());
@@ -184,37 +100,32 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent* event) {
     }
 }
 
-// 4. Paint includes the preview
+// 4. Paint renders preview
 void OpenGLWidget::paintGL() {
-    // ... render main scene ...
-    _scene_renderer->render();
+    _scene_renderer->render();  // Main scene
     
-    // Render preview if active
     if (_active_controller && _active_controller->isActive()) {
-        _scene_renderer->renderPreview(
-            _active_controller->getPreview(),
-            width(), height()
-        );
+        _scene_renderer->renderPreview(_active_controller->getPreview(),
+                                       width(), height());
     }
 }
 
-// 5. Mouse release completes and commits to data
+// 5. Mouse release completes and commits
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent* event) {
     if (_active_controller && _active_controller->isActive()) {
         _active_controller->complete();
         
-        // Convert preview to data coordinates
+        // Scene converts canvas → data coordinates
         auto data_coords = _cached_scene.previewToDataCoords(
             _active_controller->getPreview(),
             width(), height(),
-            _cached_layout_response.findLayout(_active_controller->getSeriesKey())
-        );
+            _cached_layout_response.findLayout(_active_controller->getSeriesKey()));
         
         // Commit to DataManager
-        commitInteractionResult(data_coords);
+        commitToDataManager(data_coords);
         
         _active_controller.reset();
         _interaction_mode = InteractionMode::Normal;
-        update();
     }
 }
+```
