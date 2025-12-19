@@ -29,8 +29,9 @@
  * - Handles polylines (analog), glyphs (events), rectangles (intervals)
  * - Model/View/Projection matrix computation via CorePlotting functions
  * 
- * **Layer 5: Interaction (CorePlotting::IntervalDragController, SceneHitTester)**
- * - Interval edge dragging with constraint enforcement
+ * **Layer 5: Interaction (RectangleInteractionController, SceneHitTester)**
+ * - Unified glyph interaction via IGlyphInteractionController
+ * - Interval creation and edge dragging via RectangleInteractionController
  * - Series region queries for tooltips and selection
  * - Coordinate transforms (screen ↔ world ↔ time)
  * 
@@ -50,7 +51,9 @@
  */
 
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp" // TimeSeriesViewState
-#include "CorePlotting/Interaction/IntervalDragController.hpp"
+#include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
+#include "CorePlotting/Interaction/RectangleInteractionController.hpp"
+#include "CorePlotting/Interaction/DataCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
@@ -121,6 +124,20 @@ struct LineParameters {
 enum class PlotTheme {
     Dark,// Black background, white axes (default)
     Light// White background, dark axes
+};
+
+/**
+ * @brief Interaction mode for the OpenGLWidget
+ * 
+ * Defines the current interaction behavior. The widget dispatches mouse events
+ * to the appropriate handler based on the current mode.
+ */
+enum class InteractionMode {
+    Normal,         ///< Default: pan, select, hover tooltips
+    CreateInterval, ///< Click-drag to create a new interval
+    ModifyInterval, ///< Edge dragging to modify existing interval
+    CreateLine,     ///< Click-drag to draw a selection line (future)
+    // Future: CreatePoint, CreatePolygon, etc.
 };
 
 //class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
@@ -243,104 +260,39 @@ public:
      */
     [[nodiscard]] CorePlotting::HitTestResult hitTestAtPosition(float canvas_x, float canvas_y) const;
 
-    /**
-     * @brief Start dragging an interval edge
-     * 
-     * Initiates interval edge dragging using information from a hit test result.
-     * The hit result should be an IntervalEdgeLeft or IntervalEdgeRight type.
-     * 
-     * @param hit_result HitTestResult from findIntervalEdgeAtPosition()
-     * 
-     * @note Time frame handling:
-     *       - Mouse coordinates are converted from master time frame to series time frame
-     *       - Collision detection is performed in the series' native time frame
-     *       - Display coordinates remain in master time frame for consistent rendering
-     */
-    void startIntervalDrag(CorePlotting::HitTestResult const & hit_result);
+    // ========================================================================
+    // Unified Interaction Mode API (Phase 5)
+    // ========================================================================
 
     /**
-     * @brief Update the dragged interval position
+     * @brief Set the current interaction mode
      * 
-     * Updates the position of the interval being dragged based on current mouse position.
-     * Handles collision detection and constraint enforcement in the series' native time frame.
+     * Changes how mouse events are interpreted. When switching modes,
+     * any active interaction is cancelled.
      * 
-     * @param current_pos Current mouse position
-     * 
-     * @note Error handling:
-     *       - If time frame conversion fails, the drag operation is aborted
-     *       - If series data becomes invalid, the drag operation is cancelled
-     *       - Invalid interval bounds are rejected and the drag state is preserved
+     * @param mode The new interaction mode
      */
-    void updateIntervalDrag(QPoint const & current_pos);
+    void setInteractionMode(InteractionMode mode);
 
     /**
-     * @brief Complete the interval dragging operation
-     * 
-     * Finalizes the interval drag by updating the actual data in the digital interval series.
-     * All coordinate conversions between master time frame and series time frame are
-     * handled automatically.
-     * 
-     * @note Error handling:
-     *       - If coordinate conversion fails, the operation is aborted
-     *       - If data update fails, the original interval is preserved
-     *       - The drag state is always cleared regardless of success/failure
-     * 
-     * @note Time frame conversion:
-     *       - Master time frame coordinates are converted to series time frame indices
-     *       - Data operations are performed in the series' native time frame
-     *       - Selection tracking remains in master time frame coordinates
+     * @brief Get the current interaction mode
      */
-    void finishIntervalDrag();
+    [[nodiscard]] InteractionMode interactionMode() const { return _interaction_mode; }
 
     /**
-     * @brief Cancel the current interval drag operation
+     * @brief Check if any interaction is currently active
      * 
-     * Cancels any ongoing interval drag operation and returns to normal state.
-     * This resets all drag-related state without applying any changes.
+     * Returns true if the widget is in the middle of creating or modifying
+     * a glyph (interval, line, etc.).
      */
-    void cancelIntervalDrag();
-
-    [[nodiscard]] bool isDraggingInterval() const { return _interval_drag_controller.isActive(); }
-
-    // New interval creation controls
+    [[nodiscard]] bool isInteractionActive() const;
 
     /**
-     * @brief Start creating a new interval by double-clicking and dragging
+     * @brief Cancel any active interaction
      * 
-     * Initiates the creation of a new interval starting at the specified position.
-     * The user can then drag left or right to define the interval bounds.
-     * 
-     * @param series_key The key identifying the digital interval series
-     * @param start_pos Initial mouse position where double-click occurred
+     * Resets to Normal mode without committing any changes.
      */
-    void startNewIntervalCreation(std::string const & series_key, QPoint const & start_pos);
-
-    /**
-     * @brief Update the new interval being created
-     * 
-     * Updates the bounds of the interval being created based on current mouse position.
-     * Visual feedback is provided similar to interval edge dragging.
-     * 
-     * @param current_pos Current mouse position
-     */
-    void updateNewIntervalCreation(QPoint const & current_pos);
-
-    /**
-     * @brief Finish creating the new interval
-     * 
-     * Completes the new interval creation process by adding the interval to the series.
-     * The interval start and end times are automatically ordered correctly.
-     */
-    void finishNewIntervalCreation();
-
-    /**
-     * @brief Cancel the new interval creation process
-     * 
-     * Cancels the current new interval creation and returns to normal state.
-     */
-    void cancelNewIntervalCreation();
-
-    [[nodiscard]] bool isCreatingNewInterval() const { return _is_creating_new_interval; }
+    void cancelActiveInteraction();
 
     // Accessors for SVG export and external queries
     /**
@@ -464,6 +416,22 @@ signals:
      */
     void entitySelectionChanged(EntityId entity_id, bool is_selected);
 
+    /**
+     * @brief Emitted when the interaction mode changes
+     * @param mode The new interaction mode
+     */
+    void interactionModeChanged(InteractionMode mode);
+
+    /**
+     * @brief Emitted when an interaction completes successfully
+     * 
+     * The DataCoordinates contain all information needed to update the DataManager.
+     * Connect to this signal to handle the result of interactive operations.
+     * 
+     * @param coords The data coordinates resulting from the interaction
+     */
+    void interactionCompleted(CorePlotting::Interaction::DataCoordinates const & coords);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -483,8 +451,56 @@ private:
     void drawAxis();
     void drawGridLines();
     void drawDashedLine(LineParameters const & params);
-    void drawDraggedInterval();
-    void drawNewIntervalBeingCreated();
+    
+    /**
+     * @brief Draw the preview from the active glyph controller (Phase 5)
+     * 
+     * If _glyph_controller is active, renders its preview using the
+     * SceneRenderer's PreviewRenderer. Used for interval creation,
+     * line selection, and other interactive glyph operations.
+     */
+    void drawInteractionPreview();
+
+    /**
+     * @brief Commit the current interaction result to the DataManager
+     * 
+     * Called when an interaction completes (mouse release). Converts
+     * the preview geometry to data coordinates and emits interactionCompleted.
+     */
+    void commitInteraction();
+
+    /**
+     * @brief Start interval creation using the unified interaction system (Phase 5)
+     * 
+     * Creates a RectangleInteractionController in interval mode and starts it
+     * at the given position. The controller handles all state tracking and
+     * preview geometry.
+     * 
+     * @param series_key The key identifying the digital interval series
+     * @param start_pos Initial mouse position where double-click occurred
+     */
+    void startIntervalCreationUnified(std::string const & series_key, QPoint const & start_pos);
+
+    /**
+     * @brief Start interval edge drag using the unified interaction system (Phase 5)
+     * 
+     * Creates a RectangleInteractionController in edge-drag mode for modifying
+     * an existing interval. The controller handles all state tracking and
+     * preview geometry including ghost rendering of the original position.
+     * 
+     * @param hit_result The hit test result containing edge and interval info
+     */
+    void startIntervalEdgeDragUnified(CorePlotting::HitTestResult const & hit_result);
+
+    /**
+     * @brief Handle completed interaction and update DataManager
+     * 
+     * Handles both interval creation and modification. Converts the
+     * DataCoordinates to series-native time frame and updates the data.
+     * 
+     * @param coords The data coordinates from the completed interaction
+     */
+    void handleInteractionCompleted(CorePlotting::Interaction::DataCoordinates const & coords);
 
     // New SceneRenderer-based rendering methods
     /**
@@ -589,8 +605,18 @@ private:
     // Used by SceneBuilder to apply selection_flags to rectangle batches
     std::unordered_set<EntityId> _selected_entities;
 
-    // Interval dragging state (uses CorePlotting::IntervalDragController)
-    CorePlotting::IntervalDragController _interval_drag_controller;
+    // ========================================================================
+    // Unified Interaction System (Phase 5)
+    // ========================================================================
+    
+    /// Current interaction mode
+    InteractionMode _interaction_mode{InteractionMode::Normal};
+    
+    /// Active glyph interaction controller (for CreateInterval, ModifyInterval, CreateLine, etc.)
+    std::unique_ptr<CorePlotting::Interaction::IGlyphInteractionController> _glyph_controller;
+    
+    /// Series key for the current interaction (used when committing results)
+    std::string _interaction_series_key;
 
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;
@@ -603,14 +629,6 @@ private:
     // Spike sorter configuration for custom series ordering
     // Maps group_name -> vector of channel positions
     SpikeSorterConfigMap _spike_sorter_configs;
-
-    // New interval creation state
-    bool _is_creating_new_interval{false};
-    std::string _new_interval_series_key;
-    int64_t _new_interval_start_time{0};
-    int64_t _new_interval_end_time{0};
-    int64_t _new_interval_click_time{0};// Time coordinate where double-click occurred
-    QPoint _new_interval_click_pos;
 
     // ShaderManager integration
     ShaderSourceType m_shaderSourceType = ShaderSourceType::Resource;

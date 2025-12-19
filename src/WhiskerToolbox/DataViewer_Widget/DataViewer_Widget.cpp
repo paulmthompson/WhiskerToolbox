@@ -561,8 +561,8 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
 }
 
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
-    // Disable zooming while dragging intervals
-    if (ui->openGLWidget->isDraggingInterval()) {
+    // Disable zooming while any interaction is active
+    if (ui->openGLWidget->isInteractionActive()) {
         return;
     }
 

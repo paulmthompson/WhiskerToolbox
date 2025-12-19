@@ -41,6 +41,11 @@
 #include <iostream>
 #include <ranges>
 
+// Bring interaction types into scope for cleaner code
+using CorePlotting::Interaction::RectangleEdge;
+using CorePlotting::Interaction::RectangleInteractionConfig;
+using CorePlotting::Interaction::RectangleInteractionController;
+
 // ============================================================================
 // Widget-specific transform composition helpers
 // ============================================================================
@@ -194,7 +199,8 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
         // Check if we're clicking near an interval edge for dragging (only for selected intervals)
         auto edge_result = findIntervalEdgeAtPosition(canvas_x, canvas_y);
         if (edge_result.isIntervalEdge()) {
-            startIntervalDrag(edge_result);
+            // Use unified interaction system for edge dragging
+            startIntervalEdgeDragUnified(edge_result);
             return;// Don't start panning when dragging intervals
         }
 
@@ -256,18 +262,14 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
-    if (_interval_drag_controller.isActive()) {
-        // Update interval drag
-        updateIntervalDrag(event->pos());
-        cancelTooltipTimer();// Cancel tooltip during drag
-        return;              // Don't do other mouse move processing while dragging
-    }
-
-    if (_is_creating_new_interval) {
-        // Update new interval creation
-        updateNewIntervalCreation(event->pos());
-        cancelTooltipTimer();// Cancel tooltip during interval creation
-        return;              // Don't do other mouse move processing while creating
+    // Phase 5 unified controller handling (for interval creation and edge dragging)
+    if (_glyph_controller && _glyph_controller->isActive()) {
+        float const canvas_x = static_cast<float>(event->pos().x());
+        float const canvas_y = static_cast<float>(event->pos().y());
+        _glyph_controller->update(canvas_x, canvas_y);
+        cancelTooltipTimer();
+        updateCanvas(_time);  // Redraw to show updated preview
+        return;
     }
 
     if (_isPanning) {
@@ -324,13 +326,13 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        if (_interval_drag_controller.isActive()) {
-            finishIntervalDrag();
-        } else if (_is_creating_new_interval) {
-            finishNewIntervalCreation();
-        } else {
-            _isPanning = false;
+        // Phase 5 unified controller handling
+        if (_glyph_controller && _glyph_controller->isActive()) {
+            commitInteraction();
+            return;
         }
+        
+        _isPanning = false;
     }
     QOpenGLWidget::mouseReleaseEvent(event);
 }
@@ -529,10 +531,8 @@ void OpenGLWidget::paintGL() {
 
     drawGridLines();
 
-    // Overlay rendering for interactive states (uses legacy shader path)
-    // These are temporary overlays during user interaction
-    drawDraggedInterval();
-    drawNewIntervalBeingCreated();
+    // Phase 5 unified controller preview overlay
+    drawInteractionPreview();
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
@@ -1004,353 +1004,15 @@ CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, floa
     return CorePlotting::HitTestResult::noHit();
 }
 
-void OpenGLWidget::startIntervalDrag(CorePlotting::HitTestResult const & hit_result) {
-    if (!hit_result.isIntervalEdge()) {
-        return;
-    }
-
-    // Configure the drag controller with time frame bounds if available
-    CorePlotting::IntervalDragConfig config;
-    config.min_width = 1;
-    config.snap_to_integer = true;
-    config.allow_edge_swap = false;
-
-    // Set time bounds from master time frame if available
-    if (_master_time_frame && _master_time_frame->getTotalFrameCount() > 0) {
-        config.min_time = static_cast<int64_t>(_master_time_frame->getTimeAtIndex(TimeFrameIndex(0)));
-        config.max_time = static_cast<int64_t>(_master_time_frame->getTimeAtIndex(
-                TimeFrameIndex(static_cast<int64_t>(_master_time_frame->getTotalFrameCount() - 1))));
-    }
-
-    _interval_drag_controller.setConfig(config);
-
-    // Start the drag using the hit result directly
-    if (!_interval_drag_controller.startDrag(hit_result)) {
-        return;
-    }
-
-    // Disable normal mouse interactions during drag
-    setCursor(Qt::SizeHorCursor);
-
-    bool const is_left_edge = (hit_result.hit_type == CorePlotting::HitType::IntervalEdgeLeft);
-    std::cout << "Started dragging " << (is_left_edge ? "left" : "right")
-              << " edge of interval [" << hit_result.interval_start.value_or(0) 
-              << ", " << hit_result.interval_end.value_or(0) << "]" << std::endl;
-}
-
-void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
-    if (!_interval_drag_controller.isActive()) {
-        return;
-    }
-
-    auto const & state = _interval_drag_controller.getState();
-    std::string const & series_key = state.series_key;
-
-    // Convert mouse position to time coordinate (in master time frame)
-    float const current_time_master = canvasXToTime(static_cast<float>(current_pos.x()));
-
-    // Get the series data
-    auto it = _digital_interval_series.find(series_key);
-    if (it == _digital_interval_series.end()) {
-        // Series not found - abort drag
-        cancelIntervalDrag();
-        return;
-    }
-
-    auto const & series = it->second.series;
-
-    // Convert master time coordinate to series time frame index for collision detection
-    int64_t current_time_series_index;
-    if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        // Same time frame - use time coordinate directly
-        current_time_series_index = static_cast<int64_t>(std::round(current_time_master));
-    } else {
-        // Different time frame - convert master time to series time frame index
-        current_time_series_index = series->getTimeFrame()->getIndexAtTime(current_time_master).getValue();
-    }
-
-    // Convert original interval bounds to series time frame for collision detection
-    int64_t original_start_series, original_end_series;
-    if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        // Same time frame
-        original_start_series = state.original_start;
-        original_end_series = state.original_end;
-    } else {
-        // Convert master time coordinates to series time frame indices
-        original_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(state.original_start)).getValue();
-        original_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(state.original_end)).getValue();
-    }
-
-    // Perform collision detection in series time frame
-    int64_t constrained_time = current_time_series_index;
-    bool const is_dragging_left = (state.edge == CorePlotting::DraggedEdge::Left);
-
-    if (is_dragging_left) {
-        // Dragging left edge - check for collision with other intervals
-        auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                constrained_time, constrained_time);
-
-        for (auto const & interval: overlapping_intervals) {
-            // Skip the interval we're currently editing
-            if (interval.start == original_start_series && interval.end == original_end_series) {
-                continue;
-            }
-
-            // If we would overlap with another interval, stop 1 index after it
-            if (constrained_time <= interval.end) {
-                constrained_time = interval.end + 1;
-                break;
-            }
-        }
-    } else {
-        // Dragging right edge - check for collision with other intervals
-        auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                constrained_time, constrained_time);
-
-        for (auto const & interval: overlapping_intervals) {
-            // Skip the interval we're currently editing
-            if (interval.start == original_start_series && interval.end == original_end_series) {
-                continue;
-            }
-
-            // If we would overlap with another interval, stop 1 index before it
-            if (constrained_time >= interval.start) {
-                constrained_time = interval.start - 1;
-                break;
-            }
-        }
-    }
-
-    // Convert constrained time back to master time frame for the controller
-    float world_x_for_controller;
-    if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        world_x_for_controller = static_cast<float>(constrained_time);
-    } else {
-        try {
-            world_x_for_controller = series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(constrained_time));
-        } catch (...) {
-            // Conversion failed - abort drag
-            cancelIntervalDrag();
-            return;
-        }
-    }
-
-    // Update the controller with collision-constrained position
-    _interval_drag_controller.updateDrag(world_x_for_controller);
-
-    // Trigger redraw to show the dragged interval
-    updateCanvas(_time);
-}
-
-void OpenGLWidget::finishIntervalDrag() {
-    if (!_interval_drag_controller.isActive()) {
-        return;
-    }
-
-    // Get final state from controller
-    auto final_state = _interval_drag_controller.finishDrag();
-    std::string const & series_key = final_state.series_key;
-
-    // Get the series data
-    auto it = _digital_interval_series.find(series_key);
-    if (it == _digital_interval_series.end()) {
-        // Series not found - just reset cursor
-        setCursor(Qt::ArrowCursor);
-        updateCanvas(_time);
-        return;
-    }
-
-    auto const & series = it->second.series;
-
-    // Only apply changes if the interval was actually modified
-    if (!final_state.hasChanged()) {
-        setCursor(Qt::ArrowCursor);
-        updateCanvas(_time);
-        return;
-    }
-
-    try {
-        // Convert all coordinates to series time frame for data operations
-        int64_t original_start_series, original_end_series, new_start_series, new_end_series;
-
-        if (series->getTimeFrame().get() == _master_time_frame.get()) {
-            // Same time frame - use coordinates directly
-            original_start_series = final_state.original_start;
-            original_end_series = final_state.original_end;
-            new_start_series = final_state.current_start;
-            new_end_series = final_state.current_end;
-        } else {
-            // Convert master time coordinates to series time frame indices
-            original_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.original_start)).getValue();
-            original_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.original_end)).getValue();
-            new_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.current_start)).getValue();
-            new_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(final_state.current_end)).getValue();
-        }
-
-        // Validate converted coordinates
-        if (new_start_series >= new_end_series ||
-            new_start_series < 0 || new_end_series < 0) {
-            throw std::runtime_error("Invalid interval bounds after conversion");
-        }
-
-        // Update the interval data in the series' native time frame
-        // First, remove the original interval completely
-        for (int64_t time = original_start_series; time <= original_end_series; ++time) {
-            series->setEventAtTime(TimeFrameIndex(time), false);
-        }
-
-        // Add the new interval
-        series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
-
-        // Find and select the newly created interval by its EntityId
-        // Query for intervals in the new range to get the EntityId
-        auto intervals = series->getIntervalsWithIdsInRange(
-            TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
-        
-        for (auto const & interval_with_id : intervals) {
-            if (interval_with_id.interval.start == new_start_series && 
-                interval_with_id.interval.end == new_end_series) {
-                // Clear old selection and select the modified interval
-                clearEntitySelection();
-                selectEntity(interval_with_id.entity_id);
-                emit entitySelectionChanged(interval_with_id.entity_id, true);
-                break;
-            }
-        }
-
-        std::cout << "Finished dragging interval. Original: ["
-                  << final_state.original_start << ", " << final_state.original_end
-                  << "] -> New: [" << final_state.current_start << ", " << final_state.current_end << "]" << std::endl;
-
-    } catch (...) {
-        // Error occurred during conversion or data update
-        std::cout << "Error during interval drag completion - keeping original interval" << std::endl;
-    }
-
-    // Reset cursor and redraw
-    setCursor(Qt::ArrowCursor);
-    updateCanvas(_time);
-}
-
-void OpenGLWidget::cancelIntervalDrag() {
-    if (!_interval_drag_controller.isActive()) {
-        return;
-    }
-
-    std::cout << "Cancelled interval drag" << std::endl;
-
-    // Cancel the drag in the controller
-    _interval_drag_controller.cancelDrag();
-
-    // Reset cursor
-    setCursor(Qt::ArrowCursor);
-
-    // Trigger redraw to remove the dragged interval visualization
-    updateCanvas(_time);
-}
-
-void OpenGLWidget::drawDraggedInterval() {
-    if (!_interval_drag_controller.isActive()) {
-        return;
-    }
-
-    auto const & drag_state = _interval_drag_controller.getState();
-
-    // Get the series data for rendering
-    auto it = _digital_interval_series.find(drag_state.series_key);
-    if (it == _digital_interval_series.end()) {
-        return;
-    }
-
-    auto const & display_options = it->second.display_options;
-
-    auto const start_time = static_cast<float>(_view_state.time_start);
-    auto const end_time = static_cast<float>(_view_state.time_end);
-    auto const min_y = _view_state.y_min;
-    auto const max_y = _view_state.y_max;
-
-    // Check if the dragged interval is visible
-    if (drag_state.current_end < static_cast<int64_t>(start_time) || drag_state.current_start > static_cast<int64_t>(end_time)) {
-        return;
-    }
-
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) glUseProgram(axesProgram->getProgramId());
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-    setupVertexAttribs();
-
-    // Set up matrices (same as normal interval rendering)
-    auto Model = glm::mat4(1.0f);
-    auto View = glm::mat4(1.0f);
-    auto Projection = glm::ortho(start_time, end_time, min_y, max_y);
-
-    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
-    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
-    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
-
-    // Get colors
-    int r, g, b;
-    hexToRGB(display_options->style.hex_color, r, g, b);
-    float const rNorm = static_cast<float>(r) / 255.0f;
-    float const gNorm = static_cast<float>(g) / 255.0f;
-    float const bNorm = static_cast<float>(b) / 255.0f;
-
-    // Clip the dragged interval to visible range
-    float const dragged_start = std::max(static_cast<float>(drag_state.current_start), start_time);
-    float const dragged_end = std::min(static_cast<float>(drag_state.current_end), end_time);
-
-    // Draw the original interval dimmed (alpha = 0.2)
-    float const original_start = std::max(static_cast<float>(drag_state.original_start), start_time);
-    float const original_end = std::min(static_cast<float>(drag_state.original_end), end_time);
-
-    // Set color and alpha uniforms for original interval (dimmed)
-    glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
-    glUniform1f(m_alphaLoc, 0.2f);
-
-    // Create 4D vertices (x, y, 0, 1) to match the shader expectations
-    std::array<GLfloat, 16> original_vertices = {
-            original_start, min_y, 0.0f, 1.0f,
-            original_end, min_y, 0.0f, 1.0f,
-            original_end, max_y, 0.0f, 1.0f,
-            original_start, max_y, 0.0f, 1.0f};
-
-    m_vbo.bind();
-    m_vbo.allocate(original_vertices.data(), original_vertices.size() * sizeof(GLfloat));
-    m_vbo.release();
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    // Set color and alpha uniforms for dragged interval (semi-transparent)
-    glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
-    glUniform1f(m_alphaLoc, 0.8f);
-
-    // Create 4D vertices (x, y, 0, 1) to match the shader expectations
-    std::array<GLfloat, 16> dragged_vertices = {
-            dragged_start, min_y, 0.0f, 1.0f,
-            dragged_end, min_y, 0.0f, 1.0f,
-            dragged_end, max_y, 0.0f, 1.0f,
-            dragged_start, max_y, 0.0f, 1.0f};
-
-    m_vbo.bind();
-    m_vbo.allocate(dragged_vertices.data(), dragged_vertices.size() * sizeof(GLfloat));
-    m_vbo.release();
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    glUseProgram(0);
-}
-
 void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        // Check if we're double-clicking over a digital interval series
-        //float const canvas_x = static_cast<float>(event->pos().x());
-        //float const canvas_y = static_cast<float>(event->pos().y());
-
         // Find which digital interval series (if any) is at this Y position
         // For now, use the first visible digital interval series
         // TODO: Improve this to detect which series based on Y coordinate
         for (auto const & [series_key, data]: _digital_interval_series) {
             if (data.display_options->style.is_visible) {
-                startNewIntervalCreation(series_key, event->pos());
+                // Use Phase 5 unified interaction system
+                startIntervalCreationUnified(series_key, event->pos());
                 return;
             }
         }
@@ -1359,9 +1021,129 @@ void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
-void OpenGLWidget::startNewIntervalCreation(std::string const & series_key, QPoint const & start_pos) {
-    // Don't start if we're already dragging an interval
-    if (_interval_drag_controller.isActive() || _is_creating_new_interval) {
+///////////////////////////////////////////////////////////////////////////////
+// Phase 5: Unified Interaction Mode API
+///////////////////////////////////////////////////////////////////////////////
+
+void OpenGLWidget::setInteractionMode(InteractionMode mode) {
+    if (_interaction_mode == mode) {
+        return;
+    }
+
+    // Cancel any active interaction before switching modes
+    cancelActiveInteraction();
+
+    _interaction_mode = mode;
+
+    // Create appropriate controller for the new mode
+    switch (mode) {
+        case InteractionMode::CreateInterval: {
+            RectangleInteractionConfig config;
+            config.constrain_to_x_axis = true;  // Intervals span full height
+            config.viewport_height = static_cast<float>(height());
+            config.fill_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
+            config.stroke_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+            _glyph_controller = std::make_unique<RectangleInteractionController>(config);
+            setCursor(Qt::CrossCursor);
+            break;
+        }
+        case InteractionMode::CreateLine: {
+            // TODO: Create LineInteractionController when needed
+            _glyph_controller = nullptr;
+            setCursor(Qt::CrossCursor);
+            break;
+        }
+        case InteractionMode::ModifyInterval:
+        case InteractionMode::Normal:
+        default:
+            _glyph_controller = nullptr;
+            setCursor(Qt::ArrowCursor);
+            break;
+    }
+
+    emit interactionModeChanged(mode);
+}
+
+bool OpenGLWidget::isInteractionActive() const {
+    // Check unified controller
+    if (_glyph_controller && _glyph_controller->isActive()) {
+        return true;
+    }
+    return false;
+}
+
+void OpenGLWidget::cancelActiveInteraction() {
+    // Cancel unified controller
+    if (_glyph_controller && _glyph_controller->isActive()) {
+        _glyph_controller->cancel();
+    }
+
+    // Reset mode to Normal
+    _interaction_mode = InteractionMode::Normal;
+    _glyph_controller = nullptr;
+    _interaction_series_key.clear();
+    setCursor(Qt::ArrowCursor);
+
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::drawInteractionPreview() {
+    if (!_glyph_controller || !_glyph_controller->isActive()) {
+        return;
+    }
+
+    if (!_scene_renderer || !_scene_renderer->isInitialized()) {
+        return;
+    }
+
+    auto const preview = _glyph_controller->getPreview();
+    _scene_renderer->previewRenderer().render(preview, width(), height());
+}
+
+void OpenGLWidget::commitInteraction() {
+    if (!_glyph_controller || !_glyph_controller->isActive()) {
+        return;
+    }
+
+    // Get the preview geometry
+    auto const preview = _glyph_controller->getPreview();
+
+    // Convert canvas coordinates to data coordinates based on preview type
+    CorePlotting::Interaction::DataCoordinates data_coords;
+    
+    if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Rectangle) {
+        // For intervals: just need X coordinates (time)
+        auto interval_coords = _cached_scene.previewToIntervalCoords(preview, width(), height());
+        data_coords = CorePlotting::Interaction::DataCoordinates::createInterval(
+            _interaction_series_key, interval_coords.start, interval_coords.end);
+    } else if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Line) {
+        // For lines: need full coordinate conversion
+        // Use identity transform for now (can be enhanced with series-specific transform)
+        CorePlotting::LayoutTransform identity{0.0f, 1.0f};
+        auto line_coords = _cached_scene.previewToLineCoords(preview, width(), height(), identity);
+        data_coords = CorePlotting::Interaction::DataCoordinates::createLine(
+            _interaction_series_key, line_coords.x1, line_coords.y1, line_coords.x2, line_coords.y2);
+    } else if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Point) {
+        // For points: single coordinate
+        CorePlotting::LayoutTransform identity{0.0f, 1.0f};
+        auto point_coords = _cached_scene.previewToPointCoords(preview, width(), height(), identity);
+        data_coords = CorePlotting::Interaction::DataCoordinates::createPoint(
+            _interaction_series_key, point_coords.x, point_coords.y);
+    }
+
+    // Complete the controller interaction
+    _glyph_controller->complete();
+
+    // Handle the interaction result directly (add interval to DataManager)
+    handleInteractionCompleted(data_coords);
+
+    // Reset state
+    setInteractionMode(InteractionMode::Normal);
+}
+
+void OpenGLWidget::startIntervalCreationUnified(std::string const & series_key, QPoint const & start_pos) {
+    // Don't start if we're already in an interaction
+    if (isInteractionActive()) {
         return;
     }
 
@@ -1371,161 +1153,221 @@ void OpenGLWidget::startNewIntervalCreation(std::string const & series_key, QPoi
         return;
     }
 
-    _is_creating_new_interval = true;
-    _new_interval_series_key = series_key;
-    _new_interval_click_pos = start_pos;
+    // Get series color for preview
+    auto const & display_options = it->second.display_options;
+    int r, g, b;
+    hexToRGB(display_options->style.hex_color, r, g, b);
+    
+    // Create the controller with interval mode configuration
+    RectangleInteractionConfig config;
+    config.constrain_to_x_axis = true;  // Intervals span full height
+    config.viewport_height = static_cast<float>(height());
+    config.fill_color = glm::vec4(
+        static_cast<float>(r) / 255.0f,
+        static_cast<float>(g) / 255.0f,
+        static_cast<float>(b) / 255.0f,
+        0.5f);  // 50% transparent
+    config.stroke_color = glm::vec4(
+        static_cast<float>(r) / 255.0f,
+        static_cast<float>(g) / 255.0f,
+        static_cast<float>(b) / 255.0f,
+        1.0f);
+    config.stroke_width = 2.0f;
 
-    // Convert click position to time coordinate (in master time frame)
-    float const click_time_master = canvasXToTime(static_cast<float>(start_pos.x()));
-    _new_interval_click_time = static_cast<int64_t>(std::round(click_time_master));
+    _glyph_controller = std::make_unique<RectangleInteractionController>(config);
+    _interaction_series_key = series_key;
+    _interaction_mode = InteractionMode::CreateInterval;
 
-    // Initialize start and end to the click position
-    _new_interval_start_time = _new_interval_click_time;
-    _new_interval_end_time = _new_interval_click_time;
+    // Start the controller at the click position
+    float const canvas_x = static_cast<float>(start_pos.x());
+    float const canvas_y = static_cast<float>(start_pos.y());
+    _glyph_controller->start(canvas_x, canvas_y, series_key);
 
-    // Set cursor to indicate creation mode
     setCursor(Qt::SizeHorCursor);
 
-    std::cout << "Started new interval creation for series " << series_key
-              << " at time " << _new_interval_click_time << std::endl;
-}
+    std::cout << "Started unified interval creation for series " << series_key
+              << " at canvas (" << canvas_x << ", " << canvas_y << ")" << std::endl;
 
-void OpenGLWidget::updateNewIntervalCreation(QPoint const & current_pos) {
-    if (!_is_creating_new_interval) {
-        return;
-    }
-
-    // Convert current mouse position to time coordinate (in master time frame)
-    float const current_time_master = canvasXToTime(static_cast<float>(current_pos.x()));
-    int64_t const current_time_coord = static_cast<int64_t>(std::round(current_time_master));
-
-    // Get the series data for constraint checking
-    auto it = _digital_interval_series.find(_new_interval_series_key);
-    if (it == _digital_interval_series.end()) {
-        // Series not found - abort creation
-        cancelNewIntervalCreation();
-        return;
-    }
-
-    auto const & series = it->second.series;
-
-    // Convert coordinates to series time frame for collision detection
-    int64_t click_time_series, current_time_series;
-    if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        // Same time frame - use coordinates directly
-        click_time_series = _new_interval_click_time;
-        current_time_series = current_time_coord;
-    } else {
-        // Convert master time coordinates to series time frame indices
-        click_time_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_new_interval_click_time)).getValue();
-        current_time_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(current_time_coord)).getValue();
-    }
-
-    // Determine interval bounds (always ensure start < end)
-    int64_t new_start_series = std::min(click_time_series, current_time_series);
-    int64_t new_end_series = std::max(click_time_series, current_time_series);
-
-    // Ensure minimum interval size of 1
-    if (new_start_series == new_end_series) {
-        if (current_time_series >= click_time_series) {
-            new_end_series = new_start_series + 1;
-        } else {
-            new_start_series = new_end_series - 1;
-        }
-    }
-
-    // Check for collision with existing intervals in series time frame
-    auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-            new_start_series, new_end_series);
-
-    // If there are overlapping intervals, constrain the new interval
-    for (auto const & interval: overlapping_intervals) {
-        if (current_time_series >= click_time_series) {
-            // Dragging right - stop before the first overlapping interval
-            if (new_end_series >= interval.start) {
-                new_end_series = interval.start - 1;
-                if (new_end_series <= new_start_series) {
-                    new_end_series = new_start_series + 1;
-                }
-                break;
-            }
-        } else {
-            // Dragging left - stop after the last overlapping interval
-            if (new_start_series <= interval.end) {
-                new_start_series = interval.end + 1;
-                if (new_start_series >= new_end_series) {
-                    new_start_series = new_end_series - 1;
-                }
-                break;
-            }
-        }
-    }
-
-    // Convert back to master time frame for display
-    if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        // Same time frame
-        _new_interval_start_time = new_start_series;
-        _new_interval_end_time = new_end_series;
-    } else {
-        // Convert series indices back to master time coordinates
-        try {
-            _new_interval_start_time = static_cast<int64_t>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(new_start_series)));
-            _new_interval_end_time = static_cast<int64_t>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(new_end_series)));
-        } catch (...) {
-            // Conversion failed - abort creation
-            cancelNewIntervalCreation();
-            return;
-        }
-    }
-
-    // Trigger redraw to show the new interval being created
     updateCanvas(_time);
 }
 
-void OpenGLWidget::finishNewIntervalCreation() {
-    if (!_is_creating_new_interval) {
+void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult const & hit_result) {
+    // Only handle interval edge hits
+    if (!hit_result.isIntervalEdge()) {
         return;
     }
 
-    // Get the series data
-    auto it = _digital_interval_series.find(_new_interval_series_key);
+    // Don't start if we're already in an interaction
+    if (isInteractionActive()) {
+        return;
+    }
+
+    // Check if the series exists
+    auto it = _digital_interval_series.find(hit_result.series_key);
     if (it == _digital_interval_series.end()) {
-        // Series not found - abort creation
-        cancelNewIntervalCreation();
+        return;
+    }
+
+    // Get the entity ID (required for modification)
+    if (!hit_result.entity_id.has_value()) {
+        return;
+    }
+
+    // Get interval bounds (required for modification)
+    if (!hit_result.interval_start.has_value() || !hit_result.interval_end.has_value()) {
+        return;
+    }
+
+    // Convert HitType to RectangleEdge
+    RectangleEdge edge = RectangleEdge::None;
+    if (hit_result.hit_type == CorePlotting::HitType::IntervalEdgeLeft) {
+        edge = RectangleEdge::Left;
+    } else if (hit_result.hit_type == CorePlotting::HitType::IntervalEdgeRight) {
+        edge = RectangleEdge::Right;
+    }
+
+    if (edge == RectangleEdge::None) {
+        return;
+    }
+
+    // Get series color for preview
+    auto const & display_options = it->second.display_options;
+    int r, g, b;
+    hexToRGB(display_options->style.hex_color, r, g, b);
+
+    // Create the controller with interval mode configuration
+    RectangleInteractionConfig config;
+    config.constrain_to_x_axis = true;  // Intervals span full height
+    config.viewport_height = static_cast<float>(height());
+    config.fill_color = glm::vec4(
+        static_cast<float>(r) / 255.0f,
+        static_cast<float>(g) / 255.0f,
+        static_cast<float>(b) / 255.0f,
+        0.5f);  // 50% transparent for preview
+    config.stroke_color = glm::vec4(
+        static_cast<float>(r) / 255.0f,
+        static_cast<float>(g) / 255.0f,
+        static_cast<float>(b) / 255.0f,
+        1.0f);
+    config.stroke_width = 2.0f;
+
+    auto controller = std::make_unique<RectangleInteractionController>(config);
+
+    // Convert interval bounds from data space to canvas coordinates
+    // The hit_result contains interval_start/end in data space (time indices)
+    CorePlotting::TimeAxisParams time_params(_view_state.time_start, _view_state.time_end, width());
+    float const start_canvas_x = CorePlotting::timeToCanvasX(static_cast<float>(*hit_result.interval_start), time_params);
+    float const end_canvas_x = CorePlotting::timeToCanvasX(static_cast<float>(*hit_result.interval_end), time_params);
+    
+    // For intervals, y spans full height
+    float const canvas_y = 0.0f;
+    float const canvas_height = static_cast<float>(height());
+    
+    // Original bounds: {x, y, width, height} in canvas coords
+    glm::vec4 original_bounds(
+        start_canvas_x,  // x (left edge)
+        canvas_y,        // y (bottom)
+        end_canvas_x - start_canvas_x,  // width
+        canvas_height    // height
+    );
+
+    // Current canvas position (where user clicked)
+    float const click_canvas_x = CorePlotting::timeToCanvasX(hit_result.world_x, time_params);
+    float const click_canvas_y = static_cast<float>(height()) / 2.0f;  // Middle of canvas
+
+    // Start edge drag mode
+    controller->startEdgeDrag(
+        click_canvas_x, click_canvas_y,
+        hit_result.series_key,
+        *hit_result.entity_id,
+        edge,
+        original_bounds
+    );
+
+    _glyph_controller = std::move(controller);
+    _interaction_series_key = hit_result.series_key;
+    _interaction_mode = InteractionMode::ModifyInterval;
+
+    setCursor(Qt::SizeHorCursor);
+
+    bool const is_left_edge = (edge == RectangleEdge::Left);
+    std::cout << "Started unified interval edge drag (" << (is_left_edge ? "left" : "right")
+              << ") for series " << hit_result.series_key
+              << " interval [" << *hit_result.interval_start << ", " << *hit_result.interval_end << "]"
+              << std::endl;
+
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoordinates const & coords) {
+    if (!coords.isInterval()) {
+        // For now, only handle interval types
+        return;
+    }
+
+    auto const & interval_coords = coords.asInterval();
+    
+    // Get the series data
+    auto it = _digital_interval_series.find(coords.series_key);
+    if (it == _digital_interval_series.end()) {
+        std::cout << "Series not found: " << coords.series_key << std::endl;
         return;
     }
 
     auto const & series = it->second.series;
 
     try {
-        // Convert coordinates to series time frame for data operations
-        int64_t new_start_series, new_end_series;
+        // The interval_coords are in master time frame (from view state)
+        // Convert to series time frame if needed
+        int64_t start_series, end_series;
 
         if (series->getTimeFrame().get() == _master_time_frame.get()) {
             // Same time frame - use coordinates directly
-            new_start_series = _new_interval_start_time;
-            new_end_series = _new_interval_end_time;
+            start_series = interval_coords.start;
+            end_series = interval_coords.end;
         } else {
             // Convert master time coordinates to series time frame indices
-            new_start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_new_interval_start_time)).getValue();
-            new_end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(_new_interval_end_time)).getValue();
+            start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(interval_coords.start)).getValue();
+            end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(interval_coords.end)).getValue();
+        }
+
+        // Ensure proper ordering
+        if (start_series > end_series) {
+            std::swap(start_series, end_series);
         }
 
         // Validate converted coordinates
-        if (new_start_series >= new_end_series || new_start_series < 0 || new_end_series < 0) {
-            throw std::runtime_error("Invalid interval bounds after conversion");
+        if (start_series >= end_series || start_series < 0 || end_series < 0) {
+            std::cout << "Invalid interval bounds after conversion" << std::endl;
+            return;
         }
 
-        // Add the new interval to the series
-        series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
+        if (coords.is_modification && coords.entity_id.has_value()) {
+            // Modification mode: Find and modify existing interval by EntityId
+            // Find the original interval by its EntityId
+            auto original_interval = series->getIntervalByEntityId(*coords.entity_id);
+            if (original_interval.has_value()) {
+                // Remove the original interval
+                for (int64_t time = original_interval->start; time <= original_interval->end; ++time) {
+                    series->setEventAtTime(TimeFrameIndex(time), false);
+                }
+                
+                std::cout << "Modified interval [" << original_interval->start << ", " << original_interval->end
+                          << "] -> [" << start_series << ", " << end_series << "] for series "
+                          << coords.series_key << std::endl;
+            }
+        }
 
-        // Find and select the newly created interval by its EntityId
+        // Add the new/modified interval to the series
+        series->addEvent(TimeFrameIndex(start_series), TimeFrameIndex(end_series));
+
+        // Find and select the newly created/modified interval by its EntityId
         auto intervals = series->getIntervalsWithIdsInRange(
-            TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
+            TimeFrameIndex(start_series), TimeFrameIndex(end_series));
         
         for (auto const & interval_with_id : intervals) {
-            if (interval_with_id.interval.start == new_start_series && 
-                interval_with_id.interval.end == new_end_series) {
+            if (interval_with_id.interval.start == start_series && 
+                interval_with_id.interval.end == end_series) {
                 clearEntitySelection();
                 selectEntity(interval_with_id.entity_id);
                 emit entitySelectionChanged(interval_with_id.entity_id, true);
@@ -1533,109 +1375,18 @@ void OpenGLWidget::finishNewIntervalCreation() {
             }
         }
 
-        std::cout << "Created new interval [" << _new_interval_start_time
-                  << ", " << _new_interval_end_time << "] for series "
-                  << _new_interval_series_key << std::endl;
+        if (!coords.is_modification) {
+            std::cout << "Created new interval [" << start_series
+                      << ", " << end_series << "] for series "
+                      << coords.series_key << std::endl;
+        }
 
-    } catch (...) {
-        // Error occurred during conversion or data update - abort creation
-        std::cout << "Error during new interval creation" << std::endl;
-        cancelNewIntervalCreation();
-        return;
+    } catch (std::exception const & e) {
+        std::cout << "Error during interval operation: " << e.what() << std::endl;
     }
 
-    // Reset creation state
-    _is_creating_new_interval = false;
-    _new_interval_series_key.clear();
-    setCursor(Qt::ArrowCursor);
-
-    // Trigger final redraw
+    // Trigger redraw
     updateCanvas(_time);
-}
-
-void OpenGLWidget::cancelNewIntervalCreation() {
-    if (!_is_creating_new_interval) {
-        return;
-    }
-
-    std::cout << "Cancelled new interval creation" << std::endl;
-
-    // Reset creation state without applying changes
-    _is_creating_new_interval = false;
-    _new_interval_series_key.clear();
-    setCursor(Qt::ArrowCursor);
-
-    // Trigger redraw to remove the new interval visualization
-    updateCanvas(_time);
-}
-
-void OpenGLWidget::drawNewIntervalBeingCreated() {
-    if (!_is_creating_new_interval) {
-        return;
-    }
-
-    // Get the series data for rendering
-    auto it = _digital_interval_series.find(_new_interval_series_key);
-    if (it == _digital_interval_series.end()) {
-        return;
-    }
-
-    auto const & display_options = it->second.display_options;
-
-    auto const start_time = static_cast<float>(_view_state.time_start);
-    auto const end_time = static_cast<float>(_view_state.time_end);
-    auto const min_y = _view_state.y_min;
-    auto const max_y = _view_state.y_max;
-
-    // Check if the new interval is visible
-    if (_new_interval_end_time < static_cast<int64_t>(start_time) || _new_interval_start_time > static_cast<int64_t>(end_time)) {
-        return;
-    }
-
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) glUseProgram(axesProgram->getProgramId());
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-    setupVertexAttribs();
-
-    // Set up matrices (same as normal interval rendering)
-    auto Model = glm::mat4(1.0f);
-    auto View = glm::mat4(1.0f);
-    auto Projection = glm::ortho(start_time, end_time, min_y, max_y);
-
-    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
-    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
-    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
-
-    // Get colors
-    int r, g, b;
-    hexToRGB(display_options->style.hex_color, r, g, b);
-    float const rNorm = static_cast<float>(r) / 255.0f;
-    float const gNorm = static_cast<float>(g) / 255.0f;
-    float const bNorm = static_cast<float>(b) / 255.0f;
-
-    // Set color and alpha uniforms for new interval (50% transparency)
-    glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
-    glUniform1f(m_alphaLoc, 0.5f);
-
-    // Clip the new interval to visible range
-    float const new_start = std::max(static_cast<float>(_new_interval_start_time), start_time);
-    float const new_end = std::min(static_cast<float>(_new_interval_end_time), end_time);
-
-    // Draw the new interval being created with 50% transparency
-    // Create 4D vertices (x, y, 0, 1) to match the shader expectations
-    std::array<GLfloat, 16> new_interval_vertices = {
-            new_start, min_y, 0.0f, 1.0f,
-            new_end, min_y, 0.0f, 1.0f,
-            new_end, max_y, 0.0f, 1.0f,
-            new_start, max_y, 0.0f, 1.0f};
-
-    m_vbo.bind();
-    m_vbo.allocate(new_interval_vertices.data(), new_interval_vertices.size() * sizeof(GLfloat));
-    m_vbo.release();
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    glUseProgram(0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
