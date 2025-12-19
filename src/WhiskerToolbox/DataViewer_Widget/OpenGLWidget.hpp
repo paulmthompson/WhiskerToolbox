@@ -52,7 +52,6 @@
 
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp" // TimeSeriesViewState
 #include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
-#include "CorePlotting/Interaction/RectangleInteractionController.hpp"
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"

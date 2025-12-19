@@ -4,6 +4,7 @@
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
+#include "CorePlotting/Interaction/RectangleInteractionController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
@@ -62,7 +63,11 @@ namespace {
  * 1. Data normalization (z-score style: maps ±3σ to ±1)
  * 2. User adjustments (intrinsic scale, user scale, vertical offset)
  * 3. Layout positioning (from LayoutEngine)
- * 4. Global scaling (from ViewState)
+ * 4. Global scaling (from ViewState) - applied to amplitude only, NOT position
+ * 
+ * IMPORTANT: Global zoom scales the data amplitude within each lane, but does NOT
+ * move the lane center. This is achieved by applying global scaling to the gain
+ * component only, after composing data normalization with layout positioning.
  */
 [[nodiscard]] CorePlotting::LayoutTransform composeAnalogYTransform(
         CorePlotting::SeriesLayout const & layout,
@@ -83,21 +88,27 @@ namespace {
             intrinsic_scale * user_scale_factor,
             user_vertical_offset);
 
-    // Layout provides: offset = center, gain = half_height
+    // Compose data normalization with user adjustments
+    // This gives us normalized data in [-1, 1] range (assuming ±3σ coverage)
+    auto data_transform = user_adj.compose(data_norm);
+
+    // Layout provides: offset = lane center, gain = half_height of lane
     // Apply 80% margin factor within allocated space
     constexpr float margin_factor = 0.8f;
-    CorePlotting::LayoutTransform layout_with_margin{
-            layout.y_transform.offset,
-            layout.y_transform.gain * margin_factor};
-
-    // Global scaling
-    auto global_adj = CorePlotting::NormalizationHelpers::manual(
-            global_zoom * global_vertical_scale,
-            0.0f);
-
-    // Compose in order: data_norm -> user_adj -> layout -> global
-    // Result = global.compose(layout.compose(user_adj.compose(data_norm)))
-    return global_adj.compose(layout_with_margin.compose(user_adj.compose(data_norm)));
+    
+    // Global scaling affects the amplitude within the lane, NOT the lane position
+    // So we apply global_zoom to the gain only
+    float const lane_half_height = layout.y_transform.gain * margin_factor;
+    float const effective_gain = lane_half_height * global_zoom * global_vertical_scale;
+    
+    // Final transform:
+    // 1. Apply data_transform to normalize the raw data
+    // 2. Scale by effective_gain (includes layout height + global zoom)
+    // 3. Translate to lane center (layout.offset is NOT scaled by global_zoom)
+    float const final_gain = data_transform.gain * effective_gain;
+    float const final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
+    
+    return CorePlotting::LayoutTransform{final_offset, final_gain};
 }
 
 /**
@@ -134,17 +145,22 @@ namespace {
 
 /**
  * @brief Compose Y transform for interval series
+ * 
+ * Note: Intervals intentionally ignore global_zoom because:
+ * 1. They are already in normalized space [-1, 1] representing full height
+ * 2. global_zoom is designed for scaling analog data based on std_dev
+ * 3. Intervals should always fill their allocated canvas space
  */
 [[nodiscard]] CorePlotting::LayoutTransform composeIntervalYTransform(
         CorePlotting::SeriesLayout const & layout,
         float margin_factor,
-        float global_zoom,
-        float global_vertical_scale) {
+        [[maybe_unused]] float global_zoom,      // Intentionally ignored for intervals
+        [[maybe_unused]] float global_vertical_scale) {  // Intentionally ignored for intervals
 
-    // Intervals map [-1, 1] to allocated space with margin and global scaling
+    // Intervals map [-1, 1] to allocated space with margin only
     // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
-    float const half_height = layout.y_transform.gain * margin_factor *
-                              global_zoom * global_vertical_scale;
+    // We do NOT apply global_zoom here - intervals should fill their allocated space
+    float const half_height = layout.y_transform.gain * margin_factor;
     float const center = layout.y_transform.offset;
 
     return CorePlotting::LayoutTransform{center, half_height};
@@ -177,11 +193,11 @@ OpenGLWidget::~OpenGLWidget() {
 
 void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
     _time = time;
-    
+
     // Update view state immediately so labels are correct before paintGL runs
     int64_t const zoom = _view_state.getTimeWidth();
     _view_state.setTimeWindow(_time.getValue(), zoom);
-    
+
     // Mark layout and scene as dirty since external changes may have occurred
     // (e.g., display_mode changes, series visibility changes)
     _layout_response_dirty = true;
@@ -206,13 +222,13 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
         // Perform hit testing for interval body selection
         auto hit_result = hitTestAtPosition(canvas_x, canvas_y);
-        
+
         if (hit_result.hasHit() && hit_result.hit_type == CorePlotting::HitType::IntervalBody) {
             // We hit an interval body - handle selection
             if (hit_result.hasEntityId()) {
                 EntityId const hit_entity = hit_result.entity_id.value();
                 bool const ctrl_pressed = (event->modifiers() & Qt::ControlModifier) != 0;
-                
+
                 if (ctrl_pressed) {
                     // Ctrl+Click: Toggle selection
                     if (isEntitySelected(hit_entity)) {
@@ -225,14 +241,14 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 } else {
                     // Plain click: Replace selection
                     // First emit deselection for all previously selected entities
-                    for (EntityId const old_id : _selected_entities) {
+                    for (EntityId const old_id: _selected_entities) {
                         emit entitySelectionChanged(old_id, false);
                     }
                     clearEntitySelection();
                     selectEntity(hit_entity);
                     emit entitySelectionChanged(hit_entity, true);
                 }
-                
+
                 // Don't start panning when selecting intervals
                 return;
             }
@@ -268,7 +284,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         float const canvas_y = static_cast<float>(event->pos().y());
         _glyph_controller->update(canvas_x, canvas_y);
         cancelTooltipTimer();
-        updateCanvas(_time);  // Redraw to show updated preview
+        updateCanvas(_time);// Redraw to show updated preview
         return;
     }
 
@@ -331,7 +347,7 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
             commitInteraction();
             return;
         }
-        
+
         _isPanning = false;
     }
     QOpenGLWidget::mouseReleaseEvent(event);
@@ -965,7 +981,7 @@ CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, floa
 
     // Convert canvas position to world coordinates
     float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
-    
+
     // Convert canvas Y to world Y
     CorePlotting::YAxisParams const y_params(
             _view_state.y_min,
@@ -1039,7 +1055,7 @@ void OpenGLWidget::setInteractionMode(InteractionMode mode) {
     switch (mode) {
         case InteractionMode::CreateInterval: {
             RectangleInteractionConfig config;
-            config.constrain_to_x_axis = true;  // Intervals span full height
+            config.constrain_to_x_axis = true;// Intervals span full height
             config.viewport_height = static_cast<float>(height());
             config.fill_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
             config.stroke_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1110,25 +1126,25 @@ void OpenGLWidget::commitInteraction() {
 
     // Convert canvas coordinates to data coordinates based on preview type
     CorePlotting::Interaction::DataCoordinates data_coords;
-    
+
     if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Rectangle) {
         // For intervals: just need X coordinates (time)
         auto interval_coords = _cached_scene.previewToIntervalCoords(preview, width(), height());
         data_coords = CorePlotting::Interaction::DataCoordinates::createInterval(
-            _interaction_series_key, interval_coords.start, interval_coords.end);
+                _interaction_series_key, interval_coords.start, interval_coords.end);
     } else if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Line) {
         // For lines: need full coordinate conversion
         // Use identity transform for now (can be enhanced with series-specific transform)
         CorePlotting::LayoutTransform identity{0.0f, 1.0f};
         auto line_coords = _cached_scene.previewToLineCoords(preview, width(), height(), identity);
         data_coords = CorePlotting::Interaction::DataCoordinates::createLine(
-            _interaction_series_key, line_coords.x1, line_coords.y1, line_coords.x2, line_coords.y2);
+                _interaction_series_key, line_coords.x1, line_coords.y1, line_coords.x2, line_coords.y2);
     } else if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Point) {
         // For points: single coordinate
         CorePlotting::LayoutTransform identity{0.0f, 1.0f};
         auto point_coords = _cached_scene.previewToPointCoords(preview, width(), height(), identity);
         data_coords = CorePlotting::Interaction::DataCoordinates::createPoint(
-            _interaction_series_key, point_coords.x, point_coords.y);
+                _interaction_series_key, point_coords.x, point_coords.y);
     }
 
     // Complete the controller interaction
@@ -1157,21 +1173,21 @@ void OpenGLWidget::startIntervalCreationUnified(std::string const & series_key, 
     auto const & display_options = it->second.display_options;
     int r, g, b;
     hexToRGB(display_options->style.hex_color, r, g, b);
-    
+
     // Create the controller with interval mode configuration
     RectangleInteractionConfig config;
-    config.constrain_to_x_axis = true;  // Intervals span full height
+    config.constrain_to_x_axis = true;// Intervals span full height
     config.viewport_height = static_cast<float>(height());
     config.fill_color = glm::vec4(
-        static_cast<float>(r) / 255.0f,
-        static_cast<float>(g) / 255.0f,
-        static_cast<float>(b) / 255.0f,
-        0.5f);  // 50% transparent
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            0.5f);// 50% transparent
     config.stroke_color = glm::vec4(
-        static_cast<float>(r) / 255.0f,
-        static_cast<float>(g) / 255.0f,
-        static_cast<float>(b) / 255.0f,
-        1.0f);
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
     config.stroke_width = 2.0f;
 
     _glyph_controller = std::make_unique<RectangleInteractionController>(config);
@@ -1237,18 +1253,18 @@ void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult cons
 
     // Create the controller with interval mode configuration
     RectangleInteractionConfig config;
-    config.constrain_to_x_axis = true;  // Intervals span full height
+    config.constrain_to_x_axis = true;// Intervals span full height
     config.viewport_height = static_cast<float>(height());
     config.fill_color = glm::vec4(
-        static_cast<float>(r) / 255.0f,
-        static_cast<float>(g) / 255.0f,
-        static_cast<float>(b) / 255.0f,
-        0.5f);  // 50% transparent for preview
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            0.5f);// 50% transparent for preview
     config.stroke_color = glm::vec4(
-        static_cast<float>(r) / 255.0f,
-        static_cast<float>(g) / 255.0f,
-        static_cast<float>(b) / 255.0f,
-        1.0f);
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
     config.stroke_width = 2.0f;
 
     auto controller = std::make_unique<RectangleInteractionController>(config);
@@ -1258,31 +1274,30 @@ void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult cons
     CorePlotting::TimeAxisParams time_params(_view_state.time_start, _view_state.time_end, width());
     float const start_canvas_x = CorePlotting::timeToCanvasX(static_cast<float>(*hit_result.interval_start), time_params);
     float const end_canvas_x = CorePlotting::timeToCanvasX(static_cast<float>(*hit_result.interval_end), time_params);
-    
+
     // For intervals, y spans full height
     float const canvas_y = 0.0f;
     float const canvas_height = static_cast<float>(height());
-    
+
     // Original bounds: {x, y, width, height} in canvas coords
     glm::vec4 original_bounds(
-        start_canvas_x,  // x (left edge)
-        canvas_y,        // y (bottom)
-        end_canvas_x - start_canvas_x,  // width
-        canvas_height    // height
+            start_canvas_x,               // x (left edge)
+            canvas_y,                     // y (bottom)
+            end_canvas_x - start_canvas_x,// width
+            canvas_height                 // height
     );
 
     // Current canvas position (where user clicked)
     float const click_canvas_x = CorePlotting::timeToCanvasX(hit_result.world_x, time_params);
-    float const click_canvas_y = static_cast<float>(height()) / 2.0f;  // Middle of canvas
+    float const click_canvas_y = static_cast<float>(height()) / 2.0f;// Middle of canvas
 
     // Start edge drag mode
     controller->startEdgeDrag(
-        click_canvas_x, click_canvas_y,
-        hit_result.series_key,
-        *hit_result.entity_id,
-        edge,
-        original_bounds
-    );
+            click_canvas_x, click_canvas_y,
+            hit_result.series_key,
+            *hit_result.entity_id,
+            edge,
+            original_bounds);
 
     _glyph_controller = std::move(controller);
     _interaction_series_key = hit_result.series_key;
@@ -1306,7 +1321,7 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
     }
 
     auto const & interval_coords = coords.asInterval();
-    
+
     // Get the series data
     auto it = _digital_interval_series.find(coords.series_key);
     if (it == _digital_interval_series.end()) {
@@ -1351,7 +1366,7 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
                 for (int64_t time = original_interval->start; time <= original_interval->end; ++time) {
                     series->setEventAtTime(TimeFrameIndex(time), false);
                 }
-                
+
                 std::cout << "Modified interval [" << original_interval->start << ", " << original_interval->end
                           << "] -> [" << start_series << ", " << end_series << "] for series "
                           << coords.series_key << std::endl;
@@ -1363,10 +1378,10 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
 
         // Find and select the newly created/modified interval by its EntityId
         auto intervals = series->getIntervalsWithIdsInRange(
-            TimeFrameIndex(start_series), TimeFrameIndex(end_series));
-        
-        for (auto const & interval_with_id : intervals) {
-            if (interval_with_id.interval.start == start_series && 
+                TimeFrameIndex(start_series), TimeFrameIndex(end_series));
+
+        for (auto const & interval_with_id: intervals) {
+            if (interval_with_id.interval.start == start_series &&
                 interval_with_id.interval.end == end_series) {
                 clearEntitySelection();
                 selectEntity(interval_with_id.entity_id);

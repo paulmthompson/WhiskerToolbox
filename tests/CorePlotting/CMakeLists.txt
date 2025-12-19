@@ -28,6 +28,7 @@ add_executable(test_coreplotting
     IntervalDragController.test.cpp
     Mappers.test.cpp
     SpatialLayoutStrategy.test.cpp
+    MVPComposition.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 
