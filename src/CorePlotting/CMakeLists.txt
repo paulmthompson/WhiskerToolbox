@@ -15,6 +15,7 @@ set(COREPLOTTING_SOURCES
     DataTypes/SeriesDataCache.hpp
     # SceneGraph
     SceneGraph/RenderablePrimitives.hpp
+    SceneGraph/RenderablePrimitives.cpp
     SceneGraph/SceneBuilder.hpp
     SceneGraph/SceneBuilder.cpp
     # CoordinateTransform

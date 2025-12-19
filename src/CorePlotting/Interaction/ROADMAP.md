@@ -152,38 +152,39 @@ Shaders embedded in PreviewRenderer.hpp (PreviewShaders namespace):
 
 ---
 
-## Phase 4: Scene Coordinate Conversion
+## Phase 4: Scene Coordinate Conversion ✅ COMPLETE
 
 **Goal**: Add inverse coordinate transform API to RenderableScene.
 
-### 4.1 Scene Coordinate Methods
+### 4.1 Scene Coordinate Methods ✅
 
-```cpp
-// Additions to RenderableScene (SceneGraph/RenderablePrimitives.hpp)
+Implemented coordinate conversion methods on RenderableScene:
 
-struct RenderableScene {
-    // ... existing members ...
-    
-    /// Convert canvas coordinates to world coordinates
-    [[nodiscard]] glm::vec2 canvasToWorld(
-        float canvas_x, float canvas_y,
-        int viewport_width, int viewport_height) const;
-    
-    /// Convert a GlyphPreview to DataCoordinates for a specific series
-    /// @param preview The preview geometry in canvas coordinates
-    /// @param viewport_width/height Current viewport dimensions
-    /// @param y_transform The Y-axis transform for the target series (from LayoutResponse)
-    /// @return DataCoordinates ready for committing to DataManager
-    [[nodiscard]] Interaction::DataCoordinates previewToDataCoords(
-        Interaction::GlyphPreview const& preview,
-        int viewport_width, int viewport_height,
-        LayoutTransform const& y_transform) const;
-};
-```
+- `canvasToWorld(canvas_x, canvas_y, viewport_width, viewport_height)` - Convert canvas pixels to world coordinates using the scene's view/projection matrices
+
+- `previewToDataCoords(preview, viewport_width, viewport_height, y_transform, series_key, entity_id)` - Main conversion method for interactive operations. Converts GlyphPreview to DataCoordinates suitable for DataManager
+
+- `previewToIntervalCoords(rect_preview, viewport_width, viewport_height)` - Specialized conversion for intervals (only uses X coordinates)
+
+- `previewToLineCoords(line_preview, viewport_width, viewport_height, y_transform)` - Converts line endpoints to data space
+
+- `previewToPointCoords(point_preview, viewport_width, viewport_height, y_transform)` - Converts single point to data space
 
 **Files**:
-- `SceneGraph/RenderablePrimitives.hpp` (modify)
-- `SceneGraph/RenderablePrimitives.cpp` (new - for implementations)
+- `SceneGraph/RenderablePrimitives.hpp` ✅ (modified)
+- `SceneGraph/RenderablePrimitives.cpp` ✅ (new)
+- `Interaction/DataCoordinates.hpp` ✅ (added `<cmath>` include)
+- `CorePlotting/CMakeLists.txt` ✅ (added RenderablePrimitives.cpp)
+
+**Usage Example**:
+```cpp
+// After interaction completes:
+auto preview = controller.getPreview();
+auto y_transform = layout_response.getSeriesTransform(series_key);
+auto data_coords = scene.previewToDataCoords(
+    preview, width(), height(), y_transform, series_key, entity_id);
+commitToDataManager(data_coords);
+```
 
 ---
 

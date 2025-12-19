@@ -3,6 +3,7 @@
 
 #include "Entity/EntityTypes.hpp"
 
+#include <cmath>
 #include <cstdint>
 #include <optional>
 #include <stdexcept>

@@ -1,7 +1,9 @@
 #ifndef COREPLOTTING_SCENEGRAPH_RENDERABLEPRIMITIVES_HPP
 #define COREPLOTTING_SCENEGRAPH_RENDERABLEPRIMITIVES_HPP
 
+#include "../Interaction/DataCoordinates.hpp"
 #include "../Interaction/GlyphPreview.hpp"
+#include "../Layout/LayoutTransform.hpp"
 
 #include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
@@ -151,6 +153,105 @@ struct RenderableScene {
     [[nodiscard]] std::unordered_set<EntityId> const & getSelectedEntities() const {
         return selected_entities;
     }
+
+    // ========================================================================
+    // Coordinate Conversion (Canvas → World → Data)
+    // ========================================================================
+
+    /**
+     * @brief Convert canvas pixel coordinates to world coordinates
+     * 
+     * Uses the scene's stored view and projection matrices to unproject
+     * from canvas space to world space.
+     * 
+     * @param canvas_x X coordinate in pixels (0 = left edge)
+     * @param canvas_y Y coordinate in pixels (0 = top edge, Y increases downward)
+     * @param viewport_width Viewport width in pixels
+     * @param viewport_height Viewport height in pixels
+     * @return World-space coordinates (X = time, Y = normalized plot position)
+     */
+    [[nodiscard]] glm::vec2 canvasToWorld(
+        float canvas_x, float canvas_y,
+        int viewport_width, int viewport_height) const;
+
+    /**
+     * @brief Convert a GlyphPreview to DataCoordinates for committing to DataManager
+     * 
+     * This is the main conversion method for interactive operations. It takes
+     * the preview geometry (in canvas coordinates) and converts it to data
+     * coordinates suitable for updating a data series.
+     * 
+     * @param preview The preview geometry in canvas coordinates
+     * @param viewport_width Current viewport width in pixels
+     * @param viewport_height Current viewport height in pixels
+     * @param y_transform The Y-axis LayoutTransform for the target series.
+     *                    This is obtained from the LayoutResponse for the series.
+     * @param series_key Key of the target series in DataManager
+     * @param entity_id Optional EntityId if modifying an existing element
+     * @return DataCoordinates ready for committing to DataManager
+     * 
+     * **Usage Example**:
+     * @code
+     *   // After interaction completes:
+     *   auto preview = controller.getPreview();
+     *   auto y_transform = layout_response.getSeriesTransform(series_key);
+     *   auto data_coords = scene.previewToDataCoords(
+     *       preview, width(), height(), y_transform, series_key, entity_id);
+     *   commitToDataManager(data_coords);
+     * @endcode
+     */
+    [[nodiscard]] Interaction::DataCoordinates previewToDataCoords(
+        Interaction::GlyphPreview const& preview,
+        int viewport_width, int viewport_height,
+        LayoutTransform const& y_transform,
+        std::string const& series_key,
+        std::optional<EntityId> entity_id = std::nullopt) const;
+
+    /**
+     * @brief Convert rectangle preview to interval coordinates
+     * 
+     * Specialized conversion for interval creation/modification.
+     * Only uses the X coordinates (time), ignoring Y (height spans full range).
+     * 
+     * @param rect_preview A GlyphPreview of Type::Rectangle
+     * @param viewport_width Viewport width in pixels
+     * @param viewport_height Viewport height in pixels
+     * @return IntervalCoords with start and end time indices
+     */
+    [[nodiscard]] Interaction::DataCoordinates::IntervalCoords previewToIntervalCoords(
+        Interaction::GlyphPreview const& rect_preview,
+        int viewport_width, int viewport_height) const;
+
+    /**
+     * @brief Convert line preview to line coordinates
+     * 
+     * Converts both endpoints from canvas to world coordinates.
+     * Y values are optionally transformed using the provided layout transform.
+     * 
+     * @param line_preview A GlyphPreview of Type::Line
+     * @param viewport_width Viewport width in pixels
+     * @param viewport_height Viewport height in pixels
+     * @param y_transform Y-axis transform (use identity for raw world coords)
+     * @return LineCoords with start and end points in data space
+     */
+    [[nodiscard]] Interaction::DataCoordinates::LineCoords previewToLineCoords(
+        Interaction::GlyphPreview const& line_preview,
+        int viewport_width, int viewport_height,
+        LayoutTransform const& y_transform) const;
+
+    /**
+     * @brief Convert point preview to point coordinates
+     * 
+     * @param point_preview A GlyphPreview of Type::Point
+     * @param viewport_width Viewport width in pixels
+     * @param viewport_height Viewport height in pixels
+     * @param y_transform Y-axis transform
+     * @return PointCoords in data space
+     */
+    [[nodiscard]] Interaction::DataCoordinates::PointCoords previewToPointCoords(
+        Interaction::GlyphPreview const& point_preview,
+        int viewport_width, int viewport_height,
+        LayoutTransform const& y_transform) const;
 };
 
 }// namespace CorePlotting
