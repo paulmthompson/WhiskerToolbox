@@ -30,6 +30,7 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/SeriesCoordinateQuery.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
+    CoordinateTransform/InverseTransform.hpp
     # Layout
     Layout/LayoutTransform.hpp
     Layout/NormalizationHelpers.hpp
@@ -46,6 +47,9 @@ set(COREPLOTTING_SOURCES
     Transformers/GapDetector.hpp
     Transformers/GapDetector.cpp
     # Interaction
+    Interaction/GlyphPreview.hpp
+    Interaction/IGlyphInteractionController.hpp
+    Interaction/DataCoordinates.hpp
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.hpp
     Interaction/IntervalDragController.hpp

@@ -18,91 +18,52 @@ Based on discussion, the following architectural decisions have been made:
 
 ---
 
-## Phase 1: Core Infrastructure (Foundation)
+## Phase 1: Core Infrastructure (Foundation) ✅ COMPLETE
 
 **Goal**: Establish the base types and interfaces without breaking existing functionality.
 
-### 1.1 Finalize GlyphPreview (✅ Started)
+### 1.1 Finalize GlyphPreview ✅
 
 - [x] Create `GlyphPreview.hpp` with basic structure
-- [ ] Add `IGlyphInteractionController` to separate header
-- [ ] Add namespace `CorePlotting::Interaction`
-- [ ] Add documentation comments
+- [x] Add `IGlyphInteractionController` to separate header
+- [x] Add namespace `CorePlotting::Interaction`
+- [x] Add documentation comments
+- [x] Add factory methods and convenience accessors
 
 **Files**:
-- `Interaction/GlyphPreview.hpp` (update)
-- `Interaction/IGlyphInteractionController.hpp` (new)
+- `Interaction/GlyphPreview.hpp` ✅
+- `Interaction/IGlyphInteractionController.hpp` ✅
 
-### 1.2 DataCoordinates Type
+### 1.2 DataCoordinates Type ✅
 
-Create the output type for coordinate conversion results.
-
-```cpp
-// Interaction/DataCoordinates.hpp
-namespace CorePlotting::Interaction {
-
-struct DataCoordinates {
-    std::string series_key;
-    std::optional<EntityId> entity_id;
-    bool is_modification{false};  // true if modifying existing, false if creating new
-    
-    // Type-specific coordinates (in data space)
-    struct IntervalCoords { 
-        int64_t start; 
-        int64_t end; 
-    };
-    struct LineCoords { 
-        float x1, y1, x2, y2; 
-    };
-    struct PointCoords { 
-        float x, y; 
-    };
-    struct RectCoords { 
-        float x, y, width, height; 
-    };
-    
-    std::variant<std::monostate, IntervalCoords, LineCoords, PointCoords, RectCoords> coords;
-    
-    // Convenience accessors
-    [[nodiscard]] bool hasCoords() const;
-    [[nodiscard]] bool isInterval() const;
-    [[nodiscard]] IntervalCoords const& asInterval() const;
-    // ... etc
-};
-
-} // namespace
-```
+Created the output type for coordinate conversion results with:
+- Type-specific coordinate structs (IntervalCoords, LineCoords, PointCoords, RectCoords)
+- std::variant for type-safe storage
+- Factory methods for common use cases
+- Safe accessors (both throwing and optional-returning)
 
 **Files**:
-- `Interaction/DataCoordinates.hpp` (new)
+- `Interaction/DataCoordinates.hpp` ✅
 
-### 1.3 InverseCoordinateTransform Utilities
+### 1.3 InverseCoordinateTransform Utilities ✅
 
-Add inverse coordinate transform functions to CoordinateTransform module.
-
-```cpp
-// CoordinateTransform/InverseTransform.hpp
-namespace CorePlotting {
-
-/// Canvas pixel X/Y → World coordinates (requires VP matrices)
-[[nodiscard]] glm::vec2 canvasToWorld(
-    float canvas_x, float canvas_y,
-    int viewport_width, int viewport_height,
-    glm::mat4 const& view_matrix,
-    glm::mat4 const& projection_matrix);
-
-/// World X → TimeFrameIndex (for time-series X axis)
-[[nodiscard]] int64_t worldXToTimeIndex(float world_x);  // Simple rounding
-
-/// World Y → Data Y (apply inverse of LayoutTransform)
-[[nodiscard]] float worldYToDataY(float world_y, LayoutTransform const& y_transform);
-
-} // namespace
-```
+Added inverse coordinate transform functions:
+- `canvasToNDC()` / `ndcToCanvas()` - Canvas ↔ NDC
+- `ndcToWorld()` / `worldToNDC()` - NDC ↔ World (with VP matrices)
+- `canvasToWorld()` / `worldToCanvas()` - Combined transforms
+- `worldXToTimeIndex()` / `timeIndexToWorldX()` - X-axis conversion
+- `worldYToDataY()` / `dataYToWorldY()` - Y-axis with LayoutTransform
+- `canvasToData()` - Full pipeline with result struct
 
 **Files**:
-- `CoordinateTransform/InverseTransform.hpp` (new)
-- `CoordinateTransform/InverseTransform.cpp` (new)
+- `CoordinateTransform/InverseTransform.hpp` ✅
+
+### 1.4 RenderableScene Preview Support ✅
+
+Added `active_preview` field to `RenderableScene` for interactive preview rendering.
+
+**Files**:
+- `SceneGraph/RenderablePrimitives.hpp` ✅ (modified)
 
 ---
 

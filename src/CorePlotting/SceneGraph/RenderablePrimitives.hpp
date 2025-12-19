@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -129,6 +130,10 @@ struct RenderableScene {
     // Selection state (queryable from the scene)
     // EntityIds of currently selected elements
     std::unordered_set<EntityId> selected_entities;
+
+    // Active preview for interactive glyph creation/modification
+    // Set by the widget during interactions, rendered on top of main scene
+    std::optional<Interaction::GlyphPreview> active_preview;
 
     /**
      * @brief Check if an entity is selected
