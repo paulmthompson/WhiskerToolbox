@@ -3,6 +3,7 @@
 
 #include "Renderers/GlyphRenderer.hpp"
 #include "Renderers/PolyLineRenderer.hpp"
+#include "Renderers/PreviewRenderer.hpp"
 #include "Renderers/RectangleRenderer.hpp"
 
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
@@ -126,11 +127,27 @@ public:
     [[nodiscard]] PolyLineRenderer & polyLineRenderer() { return m_poly_line_renderer; }
     [[nodiscard]] GlyphRenderer & glyphRenderer() { return m_glyph_renderer; }
     [[nodiscard]] RectangleRenderer & rectangleRenderer() { return m_rectangle_renderer; }
+    [[nodiscard]] PreviewRenderer & previewRenderer() { return m_preview_renderer; }
+
+    /**
+     * @brief Render an interactive preview overlay
+     * 
+     * Call this after render() to draw interactive preview geometry
+     * (drag rectangles, selection lines, etc.) on top of the scene.
+     * 
+     * @param preview The preview geometry to render
+     * @param viewport_width Width of the viewport in pixels
+     * @param viewport_height Height of the viewport in pixels
+     */
+    void renderPreview(CorePlotting::Interaction::GlyphPreview const & preview,
+                       int viewport_width,
+                       int viewport_height);
 
 private:
     PolyLineRenderer m_poly_line_renderer;
     GlyphRenderer m_glyph_renderer;
     RectangleRenderer m_rectangle_renderer;
+    PreviewRenderer m_preview_renderer;
 
     // Scene-level matrices
     glm::mat4 m_view_matrix{1.0f};

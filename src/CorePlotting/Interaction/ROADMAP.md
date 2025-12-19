@@ -113,84 +113,42 @@ For drawing freeform selection regions.
 
 ---
 
-## Phase 3: Preview Rendering (PlottingOpenGL)
+## Phase 3: Preview Rendering (PlottingOpenGL) ✅ COMPLETE
 
 **Goal**: Add preview rendering capability to SceneRenderer.
 
-### 3.1 PreviewRenderer
+### 3.1 PreviewRenderer ✅
 
-```cpp
-// PlottingOpenGL/Renderers/PreviewRenderer.hpp
-
-class PreviewRenderer {
-public:
-    PreviewRenderer();
-    ~PreviewRenderer();
-    
-    [[nodiscard]] bool initialize();
-    void cleanup();
-    [[nodiscard]] bool isInitialized() const;
-    
-    /// Render preview geometry in canvas coordinates
-    void render(CorePlotting::Interaction::GlyphPreview const& preview,
-                int viewport_width, int viewport_height);
-
-private:
-    // Shaders for 2D screen-space rendering
-    std::unique_ptr<QOpenGLShaderProgram> m_fill_shader;
-    std::unique_ptr<QOpenGLShaderProgram> m_stroke_shader;
-    
-    // Geometry buffers
-    QOpenGLVertexArrayObject m_rect_vao;
-    QOpenGLBuffer m_rect_vbo;
-    QOpenGLVertexArrayObject m_line_vao;
-    QOpenGLBuffer m_line_vbo;
-    
-    bool m_initialized{false};
-    
-    void renderRectangle(glm::vec4 const& bounds, glm::vec4 const& fill_color,
-                         glm::vec4 const& stroke_color, float stroke_width,
-                         glm::mat4 const& projection);
-    void renderLine(glm::vec2 const& start, glm::vec2 const& end,
-                    glm::vec4 const& color, float width,
-                    glm::mat4 const& projection);
-};
-```
+Implemented screen-space renderer for interactive preview geometry:
+- Renders `GlyphPreview` directly in canvas/pixel coordinates using orthographic projection
+- Supports all preview types: Rectangle, Line, Point, Polygon
+- Renders "ghost" of original geometry when modifying existing elements
+- Alpha blending for semi-transparent previews
+- Configurable fill color, stroke color, and stroke width
+- Embedded shaders (no external shader files needed)
 
 **Files**:
-- `PlottingOpenGL/Renderers/PreviewRenderer.hpp` (new)
-- `PlottingOpenGL/Renderers/PreviewRenderer.cpp` (new)
+- `PlottingOpenGL/Renderers/PreviewRenderer.hpp` ✅
+- `PlottingOpenGL/Renderers/PreviewRenderer.cpp` ✅
 
-### 3.2 Integrate into SceneRenderer
+### 3.2 Integrate into SceneRenderer ✅
 
-```cpp
-// Additions to SceneRenderer
-class SceneRenderer {
-public:
-    // ... existing methods ...
-    
-    /// Render a preview overlay after the main scene
-    void renderPreview(CorePlotting::Interaction::GlyphPreview const& preview,
-                       int viewport_width, int viewport_height);
-
-private:
-    PreviewRenderer m_preview_renderer;
-};
-```
+Added preview rendering capability to SceneRenderer:
+- `PreviewRenderer` member initialized/cleaned up with other renderers
+- `renderPreview(GlyphPreview const&, int viewport_width, int viewport_height)` method
+- Access via `previewRenderer()` for fine-grained control
 
 **Files**:
-- `PlottingOpenGL/SceneRenderer.hpp` (modify)
-- `PlottingOpenGL/SceneRenderer.cpp` (modify)
+- `PlottingOpenGL/SceneRenderer.hpp` ✅ (modified)
+- `PlottingOpenGL/SceneRenderer.cpp` ✅ (modified)
+- `PlottingOpenGL/CMakeLists.txt` ✅ (modified)
 
-### 3.3 Preview Shaders
+### 3.3 Preview Shaders ✅
 
-Simple 2D shaders for screen-space rendering.
-
-**Files**:
-- `PlottingOpenGL/Shaders/preview_fill.vert` (new)
-- `PlottingOpenGL/Shaders/preview_fill.frag` (new)
-- `PlottingOpenGL/Shaders/preview_stroke.vert` (new)
-- `PlottingOpenGL/Shaders/preview_stroke.frag` (new)
+Shaders embedded in PreviewRenderer.hpp (PreviewShaders namespace):
+- Simple vertex shader transforms 2D positions via orthographic matrix
+- Simple fragment shader applies uniform color
+- Same shaders used for fill (triangles) and stroke (lines)
 
 ---
 

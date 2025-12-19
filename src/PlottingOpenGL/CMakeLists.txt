@@ -27,6 +27,8 @@ set(PLOTTINGOPENGL_SOURCES
     Renderers/GlyphRenderer.hpp
     Renderers/RectangleRenderer.cpp
     Renderers/RectangleRenderer.hpp
+    Renderers/PreviewRenderer.cpp
+    Renderers/PreviewRenderer.hpp
     ShaderManager/ShaderManager.cpp
     ShaderManager/ShaderManager.hpp
     ShaderManager/ShaderProgram.cpp

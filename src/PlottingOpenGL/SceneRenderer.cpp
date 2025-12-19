@@ -29,11 +29,19 @@ bool SceneRenderer::initialize() {
         return false;
     }
 
+    if (!m_preview_renderer.initialize()) {
+        m_rectangle_renderer.cleanup();
+        m_glyph_renderer.cleanup();
+        m_poly_line_renderer.cleanup();
+        return false;
+    }
+
     m_initialized = true;
     return true;
 }
 
 void SceneRenderer::cleanup() {
+    m_preview_renderer.cleanup();
     m_rectangle_renderer.cleanup();
     m_glyph_renderer.cleanup();
     m_poly_line_renderer.cleanup();
@@ -112,6 +120,16 @@ void SceneRenderer::render(glm::mat4 const& view_matrix,
 
 void SceneRenderer::setRenderOrder(std::vector<BatchType> const& order) {
     m_render_order = order;
+}
+
+void SceneRenderer::renderPreview(CorePlotting::Interaction::GlyphPreview const & preview,
+                                   int viewport_width,
+                                   int viewport_height) {
+    if (!m_initialized) {
+        return;
+    }
+    
+    m_preview_renderer.render(preview, viewport_width, viewport_height);
 }
 
 } // namespace PlottingOpenGL
