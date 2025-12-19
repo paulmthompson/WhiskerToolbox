@@ -67,90 +67,41 @@ Added `active_preview` field to `RenderableScene` for interactive preview render
 
 ---
 
-## Phase 2: Concrete Controllers
+## Phase 2: Concrete Controllers ✅ COMPLETE
 
 **Goal**: Implement reusable interaction controllers for each primitive type.
 
-### 2.1 RectangleInteractionController
+### 2.1 RectangleInteractionController ✅
 
 Handles both interval creation and rectangle selection boxes.
 
-```cpp
-// Interaction/RectangleInteractionController.hpp
-
-class RectangleInteractionController : public IGlyphInteractionController {
-public:
-    // Configuration
-    struct Config {
-        float min_width{1.0f};   // Minimum rectangle width in canvas pixels
-        float min_height{1.0f}; // Minimum height (0 = full height for intervals)
-        bool constrain_to_x_axis{true};  // If true, height spans full canvas (interval mode)
-        bool allow_edge_drag{true};      // If true, supports modification of existing
-    };
-    
-    explicit RectangleInteractionController(Config config = {});
-    
-    // For modification: specify which edge is being dragged
-    enum class DragEdge { None, Left, Right, Top, Bottom };
-    void startEdgeDrag(float canvas_x, float canvas_y,
-                       std::string series_key,
-                       EntityId entity_id,
-                       DragEdge edge,
-                       glm::vec4 original_bounds);  // Original rectangle in canvas coords
-    
-    // IGlyphInteractionController interface
-    void start(float canvas_x, float canvas_y,
-               std::string series_key,
-               std::optional<EntityId> existing = std::nullopt) override;
-    void update(float canvas_x, float canvas_y) override;
-    void complete() override;
-    void cancel() override;
-    
-    [[nodiscard]] bool isActive() const override;
-    [[nodiscard]] GlyphPreview getPreview() const override;
-    [[nodiscard]] std::string const& getSeriesKey() const override;
-    [[nodiscard]] std::optional<EntityId> getEntityId() const override;
-    
-private:
-    Config _config;
-    // State...
-};
-```
+Features implemented:
+- **Creation mode**: Click-drag to create new rectangle
+- **Edge drag mode**: Modify existing rectangle by dragging edges
+- **Interval mode** (`constrain_to_x_axis = true`): Full-height rectangles for DigitalIntervalSeries
+- **Selection box mode** (`constrain_to_x_axis = false`): User-defined width and height
+- Ghost rendering support for modification preview
+- Configurable min width/height constraints
 
 **Files**:
-- `Interaction/RectangleInteractionController.hpp` (new)
-- `Interaction/RectangleInteractionController.cpp` (new)
+- `Interaction/RectangleInteractionController.hpp` ✅
+- `Interaction/RectangleInteractionController.cpp` ✅
 
-### 2.2 LineInteractionController
+### 2.2 LineInteractionController ✅
 
 For drawing selection lines (as in Analysis Dashboard) or creating line annotations.
 
-```cpp
-// Interaction/LineInteractionController.hpp
-
-class LineInteractionController : public IGlyphInteractionController {
-public:
-    struct Config {
-        float min_length{1.0f};  // Minimum line length in canvas pixels
-        bool snap_to_axis{false}; // If true, constrain to horizontal/vertical
-        float snap_angle_threshold{15.0f}; // Degrees from axis to snap
-    };
-    
-    explicit LineInteractionController(Config config = {});
-    
-    // IGlyphInteractionController interface...
-    
-private:
-    Config _config;
-    glm::vec2 _start_point{0};
-    glm::vec2 _end_point{0};
-    // ...
-};
-```
+Features implemented:
+- **Creation mode**: Click-drag to create new line
+- **Endpoint drag mode**: Modify existing line by dragging endpoints
+- **Axis snapping**: Optional snap to horizontal/vertical when near axis
+- **Horizontal/vertical only** constraints
+- Ghost rendering support for modification preview
+- Configurable min length and snap angle threshold
 
 **Files**:
-- `Interaction/LineInteractionController.hpp` (new)
-- `Interaction/LineInteractionController.cpp` (new)
+- `Interaction/LineInteractionController.hpp` ✅
+- `Interaction/LineInteractionController.cpp` ✅
 
 ### 2.3 PointInteractionController (Future)
 

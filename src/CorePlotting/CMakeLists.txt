@@ -46,10 +46,15 @@ set(COREPLOTTING_SOURCES
     # Transformers
     Transformers/GapDetector.hpp
     Transformers/GapDetector.cpp
+
     # Interaction
     Interaction/GlyphPreview.hpp
     Interaction/IGlyphInteractionController.hpp
     Interaction/DataCoordinates.hpp
+    Interaction/RectangleInteractionController.hpp
+    Interaction/RectangleInteractionController.cpp
+    Interaction/LineInteractionController.hpp
+    Interaction/LineInteractionController.cpp
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.hpp
     Interaction/IntervalDragController.hpp
