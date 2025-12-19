@@ -2083,10 +2083,9 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         auto batch = DataViewerHelpers::buildIntervalSeriesBatchSimplified(
                 *series, _master_time_frame, batch_params, model_matrix);
 
-
-        // NOTE: Selection highlighting is now handled automatically by RectangleRenderer
-        // via selection_flags populated by SceneBuilder::setSelectedEntities()
-        // The legacy PolyLineBatch border rendering has been removed.
+        if (!batch.bounds.empty()) {
+            builder.addRectangleBatch(std::move(batch));
+        }
     }
 }
 
