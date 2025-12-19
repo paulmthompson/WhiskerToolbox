@@ -188,20 +188,52 @@ void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
 // Add these implementations:
 void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        // Check if we're clicking near an interval edge for dragging
-        auto edge_info = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
-        if (edge_info.has_value()) {
-            auto const [series_key, is_left_edge] = edge_info.value();
-            startIntervalDrag(series_key, is_left_edge, event->pos());
+        float const canvas_x = static_cast<float>(event->pos().x());
+        float const canvas_y = static_cast<float>(event->pos().y());
+
+        // Check if we're clicking near an interval edge for dragging (only for selected intervals)
+        auto edge_result = findIntervalEdgeAtPosition(canvas_x, canvas_y);
+        if (edge_result.isIntervalEdge()) {
+            startIntervalDrag(edge_result);
             return;// Don't start panning when dragging intervals
+        }
+
+        // Perform hit testing for interval body selection
+        auto hit_result = hitTestAtPosition(canvas_x, canvas_y);
+        
+        if (hit_result.hasHit() && hit_result.hit_type == CorePlotting::HitType::IntervalBody) {
+            // We hit an interval body - handle selection
+            if (hit_result.hasEntityId()) {
+                EntityId const hit_entity = hit_result.entity_id.value();
+                bool const ctrl_pressed = (event->modifiers() & Qt::ControlModifier) != 0;
+                
+                if (ctrl_pressed) {
+                    // Ctrl+Click: Toggle selection
+                    if (isEntitySelected(hit_entity)) {
+                        deselectEntity(hit_entity);
+                        emit entitySelectionChanged(hit_entity, false);
+                    } else {
+                        selectEntity(hit_entity);
+                        emit entitySelectionChanged(hit_entity, true);
+                    }
+                } else {
+                    // Plain click: Replace selection
+                    // First emit deselection for all previously selected entities
+                    for (EntityId const old_id : _selected_entities) {
+                        emit entitySelectionChanged(old_id, false);
+                    }
+                    clearEntitySelection();
+                    selectEntity(hit_entity);
+                    emit entitySelectionChanged(hit_entity, true);
+                }
+                
+                // Don't start panning when selecting intervals
+                return;
+            }
         }
 
         _isPanning = true;
         _lastMousePos = event->pos();
-
-        // Emit click coordinates for interval selection
-        float const canvas_x = static_cast<float>(event->pos().x());
-        float const canvas_y = static_cast<float>(event->pos().y());
 
         // Convert canvas X to time coordinate
         float const time_coord = canvasXToTime(canvas_x);
@@ -254,8 +286,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         cancelTooltipTimer();// Cancel tooltip during panning
     } else {
         // Check for cursor changes when hovering near interval edges
-        auto edge_info = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
-        if (edge_info.has_value()) {
+        auto edge_result = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
+        if (edge_result.isIntervalEdge()) {
             setCursor(Qt::SizeHorCursor);
             cancelTooltipTimer();// Don't show tooltip when hovering over interval edges
         } else {
@@ -833,43 +865,6 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     return y_transform.inverse(world_y);
 }
 
-// Interval selection methods
-void OpenGLWidget::setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time) {
-    _selected_intervals[series_key] = std::make_pair(start_time, end_time);
-    
-    // Also find and track the EntityId for this interval
-    auto it = _digital_interval_series.find(series_key);
-    if (it != _digital_interval_series.end()) {
-        auto const & series = it->second.series;
-        
-        // Convert master time coordinates to series time frame if needed
-        int64_t series_start, series_end;
-        if (series->getTimeFrame().get() == _master_time_frame.get()) {
-            series_start = start_time;
-            series_end = end_time;
-        } else {
-            series_start = series->getTimeFrame()->getIndexAtTime(static_cast<float>(start_time)).getValue();
-            series_end = series->getTimeFrame()->getIndexAtTime(static_cast<float>(end_time)).getValue();
-        }
-        
-        // Find intervals that match these bounds
-        auto intervals = series->getIntervalsWithIdsInRange(
-            TimeFrameIndex(series_start), TimeFrameIndex(series_end), *series->getTimeFrame());
-        
-        for (auto const & interval_with_id : intervals) {
-            // Check if this interval matches the selected bounds
-            if (interval_with_id.interval.start == series_start && 
-                interval_with_id.interval.end == series_end) {
-                _selected_entities.insert(interval_with_id.entity_id);
-                break;
-            }
-        }
-    }
-    
-    _scene_dirty = true;
-    updateCanvas(_time);
-}
-
 // ========================================================================
 // EntityId-based Selection API
 // ========================================================================
@@ -898,7 +893,6 @@ void OpenGLWidget::toggleEntitySelection(EntityId id) {
 
 void OpenGLWidget::clearEntitySelection() {
     _selected_entities.clear();
-    _selected_intervals.clear(); // Also clear legacy tracking
     _scene_dirty = true;
     updateCanvas(_time);
 }
@@ -911,101 +905,8 @@ std::unordered_set<EntityId> const & OpenGLWidget::getSelectedEntities() const {
     return _selected_entities;
 }
 
-// ========================================================================
-// Legacy Interval Selection API  
-// ========================================================================
-
-void OpenGLWidget::clearSelectedInterval(std::string const & series_key) {
-    auto it = _selected_intervals.find(series_key);
-    if (it != _selected_intervals.end()) {
-        // Find and remove the EntityId for this interval from selection
-        auto series_it = _digital_interval_series.find(series_key);
-        if (series_it != _digital_interval_series.end()) {
-            auto const & series = series_it->second.series;
-            auto const [start_time, end_time] = it->second;
-            
-            // Convert master time coordinates to series time frame if needed
-            int64_t series_start, series_end;
-            if (series->getTimeFrame().get() == _master_time_frame.get()) {
-                series_start = start_time;
-                series_end = end_time;
-            } else {
-                series_start = series->getTimeFrame()->getIndexAtTime(static_cast<float>(start_time)).getValue();
-                series_end = series->getTimeFrame()->getIndexAtTime(static_cast<float>(end_time)).getValue();
-            }
-            
-            // Find and remove the matching EntityId
-            auto intervals = series->getIntervalsWithIdsInRange(
-                TimeFrameIndex(series_start), TimeFrameIndex(series_end), *series->getTimeFrame());
-            
-            for (auto const & interval_with_id : intervals) {
-                if (interval_with_id.interval.start == series_start && 
-                    interval_with_id.interval.end == series_end) {
-                    _selected_entities.erase(interval_with_id.entity_id);
-                    break;
-                }
-            }
-        }
-        
-        _selected_intervals.erase(it);
-        _scene_dirty = true;
-        updateCanvas(_time);
-    }
-}
-
-std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::getSelectedInterval(std::string const & series_key) const {
-    auto it = _selected_intervals.find(series_key);
-    if (it != _selected_intervals.end()) {
-        return it->second;
-    }
-    return std::nullopt;
-}
-
-std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std::string const & series_key, float time_coord) const {
-    auto it = _digital_interval_series.find(series_key);
-    if (it == _digital_interval_series.end()) {
-        return std::nullopt;
-    }
-
-    auto const & interval_data = it->second;
-    auto const & series = interval_data.series;
-
-    // Convert time coordinate from master time frame to series time frame
-    int64_t query_time_index;
-    if (series->getTimeFrame().get() == _master_time_frame.get()) {
-        // Same time frame - use time coordinate directly
-        query_time_index = static_cast<int64_t>(std::round(time_coord));
-    } else {
-        // Different time frame - convert master time to series time frame index
-        query_time_index = series->getTimeFrame()->getIndexAtTime(time_coord).getValue();
-    }
-
-    // Find all intervals that contain this time point in the series' time frame
-    auto intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(query_time_index, query_time_index);
-
-    if (!intervals.empty()) {
-        // Return the first interval found, converted to master time frame coordinates
-        auto const & interval = intervals.front();
-        int64_t interval_start_master, interval_end_master;
-
-        if (series->getTimeFrame().get() == _master_time_frame.get()) {
-            // Same time frame - use indices directly as time coordinates
-            interval_start_master = interval.start;
-            interval_end_master = interval.end;
-        } else {
-            // Convert series indices to master time frame coordinates
-            interval_start_master = static_cast<int64_t>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.start)));
-            interval_end_master = static_cast<int64_t>(series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(interval.end)));
-        }
-
-        return std::make_pair(interval_start_master, interval_end_master);
-    }
-
-    return std::nullopt;
-}
-
 // Interval edge dragging methods
-std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
+CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
 
     // Ensure scene and layout are up-to-date for hit testing
     // Note: const_cast is safe here because we're only updating cache state
@@ -1017,7 +918,7 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
 
     // If we have no cached scene yet (e.g., before first paint) and no selection, nothing to check
     if (_cached_scene.rectangle_batches.empty() && _selected_entities.empty()) {
-        return std::nullopt;
+        return CorePlotting::HitTestResult::noHit();
     }
 
     // Use CorePlotting time axis utilities for coordinate conversion
@@ -1042,39 +943,71 @@ std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosi
     CorePlotting::SceneHitTester tester(config);
 
     // Use EntityId-based hit testing for interval edges
-    CorePlotting::HitTestResult result = tester.findIntervalEdgeByEntityId(
+    static_cast<void>(canvas_y);// Y not used for edge detection
+    return tester.findIntervalEdgeByEntityId(
             world_x,
             _cached_scene,
             _selected_entities,
             _rectangle_batch_key_map);
-
-    if (result.isIntervalEdge()) {
-        bool is_left_edge = (result.hit_type == CorePlotting::HitType::IntervalEdgeLeft);
-        return std::make_pair(result.series_key, is_left_edge);
-    }
-
-    static_cast<void>(canvas_y);// Y not used for edge detection
-    return std::nullopt;
 }
 
-void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_left_edge, QPoint const & start_pos) {
-    auto selected_interval = getSelectedInterval(series_key);
-    if (!selected_interval.has_value()) {
-        return;
+CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, float canvas_y) const {
+    // If we have no cached scene yet (e.g., before first paint), return no hit
+    if (_cached_scene.rectangle_batches.empty() && _cached_scene.glyph_batches.empty()) {
+        return CorePlotting::HitTestResult::noHit();
     }
 
-    auto const [start_time, end_time] = selected_interval.value();
+    // Use CorePlotting time axis utilities for coordinate conversion
+    CorePlotting::TimeAxisParams const time_params(
+            _view_state.time_start,
+            _view_state.time_end,
+            width());
 
-    // Create HitTestResult for the IntervalDragController
-    auto hit_result = CorePlotting::HitTestResult::intervalEdgeHit(
-            series_key,
-            EntityId{0},// EntityId not used for edge drag, could be enhanced later
-            is_left_edge,
-            start_time,
-            end_time,
-            is_left_edge ? static_cast<float>(start_time) : static_cast<float>(end_time),
-            0.0f// distance not relevant here
-    );
+    // Convert canvas position to world coordinates
+    float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
+    
+    // Convert canvas Y to world Y
+    CorePlotting::YAxisParams const y_params(
+            _view_state.y_min,
+            _view_state.y_max,
+            height(),
+            _view_state.vertical_pan_offset);
+    float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
+
+    // Configure hit tester with appropriate tolerances
+    constexpr float TOLERANCE_PX = 10.0f;
+    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) /
+                                 static_cast<float>(time_params.viewport_width_px);
+    float const tolerance = TOLERANCE_PX * time_per_pixel;
+
+    CorePlotting::HitTestConfig config;
+    config.edge_tolerance = tolerance;
+    config.point_tolerance = tolerance;
+    config.prioritize_discrete = true;
+
+    CorePlotting::SceneHitTester tester(config);
+
+    // First check for intervals (body hits)
+    CorePlotting::HitTestResult result = tester.queryIntervals(
+            world_x,
+            world_y,
+            _cached_scene,
+            _rectangle_batch_key_map);
+
+    // If we got an interval body hit, return it
+    if (result.hasHit() && result.hit_type == CorePlotting::HitType::IntervalBody) {
+        return result;
+    }
+
+    // TODO: Add event hit testing via queryQuadTree when needed
+
+    return CorePlotting::HitTestResult::noHit();
+}
+
+void OpenGLWidget::startIntervalDrag(CorePlotting::HitTestResult const & hit_result) {
+    if (!hit_result.isIntervalEdge()) {
+        return;
+    }
 
     // Configure the drag controller with time frame bounds if available
     CorePlotting::IntervalDragConfig config;
@@ -1091,7 +1024,7 @@ void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_lef
 
     _interval_drag_controller.setConfig(config);
 
-    // Start the drag
+    // Start the drag using the hit result directly
     if (!_interval_drag_controller.startDrag(hit_result)) {
         return;
     }
@@ -1099,10 +1032,10 @@ void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_lef
     // Disable normal mouse interactions during drag
     setCursor(Qt::SizeHorCursor);
 
+    bool const is_left_edge = (hit_result.hit_type == CorePlotting::HitType::IntervalEdgeLeft);
     std::cout << "Started dragging " << (is_left_edge ? "left" : "right")
-              << " edge of interval [" << start_time << ", " << end_time << "]" << std::endl;
-
-    static_cast<void>(start_pos);// start_pos no longer needed with controller
+              << " edge of interval [" << hit_result.interval_start.value_or(0) 
+              << ", " << hit_result.interval_end.value_or(0) << "]" << std::endl;
 }
 
 void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
@@ -1269,8 +1202,21 @@ void OpenGLWidget::finishIntervalDrag() {
         // Add the new interval
         series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
 
-        // Update the selection to the new interval (stored in master time frame coordinates)
-        setSelectedInterval(series_key, final_state.current_start, final_state.current_end);
+        // Find and select the newly created interval by its EntityId
+        // Query for intervals in the new range to get the EntityId
+        auto intervals = series->getIntervalsWithIdsInRange(
+            TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
+        
+        for (auto const & interval_with_id : intervals) {
+            if (interval_with_id.interval.start == new_start_series && 
+                interval_with_id.interval.end == new_end_series) {
+                // Clear old selection and select the modified interval
+                clearEntitySelection();
+                selectEntity(interval_with_id.entity_id);
+                emit entitySelectionChanged(interval_with_id.entity_id, true);
+                break;
+            }
+        }
 
         std::cout << "Finished dragging interval. Original: ["
                   << final_state.original_start << ", " << final_state.original_end
@@ -1573,8 +1519,19 @@ void OpenGLWidget::finishNewIntervalCreation() {
         // Add the new interval to the series
         series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
 
-        // Set the new interval as selected (stored in master time frame coordinates)
-        setSelectedInterval(_new_interval_series_key, _new_interval_start_time, _new_interval_end_time);
+        // Find and select the newly created interval by its EntityId
+        auto intervals = series->getIntervalsWithIdsInRange(
+            TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
+        
+        for (auto const & interval_with_id : intervals) {
+            if (interval_with_id.interval.start == new_start_series && 
+                interval_with_id.interval.end == new_end_series) {
+                clearEntitySelection();
+                selectEntity(interval_with_id.entity_id);
+                emit entitySelectionChanged(interval_with_id.entity_id, true);
+                break;
+            }
+        }
 
         std::cout << "Created new interval [" << _new_interval_start_time
                   << ", " << _new_interval_end_time << "] for series "

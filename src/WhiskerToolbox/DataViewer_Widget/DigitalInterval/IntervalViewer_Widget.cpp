@@ -32,18 +32,16 @@ IntervalViewer_Widget::~IntervalViewer_Widget() {
 
 void IntervalViewer_Widget::showEvent(QShowEvent * event) {
     std::cout << "IntervalViewer_Widget: Show Event" << std::endl;
-    connect(_opengl_widget, &OpenGLWidget::mouseClick, this, &IntervalViewer_Widget::_selectInterval);
+    // Selection is now handled directly in OpenGLWidget::mousePressEvent via hit testing
+    // No need to connect to signals here - EntityId-based selection is automatic
     QWidget::showEvent(event);
 }
 
 void IntervalViewer_Widget::hideEvent(QHideEvent * event) {
     std::cout << "IntervalViewer_Widget: Hide Event" << std::endl;
-    disconnect(_opengl_widget, &OpenGLWidget::mouseClick, this, &IntervalViewer_Widget::_selectInterval);
     
-    // Clear any selected interval when widget is hidden
-    if (!_active_key.empty()) {
-        _opengl_widget->clearSelectedInterval(_active_key);
-    }
+    // Clear all selected entities when widget is hidden
+    _opengl_widget->clearEntitySelection();
     
     QWidget::hideEvent(event);
 }
@@ -51,7 +49,7 @@ void IntervalViewer_Widget::hideEvent(QHideEvent * event) {
 void IntervalViewer_Widget::setActiveKey(std::string const & key) {
     // Clear previous selection if we had one
     if (!_active_key.empty()) {
-        _opengl_widget->clearSelectedInterval(_active_key);
+        _opengl_widget->clearEntitySelection();
     }
     
     _active_key = key;
@@ -71,31 +69,9 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
     std::cout << "IntervalViewer_Widget: Active key set to " << key << std::endl;
 }
 
-void IntervalViewer_Widget::_selectInterval(float time_coordinate, float canvas_y, QString const & series_info) {
-
-    static_cast<void>(canvas_y);
-    static_cast<void>(series_info);
-
-    if (!_selection_enabled || _active_key.empty()) {
-        return;
-    }
-    
-    // Find interval at the clicked time coordinate
-    auto interval = _opengl_widget->findIntervalAtTime(_active_key, time_coordinate);
-    if (interval.has_value()) {
-        auto const [start_time, end_time] = interval.value();
-        
-        std::cout << "IntervalViewer_Widget: Selected interval from " 
-                  << start_time << " to " << end_time 
-                  << " for series " << _active_key << std::endl;
-        
-        // Set the selected interval for highlighting
-        _opengl_widget->setSelectedInterval(_active_key, start_time, end_time);
-    } else {
-        // No interval found at this time - clear selection
-        _opengl_widget->clearSelectedInterval(_active_key);
-    }
-}
+// Note: _selectInterval has been removed - interval selection is now handled
+// directly in OpenGLWidget::mousePressEvent via hitTestAtPosition() and EntityId-based
+// selection API (selectEntity, deselectEntity, toggleEntitySelection)
 
 void IntervalViewer_Widget::_openColorDialog() {
     if (_active_key.empty()) {

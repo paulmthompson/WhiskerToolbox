@@ -1,6 +1,8 @@
 #ifndef COREPLOTTING_SCENEGRAPH_RENDERABLEPRIMITIVES_HPP
 #define COREPLOTTING_SCENEGRAPH_RENDERABLEPRIMITIVES_HPP
 
+#include "../Interaction/GlyphPreview.hpp"
+
 #include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 

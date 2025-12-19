@@ -219,52 +219,6 @@ public:
     // Legacy Interval Selection API (kept for compatibility with drag controller)
     // ========================================================================
 
-    // Interval selection and manipulation controls
-
-    /**
-     * @brief Set the highlighted interval for a digital interval series
-     * 
-     * @param series_key The key identifying the digital interval series
-     * @param start_time Start time of the interval in master time frame coordinates
-     * @param end_time End time of the interval in master time frame coordinates
-     */
-    void setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time);
-
-    /**
-     * @brief Clear the highlighted interval for a digital interval series
-     * 
-     * @param series_key The key identifying the digital interval series
-     */
-    void clearSelectedInterval(std::string const & series_key);
-
-    /**
-     * @brief Get the currently highlighted interval for a digital interval series
-     * 
-     * @param series_key The key identifying the digital interval series
-     * @return Optional pair containing start and end times in master time frame coordinates,
-     *         or nullopt if no interval is selected
-     */
-    std::optional<std::pair<int64_t, int64_t>> getSelectedInterval(std::string const & series_key) const;
-
-    /**
-     * @brief Find an interval at the specified time coordinate
-     * 
-     * Searches for digital intervals that contain the given time coordinate.
-     * Automatically handles time frame conversion when the series uses a different
-     * time frame from the master time frame.
-     * 
-     * @param series_key The key identifying the digital interval series
-     * @param time_coord Time coordinate in master time frame coordinates
-     * @return Optional pair containing start and end times in master time frame coordinates,
-     *         or nullopt if no interval is found at the specified time
-     * 
-     * @note Time frame conversion is performed internally:
-     *       - Input time_coord is in master time frame coordinates
-     *       - Conversion to series time frame is done for data queries
-     *       - Returned interval bounds are converted back to master time frame coordinates
-     */
-    std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(std::string const & series_key, float time_coord) const;
-
     // Interval edge dragging controls
 
     /**
@@ -272,28 +226,37 @@ public:
      * 
      * @param canvas_x Canvas X coordinate in pixels
      * @param canvas_y Canvas Y coordinate in pixels  
-     * @return Optional pair containing series key and edge type (true=left, false=right),
-     *         or nullopt if no edge is found near the position
+     * @return HitTestResult with IntervalEdgeLeft/Right if within tolerance, NoHit otherwise
      */
-    std::optional<std::pair<std::string, bool>> findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const;
+    [[nodiscard]] CorePlotting::HitTestResult findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const;
+
+    /**
+     * @brief Perform hit testing at the specified canvas position
+     * 
+     * Uses CorePlotting::SceneHitTester to find what element (if any) exists
+     * at the given canvas coordinates. This is the preferred method for
+     * EntityId-based interaction with scene elements.
+     * 
+     * @param canvas_x Canvas X coordinate in pixels
+     * @param canvas_y Canvas Y coordinate in pixels
+     * @return HitTestResult describing what was hit (intervals, events, etc.)
+     */
+    [[nodiscard]] CorePlotting::HitTestResult hitTestAtPosition(float canvas_x, float canvas_y) const;
 
     /**
      * @brief Start dragging an interval edge
      * 
-     * Initiates interval edge dragging for the specified series. The dragging system
-     * automatically handles time frame conversion when the series uses a different
-     * time frame from the master time frame.
+     * Initiates interval edge dragging using information from a hit test result.
+     * The hit result should be an IntervalEdgeLeft or IntervalEdgeRight type.
      * 
-     * @param series_key The key identifying the digital interval series
-     * @param is_left_edge True for left edge, false for right edge
-     * @param start_pos Initial mouse position when drag started
+     * @param hit_result HitTestResult from findIntervalEdgeAtPosition()
      * 
      * @note Time frame handling:
      *       - Mouse coordinates are converted from master time frame to series time frame
      *       - Collision detection is performed in the series' native time frame
      *       - Display coordinates remain in master time frame for consistent rendering
      */
-    void startIntervalDrag(std::string const & series_key, bool is_left_edge, QPoint const & start_pos);
+    void startIntervalDrag(CorePlotting::HitTestResult const & hit_result);
 
     /**
      * @brief Update the dragged interval position
@@ -493,6 +456,13 @@ public slots:
 signals:
     void mouseHover(float time_coordinate, float canvas_y, QString const & series_info);
     void mouseClick(float time_coordinate, float canvas_y, QString const & series_info);
+    
+    /**
+     * @brief Emitted when an entity is selected or deselected
+     * @param entity_id The EntityId that was selected/deselected
+     * @param is_selected true if selected, false if deselected
+     */
+    void entitySelectionChanged(EntityId entity_id, bool is_selected);
 
 protected:
     void initializeGL() override;
@@ -618,10 +588,6 @@ private:
     // EntityId-based selection state (multi-select supported)
     // Used by SceneBuilder to apply selection_flags to rectangle batches
     std::unordered_set<EntityId> _selected_entities;
-
-    // Legacy interval selection tracking (kept for drag controller compatibility)
-    // TODO: Migrate drag controller to use EntityId instead of time coordinates
-    std::unordered_map<std::string, std::pair<int64_t, int64_t>> _selected_intervals;
 
     // Interval dragging state (uses CorePlotting::IntervalDragController)
     CorePlotting::IntervalDragController _interval_drag_controller;
