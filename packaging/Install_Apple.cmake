@@ -36,7 +36,6 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/libWhisker-Analysis.dylib"
         "${CMAKE_BINARY_DIR}/bin/libqt6advanceddocking.dylib"
         "${CMAKE_BINARY_DIR}/libDataManager.dylib"
-        "${CMAKE_BINARY_DIR}/libDataViewer.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMath6_Release.5.0.0.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMathText6_Release.5.0.0.dylib"
