@@ -21,7 +21,7 @@ add_tests_to_global(dataviewer_test_sources
                     "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer" 
                     DATAVIEWER_TEST_SOURCES)
 
-add_library(DataViewer SHARED ${DATAVIEWER_SOURCES}
+add_library(DataViewer STATIC ${DATAVIEWER_SOURCES}
 
     )
 
@@ -46,10 +46,6 @@ endif()
 
 if (MSVC)
     target_compile_options(DataViewer PRIVATE ${MSVC_WARNINGS})
-endif()
-
-if(WIN32)
-    set_target_properties(DataViewer PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 set_target_properties(DataViewer PROPERTIES
