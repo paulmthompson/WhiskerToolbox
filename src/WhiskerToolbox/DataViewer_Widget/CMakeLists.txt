@@ -7,6 +7,10 @@ set(DATAVIEWER_WIDGET_SOURCES
     DataViewer_Widget.cpp
         DataViewer_Widget.hpp
         DataViewer_Widget.ui
+        DataViewerInputHandler.cpp
+        DataViewerInputHandler.hpp
+        DataViewerInteractionManager.cpp
+        DataViewerInteractionManager.hpp
         OpenGLWidget.cpp
         OpenGLWidget.hpp
         SceneBuildingHelpers.cpp

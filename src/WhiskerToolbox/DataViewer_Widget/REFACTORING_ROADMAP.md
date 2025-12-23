@@ -7,8 +7,8 @@ This document outlines the planned refactoring of `OpenGLWidget` to address "god
 **Current State:** OpenGLWidget handles too many responsibilities directly:
 - OpenGL lifecycle management
 - Series data storage
-- Input handling (mouse events, gestures)
-- Interaction state machine (interval creation, edge dragging)
+- ~~Input handling (mouse events, gestures)~~ ✅ Extracted (Phase 1)
+- ~~Interaction state machine (interval creation, edge dragging)~~ ✅ Extracted (Phase 1)
 - Coordinate transformations
 - Selection management
 - Tooltip management
@@ -25,109 +25,60 @@ This document outlines the planned refactoring of `OpenGLWidget` to address "god
 
 ---
 
-## Phase 1: Extract Input & Interaction Handling
+## Phase 1: Extract Input & Interaction Handling ✅ COMPLETED (December 2025)
 
 **Priority:** High  
-**Estimated Impact:** ~400 lines removed from OpenGLWidget
+**Estimated Impact:** ~400 lines removed from OpenGLWidget  
+**Status:** ✅ Complete
 
-### 1.1 Create DataViewerInputHandler
+### 1.1 Create DataViewerInputHandler ✅
 
-Extract mouse event processing into a dedicated handler.
+Extracted mouse event processing into a dedicated handler.
 
-**New File:** `DataViewerInputHandler.hpp/cpp`
+**Files Created:** `DataViewerInputHandler.hpp/cpp`
 
-```cpp
-class DataViewerInputHandler : public QObject {
-    Q_OBJECT
-public:
-    struct Context {
-        const CorePlotting::TimeSeriesViewState* view_state;
-        const CorePlotting::LayoutResponse* layout;
-        const CorePlotting::RenderableScene* scene;
-        int widget_width, widget_height;
-    };
-    
-    void setContext(Context ctx);
-    void handleMousePress(QMouseEvent* event);
-    void handleMouseMove(QMouseEvent* event);
-    void handleMouseRelease(QMouseEvent* event);
-    void handleDoubleClick(QMouseEvent* event);
-    void handleLeave();
-    
-signals:
-    void panStarted();
-    void panDelta(float normalized_dy);
-    void panEnded();
-    void clicked(float time_coord, float canvas_y, const QString& series_info);
-    void hoverCoordinates(float time, float canvas_y, const QString& info);
-    void entityClicked(EntityId id, bool ctrl_pressed);
-    void intervalEdgeHovered(bool is_edge);
-    void doubleClicked(float canvas_x, float canvas_y);
-    void requestRepaint();
-};
-```
+**Implementation Notes:**
+- Uses `DataViewer::InputContext` struct to receive view state, layout, scene, and dimensions
+- Provides callbacks for series info and analog value lookup (avoids tight coupling)
+- Hit testing delegated to `CorePlotting::SceneHitTester`
+- All state changes communicated via Qt signals
 
-**Responsibilities moved:**
-- Pan gesture detection and delta calculation
-- Hover coordinate emission
-- Entity click detection (via hit testing)
-- Cursor shape management (edge hover detection)
-- Tooltip timer triggering
+**Signals implemented:**
+- `panStarted()`, `panDelta(float)`, `panEnded()` - Pan gesture handling
+- `clicked()`, `hoverCoordinates()` - Coordinate emission
+- `entityClicked(EntityId, bool)` - Selection with Ctrl modifier support
+- `intervalEdgeDragRequested()`, `intervalCreationRequested()` - Interaction triggers
+- `cursorChangeRequested()`, `tooltipRequested()`, `tooltipCancelled()` - UI feedback
+- `repaintRequested()` - Redraw triggers
 
-### 1.2 Create DataViewerInteractionManager
+### 1.2 Create DataViewerInteractionManager ✅
 
-Extract the interaction state machine for interval creation and modification.
+Extracted the interaction state machine for interval creation and modification.
 
-**New File:** `DataViewerInteractionManager.hpp/cpp`
+**Files Created:** `DataViewerInteractionManager.hpp/cpp`
 
-```cpp
-class DataViewerInteractionManager : public QObject {
-    Q_OBJECT
-public:
-    void setCoordinateContext(/* time axis params, view state */);
-    
-    // Mode management
-    void setMode(InteractionMode mode);
-    InteractionMode mode() const;
-    bool isActive() const;
-    void cancel();
-    
-    // Controller lifecycle
-    void startIntervalCreation(const QString& series_key, float canvas_x, float canvas_y,
-                               const glm::vec4& fill_color, const glm::vec4& stroke_color);
-    void startEdgeDrag(const CorePlotting::HitTestResult& hit_result,
-                       const glm::vec4& fill_color, const glm::vec4& stroke_color);
-    void update(float canvas_x, float canvas_y);
-    void complete();
-    
-    // Preview access (for rendering)
-    std::optional<CorePlotting::Interaction::GlyphPreview> getPreview() const;
-    
-signals:
-    void modeChanged(InteractionMode mode);
-    void interactionCompleted(const CorePlotting::Interaction::DataCoordinates& coords);
-    void previewUpdated();
-    void cursorChanged(Qt::CursorShape cursor);
-};
-```
+**Implementation Notes:**
+- Owns the `IGlyphInteractionController` (moved from OpenGLWidget)
+- Uses `DataViewer::InteractionContext` for coordinate conversions
+- Handles both interval creation and edge dragging modes
+- Preview geometry exposed via `getPreview()` for rendering
 
-**Responsibilities moved:**
-- `setInteractionMode()`, `isInteractionActive()`, `cancelActiveInteraction()`
-- `startIntervalCreationUnified()`, `startIntervalEdgeDragUnified()`
-- `commitInteraction()` (coordinate conversion part)
-- `drawInteractionPreview()` trigger logic
-- `_glyph_controller` ownership
-- `_interaction_mode`, `_interaction_series_key` state
+**API:**
+- `setMode()`, `mode()`, `isActive()`, `cancel()` - Mode management
+- `startIntervalCreation()`, `startEdgeDrag()` - Controller lifecycle
+- `update()`, `complete()` - Interaction progression
+- `getPreview()` - Preview access for rendering
 
-### 1.3 Migration Steps
+### 1.3 Migration Completed ✅
 
-1. Create header/source files for both classes
-2. Move relevant member variables and methods
-3. Add signal/slot connections in OpenGLWidget constructor
-4. Update mouse event handlers to delegate to InputHandler
-5. Connect InteractionManager signals to OpenGLWidget slots
-6. Remove migrated code from OpenGLWidget
-7. Update tests
+**Changes to OpenGLWidget:**
+- Removed member variables: `_isPanning`, `_lastMousePos`, `_glyph_controller`, `_interaction_mode`, `_interaction_series_key`
+- Added: `_input_handler`, `_interaction_manager` (composed components)
+- Mouse event handlers now delegate via signal/slot connections
+- `interactionMode()` method now delegates to `_interaction_manager->mode()`
+- Removed `commitInteraction()` - now handled internally by InteractionManager
+
+**Lines Removed:** ~200 lines of direct mouse handling and interaction logic
 
 ---
 
@@ -405,17 +356,17 @@ struct CacheState {
 
 ---
 
-## Proposed Final Module Structure
+## Current Module Structure
 
 ```
 DataViewer_Widget/
-├── OpenGLWidget.hpp/cpp                 # Slim coordinator (~500 lines)
-├── DataViewerInputHandler.hpp/cpp       # Mouse events, gestures
-├── DataViewerInteractionManager.hpp/cpp # Interaction state machine
-├── DataViewerSelectionManager.hpp/cpp   # EntityId selection
-├── DataViewerTooltipController.hpp/cpp  # Tooltip timer + display
-├── DataViewerCoordinates.hpp/cpp        # Coordinate transforms
-├── TimeSeriesDataStore.hpp/cpp          # Series storage + display options
+├── OpenGLWidget.hpp/cpp                 # Main widget (~1700 lines, down from ~1900)
+├── DataViewerInputHandler.hpp/cpp       # ✅ Mouse events, gestures (Phase 1)
+├── DataViewerInteractionManager.hpp/cpp # ✅ Interaction state machine (Phase 1)
+├── DataViewerSelectionManager.hpp/cpp   # (planned) EntityId selection
+├── DataViewerTooltipController.hpp/cpp  # (planned) Tooltip timer + display
+├── DataViewerCoordinates.hpp/cpp        # (planned) Coordinate transforms
+├── TimeSeriesDataStore.hpp/cpp          # (planned) Series storage + display options
 ├── SceneBuildingHelpers.hpp/cpp         # (existing) Batch building
 ├── SVGExporter.hpp/cpp                  # (existing) SVG export
 ├── SpikeSorterConfigLoader.hpp/cpp      # (existing) Spike sorter config
@@ -433,7 +384,7 @@ DataViewer_Widget/
 
 Each phase can be completed independently. Recommended order:
 
-1. **Phase 1 (Input/Interaction)** - Highest impact, most complex
+1. **Phase 1 (Input/Interaction)** ✅ COMPLETED - Highest impact, most complex
 2. **Phase 2 (Selection/Tooltip)** - Quick wins, simple extraction
 3. **Phase 3 (Data Store)** - Medium complexity, significant cleanup
 4. **Phase 4 (Coordinates)** - Low risk, reduces duplication
@@ -456,13 +407,13 @@ Each phase can be completed independently. Recommended order:
 
 ## Success Metrics
 
-| Metric | Before | Target |
-|--------|--------|--------|
-| OpenGLWidget LOC | ~1900 | ~500 |
-| Member variables | ~60 | ~20 |
-| Public methods | ~50 | ~25 |
-| Cyclomatic complexity (paintGL path) | High | Low |
-| Test coverage | Partial | Full per-component |
+| Metric | Before | After Phase 1 | Target |
+|--------|--------|---------------|--------|
+| OpenGLWidget LOC | ~1900 | ~1700 | ~500 |
+| Member variables | ~60 | ~55 | ~20 |
+| Public methods | ~50 | ~50 | ~25 |
+| Extracted classes | 0 | 2 | 6+ |
+| Test coverage | Partial | Partial | Full per-component |
 
 ---
 

@@ -56,6 +56,8 @@
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
+#include "DataViewerInputHandler.hpp"
+#include "DataViewerInteractionManager.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpikeSorterConfigLoader.hpp"
@@ -276,7 +278,7 @@ public:
     /**
      * @brief Get the current interaction mode
      */
-    [[nodiscard]] InteractionMode interactionMode() const { return _interaction_mode; }
+    [[nodiscard]] InteractionMode interactionMode() const;
 
     /**
      * @brief Check if any interaction is currently active
@@ -587,8 +589,6 @@ private:
     int m_dashedDashSizeLoc{};
     int m_dashedGapSizeLoc{};
 
-    QPoint _lastMousePos{};
-    bool _isPanning{false};
     float _ySpacing{0.1f};///< Vertical spacing factor for series
 
     std::string m_background_color{"#000000"};// black
@@ -605,17 +605,14 @@ private:
     std::unordered_set<EntityId> _selected_entities;
 
     // ========================================================================
-    // Unified Interaction System (Phase 5)
+    // Input and Interaction Handlers (Phase 5.1 - Extracted from widget)
     // ========================================================================
     
-    /// Current interaction mode
-    InteractionMode _interaction_mode{InteractionMode::Normal};
+    /// Handles mouse events and emits semantic signals
+    std::unique_ptr<DataViewer::DataViewerInputHandler> _input_handler;
     
-    /// Active glyph interaction controller (for CreateInterval, ModifyInterval, CreateLine, etc.)
-    std::unique_ptr<CorePlotting::Interaction::IGlyphInteractionController> _glyph_controller;
-    
-    /// Series key for the current interaction (used when committing results)
-    std::string _interaction_series_key;
+    /// Manages interaction state machine for interval creation/modification
+    std::unique_ptr<DataViewer::DataViewerInteractionManager> _interaction_manager;
 
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;

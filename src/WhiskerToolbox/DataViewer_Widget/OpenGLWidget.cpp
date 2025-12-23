@@ -4,7 +4,6 @@
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
-#include "CorePlotting/Interaction/RectangleInteractionController.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
@@ -41,11 +40,6 @@
 #include <ctime>
 #include <iostream>
 #include <ranges>
-
-// Bring interaction types into scope for cleaner code
-using CorePlotting::Interaction::RectangleEdge;
-using CorePlotting::Interaction::RectangleInteractionConfig;
-using CorePlotting::Interaction::RectangleInteractionController;
 
 // ============================================================================
 // Widget-specific transform composition helpers
@@ -180,6 +174,103 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     connect(_tooltip_timer, &QTimer::timeout, this, [this]() {
         showSeriesInfoTooltip(_tooltip_hover_pos);
     });
+
+    // Initialize input handler
+    _input_handler = std::make_unique<DataViewer::DataViewerInputHandler>(this);
+    
+    // Connect input handler signals
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::panDelta, this, [this](float normalized_dy) {
+        _view_state.applyVerticalPanDelta(normalized_dy);
+        update();
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::clicked, this, &OpenGLWidget::mouseClick);
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::hoverCoordinates, this, &OpenGLWidget::mouseHover);
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::entityClicked, this, [this](EntityId id, bool ctrl_pressed) {
+        if (ctrl_pressed) {
+            if (isEntitySelected(id)) {
+                deselectEntity(id);
+                emit entitySelectionChanged(id, false);
+            } else {
+                selectEntity(id);
+                emit entitySelectionChanged(id, true);
+            }
+        } else {
+            for (EntityId const old_id: _selected_entities) {
+                emit entitySelectionChanged(old_id, false);
+            }
+            clearEntitySelection();
+            selectEntity(id);
+            emit entitySelectionChanged(id, true);
+        }
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalEdgeDragRequested, this, [this](CorePlotting::HitTestResult const & hit_result) {
+        // Get series color for preview
+        auto it = _digital_interval_series.find(hit_result.series_key);
+        if (it != _digital_interval_series.end()) {
+            auto const & display_options = it->second.display_options;
+            int r, g, b;
+            hexToRGB(display_options->style.hex_color, r, g, b);
+            glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
+            glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+            _interaction_manager->startEdgeDrag(hit_result, fill_color, stroke_color);
+        }
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalCreationRequested, this, [this](QString const &, QPoint const & start_pos) {
+        // Find first visible digital interval series
+        for (auto const & [series_key, data]: _digital_interval_series) {
+            if (data.display_options->style.is_visible) {
+                int r, g, b;
+                hexToRGB(data.display_options->style.hex_color, r, g, b);
+                glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
+                glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+                _interaction_manager->startIntervalCreation(
+                    series_key,
+                    static_cast<float>(start_pos.x()),
+                    static_cast<float>(start_pos.y()),
+                    fill_color, stroke_color);
+                _input_handler->setInteractionActive(true);
+                return;
+            }
+        }
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::cursorChangeRequested, this, [this](Qt::CursorShape cursor) {
+        setCursor(cursor);
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::tooltipRequested, this, [this](QPoint const & pos) {
+        startTooltipTimer(pos);
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::tooltipCancelled, this, [this]() {
+        cancelTooltipTimer();
+    });
+    connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::repaintRequested, this, [this]() {
+        update();
+    });
+
+    // Set up series info callback for input handler
+    _input_handler->setSeriesInfoCallback([this](float canvas_x, float canvas_y) {
+        return findSeriesAtPosition(canvas_x, canvas_y);
+    });
+    _input_handler->setAnalogValueCallback([this](float canvas_y, std::string const & key) {
+        return canvasYToAnalogValue(canvas_y, key);
+    });
+
+    // Initialize interaction manager
+    _interaction_manager = std::make_unique<DataViewer::DataViewerInteractionManager>(this);
+    
+    // Connect interaction manager signals
+    connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::modeChanged, this, [this](DataViewer::InteractionMode mode) {
+        emit interactionModeChanged(static_cast<InteractionMode>(mode));
+    });
+    connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::interactionCompleted, this, [this](CorePlotting::Interaction::DataCoordinates const & coords) {
+        handleInteractionCompleted(coords);
+        _input_handler->setInteractionActive(false);
+    });
+    connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::previewUpdated, this, [this]() {
+        updateCanvas(_time);
+    });
+    connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::cursorChangeRequested, this, [this](Qt::CursorShape cursor) {
+        setCursor(cursor);
+    });
 }
 
 OpenGLWidget::~OpenGLWidget() {
@@ -206,156 +297,65 @@ void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
     update();
 }
 
-// Add these implementations:
+// Mouse event handlers - delegate to input handler and interaction manager
 void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
-    if (event->button() == Qt::LeftButton) {
-        float const canvas_x = static_cast<float>(event->pos().x());
-        float const canvas_y = static_cast<float>(event->pos().y());
+    // Update input handler context before processing
+    DataViewer::InputContext ctx;
+    ctx.view_state = &_view_state;
+    ctx.layout_response = &_cached_layout_response;
+    ctx.scene = &_cached_scene;
+    ctx.selected_entities = &_selected_entities;
+    ctx.rectangle_batch_key_map = &_rectangle_batch_key_map;
+    ctx.widget_width = width();
+    ctx.widget_height = height();
+    _input_handler->setContext(ctx);
 
-        // Check if we're clicking near an interval edge for dragging (only for selected intervals)
-        auto edge_result = findIntervalEdgeAtPosition(canvas_x, canvas_y);
-        if (edge_result.isIntervalEdge()) {
-            // Use unified interaction system for edge dragging
-            startIntervalEdgeDragUnified(edge_result);
-            return;// Don't start panning when dragging intervals
-        }
-
-        // Perform hit testing for interval body selection
-        auto hit_result = hitTestAtPosition(canvas_x, canvas_y);
-
-        if (hit_result.hasHit() && hit_result.hit_type == CorePlotting::HitType::IntervalBody) {
-            // We hit an interval body - handle selection
-            if (hit_result.hasEntityId()) {
-                EntityId const hit_entity = hit_result.entity_id.value();
-                bool const ctrl_pressed = (event->modifiers() & Qt::ControlModifier) != 0;
-
-                if (ctrl_pressed) {
-                    // Ctrl+Click: Toggle selection
-                    if (isEntitySelected(hit_entity)) {
-                        deselectEntity(hit_entity);
-                        emit entitySelectionChanged(hit_entity, false);
-                    } else {
-                        selectEntity(hit_entity);
-                        emit entitySelectionChanged(hit_entity, true);
-                    }
-                } else {
-                    // Plain click: Replace selection
-                    // First emit deselection for all previously selected entities
-                    for (EntityId const old_id: _selected_entities) {
-                        emit entitySelectionChanged(old_id, false);
-                    }
-                    clearEntitySelection();
-                    selectEntity(hit_entity);
-                    emit entitySelectionChanged(hit_entity, true);
-                }
-
-                // Don't start panning when selecting intervals
-                return;
-            }
-        }
-
-        _isPanning = true;
-        _lastMousePos = event->pos();
-
-        // Convert canvas X to time coordinate
-        float const time_coord = canvasXToTime(canvas_x);
-
-        // Find the closest analog series for Y coordinate conversion (similar to mouseMoveEvent)
-        QString series_info = "";
-        if (!_analog_series.empty()) {
-            for (auto const & [key, data]: _analog_series) {
-                if (data.display_options->style.is_visible) {
-                    float const analog_value = canvasYToAnalogValue(canvas_y, key);
-                    series_info = QString("Series: %1, Value: %2").arg(QString::fromStdString(key)).arg(analog_value, 0, 'f', 3);
-                    break;
-                }
-            }
-        }
-
-        emit mouseClick(time_coord, canvas_y, series_info);
+    if (_input_handler->handleMousePress(event)) {
+        return;
     }
     QOpenGLWidget::mousePressEvent(event);
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
-    // Phase 5 unified controller handling (for interval creation and edge dragging)
-    if (_glyph_controller && _glyph_controller->isActive()) {
+    // Check if interaction manager is handling this
+    if (_interaction_manager->isActive()) {
         float const canvas_x = static_cast<float>(event->pos().x());
         float const canvas_y = static_cast<float>(event->pos().y());
-        _glyph_controller->update(canvas_x, canvas_y);
+        _interaction_manager->update(canvas_x, canvas_y);
         cancelTooltipTimer();
-        updateCanvas(_time);// Redraw to show updated preview
         return;
     }
 
-    if (_isPanning) {
-        // Calculate vertical movement in pixels
-        int const deltaY = event->pos().y() - _lastMousePos.y();
+    // Update input handler context
+    DataViewer::InputContext ctx;
+    ctx.view_state = &_view_state;
+    ctx.layout_response = &_cached_layout_response;
+    ctx.scene = &_cached_scene;
+    ctx.selected_entities = &_selected_entities;
+    ctx.rectangle_batch_key_map = &_rectangle_batch_key_map;
+    ctx.widget_width = width();
+    ctx.widget_height = height();
+    _input_handler->setContext(ctx);
 
-        // Convert to normalized device coordinates
-        // A positive deltaY (moving down) should move the view up
-        float const normalizedDeltaY = -1.0f * static_cast<float>(deltaY) / static_cast<float>(height()) * 2.0f;
-
-        // Adjust vertical offset based on movement using ViewState method
-        _view_state.applyVerticalPanDelta(normalizedDeltaY);
-
-        _lastMousePos = event->pos();
-        update();            // Request redraw
-        cancelTooltipTimer();// Cancel tooltip during panning
-    } else {
-        // Check for cursor changes when hovering near interval edges
-        auto edge_result = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
-        if (edge_result.isIntervalEdge()) {
-            setCursor(Qt::SizeHorCursor);
-            cancelTooltipTimer();// Don't show tooltip when hovering over interval edges
-        } else {
-            setCursor(Qt::ArrowCursor);
-            // Start tooltip timer for series info
-            startTooltipTimer(event->pos());
-        }
-    }
-
-    // Emit hover coordinates for coordinate display
-    float const canvas_x = static_cast<float>(event->pos().x());
-    float const canvas_y = static_cast<float>(event->pos().y());
-
-    // Convert canvas X to time coordinate
-    float const time_coord = canvasXToTime(canvas_x);
-
-    // Find the closest analog series for Y coordinate conversion
-    QString series_info = "";
-    if (!_analog_series.empty()) {
-        // For now, use the first visible analog series for Y coordinate conversion
-        for (auto const & [key, data]: _analog_series) {
-            if (data.display_options->style.is_visible) {
-                float const analog_value = canvasYToAnalogValue(canvas_y, key);
-                series_info = QString("Series: %1, Value: %2").arg(QString::fromStdString(key)).arg(analog_value, 0, 'f', 3);
-                break;
-            }
-        }
-    }
-
-    emit mouseHover(time_coord, canvas_y, series_info);
-
+    _input_handler->handleMouseMove(event);
     QOpenGLWidget::mouseMoveEvent(event);
 }
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        // Phase 5 unified controller handling
-        if (_glyph_controller && _glyph_controller->isActive()) {
-            commitInteraction();
+        // Check if interaction manager is handling this
+        if (_interaction_manager->isActive()) {
+            _interaction_manager->complete();
             return;
         }
 
-        _isPanning = false;
+        _input_handler->handleMouseRelease(event);
     }
     QOpenGLWidget::mouseReleaseEvent(event);
 }
 
 void OpenGLWidget::leaveEvent(QEvent * event) {
-    // Cancel tooltip when mouse leaves the widget
-    cancelTooltipTimer();
+    _input_handler->handleLeave();
     QOpenGLWidget::leaveEvent(event);
 }
 
@@ -1021,90 +1021,38 @@ CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, floa
 }
 
 void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
-    if (event->button() == Qt::LeftButton) {
-        // Find which digital interval series (if any) is at this Y position
-        // For now, use the first visible digital interval series
-        // TODO: Improve this to detect which series based on Y coordinate
-        for (auto const & [series_key, data]: _digital_interval_series) {
-            if (data.display_options->style.is_visible) {
-                // Use Phase 5 unified interaction system
-                startIntervalCreationUnified(series_key, event->pos());
-                return;
-            }
-        }
+    if (_input_handler->handleDoubleClick(event)) {
+        return;
     }
-
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Phase 5: Unified Interaction Mode API
+// Phase 5: Unified Interaction Mode API - now delegates to DataViewerInteractionManager
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::setInteractionMode(InteractionMode mode) {
-    if (_interaction_mode == mode) {
-        return;
-    }
+    _interaction_manager->setMode(static_cast<DataViewer::InteractionMode>(mode));
+    _input_handler->setInteractionActive(_interaction_manager->isActive());
+}
 
-    // Cancel any active interaction before switching modes
-    cancelActiveInteraction();
-
-    _interaction_mode = mode;
-
-    // Create appropriate controller for the new mode
-    switch (mode) {
-        case InteractionMode::CreateInterval: {
-            RectangleInteractionConfig config;
-            config.constrain_to_x_axis = true;// Intervals span full height
-            config.viewport_height = static_cast<float>(height());
-            config.fill_color = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f);
-            config.stroke_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-            _glyph_controller = std::make_unique<RectangleInteractionController>(config);
-            setCursor(Qt::CrossCursor);
-            break;
-        }
-        case InteractionMode::CreateLine: {
-            // TODO: Create LineInteractionController when needed
-            _glyph_controller = nullptr;
-            setCursor(Qt::CrossCursor);
-            break;
-        }
-        case InteractionMode::ModifyInterval: // TODO
-        case InteractionMode::Normal:
-        default:
-            _glyph_controller = nullptr;
-            setCursor(Qt::ArrowCursor);
-            break;
-    }
-
-    emit interactionModeChanged(mode);
+InteractionMode OpenGLWidget::interactionMode() const {
+    return static_cast<InteractionMode>(_interaction_manager->mode());
 }
 
 bool OpenGLWidget::isInteractionActive() const {
-    // Check unified controller
-    if (_glyph_controller && _glyph_controller->isActive()) {
-        return true;
-    }
-    return false;
+    return _interaction_manager->isActive();
 }
 
 void OpenGLWidget::cancelActiveInteraction() {
-    // Cancel unified controller
-    if (_glyph_controller && _glyph_controller->isActive()) {
-        _glyph_controller->cancel();
-    }
-
-    // Reset mode to Normal
-    _interaction_mode = InteractionMode::Normal;
-    _glyph_controller = nullptr;
-    _interaction_series_key.clear();
-    setCursor(Qt::ArrowCursor);
-
+    _interaction_manager->cancel();
+    _input_handler->setInteractionActive(false);
     updateCanvas(_time);
 }
 
 void OpenGLWidget::drawInteractionPreview() {
-    if (!_glyph_controller || !_glyph_controller->isActive()) {
+    auto preview = _interaction_manager->getPreview();
+    if (!preview.has_value()) {
         return;
     }
 
@@ -1112,206 +1060,72 @@ void OpenGLWidget::drawInteractionPreview() {
         return;
     }
 
-    auto const preview = _glyph_controller->getPreview();
-    _scene_renderer->previewRenderer().render(preview, width(), height());
+    _scene_renderer->previewRenderer().render(preview.value(), width(), height());
 }
 
-void OpenGLWidget::commitInteraction() {
-    if (!_glyph_controller || !_glyph_controller->isActive()) {
-        return;
-    }
-
-    // Get the preview geometry
-    auto const preview = _glyph_controller->getPreview();
-
-    // Convert canvas coordinates to data coordinates based on preview type
-    CorePlotting::Interaction::DataCoordinates data_coords;
-
-    if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Rectangle) {
-        // For intervals: just need X coordinates (time)
-        auto interval_coords = _cached_scene.previewToIntervalCoords(preview, width(), height());
-        data_coords = CorePlotting::Interaction::DataCoordinates::createInterval(
-                _interaction_series_key, interval_coords.start, interval_coords.end);
-    } else if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Line) {
-        // For lines: need full coordinate conversion
-        // Use identity transform for now (can be enhanced with series-specific transform)
-        CorePlotting::LayoutTransform identity{0.0f, 1.0f};
-        auto line_coords = _cached_scene.previewToLineCoords(preview, width(), height(), identity);
-        data_coords = CorePlotting::Interaction::DataCoordinates::createLine(
-                _interaction_series_key, line_coords.x1, line_coords.y1, line_coords.x2, line_coords.y2);
-    } else if (preview.type == CorePlotting::Interaction::GlyphPreview::Type::Point) {
-        // For points: single coordinate
-        CorePlotting::LayoutTransform identity{0.0f, 1.0f};
-        auto point_coords = _cached_scene.previewToPointCoords(preview, width(), height(), identity);
-        data_coords = CorePlotting::Interaction::DataCoordinates::createPoint(
-                _interaction_series_key, point_coords.x, point_coords.y);
-    }
-
-    // Complete the controller interaction
-    _glyph_controller->complete();
-
-    // Handle the interaction result directly (add interval to DataManager)
-    handleInteractionCompleted(data_coords);
-
-    // Reset state
-    setInteractionMode(InteractionMode::Normal);
-}
+// Note: commitInteraction() is no longer needed - handled by InteractionManager
 
 void OpenGLWidget::startIntervalCreationUnified(std::string const & series_key, QPoint const & start_pos) {
-    // Don't start if we're already in an interaction
-    if (isInteractionActive()) {
-        return;
-    }
-
-    // Check if the series exists
+    // This is now handled by signals from DataViewerInputHandler
+    // The constructor wires up intervalCreationRequested -> interaction_manager->startIntervalCreation
+    // Keeping this method for backwards compatibility
+    
     auto it = _digital_interval_series.find(series_key);
     if (it == _digital_interval_series.end()) {
         return;
     }
 
-    // Get series color for preview
     auto const & display_options = it->second.display_options;
     int r, g, b;
     hexToRGB(display_options->style.hex_color, r, g, b);
+    glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
+    glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 
-    // Create the controller with interval mode configuration
-    RectangleInteractionConfig config;
-    config.constrain_to_x_axis = true;// Intervals span full height
-    config.viewport_height = static_cast<float>(height());
-    config.fill_color = glm::vec4(
-            static_cast<float>(r) / 255.0f,
-            static_cast<float>(g) / 255.0f,
-            static_cast<float>(b) / 255.0f,
-            0.5f);// 50% transparent
-    config.stroke_color = glm::vec4(
-            static_cast<float>(r) / 255.0f,
-            static_cast<float>(g) / 255.0f,
-            static_cast<float>(b) / 255.0f,
-            1.0f);
-    config.stroke_width = 2.0f;
+    // Update interaction manager context
+    DataViewer::InteractionContext ctx;
+    ctx.view_state = &_view_state;
+    ctx.scene = &_cached_scene;
+    ctx.widget_width = width();
+    ctx.widget_height = height();
+    _interaction_manager->setContext(ctx);
 
-    _glyph_controller = std::make_unique<RectangleInteractionController>(config);
-    _interaction_series_key = series_key;
-    _interaction_mode = InteractionMode::CreateInterval;
-
-    // Start the controller at the click position
-    float const canvas_x = static_cast<float>(start_pos.x());
-    float const canvas_y = static_cast<float>(start_pos.y());
-    _glyph_controller->start(canvas_x, canvas_y, series_key);
-
-    setCursor(Qt::SizeHorCursor);
-
-    std::cout << "Started unified interval creation for series " << series_key
-              << " at canvas (" << canvas_x << ", " << canvas_y << ")" << std::endl;
-
-    updateCanvas(_time);
+    _interaction_manager->startIntervalCreation(
+            series_key,
+            static_cast<float>(start_pos.x()),
+            static_cast<float>(start_pos.y()),
+            fill_color, stroke_color);
+    _input_handler->setInteractionActive(true);
 }
 
 void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult const & hit_result) {
-    // Only handle interval edge hits
+    // This is now handled by signals from DataViewerInputHandler
+    // Keeping this method for backwards compatibility
+    
     if (!hit_result.isIntervalEdge()) {
         return;
     }
 
-    // Don't start if we're already in an interaction
-    if (isInteractionActive()) {
-        return;
-    }
-
-    // Check if the series exists
     auto it = _digital_interval_series.find(hit_result.series_key);
     if (it == _digital_interval_series.end()) {
         return;
     }
 
-    // Get the entity ID (required for modification)
-    if (!hit_result.entity_id.has_value()) {
-        return;
-    }
-
-    // Get interval bounds (required for modification)
-    if (!hit_result.interval_start.has_value() || !hit_result.interval_end.has_value()) {
-        return;
-    }
-
-    // Convert HitType to RectangleEdge
-    RectangleEdge edge = RectangleEdge::None;
-    if (hit_result.hit_type == CorePlotting::HitType::IntervalEdgeLeft) {
-        edge = RectangleEdge::Left;
-    } else if (hit_result.hit_type == CorePlotting::HitType::IntervalEdgeRight) {
-        edge = RectangleEdge::Right;
-    }
-
-    if (edge == RectangleEdge::None) {
-        return;
-    }
-
-    // Get series color for preview
     auto const & display_options = it->second.display_options;
     int r, g, b;
     hexToRGB(display_options->style.hex_color, r, g, b);
+    glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
+    glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 
-    // Create the controller with interval mode configuration
-    RectangleInteractionConfig config;
-    config.constrain_to_x_axis = true;// Intervals span full height
-    config.viewport_height = static_cast<float>(height());
-    config.fill_color = glm::vec4(
-            static_cast<float>(r) / 255.0f,
-            static_cast<float>(g) / 255.0f,
-            static_cast<float>(b) / 255.0f,
-            0.5f);// 50% transparent for preview
-    config.stroke_color = glm::vec4(
-            static_cast<float>(r) / 255.0f,
-            static_cast<float>(g) / 255.0f,
-            static_cast<float>(b) / 255.0f,
-            1.0f);
-    config.stroke_width = 2.0f;
+    // Update interaction manager context
+    DataViewer::InteractionContext ctx;
+    ctx.view_state = &_view_state;
+    ctx.scene = &_cached_scene;
+    ctx.widget_width = width();
+    ctx.widget_height = height();
+    _interaction_manager->setContext(ctx);
 
-    auto controller = std::make_unique<RectangleInteractionController>(config);
-
-    // Convert interval bounds from data space to canvas coordinates
-    // The hit_result contains interval_start/end in data space (time indices)
-    CorePlotting::TimeAxisParams time_params(_view_state.time_start, _view_state.time_end, width());
-    float const start_canvas_x = CorePlotting::timeToCanvasX(static_cast<float>(*hit_result.interval_start), time_params);
-    float const end_canvas_x = CorePlotting::timeToCanvasX(static_cast<float>(*hit_result.interval_end), time_params);
-
-    // For intervals, y spans full height
-    float const canvas_y = 0.0f;
-    float const canvas_height = static_cast<float>(height());
-
-    // Original bounds: {x, y, width, height} in canvas coords
-    glm::vec4 original_bounds(
-            start_canvas_x,               // x (left edge)
-            canvas_y,                     // y (bottom)
-            end_canvas_x - start_canvas_x,// width
-            canvas_height                 // height
-    );
-
-    // Current canvas position (where user clicked)
-    float const click_canvas_x = CorePlotting::timeToCanvasX(hit_result.world_x, time_params);
-    float const click_canvas_y = static_cast<float>(height()) / 2.0f;// Middle of canvas
-
-    // Start edge drag mode
-    controller->startEdgeDrag(
-            click_canvas_x, click_canvas_y,
-            hit_result.series_key,
-            *hit_result.entity_id,
-            edge,
-            original_bounds);
-
-    _glyph_controller = std::move(controller);
-    _interaction_series_key = hit_result.series_key;
-    _interaction_mode = InteractionMode::ModifyInterval;
-
-    setCursor(Qt::SizeHorCursor);
-
-    bool const is_left_edge = (edge == RectangleEdge::Left);
-    std::cout << "Started unified interval edge drag (" << (is_left_edge ? "left" : "right")
-              << ") for series " << hit_result.series_key
-              << " interval [" << *hit_result.interval_start << ", " << *hit_result.interval_end << "]"
-              << std::endl;
-
-    updateCanvas(_time);
+    _interaction_manager->startEdgeDrag(hit_result, fill_color, stroke_color);
+    _input_handler->setInteractionActive(true);
 }
 
 void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoordinates const & coords) {
