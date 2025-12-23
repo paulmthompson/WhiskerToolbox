@@ -15,6 +15,8 @@
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
+#include "DataViewerSelectionManager.hpp"
+#include "DataViewerTooltipController.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
@@ -167,12 +169,33 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
     setMouseTracking(true);// Enable mouse tracking for hover events
 
-    // Initialize tooltip timer
-    _tooltip_timer = new QTimer(this);
-    _tooltip_timer->setSingleShot(true);
-    _tooltip_timer->setInterval(TOOLTIP_DELAY_MS);
-    connect(_tooltip_timer, &QTimer::timeout, this, [this]() {
-        showSeriesInfoTooltip(_tooltip_hover_pos);
+    // Initialize selection manager
+    _selection_manager = std::make_unique<DataViewer::DataViewerSelectionManager>(this);
+    connect(_selection_manager.get(), &DataViewer::DataViewerSelectionManager::selectionChanged, this, [this](EntityId id, bool selected) {
+        emit entitySelectionChanged(id, selected);
+    });
+    connect(_selection_manager.get(), &DataViewer::DataViewerSelectionManager::selectionModified, this, [this]() {
+        _scene_dirty = true;
+        updateCanvas(_time);
+    });
+
+    // Initialize tooltip controller
+    _tooltip_controller = std::make_unique<DataViewer::DataViewerTooltipController>(this);
+    _tooltip_controller->setSeriesInfoProvider([this](float canvas_x, float canvas_y) -> std::optional<DataViewer::SeriesInfo> {
+        auto result = findSeriesAtPosition(canvas_x, canvas_y);
+        if (!result.has_value()) {
+            return std::nullopt;
+        }
+        DataViewer::SeriesInfo info;
+        info.type = result->first;
+        info.key = result->second;
+        
+        // Get analog value if applicable
+        if (info.type == "Analog") {
+            info.value = canvasYToAnalogValue(canvas_y, info.key);
+            info.has_value = true;
+        }
+        return info;
     });
 
     // Initialize input handler
@@ -186,22 +209,8 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::clicked, this, &OpenGLWidget::mouseClick);
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::hoverCoordinates, this, &OpenGLWidget::mouseHover);
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::entityClicked, this, [this](EntityId id, bool ctrl_pressed) {
-        if (ctrl_pressed) {
-            if (isEntitySelected(id)) {
-                deselectEntity(id);
-                emit entitySelectionChanged(id, false);
-            } else {
-                selectEntity(id);
-                emit entitySelectionChanged(id, true);
-            }
-        } else {
-            for (EntityId const old_id: _selected_entities) {
-                emit entitySelectionChanged(old_id, false);
-            }
-            clearEntitySelection();
-            selectEntity(id);
-            emit entitySelectionChanged(id, true);
-        }
+        // Delegate to selection manager
+        _selection_manager->handleEntityClick(id, ctrl_pressed);
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalEdgeDragRequested, this, [this](CorePlotting::HitTestResult const & hit_result) {
         // Get series color for preview
@@ -237,10 +246,10 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         setCursor(cursor);
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::tooltipRequested, this, [this](QPoint const & pos) {
-        startTooltipTimer(pos);
+        _tooltip_controller->scheduleTooltip(pos);
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::tooltipCancelled, this, [this]() {
-        cancelTooltipTimer();
+        _tooltip_controller->cancel();
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::repaintRequested, this, [this]() {
         update();
@@ -304,7 +313,7 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
     ctx.view_state = &_view_state;
     ctx.layout_response = &_cached_layout_response;
     ctx.scene = &_cached_scene;
-    ctx.selected_entities = &_selected_entities;
+    ctx.selected_entities = &_selection_manager->selectedEntities();
     ctx.rectangle_batch_key_map = &_rectangle_batch_key_map;
     ctx.widget_width = width();
     ctx.widget_height = height();
@@ -322,7 +331,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         float const canvas_x = static_cast<float>(event->pos().x());
         float const canvas_y = static_cast<float>(event->pos().y());
         _interaction_manager->update(canvas_x, canvas_y);
-        cancelTooltipTimer();
+        _tooltip_controller->cancel();
         return;
     }
 
@@ -331,7 +340,7 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     ctx.view_state = &_view_state;
     ctx.layout_response = &_cached_layout_response;
     ctx.scene = &_cached_scene;
-    ctx.selected_entities = &_selected_entities;
+    ctx.selected_entities = &_selection_manager->selectedEntities();
     ctx.rectangle_batch_key_map = &_rectangle_batch_key_map;
     ctx.widget_width = width();
     ctx.widget_height = height();
@@ -882,43 +891,31 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
 }
 
 // ========================================================================
-// EntityId-based Selection API
+// EntityId-based Selection API (delegates to SelectionManager)
 // ========================================================================
 
 void OpenGLWidget::selectEntity(EntityId id) {
-    _selected_entities.insert(id);
-    _scene_dirty = true;
-    updateCanvas(_time);
+    _selection_manager->select(id);
 }
 
 void OpenGLWidget::deselectEntity(EntityId id) {
-    _selected_entities.erase(id);
-    _scene_dirty = true;
-    updateCanvas(_time);
+    _selection_manager->deselect(id);
 }
 
 void OpenGLWidget::toggleEntitySelection(EntityId id) {
-    if (_selected_entities.contains(id)) {
-        _selected_entities.erase(id);
-    } else {
-        _selected_entities.insert(id);
-    }
-    _scene_dirty = true;
-    updateCanvas(_time);
+    _selection_manager->toggle(id);
 }
 
 void OpenGLWidget::clearEntitySelection() {
-    _selected_entities.clear();
-    _scene_dirty = true;
-    updateCanvas(_time);
+    _selection_manager->clear();
 }
 
 bool OpenGLWidget::isEntitySelected(EntityId id) const {
-    return _selected_entities.contains(id);
+    return _selection_manager->isSelected(id);
 }
 
 std::unordered_set<EntityId> const & OpenGLWidget::getSelectedEntities() const {
-    return _selected_entities;
+    return _selection_manager->selectedEntities();
 }
 
 // Interval edge dragging methods
@@ -933,7 +930,7 @@ CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canva
     }
 
     // If we have no cached scene yet (e.g., before first paint) and no selection, nothing to check
-    if (_cached_scene.rectangle_batches.empty() && _selected_entities.empty()) {
+    if (_cached_scene.rectangle_batches.empty() && !_selection_manager->hasSelection()) {
         return CorePlotting::HitTestResult::noHit();
     }
 
@@ -963,7 +960,7 @@ CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canva
     return tester.findIntervalEdgeByEntityId(
             world_x,
             _cached_scene,
-            _selected_entities,
+            _selection_manager->selectedEntities(),
             _rectangle_batch_key_map);
 }
 
@@ -1219,19 +1216,8 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Tooltip functionality
+// Series lookup for tooltips and input handling
 ///////////////////////////////////////////////////////////////////////////////
-
-void OpenGLWidget::startTooltipTimer(QPoint const & pos) {
-    // Restart the timer with new position
-    _tooltip_hover_pos = pos;
-    _tooltip_timer->start();
-}
-
-void OpenGLWidget::cancelTooltipTimer() {
-    _tooltip_timer->stop();
-    QToolTip::hideText();
-}
 
 std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPosition(float canvas_x, float canvas_y) const {
     // Use CorePlotting SceneHitTester for comprehensive hit testing
@@ -1313,36 +1299,6 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     return std::nullopt;
 }
 
-void OpenGLWidget::showSeriesInfoTooltip(QPoint const & pos) {
-    float const canvas_x = static_cast<float>(pos.x());
-    float const canvas_y = static_cast<float>(pos.y());
-
-    // Find which series is under the cursor
-    auto series_info = findSeriesAtPosition(canvas_x, canvas_y);
-
-    if (series_info.has_value()) {
-        auto const & [series_type, series_key] = series_info.value();
-
-        // Build tooltip text
-        QString tooltip_text;
-        if (series_type == "Analog") {
-            // Get the analog value at this Y coordinate
-            float const analog_value = canvasYToAnalogValue(canvas_y, series_key);
-            tooltip_text = QString("<b>Analog Series</b><br>Key: %1<br>Value: %2")
-                                   .arg(QString::fromStdString(series_key))
-                                   .arg(analog_value, 0, 'f', 3);
-        } else if (series_type == "Event") {
-            tooltip_text = QString("<b>Event Series</b><br>Key: %1")
-                                   .arg(QString::fromStdString(series_key));
-        }
-
-        // Show tooltip at cursor position
-        QToolTip::showText(mapToGlobal(pos), tooltip_text, this);
-    } else {
-        // No series under cursor, hide tooltip
-        QToolTip::hideText();
-    }
-}
 ///////////////////////////////////////////////////////////////////////////////
 // New SceneRenderer-based rendering methods
 ///////////////////////////////////////////////////////////////////////////////
@@ -1381,7 +1337,7 @@ void OpenGLWidget::renderWithSceneRenderer() {
     CorePlotting::SceneBuilder builder;
     builder.setBounds(scene_bounds);
     builder.setMatrices(view, projection);
-    builder.setSelectedEntities(_selected_entities);
+    builder.setSelectedEntities(_selection_manager->selectedEntities());
 
     // Add all series batches to the scene builder
     addAnalogBatchesToBuilder(builder);

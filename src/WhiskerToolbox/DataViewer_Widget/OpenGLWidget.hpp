@@ -58,6 +58,8 @@
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
 #include "DataViewerInputHandler.hpp"
 #include "DataViewerInteractionManager.hpp"
+#include "DataViewerSelectionManager.hpp"
+#include "DataViewerTooltipController.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpikeSorterConfigLoader.hpp"
@@ -531,34 +533,19 @@ private:
      */
     void addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & builder);
 
-    // Tooltip helper methods
     /**
      * @brief Find the series under the mouse cursor
      * 
      * Checks analog series and digital event series (in stacked mode) to determine
-     * which series is under the given canvas coordinates.
+     * which series is under the given canvas coordinates. Used by tooltip controller
+     * and input handler for series identification.
      * 
      * @param canvas_x X coordinate in canvas pixels
      * @param canvas_y Y coordinate in canvas pixels
-     * @return Optional pair containing series type ("analog" or "event") and series key,
+     * @return Optional pair containing series type ("Analog", "Event", "Interval") and series key,
      *         or nullopt if no series is under the cursor
      */
     std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
-
-    /**
-     * @brief Show tooltip with series information after hover delay
-     */
-    void showSeriesInfoTooltip(QPoint const & pos);
-
-    /**
-     * @brief Start the tooltip timer on mouse hover
-     */
-    void startTooltipTimer(QPoint const & pos);
-
-    /**
-     * @brief Cancel the tooltip timer
-     */
-    void cancelTooltipTimer();
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
@@ -600,12 +587,9 @@ private:
     bool _grid_lines_enabled{false};// Default to disabled
     int _grid_spacing{100};         // Default spacing of 100 time units
 
-    // EntityId-based selection state (multi-select supported)
-    // Used by SceneBuilder to apply selection_flags to rectangle batches
-    std::unordered_set<EntityId> _selected_entities;
-
     // ========================================================================
-    // Input and Interaction Handlers (Phase 5.1 - Extracted from widget)
+    // Input, Interaction, Selection, and Tooltip Handlers
+    // (Extracted from widget for cleaner separation of concerns)
     // ========================================================================
     
     /// Handles mouse events and emits semantic signals
@@ -613,6 +597,12 @@ private:
     
     /// Manages interaction state machine for interval creation/modification
     std::unique_ptr<DataViewer::DataViewerInteractionManager> _interaction_manager;
+
+    /// Manages entity selection state (multi-select supported)
+    std::unique_ptr<DataViewer::DataViewerSelectionManager> _selection_manager;
+
+    /// Manages tooltip display with hover delay
+    std::unique_ptr<DataViewer::DataViewerTooltipController> _tooltip_controller;
 
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;
@@ -633,11 +623,6 @@ private:
     // GL lifecycle guards
     bool _gl_initialized{false};
     QMetaObject::Connection _ctxAboutToBeDestroyedConn;
-
-    // Tooltip state
-    QTimer * _tooltip_timer{nullptr};
-    QPoint _tooltip_hover_pos;
-    static constexpr int TOOLTIP_DELAY_MS = 1000;///< Delay before showing tooltip (1 second)
 
     // PlottingOpenGL Renderers
     // These use the new CorePlotting RenderableBatch approach for rendering.

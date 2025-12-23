@@ -10,8 +10,8 @@ This document outlines the planned refactoring of `OpenGLWidget` to address "god
 - ~~Input handling (mouse events, gestures)~~ ✅ Extracted (Phase 1)
 - ~~Interaction state machine (interval creation, edge dragging)~~ ✅ Extracted (Phase 1)
 - Coordinate transformations
-- Selection management
-- Tooltip management
+- ~~Selection management~~ ✅ Extracted (Phase 2)
+- ~~Tooltip management~~ ✅ Extracted (Phase 2)
 - Layout orchestration
 - Scene building
 - Axis/grid rendering
@@ -82,65 +82,55 @@ Extracted the interaction state machine for interval creation and modification.
 
 ---
 
-## Phase 2: Extract Selection & Tooltip Management
+## Phase 2: Extract Selection & Tooltip Management ✅ COMPLETED
 
 **Priority:** Medium  
 **Estimated Impact:** ~150 lines removed
+**Status:** Completed December 23, 2025
 
-### 2.1 Create DataViewerSelectionManager
+### 2.1 Create DataViewerSelectionManager ✅
 
 **New File:** `DataViewerSelectionManager.hpp/cpp`
 
-```cpp
-class DataViewerSelectionManager : public QObject {
-    Q_OBJECT
-public:
-    void select(EntityId id);
-    void deselect(EntityId id);
-    void toggle(EntityId id);
-    void clear();
-    bool isSelected(EntityId id) const;
-    const std::unordered_set<EntityId>& selectedEntities() const;
-    
-signals:
-    void selectionChanged(EntityId id, bool selected);
-    void selectionCleared();
-};
-```
+**Implementation Notes:**
+- Manages entity selection state with multi-select support (Ctrl+click)
+- Emits `selectionChanged(EntityId, bool)` for individual changes
+- Emits `selectionCleared()` and `selectionModified()` for batch operations
+- `handleEntityClick(EntityId, bool ctrl_pressed)` implements standard selection behavior
 
-**Responsibilities moved:**
-- `selectEntity()`, `deselectEntity()`, `toggleEntitySelection()`, `clearEntitySelection()`
-- `isEntitySelected()`, `getSelectedEntities()`
-- `_selected_entities` storage
+**API:**
+- `select()`, `deselect()`, `toggle()`, `clear()` - Selection manipulation
+- `handleEntityClick()` - Encapsulates click behavior (single vs multi-select)
+- `isSelected()`, `selectedEntities()` - Query methods
+- `hasSelection()`, `selectionCount()` - Convenience methods
 
-### 2.2 Create DataViewerTooltipController
+### 2.2 Create DataViewerTooltipController ✅
 
 **New File:** `DataViewerTooltipController.hpp/cpp`
 
-```cpp
-class DataViewerTooltipController : public QObject {
-    Q_OBJECT
-public:
-    explicit DataViewerTooltipController(QWidget* parent);
-    
-    void scheduleTooltip(const QPoint& pos);
-    void cancel();
-    void setSeriesInfoProvider(std::function<std::optional<SeriesInfo>(float, float)> provider);
-    
-private slots:
-    void showTooltip();
-    
-private:
-    QTimer* _timer;
-    QPoint _hover_pos;
-    std::function<std::optional<SeriesInfo>(float, float)> _info_provider;
-};
-```
+**Implementation Notes:**
+- Manages hover-delay tooltip display using QTimer
+- Uses callback (`SeriesInfoProvider`) to look up series information
+- Formats tooltip text based on series type (Analog, Event, Interval)
+- `SeriesInfo` struct provides type, key, and optional value
 
-**Responsibilities moved:**
-- `startTooltipTimer()`, `cancelTooltipTimer()`, `showSeriesInfoTooltip()`
-- `findSeriesAtPosition()` (as a callback provider)
-- `_tooltip_timer`, `_tooltip_hover_pos`
+**API:**
+- `scheduleTooltip()`, `cancel()` - Timer control
+- `setDelay()`, `delay()` - Configurable delay
+- `setSeriesInfoProvider()` - Callback for series lookup
+- `isScheduled()` - Query timer state
+
+### 2.3 Migration Completed ✅
+
+**Changes to OpenGLWidget:**
+- Removed member variables: `_selected_entities`, `_tooltip_timer`, `_tooltip_hover_pos`, `TOOLTIP_DELAY_MS`
+- Removed methods: `startTooltipTimer()`, `cancelTooltipTimer()`, `showSeriesInfoTooltip()`
+- Added: `_selection_manager`, `_tooltip_controller` (composed components)
+- Selection API methods (`selectEntity()`, etc.) now delegate to `_selection_manager`
+- Input handler signals connect to `_tooltip_controller` instead of direct timer calls
+- `findSeriesAtPosition()` retained as private helper, used by tooltip callback
+
+**Lines Removed:** ~80 lines of selection and tooltip logic
 
 ---
 
@@ -360,11 +350,11 @@ struct CacheState {
 
 ```
 DataViewer_Widget/
-├── OpenGLWidget.hpp/cpp                 # Main widget (~1700 lines, down from ~1900)
+├── OpenGLWidget.hpp/cpp                 # Main widget (~1620 lines, down from ~1900)
 ├── DataViewerInputHandler.hpp/cpp       # ✅ Mouse events, gestures (Phase 1)
 ├── DataViewerInteractionManager.hpp/cpp # ✅ Interaction state machine (Phase 1)
-├── DataViewerSelectionManager.hpp/cpp   # (planned) EntityId selection
-├── DataViewerTooltipController.hpp/cpp  # (planned) Tooltip timer + display
+├── DataViewerSelectionManager.hpp/cpp   # ✅ EntityId selection (Phase 2)
+├── DataViewerTooltipController.hpp/cpp  # ✅ Tooltip timer + display (Phase 2)
 ├── DataViewerCoordinates.hpp/cpp        # (planned) Coordinate transforms
 ├── TimeSeriesDataStore.hpp/cpp          # (planned) Series storage + display options
 ├── SceneBuildingHelpers.hpp/cpp         # (existing) Batch building
@@ -385,7 +375,7 @@ DataViewer_Widget/
 Each phase can be completed independently. Recommended order:
 
 1. **Phase 1 (Input/Interaction)** ✅ COMPLETED - Highest impact, most complex
-2. **Phase 2 (Selection/Tooltip)** - Quick wins, simple extraction
+2. **Phase 2 (Selection/Tooltip)** ✅ COMPLETED - Quick wins, simple extraction
 3. **Phase 3 (Data Store)** - Medium complexity, significant cleanup
 4. **Phase 4 (Coordinates)** - Low risk, reduces duplication
 5. **Phase 5 (Axis Rendering)** - Can be done alongside PlottingOpenGL work
@@ -407,13 +397,13 @@ Each phase can be completed independently. Recommended order:
 
 ## Success Metrics
 
-| Metric | Before | After Phase 1 | Target |
-|--------|--------|---------------|--------|
-| OpenGLWidget LOC | ~1900 | ~1700 | ~500 |
-| Member variables | ~60 | ~55 | ~20 |
-| Public methods | ~50 | ~50 | ~25 |
-| Extracted classes | 0 | 2 | 6+ |
-| Test coverage | Partial | Partial | Full per-component |
+| Metric | Before | After Phase 1 | After Phase 2 | Target |
+|--------|--------|---------------|---------------|--------|
+| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~500 |
+| Member variables | ~60 | ~55 | ~50 | ~20 |
+| Public methods | ~50 | ~50 | ~50 | ~25 |
+| Extracted classes | 0 | 2 | 4 | 6+ |
+| Test coverage | Partial | Partial | Partial | Full per-component |
 
 ---
 
@@ -425,4 +415,4 @@ Each phase can be completed independently. Recommended order:
 
 ---
 
-*Last Updated: December 2025*
+*Last Updated: December 23, 2025*
