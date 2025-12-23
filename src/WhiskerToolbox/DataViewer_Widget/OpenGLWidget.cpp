@@ -1069,7 +1069,7 @@ void OpenGLWidget::setInteractionMode(InteractionMode mode) {
             setCursor(Qt::CrossCursor);
             break;
         }
-        case InteractionMode::ModifyInterval:
+        case InteractionMode::ModifyInterval: // TODO
         case InteractionMode::Normal:
         default:
             _glyph_controller = nullptr;
