@@ -67,6 +67,23 @@ public:
      * @brief Set the image size
      */
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
+
+    // ========== Copy / Move with scaling ==========
+    /**
+     * Copy selected masks into another MaskData, resampling using nearest-neighbor
+     * dst->src mapping when source and target image sizes differ.
+     */
+    std::size_t copyByEntityIds(MaskData & target,
+                                std::unordered_set<EntityId> const & entity_ids,
+                                NotifyObservers notify);
+
+    /**
+     * Move selected masks into another MaskData, resampling using nearest-neighbor
+     * dst->src mapping when source and target image sizes differ. EntityIds are preserved.
+     */
+    std::size_t moveByEntityIds(MaskData & target,
+                                std::unordered_set<EntityId> const & entity_ids,
+                                NotifyObservers notify);
 };
 
 using MaskDataView = RaggedTimeSeriesView<Mask2D>;
