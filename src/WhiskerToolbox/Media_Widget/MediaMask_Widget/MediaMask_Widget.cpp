@@ -196,11 +196,26 @@ void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) 
         case Selection_Mode::None:
             // Do nothing in None mode
             break;
-        case Selection_Mode::Brush:
+        case Selection_Mode::Brush: {
+            // Record stroke start state for single-stroke empty-mask preservation
+            auto mask_data = _data_manager->getData<MaskData>(_active_key);
+            if (mask_data) {
+                auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+                auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
+                if (!existing_masks.empty()) {
+                    _stroke_original_primary_size = static_cast<int>(existing_masks[0].size());
+                } else {
+                    _stroke_original_primary_size = 0;
+                }
+            } else {
+                _stroke_original_primary_size = 0;
+            }
+
             _is_dragging = true;
             _is_adding_mode = true;
             _addToMask(canvas_coords);
             break;
+        }
     }
 }
 
@@ -210,6 +225,20 @@ void MediaMask_Widget::_rightClickedInVideo(CanvasCoordinates const & canvas_coo
     }
 
     std::cout << "Right clicked in video at canvas (" << canvas_coords.x << ", " << canvas_coords.y << ")" << std::endl;
+
+    // Record stroke start state for erase
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (mask_data) {
+        auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+        auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
+        if (!existing_masks.empty()) {
+            _stroke_original_primary_size = static_cast<int>(existing_masks[0].size());
+        } else {
+            _stroke_original_primary_size = 0;
+        }
+    } else {
+        _stroke_original_primary_size = 0;
+    }
 
     _is_dragging = true;
     _is_adding_mode = false;
@@ -471,8 +500,10 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
 
     // Get or create the primary mask (index 0)
     std::vector<Point2D<uint32_t>> primary_mask;
+    bool had_existing_primary = false;
     if (!existing_masks.empty()) {
         primary_mask = existing_masks[0].points();// Copy the existing mask at index 0
+        had_existing_primary = true;
     }
     // If no masks exist, primary_mask starts empty
 
@@ -497,13 +528,34 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
 
     // Only update the mask data if we added new pixels
     if (added_count > 0) {
-        // Clear all masks at this time
-        mask_data->clearAtTime(current_index_and_frame,
-                               NotifyObservers::No);
-        mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(primary_mask)), NotifyObservers::No);
-
-        // Notify observers
-        mask_data->notifyObservers();
+        if (had_existing_primary) {
+            // Modify existing primary entry in-place to preserve EntityId and registry counts
+            auto entity_id_view = mask_data->getEntityIdsAtTime(current_index_and_frame.index,
+                                                               *current_index_and_frame.time_frame);
+            std::vector<EntityId> entity_ids(entity_id_view.begin(), entity_id_view.end());
+            if (!entity_ids.empty()) {
+                auto opt_handle = mask_data->getMutableData(entity_ids[0], NotifyObservers::No);
+                if (opt_handle.has_value()) {
+                    auto handle = std::move(opt_handle.value());
+                    handle.get() = Mask2D(std::move(primary_mask));
+                    mask_data->notifyObservers();
+                } else {
+                    // Fallback: clear and add if mutable handle is not available
+                    mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                    mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(primary_mask)), NotifyObservers::No);
+                    mask_data->notifyObservers();
+                }
+            } else {
+                // No entity id (unexpected), fall back to clear+add
+                mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(primary_mask)), NotifyObservers::No);
+                mask_data->notifyObservers();
+            }
+        } else {
+            // No existing primary - append new mask as before
+            mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(primary_mask)), NotifyObservers::No);
+            mask_data->notifyObservers();
+        }
     }
 
     if (_debug_performance) {
@@ -595,16 +647,60 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     // Only update if we actually removed pixels
     if (removed_count > 0) {
 
-        mask_data->clearAtTime(current_index_and_frame,
-                               NotifyObservers::No);
+        if (!filtered_mask.empty()) {
+            // Modify existing primary entry in-place to preserve EntityId and registry counts
+            auto entity_id_view = mask_data->getEntityIdsAtTime(current_index_and_frame.index,
+                                                               *current_index_and_frame.time_frame);
+            std::vector<EntityId> entity_ids(entity_id_view.begin(), entity_id_view.end());
 
-        // Add the filtered mask back if it still has points OR if empty masks are allowed
-        if (!filtered_mask.empty() || _allow_empty_mask) {
-            mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(filtered_mask)), NotifyObservers::No);
+            if (!entity_ids.empty()) {
+                auto opt_handle = mask_data->getMutableData(entity_ids[0], NotifyObservers::No);
+                if (opt_handle.has_value()) {
+                    auto handle = std::move(opt_handle.value());
+                    handle.get() = Mask2D(std::move(filtered_mask));
+                    mask_data->notifyObservers();
+                } else {
+                    // Fallback
+                    mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                    mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(filtered_mask)), NotifyObservers::No);
+                    mask_data->notifyObservers();
+                }
+            } else {
+                // Fallback
+                mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                mask_data->addAtTime(current_index_and_frame, Mask2D(std::move(filtered_mask)), NotifyObservers::No);
+                mask_data->notifyObservers();
+            }
+        } else {
+            // filtered_mask is empty. Decide whether to preserve empty mask based on stroke and setting
+            if (_allow_empty_mask && _stroke_original_primary_size > 0) {
+                // The mask was non-empty at stroke start and has been emptied in this stroke: preserve empty mask in-place
+                auto entity_id_view = mask_data->getEntityIdsAtTime(current_index_and_frame.index,
+                                                                   *current_index_and_frame.time_frame);
+                std::vector<EntityId> entity_ids(entity_id_view.begin(), entity_id_view.end());
+
+                if (!entity_ids.empty()) {
+                    auto opt_handle = mask_data->getMutableData(entity_ids[0], NotifyObservers::No);
+                    if (opt_handle.has_value()) {
+                        auto handle = std::move(opt_handle.value());
+                        handle.get() = Mask2D();
+                        mask_data->notifyObservers();
+                    } else {
+                        mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                        mask_data->addAtTime(current_index_and_frame, Mask2D(), NotifyObservers::No);
+                        mask_data->notifyObservers();
+                    }
+                } else {
+                    mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                    mask_data->addAtTime(current_index_and_frame, Mask2D(), NotifyObservers::No);
+                    mask_data->notifyObservers();
+                }
+            } else {
+                // Not allowed or not a single-stroke full erase: remove the time frame entries
+                mask_data->clearAtTime(current_index_and_frame, NotifyObservers::No);
+                mask_data->notifyObservers();
+            }
         }
-
-        // Notify observers
-        mask_data->notifyObservers();
     }
 
     if (_debug_performance) {
@@ -631,6 +727,9 @@ void MediaMask_Widget::_mouseReleased() {
     // Stop dragging when mouse is released
     bool was_dragging = _is_dragging;
     _is_dragging = false;
+
+    // Reset stroke original size now that stroke finished
+    _stroke_original_primary_size = 0;
 
     // Update canvas once when brush drag operation is completed
     if (_selection_mode == Selection_Mode::Brush && was_dragging) {

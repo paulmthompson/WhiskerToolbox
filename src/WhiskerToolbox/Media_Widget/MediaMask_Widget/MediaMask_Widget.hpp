@@ -73,6 +73,9 @@ private:
     bool _debug_performance{false};// Debug flag for performance-related output
     bool _allow_empty_mask{false}; // Whether to preserve empty masks during brush removal
 
+    // Stroke tracking for erase behavior
+    int _stroke_original_primary_size{0};
+
     void _setupSelectionModePages();
     void _setupDilationWidget();
     void _applyMaskDilation(MaskDilationOptions const & options);
