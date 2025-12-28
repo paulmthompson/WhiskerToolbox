@@ -23,6 +23,7 @@
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeSeriesDataStore.hpp"
 
 #include <QEvent>
 #include <QMouseEvent>
@@ -169,6 +170,13 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
     setMouseTracking(true);// Enable mouse tracking for hover events
 
+    // Initialize data store (Phase 3)
+    _data_store = std::make_unique<DataViewer::TimeSeriesDataStore>(this);
+    connect(_data_store.get(), &DataViewer::TimeSeriesDataStore::layoutDirty, this, [this]() {
+        _layout_response_dirty = true;
+        updateCanvas(_time);
+    });
+
     // Initialize selection manager
     _selection_manager = std::make_unique<DataViewer::DataViewerSelectionManager>(this);
     connect(_selection_manager.get(), &DataViewer::DataViewerSelectionManager::selectionChanged, this, [this](EntityId id, bool selected) {
@@ -213,9 +221,10 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         _selection_manager->handleEntityClick(id, ctrl_pressed);
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalEdgeDragRequested, this, [this](CorePlotting::HitTestResult const & hit_result) {
-        // Get series color for preview
-        auto it = _digital_interval_series.find(hit_result.series_key);
-        if (it != _digital_interval_series.end()) {
+        // Get series color for preview (access via data store)
+        auto const & interval_series = _data_store->intervalSeries();
+        auto it = interval_series.find(hit_result.series_key);
+        if (it != interval_series.end()) {
             auto const & display_options = it->second.display_options;
             int r, g, b;
             hexToRGB(display_options->style.hex_color, r, g, b);
@@ -225,8 +234,8 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         }
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalCreationRequested, this, [this](QString const &, QPoint const & start_pos) {
-        // Find first visible digital interval series
-        for (auto const & [series_key, data]: _digital_interval_series) {
+        // Find first visible digital interval series (access via data store)
+        for (auto const & [series_key, data]: _data_store->intervalSeries()) {
             if (data.display_options->style.is_visible) {
                 int r, g, b;
                 hexToRGB(data.display_options->style.hex_color, r, g, b);
@@ -614,111 +623,46 @@ void OpenGLWidget::addAnalogTimeSeries(
         std::string const & key,
         std::shared_ptr<AnalogTimeSeries> series,
         std::string const & color) {
-
-    auto display_options = std::make_unique<NewAnalogTimeSeriesDisplayOptions>();
-
-    // Set color
-    display_options->style.hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_analog_series.size()) : color;
-    display_options->style.is_visible = true;
-
-    // Calculate scale factor based on standard deviation
-    auto start_time = std::chrono::high_resolution_clock::now();
-    setAnalogIntrinsicProperties(series.get(), *display_options);
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
-    display_options->scale_factor = display_options->data_cache.cached_std_dev * 5.0f;
-    display_options->user_scale_factor = 1.0f;// Default user scale
-
-    if (series->getTimeFrame()->getTotalFrameCount() / 5 > series->getNumSamples()) {
-        display_options->gap_handling = AnalogGapHandling::AlwaysConnect;
-        display_options->enable_gap_detection = false;
-
-    } else {
-        display_options->enable_gap_detection = true;
-        display_options->gap_handling = AnalogGapHandling::DetectGaps;
-        // Set gap threshold to 0.1% of total frames, with a minimum floor of 2 to work with integer time frames
-        float const calculated_threshold = static_cast<float>(series->getTimeFrame()->getTotalFrameCount()) / 1000.0f;
-        display_options->gap_threshold = std::max(2.0f, calculated_threshold);
-    }
-
-    _analog_series[key] = AnalogSeriesData{
-            std::move(series),
-            std::move(display_options)};
-
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    // The data store handles display options creation, color assignment,
+    // intrinsic property calculation, and emits layoutDirty signal
+    _data_store->addAnalogSeries(key, std::move(series), color);
 }
 
 void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
-    auto item = _analog_series.find(key);
-    if (item != _analog_series.end()) {
-        _analog_series.erase(item);
-    }
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    _data_store->removeAnalogSeries(key);
 }
 
 void OpenGLWidget::addDigitalEventSeries(
         std::string const & key,
         std::shared_ptr<DigitalEventSeries> series,
         std::string const & color) {
-
-    auto display_options = std::make_unique<NewDigitalEventSeriesDisplayOptions>();
-
-    // Set color
-    display_options->style.hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_event_series.size()) : color;
-    display_options->style.is_visible = true;
-
-    _digital_event_series[key] = DigitalEventSeriesData{
-            std::move(series),
-            std::move(display_options)};
-
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    _data_store->addEventSeries(key, std::move(series), color);
 }
 
 void OpenGLWidget::removeDigitalEventSeries(std::string const & key) {
-    auto item = _digital_event_series.find(key);
-    if (item != _digital_event_series.end()) {
-        _digital_event_series.erase(item);
-    }
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    _data_store->removeEventSeries(key);
 }
 
 void OpenGLWidget::addDigitalIntervalSeries(
         std::string const & key,
         std::shared_ptr<DigitalIntervalSeries> series,
         std::string const & color) {
-
-    auto display_options = std::make_unique<NewDigitalIntervalSeriesDisplayOptions>();
-
-    // Set color
-    display_options->style.hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_interval_series.size()) : color;
-    display_options->style.is_visible = true;
-
-    _digital_interval_series[key] = DigitalIntervalSeriesData{
-            std::move(series),
-            std::move(display_options)};
-
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    _data_store->addIntervalSeries(key, std::move(series), color);
 }
 
 void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
-    auto item = _digital_interval_series.find(key);
-    if (item != _digital_interval_series.end()) {
-        _digital_interval_series.erase(item);
-    }
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    _data_store->removeIntervalSeries(key);
 }
 
 void OpenGLWidget::clearSeries() {
-    _analog_series.clear();
-    _layout_response_dirty = true;
-    updateCanvas(_time);
+    // Delegate to TimeSeriesDataStore (Phase 3)
+    _data_store->clearAll();
 }
 
 void OpenGLWidget::drawDashedLine(LineParameters const & params) {
@@ -848,9 +792,10 @@ float OpenGLWidget::canvasXToTime(float canvas_x) const {
 }
 
 float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & series_key) const {
-    // Find the series
-    auto const analog_it = _analog_series.find(series_key);
-    if (analog_it == _analog_series.end()) {
+    // Find the series using data store (Phase 3)
+    auto const & analog_series = _data_store->analogSeries();
+    auto const analog_it = analog_series.find(series_key);
+    if (analog_it == analog_series.end()) {
         return 0.0f;// Series not found
     }
 
@@ -1067,8 +1012,9 @@ void OpenGLWidget::startIntervalCreationUnified(std::string const & series_key, 
     // The constructor wires up intervalCreationRequested -> interaction_manager->startIntervalCreation
     // Keeping this method for backwards compatibility
     
-    auto it = _digital_interval_series.find(series_key);
-    if (it == _digital_interval_series.end()) {
+    auto const & interval_series = _data_store->intervalSeries();
+    auto it = interval_series.find(series_key);
+    if (it == interval_series.end()) {
         return;
     }
 
@@ -1102,8 +1048,9 @@ void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult cons
         return;
     }
 
-    auto it = _digital_interval_series.find(hit_result.series_key);
-    if (it == _digital_interval_series.end()) {
+    auto const & interval_series = _data_store->intervalSeries();
+    auto it = interval_series.find(hit_result.series_key);
+    if (it == interval_series.end()) {
         return;
     }
 
@@ -1133,9 +1080,10 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
 
     auto const & interval_coords = coords.asInterval();
 
-    // Get the series data
-    auto it = _digital_interval_series.find(coords.series_key);
-    if (it == _digital_interval_series.end()) {
+    // Get the series data (access via data store)
+    auto const & interval_series = _data_store->intervalSeries();
+    auto it = interval_series.find(coords.series_key);
+    if (it == interval_series.end()) {
         std::cout << "Series not found: " << coords.series_key << std::endl;
         return;
     }
@@ -1261,15 +1209,21 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
                 }
             }
 
-            // Determine series type
-            if (_analog_series.find(series_key) != _analog_series.end()) {
-                series_type = "Analog";
-            } else if (_digital_event_series.find(series_key) != _digital_event_series.end()) {
-                series_type = "Event";
-            } else if (_digital_interval_series.find(series_key) != _digital_interval_series.end()) {
-                series_type = "Interval";
-            } else {
-                series_type = "Unknown";
+            // Determine series type using data store (Phase 3)
+            auto series_type_enum = _data_store->findSeriesTypeByKey(series_key);
+            switch (series_type_enum) {
+                case DataViewer::SeriesType::Analog:
+                    series_type = "Analog";
+                    break;
+                case DataViewer::SeriesType::DigitalEvent:
+                    series_type = "Event";
+                    break;
+                case DataViewer::SeriesType::DigitalInterval:
+                    series_type = "Interval";
+                    break;
+                default:
+                    series_type = "Unknown";
+                    break;
             }
 
             return std::make_pair(series_type, series_key);
@@ -1281,16 +1235,22 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
             world_x, world_y, _cached_layout_response);
 
     if (result.hasHit()) {
-        // Determine series type from the key by checking our series maps
+        // Determine series type using data store (Phase 3)
         std::string series_type;
-        if (_analog_series.find(result.series_key) != _analog_series.end()) {
-            series_type = "Analog";
-        } else if (_digital_event_series.find(result.series_key) != _digital_event_series.end()) {
-            series_type = "Event";
-        } else if (_digital_interval_series.find(result.series_key) != _digital_interval_series.end()) {
-            series_type = "Interval";
-        } else {
-            series_type = "Unknown";
+        auto series_type_enum = _data_store->findSeriesTypeByKey(result.series_key);
+        switch (series_type_enum) {
+            case DataViewer::SeriesType::Analog:
+                series_type = "Analog";
+                break;
+            case DataViewer::SeriesType::DigitalEvent:
+                series_type = "Event";
+                break;
+            case DataViewer::SeriesType::DigitalInterval:
+                series_type = "Interval";
+                break;
+            default:
+                series_type = "Unknown";
+                break;
         }
 
         return std::make_pair(series_type, result.series_key);
@@ -1368,7 +1328,8 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
 
-    for (auto const & [key, analog_data]: _analog_series) {
+    // Access series through data store (Phase 3)
+    for (auto const & [key, analog_data]: _data_store->analogSeries()) {
         auto const & series = analog_data.series;
         auto const & display_options = analog_data.display_options;
 
@@ -1453,7 +1414,8 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
 
-    for (auto const & [key, event_data]: _digital_event_series) {
+    // Access series through data store (Phase 3)
+    for (auto const & [key, event_data]: _data_store->eventSeries()) {
         auto const & series = event_data.series;
         auto const & display_options = event_data.display_options;
 
@@ -1529,7 +1491,8 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
 
-    for (auto const & [key, interval_data]: _digital_interval_series) {
+    // Access series through data store (Phase 3)
+    for (auto const & [key, interval_data]: _data_store->intervalSeries()) {
         auto const & series = interval_data.series;
         auto const & display_options = interval_data.display_options;
 
@@ -1592,8 +1555,9 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     request.viewport_y_max = _view_state.y_max;
 
     // Collect visible analog series keys and order by spike sorter config
+    // Access series through data store (Phase 3)
     std::vector<std::string> visible_analog_keys;
-    for (auto const & [key, data]: _analog_series) {
+    for (auto const & [key, data]: _data_store->analogSeries()) {
         if (data.display_options->style.is_visible) {
             visible_analog_keys.push_back(key);
         }
@@ -1610,7 +1574,7 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     }
 
     // Add digital event series (stacked events after analog series, full-canvas events as non-stackable)
-    for (auto const & [key, data]: _digital_event_series) {
+    for (auto const & [key, data]: _data_store->eventSeries()) {
         if (!data.display_options->style.is_visible) continue;
 
         bool is_stacked = (data.display_options->display_mode == EventDisplayMode::Stacked);
@@ -1618,7 +1582,7 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     }
 
     // Add digital interval series (always full-canvas, non-stackable)
-    for (auto const & [key, data]: _digital_interval_series) {
+    for (auto const & [key, data]: _data_store->intervalSeries()) {
         if (!data.display_options->style.is_visible) continue;
 
         request.series.emplace_back(key, CorePlotting::SeriesType::DigitalInterval, false);
@@ -1638,33 +1602,8 @@ void OpenGLWidget::computeAndApplyLayout() {
     // Compute layout using LayoutEngine
     _cached_layout_response = _layout_engine.compute(request);
 
-    // Apply computed layout to display options
-    // This updates each series' allocated_y_center and allocated_height
-    for (auto const & layout: _cached_layout_response.layouts) {
-        // Find and update analog series
-        auto analog_it = _analog_series.find(layout.series_id);
-        if (analog_it != _analog_series.end()) {
-            analog_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
-            analog_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
-            continue;
-        }
-
-        // Find and update digital event series
-        auto event_it = _digital_event_series.find(layout.series_id);
-        if (event_it != _digital_event_series.end()) {
-            event_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
-            event_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
-            continue;
-        }
-
-        // Find and update digital interval series
-        auto interval_it = _digital_interval_series.find(layout.series_id);
-        if (interval_it != _digital_interval_series.end()) {
-            interval_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
-            interval_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
-            continue;
-        }
-    }
+    // Apply computed layout to display options via data store (Phase 3)
+    _data_store->applyLayoutResponse(_cached_layout_response);
 
     // Note: _rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()
     // This ensures the batch key map stays synchronized with the actual rendered batches

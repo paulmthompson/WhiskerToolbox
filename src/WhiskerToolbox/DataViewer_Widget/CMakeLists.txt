@@ -23,6 +23,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         SpikeSorterConfigLoader.hpp
         SVGExporter.cpp
         SVGExporter.hpp
+        TimeSeriesDataStore.cpp
+        TimeSeriesDataStore.hpp
         AnalogTimeSeries/AnalogViewer_Widget.cpp
         AnalogTimeSeries/AnalogViewer_Widget.hpp
         AnalogTimeSeries/AnalogViewer_Widget.ui

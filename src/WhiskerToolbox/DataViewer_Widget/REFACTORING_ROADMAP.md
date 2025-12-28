@@ -6,7 +6,7 @@ This document outlines the planned refactoring of `OpenGLWidget` to address "god
 
 **Current State:** OpenGLWidget handles too many responsibilities directly:
 - OpenGL lifecycle management
-- Series data storage
+- ~~Series data storage~~ ✅ Extracted (Phase 3)
 - ~~Input handling (mouse events, gestures)~~ ✅ Extracted (Phase 1)
 - ~~Interaction state machine (interval creation, edge dragging)~~ ✅ Extracted (Phase 1)
 - Coordinate transformations
@@ -134,63 +134,57 @@ Extracted the interaction state machine for interval creation and modification.
 
 ---
 
-## Phase 3: Consolidate Series Data Storage
+## Phase 3: Consolidate Series Data Storage ✅ COMPLETED
 
 **Priority:** Medium  
 **Estimated Impact:** ~200 lines removed, cleaner API
+**Status:** Completed December 23, 2025
 
-### 3.1 Create TimeSeriesDataStore
+### 3.1 Create TimeSeriesDataStore ✅
 
-**New File:** `TimeSeriesDataStore.hpp/cpp`
+**Files Created:** `TimeSeriesDataStore.hpp/cpp`
 
-```cpp
-class TimeSeriesDataStore : public QObject {
-    Q_OBJECT
-public:
-    // Add series
-    void addAnalogSeries(const std::string& key, std::shared_ptr<AnalogTimeSeries> series,
-                         const std::string& color = "");
-    void addEventSeries(const std::string& key, std::shared_ptr<DigitalEventSeries> series,
-                        const std::string& color = "");
-    void addIntervalSeries(const std::string& key, std::shared_ptr<DigitalIntervalSeries> series,
-                           const std::string& color = "");
-    
-    // Remove series
-    void removeAnalogSeries(const std::string& key);
-    void removeEventSeries(const std::string& key);
-    void removeIntervalSeries(const std::string& key);
-    void clearAll();
-    
-    // Accessors
-    const auto& analogSeries() const;
-    const auto& eventSeries() const;
-    const auto& intervalSeries() const;
-    
-    // Display options access
-    std::optional<NewAnalogTimeSeriesDisplayOptions*> getAnalogConfig(const std::string& key);
-    std::optional<NewDigitalEventSeriesDisplayOptions*> getEventConfig(const std::string& key);
-    std::optional<NewDigitalIntervalSeriesDisplayOptions*> getIntervalConfig(const std::string& key);
-    
-    // Layout helpers
-    CorePlotting::LayoutRequest buildLayoutRequest(const SpikeSorterConfigMap& configs) const;
-    void applyLayoutResponse(const CorePlotting::LayoutResponse& response);
-    
-    // Series lookup by type
-    std::string findSeriesTypeByKey(const std::string& key) const;
-    
-signals:
-    void seriesAdded(const QString& key, const QString& type);
-    void seriesRemoved(const QString& key);
-    void layoutDirty();
-};
-```
+**Implementation Notes:**
+- Centralized storage for all time series data (analog, event, interval)
+- Each series type has its own entry struct (`AnalogSeriesEntry`, etc.)
+- Handles display options creation and default color assignment
+- Computes intrinsic properties (mean, std_dev) for analog series on add
+- Provides `findSeriesTypeByKey()` for series type lookup
+- `applyLayoutResponse()` updates display options from layout computation
+- Emits `layoutDirty` signal when series are added/removed
 
-**Responsibilities moved:**
-- `_analog_series`, `_digital_event_series`, `_digital_interval_series` maps
-- All `add*Series()`, `remove*Series()`, `clearSeries()` methods
-- `getAnalogConfig()`, `getDigitalEventConfig()`, `getDigitalIntervalConfig()`
-- `buildLayoutRequest()`, `computeAndApplyLayout()` (apply part)
-- Default color assignment logic from `TimeSeriesDefaultValues`
+**API:**
+- `addAnalogSeries()`, `addEventSeries()`, `addIntervalSeries()` - Add with auto-config
+- `removeAnalogSeries()`, `removeEventSeries()`, `removeIntervalSeries()` - Remove by key
+- `clearAll()` - Remove all series
+- `analogSeries()`, `eventSeries()`, `intervalSeries()` - Const accessors
+- `analogSeriesMutable()`, etc. - Mutable accessors for internal use
+- `getAnalogConfig()`, `getEventConfig()`, `getIntervalConfig()` - Display options access
+- `buildLayoutRequest()` - Create LayoutRequest for LayoutEngine
+- `applyLayoutResponse()` - Apply computed layout to display options
+- `findSeriesTypeByKey()` - Determine series type from key
+
+**Signals:**
+- `seriesAdded(QString key, QString type)` - Emitted when series added
+- `seriesRemoved(QString key)` - Emitted when series removed
+- `cleared()` - Emitted when all series cleared
+- `layoutDirty()` - Emitted when layout needs recomputation
+
+### 3.2 Migration Completed ✅
+
+**Changes to OpenGLWidget:**
+- Removed member variables: `_analog_series`, `_digital_event_series`, `_digital_interval_series`
+- Added: `_data_store` (TimeSeriesDataStore instance)
+- All `add*TimeSeries()`, `remove*TimeSeries()`, `clearSeries()` delegate to data store
+- `getAnalogConfig()`, `getDigitalEventConfig()`, `getDigitalIntervalConfig()` delegate to data store
+- `getAnalogSeriesMap()`, etc. now return `_data_store->analogSeries()` etc.
+- `computeAndApplyLayout()` uses `_data_store->applyLayoutResponse()`
+- `findSeriesAtPosition()` uses `_data_store->findSeriesTypeByKey()`
+- Rendering methods (`addAnalogBatchesToBuilder()`, etc.) iterate via data store accessors
+- Legacy type aliases maintained: `AnalogSeriesData` → `DataViewer::AnalogSeriesEntry`
+- Legacy `TimeSeriesDefaultValues` namespace delegates to `DataViewer::DefaultColors`
+
+**Lines Removed:** ~120 lines of direct series management and add/remove logic
 
 ---
 
@@ -350,13 +344,13 @@ struct CacheState {
 
 ```
 DataViewer_Widget/
-├── OpenGLWidget.hpp/cpp                 # Main widget (~1620 lines, down from ~1900)
+├── OpenGLWidget.hpp/cpp                 # Main widget (~1500 lines, down from ~1900)
 ├── DataViewerInputHandler.hpp/cpp       # ✅ Mouse events, gestures (Phase 1)
 ├── DataViewerInteractionManager.hpp/cpp # ✅ Interaction state machine (Phase 1)
 ├── DataViewerSelectionManager.hpp/cpp   # ✅ EntityId selection (Phase 2)
 ├── DataViewerTooltipController.hpp/cpp  # ✅ Tooltip timer + display (Phase 2)
+├── TimeSeriesDataStore.hpp/cpp          # ✅ Series storage + display options (Phase 3)
 ├── DataViewerCoordinates.hpp/cpp        # (planned) Coordinate transforms
-├── TimeSeriesDataStore.hpp/cpp          # (planned) Series storage + display options
 ├── SceneBuildingHelpers.hpp/cpp         # (existing) Batch building
 ├── SVGExporter.hpp/cpp                  # (existing) SVG export
 ├── SpikeSorterConfigLoader.hpp/cpp      # (existing) Spike sorter config
@@ -376,7 +370,7 @@ Each phase can be completed independently. Recommended order:
 
 1. **Phase 1 (Input/Interaction)** ✅ COMPLETED - Highest impact, most complex
 2. **Phase 2 (Selection/Tooltip)** ✅ COMPLETED - Quick wins, simple extraction
-3. **Phase 3 (Data Store)** - Medium complexity, significant cleanup
+3. **Phase 3 (Data Store)** ✅ COMPLETED - Medium complexity, significant cleanup
 4. **Phase 4 (Coordinates)** - Low risk, reduces duplication
 5. **Phase 5 (Axis Rendering)** - Can be done alongside PlottingOpenGL work
 6. **Phase 6 (Variable Grouping)** - Final polish
@@ -397,13 +391,13 @@ Each phase can be completed independently. Recommended order:
 
 ## Success Metrics
 
-| Metric | Before | After Phase 1 | After Phase 2 | Target |
-|--------|--------|---------------|---------------|--------|
-| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~500 |
-| Member variables | ~60 | ~55 | ~50 | ~20 |
-| Public methods | ~50 | ~50 | ~50 | ~25 |
-| Extracted classes | 0 | 2 | 4 | 6+ |
-| Test coverage | Partial | Partial | Partial | Full per-component |
+| Metric | Before | After Phase 1 | After Phase 2 | After Phase 3 | Target |
+|--------|--------|---------------|---------------|---------------|--------|
+| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~1500 | ~500 |
+| Member variables | ~60 | ~55 | ~50 | ~45 | ~20 |
+| Public methods | ~50 | ~50 | ~50 | ~50 | ~25 |
+| Extracted classes | 0 | 2 | 4 | 5 | 6+ |
+| Test coverage | Partial | Partial | Partial | Partial | Full per-component |
 
 ---
 
@@ -415,4 +409,4 @@ Each phase can be completed independently. Recommended order:
 
 ---
 
-*Last Updated: December 23, 2025*
+*Last Updated: December 28, 2025*

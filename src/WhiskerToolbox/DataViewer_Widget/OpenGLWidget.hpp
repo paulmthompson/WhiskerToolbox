@@ -64,6 +64,7 @@
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpikeSorterConfigLoader.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeSeriesDataStore.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -100,20 +101,10 @@ namespace CorePlotting {
 class SceneBuilder;
 }
 
-struct AnalogSeriesData {
-    std::shared_ptr<AnalogTimeSeries> series;
-    std::unique_ptr<NewAnalogTimeSeriesDisplayOptions> display_options;
-};
-
-struct DigitalEventSeriesData {
-    std::shared_ptr<DigitalEventSeries> series;
-    std::unique_ptr<NewDigitalEventSeriesDisplayOptions> display_options;
-};
-
-struct DigitalIntervalSeriesData {
-    std::shared_ptr<DigitalIntervalSeries> series;
-    std::unique_ptr<NewDigitalIntervalSeriesDisplayOptions> display_options;
-};
+// Type aliases for backward compatibility - use TimeSeriesDataStore types (Phase 3)
+using AnalogSeriesData = DataViewer::AnalogSeriesEntry;
+using DigitalEventSeriesData = DataViewer::DigitalEventSeriesEntry;
+using DigitalIntervalSeriesData = DataViewer::DigitalIntervalSeriesEntry;
 
 struct LineParameters {
     float xStart = 0.0f;
@@ -306,9 +297,9 @@ public:
 
     [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
     [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
-    [[nodiscard]] auto const & getAnalogSeriesMap() const { return _analog_series; }
-    [[nodiscard]] auto const & getDigitalEventSeriesMap() const { return _digital_event_series; }
-    [[nodiscard]] auto const & getDigitalIntervalSeriesMap() const { return _digital_interval_series; }
+    [[nodiscard]] auto const & getAnalogSeriesMap() const { return _data_store->analogSeries(); }
+    [[nodiscard]] auto const & getDigitalEventSeriesMap() const { return _data_store->eventSeries(); }
+    [[nodiscard]] auto const & getDigitalIntervalSeriesMap() const { return _data_store->intervalSeries(); }
 
     /**
      * @brief Set the master time frame used for X-axis coordinates
@@ -379,29 +370,17 @@ public:
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
     [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;
 
-    // Display options getters (similar to Media_Window pattern)
-    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const {
-        auto it = _analog_series.find(key);
-        if (it != _analog_series.end()) {
-            return it->second.display_options.get();
-        }
-        return std::nullopt;
+    // Display options getters (delegates to TimeSeriesDataStore)
+    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) {
+        return _data_store->getAnalogConfig(key);
     }
 
-    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const {
-        auto it = _digital_event_series.find(key);
-        if (it != _digital_event_series.end()) {
-            return it->second.display_options.get();
-        }
-        return std::nullopt;
+    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) {
+        return _data_store->getEventConfig(key);
     }
 
-    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const {
-        auto it = _digital_interval_series.find(key);
-        if (it != _digital_interval_series.end()) {
-            return it->second.display_options.get();
-        }
-        return std::nullopt;
+    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) {
+        return _data_store->getIntervalConfig(key);
     }
 
 public slots:
@@ -547,9 +526,15 @@ private:
      */
     std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
 
-    std::unordered_map<std::string, AnalogSeriesData> _analog_series;
-    std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
-    std::unordered_map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
+    // ========================================================================
+    // Series Data Storage (Phase 3 Refactoring)
+    // TimeSeriesDataStore provides centralized series management.
+    // Legacy accessors (_analog_series, etc.) are maintained for compatibility
+    // but delegate to _data_store internally.
+    // ========================================================================
+    
+    /// Centralized storage for all time series data (Phase 3)
+    std::unique_ptr<DataViewer::TimeSeriesDataStore> _data_store;
 
     // X-axis state using CorePlotting TimeSeriesViewState (Phase 4.6 migration)
     // Replaces legacy XAxis class with bounds-aware TimeRange + unified ViewState
@@ -675,35 +660,17 @@ private:
  */
 namespace TimeSeriesDefaultValues {
 
-inline constexpr std::array<char const *, 8> DEFAULT_COLORS = {
-        "#0000ff",// Blue
-        "#ff0000",// Red
-        "#00ff00",// Green
-        "#ff00ff",// Magenta
-        "#ffff00",// Yellow
-        "#00ffff",// Cyan
-        "#ffa500",// Orange
-        "#800080" // Purple
-};
+// Backward compatibility: delegate to DataViewer::DefaultColors (Phase 3)
+inline constexpr auto & DEFAULT_COLORS = DataViewer::DefaultColors::PALETTE;
 
 /**
  * @brief Get color from index, returns hash-based color if index exceeds DEFAULT_COLORS size
  * @param index Index of the color to retrieve
  * @return Hex color string
+ * @deprecated Use DataViewer::DefaultColors::getColorForIndex instead
  */
 inline std::string getColorForIndex(size_t index) {
-    if (index < DEFAULT_COLORS.size()) {
-        return DEFAULT_COLORS[index];
-    }
-    // Generate a pseudo-random color based on index
-    unsigned int const hash = static_cast<unsigned int>(index) * 2654435761u;
-    int const r = static_cast<int>((hash >> 16) & 0xFF);
-    int const g = static_cast<int>((hash >> 8) & 0xFF);
-    int const b = static_cast<int>(hash & 0xFF);
-
-    char hex_buffer[8];
-    std::snprintf(hex_buffer, sizeof(hex_buffer), "#%02x%02x%02x", r, g, b);
-    return std::string(hex_buffer);
+    return DataViewer::DefaultColors::getColorForIndex(index);
 }
 
 }// namespace TimeSeriesDefaultValues
