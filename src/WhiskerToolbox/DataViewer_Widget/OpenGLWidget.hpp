@@ -114,6 +114,58 @@ enum class PlotTheme {
 };
 
 /**
+ * @brief Theme-related state for the OpenGLWidget (Phase 6)
+ * 
+ * Groups visual theme settings including background and axis colors.
+ */
+struct ThemeState {
+    PlotTheme theme{PlotTheme::Dark};
+    std::string background_color{"#000000"}; // black for dark theme
+    std::string axis_color{"#FFFFFF"};       // white for dark theme
+};
+
+/**
+ * @brief Grid overlay settings (Phase 6)
+ * 
+ * Groups grid line configuration for time-axis aligned vertical lines.
+ */
+struct GridState {
+    bool enabled{false};   // Default to disabled
+    int spacing{100};      // Default spacing of 100 time units
+};
+
+/**
+ * @brief Cached rendering and hit-testing state (Phase 6)
+ * 
+ * Groups scene caching for efficient rendering and spatial queries.
+ */
+struct SceneCacheState {
+    CorePlotting::RenderableScene scene;
+    CorePlotting::LayoutResponse layout_response;
+    std::map<size_t, std::string> rectangle_batch_key_map; // interval series keys
+    std::map<size_t, std::string> glyph_batch_key_map;     // event series keys
+    bool scene_dirty{true};           // True when scene needs rebuild
+    bool layout_response_dirty{true}; // True when layout needs recompute
+};
+
+/**
+ * @brief OpenGL resource state (Phase 6)
+ * 
+ * Groups OpenGL lifecycle resources including shader, buffers, and matrices.
+ */
+struct OpenGLResourceState {
+    QOpenGLShaderProgram * program{nullptr};
+    QOpenGLBuffer vbo;
+    QOpenGLVertexArrayObject vao;
+    QMatrix4x4 proj;  // Projection matrix (identity default)
+    QMatrix4x4 view;  // View matrix (identity default)
+    QMatrix4x4 model; // Model matrix (identity default)
+    bool initialized{false};
+    QMetaObject::Connection ctx_about_to_be_destroyed_conn;
+    ShaderSourceType shader_source_type{ShaderSourceType::Resource};
+};
+
+/**
  * @brief Interaction mode for the OpenGLWidget
  * 
  * Defines the current interaction behavior. The widget dispatches mouse events
@@ -155,19 +207,19 @@ public:
     void setBackgroundColor(std::string const & hexColor);
 
     void setPlotTheme(PlotTheme theme);
-    [[nodiscard]] PlotTheme getPlotTheme() const { return _plot_theme; }
+    [[nodiscard]] PlotTheme getPlotTheme() const { return _theme_state.theme; }
 
     // Grid line controls
     void setGridLinesEnabled(bool enabled) {
-        _grid_lines_enabled = enabled;
+        _grid_state.enabled = enabled;
         updateCanvas(_time);
     }
-    [[nodiscard]] bool getGridLinesEnabled() const { return _grid_lines_enabled; }
+    [[nodiscard]] bool getGridLinesEnabled() const { return _grid_state.enabled; }
     void setGridSpacing(int spacing) {
-        _grid_spacing = spacing;
+        _grid_state.spacing = spacing;
         updateCanvas(_time);
     }
-    [[nodiscard]] int getGridSpacing() const { return _grid_spacing; }
+    [[nodiscard]] int getGridSpacing() const { return _grid_state.spacing; }
 
     // Vertical spacing controls for analog series
     void setVerticalSpacing(float spacing) {
@@ -288,7 +340,7 @@ public:
      */
     [[nodiscard]] CorePlotting::TimeSeriesViewState const & getViewState() const { return _view_state; }
 
-    [[nodiscard]] std::string const & getBackgroundColor() const { return m_background_color; }
+    [[nodiscard]] std::string const & getBackgroundColor() const { return _theme_state.background_color; }
     [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
     [[nodiscard]] auto const & getAnalogSeriesMap() const { return _data_store->analogSeries(); }
     [[nodiscard]] auto const & getDigitalEventSeriesMap() const { return _data_store->eventSeries(); }
@@ -533,23 +585,24 @@ private:
     CorePlotting::TimeSeriesViewState _view_state;
     TimeFrameIndex _time{0};
 
-    QOpenGLShaderProgram * m_program{nullptr};
-    QOpenGLBuffer m_vbo;
-    QOpenGLVertexArrayObject m_vao;
-    QMatrix4x4 m_proj; // Initialized as identity
-    QMatrix4x4 m_view; // Initialized as identity
-    QMatrix4x4 m_model;// Initialized as identity
+    // ========================================================================
+    // Grouped State (Phase 6 Refactoring)
+    // Related member variables consolidated into structs for readability.
+    // ========================================================================
+    
+    /// OpenGL resources: shader, buffers, matrices (Phase 6)
+    OpenGLResourceState _gl_state;
+
+    /// Theme settings: colors and visual style (Phase 6)
+    ThemeState _theme_state;
+
+    /// Grid overlay configuration (Phase 6)
+    GridState _grid_state;
+
+    /// Cached scene and layout for rendering/hit testing (Phase 6)
+    SceneCacheState _cache_state;
 
     float _ySpacing{0.1f};///< Vertical spacing factor for series
-
-    std::string m_background_color{"#000000"};// black
-    std::string m_axis_color{"#FFFFFF"};      // white (for dark theme)
-
-    PlotTheme _plot_theme{PlotTheme::Dark};
-
-    // Grid line settings
-    bool _grid_lines_enabled{false};// Default to disabled
-    int _grid_spacing{100};         // Default spacing of 100 time units
 
     // ========================================================================
     // Input, Interaction, Selection, and Tooltip Handlers
@@ -580,14 +633,6 @@ private:
     // Maps group_name -> vector of channel positions
     SpikeSorterConfigMap _spike_sorter_configs;
 
-    // ShaderManager integration
-    ShaderSourceType m_shaderSourceType = ShaderSourceType::Resource;
-    void setShaderSourceType(ShaderSourceType type) { m_shaderSourceType = type; }
-
-    // GL lifecycle guards
-    bool _gl_initialized{false};
-    QMetaObject::Connection _ctxAboutToBeDestroyedConn;
-
     // PlottingOpenGL Renderers
     // These use the new CorePlotting RenderableBatch approach for rendering.
     // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
@@ -599,22 +644,6 @@ private:
     // CorePlotting hit testing infrastructure (Phase 4.11 - Complete SceneHitTester Integration)
     // The hit tester provides unified hit testing via SceneHitTester
     CorePlotting::SceneHitTester _hit_tester;
-
-    // Cached scene for hit testing - stores the last rendered scene for spatial queries
-    // This is populated in renderWithSceneRenderer() and used by findIntervalEdgeAtPosition()
-    CorePlotting::RenderableScene _cached_scene;
-    bool _scene_dirty{true};///< True when scene needs to be rebuilt before hit testing
-
-    // Cached layout response - computed by LayoutEngine when dirty
-    // Used for both rendering (updating display options) and hit testing
-    CorePlotting::LayoutResponse _cached_layout_response;
-    bool _layout_response_dirty{true};
-
-    // Mapping from rectangle batch index to series key (for interval hit testing)
-    std::map<size_t, std::string> _rectangle_batch_key_map;
-
-    // Mapping from glyph batch index to series key (for event hit testing)
-    std::map<size_t, std::string> _glyph_batch_key_map;
 
     /**
      * @brief Build a LayoutRequest from current series state

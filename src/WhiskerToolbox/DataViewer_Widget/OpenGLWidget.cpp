@@ -173,7 +173,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     // Initialize data store (Phase 3)
     _data_store = std::make_unique<DataViewer::TimeSeriesDataStore>(this);
     connect(_data_store.get(), &DataViewer::TimeSeriesDataStore::layoutDirty, this, [this]() {
-        _layout_response_dirty = true;
+        _cache_state.layout_response_dirty = true;
         updateCanvas(_time);
     });
 
@@ -183,7 +183,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         emit entitySelectionChanged(id, selected);
     });
     connect(_selection_manager.get(), &DataViewer::DataViewerSelectionManager::selectionModified, this, [this]() {
-        _scene_dirty = true;
+        _cache_state.scene_dirty = true;
         updateCanvas(_time);
     });
 
@@ -293,9 +293,9 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 
 OpenGLWidget::~OpenGLWidget() {
     // Disconnect the context destruction signal BEFORE cleanup to prevent lambda from accessing destroyed object
-    if (_ctxAboutToBeDestroyedConn) {
-        disconnect(_ctxAboutToBeDestroyedConn);
-        _ctxAboutToBeDestroyedConn = QMetaObject::Connection();
+    if (_gl_state.ctx_about_to_be_destroyed_conn) {
+        disconnect(_gl_state.ctx_about_to_be_destroyed_conn);
+        _gl_state.ctx_about_to_be_destroyed_conn = QMetaObject::Connection();
     }
     cleanup();
 }
@@ -309,8 +309,8 @@ void OpenGLWidget::updateCanvas(TimeFrameIndex time) {
 
     // Mark layout and scene as dirty since external changes may have occurred
     // (e.g., display_mode changes, series visibility changes)
-    _layout_response_dirty = true;
-    _scene_dirty = true;
+    _cache_state.layout_response_dirty = true;
+    _cache_state.scene_dirty = true;
     //std::cout << "Redrawing at " << _time << std::endl;
     update();
 }
@@ -320,10 +320,10 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
     // Update input handler context before processing
     DataViewer::InputContext ctx;
     ctx.view_state = &_view_state;
-    ctx.layout_response = &_cached_layout_response;
-    ctx.scene = &_cached_scene;
+    ctx.layout_response = &_cache_state.layout_response;
+    ctx.scene = &_cache_state.scene;
     ctx.selected_entities = &_selection_manager->selectedEntities();
-    ctx.rectangle_batch_key_map = &_rectangle_batch_key_map;
+    ctx.rectangle_batch_key_map = &_cache_state.rectangle_batch_key_map;
     ctx.widget_width = width();
     ctx.widget_height = height();
     _input_handler->setContext(ctx);
@@ -347,10 +347,10 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     // Update input handler context
     DataViewer::InputContext ctx;
     ctx.view_state = &_view_state;
-    ctx.layout_response = &_cached_layout_response;
-    ctx.scene = &_cached_scene;
+    ctx.layout_response = &_cache_state.layout_response;
+    ctx.scene = &_cache_state.scene;
     ctx.selected_entities = &_selection_manager->selectedEntities();
-    ctx.rectangle_batch_key_map = &_rectangle_batch_key_map;
+    ctx.rectangle_batch_key_map = &_cache_state.rectangle_batch_key_map;
     ctx.widget_width = width();
     ctx.widget_height = height();
     _input_handler->setContext(ctx);
@@ -378,21 +378,21 @@ void OpenGLWidget::leaveEvent(QEvent * event) {
 }
 
 void OpenGLWidget::setBackgroundColor(std::string const & hexColor) {
-    m_background_color = hexColor;
+    _theme_state.background_color = hexColor;
     updateCanvas(_time);
 }
 
 void OpenGLWidget::setPlotTheme(PlotTheme theme) {
-    _plot_theme = theme;
+    _theme_state.theme = theme;
 
     if (theme == PlotTheme::Dark) {
         // Dark theme: black background, white axes
-        m_background_color = "#000000";
-        m_axis_color = "#FFFFFF";
+        _theme_state.background_color = "#000000";
+        _theme_state.axis_color = "#FFFFFF";
     } else {
         // Light theme: white background, dark axes
-        m_background_color = "#FFFFFF";
-        m_axis_color = "#333333";
+        _theme_state.background_color = "#FFFFFF";
+        _theme_state.axis_color = "#333333";
     }
 
     updateCanvas(_time);
@@ -400,22 +400,22 @@ void OpenGLWidget::setPlotTheme(PlotTheme theme) {
 
 void OpenGLWidget::cleanup() {
     // Avoid re-entrancy or cleanup without a valid context
-    if (!_gl_initialized) {
+    if (!_gl_state.initialized) {
         return;
     }
 
     // Guard: QOpenGLContext may already be gone during teardown
     if (QOpenGLContext::currentContext() == nullptr && context() == nullptr) {
-        _gl_initialized = false;
+        _gl_state.initialized = false;
         return;
     }
 
     // Safe to release our GL resources
     makeCurrent();
 
-    if (m_program) {
-        delete m_program;
-        m_program = nullptr;
+    if (_gl_state.program) {
+        delete _gl_state.program;
+        _gl_state.program = nullptr;
     }
 
     // Cleanup PlottingOpenGL SceneRenderer
@@ -430,12 +430,12 @@ void OpenGLWidget::cleanup() {
         _axis_renderer.reset();
     }
 
-    m_vbo.destroy();
-    m_vao.destroy();
+    _gl_state.vbo.destroy();
+    _gl_state.vao.destroy();
 
     doneCurrent();
 
-    _gl_initialized = false;
+    _gl_state.initialized = false;
 }
 
 void OpenGLWidget::initializeGL() {
@@ -443,15 +443,15 @@ void OpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
 
     // Track GL init and connect context destruction
-    _gl_initialized = true;
+    _gl_state.initialized = true;
     if (context()) {
         // Disconnect any previous connection to avoid duplicates
-        if (_ctxAboutToBeDestroyedConn) {
-            disconnect(_ctxAboutToBeDestroyedConn);
+        if (_gl_state.ctx_about_to_be_destroyed_conn) {
+            disconnect(_gl_state.ctx_about_to_be_destroyed_conn);
         }
         // Use QPointer for safer object lifetime tracking
         QPointer<OpenGLWidget> self(this);
-        _ctxAboutToBeDestroyedConn = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [self]() {
+        _gl_state.ctx_about_to_be_destroyed_conn = connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, [self]() {
             // Only call cleanup if the widget still exists
             if (self) {
                 self->cleanup();
@@ -463,7 +463,7 @@ void OpenGLWidget::initializeGL() {
     std::cout << "OpenGL major version: " << fmt.majorVersion() << std::endl;
     std::cout << "OpenGL minor version: " << fmt.minorVersion() << std::endl;
     int r, g, b;
-    hexToRGB(m_background_color, r, g, b);
+    hexToRGB(_theme_state.background_color, r, g, b);
     glClearColor(
             static_cast<float>(r) / 255.0f,
             static_cast<float>(g) / 255.0f,
@@ -474,25 +474,25 @@ void OpenGLWidget::initializeGL() {
     // Load axes shader (used by AxisRenderer)
     ShaderManager::instance().loadProgram(
             "axes",
-            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/colored_vertex.vert" : "src/WhiskerToolbox/shaders/colored_vertex.vert",
-            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/colored_vertex.frag" : "src/WhiskerToolbox/shaders/colored_vertex.frag",
+            _gl_state.shader_source_type == ShaderSourceType::Resource ? ":/shaders/colored_vertex.vert" : "src/WhiskerToolbox/shaders/colored_vertex.vert",
+            _gl_state.shader_source_type == ShaderSourceType::Resource ? ":/shaders/colored_vertex.frag" : "src/WhiskerToolbox/shaders/colored_vertex.frag",
             "",
-            m_shaderSourceType);
+            _gl_state.shader_source_type);
     // Load dashed line shader (used by AxisRenderer for grid)
     ShaderManager::instance().loadProgram(
             "dashed_line",
-            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.vert" : "src/WhiskerToolbox/shaders/dashed_line.vert",
-            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.frag" : "src/WhiskerToolbox/shaders/dashed_line.frag",
+            _gl_state.shader_source_type == ShaderSourceType::Resource ? ":/shaders/dashed_line.vert" : "src/WhiskerToolbox/shaders/dashed_line.vert",
+            _gl_state.shader_source_type == ShaderSourceType::Resource ? ":/shaders/dashed_line.frag" : "src/WhiskerToolbox/shaders/dashed_line.frag",
             "",
-            m_shaderSourceType);
+            _gl_state.shader_source_type);
 
     // Connect reload signal to redraw
     connect(&ShaderManager::instance(), &ShaderManager::shaderReloaded, this, [this](std::string const &) { update(); });
-    m_vao.create();
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-    m_vbo.create();
-    m_vbo.bind();
-    m_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    _gl_state.vao.create();
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&_gl_state.vao);
+    _gl_state.vbo.create();
+    _gl_state.vbo.bind();
+    _gl_state.vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
     setupVertexAttribs();
 
     // Initialize PlottingOpenGL SceneRenderer
@@ -512,7 +512,7 @@ void OpenGLWidget::initializeGL() {
 
 void OpenGLWidget::setupVertexAttribs() {
 
-    m_vbo.bind();                     // glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
+    _gl_state.vbo.bind();             // glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
     int const vertex_argument_num = 4;// Position (x, y, 0, 1) for axes shader
 
     // Attribute 0: vertex positions (x, y, 0, 1) for axes shader
@@ -523,7 +523,7 @@ void OpenGLWidget::setupVertexAttribs() {
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
 
-    m_vbo.release();
+    _gl_state.vbo.release();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -533,7 +533,7 @@ void OpenGLWidget::setupVertexAttribs() {
 
 void OpenGLWidget::paintGL() {
     int r, g, b;
-    hexToRGB(m_background_color, r, g, b);
+    hexToRGB(_theme_state.background_color, r, g, b);
     glClearColor(
             static_cast<float>(r) / 255.0f,
             static_cast<float>(g) / 255.0f,
@@ -563,11 +563,11 @@ void OpenGLWidget::resizeGL(int w, int h) {
     // Note: width() and height() will return the new values after this call
 
     // For 2D plotting, we should use orthographic projection
-    m_proj.setToIdentity();
-    m_proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);// Use orthographic projection for 2D plotting
+    _gl_state.proj.setToIdentity();
+    _gl_state.proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);// Use orthographic projection for 2D plotting
 
-    m_view.setToIdentity();
-    m_view.translate(0, 0, -1);// Move slightly back for orthographic view
+    _gl_state.view.setToIdentity();
+    _gl_state.view.translate(0, 0, -1);// Move slightly back for orthographic view
 
     // Trigger a repaint with the new dimensions
     update();
@@ -580,7 +580,7 @@ void OpenGLWidget::drawAxis() {
 
     // Parse axis color from hex string
     float r, g, b;
-    hexToRGB(m_axis_color, r, g, b);
+    hexToRGB(_theme_state.axis_color, r, g, b);
 
     // Configure axis (Phase 5: using AxisRenderer)
     PlottingOpenGL::AxisConfig axis_config;
@@ -594,8 +594,8 @@ void OpenGLWidget::drawAxis() {
     glm::mat4 view, proj;
     for (int col = 0; col < 4; ++col) {
         for (int row = 0; row < 4; ++row) {
-            view[col][row] = m_view(row, col);
-            proj[col][row] = m_proj(row, col);
+            view[col][row] = _gl_state.view(row, col);
+            proj[col][row] = _gl_state.proj(row, col);
         }
     }
 
@@ -649,7 +649,7 @@ void OpenGLWidget::clearSeries() {
 }
 
 void OpenGLWidget::drawGridLines() {
-    if (!_grid_lines_enabled || !_axis_renderer || !_axis_renderer->isInitialized()) {
+    if (!_grid_state.enabled || !_axis_renderer || !_axis_renderer->isInitialized()) {
         return;// Grid lines are disabled or renderer not ready
     }
 
@@ -657,7 +657,7 @@ void OpenGLWidget::drawGridLines() {
     PlottingOpenGL::GridConfig grid_config;
     grid_config.time_start = _view_state.time_start;
     grid_config.time_end = _view_state.time_end;
-    grid_config.spacing = _grid_spacing;
+    grid_config.spacing = _grid_state.spacing;
     grid_config.y_min = _view_state.y_min;
     grid_config.y_max = _view_state.y_max;
     grid_config.color = glm::vec3(0.5f, 0.5f, 0.5f);// Gray grid lines
@@ -669,8 +669,8 @@ void OpenGLWidget::drawGridLines() {
     glm::mat4 view, proj;
     for (int col = 0; col < 4; ++col) {
         for (int row = 0; row < 4; ++row) {
-            view[col][row] = m_view(row, col);
-            proj[col][row] = m_proj(row, col);
+            view[col][row] = _gl_state.view(row, col);
+            proj[col][row] = _gl_state.proj(row, col);
         }
     }
 
@@ -741,7 +741,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
 
     // Step 2: Get layout from cached response (or fallback to display_options)
-    auto const * series_layout = _cached_layout_response.findLayout(series_key);
+    auto const * series_layout = _cache_state.layout_response.findLayout(series_key);
     CorePlotting::SeriesLayout layout;
     if (series_layout) {
         layout = *series_layout;
@@ -803,14 +803,14 @@ CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canva
 
     // Ensure scene and layout are up-to-date for hit testing
     // Note: const_cast is safe here because we're only updating cache state
-    if (_scene_dirty || _layout_response_dirty) {
+    if (_cache_state.scene_dirty || _cache_state.layout_response_dirty) {
         // Force a scene rebuild by requesting a paint - but for hit testing
         // during mouse events, we can use the current cached values
         // The scene will be rebuilt on next paintGL() call
     }
 
     // If we have no cached scene yet (e.g., before first paint) and no selection, nothing to check
-    if (_cached_scene.rectangle_batches.empty() && !_selection_manager->hasSelection()) {
+    if (_cache_state.scene.rectangle_batches.empty() && !_selection_manager->hasSelection()) {
         return CorePlotting::HitTestResult::noHit();
     }
 
@@ -832,14 +832,14 @@ CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canva
     static_cast<void>(canvas_y);// Y not used for edge detection
     return tester.findIntervalEdgeByEntityId(
             world_x,
-            _cached_scene,
+            _cache_state.scene,
             _selection_manager->selectedEntities(),
-            _rectangle_batch_key_map);
+            _cache_state.rectangle_batch_key_map);
 }
 
 CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, float canvas_y) const {
     // If we have no cached scene yet (e.g., before first paint), return no hit
-    if (_cached_scene.rectangle_batches.empty() && _cached_scene.glyph_batches.empty()) {
+    if (_cache_state.scene.rectangle_batches.empty() && _cache_state.scene.glyph_batches.empty()) {
         return CorePlotting::HitTestResult::noHit();
     }
 
@@ -862,8 +862,8 @@ CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, floa
     CorePlotting::HitTestResult result = tester.queryIntervals(
             world_x,
             world_y,
-            _cached_scene,
-            _rectangle_batch_key_map);
+            _cache_state.scene,
+            _cache_state.rectangle_batch_key_map);
 
     // If we got an interval body hit, return it
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::IntervalBody) {
@@ -940,7 +940,7 @@ void OpenGLWidget::startIntervalCreationUnified(std::string const & series_key, 
     // Update interaction manager context
     DataViewer::InteractionContext ctx;
     ctx.view_state = &_view_state;
-    ctx.scene = &_cached_scene;
+    ctx.scene = &_cache_state.scene;
     ctx.widget_width = width();
     ctx.widget_height = height();
     _interaction_manager->setContext(ctx);
@@ -976,7 +976,7 @@ void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult cons
     // Update interaction manager context
     DataViewer::InteractionContext ctx;
     ctx.view_state = &_view_state;
-    ctx.scene = &_cached_scene;
+    ctx.scene = &_cache_state.scene;
     ctx.widget_width = width();
     ctx.widget_height = height();
     _interaction_manager->setContext(ctx);
@@ -1086,11 +1086,11 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Compute layout if dirty (const_cast needed for lazy evaluation pattern)
     // Note: This is safe because computeAndApplyLayout only modifies cache state
-    if (_layout_response_dirty) {
+    if (_cache_state.layout_response_dirty) {
         const_cast<OpenGLWidget *>(this)->computeAndApplyLayout();
     }
 
-    if (_cached_layout_response.layouts.empty()) {
+    if (_cache_state.layout_response.layouts.empty()) {
         return std::nullopt;
     }
 
@@ -1104,9 +1104,9 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // First try full hit test if we have a cached scene with spatial index
     // This can identify specific discrete elements (events, points)
-    if (_cached_scene.spatial_index) {
+    if (_cache_state.scene.spatial_index) {
         CorePlotting::HitTestResult result = _hit_tester.hitTest(
-                world_x, world_y, _cached_scene, _cached_layout_response);
+                world_x, world_y, _cache_state.scene, _cache_state.layout_response);
 
         if (result.hasHit()) {
             std::string series_type;
@@ -1116,7 +1116,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
             if (series_key.empty() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
                 // Try to find series key from glyph batch maps
                 // The QuadTree stores EntityId but not series key, so region query is fallback
-                auto region_result = _hit_tester.querySeriesRegion(world_x, world_y, _cached_layout_response);
+                auto region_result = _hit_tester.querySeriesRegion(world_x, world_y, _cache_state.layout_response);
                 if (region_result.hasHit()) {
                     series_key = region_result.series_key;
                 }
@@ -1145,7 +1145,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
 
     // Fall back to series region query (always works, uses layout)
     CorePlotting::HitTestResult result = _hit_tester.querySeriesRegion(
-            world_x, world_y, _cached_layout_response);
+            world_x, world_y, _cache_state.layout_response);
 
     if (result.hasHit()) {
         // Determine series type using data store (Phase 3)
@@ -1218,15 +1218,15 @@ void OpenGLWidget::renderWithSceneRenderer() {
     addIntervalBatchesToBuilder(builder);
 
     // Build the scene (this also builds spatial index for discrete elements)
-    _cached_scene = builder.build();
-    _scene_dirty = false;
+    _cache_state.scene = builder.build();
+    _cache_state.scene_dirty = false;
 
     // Store batch key maps for hit testing
-    _rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
-    _glyph_batch_key_map = builder.getGlyphBatchKeyMap();
+    _cache_state.rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
+    _cache_state.glyph_batch_key_map = builder.getGlyphBatchKeyMap();
 
     // Upload scene to renderer and render
-    _scene_renderer->uploadScene(_cached_scene);
+    _scene_renderer->uploadScene(_cache_state.scene);
     _scene_renderer->render(view, projection);
 }
 
@@ -1249,7 +1249,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         if (!display_options->style.is_visible) continue;
 
         // Look up layout from cached response
-        auto const * series_layout = _cached_layout_response.findLayout(key);
+        auto const * series_layout = _cache_state.layout_response.findLayout(key);
         if (!series_layout) {
             // Fallback to display_options layout if not found (shouldn't happen)
             CorePlotting::SeriesLayout fallback_layout{
@@ -1325,7 +1325,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     auto const end_time = TimeFrameIndex(_view_state.time_end);
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
-    // Each series' layout is available in _cached_layout_response
+    // Each series' layout is available in _cache_state.layout_response
 
     // Access series through data store (Phase 3)
     for (auto const & [key, event_data]: _data_store->eventSeries()) {
@@ -1347,7 +1347,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                     _view_state.y_min, _view_state.y_max, display_options->margin_factor);
         } else {
             // Stacked mode - look up layout from cached response
-            auto const * series_layout = _cached_layout_response.findLayout(key);
+            auto const * series_layout = _cache_state.layout_response.findLayout(key);
             if (series_layout) {
                 y_transform = composeEventYTransform(
                         *series_layout, display_options->margin_factor, _view_state.global_vertical_scale);
@@ -1402,7 +1402,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     auto const end_time = TimeFrameIndex(_view_state.time_end);
 
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
-    // Each series' layout is available in _cached_layout_response
+    // Each series' layout is available in _cache_state.layout_response
 
     // Access series through data store (Phase 3)
     for (auto const & [key, interval_data]: _data_store->intervalSeries()) {
@@ -1412,7 +1412,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
         if (!display_options->style.is_visible) continue;
 
         // Look up layout from cached response
-        auto const * series_layout = _cached_layout_response.findLayout(key);
+        auto const * series_layout = _cache_state.layout_response.findLayout(key);
         CorePlotting::LayoutTransform y_transform;
         if (series_layout) {
             y_transform = composeIntervalYTransform(
@@ -1505,7 +1505,7 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
 }
 
 void OpenGLWidget::computeAndApplyLayout() {
-    if (!_layout_response_dirty) {
+    if (!_cache_state.layout_response_dirty) {
         return;
     }
 
@@ -1513,26 +1513,26 @@ void OpenGLWidget::computeAndApplyLayout() {
     CorePlotting::LayoutRequest request = buildLayoutRequest();
 
     // Compute layout using LayoutEngine
-    _cached_layout_response = _layout_engine.compute(request);
+    _cache_state.layout_response = _layout_engine.compute(request);
 
     // Apply computed layout to display options via data store (Phase 3)
-    _data_store->applyLayoutResponse(_cached_layout_response);
+    _data_store->applyLayoutResponse(_cache_state.layout_response);
 
-    // Note: _rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()
+    // Note: _cache_state.rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()
     // This ensures the batch key map stays synchronized with the actual rendered batches
 
-    _layout_response_dirty = false;
+    _cache_state.layout_response_dirty = false;
 }
 
 void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
                                                 std::vector<ChannelPosition> const & positions) {
     _spike_sorter_configs[group_name] = positions;
-    _layout_response_dirty = true;
+    _cache_state.layout_response_dirty = true;
     updateCanvas(_time);
 }
 
 void OpenGLWidget::clearSpikeSorterConfiguration(std::string const & group_name) {
     _spike_sorter_configs.erase(group_name);
-    _layout_response_dirty = true;
+    _cache_state.layout_response_dirty = true;
     updateCanvas(_time);
 }

@@ -301,47 +301,90 @@ struct GridConfig {
 
 ---
 
-## Phase 6: Consolidate Member Variables
+## Phase 6: Consolidate Member Variables ✅ COMPLETED
 
 **Priority:** Low  
 **Estimated Impact:** Improved readability, reduced cognitive load
+**Status:** Completed December 28, 2025
 
-### 6.1 Group Related State into Structs
+### 6.1 Group Related State into Structs ✅
 
+Created four state structs to organize related member variables:
+
+**ThemeState** - Visual theme configuration:
 ```cpp
-// In OpenGLWidget.hpp
-
-struct ShaderState {
-    QOpenGLShaderProgram* axes_program{nullptr};
-    QOpenGLShaderProgram* dashed_program{nullptr};
-    struct Locations {
-        int proj{-1}, view{-1}, model{-1}, color{-1}, alpha{-1};
-    } axes_locs;
-    struct DashedLocations {
-        int proj{-1}, view{-1}, model{-1}, resolution{-1}, dash{-1}, gap{-1};
-    } dashed_locs;
-};
-
 struct ThemeState {
     PlotTheme theme{PlotTheme::Dark};
     std::string background_color{"#000000"};
     std::string axis_color{"#FFFFFF"};
 };
+```
 
+**GridState** - Grid overlay configuration:
+```cpp
 struct GridState {
     bool enabled{false};
     int spacing{100};
 };
+```
 
-struct CacheState {
+**SceneCacheState** - Cached rendering/hit-testing data:
+```cpp
+struct SceneCacheState {
     CorePlotting::RenderableScene scene;
     CorePlotting::LayoutResponse layout_response;
     std::map<size_t, std::string> rectangle_batch_key_map;
     std::map<size_t, std::string> glyph_batch_key_map;
     bool scene_dirty{true};
-    bool layout_dirty{true};
+    bool layout_response_dirty{true};
 };
 ```
+
+**OpenGLResourceState** - OpenGL lifecycle resources:
+```cpp
+struct OpenGLResourceState {
+    QOpenGLShaderProgram * program{nullptr};
+    QOpenGLBuffer vbo;
+    QOpenGLVertexArrayObject vao;
+    QMatrix4x4 proj, view, model;
+    bool initialized{false};
+    QMetaObject::Connection ctx_about_to_be_destroyed_conn;
+    ShaderSourceType shader_source_type{ShaderSourceType::Resource};
+};
+```
+
+### 6.2 Migration Completed ✅
+
+**Changes to OpenGLWidget.hpp:**
+- Added struct definitions before `InteractionMode` enum
+- Replaced 20+ scattered member variables with 4 grouped structs:
+  - `_gl_state` (OpenGLResourceState)
+  - `_theme_state` (ThemeState)
+  - `_grid_state` (GridState)
+  - `_cache_state` (SceneCacheState)
+- Updated inline getter methods to use new struct members
+
+**Changes to OpenGLWidget.cpp:**
+- Updated all references from old variable names to new struct accessors:
+  - `m_program` → `_gl_state.program`
+  - `m_vbo`/`m_vao` → `_gl_state.vbo`/`_gl_state.vao`
+  - `m_proj`/`m_view`/`m_model` → `_gl_state.proj`/`_gl_state.view`/`_gl_state.model`
+  - `_gl_initialized` → `_gl_state.initialized`
+  - `_ctxAboutToBeDestroyedConn` → `_gl_state.ctx_about_to_be_destroyed_conn`
+  - `m_shaderSourceType` → `_gl_state.shader_source_type`
+  - `m_background_color`/`m_axis_color` → `_theme_state.background_color`/`_theme_state.axis_color`
+  - `_plot_theme` → `_theme_state.theme`
+  - `_grid_lines_enabled`/`_grid_spacing` → `_grid_state.enabled`/`_grid_state.spacing`
+  - `_cached_scene` → `_cache_state.scene`
+  - `_cached_layout_response` → `_cache_state.layout_response`
+  - `_scene_dirty`/`_layout_response_dirty` → `_cache_state.scene_dirty`/`_cache_state.layout_response_dirty`
+  - `_rectangle_batch_key_map`/`_glyph_batch_key_map` → `_cache_state.rectangle_batch_key_map`/`_cache_state.glyph_batch_key_map`
+
+**Benefits:**
+- Related variables are now co-located in logical groups
+- Easier to understand state dependencies
+- Improved code navigation and maintenance
+- Clearer initialization patterns
 
 ---
 
@@ -377,8 +420,8 @@ Each phase can be completed independently. Recommended order:
 2. **Phase 2 (Selection/Tooltip)** ✅ COMPLETED - Quick wins, simple extraction
 3. **Phase 3 (Data Store)** ✅ COMPLETED - Medium complexity, significant cleanup
 4. **Phase 4 (Coordinates)** ✅ COMPLETED - Low risk, reduces duplication
-5. **Phase 5 (Axis Rendering)** - Can be done alongside PlottingOpenGL work
-6. **Phase 6 (Variable Grouping)** - Final polish
+5. **Phase 5 (Axis Rendering)** ✅ COMPLETED - Extracted to PlottingOpenGL
+6. **Phase 6 (Variable Grouping)** ✅ COMPLETED - Final polish, improved readability
 
 ### Testing Strategy
 
@@ -396,13 +439,13 @@ Each phase can be completed independently. Recommended order:
 
 ## Success Metrics
 
-| Metric | Before | After Phase 1 | After Phase 2 | After Phase 3 | After Phase 4 | Target |
-|--------|--------|---------------|---------------|---------------|---------------|--------|
-| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~1500 | ~1400 | ~500 |
-| Member variables | ~60 | ~55 | ~50 | ~45 | ~45 | ~20 |
-| Public methods | ~50 | ~50 | ~50 | ~50 | ~50 | ~25 |
-| Extracted classes | 0 | 2 | 4 | 5 | 6 | 6+ |
-| Test coverage | Partial | Partial | Partial | Partial | Partial | Full per-component |
+| Metric | Before | After Phase 1 | After Phase 2 | After Phase 3 | After Phase 4 | After Phase 5 | After Phase 6 | Target |
+|--------|--------|---------------|---------------|---------------|---------------|---------------|---------------|--------|
+| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~1500 | ~1400 | ~1350 | ~1350 | ~500 |
+| Member variables | ~60 | ~55 | ~50 | ~45 | ~45 | ~35 | ~25 (4 structs) | ~20 |
+| Public methods | ~50 | ~50 | ~50 | ~50 | ~50 | ~50 | ~50 | ~25 |
+| Extracted classes | 0 | 2 | 4 | 5 | 6 | 7 | 7 | 6+ ✅ |
+| Test coverage | Partial | Partial | Partial | Partial | Partial | Partial | Partial | Full per-component |
 
 ---
 
