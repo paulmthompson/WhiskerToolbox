@@ -188,46 +188,50 @@ Extracted the interaction state machine for interval creation and modification.
 
 ---
 
-## Phase 4: Extract Coordinate Transforms
+## Phase 4: Extract Coordinate Transforms ✅ COMPLETED
 
 **Priority:** Medium  
 **Estimated Impact:** ~100 lines consolidated, reduced duplication
+**Status:** Completed December 28, 2025
 
-### 4.1 Create DataViewerCoordinates
+### 4.1 Create DataViewerCoordinates ✅
 
-**New File:** `DataViewerCoordinates.hpp/cpp`
+**Files Created:** `DataViewerCoordinates.hpp/cpp`
 
-```cpp
-class DataViewerCoordinates {
-public:
-    DataViewerCoordinates(const CorePlotting::TimeSeriesViewState& view_state,
-                          int width, int height);
-    
-    // Canvas to world/time
-    float canvasXToTime(float canvas_x) const;
-    float canvasYToWorldY(float canvas_y) const;
-    glm::vec2 canvasToWorld(float canvas_x, float canvas_y) const;
-    
-    // World/time to canvas
-    float timeToCanvasX(float time) const;
-    float worldYToCanvasY(float world_y) const;
-    
-    // Inverse transform for analog values
-    float canvasYToAnalogValue(float canvas_y, const CorePlotting::LayoutTransform& y_transform) const;
-    
-    // Tolerance conversion
-    float pixelToleranceToWorld(float pixels) const;
-    
-private:
-    CorePlotting::TimeAxisParams _time_params;
-    CorePlotting::YAxisParams _y_params;
-};
-```
+**Implementation Notes:**
+- Consolidates all coordinate transformation logic into a single class
+- Wraps CorePlotting::TimeAxisParams and YAxisParams for unified interface
+- Provides canvas↔world, canvas↔time, and tolerance conversions
+- Used by InputHandler, InteractionManager, and OpenGLWidget
+- InputContext and InteractionContext structs include `makeCoordinates()` factory method
 
-**Responsibilities moved:**
-- `canvasXToTime()`, `canvasYToAnalogValue()`
-- Inline coordinate conversions in mouse handlers
-- Tolerance calculations in hit testing
+**API:**
+- `canvasXToTime()`, `canvasXToWorldX()` - X coordinate conversion
+- `canvasYToWorldY()` - Y coordinate conversion (accounts for pan offset)
+- `canvasToWorld()` - Convenience for both X and Y
+- `timeToCanvasX()`, `worldYToCanvasY()` - Inverse conversions
+- `canvasYToAnalogValue()` - Data value via inverse LayoutTransform
+- `pixelToleranceToWorldX()`, `pixelToleranceToWorldY()` - Hit testing tolerances
+- `timeUnitsPerPixel()`, `worldYUnitsPerPixel()` - Scale factors
+
+### 4.2 Migration Completed ✅
+
+**Changes to DataViewerInputHandler:**
+- Removed local `canvasXToTime()` method
+- Uses `_ctx.makeCoordinates()` for all coordinate conversions
+- Hit testing tolerance now via `coords.pixelToleranceToWorldX()`
+
+**Changes to DataViewerInteractionManager:**
+- Uses `_ctx.makeCoordinates()` for interval edge drag coordinate conversion
+- Simplified `timeToCanvasX()` calls via DataViewerCoordinates
+
+**Changes to OpenGLWidget:**
+- `canvasXToTime()` now delegates to DataViewerCoordinates
+- `canvasYToAnalogValue()` uses DataViewerCoordinates for canvas→world conversion
+- `findIntervalEdgeAtPosition()` uses DataViewerCoordinates
+- `hitTestAtPosition()` uses DataViewerCoordinates with structured binding
+
+**Lines Consolidated:** ~80 lines of duplicated coordinate conversion code
 
 ---
 
@@ -344,13 +348,13 @@ struct CacheState {
 
 ```
 DataViewer_Widget/
-├── OpenGLWidget.hpp/cpp                 # Main widget (~1500 lines, down from ~1900)
+├── OpenGLWidget.hpp/cpp                 # Main widget (~1400 lines, down from ~1900)
 ├── DataViewerInputHandler.hpp/cpp       # ✅ Mouse events, gestures (Phase 1)
 ├── DataViewerInteractionManager.hpp/cpp # ✅ Interaction state machine (Phase 1)
 ├── DataViewerSelectionManager.hpp/cpp   # ✅ EntityId selection (Phase 2)
 ├── DataViewerTooltipController.hpp/cpp  # ✅ Tooltip timer + display (Phase 2)
 ├── TimeSeriesDataStore.hpp/cpp          # ✅ Series storage + display options (Phase 3)
-├── DataViewerCoordinates.hpp/cpp        # (planned) Coordinate transforms
+├── DataViewerCoordinates.hpp/cpp        # ✅ Coordinate transforms (Phase 4)
 ├── SceneBuildingHelpers.hpp/cpp         # (existing) Batch building
 ├── SVGExporter.hpp/cpp                  # (existing) SVG export
 ├── SpikeSorterConfigLoader.hpp/cpp      # (existing) Spike sorter config
@@ -371,7 +375,7 @@ Each phase can be completed independently. Recommended order:
 1. **Phase 1 (Input/Interaction)** ✅ COMPLETED - Highest impact, most complex
 2. **Phase 2 (Selection/Tooltip)** ✅ COMPLETED - Quick wins, simple extraction
 3. **Phase 3 (Data Store)** ✅ COMPLETED - Medium complexity, significant cleanup
-4. **Phase 4 (Coordinates)** - Low risk, reduces duplication
+4. **Phase 4 (Coordinates)** ✅ COMPLETED - Low risk, reduces duplication
 5. **Phase 5 (Axis Rendering)** - Can be done alongside PlottingOpenGL work
 6. **Phase 6 (Variable Grouping)** - Final polish
 
@@ -391,13 +395,13 @@ Each phase can be completed independently. Recommended order:
 
 ## Success Metrics
 
-| Metric | Before | After Phase 1 | After Phase 2 | After Phase 3 | Target |
-|--------|--------|---------------|---------------|---------------|--------|
-| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~1500 | ~500 |
-| Member variables | ~60 | ~55 | ~50 | ~45 | ~20 |
-| Public methods | ~50 | ~50 | ~50 | ~50 | ~25 |
-| Extracted classes | 0 | 2 | 4 | 5 | 6+ |
-| Test coverage | Partial | Partial | Partial | Partial | Full per-component |
+| Metric | Before | After Phase 1 | After Phase 2 | After Phase 3 | After Phase 4 | Target |
+|--------|--------|---------------|---------------|---------------|---------------|--------|
+| OpenGLWidget LOC | ~1900 | ~1700 | ~1620 | ~1500 | ~1400 | ~500 |
+| Member variables | ~60 | ~55 | ~50 | ~45 | ~45 | ~20 |
+| Public methods | ~50 | ~50 | ~50 | ~50 | ~50 | ~25 |
+| Extracted classes | 0 | 2 | 4 | 5 | 6 | 6+ |
+| Test coverage | Partial | Partial | Partial | Partial | Partial | Full per-component |
 
 ---
 

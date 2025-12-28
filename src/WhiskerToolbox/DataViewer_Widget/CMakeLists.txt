@@ -7,6 +7,8 @@ set(DATAVIEWER_WIDGET_SOURCES
     DataViewer_Widget.cpp
         DataViewer_Widget.hpp
         DataViewer_Widget.ui
+        DataViewerCoordinates.cpp
+        DataViewerCoordinates.hpp
         DataViewerInputHandler.cpp
         DataViewerInputHandler.hpp
         DataViewerInteractionManager.cpp

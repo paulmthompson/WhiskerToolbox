@@ -3,7 +3,6 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
-#include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
@@ -15,6 +14,7 @@
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
+#include "DataViewerCoordinates.hpp"
 #include "DataViewerSelectionManager.hpp"
 #include "DataViewerTooltipController.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -786,9 +786,9 @@ int64_t OpenGLWidget::setRangeWidth(int64_t range_width) {
 ///////////////////////////////////////////////////////////////////////////////
 
 float OpenGLWidget::canvasXToTime(float canvas_x) const {
-    // Use CorePlotting coordinate transform
-    CorePlotting::TimeAxisParams params(_view_state.time_start, _view_state.time_end, width());
-    return CorePlotting::canvasXToTime(canvas_x, params);
+    // Use DataViewerCoordinates for coordinate transform
+    DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
+    return coords.canvasXToTime(canvas_x);
 }
 
 float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & series_key) const {
@@ -801,9 +801,8 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
 
     auto const & display_options = analog_it->second.display_options;
 
-    // Step 1: Convert canvas Y to world Y using CorePlotting
-    CorePlotting::YAxisParams y_params(_view_state.y_min, _view_state.y_max, height(), _view_state.vertical_pan_offset);
-    float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
+    // Step 1: Create DataViewerCoordinates for coordinate conversion
+    DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
 
     // Step 2: Get layout from cached response (or fallback to display_options)
     auto const * series_layout = _cached_layout_response.findLayout(series_key);
@@ -831,8 +830,8 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
             _view_state.global_zoom,
             _view_state.global_vertical_scale);
 
-    // Step 4: Use inverse transform to get data value
-    return y_transform.inverse(world_y);
+    // Step 4: Use DataViewerCoordinates to convert canvas Y to analog value
+    return coords.canvasYToAnalogValue(canvas_y, y_transform);
 }
 
 // ========================================================================
@@ -879,20 +878,13 @@ CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canva
         return CorePlotting::HitTestResult::noHit();
     }
 
-    // Use CorePlotting time axis utilities for coordinate conversion
-    CorePlotting::TimeAxisParams const time_params(
-            _view_state.time_start,
-            _view_state.time_end,
-            width());
-
-    // Convert canvas position to time (world X coordinate)
-    float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
+    // Use DataViewerCoordinates for coordinate conversion
+    DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
+    float const world_x = coords.canvasXToWorldX(canvas_x);
 
     // Configure hit tester with edge tolerance in world units
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
-    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) /
-                                 static_cast<float>(time_params.viewport_width_px);
-    float const edge_tolerance = EDGE_TOLERANCE_PX * time_per_pixel;
+    float const edge_tolerance = coords.pixelToleranceToWorldX(EDGE_TOLERANCE_PX);
 
     CorePlotting::HitTestConfig config;
     config.edge_tolerance = edge_tolerance;
@@ -915,28 +907,13 @@ CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, floa
         return CorePlotting::HitTestResult::noHit();
     }
 
-    // Use CorePlotting time axis utilities for coordinate conversion
-    CorePlotting::TimeAxisParams const time_params(
-            _view_state.time_start,
-            _view_state.time_end,
-            width());
-
-    // Convert canvas position to world coordinates
-    float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
-
-    // Convert canvas Y to world Y
-    CorePlotting::YAxisParams const y_params(
-            _view_state.y_min,
-            _view_state.y_max,
-            height(),
-            _view_state.vertical_pan_offset);
-    float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
+    // Use DataViewerCoordinates for coordinate conversion
+    DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
+    auto const [world_x, world_y] = coords.canvasToWorld(canvas_x, canvas_y);
 
     // Configure hit tester with appropriate tolerances
     constexpr float TOLERANCE_PX = 10.0f;
-    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) /
-                                 static_cast<float>(time_params.viewport_width_px);
-    float const tolerance = TOLERANCE_PX * time_per_pixel;
+    float const tolerance = coords.pixelToleranceToWorldX(TOLERANCE_PX);
 
     CorePlotting::HitTestConfig config;
     config.edge_tolerance = tolerance;

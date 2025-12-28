@@ -1,7 +1,7 @@
 #include "DataViewerInputHandler.hpp"
 
-#include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
+#include "DataViewerCoordinates.hpp"
 
 #include <QMouseEvent>
 #include <QWidget>
@@ -51,8 +51,9 @@ bool DataViewerInputHandler::handleMousePress(QMouseEvent * event) {
     _last_mouse_pos = event->pos();
     emit panStarted();
 
-    // Emit click coordinates
-    float const time_coord = canvasXToTime(canvas_x);
+    // Emit click coordinates using DataViewerCoordinates
+    auto const coords = _ctx.makeCoordinates();
+    float const time_coord = coords.canvasXToTime(canvas_x);
     QString const series_info = buildSeriesInfoString(canvas_x, canvas_y);
     emit clicked(time_coord, canvas_y, series_info);
 
@@ -98,7 +99,8 @@ bool DataViewerInputHandler::handleMouseMove(QMouseEvent * event) {
     }
 
     // Emit hover coordinates for coordinate display
-    float const time_coord = canvasXToTime(canvas_x);
+    auto const coords = _ctx.makeCoordinates();
+    float const time_coord = coords.canvasXToTime(canvas_x);
     QString const series_info = buildSeriesInfoString(canvas_x, canvas_y);
     emit hoverCoordinates(time_coord, canvas_y, series_info);
 
@@ -134,18 +136,6 @@ void DataViewerInputHandler::handleLeave() {
     emit tooltipCancelled();
 }
 
-float DataViewerInputHandler::canvasXToTime(float canvas_x) const {
-    if (!_ctx.view_state) {
-        return 0.0f;
-    }
-
-    CorePlotting::TimeAxisParams params(
-            _ctx.view_state->time_start,
-            _ctx.view_state->time_end,
-            _ctx.widget_width);
-    return CorePlotting::canvasXToTime(canvas_x, params);
-}
-
 CorePlotting::HitTestResult DataViewerInputHandler::findIntervalEdgeAtPosition(
         float canvas_x, float canvas_y) const {
 
@@ -158,20 +148,13 @@ CorePlotting::HitTestResult DataViewerInputHandler::findIntervalEdgeAtPosition(
         return CorePlotting::HitTestResult::noHit();
     }
 
-    // Use CorePlotting time axis utilities for coordinate conversion
-    CorePlotting::TimeAxisParams const time_params(
-            _ctx.view_state->time_start,
-            _ctx.view_state->time_end,
-            _ctx.widget_width);
-
-    // Convert canvas position to time (world X coordinate)
-    float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
+    // Use DataViewerCoordinates for coordinate conversion
+    auto const coords = _ctx.makeCoordinates();
+    float const world_x = coords.canvasXToWorldX(canvas_x);
 
     // Configure hit tester with edge tolerance in world units
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
-    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) /
-                                 static_cast<float>(time_params.viewport_width_px);
-    float const edge_tolerance = EDGE_TOLERANCE_PX * time_per_pixel;
+    float const edge_tolerance = coords.pixelToleranceToWorldX(EDGE_TOLERANCE_PX);
 
     CorePlotting::HitTestConfig config;
     config.edge_tolerance = edge_tolerance;
@@ -200,28 +183,13 @@ CorePlotting::HitTestResult DataViewerInputHandler::hitTestAtPosition(
         return CorePlotting::HitTestResult::noHit();
     }
 
-    // Use CorePlotting time axis utilities for coordinate conversion
-    CorePlotting::TimeAxisParams const time_params(
-            _ctx.view_state->time_start,
-            _ctx.view_state->time_end,
-            _ctx.widget_width);
-
-    // Convert canvas position to world coordinates
-    float const world_x = CorePlotting::canvasXToTime(canvas_x, time_params);
-
-    // Convert canvas Y to world Y
-    CorePlotting::YAxisParams const y_params(
-            _ctx.view_state->y_min,
-            _ctx.view_state->y_max,
-            _ctx.widget_height,
-            _ctx.view_state->vertical_pan_offset);
-    float const world_y = CorePlotting::canvasYToWorldY(canvas_y, y_params);
+    // Use DataViewerCoordinates for coordinate conversion
+    auto const coords = _ctx.makeCoordinates();
+    auto const [world_x, world_y] = coords.canvasToWorld(canvas_x, canvas_y);
 
     // Configure hit tester with appropriate tolerances
     constexpr float TOLERANCE_PX = 10.0f;
-    float const time_per_pixel = static_cast<float>(time_params.getTimeSpan()) /
-                                 static_cast<float>(time_params.viewport_width_px);
-    float const tolerance = TOLERANCE_PX * time_per_pixel;
+    float const tolerance = coords.pixelToleranceToWorldX(TOLERANCE_PX);
 
     CorePlotting::HitTestConfig config;
     config.edge_tolerance = tolerance;

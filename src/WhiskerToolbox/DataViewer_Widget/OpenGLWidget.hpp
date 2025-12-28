@@ -56,6 +56,7 @@
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
+#include "DataViewerCoordinates.hpp"
 #include "DataViewerInputHandler.hpp"
 #include "DataViewerInteractionManager.hpp"
 #include "DataViewerSelectionManager.hpp"

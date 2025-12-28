@@ -1,7 +1,7 @@
 #include "DataViewerInteractionManager.hpp"
 
-#include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/Interaction/RectangleInteractionController.hpp"
+#include "DataViewerCoordinates.hpp"
 
 #include <iostream>
 
@@ -149,15 +149,12 @@ void DataViewerInteractionManager::startEdgeDrag(
 
     auto controller = std::make_unique<RectangleInteractionController>(config);
 
-    // Convert interval bounds from data space to canvas coordinates
-    CorePlotting::TimeAxisParams time_params(
-            _ctx.view_state->time_start,
-            _ctx.view_state->time_end,
-            _ctx.widget_width);
-    float const start_canvas_x = CorePlotting::timeToCanvasX(
-            static_cast<float>(*hit_result.interval_start), time_params);
-    float const end_canvas_x = CorePlotting::timeToCanvasX(
-            static_cast<float>(*hit_result.interval_end), time_params);
+    // Use DataViewerCoordinates for coordinate conversion
+    auto const coords = _ctx.makeCoordinates();
+    float const start_canvas_x = coords.timeToCanvasX(
+            static_cast<float>(*hit_result.interval_start));
+    float const end_canvas_x = coords.timeToCanvasX(
+            static_cast<float>(*hit_result.interval_end));
 
     // For intervals, y spans full height
     float const canvas_y = 0.0f;
@@ -172,7 +169,7 @@ void DataViewerInteractionManager::startEdgeDrag(
     );
 
     // Current canvas position (where user clicked)
-    float const click_canvas_x = CorePlotting::timeToCanvasX(hit_result.world_x, time_params);
+    float const click_canvas_x = coords.timeToCanvasX(hit_result.world_x);
     float const click_canvas_y = static_cast<float>(_ctx.widget_height) / 2.0f;
 
     // Start edge drag mode

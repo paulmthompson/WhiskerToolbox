@@ -20,6 +20,7 @@
 #include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
+#include "DataViewerCoordinates.hpp"
 
 #include <QObject>
 
@@ -49,6 +50,17 @@ struct InteractionContext {
     CorePlotting::RenderableScene const * scene{nullptr};
     int widget_width{0};
     int widget_height{0};
+    
+    /**
+     * @brief Create a DataViewerCoordinates instance from this context
+     * @return DataViewerCoordinates configured with current view state and dimensions
+     */
+    [[nodiscard]] DataViewerCoordinates makeCoordinates() const {
+        if (view_state) {
+            return DataViewerCoordinates(*view_state, widget_width, widget_height);
+        }
+        return DataViewerCoordinates();
+    }
 };
 
 /**
