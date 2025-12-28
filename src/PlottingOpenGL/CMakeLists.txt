@@ -20,6 +20,8 @@ set(PLOTTINGOPENGL_SOURCES
     GLContext.hpp
     SceneRenderer.cpp
     SceneRenderer.hpp
+    Renderers/AxisRenderer.cpp
+    Renderers/AxisRenderer.hpp
     Renderers/IBatchRenderer.hpp
     Renderers/PolyLineRenderer.cpp
     Renderers/PolyLineRenderer.hpp

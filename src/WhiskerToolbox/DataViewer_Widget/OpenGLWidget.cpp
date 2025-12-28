@@ -417,15 +417,17 @@ void OpenGLWidget::cleanup() {
         delete m_program;
         m_program = nullptr;
     }
-    if (m_dashedProgram) {
-        delete m_dashedProgram;
-        m_dashedProgram = nullptr;
-    }
 
     // Cleanup PlottingOpenGL SceneRenderer
     if (_scene_renderer) {
         _scene_renderer->cleanup();
         _scene_renderer.reset();
+    }
+
+    // Cleanup AxisRenderer (Phase 5)
+    if (_axis_renderer) {
+        _axis_renderer->cleanup();
+        _axis_renderer.reset();
     }
 
     m_vbo.destroy();
@@ -469,45 +471,20 @@ void OpenGLWidget::initializeGL() {
             1.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // Load axes shader
+    // Load axes shader (used by AxisRenderer)
     ShaderManager::instance().loadProgram(
             "axes",
             m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/colored_vertex.vert" : "src/WhiskerToolbox/shaders/colored_vertex.vert",
             m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/colored_vertex.frag" : "src/WhiskerToolbox/shaders/colored_vertex.frag",
             "",
             m_shaderSourceType);
-    // Load dashed line shader
+    // Load dashed line shader (used by AxisRenderer for grid)
     ShaderManager::instance().loadProgram(
             "dashed_line",
             m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.vert" : "src/WhiskerToolbox/shaders/dashed_line.vert",
             m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.frag" : "src/WhiskerToolbox/shaders/dashed_line.frag",
             "",
             m_shaderSourceType);
-
-    // Get uniform locations for axes shader
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) {
-        auto nativeProgram = axesProgram->getNativeProgram();
-        if (nativeProgram) {
-            m_projMatrixLoc = nativeProgram->uniformLocation("projMatrix");
-            m_viewMatrixLoc = nativeProgram->uniformLocation("viewMatrix");
-            m_modelMatrixLoc = nativeProgram->uniformLocation("modelMatrix");
-            m_colorLoc = nativeProgram->uniformLocation("u_color");
-            m_alphaLoc = nativeProgram->uniformLocation("u_alpha");
-        }
-    }
-
-    // Get uniform locations for dashed line shader
-    auto dashedProgram = ShaderManager::instance().getProgram("dashed_line");
-    if (dashedProgram) {
-        auto nativeProgram = dashedProgram->getNativeProgram();
-        if (nativeProgram) {
-            m_dashedProjMatrixLoc = nativeProgram->uniformLocation("u_mvp");
-            m_dashedResolutionLoc = nativeProgram->uniformLocation("u_resolution");
-            m_dashedDashSizeLoc = nativeProgram->uniformLocation("u_dashSize");
-            m_dashedGapSizeLoc = nativeProgram->uniformLocation("u_gapSize");
-        }
-    }
 
     // Connect reload signal to redraw
     connect(&ShaderManager::instance(), &ShaderManager::shaderReloaded, this, [this](std::string const &) { update(); });
@@ -523,6 +500,13 @@ void OpenGLWidget::initializeGL() {
     if (!_scene_renderer->initialize()) {
         std::cerr << "Warning: Failed to initialize SceneRenderer" << std::endl;
         _scene_renderer.reset();
+    }
+
+    // Initialize AxisRenderer (Phase 5)
+    _axis_renderer = std::make_unique<PlottingOpenGL::AxisRenderer>();
+    if (!_axis_renderer->initialize()) {
+        std::cerr << "Warning: Failed to initialize AxisRenderer" << std::endl;
+        _axis_renderer.reset();
     }
 }
 
@@ -590,33 +574,32 @@ void OpenGLWidget::resizeGL(int w, int h) {
 }
 
 void OpenGLWidget::drawAxis() {
+    if (!_axis_renderer || !_axis_renderer->isInitialized()) {
+        return;
+    }
 
-    auto axesProgram = ShaderManager::instance().getProgram("axes");
-    if (axesProgram) glUseProgram(axesProgram->getProgramId());
-
-    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, m_proj.constData());
-    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, m_view.constData());
-    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, m_model.constData());
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-    setupVertexAttribs();
-
-    // Get axis color from theme and set uniforms
+    // Parse axis color from hex string
     float r, g, b;
     hexToRGB(m_axis_color, r, g, b);
-    glUniform3f(m_colorLoc, r, g, b);
-    glUniform1f(m_alphaLoc, 1.0f);
 
-    // Draw horizontal line at x=0 with 4D coordinates (x, y, 0, 1)
-    std::array<GLfloat, 8> lineVertices = {
-            0.0f, _view_state.y_min, 0.0f, 1.0f,
-            0.0f, _view_state.y_max, 0.0f, 1.0f};
+    // Configure axis (Phase 5: using AxisRenderer)
+    PlottingOpenGL::AxisConfig axis_config;
+    axis_config.x_position = 0.0f;
+    axis_config.y_min = _view_state.y_min;
+    axis_config.y_max = _view_state.y_max;
+    axis_config.color = glm::vec3(r, g, b);
+    axis_config.alpha = 1.0f;
 
-    m_vbo.bind();
-    m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
-    m_vbo.release();
-    glDrawArrays(GL_LINES, 0, 2);
-    glUseProgram(0);
+    // Convert QMatrix4x4 to glm::mat4
+    glm::mat4 view, proj;
+    for (int col = 0; col < 4; ++col) {
+        for (int row = 0; row < 4; ++row) {
+            view[col][row] = m_view(row, col);
+            proj[col][row] = m_proj(row, col);
+        }
+    }
+
+    _axis_renderer->renderAxis(axis_config, view, proj);
 }
 
 void OpenGLWidget::addAnalogTimeSeries(
@@ -665,80 +648,33 @@ void OpenGLWidget::clearSeries() {
     _data_store->clearAll();
 }
 
-void OpenGLWidget::drawDashedLine(LineParameters const & params) {
-
-    auto dashedProgram = ShaderManager::instance().getProgram("dashed_line");
-    if (dashedProgram) glUseProgram(dashedProgram->getProgramId());
-
-    glUniformMatrix4fv(m_dashedProjMatrixLoc, 1, GL_FALSE, (m_proj * m_view * m_model).constData());
-    std::array<GLfloat, 2> hw = {static_cast<float>(width()), static_cast<float>(height())};
-    glUniform2fv(m_dashedResolutionLoc, 1, hw.data());
-    glUniform1f(m_dashedDashSizeLoc, params.dashLength);
-    glUniform1f(m_dashedGapSizeLoc, params.gapLength);
-
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-
-    // Pass 3D coordinates (z=0) to match the vertex shader input format
-    std::array<float, 6> vertices = {
-            params.xStart, params.yStart, 0.0f,
-            params.xEnd, params.yEnd, 0.0f};
-
-    m_vbo.bind();
-    m_vbo.allocate(vertices.data(), vertices.size() * sizeof(float));
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
-
-    glDrawArrays(GL_LINES, 0, 2);
-
-    m_vbo.release();
-
-    glUseProgram(0);
-}
-
 void OpenGLWidget::drawGridLines() {
-    if (!_grid_lines_enabled) {
-        return;// Grid lines are disabled
+    if (!_grid_lines_enabled || !_axis_renderer || !_axis_renderer->isInitialized()) {
+        return;// Grid lines are disabled or renderer not ready
     }
 
-    auto const start_time = _view_state.time_start;
-    auto const end_time = _view_state.time_end;
+    // Configure grid (Phase 5: using AxisRenderer)
+    PlottingOpenGL::GridConfig grid_config;
+    grid_config.time_start = _view_state.time_start;
+    grid_config.time_end = _view_state.time_end;
+    grid_config.spacing = _grid_spacing;
+    grid_config.y_min = _view_state.y_min;
+    grid_config.y_max = _view_state.y_max;
+    grid_config.color = glm::vec3(0.5f, 0.5f, 0.5f);// Gray grid lines
+    grid_config.alpha = 0.5f;
+    grid_config.dash_length = 3.0f;
+    grid_config.gap_length = 3.0f;
 
-    // Calculate the range of time values
-    auto const time_range = end_time - start_time;
-
-    // Avoid drawing grid lines if the range is too small or invalid
-    if (time_range <= 0 || _grid_spacing <= 0) {
-        return;
-    }
-
-    // Find the first grid line position that's >= start_time
-    // Use integer division to ensure proper alignment
-    int64_t first_grid_time = ((start_time / _grid_spacing) * _grid_spacing);
-    if (first_grid_time < start_time) {
-        first_grid_time += _grid_spacing;
-    }
-
-    // Draw vertical grid lines at regular intervals
-    for (int64_t grid_time = first_grid_time; grid_time <= end_time; grid_time += _grid_spacing) {
-        // Convert time coordinate to normalized device coordinate (-1 to 1)
-        float const normalized_x = 2.0f * static_cast<float>(grid_time - start_time) / static_cast<float>(time_range) - 1.0f;
-
-        // Skip grid lines that are outside the visible range due to floating point precision
-        if (normalized_x < -1.0f || normalized_x > 1.0f) {
-            continue;
+    // Convert QMatrix4x4 to glm::mat4
+    glm::mat4 view, proj;
+    for (int col = 0; col < 4; ++col) {
+        for (int row = 0; row < 4; ++row) {
+            view[col][row] = m_view(row, col);
+            proj[col][row] = m_proj(row, col);
         }
-
-        LineParameters gridLine;
-        gridLine.xStart = normalized_x;
-        gridLine.xEnd = normalized_x;
-        gridLine.yStart = _view_state.y_min;
-        gridLine.yEnd = _view_state.y_max;
-        gridLine.dashLength = 3.0f;// Shorter dashes for grid lines
-        gridLine.gapLength = 3.0f; // Shorter gaps for grid lines
-
-        drawDashedLine(gridLine);
     }
+
+    _axis_renderer->renderGrid(grid_config, view, proj, width(), height());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

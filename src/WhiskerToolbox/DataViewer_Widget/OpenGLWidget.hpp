@@ -61,6 +61,7 @@
 #include "DataViewerInteractionManager.hpp"
 #include "DataViewerSelectionManager.hpp"
 #include "DataViewerTooltipController.hpp"
+#include "PlottingOpenGL/Renderers/AxisRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "SpikeSorterConfigLoader.hpp"
@@ -106,15 +107,6 @@ class SceneBuilder;
 using AnalogSeriesData = DataViewer::AnalogSeriesEntry;
 using DigitalEventSeriesData = DataViewer::DigitalEventSeriesEntry;
 using DigitalIntervalSeriesData = DataViewer::DigitalIntervalSeriesEntry;
-
-struct LineParameters {
-    float xStart = 0.0f;
-    float xEnd = 0.0f;
-    float yStart = 0.0f;
-    float yEnd = 0.0f;
-    float dashLength = 5.0f;
-    float gapLength = 5.0f;
-};
 
 enum class PlotTheme {
     Dark,// Black background, white axes (default)
@@ -433,7 +425,6 @@ private:
     void setupVertexAttribs();
     void drawAxis();
     void drawGridLines();
-    void drawDashedLine(LineParameters const & params);
     
     /**
      * @brief Draw the preview from the active glyph controller (Phase 5)
@@ -548,19 +539,6 @@ private:
     QMatrix4x4 m_proj; // Initialized as identity
     QMatrix4x4 m_view; // Initialized as identity
     QMatrix4x4 m_model;// Initialized as identity
-    int m_projMatrixLoc{};
-    int m_viewMatrixLoc{};
-    int m_modelMatrixLoc{};
-    int m_colorLoc{};
-    int m_alphaLoc{};
-
-    QOpenGLShaderProgram * m_dashedProgram{nullptr};
-    int m_dashedProjMatrixLoc{};
-    int m_dashedViewMatrixLoc{};
-    int m_dashedModelMatrixLoc{};
-    int m_dashedResolutionLoc{};
-    int m_dashedDashSizeLoc{};
-    int m_dashedGapSizeLoc{};
 
     float _ySpacing{0.1f};///< Vertical spacing factor for series
 
@@ -614,6 +592,9 @@ private:
     // These use the new CorePlotting RenderableBatch approach for rendering.
     // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
     std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
+
+    // AxisRenderer for axis lines and grid overlays (Phase 5)
+    std::unique_ptr<PlottingOpenGL::AxisRenderer> _axis_renderer;
 
     // CorePlotting hit testing infrastructure (Phase 4.11 - Complete SceneHitTester Integration)
     // The hit tester provides unified hit testing via SceneHitTester

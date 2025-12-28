@@ -9,12 +9,12 @@ This document outlines the planned refactoring of `OpenGLWidget` to address "god
 - ~~Series data storage~~ ✅ Extracted (Phase 3)
 - ~~Input handling (mouse events, gestures)~~ ✅ Extracted (Phase 1)
 - ~~Interaction state machine (interval creation, edge dragging)~~ ✅ Extracted (Phase 1)
-- Coordinate transformations
+- ~~Coordinate transformations~~ ✅ Extracted (Phase 4)
 - ~~Selection management~~ ✅ Extracted (Phase 2)
 - ~~Tooltip management~~ ✅ Extracted (Phase 2)
 - Layout orchestration
 - Scene building
-- Axis/grid rendering
+- ~~Axis/grid rendering~~ ✅ Extracted (Phase 5)
 - Theme management
 
 **Target State:** OpenGLWidget becomes a thin coordinator that:
@@ -235,68 +235,69 @@ Extracted the interaction state machine for interval creation and modification.
 
 ---
 
-## Phase 5: Extract Axis/Grid Rendering
+## Phase 5: Extract Axis/Grid Rendering ✅ COMPLETED
 
 **Priority:** Low  
 **Estimated Impact:** ~100 lines removed, consistent rendering path
+**Status:** Completed December 28, 2025
 
-### 5.1 Option A: Add AxisRenderer to PlottingOpenGL
+### 5.1 Create AxisRenderer in PlottingOpenGL ✅
 
-**New File:** `PlottingOpenGL/AxisRenderer.hpp/cpp`
+**Files Created:** `PlottingOpenGL/Renderers/AxisRenderer.hpp/cpp`
 
+**Implementation Notes:**
+- Dedicated renderer for axis lines and dashed grid overlays
+- Manages own VAO/VBO for line rendering
+- Uses "axes" shader (colored_vertex.vert/frag) for solid axis lines
+- Uses "dashed_line" shader for grid lines with configurable dash/gap
+- Caches uniform locations on initialization for efficiency
+- Two-stage architecture: Stage 1 (OpenGL) complete, Stage 2 (CorePlotting scene graph) for future SVG export
+
+**Structs:**
 ```cpp
-namespace PlottingOpenGL {
-
 struct AxisConfig {
-    float x_position;          // X position of vertical axis
-    float y_min, y_max;        // Y range
-    glm::vec3 color;
-    float alpha{1.0f};
+    float x_position{0.0f};    // X position of vertical axis
+    float y_min{-1.0f};        // Y range minimum
+    float y_max{1.0f};         // Y range maximum
+    glm::vec3 color{1.0f};     // RGB color
+    float alpha{1.0f};         // Transparency
 };
 
 struct GridConfig {
-    int64_t time_start, time_end;
-    int64_t spacing;
-    float y_min, y_max;
+    int64_t time_start{0};     // Time range start
+    int64_t time_end{1000};    // Time range end
+    int64_t spacing{100};      // Grid line spacing in time units
+    float y_min{-1.0f};        // Y range for grid lines
+    float y_max{1.0f};
+    glm::vec3 color{0.5f};     // Gray by default
+    float alpha{0.5f};
     float dash_length{3.0f};
     float gap_length{3.0f};
 };
-
-class AxisRenderer {
-public:
-    bool initialize();
-    void cleanup();
-    
-    void renderAxis(const AxisConfig& config, const glm::mat4& mvp);
-    void renderGridLines(const GridConfig& config, const glm::mat4& mvp,
-                         int viewport_width, int viewport_height);
-    
-private:
-    ShaderProgram* _solid_shader{nullptr};
-    ShaderProgram* _dashed_shader{nullptr};
-    GLuint _vao{0}, _vbo{0};
-};
-
-} // namespace PlottingOpenGL
 ```
 
-### 5.2 Option B: Integrate into SceneRenderer
+**API:**
+- `initialize()` - Create VAO/VBO and cache shader uniform locations
+- `cleanup()` - Release OpenGL resources
+- `isInitialized()` - Query initialization state
+- `renderAxis()` - Draw solid vertical axis line
+- `renderGrid()` - Draw time-aligned dashed vertical grid lines
+- `renderDashedLine()` - Internal helper for individual dashed lines
 
-Extend `SceneRenderer` to accept axis/grid configuration:
+### 5.2 Migration Completed ✅
 
-```cpp
-struct AxisOverlay {
-    std::optional<AxisConfig> axis;
-    std::optional<GridConfig> grid;
-};
+**Changes to OpenGLWidget:**
+- Added `#include "PlottingOpenGL/Renderers/AxisRenderer.hpp"`
+- Added member: `std::unique_ptr<PlottingOpenGL::AxisRenderer> _axis_renderer`
+- `initializeGL()` creates and initializes `_axis_renderer`
+- `cleanup()` cleans up `_axis_renderer`
+- Removed uniform location members: `m_projMatrixLoc`, `m_viewMatrixLoc`, `m_modelMatrixLoc`, `m_colorLoc`, `m_alphaLoc`, `m_dashedProjMatrixLoc`, `m_dashedViewMatrixLoc`, `m_dashedModelMatrixLoc`, `m_dashedResolutionLoc`, `m_dashedDashSizeLoc`, `m_dashedGapSizeLoc`
+- `drawAxis()` now delegates to `_axis_renderer->renderAxis()`
+- `drawGridLines()` now delegates to `_axis_renderer->renderGrid()`
+- Removed `drawDashedLine()` method entirely
+- Removed `LineParameters` struct from header
 
-void SceneRenderer::renderOverlays(const AxisOverlay& overlays, const glm::mat4& vp);
-```
-
-**Responsibilities moved:**
-- `drawAxis()`, `drawGridLines()`, `drawDashedLine()`
-- Shader uniform locations for axes/dashed programs
-- `_grid_lines_enabled`, `_grid_spacing` state
+**Lines Removed:** ~80 lines of direct shader management and dashed line rendering
 
 ---
 
