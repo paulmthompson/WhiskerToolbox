@@ -11,6 +11,7 @@ class DigitalIntervalSeries;
 enum class IntervalDataType {
     uint16,
     csv,
+    multi_column_binary,
     Unknown
 };
 

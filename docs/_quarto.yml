@@ -24,6 +24,8 @@ website:
             href: labeling/keypoint.qmd
           - text: "Mask Creation"
             href: labeling/mask.qmd
+          - text: "Load Tabular Binary Events"
+            href: examples/tabular_binary_events.qmd
             
       - text: "Reference Guides"
         menu:
@@ -49,6 +51,7 @@ website:
         - developer/building.qmd
         - developer/code_quality.qmd
         - developer/copilot.qmd
+        - developer/core_plotting.qmd
         - developer/contributing_code.qmd
         - text: "API Reference"
           href: api_reference.qmd

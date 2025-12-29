@@ -4,13 +4,16 @@
 #include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "utils/json_helpers.hpp"
+#include "utils/json_reflection.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"
 
 
 
 IntervalDataType stringToIntervalDataType(std::string const & data_type_str) {
     if (data_type_str == "uint16") return IntervalDataType::uint16;
     if (data_type_str == "csv") return IntervalDataType::csv;
+    if (data_type_str == "multi_column_binary") return IntervalDataType::multi_column_binary;
     return IntervalDataType::Unknown;
 }
 
@@ -82,6 +85,46 @@ std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(std::stri
             auto intervals = Loader::loadPairColumnCSV(opts);
             std::cout << "Loaded " << intervals.size() << " intervals " << std::endl;
             return std::make_shared<DigitalIntervalSeries>(intervals);
+        }
+        case IntervalDataType::multi_column_binary: {
+            // Use reflect-cpp to parse options from JSON
+            // Create options with filepath set
+            MultiColumnBinaryCSVLoaderOptions opts;
+            opts.filepath = file_path;
+            
+            // Parse optional fields from JSON
+            if (item.contains("header_lines_to_skip")) {
+                opts.header_lines_to_skip = rfl::Validator<int, rfl::Minimum<0>>(
+                    item["header_lines_to_skip"].get<int>());
+            }
+            if (item.contains("time_column")) {
+                opts.time_column = rfl::Validator<int, rfl::Minimum<0>>(
+                    item["time_column"].get<int>());
+            }
+            if (item.contains("data_column")) {
+                opts.data_column = rfl::Validator<int, rfl::Minimum<0>>(
+                    item["data_column"].get<int>());
+            }
+            if (item.contains("delimiter")) {
+                opts.delimiter = item["delimiter"].get<std::string>();
+            }
+            if (item.contains("sampling_rate")) {
+                opts.sampling_rate = rfl::Validator<double, rfl::Minimum<0.0>>(
+                    item["sampling_rate"].get<double>());
+            }
+            if (item.contains("binary_threshold")) {
+                opts.binary_threshold = item["binary_threshold"].get<double>();
+            }
+            
+            auto result = load(opts);
+            if (result) {
+                std::cout << "Loaded multi-column binary intervals from column " 
+                          << opts.getDataColumn() << std::endl;
+                return result;
+            } else {
+                std::cerr << "Error: Failed to load multi-column binary CSV" << std::endl;
+                return std::make_shared<DigitalIntervalSeries>();
+            }
         }
         default: {
             std::cout << "Format " << data_type_str << " not found " << std::endl;

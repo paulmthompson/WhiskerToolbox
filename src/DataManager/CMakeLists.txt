@@ -36,6 +36,8 @@ set(DATAMANAGER_SOURCES
         DigitalTimeSeries/Digital_Interval_Series.cpp
         DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp
         DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp
+        DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp
+        DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.cpp
         DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.hpp
         DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp
         DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp

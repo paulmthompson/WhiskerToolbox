@@ -20,6 +20,7 @@
 
 #include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
+#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
@@ -36,6 +37,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include "nlohmann/json.hpp"
+#include <rfl.hpp>
 
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
@@ -807,6 +809,39 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                                   << folder_path << std::endl;
                     } else {
                         std::cerr << "Error: Failed to create TimeFrame from filenames for "
+                                  << name << std::endl;
+                    }
+                }
+
+                if (item["format"] == "multi_column_binary") {
+                    // Load TimeFrame from multi-column binary CSV file
+                    MultiColumnBinaryCSVTimeFrameOptions opts;
+                    opts.filepath = file_path;
+                    
+                    // Parse optional fields from JSON
+                    if (item.contains("header_lines_to_skip")) {
+                        opts.header_lines_to_skip = rfl::Validator<int, rfl::Minimum<0>>(
+                            item["header_lines_to_skip"].get<int>());
+                    }
+                    if (item.contains("time_column")) {
+                        opts.time_column = rfl::Validator<int, rfl::Minimum<0>>(
+                            item["time_column"].get<int>());
+                    }
+                    if (item.contains("delimiter")) {
+                        opts.delimiter = item["delimiter"].get<std::string>();
+                    }
+                    if (item.contains("sampling_rate")) {
+                        opts.sampling_rate = rfl::Validator<double, rfl::Minimum<0.0>>(
+                            item["sampling_rate"].get<double>());
+                    }
+                    
+                    auto timeframe = load(opts);
+                    if (timeframe) {
+                        dm->setTime(TimeKey(name), timeframe, true);
+                        std::cout << "Created TimeFrame '" << name << "' from multi-column binary CSV "
+                                  << "(sampling rate: " << opts.getSamplingRate() << " Hz)" << std::endl;
+                    } else {
+                        std::cerr << "Error: Failed to create TimeFrame from multi-column binary CSV for "
                                   << name << std::endl;
                     }
                 }

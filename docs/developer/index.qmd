@@ -16,4 +16,7 @@ For starting projects, I recommend looking into four separate initiatives to ens
 -   [Static Analysis](analysis/static_analysis.qmd): Static analysis tools can help identify potential issues in the code before they become problems. This section describes how to use static analysis tools to improve code quality.
 -   [Fuzzing](fuzz/fuzzing.qmd): Fuzzing is a technique for testing software by providing random inputs to the program. This section describes how to use fuzzing to identify bugs in the code or unexpected edge cases in complex algorithms.
 
-To view how specific parts of Neuralyzer work under the hood, please view the implementation documentation.
+To view how specific parts of Neuralyzer work under the hood, please view the implementation documentation:
+
+-   [CorePlotting](core_plotting.qmd): Documentation for the core plotting library, including the `ViewState` camera model and coordinate transformations.
+

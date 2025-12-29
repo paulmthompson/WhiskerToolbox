@@ -1,0 +1,205 @@
+---
+title: "How to Load Tabular Binary Event Data"
+format: html
+---
+
+## Overview
+
+This guide shows how to load digital interval data and timestamps from tabular text files where binary events (0/1 values) are stored in columns. This is common when exporting data from data acquisition systems that record multiple digital channels alongside timestamps.
+
+## Example File Format
+
+Consider a file like `events.dat` with the following structure:
+
+```
+11/28/2025
+10:23:25 AM
+
+
+
+Time	v0	v1	v2	v3	y0	y1	y2	y3
+0.000000	1.000000	0.000000	0.000000	0.000000
+0.000071	1.000000	0.000000	0.000000	0.000000
+0.000143	1.000000	0.000000	0.000000	0.000000
+...
+```
+
+Key characteristics:
+
+- **Header lines**: Date, time, and blank lines before the column headers
+- **Column headers**: Tab-separated names (`Time`, `v0`, `v1`, etc.)
+- **Data rows**: Tab-separated values with fractional timestamps and binary (0/1) event values
+- **Multiple channels**: Each column after Time represents a different event channel
+
+## Loading Digital Intervals from a Column
+
+To extract intervals (contiguous regions where value = 1) from one column:
+
+```json
+{
+  "filepath": "events.dat",
+  "data_type": "digital_interval",
+  "name": "channel_v0",
+  "format": "multi_column_binary",
+  "header_lines_to_skip": 5,
+  "data_column": 1,
+  "delimiter": "\t",
+  "binary_threshold": 0.5
+}
+```
+
+### Configuration Options
+
+| Element | Description | Required? | Type | Default |
+|---------|-------------|-----------|------|---------|
+| `filepath` | Path to the data file, relative to JSON config | Yes | string | — |
+| `data_type` | Must be `"digital_interval"` | Yes | string | — |
+| `name` | Name for the loaded data in Neuralyzer | Yes | string | — |
+| `format` | Must be `"multi_column_binary"` | Yes | string | — |
+| `header_lines_to_skip` | Number of lines before the column header row | No | integer | 5 |
+| `time_column` | Column index (0-based) containing timestamps | No | integer | 0 |
+| `data_column` | Column index (0-based) containing binary event data | No | integer | 1 |
+| `delimiter` | Character(s) separating columns | No | string | `"\t"` (tab) |
+| `binary_threshold` | Values >= threshold are treated as 1 (on) | No | number | 0.5 |
+| `sampling_rate` | Hz for converting fractional time to integer indices | No | number | 0.0 |
+
+### Example: Load Multiple Channels
+
+To load intervals from multiple columns in the same file, specify each as a separate entry:
+
+```json
+[
+  {
+    "filepath": "events.dat",
+    "data_type": "digital_interval",
+    "name": "valve_0",
+    "format": "multi_column_binary",
+    "header_lines_to_skip": 5,
+    "data_column": 1,
+    "delimiter": "\t"
+  },
+  {
+    "filepath": "events.dat",
+    "data_type": "digital_interval",
+    "name": "valve_1",
+    "format": "multi_column_binary",
+    "header_lines_to_skip": 5,
+    "data_column": 2,
+    "delimiter": "\t"
+  },
+  {
+    "filepath": "events.dat",
+    "data_type": "digital_interval",
+    "name": "valve_2",
+    "format": "multi_column_binary",
+    "header_lines_to_skip": 5,
+    "data_column": 3,
+    "delimiter": "\t"
+  }
+]
+```
+
+## Loading TimeFrame from the Time Column
+
+To create a TimeFrame object from the timestamp column (useful for synchronization):
+
+```json
+{
+  "filepath": "events.dat",
+  "data_type": "time",
+  "name": "daq_time",
+  "format": "multi_column_binary",
+  "header_lines_to_skip": 5,
+  "time_column": 0,
+  "delimiter": "\t",
+  "sampling_rate": 14000.0
+}
+```
+
+### TimeFrame Configuration Options
+
+| Element | Description | Required? | Type | Default |
+|---------|-------------|-----------|------|---------|
+| `filepath` | Path to the data file | Yes | string | — |
+| `data_type` | Must be `"time"` | Yes | string | — |
+| `name` | Name for the TimeFrame | Yes | string | — |
+| `format` | Must be `"multi_column_binary"` | Yes | string | — |
+| `header_lines_to_skip` | Lines before column headers | No | integer | 5 |
+| `time_column` | Column index with timestamps | No | integer | 0 |
+| `delimiter` | Column separator | No | string | `"\t"` |
+| `sampling_rate` | **Important**: Multiplier to convert fractional time to integers | No | number | 1.0 |
+
+::: {.callout-important}
+## Sampling Rate for TimeFrame
+
+TimeFrame stores integer time values. If your file has fractional timestamps (e.g., `0.000071` seconds), you must specify a `sampling_rate` to convert them to integers.
+
+For example, with `sampling_rate: 14000.0`:
+
+- `0.000071` seconds → `0.000071 × 14000 = 0.994` → `0` (integer)
+- `1.0` seconds → `1.0 × 14000 = 14000` (integer)
+:::
+
+## Complete Example: Load Time and Events Together
+
+Load both the timestamps and digital intervals, then associate the intervals with the loaded timeframe:
+
+```json
+[
+  {
+    "filepath": "events.dat",
+    "data_type": "time",
+    "name": "daq_clock",
+    "format": "multi_column_binary",
+    "header_lines_to_skip": 5,
+    "time_column": 0,
+    "delimiter": "\t",
+    "sampling_rate": 14000.0
+  },
+  {
+    "filepath": "events.dat",
+    "data_type": "digital_interval",
+    "name": "stimulus_on",
+    "format": "multi_column_binary",
+    "header_lines_to_skip": 5,
+    "data_column": 1,
+    "delimiter": "\t",
+    "clock": "daq_clock"
+  }
+]
+```
+
+The `clock` field associates the digital intervals with the `daq_clock` TimeFrame, enabling proper time alignment with other data.
+
+## How Intervals Are Extracted
+
+The loader reads the specified data column and identifies intervals where the value is "on" (>= threshold):
+
+1. Scan through all rows
+2. When value transitions from 0 to 1: start a new interval
+3. When value transitions from 1 to 0: end the current interval
+4. If the file ends while in an interval, close it at the last row
+
+**Example:**
+```
+Row:   0  1  2  3  4  5  6  7  8  9
+Value: 0  1  1  1  0  0  1  1  0  0
+       └──┬──────┘     └──┬──┘
+        Interval 1     Interval 2
+        (1-3)          (6-7)
+```
+
+## Troubleshooting
+
+### No intervals loaded
+- Check that `data_column` points to the correct column (0-based index)
+- Verify `binary_threshold` is appropriate for your data values
+- Ensure `header_lines_to_skip` correctly skips to the column header row
+
+### Wrong number of columns parsed
+- Check the `delimiter` matches your file format (tab vs comma vs space)
+- Verify there are no extra delimiters or inconsistent formatting
+
+### TimeFrame has unexpected values
+- Ensure `sampling_rate` is set appropriately for fractional timestamps
+- Check that `time_column` points to the correct column

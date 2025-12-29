@@ -56,3 +56,77 @@ Digital event series are data represented by an ordered sequence of timestamps. 
 | data_type |  | Yes | string | "digital_interval" |
 | name | Name of the data once it is loaded into Neuralyzer | Yes | string |  |
 | format |  | Yes | string | "csv" |
+
+#### Tabular Binary Events (multi_column_binary)
+
+Use this format when you have a tabular file with a time column and multiple binary event columns (0/1 values), and you want to extract intervals from contiguous "on" regions.
+
+``` json
+{
+  "filepath": "events.dat",
+  "data_type": "digital_interval",
+  "name": "channel_v0",
+  "format": "multi_column_binary",
+  "header_lines_to_skip": 5,
+  "data_column": 1,
+  "delimiter": "\t",
+  "binary_threshold": 0.5
+}
+```
+
+| Element | Description | Required? | Type | Notes |
+|----|----|----|----|----|
+| filepath | Path to tabular data file, relative to JSON file. | Yes | string |  |
+| data_type |  | Yes | string | "digital_interval" |
+| name | Name of the data once loaded | Yes | string |  |
+| format |  | Yes | string | "multi_column_binary" |
+| header_lines_to_skip | Number of lines to skip before column headers | No | integer | Default is 5 |
+| time_column | Column index (0-based) for timestamps | No | integer | Default is 0 |
+| data_column | Column index (0-based) for binary event data | No | integer | Default is 1 |
+| delimiter | Column separator character | No | string | Default is "\t" (tab) |
+| binary_threshold | Values >= threshold treated as 1 (on) | No | number | Default is 0.5 |
+| sampling_rate | Hz for converting fractional time to indices | No | number | Default is 0.0 |
+| clock | TimeFrame to associate with intervals | No | string | Must match a loaded TimeFrame name |
+
+::: {.callout-tip}
+## How-To Guide
+See [How to Load Tabular Binary Event Data](../../examples/tabular_binary_events.qmd) for a complete walkthrough with examples.
+:::
+
+### TimeFrame
+
+TimeFrame objects define the time basis for other data. Multiple formats are supported.
+
+#### Tabular Binary Events (multi_column_binary)
+
+Load timestamps from a tabular file with fractional time values:
+
+``` json
+{
+  "filepath": "events.dat",
+  "data_type": "time",
+  "name": "daq_clock",
+  "format": "multi_column_binary",
+  "header_lines_to_skip": 5,
+  "time_column": 0,
+  "delimiter": "\t",
+  "sampling_rate": 14000.0
+}
+```
+
+| Element | Description | Required? | Type | Notes |
+|----|----|----|----|----|
+| filepath | Path to tabular data file | Yes | string |  |
+| data_type |  | Yes | string | "time" |
+| name | Name for the TimeFrame | Yes | string |  |
+| format |  | Yes | string | "multi_column_binary" |
+| header_lines_to_skip | Lines to skip before column headers | No | integer | Default is 5 |
+| time_column | Column index (0-based) with timestamps | No | integer | Default is 0 |
+| delimiter | Column separator | No | string | Default is "\t" |
+| sampling_rate | Multiplier to convert fractional time to integers | No | number | Default is 1.0 |
+
+::: {.callout-important}
+## Sampling Rate Required for Fractional Times
+TimeFrame stores integer values. Set `sampling_rate` to convert fractional seconds to integers (e.g., 14000.0 for 14kHz sampling).
+:::
+

@@ -110,6 +110,9 @@ add_executable(test_data_manager
         
         # Loader tests
         loaders/test_analog_reflection.cpp
+        
+        # Multi-column binary CSV tests
+        MultiColumnBinaryCSV.test.cpp
 
         TransformsV2/test_view_pipeline.test.cpp
         TransformsV2/test_line_min_point_dist_v2.test.cpp
@@ -200,6 +203,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/Media)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/Points)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/Analog)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data/DigitalIntervals)
 
 function(copy_files TARGET_NAME SOURCE_DIR DEST_DIR FILES)
     foreach(FILE ${FILES})
@@ -217,6 +221,7 @@ set(DATA_FILES_TO_COPY
         "Analog/single_column.csv"
         "DigitalEvents/events.csv"
         "Points/dlc_test.csv"
+        "DigitalIntervals/jun_test.dat"
 )
 
 copy_files(test_data_manager
