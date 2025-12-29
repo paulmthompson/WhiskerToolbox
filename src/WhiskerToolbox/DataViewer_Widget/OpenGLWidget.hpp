@@ -69,10 +69,7 @@
 #include "TimeSeriesDataStore.hpp"
 
 #include <QMatrix4x4>
-#include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -102,11 +99,6 @@ class QTimer;
 namespace CorePlotting {
 class SceneBuilder;
 }
-
-// Type aliases for backward compatibility - use TimeSeriesDataStore types (Phase 3)
-using AnalogSeriesData = DataViewer::AnalogSeriesEntry;
-using DigitalEventSeriesData = DataViewer::DigitalEventSeriesEntry;
-using DigitalIntervalSeriesData = DataViewer::DigitalIntervalSeriesEntry;
 
 enum class PlotTheme {
     Dark,// Black background, white axes (default)
@@ -151,33 +143,18 @@ struct SceneCacheState {
 /**
  * @brief OpenGL resource state (Phase 6)
  * 
- * Groups OpenGL lifecycle resources including shader, buffers, and matrices.
+ * Groups OpenGL lifecycle resources including matrices.
  */
 struct OpenGLResourceState {
-    QOpenGLShaderProgram * program{nullptr};
-    QOpenGLBuffer vbo;
-    QOpenGLVertexArrayObject vao;
     QMatrix4x4 proj;  // Projection matrix (identity default)
     QMatrix4x4 view;  // View matrix (identity default)
-    QMatrix4x4 model; // Model matrix (identity default)
     bool initialized{false};
     QMetaObject::Connection ctx_about_to_be_destroyed_conn;
     ShaderSourceType shader_source_type{ShaderSourceType::Resource};
 };
 
-/**
- * @brief Interaction mode for the OpenGLWidget
- * 
- * Defines the current interaction behavior. The widget dispatches mouse events
- * to the appropriate handler based on the current mode.
- */
-enum class InteractionMode {
-    Normal,         ///< Default: pan, select, hover tooltips
-    CreateInterval, ///< Click-drag to create a new interval
-    ModifyInterval, ///< Edge dragging to modify existing interval
-    CreateLine,     ///< Click-drag to draw a selection line (future)
-    // Future: CreatePoint, CreatePolygon, etc.
-};
+// Use InteractionMode from DataViewer namespace
+using DataViewer::InteractionMode;
 
 //class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
@@ -474,7 +451,6 @@ protected:
     void leaveEvent(QEvent * event) override;
 
 private:
-    void setupVertexAttribs();
     void drawAxis();
     void drawGridLines();
     
@@ -486,37 +462,6 @@ private:
      * line selection, and other interactive glyph operations.
      */
     void drawInteractionPreview();
-
-    /**
-     * @brief Commit the current interaction result to the DataManager
-     * 
-     * Called when an interaction completes (mouse release). Converts
-     * the preview geometry to data coordinates and emits interactionCompleted.
-     */
-    void commitInteraction();
-
-    /**
-     * @brief Start interval creation using the unified interaction system (Phase 5)
-     * 
-     * Creates a RectangleInteractionController in interval mode and starts it
-     * at the given position. The controller handles all state tracking and
-     * preview geometry.
-     * 
-     * @param series_key The key identifying the digital interval series
-     * @param start_pos Initial mouse position where double-click occurred
-     */
-    void startIntervalCreationUnified(std::string const & series_key, QPoint const & start_pos);
-
-    /**
-     * @brief Start interval edge drag using the unified interaction system (Phase 5)
-     * 
-     * Creates a RectangleInteractionController in edge-drag mode for modifying
-     * an existing interval. The controller handles all state tracking and
-     * preview geometry including ghost rendering of the original position.
-     * 
-     * @param hit_result The hit test result containing edge and interval info
-     */
-    void startIntervalEdgeDragUnified(CorePlotting::HitTestResult const & hit_result);
 
     /**
      * @brief Handle completed interaction and update DataManager
@@ -665,25 +610,5 @@ private:
     void computeAndApplyLayout();
 
 };
-
-/**
- * @brief Default values and utilities for time series display configuration
- */
-namespace TimeSeriesDefaultValues {
-
-// Backward compatibility: delegate to DataViewer::DefaultColors (Phase 3)
-inline constexpr auto & DEFAULT_COLORS = DataViewer::DefaultColors::PALETTE;
-
-/**
- * @brief Get color from index, returns hash-based color if index exceeds DEFAULT_COLORS size
- * @param index Index of the color to retrieve
- * @return Hex color string
- * @deprecated Use DataViewer::DefaultColors::getColorForIndex instead
- */
-inline std::string getColorForIndex(size_t index) {
-    return DataViewer::DefaultColors::getColorForIndex(index);
-}
-
-}// namespace TimeSeriesDefaultValues
 
 #endif//OPENGLWIDGET_HPP

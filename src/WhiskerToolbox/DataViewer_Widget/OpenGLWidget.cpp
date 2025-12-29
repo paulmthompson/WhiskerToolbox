@@ -277,7 +277,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     
     // Connect interaction manager signals
     connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::modeChanged, this, [this](DataViewer::InteractionMode mode) {
-        emit interactionModeChanged(static_cast<InteractionMode>(mode));
+        emit interactionModeChanged(mode);
     });
     connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::interactionCompleted, this, [this](CorePlotting::Interaction::DataCoordinates const & coords) {
         handleInteractionCompleted(coords);
@@ -413,11 +413,6 @@ void OpenGLWidget::cleanup() {
     // Safe to release our GL resources
     makeCurrent();
 
-    if (_gl_state.program) {
-        delete _gl_state.program;
-        _gl_state.program = nullptr;
-    }
-
     // Cleanup PlottingOpenGL SceneRenderer
     if (_scene_renderer) {
         _scene_renderer->cleanup();
@@ -429,9 +424,6 @@ void OpenGLWidget::cleanup() {
         _axis_renderer->cleanup();
         _axis_renderer.reset();
     }
-
-    _gl_state.vbo.destroy();
-    _gl_state.vao.destroy();
 
     doneCurrent();
 
@@ -488,12 +480,6 @@ void OpenGLWidget::initializeGL() {
 
     // Connect reload signal to redraw
     connect(&ShaderManager::instance(), &ShaderManager::shaderReloaded, this, [this](std::string const &) { update(); });
-    _gl_state.vao.create();
-    QOpenGLVertexArrayObject::Binder const vaoBinder(&_gl_state.vao);
-    _gl_state.vbo.create();
-    _gl_state.vbo.bind();
-    _gl_state.vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    setupVertexAttribs();
 
     // Initialize PlottingOpenGL SceneRenderer
     _scene_renderer = std::make_unique<PlottingOpenGL::SceneRenderer>();
@@ -508,22 +494,6 @@ void OpenGLWidget::initializeGL() {
         std::cerr << "Warning: Failed to initialize AxisRenderer" << std::endl;
         _axis_renderer.reset();
     }
-}
-
-void OpenGLWidget::setupVertexAttribs() {
-
-    _gl_state.vbo.bind();             // glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
-    int const vertex_argument_num = 4;// Position (x, y, 0, 1) for axes shader
-
-    // Attribute 0: vertex positions (x, y, 0, 1) for axes shader
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
-
-    // Disable unused vertex attributes
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-
-    _gl_state.vbo.release();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -887,12 +857,12 @@ void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::setInteractionMode(InteractionMode mode) {
-    _interaction_manager->setMode(static_cast<DataViewer::InteractionMode>(mode));
+    _interaction_manager->setMode(mode);
     _input_handler->setInteractionActive(_interaction_manager->isActive());
 }
 
 InteractionMode OpenGLWidget::interactionMode() const {
-    return static_cast<InteractionMode>(_interaction_manager->mode());
+    return _interaction_manager->mode();
 }
 
 bool OpenGLWidget::isInteractionActive() const {
@@ -916,73 +886,6 @@ void OpenGLWidget::drawInteractionPreview() {
     }
 
     _scene_renderer->previewRenderer().render(preview.value(), width(), height());
-}
-
-// Note: commitInteraction() is no longer needed - handled by InteractionManager
-
-void OpenGLWidget::startIntervalCreationUnified(std::string const & series_key, QPoint const & start_pos) {
-    // This is now handled by signals from DataViewerInputHandler
-    // The constructor wires up intervalCreationRequested -> interaction_manager->startIntervalCreation
-    // Keeping this method for backwards compatibility
-    
-    auto const & interval_series = _data_store->intervalSeries();
-    auto it = interval_series.find(series_key);
-    if (it == interval_series.end()) {
-        return;
-    }
-
-    auto const & display_options = it->second.display_options;
-    int r, g, b;
-    hexToRGB(display_options->style.hex_color, r, g, b);
-    glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
-    glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
-
-    // Update interaction manager context
-    DataViewer::InteractionContext ctx;
-    ctx.view_state = &_view_state;
-    ctx.scene = &_cache_state.scene;
-    ctx.widget_width = width();
-    ctx.widget_height = height();
-    _interaction_manager->setContext(ctx);
-
-    _interaction_manager->startIntervalCreation(
-            series_key,
-            static_cast<float>(start_pos.x()),
-            static_cast<float>(start_pos.y()),
-            fill_color, stroke_color);
-    _input_handler->setInteractionActive(true);
-}
-
-void OpenGLWidget::startIntervalEdgeDragUnified(CorePlotting::HitTestResult const & hit_result) {
-    // This is now handled by signals from DataViewerInputHandler
-    // Keeping this method for backwards compatibility
-    
-    if (!hit_result.isIntervalEdge()) {
-        return;
-    }
-
-    auto const & interval_series = _data_store->intervalSeries();
-    auto it = interval_series.find(hit_result.series_key);
-    if (it == interval_series.end()) {
-        return;
-    }
-
-    auto const & display_options = it->second.display_options;
-    int r, g, b;
-    hexToRGB(display_options->style.hex_color, r, g, b);
-    glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
-    glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
-
-    // Update interaction manager context
-    DataViewer::InteractionContext ctx;
-    ctx.view_state = &_view_state;
-    ctx.scene = &_cache_state.scene;
-    ctx.widget_width = width();
-    ctx.widget_height = height();
-    _interaction_manager->setContext(ctx);
-
-    _interaction_manager->startEdgeDrag(hit_result, fill_color, stroke_color);
-    _input_handler->setInteractionActive(true);
 }
 
 void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoordinates const & coords) {
