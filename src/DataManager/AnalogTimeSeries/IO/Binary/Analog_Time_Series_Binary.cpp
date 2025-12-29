@@ -81,36 +81,40 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
 
         std::cout << "Read " << data.size() << " channels" << std::endl;
 
+        // Reserve space for all channel pointers upfront
+        analog_time_series.reserve(data.size());
+
         for (auto & channel: data) {
+            // Pre-size and convert in one pass (faster than iterator constructor)
+            size_t const num_samples = channel.size();
+            std::vector<float> data_float(num_samples);
+            
+            // Direct indexed conversion - compiler can vectorize this
+            for (size_t i = 0; i < num_samples; ++i) {
+                data_float[i] = static_cast<float>(channel[i]);
+            }
+            
+            // Clear the int16 channel to free memory before creating AnalogTimeSeries
+            channel.clear();
+            channel.shrink_to_fit();
 
-            std::vector<float> data_float(channel.begin(), channel.end());
             analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float),
-                                                                            data_float.size()));
-
-            // convert to float with std::transform
-            /*
-            std::vector<float> data_float;
-            std::transform(
-                    channel.begin(),
-                    channel.end(),
-                    std::back_inserter(data_float), [](int16_t i) { return i; });
-
-            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
-            */
+                                                                            num_samples));
         }
 
     } else {
 
         auto data = Loader::readBinaryFile<int16_t>(binary_loader_opts);
 
-        // convert to float with std::transform
-        std::vector<float> data_float;
-        std::transform(
-                data.begin(),
-                data.end(),
-                std::back_inserter(data_float), [](int16_t i) { return i; });
+        // Pre-size and convert (faster than back_inserter)
+        size_t const num_samples = data.size();
+        std::vector<float> data_float(num_samples);
+        
+        for (size_t i = 0; i < num_samples; ++i) {
+            data_float[i] = static_cast<float>(data[i]);
+        }
 
-        analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
+        analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float), num_samples));
     }
 
     return analog_time_series;

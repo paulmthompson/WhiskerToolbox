@@ -103,21 +103,32 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOption
     data.resize(options.num_channels);
 
     for (size_t i = 0; i < options.num_channels; i++) {
-        //data[i].reserve(num_samples_per_channel);
         data[i].resize(num_samples_per_channel);
     }
 
     file.seekg(static_cast<std::ios::off_type>(options.header_size_bytes), std::ios::beg);
 
-    std::vector<T> time_slice_buffer(options.num_channels);
+    // Read in chunks for better I/O performance
+    // Chunk size of 10000 time samples balances memory usage and syscall overhead
+    // For 32 channels of int16, this is 640KB per chunk - fits comfortably in L2/L3 cache
+    constexpr size_t CHUNK_TIME_SAMPLES = 10000;
+    std::vector<T> chunk_buffer(CHUNK_TIME_SAMPLES * options.num_channels);
 
-    size_t current_time_index = 0;
-    while (file.read(reinterpret_cast<char *>(&time_slice_buffer[0]), static_cast<std::streamsize>(sizeof(T) * options.num_channels))) {
-        for (size_t i = 0; i < options.num_channels; ++i) {
-            //data[i].push_back(time_slice_buffer[i]);
-            data[i][current_time_index] = time_slice_buffer[i];
+    size_t time_offset = 0;
+    while (time_offset < num_samples_per_channel) {
+        size_t const chunk_size = std::min(CHUNK_TIME_SAMPLES, num_samples_per_channel - time_offset);
+        size_t const bytes_to_read = chunk_size * options.num_channels * sizeof(T);
+
+        file.read(reinterpret_cast<char *>(chunk_buffer.data()), static_cast<std::streamsize>(bytes_to_read));
+
+        // Distribute chunk data to per-channel vectors
+        for (size_t t = 0; t < chunk_size; ++t) {
+            for (size_t ch = 0; ch < options.num_channels; ++ch) {
+                data[ch][time_offset + t] = chunk_buffer[t * options.num_channels + ch];
+            }
         }
-        current_time_index++;
+
+        time_offset += chunk_size;
     }
 
 #ifdef BINARY_LOADERS_ENABLE_PROFILING
