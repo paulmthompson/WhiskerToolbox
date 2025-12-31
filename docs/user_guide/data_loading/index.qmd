@@ -19,12 +19,13 @@ Media provides the visual backdrop for data visualization and annotation.
 | Type | Description | Formats | Reference |
 |------|-------------|---------|-----------|
 | **Video** | Frame-by-frame video files | `.mp4`, `.avi`, `.mov` | [Video Loading](Video_Loading.qmd) |
-| **Images** | Sequence of image files | `.jpg`, `.png`, `.tiff` | — |
+| **Image Stacks** | Sequence of image files | `.tif`, `.png`, `.jpg` | [Image Loading](Image_Loading.qmd) |
 | **HDF5** | Hierarchical data with image arrays | `.h5`, `.hdf5`, `.mat` | — |
 
 ::: {.callout-tip}
-## Video Import How-To
-New to video import? See [How to Import Video](../../examples/video_import.qmd) for a complete walkthrough including troubleshooting B-frame issues.
+## Media Import How-To Guides
+- **Video**: See [How to Import Video](../../examples/video_import.qmd) for a complete walkthrough including troubleshooting B-frame issues.
+- **Image Stacks**: See [How to Import Image Stacks](../../examples/image_stack_import.qmd) for loading 2P imaging data and multi-channel stacks.
 :::
 
 ## Spatial Data
@@ -84,6 +85,7 @@ See [JSON Loading Reference](JSON_loading.qmd) for complete documentation on all
 Step-by-step guides for common data import tasks:
 
 - [How to Import Video](../../examples/video_import.qmd) - Video loading with B-frame handling
+- [How to Import Image Stacks](../../examples/image_stack_import.qmd) - 2P imaging and multi-channel image sequences
 - [How to Load Tabular Binary Events](../../examples/tabular_binary_events.qmd) - Import digital intervals from DAQ data
 
 ## Getting Started

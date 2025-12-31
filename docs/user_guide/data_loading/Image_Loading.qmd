@@ -1,0 +1,172 @@
+---
+title: "Image Stack Loading"
+format: html
+---
+
+## Overview
+
+Image stacks are sequences of image files that Neuralyzer treats as frame-by-frame media, similar to video. This is the standard data format for two-photon microscopy, widefield calcium imaging, and other scientific imaging modalities.
+
+::: {.callout-tip}
+## How-To Guide
+For step-by-step instructions including multi-channel loading and filename patterns, see [How to Import Image Stacks](../../examples/image_stack_import.qmd).
+:::
+
+## Supported Formats
+
+Neuralyzer uses OpenCV for image loading:
+
+| Format | Extensions | Bit Depth |
+|--------|------------|-----------|
+| TIFF | `.tif`, `.tiff`, `.ome.tif` | 8-bit, 16-bit |
+| PNG | `.png` | 8-bit, 16-bit |
+| JPEG | `.jpg`, `.jpeg` | 8-bit |
+| BMP | `.bmp` | 8-bit |
+
+::: {.callout-note}
+## 16-bit Support
+TIFF and PNG formats support 16-bit images common in scientific imaging. Neuralyzer automatically detects bit depth and normalizes display accordingly.
+:::
+
+## Loading Methods
+
+### GUI: File Menu
+
+Load images through the application menu:
+
+**File → Load Data** → Select any image file → **Open**
+
+Neuralyzer loads all images with matching extensions in the same directory.
+
+### JSON Configuration
+
+For reproducible workflows with filtering and multi-channel support:
+
+```json
+{
+  "data_type": "images",
+  "name": "media",
+  "filepath": "imaging_data",
+  "file_extensions": [".tif", ".tiff"],
+  "filename_pattern": "_Ch2_",
+  "sort_by_name": true,
+  "display_format": "Gray",
+  "recursive_search": false
+}
+```
+
+Load via **File → Load JSON Configuration**.
+
+## JSON Configuration Reference
+
+### Image Data Type
+
+| Element | Description | Required? | Type | Default |
+|---------|-------------|-----------|------|---------|
+| `data_type` | Must be `"images"` | Yes | string | — |
+| `name` | Identifier for this data in Neuralyzer | Yes | string | — |
+| `filepath` | Directory containing images, relative to JSON | Yes | string | — |
+| `file_extensions` | Array of extensions to include | No | array | `[".png", ".jpg", ".jpeg"]` |
+| `filename_pattern` | Regex pattern to filter filenames | No | string | `""` (all files) |
+| `sort_by_name` | Sort files alphabetically by name | No | boolean | `true` |
+| `display_format` | `"Gray"` or `"Color"` | No | string | `"Color"` |
+| `recursive_search` | Include subdirectories in search | No | boolean | `false` |
+
+### Multi-Channel Example
+
+Load two-photon imaging data with separate channels:
+
+```json
+[
+  {
+    "data_type": "images",
+    "name": "media",
+    "filepath": ".",
+    "file_extensions": [".ome.tif", ".tif", ".tiff"],
+    "filename_pattern": "_Ch2_",
+    "sort_by_name": true,
+    "display_format": "Gray",
+    "recursive_search": false
+  },
+  {
+    "data_type": "images",
+    "name": "media_2",
+    "filepath": ".",
+    "file_extensions": [".ome.tif", ".tif", ".tiff"],
+    "filename_pattern": "_Ch1_",
+    "sort_by_name": true,
+    "display_format": "Gray",
+    "recursive_search": false
+  }
+]
+```
+
+## Filename Pattern Matching
+
+The `filename_pattern` field accepts regex patterns that are searched within each filename:
+
+| Pattern | Description | Example Match |
+|---------|-------------|---------------|
+| `_Ch1_` | Contains "_Ch1_" | `exp_Ch1_001.tif` |
+| `green` | Contains "green" | `mouse_green_0001.tif` |
+| `trial[0-9]+` | Contains "trial" followed by digits | `exp_trial42.tif` |
+| `^frame_` | Starts with "frame_" | `frame_0001.tif` |
+
+::: {.callout-warning}
+## Case Sensitivity
+Regex patterns are case-sensitive. `_Ch1_` will not match `_ch1_`.
+:::
+
+## Display Formats
+
+| Format | Description | Use Case |
+|--------|-------------|----------|
+| `"Gray"` | Single-channel grayscale | Fluorescence imaging |
+| `"Color"` | RGBA color | Brightfield, histology |
+
+## Technical Details
+
+### File Discovery
+
+When loading images:
+
+1. Directory is scanned for files matching specified extensions
+2. If `filename_pattern` is provided, files are filtered by regex match
+3. If `sort_by_name` is true, files are sorted alphabetically
+4. Sorted file list determines frame order
+
+### Memory Management
+
+Only the current frame is loaded into memory. Large datasets with thousands of frames are handled efficiently.
+
+### Bit Depth Handling
+
+- **8-bit images**: Displayed directly (0-255 range)
+- **16-bit images**: Normalized to display range while preserving underlying data
+
+## Programmatic Access
+
+For developers:
+
+```cpp
+#include "Media/IO/Image_Data_Loader.hpp"
+
+ImageLoaderOptions opts;
+opts.directory_path = "path/to/images";
+opts.file_extensions = {".tif", ".tiff"};
+opts.filename_pattern = "_Ch2_";
+opts.sort_by_name = true;
+opts.display_format = MediaData::DisplayFormat::Gray;
+
+auto image_data = load(opts);
+
+// Access frame count
+int total_frames = image_data->getTotalFrameCount();
+```
+
+## Related Topics
+
+- [How to Import Image Stacks](../../examples/image_stack_import.qmd) - Step-by-step guide with examples
+- [JSON Loading Reference](JSON_loading.qmd) - Complete JSON configuration options
+- [Video Loading](Video_Loading.qmd) - Loading video files
+- [Media Viewer Overview](../media_viewer/overview.qmd) - Working with loaded media
