@@ -24,6 +24,8 @@ website:
             href: labeling/keypoint.qmd
           - text: "Mask Creation"
             href: labeling/mask.qmd
+          - text: "Video Import"
+            href: examples/video_import.qmd
           - text: "Load Tabular Binary Events"
             href: examples/tabular_binary_events.qmd
             

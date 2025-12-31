@@ -3,3 +3,91 @@ title: "Data Loading"
 format: html
 ---
 
+## Overview
+
+Neuralyzer supports loading diverse data types commonly used in systems neuroscience experiments. This section covers all data import methods and formats.
+
+Data can be loaded through:
+
+1. **GUI menus** - Interactive file selection for quick loading
+2. **JSON configuration files** - Reproducible, scriptable data loading for batch workflows
+
+## Media Data
+
+Media provides the visual backdrop for data visualization and annotation.
+
+| Type | Description | Formats | Reference |
+|------|-------------|---------|-----------|
+| **Video** | Frame-by-frame video files | `.mp4`, `.avi`, `.mov` | [Video Loading](Video_Loading.qmd) |
+| **Images** | Sequence of image files | `.jpg`, `.png`, `.tiff` | — |
+| **HDF5** | Hierarchical data with image arrays | `.h5`, `.hdf5`, `.mat` | — |
+
+::: {.callout-tip}
+## Video Import How-To
+New to video import? See [How to Import Video](../../examples/video_import.qmd) for a complete walkthrough including troubleshooting B-frame issues.
+:::
+
+## Spatial Data
+
+Spatial data represents locations and shapes over time, typically overlaid on video.
+
+| Type | Description | Common Sources | Reference |
+|------|-------------|----------------|-----------|
+| **Points** | (x, y) coordinates per frame | DeepLabCut, SLEAP, manual annotation | [Point Loading](Point_Loading.qmd) |
+| **Lines** | Ordered sequences of points | Whisker trackers, contour detection | [Line Loading](Line_Loading.qmd) |
+| **Masks** | Binary regions per frame | Segmentation models, ROI tools | [Mask Loading](Mask_Loading.qmd) |
+
+## Time Series Data
+
+Continuous and discrete signals recorded alongside behavior.
+
+| Type | Description | Common Sources | Reference |
+|------|-------------|----------------|-----------|
+| **Analog Time Series** | Continuous signals | Electrophysiology, sensor data | — |
+| **Digital Events** | Point events in time | Spike times, behavioral markers | — |
+| **Digital Intervals** | Time periods (start/end) | Trial epochs, stimulus periods | [JSON Loading](JSON_loading.qmd) |
+
+## Multi-dimensional Data
+
+| Type | Description | Common Sources | Reference |
+|------|-------------|----------------|-----------|
+| **Tensors** | N-dimensional arrays | Neural network outputs, multi-channel data | [Tensor Loading](Tensor_Loading.qmd) |
+
+## JSON Configuration Loading
+
+For reproducible analysis workflows, define all data loading in a JSON file:
+
+```json
+[
+  {
+    "filepath": "experiment.mp4",
+    "data_type": "video",
+    "name": "media"
+  },
+  {
+    "filepath": "tracking.csv",
+    "data_type": "point",
+    "name": "nose"
+  },
+  {
+    "filepath": "trials.csv",
+    "data_type": "digital_interval",
+    "name": "stimulus_on"
+  }
+]
+```
+
+See [JSON Loading Reference](JSON_loading.qmd) for complete documentation on all supported formats and options.
+
+## How-To Guides
+
+Step-by-step guides for common data import tasks:
+
+- [How to Import Video](../../examples/video_import.qmd) - Video loading with B-frame handling
+- [How to Load Tabular Binary Events](../../examples/tabular_binary_events.qmd) - Import digital intervals from DAQ data
+
+## Getting Started
+
+1. **Single video analysis**: Use **File → Load Data** to select your video
+2. **Multi-modal experiments**: Create a JSON configuration file referencing all your data files
+3. **Reproducible workflows**: Save your JSON configuration alongside your data for easy re-loading
