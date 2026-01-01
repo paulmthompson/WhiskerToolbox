@@ -570,22 +570,57 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     auto const numSteps = numDegrees / 15.0f;
 
     auto const current_range = ui->x_axis_samples->value();
+    auto const total_frames = static_cast<float>(_time_frame->getTotalFrameCount());
+
+    // Determine zoom sensitivity based on modifier keys:
+    // - Shift: Fine mode (very small steps for precise adjustment)
+    // - Ctrl: Coarse mode (large steps for quick navigation)
+    // - None: Normal mode (balanced default behavior)
+    bool const fine_mode = event->modifiers() & Qt::ShiftModifier;
+    bool const coarse_mode = event->modifiers() & Qt::ControlModifier;
 
     float rangeFactor;
     if (_zoom_scaling_mode == ZoomScalingMode::Adaptive) {
         // Adaptive scaling: range factor is proportional to current range width
-        // This makes adjustments more sensitive when zoomed in (small range), less sensitive when zoomed out (large range)
-        rangeFactor = static_cast<float>(current_range) * 0.1f;// 10% of current range width
+        // Base percentages and clamps vary by mode
+        float base_percentage;
+        float min_clamp_divisor;
+        float max_clamp_divisor;
+
+        if (fine_mode) {
+            // Fine mode: 1% of current range, very low minimum for precise control
+            base_percentage = 0.01f;
+            min_clamp_divisor = 10000.0f;  // 0.01% of total as minimum
+            max_clamp_divisor = 100.0f;    // 1% of total as maximum
+        } else if (coarse_mode) {
+            // Coarse mode: 20% of current range for quick navigation
+            base_percentage = 0.20f;
+            min_clamp_divisor = 20.0f;     // 5% of total as minimum
+            max_clamp_divisor = 5.0f;      // 20% of total as maximum
+        } else {
+            // Normal mode: 3% of current range (reduced from 10% for less sensitivity)
+            base_percentage = 0.03f;
+            min_clamp_divisor = 1000.0f;   // 0.1% of total as minimum
+            max_clamp_divisor = 50.0f;     // 2% of total as maximum
+        }
+
+        rangeFactor = static_cast<float>(current_range) * base_percentage;
 
         // Clamp range factor to reasonable bounds
-        // Using /20.0f instead of /100.0f to allow better zooming on short videos
-        // Minimum should be at least 1% of total frames to avoid getting stuck at small ranges
-        float const min_range_factor = std::max(1.0f, static_cast<float>(_time_frame->getTotalFrameCount()) / 100.0f);
-        float const max_range_factor = static_cast<float>(_time_frame->getTotalFrameCount()) / 20.0f;
+        float const min_range_factor = std::max(1.0f, total_frames / min_clamp_divisor);
+        float const max_range_factor = total_frames / max_clamp_divisor;
         rangeFactor = std::max(min_range_factor, std::min(rangeFactor, max_range_factor));
     } else {
-        // Fixed scaling (original behavior)
-        rangeFactor = static_cast<float>(_time_frame->getTotalFrameCount()) / 10000.0f;
+        // Fixed scaling mode with modifier support
+        float divisor;
+        if (fine_mode) {
+            divisor = 100000.0f;  // Very fine steps
+        } else if (coarse_mode) {
+            divisor = 1000.0f;    // Coarse steps
+        } else {
+            divisor = 30000.0f;   // Normal steps (reduced from 10000 for less sensitivity)
+        }
+        rangeFactor = total_frames / divisor;
     }
 
     // Calculate range delta
