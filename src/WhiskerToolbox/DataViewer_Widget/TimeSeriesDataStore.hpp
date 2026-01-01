@@ -25,6 +25,7 @@
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "SpikeSorterConfigLoader.hpp"
+#include "AnalogVertexCache.hpp"
 
 #include <QObject>
 
@@ -47,6 +48,9 @@ namespace DataViewer {
 struct AnalogSeriesEntry {
     std::shared_ptr<AnalogTimeSeries> series;
     std::unique_ptr<NewAnalogTimeSeriesDisplayOptions> display_options;
+    
+    /// Vertex cache for efficient scrolling (initialized lazily)
+    mutable AnalogVertexCache vertex_cache;
 };
 
 /**

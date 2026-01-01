@@ -437,4 +437,103 @@ CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
     return batch;
 }
 
+// ============================================================================
+// Cached Vertex API for efficient scrolling (Phase: Streaming Optimization)
+// ============================================================================
+
+std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time) {
+    
+    std::vector<DataViewer::CachedAnalogVertex> result;
+    
+    if (!master_time_frame) {
+        return result;
+    }
+    
+    // Use local-space layout (Y=raw value, model matrix handles positioning)
+    auto const local_layout = makeLocalSpaceLayout();
+    
+    // Use range-based mapper with indices
+    auto mapped_range = CorePlotting::TimeSeriesMapper::mapAnalogSeriesWithIndices(
+            series, local_layout, *master_time_frame, 1.0f, start_time, end_time);
+    
+    // Materialize into CachedAnalogVertex format
+    for (auto const & vertex : mapped_range) {
+        result.push_back(DataViewer::CachedAnalogVertex{
+            vertex.x,
+            vertex.y,
+            TimeFrameIndex{vertex.time_index}
+        });
+    }
+    
+    return result;
+}
+
+CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        AnalogBatchParams const & params,
+        glm::mat4 const & model_matrix,
+        DataViewer::AnalogVertexCache & cache) {
+    
+    CorePlotting::RenderablePolyLineBatch batch;
+    batch.global_color = params.color;
+    batch.thickness = params.thickness;
+    batch.model_matrix = model_matrix;
+
+    if (!master_time_frame) {
+        return batch;
+    }
+
+    // Initialize cache if needed (use 3x visible window for smooth scrolling)
+    size_t const visible_points = static_cast<size_t>(params.end_time.getValue() - params.start_time.getValue());
+    size_t const desired_capacity = visible_points * 3;
+    
+    if (!cache.isInitialized() || cache.capacity() < desired_capacity) {
+        cache.initialize(desired_capacity);
+    }
+    
+    // Check if we need to update the cache
+    if (cache.needsUpdate(params.start_time, params.end_time)) {
+        auto missing_ranges = cache.getMissingRanges(params.start_time, params.end_time);
+        
+        if (missing_ranges.size() == 1 && 
+            missing_ranges[0].start == params.start_time && 
+            missing_ranges[0].end == params.end_time) {
+            // Complete cache miss - regenerate all vertices
+            auto vertices = generateVerticesForRange(series, master_time_frame, 
+                                                     params.start_time, params.end_time);
+            cache.setVertices(vertices, params.start_time, params.end_time);
+        } else {
+            // Incremental update - only generate missing ranges
+            for (auto const & range : missing_ranges) {
+                auto vertices = generateVerticesForRange(series, master_time_frame,
+                                                         range.start, range.end);
+                if (range.prepend) {
+                    cache.prependVertices(vertices);
+                } else {
+                    cache.appendVertices(vertices);
+                }
+            }
+        }
+    }
+    
+    // Extract vertices for the requested range
+    auto flat_vertices = cache.getVerticesForRange(params.start_time, params.end_time);
+    
+    // Gap detection is currently not supported with caching
+    // (would require tracking original indices in the cache)
+    if (!flat_vertices.empty() && flat_vertices.size() >= 4) {
+        int const vertex_count = static_cast<int>(flat_vertices.size()) / 2;
+        batch.line_start_indices.push_back(0);
+        batch.line_vertex_counts.push_back(vertex_count);
+        batch.vertices = std::move(flat_vertices);
+    }
+
+    return batch;
+}
+
 }// namespace DataViewerHelpers

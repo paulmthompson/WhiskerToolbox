@@ -1210,8 +1210,11 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 builder.addGlyphBatch(std::move(batch));
             }
         } else {
-            auto batch = DataViewerHelpers::buildAnalogSeriesBatchSimplified(
-                    *series, _master_time_frame, batch_params, model_matrix);
+            // Use cached batch builder for efficient scrolling
+            // The vertex_cache is mutable, allowing updates even with const iteration
+            auto batch = DataViewerHelpers::buildAnalogSeriesBatchCached(
+                    *series, _master_time_frame, batch_params, model_matrix, 
+                    analog_data.vertex_cache);
             if (!batch.vertices.empty()) {
                 builder.addPolyLineBatch(std::move(batch));
             }

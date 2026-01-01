@@ -17,6 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_data_viewer_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/AnalogVertexCache.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/whiskertoolbox.qrc
 )
 

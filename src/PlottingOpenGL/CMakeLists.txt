@@ -18,6 +18,7 @@ find_package(glm CONFIG REQUIRED)
 set(PLOTTINGOPENGL_SOURCES
     GLContext.cpp
     GLContext.hpp
+    RenderingTimer.hpp
     SceneRenderer.cpp
     SceneRenderer.hpp
     Renderers/AxisRenderer.cpp
@@ -25,6 +26,8 @@ set(PLOTTINGOPENGL_SOURCES
     Renderers/IBatchRenderer.hpp
     Renderers/PolyLineRenderer.cpp
     Renderers/PolyLineRenderer.hpp
+    Renderers/StreamingPolyLineRenderer.cpp
+    Renderers/StreamingPolyLineRenderer.hpp
     Renderers/GlyphRenderer.cpp
     Renderers/GlyphRenderer.hpp
     Renderers/RectangleRenderer.cpp
