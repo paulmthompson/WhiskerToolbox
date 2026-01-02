@@ -2,44 +2,21 @@
 
 ## Overview
 
-CorePlotting is the foundational, Qt-independent C++ library for the WhiskerToolbox plotting stack. It provides unified abstractions for spatial visualization of time-series data, separating **data & layout** from **rendering** and **interaction**.
+CorePlotting is the foundational, Qt-independent C++ library for the Neuralyzer plotting stack. It provides unified abstractions for visualization of data, separating **data & layout** from **rendering** and **interaction**.
 
-The ultimate goal is to de-complect the current parallel implementations (DataViewer, Analysis Dashboard, SVG Exporter) into a layered architecture:
+This is part of a layered architecture:
 
 1.  **CorePlotting** (This Library): Data structures, Layout engines, Coordinate transforms (MVP), Spatial Indexing. (No Qt, No OpenGL).
 2.  **PlottingOpenGL**: Rendering strategies that consume CorePlotting descriptions and issue OpenGL commands.
-3.  **QtPlotting** (Future): Qt widgets, Input handling, Tooltips, bridging user events to CorePlotting queries.
+3.  **Specific Qt Widgets**: Input handling, Tooltips, bridging user events to CorePlotting queries.
 
 ---
 
-## Architectural Evolution: Position Mappers (December 2025)
+## Position Mappers
 
-### The Problem: Coordinate Mapping is Visualization-Specific
+### Separate Extraction, Layout, and Scene Building
 
-The initial design baked DataViewer-specific coordinate logic into `SceneBuilder`:
-
-```cpp
-// PROBLEM: This is DataViewer-specific, not general
-SceneBuilder::addEventSeries(series, layout, time_frame) {
-    float x = time_frame.getTimeAtIndex(event.time);  // X = absolute time
-    float y = layout.allocated_y_center;               // Y = stacked position
-}
-```
-
-This doesn't work for other visualizations:
-
-| Visualization | X Coordinate Source | Y Coordinate Source |
-|---------------|---------------------|---------------------|
-| **DataViewer Events** | `TimeFrame[event.time]` | `layout.y_center` (constant) |
-| **DataViewer Analog** | `TimeFrame[sample.index]` | `layout.apply(sample.value)` |
-| **SpatialOverlay Points** | `point.x` | `point.y` |
-| **Raster Plot** | `relative_time(event, center)` | `row.y_center` |
-| **Scatter Plot** | `series_a.value[i]` | `series_b.value[i]` |
-| **Line Event Plot** | `relative_time(sample, trigger)` | `layout.apply(sample.value)` |
-
-### The Solution: Separate Extraction, Layout, and Scene Building
-
-The architecture now follows a **three-layer model**:
+The architecture follows a **three-layer model**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -652,38 +629,7 @@ This keeps Mappers thin (or eliminates them for simple cases) while ensuring sin
 
 ---
 
-## Motivation
-
-WhiskerToolbox currently has three parallel implementations for event-like visualization:
-
-| Component | Location | Data Format | Interaction | EntityID |
-|-----------|----------|-------------|-------------|----------|
-| DataViewer FullCanvas Events | `WhiskerToolbox/DataViewer` | `DigitalEventSeries` | Click | ✅ |
-| DataViewer Stacked Events | `WhiskerToolbox/DataViewer` | `DigitalEventSeries` | Scroll/pan | ✅ |
-| EventPlotWidget (Raster) | `WhiskerToolbox/Analysis_Dashboard` | `vector<vector<float>>` | Hover, pan, zoom | ❌ |
-| SVG Exporter | `WhiskerToolbox/DataViewer` | `DigitalEventSeries` | None | N/A |
-
-**Goal**: Unify these into a shared abstraction where:
-1.  **Single Source of Truth for Layout**: The position of an event or point is calculated ONCE in `CorePlotting`.
-2.  **Unified MVP Logic**: OpenGL and SVG use the exact same matrix calculation functions.
-3.  **Universal Interaction**: Hover/Click detection works via `EntityId` lookup across all plot types.
-
 ## Architecture Status
-
-### Completed Migrations
-
-The following architectural improvements have been completed:
-
-1. ✅ **TimeRange replaces XAxis**: The legacy `XAxis` class has been replaced with `TimeRange`, which integrates with `TimeFrame` to enforce valid data bounds and prevent scrolling/zooming beyond the available data range.
-
-2. ✅ **Unified series storage**: Eliminated duplicate series storage. Series data now lives only in `OpenGLWidget`. Layout computation is handled by `LayoutEngine` with no data storage.
-
-3. ✅ **DisplayOptions split**: Split `DisplayOptions` into three separate structs:
-   - `SeriesStyle`: Rendering properties (color, alpha, thickness)
-   - `SeriesLayoutResult`: Layout output (allocated_y_center, allocated_height)
-   - `SeriesDataCache`: Cached calculations (std_dev, mean)
-
-4. ✅ **Scene-based rendering**: `OpenGLWidget` now uses `SceneBuilder` to construct `RenderableScene` objects, separating data preparation from rendering.
 
 ### Matrix Architecture Comparison
 
@@ -1601,17 +1547,3 @@ if (hit) {
 2. **TimeRange respects TimeFrame bounds**: User cannot scroll/zoom beyond valid data
 3. **Model = per-series, View/Projection = shared**: Consistent MVP pattern for time-series
 4. **RenderableScene is renderer-agnostic**: Same scene feeds OpenGL and SVG export
-
-### Completed Migrations
-
-| Legacy Component | New (CorePlotting) | Status |
-|------------------|---------------------|--------|
-| `XAxis` | `TimeRange` (TimeFrame-aware) | ✅ Complete |
-| `PlottingManager` series storage | Removed (single source in widget) | ✅ Complete |
-| `PlottingManager` allocation methods | `LayoutEngine` → `SeriesLayout` | ✅ Complete |
-| `NewAnalogTimeSeriesDisplayOptions` | Split into `SeriesStyle` + `SeriesLayout` | ✅ Complete |
-| `MVP_*.cpp` in `DataViewer/` | `SeriesMatrices.cpp` in `CorePlotting/` | ✅ Complete |
-| Inline vertex generation | `Mapper` → `SceneBuilder` → `RenderableBatch` | ✅ Complete |
-| `SceneBuilder.addEventSeries(series, tf)` | `Mapper.mapEvents()` → `SceneBuilder.addGlyphs(positions)` | ✅ Complete |
-| `_verticalPanOffset`, `_yMin`, `_yMax` | `TimeSeriesViewState` | ✅ Complete |
-
