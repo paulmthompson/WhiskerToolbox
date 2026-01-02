@@ -41,6 +41,7 @@
 
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
+#include "utils/DerivedTimeFrame.hpp"
 #include "utils/string_manip.hpp"
 
 #include "Entity/EntityGroupManager.hpp"
@@ -562,6 +563,118 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
         // Skip transformation objects - they will be processed separately
         if (item.contains("transformations")) {
+            continue;
+        }
+
+        // Check for "derived" format which doesn't require a filepath
+        if (item.contains("format") && item["format"] == "derived") {
+            if (!checkRequiredFields(item, {"data_type", "name"})) {
+                continue;
+            }
+            
+            std::string const data_type_str = item["data_type"];
+            if (data_type_str != "time") {
+                std::cerr << "Error: 'derived' format is only supported for 'time' data type" << std::endl;
+                continue;
+            }
+            
+            std::string const name = item["name"];
+            
+            // Get required source_timeframe parameter
+            if (!item.contains("source_timeframe")) {
+                std::cerr << "Error: 'derived' format requires 'source_timeframe' parameter" << std::endl;
+                continue;
+            }
+            std::string const source_timeframe_name = item["source_timeframe"];
+            auto source_timeframe = dm->getTime(TimeKey(source_timeframe_name));
+            if (!source_timeframe) {
+                std::cerr << "Error: Source timeframe '" << source_timeframe_name << "' not found. "
+                          << "Make sure it is loaded before the derived TimeFrame." << std::endl;
+                continue;
+            }
+            
+            std::shared_ptr<TimeFrame> derived_timeframe = nullptr;
+            
+            // Determine the source series name and type
+            // Support two formats:
+            // 1. source_series + source_type (preferred)
+            // 2. interval_series or event_series as key names (legacy)
+            std::string series_name;
+            std::string series_type;
+            
+            if (item.contains("source_series") && item.contains("source_type")) {
+                series_name = item["source_series"];
+                series_type = item["source_type"];
+            } else if (item.contains("interval_series")) {
+                series_name = item["interval_series"];
+                series_type = "interval";
+            } else if (item.contains("event_series")) {
+                series_name = item["event_series"];
+                series_type = "event";
+            } else {
+                std::cerr << "Error: 'derived' format requires either 'source_series'+'source_type' or "
+                          << "'interval_series'/'event_series' parameter" << std::endl;
+                continue;
+            }
+            
+            // Normalize series_type to handle variants like "interval_series" -> "interval"
+            if (series_type == "interval_series" || series_type == "interval") {
+                auto interval_series = dm->getData<DigitalIntervalSeries>(series_name);
+                if (!interval_series) {
+                    std::cerr << "Error: Interval series '" << series_name << "' not found. "
+                              << "Make sure it is loaded before the derived TimeFrame." << std::endl;
+                    continue;
+                }
+                
+                DerivedTimeFrameFromIntervalsOptions opts;
+                opts.source_timeframe = source_timeframe;
+                opts.interval_series = interval_series;
+                
+                // Get optional edge parameter (default: start)
+                std::string const edge_str = item.value("edge", "start");
+                if (edge_str == "end") {
+                    opts.edge = IntervalEdge::END;
+                } else {
+                    opts.edge = IntervalEdge::START;
+                }
+                
+                derived_timeframe = createDerivedTimeFrame(opts);
+            } else if (series_type == "event_series" || series_type == "event") {
+                auto event_series = dm->getData<DigitalEventSeries>(series_name);
+                if (!event_series) {
+                    std::cerr << "Error: Event series '" << series_name << "' not found. "
+                              << "Make sure it is loaded before the derived TimeFrame." << std::endl;
+                    continue;
+                }
+                
+                DerivedTimeFrameFromEventsOptions opts;
+                opts.source_timeframe = source_timeframe;
+                opts.event_series = event_series;
+                
+                derived_timeframe = createDerivedTimeFrame(opts);
+            } else {
+                std::cerr << "Error: Unknown source_type '" << series_type << "'. "
+                          << "Use 'interval', 'interval_series', 'event', or 'event_series'." << std::endl;
+                continue;
+            }
+            
+            if (derived_timeframe) {
+                dm->setTime(TimeKey(name), derived_timeframe, true);
+                std::cout << "Created derived TimeFrame '" << name << "'" << std::endl;
+            } else {
+                std::cerr << "Error: Failed to create derived TimeFrame for " << name << std::endl;
+            }
+            
+            // Increment progress counter
+            current_item++;
+            if (progress_callback) {
+                std::string message = "Created derived TimeFrame: " + name;
+                bool should_continue = progress_callback(current_item, total_items, message);
+                if (!should_continue) {
+                    std::cout << "Loading cancelled by user" << std::endl;
+                    return data_info_list;
+                }
+            }
             continue;
         }
 
