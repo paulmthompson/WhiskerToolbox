@@ -21,8 +21,6 @@ set(COREPLOTTING_SOURCES
     # CoordinateTransform
     CoordinateTransform/Matrices.hpp
     CoordinateTransform/Matrices.cpp
-    CoordinateTransform/ScreenToWorld.hpp
-    CoordinateTransform/ScreenToWorld.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/TimeRange.hpp

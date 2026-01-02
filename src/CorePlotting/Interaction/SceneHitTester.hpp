@@ -1,7 +1,6 @@
 #ifndef COREPLOTTING_INTERACTION_SCENEHITTESTER_HPP
 #define COREPLOTTING_INTERACTION_SCENEHITTESTER_HPP
 
-#include "../CoordinateTransform/ScreenToWorld.hpp"
 #include "../CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "../Layout/LayoutEngine.hpp"
 #include "../SceneGraph/RenderablePrimitives.hpp"
