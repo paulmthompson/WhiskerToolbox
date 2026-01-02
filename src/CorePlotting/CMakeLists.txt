@@ -58,7 +58,6 @@ set(COREPLOTTING_SOURCES
     Interaction/LineInteractionController.cpp
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.hpp
-    Interaction/IntervalDragController.hpp
     # Export
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp

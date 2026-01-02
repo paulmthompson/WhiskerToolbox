@@ -10,7 +10,6 @@
  * - Scenario 3: Raster Plot (Multi-Row Events)
  * - Scenario 4: Coordinate Transform Round-Trip
  * - Scenario 5: Mixed Series Priority (Event Beats Analog)
- * - Scenario 6: IntervalDragController State Machine
  * 
  * All tests use NO Qt/OpenGL—just CorePlotting + DataManager types.
  */
@@ -31,7 +30,6 @@
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
-#include "CorePlotting/Interaction/IntervalDragController.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 
 // DataManager includes
@@ -702,126 +700,6 @@ TEST_CASE("Scenario 5: When event overlaps analog region, event takes priority",
         REQUIRE(hit.hit_type == HitType::DigitalEvent);
     }
 }
-
-
-// ============================================================================
-// Test Scenario 6: IntervalDragController State Machine
-// ============================================================================
-
-TEST_CASE("Scenario 6: Interval drag controller enforces constraints",
-          "[CorePlotting][Integration][Phase3.5][DragController]") {
-    
-    SECTION("Basic drag workflow: start → update → finish") {
-        IntervalDragController controller;
-        
-        // Start drag from left edge hit
-        auto hit = HitTestResult::intervalEdgeHit(
-            "intervals", EntityId{100}, true, 50, 150, 50.0f, 0.0f);
-        
-        REQUIRE(controller.startDrag(hit));
-        REQUIRE(controller.isActive());
-        REQUIRE(controller.getState().edge == DraggedEdge::Left);
-        
-        // Update drag position
-        controller.updateDrag(30.0f);
-        REQUIRE(controller.getState().current_start == 30);
-        REQUIRE(controller.getState().current_end == 150);  // Unchanged
-        
-        // Finish drag
-        auto final_state = controller.finishDrag();
-        REQUIRE(final_state.hasChanged());
-        REQUIRE(final_state.current_start == 30);
-        REQUIRE_FALSE(controller.isActive());
-    }
-    
-    SECTION("Minimum width constraint prevents collapse") {
-        IntervalDragConfig config;
-        config.min_width = 20;
-        IntervalDragController controller(config);
-        
-        auto hit = HitTestResult::intervalEdgeHit(
-            "intervals", EntityId{100}, true, 50, 150, 50.0f, 0.0f);
-        controller.startDrag(hit);
-        
-        // Try to drag left edge past minimum width
-        controller.updateDrag(140.0f);  // Would result in width of 10
-        
-        // Should be clamped to maintain min_width
-        REQUIRE(controller.getState().current_start == 130);  // 150 - 20 = 130
-        REQUIRE((controller.getState().current_end - controller.getState().current_start) >= 20);
-    }
-    
-    SECTION("Time bounds constraint prevents exceeding limits") {
-        IntervalDragConfig config;
-        config.min_time = 0;
-        config.max_time = 1000;
-        config.min_width = 1;
-        IntervalDragController controller(config);
-        
-        auto hit = HitTestResult::intervalEdgeHit(
-            "intervals", EntityId{100}, true, 50, 150, 50.0f, 0.0f);
-        controller.startDrag(hit);
-        
-        // Try to drag past min_time
-        controller.updateDrag(-50.0f);
-        REQUIRE(controller.getState().current_start == 0);  // Clamped to min_time
-    }
-    
-    SECTION("Cancel restores original values") {
-        IntervalDragController controller;
-        
-        auto hit = HitTestResult::intervalEdgeHit(
-            "intervals", EntityId{100}, true, 50, 150, 50.0f, 0.0f);
-        controller.startDrag(hit);
-        controller.updateDrag(30.0f);
-        
-        // Cancel
-        auto cancelled = controller.cancelDrag();
-        
-        REQUIRE(cancelled.current_start == 50);  // Restored to original
-        REQUIRE(cancelled.current_end == 150);
-        REQUIRE_FALSE(cancelled.hasChanged());
-        REQUIRE_FALSE(controller.isActive());
-    }
-    
-    SECTION("Edge swap when allowed") {
-        IntervalDragConfig config;
-        config.min_width = 1;
-        config.allow_edge_swap = true;
-        IntervalDragController controller(config);
-        
-        auto hit = HitTestResult::intervalEdgeHit(
-            "intervals", EntityId{100}, true, 50, 150, 50.0f, 0.0f);
-        controller.startDrag(hit);
-        
-        // Drag left edge past right edge
-        controller.updateDrag(200.0f);
-        
-        // Edge should swap
-        REQUIRE(controller.getState().edge == DraggedEdge::Right);
-        REQUIRE(controller.getState().current_start == 150);
-        REQUIRE(controller.getState().current_end == 200);
-    }
-    
-    SECTION("Only interval edge hits can start drag") {
-        IntervalDragController controller;
-        
-        // Body hit should not start drag
-        auto body_hit = HitTestResult::intervalBodyHit(
-            "intervals", EntityId{100}, 50, 150, 0.0f);
-        REQUIRE_FALSE(controller.startDrag(body_hit));
-        
-        // Event hit should not start drag
-        auto event_hit = HitTestResult::eventHit(
-            "events", EntityId{1}, 0.0f, 0.0f, 0.0f);
-        REQUIRE_FALSE(controller.startDrag(event_hit));
-        
-        // No hit should not start drag
-        auto no_hit = HitTestResult::noHit();
-        REQUIRE_FALSE(controller.startDrag(no_hit));
-    }
-}
-
 
 
 // ============================================================================

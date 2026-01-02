@@ -65,7 +65,6 @@ This module provides a unified system for interactive glyph creation and modific
 | `DataCoordinates.hpp` | Output type for data-space coordinates |
 | `HitTestResult.hpp` | Hit testing result type |
 | `SceneHitTester.hpp` | Hit testing utilities |
-| `IntervalDragController.hpp` | Legacy controller (being migrated) |
 
 ## See Also
 
