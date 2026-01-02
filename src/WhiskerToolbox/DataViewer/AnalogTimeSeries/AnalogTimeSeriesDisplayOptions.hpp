@@ -2,7 +2,7 @@
 #define DATAVIEWER_ANALOGTIMESERIESDISPLAYOPTIONS_HPP
 
 #include "CorePlotting/DataTypes/SeriesStyle.hpp"
-#include "CorePlotting/DataTypes/SeriesLayoutResult.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CorePlotting/DataTypes/SeriesDataCache.hpp"
 
 #include <string>
@@ -55,8 +55,9 @@ struct NewAnalogTimeSeriesDisplayOptions {
     /// Pure rendering style (user-configurable)
     CorePlotting::SeriesStyle style;
     
-    /// Layout output (computed by PlottingManager/LayoutEngine)
-    CorePlotting::SeriesLayoutResult layout;
+    /// Layout transform (computed by LayoutEngine)
+    /// offset = allocated_y_center, gain = allocated_height / 2
+    CorePlotting::LayoutTransform layout_transform;
     
     /// Cached statistical data (mutable, invalidated on data change)
     CorePlotting::SeriesDataCache data_cache;

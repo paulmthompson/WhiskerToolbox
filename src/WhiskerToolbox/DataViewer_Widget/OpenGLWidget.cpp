@@ -716,12 +716,10 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     if (series_layout) {
         layout = *series_layout;
     } else {
-        // Fallback to display_options layout
+        // Fallback to display_options layout_transform
         layout = CorePlotting::SeriesLayout{
                 series_key,
-                CorePlotting::LayoutTransform{
-                        display_options->layout.allocated_y_center,
-                        display_options->layout.allocated_height * 0.5f},
+                display_options->layout_transform,
                 0};
     }
 
@@ -1154,12 +1152,10 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         // Look up layout from cached response
         auto const * series_layout = _cache_state.layout_response.findLayout(key);
         if (!series_layout) {
-            // Fallback to display_options layout if not found (shouldn't happen)
+            // Fallback to display_options layout_transform if not found (shouldn't happen)
             CorePlotting::SeriesLayout fallback_layout{
                     key,
-                    CorePlotting::LayoutTransform{
-                            display_options->layout.allocated_y_center,
-                            display_options->layout.allocated_height * 0.5f},
+                    display_options->layout_transform,
                     0};
             series_layout = &fallback_layout;
         }
@@ -1261,9 +1257,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                 // Fallback if layout not found
                 CorePlotting::SeriesLayout fallback{
                         key,
-                        CorePlotting::LayoutTransform{
-                                display_options->layout.allocated_y_center,
-                                display_options->layout.allocated_height * 0.5f},
+                        display_options->layout_transform,
                         0};
                 y_transform = composeEventYTransform(
                         fallback, display_options->margin_factor, _view_state.global_vertical_scale);
@@ -1328,9 +1322,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
             // Fallback if layout not found
             CorePlotting::SeriesLayout fallback{
                     key,
-                    CorePlotting::LayoutTransform{
-                            display_options->layout.allocated_y_center,
-                            display_options->layout.allocated_height * 0.5f},
+                    display_options->layout_transform,
                     0};
             y_transform = composeIntervalYTransform(
                     fallback, display_options->margin_factor,

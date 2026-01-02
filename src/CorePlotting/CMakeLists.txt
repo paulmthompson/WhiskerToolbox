@@ -9,9 +9,8 @@ set(COREPLOTTING_SOURCES
     Mappers/TimeSeriesMapper.hpp
     Mappers/SpatialMapper.hpp
     Mappers/RasterMapper.hpp
-    # DataTypes (style, layout result, cache - used by widgets)
+    # DataTypes (style, cache - used by widgets)
     DataTypes/SeriesStyle.hpp
-    DataTypes/SeriesLayoutResult.hpp
     DataTypes/SeriesDataCache.hpp
     # SceneGraph
     SceneGraph/RenderablePrimitives.hpp

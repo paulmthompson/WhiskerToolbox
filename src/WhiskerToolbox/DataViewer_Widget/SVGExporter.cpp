@@ -152,8 +152,8 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
 
     // Build model params from display options
     CorePlotting::AnalogSeriesMatrixParams model_params;
-    model_params.allocated_y_center = display_options.layout.allocated_y_center;
-    model_params.allocated_height = display_options.layout.allocated_height;
+    model_params.allocated_y_center = display_options.layout_transform.offset;
+    model_params.allocated_height = display_options.layout_transform.gain * 2.0f;
     model_params.intrinsic_scale = display_options.scaling.intrinsic_scale;
     model_params.user_scale_factor = display_options.user_scale_factor;
     model_params.global_zoom = view_state.global_zoom;
@@ -205,8 +205,8 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
 
     // Build model params from display options
     CorePlotting::EventSeriesMatrixParams model_params;
-    model_params.allocated_y_center = display_options.layout.allocated_y_center;
-    model_params.allocated_height = display_options.layout.allocated_height;
+    model_params.allocated_y_center = display_options.layout_transform.offset;
+    model_params.allocated_height = display_options.layout_transform.gain * 2.0f;
     model_params.event_height = display_options.event_height;
     model_params.margin_factor = display_options.margin_factor;
     model_params.global_vertical_scale = view_state.global_vertical_scale;
@@ -260,8 +260,8 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
 
     // Build model params from display options
     CorePlotting::IntervalSeriesMatrixParams model_params;
-    model_params.allocated_y_center = display_options.layout.allocated_y_center;
-    model_params.allocated_height = display_options.layout.allocated_height;
+    model_params.allocated_y_center = display_options.layout_transform.offset;
+    model_params.allocated_height = display_options.layout_transform.gain * 2.0f;
     model_params.margin_factor = display_options.margin_factor;
     model_params.global_zoom = view_state.global_zoom;
     model_params.global_vertical_scale = view_state.global_vertical_scale;
