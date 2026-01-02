@@ -106,7 +106,7 @@ enum class PlotTheme {
 };
 
 /**
- * @brief Theme-related state for the OpenGLWidget (Phase 6)
+ * @brief Theme-related state for the OpenGLWidget
  * 
  * Groups visual theme settings including background and axis colors.
  */
@@ -117,7 +117,7 @@ struct ThemeState {
 };
 
 /**
- * @brief Grid overlay settings (Phase 6)
+ * @brief Grid overlay settings
  * 
  * Groups grid line configuration for time-axis aligned vertical lines.
  */
@@ -127,7 +127,7 @@ struct GridState {
 };
 
 /**
- * @brief Cached rendering and hit-testing state (Phase 6)
+ * @brief Cached rendering and hit-testing state
  * 
  * Groups scene caching for efficient rendering and spatial queries.
  */
@@ -141,7 +141,7 @@ struct SceneCacheState {
 };
 
 /**
- * @brief OpenGL resource state (Phase 6)
+ * @brief OpenGL resource state
  * 
  * Groups OpenGL lifecycle resources including matrices.
  */
@@ -249,35 +249,7 @@ public:
     [[nodiscard]] std::unordered_set<EntityId> const & getSelectedEntities() const;
 
     // ========================================================================
-    // Legacy Interval Selection API (kept for compatibility with drag controller)
-    // ========================================================================
-
-    // Interval edge dragging controls
-
-    /**
-     * @brief Find interval edges near the specified canvas position
-     * 
-     * @param canvas_x Canvas X coordinate in pixels
-     * @param canvas_y Canvas Y coordinate in pixels  
-     * @return HitTestResult with IntervalEdgeLeft/Right if within tolerance, NoHit otherwise
-     */
-    [[nodiscard]] CorePlotting::HitTestResult findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const;
-
-    /**
-     * @brief Perform hit testing at the specified canvas position
-     * 
-     * Uses CorePlotting::SceneHitTester to find what element (if any) exists
-     * at the given canvas coordinates. This is the preferred method for
-     * EntityId-based interaction with scene elements.
-     * 
-     * @param canvas_x Canvas X coordinate in pixels
-     * @param canvas_y Canvas Y coordinate in pixels
-     * @return HitTestResult describing what was hit (intervals, events, etc.)
-     */
-    [[nodiscard]] CorePlotting::HitTestResult hitTestAtPosition(float canvas_x, float canvas_y) const;
-
-    // ========================================================================
-    // Unified Interaction Mode API (Phase 5)
+    // Unified Interaction Mode API
     // ========================================================================
 
     /**
@@ -455,7 +427,7 @@ private:
     void drawGridLines();
     
     /**
-     * @brief Draw the preview from the active glyph controller (Phase 5)
+     * @brief Draw the preview from the active glyph controller
      * 
      * If _glyph_controller is active, renders its preview using the
      * SceneRenderer's PreviewRenderer. Used for interval creation,
@@ -514,37 +486,24 @@ private:
      *         or nullopt if no series is under the cursor
      */
     std::optional<std::pair<std::string, std::string>> findSeriesAtPosition(float canvas_x, float canvas_y) const;
-
-    // ========================================================================
-    // Series Data Storage (Phase 3 Refactoring)
-    // TimeSeriesDataStore provides centralized series management.
-    // Legacy accessors (_analog_series, etc.) are maintained for compatibility
-    // but delegate to _data_store internally.
-    // ========================================================================
     
-    /// Centralized storage for all time series data (Phase 3)
+    /// Centralized storage for all time series data
     std::unique_ptr<DataViewer::TimeSeriesDataStore> _data_store;
 
-    // X-axis state using CorePlotting TimeSeriesViewState (Phase 4.6 migration)
-    // Replaces legacy XAxis class with bounds-aware TimeRange + unified ViewState
     CorePlotting::TimeSeriesViewState _view_state;
     TimeFrameIndex _time{0};
 
-    // ========================================================================
-    // Grouped State (Phase 6 Refactoring)
-    // Related member variables consolidated into structs for readability.
-    // ========================================================================
     
-    /// OpenGL resources: shader, buffers, matrices (Phase 6)
+    /// OpenGL resources: shader, buffers, matrices
     OpenGLResourceState _gl_state;
 
-    /// Theme settings: colors and visual style (Phase 6)
+    /// Theme settings: colors and visual style
     ThemeState _theme_state;
 
-    /// Grid overlay configuration (Phase 6)
+    /// Grid overlay configuration
     GridState _grid_state;
 
-    /// Cached scene and layout for rendering/hit testing (Phase 6)
+    /// Cached scene and layout for rendering/hit testing
     SceneCacheState _cache_state;
 
     float _ySpacing{0.1f};///< Vertical spacing factor for series
@@ -569,7 +528,7 @@ private:
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;
 
-    // Layout engine for coordinate allocation (Phase 4.9 migration)
+    // Layout engine for coordinate allocation
     // Uses StackedLayoutStrategy for DataViewer-style vertical stacking
     CorePlotting::LayoutEngine _layout_engine{
             std::make_unique<CorePlotting::StackedLayoutStrategy>()};
@@ -583,10 +542,9 @@ private:
     // SceneRenderer coordinates all batch renderers (polylines, glyphs, rectangles).
     std::unique_ptr<PlottingOpenGL::SceneRenderer> _scene_renderer;
 
-    // AxisRenderer for axis lines and grid overlays (Phase 5)
+    // AxisRenderer for axis lines and grid overlays
     std::unique_ptr<PlottingOpenGL::AxisRenderer> _axis_renderer;
 
-    // CorePlotting hit testing infrastructure (Phase 4.11 - Complete SceneHitTester Integration)
     // The hit tester provides unified hit testing via SceneHitTester
     CorePlotting::SceneHitTester _hit_tester;
 
