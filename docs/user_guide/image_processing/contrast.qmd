@@ -2,7 +2,6 @@
 title: "Contrast and Brightness Adjustment"
 format:
   html: default
-  pdf: default
 ---
 
 These two filters are implemented with a single linear transform taking parameters "alpha" ($\alpha$) and "beta" ($\beta$). Pixel values are multiplied by $\alpha$ to adjust contrast, then have $\beta$ added to adjust brightness: $$

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>File IO – Neuralyzer</title>
+<title>Data Manager – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,23 +23,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -69,7 +69,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-sidebar docked nav-fixed">
@@ -79,7 +79,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -90,7 +90,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -99,7 +99,7 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
@@ -110,12 +110,16 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../labeling/keypoint.html">
+    <a class="dropdown-item" href="../../labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../labeling/mask.html">
+    <a class="dropdown-item" href="../../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../examples/tabular_binary_events.html">
+ <span class="dropdown-text">Load Tabular Binary Events</span></a>
   </li>  
     </ul>
   </li>
@@ -125,15 +129,15 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../user_guide/index.html">
+    <a class="dropdown-item" href="../../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../developer/index.html">
+    <a class="dropdown-item" href="../../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../api_reference.html">
+    <a class="dropdown-item" href="../../api_reference.html">
  <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
@@ -160,7 +164,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/file_io.html">File IO</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Manager</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -174,128 +178,74 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Documentation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Profiling and Performance</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/building.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Building</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/code_quality.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/copilot.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">C++ Development Tools Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Contributing Code</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Fuzz Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Introduction to C++</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Transform Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/transforms.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">transforms</span></a>
+  <a href="../../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -303,10 +253,121 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Manager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/table_view.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Table View</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/analysis_dashboard/analysis_dashboard.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_viewer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Collapsible Widget</span></a>
   </div>
 </li>
+      </ul>
+  </li>
       </ul>
   </li>
     </ul>
@@ -319,15 +380,26 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#current-architecture" id="toc-current-architecture" class="nav-link active" data-scroll-target="#current-architecture">Current Architecture</a></li>
-  <li><a href="#file-inputoutput-and-memory-management-considerations" id="toc-file-inputoutput-and-memory-management-considerations" class="nav-link" data-scroll-target="#file-inputoutput-and-memory-management-considerations">File Input/Output and Memory Management Considerations</a>
+  <li><a href="#time-frame-structure-for-multi-rate-data-visualization" id="toc-time-frame-structure-for-multi-rate-data-visualization" class="nav-link active" data-scroll-target="#time-frame-structure-for-multi-rate-data-visualization">Time Frame Structure for Multi-Rate Data Visualization</a>
   <ul class="collapse">
-  <li><a href="#overview-of-file-io-requirements" id="toc-overview-of-file-io-requirements" class="nav-link" data-scroll-target="#overview-of-file-io-requirements">Overview of File IO Requirements</a></li>
-  <li><a href="#incremental-data-adjustments-and-key-value-stores" id="toc-incremental-data-adjustments-and-key-value-stores" class="nav-link" data-scroll-target="#incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</a></li>
-  <li><a href="#serialization-with-captain-proto" id="toc-serialization-with-captain-proto" class="nav-link" data-scroll-target="#serialization-with-captain-proto">Serialization with Captain Proto</a></li>
-  <li><a href="#memory-mapping-implementation" id="toc-memory-mapping-implementation" class="nav-link" data-scroll-target="#memory-mapping-implementation">Memory Mapping Implementation</a></li>
-  <li><a href="#key-value-database-libraries" id="toc-key-value-database-libraries" class="nav-link" data-scroll-target="#key-value-database-libraries">Key-Value Database Libraries</a></li>
-  <li><a href="#prioritization-and-future-considerations" id="toc-prioritization-and-future-considerations" class="nav-link" data-scroll-target="#prioritization-and-future-considerations">Prioritization and Future Considerations</a></li>
+  <li><a href="#illustrative-example-electrophysiology-and-video-data" id="toc-illustrative-example-electrophysiology-and-video-data" class="nav-link" data-scroll-target="#illustrative-example-electrophysiology-and-video-data">Illustrative Example: Electrophysiology and Video Data</a></li>
+  <li><a href="#default-time-frame-and-customization" id="toc-default-time-frame-and-customization" class="nav-link" data-scroll-target="#default-time-frame-and-customization">Default Time Frame and Customization</a></li>
+  <li><a href="#data-indexing-within-time-frames" id="toc-data-indexing-within-time-frames" class="nav-link" data-scroll-target="#data-indexing-within-time-frames">Data Indexing within Time Frames</a></li>
+  <li><a href="#widget-considerations-for-data-synchronization" id="toc-widget-considerations-for-data-synchronization" class="nav-link" data-scroll-target="#widget-considerations-for-data-synchronization">Widget Considerations for Data Synchronization</a></li>
+  <li><a href="#performance-notes" id="toc-performance-notes" class="nav-link" data-scroll-target="#performance-notes">Performance Notes</a></li>
+  </ul></li>
+  <li><a href="#observer-framework" id="toc-observer-framework" class="nav-link" data-scroll-target="#observer-framework">Observer Framework</a></li>
+  <li><a href="#data-types" id="toc-data-types" class="nav-link" data-scroll-target="#data-types">Data Types</a>
+  <ul class="collapse">
+  <li><a href="#point" id="toc-point" class="nav-link" data-scroll-target="#point">Point</a></li>
+  <li><a href="#line" id="toc-line" class="nav-link" data-scroll-target="#line">Line</a></li>
+  <li><a href="#mask" id="toc-mask" class="nav-link" data-scroll-target="#mask">Mask</a></li>
+  <li><a href="#tensors" id="toc-tensors" class="nav-link" data-scroll-target="#tensors">Tensors</a></li>
+  <li><a href="#analog-time-series" id="toc-analog-time-series" class="nav-link" data-scroll-target="#analog-time-series">Analog Time Series</a></li>
+  <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
+  <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
+  <li><a href="#media" id="toc-media" class="nav-link" data-scroll-target="#media">Media</a></li>
+  <li><a href="#time-frame" id="toc-time-frame" class="nav-link" data-scroll-target="#time-frame">Time Frame</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -335,9 +407,9 @@ ul.task-list li input[type="checkbox"] {
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Manager</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">File IO</h1>
+<h1 class="title">Data Manager</h1>
 </div>
 
 
@@ -354,200 +426,244 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="current-architecture" class="level1">
-<h1>Current Architecture</h1>
+<p>The DataManager has 3 core functionalities</p>
+<ul>
+<li><p>Assigns TimeFrames, or temporal coordinate systems to different datatypes. It keeps track of these relationships</p></li>
+<li><p>Operates a callback system that allows observers to know when data has been added to or removed from the datamanager.</p></li>
+<li><p>Checks in and serves data of different types to the user</p></li>
+</ul>
+<section id="time-frame-structure-for-multi-rate-data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="time-frame-structure-for-multi-rate-data-visualization">Time Frame Structure for Multi-Rate Data Visualization</h2>
+<p>An important feature of the program is being able to simultaneously visualize data that was collected at different sampling rates. The time frame structure is designed to indicate when time events occur at a particular sampling frequency. The data manager is responsible for keeping track of which data is located in what time frame. Multiple data objects can belong to one time frame, but one data object can only belong to a single time frame. However, if the relationship between time frame objects is specified, then data requested in one coordinate system can be converted to another.</p>
+<section id="illustrative-example-electrophysiology-and-video-data" class="level3">
+<h3 class="anchored" data-anchor-id="illustrative-example-electrophysiology-and-video-data">Illustrative Example: Electrophysiology and Video Data</h3>
+<p>Consider the following example: an NI-DAQ box samples at 30000&nbsp;Hz for electrophysiology. This results in analog data with 30000&nbsp;samples&nbsp;per&nbsp;second as well as event data for sorted spikes at 30000&nbsp;Hz resolution. The experiment may have also had a high-speed video camera collecting frames at 500&nbsp;Hz. A digital event for each frame was recorded with the same NI-DAQ. The user may have processed the video frames to categorize behavior, which would also be at the 500&nbsp;Hz resolution and be interval data.</p>
+</section>
+<section id="default-time-frame-and-customization" class="level3">
+<h3 class="anchored" data-anchor-id="default-time-frame-and-customization">Default Time Frame and Customization</h3>
+<p>The default time frame is simply called “time” and defaults to numbers between 1 and the number of frames in a loaded video. The scroll bar operates in this time frame and consequently sends signals in this time frame. The user can override this default time frame and replace it with an event structure with the same number of samples but where each event corresponds to the 30000&nbsp;Hz resolution digitized camera frame exposures. The user can then create a new clock called “master” that again counts from 1,2,3,… up to the total number of samples collected by the NI-DAQ.</p>
+</section>
+<section id="data-indexing-within-time-frames" class="level3">
+<h3 class="anchored" data-anchor-id="data-indexing-within-time-frames">Data Indexing within Time Frames</h3>
+<p>All data manager data types have a notion of “index,” and these correspond to the time frame they are associated with. This index property is important because data may be sparsely labeled and not have the same number of samples as their time frame.</p>
+</section>
+<section id="widget-considerations-for-data-synchronization" class="level3">
+<h3 class="anchored" data-anchor-id="widget-considerations-for-data-synchronization">Widget Considerations for Data Synchronization</h3>
+<p>Widgets that represent different data simultaneously must be aware of accounting for these differences.</p>
+</section>
+<section id="performance-notes" class="level3">
+<h3 class="anchored" data-anchor-id="performance-notes">Performance Notes</h3>
+<p>The user should also be aware that pointer indirections sample by sample for large vectors will be quite inefficient. If the user needs to find a series of values in a range in a different coordinate system it is most likely important to.</p>
+</section>
+</section>
+<section id="observer-framework" class="level2">
+<h2 class="anchored" data-anchor-id="observer-framework">Observer Framework</h2>
+</section>
+<section id="data-types" class="level2">
+<h2 class="anchored" data-anchor-id="data-types">Data Types</h2>
+<section id="point" class="level3">
+<h3 class="anchored" data-anchor-id="point">Point</h3>
+<p>A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The <code>PointData</code> structure can hold multiple points per unit time.</p>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 12%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Data Type</th>
-<th>Format</th>
-<th>Dependency</th>
-<th>Raw Data for Testing?</th>
-<th>IO Widget Testing</th>
-<th>Datamanager IO Testing</th>
-<th>JSON Validation Testing</th>
-<th>User Guide</th>
+<th>Examples of Point Data</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Analog</td>
-<td>Binary</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Analog</td>
-<td>CSV</td>
-<td></td>
-<td>Some</td>
-<td></td>
-<td></td>
-<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>DigitalEvent</td>
-<td>CSV</td>
-<td></td>
-<td>Yes</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>DigitalInterval</td>
-<td>Binary</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>DigitalInteral</td>
-<td>CSV</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Line Data</td>
-<td>Binary</td>
-<td>Cap’n Proto</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Line Data</td>
-<td>CSV</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Mask Data</td>
-<td>HDF5</td>
-<td>HDF5</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Mask Data</td>
-<td>Image</td>
-<td>OpenCV</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Media Data</td>
-<td>Video</td>
-<td>ffmpeg</td>
-<td>Yes</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Media Data</td>
-<td>Images</td>
-<td>OpenCV</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Media Data</td>
-<td>HDF5</td>
-<td>HDF5</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Point Data</td>
-<td>CSV</td>
-<td></td>
-<td>Yes</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Tensor</td>
-<td>Numpy</td>
-<td>Numpy</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
 <td></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="file-inputoutput-and-memory-management-considerations" class="level1">
-<h1>File Input/Output and Memory Management Considerations</h1>
-<section id="overview-of-file-io-requirements" class="level2">
-<h2 class="anchored" data-anchor-id="overview-of-file-io-requirements">Overview of File IO Requirements</h2>
-<p>Because <strong>Neuralizer</strong> is compatible with a wide range of data, its file IO needs to support a wide range of file formats. Some of these file formats will be pre-subscribed, such as data acquisition-specific formats for electrophysiology. Others are more specific to this package, such as for line data that varies over time. We must also be aware from the start that some electrophysiology file sizes can be expected to be larger than easy to work with on a regular desktop machine. For instance, Neuropixel probes record almost 400 channels at 20 kHz and are becoming more routine for use. Consequently, multiple file formats should have the ability to be easily memory-mapped and loaded from disk rather than loading the entire file into RAM.</p>
+<section id="line" class="level3">
+<h3 class="anchored" data-anchor-id="line">Line</h3>
+<p>A Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is <strong>ordered</strong>, meaning that each point is positioned relative to its neighbors. The <code>LineData</code> structure can hold multiple lines per unit time.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Line Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Currently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.</p>
 </section>
-<section id="incremental-data-adjustments-and-key-value-stores" class="level2">
-<h2 class="anchored" data-anchor-id="incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</h2>
-<p>Another important consideration from the start is that many of these data types will be incrementally adjusted. For instance, processing a video sequence frame by frame or manually adjusting the output of an automated algorithm requires changing some subset of data in a much larger scheme. For some of these file types that are greater than hundreds of megabytes, resaving an entire file for point manipulations could be onerous and time-consuming. Consequently, for some file types, it would be advantageous to use a key-value database type structure that allows us to easily make incremental adjustments and only save those changes, consequently saving data much more quickly. To my knowledge, this process is quite common in the wild but uncommon in neuroscience.</p>
+<section id="mask" class="level3">
+<h3 class="anchored" data-anchor-id="mask">Mask</h3>
+<p>A mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not <strong>ordered</strong>. These would correspond to something like a binary segmentation mask over an image. The <code>MaskData</code> structure can hold multiple masks per unit time.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Mask Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Binary Semantic Segmentation Labels</td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>A mask may just be thought as a raw pixel, by pixel definition of a <strong>shape</strong>. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.</p>
 </section>
-<section id="serialization-with-captain-proto" class="level2">
-<h2 class="anchored" data-anchor-id="serialization-with-captain-proto">Serialization with Captain Proto</h2>
-<p>The process of data serialization and deserialization will be accomplished with the <strong>Captain Proto</strong> library. This is able to easily create binary files from more complex data structures, such as those that hold multiple lines of varying size per unit time. This library can define output file structures that are purely binary and would be saved and loaded as entire objects. Alternatively, different definitions can be used to save objects as key-value pairs; for instance, each time point can be the key and the data at that time can be the value.</p>
+<section id="tensors" class="level3">
+<h3 class="anchored" data-anchor-id="tensors">Tensors</h3>
+<p>Tensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Tensor Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="memory-mapping-implementation" class="level2">
-<h2 class="anchored" data-anchor-id="memory-mapping-implementation">Memory Mapping Implementation</h2>
-<p>Captain Proto does not perform memory mapping itself. Memory mapping is different across different types of file systems, so to maintain cross-platform use, we will need to either specify different interfaces for interacting with Captain Proto or we could use another third-party library that does this for us. <strong>Boost.Interprocess</strong> is commonly cited for this purpose, but there are others.</p>
+<section id="analog-time-series" class="level3">
+<h3 class="anchored" data-anchor-id="analog-time-series">Analog Time Series</h3>
+<p>An analog time series has values that can vary continuously</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Analog Time Series Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Voltage traces from electrode recordings</td>
+</tr>
+<tr class="even">
+<td>Fluorescence intensity traces from Calcium imaging</td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="key-value-database-libraries" class="level2">
-<h2 class="anchored" data-anchor-id="key-value-database-libraries">Key-Value Database Libraries</h2>
-<p>For key-value database structures, there are multiple libraries available. Many of these are mature and designed to work with servers of extremely large datasets, and some have been developed by very large companies. One of the most popular is called <strong>LMDB</strong>, but in my test cases, this appears to be not as great with Windows. Using this library requires specifying some maximum file size; on Linux, the resulting file size is only the size of the data, but with my testing on Windows, this large maximum file size seems to persist. An alternative database is <strong>RocksDB</strong>. This software is developed by Facebook, seems to be quite mature, and should also be able to save as a key-value pair across platforms.</p>
+<section id="digital-event-series" class="level3">
+<h3 class="anchored" data-anchor-id="digital-event-series">Digital Event Series</h3>
+<p>A digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Event Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="prioritization-and-future-considerations" class="level2">
-<h2 class="anchored" data-anchor-id="prioritization-and-future-considerations">Prioritization and Future Considerations</h2>
-<p>Currently, the data that would benefit from key-value updates is only theoretical. Having a line for whiskers for each frame in a high-speed video of up to 200,000 frames results in a file size that is almost 300 MB. However, saving a binary file in its entirety when making whisker-specific updates through manual curation still takes less than a second to save and is not noticeable to the user. Consequently, I think prioritizing having binary outputs to save entire files and memory mapping of those binary file types that are read-only, such as for Neuropixel analog traces, may be the most desirable next feature. Key-value pairs with something like RocksDB should be remembered for the future, but I am going to make that less of a priority until I see a clear use case that would benefit.</p>
+<section id="digital-interval-series" class="level3">
+<h3 class="anchored" data-anchor-id="digital-interval-series">Digital Interval Series</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Interval Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="media" class="level3">
+<h3 class="anchored" data-anchor-id="media">Media</h3>
+<p>Media is a sequence of images.</p>
+<section id="image" class="level4">
+<h4 class="anchored" data-anchor-id="image">Image</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Image Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Image sequence from two photon calcium imaging experiment</td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="video" class="level4">
+<h4 class="anchored" data-anchor-id="video">Video</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Examples of Video Data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MP4 video from high speed scientific camera of behavior</td>
+</tr>
+<tr class="even">
+<td></td>
+</tr>
+<tr class="odd">
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="time-frame" class="level3">
+<h3 class="anchored" data-anchor-id="time-frame">Time Frame</h3>
 
 
 </section>

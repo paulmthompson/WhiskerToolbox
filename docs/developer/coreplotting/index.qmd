@@ -1,0 +1,50 @@
+---
+title: "CorePlotting Library"
+format: html
+---
+
+## A Qt-independent C++ library for spatial visualization of time-series data.
+
+**CorePlotting** is the foundational library for the WhiskerToolbox plotting stack. It provides unified abstractions for visualizing spatial and temporal data, explicitly separating **data & layout** from **rendering & interaction**.
+
+## Key Features
+
+-   **Renderer Agnostic:** Generates a pure data description of a scene (`RenderableScene`) consumed by OpenGL, SVG, or other backends.
+
+-   **Zero-Copy Mappers:** Uses C++20 ranges to transform data directly into GPU-ready buffers without intermediate allocations.
+
+-   **Unified Layout Engine:** Centralized logic for vertical stacking, raster rows, and spatial overlays.
+
+-   **Robust Interaction:** Unified hit-testing and interaction controllers for manipulating glyphs (intervals, lines) in world space.
+
+## The "Big Idea"
+
+The library solves the problem of coupling data structures to specific rendering widgets. Instead of a widget knowing how to draw a `DigitalEventSeries`, CorePlotting defines a pipeline:
+
+1.  **Layout**: Determine *where* a series lives (Y-axis allocation).
+
+2.  **Map**: Transform data points into world coordinates (x, y).
+
+3.  **Build**: Assemble geometric batches (`RenderablePolyLineBatch`, `RenderableGlyphBatch`).
+
+4.  **Render**: A thin OpenGL layer consumes the batches.
+
+## Getting Started
+
+To use CorePlotting, you typically interact with the `SceneBuilder` and a specific Mapper:
+
+``` cpp
+// 1. Define Layout 
+auto layout = LayoutEngine().compute(request);  
+
+// 2. Build Scene using Mappers 
+RenderableScene scene = SceneBuilder()     
+  .setBounds(viewport_bounds)     
+  .addGlyphs(         
+      "events",          
+      TimeSeriesMapper::mapEvents(my_event_series, my_time_frame, *layout.findLayout("events"))     
+  )     
+  .build(); 
+```
+
+Explore the documentation to learn more about the [Architecture](concepts/architecture.qmd "null") or specific modules like [Mappers](modules/mappers.qmd "null").
