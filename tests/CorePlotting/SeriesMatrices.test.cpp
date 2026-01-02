@@ -76,84 +76,7 @@ TEST_CASE("Utility: validateMatrix", "[CorePlotting][SeriesMatrices]") {
     }
 }
 
-TEST_CASE("AnalogModelMatrix basic functionality", "[CorePlotting][SeriesMatrices]") {
-    SECTION("Identity case - no scaling, no offset") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.0f;
-        params.allocated_height = 1.0f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 0.0f;
-        params.std_dev = 1.0f;
-        params.user_vertical_offset = 0.0f;
-        
-        glm::mat4 M = getAnalogModelMatrix(params);
-        
-        // With std_dev=1, intrinsic_scale=1/(3*1)=1/3
-        // total_y_scale = (1/3) * 1 * 1 * 1 * 1 = 1/3
-        // height_scale = 1.0 * 0.8 = 0.8
-        // final_y_scale = (1/3) * 0.8 = 0.8/3 ≈ 0.2667
-        float expected_scale = (1.0f / 3.0f) * 1.0f * 1.0f * 1.0f * 1.0f * 0.8f;
-        
-        REQUIRE_THAT(M[1][1], Catch::Matchers::WithinRel(expected_scale, 0.001f));
-        REQUIRE_THAT(M[3][1], Catch::Matchers::WithinAbs(0.0f, 0.001f)); // y_offset with mean=0
-    }
-    
-    SECTION("Data mean shifts Y position") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 100.0f;
-        params.allocated_height = 50.0f;
-        params.data_mean = 10.0f;  // Non-zero mean
-        params.std_dev = 2.0f;
-        
-        glm::mat4 M = getAnalogModelMatrix(params);
-        
-        // Should center data around allocated_y_center
-        // Check that matrix is valid
-        REQUIRE(std::isfinite(M[1][1]));
-        REQUIRE(std::isfinite(M[3][1]));
-        
-        // The Y translation should incorporate the mean offset
-        REQUIRE(M[3][1] != 100.0f); // Should differ due to mean correction
-    }
-    
-    SECTION("User vertical offset applied") {
-        AnalogSeriesMatrixParams params_no_offset;
-        params_no_offset.allocated_y_center = 0.0f;
-        params_no_offset.allocated_height = 1.0f;
-        params_no_offset.data_mean = 0.0f;
-        params_no_offset.std_dev = 1.0f;
-        params_no_offset.intrinsic_scale = 1.0f;
-        params_no_offset.user_scale_factor = 1.0f;
-        params_no_offset.global_zoom = 1.0f;
-        params_no_offset.global_vertical_scale = 1.0f;
-        params_no_offset.user_vertical_offset = 0.0f;
-        
-        AnalogSeriesMatrixParams params_with_offset = params_no_offset;
-        params_with_offset.user_vertical_offset = 25.0f;
-        
-        glm::mat4 M_no_offset = getAnalogModelMatrix(params_no_offset);
-        glm::mat4 M_with_offset = getAnalogModelMatrix(params_with_offset);
-        
-        // Debug output
-        INFO("M_no_offset[3][1] = " << M_no_offset[3][1]);
-        INFO("M_with_offset[3][1] = " << M_with_offset[3][1]);
-        INFO("M_with_offset[1][1] (scale) = " << M_with_offset[1][1]);
-        
-        // The difference should reflect the user offset
-        // Note: glm::translate applies the translation *after* the Model transformation,
-        // which means the translation is affected by the Y scaling in the model matrix
-        float y_scale = M_with_offset[1][1];
-        float translation_diff = M_with_offset[3][1] - M_no_offset[3][1];
-        
-        // The actual difference will be user_vertical_offset, not scaled
-        REQUIRE(std::abs(translation_diff - 25.0f) < 1.0f);
-    }
-}
-
-TEST_CASE("AnalogViewMatrix", "[CorePlotting][SeriesMatrices]") {
+TEST_CASE("ViewMatrix", "[CorePlotting][SeriesMatrices]") {
     SECTION("No pan offset gives identity") {
         ViewProjectionParams params;
         params.vertical_pan_offset = 0.0f;
@@ -174,7 +97,7 @@ TEST_CASE("AnalogViewMatrix", "[CorePlotting][SeriesMatrices]") {
     }
 }
 
-TEST_CASE("AnalogProjectionMatrix", "[CorePlotting][SeriesMatrices]") {
+TEST_CASE("ProjectionMatrix", "[CorePlotting][SeriesMatrices]") {
     SECTION("Valid time range creates ortho matrix") {
         TimeFrameIndex start(0);
         TimeFrameIndex end(1000);
@@ -316,207 +239,72 @@ TEST_CASE("IntervalViewMatrix", "[CorePlotting][SeriesMatrices]") {
     }
 }
 
-TEST_CASE("MVP matrix composition", "[CorePlotting][SeriesMatrices]") {
-    SECTION("Analog series full MVP chain") {
-        // Model: Position series at y=50 with height 20
-        AnalogSeriesMatrixParams model_params;
-        model_params.allocated_y_center = 50.0f;
-        model_params.allocated_height = 20.0f;
-        model_params.data_mean = 0.0f;
-        model_params.std_dev = 1.0f;
+// ============================================================================
+// LayoutTransform-based Model Matrix Tests
+// ============================================================================
+
+TEST_CASE("createModelMatrix from LayoutTransform", "[CorePlotting][SeriesMatrices]") {
+    SECTION("Identity transform gives identity matrix") {
+        LayoutTransform identity{0.0f, 1.0f};
         
-        // View: Pan down by 10
-        ViewProjectionParams view_params;
-        view_params.vertical_pan_offset = -10.0f;
+        glm::mat4 M = createModelMatrix(identity);
         
-        // Projection: Time range [0, 1000], Y range [-100, 100]
+        REQUIRE(M == glm::mat4(1.0f));
+    }
+    
+    SECTION("Scale-only transform") {
+        LayoutTransform scale_only{0.0f, 2.0f};  // gain=2, offset=0
+        
+        glm::mat4 M = createModelMatrix(scale_only);
+        
+        REQUIRE(M[1][1] == 2.0f);  // Y scale
+        REQUIRE(M[3][1] == 0.0f);  // No Y translation
+    }
+    
+    SECTION("Offset-only transform") {
+        LayoutTransform offset_only{5.0f, 1.0f};  // offset=5, gain=1
+        
+        glm::mat4 M = createModelMatrix(offset_only);
+        
+        REQUIRE(M[1][1] == 1.0f);  // No Y scale change
+        REQUIRE(M[3][1] == 5.0f);  // Y translation = 5
+    }
+    
+    SECTION("Combined scale and offset") {
+        LayoutTransform combined{3.0f, 0.5f};  // offset=3, gain=0.5
+        
+        glm::mat4 M = createModelMatrix(combined);
+        
+        REQUIRE(M[1][1] == 0.5f);  // Y scale = 0.5
+        REQUIRE(M[3][1] == 3.0f);  // Y translation = 3
+    }
+}
+
+TEST_CASE("createViewMatrix", "[CorePlotting][SeriesMatrices]") {
+    SECTION("No pan gives identity") {
+        glm::mat4 V = createViewMatrix(0.0f);
+        REQUIRE(V == glm::mat4(1.0f));
+    }
+    
+    SECTION("Pan offset creates translation") {
+        glm::mat4 V = createViewMatrix(25.0f);
+        REQUIRE(V[3][1] == 25.0f);
+        REQUIRE(V[3][0] == 0.0f);
+    }
+}
+
+TEST_CASE("createProjectionMatrix", "[CorePlotting][SeriesMatrices]") {
+    SECTION("Valid parameters create ortho matrix") {
         TimeFrameIndex start(0);
         TimeFrameIndex end(1000);
         
-        glm::mat4 M = getAnalogModelMatrix(model_params);
-        glm::mat4 V = getAnalogViewMatrix(view_params);
-        glm::mat4 P = getAnalogProjectionMatrix(start, end, -100.0f, 100.0f);
+        glm::mat4 P = createProjectionMatrix(start, end, -1.0f, 1.0f);
         
-        // Compose MVP
-        glm::mat4 MVP = P * V * M;
-        
-        // Check all elements are finite
+        // Check matrix is valid
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
-                REQUIRE(std::isfinite(MVP[i][j]));
+                REQUIRE(std::isfinite(P[i][j]));
             }
         }
     }
-}
-
-// ============================================================================
-// Inverse Transform Tests
-// ============================================================================
-
-TEST_CASE("worldYToAnalogValue basic functionality", "[CorePlotting][SeriesMatrices]") {
-    SECTION("Identity case - data at allocated center maps to data mean") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.5f;
-        params.allocated_height = 1.0f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 10.0f;  // Non-zero mean
-        params.std_dev = 1.0f;
-        params.user_vertical_offset = 0.0f;
-        
-        // World Y at allocated center should map to data mean
-        float data_value = worldYToAnalogValue(0.5f, params);
-        REQUIRE_THAT(data_value, Catch::Matchers::WithinAbs(10.0f, 0.001f));
-    }
-    
-    SECTION("Scaled data - 3 std devs above mean") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.0f;
-        params.allocated_height = 2.0f;  // Height of 2.0
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 0.0f;
-        params.std_dev = 1.0f;
-        params.user_vertical_offset = 0.0f;
-        
-        // Forward: (data=3.0 - mean=0) * scale + center
-        // scale = (1/3) * 1 * 1 * 1 * 1 * (2.0 * 0.8) = 0.533...
-        // So 3.0 * 0.533 = 1.6
-        float world_y = analogValueToWorldY(3.0f, params);
-        
-        // Inverse should give us back 3.0
-        float data_back = worldYToAnalogValue(world_y, params);
-        REQUIRE_THAT(data_back, Catch::Matchers::WithinAbs(3.0f, 0.01f));
-    }
-    
-    SECTION("With user vertical offset") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.0f;
-        params.allocated_height = 1.0f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 0.0f;
-        params.std_dev = 1.0f;
-        params.user_vertical_offset = 0.5f;  // Shifted up
-        
-        // World Y at (center + offset) = 0.5 should map to data mean
-        float data_value = worldYToAnalogValue(0.5f, params);
-        REQUIRE_THAT(data_value, Catch::Matchers::WithinAbs(0.0f, 0.001f));
-    }
-    
-    SECTION("Protection against zero std_dev") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.0f;
-        params.allocated_height = 1.0f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 5.0f;
-        params.std_dev = 0.0f;  // Zero std dev
-        params.user_vertical_offset = 0.0f;
-        
-        // Should not crash, should use fallback std_dev of 1.0
-        float data_value = worldYToAnalogValue(0.0f, params);
-        REQUIRE(std::isfinite(data_value));
-    }
-}
-
-TEST_CASE("analogValueToWorldY basic functionality", "[CorePlotting][SeriesMatrices]") {
-    SECTION("Data mean maps to allocated center plus offset") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.5f;
-        params.allocated_height = 1.0f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 10.0f;
-        params.std_dev = 1.0f;
-        params.user_vertical_offset = 0.2f;
-        
-        // Data mean should map to allocated_y_center + user_vertical_offset
-        float world_y = analogValueToWorldY(10.0f, params);
-        REQUIRE_THAT(world_y, Catch::Matchers::WithinAbs(0.7f, 0.001f));  // 0.5 + 0.2
-    }
-}
-
-TEST_CASE("Round-trip: worldYToAnalogValue <-> analogValueToWorldY", "[CorePlotting][SeriesMatrices]") {
-    SECTION("Various data values round-trip correctly") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.3f;
-        params.allocated_height = 0.5f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 2.0f;
-        params.global_zoom = 1.5f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 100.0f;
-        params.std_dev = 25.0f;
-        params.user_vertical_offset = 0.1f;
-        
-        // Test various data values
-        for (float data_value : {50.0f, 75.0f, 100.0f, 125.0f, 150.0f}) {
-            float world_y = analogValueToWorldY(data_value, params);
-            float back_to_data = worldYToAnalogValue(world_y, params);
-            REQUIRE_THAT(back_to_data, Catch::Matchers::WithinRel(data_value, 0.001f));
-        }
-    }
-    
-    SECTION("Various world Y values round-trip correctly") {
-        AnalogSeriesMatrixParams params;
-        params.allocated_y_center = 0.0f;
-        params.allocated_height = 1.0f;
-        params.intrinsic_scale = 1.0f;
-        params.user_scale_factor = 1.0f;
-        params.global_zoom = 1.0f;
-        params.global_vertical_scale = 1.0f;
-        params.data_mean = 0.0f;
-        params.std_dev = 1.0f;
-        params.user_vertical_offset = 0.0f;
-        
-        // Test various world Y values
-        for (float world_y : {-0.5f, -0.25f, 0.0f, 0.25f, 0.5f}) {
-            float data_value = worldYToAnalogValue(world_y, params);
-            float back_to_world = analogValueToWorldY(data_value, params);
-            REQUIRE_THAT(back_to_world, Catch::Matchers::WithinAbs(world_y, 0.001f));
-        }
-    }
-}
-
-TEST_CASE("Practical scenario: mouse hover Y to analog value", "[CorePlotting][SeriesMatrices]") {
-    // Simulate a DataViewer scenario:
-    // - Series positioned at y_center = 0.3 with height 0.4
-    // - Data has mean 50.0, std_dev 10.0
-    // - User has scaled to 1.5x
-    // - Global zoom at 1.0
-    // - Mouse hovers at world_y = 0.3 (exactly at series center)
-    
-    AnalogSeriesMatrixParams params;
-    params.allocated_y_center = 0.3f;
-    params.allocated_height = 0.4f;
-    params.intrinsic_scale = 1.0f;
-    params.user_scale_factor = 1.5f;
-    params.global_zoom = 1.0f;
-    params.global_vertical_scale = 1.0f;
-    params.data_mean = 50.0f;
-    params.std_dev = 10.0f;
-    params.user_vertical_offset = 0.0f;
-    
-    // Mouse at series center should give data mean
-    float hover_value = worldYToAnalogValue(0.3f, params);
-    REQUIRE_THAT(hover_value, Catch::Matchers::WithinAbs(50.0f, 0.01f));
-    
-    // Mouse slightly above center should give value above mean
-    float hover_value_above = worldYToAnalogValue(0.35f, params);
-    REQUIRE(hover_value_above > 50.0f);
-    
-    // Mouse slightly below center should give value below mean
-    float hover_value_below = worldYToAnalogValue(0.25f, params);
-    REQUIRE(hover_value_below < 50.0f);
 }

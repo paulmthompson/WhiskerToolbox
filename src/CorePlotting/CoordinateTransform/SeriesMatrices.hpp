@@ -23,21 +23,9 @@ struct SeriesDataCache;
  * 
  * **Model Matrix**: Per-series positioning and scaling
  *   - Create from LayoutTransform using createModelMatrix()
- *   - Or use legacy AnalogSeriesMatrixParams for backwards compatibility
  * 
  * **View Matrix**: Shared global camera transformations
  *   - Global vertical panning via createViewMatrix()
- * 
- * **Projection Matrix**: Shared coordinate system mapping
- *   - Maps time indices to screen X coordinates
- *   - Maps data space to screen Y coordinates
- *   - Vertical positioning based on layout allocation
- *   - Series-specific scaling (intrinsic, user, global)
- *   - Data centering around mean value
- * 
- * **View Matrix**: Shared global camera transformations
- *   - Global vertical panning
- *   - Mode-dependent behavior (FullCanvas vs Stacked)
  * 
  * **Projection Matrix**: Shared coordinate system mapping
  *   - Maps time indices to screen X coordinates
@@ -49,32 +37,6 @@ struct SeriesDataCache;
  * - User camera state (View)  
  * - Data-to-screen mapping (Projection)
  */
-
-/**
- * @brief Helper struct for analog series matrix parameters
- * 
- * Bundles the parameters needed for analog series matrix generation.
- * This struct is passed to matrix functions instead of individual parameters
- * to reduce coupling and improve testability.
- */
-struct AnalogSeriesMatrixParams {
-    // Layout parameters (from SeriesLayoutResult)
-    float allocated_y_center{0.0f};
-    float allocated_height{1.0f};
-
-    // Scaling parameters (from SeriesStyle)
-    float intrinsic_scale{1.0f};
-    float user_scale_factor{1.0f};
-    float global_zoom{1.0f};
-    float user_vertical_offset{0.0f};
-
-    // Data statistics (from SeriesDataCache)
-    float data_mean{0.0f};
-    float std_dev{1.0f};
-
-    // Global parameters
-    float global_vertical_scale{1.0f};
-};
 
 /**
  * @brief Helper struct for event series matrix parameters
@@ -137,28 +99,13 @@ struct ViewProjectionParams {
 };
 
 // ============================================================================
-// Analog Time Series MVP Matrices
+// View and Projection Matrices (shared across data types)
 // ============================================================================
 
 /**
- * @brief Create Model matrix for analog series positioning and scaling
+ * @brief Create View matrix for global transformations
  *
- * Implements three-tier scaling system:
- * 1. Intrinsic scaling (3*std_dev → ±1.0)
- * 2. User-specified scaling
- * 3. Global zoom
- * 
- * Centers data around mean value for proper visual centering.
- *
- * @param params Combined parameters for matrix generation
- * @return Model transformation matrix
- */
-glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params);
-
-/**
- * @brief Create View matrix for analog series global transformations
- *
- * Applies view-level transformations to all analog series.
+ * Applies view-level transformations to all series.
  * Handles global vertical panning.
  *
  * @param params View/projection parameters
@@ -167,7 +114,7 @@ glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params);
 glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params);
 
 /**
- * @brief Create Projection matrix for analog series coordinate mapping
+ * @brief Create Projection matrix for time series coordinate mapping
  *
  * Maps data coordinates to normalized device coordinates [-1, 1].
  * Includes robust validation to prevent OpenGL state corruption.
@@ -306,47 +253,9 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix,
                          char const * context_name = "Matrix");
 
 // ============================================================================
-// Inverse Transform Utilities
+// LayoutTransform-based API
 // ============================================================================
-
-/**
- * @brief Convert world Y coordinate to analog data value
- * 
- * Inverts the Model matrix transformation applied in getAnalogModelMatrix().
- * Use this to convert mouse cursor position (after screen→world transform)
- * to the corresponding data value for the series.
- * 
- * The forward transform is:
- *   y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
- * 
- * This function computes the inverse:
- *   y_data = (y_world - allocated_y_center - user_offset) / scale + data_mean
- * 
- * @param world_y Y coordinate in world space (post-View transform)
- * @param params Same parameters used to create the Model matrix
- * @return Corresponding data value in the analog series
- * 
- * @note The world_y should have View transforms already applied (i.e., pan offset
- *       should be accounted for before calling this function).
- */
-[[nodiscard]] float worldYToAnalogValue(float world_y, AnalogSeriesMatrixParams const & params);
-
-/**
- * @brief Convert analog data value to world Y coordinate
- * 
- * Forward transform from data space to world space.
- * This is the analytical equivalent of applying the Model matrix.
- * 
- * @param data_value Value in the analog series
- * @param params Same parameters used to create the Model matrix
- * @return Corresponding Y coordinate in world space
- */
-[[nodiscard]] float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params);
-
-// ============================================================================
-// Simplified LayoutTransform-based API
-// ============================================================================
-// These functions work with composed LayoutTransforms instead of param structs.
+// These functions work with composed LayoutTransforms.
 // The caller is responsible for computing the final transform by composing:
 //   1. Data normalization (from NormalizationHelpers)
 //   2. Layout positioning (from LayoutEngine)

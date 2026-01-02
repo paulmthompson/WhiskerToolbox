@@ -3,6 +3,8 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/Export/SVGPrimitives.hpp"
+#include "CorePlotting/Layout/NormalizationHelpers.hpp"
+#include "CorePlotting/Layout/SeriesLayout.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
@@ -18,6 +20,108 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
+
+// ============================================================================
+// Transform composition functions (matching OpenGLWidget patterns)
+// ============================================================================
+// These functions compose data normalization + layout + user adjustments into
+// a single LayoutTransform, following DESIGN.md guidelines.
+
+namespace {
+
+/**
+ * @brief Compose Y transform for analog series rendering
+ * 
+ * Follows the pattern from CorePlotting/DESIGN.md:
+ * 1. Data normalization (z-score style: maps ±3σ to ±1)
+ * 2. User adjustments (intrinsic scale, user scale, vertical offset)
+ * 3. Layout positioning (from LayoutEngine)
+ * 4. Global scaling (from ViewState) - applied to amplitude only, NOT position
+ */
+[[nodiscard]] CorePlotting::LayoutTransform composeAnalogYTransform(
+        CorePlotting::SeriesLayout const & layout,
+        float data_mean,
+        float std_dev,
+        float intrinsic_scale,
+        float user_scale_factor,
+        float user_vertical_offset,
+        float global_zoom,
+        float global_vertical_scale) {
+
+    // Use NormalizationHelpers to create the data normalization transform
+    // forStdDevRange maps mean ± 3*std_dev to ±1
+    auto data_norm = CorePlotting::NormalizationHelpers::forStdDevRange(data_mean, std_dev, 3.0f);
+
+    // User adjustments: additional scaling and offset
+    auto user_adj = CorePlotting::NormalizationHelpers::manual(
+            intrinsic_scale * user_scale_factor,
+            user_vertical_offset);
+
+    // Compose data normalization with user adjustments
+    auto data_transform = user_adj.compose(data_norm);
+
+    // Layout provides: offset = lane center, gain = half_height of lane
+    // Apply 80% margin factor within allocated space
+    constexpr float margin_factor = 0.8f;
+
+    // Global scaling affects the amplitude within the lane, NOT the lane position
+    float const lane_half_height = layout.y_transform.gain * margin_factor;
+    float const effective_gain = lane_half_height * global_zoom * global_vertical_scale;
+
+    // Final transform
+    float const final_gain = data_transform.gain * effective_gain;
+    float const final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
+
+    return CorePlotting::LayoutTransform{final_offset, final_gain};
+}
+
+/**
+ * @brief Compose Y transform for event series (stacked mode)
+ */
+[[nodiscard]] CorePlotting::LayoutTransform composeEventYTransform(
+        CorePlotting::SeriesLayout const & layout,
+        float margin_factor,
+        float global_vertical_scale) {
+
+    float const half_height = layout.y_transform.gain * margin_factor * global_vertical_scale;
+    float const center = layout.y_transform.offset;
+
+    return CorePlotting::LayoutTransform{center, half_height};
+}
+
+/**
+ * @brief Compose Y transform for event series (full canvas mode)
+ */
+[[nodiscard]] CorePlotting::LayoutTransform composeEventFullCanvasYTransform(
+        float viewport_y_min,
+        float viewport_y_max,
+        float margin_factor) {
+
+    float const height = (viewport_y_max - viewport_y_min) * margin_factor;
+    float const center = (viewport_y_max + viewport_y_min) * 0.5f;
+    float const half_height = height * 0.5f;
+
+    return CorePlotting::LayoutTransform{center, half_height};
+}
+
+/**
+ * @brief Compose Y transform for interval series
+ */
+[[nodiscard]] CorePlotting::LayoutTransform composeIntervalYTransform(
+        CorePlotting::SeriesLayout const & layout,
+        float margin_factor,
+        [[maybe_unused]] float global_zoom,
+        [[maybe_unused]] float global_vertical_scale) {
+
+    // Intervals map [-1, 1] to allocated space with margin only
+    // We do NOT apply global_zoom here - intervals should fill their allocated space
+    float const half_height = layout.y_transform.gain * margin_factor;
+    float const center = layout.y_transform.offset;
+
+    return CorePlotting::LayoutTransform{center, half_height};
+}
+
+}// anonymous namespace
 
 SVGExporter::SVGExporter(OpenGLWidget * gl_widget)
     : gl_widget_(gl_widget) {
@@ -150,20 +254,25 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
 
     auto const view_state = gl_widget_->getViewState();
 
-    // Build model params from display options
-    CorePlotting::AnalogSeriesMatrixParams model_params;
-    model_params.allocated_y_center = display_options.layout_transform.offset;
-    model_params.allocated_height = display_options.layout_transform.gain * 2.0f;
-    model_params.intrinsic_scale = display_options.scaling.intrinsic_scale;
-    model_params.user_scale_factor = display_options.user_scale_factor;
-    model_params.global_zoom = view_state.global_zoom;
-    model_params.user_vertical_offset = display_options.scaling.user_vertical_offset;
-    model_params.data_mean = display_options.data_cache.cached_mean;
-    model_params.std_dev = display_options.data_cache.cached_std_dev;
-    model_params.global_vertical_scale = view_state.global_vertical_scale;
+    // Create layout from display_options (SVGExporter doesn't have cached layout)
+    CorePlotting::SeriesLayout layout{
+            "",// key not needed for matrix generation
+            display_options.layout_transform,
+            0};
 
-    CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
+    // Compose Y transform using the new LayoutTransform-based pattern
+    CorePlotting::LayoutTransform y_transform = composeAnalogYTransform(
+            layout,
+            display_options.data_cache.cached_mean,
+            display_options.data_cache.cached_std_dev,
+            display_options.scaling.intrinsic_scale,
+            display_options.user_scale_factor,
+            display_options.scaling.user_vertical_offset,
+            view_state.global_zoom,
+            view_state.global_vertical_scale);
+
+    // Create model matrix from composed transform
+    glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -183,13 +292,12 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
     batch_params.detect_gaps = (display_options.gap_handling == AnalogGapHandling::DetectGaps);
     batch_params.gap_threshold = display_options.gap_threshold;
 
-    // Use SceneBuildingHelpers to build the batch
-    return DataViewerHelpers::buildAnalogSeriesBatch(
+    // Use simplified API (takes pre-composed model matrix)
+    return DataViewerHelpers::buildAnalogSeriesBatchSimplified(
             *series,
             gl_widget_->getMasterTimeFrame(),
             batch_params,
-            model_params,
-            view_params);
+            model_matrix);
 }
 
 CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
@@ -203,21 +311,22 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     auto const y_min = view_state.y_min;
     auto const y_max = view_state.y_max;
 
-    // Build model params from display options
-    CorePlotting::EventSeriesMatrixParams model_params;
-    model_params.allocated_y_center = display_options.layout_transform.offset;
-    model_params.allocated_height = display_options.layout_transform.gain * 2.0f;
-    model_params.event_height = display_options.event_height;
-    model_params.margin_factor = display_options.margin_factor;
-    model_params.global_vertical_scale = view_state.global_vertical_scale;
-    model_params.viewport_y_min = y_min;
-    model_params.viewport_y_max = y_max;
-    model_params.plotting_mode = (display_options.plotting_mode == EventPlottingMode::FullCanvas)
-                                         ? CorePlotting::EventSeriesMatrixParams::PlottingMode::FullCanvas
-                                         : CorePlotting::EventSeriesMatrixParams::PlottingMode::Stacked;
+    // Create layout from display_options
+    CorePlotting::SeriesLayout layout{
+            "",
+            display_options.layout_transform,
+            0};
 
-    CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
+    // Compose Y transform based on plotting mode
+    CorePlotting::LayoutTransform y_transform;
+    if (display_options.plotting_mode == EventPlottingMode::FullCanvas) {
+        y_transform = composeEventFullCanvasYTransform(y_min, y_max, display_options.margin_factor);
+    } else {
+        y_transform = composeEventYTransform(layout, display_options.margin_factor, view_state.global_vertical_scale);
+    }
+
+    // Create model matrix from composed transform
+    glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
     // Convert hex color to glm::vec4
     int r, g, b;
@@ -236,13 +345,12 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     batch_params.glyph_size = display_options.style.line_thickness;
     batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
-    // Build the batch
-    auto batch = DataViewerHelpers::buildEventSeriesBatch(
+    // Use simplified API (takes pre-composed model matrix)
+    auto batch = DataViewerHelpers::buildEventSeriesBatchSimplified(
             *series,
             gl_widget_->getMasterTimeFrame(),
             batch_params,
-            model_params,
-            view_params);
+            model_matrix);
 
     // Set colors for all events (SceneBuildingHelpers doesn't set per-glyph colors)
     batch.colors.resize(batch.positions.size(), color);
@@ -258,17 +366,21 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
 
     auto const view_state = gl_widget_->getViewState();
 
-    // Build model params from display options
-    CorePlotting::IntervalSeriesMatrixParams model_params;
-    model_params.allocated_y_center = display_options.layout_transform.offset;
-    model_params.allocated_height = display_options.layout_transform.gain * 2.0f;
-    model_params.margin_factor = display_options.margin_factor;
-    model_params.global_zoom = view_state.global_zoom;
-    model_params.global_vertical_scale = view_state.global_vertical_scale;
-    model_params.extend_full_canvas = display_options.extend_full_canvas;
+    // Create layout from display_options
+    CorePlotting::SeriesLayout layout{
+            "",
+            display_options.layout_transform,
+            0};
 
-    CorePlotting::ViewProjectionParams view_params;
-    view_params.vertical_pan_offset = view_state.vertical_pan_offset;
+    // Compose Y transform for intervals
+    CorePlotting::LayoutTransform y_transform = composeIntervalYTransform(
+            layout,
+            display_options.margin_factor,
+            view_state.global_zoom,
+            view_state.global_vertical_scale);
+
+    // Create model matrix from composed transform
+    glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
     // Convert hex color to glm::vec4 with alpha
     int r, g, b;
@@ -285,11 +397,10 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
     batch_params.end_time = TimeFrameIndex(static_cast<int64_t>(end_time));
     batch_params.color = color;
 
-    // Use SceneBuildingHelpers to build the batch
-    return DataViewerHelpers::buildIntervalSeriesBatch(
+    // Use simplified API (takes pre-composed model matrix)
+    return DataViewerHelpers::buildIntervalSeriesBatchSimplified(
             *series,
             gl_widget_->getMasterTimeFrame(),
             batch_params,
-            model_params,
-            view_params);
+            model_matrix);
 }

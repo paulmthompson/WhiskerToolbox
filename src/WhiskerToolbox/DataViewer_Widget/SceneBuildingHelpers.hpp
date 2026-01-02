@@ -60,46 +60,6 @@ struct AnalogBatchParams {
 };
 
 /**
- * @brief Build a RenderablePolyLineBatch from an AnalogTimeSeries.
- * 
- * Converts the analog data into GPU-ready vertex data. If gap detection is enabled,
- * the batch will contain multiple line segments broken at gaps.
- * 
- * @param series The analog time series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to PolyLineRenderer
- */
-CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
-        AnalogTimeSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        AnalogBatchParams const & params,
-        CorePlotting::AnalogSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
-
-/**
- * @brief Build a RenderableGlyphBatch for an AnalogTimeSeries in marker mode.
- * 
- * Converts the analog data into individual point markers instead of a connected line.
- * Used when gap_handling is set to ShowMarkers.
- * 
- * @param series The analog time series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to GlyphRenderer
- */
-CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatch(
-        AnalogTimeSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        AnalogBatchParams const & params,
-        CorePlotting::AnalogSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
-
-/**
  * @brief Parameters for building a digital event series batch.
  */
 struct EventBatchParams {
@@ -112,26 +72,6 @@ struct EventBatchParams {
 };
 
 /**
- * @brief Build a RenderableGlyphBatch from a DigitalEventSeries.
- * 
- * For events rendered as ticks (vertical lines), we use glyphs positioned at
- * the event times. The Model matrix handles vertical positioning.
- * 
- * @param series The digital event series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to GlyphRenderer
- */
-CorePlotting::RenderableGlyphBatch buildEventSeriesBatch(
-        DigitalEventSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        EventBatchParams const & params,
-        CorePlotting::EventSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
-
-/**
  * @brief Parameters for building a digital interval series batch.
  */
 struct IntervalBatchParams {
@@ -139,26 +79,6 @@ struct IntervalBatchParams {
     TimeFrameIndex end_time{0};
     glm::vec4 color{1.0f, 1.0f, 1.0f, 0.5f};
 };
-
-/**
- * @brief Build a RenderableRectangleBatch from a DigitalIntervalSeries.
- * 
- * Converts intervals to rectangles with X coordinates from interval bounds
- * and Y coordinates normalized to [-1, 1] for the Model matrix to position.
- * 
- * @param series The digital interval series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to RectangleRenderer
- */
-CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatch(
-        DigitalIntervalSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        IntervalBatchParams const & params,
-        CorePlotting::IntervalSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
 
 /**
  * @brief Build highlight rectangle for a selected interval.
@@ -198,16 +118,20 @@ CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
         glm::mat4 const & model_matrix);
 
 // ============================================================================
-// Simplified API using LayoutTransform
+// Batch Building API using pre-composed Model matrices
 // ============================================================================
-// These functions eliminate the intermediate param structs by taking
-// a pre-composed LayoutTransform or Model matrix directly.
+// These functions take a pre-composed glm::mat4 model matrix directly.
+// The caller is responsible for computing the model matrix by composing:
+//   1. Data normalization (from CorePlotting::NormalizationHelpers)
+//   2. Layout positioning (from CorePlotting::LayoutEngine)
+//   3. Any user adjustments
+// Then calling CorePlotting::createModelMatrix(y_transform) to get the matrix.
 
 /**
- * @brief Simplified analog batch building with pre-composed model matrix
+ * @brief Build a RenderablePolyLineBatch from an AnalogTimeSeries
  * 
- * Uses a pre-composed Model matrix instead of AnalogSeriesMatrixParams.
- * The caller computes the model matrix using CorePlotting::composeAnalogYTransform().
+ * Converts the analog data into GPU-ready vertex data. If gap detection is enabled,
+ * the batch will contain multiple line segments broken at gaps.
  * 
  * @param series The analog time series data
  * @param master_time_frame The master time frame for coordinate conversion
@@ -222,7 +146,16 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
- * @brief Simplified analog marker batch building with pre-composed model matrix
+ * @brief Build a RenderableGlyphBatch for an AnalogTimeSeries in marker mode
+ * 
+ * Converts the analog data into individual point markers instead of a connected line.
+ * Used when gap_handling is set to ShowMarkers.
+ * 
+ * @param series The analog time series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to GlyphRenderer
  */
 CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatchSimplified(
         AnalogTimeSeries const & series,
@@ -231,7 +164,16 @@ CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
- * @brief Simplified event batch building with pre-composed model matrix
+ * @brief Build a RenderableGlyphBatch from a DigitalEventSeries
+ * 
+ * For events rendered as ticks (vertical lines), we use glyphs positioned at
+ * the event times. The Model matrix handles vertical positioning.
+ * 
+ * @param series The digital event series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to GlyphRenderer
  */
 CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
         DigitalEventSeries const & series,
@@ -240,7 +182,16 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
- * @brief Simplified interval batch building with pre-composed model matrix
+ * @brief Build a RenderableRectangleBatch from a DigitalIntervalSeries
+ * 
+ * Converts intervals to rectangles with X coordinates from interval bounds
+ * and Y coordinates normalized to [-1, 1] for the Model matrix to position.
+ * 
+ * @param series The digital interval series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to RectangleRenderer
  */
 CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
         DigitalIntervalSeries const & series,

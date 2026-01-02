@@ -109,41 +109,8 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix, char const * context_name) {
 }
 
 // ============================================================================
-// Analog Time Series MVP Matrices
+// View and Projection Matrices (shared across data types)
 // ============================================================================
-
-glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params) {
-    // Calculate intrinsic scaling (3 standard deviations for full range)
-    // This maps ±3*std_dev (from the mean) to ±1.0 in normalized space
-    // Protect against division by zero
-    float const safe_std_dev = (params.std_dev > 1e-6f) ? params.std_dev : 1.0f;
-    float const intrinsic_scale = 1.0f / (3.0f * safe_std_dev);
-
-    // Combine all scaling factors: intrinsic, user, and global
-    float const total_y_scale = intrinsic_scale *
-                                params.intrinsic_scale *
-                                params.user_scale_factor *
-                                params.global_zoom *
-                                params.global_vertical_scale;
-
-    // Scale to fit within allocated height (use 80% of allocated space for safety)
-    // This means ±3*std_dev (from mean) will span ±80% of the allocated height
-    float const height_scale = params.allocated_height * 0.8f;
-    float const final_y_scale = total_y_scale * height_scale;
-
-    // Build the transformation to achieve: (data_value - data_mean) * scale + allocated_center + user_offset
-    // This ensures data_mean maps exactly to allocated_center, then applies user offset
-    // Formula: y_out = y_in * final_y_scale + (allocated_center - data_mean * final_y_scale) + user_offset
-
-    float const y_offset = params.allocated_y_center - params.data_mean * final_y_scale + params.user_vertical_offset;
-
-    // Construct affine transformation matrix
-    glm::mat4 Model(1.0f);
-    Model[1][1] = final_y_scale;// Y scaling
-    Model[3][1] = y_offset;     // Y translation (including user offset)
-
-    return Model;
-}
 
 glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params) {
     glm::mat4 View(1.0f);
@@ -302,61 +269,7 @@ glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
 }
 
 // ============================================================================
-// Inverse Transform Utilities
-// ============================================================================
-
-namespace {
-/**
- * @brief Calculate the combined Y scale factor for analog series
- * 
- * This is extracted to avoid duplication between forward and inverse transforms.
- */
-float calculateAnalogYScale(AnalogSeriesMatrixParams const & params) {
-    // Calculate intrinsic scaling (same as getAnalogModelMatrix)
-    float const safe_std_dev = (params.std_dev > 1e-6f) ? params.std_dev : 1.0f;
-    float const intrinsic_scale = 1.0f / (3.0f * safe_std_dev);
-
-    // Combine all scaling factors
-    float const total_y_scale = intrinsic_scale *
-                                params.intrinsic_scale *
-                                params.user_scale_factor *
-                                params.global_zoom *
-                                params.global_vertical_scale;
-
-    // Scale to fit within allocated height (80% margin)
-    float const height_scale = params.allocated_height * 0.8f;
-    return total_y_scale * height_scale;
-}
-}// anonymous namespace
-
-float worldYToAnalogValue(float world_y, AnalogSeriesMatrixParams const & params) {
-    float const final_y_scale = calculateAnalogYScale(params);
-
-    // Guard against division by zero
-    if (std::abs(final_y_scale) < 1e-10f) {
-        return params.data_mean;
-    }
-
-    // Inverse of: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
-    // Solving for y_data:
-    //   y_world - allocated_y_center - user_offset = (y_data - data_mean) * scale
-    //   (y_world - allocated_y_center - user_offset) / scale = y_data - data_mean
-    //   y_data = (y_world - allocated_y_center - user_offset) / scale + data_mean
-
-    float const y_offset = params.allocated_y_center + params.user_vertical_offset;
-    return (world_y - y_offset) / final_y_scale + params.data_mean;
-}
-
-float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params) {
-    float const final_y_scale = calculateAnalogYScale(params);
-
-    // Forward transform: y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
-    float const y_offset = params.allocated_y_center + params.user_vertical_offset;
-    return (data_value - params.data_mean) * final_y_scale + y_offset;
-}
-
-// ============================================================================
-// Simplified LayoutTransform-based API
+// LayoutTransform-based API
 // ============================================================================
 
 glm::mat4 createProjectionMatrix(TimeFrameIndex start_time,
