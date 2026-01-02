@@ -1,12 +1,14 @@
 #ifndef COREPLOTTING_COORDINATETRANSFORM_INVERSETRANSFORM_HPP
 #define COREPLOTTING_COORDINATETRANSFORM_INVERSETRANSFORM_HPP
 
-#include "CorePlotting/Layout/LayoutTransform.hpp"
-
 #include <glm/glm.hpp>
 
 #include <cmath>
 #include <cstdint>
+
+namespace CorePlotting {
+struct LayoutTransform;
+}
 
 namespace CorePlotting {
 
@@ -47,18 +49,9 @@ namespace CorePlotting {
  * @param viewport_height Viewport height in pixels
  * @return NDC coordinates in range [-1, 1]
  */
-[[nodiscard]] inline glm::vec2 canvasToNDC(
+[[nodiscard]] glm::vec2 canvasToNDC(
         float canvas_x, float canvas_y,
-        int viewport_width, int viewport_height) {
-    
-    // X: 0 → -1, width → +1
-    float const ndc_x = (2.0f * canvas_x / static_cast<float>(viewport_width)) - 1.0f;
-    
-    // Y: 0 (top) → +1, height (bottom) → -1 (flip for OpenGL convention)
-    float const ndc_y = 1.0f - (2.0f * canvas_y / static_cast<float>(viewport_height));
-    
-    return {ndc_x, ndc_y};
-}
+        int viewport_width, int viewport_height);
 
 /**
  * @brief Convert NDC to canvas pixel coordinates
@@ -71,15 +64,9 @@ namespace CorePlotting {
  * @param viewport_height Viewport height in pixels
  * @return Canvas coordinates in pixels
  */
-[[nodiscard]] inline glm::vec2 ndcToCanvas(
+[[nodiscard]] glm::vec2 ndcToCanvas(
         float ndc_x, float ndc_y,
-        int viewport_width, int viewport_height) {
-    
-    float const canvas_x = (ndc_x + 1.0f) * 0.5f * static_cast<float>(viewport_width);
-    float const canvas_y = (1.0f - ndc_y) * 0.5f * static_cast<float>(viewport_height);
-    
-    return {canvas_x, canvas_y};
-}
+        int viewport_width, int viewport_height);
 
 // ============================================================================
 // NDC ↔ World Conversions
@@ -94,20 +81,9 @@ namespace CorePlotting {
  * @param inverse_vp Inverse of (projection × view) matrix
  * @return World-space coordinates
  */
-[[nodiscard]] inline glm::vec2 ndcToWorld(
+[[nodiscard]] glm::vec2 ndcToWorld(
         glm::vec2 ndc_pos,
-        glm::mat4 const& inverse_vp) {
-    
-    // Use z=0 for 2D plotting (we're on the near plane)
-    glm::vec4 const ndc_point(ndc_pos.x, ndc_pos.y, 0.0f, 1.0f);
-    glm::vec4 const world_point = inverse_vp * ndc_point;
-    
-    // Perspective divide (for orthographic, w should be 1.0)
-    if (std::abs(world_point.w) > 1e-10f) {
-        return {world_point.x / world_point.w, world_point.y / world_point.w};
-    }
-    return {world_point.x, world_point.y};
-}
+        glm::mat4 const & inverse_vp);
 
 /**
  * @brief Convert world coordinates to NDC using VP matrices
@@ -118,18 +94,9 @@ namespace CorePlotting {
  * @param vp (projection × view) matrix
  * @return NDC coordinates
  */
-[[nodiscard]] inline glm::vec2 worldToNDC(
+[[nodiscard]] glm::vec2 worldToNDC(
         glm::vec2 world_pos,
-        glm::mat4 const& vp) {
-    
-    glm::vec4 const world_point(world_pos.x, world_pos.y, 0.0f, 1.0f);
-    glm::vec4 const ndc_point = vp * world_point;
-    
-    if (std::abs(ndc_point.w) > 1e-10f) {
-        return {ndc_point.x / ndc_point.w, ndc_point.y / ndc_point.w};
-    }
-    return {ndc_point.x, ndc_point.y};
-}
+        glm::mat4 const & vp);
 
 // ============================================================================
 // Combined Canvas ↔ World Conversions
@@ -148,21 +115,11 @@ namespace CorePlotting {
  * @param projection_matrix Projection matrix
  * @return World-space coordinates
  */
-[[nodiscard]] inline glm::vec2 canvasToWorld(
+[[nodiscard]] glm::vec2 canvasToWorld(
         float canvas_x, float canvas_y,
         int viewport_width, int viewport_height,
-        glm::mat4 const& view_matrix,
-        glm::mat4 const& projection_matrix) {
-    
-    // Canvas → NDC
-    glm::vec2 const ndc = canvasToNDC(canvas_x, canvas_y, viewport_width, viewport_height);
-    
-    // NDC → World (need inverse VP)
-    glm::mat4 const vp = projection_matrix * view_matrix;
-    glm::mat4 const inverse_vp = glm::inverse(vp);
-    
-    return ndcToWorld(ndc, inverse_vp);
-}
+        glm::mat4 const & view_matrix,
+        glm::mat4 const & projection_matrix);
 
 /**
  * @brief Convert world coordinates to canvas pixels
@@ -177,19 +134,11 @@ namespace CorePlotting {
  * @param projection_matrix Projection matrix
  * @return Canvas coordinates in pixels
  */
-[[nodiscard]] inline glm::vec2 worldToCanvas(
+[[nodiscard]] glm::vec2 worldToCanvas(
         float world_x, float world_y,
         int viewport_width, int viewport_height,
-        glm::mat4 const& view_matrix,
-        glm::mat4 const& projection_matrix) {
-    
-    // World → NDC
-    glm::mat4 const vp = projection_matrix * view_matrix;
-    glm::vec2 const ndc = worldToNDC({world_x, world_y}, vp);
-    
-    // NDC → Canvas
-    return ndcToCanvas(ndc.x, ndc.y, viewport_width, viewport_height);
-}
+        glm::mat4 const & view_matrix,
+        glm::mat4 const & projection_matrix);
 
 // ============================================================================
 // World ↔ Data Conversions
@@ -229,9 +178,7 @@ namespace CorePlotting {
  * @param y_transform The LayoutTransform applied to Y values for this series
  * @return Data Y value (original scale)
  */
-[[nodiscard]] inline float worldYToDataY(float world_y, LayoutTransform const& y_transform) {
-    return y_transform.inverse(world_y);
-}
+[[nodiscard]] float worldYToDataY(float world_y, LayoutTransform const & y_transform);
 
 /**
  * @brief Convert data Y coordinate to world Y using LayoutTransform
@@ -242,9 +189,7 @@ namespace CorePlotting {
  * @param y_transform The LayoutTransform for this series
  * @return World Y coordinate
  */
-[[nodiscard]] inline float dataYToWorldY(float data_y, LayoutTransform const& y_transform) {
-    return y_transform.apply(data_y);
-}
+[[nodiscard]] float dataYToWorldY(float data_y, LayoutTransform const & y_transform);
 
 // ============================================================================
 // Combined Canvas → Data Conversion
@@ -254,10 +199,10 @@ namespace CorePlotting {
  * @brief Result of canvas to data coordinate conversion
  */
 struct CanvasToDataResult {
-    int64_t time_index{0};  ///< X as TimeFrameIndex
-    float data_y{0.0f};     ///< Y in data space
-    float world_x{0.0f};    ///< Intermediate world X (for reference)
-    float world_y{0.0f};    ///< Intermediate world Y (for reference)
+    int64_t time_index{0};///< X as TimeFrameIndex
+    float data_y{0.0f};   ///< Y in data space
+    float world_x{0.0f};  ///< Intermediate world X (for reference)
+    float world_y{0.0f};  ///< Intermediate world Y (for reference)
 };
 
 /**
@@ -274,31 +219,13 @@ struct CanvasToDataResult {
  * @param y_transform LayoutTransform for Y-axis (series-specific)
  * @return Complete data coordinates with intermediate values
  */
-[[nodiscard]] inline CanvasToDataResult canvasToData(
+[[nodiscard]] CanvasToDataResult canvasToData(
         float canvas_x, float canvas_y,
         int viewport_width, int viewport_height,
-        glm::mat4 const& view_matrix,
-        glm::mat4 const& projection_matrix,
-        LayoutTransform const& y_transform) {
-    
-    CanvasToDataResult result;
-    
-    // Canvas → World
-    glm::vec2 const world = canvasToWorld(
-            canvas_x, canvas_y,
-            viewport_width, viewport_height,
-            view_matrix, projection_matrix);
-    
-    result.world_x = world.x;
-    result.world_y = world.y;
-    
-    // World → Data
-    result.time_index = worldXToTimeIndex(world.x);
-    result.data_y = worldYToDataY(world.y, y_transform);
-    
-    return result;
-}
+        glm::mat4 const & view_matrix,
+        glm::mat4 const & projection_matrix,
+        LayoutTransform const & y_transform);
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_COORDINATETRANSFORM_INVERSETRANSFORM_HPP
+#endif// COREPLOTTING_COORDINATETRANSFORM_INVERSETRANSFORM_HPP

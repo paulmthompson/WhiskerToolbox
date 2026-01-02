@@ -18,6 +18,8 @@ set(COREPLOTTING_SOURCES
     SceneGraph/SceneBuilder.hpp
     SceneGraph/SceneBuilder.cpp
     # CoordinateTransform
+    CoordinateTransform/InverseTransform.cpp 
+    CoordinateTransform/InverseTransform.hpp
     CoordinateTransform/Matrices.hpp
     CoordinateTransform/Matrices.cpp
     CoordinateTransform/ViewState.hpp
@@ -28,7 +30,6 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/SeriesCoordinateQuery.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
-    CoordinateTransform/InverseTransform.hpp
     # Layout
     Layout/LayoutTransform.hpp
     Layout/NormalizationHelpers.hpp

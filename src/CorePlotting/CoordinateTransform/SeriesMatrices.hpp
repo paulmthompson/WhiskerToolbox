@@ -9,7 +9,6 @@
 
 namespace CorePlotting {
 
-// Forward declarations for display options structs
 struct SeriesStyle;
 struct SeriesDataCache;
 
