@@ -7,7 +7,6 @@ This document outlines the roadmap for consolidating the plotting architecture i
 The following are optional cleanups that can be done incrementally:
 
 - [ ] **Migrate DisplayOptions to SeriesConfig**: Replace `NewAnalogTimeSeriesDisplayOptions` with `AnalogSeriesConfig`
-- [ ] **Remove legacy param structs**: Delete `AnalogSeriesMatrixParams`, `EventSeriesMatrixParams`, `IntervalSeriesMatrixParams` from SeriesMatrices.hpp once no longer used
 - [ ] **Update SVGExporter**: Use same compose pattern for consistency
 
 ---
