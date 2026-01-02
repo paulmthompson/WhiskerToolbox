@@ -17,10 +17,10 @@
  * @endcode
  */
 
+#include "AnalogVertexCache.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "AnalogVertexCache.hpp"
 
 #include <glm/glm.hpp>
 
@@ -42,8 +42,8 @@ namespace DataViewerHelpers {
  * @brief Rendering mode for analog series.
  */
 enum class AnalogRenderMode {
-    Line,   ///< Render as connected line strip (default)
-    Markers ///< Render as individual point markers
+    Line,  ///< Render as connected line strip (default)
+    Markers///< Render as individual point markers
 };
 
 /**
@@ -56,7 +56,7 @@ struct AnalogBatchParams {
     bool detect_gaps{true};   ///< Whether to break lines at gaps
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     float thickness{1.0f};
-    AnalogRenderMode render_mode{AnalogRenderMode::Line}; ///< How to render the series
+    AnalogRenderMode render_mode{AnalogRenderMode::Line};///< How to render the series
 };
 
 /**
@@ -198,9 +198,9 @@ CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
         glm::mat4 const & model_matrix);
 
 // ============================================================================
-// Simplified API using LayoutTransform (Phase 4.13)
+// Simplified API using LayoutTransform
 // ============================================================================
-// These functions eliminate the intermediate param structs by taking 
+// These functions eliminate the intermediate param structs by taking
 // a pre-composed LayoutTransform or Model matrix directly.
 
 /**

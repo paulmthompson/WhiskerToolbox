@@ -81,7 +81,7 @@ CorePlotting::RenderableScene SVGExporter::buildScene(int start_time, int end_ti
     auto const y_max = view_state.y_max;
 
     // Build shared View and Projection matrices
-    // Get view state parameters from OpenGLWidget (Phase 4.7+ migration)
+    // Get view state parameters from OpenGLWidget
     CorePlotting::ViewProjectionParams view_params;
     view_params.vertical_pan_offset = view_state.vertical_pan_offset;
 

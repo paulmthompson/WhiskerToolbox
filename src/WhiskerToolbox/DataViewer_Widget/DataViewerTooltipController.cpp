@@ -6,8 +6,8 @@
 namespace DataViewer {
 
 DataViewerTooltipController::DataViewerTooltipController(QWidget * parent_widget)
-    : QObject(parent_widget)
-    , _parent_widget(parent_widget) {
+    : QObject(parent_widget),
+      _parent_widget(parent_widget) {
     _timer = new QTimer(this);
     _timer->setSingleShot(true);
     _timer->setInterval(DEFAULT_DELAY_MS);

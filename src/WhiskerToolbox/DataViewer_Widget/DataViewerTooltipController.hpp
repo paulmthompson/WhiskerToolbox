@@ -32,10 +32,10 @@ namespace DataViewer {
  * @brief Information about a series at a specific position
  */
 struct SeriesInfo {
-    std::string type;    ///< Series type ("Analog", "Event", "Interval")
-    std::string key;     ///< Series key/identifier
-    float value{0.0f};   ///< Optional value (for analog series at hover position)
-    bool has_value{false}; ///< Whether value field is meaningful
+    std::string type;     ///< Series type ("Analog", "Event", "Interval")
+    std::string key;      ///< Series key/identifier
+    float value{0.0f};    ///< Optional value (for analog series at hover position)
+    bool has_value{false};///< Whether value field is meaningful
 };
 
 /**

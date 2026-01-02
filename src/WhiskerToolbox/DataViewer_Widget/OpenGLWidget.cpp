@@ -92,19 +92,19 @@ namespace {
     // Layout provides: offset = lane center, gain = half_height of lane
     // Apply 80% margin factor within allocated space
     constexpr float margin_factor = 0.8f;
-    
+
     // Global scaling affects the amplitude within the lane, NOT the lane position
     // So we apply global_zoom to the gain only
     float const lane_half_height = layout.y_transform.gain * margin_factor;
     float const effective_gain = lane_half_height * global_zoom * global_vertical_scale;
-    
+
     // Final transform:
     // 1. Apply data_transform to normalize the raw data
     // 2. Scale by effective_gain (includes layout height + global zoom)
     // 3. Translate to lane center (layout.offset is NOT scaled by global_zoom)
     float const final_gain = data_transform.gain * effective_gain;
     float const final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
-    
+
     return CorePlotting::LayoutTransform{final_offset, final_gain};
 }
 
@@ -151,8 +151,8 @@ namespace {
 [[nodiscard]] CorePlotting::LayoutTransform composeIntervalYTransform(
         CorePlotting::SeriesLayout const & layout,
         float margin_factor,
-        [[maybe_unused]] float global_zoom,      // Intentionally ignored for intervals
-        [[maybe_unused]] float global_vertical_scale) {  // Intentionally ignored for intervals
+        [[maybe_unused]] float global_zoom,            // Intentionally ignored for intervals
+        [[maybe_unused]] float global_vertical_scale) {// Intentionally ignored for intervals
 
     // Intervals map [-1, 1] to allocated space with margin only
     // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
@@ -197,7 +197,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         DataViewer::SeriesInfo info;
         info.type = result->first;
         info.key = result->second;
-        
+
         // Get analog value if applicable
         if (info.type == "Analog") {
             info.value = canvasYToAnalogValue(canvas_y, info.key);
@@ -208,7 +208,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 
     // Initialize input handler
     _input_handler = std::make_unique<DataViewer::DataViewerInputHandler>(this);
-    
+
     // Connect input handler signals
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::panDelta, this, [this](float normalized_dy) {
         _view_state.applyVerticalPanDelta(normalized_dy);
@@ -242,10 +242,10 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
                 glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
                 glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
                 _interaction_manager->startIntervalCreation(
-                    series_key,
-                    static_cast<float>(start_pos.x()),
-                    static_cast<float>(start_pos.y()),
-                    fill_color, stroke_color);
+                        series_key,
+                        static_cast<float>(start_pos.x()),
+                        static_cast<float>(start_pos.y()),
+                        fill_color, stroke_color);
                 _input_handler->setInteractionActive(true);
                 return;
             }
@@ -274,7 +274,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 
     // Initialize interaction manager
     _interaction_manager = std::make_unique<DataViewer::DataViewerInteractionManager>(this);
-    
+
     // Connect interaction manager signals
     connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::modeChanged, this, [this](DataViewer::InteractionMode mode) {
         emit interactionModeChanged(mode);
@@ -1124,7 +1124,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
             // Use cached batch builder for efficient scrolling
             // The vertex_cache is mutable, allowing updates even with const iteration
             auto batch = DataViewerHelpers::buildAnalogSeriesBatchCached(
-                    *series, _master_time_frame, batch_params, model_matrix, 
+                    *series, _master_time_frame, batch_params, model_matrix,
                     analog_data.vertex_cache);
             if (!batch.vertices.empty()) {
                 builder.addPolyLineBatch(std::move(batch));

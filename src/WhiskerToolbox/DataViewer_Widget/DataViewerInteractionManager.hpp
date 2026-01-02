@@ -50,7 +50,7 @@ struct InteractionContext {
     CorePlotting::RenderableScene const * scene{nullptr};
     int widget_width{0};
     int widget_height{0};
-    
+
     /**
      * @brief Create a DataViewerCoordinates instance from this context
      * @return DataViewerCoordinates configured with current view state and dimensions
