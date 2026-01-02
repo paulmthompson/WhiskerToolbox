@@ -152,7 +152,6 @@ The times are essentially identical regardless of mask content size.
 
 The following benchmark compares insertion performance across different data types and storage strategies.
 
-
 ### Results
 
 ```         
@@ -222,7 +221,6 @@ Mask2D (1KB)                 245.80 ns
 ## Profiling: Storage Strategy Comparison
 
 This benchmark compares the current map-based implementation against the SoA approach.
-
 
 ### Results
 
@@ -374,7 +372,6 @@ Based on the profiling results:
 
 When creating filtered views that reference source data without copying, we measured the overhead of index indirection.
 
-
 ### Results
 
 ```         
@@ -431,7 +428,7 @@ Memory savings:          82.9% vs full copy
 ### Analysis
 
 | Metric | Result | Notes |
-|-------------------------|-------------------------|----------------------|
+|----|----|----|
 | Virtual dispatch overhead | **0.94x** (faster!) | Compiler optimizes well |
 | Index indirection overhead | **0.89x** (faster!) | CPU prefetching helps |
 | Filtered iteration | **4.6x faster** | vs scanning all + filter check |
@@ -504,7 +501,6 @@ auto& data = std::visit([i](auto& ptr) -> auto& {
     return ptr->getData(i); 
 }, storage);  // std::visit dispatch
 ```
-
 
 ### Results
 

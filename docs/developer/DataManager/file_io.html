@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>transforms – Neuralyzer</title>
+<title>File IO – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,23 +23,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -69,7 +69,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
 <body class="nav-sidebar docked nav-fixed">
@@ -79,7 +79,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -90,7 +90,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -99,7 +99,7 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
@@ -110,12 +110,16 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../labeling/keypoint.html">
+    <a class="dropdown-item" href="../../labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../labeling/mask.html">
+    <a class="dropdown-item" href="../../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../examples/tabular_binary_events.html">
+ <span class="dropdown-text">Load Tabular Binary Events</span></a>
   </li>  
     </ul>
   </li>
@@ -125,15 +129,15 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../user_guide/index.html">
+    <a class="dropdown-item" href="../../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../developer/index.html">
+    <a class="dropdown-item" href="../../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../api_reference.html">
+    <a class="dropdown-item" href="../../api_reference.html">
  <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
@@ -160,7 +164,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/transforms.html">transforms</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../developer/DataManager/file_io.html">File IO</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -174,128 +178,74 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Documentation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Profiling and Performance</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/building.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Building</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/code_quality.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/copilot.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">C++ Development Tools Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Contributing Code</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Fuzz Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Introduction to C++</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Transform Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Testing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/transforms.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">transforms</span></a>
+  <a href="../../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -303,10 +253,121 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Manager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/table_view.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Table View</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/analysis_dashboard/analysis_dashboard.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_viewer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Collapsible Widget</span></a>
   </div>
 </li>
+      </ul>
+  </li>
       </ul>
   </li>
     </ul>
@@ -319,16 +380,25 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#transform-catalog" id="toc-transform-catalog" class="nav-link active" data-scroll-target="#transform-catalog">Transform Catalog</a></li>
+  <li><a href="#current-architecture" id="toc-current-architecture" class="nav-link active" data-scroll-target="#current-architecture">Current Architecture</a></li>
+  <li><a href="#file-inputoutput-and-memory-management-considerations" id="toc-file-inputoutput-and-memory-management-considerations" class="nav-link" data-scroll-target="#file-inputoutput-and-memory-management-considerations">File Input/Output and Memory Management Considerations</a>
+  <ul class="collapse">
+  <li><a href="#overview-of-file-io-requirements" id="toc-overview-of-file-io-requirements" class="nav-link" data-scroll-target="#overview-of-file-io-requirements">Overview of File IO Requirements</a></li>
+  <li><a href="#incremental-data-adjustments-and-key-value-stores" id="toc-incremental-data-adjustments-and-key-value-stores" class="nav-link" data-scroll-target="#incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</a></li>
+  <li><a href="#serialization-with-captain-proto" id="toc-serialization-with-captain-proto" class="nav-link" data-scroll-target="#serialization-with-captain-proto">Serialization with Captain Proto</a></li>
+  <li><a href="#memory-mapping-implementation" id="toc-memory-mapping-implementation" class="nav-link" data-scroll-target="#memory-mapping-implementation">Memory Mapping Implementation</a></li>
+  <li><a href="#key-value-database-libraries" id="toc-key-value-database-libraries" class="nav-link" data-scroll-target="#key-value-database-libraries">Key-Value Database Libraries</a></li>
+  <li><a href="#prioritization-and-future-considerations" id="toc-prioritization-and-future-considerations" class="nav-link" data-scroll-target="#prioritization-and-future-considerations">Prioritization and Future Considerations</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../developer/DataManager/file_io.html">File IO</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">transforms</h1>
+<h1 class="title">File IO</h1>
 </div>
 
 
@@ -345,242 +415,203 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="transform-catalog" class="level1">
-<h1>Transform Catalog</h1>
-<p>The below table has all of the transformations currently available in the Data Transform widget. Each transform should have a test.cpp file (Column 2). The test.cpp file should include tests to make sure it can be populated by a JSON template (e.g.&nbsp;it can be run by loading data with a JSON file). Some transforms will “just work” because they are parameterless, but transforms with parameters will need to have them also described with a JSON link and put in the transform parameter factory. Documentation for users should be provided to describe the algorithm and its uses. Finally, a benchmark.cpp file should be created and placed in the same directory.</p>
+<section id="current-architecture" class="level1">
+<h1>Current Architecture</h1>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
-<col style="width: 14%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Transform Name</th>
-<th>Has .test.cpp?</th>
-<th>JSON-based Test?</th>
-<th>Parameters in ParameterFactory?</th>
-<th>User Docs Exist?</th>
-<th>Has benchmark.cpp?</th>
-<th>Benchmark Results</th>
+<th>Data Type</th>
+<th>Format</th>
+<th>Dependency</th>
+<th>Raw Data for Testing?</th>
+<th>IO Widget Testing</th>
+<th>Datamanager IO Testing</th>
+<th>JSON Validation Testing</th>
+<th>User Guide</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Calculate Mask Centroid</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Analog</td>
+<td>Binary</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Convert Mask to Line</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
-<td>No</td>
+<td>Analog</td>
+<td>CSV</td>
+<td></td>
+<td>Some</td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>Skeletonize Mask</td>
+<td>DigitalEvent</td>
+<td>CSV</td>
+<td></td>
 <td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Remove Small Connected Components</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>DigitalInterval</td>
+<td>Binary</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>Apply Median Filter</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>DigitalInteral</td>
+<td>CSV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Calculate Area</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Line Data</td>
+<td>Binary</td>
+<td>Cap’n Proto</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>Fill Mask Holes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Line Data</td>
+<td>CSV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Calculate Mask Principal Axis</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Mask Data</td>
+<td>HDF5</td>
+<td>HDF5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>Whisker Tracing</td>
-<td>No</td>
-<td>N/A</td>
-<td>No</td>
-<td>No</td>
-<td>No</td>
+<td>Mask Data</td>
+<td>Image</td>
+<td>OpenCV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Clip Line by Reference Line</td>
+<td>Media Data</td>
+<td>Video</td>
+<td>ffmpeg</td>
 <td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>Line Alignment to Bright Features</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
-<td>Yes</td>
-<td>10 images in 2ms</td>
-</tr>
-<tr class="even">
-<td>Calculate Line to Point Distance</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Media Data</td>
+<td>Images</td>
+<td>OpenCV</td>
 <td></td>
-</tr>
-<tr class="odd">
-<td>Resample Line</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Extract Line Subsegment</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Media Data</td>
+<td>HDF5</td>
+<td>HDF5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td>Calculate Line Angle</td>
+<td>Point Data</td>
+<td>CSV</td>
+<td></td>
 <td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td></td>
+<td></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td>Calculate Line Curvature</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
+<td>Tensor</td>
+<td>Numpy</td>
+<td>Numpy</td>
 <td></td>
-</tr>
-<tr class="odd">
-<td>Extract Point from Line</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
 <td></td>
-</tr>
-<tr class="even">
-<td>Filter</td>
-<td>Yes</td>
-<td>No</td>
-<td>No</td>
-<td>No</td>
-<td>No</td>
 <td></td>
-</tr>
-<tr class="odd">
-<td>Hilbert Phase</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
 <td></td>
-</tr>
-<tr class="even">
-<td>Threshold Event Detection</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Threshold Interval Detection</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Scale and Normalize</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
-<td>No</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Group Intervals</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>Yes</td>
-<td>No</td>
 <td></td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="file-inputoutput-and-memory-management-considerations" class="level1">
+<h1>File Input/Output and Memory Management Considerations</h1>
+<section id="overview-of-file-io-requirements" class="level2">
+<h2 class="anchored" data-anchor-id="overview-of-file-io-requirements">Overview of File IO Requirements</h2>
+<p>Because <strong>Neuralizer</strong> is compatible with a wide range of data, its file IO needs to support a wide range of file formats. Some of these file formats will be pre-subscribed, such as data acquisition-specific formats for electrophysiology. Others are more specific to this package, such as for line data that varies over time. We must also be aware from the start that some electrophysiology file sizes can be expected to be larger than easy to work with on a regular desktop machine. For instance, Neuropixel probes record almost 400 channels at 20 kHz and are becoming more routine for use. Consequently, multiple file formats should have the ability to be easily memory-mapped and loaded from disk rather than loading the entire file into RAM.</p>
+</section>
+<section id="incremental-data-adjustments-and-key-value-stores" class="level2">
+<h2 class="anchored" data-anchor-id="incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</h2>
+<p>Another important consideration from the start is that many of these data types will be incrementally adjusted. For instance, processing a video sequence frame by frame or manually adjusting the output of an automated algorithm requires changing some subset of data in a much larger scheme. For some of these file types that are greater than hundreds of megabytes, resaving an entire file for point manipulations could be onerous and time-consuming. Consequently, for some file types, it would be advantageous to use a key-value database type structure that allows us to easily make incremental adjustments and only save those changes, consequently saving data much more quickly. To my knowledge, this process is quite common in the wild but uncommon in neuroscience.</p>
+</section>
+<section id="serialization-with-captain-proto" class="level2">
+<h2 class="anchored" data-anchor-id="serialization-with-captain-proto">Serialization with Captain Proto</h2>
+<p>The process of data serialization and deserialization will be accomplished with the <strong>Captain Proto</strong> library. This is able to easily create binary files from more complex data structures, such as those that hold multiple lines of varying size per unit time. This library can define output file structures that are purely binary and would be saved and loaded as entire objects. Alternatively, different definitions can be used to save objects as key-value pairs; for instance, each time point can be the key and the data at that time can be the value.</p>
+</section>
+<section id="memory-mapping-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="memory-mapping-implementation">Memory Mapping Implementation</h2>
+<p>Captain Proto does not perform memory mapping itself. Memory mapping is different across different types of file systems, so to maintain cross-platform use, we will need to either specify different interfaces for interacting with Captain Proto or we could use another third-party library that does this for us. <strong>Boost.Interprocess</strong> is commonly cited for this purpose, but there are others.</p>
+</section>
+<section id="key-value-database-libraries" class="level2">
+<h2 class="anchored" data-anchor-id="key-value-database-libraries">Key-Value Database Libraries</h2>
+<p>For key-value database structures, there are multiple libraries available. Many of these are mature and designed to work with servers of extremely large datasets, and some have been developed by very large companies. One of the most popular is called <strong>LMDB</strong>, but in my test cases, this appears to be not as great with Windows. Using this library requires specifying some maximum file size; on Linux, the resulting file size is only the size of the data, but with my testing on Windows, this large maximum file size seems to persist. An alternative database is <strong>RocksDB</strong>. This software is developed by Facebook, seems to be quite mature, and should also be able to save as a key-value pair across platforms.</p>
+</section>
+<section id="prioritization-and-future-considerations" class="level2">
+<h2 class="anchored" data-anchor-id="prioritization-and-future-considerations">Prioritization and Future Considerations</h2>
+<p>Currently, the data that would benefit from key-value updates is only theoretical. Having a line for whiskers for each frame in a high-speed video of up to 200,000 frames results in a file size that is almost 300 MB. However, saving a binary file in its entirety when making whisker-specific updates through manual curation still takes less than a second to save and is not noticeable to the user. Consequently, I think prioritizing having binary outputs to save entire files and memory mapping of those binary file types that are read-only, such as for Neuropixel analog traces, may be the most desirable next feature. Key-value pairs with something like RocksDB should be remembered for the future, but I am going to make that less of a priority until I see a clear use case that would benefit.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

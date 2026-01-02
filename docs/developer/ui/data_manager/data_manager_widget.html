@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>display_options – Neuralyzer</title>
+<title>Data Manager Widget – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,60 +20,26 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -103,17 +69,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
 
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../../styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-sidebar docked nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -124,7 +90,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="../../../index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -133,7 +99,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="../../../examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
@@ -144,12 +110,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../labeling/keypoint.html">
+    <a class="dropdown-item" href="../../../labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../labeling/mask.html">
+    <a class="dropdown-item" href="../../../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../examples/tabular_binary_events.html">
+ <span class="dropdown-text">Load Tabular Binary Events</span></a>
   </li>  
     </ul>
   </li>
@@ -159,15 +129,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../user_guide/index.html">
+    <a class="dropdown-item" href="../../../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../developer/index.html">
+    <a class="dropdown-item" href="../../../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../api_reference.html">
+    <a class="dropdown-item" href="../../../api_reference.html">
  <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
@@ -189,291 +159,264 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
       </div> <!-- /container-fluid -->
     </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../developer/ui/analysis_dashboard/analysis_dashboard.html">User Interface</a></li><li class="breadcrumb-item"><a href="../../../developer/ui/data_manager/data_manager_widget.html">Data Manager Widget</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Documentation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/code_quality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Manager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/table_view.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Table View</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/analysis_dashboard/analysis_dashboard.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/data_viewer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#display-options-for-media-widgets" id="toc-display-options-for-media-widgets" class="nav-link active" data-scroll-target="#display-options-for-media-widgets">Display Options for Media Widgets</a>
-  <ul class="collapse">
-  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#point-display-options" id="toc-point-display-options" class="nav-link" data-scroll-target="#point-display-options">Point Display Options</a>
-  <ul class="collapse">
-  <li><a href="#point-size-control" id="toc-point-size-control" class="nav-link" data-scroll-target="#point-size-control">Point Size Control</a></li>
-  <li><a href="#marker-shape-options" id="toc-marker-shape-options" class="nav-link" data-scroll-target="#marker-shape-options">Marker Shape Options</a></li>
-  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details">Implementation Details</a></li>
-  </ul></li>
-  <li><a href="#line-display-options" id="toc-line-display-options" class="nav-link" data-scroll-target="#line-display-options">Line Display Options</a>
-  <ul class="collapse">
-  <li><a href="#line-thickness-control" id="toc-line-thickness-control" class="nav-link" data-scroll-target="#line-thickness-control">Line Thickness Control</a></li>
-  <li><a href="#additional-line-features" id="toc-additional-line-features" class="nav-link" data-scroll-target="#additional-line-features">Additional Line Features</a></li>
-  <li><a href="#position-marker-details" id="toc-position-marker-details" class="nav-link" data-scroll-target="#position-marker-details">Position Marker Details</a></li>
-  <li><a href="#implementation-details-1" id="toc-implementation-details-1" class="nav-link" data-scroll-target="#implementation-details-1">Implementation Details</a></li>
-  <li><a href="#utility-functions" id="toc-utility-functions" class="nav-link" data-scroll-target="#utility-functions">Utility Functions</a></li>
-  </ul></li>
-  <li><a href="#technical-architecture" id="toc-technical-architecture" class="nav-link" data-scroll-target="#technical-architecture">Technical Architecture</a>
-  <ul class="collapse">
-  <li><a href="#display-options-structure" id="toc-display-options-structure" class="nav-link" data-scroll-target="#display-options-structure">Display Options Structure</a></li>
-  <li><a href="#widget-integration" id="toc-widget-integration" class="nav-link" data-scroll-target="#widget-integration">Widget Integration</a></li>
-  <li><a href="#rendering-system" id="toc-rendering-system" class="nav-link" data-scroll-target="#rendering-system">Rendering System</a></li>
-  </ul></li>
-  <li><a href="#usage-guidelines" id="toc-usage-guidelines" class="nav-link" data-scroll-target="#usage-guidelines">Usage Guidelines</a>
-  <ul class="collapse">
-  <li><a href="#for-users" id="toc-for-users" class="nav-link" data-scroll-target="#for-users">For Users</a></li>
-  <li><a href="#for-developers" id="toc-for-developers" class="nav-link" data-scroll-target="#for-developers">For Developers</a></li>
-  <li><a href="#mask-display-options" id="toc-mask-display-options" class="nav-link" data-scroll-target="#mask-display-options">Mask Display Options</a></li>
-  <li><a href="#mask-display-features" id="toc-mask-display-features" class="nav-link" data-scroll-target="#mask-display-features">Mask Display Features</a></li>
-  <li><a href="#ui-integration" id="toc-ui-integration" class="nav-link" data-scroll-target="#ui-integration">UI Integration</a></li>
-  </ul></li>
-  </ul></li>
+  <li><a href="#data-manager-widget-overview" id="toc-data-manager-widget-overview" class="nav-link active" data-scroll-target="#data-manager-widget-overview">Data Manager Widget Overview</a></li>
+  <li><a href="#data-saving-functionality" id="toc-data-saving-functionality" class="nav-link" data-scroll-target="#data-saving-functionality">Data Saving Functionality</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../../developer/ui/analysis_dashboard/analysis_dashboard.html">User Interface</a></li><li class="breadcrumb-item"><a href="../../../developer/ui/data_manager/data_manager_widget.html">Data Manager Widget</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Data Manager Widget</h1>
+</div>
 
 
 
+<div class="quarto-title-meta">
 
-<section id="display-options-for-media-widgets" class="level1">
-<h1>Display Options for Media Widgets</h1>
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>The display system in WhiskerToolbox allows users to customize the visual appearance of various data types including points and lines through configurable display options.</p>
-</section>
-<section id="point-display-options" class="level2">
-<h2 class="anchored" data-anchor-id="point-display-options">Point Display Options</h2>
-<section id="point-size-control" class="level3">
-<h3 class="anchored" data-anchor-id="point-size-control">Point Size Control</h3>
-<ul>
-<li><strong>Range</strong>: 1-50 pixels</li>
-<li><strong>UI Controls</strong>:
-<ul>
-<li>Horizontal slider for quick adjustments</li>
-<li>Spin box for precise numeric input</li>
-<li>Synchronized controls (changing one updates the other)</li>
-</ul></li>
-<li><strong>Default Value</strong>: 5 pixels</li>
-</ul>
-</section>
-<section id="marker-shape-options" class="level3">
-<h3 class="anchored" data-anchor-id="marker-shape-options">Marker Shape Options</h3>
-<p>The system supports six different marker shapes:</p>
-<ol type="1">
-<li><strong>Circle</strong> (default) - Filled circular marker</li>
-<li><strong>Square</strong> - Filled rectangular marker<br>
-</li>
-<li><strong>Triangle</strong> - Filled triangular marker pointing upward</li>
-<li><strong>Cross</strong> - Plus sign (+) shaped marker</li>
-<li><strong>X</strong> - X-shaped marker (×)</li>
-<li><strong>Diamond</strong> - Diamond shaped marker (rotated square)</li>
-</ol>
-</section>
-<section id="implementation-details" class="level3">
-<h3 class="anchored" data-anchor-id="implementation-details">Implementation Details</h3>
-<ul>
-<li>Point configuration is stored in the <code>PointDisplayOptions</code> structure</li>
-<li>UI controls are synchronized to prevent conflicts</li>
-<li>Real-time updates are supported via Qt signals/slots</li>
-<li>Different marker shapes are rendered using appropriate Qt drawing primitives</li>
-</ul>
-</section>
-</section>
-<section id="line-display-options" class="level2">
-<h2 class="anchored" data-anchor-id="line-display-options">Line Display Options</h2>
-<section id="line-thickness-control" class="level3">
-<h3 class="anchored" data-anchor-id="line-thickness-control">Line Thickness Control</h3>
-<ul>
-<li><strong>Range</strong>: 1-20 pixels</li>
-<li><strong>UI Controls</strong>:
-<ul>
-<li>Horizontal slider for quick adjustments</li>
-<li>Spin box for precise numeric input</li>
-<li>Synchronized controls (changing one updates the other)</li>
-</ul></li>
-<li><strong>Default Value</strong>: 2 pixels</li>
-</ul>
-</section>
-<section id="additional-line-features" class="level3">
-<h3 class="anchored" data-anchor-id="additional-line-features">Additional Line Features</h3>
-<ul>
-<li><strong>Show Points</strong>: Option to display open circles at each data point along the line</li>
-<li><strong>Edge Snapping</strong>: Enable automatic snapping to detected edges when adding points</li>
-<li><strong>Position Marker</strong>: Display a marker at a specified percentage distance along the line (off by default)
-<ul>
-<li><code>show_position_marker</code> (bool): Enable/disable position marker display</li>
-<li><code>position_percentage</code> (int, 0-100%): Position along line where marker appears</li>
-</ul></li>
-<li><strong>Line Segment</strong>: Display only a portion of the line between two percentage points (off by default)
-<ul>
-<li><code>show_segment</code> (bool): Enable/disable segment-only display mode</li>
-<li><code>segment_start_percentage</code> (int, 0-100%): Start percentage for line segment</li>
-<li><code>segment_end_percentage</code> (int, 0-100%): End percentage for line segment</li>
-</ul></li>
-<li><strong>Color and Alpha</strong>: Configurable line color and transparency</li>
-</ul>
-</section>
-<section id="position-marker-details" class="level3">
-<h3 class="anchored" data-anchor-id="position-marker-details">Position Marker Details</h3>
-<ul>
-<li><strong>Range</strong>: 0-100% along the cumulative length of the line</li>
-<li><strong>UI Controls</strong>:
-<ul>
-<li>Checkbox to enable/disable the feature (off by default)</li>
-<li>Horizontal slider for quick adjustments</li>
-<li>Spin box for precise numeric input with % suffix</li>
-</ul></li>
-<li><strong>Default Value</strong>: 20% along the line</li>
-<li><strong>Visual Appearance</strong>: Distinctive filled circle with white border, same color as the line</li>
-<li><strong>Calculation</strong>: Based on cumulative distance along line segments, not point indices</li>
-</ul>
-</section>
-<section id="implementation-details-1" class="level3">
-<h3 class="anchored" data-anchor-id="implementation-details-1">Implementation Details</h3>
-<ul>
-<li>Line configuration is stored in the <code>LineDisplayOptions</code> structure<br>
-</li>
-<li>Line thickness is applied via <code>QPen::setWidth()</code> during rendering</li>
-<li>Position marker calculated using cumulative distance along line segments</li>
-<li>UI controls follow the same synchronization pattern as point controls</li>
-<li>Real-time updates are supported via Qt signals/slots</li>
-</ul>
-<section id="line-segment-rendering" class="level4">
-<h4 class="anchored" data-anchor-id="line-segment-rendering">Line Segment Rendering</h4>
-<p>The segment feature allows displaying only a portion of the line between two percentage points along its cumulative distance:</p>
-<ul>
-<li><strong><code>get_segment_between_percentages()</code></strong>: Utility function in <code>lines.hpp</code> that extracts a continuous segment
-<ul>
-<li>Calculates cumulative distances along the original line</li>
-<li>Performs linear interpolation for precise start/end points</li>
-<li>Returns a new <code>Line2D</code> containing only the specified segment</li>
-<li>Handles edge cases (empty lines, invalid percentages, zero-length segments)</li>
-</ul></li>
-<li><strong>UI Validation</strong>: Start percentage cannot exceed end percentage (enforced in UI)</li>
-<li><strong>Rendering Logic</strong>: When enabled, replaces the full line with the extracted segment in all rendering operations</li>
-<li><strong>Position Marker Compatibility</strong>: Position markers work correctly with segments (percentage relative to segment, not original line)</li>
-</ul>
-</section>
-<section id="mask-bounding-box-rendering" class="level4">
-<h4 class="anchored" data-anchor-id="mask-bounding-box-rendering">Mask Bounding Box Rendering</h4>
-<p>The bounding box feature provides a visual outline around mask regions:</p>
-<ul>
-<li><strong><code>get_bounding_box()</code></strong>: Utility function in <code>masks.hpp</code> that calculates min/max coordinates
-<ul>
-<li>Iterates through all mask points to find extrema</li>
-<li>Returns pair of Point2D representing opposite corners</li>
-<li>Handles single-point masks correctly</li>
-</ul></li>
-<li><strong>Rendering Logic</strong>: Draws unfilled rectangles using Qt’s <code>addRect()</code> with <code>Qt::NoBrush</code></li>
-<li><strong>Coordinate Scaling</strong>: Applies same aspect ratio scaling as mask data</li>
-<li><strong>Multiple Masks</strong>: Each mask gets its own bounding box when feature is enabled</li>
-<li><strong>Time Handling</strong>: Bounding boxes are drawn for both current time and time -1 masks</li>
-<li><strong>Container Management</strong>: Uses separate <code>_mask_bounding_boxes</code> container (similar to digital intervals) to avoid type conflicts</li>
-</ul>
-</section>
-</section>
-<section id="utility-functions" class="level3">
-<h3 class="anchored" data-anchor-id="utility-functions">Utility Functions</h3>
-</section>
-</section>
-<section id="technical-architecture" class="level2">
-<h2 class="anchored" data-anchor-id="technical-architecture">Technical Architecture</h2>
-<section id="display-options-structure" class="level3">
-<h3 class="anchored" data-anchor-id="display-options-structure">Display Options Structure</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PointDisplayOptions <span class="op">:</span> <span class="kw">public</span> BaseDisplayOptions <span class="op">{</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> point_size<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_SIZE<span class="op">};</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    PointMarkerShape marker_shape<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_MARKER_SHAPE<span class="op">};</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineDisplayOptions <span class="op">:</span> <span class="kw">public</span> BaseDisplayOptions <span class="op">{</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> line_thickness<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>LINE_THICKNESS<span class="op">};</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_points<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>SHOW_POINTS<span class="op">};</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> edge_snapping<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_position_marker<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> position_percentage<span class="op">{</span><span class="dv">20</span><span class="op">};</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="widget-integration" class="level3">
-<h3 class="anchored" data-anchor-id="widget-integration">Widget Integration</h3>
-<ul>
-<li>MediaPoint_Widget handles point-specific controls</li>
-<li>MediaLine_Widget handles line-specific controls</li>
-<li>Media_Window applies the configurations during rendering</li>
-<li>Synchronized UI controls prevent user confusion</li>
-</ul>
-</section>
-<section id="rendering-system" class="level3">
-<h3 class="anchored" data-anchor-id="rendering-system">Rendering System</h3>
-<p>The rendering system in Media_Window applies the display options during the plotting phase: - Point markers are drawn using the configured size and shape - Lines are drawn using the configured thickness via QPen - Position markers use <code>get_position_at_percentage()</code> for accurate placement - All configurations support real-time updates without data loss</p>
-</section>
-</section>
-<section id="usage-guidelines" class="level2">
-<h2 class="anchored" data-anchor-id="usage-guidelines">Usage Guidelines</h2>
-<section id="for-users" class="level3">
-<h3 class="anchored" data-anchor-id="for-users">For Users</h3>
-<ol type="1">
-<li>Select the data item from the feature table</li>
-<li>Adjust display options in the widget panel</li>
-<li>Changes are applied immediately to the visualization</li>
-<li>Use sliders for quick adjustments or spinboxes for precise values</li>
-<li>Enable position marker to highlight specific locations along lines</li>
-</ol>
-</section>
-<section id="for-developers" class="level3">
-<h3 class="anchored" data-anchor-id="for-developers">For Developers</h3>
-<ol type="1">
-<li>All display options inherit from <code>BaseDisplayOptions</code></li>
-<li>UI controls should use blockSignals() to prevent recursive updates</li>
-<li>Follow the established naming convention for slot functions</li>
-<li>Add corresponding test cases for new display options</li>
-<li>Use <code>get_position_at_percentage()</code> for accurate line position calculations</li>
-<li>Document new features in this file</li>
-</ol>
-</section>
-<section id="mask-display-options" class="level3">
-<h3 class="anchored" data-anchor-id="mask-display-options">Mask Display Options</h3>
-<p>Mask data represents 2D regions or shapes that can be overlaid on the media canvas:</p>
-<ul>
-<li><strong>Color and Alpha</strong>: Configurable mask color and transparency</li>
-<li><strong>Bounding Box</strong>: Display rectangular outline around the mask extent (off by default)
-<ul>
-<li><code>show_bounding_box</code> (bool): Enable/disable bounding box display</li>
-</ul></li>
-</ul>
-<section id="technical-implementation" class="level4">
-<h4 class="anchored" data-anchor-id="technical-implementation">Technical Implementation</h4>
-</section>
-</section>
-<section id="mask-display-features" class="level3">
-<h3 class="anchored" data-anchor-id="mask-display-features">Mask Display Features</h3>
-<p>The mask display system includes:</p>
-<ul>
-<li><strong>Color and Alpha Control</strong>: Masks can be displayed with configurable colors and transparency levels</li>
-<li><strong>Bounding Box</strong>: Option to display a rectangular outline around each mask showing its bounds</li>
-<li><strong>Outline Drawing</strong>: Option to display the mask boundary as a thick line by connecting extremal points</li>
-</ul>
-<section id="bounding-box-feature" class="level4">
-<h4 class="anchored" data-anchor-id="bounding-box-feature">Bounding Box Feature</h4>
-<p>When enabled, a bounding box renders a rectangle outline around each mask. The implementation: - Uses the existing <code>get_bounding_box()</code> utility function from <code>masks.hpp</code> - Scales coordinates properly with aspect ratios - Draws unfilled rectangles using <code>Qt::NoBrush</code> for outline-only appearance - Handles both current time and time -1 masks</p>
-</section>
-<section id="outline-feature" class="level4">
-<h4 class="anchored" data-anchor-id="outline-feature">Outline Feature</h4>
-<p>When enabled, displays the mask boundary as a thick line connecting extremal points. The algorithm: - For each unique x coordinate, finds the maximum y value - For each unique y coordinate, finds the maximum x value<br>
-- Collects all extremal points and sorts them by angle from centroid - Connects points to form a closed boundary outline - Renders as a thick 4-pixel wide line using <code>QPainterPath</code></p>
-<p>The outline feature uses the <code>get_mask_outline()</code> function to compute boundary points by finding extremal coordinates, providing a visual representation of the mask’s outer boundary.</p>
-</section>
-</section>
-<section id="ui-integration" class="level3">
-<h3 class="anchored" data-anchor-id="ui-integration">UI Integration</h3>
+    
+  
+    
+  </div>
+  
 
 
+</header>
+
+
+<section id="data-manager-widget-overview" class="level1">
+<h1>Data Manager Widget Overview</h1>
+<p>The data manager widget serves as the main user interface for interacting with all data currently loaded into the program. At its top, the widget displays all keys currently in the data manager along with their corresponding data types. It enables the user to specify the folder for saving data. Additionally, users can create new, initially blank data sets, which can subsequently be populated through further manipulations and other widgets.</p>
+<p>When a user selects an entry in the top table, a data type-specific soft widget is populated. This widget presents the user with various features of the selected data. For example, when dealing with point data, it shows a table listing every available point within that data set and its associated frame. The user has the ability to scroll through this table; clicking an entry causes the time displayed by the rest of the program to jump to that point’s frame. Users can perform several data manipulations via these specific widgets. For instance, using the point widget, a user can delete any specific point. They can also opt to move a specific point to another point data set available in the manager.</p>
 </section>
-</section>
+<section id="data-saving-functionality" class="level1">
+<h1>Data Saving Functionality</h1>
+<p>The data manager widget also functions as the primary interface for saving data to disk. It features a sub-widget interface where the user can select the desired file output type, and specific options for that output type are then displayed. For instance, if a user is viewing point data, they can choose to output CSV files and will be presented with various CSV saving options, such as selecting the delimiter and deciding whether a header should be included, etc.</p>
+
+
 </section>
 
 </main> <!-- /main -->

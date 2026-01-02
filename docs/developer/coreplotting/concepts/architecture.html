@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Image Processing – Neuralyzer</title>
+<title>Architecture and Data Flow – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,23 +23,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -67,19 +67,22 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="../../../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../../../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../../styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -90,7 +93,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../index.html"> 
+    <a class="nav-link" href="../../../index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -99,7 +102,7 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="../../../examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
@@ -110,12 +113,16 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../labeling/keypoint.html">
+    <a class="dropdown-item" href="../../../labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../labeling/mask.html">
+    <a class="dropdown-item" href="../../../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../../examples/tabular_binary_events.html">
+ <span class="dropdown-text">Load Tabular Binary Events</span></a>
   </li>  
     </ul>
   </li>
@@ -125,15 +132,15 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../user_guide/index.html">
+    <a class="dropdown-item" href="../../../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../developer/index.html">
+    <a class="dropdown-item" href="../../../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../api_reference.html">
+    <a class="dropdown-item" href="../../../api_reference.html">
  <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
@@ -155,174 +162,38 @@ ul.task-list li input[type="checkbox"] {
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/image_processing.html">Image Processing</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Developer Documentation</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Profiling and Performance</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Building</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">C++ Development Tools Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Contributing Code</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Fuzz Testing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Introduction to C++</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_transform_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Transform Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/transforms.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">transforms</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Collapsible Widget</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#the-three-layer-model" id="toc-the-three-layer-model" class="nav-link active" data-scroll-target="#the-three-layer-model">The Three-Layer Model</a>
+  <ul class="collapse">
+  <li><a href="#visualization-layer-mappers" id="toc-visualization-layer-mappers" class="nav-link" data-scroll-target="#visualization-layer-mappers">1. Visualization Layer (Mappers)</a></li>
+  <li><a href="#generic-layer-scenebuilder" id="toc-generic-layer-scenebuilder" class="nav-link" data-scroll-target="#generic-layer-scenebuilder">2. Generic Layer (SceneBuilder)</a></li>
+  <li><a href="#rendering-layer-plottingopengl" id="toc-rendering-layer-plottingopengl" class="nav-link" data-scroll-target="#rendering-layer-plottingopengl">3. Rendering Layer (PlottingOpenGL)</a></li>
+  </ul></li>
+  <li><a href="#data-flow-diagram" id="toc-data-flow-diagram" class="nav-link" data-scroll-target="#data-flow-diagram">Data Flow Diagram</a></li>
+  <li><a href="#core-abstractions" id="toc-core-abstractions" class="nav-link" data-scroll-target="#core-abstractions">Core Abstractions</a>
+  <ul class="collapse">
+  <li><a href="#viewstate" id="toc-viewstate" class="nav-link" data-scroll-target="#viewstate">ViewState</a></li>
+  <li><a href="#layouttransform" id="toc-layouttransform" class="nav-link" data-scroll-target="#layouttransform">LayoutTransform</a></li>
+  <li><a href="#renderablescene" id="toc-renderablescene" class="nav-link" data-scroll-target="#renderablescene">RenderableScene</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Image Processing</h1>
+<h1 class="title">Architecture and Data Flow</h1>
 </div>
 
 
@@ -339,8 +210,94 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<p>CorePlotting allows different visualization types (DataViewer, SpatialOverlay, Raster Plots) to share a common rendering and interaction backend.</p>
+<section id="the-three-layer-model" class="level2">
+<h2 class="anchored" data-anchor-id="the-three-layer-model">The Three-Layer Model</h2>
+<p>The architecture separates visualization-specific logic from generic scene composition.</p>
+<section id="visualization-layer-mappers" class="level3">
+<h3 class="anchored" data-anchor-id="visualization-layer-mappers">1. Visualization Layer (Mappers)</h3>
+<p>This layer understands specific data types (<code>AnalogTimeSeries</code>, <code>PointData</code>) and how they map to space.</p>
+<ul>
+<li><p><strong>Input:</strong> Data Objects + TimeFrame + Layout</p></li>
+<li><p><strong>Output:</strong> Ranges of <code>MappedElement</code> (x, y, entity_id)</p></li>
+</ul>
+</section>
+<section id="generic-layer-scenebuilder" class="level3">
+<h3 class="anchored" data-anchor-id="generic-layer-scenebuilder">2. Generic Layer (SceneBuilder)</h3>
+<p>This layer knows nothing about time series or biological data. It only knows about geometry.</p>
+<ul>
+<li><p><strong>Input:</strong> Ranges of positions and IDs.</p></li>
+<li><p><strong>Output:</strong> <code>RenderableScene</code></p></li>
+</ul>
+</section>
+<section id="rendering-layer-plottingopengl" class="level3">
+<h3 class="anchored" data-anchor-id="rendering-layer-plottingopengl">3. Rendering Layer (PlottingOpenGL)</h3>
+<p>This layer consumes the scene and issues draw calls.</p>
+<ul>
+<li><p><strong>Input:</strong> <code>RenderableScene</code></p></li>
+<li><p><strong>Output:</strong> Pixels on screen.</p></li>
+</ul>
+</section>
+</section>
+<section id="data-flow-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="data-flow-diagram">Data Flow Diagram</h2>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph TD
+  Data[Data Manager Types] --&gt;|LayoutEngine| Layout[SeriesLayout]     
+  Data --&gt;|Mapper| Mapped[Mapped Elements Range]     
+  Layout --&gt;|Mapper| Mapped          
+  
+  Mapped --&gt;|SceneBuilder| Scene[RenderableScene]          
+  
+  subgraph RenderableScene     
+  Batches[GPU Batches]     
+  QuadTree[Spatial Index]    
+  Matrices[MVP Matrices]     
+  end          
+  
+  Scene --&gt;|PlottingOpenGL| Screen     
+  Scene --&gt;|HitTester| Interaction 
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="core-abstractions" class="level2">
+<h2 class="anchored" data-anchor-id="core-abstractions">Core Abstractions</h2>
+<section id="viewstate" class="level3">
+<h3 class="anchored" data-anchor-id="viewstate">ViewState</h3>
+<p>The single source of truth for the camera.</p>
+<ul>
+<li><p><strong>TimeSeriesViewState</strong>: Used for scrolling time-series plots. Handles buffer scope (what time range is loaded) and view (pan/zoom).</p></li>
+<li><p><strong>ViewState</strong>: Used for spatial 2D plots.</p></li>
+</ul>
+</section>
+<section id="layouttransform" class="level3">
+<h3 class="anchored" data-anchor-id="layouttransform">LayoutTransform</h3>
+<p>A purely geometric affine transform (<code>output = input * gain + offset</code>).</p>
+<ul>
+<li><p>Used to convert data units (volts, classes) into world coordinates.</p></li>
+<li><p>Composes data normalization (Z-score) with layout positioning (Stacking).</p></li>
+</ul>
+</section>
+<section id="renderablescene" class="level3">
+<h3 class="anchored" data-anchor-id="renderablescene">RenderableScene</h3>
+<p>A snapshot of a frame. It contains:</p>
+<ol type="1">
+<li><p><strong>Batches</strong>: <code>poly_line_batches</code>, <code>glyph_batches</code>, <code>rectangle_batches</code>.</p></li>
+<li><p><strong>Spatial Index</strong>: A <code>QuadTree</code> automatically built from the same data as the batches.</p></li>
+<li><p><strong>Matrices</strong>: Shared View and Projection matrices.</p></li>
+</ol>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
