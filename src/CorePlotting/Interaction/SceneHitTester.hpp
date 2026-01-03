@@ -147,26 +147,6 @@ public:
             std::map<size_t, std::string> const & series_key_map) const;
 
     /**
-     * @brief Find interval edge at a given position
-     * 
-     * Specialized query for detecting interval edges for drag operations.
-     * Only considers currently selected intervals or all intervals if none selected.
-     * 
-     * @param world_x World X coordinate
-     * @param scene Scene containing rectangle batches
-     * @param selected_intervals Map of series_key -> (start, end) for selected intervals
-     * @param series_key_map Mapping from batch index to series key
-     * @return HitTestResult with IntervalEdgeLeft/Right if within edge tolerance
-     * 
-     * @deprecated Use findIntervalEdgeByEntityId() for EntityId-based selection
-     */
-    [[nodiscard]] HitTestResult findIntervalEdge(
-            float world_x,
-            RenderableScene const & scene,
-            std::map<std::string, std::pair<int64_t, int64_t>> const & selected_intervals,
-            std::map<size_t, std::string> const & series_key_map) const;
-
-    /**
      * @brief Find interval edge at a given position using EntityId-based selection
      * 
      * Modern version of findIntervalEdge that uses EntityId set for selection state.
@@ -320,82 +300,6 @@ inline HitTestResult SceneHitTester::queryIntervals(
                         static_cast<int64_t>(rect_x + rect_w),
                         dist);
 
-                best = selectBestHit(best, result);
-            }
-        }
-    }
-
-    return best;
-}
-
-inline HitTestResult SceneHitTester::findIntervalEdge(
-        float world_x,
-        RenderableScene const & scene,
-        std::map<std::string, std::pair<int64_t, int64_t>> const & selected_intervals,
-        std::map<size_t, std::string> const & series_key_map) const {
-    HitTestResult best = HitTestResult::noHit();
-
-    for (size_t batch_idx = 0; batch_idx < scene.rectangle_batches.size(); ++batch_idx) {
-        auto const & batch = scene.rectangle_batches[batch_idx];
-
-        // Get series key for this batch
-        std::string series_key;
-        auto key_it = series_key_map.find(batch_idx);
-        if (key_it != series_key_map.end()) {
-            series_key = key_it->second;
-        }
-
-        // Check if this series has a selected interval
-        auto sel_it = selected_intervals.find(series_key);
-        if (sel_it == selected_intervals.end() && !selected_intervals.empty()) {
-            continue;// Only check selected intervals if any are selected
-        }
-
-        for (size_t i = 0; i < batch.bounds.size(); ++i) {
-            auto const & rect = batch.bounds[i];
-            float rect_x = rect.x;
-            float rect_w = rect.z;
-            float left_edge = rect_x;
-            float right_edge = rect_x + rect_w;
-
-            // If we have selected intervals, only check matching ones
-            if (sel_it != selected_intervals.end()) {
-                if (static_cast<int64_t>(rect_x) != sel_it->second.first ||
-                    static_cast<int64_t>(right_edge) != sel_it->second.second) {
-                    continue;
-                }
-            }
-
-            EntityId entity_id{0};
-            if (i < batch.entity_ids.size()) {
-                entity_id = batch.entity_ids[i];
-            }
-
-            // Check left edge
-            float left_dist = std::abs(world_x - left_edge);
-            if (left_dist <= _config.edge_tolerance) {
-                auto result = HitTestResult::intervalEdgeHit(
-                        series_key,
-                        entity_id,
-                        true,// is_left_edge
-                        static_cast<int64_t>(rect_x),
-                        static_cast<int64_t>(right_edge),
-                        left_edge,
-                        left_dist);
-                best = selectBestHit(best, result);
-            }
-
-            // Check right edge
-            float right_dist = std::abs(world_x - right_edge);
-            if (right_dist <= _config.edge_tolerance) {
-                auto result = HitTestResult::intervalEdgeHit(
-                        series_key,
-                        entity_id,
-                        false,// is_left_edge (right edge)
-                        static_cast<int64_t>(rect_x),
-                        static_cast<int64_t>(right_edge),
-                        right_edge,
-                        right_dist);
                 best = selectBestHit(best, result);
             }
         }

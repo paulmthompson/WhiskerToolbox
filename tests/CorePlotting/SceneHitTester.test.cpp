@@ -204,53 +204,6 @@ TEST_CASE("SceneHitTester queryIntervals", "[CorePlotting][SceneHitTester]") {
     }
 }
 
-TEST_CASE("SceneHitTester findIntervalEdge", "[CorePlotting][SceneHitTester]") {
-    HitTestConfig config;
-    config.edge_tolerance = 5.0f;
-    SceneHitTester tester(config);
-    
-    // Create scene with rectangle batch
-    RenderableScene scene;
-    RenderableRectangleBatch batch;
-    batch.bounds.push_back(glm::vec4(100.0f, 0.0f, 100.0f, 0.5f)); // [100, 200]
-    batch.entity_ids.push_back(EntityId{42});
-    scene.rectangle_batches.push_back(batch);
-    
-    std::map<size_t, std::string> key_map;
-    key_map[0] = "intervals";
-    
-    std::map<std::string, std::pair<int64_t, int64_t>> selected;
-    selected["intervals"] = {100, 200};
-    
-    SECTION("Hit left edge") {
-        auto result = tester.findIntervalEdge(102.0f, scene, selected, key_map);
-        
-        REQUIRE(result.hasHit());
-        REQUIRE(result.hit_type == HitType::IntervalEdgeLeft);
-        REQUIRE_THAT(result.world_x, WithinAbs(100.0f, 0.001f));
-    }
-    
-    SECTION("Hit right edge") {
-        auto result = tester.findIntervalEdge(198.0f, scene, selected, key_map);
-        
-        REQUIRE(result.hasHit());
-        REQUIRE(result.hit_type == HitType::IntervalEdgeRight);
-        REQUIRE_THAT(result.world_x, WithinAbs(200.0f, 0.001f));
-    }
-    
-    SECTION("Miss - in middle of interval") {
-        auto result = tester.findIntervalEdge(150.0f, scene, selected, key_map);
-        
-        REQUIRE_FALSE(result.hasHit());
-    }
-    
-    SECTION("Miss - outside interval") {
-        auto result = tester.findIntervalEdge(50.0f, scene, selected, key_map);
-        
-        REQUIRE_FALSE(result.hasHit());
-    }
-}
-
 TEST_CASE("SceneHitTester selectBestHit priority", "[CorePlotting][SceneHitTester]") {
     // Test through hitTest which uses selectBestHit internally
     SceneHitTester tester;

@@ -193,17 +193,6 @@ float dist = y_dist;  // For intervals, X is always inside
 
 ## Priority 4: Code Cleanup
 
-### 4.1 Delete Deprecated `findIntervalEdge`
-
-**File**: [Interaction/SceneHitTester.hpp](Interaction/SceneHitTester.hpp#L165-L175)
-
-**Issue**: Marked `@deprecated` in favor of `findIntervalEdgeByEntityId`. Delete it now.
-
-**Action Items**:
-- [ ] Remove `findIntervalEdge()` method declaration
-- [ ] Remove implementation (if in .cpp)
-- [ ] Update any remaining callers to use `findIntervalEdgeByEntityId()`
-
 ---
 
 ### 4.2 Review SpanLineView Usage
