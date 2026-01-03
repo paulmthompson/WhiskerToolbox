@@ -288,9 +288,6 @@ void DataViewer_Widget::closeEvent(QCloseEvent * event) {
 void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
 
-    // Update plotting manager dimensions when widget is resized
-    _updatePlottingManagerDimensions();
-
     // The OpenGL widget will automatically get its resizeGL called by Qt
     // but we can trigger an additional update if needed
     if (ui->openGLWidget) {
@@ -1064,12 +1061,6 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
 }
 
-void DataViewer_Widget::_updateViewBounds() {
-    // OpenGLWidget now uses its internal _view_state for view bounds
-    // This function is kept for API compatibility but no longer needs to do anything
-    std::cout << "DataViewer_Widget: Using standard view bounds from ViewState" << std::endl;
-}
-
 std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
     switch (dm_type) {
         case DM_DataType::Analog:
@@ -1085,21 +1076,6 @@ std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
                       << " defaulting to Analog for plotting manager" << std::endl;
             return "Analog";
     }
-}
-
-void DataViewer_Widget::_updatePlottingManagerDimensions() {
-    // Deprecated - dimensions are now handled by OpenGLWidget's ViewState
-    // This function is kept for API compatibility
-    auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
-    std::cout << "DataViewer_Widget: Canvas dimensions: "
-              << canvas_width << "x" << canvas_height << " pixels" << std::endl;
-}
-
-void DataViewer_Widget::_applyPlottingManagerAllocation(std::string const & series_key) {
-    // Deprecated - layout allocation is now computed by OpenGLWidget::computeAndApplyLayout()
-    // This function is kept for API compatibility but no longer does anything
-    std::cout << "DataViewer_Widget: Layout allocation for '" << series_key
-              << "' now handled by OpenGLWidget" << std::endl;
 }
 
 // ===== Context menu and configuration handling =====

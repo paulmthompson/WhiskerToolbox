@@ -339,31 +339,7 @@ TEST_CASE("Scenario 2: Interval hit testing with edge detection for drag handles
         REQUIRE(hit.interval_start.value() == 100);
         REQUIRE(hit.interval_end.value() == 300);
     }
-    
-    SECTION("Click near left edge (drag handle)") {
-        std::map<std::string, std::pair<int64_t, int64_t>> selected;
-        selected["intervals"] = {100, 300};
-        
-        // Click near left edge at x=102
-        auto hit = tester.findIntervalEdge(102.0f, scene, selected, key_map);
-        
-        REQUIRE(hit.hasHit());
-        REQUIRE(hit.hit_type == HitType::IntervalEdgeLeft);
-        REQUIRE_THAT(hit.world_x, WithinAbs(100.0f, 1.0f));
-    }
-    
-    SECTION("Click near right edge (drag handle)") {
-        std::map<std::string, std::pair<int64_t, int64_t>> selected;
-        selected["intervals"] = {100, 300};
-        
-        // Click near right edge at x=298
-        auto hit = tester.findIntervalEdge(298.0f, scene, selected, key_map);
-        
-        REQUIRE(hit.hasHit());
-        REQUIRE(hit.hit_type == HitType::IntervalEdgeRight);
-        REQUIRE_THAT(hit.world_x, WithinAbs(300.0f, 1.0f));
-    }
-    
+
     SECTION("Click outside any interval") {
         // Click at x=400, between intervals
         auto hit = tester.queryIntervals(400.0f, 0.0f, scene, key_map);

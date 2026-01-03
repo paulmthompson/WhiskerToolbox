@@ -1,5 +1,7 @@
 #include "ViewState.hpp"
-#include "Matrices.hpp"
+
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <algorithm>
 #include <cmath>
 
@@ -61,7 +63,7 @@ void computeMatricesFromViewState(ViewState const & state, glm::mat4 & view_matr
     // 3. Projection Matrix
     // Orthographic projection of the visible bounds.
     // Note: OpenGL standard is usually -1 to 1 for Z.
-    proj_matrix = createOrthoProjection(visible.min_x, visible.max_x, visible.min_y, visible.max_y, -1.0f, 1.0f);
+    proj_matrix = glm::ortho(visible.min_x, visible.max_x, visible.min_y, visible.max_y, -1.0f, 1.0f);
 }
 
 glm::vec2 screenToWorld(ViewState const & state, int screen_x, int screen_y) {
