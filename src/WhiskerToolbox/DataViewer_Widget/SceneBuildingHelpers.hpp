@@ -80,42 +80,6 @@ struct IntervalBatchParams {
     glm::vec4 color{1.0f, 1.0f, 1.0f, 0.5f};
 };
 
-/**
- * @brief Build highlight rectangle for a selected interval.
- * 
- * Creates a separate batch for the selection highlight border.
- * 
- * @param start_time Start time of the interval (master time frame)
- * @param end_time End time of the interval (master time frame)
- * @param highlight_color Color for the highlight (typically brighter)
- * @param model_matrix Model matrix from the parent interval series
- * @return A batch containing just the highlight rectangle
- */
-CorePlotting::RenderableRectangleBatch buildIntervalHighlightBatch(
-        int64_t start_time,
-        int64_t end_time,
-        glm::vec4 const & highlight_color,
-        glm::mat4 const & model_matrix);
-
-/**
- * @brief Build highlight border polylines for a selected interval.
- * 
- * Creates a polyline batch containing the four edges of the selection rectangle.
- * This is drawn on top of the filled rectangle for visual emphasis.
- * 
- * @param start_time Start time of the interval (master time frame)
- * @param end_time End time of the interval (master time frame)
- * @param highlight_color Color for the border (typically brighter than fill)
- * @param border_thickness Line width for the border
- * @param model_matrix Model matrix from the parent interval series
- * @return A batch containing the four border lines
- */
-CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
-        int64_t start_time,
-        int64_t end_time,
-        glm::vec4 const & highlight_color,
-        float border_thickness,
-        glm::mat4 const & model_matrix);
 
 // ============================================================================
 // Batch Building API using pre-composed Model matrices
