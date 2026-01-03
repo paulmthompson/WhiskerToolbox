@@ -1,0 +1,244 @@
+---
+title: "Building Custom Plot Widgets with CorePlotting"
+format: html
+---
+
+# **1\. Overview**
+
+The **CorePlotting** library is a framework-agnostic plotting engine designed for high-performance time-series and spatial data visualization. It separates the concerns of *Data Processing*, *Layout Calculation*, and *Rendering* to ensure testability and flexibility.
+
+When building a Qt widget (like DataViewer\_Widget or OpenGLWidget), you act as the **Integrator**, connecting these distinct layers.
+
+## **The Architecture**
+
+The rendering pipeline follows a unidirectional data flow:
+
+graph TD  
+    Data\[Data Source\] \--\>|LayoutRequest| Layout\[Layout Engine\]  
+    Layout \--\>|LayoutResponse| Mapper\[Coordinate Mappers\]  
+    Data \--\> Mapper  
+    Mapper \--\>|Mapped Elements| Builder\[Scene Builder\]  
+    Builder \--\>|RenderableScene| Renderer\[Scene Renderer\]  
+    Renderer \--\>|OpenGL| Screen\[QOpenGLWidget\]
+
+1. **Layout Engine**: Determines *where* series should appear (vertical stacking, row layouts).  
+2. **Mappers**: Transforms domain data (e.g., AnalogTimeSeries) into world-space geometry.  
+3. **Scene Builder**: Batches geometry into optimization-friendly structures.  
+4. **Scene Renderer**: Handles the actual OpenGL draw calls (via PlottingOpenGL).
+
+# **2\. Widget Skeleton**
+
+To create a plotting widget, inherit from QOpenGLWidget and QOpenGLFunctions. You will need to manage the state of the CorePlotting components.
+
+\#include \<QOpenGLWidget\>  
+\#include \<QOpenGLFunctions\>  
+\#include "CorePlotting/CoordinateTransform/ViewState.hpp"  
+\#include "CorePlotting/Layout/LayoutEngine.hpp"  
+\#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"  
+\#include "PlottingOpenGL/SceneRenderer.hpp"
+
+class MyPlotWidget : public QOpenGLWidget, protected QOpenGLFunctions {  
+    Q\_OBJECT
+
+public:  
+    explicit MyPlotWidget(QWidget \*parent \= nullptr);  
+    \~MyPlotWidget() override;
+
+protected:  
+    void initializeGL() override;  
+    void resizeGL(int w, int h) override;  
+    void paintGL() override;
+
+private:  
+    // 1\. View State: Manages Zoom/Pan and Time Window  
+    CorePlotting::TimeSeriesViewState \_view\_state;
+
+    // 2\. Layout Engine: Calculates vertical positioning  
+    CorePlotting::LayoutEngine \_layout\_engine;
+
+    // 3\. Rendering Backend  
+    std::unique\_ptr\<PlottingOpenGL::SceneRenderer\> \_renderer;
+
+    // 4\. Cache: Stores the built scene to avoid rebuilding every frame  
+    struct Cache {  
+        CorePlotting::RenderableScene scene;  
+        CorePlotting::LayoutResponse layout;  
+        bool dirty \= true;  
+    } \_cache;  
+      
+    // Helper to rebuild scene  
+    void rebuildScene();  
+};
+
+# **3\. The Layout Phase**
+
+Before rendering geometry, you must decide where data sits on the screen. This is handled by the LayoutEngine.
+
+## **Defining a Layout Request**
+
+The LayoutEngine takes a LayoutRequest containing metadata about your series (but not the data itself).
+
+CorePlotting::LayoutRequest request;  
+request.viewport\_y\_min \= \-1.0f; // Bottom of viewport (NDC)  
+request.viewport\_y\_max \=  1.0f; // Top of viewport (NDC)
+
+// Add series metadata  
+// Args: ID, Type, IsStackable  
+request.series.emplace\_back("analog\_1", CorePlotting::SeriesType::Analog, true);  
+request.series.emplace\_back("analog\_2", CorePlotting::SeriesType::Analog, true);  
+request.series.emplace\_back("events",   CorePlotting::SeriesType::DigitalEvent, true);
+
+// Compute layout  
+// Uses StackedLayoutStrategy by default (equal height distribution)  
+\_cache.layout \= \_layout\_engine.compute(request);
+
+The result, LayoutResponse, contains LayoutTransform objects (gain/offset) for each series.
+
+# **4\. The Construction Phase (SceneBuilder)**
+
+This is the core of your paintGL or update loop. You use Mappers to transform data into geometry, and SceneBuilder to batch it.
+
+## **Mappers**
+
+Mappers take **Data**, **Layout**, and **TimeFrame** and produce **Geometry**.
+
+\#include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
+
+// ... inside rebuildScene() ...
+
+CorePlotting::SceneBuilder builder;
+
+// 1\. Set bounds (Required for spatial indexing/hit testing)  
+CorePlotting::BoundingBox bounds(  
+    \_view\_state.time\_start, \-1.0f,   
+    \_view\_state.time\_end,    1.0f  
+);  
+builder.setBounds(bounds);
+
+// 2\. Iterate over your data sources  
+for (auto& series\_id : my\_series\_list) {  
+    // Get the computed layout for this series  
+    const auto\* layout \= \_cache.layout.findLayout(series\_id);  
+    if (\!layout) continue;
+
+    // Get the actual data object  
+    auto series\_data \= my\_data\_store-\>getSeries(series\_id);
+
+    // Map Data \-\> Geometry  
+    // This example uses TimeSeriesMapper for Analog data  
+    // Note: We typically use 'mapAnalogSeriesWithIndices' for gap detection capability  
+    auto mapped\_range \= CorePlotting::TimeSeriesMapper::mapAnalogSeries(  
+        \*series\_data,  
+        \*layout,           // Applies vertical positioning  
+        \*master\_time\_frame,// Handles TimeIndex \-\> float conversion  
+        1.0f,              // Y-Scale factor (e.g. 1/std\_dev)  
+        \_view\_state.time\_start,   
+        \_view\_state.time\_end  
+    );
+
+    // Add to Builder  
+    // SceneBuilder::addPolyLine will create a RenderablePolyLineBatch  
+    builder.addPolyLine(  
+        series\_id,   
+        mapped\_range,   
+        entity\_id,   
+        {.color \= {1,0,0,1}, .thickness \= 1.0f}  
+    );  
+}
+
+// 3\. Finalize  
+\_cache.scene \= builder.build();  
+\_cache.dirty \= false;
+
+## **Optimizing for Scrolling**
+
+For scrolling large datasets, regenerating the entire scene every frame is expensive.  
+Use AnalogVertexCache (demonstrated in AnalogVertexCache.hpp) to maintain a ring buffer of vertices.
+
+1. Check cache.needsUpdate(start, end).  
+2. If true, generate *only* the new edge vertices.  
+3. Use SceneBuilder::addPolyLineBatch with the cached vector.
+
+# **5\. The Rendering Phase**
+
+In paintGL(), you upload the scene to the GPU and draw it.
+
+## **Coordinate Matrices**
+
+CorePlotting uses a specific matrix strategy:
+
+* **Projection**: Maps Time (X) and Normalized Layout (Y) to Screen (NDC).  
+* **View**: Handles global panning.  
+* **Model**: Handles per-series scaling (embedded in the batches).
+
+void MyPlotWidget::paintGL() {  
+    // 1\. Rebuild scene if needed  
+    if (\_cache.dirty) rebuildScene();
+
+    // 2\. Compute Matrices using CorePlotting helpers  
+    glm::mat4 view \= CorePlotting::getAnalogViewMatrix({  
+        .vertical\_pan\_offset \= \_view\_state.vertical\_pan\_offset  
+    });
+
+    glm::mat4 proj \= CorePlotting::getAnalogProjectionMatrix(  
+        CorePlotting::TimeFrameIndex(\_view\_state.time\_start),  
+        CorePlotting::TimeFrameIndex(\_view\_state.time\_end),  
+        \_view\_state.y\_min,  
+        \_view\_state.y\_max  
+    );
+
+    // 3\. Render  
+    \_renderer-\>uploadScene(\_cache.scene);  
+    \_renderer-\>render(view, proj);  
+}
+
+# **6\. Handling Input & Interaction**
+
+Interaction logic should be separated from the drawing logic. Use SceneHitTester and InputHandler.
+
+## **Coordinate Transformation**
+
+Always use InverseTransform.hpp or the DataViewerCoordinates wrapper to convert mouse clicks to data.
+
+// In mousePressEvent  
+DataViewer::DataViewerCoordinates coords(\_view\_state, width(), height());
+
+// Canvas (Pixel) \-\> Time  
+float time \= coords.canvasXToTime(event-\>pos().x());
+
+// Canvas (Pixel) \-\> World Y  
+float world\_y \= coords.canvasYToWorldY(event-\>pos().y());
+
+## **Hit Testing**
+
+Use SceneHitTester to find what the user clicked. It queries the QuadTree built by the SceneBuilder.
+
+CorePlotting::SceneHitTester tester;  
+auto result \= tester.hitTest(time, world\_y, \_cache.scene, \_cache.layout);
+
+if (result.hasHit()) {  
+    if (result.isDiscrete()) {  
+        // User clicked an Event or Interval  
+        selectEntity(result.entity\_id);  
+    } else {  
+        // User clicked a Series background  
+        setActiveSeries(result.series\_key);  
+    }  
+}
+
+## **Interactive Creation (Controllers)**
+
+For complex interactions like drawing intervals, delegate to CorePlotting::Interaction controllers.
+
+1. **Start**: controller.start(x, y, key)  
+2. **Update**: controller.update(x, y)  
+3. **Render**: \_renderer-\>previewRenderer().render(controller.getPreview())  
+4. **Commit**: Use scene.previewToDataCoords(...) to convert the final pixel preview into strict data coordinates (TimeIndices).
+
+# **7\. Checklist for New Widgets**
+
+* \[ \] **Data Storage**: Does the widget own the data, or reference a DataManager? (Ideally reference).  
+* \[ \] **View State**: Are you using TimeSeriesViewState for X-axis scrolling?  
+* \[ \] **Layout**: Are you using StackedLayoutStrategy (vertical channels) or RowLayoutStrategy (raster plots)?  
+* \[ \] **Mappers**: Are you using TimeSeriesMapper (absolute time) or RasterMapper (relative time)?  
+* \[ \] **Hit Testing**: Are you passing the RenderableScene to SceneHitTester for clicks?
