@@ -55,27 +55,36 @@ website:
         - developer/building.qmd
         - developer/code_quality.qmd
         - developer/copilot.qmd
-        - developer/core_plotting.qmd
         - developer/contributing_code.qmd
+        - developer/fuzz/fuzzing.qmd
+        - developer/intro_to_c.qmd
+        - developer/analysis/static_analysis.qmd
+        - developer/testing/testing.qmd
         - text: "API Reference"
           href: api_reference.qmd
-        - developer/data_manager.qmd 
-        - developer/file_io.qmd
-        - developer/fuzz/fuzzing.qmd
-        - developer/image_processing.qmd
-        - developer/intro_to_c.qmd
-        - developer/media_widget.qmd
-        - developer/analysis/static_analysis.qmd
-        - developer/data_manager_widget.qmd
-        - developer/data_transform_widget.qmd
-        - developer/data_viewer_widget.qmd
-        - developer/table_view.qmd
-        - developer/testing/testing.qmd
-        - developer/transforms.qmd
-        - section: "Features"
-          href: developer/Features/overview.qmd
+        - section: "Core Libraries"
           contents:
-            - developer/Features/Collapsible_Widget.qmd
+            - developer/CoreGeometry/index.qmd
+            - developer/coreplotting/index.qmd
+            - developer/Entity/index.qmd
+        - section: "Data Management"
+          contents:
+            - developer/DataManager/data_manager.qmd
+            - developer/DataManager/file_io.qmd
+            - developer/DataManager/data_structures.qmd
+            - developer/DataManager/binary_loading_performance.qmd
+        - developer/table_view.qmd
+        - section: "User Interface"
+          contents:
+            - developer/ui/analysis_dashboard/analysis_dashboard.qmd
+            - developer/ui/data_manager/data_manager_widget.qmd
+            - developer/ui/data_transform/data_transform_widget.qmd
+            - developer/ui/data_viewer/data_viewer_widget.qmd
+            - developer/ui/media_widget/media_widget.qmd
+            - section: "Features"
+              href: developer/ui/Features/overview.qmd
+              contents:
+                  - developer/ui/Features/Collapsible_Widget.qmd
 
     - title: "User Guide"
       style: "docked"

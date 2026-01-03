@@ -9,9 +9,7 @@
 
 namespace CorePlotting {
 
-// Forward declarations for display options structs
 struct SeriesStyle;
-struct SeriesLayoutResult;
 struct SeriesDataCache;
 
 /**
@@ -25,21 +23,9 @@ struct SeriesDataCache;
  * 
  * **Model Matrix**: Per-series positioning and scaling
  *   - Create from LayoutTransform using createModelMatrix()
- *   - Or use legacy AnalogSeriesMatrixParams for backwards compatibility
  * 
  * **View Matrix**: Shared global camera transformations
  *   - Global vertical panning via createViewMatrix()
- * 
- * **Projection Matrix**: Shared coordinate system mapping
- *   - Maps time indices to screen X coordinates
- *   - Maps data space to screen Y coordinates
- *   - Vertical positioning based on layout allocation
- *   - Series-specific scaling (intrinsic, user, global)
- *   - Data centering around mean value
- * 
- * **View Matrix**: Shared global camera transformations
- *   - Global vertical panning
- *   - Mode-dependent behavior (FullCanvas vs Stacked)
  * 
  * **Projection Matrix**: Shared coordinate system mapping
  *   - Maps time indices to screen X coordinates
@@ -51,76 +37,6 @@ struct SeriesDataCache;
  * - User camera state (View)  
  * - Data-to-screen mapping (Projection)
  */
-
-/**
- * @brief Helper struct for analog series matrix parameters
- * 
- * Bundles the parameters needed for analog series matrix generation.
- * This struct is passed to matrix functions instead of individual parameters
- * to reduce coupling and improve testability.
- */
-struct AnalogSeriesMatrixParams {
-    // Layout parameters (from SeriesLayoutResult)
-    float allocated_y_center{0.0f};
-    float allocated_height{1.0f};
-
-    // Scaling parameters (from SeriesStyle)
-    float intrinsic_scale{1.0f};
-    float user_scale_factor{1.0f};
-    float global_zoom{1.0f};
-    float user_vertical_offset{0.0f};
-
-    // Data statistics (from SeriesDataCache)
-    float data_mean{0.0f};
-    float std_dev{1.0f};
-
-    // Global parameters
-    float global_vertical_scale{1.0f};
-};
-
-/**
- * @brief Helper struct for event series matrix parameters
- * 
- * Parameters for digital event series MVP matrix generation.
- */
-struct EventSeriesMatrixParams {
-    // Layout parameters
-    float allocated_y_center{0.0f};
-    float allocated_height{1.0f};
-
-    // Event-specific parameters
-    float event_height{0.0f}; ///< Desired height for events (0 = use allocated)
-    float margin_factor{0.8f};///< Vertical margin (0-1)
-    float global_vertical_scale{1.0f};
-
-    // Viewport bounds (for FullCanvas mode)
-    float viewport_y_min{-1.0f};
-    float viewport_y_max{1.0f};
-
-    // Mode flag
-    enum class PlottingMode {
-        FullCanvas,///< Events extend full viewport height
-        Stacked    ///< Events positioned within allocated space
-    };
-    PlottingMode plotting_mode{PlottingMode::Stacked};
-};
-
-/**
- * @brief Helper struct for interval series matrix parameters
- */
-struct IntervalSeriesMatrixParams {
-    // Layout parameters
-    float allocated_y_center{0.0f};
-    float allocated_height{1.0f};
-
-    // Interval-specific parameters
-    float margin_factor{1.0f};
-    float global_zoom{1.0f};
-    float global_vertical_scale{1.0f};
-
-    // Mode flag
-    bool extend_full_canvas{true};
-};
 
 /**
  * @brief Helper struct for shared view/projection parameters
@@ -139,28 +55,13 @@ struct ViewProjectionParams {
 };
 
 // ============================================================================
-// Analog Time Series MVP Matrices
+// View and Projection Matrices (shared across data types)
 // ============================================================================
 
 /**
- * @brief Create Model matrix for analog series positioning and scaling
+ * @brief Create View matrix for global transformations
  *
- * Implements three-tier scaling system:
- * 1. Intrinsic scaling (3*std_dev → ±1.0)
- * 2. User-specified scaling
- * 3. Global zoom
- * 
- * Centers data around mean value for proper visual centering.
- *
- * @param params Combined parameters for matrix generation
- * @return Model transformation matrix
- */
-glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params);
-
-/**
- * @brief Create View matrix for analog series global transformations
- *
- * Applies view-level transformations to all analog series.
+ * Applies view-level transformations to all series.
  * Handles global vertical panning.
  *
  * @param params View/projection parameters
@@ -169,7 +70,7 @@ glm::mat4 getAnalogModelMatrix(AnalogSeriesMatrixParams const & params);
 glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params);
 
 /**
- * @brief Create Projection matrix for analog series coordinate mapping
+ * @brief Create Projection matrix for time series coordinate mapping
  *
  * Maps data coordinates to normalized device coordinates [-1, 1].
  * Includes robust validation to prevent OpenGL state corruption.
@@ -184,94 +85,6 @@ glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
                                     TimeFrameIndex end_time_index,
                                     float y_min,
                                     float y_max);
-
-// ============================================================================
-// Digital Event Series MVP Matrices
-// ============================================================================
-
-/**
- * @brief Create Model matrix for digital event series
- *
- * Handles both plotting modes:
- * - FullCanvas: Events extend from top to bottom of entire viewport
- * - Stacked: Events are positioned within allocated space
- *
- * @param params Event-specific parameters
- * @return Model transformation matrix
- */
-glm::mat4 getEventModelMatrix(EventSeriesMatrixParams const & params);
-
-/**
- * @brief Create View matrix for digital event series
- *
- * Behavior depends on plotting mode:
- * - FullCanvas: No panning (events stay viewport-pinned)
- * - Stacked: Applies panning (events move with content)
- *
- * @param params Event-specific parameters
- * @param view_params View/projection parameters  
- * @return View transformation matrix
- */
-glm::mat4 getEventViewMatrix(EventSeriesMatrixParams const & params,
-                             ViewProjectionParams const & view_params);
-
-/**
- * @brief Create Projection matrix for digital event series
- *
- * Maps time indices and data coordinates to NDC.
- * Behavior is consistent across both plotting modes.
- *
- * @param start_time_index Start of visible time range
- * @param end_time_index End of visible time range
- * @param y_min Minimum Y coordinate in data space  
- * @param y_max Maximum Y coordinate in data space
- * @return Projection transformation matrix
- */
-glm::mat4 getEventProjectionMatrix(TimeFrameIndex start_time_index,
-                                   TimeFrameIndex end_time_index,
-                                   float y_min,
-                                   float y_max);
-
-// ============================================================================
-// Digital Interval Series MVP Matrices
-// ============================================================================
-
-/**
- * @brief Create Model matrix for digital interval series
- *
- * Intervals are rendered as rectangles extending vertically.
- * Supports full-canvas mode for background highlighting.
- *
- * @param params Interval-specific parameters
- * @return Model transformation matrix
- */
-glm::mat4 getIntervalModelMatrix(IntervalSeriesMatrixParams const & params);
-
-/**
- * @brief Create View matrix for digital interval series
- *
- * Intervals remain viewport-pinned (do not move with panning).
- *
- * @param params View/projection parameters
- * @return View transformation matrix (typically identity)
- */
-glm::mat4 getIntervalViewMatrix(ViewProjectionParams const & params);
-
-/**
- * @brief Create Projection matrix for digital interval series
- *
- * Maps time indices to horizontal extent, viewport bounds to vertical.
- *
- * @param start_time_index Start of visible time range
- * @param end_time_index End of visible time range
- * @param viewport_y_min Bottom of viewport in world coordinates
- * @param viewport_y_max Top of viewport in world coordinates  
- * @return Projection transformation matrix
- */
-glm::mat4 getIntervalProjectionMatrix(TimeFrameIndex start_time_index,
-                                      TimeFrameIndex end_time_index,
-                                      float viewport_y_min,
-                                      float viewport_y_max);
 
 // ============================================================================
 // Utility Functions
@@ -308,47 +121,9 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix,
                          char const * context_name = "Matrix");
 
 // ============================================================================
-// Inverse Transform Utilities
+// LayoutTransform-based API
 // ============================================================================
-
-/**
- * @brief Convert world Y coordinate to analog data value
- * 
- * Inverts the Model matrix transformation applied in getAnalogModelMatrix().
- * Use this to convert mouse cursor position (after screen→world transform)
- * to the corresponding data value for the series.
- * 
- * The forward transform is:
- *   y_world = (y_data - data_mean) * scale + allocated_y_center + user_offset
- * 
- * This function computes the inverse:
- *   y_data = (y_world - allocated_y_center - user_offset) / scale + data_mean
- * 
- * @param world_y Y coordinate in world space (post-View transform)
- * @param params Same parameters used to create the Model matrix
- * @return Corresponding data value in the analog series
- * 
- * @note The world_y should have View transforms already applied (i.e., pan offset
- *       should be accounted for before calling this function).
- */
-[[nodiscard]] float worldYToAnalogValue(float world_y, AnalogSeriesMatrixParams const & params);
-
-/**
- * @brief Convert analog data value to world Y coordinate
- * 
- * Forward transform from data space to world space.
- * This is the analytical equivalent of applying the Model matrix.
- * 
- * @param data_value Value in the analog series
- * @param params Same parameters used to create the Model matrix
- * @return Corresponding Y coordinate in world space
- */
-[[nodiscard]] float analogValueToWorldY(float data_value, AnalogSeriesMatrixParams const & params);
-
-// ============================================================================
-// Simplified LayoutTransform-based API
-// ============================================================================
-// These functions work with composed LayoutTransforms instead of param structs.
+// These functions work with composed LayoutTransforms.
 // The caller is responsible for computing the final transform by composing:
 //   1. Data normalization (from NormalizationHelpers)
 //   2. Layout positioning (from LayoutEngine)

@@ -16,7 +16,34 @@ For starting projects, I recommend looking into four separate initiatives to ens
 -   [Static Analysis](analysis/static_analysis.qmd): Static analysis tools can help identify potential issues in the code before they become problems. This section describes how to use static analysis tools to improve code quality.
 -   [Fuzzing](fuzz/fuzzing.qmd): Fuzzing is a technique for testing software by providing random inputs to the program. This section describes how to use fuzzing to identify bugs in the code or unexpected edge cases in complex algorithms.
 
-To view how specific parts of Neuralyzer work under the hood, please view the implementation documentation:
+Neuralyzer has many moving parts. There are multiple libraries that encapsulate different features that are maintained as part of this project. It is worth being familiar with some of these:
 
--   [CorePlotting](core_plotting.qmd): Documentation for the core plotting library, including the `ViewState` camera model and coordinate transformations.
+-   [CoreGeometry](CoreGeometry/index.qmd):
+-   [CorePlotting](coreplotting/index.qmd): This is the backend agnostic plotting interface for
+-   Entity:
+-   TimeFrame:
+-   PlottingOpenGL:
+-   ObserverData:
+-   SpatialIndex:
 
+Data is loaded and managed by the DataManager class. The DataManager also currently contains some modular components like
+
+-   Data Transformation Architecture:
+
+Finally, UI elements
+
+-   DataViewer Widget:
+
+-   Spatial Overlay Widget
+
+-   Event Plot
+
+-   Scatter Plot
+
+-   Line Event Plot
+
+-   Media Widget
+
+-   Data Transform Widget
+
+-   Data Manager Widget

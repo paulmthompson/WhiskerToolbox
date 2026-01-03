@@ -2,7 +2,7 @@
 #define DATAVIEWER_DIGITALINTERVALSERIESDISPLAYOPTIONS_HPP
 
 #include "CorePlotting/DataTypes/SeriesStyle.hpp"
-#include "CorePlotting/DataTypes/SeriesLayoutResult.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 
 #include <string>
 
@@ -27,8 +27,9 @@ struct NewDigitalIntervalSeriesDisplayOptions {
     /// Pure rendering style (user-configurable)
     CorePlotting::SeriesStyle style{CorePlotting::SeriesStyle{"#ff6b6b", 0.3f}};
     
-    /// Layout output (computed by PlottingManager/LayoutEngine)
-    CorePlotting::SeriesLayoutResult layout{0.0f, 2.0f}; // Default height 2.0 (full canvas)
+    /// Layout transform (computed by LayoutEngine)
+    /// offset = allocated_y_center (0.0), gain = allocated_height/2 (1.0 for height 2.0)
+    CorePlotting::LayoutTransform layout_transform{0.0f, 1.0f};
     
     // ========== Interval-Specific Configuration ==========
 

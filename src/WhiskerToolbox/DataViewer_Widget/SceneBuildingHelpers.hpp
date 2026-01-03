@@ -17,6 +17,7 @@
  * @endcode
  */
 
+#include "AnalogVertexCache.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -41,8 +42,8 @@ namespace DataViewerHelpers {
  * @brief Rendering mode for analog series.
  */
 enum class AnalogRenderMode {
-    Line,   ///< Render as connected line strip (default)
-    Markers ///< Render as individual point markers
+    Line,  ///< Render as connected line strip (default)
+    Markers///< Render as individual point markers
 };
 
 /**
@@ -55,48 +56,8 @@ struct AnalogBatchParams {
     bool detect_gaps{true};   ///< Whether to break lines at gaps
     glm::vec4 color{1.0f, 1.0f, 1.0f, 1.0f};
     float thickness{1.0f};
-    AnalogRenderMode render_mode{AnalogRenderMode::Line}; ///< How to render the series
+    AnalogRenderMode render_mode{AnalogRenderMode::Line};///< How to render the series
 };
-
-/**
- * @brief Build a RenderablePolyLineBatch from an AnalogTimeSeries.
- * 
- * Converts the analog data into GPU-ready vertex data. If gap detection is enabled,
- * the batch will contain multiple line segments broken at gaps.
- * 
- * @param series The analog time series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to PolyLineRenderer
- */
-CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatch(
-        AnalogTimeSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        AnalogBatchParams const & params,
-        CorePlotting::AnalogSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
-
-/**
- * @brief Build a RenderableGlyphBatch for an AnalogTimeSeries in marker mode.
- * 
- * Converts the analog data into individual point markers instead of a connected line.
- * Used when gap_handling is set to ShowMarkers.
- * 
- * @param series The analog time series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to GlyphRenderer
- */
-CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatch(
-        AnalogTimeSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        AnalogBatchParams const & params,
-        CorePlotting::AnalogSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
 
 /**
  * @brief Parameters for building a digital event series batch.
@@ -111,26 +72,6 @@ struct EventBatchParams {
 };
 
 /**
- * @brief Build a RenderableGlyphBatch from a DigitalEventSeries.
- * 
- * For events rendered as ticks (vertical lines), we use glyphs positioned at
- * the event times. The Model matrix handles vertical positioning.
- * 
- * @param series The digital event series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to GlyphRenderer
- */
-CorePlotting::RenderableGlyphBatch buildEventSeriesBatch(
-        DigitalEventSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        EventBatchParams const & params,
-        CorePlotting::EventSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
-
-/**
  * @brief Parameters for building a digital interval series batch.
  */
 struct IntervalBatchParams {
@@ -138,26 +79,6 @@ struct IntervalBatchParams {
     TimeFrameIndex end_time{0};
     glm::vec4 color{1.0f, 1.0f, 1.0f, 0.5f};
 };
-
-/**
- * @brief Build a RenderableRectangleBatch from a DigitalIntervalSeries.
- * 
- * Converts intervals to rectangles with X coordinates from interval bounds
- * and Y coordinates normalized to [-1, 1] for the Model matrix to position.
- * 
- * @param series The digital interval series data
- * @param master_time_frame The master time frame for coordinate conversion
- * @param params Batch building parameters
- * @param model_params Parameters for building the Model matrix
- * @param view_params Parameters for building the View matrix
- * @return A batch ready for upload to RectangleRenderer
- */
-CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatch(
-        DigitalIntervalSeries const & series,
-        std::shared_ptr<TimeFrame> const & master_time_frame,
-        IntervalBatchParams const & params,
-        CorePlotting::IntervalSeriesMatrixParams const & model_params,
-        CorePlotting::ViewProjectionParams const & view_params);
 
 /**
  * @brief Build highlight rectangle for a selected interval.
@@ -197,16 +118,20 @@ CorePlotting::RenderablePolyLineBatch buildIntervalHighlightBorderBatch(
         glm::mat4 const & model_matrix);
 
 // ============================================================================
-// Simplified API using LayoutTransform (Phase 4.13)
+// Batch Building API using pre-composed Model matrices
 // ============================================================================
-// These functions eliminate the intermediate param structs by taking 
-// a pre-composed LayoutTransform or Model matrix directly.
+// These functions take a pre-composed glm::mat4 model matrix directly.
+// The caller is responsible for computing the model matrix by composing:
+//   1. Data normalization (from CorePlotting::NormalizationHelpers)
+//   2. Layout positioning (from CorePlotting::LayoutEngine)
+//   3. Any user adjustments
+// Then calling CorePlotting::createModelMatrix(y_transform) to get the matrix.
 
 /**
- * @brief Simplified analog batch building with pre-composed model matrix
+ * @brief Build a RenderablePolyLineBatch from an AnalogTimeSeries
  * 
- * Uses a pre-composed Model matrix instead of AnalogSeriesMatrixParams.
- * The caller computes the model matrix using CorePlotting::composeAnalogYTransform().
+ * Converts the analog data into GPU-ready vertex data. If gap detection is enabled,
+ * the batch will contain multiple line segments broken at gaps.
  * 
  * @param series The analog time series data
  * @param master_time_frame The master time frame for coordinate conversion
@@ -221,7 +146,16 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
- * @brief Simplified analog marker batch building with pre-composed model matrix
+ * @brief Build a RenderableGlyphBatch for an AnalogTimeSeries in marker mode
+ * 
+ * Converts the analog data into individual point markers instead of a connected line.
+ * Used when gap_handling is set to ShowMarkers.
+ * 
+ * @param series The analog time series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to GlyphRenderer
  */
 CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatchSimplified(
         AnalogTimeSeries const & series,
@@ -230,7 +164,16 @@ CorePlotting::RenderableGlyphBatch buildAnalogSeriesMarkerBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
- * @brief Simplified event batch building with pre-composed model matrix
+ * @brief Build a RenderableGlyphBatch from a DigitalEventSeries
+ * 
+ * For events rendered as ticks (vertical lines), we use glyphs positioned at
+ * the event times. The Model matrix handles vertical positioning.
+ * 
+ * @param series The digital event series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to GlyphRenderer
  */
 CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
         DigitalEventSeries const & series,
@@ -239,13 +182,71 @@ CorePlotting::RenderableGlyphBatch buildEventSeriesBatchSimplified(
         glm::mat4 const & model_matrix);
 
 /**
- * @brief Simplified interval batch building with pre-composed model matrix
+ * @brief Build a RenderableRectangleBatch from a DigitalIntervalSeries
+ * 
+ * Converts intervals to rectangles with X coordinates from interval bounds
+ * and Y coordinates normalized to [-1, 1] for the Model matrix to position.
+ * 
+ * @param series The digital interval series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters
+ * @param model_matrix Pre-computed Model matrix
+ * @return A batch ready for upload to RectangleRenderer
  */
 CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
         DigitalIntervalSeries const & series,
         std::shared_ptr<TimeFrame> const & master_time_frame,
         IntervalBatchParams const & params,
         glm::mat4 const & model_matrix);
+
+// ============================================================================
+// Cached Vertex API for efficient scrolling (Phase: Streaming Optimization)
+// ============================================================================
+// These functions use AnalogVertexCache to minimize vertex regeneration
+// when scrolling time series data.
+
+/**
+ * @brief Build analog batch using vertex cache for efficient scrolling
+ * 
+ * This function implements the ring buffer optimization strategy:
+ * 1. Check if cache covers the requested range
+ * 2. If not, generate only the missing edge data
+ * 3. Update the cache with new vertices
+ * 4. Return batch built from cached vertices
+ * 
+ * For typical scrolling (scroll by 10-100 points out of 100K visible),
+ * this is ~26-130x faster than regenerating all vertices.
+ * 
+ * @param series The analog time series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param params Batch building parameters (time range, gap config, style)
+ * @param model_matrix Pre-computed Model matrix
+ * @param cache Vertex cache (will be updated with new data)
+ * @return A batch ready for upload to PolyLineRenderer
+ */
+CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        AnalogBatchParams const & params,
+        glm::mat4 const & model_matrix,
+        DataViewer::AnalogVertexCache & cache);
+
+/**
+ * @brief Generate vertices for a specific time range (helper for cache population)
+ * 
+ * This is the core vertex generation logic extracted for use by the cache.
+ * 
+ * @param series The analog time series data
+ * @param master_time_frame The master time frame for coordinate conversion
+ * @param start_time Start of range to generate
+ * @param end_time End of range to generate
+ * @return Vector of CachedAnalogVertex ready for cache insertion
+ */
+std::vector<DataViewer::CachedAnalogVertex> generateVerticesForRange(
+        AnalogTimeSeries const & series,
+        std::shared_ptr<TimeFrame> const & master_time_frame,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time);
 
 }// namespace DataViewerHelpers
 

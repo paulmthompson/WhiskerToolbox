@@ -135,8 +135,8 @@ public:
     }
 
     DigitalEventDisplayOptionsBuilder& withAllocation(float center, float height) {
-        _options.layout.allocated_y_center = center;
-        _options.layout.allocated_height = height;
+        _options.layout_transform.offset = center;
+        _options.layout_transform.gain = height / 2.0f;
         return *this;
     }
 

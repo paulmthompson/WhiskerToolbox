@@ -17,26 +17,26 @@ namespace CorePlotting {
  * position relative to that series' allocated region.
  */
 struct SeriesQueryResult {
-    std::string series_key;         ///< Key identifying the series
-    float series_local_y{0.0f};     ///< Y coordinate relative to series center
-    float normalized_y{0.0f};       ///< Y position normalized to [-1, +1] within series height
-    bool is_within_bounds{false};   ///< Whether point is strictly within allocated region
-    int series_index{-1};           ///< Index of series in layout (for ordering)
-    
+    std::string series_key;      ///< Key identifying the series
+    float series_local_y{0.0f};  ///< Y coordinate relative to series center
+    float normalized_y{0.0f};    ///< Y position normalized to [-1, +1] within series height
+    bool is_within_bounds{false};///< Whether point is strictly within allocated region
+    int series_index{-1};        ///< Index of series in layout (for ordering)
+
     /**
      * @brief Default constructor creates an invalid result
      */
     SeriesQueryResult() = default;
-    
+
     /**
      * @brief Construct with all values
      */
     SeriesQueryResult(std::string key, float local_y, float norm_y, bool within, int index)
-        : series_key(std::move(key))
-        , series_local_y(local_y)
-        , normalized_y(norm_y)
-        , is_within_bounds(within)
-        , series_index(index) {}
+        : series_key(std::move(key)),
+          series_local_y(local_y),
+          normalized_y(norm_y),
+          is_within_bounds(within),
+          series_index(index) {}
 };
 
 /**
@@ -66,39 +66,37 @@ struct SeriesQueryResult {
  * @endcode
  */
 [[nodiscard]] inline std::optional<SeriesQueryResult> findSeriesAtWorldY(
-    float world_y,
-    LayoutResponse const& layout_response,
-    float tolerance = 0.0f)
-{
-    for (auto const& series_layout : layout_response.layouts) {
+        float world_y,
+        LayoutResponse const & layout_response,
+        float tolerance = 0.0f) {
+    for (auto const & series_layout: layout_response.layouts) {
         // y_transform: offset = center, gain = half_height
         float const y_center = series_layout.y_transform.offset;
         float const half_height = series_layout.y_transform.gain;
-        
+
         float const y_min = y_center - half_height - tolerance;
         float const y_max = y_center + half_height + tolerance;
-        
+
         if (world_y >= y_min && world_y <= y_max) {
             float const local_y = world_y - y_center;
-            float const normalized = (half_height > 0.0f) 
-                ? local_y / half_height 
-                : 0.0f;
-            
+            float const normalized = (half_height > 0.0f)
+                                             ? local_y / half_height
+                                             : 0.0f;
+
             // Check if strictly within bounds (no tolerance)
-            bool const strictly_within = 
-                world_y >= (y_center - half_height) && 
-                world_y <= (y_center + half_height);
-            
+            bool const strictly_within =
+                    world_y >= (y_center - half_height) &&
+                    world_y <= (y_center + half_height);
+
             return SeriesQueryResult(
-                series_layout.series_id,
-                local_y,
-                normalized,
-                strictly_within,
-                series_layout.series_index
-            );
+                    series_layout.series_id,
+                    local_y,
+                    normalized,
+                    strictly_within,
+                    series_layout.series_index);
         }
     }
-    
+
     return std::nullopt;
 }
 
@@ -122,45 +120,43 @@ struct SeriesQueryResult {
  * @endcode
  */
 [[nodiscard]] inline std::optional<SeriesQueryResult> findClosestSeriesAtWorldY(
-    float world_y,
-    LayoutResponse const& layout_response)
-{
+        float world_y,
+        LayoutResponse const & layout_response) {
     if (layout_response.layouts.empty()) {
         return std::nullopt;
     }
-    
-    SeriesLayout const* closest = nullptr;
+
+    SeriesLayout const * closest = nullptr;
     float min_distance = std::numeric_limits<float>::max();
-    
-    for (auto const& series_layout : layout_response.layouts) {
+
+    for (auto const & series_layout: layout_response.layouts) {
         float const distance = std::abs(world_y - series_layout.y_transform.offset);
         if (distance < min_distance) {
             min_distance = distance;
             closest = &series_layout;
         }
     }
-    
+
     if (!closest) {
         return std::nullopt;
     }
-    
+
     // y_transform: offset = center, gain = half_height
     float const y_center = closest->y_transform.offset;
     float const half_height = closest->y_transform.gain;
     float const local_y = world_y - y_center;
     float const normalized = (half_height > 0.0f) ? local_y / half_height : 0.0f;
-    
-    bool const within_bounds = 
-        world_y >= (y_center - half_height) && 
-        world_y <= (y_center + half_height);
-    
+
+    bool const within_bounds =
+            world_y >= (y_center - half_height) &&
+            world_y <= (y_center + half_height);
+
     return SeriesQueryResult(
-        closest->series_id,
-        local_y,
-        normalized,
-        within_bounds,
-        closest->series_index
-    );
+            closest->series_id,
+            local_y,
+            normalized,
+            within_bounds,
+            closest->series_index);
 }
 
 /**
@@ -183,9 +179,8 @@ struct SeriesQueryResult {
  * @endcode
  */
 [[nodiscard]] inline float worldYToSeriesLocalY(
-    float world_y,
-    SeriesLayout const& series_layout)
-{
+        float world_y,
+        SeriesLayout const & series_layout) {
     return world_y - series_layout.y_transform.offset;
 }
 
@@ -199,9 +194,8 @@ struct SeriesQueryResult {
  * @return World Y coordinate
  */
 [[nodiscard]] inline float seriesLocalYToWorldY(
-    float local_y,
-    SeriesLayout const& series_layout)
-{
+        float local_y,
+        SeriesLayout const & series_layout) {
     return local_y + series_layout.y_transform.offset;
 }
 
@@ -214,8 +208,7 @@ struct SeriesQueryResult {
  * @return Pair of (y_min, y_max) in world coordinates
  */
 [[nodiscard]] inline std::pair<float, float> getSeriesWorldBounds(
-    SeriesLayout const& series_layout)
-{
+        SeriesLayout const & series_layout) {
     // y_transform: offset = center, gain = half_height
     float const y_center = series_layout.y_transform.offset;
     float const half_height = series_layout.y_transform.gain;
@@ -231,10 +224,9 @@ struct SeriesQueryResult {
  * @return true if world_y is within the series' allocated region
  */
 [[nodiscard]] inline bool isWithinSeriesBounds(
-    float world_y,
-    SeriesLayout const& series_layout,
-    float tolerance = 0.0f)
-{
+        float world_y,
+        SeriesLayout const & series_layout,
+        float tolerance = 0.0f) {
     auto [y_min, y_max] = getSeriesWorldBounds(series_layout);
     return world_y >= (y_min - tolerance) && world_y <= (y_max + tolerance);
 }
@@ -250,9 +242,8 @@ struct SeriesQueryResult {
  * @return World Y coordinate
  */
 [[nodiscard]] inline float normalizedSeriesYToWorldY(
-    float normalized_y,
-    SeriesLayout const& series_layout)
-{
+        float normalized_y,
+        SeriesLayout const & series_layout) {
     // y_transform: offset = center, gain = half_height
     float const half_height = series_layout.y_transform.gain;
     return series_layout.y_transform.offset + normalized_y * half_height;
@@ -268,9 +259,8 @@ struct SeriesQueryResult {
  * @return Normalized position (0 at center, ±1 at edges)
  */
 [[nodiscard]] inline float worldYToNormalizedSeriesY(
-    float world_y,
-    SeriesLayout const& series_layout)
-{
+        float world_y,
+        SeriesLayout const & series_layout) {
     // y_transform: offset = center, gain = half_height
     float const half_height = series_layout.y_transform.gain;
     if (half_height <= 0.0f) {
@@ -280,6 +270,6 @@ struct SeriesQueryResult {
     return local_y / half_height;
 }
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_COORDINATETRANSFORM_SERIESCOORDINATEQUERY_HPP
+#endif// COREPLOTTING_COORDINATETRANSFORM_SERIESCOORDINATEQUERY_HPP

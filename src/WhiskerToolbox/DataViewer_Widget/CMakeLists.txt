@@ -3,7 +3,11 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGLWidgets OpenGL)
 
 find_package(glm CONFIG REQUIRED)
 
+find_package(Boost REQUIRED)
+
 set(DATAVIEWER_WIDGET_SOURCES
+    AnalogVertexCache.cpp
+    AnalogVertexCache.hpp
     DataViewer_Widget.cpp
         DataViewer_Widget.hpp
         DataViewer_Widget.ui
@@ -58,6 +62,7 @@ target_link_libraries(DataViewer_Widget PRIVATE
 
 target_link_libraries(DataViewer_Widget PRIVATE DataManager)
 target_link_libraries(DataViewer_Widget PRIVATE glm::glm)
+target_link_libraries(DataViewer_Widget PRIVATE Boost::boost)
 target_link_libraries(DataViewer_Widget PRIVATE DataViewer)
 target_link_libraries(DataViewer_Widget PRIVATE Feature_Tree_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE PlottingOpenGL)  # Contains ShaderManager

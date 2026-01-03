@@ -47,7 +47,7 @@ struct InputContext {
     std::map<size_t, std::string> const * rectangle_batch_key_map{nullptr};
     int widget_width{0};
     int widget_height{0};
-    
+
     /**
      * @brief Create a DataViewerCoordinates instance from this context
      * @return DataViewerCoordinates configured with current view state and dimensions

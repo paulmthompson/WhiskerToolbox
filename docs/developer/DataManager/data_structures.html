@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="WhiskerToolbox Team">
+<meta name="dcterms.date" content="2026-01-02">
+
+<title>Data Structure Performance – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Tutorials</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
+        <li>
+    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
+ <span class="dropdown-text">Keypoint Labeling</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-how-to-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">How-to guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
+        <li>
+    <a class="dropdown-item" href="../../labeling/keypoint.html">
+ <span class="dropdown-text">Label Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../labeling/mask.html">
+ <span class="dropdown-text">Mask Creation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../examples/tabular_binary_events.html">
+ <span class="dropdown-text">Load Tabular Binary Events</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">Concepts</span>
+    </span>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../developer/DataManager/data_structures.html">Data Structure Performance</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Developer Documentation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Profiling and Performance</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/code_quality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/copilot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">C++ Development Tools Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contributing Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fuzz Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction to C++</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../api_reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">API Reference</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Core Libraries</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Core Geometry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">CorePlotting Library</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Entity Manager</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Data Management</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Data Structure Performance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/table_view.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Table View</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">User Interface</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/analysis_dashboard/analysis_dashboard.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Transform Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/data_viewer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#raggedtimeseries" id="toc-raggedtimeseries" class="nav-link" data-scroll-target="#raggedtimeseries">RaggedTimeSeries</a>
+  <ul class="collapse">
+  <li><a href="#current-implementation" id="toc-current-implementation" class="nav-link" data-scroll-target="#current-implementation">Current Implementation</a>
+  <ul class="collapse">
+  <li><a href="#characteristics" id="toc-characteristics" class="nav-link" data-scroll-target="#characteristics">Characteristics</a></li>
+  </ul></li>
+  <li><a href="#alternative-structure-of-arrays-soa" id="toc-alternative-structure-of-arrays-soa" class="nav-link" data-scroll-target="#alternative-structure-of-arrays-soa">Alternative: Structure of Arrays (SoA)</a>
+  <ul class="collapse">
+  <li><a href="#characteristics-1" id="toc-characteristics-1" class="nav-link" data-scroll-target="#characteristics-1">Characteristics</a></li>
+  </ul></li>
+  <li><a href="#profiling-trivially-copyable-vs-non-trivially-copyable-types" id="toc-profiling-trivially-copyable-vs-non-trivially-copyable-types" class="nav-link" data-scroll-target="#profiling-trivially-copyable-vs-non-trivially-copyable-types">Profiling: Trivially Copyable vs Non-Trivially Copyable Types</a>
+  <ul class="collapse">
+  <li><a href="#what-is-trivially-copyable" id="toc-what-is-trivially-copyable" class="nav-link" data-scroll-target="#what-is-trivially-copyable">What is Trivially Copyable?</a></li>
+  <li><a href="#why-does-it-matter" id="toc-why-does-it-matter" class="nav-link" data-scroll-target="#why-does-it-matter">Why Does It Matter?</a></li>
+  <li><a href="#does-data-size-inside-mask2d-affect-performance" id="toc-does-data-size-inside-mask2d-affect-performance" class="nav-link" data-scroll-target="#does-data-size-inside-mask2d-affect-performance">Does Data Size Inside Mask2D Affect Performance?</a></li>
+  </ul></li>
+  <li><a href="#profiling-middle-insertion-performance" id="toc-profiling-middle-insertion-performance" class="nav-link" data-scroll-target="#profiling-middle-insertion-performance">Profiling: Middle Insertion Performance</a>
+  <ul class="collapse">
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">Analysis</a></li>
+  </ul></li>
+  <li><a href="#profiling-storage-strategy-comparison" id="toc-profiling-storage-strategy-comparison" class="nav-link" data-scroll-target="#profiling-storage-strategy-comparison">Profiling: Storage Strategy Comparison</a>
+  <ul class="collapse">
+  <li><a href="#results-1" id="toc-results-1" class="nav-link" data-scroll-target="#results-1">Results</a></li>
+  <li><a href="#analysis-1" id="toc-analysis-1" class="nav-link" data-scroll-target="#analysis-1">Analysis</a></li>
+  </ul></li>
+  <li><a href="#implications-for-view-based-filtering" id="toc-implications-for-view-based-filtering" class="nav-link" data-scroll-target="#implications-for-view-based-filtering">Implications for View-Based Filtering</a>
+  <ul class="collapse">
+  <li><a href="#current-approach-copy-on-filter" id="toc-current-approach-copy-on-filter" class="nav-link" data-scroll-target="#current-approach-copy-on-filter">Current Approach: Copy on Filter</a></li>
+  <li><a href="#alternative-index-based-views" id="toc-alternative-index-based-views" class="nav-link" data-scroll-target="#alternative-index-based-views">Alternative: Index-Based Views</a></li>
+  <li><a href="#performance-comparison" id="toc-performance-comparison" class="nav-link" data-scroll-target="#performance-comparison">Performance Comparison</a></li>
+  </ul></li>
+  <li><a href="#recommendations" id="toc-recommendations" class="nav-link" data-scroll-target="#recommendations">Recommendations</a></li>
+  <li><a href="#derived-storage-views-performance" id="toc-derived-storage-views-performance" class="nav-link" data-scroll-target="#derived-storage-views-performance">Derived Storage (Views) Performance</a>
+  <ul class="collapse">
+  <li><a href="#results-2" id="toc-results-2" class="nav-link" data-scroll-target="#results-2">Results</a></li>
+  <li><a href="#analysis-2" id="toc-analysis-2" class="nav-link" data-scroll-target="#analysis-2">Analysis</a></li>
+  </ul></li>
+  <li><a href="#crtp-variant-vs-virtual-inheritance" id="toc-crtp-variant-vs-virtual-inheritance" class="nav-link" data-scroll-target="#crtp-variant-vs-virtual-inheritance">CRTP + Variant vs Virtual Inheritance</a>
+  <ul class="collapse">
+  <li><a href="#the-two-approaches" id="toc-the-two-approaches" class="nav-link" data-scroll-target="#the-two-approaches">The Two Approaches</a></li>
+  <li><a href="#results-3" id="toc-results-3" class="nav-link" data-scroll-target="#results-3">Results</a></li>
+  <li><a href="#analysis-summary" id="toc-analysis-summary" class="nav-link" data-scroll-target="#analysis-summary">Analysis Summary</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/DataManager/data_manager.html">Data Management</a></li><li class="breadcrumb-item"><a href="../../developer/DataManager/data_structures.html">Data Structure Performance</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Data Structure Performance</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>WhiskerToolbox Team </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 2, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>This document provides profiling information and design rationale for the core data structures used in WhiskerToolbox. Understanding the performance characteristics of these structures is essential for making informed architectural decisions.</p>
+</section>
+<section id="raggedtimeseries" class="level1">
+<h1>RaggedTimeSeries</h1>
+<p><code>RaggedTimeSeries&lt;TData&gt;</code> is a templated container for time series data where multiple entries can exist at each timestamp. It is the base class for:</p>
+<ul>
+<li><code>MaskData</code> - Binary masks over time</li>
+<li><code>LineData</code> - Lines/curves over time<br>
+</li>
+<li><code>PointData</code> - Points over time</li>
+</ul>
+<p>Each entry has:</p>
+<ol type="1">
+<li>A <code>TimeFrameIndex</code> - when this entry occurs</li>
+<li>A <code>LocalIndex</code> - distinguishing multiple entries at the same time (0, 1, 2, …)</li>
+<li>An <code>EntityId</code> - unique identifier for tracking and grouping</li>
+<li>The actual data (<code>Mask2D</code>, <code>Line2D</code>, <code>Point2D&lt;float&gt;</code>)</li>
+</ol>
+<section id="current-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="current-implementation">Current Implementation</h2>
+<p>The current implementation uses a map of vectors:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>DataEntry<span class="op">&lt;</span>TData<span class="op">&gt;&gt;&gt;</span> _data<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> TData<span class="op">&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DataEntry <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    TData data<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="characteristics" class="level3">
+<h3 class="anchored" data-anchor-id="characteristics">Characteristics</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 19%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Complexity</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lookup by TimeFrameIndex</td>
+<td>O(log n)</td>
+<td>Map lookup</td>
+</tr>
+<tr class="even">
+<td>Lookup by EntityId</td>
+<td>O(n)</td>
+<td>Full scan required</td>
+</tr>
+<tr class="odd">
+<td>Insert at time (append)</td>
+<td>O(log n)</td>
+<td>Map insert + vector push_back</td>
+</tr>
+<tr class="even">
+<td>Insert at time (middle)</td>
+<td>O(log n + k)</td>
+<td>k = entries at that time</td>
+</tr>
+<tr class="odd">
+<td>Iterate all entries</td>
+<td>O(n)</td>
+<td>Must traverse map + vectors</td>
+</tr>
+<tr class="even">
+<td>Memory layout</td>
+<td>Fragmented</td>
+<td>Many small vector allocations</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="alternative-structure-of-arrays-soa" class="level2">
+<h2 class="anchored" data-anchor-id="alternative-structure-of-arrays-soa">Alternative: Structure of Arrays (SoA)</h2>
+<p>An alternative storage strategy uses parallel arrays:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> TData<span class="op">&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SoAStorage <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> times<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>LocalIndex<span class="op">&gt;</span> local_indices<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TData<span class="op">&gt;</span> data<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> entity_ids<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Acceleration structures</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> <span class="bu">std::</span>pair<span class="op">&lt;</span><span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span><span class="op">&gt;&gt;</span> time_ranges<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_map<span class="op">&lt;</span>EntityId<span class="op">,</span> <span class="dt">size_t</span><span class="op">&gt;</span> entity_to_index<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="characteristics-1" class="level3">
+<h3 class="anchored" data-anchor-id="characteristics-1">Characteristics</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Complexity</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lookup by TimeFrameIndex</td>
+<td>O(log n)</td>
+<td>Via time_ranges map</td>
+</tr>
+<tr class="even">
+<td>Lookup by EntityId</td>
+<td>O(1)</td>
+<td>Via entity_to_index map</td>
+</tr>
+<tr class="odd">
+<td>Append</td>
+<td>O(1) amortized</td>
+<td>Vector push_back</td>
+</tr>
+<tr class="even">
+<td>Middle insert</td>
+<td>O(n)</td>
+<td>Must shift all arrays</td>
+</tr>
+<tr class="odd">
+<td>Iterate all entries</td>
+<td>O(n)</td>
+<td>Contiguous memory</td>
+</tr>
+<tr class="even">
+<td>Memory layout</td>
+<td>Contiguous</td>
+<td>Cache-friendly</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="profiling-trivially-copyable-vs-non-trivially-copyable-types" class="level2">
+<h2 class="anchored" data-anchor-id="profiling-trivially-copyable-vs-non-trivially-copyable-types">Profiling: Trivially Copyable vs Non-Trivially Copyable Types</h2>
+<p>A critical performance consideration is whether the stored type is <strong>trivially copyable</strong>.</p>
+<section id="what-is-trivially-copyable" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-trivially-copyable">What is Trivially Copyable?</h3>
+<p>A type is trivially copyable if it can be copied with a simple <code>memcpy</code>/<code>memmove</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Trivially copyable - just raw bytes</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point2D <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x<span class="op">,</span> y<span class="op">;</span>  <span class="co">// 8 bytes total</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">static_assert</span><span class="op">(</span><span class="bu">std::</span>is_trivially_copyable_v<span class="op">&lt;</span>Point2D<span class="op">&gt;);</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// NOT trivially copyable - contains std::vector</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Mask2D <span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> data<span class="op">;</span>  <span class="co">// 24 bytes (pointer + size + capacity)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">static_assert</span><span class="op">(!</span><span class="bu">std::</span>is_trivially_copyable_v<span class="op">&lt;</span>Mask2D<span class="op">&gt;);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="why-does-it-matter" class="level3">
+<h3 class="anchored" data-anchor-id="why-does-it-matter">Why Does It Matter?</h3>
+<p>When inserting into the middle of a <code>std::vector</code>:</p>
+<p><strong>For trivially copyable types:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler generates a single memmove call</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>memmove<span class="op">(</span>dest<span class="op">,</span> src<span class="op">,</span> num_elements <span class="op">*</span> <span class="kw">sizeof</span><span class="op">(</span>T<span class="op">));</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>For non-trivially copyable types:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Compiler must call move constructor for EACH element</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> num_elements<span class="op">;</span> i <span class="op">&gt;</span> insert_pos<span class="op">;</span> <span class="op">--</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">new</span> <span class="op">(&amp;</span>dest<span class="op">[</span>i<span class="op">])</span> T<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>src<span class="op">[</span>i<span class="op">-</span><span class="dv">1</span><span class="op">]));</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    src<span class="op">[</span>i<span class="op">-</span><span class="dv">1</span><span class="op">].~</span>T<span class="op">();</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="does-data-size-inside-mask2d-affect-performance" class="level3">
+<h3 class="anchored" data-anchor-id="does-data-size-inside-mask2d-affect-performance">Does Data Size Inside Mask2D Affect Performance?</h3>
+<p>No! The move constructor for <code>std::vector</code> just swaps 3 pointers:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// std::vector move constructor (simplified)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>vector<span class="op">(</span>vector<span class="op">&amp;&amp;</span> other<span class="op">)</span> <span class="kw">noexcept</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    _data <span class="op">=</span> other<span class="op">.</span>_data<span class="op">;</span>           <span class="co">// Steal the pointer</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    _size <span class="op">=</span> other<span class="op">.</span>_size<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    _capacity <span class="op">=</span> other<span class="op">.</span>_capacity<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    other<span class="op">.</span>_data <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span>         <span class="co">// Leave source empty</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Measured results with 200,000 elements and 100 middle insertions:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Mask data size</th>
+<th>Time per insert</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0 bytes</td>
+<td>~148 µs</td>
+</tr>
+<tr class="even">
+<td>100 bytes</td>
+<td>~172 µs</td>
+</tr>
+<tr class="odd">
+<td>1 KB</td>
+<td>~145 µs</td>
+</tr>
+</tbody>
+</table>
+<p>The times are essentially identical regardless of mask content size.</p>
+</section>
+</section>
+<section id="profiling-middle-insertion-performance" class="level2">
+<h2 class="anchored" data-anchor-id="profiling-middle-insertion-performance">Profiling: Middle Insertion Performance</h2>
+<p>The following benchmark compares insertion performance across different data types and storage strategies.</p>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<pre><code>=============================================================================
+RaggedTimeSeries Storage Benchmark
+=============================================================================
+
+Configuration:
+  Initial elements: 200000
+  Middle insertions: 1000
+  Average elements moved: 100000
+
+-----------------------------------------------------------------------------
+MIDDLE INSERTION PERFORMANCE
+-----------------------------------------------------------------------------
+Type                              Size    Per Insert    Bytes Moved
+-----------------------------------------------------------------------------
+
+-- Trivially Copyable Types (uses memmove) --
+Point2D&lt;float&gt;                  8 bytes        18.6 µs        800000 bytes
+EntityId                        8 bytes        18.7 µs        800000 bytes
+TimeFrameIndex                  8 bytes        19.2 µs        800000 bytes
+SoAKey (composite)             24 bytes        65.0 µs       2400000 bytes
+
+-- Non-Trivially Copyable Types (move constructor per element) --
+Mask2D (empty)                 24 bytes       190.7 µs       2400000 bytes
+Mask2D (100 bytes)             24 bytes       210.9 µs       2400000 bytes
+Mask2D (1KB)                   24 bytes       155.7 µs       2400000 bytes
+Line2D (empty)                 24 bytes       159.6 µs       2400000 bytes
+Line2D (50 points)             24 bytes       169.0 µs       2400000 bytes
+
+-----------------------------------------------------------------------------
+APPEND PERFORMANCE (for comparison)
+-----------------------------------------------------------------------------
+Type                        Per Append
+-----------------------------------------------------------------------------
+Point2D&lt;float&gt;                 1.38 ns
+SoAKey (composite)             5.14 ns
+Mask2D (empty)                 2.66 ns
+Mask2D (1KB)                 245.80 ns</code></pre>
+</section>
+<section id="analysis" class="level3">
+<h3 class="anchored" data-anchor-id="analysis">Analysis</h3>
+<p><strong>Key findings:</strong></p>
+<ol type="1">
+<li><p><strong>Trivially copyable types are 3-10× faster</strong> for middle insertion:</p>
+<ul>
+<li><code>Point2D</code> (8 bytes): 18.6 µs per insert</li>
+<li><code>SoAKey</code> (24 bytes): 65.0 µs per insert<br>
+</li>
+<li><code>Mask2D</code> (24 bytes, non-trivial): 155-210 µs per insert</li>
+</ul></li>
+<li><p><strong>Data size inside containers doesn’t matter for moves</strong>:</p>
+<ul>
+<li><code>Mask2D</code> with 0 bytes: 190.7 µs</li>
+<li><code>Mask2D</code> with 1KB: 155.7 µs (within noise)</li>
+</ul>
+<p>This is because <code>std::vector</code>’s move constructor just swaps 3 pointers.</p></li>
+<li><p><strong>Append is dramatically faster</strong> than middle insertion:</p>
+<ul>
+<li><code>Point2D</code> append: 1.38 ns (13,000× faster than insert)</li>
+<li><code>Mask2D</code> append: 2.66 ns (60,000× faster than insert)</li>
+</ul></li>
+<li><p><strong>For SoA with views</strong>: Keep metadata (TimeFrameIndex, EntityId) in trivially copyable arrays; keep actual data (Mask2D) in append-only storage.</p></li>
+</ol>
+</section>
+</section>
+<section id="profiling-storage-strategy-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="profiling-storage-strategy-comparison">Profiling: Storage Strategy Comparison</h2>
+<p>This benchmark compares the current map-based implementation against the SoA approach.</p>
+<section id="results-1" class="level3">
+<h3 class="anchored" data-anchor-id="results-1">Results</h3>
+<pre><code>=============================================================================
+Storage Strategy Benchmark: Map-Based vs Structure of Arrays
+=============================================================================
+
+Configuration:
+  Total entries: 200000
+  Time points: 50000
+  Avg entries per time: 4
+  Lookups per test: 10000
+  Filter set size: 1000
+
+-----------------------------------------------------------------------------
+CONSTRUCTION (append 200000 entries in time order)
+-----------------------------------------------------------------------------
+Map-Based:  35.3 ms
+SoA:        85.5 ms
+Speedup:    0.41x
+
+-----------------------------------------------------------------------------
+LOOKUP BY EntityId (10000 random lookups)
+-----------------------------------------------------------------------------
+Map-Based:  9105.2 ms total, 910.5 µs per lookup
+SoA:        0.7 ms total, 69.4 ns per lookup
+Speedup:    13120x
+
+-----------------------------------------------------------------------------
+LOOKUP BY TimeFrameIndex (10000 random lookups)
+-----------------------------------------------------------------------------
+Map-Based:  2.9 ms total, 293.6 ns per lookup
+SoA:        4.0 ms total, 403.5 ns per lookup
+Speedup:    0.73x
+
+-----------------------------------------------------------------------------
+FILTER BY EntityId SET (filter 1000 EntityIds)
+-----------------------------------------------------------------------------
+Map-Based (full copy):    8.1 ms, 998 results
+SoA (scan, indices only): 4.6 ms, 998 results
+SoA (hash, indices only): 0.1 ms, 998 results
+Speedup (hash vs map):    75x
+
+-----------------------------------------------------------------------------
+ITERATE ALL ENTRIES
+-----------------------------------------------------------------------------
+Map-Based:  2.8 ms
+SoA:        0.5 ms
+Speedup:    5.17x</code></pre>
+</section>
+<section id="analysis-1" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-1">Analysis</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Map-Based</th>
+<th>SoA</th>
+<th>Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Construction</td>
+<td>35.3 ms</td>
+<td>85.5 ms</td>
+<td>Map (2.4×)</td>
+</tr>
+<tr class="even">
+<td>EntityId Lookup</td>
+<td>910 µs</td>
+<td>69 ns</td>
+<td><strong>SoA (13,120×)</strong></td>
+</tr>
+<tr class="odd">
+<td>TimeFrameIndex Lookup</td>
+<td>294 ns</td>
+<td>404 ns</td>
+<td>Map (1.4×)</td>
+</tr>
+<tr class="even">
+<td>EntityId Filter (1000 ids)</td>
+<td>8.1 ms</td>
+<td>0.1 ms</td>
+<td><strong>SoA (75×)</strong></td>
+</tr>
+<tr class="odd">
+<td>Iterate All</td>
+<td>2.8 ms</td>
+<td>0.5 ms</td>
+<td><strong>SoA (5×)</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key findings:</strong></p>
+<ol type="1">
+<li><p><strong>EntityId operations are dramatically faster with SoA</strong>:</p>
+<ul>
+<li>Single lookup: <strong>13,120× faster</strong> (910 µs → 69 ns)</li>
+<li>Filtering 1000 EntityIds: <strong>75× faster</strong> (8.1 ms → 0.1 ms)</li>
+</ul>
+<p>This is because SoA maintains an <code>unordered_map&lt;EntityId, size_t&gt;</code> for O(1) lookup, while map-based requires O(n) full scan.</p></li>
+<li><p><strong>TimeFrameIndex lookup is slightly faster with Map</strong>:</p>
+<ul>
+<li>Both are O(log m) where m = unique time points</li>
+<li>Map wins by ~1.4× due to direct access vs indirection</li>
+</ul></li>
+<li><p><strong>Construction favors Map</strong>:</p>
+<ul>
+<li>Map: 35.3 ms</li>
+<li>SoA: 85.5 ms (2.4× slower)</li>
+</ul>
+<p>This is because SoA maintains additional acceleration structures.</p></li>
+<li><p><strong>Iteration strongly favors SoA</strong>:</p>
+<ul>
+<li>5× faster due to cache-friendly sequential memory access</li>
+<li>Map traverses fragmented memory (many small vectors)</li>
+</ul></li>
+<li><p><strong>For view-based filtering</strong>, the SoA approach returns <strong>indices only</strong> (8 bytes each), while map-based must copy the entire <code>DataEntry&lt;TData&gt;</code> including the data.</p></li>
+</ol>
+</section>
+</section>
+<section id="implications-for-view-based-filtering" class="level2">
+<h2 class="anchored" data-anchor-id="implications-for-view-based-filtering">Implications for View-Based Filtering</h2>
+<p>One key use case is creating filtered views of data (e.g., by EntityId set or TimeFrameIndex range).</p>
+<section id="current-approach-copy-on-filter" class="level3">
+<h3 class="anchored" data-anchor-id="current-approach-copy-on-filter">Current Approach: Copy on Filter</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Creates a new RaggedTimeSeries with copied data</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filtered <span class="op">=</span> source<span class="op">.</span>copyByEntityIds<span class="op">(</span>entity_set<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="alternative-index-based-views" class="level3">
+<h3 class="anchored" data-anchor-id="alternative-index-based-views">Alternative: Index-Based Views</h3>
+<p>With SoA storage, filtering can return a lightweight view:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// View is just a vector of indices into the source</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RaggedView <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    SoAStorage <span class="at">const</span><span class="op">*</span> source<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;</span> indices<span class="op">;</span>  <span class="co">// Which entries are included</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Creating a filtered view - O(n) scan, O(m) allocation for m matches</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">// No data copying!</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filtered_view <span class="op">=</span> source<span class="op">.</span>createEntityIdView<span class="op">(</span>entity_set<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="performance-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="performance-comparison">Performance Comparison</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Copy Approach</th>
+<th>View Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Create filter</td>
+<td>O(n) + copy TData</td>
+<td>O(n) + O(m) indices</td>
+</tr>
+<tr class="even">
+<td>Memory usage</td>
+<td>Full copy</td>
+<td>Just indices (8 bytes each)</td>
+</tr>
+<tr class="odd">
+<td>Access element</td>
+<td>O(1)</td>
+<td>O(1) + 1 indirection</td>
+</tr>
+<tr class="even">
+<td>Modify source</td>
+<td>Independent</td>
+<td>View sees changes</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="recommendations" class="level2">
+<h2 class="anchored" data-anchor-id="recommendations">Recommendations</h2>
+<p>Based on the profiling results:</p>
+<ol type="1">
+<li><p><strong>Append-only data</strong>: SoA storage is highly efficient for data that arrives chronologically. With 200,000 entries, iteration is 5× faster due to cache-friendly memory layout.</p></li>
+<li><p><strong>Frequent EntityId lookups</strong>: The current map-based implementation is O(n) per lookup (910 µs with 200k entries). Adding an <code>entity_to_index</code> map provides O(1) access (69 ns), a <strong>13,000× improvement</strong>.</p></li>
+<li><p><strong>View-based filtering</strong>: Use index vectors rather than copying data. Filtering 1000 EntityIds takes 8.1 ms with copy vs 0.1 ms with indices only (<strong>75× faster</strong>).</p></li>
+<li><p><strong>Middle insertions</strong>: Avoid when possible; batch operations and sort. A single middle insertion into 200k <code>Mask2D</code> elements costs ~170 µs, while append costs ~3 ns.</p></li>
+<li><p><strong>TimeFrameIndex operations</strong>: The current map-based approach is already optimal for time-based lookup (O(log m)). SoA provides similar performance.</p></li>
+<li><p><strong>Hybrid approach</strong>: For best overall performance:</p>
+<ul>
+<li>Keep <code>Mask2D</code>/<code>Line2D</code> data in append-only storage (arena)</li>
+<li>Maintain parallel vectors of trivially-copyable metadata (TimeFrameIndex, EntityId)</li>
+<li>Use hash maps for O(1) EntityId lookup</li>
+<li>Views hold index vectors referencing the source data</li>
+</ul></li>
+</ol>
+</section>
+<section id="derived-storage-views-performance" class="level2">
+<h2 class="anchored" data-anchor-id="derived-storage-views-performance">Derived Storage (Views) Performance</h2>
+<p>When creating filtered views that reference source data without copying, we measured the overhead of index indirection.</p>
+<section id="results-2" class="level3">
+<h3 class="anchored" data-anchor-id="results-2">Results</h3>
+<pre><code>=============================================================================
+Derived Storage Overhead Benchmark
+=============================================================================
+
+Configuration:
+  Source entries: 200000
+  View size: 10000 (5% of source)
+
+-----------------------------------------------------------------------------
+SEQUENTIAL ITERATION (all elements)
+-----------------------------------------------------------------------------
+Direct array access:     7438.8 µs  (37.2 ns/element)
+Source (virtual):        6958.1 µs  (34.8 ns/element)
+Derived 'all' view:      6627.0 µs  (33.1 ns/element)
+
+Overhead analysis (vs direct array):
+  Virtual dispatch:      0.94x
+  View indirection:      0.89x
+
+-----------------------------------------------------------------------------
+FILTERED VIEW ITERATION (subset)
+-----------------------------------------------------------------------------
+Filtered view (9742 entries): 1724.7 µs  (177.0 ns/element)
+Source + filter check:   7853.9 µs  (scanning all 200000)
+
+Filtered view speedup:   4.6x faster
+
+-----------------------------------------------------------------------------
+CACHE EFFECTS: SEQUENTIAL vs RANDOM VIEW INDICES
+-----------------------------------------------------------------------------
+Sequential indices:      306.9 µs  (30.7 ns/element)
+Random indices:          1670.0 µs  (171.2 ns/element)
+
+Cache penalty:           5.44x slower
+
+-----------------------------------------------------------------------------
+MEMORY OVERHEAD
+-----------------------------------------------------------------------------
+Source storage:
+  Total:                  30468 KB
+
+Derived view (9742 entries):
+  Index vector:           76 KB
+  Local EntityId map:     152 KB
+  Data copied:            0 KB (references source)
+  Total:                  228 KB
+
+Memory savings:          82.9% vs full copy</code></pre>
+</section>
+<section id="analysis-2" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-2">Analysis</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Result</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Virtual dispatch overhead</td>
+<td><strong>0.94x</strong> (faster!)</td>
+<td>Compiler optimizes well</td>
+</tr>
+<tr class="even">
+<td>Index indirection overhead</td>
+<td><strong>0.89x</strong> (faster!)</td>
+<td>CPU prefetching helps</td>
+</tr>
+<tr class="odd">
+<td>Filtered iteration</td>
+<td><strong>4.6x faster</strong></td>
+<td>vs scanning all + filter check</td>
+</tr>
+<tr class="even">
+<td>Cache penalty (random indices)</td>
+<td><strong>5.4x slower</strong></td>
+<td>171 ns vs 31 ns per element</td>
+</tr>
+<tr class="odd">
+<td>Memory savings</td>
+<td><strong>83%</strong></td>
+<td>228 KB view vs full copy</td>
+</tr>
+<tr class="even">
+<td>View creation</td>
+<td><strong>233 ns/EntityId</strong></td>
+<td>One-time cost</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key insights:</strong></p>
+<ol type="1">
+<li><p><strong>Virtual dispatch is essentially free</strong> - The compiler devirtualizes with <code>-O3</code></p></li>
+<li><p><strong>Index indirection overhead is negligible</strong> for sequential access due to CPU prefetching</p></li>
+<li><p><strong>The REAL cost is cache misses</strong> with random access patterns (5.4x penalty)</p></li>
+<li><p><strong>Views pay for themselves quickly</strong> - Creation cost is amortized in &lt; 1 iteration</p></li>
+<li><p><strong>Sort view indices</strong> when possible for cache-friendly access</p></li>
+</ol>
+</section>
+</section>
+<section id="crtp-variant-vs-virtual-inheritance" class="level2">
+<h2 class="anchored" data-anchor-id="crtp-variant-vs-virtual-inheritance">CRTP + Variant vs Virtual Inheritance</h2>
+<p>An alternative to virtual inheritance for polymorphic storage is the CRTP (Curiously Recurring Template Pattern) combined with <code>std::variant</code> for type erasure. This pattern is already used in <code>AnalogDataStorage.hpp</code>.</p>
+<section id="the-two-approaches" class="level3">
+<h3 class="anchored" data-anchor-id="the-two-approaches">The Two Approaches</h3>
+<p><strong>Virtual Inheritance (Classic OOP):</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> TData<span class="op">&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IRaggedStorage <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="op">~</span>IRaggedStorage<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> TData <span class="at">const</span><span class="op">&amp;</span> getData<span class="op">(</span><span class="dt">size_t</span> idx<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... other pure virtual methods</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SourceStorage <span class="op">:</span> <span class="kw">public</span> IRaggedStorage<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">};</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DerivedStorage <span class="op">:</span> <span class="kw">public</span> IRaggedStorage<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">};</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage via base pointer</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>IRaggedStorage<span class="op">&lt;</span>Mask2D<span class="op">&gt;&gt;</span> storage <span class="op">=</span> <span class="co">/*...*/</span><span class="op">;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span><span class="op">&amp;</span> data <span class="op">=</span> storage<span class="op">-&gt;</span>getData<span class="op">(</span>i<span class="op">);</span>  <span class="co">// vtable dispatch</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>CRTP + Variant (Modern C++):</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> Derived<span class="op">,</span> <span class="kw">typename</span> TData<span class="op">&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> StorageBase <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Static dispatch via CRTP</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span>Derived <span class="at">const</span><span class="op">*&gt;(</span><span class="kw">this</span><span class="op">)-&gt;</span>sizeImpl<span class="op">();</span> </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SourceStorage <span class="op">:</span> <span class="kw">public</span> StorageBase<span class="op">&lt;</span>SourceStorage<span class="op">,</span> Mask2D<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">};</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DerivedStorage <span class="op">:</span> <span class="kw">public</span> StorageBase<span class="op">&lt;</span>DerivedStorage<span class="op">,</span> Mask2D<span class="op">&gt;</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">};</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Type erasure via variant</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StorageVariant <span class="op">=</span> <span class="bu">std::</span>variant<span class="op">&lt;</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>SourceStorage<span class="op">&gt;,</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DerivedStorage<span class="op">&gt;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;;</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>StorageVariant storage <span class="op">=</span> <span class="co">/*...*/</span><span class="op">;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span><span class="op">&amp;</span> data <span class="op">=</span> <span class="bu">std::</span>visit<span class="op">([</span>i<span class="op">](</span><span class="kw">auto</span><span class="op">&amp;</span> ptr<span class="op">)</span> <span class="op">-&gt;</span> <span class="kw">auto</span><span class="op">&amp;</span> <span class="op">{</span> </span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ptr<span class="op">-&gt;</span>getData<span class="op">(</span>i<span class="op">);</span> </span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="op">},</span> storage<span class="op">);</span>  <span class="co">// std::visit dispatch</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="results-3" class="level3">
+<h3 class="anchored" data-anchor-id="results-3">Results</h3>
+<pre><code>=============================================================================
+CRTP + Variant vs Virtual Inheritance Benchmark
+=============================================================================
+
+Configuration:
+  Entries: 200000
+  View size: 10000
+  Iterations: 100
+
+=============================================================================
+PART 1: Point2D (trivially copyable) - Isolating Dispatch Overhead
+=============================================================================
+
+POINT2D: SEQUENTIAL ITERATION (dispatch overhead visible)
+Virtual (base ptr):      691.7 µs  (3.5 ns/elem)
+CRTP (direct):           332.3 µs  (1.7 ns/elem)
+CRTP (variant):          320.8 µs  (1.6 ns/elem)
+
+Speedup vs Virtual:
+  CRTP direct:  2.08x
+  CRTP variant: 2.16x
+
+=============================================================================
+PART 2: Mask2D (non-trivially copyable) - Data Access Dominates
+=============================================================================
+
+SOURCE STORAGE: SEQUENTIAL ITERATION
+Virtual (base ptr):      7366.7 µs  (36.8 ns/elem)
+CRTP (direct):           6635.9 µs  (33.2 ns/elem)
+CRTP (variant):          7000.2 µs  (35.0 ns/elem)
+
+Speedup vs Virtual:
+  CRTP direct:  1.11x
+  CRTP variant: 1.05x
+
+ENTITY ID LOOKUP (10000 lookups)
+Virtual:                 4406.9 µs  (440.7 ns/lookup)
+CRTP (direct):           3778.3 µs  (377.8 ns/lookup)
+CRTP (variant):          2993.7 µs  (299.4 ns/lookup)
+
+Speedup vs Virtual:
+  CRTP direct:  1.17x
+  CRTP variant: 1.47x</code></pre>
+</section>
+<section id="analysis-summary" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-summary">Analysis Summary</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Access Pattern</th>
+<th>Virtual</th>
+<th>CRTP Direct</th>
+<th>CRTP Variant</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Point2D iteration</td>
+<td>3.5 ns/elem</td>
+<td><strong>1.7 ns</strong></td>
+<td><strong>1.6 ns</strong></td>
+</tr>
+<tr class="even">
+<td>Mask2D iteration</td>
+<td>36.8 ns/elem</td>
+<td>33.2 ns</td>
+<td>35.0 ns</td>
+</tr>
+<tr class="odd">
+<td>EntityId lookup</td>
+<td>440.7 ns</td>
+<td>377.8 ns</td>
+<td><strong>299.4 ns</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key insights:</strong></p>
+<ol type="1">
+<li><p><strong>CRTP is 2× faster for lightweight data</strong> (Point2D):</p>
+<ul>
+<li>Dispatch overhead becomes visible when data access is cheap</li>
+<li>Both direct and variant approaches eliminate vtable lookup</li>
+</ul></li>
+<li><p><strong>When data access dominates, dispatch doesn’t matter</strong>:</p>
+<ul>
+<li>For Mask2D (vector-backed), virtual vs CRTP vs variant are within 10%</li>
+<li>The CPU spends most time chasing pointers, not dispatching</li>
+</ul></li>
+<li><p><strong>CRTP Variant wins on hash lookups</strong> (1.47× faster):</p>
+<ul>
+<li><code>std::visit</code> can be faster than virtual when compiler can see all types</li>
+<li>Better inlining opportunities</li>
+</ul></li>
+<li><p><strong>When to use each approach</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Virtual</td>
+<td>Open extension (plugins), external libraries</td>
+</tr>
+<tr class="even">
+<td>CRTP Direct</td>
+<td>Maximum performance, type known at compile time</td>
+</tr>
+<tr class="odd">
+<td>CRTP Variant</td>
+<td>Closed type set, value semantics, pattern matching</td>
+</tr>
+</tbody>
+</table></li>
+<li><p><strong>CRTP + Variant advantages</strong>:</p>
+<ul>
+<li>No heap allocation for small types (in-place storage)</li>
+<li>Exhaustive handling enforced by compiler (<code>std::visit</code>)</li>
+<li>No virtual destructor overhead</li>
+<li>Better optimization across type boundaries</li>
+</ul></li>
+<li><p><strong>CRTP + Variant disadvantages</strong>:</p>
+<ul>
+<li>More complex code</li>
+<li>All types must be known at compile time</li>
+<li>Larger object size (variant stores largest type + discriminant)</li>
+<li>Recompile required to add new types</li>
+</ul></li>
+</ol>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -41,7 +41,7 @@ void DataViewerSelectionManager::clear() {
     emit selectionCleared();
 
     // Emit individual change signals for each previously selected entity
-    for (EntityId const id : previously_selected) {
+    for (EntityId const id: previously_selected) {
         emit selectionChanged(id, false);
     }
 
@@ -60,7 +60,7 @@ void DataViewerSelectionManager::handleEntityClick(EntityId id, bool ctrl_presse
         _selected_entities.clear();
         emit selectionCleared();
 
-        for (EntityId const old_id : previously_selected) {
+        for (EntityId const old_id: previously_selected) {
             if (old_id != id) {
                 emit selectionChanged(old_id, false);
             }

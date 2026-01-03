@@ -92,19 +92,19 @@ namespace {
     // Layout provides: offset = lane center, gain = half_height of lane
     // Apply 80% margin factor within allocated space
     constexpr float margin_factor = 0.8f;
-    
+
     // Global scaling affects the amplitude within the lane, NOT the lane position
     // So we apply global_zoom to the gain only
     float const lane_half_height = layout.y_transform.gain * margin_factor;
     float const effective_gain = lane_half_height * global_zoom * global_vertical_scale;
-    
+
     // Final transform:
     // 1. Apply data_transform to normalize the raw data
     // 2. Scale by effective_gain (includes layout height + global zoom)
     // 3. Translate to lane center (layout.offset is NOT scaled by global_zoom)
     float const final_gain = data_transform.gain * effective_gain;
     float const final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
-    
+
     return CorePlotting::LayoutTransform{final_offset, final_gain};
 }
 
@@ -151,8 +151,8 @@ namespace {
 [[nodiscard]] CorePlotting::LayoutTransform composeIntervalYTransform(
         CorePlotting::SeriesLayout const & layout,
         float margin_factor,
-        [[maybe_unused]] float global_zoom,      // Intentionally ignored for intervals
-        [[maybe_unused]] float global_vertical_scale) {  // Intentionally ignored for intervals
+        [[maybe_unused]] float global_zoom,            // Intentionally ignored for intervals
+        [[maybe_unused]] float global_vertical_scale) {// Intentionally ignored for intervals
 
     // Intervals map [-1, 1] to allocated space with margin only
     // Note: layout.y_transform.gain already represents half-height (maps [-1,1] to allocated space)
@@ -170,7 +170,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
     setMouseTracking(true);// Enable mouse tracking for hover events
 
-    // Initialize data store (Phase 3)
+    // Initialize data store
     _data_store = std::make_unique<DataViewer::TimeSeriesDataStore>(this);
     connect(_data_store.get(), &DataViewer::TimeSeriesDataStore::layoutDirty, this, [this]() {
         _cache_state.layout_response_dirty = true;
@@ -197,7 +197,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         DataViewer::SeriesInfo info;
         info.type = result->first;
         info.key = result->second;
-        
+
         // Get analog value if applicable
         if (info.type == "Analog") {
             info.value = canvasYToAnalogValue(canvas_y, info.key);
@@ -208,7 +208,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 
     // Initialize input handler
     _input_handler = std::make_unique<DataViewer::DataViewerInputHandler>(this);
-    
+
     // Connect input handler signals
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::panDelta, this, [this](float normalized_dy) {
         _view_state.applyVerticalPanDelta(normalized_dy);
@@ -242,10 +242,10 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
                 glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
                 glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
                 _interaction_manager->startIntervalCreation(
-                    series_key,
-                    static_cast<float>(start_pos.x()),
-                    static_cast<float>(start_pos.y()),
-                    fill_color, stroke_color);
+                        series_key,
+                        static_cast<float>(start_pos.x()),
+                        static_cast<float>(start_pos.y()),
+                        fill_color, stroke_color);
                 _input_handler->setInteractionActive(true);
                 return;
             }
@@ -274,7 +274,7 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
 
     // Initialize interaction manager
     _interaction_manager = std::make_unique<DataViewer::DataViewerInteractionManager>(this);
-    
+
     // Connect interaction manager signals
     connect(_interaction_manager.get(), &DataViewer::DataViewerInteractionManager::modeChanged, this, [this](DataViewer::InteractionMode mode) {
         emit interactionModeChanged(mode);
@@ -419,7 +419,7 @@ void OpenGLWidget::cleanup() {
         _scene_renderer.reset();
     }
 
-    // Cleanup AxisRenderer (Phase 5)
+    // Cleanup AxisRenderer
     if (_axis_renderer) {
         _axis_renderer->cleanup();
         _axis_renderer.reset();
@@ -488,7 +488,7 @@ void OpenGLWidget::initializeGL() {
         _scene_renderer.reset();
     }
 
-    // Initialize AxisRenderer (Phase 5)
+    // Initialize AxisRenderer
     _axis_renderer = std::make_unique<PlottingOpenGL::AxisRenderer>();
     if (!_axis_renderer->initialize()) {
         std::cerr << "Warning: Failed to initialize AxisRenderer" << std::endl;
@@ -519,7 +519,7 @@ void OpenGLWidget::paintGL() {
 
     drawGridLines();
 
-    // Phase 5 unified controller preview overlay
+    //unified controller preview overlay
     drawInteractionPreview();
 }
 
@@ -552,7 +552,7 @@ void OpenGLWidget::drawAxis() {
     float r, g, b;
     hexToRGB(_theme_state.axis_color, r, g, b);
 
-    // Configure axis (Phase 5: using AxisRenderer)
+    // Configure axis using AxisRenderer
     PlottingOpenGL::AxisConfig axis_config;
     axis_config.x_position = 0.0f;
     axis_config.y_min = _view_state.y_min;
@@ -576,14 +576,10 @@ void OpenGLWidget::addAnalogTimeSeries(
         std::string const & key,
         std::shared_ptr<AnalogTimeSeries> series,
         std::string const & color) {
-    // Delegate to TimeSeriesDataStore (Phase 3)
-    // The data store handles display options creation, color assignment,
-    // intrinsic property calculation, and emits layoutDirty signal
     _data_store->addAnalogSeries(key, std::move(series), color);
 }
 
 void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
-    // Delegate to TimeSeriesDataStore (Phase 3)
     _data_store->removeAnalogSeries(key);
 }
 
@@ -591,12 +587,10 @@ void OpenGLWidget::addDigitalEventSeries(
         std::string const & key,
         std::shared_ptr<DigitalEventSeries> series,
         std::string const & color) {
-    // Delegate to TimeSeriesDataStore (Phase 3)
     _data_store->addEventSeries(key, std::move(series), color);
 }
 
 void OpenGLWidget::removeDigitalEventSeries(std::string const & key) {
-    // Delegate to TimeSeriesDataStore (Phase 3)
     _data_store->removeEventSeries(key);
 }
 
@@ -604,17 +598,14 @@ void OpenGLWidget::addDigitalIntervalSeries(
         std::string const & key,
         std::shared_ptr<DigitalIntervalSeries> series,
         std::string const & color) {
-    // Delegate to TimeSeriesDataStore (Phase 3)
     _data_store->addIntervalSeries(key, std::move(series), color);
 }
 
 void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
-    // Delegate to TimeSeriesDataStore (Phase 3)
     _data_store->removeIntervalSeries(key);
 }
 
 void OpenGLWidget::clearSeries() {
-    // Delegate to TimeSeriesDataStore (Phase 3)
     _data_store->clearAll();
 }
 
@@ -623,7 +614,7 @@ void OpenGLWidget::drawGridLines() {
         return;// Grid lines are disabled or renderer not ready
     }
 
-    // Configure grid (Phase 5: using AxisRenderer)
+    // Configure grid
     PlottingOpenGL::GridConfig grid_config;
     grid_config.time_start = _view_state.time_start;
     grid_config.time_end = _view_state.time_end;
@@ -698,7 +689,7 @@ float OpenGLWidget::canvasXToTime(float canvas_x) const {
 }
 
 float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & series_key) const {
-    // Find the series using data store (Phase 3)
+    // Find the series using data store
     auto const & analog_series = _data_store->analogSeries();
     auto const analog_it = analog_series.find(series_key);
     if (analog_it == analog_series.end()) {
@@ -716,12 +707,10 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     if (series_layout) {
         layout = *series_layout;
     } else {
-        // Fallback to display_options layout
+        // Fallback to display_options layout_transform
         layout = CorePlotting::SeriesLayout{
                 series_key,
-                CorePlotting::LayoutTransform{
-                        display_options->layout.allocated_y_center,
-                        display_options->layout.allocated_height * 0.5f},
+                display_options->layout_transform,
                 0};
     }
 
@@ -768,82 +757,6 @@ std::unordered_set<EntityId> const & OpenGLWidget::getSelectedEntities() const {
     return _selection_manager->selectedEntities();
 }
 
-// Interval edge dragging methods
-CorePlotting::HitTestResult OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
-
-    // Ensure scene and layout are up-to-date for hit testing
-    // Note: const_cast is safe here because we're only updating cache state
-    if (_cache_state.scene_dirty || _cache_state.layout_response_dirty) {
-        // Force a scene rebuild by requesting a paint - but for hit testing
-        // during mouse events, we can use the current cached values
-        // The scene will be rebuilt on next paintGL() call
-    }
-
-    // If we have no cached scene yet (e.g., before first paint) and no selection, nothing to check
-    if (_cache_state.scene.rectangle_batches.empty() && !_selection_manager->hasSelection()) {
-        return CorePlotting::HitTestResult::noHit();
-    }
-
-    // Use DataViewerCoordinates for coordinate conversion
-    DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
-    float const world_x = coords.canvasXToWorldX(canvas_x);
-
-    // Configure hit tester with edge tolerance in world units
-    constexpr float EDGE_TOLERANCE_PX = 10.0f;
-    float const edge_tolerance = coords.pixelToleranceToWorldX(EDGE_TOLERANCE_PX);
-
-    CorePlotting::HitTestConfig config;
-    config.edge_tolerance = edge_tolerance;
-    config.point_tolerance = edge_tolerance;
-
-    CorePlotting::SceneHitTester tester(config);
-
-    // Use EntityId-based hit testing for interval edges
-    static_cast<void>(canvas_y);// Y not used for edge detection
-    return tester.findIntervalEdgeByEntityId(
-            world_x,
-            _cache_state.scene,
-            _selection_manager->selectedEntities(),
-            _cache_state.rectangle_batch_key_map);
-}
-
-CorePlotting::HitTestResult OpenGLWidget::hitTestAtPosition(float canvas_x, float canvas_y) const {
-    // If we have no cached scene yet (e.g., before first paint), return no hit
-    if (_cache_state.scene.rectangle_batches.empty() && _cache_state.scene.glyph_batches.empty()) {
-        return CorePlotting::HitTestResult::noHit();
-    }
-
-    // Use DataViewerCoordinates for coordinate conversion
-    DataViewer::DataViewerCoordinates const coords(_view_state, width(), height());
-    auto const [world_x, world_y] = coords.canvasToWorld(canvas_x, canvas_y);
-
-    // Configure hit tester with appropriate tolerances
-    constexpr float TOLERANCE_PX = 10.0f;
-    float const tolerance = coords.pixelToleranceToWorldX(TOLERANCE_PX);
-
-    CorePlotting::HitTestConfig config;
-    config.edge_tolerance = tolerance;
-    config.point_tolerance = tolerance;
-    config.prioritize_discrete = true;
-
-    CorePlotting::SceneHitTester tester(config);
-
-    // First check for intervals (body hits)
-    CorePlotting::HitTestResult result = tester.queryIntervals(
-            world_x,
-            world_y,
-            _cache_state.scene,
-            _cache_state.rectangle_batch_key_map);
-
-    // If we got an interval body hit, return it
-    if (result.hasHit() && result.hit_type == CorePlotting::HitType::IntervalBody) {
-        return result;
-    }
-
-    // TODO: Add event hit testing via queryQuadTree when needed
-
-    return CorePlotting::HitTestResult::noHit();
-}
 
 void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (_input_handler->handleDoubleClick(event)) {
@@ -853,7 +766,7 @@ void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Phase 5: Unified Interaction Mode API - now delegates to DataViewerInteractionManager
+// Interaction Mode API - delegates to DataViewerInteractionManager
 ///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::setInteractionMode(InteractionMode mode) {
@@ -1025,7 +938,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
                 }
             }
 
-            // Determine series type using data store (Phase 3)
+            // Determine series type using data store
             auto series_type_enum = _data_store->findSeriesTypeByKey(series_key);
             switch (series_type_enum) {
                 case DataViewer::SeriesType::Analog:
@@ -1051,7 +964,7 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
             world_x, world_y, _cache_state.layout_response);
 
     if (result.hasHit()) {
-        // Determine series type using data store (Phase 3)
+        // Determine series type using data store
         std::string series_type;
         auto series_type_enum = _data_store->findSeriesTypeByKey(result.series_key);
         switch (series_type_enum) {
@@ -1144,7 +1057,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cached_layout_response
 
-    // Access series through data store (Phase 3)
+    // Access series through data store
     for (auto const & [key, analog_data]: _data_store->analogSeries()) {
         auto const & series = analog_data.series;
         auto const & display_options = analog_data.display_options;
@@ -1154,12 +1067,10 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
         // Look up layout from cached response
         auto const * series_layout = _cache_state.layout_response.findLayout(key);
         if (!series_layout) {
-            // Fallback to display_options layout if not found (shouldn't happen)
+            // Fallback to display_options layout_transform if not found (shouldn't happen)
             CorePlotting::SeriesLayout fallback_layout{
                     key,
-                    CorePlotting::LayoutTransform{
-                            display_options->layout.allocated_y_center,
-                            display_options->layout.allocated_height * 0.5f},
+                    display_options->layout_transform,
                     0};
             series_layout = &fallback_layout;
         }
@@ -1210,8 +1121,11 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 builder.addGlyphBatch(std::move(batch));
             }
         } else {
-            auto batch = DataViewerHelpers::buildAnalogSeriesBatchSimplified(
-                    *series, _master_time_frame, batch_params, model_matrix);
+            // Use cached batch builder for efficient scrolling
+            // The vertex_cache is mutable, allowing updates even with const iteration
+            auto batch = DataViewerHelpers::buildAnalogSeriesBatchCached(
+                    *series, _master_time_frame, batch_params, model_matrix,
+                    analog_data.vertex_cache);
             if (!batch.vertices.empty()) {
                 builder.addPolyLineBatch(std::move(batch));
             }
@@ -1230,7 +1144,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
 
-    // Access series through data store (Phase 3)
+    // Access series through data store
     for (auto const & [key, event_data]: _data_store->eventSeries()) {
         auto const & series = event_data.series;
         auto const & display_options = event_data.display_options;
@@ -1258,9 +1172,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                 // Fallback if layout not found
                 CorePlotting::SeriesLayout fallback{
                         key,
-                        CorePlotting::LayoutTransform{
-                                display_options->layout.allocated_y_center,
-                                display_options->layout.allocated_height * 0.5f},
+                        display_options->layout_transform,
                         0};
                 y_transform = composeEventYTransform(
                         fallback, display_options->margin_factor, _view_state.global_vertical_scale);
@@ -1307,7 +1219,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     // Layout has already been computed by computeAndApplyLayout() in renderWithSceneRenderer()
     // Each series' layout is available in _cache_state.layout_response
 
-    // Access series through data store (Phase 3)
+    // Access series through data store
     for (auto const & [key, interval_data]: _data_store->intervalSeries()) {
         auto const & series = interval_data.series;
         auto const & display_options = interval_data.display_options;
@@ -1325,9 +1237,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
             // Fallback if layout not found
             CorePlotting::SeriesLayout fallback{
                     key,
-                    CorePlotting::LayoutTransform{
-                            display_options->layout.allocated_y_center,
-                            display_options->layout.allocated_height * 0.5f},
+                    display_options->layout_transform,
                     0};
             y_transform = composeIntervalYTransform(
                     fallback, display_options->margin_factor,
@@ -1362,7 +1272,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 }
 
 // =============================================================================
-// Layout System (Phase 4.9 Migration - Unified LayoutEngine)
+// Layout System with LayoutEngine)
 // =============================================================================
 
 CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
@@ -1371,7 +1281,7 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     request.viewport_y_max = _view_state.y_max;
 
     // Collect visible analog series keys and order by spike sorter config
-    // Access series through data store (Phase 3)
+    // Access series through data store
     std::vector<std::string> visible_analog_keys;
     for (auto const & [key, data]: _data_store->analogSeries()) {
         if (data.display_options->style.is_visible) {
@@ -1418,7 +1328,7 @@ void OpenGLWidget::computeAndApplyLayout() {
     // Compute layout using LayoutEngine
     _cache_state.layout_response = _layout_engine.compute(request);
 
-    // Apply computed layout to display options via data store (Phase 3)
+    // Apply computed layout to display options via data store
     _data_store->applyLayoutResponse(_cache_state.layout_response);
 
     // Note: _cache_state.rectangle_batch_key_map is now populated by SceneBuilder in renderWithSceneRenderer()

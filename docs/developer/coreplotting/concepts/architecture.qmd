@@ -1,0 +1,82 @@
+---
+title: "Architecture and Data Flow"
+format: html
+---
+
+CorePlotting allows different visualization types (DataViewer, SpatialOverlay, Raster Plots) to share a common rendering and interaction backend.
+
+## The Three-Layer Model
+
+The architecture separates visualization-specific logic from generic scene composition.
+
+### 1. Visualization Layer (Mappers)
+
+This layer understands specific data types (`AnalogTimeSeries`, `PointData`) and how they map to space.
+
+-   **Input:** Data Objects + TimeFrame + Layout
+
+-   **Output:** Ranges of `MappedElement` (x, y, entity_id)
+
+### 2. Generic Layer (SceneBuilder)
+
+This layer knows nothing about time series or biological data. It only knows about geometry.
+
+-   **Input:** Ranges of positions and IDs.
+
+-   **Output:** `RenderableScene`
+
+### 3. Rendering Layer (PlottingOpenGL)
+
+This layer consumes the scene and issues draw calls.
+
+-   **Input:** `RenderableScene`
+
+-   **Output:** Pixels on screen.
+
+## Data Flow Diagram
+
+```{mermaid}
+graph TD
+  Data[Data Manager Types] -->|LayoutEngine| Layout[SeriesLayout]     
+  Data -->|Mapper| Mapped[Mapped Elements Range]     
+  Layout -->|Mapper| Mapped          
+  
+  Mapped -->|SceneBuilder| Scene[RenderableScene]          
+  
+  subgraph RenderableScene     
+  Batches[GPU Batches]     
+  QuadTree[Spatial Index]    
+  Matrices[MVP Matrices]     
+  end          
+  
+  Scene -->|PlottingOpenGL| Screen     
+  Scene -->|HitTester| Interaction 
+```
+
+## Core Abstractions
+
+### ViewState
+
+The single source of truth for the camera.
+
+-   **TimeSeriesViewState**: Used for scrolling time-series plots. Handles buffer scope (what time range is loaded) and view (pan/zoom).
+
+-   **ViewState**: Used for spatial 2D plots.
+
+### LayoutTransform
+
+A purely geometric affine transform (`output = input * gain + offset`).
+
+-   Used to convert data units (volts, classes) into world coordinates.
+
+-   Composes data normalization (Z-score) with layout positioning (Stacking).
+
+### RenderableScene
+
+A snapshot of a frame. It contains:
+
+1.  **Batches**: `poly_line_batches`, `glyph_batches`, `rectangle_batches`.
+
+2.  **Spatial Index**: A `QuadTree` automatically built from the same data as the batches.
+
+3.  **Matrices**: Shared View and Projection matrices.

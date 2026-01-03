@@ -151,6 +151,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../examples/tabular_binary_events.html">
+ <span class="dropdown-text">Load Tabular Binary Events</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -593,6 +597,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link active" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
   <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
+  <li><a href="#timeframe" id="toc-timeframe" class="nav-link" data-scroll-target="#timeframe">TimeFrame</a></li>
   </ul>
 </nav>
     </div>
@@ -774,6 +779,237 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+</section>
+<section id="tabular-binary-events-multi_column_binary" class="level4">
+<h4 class="anchored" data-anchor-id="tabular-binary-events-multi_column_binary">Tabular Binary Events (multi_column_binary)</h4>
+<p>Use this format when you have a tabular file with a time column and multiple binary event columns (0/1 values), and you want to extract intervals from contiguous “on” regions.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"events.dat"</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"digital_interval"</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"channel_v0"</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"multi_column_binary"</span><span class="fu">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"header_lines_to_skip"</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data_column"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"delimiter"</span><span class="fu">:</span> <span class="st">"</span><span class="ch">\t</span><span class="st">"</span><span class="fu">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"binary_threshold"</span><span class="fu">:</span> <span class="dv">0</span><span class="er">.</span><span class="dv">5</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Description</th>
+<th>Required?</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filepath</td>
+<td>Path to tabular data file, relative to JSON file.</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>data_type</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“digital_interval”</td>
+</tr>
+<tr class="odd">
+<td>name</td>
+<td>Name of the data once loaded</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>format</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“multi_column_binary”</td>
+</tr>
+<tr class="odd">
+<td>header_lines_to_skip</td>
+<td>Number of lines to skip before column headers</td>
+<td>No</td>
+<td>integer</td>
+<td>Default is 5</td>
+</tr>
+<tr class="even">
+<td>time_column</td>
+<td>Column index (0-based) for timestamps</td>
+<td>No</td>
+<td>integer</td>
+<td>Default is 0</td>
+</tr>
+<tr class="odd">
+<td>data_column</td>
+<td>Column index (0-based) for binary event data</td>
+<td>No</td>
+<td>integer</td>
+<td>Default is 1</td>
+</tr>
+<tr class="even">
+<td>delimiter</td>
+<td>Column separator character</td>
+<td>No</td>
+<td>string</td>
+<td>Default is “ (tab)</td>
+</tr>
+<tr class="odd">
+<td>binary_threshold</td>
+<td>Values &gt;= threshold treated as 1 (on)</td>
+<td>No</td>
+<td>number</td>
+<td>Default is 0.5</td>
+</tr>
+<tr class="even">
+<td>sampling_rate</td>
+<td>Hz for converting fractional time to indices</td>
+<td>No</td>
+<td>number</td>
+<td>Default is 0.0</td>
+</tr>
+<tr class="odd">
+<td>clock</td>
+<td>TimeFrame to associate with intervals</td>
+<td>No</td>
+<td>string</td>
+<td>Must match a loaded TimeFrame name</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+How-To Guide
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>See <a href="../../examples/tabular_binary_events.html">How to Load Tabular Binary Event Data</a> for a complete walkthrough with examples.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="timeframe" class="level3">
+<h3 class="anchored" data-anchor-id="timeframe">TimeFrame</h3>
+<p>TimeFrame objects define the time basis for other data. Multiple formats are supported.</p>
+<section id="tabular-binary-events-multi_column_binary-1" class="level4">
+<h4 class="anchored" data-anchor-id="tabular-binary-events-multi_column_binary-1">Tabular Binary Events (multi_column_binary)</h4>
+<p>Load timestamps from a tabular file with fractional time values:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"events.dat"</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"time"</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"daq_clock"</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"multi_column_binary"</span><span class="fu">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"header_lines_to_skip"</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"time_column"</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"delimiter"</span><span class="fu">:</span> <span class="st">"</span><span class="ch">\t</span><span class="st">"</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sampling_rate"</span><span class="fu">:</span> <span class="fl">14000.0</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Description</th>
+<th>Required?</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filepath</td>
+<td>Path to tabular data file</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>data_type</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“time”</td>
+</tr>
+<tr class="odd">
+<td>name</td>
+<td>Name for the TimeFrame</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>format</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“multi_column_binary”</td>
+</tr>
+<tr class="odd">
+<td>header_lines_to_skip</td>
+<td>Lines to skip before column headers</td>
+<td>No</td>
+<td>integer</td>
+<td>Default is 5</td>
+</tr>
+<tr class="even">
+<td>time_column</td>
+<td>Column index (0-based) with timestamps</td>
+<td>No</td>
+<td>integer</td>
+<td>Default is 0</td>
+</tr>
+<tr class="odd">
+<td>delimiter</td>
+<td>Column separator</td>
+<td>No</td>
+<td>string</td>
+<td>Default is “</td>
+</tr>
+<tr class="even">
+<td>sampling_rate</td>
+<td>Multiplier to convert fractional time to integers</td>
+<td>No</td>
+<td>number</td>
+<td>Default is 1.0</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Sampling Rate Required for Fractional Times
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>TimeFrame stores integer values. Set <code>sampling_rate</code> to convert fractional seconds to integers (e.g., 14000.0 for 14kHz sampling).</p>
+</div>
+</div>
 
 
 </section>

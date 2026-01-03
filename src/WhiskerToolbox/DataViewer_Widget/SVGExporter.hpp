@@ -28,7 +28,7 @@ class TimeFrame;
  * This ensures that the SVG output matches the on-screen visualization exactly,
  * as it uses the same batch building and coordinate transformation code.
  * 
- * Architecture (Phase 2 refactoring):
+ * Architecture:
  * - Builds RenderableBatches from series data (same as OpenGL rendering)
  * - Uses CorePlotting::renderSceneToSVG() for SVG generation
  * - Shared View/Projection matrices ensure coordinate consistency

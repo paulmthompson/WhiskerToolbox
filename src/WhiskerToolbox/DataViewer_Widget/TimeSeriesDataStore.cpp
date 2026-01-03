@@ -26,9 +26,9 @@ void TimeSeriesDataStore::addAnalogSeries(std::string const & key,
     auto display_options = std::make_unique<NewAnalogTimeSeriesDisplayOptions>();
 
     // Set color
-    display_options->style.hex_color = color.empty() 
-        ? DefaultColors::getColorForIndex(_analog_series.size()) 
-        : color;
+    display_options->style.hex_color = color.empty()
+                                               ? DefaultColors::getColorForIndex(_analog_series.size())
+                                               : color;
     display_options->style.is_visible = true;
 
     // Calculate scale factor based on standard deviation
@@ -37,7 +37,7 @@ void TimeSeriesDataStore::addAnalogSeries(std::string const & key,
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
-    
+
     display_options->scale_factor = display_options->data_cache.cached_std_dev * 5.0f;
     display_options->user_scale_factor = 1.0f;// Default user scale
 
@@ -67,9 +67,9 @@ void TimeSeriesDataStore::addEventSeries(std::string const & key,
     auto display_options = std::make_unique<NewDigitalEventSeriesDisplayOptions>();
 
     // Set color
-    display_options->style.hex_color = color.empty() 
-        ? DefaultColors::getColorForIndex(_digital_event_series.size()) 
-        : color;
+    display_options->style.hex_color = color.empty()
+                                               ? DefaultColors::getColorForIndex(_digital_event_series.size())
+                                               : color;
     display_options->style.is_visible = true;
 
     _digital_event_series[key] = DigitalEventSeriesEntry{
@@ -86,9 +86,9 @@ void TimeSeriesDataStore::addIntervalSeries(std::string const & key,
     auto display_options = std::make_unique<NewDigitalIntervalSeriesDisplayOptions>();
 
     // Set color
-    display_options->style.hex_color = color.empty() 
-        ? DefaultColors::getColorForIndex(_digital_interval_series.size()) 
-        : color;
+    display_options->style.hex_color = color.empty()
+                                               ? DefaultColors::getColorForIndex(_digital_interval_series.size())
+                                               : color;
     display_options->style.is_visible = true;
 
     _digital_interval_series[key] = DigitalIntervalSeriesEntry{
@@ -150,13 +150,13 @@ void TimeSeriesDataStore::clearAll() {
     event_keys.reserve(_digital_event_series.size());
     interval_keys.reserve(_digital_interval_series.size());
 
-    for (auto const & [key, _] : _analog_series) {
+    for (auto const & [key, _]: _analog_series) {
         analog_keys.push_back(key);
     }
-    for (auto const & [key, _] : _digital_event_series) {
+    for (auto const & [key, _]: _digital_event_series) {
         event_keys.push_back(key);
     }
-    for (auto const & [key, _] : _digital_interval_series) {
+    for (auto const & [key, _]: _digital_interval_series) {
         interval_keys.push_back(key);
     }
 
@@ -169,13 +169,13 @@ void TimeSeriesDataStore::clearAll() {
     emit cleared();
 
     // Emit individual seriesRemoved signals
-    for (auto const & key : analog_keys) {
+    for (auto const & key: analog_keys) {
         emit seriesRemoved(QString::fromStdString(key));
     }
-    for (auto const & key : event_keys) {
+    for (auto const & key: event_keys) {
         emit seriesRemoved(QString::fromStdString(key));
     }
-    for (auto const & key : interval_keys) {
+    for (auto const & key: interval_keys) {
         emit seriesRemoved(QString::fromStdString(key));
     }
 
@@ -246,14 +246,14 @@ CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
         float viewport_y_min,
         float viewport_y_max,
         SpikeSorterConfigMap const & spike_sorter_configs) const {
-    
+
     CorePlotting::LayoutRequest request;
     request.viewport_y_min = viewport_y_min;
     request.viewport_y_max = viewport_y_max;
 
     // Collect visible analog series keys and order by spike sorter config
     std::vector<std::string> visible_analog_keys;
-    for (auto const & [key, data] : _analog_series) {
+    for (auto const & [key, data]: _analog_series) {
         if (data.display_options->style.is_visible) {
             visible_analog_keys.push_back(key);
         }
@@ -265,12 +265,12 @@ CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
     }
 
     // Add analog series in order
-    for (auto const & key : visible_analog_keys) {
+    for (auto const & key: visible_analog_keys) {
         request.series.emplace_back(key, CorePlotting::SeriesType::Analog, true);
     }
 
     // Add digital event series (stacked events after analog series, full-canvas events as non-stackable)
-    for (auto const & [key, data] : _digital_event_series) {
+    for (auto const & [key, data]: _digital_event_series) {
         if (!data.display_options->style.is_visible) {
             continue;
         }
@@ -280,7 +280,7 @@ CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
     }
 
     // Add digital interval series (always full-canvas, non-stackable)
-    for (auto const & [key, data] : _digital_interval_series) {
+    for (auto const & [key, data]: _digital_interval_series) {
         if (!data.display_options->style.is_visible) {
             continue;
         }
@@ -292,28 +292,25 @@ CorePlotting::LayoutRequest TimeSeriesDataStore::buildLayoutRequest(
 }
 
 void TimeSeriesDataStore::applyLayoutResponse(CorePlotting::LayoutResponse const & response) {
-    for (auto const & layout : response.layouts) {
+    for (auto const & layout: response.layouts) {
         // Find and update analog series
         auto analog_it = _analog_series.find(layout.series_id);
         if (analog_it != _analog_series.end()) {
-            analog_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
-            analog_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
+            analog_it->second.display_options->layout_transform = layout.y_transform;
             continue;
         }
 
         // Find and update digital event series
         auto event_it = _digital_event_series.find(layout.series_id);
         if (event_it != _digital_event_series.end()) {
-            event_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
-            event_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
+            event_it->second.display_options->layout_transform = layout.y_transform;
             continue;
         }
 
         // Find and update digital interval series
         auto interval_it = _digital_interval_series.find(layout.series_id);
         if (interval_it != _digital_interval_series.end()) {
-            interval_it->second.display_options->layout.allocated_y_center = layout.y_transform.offset;
-            interval_it->second.display_options->layout.allocated_height = layout.y_transform.gain * 2.0f;
+            interval_it->second.display_options->layout_transform = layout.y_transform;
             continue;
         }
     }
@@ -337,14 +334,14 @@ SeriesType TimeSeriesDataStore::findSeriesTypeByKey(std::string const & key) con
 }
 
 bool TimeSeriesDataStore::isEmpty() const {
-    return _analog_series.empty() && 
-           _digital_event_series.empty() && 
+    return _analog_series.empty() &&
+           _digital_event_series.empty() &&
            _digital_interval_series.empty();
 }
 
 size_t TimeSeriesDataStore::totalSeriesCount() const {
-    return _analog_series.size() + 
-           _digital_event_series.size() + 
+    return _analog_series.size() +
+           _digital_event_series.size() +
            _digital_interval_series.size();
 }
 

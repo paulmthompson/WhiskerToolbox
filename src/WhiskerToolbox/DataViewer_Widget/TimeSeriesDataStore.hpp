@@ -17,9 +17,9 @@
  * The store emits signals when series are added/removed, allowing the parent
  * widget and other observers to react appropriately.
  * 
- * @see REFACTORING_ROADMAP.md Phase 3
  */
 
+#include "AnalogVertexCache.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
@@ -47,6 +47,9 @@ namespace DataViewer {
 struct AnalogSeriesEntry {
     std::shared_ptr<AnalogTimeSeries> series;
     std::unique_ptr<NewAnalogTimeSeriesDisplayOptions> display_options;
+
+    /// Vertex cache for efficient scrolling (initialized lazily)
+    mutable AnalogVertexCache vertex_cache;
 };
 
 /**

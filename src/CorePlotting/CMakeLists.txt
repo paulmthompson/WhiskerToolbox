@@ -9,9 +9,8 @@ set(COREPLOTTING_SOURCES
     Mappers/TimeSeriesMapper.hpp
     Mappers/SpatialMapper.hpp
     Mappers/RasterMapper.hpp
-    # DataTypes (style, layout result, cache - used by widgets)
+    # DataTypes (style, cache - used by widgets)
     DataTypes/SeriesStyle.hpp
-    DataTypes/SeriesLayoutResult.hpp
     DataTypes/SeriesDataCache.hpp
     # SceneGraph
     SceneGraph/RenderablePrimitives.hpp
@@ -19,10 +18,10 @@ set(COREPLOTTING_SOURCES
     SceneGraph/SceneBuilder.hpp
     SceneGraph/SceneBuilder.cpp
     # CoordinateTransform
+    CoordinateTransform/InverseTransform.cpp 
+    CoordinateTransform/InverseTransform.hpp
     CoordinateTransform/Matrices.hpp
     CoordinateTransform/Matrices.cpp
-    CoordinateTransform/ScreenToWorld.hpp
-    CoordinateTransform/ScreenToWorld.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/TimeRange.hpp
@@ -31,7 +30,6 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/SeriesCoordinateQuery.hpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
-    CoordinateTransform/InverseTransform.hpp
     # Layout
     Layout/LayoutTransform.hpp
     Layout/NormalizationHelpers.hpp
@@ -58,7 +56,6 @@ set(COREPLOTTING_SOURCES
     Interaction/LineInteractionController.cpp
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.hpp
-    Interaction/IntervalDragController.hpp
     # Export
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp
