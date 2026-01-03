@@ -3,8 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/Export/SVGPrimitives.hpp"
-#include "CorePlotting/Layout/NormalizationHelpers.hpp"
-#include "CorePlotting/Layout/SeriesLayout.hpp"
+#include "TransformComposers.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
@@ -20,108 +19,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
-
-// ============================================================================
-// Transform composition functions (matching OpenGLWidget patterns)
-// ============================================================================
-// These functions compose data normalization + layout + user adjustments into
-// a single LayoutTransform, following DESIGN.md guidelines.
-
-namespace {
-
-/**
- * @brief Compose Y transform for analog series rendering
- * 
- * Follows the pattern from CorePlotting/DESIGN.md:
- * 1. Data normalization (z-score style: maps ±3σ to ±1)
- * 2. User adjustments (intrinsic scale, user scale, vertical offset)
- * 3. Layout positioning (from LayoutEngine)
- * 4. Global scaling (from ViewState) - applied to amplitude only, NOT position
- */
-[[nodiscard]] CorePlotting::LayoutTransform composeAnalogYTransform(
-        CorePlotting::SeriesLayout const & layout,
-        float data_mean,
-        float std_dev,
-        float intrinsic_scale,
-        float user_scale_factor,
-        float user_vertical_offset,
-        float global_zoom,
-        float global_vertical_scale) {
-
-    // Use NormalizationHelpers to create the data normalization transform
-    // forStdDevRange maps mean ± 3*std_dev to ±1
-    auto data_norm = CorePlotting::NormalizationHelpers::forStdDevRange(data_mean, std_dev, 3.0f);
-
-    // User adjustments: additional scaling and offset
-    auto user_adj = CorePlotting::NormalizationHelpers::manual(
-            intrinsic_scale * user_scale_factor,
-            user_vertical_offset);
-
-    // Compose data normalization with user adjustments
-    auto data_transform = user_adj.compose(data_norm);
-
-    // Layout provides: offset = lane center, gain = half_height of lane
-    // Apply 80% margin factor within allocated space
-    constexpr float margin_factor = 0.8f;
-
-    // Global scaling affects the amplitude within the lane, NOT the lane position
-    float const lane_half_height = layout.y_transform.gain * margin_factor;
-    float const effective_gain = lane_half_height * global_zoom * global_vertical_scale;
-
-    // Final transform
-    float const final_gain = data_transform.gain * effective_gain;
-    float const final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
-
-    return CorePlotting::LayoutTransform{final_offset, final_gain};
-}
-
-/**
- * @brief Compose Y transform for event series (stacked mode)
- */
-[[nodiscard]] CorePlotting::LayoutTransform composeEventYTransform(
-        CorePlotting::SeriesLayout const & layout,
-        float margin_factor,
-        float global_vertical_scale) {
-
-    float const half_height = layout.y_transform.gain * margin_factor * global_vertical_scale;
-    float const center = layout.y_transform.offset;
-
-    return CorePlotting::LayoutTransform{center, half_height};
-}
-
-/**
- * @brief Compose Y transform for event series (full canvas mode)
- */
-[[nodiscard]] CorePlotting::LayoutTransform composeEventFullCanvasYTransform(
-        float viewport_y_min,
-        float viewport_y_max,
-        float margin_factor) {
-
-    float const height = (viewport_y_max - viewport_y_min) * margin_factor;
-    float const center = (viewport_y_max + viewport_y_min) * 0.5f;
-    float const half_height = height * 0.5f;
-
-    return CorePlotting::LayoutTransform{center, half_height};
-}
-
-/**
- * @brief Compose Y transform for interval series
- */
-[[nodiscard]] CorePlotting::LayoutTransform composeIntervalYTransform(
-        CorePlotting::SeriesLayout const & layout,
-        float margin_factor,
-        [[maybe_unused]] float global_zoom,
-        [[maybe_unused]] float global_vertical_scale) {
-
-    // Intervals map [-1, 1] to allocated space with margin only
-    // We do NOT apply global_zoom here - intervals should fill their allocated space
-    float const half_height = layout.y_transform.gain * margin_factor;
-    float const center = layout.y_transform.offset;
-
-    return CorePlotting::LayoutTransform{center, half_height};
-}
-
-}// anonymous namespace
 
 SVGExporter::SVGExporter(OpenGLWidget * gl_widget)
     : gl_widget_(gl_widget) {
@@ -261,7 +158,7 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
             0};
 
     // Compose Y transform using the new LayoutTransform-based pattern
-    CorePlotting::LayoutTransform y_transform = composeAnalogYTransform(
+    CorePlotting::LayoutTransform y_transform = DataViewer::composeAnalogYTransform(
             layout,
             display_options.data_cache.cached_mean,
             display_options.data_cache.cached_std_dev,
@@ -320,9 +217,9 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     // Compose Y transform based on plotting mode
     CorePlotting::LayoutTransform y_transform;
     if (display_options.plotting_mode == EventPlottingMode::FullCanvas) {
-        y_transform = composeEventFullCanvasYTransform(y_min, y_max, display_options.margin_factor);
+        y_transform = DataViewer::composeEventFullCanvasYTransform(y_min, y_max, display_options.margin_factor);
     } else {
-        y_transform = composeEventYTransform(layout, display_options.margin_factor, view_state.global_vertical_scale);
+        y_transform = DataViewer::composeEventYTransform(layout, display_options.margin_factor, view_state.global_vertical_scale);
     }
 
     // Create model matrix from composed transform
@@ -373,7 +270,7 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
             0};
 
     // Compose Y transform for intervals
-    CorePlotting::LayoutTransform y_transform = composeIntervalYTransform(
+    CorePlotting::LayoutTransform y_transform = DataViewer::composeIntervalYTransform(
             layout,
             display_options.margin_factor,
             view_state.global_zoom,
