@@ -95,28 +95,6 @@ struct TimeIndexAndFrame {
         : index(time_frame_index), time_frame(time_frame_ptr) {}
 };
 
-
-
-
-/**
- * @brief Converts a time index from one TimeFrame to another.
- *
- * If the time value's original frame (`source_time_frame`) is the same as the series'
- * data frame (`destination_time_frame`), the time value is returned as is.
- * Otherwise, the time value (which is a time in `source_time_frame`) is converted
- * to an index within the `destination_time_frame`.
- *
- * @param time_value_in_source_frame The time value, expressed in `source_value_frame` coordinates.
- * @param source_time_frame The TimeFrame in which `time_value_in_source_frame` is defined.
- * @param destination_time_frame The TimeFrame associated with the data series being queried. This
- *                          also serves as the target frame for index conversion if frames differ.
- * @return The original `time_value_in_source_frame` if frames are the same object instance,
- *         or the corresponding index in `destination_time_frame` if frames are different.
- */
-TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
-                              TimeFrame const * source_time_frame,
-                              TimeFrame const * destination_time_frame);
-
 /**
  * @brief Converts a time index range from one TimeFrame to another.
  *
@@ -137,6 +115,18 @@ TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
         TimeFrameIndex stop_index,
         TimeFrame const & from_time_frame,
         TimeFrame const & to_time_frame);
+
+/**
+ * @brief Convert a time index from one TimeFrame to another.
+ *
+ * @param time The time index to convert.
+ * @param source_timeframe The source TimeFrame.
+ * @param target_timeframe The target TimeFrame.
+ * @return The converted time index.
+ */
+TimeFrameIndex convert_time_index(TimeFrameIndex const time,
+    TimeFrame const * source_timeframe,
+    TimeFrame const * target_timeframe);
 
 // ========== Filename-based TimeFrame Creation ==========
 
@@ -186,16 +176,5 @@ struct FilenameTimeFrameOptions {
  */
 std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions const & options);
 
-/**
- * @brief Convert a time index from one TimeFrame to another.
- *
- * @param time The time index to convert.
- * @param source_timeframe The source TimeFrame.
- * @param target_timeframe The target TimeFrame.
- * @return The converted time index.
- */
-TimeFrameIndex convert_time_index(TimeFrameIndex const time,
-    TimeFrame const * source_timeframe,
-    TimeFrame const * target_timeframe);
     
 #endif// TIMEFRAME_HPP

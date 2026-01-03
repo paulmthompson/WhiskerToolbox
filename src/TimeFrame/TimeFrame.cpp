@@ -60,18 +60,6 @@ int TimeFrame::checkFrameInbounds(int frame_id) const {
     return frame_id;
 }
 
-TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
-                                     TimeFrame const * source_time_frame,
-                                     TimeFrame const * destination_time_frame) {
-    if (source_time_frame == destination_time_frame) {
-        // Frames are the same. The time value can be used directly.
-        return source_index;
-    } else {
-        auto destination_index = destination_time_frame->getIndexAtTime(static_cast<float>(source_index.getValue()));
-        return destination_index;
-    }
-}
-
 std::pair<TimeFrameIndex, TimeFrameIndex> convertTimeFrameRange(
         TimeFrameIndex const start_index,
         TimeFrameIndex const stop_index,
@@ -87,6 +75,20 @@ std::pair<TimeFrameIndex, TimeFrameIndex> convertTimeFrameRange(
     auto target_stop_index = to_time_frame.getIndexAtTime(static_cast<float>(stop_time_value));
 
     return {target_start_index, target_stop_index};
+}
+
+TimeFrameIndex convert_time_index(TimeFrameIndex const time,
+                                  TimeFrame const * source_timeframe,
+                                  TimeFrame const * target_timeframe) {
+    if (source_timeframe == target_timeframe) {
+        return time;
+    }
+    if (!source_timeframe || !target_timeframe) {
+        return time;
+    }
+    auto const time_value = source_timeframe->getTimeAtIndex(time);
+    auto const target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
+    return target_index;
 }
 
 // ========== Filename-based TimeFrame Creation Implementation ==========
@@ -212,18 +214,4 @@ std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions
         std::cerr << "Error creating TimeFrame from filenames: " << e.what() << std::endl;
         return nullptr;
     }
-}
-
-TimeFrameIndex convert_time_index(TimeFrameIndex const time,
-                                  TimeFrame const * source_timeframe,
-                                  TimeFrame const * target_timeframe) {
-    if (source_timeframe == target_timeframe) {
-        return time;
-    }
-    if (!source_timeframe || !target_timeframe) {
-        return time;
-    }
-    auto const time_value = source_timeframe->getTimeAtIndex(time);
-    auto const target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
-    return target_index;
 }
