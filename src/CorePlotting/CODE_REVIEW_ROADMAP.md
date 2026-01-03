@@ -208,19 +208,6 @@ float dist = y_dist;  // For intervals, X is always inside
 
 ---
 
-### 4.3 Review Generic createModelMatrix Usage
-
-**File**: [CoordinateTransform/Matrices.cpp](CoordinateTransform/Matrices.cpp#L25-L30)
-
-**Issue**: `createModelMatrix(float scale_x, float scale_y, float translate_x, float translate_y)` may be unused since `SeriesMatrices.hpp` provides `createModelMatrix(LayoutTransform)`.
-
-**Action Items**:
-- [ ] Audit codebase for generic `createModelMatrix` usage
-- [ ] If unused, remove to reduce API surface
-- [ ] If used, document when to prefer each overload
-
----
-
 ### 4.4 Update or Remove Interaction/ROADMAP.md
 
 **File**: [Interaction/ROADMAP.md](Interaction/ROADMAP.md)
