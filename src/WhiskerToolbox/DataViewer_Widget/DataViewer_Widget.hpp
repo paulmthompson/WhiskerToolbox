@@ -69,22 +69,12 @@ public:
      */
     void autoArrangeVerticalSpacing();
 
-    /**
-     * @brief Print debug information about vertical spacing and positioning
-     * 
-     * Useful for diagnosing overlap and positioning issues. Prints detailed
-     * information about all series positions, bounds, and spacing.
-     */
-    void debugVerticalSpacing() const;
-
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void resizeEvent(QResizeEvent * event) override;
 private slots:
-    //void _insertRows(const std::vector<std::string>& keys);
     void _addFeatureToModel(QString const & feature, bool enabled);
-    //void _highlightAvailableFeature(int row, int column);
     void _plotSelectedFeature(std::string const & key);
     void _removeSelectedFeature(std::string const & key);
     void _plotSelectedFeatureWithoutUpdate(std::string const & key);
@@ -133,30 +123,6 @@ private:
      * @return String identifier for the data type
      */
     std::string _convertDataType(DM_DataType dm_type) const;
-
-    /**
-     * @brief Update plotting manager dimensions when widget is resized
-     * 
-     * Called when the OpenGL widget is resized to keep coordinate calculations current.
-     */
-    void _updatePlottingManagerDimensions();
-
-    /**
-     * @brief Update OpenGL widget view bounds based on PlottingManager
-     * 
-     * Adjusts the viewport to accommodate all content from PlottingManager.
-     */
-    void _updateViewBounds();
-
-    /**
-     * @brief Apply PlottingManager coordinate allocation to OpenGL widget
-     * 
-     * Updates the positioning parameters for a specific series based on the
-     * PlottingManager's calculations.
-     * 
-     * @param series_key Key of the series to update
-     */
-    void _applyPlottingManagerAllocation(std::string const & series_key);
 
     void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
 
