@@ -4,6 +4,7 @@
 #include "CoreGeometry/points.hpp"
 #include "CorePlotting/Interaction/GlyphPreview.hpp"
 #include "CorePlotting/Interaction/PolygonInteractionController.hpp"
+#include "ISelectionHandler.hpp"
 #include "SelectionModes.hpp"
 
 #include <QMatrix4x4>
@@ -46,56 +47,23 @@ private:
  * state management and preview generation. The widget's PreviewRenderer handles
  * actual OpenGL rendering.
  */
-class PolygonSelectionHandler {
+class PolygonSelectionHandler : public ISelectionHandler {
 public:
-    using NotificationCallback = std::function<void()>;
-
     explicit PolygonSelectionHandler();
-    ~PolygonSelectionHandler();
+    ~PolygonSelectionHandler() override;
 
-    /**
-     * @brief Set the notification callback to be called when selection is completed
-     * @param callback The callback function to call when selection is completed
-     */
-    void setNotificationCallback(NotificationCallback callback);
+    // ISelectionHandler interface implementation
+    void setNotificationCallback(NotificationCallback callback) override;
+    void clearNotificationCallback() override;
+    [[nodiscard]] CorePlotting::Interaction::GlyphPreview getPreview() const override;
+    [[nodiscard]] bool isActive() const override;
+    void deactivate() override;
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const override { return _active_selection_region; }
 
-    /**
-     * @brief Clear the notification callback
-     */
-    void clearNotificationCallback();
-
-    /**
-     * @brief Get preview geometry for rendering via PreviewRenderer
-     * 
-     * This replaces the old render() method. The widget should call this
-     * and pass the result to PreviewRenderer::render().
-     * 
-     * @return GlyphPreview containing polygon geometry in canvas coordinates
-     */
-    [[nodiscard]] CorePlotting::Interaction::GlyphPreview getPreview() const;
-
-    /**
-     * @brief Check if polygon selection is currently active
-     * @return true if a polygon is being constructed
-     */
-    [[nodiscard]] bool isActive() const;
-
-    void deactivate();
-
-    /**
-     * @brief Get the current active selection region (if any)
-     * @return Pointer to selection region, or nullptr if none active
-     */
-    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
-
-
-    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
-
-    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos);
-
-    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
-
-    void keyPressEvent(QKeyEvent * event);
+    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) override;
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) override;
+    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) override {}
+    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     NotificationCallback _notification_callback;

@@ -4,8 +4,8 @@
 #include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
+#include "Selection/ISelectionHandler.hpp"
 #include "Selection/LineSelectionHandler.hpp"
-#include "Selection/NoneSelectionHandler.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
@@ -716,13 +716,13 @@ static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<Entity
     return comparison_polygon;
 }
 
-void MaskDataVisualization::applySelection(SelectionVariant & selection_handler) {
-    if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
-        applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
-    } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
-        applySelection(*std::get<std::unique_ptr<PointSelectionHandler>>(selection_handler));
+void MaskDataVisualization::applySelection(ISelectionHandler & selection_handler) {
+    if (auto* polygon_handler = dynamic_cast<PolygonSelectionHandler*>(&selection_handler)) {
+        applySelection(*polygon_handler);
+    } else if (auto* point_handler = dynamic_cast<PointSelectionHandler*>(&selection_handler)) {
+        applySelection(*point_handler);
     } else {
-        std::cout << "MaskDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
+        std::cout << "MaskDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler or PointSelectionHandler" << std::endl;
     }
 }
 

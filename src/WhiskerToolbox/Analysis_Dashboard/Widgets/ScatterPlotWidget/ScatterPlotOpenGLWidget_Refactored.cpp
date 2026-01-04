@@ -234,7 +234,7 @@ std::optional<QString> ScatterPlotOpenGLWidget::generateTooltipContent(QPoint co
 void ScatterPlotOpenGLWidget::makeSelection() {
     auto context = createRenderingContext();
 
-    if (_selection_handler.valueless_by_exception()) {
+    if (!_selection_handler) {
         return;
     }
 
@@ -253,7 +253,9 @@ void ScatterPlotOpenGLWidget::makeSelection() {
         return;
     }
 
-    _visualization->applySelection(_selection_handler);
+    if (_selection_handler) {
+        _visualization->applySelection(*_selection_handler);
+    }
 
     // Emit selection changed signal with updated counts
     size_t total_selected = getTotalSelectedPoints();

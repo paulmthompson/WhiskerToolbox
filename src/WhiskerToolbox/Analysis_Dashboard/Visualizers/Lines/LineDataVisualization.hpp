@@ -29,9 +29,9 @@
 #include <vector>
 
 class QOpenGLShaderProgram;
+class ISelectionHandler;
 class PolygonSelectionHandler;
 class LineSelectionHandler;
-class NoneSelectionHandler;
 class LineData;
 
 
@@ -221,7 +221,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
 
     //========== Selection Handlers ==========
 
-    void applySelection(SelectionVariant & selection_handler, RenderingContext const & context);
+    void applySelection(ISelectionHandler & selection_handler, RenderingContext const & context);
 
     /**
      * @brief Apply selection to this LineDataVisualization

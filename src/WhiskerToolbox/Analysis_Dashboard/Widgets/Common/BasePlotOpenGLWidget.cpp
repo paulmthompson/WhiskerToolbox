@@ -2,6 +2,7 @@
 #include "GenericViewAdapter.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "PlotInteractionController.hpp"
+#include "Selection/ISelectionHandler.hpp"
 #include "Selection/LineSelectionHandler.hpp"
 #include "Selection/NoneSelectionHandler.hpp"
 #include "Selection/PointSelectionHandler.hpp"
@@ -23,8 +24,6 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <QWheelEvent>
-
-#include <type_traits>
 
 BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -216,13 +215,10 @@ void BasePlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
     auto world_pos = screenToWorld(event->pos());
 
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            qDebug() << "BasePlotOpenGLWidget: Forwarding mousePressEvent to selection handler";
-            handler->mousePressEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        qDebug() << "BasePlotOpenGLWidget: Forwarding mousePressEvent to selection handler";
+        _selection_handler->mousePressEvent(event, world_pos);
+    }
 
     requestThrottledUpdate();
 
@@ -244,12 +240,9 @@ void BasePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     auto world_pos = screenToWorld(event->pos());
     emit mouseWorldMoved(world_pos.x(), world_pos.y());
 
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mouseMoveEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->mouseMoveEvent(event, world_pos);
+    }
 
     requestThrottledUpdate();
     QOpenGLWidget::mouseMoveEvent(event);
@@ -267,12 +260,9 @@ void BasePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
     auto world_pos = screenToWorld(event->pos());
 
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mouseReleaseEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->mouseReleaseEvent(event, world_pos);
+    }
 
 
     QOpenGLWidget::mouseReleaseEvent(event);
@@ -301,12 +291,9 @@ void BasePlotOpenGLWidget::leaveEvent(QEvent * event) {
 
 void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent * event) {
 
-    std::visit([event](auto & handler) {
-        if (handler) {
-            handler->keyPressEvent(event);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->keyPressEvent(event);
+    }
 
     switch (event->key()) {
         case Qt::Key_R:
@@ -363,12 +350,9 @@ void BasePlotOpenGLWidget::createSelectionHandler(SelectionMode mode) {
     }
 
     // Set up notification callback for the handler
-    std::visit([this](auto & handler) {
-        if (handler) {
-            handler->setNotificationCallback(_selection_callback);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->setNotificationCallback(_selection_callback);
+    }
 }
 
 void BasePlotOpenGLWidget::renderBackground() {
@@ -377,31 +361,13 @@ void BasePlotOpenGLWidget::renderBackground() {
 }
 
 void BasePlotOpenGLWidget::renderOverlays() {
-    auto context = createRenderingContext();
-    auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
-
-    // Render selection handler previews
-    // LineSelectionHandler and PolygonSelectionHandler use PreviewRenderer (Phase 2+3 migration)
-    // Other handlers still use their own render() methods
-    std::visit([this, &mvp_matrix](auto & handler) {
-        if (!handler) return;
-        
-        using HandlerType = std::decay_t<decltype(*handler)>;
-        if constexpr (std::is_same_v<HandlerType, LineSelectionHandler> ||
-                      std::is_same_v<HandlerType, PolygonSelectionHandler>) {
-            // Use PreviewRenderer for LineSelectionHandler and PolygonSelectionHandler
-            if (_preview_renderer.isInitialized() && handler->isActive()) {
-                auto preview = handler->getPreview();
-                if (preview.isValid()) {
-                    _preview_renderer.render(preview, width(), height());
-                }
-            }
-        } else {
-            // Other handlers still use their own render() method
-            handler->render(mvp_matrix);
+    // Render selection handler previews using PreviewRenderer (Phase 4 unified interface)
+    if (_selection_handler && _preview_renderer.isInitialized() && _selection_handler->isActive()) {
+        auto preview = _selection_handler->getPreview();
+        if (preview.isValid()) {
+            _preview_renderer.render(preview, width(), height());
         }
-    },
-               _selection_handler);
+    }
 
     // Phase 1 test: Verify PreviewRenderer works correctly
     // Uncomment the #define at top of file to render a test line in screen coordinates

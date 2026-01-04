@@ -331,6 +331,15 @@ Same pattern as LineSelectionHandler:
 
 **Objective:** Create a common interface for all selection handlers that mirrors `IGlyphInteractionController`.
 
+> **STATUS: COMPLETED** (2026-01-04)
+
+**Changes Made:**
+- Created `ISelectionHandler` interface with unified API for all selection handlers
+- Updated `LineSelectionHandler`, `PolygonSelectionHandler`, `PointSelectionHandler`, `NoneSelectionHandler` to implement `ISelectionHandler`
+- Replaced `SelectionVariant` (std::variant) with `SelectionHandler` (unique_ptr<ISelectionHandler>)
+- Removed all `std::visit` calls from widget code - now uses direct method calls
+- Updated visualizer `applySelection()` methods to use `dynamic_cast` instead of `std::holds_alternative`
+
 ### 4.1 Define ISelectionHandler Interface
 
 ```cpp
@@ -399,9 +408,9 @@ using SelectionHandler = std::unique_ptr<ISelectionHandler>;
 ```
 
 **Acceptance Criteria:**
-- [ ] All handlers implement `ISelectionHandler`
-- [ ] Widget code simplified (no more `std::visit` needed)
-- [ ] `getPreview()` works for all handler types
+- [x] All handlers implement `ISelectionHandler`
+- [x] Widget code simplified (no more `std::visit` needed)
+- [x] `getPreview()` works for all handler types
 
 ---
 
@@ -499,9 +508,9 @@ void onSelectionComplete() {
 - [x] Verify functionality unchanged ✓ (2026-01-04)
 
 ### Phase 4: Interface Unification
-- [ ] Create `ISelectionHandler` interface
-- [ ] Update all handlers to implement interface
-- [ ] Replace `SelectionVariant` with `SelectionHandler`
+- [x] Create `ISelectionHandler` interface
+- [x] Update all handlers to implement interface
+- [x] Replace `SelectionVariant` with `SelectionHandler`
 
 ### Phase 5: Widget Cleanup
 - [ ] Centralize preview rendering

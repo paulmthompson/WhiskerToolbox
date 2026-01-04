@@ -18,14 +18,13 @@
 #include <memory>
 #include <set>
 #include <unordered_set>
-#include <variant>
 #include <vector>
 
 class MaskData;
 class GroupManager;
 class QOpenGLShaderProgram;
+class ISelectionHandler;
 class PolygonSelectionHandler;
-class NoneSelectionHandler;
 class LineSelectionHandler;
 class PointSelectionHandler;
 
@@ -151,9 +150,9 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
     /**
      * @brief Apply selection to this MaskDataVisualization
-     * @param selection_handler The PolygonSelectionHandler to apply
+     * @param selection_handler The selection handler to apply
      */
-    void applySelection(SelectionVariant & selection_handler);
+    void applySelection(ISelectionHandler & selection_handler);
 
     /**
      * @brief Apply selection to this MaskDataVisualization
