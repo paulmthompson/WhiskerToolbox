@@ -176,7 +176,7 @@ protected:
 
     // Selection mode
     SelectionMode _selection_mode = SelectionMode::None;
-    SelectionVariant _selection_handler;
+    SelectionHandler _selection_handler;
     std::function<void()> _selection_callback;
 
     // View state (encapsulates zoom, pan, bounds, etc.)

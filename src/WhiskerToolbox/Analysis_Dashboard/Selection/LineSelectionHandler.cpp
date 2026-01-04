@@ -1,5 +1,7 @@
 #include "LineSelectionHandler.hpp"
 
+#include "CoreGeometry/line_geometry.hpp"
+
 #include <QDebug>
 #include <QGuiApplication>
 #include <QKeyEvent>
@@ -163,36 +165,9 @@ LineSelectionRegion::LineSelectionRegion(Point2D<float> const & start_point, Poi
 }
 
 bool LineSelectionRegion::containsPoint(Point2D<float> point) const {
-    // For line selection, we'll use a simple distance-based approach
     // A point is "contained" if it's within a certain distance of the line
-
-    auto const tolerance = 5.0;// 5 pixel tolerance
-
-    // Calculate distance from point to line segment
-    float dx = _end_point.x - _start_point.x;
-    float dy = _end_point.y - _start_point.y;
-
-    if (dx == 0.0f && dy == 0.0f) {
-        // Line is actually a point, check distance to that point
-        auto distance2 = std::pow(point.x - _start_point.x, 2) +
-                         std::pow(point.y - _start_point.y, 2);
-        return distance2 <= (tolerance * tolerance);
-    }
-
-    // Calculate the closest point on the line segment to the given point
-    float t = ((point.x - _start_point.x) * dx + (point.y - _start_point.y) * dy) / (dx * dx + dy * dy);
-
-    // Clamp t to [0, 1] to stay within the line segment
-    t = std::max(0.0f, std::min(1.0f, t));
-
-    // Calculate the closest point on the line segment
-    float closest_x = _start_point.x + t * dx;
-    float closest_y = _start_point.y + t * dy;
-
-    // Calculate distance from point to closest point on line
-    auto distance2 = std::pow(point.x - closest_x, 2) +
-                     std::pow(point.y - closest_y, 2);
-
+    auto const tolerance = 5.0; // 5 pixel tolerance
+    auto distance2 = point_to_line_segment_distance2(point, _start_point, _end_point);
     return distance2 <= (tolerance * tolerance);
 }
 

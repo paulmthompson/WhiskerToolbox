@@ -23,8 +23,4 @@ class ISelectionHandler;
  */
 using SelectionHandler = std::unique_ptr<ISelectionHandler>;
 
-// Keep the old name for backward compatibility during migration
-// TODO: Remove this alias once all usages are updated
-using SelectionVariant = SelectionHandler;
-
 #endif// SELECTIONHANDLERS_HPP
