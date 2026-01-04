@@ -418,14 +418,23 @@ using SelectionHandler = std::unique_ptr<ISelectionHandler>;
 
 **Objective:** Simplify widget code now that handlers have unified interface.
 
+> **STATUS: COMPLETED** (2026-01-04)
+
+**Changes Made:**
+- Centralized preview rendering in `BasePlotOpenGLWidget::renderOverlays()` using unified `getPreview()` interface
+- Event routing simplified - all handlers called via `_selection_handler->methodName()` directly
+- Removed all handler-specific `render(mvp_matrix)` calls
+- Removed Phase 1 test code (`PREVIEW_RENDERER_TEST_ENABLED`) as it's no longer needed
+
 ### 5.1 Centralize Preview Rendering
 
+Preview rendering is now centralized in `BasePlotOpenGLWidget::renderOverlays()`:
+
 ```cpp
-void SpatialOverlayWidget::paintGL() {
-    // ... scene rendering ...
-    
-    // Unified preview rendering
-    if (_selection_handler && _selection_handler->isActive()) {
+void BasePlotOpenGLWidget::renderOverlays() {
+    // Render selection handler previews using PreviewRenderer
+    // This unified approach replaces the old per-handler render() methods
+    if (_selection_handler && _preview_renderer.isInitialized() && _selection_handler->isActive()) {
         auto preview = _selection_handler->getPreview();
         if (preview.isValid()) {
             _preview_renderer.render(preview, width(), height());
@@ -436,17 +445,28 @@ void SpatialOverlayWidget::paintGL() {
 
 ### 5.2 Simplify Event Routing
 
+Event routing uses direct method calls on `_selection_handler`:
+
 ```cpp
-void SpatialOverlayWidget::mousePressEvent(QMouseEvent* event) {
-    QVector2D world_pos = screenToWorld(event->pos());
-    _selection_handler->mousePressEvent(event, world_pos);
-    update();
+void BasePlotOpenGLWidget::mousePressEvent(QMouseEvent* event) {
+    // ...
+    auto world_pos = screenToWorld(event->pos());
+    if (_selection_handler) {
+        _selection_handler->mousePressEvent(event, world_pos);
+    }
+    requestThrottledUpdate();
 }
 ```
 
 ### 5.3 Remove Handler-Specific render() Calls
 
-The individual `handler->render(mvp_matrix)` calls are replaced by the unified preview rendering.
+The individual `handler->render(mvp_matrix)` calls have been replaced by the unified preview rendering.
+
+**Acceptance Criteria:**
+- [x] Preview rendering centralized in base class
+- [x] Event routing uses unified ISelectionHandler interface
+- [x] No handler-specific render calls remain
+- [x] Phase 1 test code removed
 
 ---
 
@@ -513,9 +533,9 @@ void onSelectionComplete() {
 - [x] Replace `SelectionVariant` with `SelectionHandler`
 
 ### Phase 5: Widget Cleanup
-- [ ] Centralize preview rendering
-- [ ] Simplify event routing
-- [ ] Remove handler-specific render calls
+- [x] Centralize preview rendering
+- [x] Simplify event routing
+- [x] Remove handler-specific render calls
 
 ### Phase 6: DataCoordinates (Optional)
 - [ ] Evaluate if `SelectionRegion` can be replaced

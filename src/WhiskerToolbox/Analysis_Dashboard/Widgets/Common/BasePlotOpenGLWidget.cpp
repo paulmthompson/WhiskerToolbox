@@ -10,11 +10,6 @@
 #include "TooltipManager.hpp"
 #include "widget_utilities.hpp"
 
-// Phase 1 test: Uncomment to enable PreviewRenderer test rendering
-// This draws a red diagonal line to verify the renderer works correctly
-// Remove this line and associated code once Phase 2 is complete
-// #define PREVIEW_RENDERER_TEST_ENABLED
-
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -361,28 +356,14 @@ void BasePlotOpenGLWidget::renderBackground() {
 }
 
 void BasePlotOpenGLWidget::renderOverlays() {
-    // Render selection handler previews using PreviewRenderer (Phase 4 unified interface)
+    // Render selection handler previews using PreviewRenderer
+    // This unified approach replaces the old per-handler render() methods
     if (_selection_handler && _preview_renderer.isInitialized() && _selection_handler->isActive()) {
         auto preview = _selection_handler->getPreview();
         if (preview.isValid()) {
             _preview_renderer.render(preview, width(), height());
         }
     }
-
-    // Phase 1 test: Verify PreviewRenderer works correctly
-    // Uncomment the #define at top of file to render a test line in screen coordinates
-    // This should be removed once Phase 2 (LineSelectionHandler migration) is complete
-#ifdef PREVIEW_RENDERER_TEST_ENABLED
-    if (_preview_renderer.isInitialized()) {
-        CorePlotting::Interaction::GlyphPreview test_preview;
-        test_preview.type = CorePlotting::Interaction::GlyphPreview::Type::Line;
-        test_preview.line_start = {100.0f, 100.0f};
-        test_preview.line_end = {300.0f, 200.0f};
-        test_preview.stroke_color = {1.0f, 0.0f, 0.0f, 1.0f};  // Red line
-        test_preview.stroke_width = 3.0f;
-        _preview_renderer.render(test_preview, width(), height());
-    }
-#endif
 }
 
 void BasePlotOpenGLWidget::renderUI() {
