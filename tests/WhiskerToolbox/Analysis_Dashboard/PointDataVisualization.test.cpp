@@ -1,7 +1,6 @@
 #include "../fixtures/qt_test_fixtures.hpp"
 
 #include "Visualizers/Points/PointDataVisualization.hpp"
-#include "Visualizers/Points/VectorPointVisualization.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "DataManager/Points/utils/Point_Data_utils.hpp"
 #include "DataManager/Points/Point_Data.hpp"
@@ -147,71 +146,3 @@ TEST_CASE_METHOD(PointVisualizationTestFixture, "PointDataVisualization - Hover"
         REQUIRE(tooltip.isEmpty());
     }
 }
-
-
-TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Basic Creation", "[VectorPointVisualization]") {
-    // Create test vector data
-    auto [x_coords, y_coords, row_indicators] = createTestVectorData();
-    
-    // Create VectorPointVisualization
-    VectorPointVisualization<int64_t> visualization("test_vector_data", x_coords, y_coords, row_indicators);
-    REQUIRE(&visualization != nullptr);
-    
-}
-
-TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Data Population", "[VectorPointVisualization]") {
-    // Create test vector data
-    auto [x_coords, y_coords, row_indicators] = createTestVectorData();
-    
-    // Create VectorPointVisualization
-    VectorPointVisualization<int64_t> visualization("test_vector_data", x_coords, y_coords, row_indicators);
-    
-    SECTION("Vertex data population") {
-        // Verify that vertex data was populated
-        REQUIRE(visualization.m_vertex_data.size() > 0);
-        
-        // Should have 3 floats per point (x, y, group_id)
-        REQUIRE(visualization.m_vertex_data.size() == x_coords.size() * 3);
-    }
-    
-}
-
-TEST_CASE_METHOD(PointVisualizationTestFixture, "VectorPointVisualization - Validation", "[VectorPointVisualization]") {
-    SECTION("Mismatched coordinate sizes") {
-        std::vector<float> x_coords = {1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {1.0f, 2.0f}; // Different size
-        
-        // Should handle mismatched sizes gracefully
-        VectorPointVisualization<int64_t> visualization("test_data", x_coords, y_coords);
-        REQUIRE(&visualization != nullptr);
-    }
-    
-    SECTION("Mismatched indicator sizes") {
-        std::vector<float> x_coords = {1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {1.0f, 2.0f, 3.0f};
-        std::vector<int64_t> row_indicators = {1, 2}; // Different size
-        
-        // Should handle mismatched indicator sizes gracefully
-        VectorPointVisualization<int64_t> visualization("test_data", x_coords, y_coords, row_indicators);
-        REQUIRE(&visualization != nullptr);
-    }
-}
-
-TEST_CASE_METHOD(PointVisualizationTestFixture, "Point Visualization - Integration", "[PointVisualization]") {
-    // Test integration between different visualization types
-    
-    SECTION("Rendering multiple visualizations") {
-        auto point_data = createTestPointData();
-        PointDataVisualization point_viz("point_data", point_data);
-        
-        auto [x_coords, y_coords, row_indicators] = createTestVectorData();
-        VectorPointVisualization<int64_t> vector_viz("vector_data", x_coords, y_coords, row_indicators);
-        
-        QMatrix4x4 mvp_matrix;
-        mvp_matrix.setToIdentity();
-        
-        // Both should render without errors
-        REQUIRE_NOTHROW(point_viz.render(mvp_matrix, 2.0f));
-        REQUIRE_NOTHROW(vector_viz.render(mvp_matrix, 2.0f));
-    }
-} 

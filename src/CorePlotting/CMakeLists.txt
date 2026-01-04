@@ -52,6 +52,8 @@ set(COREPLOTTING_SOURCES
     Interaction/RectangleInteractionController.cpp
     Interaction/LineInteractionController.hpp
     Interaction/LineInteractionController.cpp
+    Interaction/PolygonInteractionController.hpp
+    Interaction/PolygonInteractionController.cpp
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.hpp
     # Export
