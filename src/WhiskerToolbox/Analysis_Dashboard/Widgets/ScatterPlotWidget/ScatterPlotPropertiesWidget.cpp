@@ -7,7 +7,6 @@
 #include "DataManager/utils/TableView/TableRegistry.hpp"
 #include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
-#include "ScatterPlotOpenGLWidget.hpp"
 #include "ui_ScatterPlotPropertiesWidget.h"
 #include "Analysis_Dashboard/DataView/Transforms/FilterByRangeTransform.hpp"
 #include "Analysis_Dashboard/DataView/Transforms/ColorByFeatureTransform.hpp"

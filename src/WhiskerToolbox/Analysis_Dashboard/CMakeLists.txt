@@ -67,8 +67,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     # Widgets
     Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
     Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
-   # Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.hpp
-   # Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget.cpp
     Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.hpp
     Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.cpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
