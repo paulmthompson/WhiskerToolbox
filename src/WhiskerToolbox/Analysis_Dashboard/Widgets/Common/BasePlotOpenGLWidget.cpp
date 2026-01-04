@@ -9,6 +9,11 @@
 #include "TooltipManager.hpp"
 #include "widget_utilities.hpp"
 
+// Phase 1 test: Uncomment to enable PreviewRenderer test rendering
+// This draws a red diagonal line to verify the renderer works correctly
+// Remove this line and associated code once Phase 2 is complete
+// #define PREVIEW_RENDERER_TEST_ENABLED
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -69,7 +74,14 @@ BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget * parent)
              << major << "." << minor << "and" << samples << "samples";
 }
 
-BasePlotOpenGLWidget::~BasePlotOpenGLWidget() = default;
+BasePlotOpenGLWidget::~BasePlotOpenGLWidget() {
+    // Ensure OpenGL context is current for resource cleanup
+    if (_opengl_resources_initialized && context() && context()->isValid()) {
+        makeCurrent();
+        _preview_renderer.cleanup();
+        doneCurrent();
+    }
+}
 
 void BasePlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
@@ -163,6 +175,12 @@ void BasePlotOpenGLWidget::initializeGL() {
     }
 
     _opengl_resources_initialized = true;
+
+    // Initialize preview renderer for selection overlay rendering
+    // (Phase 1 of selection handler refactoring roadmap)
+    if (!_preview_renderer.initialize()) {
+        qWarning() << "BasePlotOpenGLWidget: Failed to initialize PreviewRenderer";
+    }
 
     // Create interaction controller if not already created
     if (!_interaction) {
@@ -366,6 +384,21 @@ void BasePlotOpenGLWidget::renderOverlays() {
         }
     },
                _selection_handler);
+
+    // Phase 1 test: Verify PreviewRenderer works correctly
+    // Uncomment the #define below to render a test line in screen coordinates
+    // This should be removed once Phase 2 (LineSelectionHandler migration) is complete
+#ifdef PREVIEW_RENDERER_TEST_ENABLED
+    if (_preview_renderer.isInitialized()) {
+        CorePlotting::Interaction::GlyphPreview test_preview;
+        test_preview.type = CorePlotting::Interaction::GlyphPreview::Type::Line;
+        test_preview.line_start = {100.0f, 100.0f};
+        test_preview.line_end = {300.0f, 200.0f};
+        test_preview.stroke_color = {1.0f, 0.0f, 0.0f, 1.0f};  // Red line
+        test_preview.stroke_width = 3.0f;
+        _preview_renderer.render(test_preview, width(), height());
+    }
+#endif
 }
 
 void BasePlotOpenGLWidget::renderUI() {

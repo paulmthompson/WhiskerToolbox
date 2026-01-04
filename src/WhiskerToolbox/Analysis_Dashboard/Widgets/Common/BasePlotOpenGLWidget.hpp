@@ -5,6 +5,7 @@
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "Visualizers/RenderingContext.hpp"
 
 #include <QMatrix4x4>
@@ -190,6 +191,9 @@ protected:
     // Shared services
     std::unique_ptr<PlotInteractionController> _interaction;
     std::unique_ptr<TooltipManager> _tooltip_manager;
+
+    // Preview rendering for selection handlers (Phase 1 of refactoring roadmap)
+    PlottingOpenGL::PreviewRenderer _preview_renderer;
 
     // Update throttling
     QTimer * _fps_limiter_timer;
