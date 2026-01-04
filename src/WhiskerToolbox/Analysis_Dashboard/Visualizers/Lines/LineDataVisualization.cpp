@@ -4,8 +4,8 @@
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderSourceType.hpp"
 
+#include "Selection/ISelectionHandler.hpp"
 #include "Selection/LineSelectionHandler.hpp"
-#include "Selection/NoneSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 
 #include <QDebug>
@@ -683,11 +683,11 @@ void LineDataVisualization::clearSelection() {
     m_viewIsDirty = true;
 }
 
-void LineDataVisualization::applySelection(SelectionVariant & selection_handler, RenderingContext const & context) {
-    if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
-        applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
-    } else if (std::holds_alternative<std::unique_ptr<LineSelectionHandler>>(selection_handler)) {
-        applySelection(*std::get<std::unique_ptr<LineSelectionHandler>>(selection_handler), context);
+void LineDataVisualization::applySelection(ISelectionHandler & selection_handler, RenderingContext const & context) {
+    if (auto* polygon_handler = dynamic_cast<PolygonSelectionHandler*>(&selection_handler)) {
+        applySelection(*polygon_handler);
+    } else if (auto* line_handler = dynamic_cast<LineSelectionHandler*>(&selection_handler)) {
+        applySelection(*line_handler, context);
     } else {
         std::cout << "LineDataVisualization::applySelection: selection_handler is not a supported type (PolygonSelectionHandler or LineSelectionHandler)" << std::endl;
     }

@@ -2,6 +2,7 @@
 #include "GenericViewAdapter.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "PlotInteractionController.hpp"
+#include "Selection/ISelectionHandler.hpp"
 #include "Selection/LineSelectionHandler.hpp"
 #include "Selection/NoneSelectionHandler.hpp"
 #include "Selection/PointSelectionHandler.hpp"
@@ -69,7 +70,14 @@ BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget * parent)
              << major << "." << minor << "and" << samples << "samples";
 }
 
-BasePlotOpenGLWidget::~BasePlotOpenGLWidget() = default;
+BasePlotOpenGLWidget::~BasePlotOpenGLWidget() {
+    // Ensure OpenGL context is current for resource cleanup
+    if (_opengl_resources_initialized && context() && context()->isValid()) {
+        makeCurrent();
+        _preview_renderer.cleanup();
+        doneCurrent();
+    }
+}
 
 void BasePlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
@@ -164,6 +172,12 @@ void BasePlotOpenGLWidget::initializeGL() {
 
     _opengl_resources_initialized = true;
 
+    // Initialize preview renderer for selection overlay rendering
+    // (Phase 1 of selection handler refactoring roadmap)
+    if (!_preview_renderer.initialize()) {
+        qWarning() << "BasePlotOpenGLWidget: Failed to initialize PreviewRenderer";
+    }
+
     // Create interaction controller if not already created
     if (!_interaction) {
         // This will be overridden by subclasses to provide their specific view adapter
@@ -196,13 +210,10 @@ void BasePlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
     auto world_pos = screenToWorld(event->pos());
 
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            qDebug() << "BasePlotOpenGLWidget: Forwarding mousePressEvent to selection handler";
-            handler->mousePressEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        qDebug() << "BasePlotOpenGLWidget: Forwarding mousePressEvent to selection handler";
+        _selection_handler->mousePressEvent(event, world_pos);
+    }
 
     requestThrottledUpdate();
 
@@ -224,12 +235,9 @@ void BasePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     auto world_pos = screenToWorld(event->pos());
     emit mouseWorldMoved(world_pos.x(), world_pos.y());
 
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mouseMoveEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->mouseMoveEvent(event, world_pos);
+    }
 
     requestThrottledUpdate();
     QOpenGLWidget::mouseMoveEvent(event);
@@ -247,12 +255,9 @@ void BasePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
     auto world_pos = screenToWorld(event->pos());
 
-    std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            handler->mouseReleaseEvent(event, world_pos);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->mouseReleaseEvent(event, world_pos);
+    }
 
 
     QOpenGLWidget::mouseReleaseEvent(event);
@@ -281,12 +286,9 @@ void BasePlotOpenGLWidget::leaveEvent(QEvent * event) {
 
 void BasePlotOpenGLWidget::handleKeyPress(QKeyEvent * event) {
 
-    std::visit([event](auto & handler) {
-        if (handler) {
-            handler->keyPressEvent(event);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->keyPressEvent(event);
+    }
 
     switch (event->key()) {
         case Qt::Key_R:
@@ -343,12 +345,9 @@ void BasePlotOpenGLWidget::createSelectionHandler(SelectionMode mode) {
     }
 
     // Set up notification callback for the handler
-    std::visit([this](auto & handler) {
-        if (handler) {
-            handler->setNotificationCallback(_selection_callback);
-        }
-    },
-               _selection_handler);
+    if (_selection_handler) {
+        _selection_handler->setNotificationCallback(_selection_callback);
+    }
 }
 
 void BasePlotOpenGLWidget::renderBackground() {
@@ -357,15 +356,14 @@ void BasePlotOpenGLWidget::renderBackground() {
 }
 
 void BasePlotOpenGLWidget::renderOverlays() {
-    auto context = createRenderingContext();
-    auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
-
-    std::visit([mvp_matrix](auto & handler) {
-        if (handler) {
-            handler->render(mvp_matrix);
+    // Render selection handler previews using PreviewRenderer
+    // This unified approach replaces the old per-handler render() methods
+    if (_selection_handler && _preview_renderer.isInitialized() && _selection_handler->isActive()) {
+        auto preview = _selection_handler->getPreview();
+        if (preview.isValid()) {
+            _preview_renderer.render(preview, width(), height());
         }
-    },
-               _selection_handler);
+    }
 }
 
 void BasePlotOpenGLWidget::renderUI() {

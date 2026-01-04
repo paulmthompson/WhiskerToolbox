@@ -3,6 +3,7 @@
 
 #include "Entity/EntityTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
+#include "Selection/ISelectionHandler.hpp"
 #include "Selection/PointSelectionHandler.hpp"
 #include "Selection/PolygonSelectionHandler.hpp"
 #include "Selection/SelectionHandlers.hpp"
@@ -22,12 +23,9 @@
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
-#include <variant>
 #include <vector>
 
 class QOpenGLShaderProgram;
-class LineSelectionHandler;
-class NoneSelectionHandler;
 class GroupManager;
 
 /**
@@ -191,9 +189,9 @@ public:
 
     /**
      * @brief Apply selection to this visualization
-     * @param selection_handler The PolygonSelectionHandler to apply
+     * @param selection_handler The selection handler to apply
      */
-    void applySelection(SelectionVariant & selection_handler);
+    void applySelection(ISelectionHandler & selection_handler);
 
     /**
      * @brief Apply selection to this visualization
@@ -713,13 +711,13 @@ void GenericPointVisualization<RowIndicatorType>::_renderHoverPoint(QOpenGLShade
 }
 
 template<typename RowIndicatorType>
-void GenericPointVisualization<RowIndicatorType>::applySelection(SelectionVariant & selection_handler) {
-    if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
-        applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
-    } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
-        applySelection(*std::get<std::unique_ptr<PointSelectionHandler>>(selection_handler));
+void GenericPointVisualization<RowIndicatorType>::applySelection(ISelectionHandler & selection_handler) {
+    if (auto* polygon_handler = dynamic_cast<PolygonSelectionHandler*>(&selection_handler)) {
+        applySelection(*polygon_handler);
+    } else if (auto* point_handler = dynamic_cast<PointSelectionHandler*>(&selection_handler)) {
+        applySelection(*point_handler);
     } else {
-        std::cout << "GenericPointVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
+        std::cout << "GenericPointVisualization::applySelection: selection_handler is not a PolygonSelectionHandler or PointSelectionHandler" << std::endl;
     }
 }
 

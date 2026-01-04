@@ -2,6 +2,8 @@
 #define POINTSELECTIONHANDLER_HPP
 
 #include "CoreGeometry/points.hpp"
+#include "CorePlotting/Interaction/GlyphPreview.hpp"
+#include "ISelectionHandler.hpp"
 #include "SelectionModes.hpp"
 
 #include <QMatrix4x4>
@@ -14,29 +16,39 @@
 class QKeyEvent;
 
 
-class PointSelectionHandler {
+/**
+ * @brief Handles point selection functionality for spatial overlay widgets
+ * 
+ * This class encapsulates the logic for selecting individual points.
+ * Unlike line and polygon handlers, point selection is immediate (on click)
+ * and doesn't have a preview state.
+ */
+class PointSelectionHandler : public ISelectionHandler {
 public:
-    using NotificationCallback = std::function<void()>;
-
     explicit PointSelectionHandler(float world_tolerance);
-    ~PointSelectionHandler() = default;
+    ~PointSelectionHandler() override = default;
 
-    void setNotificationCallback(NotificationCallback callback);
-    void clearNotificationCallback();
+    // ISelectionHandler interface implementation
+    void setNotificationCallback(NotificationCallback callback) override;
+    void clearNotificationCallback() override;
+    [[nodiscard]] CorePlotting::Interaction::GlyphPreview getPreview() const override {
+        // Point selection doesn't have a preview - selection is immediate
+        return CorePlotting::Interaction::GlyphPreview{};
+    }
+    [[nodiscard]] bool isActive() const override { return false; } // Point selection is immediate, not continuous
+    void deactivate() override {}
 
-    void render(QMatrix4x4 const & mvp_matrix) {}
-    void deactivate() {}
-
-    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const {
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const override {
         static std::unique_ptr<SelectionRegion> null_region = nullptr;
         return null_region;
     }
 
-    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
-    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {}
-    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
-    void keyPressEvent(QKeyEvent * event) {}
+    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) override;
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) override {}
+    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) override {}
+    void keyPressEvent(QKeyEvent * event) override {}
 
+    // Point-specific accessors
     [[nodiscard]] QVector2D getWorldPos() const { return _world_pos; }
     [[nodiscard]] Qt::KeyboardModifiers getModifiers() const { return _modifiers; }
 

@@ -2,13 +2,12 @@
 #define LINESELECTIONHANDLER_HPP
 
 #include "CoreGeometry/lines.hpp"
+#include "CorePlotting/Interaction/GlyphPreview.hpp"
+#include "CorePlotting/Interaction/LineInteractionController.hpp"
+#include "ISelectionHandler.hpp"
 #include "SelectionModes.hpp"
-#include "ShaderManager/ShaderProgram.hpp"
 
 #include <QMatrix4x4>
-#include <QOpenGLBuffer>
-#include <QOpenGLFunctions_4_1_Core>
-#include <QOpenGLVertexArrayObject>
 #include <QPoint>
 #include <QVector2D>
 
@@ -18,7 +17,6 @@
 
 class QKeyEvent;
 class QMouseEvent;
-class QOpenGLShaderProgram;
 
 enum class LineSelectionBehavior {
     Replace,
@@ -81,97 +79,62 @@ private:
 /**
  * @brief Handles line selection functionality for spatial overlay widgets
  * 
- * This class encapsulates all the logic and OpenGL resources needed for line selection,
- * including line drawing, rendering, and selection region creation.
+ * This class encapsulates all the logic needed for line selection,
+ * including line drawing, rendering via PreviewRenderer, and selection region creation.
+ * 
+ * Internally delegates to CorePlotting::Interaction::LineInteractionController for
+ * state management and preview generation. The widget's PreviewRenderer handles
+ * actual OpenGL rendering.
  */
-class LineSelectionHandler : protected QOpenGLFunctions_4_1_Core {
+class LineSelectionHandler : public ISelectionHandler {
 public:
-    using NotificationCallback = std::function<void()>;
-
     explicit LineSelectionHandler();
-    ~LineSelectionHandler();
+    ~LineSelectionHandler() override;
 
-    /**
-     * @brief Set the notification callback to be called when selection is completed
-     * @param callback The callback function to call when selection is completed
-     */
-    void setNotificationCallback(NotificationCallback callback);
+    // ISelectionHandler interface implementation
+    void setNotificationCallback(NotificationCallback callback) override;
+    void clearNotificationCallback() override;
+    [[nodiscard]] CorePlotting::Interaction::GlyphPreview getPreview() const override;
+    [[nodiscard]] bool isActive() const override;
+    void deactivate() override;
+    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const override { return _active_selection_region; }
 
-    /**
-     * @brief Clear the notification callback
-     */
-    void clearNotificationCallback();
-
-    /**
-     * @brief Render line selection overlay using OpenGL
-     * @param mvp_matrix Model-View-Projection matrix
-     */
-    void render(QMatrix4x4 const & mvp_matrix);
-
-    void deactivate();
-
-    /**
-     * @brief Get the current active selection region (if any)
-     * @return Pointer to selection region, or nullptr if none active
-     */
-    [[nodiscard]] std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
-
-    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
-
-    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos);
-
-    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos);
-
-    void keyPressEvent(QKeyEvent * event);
+    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) override;
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) override;
+    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
     /**
      * @brief Update line end point during drawing
      * @param world_x World X coordinate
      * @param world_y World Y coordinate
+     * @param screen_x Screen X coordinate (for preview rendering)
+     * @param screen_y Screen Y coordinate (for preview rendering)
      */
-    void updateLineEndPoint(float world_x, float world_y);
+    void updateLineEndPoint(float world_x, float world_y, float screen_x, float screen_y);
 
 private:
     NotificationCallback _notification_callback;
 
-    QOpenGLShaderProgram * _line_shader_program;
+    // CorePlotting controller for state management and preview generation
+    CorePlotting::Interaction::LineInteractionController _controller;
 
-    // OpenGL rendering resources
-    QOpenGLBuffer _line_vertex_buffer;
-    QOpenGLVertexArrayObject _line_vertex_array_object;
-
-    // Line selection state
-    bool _is_drawing_line;
-    Point2D<float> _line_start_point_world;                   // Line start point in world coordinates (for rendering)
-    Point2D<float> _line_end_point_world;                     // Line end point in world coordinates (for rendering)
+    // Line selection state (world coordinates for selection region)
+    Point2D<float> _line_start_point_world;                   // Line start point in world coordinates
+    Point2D<float> _line_end_point_world;                     // Line end point in world coordinates
     Point2D<float> _line_start_point_screen;                  // Line start point in screen coordinates (for picking)
     Point2D<float> _line_end_point_screen;                    // Line end point in screen coordinates (for picking)
     std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
-    LineSelectionBehavior _current_behavior;
-
-    /**
-     * @brief Initialize OpenGL resources
-     * Must be called from an OpenGL context
-     */
-    void initializeOpenGLResources();
-
-    /**
-     * @brief Clean up OpenGL resources
-     * Must be called from an OpenGL context
-     */
-    void cleanupOpenGLResources();
-
-    /**
-     * @brief Update line vertex buffer
-     */
-    void updateLineBuffer();
+    LineSelectionBehavior _current_behavior = LineSelectionBehavior::Replace;
 
     /**
      * @brief Start line selection at given world coordinates
      * @param world_x World X coordinate
      * @param world_y World Y coordinate
+     * @param screen_x Screen X coordinate (for preview rendering)
+     * @param screen_y Screen Y coordinate (for preview rendering)
      */
-    void startLineSelection(float world_x, float world_y);
+    void startLineSelection(float world_x, float world_y, float screen_x, float screen_y);
 
 
     /**

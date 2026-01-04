@@ -546,7 +546,7 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
 
     std::cout << "makeSelection" << std::endl;
 
-    if (_selection_handler.valueless_by_exception()) {
+    if (!_selection_handler) {
         return;
     }
 
@@ -573,14 +573,16 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
     }
 
     // Apply selection to all visualization structs using their existing applySelection methods
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->applySelection(_selection_handler);
-    }
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        viz->applySelection(_selection_handler);
-    }
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->applySelection(_selection_handler, context);
+    if (_selection_handler) {
+        for (auto const & [key, viz]: _point_data_visualizations) {
+            viz->applySelection(*_selection_handler);
+        }
+        for (auto const & [key, viz]: _mask_data_visualizations) {
+            viz->applySelection(*_selection_handler);
+        }
+        for (auto const & [key, viz]: _line_data_visualizations) {
+            viz->applySelection(*_selection_handler, context);
+        }
     }
 
     if (made_current) {
