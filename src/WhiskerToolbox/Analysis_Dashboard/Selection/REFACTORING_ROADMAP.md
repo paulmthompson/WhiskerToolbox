@@ -145,6 +145,17 @@ if (_opengl_resources_initialized && context() && context()->isValid()) {
 
 **Objective:** Replace `LineSelectionHandler` internals with `LineInteractionController` while maintaining the same external behavior.
 
+> **STATUS: COMPLETED** (2026-01-04)
+
+**Changes Made:**
+- Added `LineInteractionController` member to `LineSelectionHandler`
+- Removed all OpenGL resources (VAO, VBO, shader program)
+- Removed `QOpenGLFunctions_4_1_Core` inheritance
+- Replaced `render(mvp_matrix)` with `getPreview()` returning `GlyphPreview`
+- Added `isActive()` method delegating to controller
+- Updated `BasePlotOpenGLWidget::renderOverlays()` to use `PreviewRenderer` for `LineSelectionHandler`
+- Updated mouse event handlers to pass screen coordinates to controller
+
 ### 2.1 Add LineInteractionController
 
 **Files to modify:**
@@ -211,11 +222,11 @@ CorePlotting::Interaction::GlyphPreview LineSelectionHandler::getPreview() const
 ### 2.4 Remove Deprecated OpenGL Code
 
 Once migration is validated:
-- [ ] Remove `_line_vertex_buffer`, `_line_vertex_array_object`
-- [ ] Remove `initializeOpenGLResources()` / `cleanupOpenGLResources()`
-- [ ] Remove `updateLineBuffer()`
-- [ ] Remove direct `glDrawArrays()` calls
-- [ ] Remove shader program pointer `_line_shader_program`
+- [x] Remove `_line_vertex_buffer`, `_line_vertex_array_object`
+- [x] Remove `initializeOpenGLResources()` / `cleanupOpenGLResources()`
+- [x] Remove `updateLineBuffer()`
+- [x] Remove direct `glDrawArrays()` calls
+- [x] Remove shader program pointer `_line_shader_program`
 
 ### 2.5 Update LineSelectionRegion Creation
 
@@ -238,10 +249,10 @@ void LineSelectionHandler::completeLineSelection() {
 ```
 
 **Acceptance Criteria:**
-- [ ] Line selection works identically to before
-- [ ] Line renders via PreviewRenderer
-- [ ] OpenGL resource cleanup successful (no leaks)
-- [ ] All existing tests pass
+- [x] Line selection works identically to before (verified 2026-01-04)
+- [x] Line renders via PreviewRenderer
+- [x] OpenGL resource cleanup successful (no leaks)
+- [x] All existing tests pass
 
 ---
 
@@ -460,11 +471,11 @@ void onSelectionComplete() {
 - [x] Verify test preview renders correctly ✓
 
 ### Phase 2: LineSelectionHandler
-- [ ] Add `LineInteractionController` member
-- [ ] Delegate state management to controller
-- [ ] Replace `render()` with `getPreview()`
-- [ ] Remove OpenGL resources
-- [ ] Verify functionality unchanged
+- [x] Add `LineInteractionController` member
+- [x] Delegate state management to controller
+- [x] Replace `render()` with `getPreview()`
+- [x] Remove OpenGL resources
+- [x] Verify functionality unchanged ✓ (2026-01-04)
 
 ### Phase 3: PolygonSelectionHandler
 - [ ] Add `PolygonInteractionController` member

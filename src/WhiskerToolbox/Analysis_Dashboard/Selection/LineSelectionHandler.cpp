@@ -1,26 +1,22 @@
 #include "LineSelectionHandler.hpp"
 
-#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-
 #include <QDebug>
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include <QMouseEvent>
-#include <QOpenGLShaderProgram>
 
 
-LineSelectionHandler::LineSelectionHandler()
-    : _line_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      _is_drawing_line(false) {
-
-    initializeOpenGLFunctions();
-
-    initializeOpenGLResources();
+LineSelectionHandler::LineSelectionHandler() {
+    // Configure the controller with default styling
+    CorePlotting::Interaction::LineInteractionConfig config;
+    config.stroke_color = {1.0f, 0.0f, 0.0f, 1.0f}; // Bright red
+    config.stroke_width = 5.0f; // Match previous line width
+    _controller.setConfig(config);
+    
+    qDebug() << "LineSelectionHandler: Created (using CorePlotting controller)";
 }
 
-LineSelectionHandler::~LineSelectionHandler() {
-    cleanupOpenGLResources();
-}
+LineSelectionHandler::~LineSelectionHandler() = default;
 
 void LineSelectionHandler::setNotificationCallback(NotificationCallback callback) {
     _notification_callback = callback;
@@ -30,76 +26,37 @@ void LineSelectionHandler::clearNotificationCallback() {
     _notification_callback = nullptr;
 }
 
-void LineSelectionHandler::initializeOpenGLResources() {
+void LineSelectionHandler::startLineSelection(float world_x, float world_y, float screen_x, float screen_y) {
 
-    ShaderManager & shader_manager = ShaderManager::instance();
-    if (!shader_manager.getProgram("line")) {
-        bool success = shader_manager.loadProgram("line",
-                                                  ":/shaders/line.vert",
-                                                  ":/shaders/line.frag",
-                                                  "",
-                                                  ShaderSourceType::Resource);
-        if (!success) {
-            qDebug() << "Failed to load line shader!";
-        }
-    }
+    qDebug() << "LineSelectionHandler: Starting line selection at world:" << world_x << "," << world_y
+             << "screen:" << screen_x << "," << screen_y;
 
-    // Create line vertex array object and buffer
-    _line_vertex_array_object.create();
-    _line_vertex_array_object.bind();
-
-    _line_vertex_buffer.create();
-    _line_vertex_buffer.bind();
-    _line_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-
-    // Pre-allocate line vertex buffer for two points (4 floats: start_x, start_y, end_x, end_y)
-    glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-
-    // Set up vertex attributes for line vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    _line_vertex_array_object.release();
-    _line_vertex_buffer.release();
-
-    qDebug() << "LineSelectionHandler: OpenGL resources initialized successfully";
-}
-
-void LineSelectionHandler::cleanupOpenGLResources() {
-    _line_vertex_buffer.destroy();
-    _line_vertex_array_object.destroy();
-}
-
-void LineSelectionHandler::startLineSelection(float world_x, float world_y) {
-
-    qDebug() << "LineSelectionHandler: Starting line selection at" << world_x << "," << world_y;
-    qDebug() << "LineSelectionHandler: _is_drawing_line was:" << _is_drawing_line << "setting to true";
-
-    _is_drawing_line = true;
+    // Store world coordinates for selection region creation
     _line_start_point_world = Point2D<float>(world_x, world_y);
-    _line_end_point_world = _line_start_point_world;// Initially end point is same as start point
+    _line_end_point_world = _line_start_point_world; // Initially end point is same as start point
+    
+    // Start the controller in screen/canvas coordinates for rendering
+    _controller.start(screen_x, screen_y, "line_selection");
 
     qDebug() << "LineSelectionHandler: Added first line point at world:" << world_x << "," << world_y;
-
-    // Update line buffer
-    updateLineBuffer();
 }
 
-void LineSelectionHandler::updateLineEndPoint(float world_x, float world_y) {
-    if (!_is_drawing_line) {
+void LineSelectionHandler::updateLineEndPoint(float world_x, float world_y, float screen_x, float screen_y) {
+    if (!_controller.isActive()) {
         return;
     }
 
+    // Update world coordinates for selection region
     _line_end_point_world = Point2D<float>(world_x, world_y);
+    
+    // Update controller with screen coordinates for rendering
+    _controller.update(screen_x, screen_y);
 
-    qDebug() << "LineSelectionHandler: Updated line end point to" << world_x << "," << world_y;
-
-    // Update line buffer
-    updateLineBuffer();
+    qDebug() << "LineSelectionHandler: Updated line end point to world:" << world_x << "," << world_y;
 }
 
 void LineSelectionHandler::completeLineSelection() {
-    if (!_is_drawing_line) {
+    if (!_controller.isActive()) {
         qDebug() << "LineSelectionHandler: Cannot complete line selection - not currently drawing";
         cancelLineSelection();
         return;
@@ -109,7 +66,10 @@ void LineSelectionHandler::completeLineSelection() {
              << _line_start_point_world.x << "," << _line_start_point_world.y
              << "to" << _line_end_point_world.x << "," << _line_end_point_world.y;
 
-    // Create selection region and apply it
+    // Complete the controller interaction
+    _controller.complete();
+
+    // Create selection region with world coordinates
     auto line_region = std::make_unique<LineSelectionRegion>(_line_start_point_world, _line_end_point_world);
     line_region->setBehavior(_current_behavior);
     // Set screen coordinates for picking
@@ -120,84 +80,19 @@ void LineSelectionHandler::completeLineSelection() {
     if (_notification_callback) {
         _notification_callback();
     }
-
-    // Clean up line selection state
-    _is_drawing_line = false;
 }
 
 void LineSelectionHandler::cancelLineSelection() {
     qDebug() << "LineSelectionHandler: Cancelling line selection";
-
-    _is_drawing_line = false;
-
-    // Clear line buffer
-    _line_vertex_buffer.bind();
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    _line_vertex_buffer.release();
+    _controller.cancel();
 }
 
-void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
-    qDebug() << "LineSelectionHandler::render called, _is_drawing_line =" << _is_drawing_line;
-    
-    if (!_is_drawing_line) {
-        return;
-    }
+CorePlotting::Interaction::GlyphPreview LineSelectionHandler::getPreview() const {
+    return _controller.getPreview();
+}
 
-    ShaderManager & shader_manager = ShaderManager::instance();
-    _line_shader_program = shader_manager.getProgram("line")->getNativeProgram();
-    
-    qDebug() << "LineSelectionHandler: Got shader program:" << (_line_shader_program ? "valid" : "null");
-
-    qDebug() << "LineSelectionHandler: Rendering line overlay from"
-             << _line_start_point_world.x << "," << _line_start_point_world.y
-             << "to" << _line_end_point_world.x << "," << _line_end_point_world.y;
-
-    // Use line shader program
-    if (!_line_shader_program->bind()) {
-        qDebug() << "LineSelectionHandler: Failed to bind line shader program";
-        return;
-    }
-
-    // Set uniform matrices
-    _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
-
-    // Enable line smoothing
-    glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-
-    // Set line width (make it thicker for visibility)
-    glLineWidth(5.0f);
-
-    // === DRAW CALL: Render line ===
-    _line_vertex_array_object.bind();
-    _line_vertex_buffer.bind();
-
-    // Set vertex attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    // Set uniforms for line (bright red for visibility)
-    _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f));// Bright red
-
-    // Disable blending for solid black line
-    glDisable(GL_BLEND);
-
-    // Draw the line
-    glDrawArrays(GL_LINES, 0, 2);
-
-    // Re-enable blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Reset line width
-    glLineWidth(1.0f);
-    glDisable(GL_LINE_SMOOTH);
-
-    _line_vertex_buffer.release();
-    _line_vertex_array_object.release();
-    _line_shader_program->release();
-
-    qDebug() << "LineSelectionHandler: Finished rendering line overlay";
+bool LineSelectionHandler::isActive() const {
+    return _controller.isActive();
 }
 
 void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
@@ -206,33 +101,39 @@ void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const 
              
     if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
         qDebug() << "LineSelectionHandler: Ctrl+Left click detected!";
-        if (!_is_drawing_line) {
+        if (!_controller.isActive()) {
             Qt::KeyboardModifiers modifiers = QGuiApplication::keyboardModifiers();
             if (modifiers.testFlag(Qt::ShiftModifier)) {
                 _current_behavior = LineSelectionBehavior::Remove;
             } else {
                 _current_behavior = LineSelectionBehavior::Replace;
             }
-            startLineSelection(world_pos.x(), world_pos.y());
+            
+            float screen_x = static_cast<float>(event->pos().x());
+            float screen_y = static_cast<float>(event->pos().y());
+            
+            startLineSelection(world_pos.x(), world_pos.y(), screen_x, screen_y);
             // Store screen coordinates for picking
-            _line_start_point_screen = Point2D<float>(static_cast<float>(event->pos().x()),
-                                                      static_cast<float>(event->pos().y()));
+            _line_start_point_screen = Point2D<float>(screen_x, screen_y);
             _line_end_point_screen = _line_start_point_screen;
         }
     }
 }
 
 void LineSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (_is_drawing_line && (event->buttons() & Qt::LeftButton)) {
+    if (_controller.isActive() && (event->buttons() & Qt::LeftButton)) {
+        float screen_x = static_cast<float>(event->pos().x());
+        float screen_y = static_cast<float>(event->pos().y());
+        
         qDebug() << "LineSelectionHandler: Updating line end point to" << world_pos.x() << "," << world_pos.y();
-        updateLineEndPoint(world_pos.x(), world_pos.y());
+        updateLineEndPoint(world_pos.x(), world_pos.y(), screen_x, screen_y);
         // Update screen coordinates for picking
-        _line_end_point_screen = Point2D<float>(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
+        _line_end_point_screen = Point2D<float>(screen_x, screen_y);
     }
 }
 
 void LineSelectionHandler::mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (_is_drawing_line && (event->button() == Qt::LeftButton)) {
+    if (_controller.isActive() && (event->button() == Qt::LeftButton)) {
         qDebug() << "LineSelectionHandler: Completing line selection";
         completeLineSelection();
     }
@@ -240,7 +141,7 @@ void LineSelectionHandler::mouseReleaseEvent(QMouseEvent * event, QVector2D cons
 
 void LineSelectionHandler::keyPressEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape) {
-        if (_is_drawing_line) {
+        if (_controller.isActive()) {
             cancelLineSelection();
         } else {
             if (_notification_callback) {
@@ -252,28 +153,6 @@ void LineSelectionHandler::keyPressEvent(QKeyEvent * event) {
 
 void LineSelectionHandler::deactivate() {
     cancelLineSelection();
-}
-
-void LineSelectionHandler::updateLineBuffer() {
-    if (!_is_drawing_line) {
-        return;
-    }
-
-    // Update line buffer with current line data
-    std::vector<float> line_data = {
-            _line_start_point_world.x, _line_start_point_world.y,
-            _line_end_point_world.x, _line_end_point_world.y};
-
-    _line_vertex_array_object.bind();
-    _line_vertex_buffer.bind();
-    _line_vertex_buffer.allocate(line_data.data(), static_cast<int>(line_data.size() * sizeof(float)));
-
-    // Set vertex attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    _line_vertex_buffer.release();
-    _line_vertex_array_object.release();
 }
 
 // LineSelectionRegion implementation

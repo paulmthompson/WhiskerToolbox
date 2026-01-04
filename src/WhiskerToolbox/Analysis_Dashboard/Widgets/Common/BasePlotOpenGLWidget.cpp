@@ -24,6 +24,8 @@
 #include <QTimer>
 #include <QWheelEvent>
 
+#include <type_traits>
+
 BasePlotOpenGLWidget::BasePlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _group_manager(nullptr),
@@ -378,15 +380,30 @@ void BasePlotOpenGLWidget::renderOverlays() {
     auto context = createRenderingContext();
     auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
 
-    std::visit([mvp_matrix](auto & handler) {
-        if (handler) {
+    // Render selection handler previews
+    // LineSelectionHandler uses PreviewRenderer (Phase 2 migration)
+    // Other handlers still use their own render() methods
+    std::visit([this, &mvp_matrix](auto & handler) {
+        if (!handler) return;
+        
+        using HandlerType = std::decay_t<decltype(*handler)>;
+        if constexpr (std::is_same_v<HandlerType, LineSelectionHandler>) {
+            // Use PreviewRenderer for LineSelectionHandler
+            if (_preview_renderer.isInitialized() && handler->isActive()) {
+                auto preview = handler->getPreview();
+                if (preview.isValid()) {
+                    _preview_renderer.render(preview, width(), height());
+                }
+            }
+        } else {
+            // Other handlers still use their own render() method
             handler->render(mvp_matrix);
         }
     },
                _selection_handler);
 
     // Phase 1 test: Verify PreviewRenderer works correctly
-    // Uncomment the #define below to render a test line in screen coordinates
+    // Uncomment the #define at top of file to render a test line in screen coordinates
     // This should be removed once Phase 2 (LineSelectionHandler migration) is complete
 #ifdef PREVIEW_RENDERER_TEST_ENABLED
     if (_preview_renderer.isInitialized()) {
