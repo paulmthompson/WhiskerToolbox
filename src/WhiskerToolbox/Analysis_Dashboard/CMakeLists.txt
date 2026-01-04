@@ -104,7 +104,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Visualizers/Points/PointDataVisualization.cpp
     Visualizers/Points/GenericPointVisualization.hpp
     Visualizers/Points/GenericPointVisualization.cpp
-    Visualizers/Points/VectorPointVisualization.hpp
     Visualizers/Points/ScatterPlotVisualization.hpp
     Visualizers/Points/ScatterPlotVisualization.cpp
 
