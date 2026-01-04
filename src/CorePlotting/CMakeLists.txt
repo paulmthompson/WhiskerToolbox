@@ -24,8 +24,10 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/TimeRange.hpp
     CoordinateTransform/TimeAxisCoordinates.hpp
+    CoordinateTransform/TimeAxisCoordinates.cpp
     CoordinateTransform/TimeFrameAdapters.hpp
     CoordinateTransform/SeriesCoordinateQuery.hpp
+    CoordinateTransform/SeriesCoordinateQuery.cpp
     CoordinateTransform/SeriesMatrices.hpp
     CoordinateTransform/SeriesMatrices.cpp
     # Layout
@@ -55,6 +57,7 @@ set(COREPLOTTING_SOURCES
     Interaction/PolygonInteractionController.hpp
     Interaction/PolygonInteractionController.cpp
     Interaction/HitTestResult.hpp
+    Interaction/SceneHitTester.cpp
     Interaction/SceneHitTester.hpp
     # Export
     Export/SVGPrimitives.hpp
