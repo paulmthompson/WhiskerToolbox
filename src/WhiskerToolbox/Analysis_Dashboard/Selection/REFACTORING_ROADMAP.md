@@ -260,6 +260,19 @@ void LineSelectionHandler::completeLineSelection() {
 
 **Objective:** Replace `PolygonSelectionHandler` with `PolygonInteractionController`.
 
+> **STATUS: COMPLETED** (2026-01-04)
+
+**Changes Made:**
+- Added `PolygonInteractionController` member to `PolygonSelectionHandler`
+- Removed all OpenGL resources (VAO, VBO, shader program)
+- Removed `QOpenGLFunctions_4_1_Core` inheritance
+- Replaced `render(mvp_matrix)` with `getPreview()` returning `GlyphPreview`
+- Added `isActive()` method delegating to controller
+- Added `mouseMoveEvent()` to update cursor position for preview line
+- Updated `BasePlotOpenGLWidget::renderOverlays()` to use `PreviewRenderer` for `PolygonSelectionHandler`
+- Updated mouse event handlers to pass screen coordinates to controller
+- Supports click-near-first-vertex auto-close feature
+
 ### 3.1 Add PolygonInteractionController
 
 ```cpp
@@ -300,17 +313,17 @@ void PolygonSelectionHandler::mouseMoveEvent(QMouseEvent* event, ...) {
 ### 3.4 Replace render() and Remove OpenGL Code
 
 Same pattern as LineSelectionHandler:
-- [ ] Remove `_polygon_vertex_buffer`, `_polygon_line_buffer`
-- [ ] Remove `_polygon_vertex_array_object`, `_polygon_line_array_object`
-- [ ] Remove `updatePolygonBuffers()`
-- [ ] Widget calls `_preview_renderer.render(_polygon_handler->getPreview(), ...)`
+- [x] Remove `_polygon_vertex_buffer`, `_polygon_line_buffer`
+- [x] Remove `_polygon_vertex_array_object`, `_polygon_line_array_object`
+- [x] Remove `updatePolygonBuffers()`
+- [x] Widget calls `_preview_renderer.render(_polygon_handler->getPreview(), ...)`
 
 **Acceptance Criteria:**
-- [ ] Polygon selection works identically (click-to-add-vertex)
-- [ ] Vertices render as points, edges render as lines
-- [ ] Closure line renders in different color
-- [ ] Enter/Return completes polygon
-- [ ] Escape cancels polygon
+- [x] Polygon selection works identically (click-to-add-vertex)
+- [x] Vertices render as points, edges render as lines
+- [x] Closure line renders in different color
+- [x] Enter/Return completes polygon
+- [x] Escape cancels polygon
 
 ---
 
@@ -478,12 +491,12 @@ void onSelectionComplete() {
 - [x] Verify functionality unchanged ✓ (2026-01-04)
 
 ### Phase 3: PolygonSelectionHandler
-- [ ] Add `PolygonInteractionController` member
-- [ ] Delegate state management to controller
-- [ ] Handle cursor position preview
-- [ ] Replace `render()` with `getPreview()`
-- [ ] Remove OpenGL resources
-- [ ] Verify functionality unchanged
+- [x] Add `PolygonInteractionController` member
+- [x] Delegate state management to controller
+- [x] Handle cursor position preview
+- [x] Replace `render()` with `getPreview()`
+- [x] Remove OpenGL resources
+- [x] Verify functionality unchanged ✓ (2026-01-04)
 
 ### Phase 4: Interface Unification
 - [ ] Create `ISelectionHandler` interface

@@ -1,25 +1,24 @@
 #include "PolygonSelectionHandler.hpp"
 
-#include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-
 #include <QDebug>
 #include <QKeyEvent>
 #include <QMouseEvent>
-#include <QOpenGLShaderProgram>
 
-PolygonSelectionHandler::PolygonSelectionHandler()
-    : _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
-      _is_polygon_selecting(false) {
 
-    initializeOpenGLFunctions();
-
-    initializeOpenGLResources();
+PolygonSelectionHandler::PolygonSelectionHandler() {
+    // Configure the controller with default styling
+    CorePlotting::Interaction::PolygonInteractionConfig config;
+    config.stroke_color = {0.2f, 0.6f, 1.0f, 1.0f};  // Blue
+    config.vertex_color = {1.0f, 0.0f, 0.0f, 1.0f};  // Red vertices
+    config.closure_line_color = {1.0f, 0.6f, 0.2f, 1.0f}; // Orange closure
+    config.stroke_width = 2.0f;
+    config.vertex_size = 8.0f;
+    _controller.setConfig(config);
+    
+    qDebug() << "PolygonSelectionHandler: Created (using CorePlotting controller)";
 }
 
-PolygonSelectionHandler::~PolygonSelectionHandler() {
-    cleanupOpenGLResources();
-}
+PolygonSelectionHandler::~PolygonSelectionHandler() = default;
 
 void PolygonSelectionHandler::setNotificationCallback(NotificationCallback callback) {
     _notification_callback = callback;
@@ -29,109 +28,59 @@ void PolygonSelectionHandler::clearNotificationCallback() {
     _notification_callback = nullptr;
 }
 
-void PolygonSelectionHandler::initializeOpenGLResources() {
+void PolygonSelectionHandler::startPolygonSelection(float world_x, float world_y, float screen_x, float screen_y) {
 
-    ShaderManager & shader_manager = ShaderManager::instance();
-    if (!shader_manager.getProgram("line")) {
-        bool success = shader_manager.loadProgram("line",
-                                                  ":/shaders/line.vert",
-                                                  ":/shaders/line.frag",
-                                                  "",
-                                                  ShaderSourceType::Resource);
-        if (!success) {
-            qDebug() << "Failed to load line shader!";
-        }
-    }
+    qDebug() << "PolygonSelectionHandler: Starting polygon selection at world:" << world_x << "," << world_y
+             << "screen:" << screen_x << "," << screen_y;
 
-    // Create polygon vertex array object and buffer
-    _polygon_vertex_array_object.create();
-    _polygon_vertex_array_object.bind();
+    // Clear any previous world coordinates
+    _polygon_vertices_world.clear();
+    
+    // Add first vertex to world coordinates storage
+    _polygon_vertices_world.push_back(Point2D<float>(world_x, world_y));
 
-    _polygon_vertex_buffer.create();
-    _polygon_vertex_buffer.bind();
-    _polygon_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-
-    // Pre-allocate polygon vertex buffer (initially empty)
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    // Set up vertex attributes for polygon vertices
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    _polygon_vertex_array_object.release();
-    _polygon_vertex_buffer.release();
-
-    // Create polygon line array object and buffer
-    _polygon_line_array_object.create();
-    _polygon_line_array_object.bind();
-
-    _polygon_line_buffer.create();
-    _polygon_line_buffer.bind();
-    _polygon_line_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-
-    // Pre-allocate polygon line buffer (initially empty)
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    // Set up vertex attributes for polygon lines
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    _polygon_line_array_object.release();
-    _polygon_line_buffer.release();
-
-    qDebug() << "PolygonSelectionHandler: OpenGL resources initialized successfully";
-}
-
-void PolygonSelectionHandler::cleanupOpenGLResources() {
-    _polygon_vertex_buffer.destroy();
-    _polygon_vertex_array_object.destroy();
-
-    _polygon_line_buffer.destroy();
-    _polygon_line_array_object.destroy();
-}
-
-void PolygonSelectionHandler::startPolygonSelection(int world_x, int world_y) {
-
-    qDebug() << "PolygonSelectionHandler: Starting polygon selection at" << world_x << "," << world_y;
-
-    _is_polygon_selecting = true;
-    _polygon_vertices.clear();
-
-    // Add first vertex
-    _polygon_vertices.push_back(Point2D<float>(world_x, world_y));
+    // Start the controller in screen/canvas coordinates for rendering
+    _controller.start(screen_x, screen_y, "polygon_selection");
 
     qDebug() << "PolygonSelectionHandler: Added first polygon vertex at world:" << world_x << "," << world_y;
-
-    // Update polygon buffers
-    updatePolygonBuffers();
 }
 
-void PolygonSelectionHandler::addPolygonVertex(int world_x, int world_y) {
-    if (!_is_polygon_selecting) {
+void PolygonSelectionHandler::addPolygonVertex(float world_x, float world_y, float screen_x, float screen_y) {
+    if (!_controller.isActive()) {
         return;
     }
 
-    _polygon_vertices.push_back(Point2D<float>(world_x, world_y));
+    // Add vertex to world coordinates storage
+    _polygon_vertices_world.push_back(Point2D<float>(world_x, world_y));
+    
+    // Add vertex to controller for rendering
+    auto result = _controller.addVertex(screen_x, screen_y);
 
-    qDebug() << "PolygonSelectionHandler: Added polygon vertex" << _polygon_vertices.size()
-             << "at" << world_x << "," << world_y;
-
-    // Update polygon buffers
-    updatePolygonBuffers();
+    qDebug() << "PolygonSelectionHandler: Added polygon vertex" << _polygon_vertices_world.size()
+             << "at world:" << world_x << "," << world_y;
+             
+    // Check if polygon was auto-closed by clicking near first vertex
+    if (result == CorePlotting::Interaction::AddVertexResult::ClosedPolygon) {
+        qDebug() << "PolygonSelectionHandler: Polygon auto-closed by clicking near first vertex";
+        completePolygonSelection();
+    }
 }
 
 void PolygonSelectionHandler::completePolygonSelection() {
-    if (!_is_polygon_selecting || _polygon_vertices.size() < 3) {
+    if (!_controller.isActive() || _polygon_vertices_world.size() < 3) {
         qDebug() << "PolygonSelectionHandler: Cannot complete polygon selection - insufficient vertices";
         cancelPolygonSelection();
         return;
     }
 
     qDebug() << "PolygonSelectionHandler: Completing polygon selection with"
-             << _polygon_vertices.size() << "vertices";
+             << _polygon_vertices_world.size() << "vertices";
 
-    // Create selection region and apply it
-    auto polygon_region = std::make_unique<PolygonSelectionRegion>(_polygon_vertices);
+    // Complete the controller interaction
+    _controller.complete();
+
+    // Create selection region with world coordinates
+    auto polygon_region = std::make_unique<PolygonSelectionRegion>(_polygon_vertices_world);
     _active_selection_region = std::move(polygon_region);
 
     // Call notification callback if set
@@ -140,113 +89,43 @@ void PolygonSelectionHandler::completePolygonSelection() {
     }
 
     // Clean up polygon selection state
-    _is_polygon_selecting = false;
-    _polygon_vertices.clear();
+    _polygon_vertices_world.clear();
 }
 
 void PolygonSelectionHandler::cancelPolygonSelection() {
     qDebug() << "PolygonSelectionHandler: Cancelling polygon selection";
 
-    _is_polygon_selecting = false;
-    _polygon_vertices.clear();
-
-    // Clear polygon buffers
-
-    _polygon_vertex_buffer.bind();
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    _polygon_vertex_buffer.release();
-
-    _polygon_line_buffer.bind();
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    _polygon_line_buffer.release();
+    _controller.cancel();
+    _polygon_vertices_world.clear();
 }
 
-void PolygonSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
-    if (!_is_polygon_selecting || _polygon_vertices.empty()) {
-        return;
-    }
+CorePlotting::Interaction::GlyphPreview PolygonSelectionHandler::getPreview() const {
+    return _controller.getPreview();
+}
 
-    ShaderManager & shader_manager = ShaderManager::instance();
-    _line_shader_program = shader_manager.getProgram("line")->getNativeProgram();
-
-    qDebug() << "PolygonSelectionHandler: Rendering polygon overlay with" << _polygon_vertices.size() << "vertices";
-
-    // Use line shader program
-    if (!_line_shader_program->bind()) {
-        qDebug() << "PolygonSelectionHandler: Failed to bind line shader program";
-        return;
-    }
-
-    // Set uniform matrices
-    _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
-
-    // Enable line smoothing
-    glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-
-    // Set line width
-    glLineWidth(2.0f);
-
-    // === DRAW CALL 1: Render polygon vertices as points ===
-    _polygon_vertex_array_object.bind();
-    _polygon_vertex_buffer.bind();
-
-    // Set vertex attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    // Set uniforms for vertices (red points)
-    _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f));// Red
-    _line_shader_program->setUniformValue("u_point_size", 8.0f);
-
-    // Draw vertices as points
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_polygon_vertices.size()));
-
-    _polygon_vertex_buffer.release();
-    _polygon_vertex_array_object.release();
-
-    // === DRAW CALL 2: Render polygon lines ===
-    if (_polygon_vertices.size() >= 2) {
-        _polygon_line_array_object.bind();
-        _polygon_line_buffer.bind();
-
-        // Set vertex attributes
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-        // Set uniforms for lines (blue dashed appearance)
-        _line_shader_program->setUniformValue("u_color", QVector4D(0.2f, 0.6f, 1.0f, 1.0f));// Blue
-
-        // Draw lines
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>((_polygon_vertices.size() - 1) * 2));
-
-        // Draw closure line if we have 3+ vertices
-        if (_polygon_vertices.size() >= 3) {
-            // Draw closure line with different color
-            _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.6f, 0.2f, 1.0f));// Orange
-            glDrawArrays(GL_LINES, static_cast<GLint>((_polygon_vertices.size() - 1) * 2), 2);
-        }
-
-        _polygon_line_buffer.release();
-        _polygon_line_array_object.release();
-    }
-
-    // Reset line width
-    glLineWidth(1.0f);
-    glDisable(GL_LINE_SMOOTH);
-
-    _line_shader_program->release();
-
-    qDebug() << "PolygonSelectionHandler: Finished rendering polygon overlay";
+bool PolygonSelectionHandler::isActive() const {
+    return _controller.isActive();
 }
 
 void PolygonSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
     if (event->button() == Qt::LeftButton && event->modifiers().testFlag(Qt::ControlModifier)) {
+        float screen_x = static_cast<float>(event->pos().x());
+        float screen_y = static_cast<float>(event->pos().y());
+        
         if (!isPolygonSelecting()) {
-            startPolygonSelection(static_cast<int>(world_pos.x()), static_cast<int>(world_pos.y()));
+            startPolygonSelection(world_pos.x(), world_pos.y(), screen_x, screen_y);
         } else {
-            addPolygonVertex(static_cast<int>(world_pos.x()), static_cast<int>(world_pos.y()));
+            addPolygonVertex(world_pos.x(), world_pos.y(), screen_x, screen_y);
         }
+    }
+}
+
+void PolygonSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
+    // Update cursor position for preview line from last vertex to cursor
+    if (_controller.isActive()) {
+        float screen_x = static_cast<float>(event->pos().x());
+        float screen_y = static_cast<float>(event->pos().y());
+        _controller.updateCursorPosition(screen_x, screen_y);
     }
 }
 
@@ -262,67 +141,6 @@ void PolygonSelectionHandler::keyPressEvent(QKeyEvent * event) {
 
 void PolygonSelectionHandler::deactivate() {
     cancelPolygonSelection();
-    //cleanupOpenGLResources();
-}
-
-void PolygonSelectionHandler::updatePolygonBuffers() {
-    if (_polygon_vertices.empty()) {
-        return;
-    }
-
-    // Update vertex buffer (for drawing vertices as points)
-    std::vector<float> vertex_data;
-    vertex_data.reserve(_polygon_vertices.size() * 2);
-
-    for (auto const & vertex: _polygon_vertices) {
-        vertex_data.push_back(vertex.x);
-        vertex_data.push_back(vertex.y);
-    }
-
-    _polygon_vertex_array_object.bind();
-    _polygon_vertex_buffer.bind();
-    _polygon_vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
-
-    // Set vertex attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    _polygon_vertex_buffer.release();
-    _polygon_vertex_array_object.release();
-
-    // Update line buffer (for drawing lines between vertices)
-    if (_polygon_vertices.size() >= 2) {
-        std::vector<float> line_data;
-        line_data.reserve((_polygon_vertices.size() * 2 + 2) * 2);// Extra space for closure line
-
-        // Add lines between consecutive vertices
-        for (size_t i = 1; i < _polygon_vertices.size(); ++i) {
-            // Line from previous vertex to current vertex
-            line_data.push_back(_polygon_vertices[i - 1].x);
-            line_data.push_back(_polygon_vertices[i - 1].y);
-            line_data.push_back(_polygon_vertices[i].x);
-            line_data.push_back(_polygon_vertices[i].y);
-        }
-
-        // Add closure line if we have 3+ vertices
-        if (_polygon_vertices.size() >= 3) {
-            line_data.push_back(_polygon_vertices.back().x);
-            line_data.push_back(_polygon_vertices.back().y);
-            line_data.push_back(_polygon_vertices.front().x);
-            line_data.push_back(_polygon_vertices.front().y);
-        }
-
-        _polygon_line_array_object.bind();
-        _polygon_line_buffer.bind();
-        _polygon_line_buffer.allocate(line_data.data(), static_cast<int>(line_data.size() * sizeof(float)));
-
-        // Set vertex attributes
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-        _polygon_line_buffer.release();
-        _polygon_line_array_object.release();
-    }
 }
 
 PolygonSelectionRegion::PolygonSelectionRegion(std::vector<Point2D<float>> const & vertices)

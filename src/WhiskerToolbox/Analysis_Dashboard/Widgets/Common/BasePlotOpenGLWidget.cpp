@@ -381,14 +381,15 @@ void BasePlotOpenGLWidget::renderOverlays() {
     auto mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
 
     // Render selection handler previews
-    // LineSelectionHandler uses PreviewRenderer (Phase 2 migration)
+    // LineSelectionHandler and PolygonSelectionHandler use PreviewRenderer (Phase 2+3 migration)
     // Other handlers still use their own render() methods
     std::visit([this, &mvp_matrix](auto & handler) {
         if (!handler) return;
         
         using HandlerType = std::decay_t<decltype(*handler)>;
-        if constexpr (std::is_same_v<HandlerType, LineSelectionHandler>) {
-            // Use PreviewRenderer for LineSelectionHandler
+        if constexpr (std::is_same_v<HandlerType, LineSelectionHandler> ||
+                      std::is_same_v<HandlerType, PolygonSelectionHandler>) {
+            // Use PreviewRenderer for LineSelectionHandler and PolygonSelectionHandler
             if (_preview_renderer.isInitialized() && handler->isActive()) {
                 auto preview = handler->getPreview();
                 if (preview.isValid()) {

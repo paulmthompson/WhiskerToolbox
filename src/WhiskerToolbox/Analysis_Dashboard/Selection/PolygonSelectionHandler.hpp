@@ -2,13 +2,11 @@
 #define POLYGONSELECTIONHANDLER_HPP
 
 #include "CoreGeometry/points.hpp"
+#include "CorePlotting/Interaction/GlyphPreview.hpp"
+#include "CorePlotting/Interaction/PolygonInteractionController.hpp"
 #include "SelectionModes.hpp"
-#include "ShaderManager/ShaderProgram.hpp"
 
 #include <QMatrix4x4>
-#include <QOpenGLBuffer>
-#include <QOpenGLFunctions_4_1_Core>
-#include <QOpenGLVertexArrayObject>
 #include <QPoint>
 #include <QVector2D>
 
@@ -18,7 +16,6 @@
 
 class QKeyEvent;
 class QMouseEvent;
-class QOpenGLShaderProgram;
 
 /**
  * @brief Polygon selection region for area-based selection
@@ -42,10 +39,14 @@ private:
 /**
  * @brief Handles polygon selection functionality for spatial overlay widgets
  * 
- * This class encapsulates all the logic and OpenGL resources needed for polygon selection,
- * including vertex management, rendering, and selection region creation.
+ * This class encapsulates all the logic needed for polygon selection,
+ * including vertex management, rendering via PreviewRenderer, and selection region creation.
+ * 
+ * Internally delegates to CorePlotting::Interaction::PolygonInteractionController for
+ * state management and preview generation. The widget's PreviewRenderer handles
+ * actual OpenGL rendering.
  */
-class PolygonSelectionHandler : protected QOpenGLFunctions_4_1_Core {
+class PolygonSelectionHandler {
 public:
     using NotificationCallback = std::function<void()>;
 
@@ -64,10 +65,20 @@ public:
     void clearNotificationCallback();
 
     /**
-     * @brief Render polygon selection overlay using OpenGL
-     * @param mvp_matrix Model-View-Projection matrix
+     * @brief Get preview geometry for rendering via PreviewRenderer
+     * 
+     * This replaces the old render() method. The widget should call this
+     * and pass the result to PreviewRenderer::render().
+     * 
+     * @return GlyphPreview containing polygon geometry in canvas coordinates
      */
-    void render(QMatrix4x4 const & mvp_matrix);
+    [[nodiscard]] CorePlotting::Interaction::GlyphPreview getPreview() const;
+
+    /**
+     * @brief Check if polygon selection is currently active
+     * @return true if a polygon is being constructed
+     */
+    [[nodiscard]] bool isActive() const;
 
     void deactivate();
 
@@ -80,7 +91,7 @@ public:
 
     void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
 
-    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {}
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos);
 
     void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
 
@@ -89,63 +100,42 @@ public:
 private:
     NotificationCallback _notification_callback;
 
-    QOpenGLShaderProgram * _line_shader_program;
+    // CorePlotting controller for state management and preview generation
+    CorePlotting::Interaction::PolygonInteractionController _controller;
 
-    // OpenGL rendering resources
-    QOpenGLBuffer _polygon_vertex_buffer;
-    QOpenGLVertexArrayObject _polygon_vertex_array_object;
-    QOpenGLBuffer _polygon_line_buffer;
-    QOpenGLVertexArrayObject _polygon_line_array_object;
-
-    // Polygon selection state
-    bool _is_polygon_selecting;
-    std::vector<Point2D<float>> _polygon_vertices;            // Current polygon vertices in world coordinates
+    // Polygon selection state (world coordinates for selection region)
+    std::vector<Point2D<float>> _polygon_vertices_world;      // Polygon vertices in world coordinates
     std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
-
-    /**
-     * @brief Initialize OpenGL resources
-     * Must be called from an OpenGL context
-     */
-    void initializeOpenGLResources();
-
-    /**
-     * @brief Clean up OpenGL resources
-     * Must be called from an OpenGL context
-     */
-    void cleanupOpenGLResources();
-
-    /**
-     * @brief Update polygon vertex and line buffers
-     */
-    void updatePolygonBuffers();
-
-    /**
-     * @brief Add point to current polygon selection
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
-     */
-    void addPolygonVertex(int world_x, int world_y);
-
 
     /**
      * @brief Check if currently in polygon selection mode
      * @return True if actively selecting a polygon
      */
-    [[nodiscard]] bool isPolygonSelecting() const { return _is_polygon_selecting; }
+    [[nodiscard]] bool isPolygonSelecting() const { return _controller.isActive(); }
 
     /**
      * @brief Get the number of vertices in the current polygon
      * @return Number of vertices
      */
-    [[nodiscard]] size_t getVertexCount() const { return _polygon_vertices.size(); }
+    [[nodiscard]] size_t getVertexCount() const { return _controller.getVertexCount(); }
 
     /**
      * @brief Start polygon selection at given world coordinates
      * @param world_x World X coordinate
      * @param world_y World Y coordinate
+     * @param screen_x Screen X coordinate (for preview rendering)
+     * @param screen_y Screen Y coordinate (for preview rendering)
      */
-    void startPolygonSelection(int world_x, int world_y);
+    void startPolygonSelection(float world_x, float world_y, float screen_x, float screen_y);
 
+    /**
+     * @brief Add point to current polygon selection
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @param screen_x Screen X coordinate (for preview rendering)
+     * @param screen_y Screen Y coordinate (for preview rendering)
+     */
+    void addPolygonVertex(float world_x, float world_y, float screen_x, float screen_y);
 
     /**
      * @brief Complete polygon selection and create selection region
