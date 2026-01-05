@@ -360,20 +360,11 @@ namespace TimeSeriesMapper {
  * @param time_frame TimeFrame for index→time conversion
  * @return Vector of MappedElement
  */
-[[nodiscard]] inline std::vector<MappedElement> mapEventsToVector(
+[[nodiscard]] std::vector<MappedElement> mapEventsToVector(
     DigitalEventSeries const & series,
     SeriesLayout const & layout,
     TimeFrame const & time_frame
-) {
-    std::vector<MappedElement> result;
-    result.reserve(series.size());
-    
-    for (auto const & event : mapEvents(series, layout, time_frame)) {
-        result.push_back(event);
-    }
-    
-    return result;
-}
+);
 
 /**
  * @brief Map intervals to a vector of MappedRectElement
@@ -383,20 +374,11 @@ namespace TimeSeriesMapper {
  * @param time_frame TimeFrame for conversion
  * @return Vector of MappedRectElement
  */
-[[nodiscard]] inline std::vector<MappedRectElement> mapIntervalsToVector(
+[[nodiscard]] std::vector<MappedRectElement> mapIntervalsToVector(
     DigitalIntervalSeries const & series,
     SeriesLayout const & layout,
     TimeFrame const & time_frame
-) {
-    std::vector<MappedRectElement> result;
-    result.reserve(series.size());
-    
-    for (auto const & rect : mapIntervals(series, layout, time_frame)) {
-        result.push_back(rect);
-    }
-    
-    return result;
-}
+);
 
 /**
  * @brief Map analog series to a vector of MappedVertex
@@ -409,24 +391,14 @@ namespace TimeSeriesMapper {
  * @param end_time End of range
  * @return Vector of MappedVertex
  */
-[[nodiscard]] inline std::vector<MappedVertex> mapAnalogToVector(
+[[nodiscard]]  std::vector<MappedVertex> mapAnalogToVector(
     AnalogTimeSeries const & series,
     SeriesLayout const & layout,
     TimeFrame const & time_frame,
     float y_scale,
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
-) {
-    std::vector<MappedVertex> result;
-    // Estimate capacity based on range
-    auto range = mapAnalogSeries(series, layout, time_frame, y_scale, start_time, end_time);
-    
-    for (auto const & vertex : range) {
-        result.push_back(vertex);
-    }
-    
-    return result;
-}
+);
 
 } // namespace TimeSeriesMapper
 

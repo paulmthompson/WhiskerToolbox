@@ -25,6 +25,8 @@ Q_DECLARE_METATYPE(EntityId)
 #include <QCheckBox>
 #include <QMenu>
 #include <QTimer>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"

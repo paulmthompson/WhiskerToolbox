@@ -9,21 +9,16 @@
 // per-plot QGraphicsView with a QOpenGLWidget viewport, so existing plot
 // rendering code remains unchanged.
 
-// Lakos include order
-// 1) Prototype header for this implementation: none
-// 2) Other project headers
+
 #include "Analysis_Dashboard/PlotOrganizers/AbstractPlotOrganizer.hpp"
-// 3) Third-party/non-standard libraries
-// Forward declarations for ADS to avoid heavy includes in the header
-namespace ads {
-class CDockManager;
-class CDockWidget;
-}
-// 4) Almost-standard libraries: none
-// 5) C++ standard library
+
 #include <map>
 #include <memory>
 
+namespace ads {
+class CDockManager;
+class CDockWidget;
+}// namespace ads
 class PlotContainer;
 class PlotDockWidgetContent;
 
@@ -45,18 +40,18 @@ public:
      * @pre dock_manager may be nullptr; in that case, addPlot will be a no-op
      * @post Organizer is ready to accept plots
      */
-    explicit DockingPlotOrganizer(ads::CDockManager* dock_manager, QObject* parent = nullptr);
+    explicit DockingPlotOrganizer(ads::CDockManager * dock_manager, QObject * parent = nullptr);
     ~DockingPlotOrganizer() override;
 
     // AbstractPlotOrganizer interface
     void addPlot(std::unique_ptr<PlotContainer> plot_container) override;
-    bool removePlot(QString const& plot_id) override;
-    PlotContainer* getPlot(QString const& plot_id) const override;
+    bool removePlot(QString const & plot_id) override;
+    PlotContainer * getPlot(QString const & plot_id) const override;
     QStringList getAllPlotIds() const override;
     int getPlotCount() const override;
-    void selectPlot(QString const& plot_id) override;
+    void selectPlot(QString const & plot_id) override;
     void clearAllPlots() override;
-    QWidget* getDisplayWidget() override;
+    QWidget * getDisplayWidget() override;
 
 private slots:
     /**
@@ -65,7 +60,7 @@ private slots:
      * @pre plot_id must refer to a known plot
      * @post The plot is considered selected and plotSelected emitted
      */
-    void _onContentActivated(QString const& plot_id);
+    void _onContentActivated(QString const & plot_id);
 
     /**
      * @brief Handle dock close requests to remove plots
@@ -73,27 +68,27 @@ private slots:
      * @pre plot_id must refer to a known plot
      * @post Plot is removed and plotRemoved emitted
      */
-    void _onDockCloseRequested(QString const& plot_id);
+    void _onDockCloseRequested(QString const & plot_id);
 
     /**
      * @brief Forward container plot selection to organizer signal
      */
-    void _onPlotSelected(QString const& plot_id);
+    void _onPlotSelected(QString const & plot_id);
 
     /**
      * @brief Forward container frame jump to organizer signal
      */
-    void _onFrameJumpRequested(int64_t time_frame_index, const std::string& data_key);
+    void _onFrameJumpRequested(int64_t time_frame_index, std::string const & data_key);
 
 private:
     struct Entry {
         std::unique_ptr<PlotContainer> _container;
-        PlotDockWidgetContent* _content; // not owning
-        ads::CDockWidget* _dock;         // not owning
+        PlotDockWidgetContent * _content;// not owning
+        ads::CDockWidget * _dock;        // not owning
     };
 
-    ads::CDockManager* _dock_manager;
-    QWidget* _placeholder_widget;
+    ads::CDockManager * _dock_manager;
+    QWidget * _placeholder_widget;
     std::map<QString, Entry> _entries;
 
     /**
@@ -102,7 +97,7 @@ private:
      * @pre container != nullptr
      * @post Signals connected
      */
-    void _connectContainerSignals(PlotContainer* container);
+    void _connectContainerSignals(PlotContainer * container);
 
     /**
      * @brief Disconnect signals from a plot container
@@ -110,8 +105,7 @@ private:
      * @pre container != nullptr
      * @post Signals disconnected
      */
-    void _disconnectContainerSignals(PlotContainer* container);
+    void _disconnectContainerSignals(PlotContainer * container);
 };
 
-#endif // DOCKINGPLOTORGANIZER_HPP
-
+#endif// DOCKINGPLOTORGANIZER_HPP

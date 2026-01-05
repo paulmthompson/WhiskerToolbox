@@ -7,6 +7,7 @@ set(COREPLOTTING_SOURCES
     Mappers/MappedLineView.hpp
     Mappers/MapperConcepts.hpp
     Mappers/TimeSeriesMapper.hpp
+    Mappers/TimeSeriesMapper.cpp
     Mappers/SpatialMapper.hpp
     Mappers/RasterMapper.hpp
     # DataTypes (style, cache - used by widgets)
