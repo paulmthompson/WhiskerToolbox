@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "DataManager/Observer/Observer_Data.hpp"
+#include "Observer/Observer_Data.hpp"
 
 /**
  * @brief Unique identifier for user-defined groups of entities.

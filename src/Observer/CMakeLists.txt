@@ -1,5 +1,6 @@
 # ObserverData Static Library
 # This library provides the observer pattern implementation for data classes
+# Promoted to top-level library (Phase 1 of Entity Lineage Refactoring)
 
 add_library(ObserverData STATIC
     Observer_Data.hpp
@@ -9,6 +10,7 @@ add_library(ObserverData STATIC
 # Set up include directories
 target_include_directories(ObserverData PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"  # For "Observer/..." includes
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -37,5 +39,3 @@ add_library(WhiskerToolbox::ObserverData ALIAS ObserverData)
 
 # Note: Observer test is built from the main test directory to ensure Catch2 is available
 # The test file Observer_Data.test.cpp is kept here for co-location with implementation
-
-

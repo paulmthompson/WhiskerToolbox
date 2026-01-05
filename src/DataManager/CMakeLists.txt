@@ -14,7 +14,8 @@ find_package(Armadillo REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 
-add_subdirectory(Observer)
+# Note: Observer library has been promoted to top-level (src/Observer)
+# DataManager gets Observer includes via transitive dependency from Entity
 
 add_subdirectory(Lines)
 

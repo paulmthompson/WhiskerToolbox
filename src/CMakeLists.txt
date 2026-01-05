@@ -1,3 +1,5 @@
+add_subdirectory(Observer)
+
 add_subdirectory(TimeFrame)
 
 add_subdirectory(Entity)

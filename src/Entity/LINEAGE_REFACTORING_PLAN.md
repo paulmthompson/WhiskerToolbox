@@ -7,28 +7,53 @@ This document outlines a refactoring plan to move lineage tracking functionality
 Entity library that provides both entity identification and lineage tracking, making it
 reusable across different data management systems.
 
+## Progress Tracking
+
+| Phase | Status | Completion Date |
+|-------|--------|-----------------|
+| Phase 1: Promote Observer Library to Top-Level | ✅ Complete | 2026-01-05 |
+| Phase 2: Move Lineage Types to Entity | ⏳ Not Started | — |
+| Phase 3: Create Abstract Resolution Interface | ⏳ Not Started | — |
+| Phase 4: DataManager Integration Adapter | ⏳ Not Started | — |
+| Phase 5: Update CMake and Dependencies | ⏳ Not Started | — |
+| Phase 6: Integration Testing and Documentation | ⏳ Not Started | — |
+
 ## Current Architecture Analysis
 
-### Current State
+### Current State (After Phase 1)
+
+Phase 1 has been completed successfully. The Observer library has been promoted to a top-level
+library and the dependency architecture is now correctly structured.
 
 ```
-src/Entity/                          src/DataManager/Lineage/
-├── EntityTypes.hpp                  ├── LineageTypes.hpp
-├── EntityRegistry.hpp/cpp           ├── LineageRegistry.hpp/cpp
-├── EntityGroupManager.hpp/cpp       ├── EntityResolver.hpp/cpp
-└── EntityGroupManager.test.cpp      └── LineageRecorder.hpp/cpp
+src/Observer/                       # ✅ MOVED: Promoted to top-level library
+├── CMakeLists.txt
+├── Observer_Data.hpp
+├── Observer_Data.cpp
+└── Observer_Data.test.cpp
 
-src/DataManager/Observer/            
-├── Observer_Data.hpp                
-├── Observer_Data.cpp                
-├── Observer_Data.test.cpp           
-└── CMakeLists.txt                   
+src/Entity/                         # ✅ UPDATED: Now depends on Observer
+├── CMakeLists.txt
+├── EntityTypes.hpp
+├── EntityRegistry.hpp/cpp
+├── EntityRegistry.test.cpp
+├── EntityGroupManager.hpp/cpp
+├── EntityGroupManager.test.cpp
+└── Lineage/                        # ⏳ TO DO: Move lineage types here
+
+src/DataManager/Lineage/           # ⏳ TO DO: Simplify to adapter pattern
+├── EntityResolver.hpp/cpp
+├── LineageRecorder.hpp/cpp
+└── (Other lineage files)
+
+src/TimeFrame/                     # Unchanged
 ```
 
-**Dependencies:**
-- `Entity` library: Depends on `TimeFrame`, includes `DataManager/Observer` (problematic)
-- `Observer` library: **No dependencies** (static library, self-contained)
-- `Lineage` subsystem: Depends on `DataManager`, all data types (MaskData, LineData, etc.)
+**Current Dependencies (After Phase 1):**
+- ✅ `Observer` library: No dependencies (static library, self-contained)
+- ✅ `Entity` library: Depends on `TimeFrame`, `Observer`
+- ✅ `DataManager`: Depends on `Entity`, `TimeFrame`, `Observer`
+- ⏳ `Lineage` subsystem: Still in `DataManager`, to be moved to `Entity`
 
 ### Identified Issues
 
@@ -226,13 +251,13 @@ Update all files that include `DataManager/Observer/Observer_Data.hpp` to use `O
 This may include files in DataManager and other libraries.
 
 #### Deliverables - Phase 1
-- [ ] `src/Observer/` directory created with moved files
-- [ ] `src/Observer/CMakeLists.txt` updated for new location
-- [ ] Entity CMakeLists.txt updated with Observer dependency
-- [ ] Top-level CMakeLists.txt updated with build order
-- [ ] All include paths updated to `Observer/Observer_Data.hpp`
-- [ ] Old `DataManager/Observer/` directory removed
-- [ ] All tests passing
+- [x] `src/Observer/` directory created with moved files
+- [x] `src/Observer/CMakeLists.txt` updated for new location
+- [x] Entity CMakeLists.txt updated with Observer dependency
+- [x] Top-level CMakeLists.txt updated with build order
+- [x] All include paths updated to `Observer/Observer_Data.hpp`
+- [x] Old `DataManager/Observer/` directory removed
+- [x] All tests passing
 
 ---
 

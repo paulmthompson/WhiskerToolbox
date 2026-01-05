@@ -17,7 +17,11 @@ target_include_directories(Entity PUBLIC
 )
 
 # Link to TimeFrame library since EntityRegistry depends on TimeFrameIndex
-target_link_libraries(Entity PUBLIC WhiskerToolbox::TimeFrame)
+# Link to ObserverData since EntityGroupManager uses observer pattern
+target_link_libraries(Entity PUBLIC 
+    WhiskerToolbox::TimeFrame
+    WhiskerToolbox::ObserverData
+)
 
 # Apply the same compiler flags as the main project
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

@@ -105,4 +105,4 @@ private:
     std::function<void()> _on_destroy_cb;
 };
 
-#endif// OBSERVER_DATA_HPP
+#endif // OBSERVER_DATA_HPP

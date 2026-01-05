@@ -12,6 +12,7 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 include(Catch)
 
+add_subdirectory(Observer)
 add_subdirectory(TimeFrame)
 add_subdirectory(Entity)
 add_subdirectory(CoreGeometry)
