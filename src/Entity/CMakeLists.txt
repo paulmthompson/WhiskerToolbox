@@ -13,6 +13,9 @@ add_library(Entity SHARED
     Lineage/LineageTypes.hpp
     Lineage/LineageRegistry.hpp
     Lineage/LineageRegistry.cpp
+    # Abstract resolver interface and implementation (Phase 3)
+    Lineage/LineageResolver.hpp
+    Lineage/LineageResolver.cpp
 )
 
 # Set up include directories

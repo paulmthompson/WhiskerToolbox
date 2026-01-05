@@ -13,17 +13,18 @@ reusable across different data management systems.
 |-------|--------|-----------------|
 | Phase 1: Promote Observer Library to Top-Level | ✅ Complete | 2026-01-05 |
 | Phase 2: Move Lineage Types to Entity | ✅ Complete | 2026-01-05 |
-| Phase 3: Create Abstract Resolution Interface | ⏳ Not Started | — |
+| Phase 3: Create Abstract Resolution Interface | ✅ Complete | 2026-01-05 |
 | Phase 4: DataManager Integration Adapter | ⏳ Not Started | — |
 | Phase 5: Update CMake and Dependencies | ⏳ Not Started | — |
 | Phase 6: Integration Testing and Documentation | ⏳ Not Started | — |
 
 ## Current Architecture Analysis
 
-### Current State (After Phase 2)
+### Current State (After Phase 3)
 
-Phases 1 and 2 have been completed successfully. The Observer library has been promoted to a top-level
-library and the Lineage types have been moved to the Entity library.
+Phases 1, 2, and 3 have been completed successfully. The Observer library has been promoted to a top-level
+library, the Lineage types and basic registry have been moved to the Entity library, and the abstract
+resolution interface has been created.
 
 ```
 src/Observer/                       # ✅ MOVED: Promoted to top-level library
@@ -32,19 +33,22 @@ src/Observer/                       # ✅ MOVED: Promoted to top-level library
 ├── Observer_Data.cpp
 └── Observer_Data.test.cpp
 
-src/Entity/                         # ✅ UPDATED: Now contains Lineage types
+src/Entity/                         # ✅ UPDATED: Now contains Lineage types and resolver
 ├── CMakeLists.txt
 ├── EntityTypes.hpp
 ├── EntityRegistry.hpp/cpp
 ├── EntityRegistry.test.cpp
 ├── EntityGroupManager.hpp/cpp
 ├── EntityGroupManager.test.cpp
-└── Lineage/                        # ✅ MOVED: LineageTypes and LineageRegistry here
+└── Lineage/                        # ✅ COMPLETE: LineageTypes, Registry, and Resolver
     ├── LineageTypes.hpp
     ├── LineageRegistry.hpp/cpp
-    └── LineageRegistry.test.cpp
+    ├── LineageRegistry.test.cpp
+    ├── LineageResolver.hpp         # ✅ NEW: Abstract interface + resolver
+    ├── LineageResolver.cpp
+    └── LineageResolver.test.cpp    # ✅ NEW: Comprehensive unit tests with mock
 
-src/DataManager/Lineage/           # ✅ SIMPLIFIED: Only DataManager-specific code
+src/DataManager/Lineage/           # ✅ UPDATED: Now only contains DataManager-specific code
 ├── EntityResolver.hpp/cpp
 ├── EntityResolver.test.cpp
 ├── LineageRecorder.hpp/cpp
@@ -53,12 +57,13 @@ src/DataManager/Lineage/           # ✅ SIMPLIFIED: Only DataManager-specific c
 src/TimeFrame/                     # Unchanged
 ```
 
-**Current Dependencies (After Phase 2):**
+**Current Dependencies (After Phase 3):**
 - ✅ `Observer` library: No dependencies (static library, self-contained)
 - ✅ `Entity` library: Depends on `TimeFrame`, `Observer`
-- ✅ `Entity/Lineage`: Depends only on `Entity/EntityTypes.hpp` and standard library
+- ✅ `Entity/Lineage`: All types and resolver depend only on `Entity/EntityTypes.hpp`, `TimeFrame`, and standard library
 - ✅ `DataManager`: Depends on `Entity`, `TimeFrame`, `Observer`
-- ⏳ Abstract `LineageResolver`: To be implemented in Phase 3
+- ✅ `IEntityDataSource` interface: Abstraction layer for data access
+- ✅ `LineageResolver`: Generic resolver independent of DataManager
 
 ### Identified Issues
 
@@ -337,6 +342,50 @@ target_link_libraries(Entity PUBLIC WhiskerToolbox::TimeFrame WhiskerToolbox::Ob
 
 ### Phase 3: Create Abstract Resolution Interface (Week 2)
 
+#### 3.0 Summary of Accomplishments
+
+Phase 3 has been completed successfully. The following components were implemented:
+
+1. **`IEntityDataSource` Interface** (Entity/Lineage/LineageResolver.hpp)
+   - Abstract interface for data-source-specific entity resolution
+   - Four pure virtual methods for EntityId queries:
+     - `getEntityIds()` - Get single EntityId at time/index
+     - `getAllEntityIdsAtTime()` - Get all EntityIds at a time point
+     - `getAllEntityIds()` - Get all EntityIds in container
+     - `getElementCount()` - Get element count at time
+   - Enables testing lineage resolution without DataManager dependency
+
+2. **`LineageResolver` Implementation** (Entity/Lineage/LineageResolver.cpp)
+   - Generic lineage resolver using abstract data source
+   - 250+ lines of implementation code
+   - Full support for all 8 lineage types:
+     - Source, OneToOneByTime, AllToOneByTime
+     - SubsetLineage, MultiSourceLineage, ExplicitLineage
+     - EntityMappedLineage, ImplicitEntityMapping
+   - Methods:
+     - `resolveToSource()` - Single-step resolution
+     - `resolveToRoot()` - Full chain resolution with special AllToOne handling
+     - `resolveByEntityId()` - EntityId-based resolution
+     - `getLineageChain()`, `getAllSourceEntities()` - Query methods
+   - Helper methods for each lineage strategy type
+
+3. **Comprehensive Unit Tests** (Entity/Lineage/LineageResolver.test.cpp)
+   - 400+ lines of test code
+   - 40+ test cases across 12 test suites
+   - Mock `MockEntityDataSource` implementing `IEntityDataSource`
+   - Coverage includes:
+     - Construction and null pointer handling
+     - All 8 lineage types (single and multi-level chains)
+     - Edge cases (out of range, empty data, unmapped entities)
+     - Chain resolution through multiple transformation levels
+     - AllToOne special case with intermediate containers
+
+4. **Build System Updates**
+   - Updated `src/Entity/CMakeLists.txt` to include resolver sources
+   - Updated `tests/Entity/CMakeLists.txt` to include resolver tests
+   - Clean compilation with only minor vectorization remarks (no errors)
+   - All tests passing
+
 #### 3.1 Design the Resolver Interface
 
 The key insight is that lineage *types* and *storage* don't need DataManager, but
@@ -614,10 +663,12 @@ TEST_CASE("LineageResolver with mock data source", "[entity][lineage]") {
 ```
 
 #### Deliverables - Phase 3
-- [ ] `src/Entity/Lineage/LineageResolver.hpp` - Interface + generic resolver
-- [ ] `src/Entity/Lineage/LineageResolver.cpp` - Implementation
-- [ ] `src/Entity/Lineage/LineageResolver.test.cpp` - Unit tests with mock
-- [ ] Documentation for implementing IEntityDataSource
+- [x] `src/Entity/Lineage/LineageResolver.hpp` - Interface + generic resolver
+- [x] `src/Entity/Lineage/LineageResolver.cpp` - Implementation
+- [x] `src/Entity/Lineage/LineageResolver.test.cpp` - Unit tests with mock
+- [x] Updated Entity CMakeLists.txt with Lineage resolver sources
+- [x] All tests passing (40+ test cases covering all lineage types)
+- [x] Documentation for implementing IEntityDataSource
 
 ---
 
@@ -1055,9 +1106,9 @@ provided. This is an intentional breaking change to enforce the new architecture
 | `DataManager/Lineage/EntityResolver.test.cpp` | (stays) | Update includes | ✅ Complete (Phase 2) |
 | `DataManager/Lineage/LineageRecorder.hpp` | (stays) | Refactor includes | ✅ Complete (Phase 2) |
 | `DataManager/Lineage/LineageRecorder.cpp` | (stays) | Refactor includes | ✅ Complete (Phase 2) |
-| (new) | `Entity/Lineage/LineageResolver.hpp` | Create | ⏳ Phase 3 |
-| (new) | `Entity/Lineage/LineageResolver.cpp` | Create | ⏳ Phase 3 |
-| (new) | `Entity/Lineage/LineageResolver.test.cpp` | Create | ⏳ Phase 3 |
+| (new) | `Entity/Lineage/LineageResolver.hpp` | Create | ✅ Complete (Phase 3) |
+| (new) | `Entity/Lineage/LineageResolver.cpp` | Create | ✅ Complete (Phase 3) |
+| (new) | `Entity/Lineage/LineageResolver.test.cpp` | Create | ✅ Complete (Phase 3) |
 | (new) | `DataManager/Lineage/DataManagerEntityDataSource.hpp` | Create | ⏳ Phase 4 |
 | (new) | `DataManager/Lineage/DataManagerEntityDataSource.cpp` | Create | ⏳ Phase 4 |
 | (new) | `DataManager/Lineage/DataManagerEntityDataSource.test.cpp` | Create | ⏳ Phase 4 |

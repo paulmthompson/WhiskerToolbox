@@ -19,6 +19,7 @@ add_executable(test_entity
     ${CMAKE_SOURCE_DIR}/src/Entity/EntityGroupManager.test.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Entity/Lineage/LineageRegistry.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/Entity/Lineage/LineageResolver.test.cpp
 )
 
 target_link_libraries(test_entity PRIVATE 
