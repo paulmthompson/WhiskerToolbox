@@ -500,6 +500,25 @@ public:
     [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
     /**
+     * @brief Get time-value pairs as a range with timeframe conversion
+     * 
+     * Similar to getTimeValueRangeInTimeFrameIndexRange, but accepts a source timeframe
+     * to convert the start and end time indices from the source coordinate system to
+     * the analog time series coordinate system.
+     * 
+     * @param start_time The start TimeFrameIndex in source timeframe coordinates
+     * @param end_time The end TimeFrameIndex in source timeframe coordinates
+     * @param source_timeFrame The timeframe that start_time and end_time are expressed in
+     * @return TimeValueRangeView that supports range-based for loops
+     * 
+     * @note If source_timeFrame equals the analog series' timeframe, or if either is null,
+     *       falls back to the non-converting version
+     */
+    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time,
+                                                                            TimeFrameIndex end_time,
+                                                                            TimeFrame const & source_timeFrame) const;
+
+    /**
      * @brief Get time-value pairs as span and time iterator for zero-copy access
      * 
      * Returns a structure containing a zero-copy span over the data values and a

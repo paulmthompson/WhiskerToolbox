@@ -238,6 +238,28 @@ AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFr
     return {this, DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1)};
 }
 
+AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFrameIndexRange(
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time,
+        TimeFrame const & source_timeFrame) const {
+    
+    // If source timeframe is the same as our timeframe, no conversion needed
+    if (&source_timeFrame == _time_frame.get()) {
+        return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+    }
+
+    // If we don't have a timeframe, fall back to non-converting version
+    if (!_time_frame) {
+        return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+    }
+
+    // Convert the time indices from source timeframe to our timeframe
+    auto [target_start, target_end] = convertTimeFrameRange(
+        start_time, end_time, source_timeFrame, *_time_frame);
+
+    return getTimeValueRangeInTimeFrameIndexRange(target_start, target_end);
+}
+
 AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Use existing getDataInTimeFrameIndexRange for the span
     auto data_span = getDataInTimeFrameIndexRange(start_time, end_time);

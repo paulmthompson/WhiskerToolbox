@@ -265,16 +265,20 @@ namespace TimeSeriesMapper {
 [[nodiscard]] inline auto mapAnalogSeries(
     AnalogTimeSeries const & series,
     SeriesLayout const & layout,
-    TimeFrame const & time_frame,
+    TimeFrame const & query_time_frame,
     float y_scale,
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
 ) {
     float const y_offset = layout.y_transform.offset;
+    auto const * series_tf = series.getTimeFrame().get();
     
-    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time)
-        | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
+    // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
+    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame)
+        | std::views::transform([series_tf, y_scale, y_offset](auto const & tv_point) {
+            // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
+            float x = series_tf ? static_cast<float>(series_tf->getTimeAtIndex(tv_point.time_frame_index))
+                                : static_cast<float>(tv_point.time_frame_index.getValue());
             float y = tv_point.value * y_scale + y_offset;
             return MappedVertex{x, y};
         });
@@ -330,16 +334,20 @@ namespace TimeSeriesMapper {
 [[nodiscard]] inline auto mapAnalogSeriesWithIndices(
     AnalogTimeSeries const & series,
     SeriesLayout const & layout,
-    TimeFrame const & time_frame,
+    TimeFrame const & query_time_frame,
     float y_scale,
     TimeFrameIndex start_time,
     TimeFrameIndex end_time
 ) {
     float const y_offset = layout.y_transform.offset;
+    auto const * series_tf = series.getTimeFrame().get();
     
-    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time)
-        | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
+    // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
+    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame)
+        | std::views::transform([series_tf, y_scale, y_offset](auto const & tv_point) {
+            // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
+            float x = series_tf ? static_cast<float>(series_tf->getTimeAtIndex(tv_point.time_frame_index))
+                                : static_cast<float>(tv_point.time_frame_index.getValue());
             float y = tv_point.value * y_scale + y_offset;
             return MappedAnalogVertex{x, y, tv_point.time_frame_index.getValue()};
         });
