@@ -2,7 +2,7 @@
 #define WHISKERTOOLBOX_ENTITY_RESOLVER_HPP
 
 #include "Entity/EntityTypes.hpp"
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <optional>
@@ -13,7 +13,7 @@
 // Forward declarations
 class DataManager;
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 /**
  * @brief Resolves derived data elements back to their source EntityIds
@@ -223,6 +223,6 @@ private:
             std::size_t local_index) const;
 };
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
 
 #endif// WHISKERTOOLBOX_ENTITY_RESOLVER_HPP

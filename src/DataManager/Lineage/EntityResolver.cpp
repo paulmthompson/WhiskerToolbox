@@ -1,6 +1,6 @@
 #include "Lineage/EntityResolver.hpp"
 #include "DataManager.hpp"
-#include "Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
 
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <ranges>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 EntityResolver::EntityResolver(DataManager * dm)
     : _dm(dm) {
@@ -636,4 +636,4 @@ std::vector<EntityId> EntityResolver::resolveImplicit(
     return {};
 }
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage

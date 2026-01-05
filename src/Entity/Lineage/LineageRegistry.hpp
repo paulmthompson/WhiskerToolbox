@@ -1,7 +1,7 @@
-#ifndef WHISKERTOOLBOX_LINEAGE_REGISTRY_HPP
-#define WHISKERTOOLBOX_LINEAGE_REGISTRY_HPP
+#ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
+#define WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
 
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 
 #include <chrono>
 #include <functional>
@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 /**
  * @brief Entry in the lineage registry with metadata
@@ -212,6 +212,6 @@ private:
     buildDependencyMap() const;
 };
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_LINEAGE_REGISTRY_HPP
+#endif// WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP

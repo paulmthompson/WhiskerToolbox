@@ -1,12 +1,18 @@
 # Entity Shared Library
-# This library provides entity management and registration functionality
+# This library provides entity management, registration, and lineage tracking functionality
 
 add_library(Entity SHARED
+    # Core types
     EntityTypes.hpp
     EntityRegistry.hpp
     EntityRegistry.cpp
     EntityGroupManager.hpp
     EntityGroupManager.cpp
+    
+    # Lineage subsystem (moved from DataManager in Phase 2)
+    Lineage/LineageTypes.hpp
+    Lineage/LineageRegistry.hpp
+    Lineage/LineageRegistry.cpp
 )
 
 # Set up include directories

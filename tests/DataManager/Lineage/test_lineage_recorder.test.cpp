@@ -1,11 +1,11 @@
 #include "Lineage/LineageRecorder.hpp"
-#include "Lineage/LineageRegistry.hpp"
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 #include "transforms/v2/core/TransformTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace WhiskerToolbox::Lineage;
+using namespace WhiskerToolbox::Entity::Lineage;
 using namespace WhiskerToolbox::Transforms::V2;
 
 TEST_CASE("LineageRecorder - Basic Recording", "[lineage][recorder]") {

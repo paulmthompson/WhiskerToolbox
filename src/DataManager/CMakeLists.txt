@@ -255,9 +255,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.cpp
 
-        Lineage/LineageTypes.hpp
-        Lineage/LineageRegistry.hpp
-        Lineage/LineageRegistry.cpp
+        # Lineage subsystem (only DataManager-specific files remain here)
+        # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library
         Lineage/EntityResolver.hpp
         Lineage/EntityResolver.cpp
         Lineage/LineageRecorder.hpp

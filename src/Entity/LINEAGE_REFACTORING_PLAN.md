@@ -12,7 +12,7 @@ reusable across different data management systems.
 | Phase | Status | Completion Date |
 |-------|--------|-----------------|
 | Phase 1: Promote Observer Library to Top-Level | ✅ Complete | 2026-01-05 |
-| Phase 2: Move Lineage Types to Entity | ⏳ Not Started | — |
+| Phase 2: Move Lineage Types to Entity | ✅ Complete | 2026-01-05 |
 | Phase 3: Create Abstract Resolution Interface | ⏳ Not Started | — |
 | Phase 4: DataManager Integration Adapter | ⏳ Not Started | — |
 | Phase 5: Update CMake and Dependencies | ⏳ Not Started | — |
@@ -20,10 +20,10 @@ reusable across different data management systems.
 
 ## Current Architecture Analysis
 
-### Current State (After Phase 1)
+### Current State (After Phase 2)
 
-Phase 1 has been completed successfully. The Observer library has been promoted to a top-level
-library and the dependency architecture is now correctly structured.
+Phases 1 and 2 have been completed successfully. The Observer library has been promoted to a top-level
+library and the Lineage types have been moved to the Entity library.
 
 ```
 src/Observer/                       # ✅ MOVED: Promoted to top-level library
@@ -32,75 +32,69 @@ src/Observer/                       # ✅ MOVED: Promoted to top-level library
 ├── Observer_Data.cpp
 └── Observer_Data.test.cpp
 
-src/Entity/                         # ✅ UPDATED: Now depends on Observer
+src/Entity/                         # ✅ UPDATED: Now contains Lineage types
 ├── CMakeLists.txt
 ├── EntityTypes.hpp
 ├── EntityRegistry.hpp/cpp
 ├── EntityRegistry.test.cpp
 ├── EntityGroupManager.hpp/cpp
 ├── EntityGroupManager.test.cpp
-└── Lineage/                        # ⏳ TO DO: Move lineage types here
+└── Lineage/                        # ✅ MOVED: LineageTypes and LineageRegistry here
+    ├── LineageTypes.hpp
+    ├── LineageRegistry.hpp/cpp
+    └── LineageRegistry.test.cpp
 
-src/DataManager/Lineage/           # ⏳ TO DO: Simplify to adapter pattern
+src/DataManager/Lineage/           # ✅ SIMPLIFIED: Only DataManager-specific code
 ├── EntityResolver.hpp/cpp
+├── EntityResolver.test.cpp
 ├── LineageRecorder.hpp/cpp
-└── (Other lineage files)
+└── (No more LineageTypes.hpp, LineageRegistry.hpp)
 
 src/TimeFrame/                     # Unchanged
 ```
 
-**Current Dependencies (After Phase 1):**
+**Current Dependencies (After Phase 2):**
 - ✅ `Observer` library: No dependencies (static library, self-contained)
 - ✅ `Entity` library: Depends on `TimeFrame`, `Observer`
+- ✅ `Entity/Lineage`: Depends only on `Entity/EntityTypes.hpp` and standard library
 - ✅ `DataManager`: Depends on `Entity`, `TimeFrame`, `Observer`
-- ⏳ `Lineage` subsystem: Still in `DataManager`, to be moved to `Entity`
+- ⏳ Abstract `LineageResolver`: To be implemented in Phase 3
 
 ### Identified Issues
 
-#### 1. **Tight Coupling in EntityResolver**
+#### 1. **Tight Coupling in EntityResolver** (Still to be addressed in Phase 3-4)
 The `EntityResolver` class has ~640 lines of code that directly depends on:
 - `DataManager.hpp` for data access
 - Every data type (`MaskData`, `LineData`, `PointData`, `DigitalEventSeries`, etc.)
 - Switch statements dispatching on `DM_DataType` enum
 
-```cpp
-// Current problematic pattern in EntityResolver.cpp
-DM_DataType const type = _dm->getType(data_key);
-switch (type) {
-    case DM_DataType::Line:
-        if (auto data = _dm->getData<LineData>(data_key)) { ... }
-    case DM_DataType::Mask:
-        if (auto data = _dm->getData<MaskData>(data_key)) { ... }
-    // ... 10+ more cases
-}
-```
+This will be addressed by creating an abstract `IEntityDataSource` interface and `LineageResolver` class.
 
-#### 2. **LineageTypes Already Has Minimal Dependencies**
+#### 2. **LineageTypes Minimal Dependencies** ✅ RESOLVED
 `LineageTypes.hpp` only includes:
-- `Entity/EntityTypes.hpp` (already in Entity library)
+- `Entity/EntityTypes.hpp` (now correctly in Entity library)
 - Standard library headers
 
-This file could be moved to Entity with no changes.
+✅ **Status**: Successfully moved to `src/Entity/Lineage/LineageTypes.hpp`
 
-#### 3. **LineageRegistry Has No DataManager Dependencies**
+#### 3. **LineageRegistry No DataManager Dependencies** ✅ RESOLVED
 `LineageRegistry.hpp/cpp` only depends on:
-- `LineageTypes.hpp`
+- `LineageTypes.hpp` (now in Entity/Lineage)
 - Standard library headers
 
-This could also be moved to Entity with no changes.
+✅ **Status**: Successfully moved to `src/Entity/Lineage/LineageRegistry.hpp/cpp`
 
-#### 4. **Observer Library is Misplaced**
-The `ObserverData` library in `DataManager/Observer/` is actually a **self-contained
-static library with no dependencies**. It should be promoted to a top-level library
-(sibling to Entity, TimeFrame, etc.) and Entity should properly depend on it.
+#### 4. **Observer Library is Misplaced** ✅ RESOLVED
+The `ObserverData` library was in `DataManager/Observer/` but is self-contained with no dependencies.
 
-Currently `EntityGroupManager` includes `DataManager/Observer/Observer_Data.hpp`
-which creates an implicit (and incorrect) dependency path.
+✅ **Status**: Promoted to `src/Observer/` as top-level library (Phase 1 complete)
 
-#### 5. **API Inconsistency**
+#### 5. **API Inconsistency** (To be addressed in later phases)
 - `EntityRegistry` is thread-safe (uses `std::mutex`)
 - `LineageRegistry` is not thread-safe (caller must synchronize)
 - `EntityGroupManager` is not thread-safe
+
+This inconsistency will be documented and potentially addressed in Phase 6.
 
 ---
 
@@ -295,49 +289,49 @@ Move `src/DataManager/Lineage/LineageRegistry.hpp/cpp` to `src/Entity/Lineage/`:
 src/DataManager/Lineage/LineageRegistry.test.cpp → src/Entity/Lineage/LineageRegistry.test.cpp
 ```
 
-#### 2.3 Add Thread-Safety to LineageRegistry (Optional)
+#### 2.3 Update Entity CMakeLists.txt
 
-For consistency with `EntityRegistry`, consider making `LineageRegistry` thread-safe:
+Update Entity to include Lineage sources in the build:
 
-```cpp
-class LineageRegistry {
-private:
-    mutable std::mutex _mutex;  // Add mutex protection
-    // ... existing members
-};
-```
+```cmake
+# src/Entity/CMakeLists.txt (updated)
 
-**Decision Point:** Thread-safety adds overhead. If lineage operations are always
-performed on the UI thread, this may be unnecessary. Document the thread-safety
-contract clearly either way.
+add_library(Entity SHARED
+    # Core types
+    EntityTypes.hpp
+    EntityRegistry.hpp
+    EntityRegistry.cpp
+    EntityGroupManager.hpp
+    EntityGroupManager.cpp
+    
+    # Lineage subsystem (moved from DataManager)
+    Lineage/LineageTypes.hpp
+    Lineage/LineageRegistry.hpp
+    Lineage/LineageRegistry.cpp
+)
 
-#### 2.4 Create Backward Compatibility Headers
-
-```cpp
-// src/DataManager/Lineage/LineageTypes.hpp (deprecated)
-#ifndef WHISKERTOOLBOX_LINEAGE_TYPES_HPP_DEPRECATED
-#define WHISKERTOOLBOX_LINEAGE_TYPES_HPP_DEPRECATED
-
-#pragma message("Warning: Include Entity/Lineage/LineageTypes.hpp instead")
-
-#include "Entity/Lineage/LineageTypes.hpp"
-
-// Re-export in old namespace for compatibility
-namespace WhiskerToolbox::Lineage {
-    using namespace WhiskerToolbox::Entity::Lineage;
-}
-
-#endif
+target_include_directories(Entity PUBLIC ...)
+target_link_libraries(Entity PUBLIC WhiskerToolbox::TimeFrame WhiskerToolbox::ObserverData)
 ```
 
 #### Deliverables - Phase 2
-- [ ] `src/Entity/Lineage/` directory created
-- [ ] `LineageTypes.hpp` moved with updated includes
-- [ ] `LineageRegistry.hpp/cpp` moved with updated includes
-- [ ] `LineageRegistry.test.cpp` moved to `src/Entity/Lineage/`
-- [ ] Backward compatibility headers in old location (deprecated)
-- [ ] Update DataManager CMakeLists.txt
-- [ ] Update Entity CMakeLists.txt to include Lineage sources
+- [x] `src/Entity/Lineage/` directory created
+- [x] `LineageTypes.hpp` moved with updated includes and namespace alias
+- [x] `LineageRegistry.hpp/cpp` moved with updated includes
+- [x] `LineageRegistry.test.cpp` moved to `src/Entity/Lineage/`
+- [x] Updated all references in DataManager to use new paths
+- [x] Updated DataManager CMakeLists.txt to remove Lineage sources
+- [x] Updated Entity CMakeLists.txt to include Lineage sources
+- [x] Updated tests/DataManager/CMakeLists.txt to reference moved test
+- [x] All tests passing
+
+**Implementation Notes:**
+- Namespace alias `WhiskerToolbox::Lineage = WhiskerToolbox::Entity::Lineage` created in `LineageTypes.hpp` for backward compatibility
+- Updated `DataManager.hpp` forward declaration and member variables to use `WhiskerToolbox::Entity::Lineage::LineageRegistry`
+- Updated DataManager Lineage files (EntityResolver, LineageRecorder) to use `WhiskerToolbox::Entity::Lineage` namespace
+- Removed old files from `src/DataManager/Lineage/`: LineageTypes.hpp, LineageRegistry.hpp/cpp, LineageRegistry.test.cpp
+- All unit tests for LineageRegistry moved and passing
+- All integration tests with DataManager passing
 
 ---
 
@@ -855,32 +849,22 @@ add_subdirectory(DataManager)
 # ... rest of libraries
 ```
 
-#### 5.4 Add Backward Compatibility Headers
+#### 5.4 Update Include Paths Across Codebase
 
-Create deprecated forwarding headers in the old locations:
+Update all files that reference the old lineage locations to use the new paths:
 
-```cpp
-// src/DataManager/Lineage/LineageTypes.hpp (deprecated)
-#ifndef WHISKERTOOLBOX_LINEAGE_TYPES_HPP
-#define WHISKERTOOLBOX_LINEAGE_TYPES_HPP
+**Old paths → New paths:**
+- `DataManager/Lineage/LineageTypes.hpp` → `Entity/Lineage/LineageTypes.hpp`
+- `DataManager/Lineage/LineageRegistry.hpp` → `Entity/Lineage/LineageRegistry.hpp`
+- `WhiskerToolbox::Lineage` namespace → `WhiskerToolbox::Entity::Lineage`
 
-#pragma message("Warning: Include Entity/Lineage/LineageTypes.hpp instead of DataManager/Lineage/LineageTypes.hpp")
-
-#include "Entity/Lineage/LineageTypes.hpp"
-
-// Re-export in old namespace for compatibility
-namespace WhiskerToolbox::Lineage {
-    using namespace WhiskerToolbox::Entity::Lineage;
-}
-
-#endif
-```
+This is a breaking change. All dependent code must be updated.
 
 #### Deliverables - Phase 5
 - [ ] Updated Entity CMakeLists.txt with Lineage sources
-- [ ] Updated DataManager CMakeLists.txt
+- [ ] Updated DataManager CMakeLists.txt to remove Lineage sources
 - [ ] Updated top-level src/CMakeLists.txt for build order
-- [ ] Backward compatibility headers
+- [ ] All include paths updated across codebase (breaking change)
 - [ ] Verify no circular dependencies
 - [ ] CI builds passing on all platforms
 
@@ -981,7 +965,7 @@ src/DataManager/Lineage/
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| Breaking existing code | Medium | High | Backward compat headers; extensive testing |
+| Breaking existing code | High | High | Comprehensive search/replace; clear migration guide |
 | Circular dependency | Low | High | Careful CMake ordering; dependency analysis |
 | Performance regression | Low | Medium | Benchmark before/after; inline critical paths |
 | API complexity increase | Medium | Low | Hide complexity behind existing APIs |
@@ -997,10 +981,13 @@ src/DataManager/Lineage/
 - `EntityGroupManager` public API
 - `EntityResolver` public API (in DataManager)
 
-### Deprecated (Keep Working, Mark for Removal)
-- `#include "DataManager/Lineage/LineageTypes.hpp"` → Use `Entity/Lineage/LineageTypes.hpp`
-- `#include "DataManager/Lineage/LineageRegistry.hpp"` → Use `Entity/Lineage/LineageRegistry.hpp`
-- `WhiskerToolbox::Lineage` namespace → Use `WhiskerToolbox::Entity::Lineage`
+### Breaking Changes (Code Migration Required)
+- `#include "DataManager/Lineage/LineageTypes.hpp"` → Must use `Entity/Lineage/LineageTypes.hpp`
+- `#include "DataManager/Lineage/LineageRegistry.hpp"` → Must use `Entity/Lineage/LineageRegistry.hpp`
+- `WhiskerToolbox::Lineage` namespace → Must use `WhiskerToolbox::Entity::Lineage`
+
+All references must be updated across the codebase. No backward compatibility headers will be
+provided. This is an intentional breaking change to enforce the new architecture.
 
 ### New APIs
 - `IEntityDataSource` interface
@@ -1053,27 +1040,25 @@ src/DataManager/Lineage/
 
 ## Appendix: File Movement Summary
 
-| Current Location | New Location | Action |
-|-----------------|--------------|--------|
-| `DataManager/Observer/Observer_Data.hpp` | `Observer/Observer_Data.hpp` | Move |
-| `DataManager/Observer/Observer_Data.cpp` | `Observer/Observer_Data.cpp` | Move |
-| `DataManager/Observer/Observer_Data.test.cpp` | `Observer/Observer_Data.test.cpp` | Move |
-| `DataManager/Observer/CMakeLists.txt` | `Observer/CMakeLists.txt` | Move + Update |
-| `DataManager/Lineage/LineageTypes.hpp` | `Entity/Lineage/LineageTypes.hpp` | Move |
-| `DataManager/Lineage/LineageRegistry.hpp` | `Entity/Lineage/LineageRegistry.hpp` | Move |
-| `DataManager/Lineage/LineageRegistry.cpp` | `Entity/Lineage/LineageRegistry.cpp` | Move |
-| `DataManager/Lineage/LineageRegistry.test.cpp` | `Entity/Lineage/LineageRegistry.test.cpp` | Move |
-| `DataManager/Lineage/EntityResolver.hpp` | (stays) | Refactor |
-| `DataManager/Lineage/EntityResolver.cpp` | (stays) | Refactor |
-| `DataManager/Lineage/EntityResolver.test.cpp` | (stays) | Update |
-| `DataManager/Lineage/LineageRecorder.hpp` | (stays) | Update includes |
-| `DataManager/Lineage/LineageRecorder.cpp` | (stays) | Update includes |
-| (new) | `Entity/Lineage/LineageResolver.hpp` | Create |
-| (new) | `Entity/Lineage/LineageResolver.cpp` | Create |
-| (new) | `Entity/Lineage/LineageResolver.test.cpp` | Create |
-| (new) | `DataManager/Lineage/DataManagerEntityDataSource.hpp` | Create |
-| (new) | `DataManager/Lineage/DataManagerEntityDataSource.cpp` | Create |
-| (new) | `DataManager/Lineage/DataManagerEntityDataSource.test.cpp` | Create |
-| `DataManager/Observer/` | (deleted) | Remove after moving |
-| (new) | `DataManager/Lineage/LineageTypes.hpp` | Deprecated forwarding header |
-| (new) | `DataManager/Lineage/LineageRegistry.hpp` | Deprecated forwarding header |
+| Current Location | New Location | Action | Status |
+|-----------------|--------------|--------|--------|
+| `DataManager/Observer/Observer_Data.hpp` | `Observer/Observer_Data.hpp` | Move | ✅ Complete |
+| `DataManager/Observer/Observer_Data.cpp` | `Observer/Observer_Data.cpp` | Move | ✅ Complete |
+| `DataManager/Observer/Observer_Data.test.cpp` | `Observer/Observer_Data.test.cpp` | Move | ✅ Complete |
+| `DataManager/Observer/CMakeLists.txt` | `Observer/CMakeLists.txt` | Move + Update | ✅ Complete |
+| `DataManager/Lineage/LineageTypes.hpp` | `Entity/Lineage/LineageTypes.hpp` | Move | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/LineageRegistry.hpp` | `Entity/Lineage/LineageRegistry.hpp` | Move | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/LineageRegistry.cpp` | `Entity/Lineage/LineageRegistry.cpp` | Move | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/LineageRegistry.test.cpp` | `Entity/Lineage/LineageRegistry.test.cpp` | Move | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/EntityResolver.hpp` | (stays) | Refactor includes | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/EntityResolver.cpp` | (stays) | Refactor includes | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/EntityResolver.test.cpp` | (stays) | Update includes | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/LineageRecorder.hpp` | (stays) | Refactor includes | ✅ Complete (Phase 2) |
+| `DataManager/Lineage/LineageRecorder.cpp` | (stays) | Refactor includes | ✅ Complete (Phase 2) |
+| (new) | `Entity/Lineage/LineageResolver.hpp` | Create | ⏳ Phase 3 |
+| (new) | `Entity/Lineage/LineageResolver.cpp` | Create | ⏳ Phase 3 |
+| (new) | `Entity/Lineage/LineageResolver.test.cpp` | Create | ⏳ Phase 3 |
+| (new) | `DataManager/Lineage/DataManagerEntityDataSource.hpp` | Create | ⏳ Phase 4 |
+| (new) | `DataManager/Lineage/DataManagerEntityDataSource.cpp` | Create | ⏳ Phase 4 |
+| (new) | `DataManager/Lineage/DataManagerEntityDataSource.test.cpp` | Create | ⏳ Phase 4 |
+| `DataManager/Observer/` | (deleted) | Remove | ✅ Complete (Phase 1) |

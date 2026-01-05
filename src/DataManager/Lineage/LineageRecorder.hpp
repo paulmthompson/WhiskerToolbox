@@ -1,14 +1,14 @@
 #ifndef WHISKERTOOLBOX_LINEAGE_RECORDER_HPP
 #define WHISKERTOOLBOX_LINEAGE_RECORDER_HPP
 
-#include "Lineage/LineageRegistry.hpp"
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 #include "transforms/v2/core/TransformTypes.hpp"
 
 #include <stdexcept>
 #include <string>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 /**
  * @brief Helper to record lineage from v2 transform pipelines
@@ -84,6 +84,6 @@ public:
             std::string const & data_key);
 };
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
 
 #endif// WHISKERTOOLBOX_LINEAGE_RECORDER_HPP

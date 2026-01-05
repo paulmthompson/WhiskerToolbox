@@ -1,10 +1,10 @@
-#include "Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
 
 #include <algorithm>
 #include <queue>
 #include <unordered_set>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 void LineageRegistry::setLineage(std::string const & data_key, Descriptor lineage) {
     _lineages[data_key] = LineageEntry(std::move(lineage));
@@ -170,4 +170,4 @@ LineageRegistry::buildDependencyMap() const {
     return dep_map;
 }
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
