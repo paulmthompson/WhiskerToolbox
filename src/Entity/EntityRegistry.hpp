@@ -1,3 +1,11 @@
+/**
+ * @file EntityRegistry.hpp
+ * @brief Thread-safe registry for session-scoped entity identifiers
+ * @ingroup Entity
+ *
+ * Provides deterministic, session-local mapping between (data_key, kind, time, local_index)
+ * tuples and opaque EntityId values. All operations are thread-safe.
+ */
 #ifndef ENTITYREGISTRY_HPP
 #define ENTITYREGISTRY_HPP
 

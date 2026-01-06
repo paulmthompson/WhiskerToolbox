@@ -1,3 +1,12 @@
+/**
+ * @file LineageResolver.hpp
+ * @brief Generic lineage resolution using abstract data source interface
+ * @ingroup Entity
+ *
+ * Provides the IEntityDataSource interface for abstracting data storage from
+ * lineage resolution, and the LineageResolver class for resolving derived
+ * entities back to their source entities.
+ */
 #ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_RESOLVER_HPP
 #define WHISKERTOOLBOX_ENTITY_LINEAGE_RESOLVER_HPP
 

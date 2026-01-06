@@ -37,88 +37,115 @@ graph TB
 
 Located in `Entity/EntityTypes.hpp`, defines the fundamental types:
 
-- **`EntityId`**: Strongly-typed identifier for entities
-- **`EntityKind`**: Enumeration of entity categories (Mask, Line, Point, etc.)
-- **`EntityDescriptor`**: Combines EntityId with metadata
-- **`EntityTupleKey`**: Composite key for entity lookup
+- **`EntityId`**: Strongly-typed identifier for entities (wraps `uint64_t`)
+- **`EntityKind`**: Enumeration of entity categories (Point, Line, Event, Interval, Mask)
+- **`EntityDescriptor`**: Combines data_key, kind, time_value, and local_index
+- **`EntityTupleKey`**: Composite key for entity registry lookups
+- **`DataEntry<T>`**: Template wrapper pairing data with EntityId
 
 ```cpp
 #include "Entity/EntityTypes.hpp"
 
-// Create an EntityId
+// EntityId requires explicit construction
 EntityId id(42);
 
-// EntityIds are comparable
+// EntityIds are comparable and hashable
 if (id == EntityId(42)) { /* ... */ }
 
-// Use in containers
+// Use in unordered containers (std::hash specialization provided)
 std::unordered_set<EntityId> entity_set;
 entity_set.insert(id);
+
+// EntityKind enumeration
+EntityKind kind = EntityKind::MaskEntity;
 ```
 
 ### EntityRegistry
 
-Thread-safe registry for allocating and managing EntityIds:
+Thread-safe registry that maps (data_key, kind, time, local_index) tuples to unique EntityIds:
 
 ```cpp
 #include "Entity/EntityRegistry.hpp"
 
 EntityRegistry registry;
 
-// Allocate a new unique EntityId
-EntityId id = registry.allocate();
+// Get or create an EntityId for the tuple (idempotent)
+EntityId id = registry.ensureId("masks", EntityKind::MaskEntity, 
+                                 TimeFrameIndex(10), 0);
 
-// Allocate multiple IDs
-auto ids = registry.allocateBatch(10);
+// Lookup descriptor for an EntityId
+auto desc = registry.get(id);
+if (desc) {
+    std::cout << "Data key: " << desc->data_key << "\n";
+    std::cout << "Time: " << desc->time_value << "\n";
+}
 
-// Check if an ID exists
-bool exists = registry.contains(id);
+// Clear all entities (session reset)
+registry.clear();
 ```
 
 **Thread Safety**: `EntityRegistry` uses `std::mutex` internally and is safe to use from multiple threads.
 
 ### EntityGroupManager
 
-Manages named groups of entities with observer notification:
+Manages user-defined groups of entities with observer notification support:
 
 ```cpp
 #include "Entity/EntityGroupManager.hpp"
 
 EntityGroupManager manager;
 
-// Create a group
-manager.createGroup("whisker_1");
+// Create a group (returns unique GroupId)
+GroupId group = manager.createGroup("whisker_1", "First whisker entities");
 
-// Add entities to group
-manager.addToGroup("whisker_1", EntityId(100));
-manager.addToGroup("whisker_1", EntityId(101));
+// Add single entity
+manager.addEntityToGroup(group, EntityId(100));
 
-// Query groups
-auto members = manager.getGroupMembers("whisker_1");
-auto groups = manager.getGroupsContaining(EntityId(100));
+// Add multiple entities efficiently
+std::vector<EntityId> ids = {EntityId(101), EntityId(102), EntityId(103)};
+std::size_t added = manager.addEntitiesToGroup(group, ids);
 
-// Observe changes
-manager.addObserver([](std::string const& group, EntityId id, bool added) {
-    // Handle group membership changes
+// Query group contents
+auto members = manager.getEntitiesInGroup(group);
+bool in_group = manager.isEntityInGroup(group, EntityId(100));
+
+// Reverse lookup: which groups contain an entity?
+auto groups = manager.getGroupsContainingEntity(EntityId(100));
+
+// Get group metadata
+auto descriptor = manager.getGroupDescriptor(group);
+if (descriptor) {
+    std::cout << "Name: " << descriptor->name << "\n";
+    std::cout << "Size: " << descriptor->entity_count << "\n";
+}
+
+// Observe changes (for UI updates)
+manager.getGroupObservers().addObserver([]() {
+    // Refresh UI when groups change
 });
+manager.notifyGroupsChanged();  // Call after bulk updates
 ```
 
 **Thread Safety**: `EntityGroupManager` is **not** thread-safe. Callers must synchronize access when using from multiple threads.
 
 ## Lineage Subsystem
 
-The Lineage subsystem tracks data provenance—how derived data relates to source data.
+The Lineage subsystem tracks data provenance—how derived data relates to source data. This enables features like:
+
+- Tracing computed values back to original entities
+- Invalidating derived data when sources change
+- Visualizing data relationships in the UI
 
 ### Lineage Types
 
-Located in `Entity/Lineage/LineageTypes.hpp`, defines 8 lineage strategies:
+Located in `Entity/Lineage/LineageTypes.hpp`, defines 8 lineage strategies as a `std::variant`:
 
 | Type | Description | Use Case |
 |------|-------------|----------|
 | `Source` | Root data with no parent | Raw loaded data |
 | `OneToOneByTime` | 1:1 mapping at each time point | MaskData → Area values |
 | `AllToOneByTime` | N:1 aggregation at each time | Sum of all areas at time T |
-| `SubsetLineage` | Filtered subset of source | Excluded entities |
+| `SubsetLineage` | Filtered subset of source | Excluded/selected entities |
 | `MultiSourceLineage` | Multiple sources combined | Merged datasets |
 | `ExplicitLineage` | Manual per-element mapping | Custom transformations |
 | `EntityMappedLineage` | EntityId → EntityId mapping | Persistent entity relationships |
@@ -128,24 +155,37 @@ Located in `Entity/Lineage/LineageTypes.hpp`, defines 8 lineage strategies:
 #include "Entity/Lineage/LineageTypes.hpp"
 using namespace WhiskerToolbox::Entity::Lineage;
 
-// One-to-one relationship
+// One-to-one relationship: derived[T, i] ← source[T, i]
 OneToOneByTime lineage{"source_masks"};
 
-// Aggregation
+// Aggregation: derived[T] ← ALL source[T, *]
 AllToOneByTime agg_lineage{"mask_areas"};
 
-// Entity mapping
+// Subset with specific entities
+SubsetLineage subset;
+subset.source_key = "masks";
+subset.included_entities = {EntityId(100), EntityId(102)};
+
+// Entity-to-entity mapping for entity-bearing derived containers
 EntityMappedLineage mapped;
 mapped.source_key = "masks";
 mapped.entity_mapping = {
     {EntityId(200), {EntityId(100)}},  // Line 200 from Mask 100
-    {EntityId(201), {EntityId(100), EntityId(101)}}  // Line 201 from Masks 100, 101
+    {EntityId(201), {EntityId(100), EntityId(101)}}  // Line 201 from Masks 100 & 101
 };
+
+// Type-erased descriptor for storage
+Descriptor desc = lineage;
+
+// Query helpers
+bool is_source = isSource(desc);  // false
+auto keys = getSourceKeys(desc);  // {"source_masks"}
+std::string name = getLineageTypeName(desc);  // "OneToOneByTime"
 ```
 
 ### LineageRegistry
 
-Stores lineage metadata for data containers:
+Stores lineage metadata for data containers with staleness tracking:
 
 ```cpp
 #include "Entity/Lineage/LineageRegistry.hpp"
@@ -153,31 +193,42 @@ using namespace WhiskerToolbox::Entity::Lineage;
 
 LineageRegistry registry;
 
-// Register source data
+// Register source data (no parent)
 registry.setLineage("masks", Source{});
 
-// Register derived data
+// Register derived data chain
 registry.setLineage("mask_areas", OneToOneByTime{"masks"});
 registry.setLineage("total_area", AllToOneByTime{"mask_areas"});
 
 // Query lineage
 if (registry.hasLineage("mask_areas")) {
     auto lineage = registry.getLineage("mask_areas");
+    // Use std::visit to dispatch on lineage type
 }
 
-// Get full chain
+// Get full chain from derived to root
 auto chain = registry.getLineageChain("total_area");
 // Returns: ["total_area", "mask_areas", "masks"]
 
+// Find dependents (reverse lookup)
+auto dependents = registry.getDependentKeys("masks");
+// Returns: ["mask_areas"]
+
 // Check if source
-bool is_source = registry.isSource("masks");  // true
+bool is_src = registry.isSource("masks");  // true
+
+// Staleness tracking for cache invalidation
+registry.markStale("mask_areas");
+bool stale = registry.isStale("mask_areas");  // true
+registry.propagateStale("masks");  // Marks masks and all dependents stale
+registry.markValid("mask_areas");  // After recomputation
 ```
 
 **Thread Safety**: `LineageRegistry` is **not** thread-safe. Callers must synchronize access.
 
 ### LineageResolver
 
-Resolves lineage to find source EntityIds. Uses the abstract `IEntityDataSource` interface:
+Resolves lineage to find source EntityIds. Uses the abstract `IEntityDataSource` interface to decouple from specific data storage implementations:
 
 ```cpp
 #include "Entity/Lineage/LineageResolver.hpp"
@@ -188,17 +239,35 @@ using namespace WhiskerToolbox::Entity::Lineage;
 MyDataSource data_source;
 LineageRegistry registry;
 
+// Resolver takes non-owning pointers (caller must ensure lifetime)
 LineageResolver resolver(&data_source, &registry);
 
-// Resolve single step: derived → immediate source
+// Resolve single step: derived → immediate source EntityIds
 auto source_ids = resolver.resolveToSource("mask_areas", TimeFrameIndex(10), 0);
 
 // Resolve full chain: derived → root source(s)
+// Handles multi-level derivations like: masks → areas → peaks
 auto root_ids = resolver.resolveToRoot("total_area", TimeFrameIndex(10));
 
-// For EntityMappedLineage
+// For EntityMappedLineage: resolve by derived EntityId
 auto parent_ids = resolver.resolveByEntityId("derived_lines", EntityId(200));
+
+// Query helpers
+bool has_lin = resolver.hasLineage("mask_areas");  // true
+bool is_src = resolver.isSource("masks");  // true
+auto chain = resolver.getLineageChain("total_area");
+auto all_sources = resolver.getAllSourceEntities("mask_areas");
 ```
+
+**Resolution Semantics by Lineage Type:**
+
+| Lineage Type | `resolveToSource()` Returns |
+|--------------|----------------------------|
+| `Source` | EntityIds from the container itself |
+| `OneToOneByTime` | EntityId at same (time, index) in source |
+| `AllToOneByTime` | All EntityIds at that time in source |
+| `SubsetLineage` | Filtered EntityIds from source |
+| `EntityMappedLineage` | Use `resolveByEntityId()` instead |
 
 ### IEntityDataSource Interface
 
@@ -233,17 +302,25 @@ public:
 
 ## Integration with DataManager
 
-The DataManager library provides `DataManagerEntityDataSource` which implements `IEntityDataSource`:
+The DataManager library provides `DataManagerEntityDataSource` which implements `IEntityDataSource`, and `EntityResolver` as a convenience wrapper:
 
 ```cpp
+#include "DataManager.hpp"
 #include "Lineage/EntityResolver.hpp"
 
 DataManager dm;
-// ... add data ...
+// ... add data and register lineage via dm.getLineageRegistry() ...
 
-EntityResolver resolver(&dm);  // Uses DataManagerEntityDataSource internally
+// EntityResolver composes DataManagerEntityDataSource + LineageResolver internally
+EntityResolver resolver(&dm);
+
+// All LineageResolver methods are available
 auto source_ids = resolver.resolveToSource("derived_data", TimeFrameIndex(10));
+auto root_ids = resolver.resolveToRoot("derived_data", TimeFrameIndex(10));
+auto chain = resolver.getLineageChain("derived_data");
 ```
+
+The separation allows the Entity library to be tested and used without DataManager dependency.
 
 ## Dependencies
 
@@ -273,50 +350,66 @@ graph LR
 
 ## Testing
 
-Unit tests are co-located with source files:
+Unit tests are co-located with source files in `src/Entity/`:
 
-- `Entity/EntityRegistry.test.cpp`
-- `Entity/EntityGroupManager.test.cpp`
-- `Entity/Lineage/LineageRegistry.test.cpp`
-- `Entity/Lineage/LineageResolver.test.cpp`
+- `EntityRegistry.test.cpp` - ID allocation and lookup
+- `EntityGroupManager.test.cpp` - Group CRUD and queries
+- `Lineage/LineageRegistry.test.cpp` - Lineage storage and staleness
+- `Lineage/LineageResolver.test.cpp` - Resolution with mock data source
 
 Integration tests are in `tests/DataManager/Lineage/`:
 
-- `test_transform_lineage_integration.test.cpp` - Full pipeline tests
-- `test_lineage_recorder.test.cpp` - LineageRecorder tests
+- `test_transform_lineage_integration.test.cpp` - Full pipeline tests (700+ lines)
+- `DataManagerEntityDataSource.test.cpp` - Type dispatch tests
 
 Run entity tests:
 ```bash
-ctest --preset linux-clang-release -R entity
+ctest --preset linux-clang-release -R Entity
+```
+
+Run all lineage-related tests:
+```bash
+ctest --preset linux-clang-release -R "[Ll]ineage"
 ```
 
 ## Migration Guide
 
 ### From DataManager/Lineage to Entity/Lineage
 
-If you have code using the old locations:
+If you have code using the old locations (pre-January 2026):
 
 ```cpp
-// OLD (deprecated)
+// OLD (no longer available)
 #include "DataManager/Lineage/LineageTypes.hpp"
 #include "DataManager/Lineage/LineageRegistry.hpp"
-namespace Lineage = WhiskerToolbox::Lineage;
+using namespace WhiskerToolbox::Lineage;
 
 // NEW
 #include "Entity/Lineage/LineageTypes.hpp"
 #include "Entity/Lineage/LineageRegistry.hpp"
-namespace Lineage = WhiskerToolbox::Entity::Lineage;
+using namespace WhiskerToolbox::Entity::Lineage;
 ```
 
-### Namespace Changes
+### Key API Changes
 
-The namespace has moved from `WhiskerToolbox::Lineage` to `WhiskerToolbox::Entity::Lineage`. A compatibility alias exists but should not be relied upon for new code.
+| Old | New |
+|-----|-----|
+| `WhiskerToolbox::Lineage` namespace | `WhiskerToolbox::Entity::Lineage` |
+| Lineage types in DataManager | Lineage types in Entity |
+| Direct DataManager coupling | Abstract `IEntityDataSource` interface |
+
+### EntityResolver Backward Compatibility
+
+The `EntityResolver` class in `DataManager/Lineage/` maintains its public API. Existing code using `EntityResolver` with DataManager should continue to work without changes.
 
 ## Example: Custom Data Source
 
-To use lineage resolution with a custom data backend:
+To use lineage resolution with a custom data backend, implement `IEntityDataSource`:
 
 ```cpp
+#include "Entity/Lineage/LineageResolver.hpp"
+using namespace WhiskerToolbox::Entity::Lineage;
+
 class MyCustomDataSource : public IEntityDataSource {
 public:
     std::vector<EntityId> getEntityIds(
@@ -324,41 +417,67 @@ public:
         TimeFrameIndex time,
         std::size_t local_index) const override 
     {
-        // Your implementation
-        return _storage.getEntityAt(data_key, time, local_index);
+        // Return EntityId at specific position
+        // Return empty vector if not found
+        auto it = _data.find({data_key, time.getValue()});
+        if (it == _data.end() || local_index >= it->second.size()) {
+            return {};
+        }
+        return {it->second[local_index]};
     }
     
     std::vector<EntityId> getAllEntityIdsAtTime(
         std::string const& data_key,
         TimeFrameIndex time) const override 
     {
-        return _storage.getAllEntitiesAtTime(data_key, time);
+        auto it = _data.find({data_key, time.getValue()});
+        if (it == _data.end()) return {};
+        return it->second;
     }
     
     std::unordered_set<EntityId> getAllEntityIds(
         std::string const& data_key) const override 
     {
-        return _storage.getAllEntities(data_key);
+        std::unordered_set<EntityId> result;
+        for (auto const& [key, ids] : _data) {
+            if (key.first == data_key) {
+                result.insert(ids.begin(), ids.end());
+            }
+        }
+        return result;
     }
     
     std::size_t getElementCount(
         std::string const& data_key,
         TimeFrameIndex time) const override 
     {
-        return _storage.countAt(data_key, time);
+        auto it = _data.find({data_key, time.getValue()});
+        return it != _data.end() ? it->second.size() : 0;
     }
 
 private:
-    MyStorageBackend _storage;
+    // Example storage: (data_key, time) → vector of EntityIds
+    std::map<std::pair<std::string, int64_t>, std::vector<EntityId>> _data;
 };
 
 // Use with LineageResolver
 MyCustomDataSource data_source;
 LineageRegistry registry;
 LineageResolver resolver(&data_source, &registry);
+
+// Now resolution works with your custom backend
+auto ids = resolver.resolveToSource("derived", TimeFrameIndex(10));
 ```
+
+## Performance Considerations
+
+- **EntityRegistry**: O(1) lookup and insertion via hash maps
+- **EntityGroupManager**: O(1) for membership queries; O(n) for batch operations
+- **LineageRegistry**: O(1) for single-key queries; O(n) for chain traversal
+- **LineageResolver**: Resolution cost depends on lineage depth and data source implementation; `resolveAllToOneToRoot` is O(n × depth) for n elements at a time point
 
 ## See Also
 
 - [Transform Pipeline](../transforms/index.qmd) - Data transformation system
 - [Table View](../table_view.qmd) - Tabular data views
+- [DataManager](../data_manager.qmd) - Central data storage
