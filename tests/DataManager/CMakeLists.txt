@@ -30,6 +30,7 @@ add_executable(test_data_manager
         fixtures/test_builders.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/EntityResolver.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/DataManagerEntityDataSource.test.cpp
 
         Lineage/test_lineage_recorder.test.cpp
         Lineage/test_transform_lineage_integration.test.cpp

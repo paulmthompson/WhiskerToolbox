@@ -257,6 +257,9 @@ set(DATAMANAGER_SOURCES
 
         # Lineage subsystem (only DataManager-specific files remain here)
         # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library
+        # EntityResolver now uses composition with LineageResolver from Entity
+        Lineage/DataManagerEntityDataSource.hpp
+        Lineage/DataManagerEntityDataSource.cpp
         Lineage/EntityResolver.hpp
         Lineage/EntityResolver.cpp
         Lineage/LineageRecorder.hpp
