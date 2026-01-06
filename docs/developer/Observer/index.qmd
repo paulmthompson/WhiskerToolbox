@@ -1,0 +1,213 @@
+---
+title: "Observer Library"
+description: "Observer pattern implementation for data change notifications"
+---
+
+## Overview
+
+The Observer library provides a lightweight implementation of the [observer pattern](https://en.wikipedia.org/wiki/Observer_pattern) used throughout WhiskerToolbox to propagate data changes to dependent components. When data objects are modified, all registered observers are automatically notified, enabling reactive UI updates and derived data recalculation.
+
+## Core Components
+
+### ObserverData
+
+The `ObserverData` class manages a collection of callback functions that are invoked when data changes occur.
+
+```cpp
+#include "Observer/Observer_Data.hpp"
+
+ObserverData observable;
+
+// Register an observer - store the ID for later removal
+auto id = observable.addObserver([]() {
+    std::cout << "Data changed!" << std::endl;
+});
+
+// Trigger all registered callbacks
+observable.notifyObservers();
+
+// Remove the observer when no longer needed
+observable.removeObserver(id);
+```
+
+### NotifyObservers Enum
+
+The `NotifyObservers` enum provides a strongly-typed way to specify whether observers should be notified after a data modification. This is used by consuming libraries (e.g., DataManager) to provide clear APIs:
+
+```cpp
+// In a data class that uses ObserverData internally
+void MyDataClass::setData(const Data& data, NotifyObservers notify = NotifyObservers::Yes) {
+    _data = data;
+    if (notify == NotifyObservers::Yes) {
+        _observer_data.notifyObservers();
+    }
+}
+
+// Usage - explicit about notification intent
+myData.setData(newData, NotifyObservers::Yes);  // Notify observers
+myData.setData(newData, NotifyObservers::No);   // Silent update (batch operations)
+```
+
+### ModificationHandle
+
+`ModificationHandle<T>` is a RAII wrapper that automatically notifies observers when modifications are complete. This ensures notifications happen even if exceptions occur or code paths are complex.
+
+```cpp
+// In a data class
+ModificationHandle<std::vector<Point>> getDataForModification() {
+    return ModificationHandle<std::vector<Point>>(
+        _points,
+        [this]() { _observer_data.notifyObservers(); }
+    );
+}
+
+// Usage
+{
+    auto handle = myData.getDataForModification();
+    handle->push_back(Point{1.0, 2.0});
+    handle->push_back(Point{3.0, 4.0});
+    // Notification happens automatically when handle goes out of scope
+}
+```
+
+## Integration Pattern
+
+The typical pattern for making a class observable is to compose `ObserverData` as a member:
+
+```cpp
+class MyObservableData {
+public:
+    // Allow external code to register observers
+    ObserverData::CallbackID addObserver(ObserverData::ObserverCallback callback) {
+        return _observer_data.addObserver(std::move(callback));
+    }
+    
+    void removeObserver(ObserverData::CallbackID id) {
+        _observer_data.removeObserver(id);
+    }
+    
+    // Data modification methods notify observers
+    void setValue(int value, NotifyObservers notify = NotifyObservers::Yes) {
+        _value = value;
+        if (notify == NotifyObservers::Yes) {
+            _observer_data.notifyObservers();
+        }
+    }
+    
+private:
+    int _value = 0;
+    ObserverData _observer_data;
+};
+```
+
+## Usage in WhiskerToolbox
+
+The Observer library is fundamental to WhiskerToolbox's reactive architecture:
+
+1. **DataManager**: All data types (PointData, LineData, MaskData, etc.) use observers to notify the UI when data changes
+2. **Transforms**: Output data objects observe their input sources to automatically recalculate when inputs change
+3. **TableView**: Tables observe their source data and row/column selectors to update when dependencies change
+4. **UI Widgets**: Qt widgets register observers on data objects to refresh their display
+
+```
+┌─────────────┐     notifies     ┌─────────────┐     notifies     ┌─────────────┐
+│  Raw Data   │ ───────────────► │  Transform  │ ───────────────► │  UI Widget  │
+│ (PointData) │                  │  (Output)   │                  │  (Display)  │
+└─────────────┘                  └─────────────┘                  └─────────────┘
+```
+
+## Important Limitations
+
+::: {.callout-warning}
+## Not Thread-Safe
+
+The Observer library is **not thread-safe**. All operations (`addObserver`, `removeObserver`, `notifyObservers`) must be called from the same thread, or external synchronization must be provided.
+:::
+
+::: {.callout-warning}
+## No Modification During Notification
+
+Adding or removing observers from within an observer callback during `notifyObservers()` results in **undefined behavior**. If you need to modify observers in response to a notification, defer the modification until after the notification completes.
+:::
+
+::: {.callout-note}
+## Exception Behavior
+
+If an observer callback throws an exception, remaining observers will **not** be notified. The exception propagates to the caller of `notifyObservers()`. Design callbacks to be exception-safe.
+:::
+
+## Best Practices
+
+### Always Store Callback IDs
+
+The `addObserver()` method returns a `CallbackID` that is required for removal. Always store this ID if you need to unregister the observer later:
+
+```cpp
+// Good - ID stored for later removal
+auto id = observable.addObserver(callback);
+// ... later ...
+observable.removeObserver(id);
+
+// Bad - ID discarded, observer cannot be removed
+observable.addObserver(callback);  // Compiler warning: [[nodiscard]]
+```
+
+### Use NotifyObservers::No for Batch Operations
+
+When performing multiple modifications, suppress intermediate notifications to avoid redundant updates:
+
+```cpp
+void loadDataset(const std::vector<Point>& points) {
+    for (size_t i = 0; i < points.size() - 1; ++i) {
+        addPoint(points[i], NotifyObservers::No);  // No notification
+    }
+    addPoint(points.back(), NotifyObservers::Yes);  // Single notification at end
+}
+```
+
+### Clean Up Observers
+
+Always remove observers when the observing object is destroyed to prevent dangling callbacks:
+
+```cpp
+class MyWidget {
+public:
+    MyWidget(ObservableData& data) : _data(data) {
+        _observer_id = _data.addObserver([this]() { refresh(); });
+    }
+    
+    ~MyWidget() {
+        _data.removeObserver(_observer_id);  // Prevent dangling callback
+    }
+    
+private:
+    ObservableData& _data;
+    ObserverData::CallbackID _observer_id;
+};
+```
+
+## API Reference
+
+### ObserverData
+
+| Method | Description |
+|--------|-------------|
+| `[[nodiscard]] CallbackID addObserver(ObserverCallback)` | Register a callback, returns unique ID |
+| `void notifyObservers()` | Invoke all registered callbacks |
+| `void removeObserver(CallbackID)` | Unregister a callback by ID |
+
+### ModificationHandle\<T\>
+
+| Method | Description |
+|--------|-------------|
+| `T* operator->()` | Pointer-like access to underlying data |
+| `T& operator*()` | Reference access to underlying data |
+| `T& get()` | Explicit getter for underlying data |
+| *destructor* | Automatically invokes notification callback |
+
+### NotifyObservers
+
+| Value | Description |
+|-------|-------------|
+| `Yes` | Notify observers after the operation |
+| `No` | Suppress observer notification |
