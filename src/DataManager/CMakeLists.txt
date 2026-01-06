@@ -1,5 +1,3 @@
-
-
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(reflectcpp CONFIG REQUIRED)
@@ -192,6 +190,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/Line_Clip/line_clip.hpp
         transforms/Points/Point_Particle_Filter/point_particle_filter.cpp
         transforms/Points/Point_Particle_Filter/point_particle_filter.hpp
+        transforms/Points/Point_Distance/point_distance.cpp
+        transforms/Points/Point_Distance/point_distance.hpp
         transforms/Masks/Mask_Area/mask_area.cpp
         transforms/Masks/Mask_Area/mask_area.hpp
         transforms/Masks/Mask_Centroid/mask_centroid.cpp
@@ -254,6 +254,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.cpp
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.cpp
+        transforms/v2/algorithms/PointDistance/PointDistance.hpp
+        transforms/v2/algorithms/PointDistance/PointDistance.cpp
 
         # Lineage subsystem (only DataManager-specific files remain here)
         # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library
