@@ -202,6 +202,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.cpp
         DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp
         DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.ui
+        DataTransform_Widget/Points/PointDistance_Widget/PointDistance_Widget.cpp
+        DataTransform_Widget/Points/PointDistance_Widget/PointDistance_Widget.hpp
+        DataTransform_Widget/Points/PointDistance_Widget/PointDistance_Widget.ui
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
         DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui

@@ -1,4 +1,3 @@
-
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGLWidgets OpenGL)
 
 find_package(glm CONFIG REQUIRED)
@@ -95,4 +94,4 @@ set_target_properties(DataViewer_Widget PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
     AUTORCC ON
-) 
+)

@@ -86,6 +86,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Lines/Line_Group_To_Intervals/line_group_to_intervals.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Points/Point_Particle_Filter/point_particle_filter.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Points/Point_Distance/point_distance.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Area/mask_area.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Centroid/mask_centroid.test.cpp
@@ -130,7 +131,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineSubsegment/LineSubsegment.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskCentroid/MaskCentroid.test.cpp
-
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/PointDistance/PointDistance.test.cpp
 )
 
 # Add VideoData tests only if FFmpeg is enabled

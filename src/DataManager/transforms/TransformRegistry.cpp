@@ -23,6 +23,7 @@
 #include "transforms/Lines/Line_Resample/line_resample.hpp"
 #include "transforms/Lines/Line_Subsegment/line_subsegment.hpp"
 #include "transforms/Points/Point_Particle_Filter/point_particle_filter.hpp"
+#include "transforms/Points/Point_Distance/point_distance.hpp"
 #include "transforms/Masks/Mask_Area/mask_area.hpp"
 #include "transforms/Masks/Mask_Centroid/mask_centroid.hpp"
 #include "transforms/Masks/Mask_Connected_Component/mask_connected_component.hpp"
@@ -73,6 +74,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineOutlierDetectionOperation>());
     _registerOperation(std::make_unique<LineIndexGroupingOperation>());
     _registerOperation(std::make_unique<LineGroupToIntervalsOperation>());
+    _registerOperation(std::make_unique<PointDistanceOperation>());
     _registerOperation(std::make_unique<PointParticleFilterOperation>());
     _registerOperation(std::make_unique<GroupOperation>());
     _registerOperation(std::make_unique<BooleanOperation>());

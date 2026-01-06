@@ -40,6 +40,7 @@
 #include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 #include "DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp"
+#include "DataTransform_Widget/Points/PointDistance_Widget/PointDistance_Widget.hpp"
 #include "Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp"
 
 #include <QApplication>
@@ -266,6 +267,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         widget->setDataManager(_data_manager);
         return widget;
     };
+    _parameterWidgetFactories["Calculate Point Distance"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new PointDistance_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
 
     _parameterWidgetFactories["Filter"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogFilter_Widget(parent);
