@@ -111,6 +111,8 @@ set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/libwinpthread-1.dll"
         #"${CMAKE_BINARY_DIR}/libomp140.x86_64.dll" #This is located in C:\Windows\System32
         "C:/Windows/System32/libomp140.x86_64.dll"
+        "${CMAKE_BINARY_DIR}/yyjson.dll"
+
 )
 
 set(TORCH_DLLS
