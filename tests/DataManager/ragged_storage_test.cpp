@@ -277,3 +277,219 @@ TEST_CASE("RaggedStorage with Mask2D", "[RaggedStorage]") {
         CHECK(view.getData(*idx3).points()[0].x == 3);
     }
 }
+
+// =============================================================================
+// Cache Optimization Tests
+// =============================================================================
+
+TEST_CASE("RaggedStorageCache - Owning storage", "[RaggedStorage][cache]") {
+    OwningRaggedStorage<Point2D<float>> storage;
+    
+    SECTION("Empty storage has valid but zero-size cache") {
+        auto cache = storage.tryGetCache();
+        CHECK(cache.isValid());
+        CHECK(cache.cache_size == 0);
+    }
+    
+    SECTION("Populated storage provides valid cache with pointers") {
+        storage.append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        storage.append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+        storage.append(TimeFrameIndex{30}, Point2D<float>{5.0f, 6.0f}, EntityId{102});
+        
+        auto cache = storage.tryGetCache();
+        
+        CHECK(cache.isValid());
+        CHECK(cache.cache_size == 3);
+        
+        // Verify cache data matches storage data
+        for (size_t i = 0; i < cache.cache_size; ++i) {
+            CHECK(cache.getTime(i) == storage.getTime(i));
+            CHECK(cache.getData(i).x == storage.getData(i).x);
+            CHECK(cache.getData(i).y == storage.getData(i).y);
+            CHECK(cache.getEntityId(i) == storage.getEntityId(i));
+        }
+    }
+    
+    SECTION("Cache pointers are contiguous with storage") {
+        storage.append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        storage.append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+        
+        auto cache = storage.tryGetCache();
+        
+        // Pointers should match internal vector data
+        CHECK(cache.times_ptr == storage.times().data());
+        CHECK(cache.data_ptr == storage.data().data());
+        CHECK(cache.entity_ids_ptr == storage.entityIds().data());
+    }
+}
+
+TEST_CASE("RaggedStorageCache - View storage", "[RaggedStorage][cache]") {
+    auto source = std::make_shared<OwningRaggedStorage<Point2D<float>>>();
+    source->append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+    source->append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+    source->append(TimeFrameIndex{30}, Point2D<float>{5.0f, 6.0f}, EntityId{102});
+    
+    ViewRaggedStorage<Point2D<float>> view(source);
+    view.setAllIndices();
+    
+    SECTION("View storage returns invalid cache") {
+        auto cache = view.tryGetCache();
+        
+        CHECK_FALSE(cache.isValid());
+        CHECK(cache.times_ptr == nullptr);
+        CHECK(cache.data_ptr == nullptr);
+        CHECK(cache.entity_ids_ptr == nullptr);
+    }
+    
+    SECTION("Filtered view also returns invalid cache") {
+        std::unordered_set<EntityId> ids{EntityId{100}, EntityId{102}};
+        view.filterByEntityIds(ids);
+        
+        auto cache = view.tryGetCache();
+        CHECK_FALSE(cache.isValid());
+    }
+}
+
+// =============================================================================
+// RaggedStorageWrapper Tests (Type Erasure)
+// =============================================================================
+
+TEST_CASE("RaggedStorageWrapper - Basic operations with owning storage", "[RaggedStorage][wrapper]") {
+    OwningRaggedStorage<Point2D<float>> storage;
+    storage.append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+    storage.append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+    storage.append(TimeFrameIndex{30}, Point2D<float>{5.0f, 6.0f}, EntityId{102});
+    
+    RaggedStorageWrapper<Point2D<float>> wrapper(std::move(storage));
+    
+    SECTION("Size and bounds") {
+        CHECK(wrapper.size() == 3);
+        CHECK_FALSE(wrapper.empty());
+        CHECK(wrapper.getTimeCount() == 3);
+    }
+    
+    SECTION("Element access") {
+        CHECK(wrapper.getTime(0) == TimeFrameIndex{10});
+        CHECK(wrapper.getData(0).x == 1.0f);
+        CHECK(wrapper.getData(0).y == 2.0f);
+        CHECK(wrapper.getEntityId(1) == EntityId{101});
+    }
+    
+    SECTION("EntityId lookup") {
+        auto idx = wrapper.findByEntityId(EntityId{101});
+        REQUIRE(idx.has_value());
+        CHECK(*idx == 1);
+        
+        CHECK_FALSE(wrapper.findByEntityId(EntityId{999}).has_value());
+    }
+    
+    SECTION("Time range lookup") {
+        auto [start, end] = wrapper.getTimeRange(TimeFrameIndex{10});
+        CHECK(start == 0);
+        CHECK(end == 1);
+    }
+    
+    SECTION("Storage type identification") {
+        CHECK(wrapper.getStorageType() == RaggedStorageType::Owning);
+        CHECK_FALSE(wrapper.isView());
+    }
+}
+
+TEST_CASE("RaggedStorageWrapper - Cache optimization", "[RaggedStorage][wrapper][cache]") {
+    SECTION("Owning storage provides valid cache through wrapper") {
+        OwningRaggedStorage<Point2D<float>> storage;
+        storage.append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        storage.append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+        
+        RaggedStorageWrapper<Point2D<float>> wrapper(std::move(storage));
+        
+        auto cache = wrapper.tryGetCache();
+        CHECK(cache.isValid());
+        CHECK(cache.cache_size == 2);
+        
+        // Verify cache data matches wrapper data
+        CHECK(cache.getTime(0) == wrapper.getTime(0));
+        CHECK(cache.getData(0).x == wrapper.getData(0).x);
+        CHECK(cache.getEntityId(1) == wrapper.getEntityId(1));
+    }
+    
+    SECTION("View storage provides invalid cache through wrapper") {
+        auto source = std::make_shared<OwningRaggedStorage<Point2D<float>>>();
+        source->append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        source->append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+        
+        ViewRaggedStorage<Point2D<float>> view(source);
+        view.setAllIndices();
+        
+        RaggedStorageWrapper<Point2D<float>> wrapper(std::move(view));
+        
+        auto cache = wrapper.tryGetCache();
+        CHECK_FALSE(cache.isValid());
+        CHECK(wrapper.getStorageType() == RaggedStorageType::View);
+    }
+}
+
+TEST_CASE("RaggedStorageWrapper - Default construction", "[RaggedStorage][wrapper]") {
+    RaggedStorageWrapper<Point2D<float>> wrapper;
+    
+    CHECK(wrapper.size() == 0);
+    CHECK(wrapper.empty());
+    CHECK(wrapper.getStorageType() == RaggedStorageType::Owning);
+    
+    // Even empty owning storage should have valid cache
+    auto cache = wrapper.tryGetCache();
+    CHECK(cache.isValid());
+    CHECK(cache.cache_size == 0);
+}
+
+TEST_CASE("RaggedStorageWrapper - Type access", "[RaggedStorage][wrapper]") {
+    SECTION("tryGet returns correct type for owning storage") {
+        OwningRaggedStorage<Point2D<float>> storage;
+        storage.append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        
+        RaggedStorageWrapper<Point2D<float>> wrapper(std::move(storage));
+        
+        auto* owning = wrapper.tryGet<OwningRaggedStorage<Point2D<float>>>();
+        REQUIRE(owning != nullptr);
+        CHECK(owning->size() == 1);
+        
+        auto* view = wrapper.tryGet<ViewRaggedStorage<Point2D<float>>>();
+        CHECK(view == nullptr);
+    }
+    
+    SECTION("tryGet returns correct type for view storage") {
+        auto source = std::make_shared<OwningRaggedStorage<Point2D<float>>>();
+        source->append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        
+        ViewRaggedStorage<Point2D<float>> view(source);
+        view.setAllIndices();
+        
+        RaggedStorageWrapper<Point2D<float>> wrapper(std::move(view));
+        
+        auto* viewPtr = wrapper.tryGet<ViewRaggedStorage<Point2D<float>>>();
+        REQUIRE(viewPtr != nullptr);
+        CHECK(viewPtr->size() == 1);
+        
+        auto* owning = wrapper.tryGet<OwningRaggedStorage<Point2D<float>>>();
+        CHECK(owning == nullptr);
+    }
+}
+
+TEST_CASE("RaggedStorageWrapper - Move semantics", "[RaggedStorage][wrapper]") {
+    OwningRaggedStorage<Point2D<float>> storage;
+    storage.append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+    
+    RaggedStorageWrapper<Point2D<float>> wrapper1(std::move(storage));
+    CHECK(wrapper1.size() == 1);
+    
+    // Move construction
+    RaggedStorageWrapper<Point2D<float>> wrapper2(std::move(wrapper1));
+    CHECK(wrapper2.size() == 1);
+    CHECK(wrapper2.getData(0).x == 1.0f);
+    
+    // Move assignment
+    RaggedStorageWrapper<Point2D<float>> wrapper3;
+    wrapper3 = std::move(wrapper2);
+    CHECK(wrapper3.size() == 1);
+    CHECK(wrapper3.getEntityId(0) == EntityId{100});
+}
