@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -587,14 +588,53 @@ public:
     [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::View; }
 
     /**
-     * @brief Return invalid cache (views are non-contiguous)
+     * @brief Return cache if view is contiguous, otherwise invalid cache
      * 
-     * ViewRaggedStorage accesses source data through an indirection array,
-     * so contiguous pointer access is not possible. Returns an invalid cache
-     * to signal that callers must use virtual dispatch for element access.
+     * ViewRaggedStorage can provide a valid cache when the indices form
+     * a contiguous range (e.g., all elements, or a consecutive subset).
+     * This enables zero-overhead iteration for common view patterns.
+     * 
+     * Contiguous cases:
+     * - All indices: _indices == [0, 1, 2, ..., n-1]
+     * - Consecutive range: _indices == [k, k+1, ..., m]
+     * 
+     * Non-contiguous cases (must use virtual dispatch):
+     * - Filtered by entity IDs (sparse)
+     * - Non-consecutive time ranges
      */
     [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
-        // Views cannot provide contiguous access - return invalid cache
+        // Empty view is trivially contiguous
+        if (_indices.empty()) {
+            return RaggedStorageCache<TData>{nullptr, nullptr, nullptr, 0, true};
+        }
+        
+        // Check if indices form a contiguous range [start, start+1, ..., start+n-1]
+        size_t const start_idx = _indices[0];
+        bool is_contiguous = true;
+        
+        for (size_t i = 1; i < _indices.size(); ++i) {
+            if (_indices[i] != start_idx + i) {
+                is_contiguous = false;
+                break;
+            }
+        }
+        
+        if (is_contiguous) {
+            // Return cache pointing to the contiguous range in source
+            auto const& src_times = _source->times();
+            auto const& src_data = _source->data();
+            auto const& src_entity_ids = _source->entityIds();
+            
+            return RaggedStorageCache<TData>{
+                src_times.data() + start_idx,
+                src_data.data() + start_idx,
+                src_entity_ids.data() + start_idx,
+                _indices.size(),
+                true  // is_contiguous
+            };
+        }
+        
+        // Non-contiguous - return invalid cache
         return RaggedStorageCache<TData>{};
     }
 
@@ -875,6 +915,95 @@ public:
         return _impl->tryGetCache();
     }
 
+    // ========== Mutation Operations ==========
+    
+    /**
+     * @brief Append a new entry (move version)
+     * 
+     * Only valid for owning storage. Throws if storage is a view.
+     * 
+     * @param time The TimeFrameIndex for this entry
+     * @param data The data to store (will be moved)
+     * @param entity_id The EntityId for this entry
+     * @throws std::runtime_error if storage is not owning
+     */
+    void append(TimeFrameIndex time, TData&& data, EntityId entity_id) {
+        _impl->append(time, std::move(data), entity_id);
+    }
+
+    /**
+     * @brief Append a new entry (copy version)
+     * 
+     * Only valid for owning storage. Throws if storage is a view.
+     */
+    void append(TimeFrameIndex time, TData const& data, EntityId entity_id) {
+        _impl->append(time, data, entity_id);
+    }
+
+    /**
+     * @brief Reserve capacity for expected number of entries
+     * 
+     * Only valid for owning storage.
+     */
+    void reserve(size_t capacity) {
+        _impl->reserve(capacity);
+    }
+
+    /**
+     * @brief Clear all data
+     * 
+     * Only valid for owning storage.
+     */
+    void clear() {
+        _impl->clear();
+    }
+
+    /**
+     * @brief Remove entry by EntityId
+     * 
+     * Only valid for owning storage.
+     * 
+     * @param entity_id The EntityId to remove
+     * @return true if found and removed, false otherwise
+     */
+    bool removeByEntityId(EntityId entity_id) {
+        return _impl->removeByEntityId(entity_id);
+    }
+
+    /**
+     * @brief Remove all entries at a specific time
+     * 
+     * Only valid for owning storage.
+     * 
+     * @param time The TimeFrameIndex to remove all entries for
+     * @return Number of entries removed
+     */
+    size_t removeAtTime(TimeFrameIndex time) {
+        return _impl->removeAtTime(time);
+    }
+
+    /**
+     * @brief Get mutable reference to data (use with caution)
+     * 
+     * Modifications through this reference do not trigger cache invalidation.
+     * Only valid for owning storage.
+     * 
+     * @param idx Flat index in [0, size())
+     * @return Mutable reference to data
+     */
+    [[nodiscard]] TData& getMutableData(size_t idx) {
+        return _impl->getMutableData(idx);
+    }
+
+    /**
+     * @brief Get the time ranges map for iteration (owning storage only)
+     * 
+     * @return Const reference to time ranges map, or throws if not owning
+     */
+    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const {
+        return _impl->timeRanges();
+    }
+
     // ========== Type Access ==========
     
     /**
@@ -908,7 +1037,7 @@ private:
         // Size & bounds
         virtual size_t size() const = 0;
         
-        // Element access
+        // Element access (const)
         virtual TimeFrameIndex getTime(size_t idx) const = 0;
         virtual TData const& getData(size_t idx) const = 0;
         virtual EntityId getEntityId(size_t idx) const = 0;
@@ -923,6 +1052,16 @@ private:
         
         // Cache optimization
         virtual RaggedStorageCache<TData> tryGetCache() const = 0;
+        
+        // Mutation operations (may throw for read-only storage types)
+        virtual void append(TimeFrameIndex time, TData&& data, EntityId entity_id) = 0;
+        virtual void append(TimeFrameIndex time, TData const& data, EntityId entity_id) = 0;
+        virtual void reserve(size_t capacity) = 0;
+        virtual void clear() = 0;
+        virtual bool removeByEntityId(EntityId entity_id) = 0;
+        virtual size_t removeAtTime(TimeFrameIndex time) = 0;
+        virtual TData& getMutableData(size_t idx) = 0;
+        virtual std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const = 0;
     };
 
     /**
@@ -976,6 +1115,72 @@ private:
                 return _storage.tryGetCache();
             } else {
                 return RaggedStorageCache<TData>{};
+            }
+        }
+
+        // Mutation operations - only supported for OwningRaggedStorage
+        void append(TimeFrameIndex time, TData&& data, EntityId entity_id) override {
+            if constexpr (requires { _storage.append(time, std::move(data), entity_id); }) {
+                _storage.append(time, std::move(data), entity_id);
+            } else {
+                throw std::runtime_error("append() not supported for view/lazy storage");
+            }
+        }
+
+        void append(TimeFrameIndex time, TData const& data, EntityId entity_id) override {
+            if constexpr (requires { _storage.append(time, data, entity_id); }) {
+                _storage.append(time, data, entity_id);
+            } else {
+                throw std::runtime_error("append() not supported for view/lazy storage");
+            }
+        }
+
+        void reserve(size_t capacity) override {
+            if constexpr (requires { _storage.reserve(capacity); }) {
+                _storage.reserve(capacity);
+            }
+            // No-op for storage types that don't support reserve
+        }
+
+        void clear() override {
+            if constexpr (requires { _storage.clear(); }) {
+                _storage.clear();
+            } else {
+                throw std::runtime_error("clear() not supported for view/lazy storage");
+            }
+        }
+
+        bool removeByEntityId(EntityId entity_id) override {
+            if constexpr (requires { _storage.removeByEntityId(entity_id); }) {
+                return _storage.removeByEntityId(entity_id);
+            } else {
+                throw std::runtime_error("removeByEntityId() not supported for view/lazy storage");
+            }
+        }
+
+        size_t removeAtTime(TimeFrameIndex time) override {
+            if constexpr (requires { _storage.removeAtTime(time); }) {
+                return _storage.removeAtTime(time);
+            } else {
+                throw std::runtime_error("removeAtTime() not supported for view/lazy storage");
+            }
+        }
+
+        TData& getMutableData(size_t idx) override {
+            if constexpr (requires { _storage.getMutableData(idx); }) {
+                return _storage.getMutableData(idx);
+            } else {
+                throw std::runtime_error("getMutableData() not supported for view/lazy storage");
+            }
+        }
+
+        std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const override {
+            if constexpr (requires { _storage.timeRanges(); }) {
+                return _storage.timeRanges();
+            } else {
+                // Return empty map for non-owning storage - this should rarely be called
+                static std::map<TimeFrameIndex, std::pair<size_t, size_t>> const empty_map{};
+                return empty_map;
             }
         }
     };

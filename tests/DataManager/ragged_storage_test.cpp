@@ -332,21 +332,44 @@ TEST_CASE("RaggedStorageCache - View storage", "[RaggedStorage][cache]") {
     ViewRaggedStorage<Point2D<float>> view(source);
     view.setAllIndices();
     
-    SECTION("View storage returns invalid cache") {
+    SECTION("Contiguous view returns valid cache") {
+        // View with setAllIndices() creates contiguous indices [0,1,2]
+        // so it can provide a valid cache pointing to source data
         auto cache = view.tryGetCache();
         
-        CHECK_FALSE(cache.isValid());
-        CHECK(cache.times_ptr == nullptr);
-        CHECK(cache.data_ptr == nullptr);
-        CHECK(cache.entity_ids_ptr == nullptr);
+        CHECK(cache.isValid());
+        CHECK(cache.cache_size == 3);
+        CHECK(cache.times_ptr != nullptr);
+        CHECK(cache.data_ptr != nullptr);
+        CHECK(cache.entity_ids_ptr != nullptr);
+        
+        // Verify cache data matches view data
+        CHECK(cache.getTime(0) == view.getTime(0));
+        CHECK(cache.getData(1).x == view.getData(1).x);
+        CHECK(cache.getEntityId(2) == view.getEntityId(2));
     }
     
-    SECTION("Filtered view also returns invalid cache") {
+    SECTION("Non-contiguous filtered view returns invalid cache") {
+        // Filtering to non-adjacent indices [0, 2] breaks contiguity
         std::unordered_set<EntityId> ids{EntityId{100}, EntityId{102}};
         view.filterByEntityIds(ids);
         
         auto cache = view.tryGetCache();
         CHECK_FALSE(cache.isValid());
+    }
+    
+    SECTION("Contiguous subset view returns valid cache") {
+        // A view containing only indices [0, 1] is still contiguous
+        std::unordered_set<EntityId> ids{EntityId{100}, EntityId{101}};
+        view.filterByEntityIds(ids);
+        
+        auto cache = view.tryGetCache();
+        CHECK(cache.isValid());
+        CHECK(cache.cache_size == 2);
+        
+        // Verify the cache points to the correct data
+        CHECK(cache.getTime(0) == TimeFrameIndex{10});
+        CHECK(cache.getTime(1) == TimeFrameIndex{20});
     }
 }
 
@@ -413,13 +436,33 @@ TEST_CASE("RaggedStorageWrapper - Cache optimization", "[RaggedStorage][wrapper]
         CHECK(cache.getEntityId(1) == wrapper.getEntityId(1));
     }
     
-    SECTION("View storage provides invalid cache through wrapper") {
+    SECTION("Contiguous view provides valid cache through wrapper") {
         auto source = std::make_shared<OwningRaggedStorage<Point2D<float>>>();
         source->append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
         source->append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
         
         ViewRaggedStorage<Point2D<float>> view(source);
+        view.setAllIndices();  // Creates contiguous indices [0, 1]
+        
+        RaggedStorageWrapper<Point2D<float>> wrapper(std::move(view));
+        
+        auto cache = wrapper.tryGetCache();
+        CHECK(cache.isValid());
+        CHECK(cache.cache_size == 2);
+        CHECK(wrapper.getStorageType() == RaggedStorageType::View);
+    }
+    
+    SECTION("Non-contiguous view provides invalid cache through wrapper") {
+        auto source = std::make_shared<OwningRaggedStorage<Point2D<float>>>();
+        source->append(TimeFrameIndex{10}, Point2D<float>{1.0f, 2.0f}, EntityId{100});
+        source->append(TimeFrameIndex{20}, Point2D<float>{3.0f, 4.0f}, EntityId{101});
+        source->append(TimeFrameIndex{30}, Point2D<float>{5.0f, 6.0f}, EntityId{102});
+        
+        ViewRaggedStorage<Point2D<float>> view(source);
         view.setAllIndices();
+        // Filter to non-contiguous indices [0, 2]
+        std::unordered_set<EntityId> ids{EntityId{100}, EntityId{102}};
+        view.filterByEntityIds(ids);
         
         RaggedStorageWrapper<Point2D<float>> wrapper(std::move(view));
         

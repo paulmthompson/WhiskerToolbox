@@ -99,6 +99,74 @@ public:
         }
     }
 
+    // ========== Factory Methods for Views ==========
+
+    /**
+     * @brief Create a filtered copy containing only entries with specified EntityIds
+     * 
+     * This creates a new RaggedTimeSeries (with owning storage) containing
+     * only the entries matching the provided EntityIds. The returned series
+     * will have new EntityIds assigned if an identity context is set, or
+     * will preserve the original EntityIds if no registry is set.
+     * 
+     * Note: This creates a copy, not a view. For zero-copy iteration,
+     * use getDataByEntityIds() instead.
+     * 
+     * @param entity_ids Set of EntityIds to include in the filtered copy
+     * @return New RaggedTimeSeries containing only matching entries
+     * 
+     * @see getDataByEntityIds() for lazy zero-copy access to filtered data
+     */
+    [[nodiscard]] RaggedTimeSeries<TData> createFilteredCopy(
+        std::unordered_set<EntityId> const& entity_ids) const {
+        
+        RaggedTimeSeries<TData> result;
+        result.setImageSize(_image_size);
+        result.setTimeFrame(_time_frame);
+        
+        // If we have an identity context, the new series should get its own EntityIds
+        // Otherwise, preserve the original EntityIds
+        
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            EntityId const eid = _storage.getEntityId(i);
+            if (entity_ids.contains(eid)) {
+                // Use addEntryAtTime to preserve EntityId when no registry
+                // If a registry is set on result, addAtTime would generate new IDs
+                result.addEntryAtTime(_storage.getTime(i), _storage.getData(i), eid, NotifyObservers::No);
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * @brief Create a filtered copy containing only entries in a time range
+     * 
+     * Creates a new RaggedTimeSeries (with owning storage) containing only
+     * entries within the specified time range [start, end] (inclusive).
+     * 
+     * @param start_time Start of time range (inclusive)
+     * @param end_time End of time range (inclusive)
+     * @return New RaggedTimeSeries containing only entries in the time range
+     */
+    [[nodiscard]] RaggedTimeSeries<TData> createTimeRangeCopy(
+        TimeFrameIndex start_time, 
+        TimeFrameIndex end_time) const {
+        
+        RaggedTimeSeries<TData> result;
+        result.setImageSize(_image_size);
+        result.setTimeFrame(_time_frame);
+        
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            TimeFrameIndex const time = _storage.getTime(i);
+            if (time >= start_time && time <= end_time) {
+                result.addEntryAtTime(time, _storage.getData(i), _storage.getEntityId(i), NotifyObservers::No);
+            }
+        }
+        
+        return result;
+    }
+
     // ========== Time Frame ==========
     /**
      * @brief Set the time frame for this data structure
@@ -176,7 +244,7 @@ public:
 
         EntityKind const kind = getEntityKind();
         
-        // Create a new storage and repopulate with correct EntityIds
+        // Create a new owning storage and repopulate with correct EntityIds
         OwningRaggedStorage<TData> new_storage;
         new_storage.reserve(_storage.size());
         
@@ -196,7 +264,8 @@ public:
             new_storage.append(time, data, entity_id);
         }
         
-        _storage = std::move(new_storage);
+        _storage = RaggedStorageWrapper<TData>(std::move(new_storage));
+        _updateStorageCache();
     }
 
     // ========== Common Entity-based Operations ==========
@@ -213,7 +282,9 @@ public:
      * @param notify If true, observers will be notified of the change
      */
     void addEntryAtTime(TimeFrameIndex time, TData const & data, EntityId entity_id, NotifyObservers notify) {
+        _invalidateStorageCache();
         _storage.append(time, data, entity_id);
+        _updateStorageCache();
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
         }
@@ -284,11 +355,13 @@ public:
         }
         
         // Remove from source
+        _invalidateStorageCache();
         for (auto const& [time, data, eid] : to_move) {
             (void)time;
             (void)data;
             _storage.removeByEntityId(eid);
         }
+        _updateStorageCache();
         
         if (notify == NotifyObservers::Yes && !to_move.empty()) {
             target.notifyObservers();
@@ -421,7 +494,9 @@ public:
      * @return true if the data was found and cleared, false otherwise
      */
     [[nodiscard]] bool clearByEntityId(EntityId entity_id, NotifyObservers notify) {
+        _invalidateStorageCache();
         bool const removed = _storage.removeByEntityId(entity_id);
+        _updateStorageCache();
         if (removed && notify == NotifyObservers::Yes) {
             notifyObservers();
         }
@@ -465,7 +540,9 @@ public:
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
         }
 
+        _invalidateStorageCache();
         _storage.append(time, data, entity_id);
+        _updateStorageCache();
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
@@ -504,7 +581,9 @@ public:
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
         }
 
+        _invalidateStorageCache();
         _storage.append(time, std::move(data), entity_id);
+        _updateStorageCache();
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
@@ -545,8 +624,10 @@ public:
             entity_id = _identity_registry->ensureId(_identity_data_key, getEntityKind(), time, local_index);
         }
 
+        _invalidateStorageCache();
         // Construct TData in-place then append
         _storage.append(time, TData(std::forward<TDataArgs>(args)...), entity_id);
+        _updateStorageCache();
     }
 
     /**
@@ -566,6 +647,7 @@ public:
         auto [start, end] = _storage.getTimeRange(time);
         size_t const old_count = end - start;
 
+        _invalidateStorageCache();
         for (size_t i = 0; i < data_to_add.size(); ++i) {
             int const local_index = static_cast<int>(old_count + i);
             EntityId entity_id = EntityId(0);
@@ -574,6 +656,7 @@ public:
             }
             _storage.append(time, data_to_add[i], entity_id);
         }
+        _updateStorageCache();
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
@@ -598,6 +681,7 @@ public:
         auto [start, end] = _storage.getTimeRange(time);
         size_t const old_count = end - start;
 
+        _invalidateStorageCache();
         for (size_t i = 0; i < data_to_add.size(); ++i) {
             int const local_index = static_cast<int>(old_count + i);
             EntityId entity_id = EntityId(0);
@@ -606,6 +690,7 @@ public:
             }
             _storage.append(time, std::move(data_to_add[i]), entity_id);
         }
+        _updateStorageCache();
 
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
@@ -801,6 +886,65 @@ public:
      */
     auto view() const;
 
+    // ========== Storage Access ==========
+
+    /**
+     * @brief Get the storage cache for fast-path iteration
+     * 
+     * Returns a cache structure that provides direct pointer access to underlying
+     * data when storage is contiguous (owning). For view-based storage, returns
+     * an invalid cache.
+     * 
+     * This is useful for performance-critical code that needs to iterate over
+     * all data with minimal overhead:
+     * 
+     * @code
+     * auto cache = ts.getStorageCache();
+     * if (cache.isValid()) {
+     *     // Fast path: direct pointer access
+     *     for (size_t i = 0; i < cache.cache_size; ++i) {
+     *         auto time = cache.getTime(i);
+     *         auto const& data = cache.getData(i);
+     *         // ...
+     *     }
+     * } else {
+     *     // Slow path: use elements() view
+     *     for (auto [time, entry] : ts.elements()) {
+     *         // ...
+     *     }
+     * }
+     * @endcode
+     * 
+     * @return RaggedStorageCache<TData> with valid pointers if storage is contiguous
+     */
+    [[nodiscard]] RaggedStorageCache<TData> const& getStorageCache() const {
+        if (!_cached_storage.isValid() && !_storage.empty()) {
+            _updateStorageCache();
+        }
+        return _cached_storage;
+    }
+
+    /**
+     * @brief Check if storage is currently using the owning backend
+     * 
+     * When storage is owning (contiguous), direct pointer access is available
+     * via getStorageCache() for zero-overhead iteration.
+     * 
+     * @return true if storage owns its data (contiguous), false if it's a view
+     */
+    [[nodiscard]] bool isStorageContiguous() const {
+        return _storage.getStorageType() == RaggedStorageType::Owning;
+    }
+
+    /**
+     * @brief Get the underlying storage type
+     * 
+     * @return RaggedStorageType enum indicating the storage backend
+     */
+    [[nodiscard]] RaggedStorageType getStorageType() const {
+        return _storage.getStorageType();
+    }
+
 
 protected:
     /**
@@ -845,7 +989,9 @@ protected:
      * @return true if data was found and cleared, false otherwise
      */
     [[nodiscard]] bool _clearAtTime(TimeFrameIndex time, NotifyObservers notify) {
+        _invalidateStorageCache();
         size_t const removed = _storage.removeAtTime(time);
+        _updateStorageCache();
         if (removed == 0) {
             return false;
         }
@@ -858,8 +1004,13 @@ protected:
 
     // ========== Protected Member Variables ==========
     
-    /// Storage for time series data using SoA layout
-    OwningRaggedStorage<TData> _storage;
+    /// Storage for time series data using type-erased wrapper
+    /// Default-constructs with OwningRaggedStorage backend
+    RaggedStorageWrapper<TData> _storage;
+    
+    /// Cached pointers for fast-path iteration when storage is contiguous
+    /// This cache is invalidated when storage is modified
+    mutable RaggedStorageCache<TData> _cached_storage;
     
     /// Image size metadata
     ImageSize _image_size;
@@ -872,6 +1023,26 @@ protected:
     
     /// Pointer to EntityRegistry for automatic EntityId management
     EntityRegistry * _identity_registry{nullptr};
+    
+    /**
+     * @brief Update the cached storage pointers
+     * 
+     * Called after any modification to the storage to update the cache.
+     * If storage is contiguous (owning), the cache will be valid.
+     * If storage is non-contiguous (view), the cache will be invalid.
+     */
+    void _updateStorageCache() const {
+        _cached_storage = _storage.tryGetCache();
+    }
+    
+    /**
+     * @brief Invalidate the storage cache
+     * 
+     * Called before modifications to ensure cache is refreshed after.
+     */
+    void _invalidateStorageCache() const {
+        _cached_storage = RaggedStorageCache<TData>{};
+    }
 };
 
 // RaggedTimeSeriesView wraps a RaggedTimeSeries and provides a proper range interface
