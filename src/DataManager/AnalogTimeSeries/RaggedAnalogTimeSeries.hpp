@@ -2,10 +2,10 @@
 #define RAGGED_ANALOG_TIME_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "RaggedAnalogStorage.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
-#include "utils/RaggedAnalogStorage.hpp"
 
 #include <map>
 #include <memory>
@@ -80,22 +80,20 @@ public:
      * ```
      */
     template<std::ranges::input_range R>
-    requires requires(std::ranges::range_value_t<R> pair) {
-        { pair.first } -> std::convertible_to<TimeFrameIndex>;
-        { pair.second };  // Can be float, vector<float>, or span<float const>
-    }
-    explicit RaggedAnalogTimeSeries(R&& time_value_pairs) {
-        for (auto&& [time, values] : time_value_pairs) {
+        requires requires(std::ranges::range_value_t<R> pair) {
+            { pair.first } -> std::convertible_to<TimeFrameIndex>;
+            { pair.second };// Can be float, vector<float>, or span<float const>
+        }
+    explicit RaggedAnalogTimeSeries(R && time_value_pairs) {
+        for (auto && [time, values]: time_value_pairs) {
             // Handle different value types
             if constexpr (std::convertible_to<decltype(values), float>) {
                 // Single float value
                 _storage.append(time, static_cast<float>(values));
-            }
-            else if constexpr (std::convertible_to<decltype(values), std::vector<float>>) {
+            } else if constexpr (std::convertible_to<decltype(values), std::vector<float>>) {
                 // Vector of floats - use batch append
                 _storage.appendBatch(time, values);
-            }
-            else if constexpr (std::ranges::range<decltype(values)>) {
+            } else if constexpr (std::ranges::range<decltype(values)>) {
                 // Span or other range type
                 std::vector<float> vec(std::ranges::begin(values), std::ranges::end(values));
                 _storage.appendBatch(time, std::move(vec));
@@ -138,19 +136,18 @@ public:
     template<std::ranges::random_access_range ViewType>
     [[nodiscard]] static std::shared_ptr<RaggedAnalogTimeSeries> createFromView(
             ViewType view,
-            std::shared_ptr<TimeFrame> time_frame)
-    {
+            std::shared_ptr<TimeFrame> time_frame) {
         size_t num_elements = std::ranges::size(view);
-        
+
         // Create lazy storage
         auto lazy_storage = LazyRaggedAnalogStorage<ViewType>(std::move(view), num_elements);
         RaggedAnalogStorageWrapper storage_wrapper(std::move(lazy_storage));
-        
+
         auto result = std::make_shared<RaggedAnalogTimeSeries>();
         result->_storage = std::move(storage_wrapper);
         result->_time_frame = std::move(time_frame);
         result->_updateStorageCache();
-        
+
         return result;
     }
 
@@ -168,13 +165,13 @@ public:
     [[nodiscard]] std::shared_ptr<RaggedAnalogTimeSeries> materialize() const {
         auto result = std::make_shared<RaggedAnalogTimeSeries>();
         result->_time_frame = _time_frame;
-        
+
         // Copy all elements to new owning storage
         for (size_t i = 0; i < _storage.size(); ++i) {
             result->_storage.append(_storage.getTime(i), _storage.getValue(i));
         }
         result->_updateStorageCache();
-        
+
         return result;
     }
 
@@ -405,16 +402,17 @@ public:
 
         Iterator() = default;
 
-        Iterator(RaggedAnalogTimeSeries const* series,
+        Iterator(RaggedAnalogTimeSeries const * series,
                  std::map<TimeFrameIndex, std::pair<size_t, size_t>>::const_iterator time_it)
-            : _series(series), _time_iter(time_it) {}
+            : _series(series),
+              _time_iter(time_it) {}
 
         TimeValueEntry operator*() const {
             TimeFrameIndex const time = _time_iter->first;
             return {time, _series->_storage.getValuesAtTime(time)};
         }
 
-        Iterator& operator++() {
+        Iterator & operator++() {
             ++_time_iter;
             return *this;
         }
@@ -434,7 +432,7 @@ public:
         }
 
     private:
-        RaggedAnalogTimeSeries const* _series = nullptr;
+        RaggedAnalogTimeSeries const * _series = nullptr;
         std::map<TimeFrameIndex, std::pair<size_t, size_t>>::const_iterator _time_iter;
     };
 
@@ -473,10 +471,9 @@ public:
      */
     [[nodiscard]] auto elements() const {
         // Create an index-based view over all elements
-        return std::views::iota(size_t{0}, _storage.size())
-            | std::views::transform([this](size_t idx) {
-                return std::make_pair(_storage.getTime(idx), _storage.getValue(idx));
-            });
+        return std::views::iota(size_t{0}, _storage.size()) | std::views::transform([this](size_t idx) {
+                   return std::make_pair(_storage.getTime(idx), _storage.getValue(idx));
+               });
     }
 
     /**
@@ -494,10 +491,9 @@ public:
      * @return A lazy range view of (TimeFrameIndex, span) pairs
      */
     [[nodiscard]] auto time_slices() const {
-        return _storage.timeRanges()
-            | std::views::transform([this](auto const& pair) {
-                return std::make_pair(pair.first, _storage.getValuesAtTime(pair.first));
-            });
+        return _storage.timeRanges() | std::views::transform([this](auto const & pair) {
+                   return std::make_pair(pair.first, _storage.getValuesAtTime(pair.first));
+               });
     }
 
     // ========== Storage Access (Advanced) ==========
@@ -565,4 +561,4 @@ inline auto RaggedAnalogTimeSeries::view() const {
     return RaggedAnalogTimeSeriesView(this);
 }
 
-#endif // RAGGED_ANALOG_TIME_SERIES_HPP
+#endif// RAGGED_ANALOG_TIME_SERIES_HPP
