@@ -450,6 +450,159 @@ private:
 };
 
 // =============================================================================
+// Lazy Storage (View-based Computation on Demand)
+// =============================================================================
+
+/**
+ * @brief Lazy ragged storage that computes values on-demand from a view
+ * 
+ * Stores a computation pipeline as a random-access view that transforms data
+ * on-demand. Enables efficient composition of transforms without materializing
+ * intermediate results. Works with any random-access range that yields tuples
+ * of (TimeFrameIndex, EntityId, TData).
+ * 
+ * Performance characteristics:
+ * - Zero memory overhead for intermediate results
+ * - Each access computes the value (no caching)
+ * - Not contiguous in memory (cache always invalid)
+ * - Ideal for sequential iteration (e.g., saving transformed results)
+ * - Call materialize() before random access-heavy operations
+ * 
+ * @tparam TData The data type stored (e.g., Mask2D, Line2D, Point2D<float>)
+ * @tparam ViewType Type of the random-access range view
+ * 
+ * @example Transform pipeline applied lazily:
+ * @code
+ * auto transformed_view = mask_data.flattened_data()
+ *     | std::views::transform([](auto tuple) {
+ *         auto [time, eid, mask] = tuple;
+ *         return std::make_tuple(time, eid, dilate(mask.get()));
+ *     });
+ * auto lazy_masks = MaskData::createFromView(transformed_view);
+ * @endcode
+ */
+template<typename TData, typename ViewType>
+class LazyRaggedStorage : public RaggedStorageBase<LazyRaggedStorage<TData, ViewType>, TData> {
+public:
+    /**
+     * @brief Construct lazy storage from a random-access view
+     * 
+     * The view must yield elements that can be accessed as tuples of
+     * (TimeFrameIndex, EntityId, TData) or (TimeFrameIndex, EntityId, TData const&).
+     * 
+     * @param view Random-access range view (must support operator[] and size())
+     * @param num_elements Number of elements in the view
+     * 
+     * @throws static_assert if view is not random-access
+     */
+    explicit LazyRaggedStorage(ViewType view, size_t num_elements)
+        : _view(std::move(view))
+        , _num_elements(num_elements) {
+        static_assert(std::ranges::random_access_range<ViewType>,
+                      "LazyRaggedStorage requires random access range");
+        _buildLocalIndices();
+    }
+
+    virtual ~LazyRaggedStorage() = default;
+
+    // ========== CRTP Implementation ==========
+
+    [[nodiscard]] size_t sizeImpl() const { return _num_elements; }
+
+    [[nodiscard]] TimeFrameIndex getTimeImpl(size_t idx) const {
+        auto element = _view[idx];
+        return std::get<0>(element);
+    }
+
+    [[nodiscard]] TData const& getDataImpl(size_t idx) const {
+        auto element = _view[idx];
+        // Handle both std::cref<TData> and TData directly
+        if constexpr (requires { element; std::get<2>(element).get(); }) {
+            // std::reference_wrapper case
+            _cached_data = std::get<2>(element).get();
+        } else {
+            // Direct TData case
+            _cached_data = std::get<2>(element);
+        }
+        return _cached_data;
+    }
+
+    [[nodiscard]] EntityId getEntityIdImpl(size_t idx) const {
+        auto element = _view[idx];
+        return std::get<1>(element);
+    }
+
+    [[nodiscard]] std::optional<size_t> findByEntityIdImpl(EntityId id) const {
+        auto it = _entity_to_index.find(id);
+        return it != _entity_to_index.end() ? std::optional{it->second} : std::nullopt;
+    }
+
+    [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex time) const {
+        auto it = _time_ranges.find(time);
+        return it != _time_ranges.end() ? it->second : std::pair<size_t, size_t>{0, 0};
+    }
+
+    [[nodiscard]] size_t getTimeCountImpl() const { return _time_ranges.size(); }
+
+    [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::Lazy; }
+
+    /**
+     * @brief Lazy storage is never contiguous in memory
+     * 
+     * Returns an invalid cache, forcing callers to use virtual dispatch.
+     * This is correct since lazy storage computes values on-demand.
+     */
+    [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
+        return RaggedStorageCache<TData>{};  // Invalid cache
+    }
+
+    /**
+     * @brief Get reference to underlying view (for advanced use)
+     */
+    [[nodiscard]] ViewType const& getView() const {
+        return _view;
+    }
+
+private:
+    /**
+     * @brief Build local EntityId and time range indices on construction
+     * 
+     * We need to iterate through the view once to build acceleration structures.
+     * This allows O(1) EntityId lookup and O(log n) time range lookup.
+     */
+    void _buildLocalIndices() {
+        _entity_to_index.clear();
+        _time_ranges.clear();
+        
+        for (size_t i = 0; i < _num_elements; ++i) {
+            auto element = _view[i];
+            TimeFrameIndex time = std::get<0>(element);
+            EntityId eid = std::get<1>(element);
+            
+            _entity_to_index[eid] = i;
+            
+            auto it = _time_ranges.find(time);
+            if (it == _time_ranges.end()) {
+                _time_ranges[time] = {i, i + 1};
+            } else {
+                // Extend the end (assumes elements are time-ordered)
+                it->second.second = i + 1;
+            }
+        }
+    }
+
+    ViewType _view;
+    size_t _num_elements;
+    
+    // Acceleration structures built on construction
+    std::unordered_map<EntityId, size_t> _entity_to_index;
+    std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;
+    
+    // Mutable cache for getDataImpl (required for returning const ref)
+    mutable TData _cached_data;
+};
+
+// =============================================================================
 // View Storage (References Source via Indices)
 // =============================================================================
 

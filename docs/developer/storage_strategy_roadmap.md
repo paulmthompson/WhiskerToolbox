@@ -26,8 +26,22 @@ This document outlines a plan to unify the storage abstraction patterns across a
 - ✅ Cache optimization integrated throughout all mutation methods
 - ✅ Build successful with zero errors/warnings
 
-**Next Phase: Phase 3 Lazy Transforms - 🔄 IN QUEUE**
-Enable lazy transforms for `RaggedTimeSeries` with `LazyRaggedStorage<TData, ViewType>`.
+**Phase 3: Lazy Transform Support - ✅ COMPLETED**
+
+- ✅ `LazyRaggedStorage<TData, ViewType>` CRTP class with view-based lazy evaluation
+- ✅ Index building on construction (`_entity_to_index`, `_time_ranges`)
+- ✅ Cache optimization: `tryGetCacheImpl()` returns invalid cache (lazy is non-contiguous)
+- ✅ Element-by-element computation on-demand via view access
+- ✅ `RaggedTimeSeries::createFromView<ViewType>()` static factory method
+- ✅ `RaggedTimeSeries::createFromViewWithNewIds<ViewType>()` for fresh EntityIds
+- ✅ `RaggedTimeSeries::materialize()` method for lazy→owning conversion
+- ✅ `RaggedTimeSeries::isLazy()` helper to check storage type
+- ✅ EntityId preservation during materialization
+- ✅ Comprehensive unit tests: 8+ test cases covering all lazy operations
+- ✅ Build successful with all tests passing
+
+**Next Phase: Phase 4 Other Data Types - 🔄 IN QUEUE**
+Apply lazy storage pattern to RaggedAnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries.
 
 ## Current State Analysis
 
@@ -36,7 +50,7 @@ Enable lazy transforms for `RaggedTimeSeries` with `LazyRaggedStorage<TData, Vie
 | Data Type | Storage Abstraction | Memory-Mapped | View/Subset | Lazy Transform |
 |-----------|---------------------|---------------|-------------|----------------|
 | `AnalogTimeSeries` | ✅ Full (CRTP + Type-erasure) | ✅ | ✅ LazyViewStorage | ✅ |
-| `RaggedTimeSeries<T>` | ✅ Full (CRTP + Type-erasure wrapper) | ❌ | ✅ ViewRaggedStorage factory | 🔄 Ready (Phase 3) |
+| `RaggedTimeSeries<T>` | ✅ Full (CRTP + Type-erasure wrapper) | ❌ | ✅ ViewRaggedStorage factory | ✅ LazyRaggedStorage |
 | `RaggedAnalogTimeSeries` | ❌ Raw `std::map` | ❌ | ❌ | ❌ |
 | `DigitalEventSeries` | ❌ Raw `std::vector` | ❌ | ❌ | ❌ |
 | `DigitalIntervalSeries` | ❌ Raw `std::vector` | ❌ | ❌ | ❌ |
@@ -294,32 +308,88 @@ class RaggedStorageWrapper {
    - Cache optimization transparent to users
    - Performance characteristics identical to Phase 1
 
-### Phase 3: Lazy Transform Support (Estimated: 6-8 hours) 🔄 **IN QUEUE**
+### Phase 3: Lazy Transform Support (Estimated: 6-8 hours) ✅ **COMPLETED**
 
 **Goal:** Enable lazy transforms for `RaggedTimeSeries`.
 
-1. **Create `LazyRaggedStorage<TData, ViewType>`**:
+✅ **1. Created `LazyRaggedStorage<TData, ViewType>`** CRTP class
    ```cpp
    template<typename TData, typename ViewType>
    class LazyRaggedStorage {
-       ViewType _view;
-       std::vector<EntityId> _entity_ids;  // Strategy depends on transform type
-       // See "Design Decisions" section below for EntityId handling approach
+       ViewType _view;                                    // Lazy data source
+       size_t _num_elements;                              // Element count
+       std::unordered_map<EntityId, size_t> _entity_to_index;  // EntityId lookup
+       std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;  // Time index
+       mutable TData _cached_data;                        // Single-element cache
+       
+       void _buildLocalIndices();  // Called on construction
    };
    ```
+   - Stores view and element count
+   - Builds indices on construction from view in O(n) time
+   - Elements computed on-demand via view[idx]
+   - Cache always returns invalid (non-contiguous lazy access)
+   - Type identification: `RaggedStorageType::Lazy`
 
-2. **Implement EntityId handling based on transform type** (see § Design Decisions)
-   - Use lineage system (`LineageTypes.hpp`) to determine appropriate strategy
-   - 1:1 transforms: Pass through source EntityIds
-   - N:1 transforms: Store computed EntityId mapping
-   - New entity transforms: Generate new EntityIds with lineage tracking
-   - Implementation will follow existing patterns from `AnalogTimeSeries` lazy storage
+✅ **2. Integrated with RaggedStorageWrapper** type erasure
+   - `StorageModel<LazyRaggedStorage<...>>` properly dispatches all methods
+   - Mutation operations throw (lazy storage is read-only)
+   - Type erasure allows `LazyRaggedStorage<T, ViewType>` with unbounded `ViewType`
 
-3. **Add `createFromView()` factory method** to `RaggedTimeSeries`
+✅ **3. Implemented EntityId handling**
+   - Passes through source EntityIds for 1:1 transforms (most common case)
+   - `_entity_to_index` unordered_map for O(1) lookup by EntityId
+   - `_time_ranges` map for efficient time-based queries
+   - Preserved during materialization via `materialize()` method
 
-4. **Add `materialize()` method** to convert lazy storage to owning
+✅ **4. Added factory methods** to `RaggedTimeSeries`
+   ```cpp
+   // Option A: Keep source EntityIds (1:1 transforms, e.g., MaskArea)
+   template<typename ViewType>
+   static std::shared_ptr<RaggedTimeSeries<TData>> createFromView(
+       ViewType view,
+       std::shared_ptr<TimeFrame> const& time_frame,
+       ImageSize image_size);
+   
+   // Option B: Generate fresh EntityIds (new entity transforms)
+   template<typename ViewType>
+   static std::shared_ptr<RaggedTimeSeries<TData>> createFromViewWithNewIds(
+       ViewType view,
+       std::string const& data_key,
+       std::shared_ptr<EntityRegistry> registry);
+   ```
+   - `createFromView()` creates lazy series with passthrough EntityIds
+   - `createFromViewWithNewIds()` materializes immediately with fresh EntityIds
+   - Both support arbitrary view types via template parameter
 
-### Phase 4: Other Data Types (Estimated: 8-12 hours) ⏳ **PLANNED**
+✅ **5. Added materialization method**
+   ```cpp
+   std::shared_ptr<RaggedTimeSeries<TData>> materialize() const;
+   ```
+   - Copies all elements from lazy storage to owning storage
+   - Preserves EntityIds
+   - Returns new series with `OwningRaggedStorage<TData>` backend
+   - Useful when lazy evaluation is no longer desirable
+
+✅ **6. Added type query helper**
+   ```cpp
+   [[nodiscard]] bool isLazy() const;
+   ```
+   - Returns true if underlying storage is `LazyRaggedStorage`
+   - Useful for performance-sensitive code to detect lazy evaluation
+
+✅ **7. Comprehensive unit tests** (8+ test cases, 20+ sections)
+   - Direct LazyRaggedStorage operations: size, type, element access, entity lookup, time ranges
+   - Lazy cache optimization: `tryGetCacheImpl()` returns invalid cache
+   - Transform computation: verify elements computed from view on-demand
+   - Wrapper integration: type erasure dispatch, mutation exception handling
+   - Complex transforms: Mask2D coordinate doubling through lazy storage
+   - RaggedTimeSeries factory methods: lazy creation, entity lookup on lazy
+   - Materialization: lazy→owning conversion with verification
+   - Round-trip: transform → lazy series → materialize with value verification
+   - All tests passing ✅
+
+### Phase 4: Other Data Types (Estimated: 8-12 hours) 🔄 **IN QUEUE**
 
 **Goal:** Bring storage abstraction to remaining types.
 
@@ -1140,27 +1210,28 @@ static_assert(RaggedStorageConcept<ViewRaggedStorage<SimpleData>, SimpleData>,
 |-------|--------|--------|--------------|
 | Phase 1: Foundation | 4-6 hours | ✅ **COMPLETED** | None |
 | Phase 2: Integration | 4-6 hours | ✅ **COMPLETED** | Phase 1 ✅ |
-| Phase 3: Lazy Transforms | 6-8 hours | 🔄 **IN QUEUE** | Phase 2 ✅ |
-| Phase 4: Other Data Types | 8-12 hours | ⏳ **PLANNED** | Phase 2 ✅ |
+| Phase 3: Lazy Transforms | 6-8 hours | ✅ **COMPLETED** | Phase 2 ✅ |
+| Phase 4: Other Data Types | 8-12 hours | 🔄 **IN QUEUE** | Phase 2 ✅ |
 | Phase 5: Testing & Docs | 4-6 hours | ⏳ **PLANNED** | All phases |
 
 **Progress Summary:**
-- **Completed:** 8-12 hours (Phase 1 + Phase 2 implemented and tested)
-- **Remaining:** 18-26 hours (3 phases)
-- **Total Scope:** 26-38 hours
-- **Current Achievement:** 21-32% complete
+- **Completed:** 18-20 hours (Phase 1 + Phase 2 + Phase 3 implemented and tested)
+- **Remaining:** 12-18 hours (2 phases)
+- **Total Scope:** 30-38 hours
+- **Current Achievement:** 47-67% complete
 
-**Recent Achievements (Phase 2):**
-- ✅ Migrated `RaggedTimeSeries` to use `RaggedStorageWrapper`
-- ✅ Implemented cache optimization with `_cacheOptimizationPointers()` method
-- ✅ Updated all mutation methods to invalidate/update cache
-- ✅ Modified `RaggedIterator` for fast-path access
-- ✅ Added `createView()` static factory for view-based instances
-- ✅ Extended `RaggedStorageWrapper` with mutation methods
-- ✅ Implemented contiguous view cache detection and optimization
-- ✅ Updated all tests to verify contiguous vs non-contiguous behavior
-- ✅ All tests passing: LineData, MaskData, PointData verified
-- ✅ Build successful with zero errors/warnings
+**Recent Achievements (Phase 3):**
+- ✅ Implemented `LazyRaggedStorage<TData, ViewType>` CRTP class (~130 lines)
+- ✅ View-based lazy evaluation with on-demand element computation
+- ✅ Index building on construction: `_entity_to_index` and `_time_ranges` maps
+- ✅ Cache optimization: `tryGetCacheImpl()` returns invalid (forces lazy path)
+- ✅ RaggedStorageWrapper integration with type erasure for unbounded `ViewType`
+- ✅ `createFromView<ViewType>()` factory for 1:1 transforms
+- ✅ `createFromViewWithNewIds<ViewType>()` factory for fresh EntityId generation
+- ✅ `materialize()` method for lazy→owning conversion with EntityId preservation
+- ✅ `isLazy()` helper for runtime storage type detection
+- ✅ Comprehensive test coverage: 8+ test cases, 20+ test sections
+- ✅ Build successful with all tests passing
 
 ---
 

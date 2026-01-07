@@ -9,6 +9,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/interval_data.hpp"
 #include "utils/map_timeseries.hpp"
 #include "utils/RaggedStorage.hpp"
 
@@ -162,6 +163,123 @@ public:
             if (time >= start_time && time <= end_time) {
                 result.addEntryAtTime(time, _storage.getData(i), _storage.getEntityId(i), NotifyObservers::No);
             }
+        }
+        
+        return result;
+    }
+
+    // ========== Lazy Transform Factory Methods ==========
+
+    /**
+     * @brief Create RaggedTimeSeries from a lazy view
+     * 
+     * Creates a RaggedTimeSeries that computes values on-demand from a ranges view.
+     * The view must be a random-access range that yields tuples compatible with 
+     * (TimeFrameIndex, EntityId, TData) or (TimeFrameIndex, EntityId, TData const&).
+     * No intermediate data is materialized - values are computed when accessed.
+     * 
+     * This enables efficient transform pipelines without intermediate allocations:
+     * @code
+     * // Skeletonization without materializing intermediate results
+     * auto transformed_view = mask_data.flattened_data()
+     *     | std::views::transform([](auto tuple) {
+     *         auto const& [time, eid, mask_ref] = tuple;
+     *         return std::make_tuple(time, eid, skeletonize(mask_ref.get()));
+     *     });
+     * 
+     * auto lazy_skeleton = RaggedTimeSeries<Line2D>::createFromView(
+     *     transformed_view, 
+     *     mask_data.getTimeFrame(),
+     *     mask_data.getImageSize()
+     * );
+     * 
+     * // Access computes skeletonization on-demand
+     * auto skeleton = lazy_skeleton->getData(0);
+     * @endcode
+     * 
+     * @tparam ViewType Random-access range type
+     * @param view Random-access range view yielding (TimeFrameIndex, EntityId, TData) tuples
+     * @param time_frame Shared time frame (reuse from base series for efficiency)
+     * @param image_size Optional image size metadata
+     * @return std::shared_ptr<RaggedTimeSeries<TData>> Lazy ragged time series
+     * 
+     * @note The view must remain valid for the lifetime of the returned RaggedTimeSeries.
+     *       Capture by value in lambdas or ensure base series outlives the lazy series.
+     * @note For materialized (eager) storage, call .materialize() on the result
+     * 
+     * @see materialize() to convert lazy storage to owning storage
+     * @see flattened_data() to get a view over an existing RaggedTimeSeries
+     */
+    template<std::ranges::random_access_range ViewType>
+    [[nodiscard]] static std::shared_ptr<RaggedTimeSeries<TData>> createFromView(
+            ViewType view,
+            std::shared_ptr<TimeFrame> time_frame,
+            ImageSize image_size = ImageSize{})
+    {
+        size_t num_elements = std::ranges::size(view);
+        
+        // Create lazy storage
+        auto lazy_storage = LazyRaggedStorage<TData, ViewType>(std::move(view), num_elements);
+        RaggedStorageWrapper<TData> storage_wrapper(std::move(lazy_storage));
+        
+        // Create the result using the wrapper
+        auto result = std::make_shared<RaggedTimeSeries<TData>>();
+        result->_storage = std::move(storage_wrapper);
+        result->_time_frame = std::move(time_frame);
+        result->_image_size = image_size;
+        result->_updateStorageCache();
+        
+        return result;
+    }
+
+    /**
+     * @brief Create RaggedTimeSeries from a lazy view with new EntityIds
+     * 
+     * Same as createFromView(), but generates new EntityIds for each element
+     * using the provided EntityRegistry. This is useful when creating transformed
+     * data that should have distinct entity identities from the source.
+     * 
+     * @tparam ViewType Random-access range type yielding (TimeFrameIndex, TData) pairs
+     * @param view Random-access range view yielding (TimeFrameIndex, TData) pairs
+     * @param time_frame Shared time frame
+     * @param data_key Data key for EntityRegistry
+     * @param registry EntityRegistry for generating new EntityIds
+     * @param image_size Optional image size metadata
+     * @return std::shared_ptr<RaggedTimeSeries<TData>> Materialized (owning) time series with new EntityIds
+     * 
+     * @note This materializes the view immediately since EntityIds must be generated
+     *       at construction time. For lazy evaluation, use createFromView() with
+     *       pre-assigned EntityIds.
+     */
+    template<std::ranges::input_range ViewType>
+    [[nodiscard]] static std::shared_ptr<RaggedTimeSeries<TData>> createFromViewWithNewIds(
+            ViewType view,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::string const& data_key,
+            EntityRegistry* registry,
+            ImageSize image_size = ImageSize{})
+    {
+        auto result = std::make_shared<RaggedTimeSeries<TData>>();
+        result->_time_frame = std::move(time_frame);
+        result->_image_size = image_size;
+        result->setIdentityContext(data_key, registry);
+        
+        // Materialize immediately with new EntityIds
+        for (auto&& element : view) {
+            if constexpr (requires { std::get<0>(element); std::get<1>(element); }) {
+                // Tuple or pair: (TimeFrameIndex, TData)
+                auto time = std::get<0>(element);
+                auto const& data = std::get<1>(element);
+                result->addAtTime(time, data, NotifyObservers::No);
+            } else {
+                // Structured binding style
+                auto const& [time, data] = element;
+                result->addAtTime(time, data, NotifyObservers::No);
+            }
+        }
+        
+        if (!result->_storage.empty()) {
+            result->notifyObservers();
         }
         
         return result;
@@ -943,6 +1061,77 @@ public:
      */
     [[nodiscard]] RaggedStorageType getStorageType() const {
         return _storage.getStorageType();
+    }
+
+    /**
+     * @brief Check if storage uses lazy evaluation
+     * 
+     * @return true if storage is lazy (values computed on-demand), false otherwise
+     */
+    [[nodiscard]] bool isLazy() const {
+        return _storage.getStorageType() == RaggedStorageType::Lazy;
+    }
+
+    // ========== Materialization ==========
+
+    /**
+     * @brief Materialize lazy storage into owning storage
+     * 
+     * Converts any storage backend (lazy, view, etc.) into contiguous
+     * owning storage by evaluating all values and copying them into memory.
+     * Useful when:
+     * - Random access patterns would cause repeated computation
+     * - Downstream operations require mutation
+     * - Original data source (base series, captured lambdas) will be destroyed
+     * 
+     * The resulting series has owning storage with the same data as the source.
+     * EntityIds are preserved from the source.
+     * 
+     * @return std::shared_ptr<RaggedTimeSeries<TData>> New series with owning storage
+     * 
+     * @note For already-materialized owning storage, this creates a deep copy
+     * @note This will evaluate all lazy computations immediately
+     * 
+     * @example
+     * @code
+     * auto lazy_masks = MaskData::createFromView(transformed_view, time_frame);
+     * // ... do some sequential processing ...
+     * 
+     * // Materialize before random access-heavy operations
+     * auto materialized = lazy_masks->materialize();
+     * 
+     * // Now random access is efficient and mutations are supported
+     * for (int i = 0; i < 1000; ++i) {
+     *     auto mask = materialized->getData(random_indices[i]);
+     * }
+     * @endcode
+     */
+    [[nodiscard]] std::shared_ptr<RaggedTimeSeries<TData>> materialize() const {
+        auto result = std::make_shared<RaggedTimeSeries<TData>>();
+        result->setImageSize(_image_size);
+        result->setTimeFrame(_time_frame);
+        
+        // Reserve space for efficiency
+        if (_storage.size() > 0) {
+            // Can't reserve on wrapper, but it will grow efficiently
+        }
+        
+        // Copy all elements with their EntityIds preserved
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            result->addEntryAtTime(
+                _storage.getTime(i),
+                _storage.getData(i),
+                _storage.getEntityId(i),
+                NotifyObservers::No
+            );
+        }
+        
+        // Copy identity context if set
+        if (_identity_registry) {
+            result->setIdentityContext(_identity_data_key, _identity_registry);
+        }
+        
+        return result;
     }
 
 
