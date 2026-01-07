@@ -1,6 +1,7 @@
 #ifndef DIGITAL_INTERVAL_SERIES_HPP
 #define DIGITAL_INTERVAL_SERIES_HPP
 
+#include "DigitalIntervalStorage.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
@@ -9,8 +10,10 @@
 
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <ranges>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -376,8 +379,76 @@ public:
                                                                          TimeFrameIndex stop_index,
                                                                          TimeFrame const & source_time_frame) const;
 
+    // ========== Storage Type Queries ==========
+
+    /**
+     * @brief Check if this series uses view storage (doesn't own data)
+     * @return true if storage is a view, false otherwise
+     */
+    [[nodiscard]] bool isView() const { return _storage.isView(); }
+
+    /**
+     * @brief Check if this series uses lazy storage
+     * @return true if storage is lazy-evaluated, false otherwise
+     */
+    [[nodiscard]] bool isLazy() const { return _storage.isLazy(); }
+
+    /**
+     * @brief Get the storage type of this series
+     * @return The storage type enum value
+     */
+    [[nodiscard]] DigitalIntervalStorageType getStorageType() const { return _storage.getStorageType(); }
+
+    // ========== Factory Methods ==========
+
+    /**
+     * @brief Create a view of this series filtered by time range
+     * 
+     * Returns a new DigitalIntervalSeries that references this series' data
+     * without copying. The view includes intervals overlapping with [start, end].
+     * 
+     * @param start Start time (inclusive)
+     * @param end End time (inclusive)
+     * @return Shared pointer to new view-based series
+     */
+    [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
+            std::shared_ptr<DigitalIntervalSeries const> source,
+            int64_t start,
+            int64_t end);
+
+    /**
+     * @brief Create a view of this series filtered by EntityIds
+     * 
+     * @param source Source series to create view from
+     * @param entity_ids Set of EntityIds to include in the view
+     * @return Shared pointer to new view-based series
+     */
+    [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
+            std::shared_ptr<DigitalIntervalSeries const> source,
+            std::unordered_set<EntityId> const & entity_ids);
+
+    /**
+     * @brief Materialize this series into a new owning series
+     * 
+     * If this series uses view or lazy storage, creates a new series
+     * with owning storage containing copies of all data.
+     * 
+     * @return Shared pointer to new owning series
+     */
+    [[nodiscard]] std::shared_ptr<DigitalIntervalSeries> materialize() const;
+
+    /**
+     * @brief Get the storage cache for fast-path iteration
+     * 
+     * Returns a cache structure with pointers to contiguous data if available.
+     * 
+     * @return DigitalIntervalStorageCache with valid pointers if contiguous
+     */
+    [[nodiscard]] DigitalIntervalStorageCache getStorageCache() const { return _storage.tryGetCache(); }
+
 private:
-    std::vector<Interval> _data{};
+    DigitalIntervalStorageWrapper _storage;
+    std::vector<Interval> _data{};// Legacy data (kept for compatibility during transition)
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
     void _addEvent(Interval new_interval);
@@ -385,6 +456,7 @@ private:
     void _removeEventAtTime(TimeFrameIndex time);
 
     void _sortData();
+    void _syncStorageFromData();// Sync _storage from legacy _data vector
 
     // Helper method to handle clipping intervals at range boundaries
     std::vector<Interval> _getIntervalsAsVectorClipped(

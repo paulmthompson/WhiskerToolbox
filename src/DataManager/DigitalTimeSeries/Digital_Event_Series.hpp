@@ -1,13 +1,16 @@
 #ifndef BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 #define BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 
+#include "DigitalEventStorage.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <compare>
+#include <memory>
 #include <ranges>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -22,11 +25,14 @@ class EntityRegistry;
  *
  * Use digital events where you wish to specify a time for each event.
  *
- *
+ * Now backed by flexible storage abstraction supporting:
+ * - Owning storage (default): owns data in SoA layout
+ * - View storage: zero-copy filtered view of another series
+ * - Lazy storage: on-demand computation from transforms
  */
 class DigitalEventSeries : public ObserverData {
 public:
-    DigitalEventSeries() = default;
+    DigitalEventSeries();
     explicit DigitalEventSeries(std::vector<TimeFrameIndex> event_vector);
 
     // =============================================================
@@ -35,8 +41,9 @@ public:
 
     /**
      * @brief Random Access Iterator for DigitalEventSeries
-     * * Synthesizes EventWithId objects on demand from the parallel 
-     * time and ID vectors.
+     * 
+     * Synthesizes EventWithId objects on demand from the storage.
+     * Uses cached pointers for fast-path iteration when storage is contiguous.
      */
     class EventIterator {
     public:
@@ -51,20 +58,22 @@ public:
         EventIterator() = default;
         EventIterator(DigitalEventSeries const * series, size_t index)
             : _series(series),
-              _index(index) {}
+              _index(index),
+              _cached_storage(series ? series->_cached_storage : DigitalEventStorageCache{}) {}
 
-        // Dereference: Zips the Time and ID together
+        // Dereference: Gets event time and entity ID
         reference operator*() const {
-            // Access private members of the series (nested classes have access)
-            TimeFrameIndex const time = _series->_data[_index];
+            // Fast path: use cached pointers if valid
+            if (_cached_storage.isValid()) {
+                return EventWithId(
+                        _cached_storage.getEvent(_index),
+                        _cached_storage.getEntityId(_index));
+            }
 
-            // Defensive check: ensure we don't read past IDs if they are out of sync
-            // (Though rebuildAllEntityIds should keep them synced)
-            EntityId const id = (_index < _series->_entity_ids.size())
-                                        ? _series->_entity_ids[_index]
-                                        : EntityId(0);
-
-            return EventWithId(time, id);
+            // Slow path: virtual dispatch through wrapper
+            return EventWithId(
+                    _series->_storage.getEvent(_index),
+                    _series->_storage.getEntityId(_index));
         }
 
         // Standard Random Access Operations
@@ -118,6 +127,7 @@ public:
     private:
         DigitalEventSeries const * _series{nullptr};
         size_t _index{0};
+        DigitalEventStorageCache _cached_storage{};
     };
 
     /**
@@ -152,16 +162,16 @@ public:
 
     bool removeEvent(TimeFrameIndex event_time);
 
-    [[nodiscard]] size_t size() const { return _data.size(); }
+    [[nodiscard]] size_t size() const { return _storage.size(); }
 
-    void clear() {
-        _data.clear();
-        notifyObservers();
-    }
+    void clear();
 
     [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-        return _data | std::views::filter([start_time, stop_time](TimeFrameIndex time) {
-                   return time >= start_time && time <= stop_time;
+        // Use storage's getTimeRange for efficient range lookup
+        auto [start_idx, end_idx] = _storage.getTimeRange(start_time, stop_time);
+
+        return std::views::iota(start_idx, end_idx) | std::views::transform([this](size_t idx) {
+                   return _storage.getEvent(idx);
                });
     }
 
@@ -183,10 +193,14 @@ public:
     };
 
     std::vector<TimeFrameIndex> getEventsAsVector(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
+        auto [start_idx, end_idx] = _storage.getTimeRange(start_time, stop_time);
+
         std::vector<TimeFrameIndex> result;
-        for (TimeFrameIndex time: _data) {
-            if (time >= start_time && time <= stop_time) {
-                result.push_back(time);
+        if (end_idx > start_idx) {
+            result.reserve(end_idx - start_idx);
+
+            for (size_t i = start_idx; i < end_idx; ++i) {
+                result.push_back(_storage.getEvent(i));
             }
         }
         return result;
@@ -238,19 +252,110 @@ public:
         _identity_registry = registry;
     }
     void rebuildAllEntityIds();
-    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const { return _entity_ids; }
+    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const;
+
+    // ========== Storage Type Queries ==========
+
+    /**
+     * @brief Check if storage is a view (doesn't own data)
+     */
+    [[nodiscard]] bool isView() const { return _storage.isView(); }
+
+    /**
+     * @brief Check if storage is lazy-evaluated
+     */
+    [[nodiscard]] bool isLazy() const { return _storage.isLazy(); }
+
+    /**
+     * @brief Get the underlying storage type
+     */
+    [[nodiscard]] DigitalEventStorageType getStorageType() const { return _storage.getStorageType(); }
+
+    // ========== View and Lazy Factory Methods ==========
+
+    /**
+     * @brief Create a view-based series filtering by time range
+     * 
+     * @param source Source series to create view from
+     * @param start Start time (inclusive)
+     * @param end End time (inclusive)
+     * @return New series backed by view storage
+     */
+    static std::shared_ptr<DigitalEventSeries> createView(
+            std::shared_ptr<DigitalEventSeries const> source,
+            TimeFrameIndex start,
+            TimeFrameIndex end);
+
+    /**
+     * @brief Create a view-based series filtering by EntityIds
+     * 
+     * @param source Source series to create view from
+     * @param entity_ids Set of EntityIds to include
+     * @return New series backed by view storage
+     */
+    static std::shared_ptr<DigitalEventSeries> createView(
+            std::shared_ptr<DigitalEventSeries const> source,
+            std::unordered_set<EntityId> const & entity_ids);
+
+    /**
+     * @brief Create a lazy-evaluated series from a transform view
+     * 
+     * @tparam ViewType Random-access range type yielding EventWithId-like objects
+     * @param view The transform view
+     * @param num_elements Number of elements in the view
+     * @param time_frame Optional time frame for the new series
+     * @return New series backed by lazy storage
+     */
+    template<typename ViewType>
+    static std::shared_ptr<DigitalEventSeries> createFromView(
+            ViewType view,
+            size_t num_elements,
+            std::shared_ptr<TimeFrame> time_frame = nullptr);
+
+    /**
+     * @brief Materialize a lazy or view series into owning storage
+     * 
+     * Copies all events from the current storage into a new series with
+     * owning storage. Useful when lazy evaluation is no longer desirable.
+     * 
+     * @return New series with owning storage containing all events
+     */
+    [[nodiscard]] std::shared_ptr<DigitalEventSeries> materialize() const;
 
 private:
-    std::vector<TimeFrameIndex> _data{};
+    DigitalEventStorageWrapper _storage;
+    DigitalEventStorageCache _cached_storage;// Fast-path cache
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
 
-    // Sort the events in ascending order
-    void _sortEvents();
+    // Cache management
+    void _cacheOptimizationPointers();
+
+    // Legacy interface support
+    mutable std::vector<TimeFrameIndex> _legacy_event_vector;
+    mutable bool _legacy_vector_valid{false};
+    mutable std::vector<EntityId> _legacy_entity_id_vector;
+    mutable bool _legacy_entity_id_valid{false};
 
     // Identity
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
-    std::vector<EntityId> _entity_ids;
 };
+
+// =============================================================================
+// Template Implementation
+// =============================================================================
+
+template<typename ViewType>
+std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createFromView(
+        ViewType view,
+        size_t num_elements,
+        std::shared_ptr<TimeFrame> time_frame) {
+    auto result = std::make_shared<DigitalEventSeries>();
+    result->_storage = DigitalEventStorageWrapper{
+            LazyDigitalEventStorage<ViewType>{std::move(view), num_elements}};
+    result->_time_frame = std::move(time_frame);
+    result->_cacheOptimizationPointers();
+    return result;
+}
 
 #endif//BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP

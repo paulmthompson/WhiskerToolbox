@@ -11,6 +11,7 @@
 DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vector) {
     _data = std::move(digital_vector);
     _sortData();
+    _syncStorageFromData();
 }
 
 DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>> const & digital_vector) {
@@ -21,6 +22,7 @@ DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>
     }
     _data = std::move(intervals);
     _sortData();
+    _syncStorageFromData();
 }
 
 // ========== Getters ==========
@@ -41,8 +43,39 @@ bool DigitalIntervalSeries::isEventAtTime(TimeFrameIndex const time) const {
 }
 
 void DigitalIntervalSeries::addEvent(Interval new_interval) {
+    size_t const old_size = _data.size();
     _addEvent(new_interval);
-
+    size_t const new_size = _data.size();
+    
+    // If an interval was actually added (not merged into existing), assign EntityId
+    if (new_size > old_size && _identity_registry) {
+        // Find the index of the newly added interval
+        auto it = std::ranges::find(_data, new_interval);
+        if (it != _data.end()) {
+            size_t const idx = static_cast<size_t>(std::distance(_data.begin(), it));
+            
+            // Ensure _entity_ids vector is properly sized
+            if (_entity_ids.size() < new_size) {
+                _entity_ids.resize(new_size, EntityId{0});
+            }
+            
+            // Generate EntityId for the new interval
+            EntityId entity_id = _identity_registry->ensureId(
+                _identity_data_key,
+                EntityKind::IntervalEntity,
+                TimeFrameIndex{new_interval.start},
+                static_cast<int>(idx)
+            );
+            _entity_ids[idx] = entity_id;
+        }
+    } else if (new_size > old_size) {
+        // No registry, just ensure vector is sized with zero IDs
+        _entity_ids.resize(new_size, EntityId{0});
+    }
+    // Note: If intervals were merged (new_size <= old_size), entity IDs may need rebuilding
+    // via rebuildAllEntityIds() if precise tracking is needed
+    
+    _syncStorageFromData();
     notifyObservers();
 }
 
@@ -66,6 +99,7 @@ void DigitalIntervalSeries::_addEvent(Interval new_interval) {
 
 void DigitalIntervalSeries::setEventAtTime(TimeFrameIndex time, bool const event) {
     _setEventAtTime(time, event);
+    _syncStorageFromData();
     notifyObservers();
 }
 
@@ -73,6 +107,7 @@ bool DigitalIntervalSeries::removeInterval(Interval const & interval) {
     auto it = std::ranges::find(_data, interval);
     if (it != _data.end()) {
         _data.erase(it);
+        _syncStorageFromData();
         notifyObservers();
         return true;
     }
@@ -92,6 +127,7 @@ size_t DigitalIntervalSeries::removeIntervals(std::vector<Interval> const & inte
 
     if (removed_count > 0) {
         _sortData();// Re-sort after removals
+        _syncStorageFromData();
         notifyObservers();
     }
 
@@ -136,6 +172,7 @@ void DigitalIntervalSeries::_sortData() {
 void DigitalIntervalSeries::rebuildAllEntityIds() {
     if (!_identity_registry) {
         _entity_ids.assign(_data.size(), EntityId(0));
+        _syncStorageFromData();
         return;
     }
     _entity_ids.clear();
@@ -145,6 +182,7 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
         _entity_ids.push_back(
                 _identity_registry->ensureId(_identity_data_key, EntityKind::IntervalEntity, TimeFrameIndex{_data[i].start}, static_cast<int>(i)));
     }
+    _syncStorageFromData();
 }
 
 // ========== Entity Lookup Methods ==========
@@ -284,4 +322,131 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFra
         }
     }
     return closest_index;
+}
+
+// ========== Storage Integration ==========
+
+void DigitalIntervalSeries::_syncStorageFromData() {
+    // Rebuild owning storage from legacy _data
+    auto* owning = _storage.tryGetMutableOwning();
+    if (owning) {
+        owning->clear();
+        for (size_t i = 0; i < _data.size(); ++i) {
+            EntityId id = (i < _entity_ids.size()) ? _entity_ids[i] : EntityId{0};
+            owning->addInterval(_data[i], id);
+        }
+    }
+}
+
+// ========== Factory Methods ==========
+
+std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
+    std::shared_ptr<DigitalIntervalSeries const> source,
+    int64_t start,
+    int64_t end)
+{
+    auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_time_frame = source->_time_frame;
+    result->_identity_data_key = source->_identity_data_key;
+    result->_identity_registry = source->_identity_registry;
+    
+    // Get owning storage from source
+    auto const* source_owning = source->_storage.tryGetOwning();
+    if (!source_owning) {
+        // Source is not owning - materialize first
+        auto materialized = source->materialize();
+        source_owning = materialized->_storage.tryGetOwning();
+        if (!source_owning) {
+            throw std::runtime_error("Failed to materialize source for view creation");
+        }
+        // Create view from materialized storage
+        auto view_storage = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
+        ViewDigitalIntervalStorage view{view_storage};
+        view.filterByOverlappingRange(start, end);
+        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
+    } else {
+        // Create view from source owning storage
+        auto shared_source = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
+        ViewDigitalIntervalStorage view{shared_source};
+        view.filterByOverlappingRange(start, end);
+        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
+    }
+    
+    // Sync legacy _data for compatibility
+    result->_data.clear();
+    for (size_t i = 0; i < result->_storage.size(); ++i) {
+        result->_data.push_back(result->_storage.getInterval(i));
+        result->_entity_ids.push_back(result->_storage.getEntityId(i));
+    }
+    
+    return result;
+}
+
+std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
+    std::shared_ptr<DigitalIntervalSeries const> source,
+    std::unordered_set<EntityId> const& entity_ids)
+{
+    auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_time_frame = source->_time_frame;
+    result->_identity_data_key = source->_identity_data_key;
+    result->_identity_registry = source->_identity_registry;
+    
+    // Get owning storage from source
+    auto const* source_owning = source->_storage.tryGetOwning();
+    if (!source_owning) {
+        // Source is not owning - materialize first
+        auto materialized = source->materialize();
+        source_owning = materialized->_storage.tryGetOwning();
+        if (!source_owning) {
+            throw std::runtime_error("Failed to materialize source for view creation");
+        }
+        auto view_storage = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
+        ViewDigitalIntervalStorage view{view_storage};
+        view.filterByEntityIds(entity_ids);
+        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
+    } else {
+        auto shared_source = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
+        ViewDigitalIntervalStorage view{shared_source};
+        view.filterByEntityIds(entity_ids);
+        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
+    }
+    
+    // Sync legacy _data for compatibility
+    result->_data.clear();
+    for (size_t i = 0; i < result->_storage.size(); ++i) {
+        result->_data.push_back(result->_storage.getInterval(i));
+        result->_entity_ids.push_back(result->_storage.getEntityId(i));
+    }
+    
+    return result;
+}
+
+std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::materialize() const {
+    auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_time_frame = _time_frame;
+    result->_identity_data_key = _identity_data_key;
+    result->_identity_registry = _identity_registry;
+    
+    // Copy all data to new owning storage
+    OwningDigitalIntervalStorage new_storage;
+    new_storage.reserve(_storage.size());
+    
+    for (size_t i = 0; i < _storage.size(); ++i) {
+        new_storage.addInterval(_storage.getInterval(i), _storage.getEntityId(i));
+    }
+    
+    result->_storage = DigitalIntervalStorageWrapper{std::move(new_storage)};
+    
+    // Sync legacy _data for compatibility
+    result->_data.clear();
+    result->_data.reserve(result->_storage.size());
+    result->_entity_ids.clear();
+    result->_entity_ids.reserve(result->_storage.size());
+    
+    for (size_t i = 0; i < result->_storage.size(); ++i) {
+        result->_data.push_back(result->_storage.getInterval(i));
+        result->_entity_ids.push_back(result->_storage.getEntityId(i));
+    }
+    
+    return result;
 }

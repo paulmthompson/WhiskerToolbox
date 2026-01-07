@@ -21,6 +21,8 @@ add_executable(test_data_manager
 
         ragged_storage_test.cpp
         ragged_analog_storage_test.cpp
+        digital_event_storage_test.cpp
+        digital_interval_storage_test.cpp
 
         test_filename_timeframe.cpp
         test_tableview.cpp

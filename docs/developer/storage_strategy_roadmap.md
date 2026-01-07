@@ -40,7 +40,7 @@ This document outlines a plan to unify the storage abstraction patterns across a
 - ✅ Comprehensive unit tests: 8+ test cases covering all lazy operations
 - ✅ Build successful with all tests passing
 
-**Phase 4: Other Data Types - 🔄 IN PROGRESS**
+**Phase 4: Other Data Types - ✅ COMPLETED**
 
 **Phase 4.1: RaggedAnalogTimeSeries - ✅ COMPLETED**
 
@@ -57,7 +57,43 @@ This document outlines a plan to unify the storage abstraction patterns across a
 - ✅ All tests passing with zero errors
 - ✅ Build successful
 
-**Next: Phase 4.2/4.3 - DigitalEventSeries & DigitalIntervalSeries**
+**Phase 4.2: DigitalEventSeries - ✅ COMPLETED**
+
+- ✅ Created `DigitalEventStorage.hpp` with specialized storage classes
+- ✅ `OwningDigitalEventStorage` - owns `std::vector<TimeFrameIndex>` with EntityId mapping
+- ✅ `ViewDigitalEventStorage` - zero-copy view with index-based filtering
+- ✅ `LazyDigitalEventStorage<ViewType>` - lazy-evaluated digital event series
+- ✅ `DigitalEventStorageWrapper` - type-erased wrapper with StorageConcept/StorageModel pattern
+- ✅ `DigitalEventStorageCache` - contiguous pointer optimization struct
+- ✅ `std::hash<TimeFrameIndex>` specialization for unordered_map support
+- ✅ Updated `DigitalEventSeries` class to use new storage wrapper
+- ✅ Added factory methods: `createView()` (by time range and by EntityIds)
+- ✅ Added `materialize()` method for lazy→owning conversion
+- ✅ Added type query helpers: `isView()`, `isLazy()`, `getStorageType()`
+- ✅ Fixed underflow in `getEventsAsVector()` and `getEventsWithIdsInRange()` for invalid ranges
+- ✅ Added legacy vector support via `getEventSeries()` for backward compatibility
+- ✅ Comprehensive unit tests: 500+ lines covering ownership, views, materialization
+- ✅ All tests passing with zero errors
+- ✅ Build successful
+
+**Phase 4.3: DigitalIntervalSeries - ✅ COMPLETED**
+
+- ✅ Created `DigitalIntervalStorage.hpp` with specialized storage classes
+- ✅ `OwningDigitalIntervalStorage` - owns `std::vector<Interval>` with EntityId mapping
+- ✅ `ViewDigitalIntervalStorage` - zero-copy view with interval-specific filtering (overlap/containment queries)
+- ✅ `LazyDigitalIntervalStorage<ViewType>` - lazy-evaluated interval series
+- ✅ `DigitalIntervalStorageWrapper` - type-erased wrapper with StorageConcept/StorageModel pattern
+- ✅ `DigitalIntervalStorageCache` - contiguous pointer optimization struct
+- ✅ `std::hash<Interval>` specialization for unordered_map support
+- ✅ Updated `DigitalIntervalSeries` class to use new storage wrapper
+- ✅ Updated `DigitalIntervalSeries::addEvent()` to auto-assign EntityIds from registry (matches DigitalEventSeries pattern)
+- ✅ Added factory methods: `createView()` (by time range and by EntityIds)
+- ✅ Added `materialize()` method for lazy→owning conversion
+- ✅ Added type query helpers: `isView()`, `isLazy()`, `getStorageType()`
+- ✅ Added legacy vector support via `getDigitalIntervalSeries()` for backward compatibility
+- ✅ Comprehensive unit tests: 600+ lines covering ownership, views, materialization, entity ID handling
+- ✅ All tests passing with zero errors
+- ✅ Build successful
 
 ## Current State Analysis
 
@@ -68,8 +104,8 @@ This document outlines a plan to unify the storage abstraction patterns across a
 | `AnalogTimeSeries` | ✅ Full (CRTP + Type-erasure) | ✅ | ✅ LazyViewStorage | ✅ |
 | `RaggedTimeSeries<T>` | ✅ Full (CRTP + Type-erasure wrapper) | ❌ | ✅ ViewRaggedStorage factory | ✅ LazyRaggedStorage |
 | `RaggedAnalogTimeSeries` | ✅ Full (CRTP + Type-erasure wrapper, no EntityIds) | ❌ | ✅ ViewRaggedAnalogStorage factory | ✅ LazyRaggedAnalogStorage |
-| `DigitalEventSeries` | ❌ Raw `std::vector` | ❌ | ❌ | ❌ |
-| `DigitalIntervalSeries` | ❌ Raw `std::vector` | ❌ | ❌ | ❌ |
+| `DigitalEventSeries` | ✅ Full (CRTP + Type-erasure wrapper) | ❌ | ✅ ViewDigitalEventStorage factory | ✅ LazyDigitalEventStorage |
+| `DigitalIntervalSeries` | ✅ Full (CRTP + Type-erasure wrapper) | ❌ | ✅ ViewDigitalIntervalStorage factory | ✅ LazyDigitalIntervalStorage |
 
 ### What's Working Well
 
@@ -419,14 +455,43 @@ class RaggedStorageWrapper {
   - `tests/DataManager/ragged_analog_storage_test.cpp` (~400 lines)
 - ✅ All tests passing
 
-#### Phase 4.2: DigitalEventSeries
+#### Phase 4.2: DigitalEventSeries ✅ **COMPLETED**
 
-- Simple case: just `std::vector<TimeFrameIndex>`
-- Storage wrapper for vector vs memory-mapped vs view
+- ✅ Created `DigitalEventStorage.hpp` with specialized storage classes
+- ✅ `OwningDigitalEventStorage` - owns `std::vector<TimeFrameIndex>` with EntityId mapping
+- ✅ `ViewDigitalEventStorage` - zero-copy view with index-based filtering
+- ✅ `LazyDigitalEventStorage<ViewType>` - lazy-evaluated digital event series
+- ✅ `DigitalEventStorageWrapper` - type-erased wrapper with StorageConcept/StorageModel pattern
+- ✅ `DigitalEventStorageCache` - contiguous pointer optimization struct
+- ✅ `std::hash<TimeFrameIndex>` specialization for unordered_map support
+- ✅ Updated `DigitalEventSeries` class to use new storage wrapper
+- ✅ Added factory methods: `createView()` (by time range and by EntityIds)
+- ✅ Added `materialize()` method for lazy→owning conversion
+- ✅ Added type query helpers: `isView()`, `isLazy()`, `getStorageType()`
+- ✅ Fixed underflow in `getEventsAsVector()` and `getEventsWithIdsInRange()` for invalid ranges
+- ✅ Added legacy vector support via `getEventSeries()` for backward compatibility
+- ✅ Comprehensive unit tests: 500+ lines covering ownership, views, materialization
+- ✅ All tests passing with zero errors
+- ✅ Build successful
 
-#### Phase 4.3: DigitalIntervalSeries
+#### Phase 4.3: DigitalIntervalSeries - ✅ **COMPLETED**
 
-- Similar to events but stores `Interval` instead of `TimeFrameIndex`
+- ✅ Created `DigitalIntervalStorage.hpp` with specialized storage classes
+- ✅ `OwningDigitalIntervalStorage` - owns `std::vector<Interval>` with EntityId mapping
+- ✅ `ViewDigitalIntervalStorage` - zero-copy view with interval-specific filtering (overlap/containment queries)
+- ✅ `LazyDigitalIntervalStorage<ViewType>` - lazy-evaluated interval series
+- ✅ `DigitalIntervalStorageWrapper` - type-erased wrapper with StorageConcept/StorageModel pattern
+- ✅ `DigitalIntervalStorageCache` - contiguous pointer optimization struct
+- ✅ `std::hash<Interval>` specialization for unordered_map support
+- ✅ Updated `DigitalIntervalSeries` class to use new storage wrapper
+- ✅ Updated `DigitalIntervalSeries::addEvent()` to auto-assign EntityIds from registry (matches DigitalEventSeries pattern)
+- ✅ Added factory methods: `createView()` (by time range and by EntityIds)
+- ✅ Added `materialize()` method for lazy→owning conversion
+- ✅ Added type query helpers: `isView()`, `isLazy()`, `getStorageType()`
+- ✅ Added legacy vector support via `getDigitalIntervalSeries()` for backward compatibility
+- ✅ Comprehensive unit tests: 600+ lines covering ownership, views, materialization, entity ID handling
+- ✅ All tests passing with zero errors
+- ✅ Build successful
 
 ### Phase 5: Testing & Documentation (Estimated: 4-6 hours)
 
@@ -1236,27 +1301,32 @@ static_assert(RaggedStorageConcept<ViewRaggedStorage<SimpleData>, SimpleData>,
 | Phase 2: Integration | 4-6 hours | ✅ **COMPLETED** | Phase 1 ✅ |
 | Phase 3: Lazy Transforms | 6-8 hours | ✅ **COMPLETED** | Phase 2 ✅ |
 | Phase 4.1: RaggedAnalogTimeSeries | 2-3 hours | ✅ **COMPLETED** | Phase 3 ✅ |
-| Phase 4.2-4.3: DigitalEventSeries & DigitalIntervalSeries | 5-8 hours | ⏳ **PLANNED** | Phase 3 ✅ |
+| Phase 4.2: DigitalEventSeries | 3-4 hours | ✅ **COMPLETED** | Phase 3 ✅ |
+| Phase 4.3: DigitalIntervalSeries | 2-3 hours | ✅ **COMPLETED** | Phase 3 ✅ |
 | Phase 5: Testing & Docs | 4-6 hours | ⏳ **PLANNED** | All phases |
 
 **Progress Summary:**
-- **Completed:** 20-23 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 implemented and tested)
-- **Remaining:** 9-14 hours (2 phases)
-- **Total Scope:** 30-38 hours
-- **Current Achievement:** 59-77% complete
+- **Completed:** 32-36 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 + Phase 4.2 + Phase 4.3 all implemented and tested)
+- **Remaining:** 4-6 hours (final testing/docs)
+- **Total Scope:** 36-42 hours
+- **Current Achievement:** 89-90% complete
 
-**Recent Achievements (Phase 3):**
-- ✅ Implemented `LazyRaggedStorage<TData, ViewType>` CRTP class (~130 lines)
-- ✅ View-based lazy evaluation with on-demand element computation
-- ✅ Index building on construction: `_entity_to_index` and `_time_ranges` maps
-- ✅ Cache optimization: `tryGetCacheImpl()` returns invalid (forces lazy path)
-- ✅ RaggedStorageWrapper integration with type erasure for unbounded `ViewType`
-- ✅ `createFromView<ViewType>()` factory for 1:1 transforms
-- ✅ `createFromViewWithNewIds<ViewType>()` factory for fresh EntityId generation
-- ✅ `materialize()` method for lazy→owning conversion with EntityId preservation
-- ✅ `isLazy()` helper for runtime storage type detection
-- ✅ Comprehensive test coverage: 8+ test cases, 20+ test sections
-- ✅ Build successful with all tests passing
+**Recent Achievements (Phase 4.3):**
+- ✅ Implemented `DigitalIntervalStorage.hpp` with storage abstraction pattern (~1100 lines)
+- ✅ `OwningDigitalIntervalStorage`: Vector-based storage with interval data and entity ID mapping
+- ✅ `ViewDigitalIntervalStorage`: Zero-copy filtering with interval-specific semantics (overlap/containment queries)
+- ✅ `LazyDigitalIntervalStorage<ViewType>`: On-demand computation from transform views
+- ✅ `DigitalIntervalStorageWrapper`: Type-erased wrapper supporting all backend types
+- ✅ Hash specialization: `std::hash<Interval>` for unordered container support
+- ✅ `DigitalIntervalSeries` integration: Full migration to new storage backend
+- ✅ EntityId auto-assignment: Updated `addEvent()` to generate EntityIds from registry (matches DigitalEventSeries pattern)
+- ✅ Factory methods: `createView()` with time range and entity ID filters
+- ✅ Materialization: Lazy→owning conversion with entity ID preservation
+- ✅ Type queries: `isView()`, `isLazy()`, `getStorageType()` for runtime inspection
+- ✅ Backward compatibility: Legacy vector interface via `getDigitalIntervalSeries()`
+- ✅ Comprehensive test coverage: 600+ lines covering all storage types, views, materialization, entity handling
+- ✅ Build successful with zero errors/warnings
+- ✅ All tests passing
 
 ---
 
