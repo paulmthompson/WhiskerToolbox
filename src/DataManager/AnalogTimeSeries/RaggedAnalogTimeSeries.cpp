@@ -16,11 +16,7 @@ std::shared_ptr<TimeFrame> RaggedAnalogTimeSeries::getTimeFrame() const {
 // ========== Data Access ==========
 
 std::span<float const> RaggedAnalogTimeSeries::getDataAtTime(TimeFrameIndex time) const {
-    auto it = _data.find(time);
-    if (it == _data.end()) {
-        return {};
-    }
-    return std::span<float const>(it->second);
+    return _storage.getValuesAtTime(time);
 }
 
 std::span<float const> RaggedAnalogTimeSeries::getDataAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
@@ -28,23 +24,36 @@ std::span<float const> RaggedAnalogTimeSeries::getDataAtTime(TimeIndexAndFrame c
     return getDataAtTime(converted_time);
 }
 
+std::vector<float> RaggedAnalogTimeSeries::getValuesAtTimeVec(TimeFrameIndex time) const {
+    auto [start, end] = _storage.getTimeRange(time);
+    if (start >= end) {
+        return {};
+    }
+    
+    std::vector<float> result;
+    result.reserve(end - start);
+    for (size_t i = start; i < end; ++i) {
+        result.push_back(_storage.getValue(i));
+    }
+    return result;
+}
+
 bool RaggedAnalogTimeSeries::hasDataAtTime(TimeFrameIndex time) const {
-    return _data.contains(time);
+    return _storage.hasDataAtTime(time);
 }
 
 size_t RaggedAnalogTimeSeries::getCountAtTime(TimeFrameIndex time) const {
-    auto it = _data.find(time);
-    if (it == _data.end()) {
-        return 0;
-    }
-    return it->second.size();
+    auto [start, end] = _storage.getTimeRange(time);
+    return end - start;
 }
 
 std::vector<TimeFrameIndex> RaggedAnalogTimeSeries::getTimeIndices() const {
     std::vector<TimeFrameIndex> indices;
-    indices.reserve(_data.size());
+    auto const& time_ranges = _storage.timeRanges();
+    indices.reserve(time_ranges.size());
     
-    for (auto const & [time, values] : _data) {
+    for (auto const & [time, range] : time_ranges) {
+        (void)range;  // unused
         indices.push_back(time);
     }
     
@@ -52,13 +61,15 @@ std::vector<TimeFrameIndex> RaggedAnalogTimeSeries::getTimeIndices() const {
 }
 
 size_t RaggedAnalogTimeSeries::getNumTimePoints() const {
-    return _data.size();
+    return _storage.getTimeCount();
 }
 
 // ========== Data Modification ==========
 
 void RaggedAnalogTimeSeries::setDataAtTime(TimeFrameIndex time, std::vector<float> const & data, NotifyObservers notify) {
-    _data[time] = data;
+    _invalidateStorageCache();
+    _storage.setAtTime(time, data);
+    _updateStorageCache();
     
     if (notify == NotifyObservers::Yes) {
         notifyObservers();
@@ -66,7 +77,10 @@ void RaggedAnalogTimeSeries::setDataAtTime(TimeFrameIndex time, std::vector<floa
 }
 
 void RaggedAnalogTimeSeries::setDataAtTime(TimeFrameIndex time, std::vector<float> && data, NotifyObservers notify) {
-    _data[time] = std::move(data);
+    _invalidateStorageCache();
+    // setAtTime copies anyway since it may need to remove existing data first
+    _storage.setAtTime(time, data);
+    _updateStorageCache();
     
     if (notify == NotifyObservers::Yes) {
         notifyObservers();
@@ -84,8 +98,9 @@ void RaggedAnalogTimeSeries::setDataAtTime(TimeIndexAndFrame const & time_index_
 }
 
 void RaggedAnalogTimeSeries::appendAtTime(TimeFrameIndex time, std::vector<float> const & data, NotifyObservers notify) {
-    auto & existing = _data[time];
-    existing.insert(existing.end(), data.begin(), data.end());
+    _invalidateStorageCache();
+    _storage.appendBatch(time, data);
+    _updateStorageCache();
     
     if (notify == NotifyObservers::Yes) {
         notifyObservers();
@@ -93,10 +108,9 @@ void RaggedAnalogTimeSeries::appendAtTime(TimeFrameIndex time, std::vector<float
 }
 
 void RaggedAnalogTimeSeries::appendAtTime(TimeFrameIndex time, std::vector<float> && data, NotifyObservers notify) {
-    auto & existing = _data[time];
-    existing.insert(existing.end(), 
-                   std::make_move_iterator(data.begin()), 
-                   std::make_move_iterator(data.end()));
+    _invalidateStorageCache();
+    _storage.appendBatch(time, std::move(data));
+    _updateStorageCache();
     
     if (notify == NotifyObservers::Yes) {
         notifyObservers();
@@ -104,12 +118,13 @@ void RaggedAnalogTimeSeries::appendAtTime(TimeFrameIndex time, std::vector<float
 }
 
 bool RaggedAnalogTimeSeries::clearAtTime(TimeFrameIndex time, NotifyObservers notify) {
-    auto it = _data.find(time);
-    if (it == _data.end()) {
+    if (!_storage.hasDataAtTime(time)) {
         return false;
     }
     
-    _data.erase(it);
+    _invalidateStorageCache();
+    _storage.removeAtTime(time);
+    _updateStorageCache();
     
     if (notify == NotifyObservers::Yes) {
         notifyObservers();
@@ -124,7 +139,9 @@ bool RaggedAnalogTimeSeries::clearAtTime(TimeIndexAndFrame const & time_index_an
 }
 
 void RaggedAnalogTimeSeries::clearAll(NotifyObservers notify) {
-    _data.clear();
+    _invalidateStorageCache();
+    _storage.clear();
+    _updateStorageCache();
     
     if (notify == NotifyObservers::Yes) {
         notifyObservers();

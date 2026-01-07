@@ -5,6 +5,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
+#include "utils/RaggedAnalogStorage.hpp"
 
 #include <map>
 #include <memory>
@@ -23,10 +24,16 @@ class RaggedAnalogTimeSeriesView;
  * the number of samples at each time point need not be constant.
  *
  * This class manages:
- * - Time series storage as a map from TimeFrameIndex to vectors of floats
+ * - Time series storage via type-erased storage wrapper (supports owning, view, and lazy)
  * - TimeFrame association for time-based operations
  * - Observer pattern integration for data change notifications
  * - Range-based iteration interface
+ * - Cache optimization for fast-path iteration over contiguous storage
+ *
+ * Storage Backends:
+ * - OwningRaggedAnalogStorage: Default, owns data in SoA layout
+ * - ViewRaggedAnalogStorage: Zero-copy filtered view of another storage
+ * - LazyRaggedAnalogStorage: On-demand computation from a transform view
  *
  * Use cases include:
  * - Spike trains with varying numbers of detected events per time bin
@@ -81,32 +88,20 @@ public:
         for (auto&& [time, values] : time_value_pairs) {
             // Handle different value types
             if constexpr (std::convertible_to<decltype(values), float>) {
-                // Single float value - append to existing data at this time
-                _data[time].push_back(static_cast<float>(values));
+                // Single float value
+                _storage.append(time, static_cast<float>(values));
             }
             else if constexpr (std::convertible_to<decltype(values), std::vector<float>>) {
-                // Vector of floats
-                if (_data.find(time) == _data.end()) {
-                    // No existing data at this time - move or copy the entire vector
-                    if constexpr (std::is_rvalue_reference_v<decltype(values)>) {
-                        _data[time] = std::move(values);
-                    } else {
-                        _data[time] = values;
-                    }
-                } else {
-                    // Existing data at this time - append
-                    _data[time].insert(_data[time].end(), values.begin(), values.end());
-                }
+                // Vector of floats - use batch append
+                _storage.appendBatch(time, values);
             }
             else if constexpr (std::ranges::range<decltype(values)>) {
-                // Span or other range type - append to existing data
-                if (_data.find(time) == _data.end()) {
-                    _data[time] = std::vector<float>(std::ranges::begin(values), std::ranges::end(values));
-                } else {
-                    _data[time].insert(_data[time].end(), std::ranges::begin(values), std::ranges::end(values));
-                }
+                // Span or other range type
+                std::vector<float> vec(std::ranges::begin(values), std::ranges::end(values));
+                _storage.appendBatch(time, std::move(vec));
             }
         }
+        _updateStorageCache();
     }
 
     // Delete copy constructor and copy assignment
@@ -116,6 +111,90 @@ public:
     // Enable move semantics
     RaggedAnalogTimeSeries(RaggedAnalogTimeSeries &&) = default;
     RaggedAnalogTimeSeries & operator=(RaggedAnalogTimeSeries &&) = default;
+
+    // ========== Lazy Transform Factory Methods ==========
+
+    /**
+     * @brief Create RaggedAnalogTimeSeries from a lazy view
+     * 
+     * Creates a RaggedAnalogTimeSeries that computes values on-demand from a ranges view.
+     * The view must be a random-access range that yields pairs compatible with
+     * (TimeFrameIndex, float). No intermediate data is materialized.
+     * 
+     * @tparam ViewType Random-access range type
+     * @param view Random-access range view yielding (TimeFrameIndex, float) pairs
+     * @param time_frame Shared time frame
+     * @return std::shared_ptr<RaggedAnalogTimeSeries> Lazy time series
+     * 
+     * @example
+     * ```cpp
+     * auto scaled_view = original.elements()
+     *     | std::views::transform([](auto pair) {
+     *         return std::make_pair(pair.first, pair.second * 2.0f);
+     *     });
+     * auto lazy_scaled = RaggedAnalogTimeSeries::createFromView(scaled_view, original.getTimeFrame());
+     * ```
+     */
+    template<std::ranges::random_access_range ViewType>
+    [[nodiscard]] static std::shared_ptr<RaggedAnalogTimeSeries> createFromView(
+            ViewType view,
+            std::shared_ptr<TimeFrame> time_frame)
+    {
+        size_t num_elements = std::ranges::size(view);
+        
+        // Create lazy storage
+        auto lazy_storage = LazyRaggedAnalogStorage<ViewType>(std::move(view), num_elements);
+        RaggedAnalogStorageWrapper storage_wrapper(std::move(lazy_storage));
+        
+        auto result = std::make_shared<RaggedAnalogTimeSeries>();
+        result->_storage = std::move(storage_wrapper);
+        result->_time_frame = std::move(time_frame);
+        result->_updateStorageCache();
+        
+        return result;
+    }
+
+    /**
+     * @brief Materialize lazy storage into owning storage
+     * 
+     * If this series has lazy storage, creates a new series with all values
+     * computed and stored in owning storage. Useful when:
+     * - The source data for a lazy view is about to be destroyed
+     * - Random access patterns would cause repeated computation
+     * - The data needs to be saved to disk
+     * 
+     * @return New RaggedAnalogTimeSeries with owning storage
+     */
+    [[nodiscard]] std::shared_ptr<RaggedAnalogTimeSeries> materialize() const {
+        auto result = std::make_shared<RaggedAnalogTimeSeries>();
+        result->_time_frame = _time_frame;
+        
+        // Copy all elements to new owning storage
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            result->_storage.append(_storage.getTime(i), _storage.getValue(i));
+        }
+        result->_updateStorageCache();
+        
+        return result;
+    }
+
+    /**
+     * @brief Check if this series uses lazy storage
+     * 
+     * @return true if underlying storage is LazyRaggedAnalogStorage
+     */
+    [[nodiscard]] bool isLazy() const {
+        return _storage.isLazy();
+    }
+
+    /**
+     * @brief Check if this series uses view storage
+     * 
+     * @return true if underlying storage is ViewRaggedAnalogStorage
+     */
+    [[nodiscard]] bool isView() const {
+        return _storage.isView();
+    }
 
     // ========== Time Frame ==========
     /**
@@ -138,6 +217,7 @@ public:
      * @brief Get the data at a specific time
      * 
      * Returns a span view over the float vector at the specified time.
+     * For lazy storage, this may return empty span; use getValuesAtTimeVec() instead.
      * 
      * @param time The time to query
      * @return std::span<float const> view over the data, or empty span if no data exists
@@ -151,6 +231,17 @@ public:
      * @return std::span<float const> view over the data, or empty span if no data exists
      */
     [[nodiscard]] std::span<float const> getDataAtTime(TimeIndexAndFrame const & time_index_and_frame) const;
+
+    /**
+     * @brief Get the data at a specific time as a vector (works with lazy storage)
+     * 
+     * This method always works, including for lazy storage where getDataAtTime()
+     * might return empty span.
+     * 
+     * @param time The time to query
+     * @return Vector of float values at the time, empty if no data exists
+     */
+    [[nodiscard]] std::vector<float> getValuesAtTimeVec(TimeFrameIndex time) const;
 
     /**
      * @brief Check if data exists at a specific time
@@ -181,6 +272,15 @@ public:
      * @return The number of time indices that have data
      */
     [[nodiscard]] size_t getNumTimePoints() const;
+
+    /**
+     * @brief Get total number of float values across all times
+     * 
+     * @return Total element count
+     */
+    [[nodiscard]] size_t getTotalValueCount() const {
+        return _storage.size();
+    }
 
     // ========== Data Modification ==========
 
@@ -282,7 +382,18 @@ public:
     };
 
     /**
+     * @brief Entry structure for flat element iteration
+     */
+    struct FlatElement {
+        TimeFrameIndex time;
+        float value;
+    };
+
+    /**
      * @brief Iterator for range-based iteration over time-value pairs
+     * 
+     * This iterator groups values by time, yielding TimeValueEntry for each
+     * distinct time point. For lazy storage, the span may be empty.
      */
     class Iterator {
     public:
@@ -292,15 +403,19 @@ public:
         using pointer = TimeValueEntry const *;
         using reference = TimeValueEntry const &;
 
-        Iterator(std::map<TimeFrameIndex, std::vector<float>>::const_iterator it)
-            : _it(it) {}
+        Iterator() = default;
+
+        Iterator(RaggedAnalogTimeSeries const* series,
+                 std::map<TimeFrameIndex, std::pair<size_t, size_t>>::const_iterator time_it)
+            : _series(series), _time_iter(time_it) {}
 
         TimeValueEntry operator*() const {
-            return {_it->first, std::span<float const>(_it->second)};
+            TimeFrameIndex const time = _time_iter->first;
+            return {time, _series->_storage.getValuesAtTime(time)};
         }
 
         Iterator& operator++() {
-            ++_it;
+            ++_time_iter;
             return *this;
         }
 
@@ -311,29 +426,30 @@ public:
         }
 
         friend bool operator==(Iterator const & a, Iterator const & b) {
-            return a._it == b._it;
+            return a._time_iter == b._time_iter;
         }
 
         friend bool operator!=(Iterator const & a, Iterator const & b) {
-            return a._it != b._it;
+            return a._time_iter != b._time_iter;
         }
 
     private:
-        std::map<TimeFrameIndex, std::vector<float>>::const_iterator _it;
+        RaggedAnalogTimeSeries const* _series = nullptr;
+        std::map<TimeFrameIndex, std::pair<size_t, size_t>>::const_iterator _time_iter;
     };
 
     /**
      * @brief Get iterator to the beginning of the time series
      */
     [[nodiscard]] Iterator begin() const {
-        return Iterator(_data.begin());
+        return Iterator(this, _storage.timeRanges().begin());
     }
 
     /**
      * @brief Get iterator to the end of the time series
      */
     [[nodiscard]] Iterator end() const {
-        return Iterator(_data.end());
+        return Iterator(this, _storage.timeRanges().end());
     }
 
     /**
@@ -356,16 +472,11 @@ public:
      * @return A lazy range view of (TimeFrameIndex, float) pairs
      */
     [[nodiscard]] auto elements() const {
-        return _data | std::views::transform([](auto const& pair) {
-            // Capture the time for each value in the vector
-            TimeFrameIndex const time = pair.first;
-            std::vector<float> const& values = pair.second;
-            
-            // Create a view that pairs the time with each float value
-            return values | std::views::transform([time](float value) {
-                return std::make_pair(time, value);
+        // Create an index-based view over all elements
+        return std::views::iota(size_t{0}, _storage.size())
+            | std::views::transform([this](size_t idx) {
+                return std::make_pair(_storage.getTime(idx), _storage.getValue(idx));
             });
-        }) | std::views::join;  // Flatten the nested ranges
     }
 
     /**
@@ -375,14 +486,29 @@ public:
      * all values at each time point as a span. Useful when you need to process
      * all values at a time together rather than individually.
      * 
+     * Note: For lazy storage, the spans may be empty. Use time_slices_vec()
+     * instead if you need guaranteed access.
+     * 
      * Usage: for (auto [time, values_span] : ragged_analog.time_slices()) { ... }
      * 
      * @return A lazy range view of (TimeFrameIndex, span) pairs
      */
     [[nodiscard]] auto time_slices() const {
-        return _data | std::views::transform([](auto const& pair) {
-            return std::make_pair(pair.first, std::span<float const>{pair.second});
-        });
+        return _storage.timeRanges()
+            | std::views::transform([this](auto const& pair) {
+                return std::make_pair(pair.first, _storage.getValuesAtTime(pair.first));
+            });
+    }
+
+    // ========== Storage Access (Advanced) ==========
+
+    /**
+     * @brief Get storage cache for fast-path iteration
+     * 
+     * Returns cached pointers if storage is contiguous, otherwise invalid cache.
+     */
+    [[nodiscard]] RaggedAnalogStorageCache getStorageCache() const {
+        return _cached_storage;
     }
 
 private:
@@ -394,8 +520,25 @@ private:
      */
     [[nodiscard]] TimeFrameIndex _convertTimeIndex(TimeIndexAndFrame const & time_index_and_frame) const;
 
-    /// Map from TimeFrameIndex to vectors of float values
-    std::map<TimeFrameIndex, std::vector<float>> _data;
+    /**
+     * @brief Update the storage cache after mutations
+     */
+    void _updateStorageCache() {
+        _cached_storage = _storage.tryGetCache();
+    }
+
+    /**
+     * @brief Invalidate the storage cache before mutations
+     */
+    void _invalidateStorageCache() {
+        _cached_storage = RaggedAnalogStorageCache{};
+    }
+
+    /// Type-erased storage wrapper
+    RaggedAnalogStorageWrapper _storage;
+
+    /// Cached pointers for fast-path iteration
+    RaggedAnalogStorageCache _cached_storage;
 
     /// Associated time frame (optional)
     std::shared_ptr<TimeFrame> _time_frame{nullptr};

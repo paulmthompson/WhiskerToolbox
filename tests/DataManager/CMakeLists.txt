@@ -20,6 +20,7 @@ add_executable(test_data_manager
        test_data_manager.cpp
 
         ragged_storage_test.cpp
+        ragged_analog_storage_test.cpp
 
         test_filename_timeframe.cpp
         test_tableview.cpp

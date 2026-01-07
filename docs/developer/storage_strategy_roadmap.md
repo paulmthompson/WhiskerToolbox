@@ -40,8 +40,24 @@ This document outlines a plan to unify the storage abstraction patterns across a
 - ✅ Comprehensive unit tests: 8+ test cases covering all lazy operations
 - ✅ Build successful with all tests passing
 
-**Next Phase: Phase 4 Other Data Types - 🔄 IN QUEUE**
-Apply lazy storage pattern to RaggedAnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries.
+**Phase 4: Other Data Types - 🔄 IN PROGRESS**
+
+**Phase 4.1: RaggedAnalogTimeSeries - ✅ COMPLETED**
+
+- ✅ Created `RaggedAnalogStorage.hpp` with specialized storage classes (no EntityIds unlike RaggedTimeSeries)
+- ✅ `OwningRaggedAnalogStorage` - structure-of-arrays layout (parallel vectors for times/values)
+- ✅ `ViewRaggedAnalogStorage` - zero-copy view with filtering
+- ✅ `LazyRaggedAnalogStorage<ViewType>` - on-demand computation from views
+- ✅ `RaggedAnalogStorageWrapper` - type-erased wrapper with StorageConcept/StorageModel pattern
+- ✅ `RaggedAnalogStorageCache` - contiguous pointer optimization struct
+- ✅ Updated `RaggedAnalogTimeSeries` class to use new storage wrapper
+- ✅ Added factory methods: `createFromView()`, `materialize()`, `isLazy()`, `isView()`
+- ✅ Cache optimization integrated throughout all mutation methods
+- ✅ Comprehensive unit tests: 400+ lines covering ownership, views, lazy evaluation, integration
+- ✅ All tests passing with zero errors
+- ✅ Build successful
+
+**Next: Phase 4.2/4.3 - DigitalEventSeries & DigitalIntervalSeries**
 
 ## Current State Analysis
 
@@ -51,7 +67,7 @@ Apply lazy storage pattern to RaggedAnalogTimeSeries, DigitalEventSeries, Digita
 |-----------|---------------------|---------------|-------------|----------------|
 | `AnalogTimeSeries` | ✅ Full (CRTP + Type-erasure) | ✅ | ✅ LazyViewStorage | ✅ |
 | `RaggedTimeSeries<T>` | ✅ Full (CRTP + Type-erasure wrapper) | ❌ | ✅ ViewRaggedStorage factory | ✅ LazyRaggedStorage |
-| `RaggedAnalogTimeSeries` | ❌ Raw `std::map` | ❌ | ❌ | ❌ |
+| `RaggedAnalogTimeSeries` | ✅ Full (CRTP + Type-erasure wrapper, no EntityIds) | ❌ | ✅ ViewRaggedAnalogStorage factory | ✅ LazyRaggedAnalogStorage |
 | `DigitalEventSeries` | ❌ Raw `std::vector` | ❌ | ❌ | ❌ |
 | `DigitalIntervalSeries` | ❌ Raw `std::vector` | ❌ | ❌ | ❌ |
 
@@ -389,20 +405,28 @@ class RaggedStorageWrapper {
    - Round-trip: transform → lazy series → materialize with value verification
    - All tests passing ✅
 
-### Phase 4: Other Data Types (Estimated: 8-12 hours) 🔄 **IN QUEUE**
+### Phase 4: Other Data Types (Estimated: 8-12 hours) 🔄 **IN PROGRESS**
 
 **Goal:** Bring storage abstraction to remaining types.
 
-1. **`RaggedAnalogTimeSeries`**
-   - Similar pattern to `RaggedTimeSeries` but simpler (no EntityId)
-   - `std::map<TimeFrameIndex, std::vector<float>>` → wrapper
+#### Phase 4.1: RaggedAnalogTimeSeries ✅ **COMPLETED**
 
-2. **`DigitalEventSeries`**
-   - Simple case: just `std::vector<TimeFrameIndex>`
-   - Storage wrapper for vector vs memory-mapped vs view
+- ✅ Implemented storage abstraction matching RaggedTimeSeries pattern
+- ✅ Pattern: CRTP base class + Type erasure (StorageConcept/StorageModel)
+- ✅ Key difference: No EntityId support (has_entity_ids = false)
+- ✅ Files created:
+  - `src/DataManager/utils/RaggedAnalogStorage.hpp` (~750 lines)
+  - `tests/DataManager/ragged_analog_storage_test.cpp` (~400 lines)
+- ✅ All tests passing
 
-3. **`DigitalIntervalSeries`**
-   - Similar to events but stores `Interval` instead of `TimeFrameIndex`
+#### Phase 4.2: DigitalEventSeries
+
+- Simple case: just `std::vector<TimeFrameIndex>`
+- Storage wrapper for vector vs memory-mapped vs view
+
+#### Phase 4.3: DigitalIntervalSeries
+
+- Similar to events but stores `Interval` instead of `TimeFrameIndex`
 
 ### Phase 5: Testing & Documentation (Estimated: 4-6 hours)
 
@@ -1211,14 +1235,15 @@ static_assert(RaggedStorageConcept<ViewRaggedStorage<SimpleData>, SimpleData>,
 | Phase 1: Foundation | 4-6 hours | ✅ **COMPLETED** | None |
 | Phase 2: Integration | 4-6 hours | ✅ **COMPLETED** | Phase 1 ✅ |
 | Phase 3: Lazy Transforms | 6-8 hours | ✅ **COMPLETED** | Phase 2 ✅ |
-| Phase 4: Other Data Types | 8-12 hours | 🔄 **IN QUEUE** | Phase 2 ✅ |
+| Phase 4.1: RaggedAnalogTimeSeries | 2-3 hours | ✅ **COMPLETED** | Phase 3 ✅ |
+| Phase 4.2-4.3: DigitalEventSeries & DigitalIntervalSeries | 5-8 hours | ⏳ **PLANNED** | Phase 3 ✅ |
 | Phase 5: Testing & Docs | 4-6 hours | ⏳ **PLANNED** | All phases |
 
 **Progress Summary:**
-- **Completed:** 18-20 hours (Phase 1 + Phase 2 + Phase 3 implemented and tested)
-- **Remaining:** 12-18 hours (2 phases)
+- **Completed:** 20-23 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 implemented and tested)
+- **Remaining:** 9-14 hours (2 phases)
 - **Total Scope:** 30-38 hours
-- **Current Achievement:** 47-67% complete
+- **Current Achievement:** 59-77% complete
 
 **Recent Achievements (Phase 3):**
 - ✅ Implemented `LazyRaggedStorage<TData, ViewType>` CRTP class (~130 lines)
