@@ -495,19 +495,246 @@ class RaggedStorageWrapper {
 
 ### Phase 5: Testing & Documentation (Estimated: 4-6 hours)
 
-1. **Unit tests for each storage type**
-   - Owning storage basic operations
-   - View storage filtering
-   - Lazy storage computation
-   - Cache optimization correctness
+This phase is divided into three sub-phases with detailed task matrices:
 
-2. **Performance benchmarks**
-   - Compare iteration speed: cached vs uncached
-   - Memory usage: owning vs view
+---
 
-3. **Documentation**
-   - Usage examples for each factory method
-   - Performance guidance (when to use views vs copies)
+#### **Phase 5.1: Unit Test Verification (Estimated: 2 hours)**
+
+**Goal:** Verify all storage backends have comprehensive unit test coverage
+
+| Unit Test Category | AnalogTimeSeries | RaggedAnalogTimeSeries | RaggedTimeSeries<T> | DigitalEventSeries | DigitalIntervalSeries |
+|-------------------|------------------|------------------------|---------------------|--------------------|-----------------------|
+| **Empty Storage Semantics** | ✅ Existing | ⏳ Add test | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Owning Storage CRUD** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing |
+| **View Storage Filtering** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing |
+| **Lazy Storage Computation** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ⏳ Add test |
+| **Cache Validity (Owning)** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ⏳ Add test |
+| **Cache Validity (View - Contiguous)** | ⏳ Add test | ⏳ Add test | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Cache Validity (View - Sparse)** | ⏳ Add test | ⏳ Add test | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Cache Validity (Lazy)** | ✅ Existing | ✅ Existing | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **EntityId Lookup** | N/A | N/A | ✅ Existing | ✅ Existing | ✅ Existing |
+| **Time Range Queries** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing |
+| **Materialization (Lazy→Owning)** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ⏳ Add test |
+| **Factory Methods (createView)** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing |
+| **Factory Methods (createFromView)** | ✅ Existing | ✅ Existing | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Type Query (isView/isLazy)** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing |
+| **Move Semantics** | ⏳ Add test | ⏳ Add test | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Iterator Fast-Path** | ✅ Existing | ⏳ Add test | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Mutation on Read-Only (Exception)** | ⏳ Add test | ⏳ Add test | ✅ Existing | ⏳ Add test | ⏳ Add test |
+| **Storage Type Identification** | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing | ✅ Existing |
+| **Edge Cases (Boundary Times)** | ⏳ Add test | ⏳ Add test | ⏳ Add test | ⏳ Add test | ⏳ Add test |
+| **Interval-Specific Queries** | N/A | N/A | N/A | N/A | ✅ Existing |
+
+**Test File Locations:**
+
+| Data Type | Test File Path | Notes |
+|-----------|---------------|-------|
+| **AnalogTimeSeries** | `tests/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp` | Storage backend tests in main test file |
+| **RaggedAnalogTimeSeries** | `tests/DataManager/ragged_analog_storage_test.cpp` | Dedicated storage test file (~400 lines) |
+| **RaggedTimeSeries<T>** | `tests/DataManager/utils/RaggedStorage.test.cpp` | Generic storage tests with mock types |
+| | `tests/DataManager/Lines/LineData.test.cpp` | Integration tests with `Line2D` |
+| | `tests/DataManager/Masks/MaskData.test.cpp` | Integration tests with `Mask2D` |
+| | `tests/DataManager/Points/PointData.test.cpp` | Integration tests with `Point2D<float>` |
+| **DigitalEventSeries** | `tests/DataManager/digital_event_storage_test.cpp` | Dedicated storage test file (~500 lines) |
+| **DigitalIntervalSeries** | `tests/DataManager/digital_interval_storage_test.cpp` | Dedicated storage test file (~600 lines) |
+
+**Total Tests to Add:** ~40-50 new test sections across all data types
+
+**Priority Order:**
+1. **High Priority (Critical gaps):** Empty storage, cache validity for views, lazy materialization for DigitalIntervalSeries
+2. **Medium Priority (Completeness):** Move semantics, iterator fast-path verification, mutation exceptions
+3. **Low Priority (Edge cases):** Boundary time handling, stress tests
+
+---
+
+#### **Phase 5.2: Performance Benchmarks (Estimated: 1.5 hours)**
+
+**Goal:** Quantify performance characteristics and validate cache optimization effectiveness
+
+| Benchmark Category | AnalogTimeSeries | RaggedAnalogTimeSeries | RaggedTimeSeries<T> | DigitalEventSeries | DigitalIntervalSeries |
+|-------------------|------------------|------------------------|---------------------|--------------------|-----------------------|
+| **Iteration (Owning, 1M elements)** | ✅ Baseline exists | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Iteration (View Contiguous, 1M)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Iteration (View Sparse, 1M)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Iteration (Lazy, 1M)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **EntityId Lookup (100k lookups)** | N/A | N/A | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Time Range Query (10k queries)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **View Creation (Filter 10%)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Materialization (100k elements)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Memory Footprint (1M elements)** | ⏳ Measure | ⏳ Measure | ⏳ Measure | ⏳ Measure | ⏳ Measure |
+| **Cache Hit Rate (Trace)** | ⏳ Instrument | ⏳ Instrument | ⏳ Instrument | ⏳ Instrument | ⏳ Instrument |
+| **Insert Performance (Sequential)** | ✅ Baseline exists | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+| **Insert Performance (Random Time)** | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create | ⏳ Create |
+
+**Benchmark File Locations:**
+
+| Data Type | Benchmark File Path |
+|-----------|---------------------|
+| **AnalogTimeSeries** | `benchmark/storage_backend/AnalogTimeSeries.benchmark.cpp` |
+| **RaggedAnalogTimeSeries** | `benchmark/storage_backend/RaggedAnalogTimeSeries.benchmark.cpp` |
+| **RaggedTimeSeries<T>** | `benchmark/storage_backend/RaggedTimeSeries.benchmark.cpp` |
+| **DigitalEventSeries** | `benchmark/storage_backend/DigitalEventSeries.benchmark.cpp` |
+| **DigitalIntervalSeries** | `benchmark/storage_backend/DigitalIntervalSeries.benchmark.cpp` |
+
+**Directory Structure:**
+```
+benchmark/
+├── storage_backend/
+│   ├── AnalogTimeSeries.benchmark.cpp
+│   ├── RaggedAnalogTimeSeries.benchmark.cpp
+│   ├── RaggedTimeSeries.benchmark.cpp
+│   ├── DigitalEventSeries.benchmark.cpp
+│   └── DigitalIntervalSeries.benchmark.cpp
+├── MaskArea.benchmark.cpp              # Existing
+├── PolyLineUpload.benchmark.cpp        # Existing
+└── ...                                 # Other existing benchmarks
+```
+
+**Success Criteria:**
+- **Cache hit rate:** >95% for contiguous storage iteration
+- **Owning iteration:** ≤5% slower than raw vector iteration
+- **View iteration (contiguous):** ≤10% slower than owning
+- **View iteration (sparse):** Expected 2-5x slower (acceptable due to indirection)
+- **Lazy iteration:** Expected 5-50x slower depending on computation complexity
+- **Memory overhead:** Cache struct ≤32 bytes per container
+- **View creation:** O(n) where n = filtered element count
+- **Materialization:** ≤2x the cost of simple iteration
+
+**Measurement Tools:**
+- Google Benchmark (existing framework in `benchmark/` directory)
+- `heaptrack` for memory profiling (already available)
+- Manual instrumentation for cache hit tracing
+
+---
+
+#### **Phase 5.3: Documentation (Estimated: 1.5 hours)**
+
+**Goal:** Provide comprehensive usage documentation and performance guidance
+
+| Documentation Task | AnalogTimeSeries | RaggedAnalogTimeSeries | RaggedTimeSeries<T> | DigitalEventSeries | DigitalIntervalSeries |
+|-------------------|------------------|------------------------|---------------------|--------------------|-----------------------|
+| **Class Header Doxygen** | ✅ Existing | ⏳ Update | ⏳ Update | ⏳ Update | ⏳ Update |
+| **Storage Backend Overview** | ✅ Existing | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **Factory Method Examples** | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **createView() Usage** | ✅ Existing | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **createFromView() Usage** | ✅ Existing | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **materialize() When to Use** | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **Performance Guidance** | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **Cache Optimization Details** | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **EntityId Semantics** | N/A | N/A | ⏳ Add | ⏳ Add | ⏳ Add |
+| **View Lifetime Warning** | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **Migration Guide (from old API)** | N/A | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+| **Storage Type Decision Tree** | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add | ⏳ Add |
+
+**Documentation Locations:**
+1. **Header file Doxygen:** Add to each class header (`*.hpp`)
+2. **Usage examples:** `docs/examples/storage_backends_guide.md` (new file)
+3. **Performance guide:** `docs/developer/storage_performance.md` (new file)
+4. **Migration guide:** `docs/developer/storage_migration_guide.md` (new file)
+
+**Key Documentation Sections to Write:**
+
+##### 1. Storage Backend Overview (Per Data Type)
+```cpp
+/**
+ * @brief [DataType] supports three storage backends via type erasure
+ * 
+ * **Owning Storage:** Default backend, owns all data in memory
+ * - Use for: Primary data, mutable containers
+ * - Performance: Fastest iteration (cache-optimized)
+ * - Memory: Full copy of data
+ * 
+ * **View Storage:** Zero-copy filtered view of owning storage
+ * - Use for: Temporary subsets, filtering by EntityId/time
+ * - Performance: Fast if contiguous, slower if sparse
+ * - Memory: Only index array (~8 bytes per element)
+ * 
+ * **Lazy Storage:** On-demand computation from transform views
+ * - Use for: Transform pipelines, deferred computation
+ * - Performance: Slowest (recomputes on access)
+ * - Memory: Minimal (view + indices only)
+ */
+```
+
+##### 2. Factory Method Examples
+```cpp
+// Example 1: Create a view filtered by EntityIds
+auto source = std::make_shared<LineData>(...);
+std::unordered_set<EntityId> selected_ids = {...};
+auto view = LineData::createView(source, selected_ids);
+
+// Example 2: Lazy transform from MaskData to areas
+auto masks = std::make_shared<MaskData>(...);
+auto area_view = masks->getData() | ranges::views::transform(computeArea);
+auto lazy_areas = RaggedAnalogTimeSeries::createFromView(area_view, time_frame);
+
+// Example 3: Materialize lazy data for repeated access
+auto materialized = lazy_areas->materialize();
+```
+
+##### 3. Performance Decision Tree
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Need to store data?                                         │
+│ ├─ YES: Use owning storage (default constructor)           │
+│ └─ NO: ↓                                                    │
+│                                                             │
+│ Need a subset of existing data?                            │
+│ ├─ YES: Use createView() with filters                      │
+│ │   └─ Access pattern: ↓                                   │
+│ │       ├─ One-time iteration → Keep as view              │
+│ │       └─ Multiple iterations → Call materialize()       │
+│ └─ NO: ↓                                                    │
+│                                                             │
+│ Computing derived data?                                    │
+│ └─ YES: Use createFromView() with transform                │
+│     └─ Access pattern: ↓                                   │
+│         ├─ Rare access → Keep lazy                         │
+│         └─ Frequent access → Call materialize()            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+##### 4. View Lifetime Warning
+```cpp
+/**
+ * @warning View storage holds a shared_ptr to source data
+ * 
+ * If the source is modified after view creation, the view becomes
+ * invalid and behavior is undefined. Views are intended for:
+ * - Temporary filtering/subsetting
+ * - Passing to functions that don't outlive the source
+ * - Immediate materialization
+ * 
+ * For long-lived derived data, call materialize() to create
+ * an independent owning copy.
+ */
+```
+
+**Files to Create/Update:**
+- `docs/examples/storage_backends_guide.md` (new, ~300 lines)
+- `docs/developer/storage_performance.md` (new, ~200 lines)  
+- `docs/developer/storage_migration_guide.md` (new, ~150 lines)
+- Update existing class headers with expanded Doxygen comments
+
+---
+
+### Phase 5 Summary
+
+**Total Estimated Effort:** 5-6 hours (slightly more than initial estimate due to comprehensive scope)
+
+| Sub-Phase | Focus | Deliverables | Estimated Time |
+|-----------|-------|--------------|----------------|
+| **5.1: Unit Tests** | Test coverage gaps | 40-50 new test sections | 2 hours |
+| **5.2: Performance** | Benchmarks + profiling | 12 benchmark suites, perf report | 1.5 hours |
+| **5.3: Documentation** | Usage + migration guides | 3 new docs, updated headers | 1.5-2 hours |
+
+**Definition of Done:**
+- ✅ All data types have >90% test coverage for storage backends
+- ✅ Performance benchmarks document cache optimization effectiveness
+- ✅ Users can follow documentation to use all three storage backends
+- ✅ Migration guide exists for code using old storage APIs
+- ✅ Performance decision tree helps users choose appropriate backend
 
 ---
 
