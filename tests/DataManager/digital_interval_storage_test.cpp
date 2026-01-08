@@ -665,3 +665,259 @@ TEST_CASE("DigitalIntervalStorage edge cases", "[DigitalIntervalStorage][edge]")
         CHECK(storage.hasIntervalAtTime(25));  // Contained in both
     }
 }
+
+// =============================================================================
+// DigitalIntervalSeries::createFromView Tests
+// =============================================================================
+
+TEST_CASE("DigitalIntervalSeries::createFromView basic operations", "[DigitalIntervalSeries][createFromView]") {
+    
+    SECTION("Create lazy series from transform view") {
+        // Create source data
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2}),
+            IntervalWithId(Interval{50, 60}, EntityId{3})
+        };
+        
+        // Identity transform
+        auto view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
+        
+        REQUIRE(lazy_series != nullptr);
+        CHECK(lazy_series->size() == 3);
+        CHECK(lazy_series->isLazy());
+        CHECK_FALSE(lazy_series->isView());
+        CHECK(lazy_series->getStorageType() == DigitalIntervalStorageType::Lazy);
+    }
+    
+    SECTION("Lazy series allows iteration via view()") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2})
+        };
+        
+        auto view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
+        
+        size_t count = 0;
+        for (auto const& element : lazy_series->view()) {
+            if (count == 0) {
+                CHECK(element.interval.start == 10);
+                CHECK(element.entity_id == EntityId{1});
+            } else if (count == 1) {
+                CHECK(element.interval.start == 30);
+                CHECK(element.entity_id == EntityId{2});
+            }
+            ++count;
+        }
+        CHECK(count == 2);
+    }
+    
+    SECTION("Transform view - shift intervals") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2})
+        };
+        
+        // Shift all intervals by +100
+        auto shifted_view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return IntervalWithId(
+                Interval{iwid.interval.start + 100, iwid.interval.end + 100},
+                iwid.entity_id
+            );
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(shifted_view, source_data.size());
+        
+        CHECK(lazy_series->size() == 2);
+        
+        // Verify transformation was applied
+        auto series_view = lazy_series->view();
+        auto it = series_view.begin();
+        
+        CHECK((*it).interval.start == 110);  // 10 + 100
+        CHECK((*it).interval.end == 120);    // 20 + 100
+        CHECK((*it).entity_id == EntityId{1});
+        
+        ++it;
+        CHECK((*it).interval.start == 130);  // 30 + 100
+        CHECK((*it).interval.end == 140);    // 40 + 100
+        CHECK((*it).entity_id == EntityId{2});
+    }
+    
+    SECTION("Create with time frame") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{1, 2}, EntityId{1})
+        };
+        
+        std::vector<int> times = {0, 10, 20, 30};
+        auto time_frame = std::make_shared<TimeFrame>(times);
+
+    
+        auto view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size(), time_frame);
+        
+        CHECK(lazy_series->getTimeFrame() == time_frame);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalIntervalSeries][createFromView][materialize]") {
+    
+    SECTION("Materialize lazy series to owning") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2}),
+            IntervalWithId(Interval{50, 60}, EntityId{3})
+        };
+        
+        // Transform: double all interval values
+        auto doubled_view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return IntervalWithId(
+                Interval{iwid.interval.start * 2, iwid.interval.end * 2},
+                iwid.entity_id
+            );
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(doubled_view, source_data.size());
+        
+        CHECK(lazy_series->isLazy());
+        
+        // Materialize
+        auto materialized = lazy_series->materialize();
+        
+        REQUIRE(materialized != nullptr);
+        CHECK_FALSE(materialized->isLazy());
+        CHECK_FALSE(materialized->isView());
+        CHECK(materialized->getStorageType() == DigitalIntervalStorageType::Owning);
+        CHECK(materialized->size() == 3);
+        
+        // Verify values were computed correctly
+        auto const& intervals = materialized->getDigitalIntervalSeries();
+        CHECK(intervals[0].start == 20);   // 10 * 2
+        CHECK(intervals[0].end == 40);     // 20 * 2
+        CHECK(intervals[1].start == 60);   // 30 * 2
+        CHECK(intervals[1].end == 80);     // 40 * 2
+        CHECK(intervals[2].start == 100);  // 50 * 2
+        CHECK(intervals[2].end == 120);    // 60 * 2
+    }
+    
+    SECTION("Materialize preserves EntityIds") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{100}),
+            IntervalWithId(Interval{30, 40}, EntityId{200}),
+        };
+        
+        auto view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
+        auto materialized = lazy_series->materialize();
+        
+        auto const& entity_ids = materialized->getEntityIds();
+        REQUIRE(entity_ids.size() == 2);
+        CHECK(entity_ids[0] == EntityId{100});
+        CHECK(entity_ids[1] == EntityId{200});
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries::createFromView from existing series", "[DigitalIntervalSeries][createFromView][integration]") {
+    
+    SECTION("Create lazy from existing DigitalIntervalSeries::view()") {
+        // Create an owning series
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{30, 40});
+        source->addEvent(Interval{50, 60});
+        
+        // Create a lazy transform from the series' view
+        auto filtered_view = source->view() 
+            | std::views::filter([](IntervalWithId const& iwid) {
+                return iwid.interval.start >= 30;  // Only intervals starting at 30+
+            });
+        
+        // Count elements for lazy series creation
+        size_t count = 0;
+        for (auto const& _ : filtered_view) {
+            (void)_;
+            ++count;
+        }
+        
+        // Note: For lazy series we need a random-access range
+        // Filter views are not random-access, so we'd need to materialize first
+        // or use a different approach. This test shows the limitation.
+        
+        // For random-access transforms (not filters), createFromView works:
+        auto transformed_view = source->view()
+            | std::views::transform([](IntervalWithId const& iwid) {
+                return IntervalWithId(
+                    Interval{iwid.interval.start, iwid.interval.end + 10},
+                    iwid.entity_id
+                );
+            });
+        
+        auto lazy_extended = DigitalIntervalSeries::createFromView(
+            transformed_view, source->size());
+        
+        CHECK(lazy_extended->size() == 3);
+        
+        // Check first interval was extended
+        auto first = *lazy_extended->view().begin();
+        CHECK(first.interval.end == 30);  // Was 20, now 20+10
+    }
+    
+    SECTION("Round trip: series -> lazy transform -> materialize") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{100, 200});
+        source->addEvent(Interval{300, 400});
+        
+        // Scale intervals by 2
+        auto scaled_view = source->view()
+            | std::views::transform([](IntervalWithId const& iwid) {
+                return IntervalWithId(
+                    Interval{iwid.interval.start * 2, iwid.interval.end * 2},
+                    iwid.entity_id
+                );
+            });
+        
+        auto lazy = DigitalIntervalSeries::createFromView(scaled_view, source->size());
+        auto final_series = lazy->materialize();
+        
+        CHECK(final_series->size() == 2);
+        
+        auto const& intervals = final_series->getDigitalIntervalSeries();
+        CHECK(intervals[0].start == 200);
+        CHECK(intervals[0].end == 400);
+        CHECK(intervals[1].start == 600);
+        CHECK(intervals[1].end == 800);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries::createFromView empty series", "[DigitalIntervalSeries][createFromView][edge]") {
+    
+    SECTION("Create lazy from empty vector") {
+        std::vector<IntervalWithId> empty_data;
+        auto view = empty_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, 0);
+        
+        CHECK(lazy_series->size() == 0);
+        CHECK(lazy_series->isLazy());
+        
+        auto materialized = lazy_series->materialize();
+        CHECK(materialized->size() == 0);
+        CHECK_FALSE(materialized->isLazy());
+    }
+}

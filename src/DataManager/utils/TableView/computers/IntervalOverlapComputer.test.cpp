@@ -384,10 +384,10 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals
+        // Create column intervals - identical intervals are deduplicated
         std::vector<Interval> columnIntervals = {
                 {1, 3},// Interval 0
-                {1, 3} // Interval 1 (identical to interval 0)
+                {1, 3} // Duplicate - will be deduplicated
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -399,7 +399,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
 
         ExecutionPlan plan(rowIntervals, timeFrame);
 
-        // Test AssignID operation (should return the last matching interval)
+        // Test AssignID operation (returns index of matching interval)
         IntervalOverlapComputer<int64_t> assignComputer(intervalSource,
                                                         IntervalOverlapOperation::AssignID,
                                                         "IdenticalIntervals");
@@ -407,7 +407,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto [assignResults, assignEntity_ids] = assignComputer.compute(plan);
 
         REQUIRE(assignResults.size() == 1);
-        REQUIRE(assignResults[0] == 1);// Should return the last matching interval (index 1)
+        REQUIRE(assignResults[0] == 0);// Single deduplicated interval at index 0
     }
 }
 

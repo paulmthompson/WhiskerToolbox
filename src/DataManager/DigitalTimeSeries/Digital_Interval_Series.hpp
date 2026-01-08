@@ -59,19 +59,23 @@ public:
     /**
      * @brief Get a std::ranges compatible view of the series.
      * 
-     * Returns a random-access view that synthesizes IntervalWithId objects on demand
-     * from the parallel interval and ID vectors.
+     * Returns a random-access view that synthesizes IntervalWithId objects on demand.
+     * Uses cached pointers for fast-path iteration when storage is contiguous.
      * Allows iterating over IntervalWithId objects directly.
      */
     [[nodiscard]] auto view() const {
         return std::views::iota(size_t{0}, size())
              | std::views::transform([this](size_t idx) {
-                   Interval const & interval = _data[idx];
-                   // Defensive check for ID sync
-                   EntityId const id = (idx < _entity_ids.size())
-                                               ? _entity_ids[idx]
-                                               : EntityId(0);
-                   return IntervalWithId(interval, id);
+                   // Fast path: use cached pointers if valid
+                   if (_cached_storage.isValid()) {
+                       return IntervalWithId(
+                               _cached_storage.getInterval(idx),
+                               _cached_storage.getEntityId(idx));
+                   }
+                   // Slow path: virtual dispatch through wrapper
+                   return IntervalWithId(
+                           _storage.getInterval(idx),
+                           _storage.getEntityId(idx));
                });
     }
 
@@ -109,30 +113,41 @@ public:
 
     template<typename T, typename B>
     void setEventsAtTimes(std::vector<T> times, std::vector<B> events) {
-        for (int64_t i = 0; i < times.size(); ++i) {
-            _setEventAtTime(TimeFrameIndex(times[i]), events[i]);
+        for (size_t i = 0; i < times.size(); ++i) {
+            _setEventAtTimeInternal(TimeFrameIndex(times[i]), events[i]);
         }
+        _cacheOptimizationPointers();
+        _invalidateLegacyCache();
         notifyObservers();
     }
 
     template<typename T>
     void createIntervalsFromBool(std::vector<T> const & bool_vector) {
+        // Clear existing storage and rebuild
+        auto* owning = _storage.tryGetMutableOwning();
+        if (owning) {
+            owning->clear();
+        }
+        
         bool in_interval = false;
         int start = 0;
-        for (int i = 0; i < bool_vector.size(); ++i) {
+        for (size_t i = 0; i < bool_vector.size(); ++i) {
             if (bool_vector[i] && !in_interval) {
-                start = i;
+                start = static_cast<int>(i);
                 in_interval = true;
             } else if (!bool_vector[i] && in_interval) {
-                _data.push_back(Interval{start, i - 1});
+                if (owning) {
+                    owning->addInterval(Interval{start, static_cast<int64_t>(i - 1)}, EntityId{0});
+                }
                 in_interval = false;
             }
         }
-        if (in_interval) {
-            _data.push_back(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)});
+        if (in_interval && owning) {
+            owning->addInterval(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)}, EntityId{0});
         }
-
-        _sortData();
+        
+        _cacheOptimizationPointers();
+        _invalidateLegacyCache();
         notifyObservers();
     }
 
@@ -142,7 +157,7 @@ public:
 
     [[nodiscard]] bool isEventAtTime(TimeFrameIndex time) const;
 
-    [[nodiscard]] size_t size() const { return _data.size(); };
+    [[nodiscard]] size_t size() const { return _storage.size(); };
 
 
     // Defines how to handle intervals that overlap with range boundaries
@@ -158,13 +173,24 @@ public:
             int64_t stop_time) const {
 
         if constexpr (mode == RangeMode::CONTAINED) {
-            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                       return interval.start >= start_time && interval.end <= stop_time;
-                   });
+            // Direct storage access like DigitalEventSeries - returns by value
+            return std::views::iota(size_t{0}, _storage.size())
+                   | std::views::filter([this, start_time, stop_time](size_t idx) {
+                         Interval const interval = _storage.getInterval(idx);
+                         return interval.start >= start_time && interval.end <= stop_time;
+                     })
+                   | std::views::transform([this](size_t idx) {
+                         return _storage.getInterval(idx);
+                     });
         } else if constexpr (mode == RangeMode::OVERLAPPING) {
-            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                       return interval.start <= stop_time && interval.end >= start_time;
-                   });
+            return std::views::iota(size_t{0}, _storage.size())
+                   | std::views::filter([this, start_time, stop_time](size_t idx) {
+                         Interval const interval = _storage.getInterval(idx);
+                         return interval.start <= stop_time && interval.end >= start_time;
+                     })
+                   | std::views::transform([this](size_t idx) {
+                         return _storage.getInterval(idx);
+                     });
         } else if constexpr (mode == RangeMode::CLIP) {
             // For CLIP mode, we return a vector since we need to modify intervals
             return _getIntervalsAsVectorClipped(start_time, stop_time);
@@ -217,7 +243,7 @@ public:
         _identity_registry = registry;
     }
     void rebuildAllEntityIds();
-    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const { return _entity_ids; }
+    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const;
 
     // ========== Entity Lookup Methods ==========
 
@@ -346,6 +372,47 @@ public:
     [[nodiscard]] std::shared_ptr<DigitalIntervalSeries> materialize() const;
 
     /**
+     * @brief Create a lazy-evaluated series from a transform view
+     * 
+     * Creates a new DigitalIntervalSeries backed by lazy storage that computes
+     * elements on-demand from the provided view. Useful for transform pipelines
+     * where you want to defer computation until elements are accessed.
+     * 
+     * The view must yield objects that are convertible to IntervalWithId, or
+     * have .interval and .entity_id members, or be a pair/tuple of (Interval, EntityId).
+     * 
+     * @tparam ViewType Random-access range type yielding IntervalWithId-like objects
+     * @param view The transform view (will be moved)
+     * @param num_elements Number of elements in the view
+     * @param time_frame Optional time frame for the new series
+     * @return New series backed by lazy storage
+     * 
+     * @note The resulting series is read-only. Call materialize() to convert
+     *       to an owning series if you need to modify the data.
+     * 
+     * @example
+     * @code
+     * auto source = std::make_shared<DigitalIntervalSeries>(...);
+     * 
+     * // Create a lazy transform that shifts all intervals by 100
+     * auto shifted_view = source->view() 
+     *     | std::views::transform([](IntervalWithId const& iwid) {
+     *           return IntervalWithId(
+     *               Interval{iwid.interval.start + 100, iwid.interval.end + 100},
+     *               iwid.entity_id);
+     *       });
+     * 
+     * auto lazy_series = DigitalIntervalSeries::createFromView(
+     *     shifted_view, source->size(), source->getTimeFrame());
+     * @endcode
+     */
+    template<typename ViewType>
+    [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createFromView(
+            ViewType view,
+            size_t num_elements,
+            std::shared_ptr<TimeFrame> time_frame = nullptr);
+
+    /**
      * @brief Get the storage cache for fast-path iteration
      * 
      * Returns a cache structure with pointers to contiguous data if available.
@@ -356,15 +423,27 @@ public:
 
 private:
     DigitalIntervalStorageWrapper _storage;
-    std::vector<Interval> _data{};// Legacy data (kept for compatibility during transition)
+    DigitalIntervalStorageCache _cached_storage;  // Fast-path cache
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
+    
+    // Lazy-built cache for legacy API (getDigitalIntervalSeries)
+    mutable std::vector<Interval> _legacy_data_cache;
+    mutable bool _legacy_data_cache_valid{false};
+    mutable std::vector<EntityId> _legacy_entity_id_cache;
+    mutable bool _legacy_entity_id_cache_valid{false};
+    void _invalidateLegacyCache() { 
+        _legacy_data_cache_valid = false; 
+        _legacy_entity_id_cache_valid = false;
+    }
+    void _rebuildLegacyCacheIfNeeded() const;
+    void _rebuildEntityIdCacheIfNeeded() const;
+    
+    // Cache management
+    void _cacheOptimizationPointers();
 
-    void _addEvent(Interval new_interval);
-    void _setEventAtTime(TimeFrameIndex time, bool event);
-    void _removeEventAtTime(TimeFrameIndex time);
-
-    void _sortData();
-    void _syncStorageFromData();// Sync _storage from legacy _data vector
+    void _addEventInternal(Interval new_interval);  // Core mutation logic
+    void _setEventAtTimeInternal(TimeFrameIndex time, bool event);
+    void _removeEventAtTimeInternal(TimeFrameIndex time);
 
     // Helper method to handle clipping intervals at range boundaries
     std::vector<Interval> _getIntervalsAsVectorClipped(
@@ -373,7 +452,8 @@ private:
 
         std::vector<Interval> result;
 
-        for (auto const & interval: _data) {
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            Interval const interval = _storage.getInterval(i);
 
             // Skip if not overlapping
             if (interval.end < start_time || interval.start > stop_time)
@@ -404,7 +484,6 @@ private:
     // Identity
     std::string _identity_data_key;
     EntityRegistry * _identity_registry{nullptr};
-    std::vector<EntityId> _entity_ids;
 
     /**
      * @brief Get time values from TimeFrameIndex range
@@ -417,6 +496,24 @@ private:
             TimeFrameIndex start_index,
             TimeFrameIndex stop_index) const;
 };
+
+// =============================================================================
+// Template Implementation
+// =============================================================================
+
+template<typename ViewType>
+std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createFromView(
+        ViewType view,
+        size_t num_elements,
+        std::shared_ptr<TimeFrame> time_frame) {
+    auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_storage = DigitalIntervalStorageWrapper{
+            LazyDigitalIntervalStorage<ViewType>{std::move(view), num_elements}};
+    result->_time_frame = std::move(time_frame);
+    result->_cacheOptimizationPointers();
+    // Note: _data vector left empty - storage wrapper handles all access
+    return result;
+}
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time);
 

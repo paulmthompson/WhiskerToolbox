@@ -393,6 +393,59 @@ public:
         _entity_ids = std::move(ids);
         _rebuildEntityIdIndex();
     }
+    
+    /**
+     * @brief Set entity ID at a specific index
+     */
+    void setEntityId(size_t idx, EntityId id) {
+        if (idx >= _entity_ids.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        // Remove old mapping
+        _entity_id_to_index.erase(_entity_ids[idx]);
+        _entity_ids[idx] = id;
+        _entity_id_to_index[id] = idx;
+    }
+    
+    /**
+     * @brief Set interval at a specific index (does not re-sort)
+     */
+    void setInterval(size_t idx, Interval interval) {
+        if (idx >= _intervals.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        _intervals[idx] = interval;
+    }
+    
+    /**
+     * @brief Remove interval at a specific index
+     */
+    void removeAt(size_t idx) {
+        if (idx >= _intervals.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        
+        // Remove from entity ID index
+        if (idx < _entity_ids.size()) {
+            _entity_id_to_index.erase(_entity_ids[idx]);
+        }
+        
+        _intervals.erase(_intervals.begin() + static_cast<std::ptrdiff_t>(idx));
+        _entity_ids.erase(_entity_ids.begin() + static_cast<std::ptrdiff_t>(idx));
+        
+        // Update indices for moved elements
+        for (size_t i = idx; i < _entity_ids.size(); ++i) {
+            _entity_id_to_index[_entity_ids[i]] = i;
+        }
+    }
+    
+    /**
+     * @brief Sort intervals and entity IDs together
+     */
+    void sort() {
+        _sortIntervalsWithEntityIds();
+        _rebuildEntityIdIndex();
+    }
 
     // ========== CRTP Implementation ==========
     

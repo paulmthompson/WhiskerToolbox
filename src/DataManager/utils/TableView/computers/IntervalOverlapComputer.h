@@ -70,12 +70,12 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return Number of overlapping column intervals.
 */
 [[nodiscard]] int64_t countOverlappingIntervals(TimeFrameInterval const & rowInterval,
-                                                std::ranges::range auto & columnIntervals,
+                                                std::ranges::range auto && columnIntervals,
                                                 TimeFrame const * sourceTimeFrame,
                                                 TimeFrame const * destinationTimeFrame) {
     int64_t count = 0;
 
-    for (auto & colInterval: columnIntervals) {
+    for (auto colInterval: columnIntervals) {
         if (intervalsOverlapInAbsoluteTime(rowInterval, colInterval, sourceTimeFrame, destinationTimeFrame)) {
             ++count;
         }

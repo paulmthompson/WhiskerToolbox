@@ -108,29 +108,29 @@ public:
      * ```
      */
     template<std::ranges::input_range R>
-    requires requires(std::ranges::range_value_t<R> pair) {
-        { pair.first } -> std::convertible_to<TimeFrameIndex>;
-        { pair.second } -> std::convertible_to<float>;
-    }
-    explicit AnalogTimeSeries(R&& time_value_pairs) 
+        requires requires(std::ranges::range_value_t<R> pair) {
+            { pair.first } -> std::convertible_to<TimeFrameIndex>;
+            { pair.second } -> std::convertible_to<float>;
+        }
+    explicit AnalogTimeSeries(R && time_value_pairs)
         : AnalogTimeSeries() {
-        
+
         // First pass: collect into vectors for efficient construction
         std::vector<TimeFrameIndex> times;
         std::vector<float> values;
-        
+
         // Reserve if we can get size
         if constexpr (std::ranges::sized_range<R>) {
             auto size = std::ranges::size(time_value_pairs);
             times.reserve(size);
             values.reserve(size);
         }
-        
-        for (auto&& [time, value] : time_value_pairs) {
+
+        for (auto && [time, value]: time_value_pairs) {
             times.push_back(time);
             values.push_back(static_cast<float>(value));
         }
-        
+
         // Use existing setData method for efficient storage setup
         setData(std::move(values), std::move(times));
     }
@@ -216,25 +216,24 @@ public:
     template<std::ranges::random_access_range ViewType>
     [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createFromView(
             ViewType view,
-            std::shared_ptr<TimeIndexStorage> time_storage)
-    {
+            std::shared_ptr<TimeIndexStorage> time_storage) {
         size_t num_samples = std::ranges::size(view);
-        
+
         // Validate that view size matches time storage
         if (num_samples != time_storage->size()) {
             throw std::runtime_error(
-                "View size (" + std::to_string(num_samples) + 
-                ") does not match time storage size (" + 
-                std::to_string(time_storage->size()) + ")");
+                    "View size (" + std::to_string(num_samples) +
+                    ") does not match time storage size (" +
+                    std::to_string(time_storage->size()) + ")");
         }
-        
+
         // Create lazy storage
         auto lazy_storage = LazyViewStorage<ViewType>(std::move(view), num_samples);
         DataStorageWrapper storage_wrapper(std::move(lazy_storage));
-        
+
         // Use private constructor with shared time storage
         return std::shared_ptr<AnalogTimeSeries>(
-            new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
+                new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
     }
 
     // ========== Getting Data ==========
@@ -325,12 +324,10 @@ public:
      * Uses cached pointers for fast-path iteration when storage is contiguous.
      */
     [[nodiscard]] auto view() const {
-        return std::views::iota(size_t{0}, getNumSamples())
-             | std::views::transform([this](size_t i) {
+        return std::views::iota(size_t{0}, getNumSamples()) | std::views::transform([this](size_t i) {
                    return TimeValuePoint{
-                       _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
-                       _getDataAtDataArrayIndex(DataArrayIndex(i))
-                   };
+                           _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
+                           _getDataAtDataArrayIndex(DataArrayIndex(i))};
                });
     }
 
@@ -340,8 +337,7 @@ public:
      * Returns a random-access view of float values only, without time frame indices.
      */
     [[nodiscard]] auto viewValues() const {
-        return std::views::iota(size_t{0}, getNumSamples())
-             | std::views::transform([this](size_t i) {
+        return std::views::iota(size_t{0}, getNumSamples()) | std::views::transform([this](size_t i) {
                    return _getDataAtDataArrayIndex(DataArrayIndex(i));
                });
     }
@@ -356,12 +352,10 @@ public:
      * @param end_index Ending DataArrayIndex (exclusive)
      */
     [[nodiscard]] auto viewTimeValueRange(DataArrayIndex start_index, DataArrayIndex end_index) const {
-        return std::views::iota(start_index.getValue(), end_index.getValue())
-             | std::views::transform([this](size_t i) {
+        return std::views::iota(start_index.getValue(), end_index.getValue()) | std::views::transform([this](size_t i) {
                    return TimeValuePoint{
-                       _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
-                       _getDataAtDataArrayIndex(DataArrayIndex(i))
-                   };
+                           _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
+                           _getDataAtDataArrayIndex(DataArrayIndex(i))};
                });
     }
 
@@ -463,7 +457,7 @@ public:
 
         // Convert the time indices from source timeframe to our timeframe
         auto [target_start, target_end] = convertTimeFrameRange(
-            start_time, end_time, source_timeFrame, *_time_frame);
+                start_time, end_time, source_timeFrame, *_time_frame);
 
         return getTimeValueRangeInTimeFrameIndexRange(target_start, target_end);
     }
@@ -482,7 +476,8 @@ public:
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
      */
-    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time,
+                                                                          TimeFrameIndex end_time) const;
 
     /**
      * @brief Get time-value pairs with timeframe conversion
@@ -674,12 +669,11 @@ private:
 
     // Private constructors for factory methods
     AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
-    
+
     // Constructor for reusing shared time storage (efficient for lazy views)
     AnalogTimeSeries(DataStorageWrapper storage, std::shared_ptr<TimeIndexStorage> time_storage)
-        : _data_storage(std::move(storage))
-        , _time_storage(std::move(time_storage))
-    {
+        : _data_storage(std::move(storage)),
+          _time_storage(std::move(time_storage)) {
         _cacheOptimizationPointers();
     }
 
@@ -766,13 +760,11 @@ public:
      * Compatible with TransformPipeline.
      */
     [[nodiscard]] auto elements() const {
-        return std::views::iota(size_t(0), _data_storage.size()) 
-             | std::views::transform([this](size_t i) {
-                 return std::make_pair(
-                     _time_storage->getTimeFrameIndexAt(i),
-                     _data_storage.getValueAt(i)
-                 );
-             });
+        return std::views::iota(size_t(0), _data_storage.size()) | std::views::transform([this](size_t i) {
+                   return std::make_pair(
+                           _time_storage->getTimeFrameIndexAt(i),
+                           _data_storage.getValueAt(i));
+               });
     }
 
     /**
@@ -827,24 +819,22 @@ public:
             auto span = _data_storage.getSpan();
             values.assign(span.begin(), span.end());
             return std::make_shared<AnalogTimeSeries>(
-                std::move(values), 
-                _time_storage->getAllTimeIndices()
-            );
+                    std::move(values),
+                    _time_storage->getAllTimeIndices());
         }
-        
+
         // Slow path: evaluate all values from storage
         size_t n = _data_storage.size();
         std::vector<float> values;
         values.reserve(n);
-        
+
         for (size_t i = 0; i < n; ++i) {
             values.push_back(_data_storage.getValueAt(i));
         }
-        
+
         return std::make_shared<AnalogTimeSeries>(
-            std::move(values),
-            _time_storage->getAllTimeIndices()
-        );
+                std::move(values),
+                _time_storage->getAllTimeIndices());
     }
 };
 
