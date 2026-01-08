@@ -40,119 +40,26 @@ public:
     // =============================================================
 
     /**
-     * @brief Random Access Iterator for DigitalEventSeries
-     * 
-     * Synthesizes EventWithId objects on demand from the storage.
-     * Uses cached pointers for fast-path iteration when storage is contiguous.
-     */
-    class EventIterator {
-    public:
-        // Iterator traits
-        using iterator_category = std::random_access_iterator_tag;
-        using iterator_concept = std::random_access_iterator_tag;
-        using value_type = EventWithId;
-        using difference_type = std::ptrdiff_t;
-        using pointer = EventWithId;  // Proxy pointer
-        using reference = EventWithId;// Return by Value
-
-        EventIterator() = default;
-        EventIterator(DigitalEventSeries const * series, size_t index)
-            : _series(series),
-              _index(index),
-              _cached_storage(series ? series->_cached_storage : DigitalEventStorageCache{}) {}
-
-        // Dereference: Gets event time and entity ID
-        reference operator*() const {
-            // Fast path: use cached pointers if valid
-            if (_cached_storage.isValid()) {
-                return EventWithId(
-                        _cached_storage.getEvent(_index),
-                        _cached_storage.getEntityId(_index));
-            }
-
-            // Slow path: virtual dispatch through wrapper
-            return EventWithId(
-                    _series->_storage.getEvent(_index),
-                    _series->_storage.getEntityId(_index));
-        }
-
-        // Standard Random Access Operations
-        EventIterator & operator++() {
-            ++_index;
-            return *this;
-        }
-        EventIterator operator++(int) {
-            auto tmp = *this;
-            ++_index;
-            return tmp;
-        }
-        EventIterator & operator--() {
-            --_index;
-            return *this;
-        }
-        EventIterator operator--(int) {
-            auto tmp = *this;
-            --_index;
-            return tmp;
-        }
-
-        EventIterator & operator+=(difference_type n) {
-            _index += static_cast<size_t>(n);
-            return *this;
-        }
-        EventIterator & operator-=(difference_type n) {
-            _index -= static_cast<size_t>(n);
-            return *this;
-        }
-
-        friend EventIterator operator+(EventIterator it, difference_type n) { return it += n; }
-        friend EventIterator operator+(difference_type n, EventIterator it) { return it += n; }
-        friend EventIterator operator-(EventIterator it, difference_type n) { return it -= n; }
-
-        friend difference_type operator-(EventIterator const & lhs, EventIterator const & rhs) {
-            return static_cast<difference_type>(lhs._index) - static_cast<difference_type>(rhs._index);
-        }
-
-        // Comparison (Space-ship operator handles <, >, <=, >=, ==, !=)
-        auto operator<=>(EventIterator const & other) const {
-            return _index <=> other._index;
-        }
-        bool operator==(EventIterator const & other) const {
-            return _index == other._index;
-        }
-
-        // Subscript
-        reference operator[](difference_type n) const { return *(*this + n); }
-
-    private:
-        DigitalEventSeries const * _series{nullptr};
-        size_t _index{0};
-        DigitalEventStorageCache _cached_storage{};
-    };
-
-    /**
-     * @brief Lightweight view over the event series
-     */
-    class EventView : public std::ranges::view_interface<EventView> {
-    public:
-        EventView() = default;
-        EventView(DigitalEventSeries const * series)
-            : _series(series) {}
-
-        EventIterator begin() const { return EventIterator(_series, 0); }
-        EventIterator end() const { return EventIterator(_series, _series->size()); }
-        size_t size() const { return _series->size(); }
-
-    private:
-        DigitalEventSeries const * _series{nullptr};
-    };
-
-    /**
      * @brief Get a std::ranges compatible view of the series.
+     * 
+     * Returns a random-access view that synthesizes EventWithId objects on demand.
+     * Uses cached pointers for fast-path iteration when storage is contiguous.
      * Allows iterating over EventWithId objects directly.
      */
     [[nodiscard]] auto view() const {
-        return EventView(this);
+        return std::views::iota(size_t{0}, size())
+             | std::views::transform([this](size_t idx) {
+                   // Fast path: use cached pointers if valid
+                   if (_cached_storage.isValid()) {
+                       return EventWithId(
+                               _cached_storage.getEvent(idx),
+                               _cached_storage.getEntityId(idx));
+                   }
+                   // Slow path: virtual dispatch through wrapper
+                   return EventWithId(
+                           _storage.getEvent(idx),
+                           _storage.getEntityId(idx));
+               });
     }
 
 
