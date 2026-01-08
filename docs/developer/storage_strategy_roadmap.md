@@ -241,7 +241,7 @@ This refactoring was necessary to ensure both digital series have identical qual
 - ✅ All tests passing with zero errors
 - ✅ Build successful
 
-**Phase 4.4: Interface Unification - 🔄 MOSTLY COMPLETE**
+**Phase 4.4: Interface Unification - ✅ COMPLETED**
 
 **Step 1: Add `createFromView<ViewType>()` - ✅ COMPLETED**
 - ✅ Implemented `createFromView<ViewType>()` in `DigitalIntervalSeries`
@@ -263,14 +263,13 @@ This refactoring was necessary to ensure both digital series have identical qual
 - ✅ Maintained 100% backward compatibility (member access still works)
 - ✅ All 242+ tests passing, zero build errors
 
-**Steps 4-6: Remaining Interface Unification - ⏳ PLANNED**
-- ⏳ Add universal `elements()` method to all types (currently on 3 of 5)
-- ⏳ Convert materializing `get*WithIdsInRange()` methods to return views instead of vectors
-- ⏳ Add backwards-compatible vector-returning methods for existing callers
-- ⏳ Documentation: Update usage examples for generic algorithms
-- ⏳ Note: `AnalogTimeSeries` and `RaggedAnalogTimeSeries` do NOT have EntityIds - cannot support EntityId filtering
+**Steps 4-6: Remaining Interface Unification - ✅ COMPLETED**
+- ✅ Add universal `elements()` method to all types (all 5 types complete)
+- ⏭️ Step 5 SKIPPED: `get*WithIdsInRange()` methods kept as materializing (view semantics deferred)
+- ✅ Documentation: Complete developer guide for generic algorithms created
+- ✅ Note: `AnalogTimeSeries` and `RaggedAnalogTimeSeries` do NOT have EntityIds - cannot support EntityId filtering
 
-## Current State Analysis - Phase 4.4 Step 2 Complete
+## Current State Analysis - Phase 4.4 Complete ✅
 
 ### Element Accessor Standardization
 
@@ -426,17 +425,27 @@ All five core time series data types in WhiskerToolbox now employ a **unified, f
    - Zero memory overhead when not used
    - Full compatibility with existing code
 
-### Phase 4.4 Status: Step 4 Complete (4 of 6 done, ~67% complete) 🔄
+### Phase 4.4 Interface Unification - ✅ COMPLETE
 
-**Completed Steps:**
-- ✅ Step 1: Add `createFromView<ViewType>()` to DigitalIntervalSeries
-- ✅ Step 2: Standardize element accessors via TimeSeriesConcepts.hpp
-- ✅ Step 3: Create TimeSeriesFilters.hpp with generic utilities (all tests passing)
-- ✅ Step 4: Add universal `elements()` method to DigitalEventSeries and DigitalIntervalSeries (all tests passing)
+8. **C++20 Concepts for Generic Programming** (`TimeSeriesConcepts.hpp`):
+   - `TimeSeriesElement`: Base concept requiring `.time()` accessor
+   - `EntityElement`: Extends with `.id()` accessor for EntityId support
+   - `ValueElement<T,V>`: Extends with `.value()` accessor for data access
+   - `FullElement<T,V>`: Combines EntityElement and ValueElement
 
-**Remaining Steps:**
-- ⏳ Step 5: Convert materializing `get*WithIdsInRange()` methods to return views
-- ⏳ Step 6: Documentation and polish
+9. **Generic Filter Utilities** (`TimeSeriesFilters.hpp`):
+   - `filterByTimeRange()`: Lazy view filtering by time bounds
+   - `filterByEntityIds()`: Lazy view filtering by EntityId set (compile-time concept-enforced)
+   - `filterByTimeRangeAndEntityIds()`: Combined filtering
+   - Utility functions: `materializeToVector()`, `extractTimes()`, `uniqueEntityIds()`, `timeBounds()`
+
+10. **Universal Element Access**:
+    - All 5 types provide `elements()` for backward-compatible pair iteration
+    - All 5 types provide `elementsView()` for concept-compliant element iteration
+    - Standardized `.time()`, `.id()`, `.value()` accessors on all element types
+
+11. **Complete Developer Documentation**:
+    - `docs/developer/DataManager/generic_time_series.qmd`: Comprehensive guide covering concepts, filters, examples, and migration
 
 **Test Status:**
 - ✅ TimeSeriesFilters.test.cpp: All 40+ test sections passing
@@ -459,7 +468,8 @@ All five core time series data types in WhiskerToolbox now employ a **unified, f
 - `src/DataManager/utils/RaggedAnalogStorage.hpp` (~750 lines)
 - `src/DataManager/utils/DigitalEventStorage.hpp` (~900 lines)
 - `src/DataManager/utils/DigitalIntervalStorage.hpp` (~1100 lines)
-- `src/DataManager/utils/StorageConcepts.hpp` (planned, ~150 lines)
+- `src/DataManager/utils/TimeSeriesConcepts.hpp` (~210 lines)
+- `src/DataManager/utils/TimeSeriesFilters.hpp` (~560 lines)
 
 **Modified Time Series Classes (5 files):**
 - `src/DataManager/AnalogTimeSeries/Analog_Time_Series.hpp` (Phase 1 reference)
@@ -468,10 +478,14 @@ All five core time series data types in WhiskerToolbox now employ a **unified, f
 - `src/DataManager/DigitalTimeSeries/DigitalIntervalSeries.hpp` (Phase 4.3 + cleanup)
 - `src/DataManager/RaggedAnalogTimeSeries.hpp` (Phase 4.1)
 
-**New Test Files (3 files, ~1500 lines total):**
+**New Test Files (4 files, ~2200 lines total):**
 - `tests/DataManager/ragged_analog_storage_test.cpp` (~400 lines)
 - `tests/DataManager/digital_event_storage_test.cpp` (~500 lines)
 - `tests/DataManager/digital_interval_storage_test.cpp` (~600 lines)
+- `tests/DataManager/TimeSeriesFilters.test.cpp` (~700 lines)
+
+**New Documentation (1 file):**
+- `docs/developer/DataManager/generic_time_series.qmd` - Complete developer guide for generic time series programming
 
 ### Key Technical Insights
 
@@ -858,15 +872,15 @@ class RaggedStorageWrapper {
 | Missing storage mutation methods | ✅ FIXED | Added `removeAt()`, `sort()`, `setInterval()`, `setEntityId()` to storage layer |
 | Range view dangling references | ✅ FIXED | Changed `getIntervalsInRange()` to use direct storage access (by value) |
 
-**Remaining Inconsistencies (For Phase 4.4 Steps 5-6):**
+**Inconsistencies Status (Phase 4.4 Complete):**
 
-| Inconsistency | Impact | Status | Target Resolution |
-|---------------|--------|--------|------------------|
+| Inconsistency | Impact | Status | Resolution |
+|---------------|--------|--------|------------|
 | Element type naming varies (`EventWithId`, `IntervalWithId`, `TimeValuePoint`, `DataEntry<T>`) | Low - already consistent within each type | ✅ RESOLVED | `TimeSeriesConcepts.hpp` created with unified concepts |
 | Different accessor patterns for element properties | Low - types expose different members | ✅ RESOLVED | Standardized `.time()`, `.id()`, `.value()` accessors implemented across all types |
-| `elements()` method not universal | ✅ RESOLVED | ✅ RESOLVED | Add `elements()` to `DigitalEventSeries` and `DigitalIntervalSeries` ✅ DONE |
-| `get*WithIdsInRange()` materializes instead of returns views | Medium - forces materialization for some use cases | ⏳ PENDING | Evaluate feasibility of returning views; may need separate vectorized methods |
-| EntityId filtering duplicated across types | Low - pattern is consistent | ✅ RESOLVED | Generic filters in `TimeSeriesFilters.hpp` ✅ DONE |
+| `elements()` method not universal | N/A | ✅ RESOLVED | `elements()` and `elementsView()` added to all 5 time series types |
+| `get*WithIdsInRange()` materializes instead of returns views | Low - `TimeSeriesFilters.hpp` provides view alternative | ⏭️ SKIPPED | New code uses `filterByTimeRangeAndEntityIds()` for lazy filtering |
+| EntityId filtering duplicated across types | N/A | ✅ RESOLVED | Generic filters in `TimeSeriesFilters.hpp` |
 
 ##### Implementation Checklist
 
@@ -966,22 +980,34 @@ class RaggedStorageWrapper {
   - ✅ All five types now have identical `elements()` and `elementsView()` patterns
   - ✅ All tests passing with zero errors
 
-**Step 5: Convert Materializing Methods to Views (Priority: P2)**
+**Step 5: Convert Materializing Methods to Views (Priority: P2) - ⏭️ SKIPPED**
 
-- [ ] Change `getEventsWithIdsInRange()` to return a view (not vector)
-- [ ] Change `getIntervalsWithIdsInRange()` to return a view (not vector)
-- [ ] Add `getEventsWithIdsInRangeVec()` for callers needing vectors
-- [ ] Add `getIntervalsWithIdsInRangeVec()` for callers needing vectors
-- [ ] Update callers if any exist
+Step 5 was intentionally skipped. The `get*WithIdsInRange()` methods continue to return 
+materialized vectors. This decision was made because:
+1. Existing callers expect vector semantics
+2. View lifetime management adds complexity
+3. The `filterByTimeRangeAndEntityIds()` utility in `TimeSeriesFilters.hpp` provides lazy view semantics for new code
+4. Backward compatibility is prioritized over API consistency in this case
 
-**Step 6: Documentation and Polish (Priority: P3)**
+New code should use `TimeSeriesFilters.hpp` utilities for lazy filtering.
 
-- [ ] Document unified element accessor pattern in developer docs
-- [ ] Add examples showing generic algorithms working across types
-- [ ] Update roadmap with final completion status
-- [ ] Create migration guide for code using old element access patterns
+**Step 6: Documentation and Polish (Priority: P3) - ✅ COMPLETED**
 
-##### Success Criteria - Step 2 Achievement
+- [x] Document unified element accessor pattern in developer docs
+- [x] Add examples showing generic algorithms working across types
+- [x] Update roadmap with final completion status
+- [x] Create migration guide for code using old element access patterns
+
+**Documentation Created:**
+- `docs/developer/DataManager/generic_time_series.qmd` - Complete developer guide covering:
+  - Element accessor pattern (`.time()`, `.id()`, `.value()`)
+  - C++20 concepts (`TimeSeriesElement`, `EntityElement`, `ValueElement`, `FullElement`)
+  - Generic filter utilities (`filterByTimeRange`, `filterByEntityIds`, etc.)
+  - Practical examples for cross-type algorithms
+  - Migration guide from old patterns to new patterns
+  - Performance considerations for lazy views vs materialization
+
+##### Success Criteria - Phase 4.4 Complete ✅
 
 1. **Concept Definitions:** ✅ `TimeSeriesConcepts.hpp` created with all required concepts and utilities
 2. **Accessor Methods:** ✅ All element types have `.time()`, `.id()`, `.value()` methods
@@ -989,13 +1015,17 @@ class RaggedStorageWrapper {
 4. **Backward Compatibility:** ✅ 100% maintained - member access still works, no breaking changes
 5. **Test Coverage:** ✅ All 242+ tests passing, zero build errors
 6. **Generic Programming:** ✅ C++20 concepts enable writing template functions across all types
+7. **Filter Utilities:** ✅ `TimeSeriesFilters.hpp` provides `filterByTimeRange()`, `filterByEntityIds()`, and more
+8. **Universal Elements:** ✅ All 5 types provide `elements()` and `elementsView()` with consistent semantics
+9. **Documentation:** ✅ Complete developer guide at `docs/developer/DataManager/generic_time_series.qmd`
 
-##### Remaining Success Criteria for Steps 3-6
+##### Notes on Step 5 (Skipped)
 
-1. **Filter Utilities:** Generic `filterByTimeRange()` and `filterByEntityIds()` functions
-2. **Universal Elements:** All types provide `elements()` method with consistent semantics
-3. **View Returns:** Range query methods return views instead of materializing vectors
-4. **Documentation:** Complete usage guide and migration examples
+The decision to skip Step 5 (converting `get*WithIdsInRange()` to return views) was intentional:
+- View lifetime semantics add complexity for callers
+- Existing code expects vector ownership transfer
+- `TimeSeriesFilters.hpp` provides lazy view functionality for new code
+- Backward compatibility prioritized
 
 ##### Notes on EntityId Support
 
@@ -2052,32 +2082,25 @@ static_assert(RaggedStorageConcept<ViewRaggedStorage<SimpleData>, SimpleData>,
 | Phase 4.4 Step 2: Standardize Element Accessors | 4-6 hours | ✅ **COMPLETED** | Phase 4.4 Step 1 ✅ |
 | Phase 4.4 Step 3: TimeSeriesFilters.hpp | 2-3 hours | ✅ **COMPLETED** | Phase 4.4 Step 2 ✅ |
 | Phase 4.4 Step 4: Universal elements() Method | 2-3 hours | ✅ **COMPLETED** | Phase 4.4 Step 3 ✅ |
-| Phase 4.4 Steps 5-6: Remaining Unification | 3-4 hours | ⏳ **PLANNED** | Phase 4.4 Step 4 ✅ |
+| Phase 4.4 Step 5: View Conversions | - | ⏭️ **SKIPPED** | - |
+| Phase 4.4 Step 6: Documentation | 1-2 hours | ✅ **COMPLETED** | Phase 4.4 Step 4 ✅ |
 | Phase 5: Testing & Docs | 4-6 hours | ⏳ **PLANNED** | All phases |
 
 **Progress Summary:**
-- **Completed:** 52-59 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 + Phase 4.2 + Phase 4.3 + cleanup + Step 1 + Step 2 + Step 3 + Step 4, all implemented and tested)
-- **In Progress:** 0 hours (Phase 4.4 Step 4 complete)
-- **Remaining:** 3-4 hours (remaining interface unification steps 5-6 + final testing/docs)
-- **Total Scope:** 55-63 hours
-- **Current Achievement:** ~92% complete (storage abstractions complete, accessor standardization complete, universal elements() complete, view conversions pending)
+- **Completed:** 54-62 hours (All Phase 1-4 + Phase 4.4 documentation)
+- **Skipped:** Step 5 (view conversions) - intentionally deferred
+- **Remaining:** 4-6 hours (Phase 5: comprehensive testing & additional docs)
+- **Total Scope:** 58-68 hours
+- **Current Achievement:** ~95% complete (all storage abstractions, accessors, concepts, filters, elements(), and documentation complete)
 
-**Recent Achievements (Phase 4.3):**
-- ✅ Implemented `DigitalIntervalStorage.hpp` with storage abstraction pattern (~1100 lines)
-- ✅ `OwningDigitalIntervalStorage`: Vector-based storage with interval data and entity ID mapping
-- ✅ `ViewDigitalIntervalStorage`: Zero-copy filtering with interval-specific semantics (overlap/containment queries)
-- ✅ `LazyDigitalIntervalStorage<ViewType>`: On-demand computation from transform views
-- ✅ `DigitalIntervalStorageWrapper`: Type-erased wrapper supporting all backend types
-- ✅ Hash specialization: `std::hash<Interval>` for unordered container support
-- ✅ `DigitalIntervalSeries` integration: Full migration to new storage backend
-- ✅ EntityId auto-assignment: Updated `addEvent()` to generate EntityIds from registry (matches DigitalEventSeries pattern)
-- ✅ Factory methods: `createView()` with time range and entity ID filters
-- ✅ Materialization: Lazy→owning conversion with entity ID preservation
-- ✅ Type queries: `isView()`, `isLazy()`, `getStorageType()` for runtime inspection
-- ✅ Backward compatibility: Legacy vector interface via `getDigitalIntervalSeries()`
-- ✅ Comprehensive test coverage: 600+ lines covering all storage types, views, materialization, entity handling
-- ✅ Build successful with zero errors/warnings
-- ✅ All tests passing
+**Phase 4.4 Final Achievements:**
+- ✅ All 5 time series types have unified storage abstractions
+- ✅ `TimeSeriesConcepts.hpp`: C++20 concepts for generic programming
+- ✅ `TimeSeriesFilters.hpp`: Generic filter utilities (560+ lines)
+- ✅ Universal `elements()` and `elementsView()` methods on all types
+- ✅ Developer documentation: `docs/developer/DataManager/generic_time_series.qmd`
+- ✅ 100% backward compatibility maintained
+- ✅ All 242+ tests passing
 
 ---
 

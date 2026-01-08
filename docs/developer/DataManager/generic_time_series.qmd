@@ -1,0 +1,575 @@
+---
+title: "Generic Time Series Programming"
+author: "WhiskerToolbox Team"
+date: last-modified
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+# Overview
+
+WhiskerToolbox provides a unified interface for working with different time series data types through C++20 concepts and generic filter utilities. This enables writing algorithms that work across all time series types while maintaining type safety at compile time.
+
+This document covers:
+
+1. **Element Accessor Pattern** - Standardized `.time()`, `.id()`, `.value()` methods
+2. **C++20 Concepts** - Type constraints for generic programming
+3. **Filter Utilities** - Generic functions for filtering by time and EntityId
+4. **Migration Guide** - Updating code from old element access patterns
+
+# Element Types Overview
+
+Each time series type provides element access through two methods:
+
+| Method | Return Type | Use Case |
+|--------|-------------|----------|
+| `elements()` | `std::pair<TimeFrameIndex, Element>` | Backward-compatible pair iteration |
+| `elementsView()` | Element type directly | Concept-compliant generic algorithms |
+
+## Element Type Reference
+
+| Series Type | Element Type | Has EntityId | Primary Value |
+|-------------|--------------|--------------|---------------|
+| `AnalogTimeSeries` | `TimeValuePoint` | ❌ | `float` |
+| `RaggedAnalogTimeSeries` | `FlatElement` | ❌ | `float` |
+| `RaggedTimeSeries<T>` | `RaggedElement<T>` | ✅ | `T` (e.g., `Mask2D`) |
+| `DigitalEventSeries` | `EventWithId` | ✅ | `TimeFrameIndex` |
+| `DigitalIntervalSeries` | `IntervalWithId` | ✅ | `Interval` |
+
+## Standardized Accessor Methods
+
+All element types provide these standardized accessors:
+
+```cpp
+// Common to all element types (TimeSeriesElement concept)
+TimeFrameIndex time() const;   // Returns the time point
+
+// Additional for entity-bearing types (EntityElement concept)
+EntityId id() const;           // Returns the entity identifier
+
+// Additional for value-bearing types (ValueElement concept)
+auto value() const;            // Returns the primary data value
+```
+
+### Example: AnalogTimeSeries::TimeValuePoint
+
+```cpp
+struct TimeValuePoint {
+    [[nodiscard]] TimeFrameIndex time() const { return _time; }
+    [[nodiscard]] float value() const { return _value; }
+    
+private:
+    TimeFrameIndex _time;
+    float _value;
+};
+```
+
+### Example: DigitalEventSeries::EventWithId
+
+```cpp
+struct EventWithId {
+    [[nodiscard]] TimeFrameIndex time() const { return _event_time; }
+    [[nodiscard]] EntityId id() const { return _entity_id; }
+    [[nodiscard]] TimeFrameIndex value() const { return _event_time; }
+    
+private:
+    TimeFrameIndex _event_time;
+    EntityId _entity_id;
+};
+```
+
+### Example: DigitalIntervalSeries::IntervalWithId
+
+```cpp
+struct IntervalWithId {
+    [[nodiscard]] TimeFrameIndex time() const { 
+        return TimeFrameIndex(_interval.start); 
+    }
+    [[nodiscard]] EntityId id() const { return _entity_id; }
+    [[nodiscard]] Interval const& value() const { return _interval; }
+    
+private:
+    Interval _interval;
+    EntityId _entity_id;
+};
+```
+
+# C++20 Concepts
+
+The `TimeSeriesConcepts.hpp` header defines concepts for generic programming:
+
+```cpp
+#include "DataManager/utils/TimeSeriesConcepts.hpp"
+
+using namespace WhiskerToolbox::Concepts;
+```
+
+## Concept Hierarchy
+
+```
+TimeSeriesElement<T>
+├── requires: t.time() → TimeFrameIndex
+│
+├─ EntityElement<T>
+│  └── requires: t.id() → EntityId
+│
+├─ ValueElement<T, V>
+│  └── requires: t.value() → V
+│
+└─ FullElement<T, V>
+   └── requires: both EntityElement and ValueElement<T, V>
+```
+
+## Writing Generic Functions
+
+### Time-Based Operations (All Types)
+
+```cpp
+// Works with ALL time series element types
+template<TimeSeriesElement T>
+void printTime(T const& elem) {
+    std::cout << "Time: " << elem.time().getValue() << "\n";
+}
+
+// Usage with any series type
+for (auto const& elem : analogSeries->elementsView()) {
+    printTime(elem);  // TimeValuePoint
+}
+for (auto const& elem : eventSeries->elementsView()) {
+    printTime(elem);  // EventWithId
+}
+```
+
+### Entity-Based Operations (Types with EntityIds)
+
+```cpp
+// Only compiles for entity-bearing types
+template<EntityElement T>
+void printEntity(T const& elem) {
+    std::cout << "EntityId: " << elem.id().getValue() << "\n";
+}
+
+// Works:
+for (auto const& elem : eventSeries->elementsView()) {
+    printEntity(elem);  // EventWithId has id()
+}
+
+// Compile error:
+for (auto const& elem : analogSeries->elementsView()) {
+    printEntity(elem);  // TimeValuePoint does NOT have id()
+}
+```
+
+### Full Element Operations
+
+```cpp
+// For types with both EntityId and Value
+template<typename V, FullElement<V> T>
+void processFullElement(T const& elem) {
+    auto t = elem.time();
+    auto id = elem.id();
+    auto val = elem.value();
+    // ... process all three
+}
+```
+
+## Utility Functions
+
+The concepts header provides utility functions:
+
+```cpp
+// Extract time from any TimeSeriesElement
+template<TimeSeriesElement T>
+TimeFrameIndex getTime(T const& elem);
+
+// Extract EntityId from any EntityElement  
+template<EntityElement T>
+EntityId getEntityId(T const& elem);
+
+// Check if element is in time range [start, end]
+template<TimeSeriesElement T>
+bool isInTimeRange(T const& elem, TimeFrameIndex start, TimeFrameIndex end);
+
+// Check if element's EntityId is in a set
+template<EntityElement T>
+bool isInEntitySet(T const& elem, std::unordered_set<EntityId> const& ids);
+```
+
+# Generic Filter Utilities
+
+The `TimeSeriesFilters.hpp` header provides lazy, composable filtering:
+
+```cpp
+#include "DataManager/utils/TimeSeriesFilters.hpp"
+
+using namespace WhiskerToolbox::Filters;
+```
+
+## Filter Functions
+
+### filterByTimeRange
+
+Works with any `TimeSeriesElement`:
+
+```cpp
+auto series = std::make_shared<AnalogTimeSeries>();
+// ... populate ...
+
+// Lazy view - no data copied
+auto filtered = filterByTimeRange(
+    series->elementsView(),
+    TimeFrameIndex(100),
+    TimeFrameIndex(200));
+
+for (auto const& elem : filtered) {
+    // Only elements with time in [100, 200]
+}
+```
+
+### filterByEntityIds
+
+Works only with `EntityElement` (compile-time enforced):
+
+```cpp
+auto events = std::make_shared<DigitalEventSeries>();
+// ... populate ...
+
+std::unordered_set<EntityId> selected{EntityId(1), EntityId(3)};
+auto filtered = filterByEntityIds(events->elementsView(), selected);
+
+for (auto const& event : filtered) {
+    // Only events with EntityId 1 or 3
+}
+```
+
+### filterByTimeRangeAndEntityIds
+
+Combined filtering for efficiency:
+
+```cpp
+auto filtered = filterByTimeRangeAndEntityIds(
+    series->elementsView(),
+    TimeFrameIndex(100),
+    TimeFrameIndex(500),
+    entity_ids);
+```
+
+## Composition
+
+Filters are lazy views that can be composed:
+
+```cpp
+// Chain multiple filters
+auto result = filterByTimeRange(
+    filterByEntityIds(series->view(), ids),
+    start, end);
+
+// With standard ranges
+auto processed = series->elementsView()
+    | std::views::filter([](auto const& e) { return e.time() > TimeFrameIndex(100); })
+    | std::views::transform([](auto const& e) { return e.value(); });
+```
+
+## Materialization
+
+When you need a vector instead of a lazy view:
+
+```cpp
+// Convert view to vector
+auto vec = materializeToVector(filterByTimeRange(elements, start, end));
+
+// Now vec is a std::vector<ElementType>
+```
+
+## Utility Functions
+
+### Counting
+
+```cpp
+// Count elements in time range
+auto count = countInTimeRange(series->elementsView(), start, end);
+
+// Count elements with matching EntityIds
+auto count = countWithEntityIds(series->elementsView(), entity_ids);
+```
+
+### Predicates
+
+```cpp
+// Check if any element exists in range
+bool hasData = anyInTimeRange(series->elementsView(), start, end);
+
+// Check if all elements are in range
+bool allIn = allInTimeRange(series->elementsView(), start, end);
+```
+
+### Extraction
+
+```cpp
+// Get all times as a view
+auto times = extractTimes(series->elementsView());
+
+// Get all EntityIds as a view
+auto ids = extractEntityIds(entitySeries->elementsView());
+
+// Get unique EntityIds as a set
+auto uniqueIds = uniqueEntityIds(entitySeries->elementsView());
+```
+
+### Bounds
+
+```cpp
+// Find time bounds
+auto bounds = timeBounds(series->elementsView());
+if (bounds) {
+    auto [minTime, maxTime] = *bounds;
+}
+
+// Find min/max separately
+auto minT = minTime(series->elementsView());
+auto maxT = maxTime(series->elementsView());
+```
+
+# Practical Examples
+
+## Example 1: Generic Statistics
+
+```cpp
+#include "DataManager/utils/TimeSeriesConcepts.hpp"
+
+using namespace WhiskerToolbox::Concepts;
+
+// Compute statistics for any time series with float values
+template<std::ranges::input_range R>
+    requires ValueElement<std::ranges::range_value_t<R>, float>
+struct Stats {
+    float mean = 0;
+    float min = std::numeric_limits<float>::max();
+    float max = std::numeric_limits<float>::lowest();
+    size_t count = 0;
+    
+    explicit Stats(R&& range) {
+        for (auto const& elem : range) {
+            float val = elem.value();
+            mean += val;
+            min = std::min(min, val);
+            max = std::max(max, val);
+            ++count;
+        }
+        if (count > 0) mean /= count;
+    }
+};
+
+// Usage:
+auto stats = Stats(analogSeries->elementsView());
+auto filteredStats = Stats(filterByTimeRange(
+    analogSeries->elementsView(), start, end));
+```
+
+## Example 2: Entity-Aware Processing
+
+```cpp
+#include "DataManager/utils/TimeSeriesFilters.hpp"
+
+using namespace WhiskerToolbox::Filters;
+
+// Process only selected entities in a time window
+void processSelectedMasks(
+    MaskData const& masks,
+    std::unordered_set<EntityId> const& selected_entities,
+    TimeFrameIndex start,
+    TimeFrameIndex end)
+{
+    auto filtered = filterByTimeRangeAndEntityIds(
+        masks.elementsView(),
+        start, end,
+        selected_entities);
+    
+    for (auto const& elem : filtered) {
+        auto const& mask = elem.value();  // Mask2D const&
+        auto entityId = elem.id();
+        auto time = elem.time();
+        
+        // Process mask...
+    }
+}
+```
+
+## Example 3: Cross-Type Operations
+
+```cpp
+// Find overlapping time ranges across different series types
+template<TimeSeriesElement T1, TimeSeriesElement T2>
+std::optional<std::pair<TimeFrameIndex, TimeFrameIndex>>
+findOverlap(T1 const& range1, T2 const& range2)
+{
+    auto bounds1 = timeBounds(range1);
+    auto bounds2 = timeBounds(range2);
+    
+    if (!bounds1 || !bounds2) return std::nullopt;
+    
+    auto [min1, max1] = *bounds1;
+    auto [min2, max2] = *bounds2;
+    
+    auto overlapStart = std::max(min1, min2);
+    auto overlapEnd = std::min(max1, max2);
+    
+    if (overlapStart <= overlapEnd) {
+        return std::make_pair(overlapStart, overlapEnd);
+    }
+    return std::nullopt;
+}
+
+// Usage with different series types:
+auto overlap = findOverlap(
+    analogSeries->elementsView(),
+    maskData.elementsView());
+```
+
+# Migration Guide
+
+## Old Pattern → New Pattern
+
+### Direct Member Access → Accessor Methods
+
+**Before (still works, but deprecated):**
+```cpp
+// Old: Direct struct member access
+for (auto [time, entry] : series.elements()) {
+    float val = entry.value;  // Direct member
+}
+```
+
+**After (preferred):**
+```cpp
+// New: Accessor method
+for (auto const& elem : series.elementsView()) {
+    float val = elem.value();  // Accessor method
+}
+```
+
+### Type-Specific Code → Generic Code
+
+**Before:**
+```cpp
+// Separate functions for each type
+void processAnalog(AnalogTimeSeries const& series) {
+    for (auto [time, point] : series.elements()) {
+        // Analog-specific code
+    }
+}
+
+void processEvents(DigitalEventSeries const& series) {
+    for (auto [time, event] : series.elements()) {
+        // Event-specific code
+    }
+}
+```
+
+**After:**
+```cpp
+// Single generic function
+template<TimeSeriesElement T>
+void processAnyTimeSeries(std::ranges::input_range auto&& range) {
+    for (auto const& elem : range) {
+        auto time = elem.time();
+        // Works with any time series type
+    }
+}
+
+// Usage:
+processAnyTimeSeries(analogSeries->elementsView());
+processAnyTimeSeries(eventSeries->elementsView());
+```
+
+### Manual Filtering → Filter Utilities
+
+**Before:**
+```cpp
+// Manual filtering
+std::vector<EventWithId> filtered;
+for (auto const& event : events.view()) {
+    if (event.time() >= start && event.time() <= end) {
+        if (ids.contains(event.id())) {
+            filtered.push_back(event);
+        }
+    }
+}
+```
+
+**After:**
+```cpp
+// Using filter utilities
+auto filtered = materializeToVector(
+    filterByTimeRangeAndEntityIds(events.view(), start, end, ids));
+```
+
+## Backward Compatibility
+
+The old patterns **continue to work**. The new accessor methods are additive - they don't break existing code.
+
+| Old Pattern | Status | Notes |
+|-------------|--------|-------|
+| `elem.value` (member) | ✅ Works | Renamed to `_value`, but still accessible |
+| `elem.time` (member) | ✅ Works | Renamed to `_time`, but still accessible |
+| `series.elements()` | ✅ Works | Returns pairs for structured bindings |
+| `series.view()` | ✅ Works | Returns element objects directly |
+
+The new `elementsView()` method is added for concept-compliant iteration, but `elements()` remains for backward compatibility with code using `auto [time, elem]` structured bindings.
+
+# Performance Considerations
+
+## Lazy Views vs Materialization
+
+Filter functions return **lazy views** that don't copy data:
+
+```cpp
+// GOOD: Lazy, no allocation
+auto view = filterByTimeRange(series->elementsView(), start, end);
+for (auto const& elem : view) { /* ... */ }
+
+// AVOID: Unnecessary materialization
+auto vec = materializeToVector(filterByTimeRange(series->elementsView(), start, end));
+for (auto const& elem : vec) { /* ... */ }  // Vector copy overhead
+```
+
+**When to materialize:**
+
+- Need random access to filtered elements
+- Need to iterate multiple times
+- Need data to outlive the source series
+- Passing to APIs that require vectors
+
+## Cache-Optimized Iteration
+
+All time series types use cache optimization for fast iteration:
+
+```cpp
+// Fast: Uses cached contiguous pointers
+for (auto const& elem : series->elementsView()) {
+    // Zero virtual dispatch when storage is contiguous
+}
+
+// Also fast: elements() uses same optimization
+for (auto [time, elem] : series->elements()) {
+    // Cache-optimized path
+}
+```
+
+# Header Files
+
+| Header | Contents |
+|--------|----------|
+| `DataManager/utils/TimeSeriesConcepts.hpp` | Concepts and utility functions |
+| `DataManager/utils/TimeSeriesFilters.hpp` | Generic filter functions |
+| `DataManager/DigitalTimeSeries/EventWithId.hpp` | EventWithId element type |
+| `DataManager/DigitalTimeSeries/IntervalWithId.hpp` | IntervalWithId element type |
+
+# See Also
+
+- [Data Structures Performance](data_structures.qmd) - Performance characteristics of storage backends
+- [Storage Strategy Roadmap](../storage_strategy_roadmap.md) - Complete storage refactoring documentation
+- [Time Frame](../../TimeFrame/index.qmd) - TimeFrameIndex and time conversion
