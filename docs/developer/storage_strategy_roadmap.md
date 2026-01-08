@@ -263,8 +263,7 @@ This refactoring was necessary to ensure both digital series have identical qual
 - ✅ Maintained 100% backward compatibility (member access still works)
 - ✅ All 242+ tests passing, zero build errors
 
-**Steps 3-6: Remaining Interface Unification - ⏳ PLANNED**
-- ⏳ Create `TimeSeriesFilters.hpp` with generic `filterByTimeRange()` and `filterByEntityIds()` templates
+**Steps 4-6: Remaining Interface Unification - ⏳ PLANNED**
 - ⏳ Add universal `elements()` method to all types (currently on 3 of 5)
 - ⏳ Convert materializing `get*WithIdsInRange()` methods to return views instead of vectors
 - ⏳ Add backwards-compatible vector-returning methods for existing callers
@@ -427,27 +426,22 @@ All five core time series data types in WhiskerToolbox now employ a **unified, f
    - Zero memory overhead when not used
    - Full compatibility with existing code
 
-### Phase 4.4 Status
+### Phase 4.4 Status: Step 3 Complete (3 of 6 done, ~50% complete) 🔄
 
-**Step 1 Completed (with detour for completeness):**
-- ✅ Implemented `createFromView<ViewType>()` in `DigitalIntervalSeries`
-- ✅ Completed full storage migration cleanup (removed legacy dual-storage)
-- ✅ Fixed deduplication semantics bug in constructor
-- ✅ All tests passing
+**Completed Steps:**
+- ✅ Step 1: Add `createFromView<ViewType>()` to DigitalIntervalSeries
+- ✅ Step 2: Standardize element accessors via TimeSeriesConcepts.hpp
+- ✅ Step 3: Create TimeSeriesFilters.hpp with generic utilities (all tests passing)
 
-**Step 2 Completed:**
-- ✅ Created `TimeSeriesConcepts.hpp` with C++20 concepts
-- ✅ Standardized accessor methods (`.time()`, `.id()`, `.value()`) across all element types
-- ✅ Added `elementsView()` methods to all time series types
-- ✅ Maintained 100% backward compatibility
-- ✅ All 242+ tests passing with zero build errors
-- ✅ Updated ~50+ files with accessor method calls throughout codebase
+**Remaining Steps:**
+- ⏳ Step 4: Add universal `elements()` method to DigitalEventSeries and DigitalIntervalSeries
+- ⏳ Step 5: Convert materializing `get*WithIdsInRange()` methods to return views
+- ⏳ Step 6: Documentation and polish
 
-**Steps 3-6 Upcoming:**
-- ⏳ Generic filter utilities via `TimeSeriesFilters.hpp`
-- ⏳ Universal `elements()` method on all types
-- ⏳ View-based range query returns
-- ⏳ Documentation and final polish
+**Test Status:**
+- ✅ TimeSeriesFilters.test.cpp: All 40+ test sections passing
+- ✅ Build successful with zero errors
+- ✅ Concept compliance verified at compile-time
 
 ### Quality Metrics
 
@@ -934,22 +928,22 @@ class RaggedStorageWrapper {
 | `DataEntry<TData>` | ✅ | Already has `time()`, `entity_id()`, `data()` - concept compliant |
 | `RaggedElement` | ✅ | Added `time()`, `id()`, `value()` accessor methods |
 
-**Step 3: Create TimeSeriesFilters.hpp (Priority: P1)**
+**Step 3: Create TimeSeriesFilters.hpp (Priority: P1) - ✅ COMPLETED**
 
-- [ ] Create `src/DataManager/utils/TimeSeriesFilters.hpp`
-- [ ] Implement generic free function templates:
-  ```cpp
-  // Filter any range of TimeSeriesElements by time
-  template<std::ranges::input_range R>
-      requires TimeSeriesElement<std::ranges::range_value_t<R>>
-  auto filterByTimeRange(R&& range, TimeFrameIndex start, TimeFrameIndex end);
-  
-  // Filter any range of EntityElements by EntityId set
-  template<std::ranges::input_range R>
-      requires EntityElement<std::ranges::range_value_t<R>>
-  auto filterByEntityIds(R&& range, std::unordered_set<EntityId> const& ids);
-  ```
-- [ ] Add unit tests for filter functions with all applicable types
+- [x] Created `src/DataManager/utils/TimeSeriesFilters.hpp` (~580 lines)
+- [x] Implemented generic free function templates:
+  - `filterByTimeRange()` - works with all TimeSeriesElement types
+  - `filterByEntityIds()` - compile-time enforced for EntityElement only
+  - `filterByTimeRangeAndEntityIds()` - combined filtering
+  - `materializeToVector()` - materialization utility
+  - `countInTimeRange()`, `anyInTimeRange()`, `allInTimeRange()` - predicates
+  - `extractTimes()`, `extractEntityIds()`, `uniqueEntityIds()` - extraction utilities
+  - `minTime()`, `maxTime()`, `timeBounds()` - boundary utilities
+- [x] Added comprehensive unit tests (700+ lines, 40+ test sections)
+  - Tests with TimeValuePoint, FlatElement, EventWithId, IntervalWithId
+  - Integration tests with actual series types (AnalogTimeSeries, DigitalEventSeries, etc.)
+  - Concept compliance verification at compile-time
+  - **All tests passing with zero build errors**
 
 **Step 4: Add Universal `elements()` Method (Priority: P2)**
 

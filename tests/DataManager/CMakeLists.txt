@@ -25,6 +25,7 @@ add_executable(test_data_manager
         digital_interval_storage_test.cpp
 
         utils/TimeSeriesConcepts.test.cpp
+        utils/TimeSeriesFilters.test.cpp
 
         test_filename_timeframe.cpp
         test_tableview.cpp
