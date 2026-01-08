@@ -17,7 +17,7 @@ static float getValueAtIndex(const AnalogTimeSeries* series, size_t index) {
     size_t i = 0;
     for (auto const& sample : series->getAllSamples()) {
         if (i == index) {
-            return sample.value;
+            return sample.value();
         }
         ++i;
     }

@@ -37,7 +37,7 @@ TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter Analog Time Se
         size_t i = 0;
         for (auto const& sample : filtered->getAllSamples()) {
             if (i >= 500) {
-                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value()));
             }
             ++i;
         }
@@ -59,7 +59,7 @@ TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter Analog Time Se
         size_t i = 0;
         for (auto const& sample : filtered->getAllSamples()) {
             if (i >= 500) {
-                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value()));
             }
             ++i;
         }
@@ -81,7 +81,7 @@ TEST_CASE_METHOD(AnalogFilterTestFixture, "Data Transform: Filter Analog Time Se
         size_t i = 0;
         for (auto const& sample : filtered->getAllSamples()) {
             if (i >= 500) {
-                max_amplitude = std::max(max_amplitude, std::abs(sample.value));
+                max_amplitude = std::max(max_amplitude, std::abs(sample.value()));
             }
             ++i;
         }

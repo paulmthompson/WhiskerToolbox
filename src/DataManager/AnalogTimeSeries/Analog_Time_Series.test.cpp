@@ -278,7 +278,7 @@ TEST_CASE("AnalogTimeSeries - Time-Value Range Interface", "[analog][timeseries]
         
         for (auto const& point : range) {
             collected_times.push_back(point.time_frame_index);
-            collected_values.push_back(point.value);
+            collected_values.push_back(point.value());
         }
         
         // Should get TimeFrameIndex 4, 6, 8 (data values 20.0f, 30.0f, 40.0f)
@@ -310,7 +310,7 @@ TEST_CASE("AnalogTimeSeries - Time-Value Range Interface", "[analog][timeseries]
         std::vector<std::pair<int64_t, float>> collected_points;
         
         for (auto const& point : range) {
-            collected_points.emplace_back(point.time_frame_index.getValue(), point.value);
+            collected_points.emplace_back(point.time_frame_index.getValue(), point.value());
         }
         
         // Should get TimeFrameIndex 101, 102, 103 (values 2.2f, 3.3f, 4.4f)
@@ -356,7 +356,7 @@ TEST_CASE("AnalogTimeSeries - Time-Value Range Interface", "[analog][timeseries]
         
         auto const& point = *it;
         REQUIRE(point.time_frame_index == TimeFrameIndex(50));
-        REQUIRE(point.value == 42.0f);
+        REQUIRE(point.value() == 42.0f);
         
         ++it;
         REQUIRE(it == range.end());
@@ -382,31 +382,31 @@ TEST_CASE("AnalogTimeSeries - Time-Value Range Interface", "[analog][timeseries]
         // 1. Test Dereference (Return by Value)
         // Note: (*it) creates a temporary TimeValuePoint
         REQUIRE((*it).time_frame_index == TimeFrameIndex(20));
-        REQUIRE((*it).value == 2.0f);
+        REQUIRE((*it).value() == 2.0f);
         
         // 2. Test Random Access Indexing (operator[])
-        REQUIRE(range[0].value == 2.0f);
-        REQUIRE(range[1].value == 3.0f);
+        REQUIRE(range[0].value() == 2.0f);
+        REQUIRE(range[1].value() == 3.0f);
 
         // 3. Test Iterator Arithmetic (operator+, operator-)
         auto second_it = it + 1;
-        REQUIRE((*second_it).value == 3.0f);
+        REQUIRE((*second_it).value() == 3.0f);
         REQUIRE((second_it - it) == 1); // Difference type
 
         // 4. Test Pre/Post Increment
         ++it;
         REQUIRE((*it).time_frame_index == TimeFrameIndex(30));
-        REQUIRE((*it).value == 3.0f);
+        REQUIRE((*it).value() == 3.0f);
         
         // 5. Test Bidirectional (operator--)
         --it; 
-        REQUIRE((*it).value == 2.0f); // Should be back at start
+        REQUIRE((*it).value() == 2.0f); // Should be back at start
         
         // 6. Test Random Access assignments (+=, -=)
         it += 1;
-        REQUIRE((*it).value == 3.0f);
+        REQUIRE((*it).value() == 3.0f);
         it -= 1;
-        REQUIRE((*it).value == 2.0f);
+        REQUIRE((*it).value() == 2.0f);
 
         // 7. Test End iterator logic
         it += 2; 
@@ -608,7 +608,7 @@ TEST_CASE("AnalogTimeSeries - Time-Value Interface Comparison", "[analog][timese
         std::vector<std::pair<int64_t, float>> range_results;
         
         for (auto const& point : range) {
-            range_results.emplace_back(point.time_frame_index.getValue(), point.value);
+            range_results.emplace_back(point.time_frame_index.getValue(), point.value());
         }
 
         // Get data using span interface - simple test just checking values match
@@ -912,8 +912,8 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         float sum = 0.0f, sum_sq = 0.0f;
         size_t n = base_series->getNumSamples();
         for (auto const& sample : base_series->view()) {
-            sum += sample.value;
-            sum_sq += sample.value * sample.value;
+            sum += sample.value();
+            sum_sq += sample.value() * sample.value();
         }
         float mean = sum / n;  // 30.0
         float variance = (sum_sq / n) - (mean * mean);  // 200.0
@@ -922,7 +922,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         // Create lazy z-score transform
         auto z_score_view = base_series->view()
             | std::views::transform([mean, std](auto tv) {
-                float z = (tv.value - mean) / std;
+                float z = (tv.value() - mean) / std;
                 return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, z};
             });
         
@@ -965,7 +965,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         // Create lazy transform that doubles values (using std::pair)
         auto doubled_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return std::pair{tv.time_frame_index, tv.value * 2.0f};
+                return std::pair{tv.time_frame_index, tv.value() * 2.0f};
             });
         
         auto doubled_series = AnalogTimeSeries::createFromView(
@@ -997,10 +997,10 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         // Chain: square, then add 10
         auto transformed_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * tv.value};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() * tv.value()};
             })
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value + 10.0f};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() + 10.0f};
             });
         
         auto transformed_series = AnalogTimeSeries::createFromView(
@@ -1026,7 +1026,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         
         auto lazy_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * 2.0f};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() * 2.0f};
             });
         
         auto lazy_series = AnalogTimeSeries::createFromView(lazy_view, base_series->getTimeStorage());
@@ -1045,7 +1045,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         
         auto scaled_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * 0.1f};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() * 0.1f};
             });
         
         auto scaled_series = AnalogTimeSeries::createFromView(scaled_view, base_series->getTimeStorage());
@@ -1058,7 +1058,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         auto range = scaled_series->getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(10), TimeFrameIndex(30));
         std::vector<float> collected;
         for (auto const& sample : range) {
-            collected.push_back(sample.value);
+            collected.push_back(sample.value());
         }
         
         REQUIRE(collected.size() == 3);
@@ -1077,7 +1077,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Storage", "[analog][timeseries][lazy][vi
         
         auto cubed_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * tv.value * tv.value};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() * tv.value() * tv.value()};
             });
         
         auto cubed_series = AnalogTimeSeries::createFromView(cubed_view, base_series->getTimeStorage());
@@ -1128,7 +1128,7 @@ TEST_CASE("AnalogTimeSeries - Materialization", "[analog][timeseries][materializ
         
         auto squared_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value * tv.value};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() * tv.value()};
             });
         
         auto lazy_series = AnalogTimeSeries::createFromView(squared_view, base_series->getTimeStorage());
@@ -1221,7 +1221,7 @@ TEST_CASE("AnalogTimeSeries - Materialization", "[analog][timeseries][materializ
         // Expensive transform (for demonstration)
         auto expensive_view = base_series->view()
             | std::views::transform([](auto tv) {
-                float result = tv.value;
+                float result = tv.value();
                 for (int i = 0; i < 10; ++i) {
                     result = std::sqrt(result + 1.0f);
                 }
@@ -1253,7 +1253,7 @@ TEST_CASE("AnalogTimeSeries - Materialization", "[analog][timeseries][materializ
         
         auto transformed_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value + 1.0f};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() + 1.0f};
             });
         
         auto lazy_series = AnalogTimeSeries::createFromView(transformed_view, base_series->getTimeStorage());
@@ -1288,7 +1288,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Integration with Statistics", "[analog][
         // Create lazy log transform
         auto log_view = base_series->view()
             | std::views::transform([](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, std::log(tv.value)};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, std::log(tv.value())};
             });
         
         auto log_series = AnalogTimeSeries::createFromView(log_view, base_series->getTimeStorage());
@@ -1297,7 +1297,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Integration with Statistics", "[analog][
         float sum = 0.0f;
         int count = 0;
         for (auto const& sample : log_series->getAllSamples()) {
-            sum += sample.value;
+            sum += sample.value();
             count++;
         }
         float mean = sum / count;
@@ -1323,7 +1323,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Integration with Statistics", "[analog][
         // Create centered view (subtract mean)
         auto centered_view = base_series->view()
             | std::views::transform([mean](auto tv) {
-                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value - mean};
+                return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, tv.value() - mean};
             });
         
         auto centered_series = AnalogTimeSeries::createFromView(centered_view, base_series->getTimeStorage());
@@ -1332,7 +1332,7 @@ TEST_CASE("AnalogTimeSeries - Lazy View Integration with Statistics", "[analog][
         float sum_sq = 0.0f;
         int count = 0;
         for (auto const& sample : centered_series->getAllSamples()) {
-            sum_sq += sample.value * sample.value;
+            sum_sq += sample.value() * sample.value();
             count++;
         }
         float variance = sum_sq / count;

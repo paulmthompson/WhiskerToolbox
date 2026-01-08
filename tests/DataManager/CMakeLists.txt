@@ -24,6 +24,8 @@ add_executable(test_data_manager
         digital_event_storage_test.cpp
         digital_interval_storage_test.cpp
 
+        utils/TimeSeriesConcepts.test.cpp
+
         test_filename_timeframe.cpp
         test_tableview.cpp
         test_data_manager_fixtures.cpp

@@ -186,7 +186,7 @@ public:
      * 
      * auto normalized_view = base_series->view()
      *     | std::views::transform([mean, std](auto tv) {
-     *         float z_score = (tv.value - mean) / std;
+     *         float z_score = (tv.value() - mean) / std;
      *         return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, z_score};
      *     });
      * 
@@ -306,15 +306,35 @@ public:
 
     /**
      * @brief Data structure representing a single time-value point
+     * 
+     * Represents a single sample in an AnalogTimeSeries.
+     * Satisfies the TimeSeriesElement and ValueElement<float> concepts.
+     * Does NOT satisfy EntityElement (AnalogTimeSeries has no EntityIds).
+     * 
+     * @see TimeSeriesConcepts.hpp for concept definitions
      */
     struct TimeValuePoint {
-        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};
-        float value{0.0f};
+        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};  // Public for backward compatibility
+        float _value{0.0f};                                   // Prefixed to avoid collision with value() method
 
         TimeValuePoint() = default;
         TimeValuePoint(TimeFrameIndex time_idx, float val)
             : time_frame_index(time_idx),
-              value(val) {}
+              _value(val) {}
+
+        // ========== Standardized Accessors (for TimeSeriesElement/ValueElement concepts) ==========
+
+        /**
+         * @brief Get the time of this sample (for TimeSeriesElement concept)
+         * @return TimeFrameIndex The sample timestamp
+         */
+        [[nodiscard]] constexpr TimeFrameIndex time() const noexcept { return time_frame_index; }
+
+        /**
+         * @brief Get the value of this sample (for ValueElement concept)
+         * @return float The sample value
+         */
+        [[nodiscard]] constexpr float value() const noexcept { return _value; }
     };
 
     /**
@@ -756,14 +776,42 @@ public:
     /**
      * @brief Get a view of (TimeFrameIndex, float) pairs
      * 
-     * Enables iterating over the time series as a sequence of time-value pairs.
+     * Enables iterating over the time series as a sequence of (time, value) pairs.
      * Compatible with TransformPipeline.
+     * 
+     * Returns `std::pair<TimeFrameIndex, float>` for backward compatibility
+     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * 
+     * @return A lazy range view of (TimeFrameIndex, float) pairs
+     * @see elementsView() for concept-compliant iteration with TimeValuePoint
      */
     [[nodiscard]] auto elements() const {
         return std::views::iota(size_t(0), _data_storage.size()) | std::views::transform([this](size_t i) {
                    return std::make_pair(
                            _time_storage->getTimeFrameIndexAt(i),
                            _data_storage.getValueAt(i));
+               });
+    }
+
+    /**
+     * @brief Get a view of TimeValuePoint objects (concept-compliant)
+     * 
+     * Enables iterating over the time series as a sequence of TimeValuePoint objects.
+     * Each element satisfies the TimeSeriesElement and ValueElement<float> concepts,
+     * enabling use with generic time series algorithms.
+     * 
+     * Use this method when you need concept-compliant elements for generic algorithms.
+     * Use elements() when you need backward-compatible pair iteration.
+     * 
+     * @return A lazy range view of TimeValuePoint objects
+     * @see TimeValuePoint
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    [[nodiscard]] auto elementsView() const {
+        return std::views::iota(size_t(0), _data_storage.size()) | std::views::transform([this](size_t i) {
+                   return TimeValuePoint{
+                           _time_storage->getTimeFrameIndexAt(i),
+                           _data_storage.getValueAt(i)};
                });
     }
 

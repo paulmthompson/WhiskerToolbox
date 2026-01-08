@@ -380,10 +380,33 @@ public:
 
     /**
      * @brief Entry structure for flat element iteration
+     * 
+     * Represents a single (time, value) pair from the flattened ragged structure.
+     * Satisfies the TimeSeriesElement and ValueElement<float> concepts.
+     * Does NOT satisfy EntityElement (RaggedAnalogTimeSeries has no EntityIds).
+     * 
+     * @see TimeSeriesConcepts.hpp for concept definitions
      */
     struct FlatElement {
-        TimeFrameIndex time;
-        float value;
+        TimeFrameIndex _time{TimeFrameIndex(0)};   // Prefixed to avoid collision with time() method
+        float _value{0.0f};                         // Prefixed to avoid collision with value() method
+
+        FlatElement() = default;
+        FlatElement(TimeFrameIndex t, float v) : _time(t), _value(v) {}
+
+        // ========== Standardized Accessors (for TimeSeriesElement/ValueElement concepts) ==========
+
+        /**
+         * @brief Get the time of this element (for TimeSeriesElement concept)
+         * @return TimeFrameIndex The element timestamp
+         */
+        [[nodiscard]] constexpr TimeFrameIndex time() const noexcept { return _time; }
+
+        /**
+         * @brief Get the value of this element (for ValueElement concept)
+         * @return float The element value
+         */
+        [[nodiscard]] constexpr float value() const noexcept { return _value; }
     };
 
     /**
@@ -465,14 +488,47 @@ public:
      * (time, value) pairs. This is the analog of RaggedTimeSeries<T>::elements()
      * and enables uniform iteration API across all ragged container types.
      * 
-     * Usage: for (auto [time, value] : ragged_analog.elements()) { ... }
+     * Returns `std::pair<TimeFrameIndex, float>` for backward compatibility
+     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * 
+     * Usage: `for (auto [time, value] : ragged_analog.elements()) { ... }`
      * 
      * @return A lazy range view of (TimeFrameIndex, float) pairs
+     * @see elementsView() for concept-compliant iteration with FlatElement
      */
     [[nodiscard]] auto elements() const {
         // Create an index-based view over all elements
         return std::views::iota(size_t{0}, _storage.size()) | std::views::transform([this](size_t idx) {
                    return std::make_pair(_storage.getTime(idx), _storage.getValue(idx));
+               });
+    }
+
+    /**
+     * @brief Get a flattened view of FlatElement objects (concept-compliant)
+     * 
+     * This creates a lazy view that flattens the ragged structure into individual
+     * FlatElement objects. Each element satisfies the TimeSeriesElement and 
+     * ValueElement<float> concepts, enabling use with generic time series algorithms.
+     * 
+     * Use this method when you need concept-compliant elements for generic algorithms.
+     * Use elements() when you need backward-compatible pair iteration.
+     * 
+     * Usage: 
+     * ```cpp
+     * for (auto elem : ragged_analog.elementsView()) { 
+     *     auto t = elem.time();
+     *     auto v = elem.value();
+     * }
+     * ```
+     * 
+     * @return A lazy range view of FlatElement objects
+     * @see FlatElement
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    [[nodiscard]] auto elementsView() const {
+        // Create an index-based view over all elements
+        return std::views::iota(size_t{0}, _storage.size()) | std::views::transform([this](size_t idx) {
+                   return FlatElement{_storage.getTime(idx), _storage.getValue(idx)};
                });
     }
 

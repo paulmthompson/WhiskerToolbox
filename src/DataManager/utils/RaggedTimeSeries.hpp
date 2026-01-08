@@ -46,6 +46,60 @@ template <typename TData> class RaggedTimeSeriesView;
 template <typename TData>
 class RaggedTimeSeries : public ObserverData {
 public:
+    // ========== Element Type (for concept-compliant iteration) ==========
+
+    /**
+     * @brief Element type for flattened iteration over ragged time series
+     * 
+     * This struct combines time, data, and entity_id into a single element
+     * that satisfies the TimeSeriesElement and EntityElement concepts.
+     * Used by the `elements()` method for concept-compliant iteration.
+     * 
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    struct RaggedElement {
+        TimeFrameIndex _time;
+        TData const* _data_ptr;
+        EntityId _entity_id;
+
+        RaggedElement(TimeFrameIndex t, TData const& data, EntityId eid)
+            : _time(t), _data_ptr(&data), _entity_id(eid) {}
+
+        // ========== Standardized Accessors (for TimeSeriesElement/EntityElement concepts) ==========
+
+        /**
+         * @brief Get the time of this element
+         * @return TimeFrameIndex The element timestamp
+         */
+        [[nodiscard]] constexpr TimeFrameIndex time() const noexcept { return _time; }
+
+        /**
+         * @brief Get the EntityId of this element
+         * @return EntityId The entity identifier
+         */
+        [[nodiscard]] constexpr EntityId id() const noexcept { return _entity_id; }
+
+        /**
+         * @brief Get the data of this element
+         * @return TData const& Reference to the element data
+         */
+        [[nodiscard]] TData const& data() const noexcept { return *_data_ptr; }
+
+        /**
+         * @brief Alias for data() - satisfies ValueElement concept
+         * @return TData const& Reference to the element data
+         */
+        [[nodiscard]] TData const& value() const noexcept { return *_data_ptr; }
+
+        // ========== Legacy Accessors (for backward compatibility) ==========
+
+        /**
+         * @brief Get the entity_id (legacy accessor)
+         * @return EntityId The entity identifier
+         */
+        [[nodiscard]] constexpr EntityId entity_id() const noexcept { return _entity_id; }
+    };
+
     // ========== Constructors ==========
     RaggedTimeSeries() = default;
 
@@ -970,9 +1024,16 @@ public:
 
     /**
      * @brief A flattened view of (Time, DataEntry) pairs.
-     * * This creates a zero-overhead 1D view of all entities across all times.
+     * 
+     * This creates a zero-overhead 1D view of all entities across all times.
      * Crucially, it preserves the TimeFrameIndex for each entity.
-     * * usage: for(auto [time, entry] : ts.elements()) { ... }
+     * 
+     * Returns `std::pair<TimeFrameIndex, DataEntry<TData>>` for backward compatibility
+     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * 
+     * Usage: `for(auto [time, entry] : ts.elements()) { ... }`
+     * 
+     * @see elementsView() for concept-compliant iteration with RaggedElement
      */
     [[nodiscard]] auto elements() const {
         // Use flattened iteration over all storage indices
@@ -985,8 +1046,45 @@ public:
     }
 
     /**
+     * @brief A flattened view of RaggedElement objects (concept-compliant).
+     * 
+     * This creates a zero-overhead 1D view of all entities across all times.
+     * Each element satisfies the TimeSeriesElement and EntityElement concepts,
+     * enabling use with generic time series algorithms.
+     * 
+     * Use this method when you need concept-compliant elements for generic algorithms.
+     * Use elements() when you need backward-compatible pair iteration.
+     * 
+     * Usage: 
+     * ```cpp
+     * for (auto elem : ts.elementsView()) {
+     *     auto t = elem.time();      // TimeFrameIndex
+     *     auto id = elem.id();       // EntityId
+     *     auto& data = elem.data();  // TData const&
+     * }
+     * ```
+     * 
+     * @return A lazy range view of RaggedElement objects
+     * @see RaggedElement
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    [[nodiscard]] auto elementsView() const {
+        // Use flattened iteration over all storage indices
+        return std::views::iota(size_t{0}, _storage.size())
+            | std::views::transform([this](size_t idx) {
+                return RaggedElement{
+                    _storage.getTime(idx), 
+                    _storage.getData(idx),
+                    _storage.getEntityId(idx)};
+            });
+    }
+
+    /**
      * @brief A flattened view of (Time, EntityId, TData) tuples.
-     * * Helper that unpacks the DataEntry for easier structured binding.
+     * 
+     * Helper that unpacks the data for easier structured binding.
+     * 
+     * @deprecated Use elementsView() instead for concept-compliant iteration
      */
     [[nodiscard]] auto flattened_data() const {
         return std::views::iota(size_t{0}, _storage.size())

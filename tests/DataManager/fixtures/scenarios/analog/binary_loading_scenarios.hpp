@@ -39,7 +39,7 @@ inline bool writeBinaryInt16(AnalogTimeSeries const* signal,
     
     // Write data as int16_t
     for (auto const& sample : signal->getAllSamples()) {
-        auto value = static_cast<int16_t>(sample.value);
+        auto value = static_cast<int16_t>(sample.value());
         file.write(reinterpret_cast<char const*>(&value), sizeof(int16_t));
     }
     
@@ -88,7 +88,7 @@ inline bool writeBinaryInt16MultiChannel(
     for (size_t i = 0; i < num_samples; ++i) {
         for (auto const& sig : signals) {
             auto samples = sig->getAllSamples();
-            auto value = static_cast<int16_t>(samples[i].value);
+            auto value = static_cast<int16_t>(samples[i].value());
             file.write(reinterpret_cast<char const*>(&value), sizeof(int16_t));
         }
     }
@@ -120,7 +120,7 @@ inline bool writeBinaryFloat32(AnalogTimeSeries const* signal,
     
     // Write data as float
     for (auto const& sample : signal->getAllSamples()) {
-        float value = sample.value;
+        float value = sample.value();
         file.write(reinterpret_cast<char const*>(&value), sizeof(float));
     }
     

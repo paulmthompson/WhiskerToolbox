@@ -279,7 +279,7 @@ namespace TimeSeriesMapper {
             // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
             float x = series_tf ? static_cast<float>(series_tf->getTimeAtIndex(tv_point.time_frame_index))
                                 : static_cast<float>(tv_point.time_frame_index.getValue());
-            float y = tv_point.value * y_scale + y_offset;
+            float y = tv_point.value() * y_scale + y_offset;
             return MappedVertex{x, y};
         });
 }
@@ -309,7 +309,7 @@ namespace TimeSeriesMapper {
     return series.view()
         | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
             float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
-            float y = tv_point.value * y_scale + y_offset;
+            float y = tv_point.value() * y_scale + y_offset;
             return MappedVertex{x, y};
         });
 }
@@ -348,7 +348,7 @@ namespace TimeSeriesMapper {
             // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
             float x = series_tf ? static_cast<float>(series_tf->getTimeAtIndex(tv_point.time_frame_index))
                                 : static_cast<float>(tv_point.time_frame_index.getValue());
-            float y = tv_point.value * y_scale + y_offset;
+            float y = tv_point.value() * y_scale + y_offset;
             return MappedAnalogVertex{x, y, tv_point.time_frame_index.getValue()};
         });
 }

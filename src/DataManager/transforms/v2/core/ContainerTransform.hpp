@@ -28,7 +28,7 @@ namespace WhiskerToolbox::Transforms::V2 {
  * 
  * Different containers have different iterator structures:
  * - RaggedTimeSeries elements(): std::pair<TimeFrameIndex, DataEntry<T>>
- * - AnalogTimeSeries getAllSamples(): TimeValuePoint (has .value member)
+ * - AnalogTimeSeries getAllSamples(): TimeValuePoint (has .value() method)
  * - Some containers: direct value (float, etc.)
  * 
  * This helper uses compile-time checks to extract the correct data.

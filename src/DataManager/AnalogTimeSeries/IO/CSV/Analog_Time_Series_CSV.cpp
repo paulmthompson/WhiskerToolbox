@@ -123,7 +123,7 @@ void save(AnalogTimeSeries * analog_data,
     for (auto const & sample : analog_data->getAllSamples()) {
         fout << sample.time_frame_index.getValue() 
              << opts.delimiter 
-             << sample.value 
+             << sample.value() 
              << opts.line_delim;
         if (fout.fail()) {
             std::cerr << "Error: Failed while writing data to file: " << filename << std::endl;

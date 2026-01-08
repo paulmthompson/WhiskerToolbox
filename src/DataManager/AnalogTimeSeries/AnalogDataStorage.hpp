@@ -333,7 +333,7 @@ private:
  * auto base_series = ;
  * auto view = base_series->view() 
  *     | std::views::transform([mean, std](auto tv) {
- *         return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, (tv.value - mean) / std};
+ *         return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, (tv.value() - mean) / std};
  *     });
  * auto normalized = AnalogTimeSeries::createFromView(view, base_series->getTimeStorage());
  * @endcode
@@ -363,9 +363,9 @@ public:
     [[nodiscard]] float getValueAtImpl(size_t index) const {
         auto element = _view[index];
 
-        // Support both TimeValuePoint and std::pair<TimeFrameIndex, float>
-        if constexpr (requires { element.value; }) {
-            return element.value;// TimeValuePoint
+        // Support both TimeValuePoint (with value() method) and std::pair<TimeFrameIndex, float>
+        if constexpr (requires { element.value(); }) {
+            return element.value();// TimeValuePoint
         } else {
             return element.second;// std::pair
         }
