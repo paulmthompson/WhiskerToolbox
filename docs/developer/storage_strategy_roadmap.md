@@ -40,7 +40,7 @@ This document outlines a plan to unify the storage abstraction patterns across a
 - ✅ Comprehensive unit tests: 8+ test cases covering all lazy operations
 - ✅ Build successful with all tests passing
 
-**Phase 4: Other Data Types - ✅ COMPLETED**
+**Phase 4: Other Data Types - 🔄 IN PROGRESS**
 
 **Phase 4.1: RaggedAnalogTimeSeries - ✅ COMPLETED**
 
@@ -94,6 +94,16 @@ This document outlines a plan to unify the storage abstraction patterns across a
 - ✅ Comprehensive unit tests: 600+ lines covering ownership, views, materialization, entity ID handling
 - ✅ All tests passing with zero errors
 - ✅ Build successful
+
+**Phase 4.4: Interface Unification - ⏳ PLANNED**
+
+- ⏳ Add `createFromView<ViewType>()` to `DigitalIntervalSeries` (currently missing)
+- ⏳ Create `TimeSeriesConcepts.hpp` with `TimeSeriesElement`, `EntityElement`, `ValueElement` concepts
+- ⏳ Standardize element accessors (`.time()`, `.id()`, `.value()`) across all element types
+- ⏳ Create `TimeSeriesFilters.hpp` with generic `filterByTimeRange()` and `filterByEntityIds()` templates
+- ⏳ Add universal `elements()` method to `DigitalEventSeries` and `DigitalIntervalSeries`
+- ⏳ Convert materializing `get*WithIdsInRange()` methods to return views instead of vectors
+- ⏳ Note: `AnalogTimeSeries` and `RaggedAnalogTimeSeries` do NOT have EntityIds - cannot support EntityId filtering
 
 ## Current State Analysis
 
@@ -492,6 +502,160 @@ class RaggedStorageWrapper {
 - ✅ Comprehensive unit tests: 600+ lines covering ownership, views, materialization, entity ID handling
 - ✅ All tests passing with zero errors
 - ✅ Build successful
+
+#### Phase 4.4: Interface Unification (Estimated: 4-6 hours) ⏳ **PLANNED**
+
+**Goal:** Consolidate view construction patterns, factory methods, and element accessors across all time series types to provide a consistent API.
+
+##### Current State Analysis
+
+**Data Type Characteristics:**
+
+| Type | Has EntityIds | Element Type | Primary Value |
+|------|---------------|--------------|---------------|
+| `AnalogTimeSeries` | ❌ No | `TimeValuePoint` | `float` |
+| `RaggedAnalogTimeSeries` | ❌ No | `pair<TimeFrameIndex, float>` | `float` |
+| `RaggedTimeSeries<TData>` | ✅ Yes | `DataEntry<TData>` | `TData` |
+| `DigitalEventSeries` | ✅ Yes | `EventWithId` | `TimeFrameIndex` |
+| `DigitalIntervalSeries` | ✅ Yes | `IntervalWithId` | `Interval` |
+
+**Current View Methods:**
+
+| Method | AnalogTimeSeries | RaggedAnalogTimeSeries | RaggedTimeSeries<T> | DigitalEventSeries | DigitalIntervalSeries |
+|--------|------------------|------------------------|---------------------|--------------------|-----------------------|
+| `view()` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `elements()` | ✅ | ✅ | ✅ | ❌ | ❌ |
+| `viewValues()` | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `time_slices()` | ❌ | ✅ | ❌ | ❌ | ❌ |
+| `viewTimeValueRange()` | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `getElementsInRange()` | ❌ | ❌ | ✅ | ❌ | ❌ |
+| `getEventsInRange()` | ❌ | ❌ | ❌ | ✅ (view) | ❌ |
+| `getIntervalsInRange()` | ❌ | ❌ | ❌ | ❌ | ✅ (view) |
+| `get*WithIdsInRange()` | N/A | N/A | ❌ | ✅ (materializes!) | ✅ (materializes!) |
+
+**Current Factory Methods:**
+
+| Factory Method | AnalogTimeSeries | RaggedAnalogTimeSeries | RaggedTimeSeries<T> | DigitalEventSeries | DigitalIntervalSeries |
+|----------------|------------------|------------------------|---------------------|--------------------|-----------------------|
+| `createView()` (time) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `createView()` (EntityIds) | N/A | N/A | ✅ | ✅ | ✅ |
+| `createFromView<ViewType>()` | ✅ | ✅ | ✅ | ✅ | ❌ **MISSING** |
+| `createFromViewWithNewIds()` | N/A | N/A | ✅ | ❌ | ❌ |
+| `materialize()` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Range constructor | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+##### Identified Inconsistencies
+
+1. **Missing factory method:** `DigitalIntervalSeries` lacks `createFromView<ViewType>()` for lazy transforms
+2. **Inconsistent element types:** Different naming conventions (`TimeValuePoint`, `EventWithId`, `IntervalWithId`, `DataEntry<TData>`)
+3. **`elements()` not universal:** Only 3 of 5 types provide `elements()` view
+4. **Materializing methods:** `getEventsWithIdsInRange()` and `getIntervalsWithIdsInRange()` return vectors instead of views
+5. **Missing range constructors:** Only `AnalogTimeSeries` supports construction from a range
+6. **EntityId filtering:** Types with EntityIds duplicate filtering logic instead of sharing
+
+##### Implementation Checklist
+
+**Step 1: Add Missing Factory Methods (Priority: P0)**
+
+- [ ] Add `createFromView<ViewType>()` to `DigitalIntervalSeries`
+  - Implement `LazyDigitalIntervalStorage` view handling (may already exist)
+  - Add factory method matching `DigitalEventSeries` pattern
+  - Add unit tests for lazy interval creation
+- [ ] Verify all types support lazy transform creation
+
+**Step 2: Create TimeSeriesConcepts.hpp (Priority: P0)**
+
+- [ ] Create `src/DataManager/utils/TimeSeriesConcepts.hpp`
+- [ ] Define concepts for element types:
+  ```cpp
+  template<typename T>
+  concept TimeSeriesElement = requires(T const& t) {
+      { t.time() } -> std::convertible_to<TimeFrameIndex>;
+  };
+  
+  template<typename T>
+  concept EntityElement = TimeSeriesElement<T> && requires(T const& t) {
+      { t.id() } -> std::convertible_to<EntityId>;
+  };
+  
+  template<typename T, typename V>
+  concept ValueElement = TimeSeriesElement<T> && requires(T const& t) {
+      { t.value() } -> std::convertible_to<V>;
+  };
+  ```
+- [ ] Add static_assert checks to existing element types
+
+**Step 3: Standardize Element Accessors (Priority: P1)**
+
+- [ ] Add `.time()` accessor to all element types (alias existing members if needed)
+- [ ] Add `.id()` accessor to entity-bearing element types
+- [ ] Add `.value()` or `.data()` accessor for primary data access
+- [ ] Maintain backward compatibility with existing member access
+
+| Type | Add `.time()` | Add `.id()` | Add `.value()`/`.data()` |
+|------|---------------|-------------|--------------------------|
+| `TimeValuePoint` | ⏳ (has `time`) | N/A | ⏳ (has `value`) |
+| `EventWithId` | ⏳ | ⏳ (has `id`) | ⏳ (time is value) |
+| `IntervalWithId` | ⏳ | ⏳ (has `id`) | ⏳ (has `interval`) |
+| `DataEntry<TData>` | ⏳ (has `time`) | ⏳ (has `entity_id`) | ⏳ (has `data`) |
+
+**Step 4: Create TimeSeriesFilters.hpp (Priority: P1)**
+
+- [ ] Create `src/DataManager/utils/TimeSeriesFilters.hpp`
+- [ ] Implement generic free function templates:
+  ```cpp
+  // Filter any range of TimeSeriesElements by time
+  template<std::ranges::input_range R>
+      requires TimeSeriesElement<std::ranges::range_value_t<R>>
+  auto filterByTimeRange(R&& range, TimeFrameIndex start, TimeFrameIndex end);
+  
+  // Filter any range of EntityElements by EntityId set
+  template<std::ranges::input_range R>
+      requires EntityElement<std::ranges::range_value_t<R>>
+  auto filterByEntityIds(R&& range, std::unordered_set<EntityId> const& ids);
+  ```
+- [ ] Add unit tests for filter functions with all applicable types
+
+**Step 5: Add Universal `elements()` Method (Priority: P2)**
+
+- [ ] Add `elements()` to `DigitalEventSeries` returning view of `EventWithId`
+- [ ] Add `elements()` to `DigitalIntervalSeries` returning view of `IntervalWithId`
+- [ ] Verify consistent semantics across all types
+
+**Step 6: Convert Materializing Methods to Views (Priority: P2)**
+
+- [ ] Change `getEventsWithIdsInRange()` to return a view (not vector)
+- [ ] Change `getIntervalsWithIdsInRange()` to return a view (not vector)
+- [ ] Add `getEventsWithIdsInRangeVec()` for callers needing vectors
+- [ ] Add `getIntervalsWithIdsInRangeVec()` for callers needing vectors
+- [ ] Update callers if any exist
+
+**Step 7: Documentation (Priority: P3)**
+
+- [ ] Document unified element accessor pattern in developer docs
+- [ ] Add examples showing generic algorithms working across types
+- [ ] Update roadmap with completion status
+
+##### Success Criteria
+
+1. **API Consistency:** All types have `elements()`, `view()`, `materialize()`, and appropriate factory methods
+2. **Concept Compliance:** All element types satisfy `TimeSeriesElement` concept; entity types satisfy `EntityElement`
+3. **Generic Algorithms:** Free function filters work uniformly across all applicable types
+4. **No Breaking Changes:** Existing code continues to work (accessors are additions, not replacements)
+5. **Test Coverage:** Unit tests verify concept compliance and filter behavior
+
+##### Notes on EntityId Support
+
+The following types do **NOT** have EntityIds and cannot support EntityId-based filtering:
+- `AnalogTimeSeries` - single continuous time series
+- `RaggedAnalogTimeSeries` - multi-channel without entity tracking
+
+These types should:
+- Not implement `EntityElement` concept
+- Not provide `createView(entity_ids)` factory
+- Not provide `filterByEntityIds()` support
+
+The generic filter functions use concepts to enforce this at compile time.
 
 ### Phase 5: Testing & Documentation (Estimated: 4-6 hours)
 
@@ -1530,13 +1694,14 @@ static_assert(RaggedStorageConcept<ViewRaggedStorage<SimpleData>, SimpleData>,
 | Phase 4.1: RaggedAnalogTimeSeries | 2-3 hours | ✅ **COMPLETED** | Phase 3 ✅ |
 | Phase 4.2: DigitalEventSeries | 3-4 hours | ✅ **COMPLETED** | Phase 3 ✅ |
 | Phase 4.3: DigitalIntervalSeries | 2-3 hours | ✅ **COMPLETED** | Phase 3 ✅ |
+| Phase 4.4: Interface Unification | 4-6 hours | ⏳ **PLANNED** | Phase 4.1-4.3 ✅ |
 | Phase 5: Testing & Docs | 4-6 hours | ⏳ **PLANNED** | All phases |
 
 **Progress Summary:**
 - **Completed:** 32-36 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 + Phase 4.2 + Phase 4.3 all implemented and tested)
-- **Remaining:** 4-6 hours (final testing/docs)
-- **Total Scope:** 36-42 hours
-- **Current Achievement:** 89-90% complete
+- **Remaining:** 8-12 hours (interface unification + final testing/docs)
+- **Total Scope:** 40-48 hours
+- **Current Achievement:** ~80% complete
 
 **Recent Achievements (Phase 4.3):**
 - ✅ Implemented `DigitalIntervalStorage.hpp` with storage abstraction pattern (~1100 lines)
