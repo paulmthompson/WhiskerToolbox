@@ -79,6 +79,66 @@ public:
                });
     }
 
+    /**
+     * @brief Get a view of (TimeFrameIndex, IntervalWithId) pairs for iteration
+     * 
+     * Provides a consistent interface matching other time series types.
+     * Returns `std::pair<TimeFrameIndex, IntervalWithId>` for backward compatibility
+     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * 
+     * Note: The TimeFrameIndex in the pair is the interval's start time,
+     * which is the canonical time point for this element.
+     * 
+     * Usage: `for(auto [time, interval] : series.elements()) { ... }`
+     * 
+     * @return A lazy range view of (TimeFrameIndex, IntervalWithId) pairs
+     * @see elementsView() for concept-compliant iteration with IntervalWithId
+     */
+    [[nodiscard]] auto elements() const {
+        return std::views::iota(size_t{0}, size())
+             | std::views::transform([this](size_t idx) {
+                   // Fast path: use cached pointers if valid
+                   if (_cached_storage.isValid()) {
+                       auto interval = _cached_storage.getInterval(idx);
+                       return std::make_pair(
+                               TimeFrameIndex(interval.start),
+                               IntervalWithId(interval, _cached_storage.getEntityId(idx)));
+                   }
+                   // Slow path: virtual dispatch through wrapper
+                   auto interval = _storage.getInterval(idx);
+                   return std::make_pair(
+                           TimeFrameIndex(interval.start),
+                           IntervalWithId(interval, _storage.getEntityId(idx)));
+               });
+    }
+
+    /**
+     * @brief Get a view of IntervalWithId objects (concept-compliant)
+     * 
+     * Enables iterating over the series as a sequence of IntervalWithId objects.
+     * Each element satisfies the TimeSeriesElement and EntityElement concepts,
+     * enabling use with generic time series algorithms.
+     * 
+     * Use this method when you need concept-compliant elements for generic algorithms.
+     * Use elements() when you need backward-compatible pair iteration.
+     * 
+     * Usage:
+     * ```cpp
+     * for (auto interval : series.elementsView()) {
+     *     auto t = interval.time();     // TimeFrameIndex (start time)
+     *     auto id = interval.id();      // EntityId
+     *     auto v = interval.value();    // Interval const&
+     * }
+     * ```
+     * 
+     * @return A lazy range view of IntervalWithId objects
+     * @see IntervalWithId
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    [[nodiscard]] auto elementsView() const {
+        return view();  // view() already returns IntervalWithId objects
+    }
+
     // ========== Setters ==========
 
     void addEvent(Interval new_interval);

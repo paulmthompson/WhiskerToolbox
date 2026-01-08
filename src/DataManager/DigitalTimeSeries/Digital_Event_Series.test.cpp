@@ -279,3 +279,121 @@ TEST_CASE("DigitalEventSeries - Range interaction with add/remove", "[DataManage
     REQUIRE(vector_range[0] == TimeFrameIndex(4));
     REQUIRE(vector_range[1] == TimeFrameIndex(5));
 }
+
+// =============================================================================
+// Test elements() and elementsView() methods (Phase 4.4 Step 4)
+// =============================================================================
+
+TEST_CASE("DigitalEventSeries - elements() method", "[DataManager][elements]") {
+    std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5)};
+    DigitalEventSeries des(events);
+
+    SECTION("Basic iteration with structured bindings") {
+        std::vector<TimeFrameIndex> collected_times;
+        std::vector<TimeFrameIndex> collected_event_times;
+        std::vector<EntityId> collected_ids;
+
+        for (auto const [time, event] : des.elements()) {
+            collected_times.push_back(time);
+            collected_event_times.push_back(event.event_time);
+            collected_ids.push_back(event.entity_id);
+        }
+
+        REQUIRE(collected_times.size() == 3);
+        REQUIRE(collected_times[0] == TimeFrameIndex(1));
+        REQUIRE(collected_times[1] == TimeFrameIndex(3));
+        REQUIRE(collected_times[2] == TimeFrameIndex(5));
+
+        // Time in pair should match event time
+        REQUIRE(collected_times[0] == collected_event_times[0]);
+        REQUIRE(collected_times[1] == collected_event_times[1]);
+        REQUIRE(collected_times[2] == collected_event_times[2]);
+    }
+
+    SECTION("Empty series") {
+        DigitalEventSeries empty_des;
+
+        size_t count = 0;
+        for ([[maybe_unused]] auto const [time, event] : empty_des.elements()) {
+            count++;
+        }
+        REQUIRE(count == 0);
+    }
+
+    SECTION("Pair accessors (.first, .second)") {
+        auto view = des.elements();
+        auto it = std::ranges::begin(view);
+        auto first_element = *it;
+
+        // Test .first and .second access
+        REQUIRE(first_element.first == TimeFrameIndex(1));
+        REQUIRE(first_element.second.event_time == TimeFrameIndex(1));
+    }
+
+    SECTION("Works with range algorithms") {
+        // Count elements in range
+        auto count = std::ranges::distance(des.elements());
+        REQUIRE(count == 3);
+    }
+}
+
+TEST_CASE("DigitalEventSeries - elementsView() method", "[DataManager][elements]") {
+    std::vector<TimeFrameIndex> events = {TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+    DigitalEventSeries des(events);
+
+    SECTION("Concept-compliant iteration") {
+        std::vector<TimeFrameIndex> collected_times;
+        std::vector<EntityId> collected_ids;
+        std::vector<TimeFrameIndex> collected_values;
+
+        for (auto event : des.elementsView()) {
+            collected_times.push_back(event.time());
+            collected_ids.push_back(event.id());
+            collected_values.push_back(event.value());
+        }
+
+        REQUIRE(collected_times.size() == 3);
+        REQUIRE(collected_times[0] == TimeFrameIndex(10));
+        REQUIRE(collected_times[1] == TimeFrameIndex(20));
+        REQUIRE(collected_times[2] == TimeFrameIndex(30));
+
+        // For events, value() returns the same as time()
+        REQUIRE(collected_times[0] == collected_values[0]);
+        REQUIRE(collected_times[1] == collected_values[1]);
+        REQUIRE(collected_times[2] == collected_values[2]);
+    }
+
+    SECTION("elementsView() returns same data as view()") {
+        auto view1 = des.view();
+        auto view2 = des.elementsView();
+
+        auto it1 = std::ranges::begin(view1);
+        auto it2 = std::ranges::begin(view2);
+
+        for (size_t i = 0; i < des.size(); ++i, ++it1, ++it2) {
+            REQUIRE((*it1).time() == (*it2).time());
+            REQUIRE((*it1).id() == (*it2).id());
+        }
+    }
+}
+
+TEST_CASE("DigitalEventSeries - elements() consistency with view()", "[DataManager][elements]") {
+    std::vector<TimeFrameIndex> events = {TimeFrameIndex(100), TimeFrameIndex(200)};
+    DigitalEventSeries des(events);
+
+    // elements() time should match elementsView() time
+    auto elements = des.elements();
+    auto elements_view = des.elementsView();
+
+    auto it_elem = std::ranges::begin(elements);
+    auto it_view = std::ranges::begin(elements_view);
+
+    for (size_t i = 0; i < des.size(); ++i, ++it_elem, ++it_view) {
+        auto [time, event] = *it_elem;
+        auto view_event = *it_view;
+
+        REQUIRE(time == view_event.time());
+        REQUIRE(event.event_time == view_event.event_time);
+        REQUIRE(event.entity_id == view_event.entity_id);
+    }
+}

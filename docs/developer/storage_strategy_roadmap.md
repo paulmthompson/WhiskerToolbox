@@ -426,20 +426,22 @@ All five core time series data types in WhiskerToolbox now employ a **unified, f
    - Zero memory overhead when not used
    - Full compatibility with existing code
 
-### Phase 4.4 Status: Step 3 Complete (3 of 6 done, ~50% complete) 🔄
+### Phase 4.4 Status: Step 4 Complete (4 of 6 done, ~67% complete) 🔄
 
 **Completed Steps:**
 - ✅ Step 1: Add `createFromView<ViewType>()` to DigitalIntervalSeries
 - ✅ Step 2: Standardize element accessors via TimeSeriesConcepts.hpp
 - ✅ Step 3: Create TimeSeriesFilters.hpp with generic utilities (all tests passing)
+- ✅ Step 4: Add universal `elements()` method to DigitalEventSeries and DigitalIntervalSeries (all tests passing)
 
 **Remaining Steps:**
-- ⏳ Step 4: Add universal `elements()` method to DigitalEventSeries and DigitalIntervalSeries
 - ⏳ Step 5: Convert materializing `get*WithIdsInRange()` methods to return views
 - ⏳ Step 6: Documentation and polish
 
 **Test Status:**
 - ✅ TimeSeriesFilters.test.cpp: All 40+ test sections passing
+- ✅ Digital_Event_Series.test.cpp: New elements() tests added and passing
+- ✅ Digital_Interval_Series.test.cpp: New elements() tests added and passing
 - ✅ Build successful with zero errors
 - ✅ Concept compliance verified at compile-time
 
@@ -822,7 +824,8 @@ class RaggedStorageWrapper {
 | Method | AnalogTimeSeries | RaggedAnalogTimeSeries | RaggedTimeSeries<T> | DigitalEventSeries | DigitalIntervalSeries |
 |--------|------------------|------------------------|---------------------|--------------------|-----------------------|
 | `view()` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `elements()` | ✅ | ✅ | ✅ | ❌ | ❌ |
+| `elements()` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `elementsView()` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `viewValues()` | ✅ | ❌ | ❌ | ❌ | ❌ |
 | `time_slices()` | ❌ | ✅ | ❌ | ❌ | ❌ |
 | `viewTimeValueRange()` | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -855,15 +858,15 @@ class RaggedStorageWrapper {
 | Missing storage mutation methods | ✅ FIXED | Added `removeAt()`, `sort()`, `setInterval()`, `setEntityId()` to storage layer |
 | Range view dangling references | ✅ FIXED | Changed `getIntervalsInRange()` to use direct storage access (by value) |
 
-**Remaining Inconsistencies (For Phase 4.4 Steps 3-6):**
+**Remaining Inconsistencies (For Phase 4.4 Steps 5-6):**
 
 | Inconsistency | Impact | Status | Target Resolution |
 |---------------|--------|--------|------------------|
 | Element type naming varies (`EventWithId`, `IntervalWithId`, `TimeValuePoint`, `DataEntry<T>`) | Low - already consistent within each type | ✅ RESOLVED | `TimeSeriesConcepts.hpp` created with unified concepts |
 | Different accessor patterns for element properties | Low - types expose different members | ✅ RESOLVED | Standardized `.time()`, `.id()`, `.value()` accessors implemented across all types |
-| `elements()` method not universal | Medium - 3 of 5 types have it | ⏳ PENDING | Add `elements()` to `DigitalEventSeries` and `DigitalIntervalSeries` |
+| `elements()` method not universal | ✅ RESOLVED | ✅ RESOLVED | Add `elements()` to `DigitalEventSeries` and `DigitalIntervalSeries` ✅ DONE |
 | `get*WithIdsInRange()` materializes instead of returns views | Medium - forces materialization for some use cases | ⏳ PENDING | Evaluate feasibility of returning views; may need separate vectorized methods |
-| EntityId filtering duplicated across types | Low - pattern is consistent | ⏳ PENDING | Create generic `filterByEntityIds()` in `TimeSeriesFilters.hpp` |
+| EntityId filtering duplicated across types | Low - pattern is consistent | ✅ RESOLVED | Generic filters in `TimeSeriesFilters.hpp` ✅ DONE |
 
 ##### Implementation Checklist
 
@@ -945,11 +948,23 @@ class RaggedStorageWrapper {
   - Concept compliance verification at compile-time
   - **All tests passing with zero build errors**
 
-**Step 4: Add Universal `elements()` Method (Priority: P2)**
+**Step 4: Add Universal `elements()` Method (Priority: P2) - ✅ COMPLETED**
 
-- [ ] Add `elements()` to `DigitalEventSeries` returning view of `EventWithId`
-- [ ] Add `elements()` to `DigitalIntervalSeries` returning view of `IntervalWithId`
-- [ ] Verify consistent semantics across all types
+- [x] Add `elements()` to `DigitalEventSeries` returning view of (TimeFrameIndex, EventWithId) pairs
+  - [x] Backward-compatible pair iteration: `for (auto [time, event] : series.elements())`
+  - [x] Uses cache optimization fast-path when available
+  - [x] Comprehensive unit tests added (9+ test sections)
+- [x] Add `elements()` to `DigitalIntervalSeries` returning view of (TimeFrameIndex, IntervalWithId) pairs
+  - [x] Backward-compatible pair iteration: `for (auto [time, interval] : series.elements())`
+  - [x] Uses cache optimization fast-path when available
+  - [x] Comprehensive unit tests added (9+ test sections)
+- [x] Add `elementsView()` to both types returning concept-compliant views
+  - [x] DigitalEventSeries: `elementsView()` returns EventWithId objects
+  - [x] DigitalIntervalSeries: `elementsView()` returns IntervalWithId objects
+  - [x] Full concept compliance verified at compile-time
+- [x] Verify consistent semantics across all types
+  - ✅ All five types now have identical `elements()` and `elementsView()` patterns
+  - ✅ All tests passing with zero errors
 
 **Step 5: Convert Materializing Methods to Views (Priority: P2)**
 
@@ -2035,15 +2050,17 @@ static_assert(RaggedStorageConcept<ViewRaggedStorage<SimpleData>, SimpleData>,
 | Phase 4.3.x: Storage Migration Cleanup | 2-3 hours | ✅ **COMPLETED** | Phase 4.3 ✅ |
 | Phase 4.4 Step 1: createFromView<ViewType>() | 2-3 hours | ✅ **COMPLETED** | Phase 4.1-4.3 ✅ |
 | Phase 4.4 Step 2: Standardize Element Accessors | 4-6 hours | ✅ **COMPLETED** | Phase 4.4 Step 1 ✅ |
-| Phase 4.4 Steps 3-6: Remaining Unification | 4-6 hours | ⏳ **PLANNED** | Phase 4.4 Step 2 ✅ |
+| Phase 4.4 Step 3: TimeSeriesFilters.hpp | 2-3 hours | ✅ **COMPLETED** | Phase 4.4 Step 2 ✅ |
+| Phase 4.4 Step 4: Universal elements() Method | 2-3 hours | ✅ **COMPLETED** | Phase 4.4 Step 3 ✅ |
+| Phase 4.4 Steps 5-6: Remaining Unification | 3-4 hours | ⏳ **PLANNED** | Phase 4.4 Step 4 ✅ |
 | Phase 5: Testing & Docs | 4-6 hours | ⏳ **PLANNED** | All phases |
 
 **Progress Summary:**
-- **Completed:** 44-49 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 + Phase 4.2 + Phase 4.3 + cleanup + Step 1 + Step 2, all implemented and tested)
-- **In Progress:** 0 hours (Phase 4.4 Step 2 complete)
-- **Remaining:** 8-12 hours (remaining interface unification steps 3-6 + final testing/docs)
-- **Total Scope:** 52-61 hours
-- **Current Achievement:** ~85% complete (storage abstractions complete, accessor standardization complete, generic algorithms pending)
+- **Completed:** 52-59 hours (Phase 1 + Phase 2 + Phase 3 + Phase 4.1 + Phase 4.2 + Phase 4.3 + cleanup + Step 1 + Step 2 + Step 3 + Step 4, all implemented and tested)
+- **In Progress:** 0 hours (Phase 4.4 Step 4 complete)
+- **Remaining:** 3-4 hours (remaining interface unification steps 5-6 + final testing/docs)
+- **Total Scope:** 55-63 hours
+- **Current Achievement:** ~92% complete (storage abstractions complete, accessor standardization complete, universal elements() complete, view conversions pending)
 
 **Recent Achievements (Phase 4.3):**
 - ✅ Implemented `DigitalIntervalStorage.hpp` with storage abstraction pattern (~1100 lines)

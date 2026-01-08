@@ -62,6 +62,62 @@ public:
                });
     }
 
+    /**
+     * @brief Get a view of (TimeFrameIndex, EventWithId) pairs for iteration
+     * 
+     * Provides a consistent interface matching other time series types.
+     * Returns `std::pair<TimeFrameIndex, EventWithId>` for backward compatibility
+     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * 
+     * Usage: `for(auto [time, event] : series.elements()) { ... }`
+     * 
+     * @return A lazy range view of (TimeFrameIndex, EventWithId) pairs
+     * @see elementsView() for concept-compliant iteration with EventWithId
+     */
+    [[nodiscard]] auto elements() const {
+        return std::views::iota(size_t{0}, size())
+             | std::views::transform([this](size_t idx) {
+                   // Fast path: use cached pointers if valid
+                   if (_cached_storage.isValid()) {
+                       auto event_time = _cached_storage.getEvent(idx);
+                       return std::make_pair(
+                               event_time,
+                               EventWithId(event_time, _cached_storage.getEntityId(idx)));
+                   }
+                   // Slow path: virtual dispatch through wrapper
+                   auto event_time = _storage.getEvent(idx);
+                   return std::make_pair(
+                           event_time,
+                           EventWithId(event_time, _storage.getEntityId(idx)));
+               });
+    }
+
+    /**
+     * @brief Get a view of EventWithId objects (concept-compliant)
+     * 
+     * Enables iterating over the series as a sequence of EventWithId objects.
+     * Each element satisfies the TimeSeriesElement and EntityElement concepts,
+     * enabling use with generic time series algorithms.
+     * 
+     * Use this method when you need concept-compliant elements for generic algorithms.
+     * Use elements() when you need backward-compatible pair iteration.
+     * 
+     * Usage:
+     * ```cpp
+     * for (auto event : series.elementsView()) {
+     *     auto t = event.time();   // TimeFrameIndex
+     *     auto id = event.id();    // EntityId
+     *     auto v = event.value();  // TimeFrameIndex (same as time for events)
+     * }
+     * ```
+     * 
+     * @return A lazy range view of EventWithId objects
+     * @see EventWithId
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    [[nodiscard]] auto elementsView() const {
+        return view();  // view() already returns EventWithId objects
+    }
 
     [[nodiscard]] std::vector<TimeFrameIndex> const & getEventSeries() const;
 
