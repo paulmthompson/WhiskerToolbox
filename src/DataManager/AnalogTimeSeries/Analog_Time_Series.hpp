@@ -318,140 +318,52 @@ public:
               value(val) {}
     };
 
-    class TimeValueRangeIterator {
-    public:
-        // 1. Upgrade category to Random Access
-        using iterator_category = std::random_access_iterator_tag;
+    /**
+     * @brief Get a std::ranges compatible view of all samples as TimeValuePoint.
+     * 
+     * Returns a random-access view that synthesizes TimeValuePoint objects on demand.
+     * Uses cached pointers for fast-path iteration when storage is contiguous.
+     */
+    [[nodiscard]] auto view() const {
+        return std::views::iota(size_t{0}, getNumSamples())
+             | std::views::transform([this](size_t i) {
+                   return TimeValuePoint{
+                       _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
+                       _getDataAtDataArrayIndex(DataArrayIndex(i))
+                   };
+               });
+    }
 
-        // 2. C++20 requires distinct iterator_concept for ranges
-        using iterator_concept = std::random_access_iterator_tag;
+    /**
+     * @brief Get a std::ranges compatible view of just the values (no time info).
+     * 
+     * Returns a random-access view of float values only, without time frame indices.
+     */
+    [[nodiscard]] auto viewValues() const {
+        return std::views::iota(size_t{0}, getNumSamples())
+             | std::views::transform([this](size_t i) {
+                   return _getDataAtDataArrayIndex(DataArrayIndex(i));
+               });
+    }
 
-        using value_type = TimeValuePoint;
-        using difference_type = std::ptrdiff_t;
-        using pointer = TimeValuePoint;  // Proxy pointer (optional, or strictly TimeValuePoint*)
-        using reference = TimeValuePoint;// RETURN BY VALUE
-
-        // 3. Must be default constructible
-        TimeValueRangeIterator() = default;
-
-        TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex current, DataArrayIndex end)
-            : _series(series),
-              _current_index(current),
-              _end_index(end) {
-            // Cache the contiguous pointer if available for speed
-            if (_series) _contiguous_data_ptr = _series->_data_storage.tryGetContiguousPointer();
-        }
-
-        // Dereference returns by Value (Cleanest for stashing iterators)
-        reference operator*() const {
-            // Use fast path if available
-            float val = (_contiguous_data_ptr)
-                                ? _contiguous_data_ptr[_current_index.getValue()]
-                                : _series->_data_storage.getValueAt(_current_index.getValue());
-
-            // Assume _time_storage has a similar fast lookup, otherwise use existing accessor
-            TimeFrameIndex time = _series->_getTimeFrameIndexAtDataArrayIndex(_current_index);
-
-            return TimeValuePoint{time, val};
-        }
-
-        // Standard Iterator Operations
-        TimeValueRangeIterator & operator++() {
-            // Assuming DataArrayIndex has operator++
-            // _current_index++;
-            // If not, generic increment:
-            _current_index = DataArrayIndex(_current_index.getValue() + 1);
-            return *this;
-        }
-
-        TimeValueRangeIterator operator++(int) {
-            TimeValueRangeIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        TimeValueRangeIterator & operator--() {
-            _current_index = DataArrayIndex(_current_index.getValue() - 1);
-            return *this;
-        }
-
-        TimeValueRangeIterator operator--(int) {
-            TimeValueRangeIterator tmp = *this;
-            --(*this);
-            return tmp;
-        }
-
-        // Random Access Arithmetic
-        TimeValueRangeIterator & operator+=(difference_type n) {
-            _current_index = DataArrayIndex(_current_index.getValue() + n);
-            return *this;
-        }
-
-        TimeValueRangeIterator & operator-=(difference_type n) {
-            _current_index = DataArrayIndex(_current_index.getValue() - n);
-            return *this;
-        }
-
-        friend TimeValueRangeIterator operator+(TimeValueRangeIterator it, difference_type n) { return it += n; }
-        friend TimeValueRangeIterator operator+(difference_type n, TimeValueRangeIterator it) { return it += n; }
-        friend TimeValueRangeIterator operator-(TimeValueRangeIterator it, difference_type n) { return it -= n; }
-
-        friend difference_type operator-(TimeValueRangeIterator const & lhs, TimeValueRangeIterator const & rhs) {
-            return static_cast<difference_type>(lhs._current_index.getValue()) -
-                   static_cast<difference_type>(rhs._current_index.getValue());
-        }
-
-        // Comparisons
-        bool operator==(TimeValueRangeIterator const & other) const {
-            return _current_index.getValue() == other._current_index.getValue();
-        }
-
-        // Default C++20 spaceship operator handles !=, <, >, <=, >= automatically
-        auto operator<=>(TimeValueRangeIterator const & other) const {
-            return _current_index.getValue() <=> other._current_index.getValue();
-        }
-
-        // Random access subscription
-        reference operator[](difference_type n) const {
-            return *(*this + n);
-        }
-
-    private:
-        AnalogTimeSeries const * _series = nullptr;
-        DataArrayIndex _current_index{0};
-        DataArrayIndex _end_index{0};
-        float const * _contiguous_data_ptr{nullptr};
-    };
-
-    class TimeValueRangeView : public std::ranges::view_interface<TimeValueRangeView> {
-    public:
-        // 1. Must be default constructible
-        TimeValueRangeView() = default;
-
-        TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start, DataArrayIndex end)
-            : _series(series),
-              _start_index(start),
-              _end_index(end) {}
-
-        [[nodiscard]] TimeValueRangeIterator begin() const {
-            return TimeValueRangeIterator(_series, _start_index, _end_index);
-        }
-
-        [[nodiscard]] TimeValueRangeIterator end() const {
-            return TimeValueRangeIterator(_series, _end_index, _end_index);
-        }
-
-        // size() is actually provided by view_interface if iterator is RandomAccess and sized
-        // But explicit implementation is often faster/safer if you have the data
-        [[nodiscard]] size_t size() const {
-            return _end_index.getValue() - _start_index.getValue();
-        }
-
-    private:
-        AnalogTimeSeries const * _series = nullptr;
-        DataArrayIndex _start_index{0};
-        DataArrayIndex _end_index{0};
-    };
+    /**
+     * @brief Get time-value pairs in a TimeFrameIndex range as a view.
+     * 
+     * Returns a view over the time-value pairs within the specified range.
+     * Uses internal index lookup to find the range boundaries.
+     * 
+     * @param start_index Starting DataArrayIndex
+     * @param end_index Ending DataArrayIndex (exclusive)
+     */
+    [[nodiscard]] auto viewTimeValueRange(DataArrayIndex start_index, DataArrayIndex end_index) const {
+        return std::views::iota(start_index.getValue(), end_index.getValue())
+             | std::views::transform([this](size_t i) {
+                   return TimeValuePoint{
+                       _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
+                       _getDataAtDataArrayIndex(DataArrayIndex(i))
+                   };
+               });
+    }
 
     /**
      * @brief Time index range abstraction that handles both dense and sparse storage
@@ -492,12 +404,34 @@ public:
      * 
      * @param start_time The start TimeFrameIndex (inclusive boundary)
      * @param end_time The end TimeFrameIndex (inclusive boundary)
-     * @return TimeValueRangeView that supports range-based for loops
+     * @return Range view that supports range-based for loops
      * 
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueSpanInTimeFrameIndexRange() for zero-copy alternative
      */
-    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] inline auto getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+        // Use existing boundary-finding logic
+        auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
+        auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
+
+        // Handle cases where boundaries are not found
+        if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
+            // Return empty range
+            return viewTimeValueRange(DataArrayIndex(0), DataArrayIndex(0));
+        }
+
+        size_t start_idx = start_index_opt.value().getValue();
+        size_t end_idx = end_index_opt.value().getValue();
+
+        // Validate that start <= end
+        if (start_idx > end_idx) {
+            // Return empty range for invalid range
+            return viewTimeValueRange(DataArrayIndex(0), DataArrayIndex(0));
+        }
+
+        // Create range view (end_idx + 1 because end is exclusive for the range)
+        return viewTimeValueRange(DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1));
+    }
 
     /**
      * @brief Get time-value pairs as a range with timeframe conversion
@@ -509,14 +443,30 @@ public:
      * @param start_time The start TimeFrameIndex in source timeframe coordinates
      * @param end_time The end TimeFrameIndex in source timeframe coordinates
      * @param source_timeFrame The timeframe that start_time and end_time are expressed in
-     * @return TimeValueRangeView that supports range-based for loops
+     * @return Range view that supports range-based for loops
      * 
      * @note If source_timeFrame equals the analog series' timeframe, or if either is null,
      *       falls back to the non-converting version
      */
-    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time,
-                                                                            TimeFrameIndex end_time,
-                                                                            TimeFrame const & source_timeFrame) const;
+    [[nodiscard]] inline auto getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time,
+                                                                     TimeFrameIndex end_time,
+                                                                     TimeFrame const & source_timeFrame) const {
+        // If source timeframe is the same as our timeframe, no conversion needed
+        if (&source_timeFrame == _time_frame.get()) {
+            return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+        }
+
+        // If we don't have a timeframe, fall back to non-converting version
+        if (!_time_frame) {
+            return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+        }
+
+        // Convert the time indices from source timeframe to our timeframe
+        auto [target_start, target_end] = convertTimeFrameRange(
+            start_time, end_time, source_timeFrame, *_time_frame);
+
+        return getTimeValueRangeInTimeFrameIndexRange(target_start, target_end);
+    }
 
     /**
      * @brief Get time-value pairs as span and time iterator for zero-copy access
@@ -560,7 +510,7 @@ public:
      * TimeFrameIndex and float values. This is the recommended interface for iterating
      * over all data as it works with any storage backend (vector, memory-mapped, etc.).
      * 
-     * @return TimeValueRangeView that supports range-based for loops
+     * @return Range view that supports range-based for loops
      * 
      * @example
      * ```cpp
@@ -572,7 +522,7 @@ public:
      * @note This provides a uniform interface regardless of underlying storage type
      * @see TimeValuePoint for the structure returned by dereferencing the iterator
      */
-    [[nodiscard]] TimeValueRangeView getAllSamples() const;
+    [[nodiscard]] auto getAllSamples() const { return view(); }
 
     /**
      * @brief Get the time indices as a vector
@@ -620,14 +570,6 @@ public:
      * @return std::shared_ptr<TimeFrame> The time frame
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const { return _time_frame; }
-
-    /**
- * @brief Get a ranges-compatible view of the entire series.
- */
-    [[nodiscard]] auto view() const {
-        // Assuming DataArrayIndex can be constructed from size_t 0 and size()
-        return TimeValueRangeView(this, DataArrayIndex(0), DataArrayIndex(getNumSamples()));
-    }
 
 protected:
 private:

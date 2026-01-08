@@ -214,52 +214,6 @@ AnalogTimeSeries::TimeValueSpanPair::TimeValueSpanPair(std::span<float const> da
     : values(data_span),
       time_indices(series, start_index, end_index) {}
 
-AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
-    // Use existing boundary-finding logic
-    auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
-    auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
-
-    // Handle cases where boundaries are not found
-    if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
-        // Return empty range
-        return {this, DataArrayIndex(0), DataArrayIndex(0)};
-    }
-
-    size_t start_idx = start_index_opt.value().getValue();
-    size_t end_idx = end_index_opt.value().getValue();
-
-    // Validate that start <= end
-    if (start_idx > end_idx) {
-        // Return empty range for invalid range
-        return {this, DataArrayIndex(0), DataArrayIndex(0)};
-    }
-
-    // Create range view (end_idx + 1 because end is exclusive for the range)
-    return {this, DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1)};
-}
-
-AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFrameIndexRange(
-        TimeFrameIndex start_time,
-        TimeFrameIndex end_time,
-        TimeFrame const & source_timeFrame) const {
-    
-    // If source timeframe is the same as our timeframe, no conversion needed
-    if (&source_timeFrame == _time_frame.get()) {
-        return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
-    }
-
-    // If we don't have a timeframe, fall back to non-converting version
-    if (!_time_frame) {
-        return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
-    }
-
-    // Convert the time indices from source timeframe to our timeframe
-    auto [target_start, target_end] = convertTimeFrameRange(
-        start_time, end_time, source_timeFrame, *_time_frame);
-
-    return getTimeValueRangeInTimeFrameIndexRange(target_start, target_end);
-}
-
 AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Use existing getDataInTimeFrameIndexRange for the span
     auto data_span = getDataInTimeFrameIndexRange(start_time, end_time);
@@ -312,9 +266,4 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getTimeValueSpanInTimeFrameIndexRange(target_start_index, target_end_index);
-}
-
-AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getAllSamples() const {
-    // Return a range view over all samples (from index 0 to size)
-    return {this, DataArrayIndex(0), DataArrayIndex(_data_storage.size())};
 }
