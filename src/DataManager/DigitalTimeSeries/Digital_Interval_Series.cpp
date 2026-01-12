@@ -342,22 +342,9 @@ std::vector<std::pair<EntityId, Interval>> DigitalIntervalSeries::getIntervalsBy
     return result;
 }
 
-std::vector<std::pair<EntityId, int>> DigitalIntervalSeries::getIndexInfoByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::pair<EntityId, int>> result;
-    result.reserve(entity_ids.size());
-
-    for (EntityId const entity_id: entity_ids) {
-        auto index = getIndexByEntityId(entity_id);
-        if (index) {
-            result.emplace_back(entity_id, *index);
-        }
-    }
-
-    return result;
-}
-
 // ========== Intervals with EntityIDs ==========
 
+/*
 std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
     
     std::vector<IntervalWithId> result;
@@ -372,23 +359,7 @@ std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(Ti
     }
     return result;
 }
-
-std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_index,
-                                                                              TimeFrameIndex stop_index,
-                                                                              TimeFrame const & source_time_frame) const {
-    if (&source_time_frame == _time_frame.get()) {
-        return getIntervalsWithIdsInRange(start_index, stop_index);
-    }
-
-    // If either timeframe is null, fall back to original behavior
-    if (!_time_frame.get()) {
-        return getIntervalsWithIdsInRange(start_index, stop_index);
-    }
-
-    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, source_time_frame, *_time_frame);
-    return getIntervalsWithIdsInRange(target_start_index, target_stop_index);
-}
-
+*/
 std::pair<int64_t, int64_t> DigitalIntervalSeries::_getTimeRangeFromIndices(
         TimeFrameIndex start_index,
         TimeFrameIndex stop_index) const {

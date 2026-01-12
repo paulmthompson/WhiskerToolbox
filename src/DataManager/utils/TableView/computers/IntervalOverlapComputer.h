@@ -48,7 +48,7 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return Index of the containing column interval, or -1 if none found.
 */
 [[nodiscard]] int64_t findContainingInterval(TimeFrameInterval const & rowInterval,
-                                             std::ranges::range auto const & columnIntervals) {
+                                             std::ranges::range auto & columnIntervals) {
     for (size_t i = 0; i < columnIntervals.size(); ++i) {
         auto const & colInterval = columnIntervals[i];
 
@@ -91,9 +91,10 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @param sourceTimeFrame The timeframe for the column intervals.
 * @param destinationTimeFrame The timeframe for the row interval.
 * @return Pair of count and vector of EntityIDs of overlapping intervals.
+* @note Takes range by forwarding reference because filter_view/transform_view cache begin() internally
 */
 [[nodiscard]] std::pair<int64_t, std::vector<EntityId>> countOverlappingIntervalsWithIds(TimeFrameInterval const & rowInterval,
-                                                                                         std::ranges::range auto const & columnIntervalsWithIds,
+                                                                                         std::ranges::range auto && columnIntervalsWithIds,
                                                                                          TimeFrame const * sourceTimeFrame,
                                                                                          TimeFrame const * destinationTimeFrame) {
     int64_t count = 0;
@@ -167,40 +168,64 @@ public:
 
             std::vector<EntityId> entity_ids;
             for (auto const & rowInterval: rowIntervals) {
-                auto columnIntervalsWithIds = m_source->getIntervalsWithIdsInRange(
-                        TimeFrameIndex(0),
-                        rowInterval.end,
-                        *destinationTimeFrame);
+                // Get view and materialize to vector since we need .empty() and indexed access
+                auto columnIntervalsView = m_source->viewInRange(TimeFrameIndex(0),
+                                                                 rowInterval.end,
+                                                                 *destinationTimeFrame);
+                std::vector<IntervalWithId> columnIntervalsWithIds;
+                for (auto&& interval : columnIntervalsView) {
+                    columnIntervalsWithIds.push_back(interval);
+                }
+
                 if (columnIntervalsWithIds.empty()) {
                     results.push_back(static_cast<T>(-1));
                     entity_ids.push_back(EntityId(0));
                     continue;
                 }
-                // Need to convert to their time coordinates
-                auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervalsWithIds.back().interval.start));
-                auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervalsWithIds.back().interval.end));
+
+                // Find the first column interval that overlaps with the row interval
+                // by converting to absolute time and checking overlap
                 auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
                 auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
-
-                if (source_start <= destination_end && destination_start <= source_end) {
-
-                    if (m_operation == IntervalOverlapOperation::AssignID_Start) {
-                        // Convert into row time frame
-                        auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
-                        results.push_back(static_cast<T>(source_start_index.getValue()));
-                        entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
-                    } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
-                        // Convert into row time frame
-                        auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
-                        results.push_back(static_cast<T>(source_end_index.getValue()));
-                        entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
-                    } else {
-                        results.push_back(static_cast<T>(columnIntervalsWithIds.size() - 1));
-                        entity_ids.push_back(columnIntervalsWithIds.back().entity_id);
+                
+                bool found = false;
+                size_t found_idx = 0;
+                for (size_t i = 0; i < columnIntervalsWithIds.size(); ++i) {
+                    auto const& colInterval = columnIntervalsWithIds[i];
+                    auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.interval.start));
+                    auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.interval.end));
+                    
+                    if (source_start <= destination_end && destination_start <= source_end) {
+                        found = true;
+                        found_idx = i;
+                        break;  // Take the first overlapping interval
                     }
-                } else {
+                }
+
+                if (!found) {
                     results.push_back(static_cast<T>(-1));
                     entity_ids.push_back(EntityId(0));
+                    continue;
+                }
+
+                auto const& matchedInterval = columnIntervalsWithIds[found_idx];
+                auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(matchedInterval.interval.start));
+                auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(matchedInterval.interval.end));
+
+                if (m_operation == IntervalOverlapOperation::AssignID_Start) {
+                    // Convert into row time frame
+                    auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
+                    results.push_back(static_cast<T>(source_start_index.getValue()));
+                    entity_ids.push_back(matchedInterval.entity_id);
+                } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
+                    // Convert into row time frame
+                    auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
+                    results.push_back(static_cast<T>(source_end_index.getValue()));
+                    entity_ids.push_back(matchedInterval.entity_id);
+                } else {
+                    // AssignID: return the index of the first overlapping interval
+                    results.push_back(static_cast<T>(found_idx));
+                    entity_ids.push_back(matchedInterval.entity_id);
                 }
             }
 
@@ -211,10 +236,9 @@ public:
             std::vector<std::vector<EntityId>> entity_ids;
 
             for (auto const & rowInterval: rowIntervals) {
-                auto columnIntervalsWithIds = m_source->getIntervalsWithIdsInRange(
-                        rowInterval.start,
-                        rowInterval.end,
-                        *destinationTimeFrame);
+                auto columnIntervalsWithIds = m_source->viewInRange(rowInterval.start,
+                                                                    rowInterval.end,
+                                                                    *destinationTimeFrame);
 
                 auto [count, overlappingEntityIds] = countOverlappingIntervalsWithIds(rowInterval,
                                                                                       columnIntervalsWithIds,

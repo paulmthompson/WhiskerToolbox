@@ -789,25 +789,17 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         // Test batch operations
         std::vector<EntityId> batch_entities = {all_entity_ids[0], all_entity_ids[2], all_entity_ids[4]};
         auto batch_intervals = interval_data->getIntervalsByEntityIds(batch_entities);
-        auto batch_index_info = interval_data->getIndexInfoByEntityIds(batch_entities);
 
         REQUIRE(batch_intervals.size() == 3);
-        REQUIRE(batch_index_info.size() == 3);
 
         // Verify batch results
         REQUIRE(batch_intervals[0].first == all_entity_ids[0]);
         REQUIRE(batch_intervals[0].second.start == 100);
         REQUIRE(batch_intervals[0].second.end == 200);
 
-        REQUIRE(batch_index_info[0].first == all_entity_ids[0]);
-        REQUIRE(batch_index_info[0].second == 0);
-
         REQUIRE(batch_intervals[1].first == all_entity_ids[2]);
         REQUIRE(batch_intervals[1].second.start == 500);
         REQUIRE(batch_intervals[1].second.end == 800);
-
-        REQUIRE(batch_index_info[1].first == all_entity_ids[2]);
-        REQUIRE(batch_index_info[1].second == 2);
 
         INFO("Successfully tested DigitalIntervalSeries entity lookup and group membership integration");
     }

@@ -207,7 +207,7 @@ namespace TimeSeriesMapper {
     auto const * series_tf = series.getTimeFrame().get();
 
     // views::all on an rvalue vector creates an owning_view
-    return std::views::all(series.getIntervalsWithIdsInRange(start_time, end_time, query_time_frame)) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f](auto const & interval_with_id) {
+    return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f](auto const & interval_with_id) {
                auto x_start = static_cast<float>(
                        series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.start)));
                auto x_end = static_cast<float>(

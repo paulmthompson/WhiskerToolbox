@@ -921,3 +921,460 @@ TEST_CASE("DigitalIntervalSeries::createFromView empty series", "[DigitalInterva
         CHECK_FALSE(materialized->isLazy());
     }
 }
+
+// =============================================================================
+// Public Interface with All Storage Backends Tests
+// =============================================================================
+
+namespace {
+// Helper to create a simple TimeFrame for testing
+std::shared_ptr<TimeFrame> makeTestTimeFrame(int64_t num_frames) {
+    std::vector<int> times;
+    times.reserve(static_cast<size_t>(num_frames));
+    for (int64_t i = 0; i < num_frames; ++i) {
+        times.push_back(static_cast<int>(i));
+    }
+    return std::make_shared<TimeFrame>(times);
+}
+} // namespace
+
+TEST_CASE("DigitalIntervalSeries view() works with all storage backends", "[DigitalIntervalSeries][public-api][view]") {
+    
+    SECTION("Owning storage - view() iteration") {
+        DigitalIntervalSeries series;
+        series.addEvent(Interval{10, 20});
+        series.addEvent(Interval{30, 40});
+        series.addEvent(Interval{50, 60});
+        
+        CHECK(series.getStorageType() == DigitalIntervalStorageType::Owning);
+        
+        std::vector<Interval> collected;
+        std::vector<EntityId> collected_ids;
+        for (auto const& element : series.view()) {
+            collected.push_back(element.interval);
+            collected_ids.push_back(element.entity_id);
+        }
+        
+        REQUIRE(collected.size() == 3);
+        CHECK(collected[0].start == 10);
+        CHECK(collected[1].start == 30);
+        CHECK(collected[2].start == 50);
+    }
+    
+    SECTION("View storage - view() iteration") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{30, 40});
+        source->addEvent(Interval{50, 60});
+        source->addEvent(Interval{70, 80});
+        
+        auto view_series = DigitalIntervalSeries::createView(source, 25, 55);
+        
+        CHECK(view_series->getStorageType() == DigitalIntervalStorageType::View);
+        
+        std::vector<Interval> collected;
+        for (auto const& element : view_series->view()) {
+            collected.push_back(element.interval);
+        }
+        
+        // Should have [30,40] and [50,60] which overlap with [25,55]
+        REQUIRE(collected.size() == 2);
+        CHECK(collected[0].start == 30);
+        CHECK(collected[1].start == 50);
+    }
+    
+    SECTION("Lazy storage - view() iteration") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2}),
+            IntervalWithId(Interval{50, 60}, EntityId{3})
+        };
+        
+        // Transform: shift by 100
+        auto shifted_view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return IntervalWithId(
+                Interval{iwid.interval.start + 100, iwid.interval.end + 100},
+                iwid.entity_id
+            );
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(shifted_view, source_data.size());
+        
+        CHECK(lazy_series->getStorageType() == DigitalIntervalStorageType::Lazy);
+        
+        std::vector<Interval> collected;
+        for (auto const& element : lazy_series->view()) {
+            collected.push_back(element.interval);
+        }
+        
+        REQUIRE(collected.size() == 3);
+        CHECK(collected[0].start == 110);  // 10 + 100
+        CHECK(collected[1].start == 130);  // 30 + 100
+        CHECK(collected[2].start == 150);  // 50 + 100
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries viewInRange() works with all storage backends", "[DigitalIntervalSeries][public-api][viewInRange]") {
+    auto tf = makeTestTimeFrame(200);
+    
+    SECTION("Owning storage - viewInRange()") {
+        DigitalIntervalSeries series;
+        series.setTimeFrame(tf);
+        series.addEvent(Interval{10, 20});
+        series.addEvent(Interval{30, 40});
+        series.addEvent(Interval{50, 60});
+        series.addEvent(Interval{70, 80});
+        
+        auto range = series.viewInRange(TimeFrameIndex{25}, TimeFrameIndex{55}, *tf);
+        
+        std::vector<Interval> collected;
+        for (auto const& element : range) {
+            collected.push_back(element.interval);
+        }
+        
+        // Should include intervals overlapping [25,55]: [30,40], [50,60]
+        REQUIRE(collected.size() == 2);
+        CHECK(collected[0].start == 30);
+        CHECK(collected[1].start == 50);
+    }
+    
+    SECTION("View storage - viewInRange()") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->setTimeFrame(tf);
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{30, 40});
+        source->addEvent(Interval{50, 60});
+        source->addEvent(Interval{70, 80});
+        
+        // Create view that contains all
+        auto view_series = DigitalIntervalSeries::createView(source, 0, 100);
+        view_series->setTimeFrame(tf);
+        
+        auto range = view_series->viewInRange(TimeFrameIndex{35}, TimeFrameIndex{75}, *tf);
+        
+        std::vector<Interval> collected;
+        for (auto const& element : range) {
+            collected.push_back(element.interval);
+        }
+        
+        // [30,40] overlaps at end, [50,60] fully inside, [70,80] overlaps at start
+        REQUIRE(collected.size() == 3);
+        CHECK(collected[0].start == 30);
+        CHECK(collected[1].start == 50);
+        CHECK(collected[2].start == 70);
+    }
+    
+    SECTION("Lazy storage - viewInRange()") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2}),
+            IntervalWithId(Interval{50, 60}, EntityId{3}),
+            IntervalWithId(Interval{70, 80}, EntityId{4})
+        };
+        
+        auto identity_view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(identity_view, source_data.size(), tf);
+        
+        auto range = lazy_series->viewInRange(TimeFrameIndex{45}, TimeFrameIndex{65}, *tf);
+        
+        std::vector<Interval> collected;
+        for (auto const& element : range) {
+            collected.push_back(element.interval);
+        }
+        
+        // Should include [50,60] which overlaps [45,65]
+        REQUIRE(collected.size() == 1);
+        CHECK(collected[0].start == 50);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries hasIntervalAtTime() works with all backends", "[DigitalIntervalSeries][public-api][hasIntervalAtTime]") {
+    auto tf = makeTestTimeFrame(200);
+    
+    SECTION("Owning storage") {
+        DigitalIntervalSeries series;
+        series.setTimeFrame(tf);
+        series.addEvent(Interval{10, 20});
+        series.addEvent(Interval{50, 60});
+        
+        CHECK(series.hasIntervalAtTime(TimeFrameIndex{15}, *tf));
+        CHECK(series.hasIntervalAtTime(TimeFrameIndex{10}, *tf));  // Edge
+        CHECK(series.hasIntervalAtTime(TimeFrameIndex{20}, *tf));  // Edge
+        CHECK_FALSE(series.hasIntervalAtTime(TimeFrameIndex{25}, *tf));
+        CHECK(series.hasIntervalAtTime(TimeFrameIndex{55}, *tf));
+        CHECK_FALSE(series.hasIntervalAtTime(TimeFrameIndex{100}, *tf));
+    }
+    
+    SECTION("View storage") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->setTimeFrame(tf);
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{50, 60});
+        source->addEvent(Interval{100, 110});
+        
+        // View only includes [50,60]
+        auto view_series = DigitalIntervalSeries::createView(source, 40, 70);
+        view_series->setTimeFrame(tf);
+        
+        CHECK_FALSE(view_series->hasIntervalAtTime(TimeFrameIndex{15}, *tf));  // Not in view
+        CHECK(view_series->hasIntervalAtTime(TimeFrameIndex{55}, *tf));
+        CHECK_FALSE(view_series->hasIntervalAtTime(TimeFrameIndex{105}, *tf));  // Not in view
+    }
+    
+    SECTION("Lazy storage") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{50, 60}, EntityId{2})
+        };
+        
+        auto identity_view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(identity_view, source_data.size(), tf);
+        
+        CHECK(lazy_series->hasIntervalAtTime(TimeFrameIndex{15}, *tf));
+        CHECK_FALSE(lazy_series->hasIntervalAtTime(TimeFrameIndex{30}, *tf));
+        CHECK(lazy_series->hasIntervalAtTime(TimeFrameIndex{55}, *tf));
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries mutation throws for read-only storage", "[DigitalIntervalSeries][public-api][mutation]") {
+    auto tf = makeTestTimeFrame(200);
+    
+    SECTION("View storage - addEvent throws") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        
+        auto view_series = DigitalIntervalSeries::createView(source, 0, 100);
+        
+        // Mutation should throw or materialize internally
+        // The current implementation materializes, so this test documents behavior
+        view_series->addEvent(Interval{30, 40});
+        CHECK(view_series->size() == 2);  // Should have added after materializing
+    }
+    
+    SECTION("Lazy storage - addEvent throws") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1})
+        };
+        
+        auto view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
+        
+        // Should materialize when trying to add
+        lazy_series->addEvent(Interval{30, 40});
+        CHECK(lazy_series->size() == 2);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries size() works with all backends", "[DigitalIntervalSeries][public-api][size]") {
+    
+    SECTION("Owning storage") {
+        DigitalIntervalSeries series;
+        CHECK(series.size() == 0);
+        
+        series.addEvent(Interval{10, 20});
+        CHECK(series.size() == 1);
+        
+        series.addEvent(Interval{30, 40});
+        CHECK(series.size() == 2);
+    }
+    
+    SECTION("View storage") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{30, 40});
+        source->addEvent(Interval{50, 60});
+        source->addEvent(Interval{70, 80});
+        
+        auto view1 = DigitalIntervalSeries::createView(source, 0, 100);
+        CHECK(view1->size() == 4);
+        
+        auto view2 = DigitalIntervalSeries::createView(source, 25, 55);
+        CHECK(view2->size() == 2);  // [30,40] and [50,60]
+    }
+    
+    SECTION("Lazy storage") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2}),
+            IntervalWithId(Interval{50, 60}, EntityId{3})
+        };
+        
+        auto view = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return iwid;
+        });
+        
+        auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
+        CHECK(lazy_series->size() == 3);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries getStorageType() returns correct enum", "[DigitalIntervalSeries][public-api][storage-type]") {
+    
+    SECTION("Default is Owning") {
+        DigitalIntervalSeries series;
+        CHECK(series.getStorageType() == DigitalIntervalStorageType::Owning);
+        CHECK_FALSE(series.isView());
+        CHECK_FALSE(series.isLazy());
+    }
+    
+    SECTION("createView returns View") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        
+        auto view = DigitalIntervalSeries::createView(source, 0, 100);
+        CHECK(view->getStorageType() == DigitalIntervalStorageType::View);
+        CHECK(view->isView());
+        CHECK_FALSE(view->isLazy());
+    }
+    
+    SECTION("createFromView returns Lazy") {
+        std::vector<IntervalWithId> data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1})
+        };
+        auto lazy_view = data | std::views::transform([](IntervalWithId const& i) { return i; });
+        
+        auto lazy = DigitalIntervalSeries::createFromView(lazy_view, data.size());
+        CHECK(lazy->getStorageType() == DigitalIntervalStorageType::Lazy);
+        CHECK_FALSE(lazy->isView());
+        CHECK(lazy->isLazy());
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries materialize() from all backends", "[DigitalIntervalSeries][public-api][materialize]") {
+    
+    SECTION("Materialize from Owning (copy)") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{30, 40});
+        
+        auto materialized = source->materialize();
+        
+        CHECK(materialized->getStorageType() == DigitalIntervalStorageType::Owning);
+        CHECK(materialized->size() == 2);
+        
+        // Verify independence - modifying source doesn't affect materialized
+        source->addEvent(Interval{50, 60});
+        CHECK(source->size() == 3);
+        CHECK(materialized->size() == 2);
+    }
+    
+    SECTION("Materialize from View") {
+        auto source = std::make_shared<DigitalIntervalSeries>();
+        source->addEvent(Interval{10, 20});
+        source->addEvent(Interval{30, 40});
+        source->addEvent(Interval{50, 60});
+        
+        auto view = DigitalIntervalSeries::createView(source, 25, 55);
+        CHECK(view->isView());
+        CHECK(view->size() == 2);
+        
+        auto materialized = view->materialize();
+        
+        CHECK(materialized->getStorageType() == DigitalIntervalStorageType::Owning);
+        CHECK(materialized->size() == 2);
+        
+        // Verify data
+        std::vector<Interval> collected;
+        for (auto const& e : materialized->view()) {
+            collected.push_back(e.interval);
+        }
+        CHECK(collected[0].start == 30);
+        CHECK(collected[1].start == 50);
+    }
+    
+    SECTION("Materialize from Lazy with transform") {
+        std::vector<IntervalWithId> source_data = {
+            IntervalWithId(Interval{10, 20}, EntityId{1}),
+            IntervalWithId(Interval{30, 40}, EntityId{2})
+        };
+        
+        // Double the interval values
+        auto doubled = source_data | std::views::transform([](IntervalWithId const& iwid) {
+            return IntervalWithId(
+                Interval{iwid.interval.start * 2, iwid.interval.end * 2},
+                iwid.entity_id
+            );
+        });
+        
+        auto lazy = DigitalIntervalSeries::createFromView(doubled, source_data.size());
+        CHECK(lazy->isLazy());
+        
+        auto materialized = lazy->materialize();
+        
+        CHECK(materialized->getStorageType() == DigitalIntervalStorageType::Owning);
+        CHECK(materialized->size() == 2);
+        
+        // Verify transform was applied
+        std::vector<Interval> collected;
+        for (auto const& e : materialized->view()) {
+            collected.push_back(e.interval);
+        }
+        CHECK(collected[0].start == 20);  // 10 * 2
+        CHECK(collected[0].end == 40);    // 20 * 2
+        CHECK(collected[1].start == 60);  // 30 * 2
+        CHECK(collected[1].end == 80);    // 40 * 2
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries TimeFrame conversion in viewInRange()", "[DigitalIntervalSeries][public-api][timeframe]") {
+    // Create two different time frames
+    // Time frame A: indices 0-9 map to times 0, 10, 20, ..., 90
+    std::vector<int> times_a;
+    for (int i = 0; i < 10; ++i) {
+        times_a.push_back(i * 10);
+    }
+    auto tf_a = std::make_shared<TimeFrame>(times_a);
+    
+    // Time frame B: indices 0-9 map to times 0, 5, 10, 15, ..., 45
+    std::vector<int> times_b;
+    for (int i = 0; i < 10; ++i) {
+        times_b.push_back(i * 5);
+    }
+    auto tf_b = std::make_shared<TimeFrame>(times_b);
+    
+    SECTION("Query with same TimeFrame (no conversion)") {
+        DigitalIntervalSeries series;
+        series.setTimeFrame(tf_a);
+        series.addEvent(Interval{1, 3});   // Times 10-30 in tf_a
+        series.addEvent(Interval{5, 7});   // Times 50-70 in tf_a
+        
+        // Query in tf_a coordinates
+        auto range = series.viewInRange(TimeFrameIndex{2}, TimeFrameIndex{6}, *tf_a);
+        
+        std::vector<Interval> collected;
+        for (auto const& e : range) {
+            collected.push_back(e.interval);
+        }
+        
+        // Both intervals overlap with query [2,6]
+        CHECK(collected.size() == 2);
+    }
+    
+    SECTION("Query with different TimeFrame (requires conversion)") {
+        DigitalIntervalSeries series;
+        series.setTimeFrame(tf_a);
+        series.addEvent(Interval{2, 4});  // Indices 2-4 in tf_a = times 20-40
+        
+        // Query using tf_b coordinates
+        // In tf_b: index 4 = time 20, index 8 = time 40
+        // So querying [4, 8] in tf_b should find our interval
+        auto range = series.viewInRange(TimeFrameIndex{4}, TimeFrameIndex{8}, *tf_b);
+        
+        std::vector<Interval> collected;
+        for (auto const& e : range) {
+            collected.push_back(e.interval);
+        }
+        
+        // The conversion should find interval [2,4] from tf_a
+        CHECK(collected.size() >= 1);
+    }
+}

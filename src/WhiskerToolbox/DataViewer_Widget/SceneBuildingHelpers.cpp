@@ -184,9 +184,9 @@ CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
             series, local_layout, *master_time_frame, params.start_time, params.end_time);
 
     // Reserve space
-    batch.bounds.reserve(mapped_intervals.size());
-    batch.colors.reserve(mapped_intervals.size());
-    batch.entity_ids.reserve(mapped_intervals.size());
+    //batch.bounds.reserve(mapped_intervals.size());
+    //batch.colors.reserve(mapped_intervals.size());
+    //batch.entity_ids.reserve(mapped_intervals.size());
 
     // Extract bounds, colors, and entity IDs from mapped elements
     for (auto const & interval: mapped_intervals) {

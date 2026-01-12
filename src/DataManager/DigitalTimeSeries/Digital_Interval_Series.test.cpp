@@ -42,28 +42,28 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
 }
 
 // =============================================================================
-// Test elements() and elementsView() methods (Phase 4.4 Step 4)
+// Test view() method - primary iteration interface
 // =============================================================================
 
-TEST_CASE("DigitalIntervalSeries - elements() method", "[DataManager][elements]") {
+TEST_CASE("DigitalIntervalSeries - view() method", "[DataManager][view]") {
     DigitalIntervalSeries dis;
     dis.addEvent(TimeFrameIndex(0), TimeFrameIndex(10));
     dis.addEvent(TimeFrameIndex(20), TimeFrameIndex(30));
     dis.addEvent(TimeFrameIndex(40), TimeFrameIndex(50));
 
-    SECTION("Basic iteration with structured bindings") {
+    SECTION("Basic iteration with IntervalWithId accessors") {
         std::vector<TimeFrameIndex> collected_times;
         std::vector<Interval> collected_intervals;
         std::vector<EntityId> collected_ids;
 
-        for (auto const [time, interval_with_id] : dis.elements()) {
-            collected_times.push_back(time);
+        for (auto const interval_with_id : dis.view()) {
+            collected_times.push_back(interval_with_id.time());
             collected_intervals.push_back(interval_with_id.interval);
-            collected_ids.push_back(interval_with_id.entity_id);
+            collected_ids.push_back(interval_with_id.id());
         }
 
         REQUIRE(collected_times.size() == 3);
-        // Time should be the start of each interval
+        // time() should be the start of each interval
         REQUIRE(collected_times[0] == TimeFrameIndex(0));
         REQUIRE(collected_times[1] == TimeFrameIndex(20));
         REQUIRE(collected_times[2] == TimeFrameIndex(40));
@@ -81,41 +81,41 @@ TEST_CASE("DigitalIntervalSeries - elements() method", "[DataManager][elements]"
         DigitalIntervalSeries empty_dis;
 
         size_t count = 0;
-        for ([[maybe_unused]] auto const [time, interval] : empty_dis.elements()) {
+        for ([[maybe_unused]] auto const interval : empty_dis.view()) {
             count++;
         }
         REQUIRE(count == 0);
     }
 
-    SECTION("Pair accessors (.first, .second)") {
-        auto view = dis.elements();
-        auto it = std::ranges::begin(view);
+    SECTION("Direct member access via interval and entity_id") {
+        auto v = dis.view();
+        auto it = std::ranges::begin(v);
         auto first_element = *it;
 
-        // Test .first and .second access
-        REQUIRE(first_element.first == TimeFrameIndex(0));
-        REQUIRE(first_element.second.interval.start == 0);
-        REQUIRE(first_element.second.interval.end == 10);
+        // Test direct member access
+        REQUIRE(first_element.interval.start == 0);
+        REQUIRE(first_element.interval.end == 10);
+        REQUIRE(first_element.time() == TimeFrameIndex(0));
     }
 
     SECTION("Works with range algorithms") {
         // Count elements in range
-        auto count = std::ranges::distance(dis.elements());
+        auto count = std::ranges::distance(dis.view());
         REQUIRE(count == 3);
     }
 }
 
-TEST_CASE("DigitalIntervalSeries - elementsView() method", "[DataManager][elements]") {
+TEST_CASE("DigitalIntervalSeries - view() concept-compliant iteration", "[DataManager][view]") {
     DigitalIntervalSeries dis;
     dis.addEvent(TimeFrameIndex(100), TimeFrameIndex(200));
     dis.addEvent(TimeFrameIndex(300), TimeFrameIndex(400));
 
-    SECTION("Concept-compliant iteration") {
+    SECTION("IntervalWithId satisfies concept requirements") {
         std::vector<TimeFrameIndex> collected_times;
         std::vector<EntityId> collected_ids;
         std::vector<Interval> collected_values;
 
-        for (auto interval : dis.elementsView()) {
+        for (auto interval : dis.view()) {
             collected_times.push_back(interval.time());
             collected_ids.push_back(interval.id());
             collected_values.push_back(interval.value());
@@ -130,46 +130,5 @@ TEST_CASE("DigitalIntervalSeries - elementsView() method", "[DataManager][elemen
         REQUIRE(collected_values[0].start == 100);
         REQUIRE(collected_values[0].end == 200);
         REQUIRE(collected_values[1].start == 300);
-        REQUIRE(collected_values[1].end == 400);
-    }
-
-    SECTION("elementsView() returns same data as view()") {
-        auto view1 = dis.view();
-        auto view2 = dis.elementsView();
-
-        auto it1 = std::ranges::begin(view1);
-        auto it2 = std::ranges::begin(view2);
-
-        for (size_t i = 0; i < dis.size(); ++i, ++it1, ++it2) {
-            REQUIRE((*it1).time() == (*it2).time());
-            REQUIRE((*it1).id() == (*it2).id());
-            REQUIRE((*it1).interval.start == (*it2).interval.start);
-            REQUIRE((*it1).interval.end == (*it2).interval.end);
-        }
-    }
-}
-
-TEST_CASE("DigitalIntervalSeries - elements() consistency with view()", "[DataManager][elements]") {
-    DigitalIntervalSeries dis;
-    dis.addEvent(TimeFrameIndex(50), TimeFrameIndex(75));
-    dis.addEvent(TimeFrameIndex(100), TimeFrameIndex(150));
-
-    // elements() time should match elementsView() time
-    auto elements = dis.elements();
-    auto elements_view = dis.elementsView();
-
-    auto it_elem = std::ranges::begin(elements);
-    auto it_view = std::ranges::begin(elements_view);
-
-    for (size_t i = 0; i < dis.size(); ++i, ++it_elem, ++it_view) {
-        auto [time, interval_with_id] = *it_elem;
-        auto view_interval = *it_view;
-
-        // Time in pair should be the interval start
-        REQUIRE(time == TimeFrameIndex(interval_with_id.interval.start));
-        REQUIRE(time == view_interval.time());
-        REQUIRE(interval_with_id.interval.start == view_interval.interval.start);
-        REQUIRE(interval_with_id.interval.end == view_interval.interval.end);
-        REQUIRE(interval_with_id.entity_id == view_interval.entity_id);
-    }
+        REQUIRE(collected_values[1].end == 400);    }
 }

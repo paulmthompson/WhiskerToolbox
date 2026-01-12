@@ -1,6 +1,64 @@
 #ifndef DIGITAL_INTERVAL_SERIES_HPP
 #define DIGITAL_INTERVAL_SERIES_HPP
 
+/**
+ * @file Digital_Interval_Series.hpp
+ * @brief DigitalIntervalSeries class for managing time interval data with entity tracking
+ * 
+ * This file provides the DigitalIntervalSeries class, which represents a sorted collection
+ * of time intervals, where each interval is defined by a start and end TimeFrameIndex
+ * (indices into an accompanying TimeFrame) and an EntityId (a unique identifier).
+ * 
+ * ## Storage Backends
+ * 
+ * DigitalIntervalSeries supports three storage backends via a type-erased wrapper:
+ * 
+ * ### Owning Storage (DigitalIntervalStorageType::Owning)
+ * - **Default storage type** for newly created series
+ * - Owns interval data in Structure-of-Arrays (SoA) layout for cache efficiency
+ * - Supports all mutation operations (addEvent, removeInterval, setEventAtTime)
+ * - Intervals are always maintained in sorted order by start time
+ * - O(log n) lookups by start time, O(1) lookups by EntityId via hash map
+ * 
+ * ### View Storage (DigitalIntervalStorageType::View)
+ * - **Zero-copy filtered view** of another series
+ * - Created via createView() factory methods
+ * - References source data via index vector; no data copying
+ * - Supports filtering by time range or EntityId set
+ * - **Read-only**: mutation operations will materialize to owning storage first
+ * - Returns valid cache if view indices are contiguous
+ * 
+ * ### Lazy Storage (DigitalIntervalStorageType::Lazy)
+ * - **On-demand computation** from transform views
+ * - Created via createFromView() template method
+ * - Stores a C++20 ranges view that computes IntervalWithId on access
+ * - Useful for transform pipelines without materializing intermediate results
+ * - **Read-only**: mutation operations will materialize to owning storage first
+ * - Always returns invalid cache (forces virtual dispatch)
+ * 
+ * ## TimeFrame Integration
+ * 
+ * Each interval's start/end is stored as a TimeFrameIndex, which is an index into the
+ * series' associated TimeFrame. This enables:
+ * - Different data sources to use different sampling rates
+ * - Automatic time conversion when querying across timeframes
+ * - Efficient range queries using binary search on indices
+ * 
+ * ## Entity System Integration
+ * 
+ * Each interval can have an associated EntityId for tracking across the application.
+ * When setIdentityContext() is called with an EntityRegistry, new intervals are
+ * automatically assigned unique EntityIds. This enables:
+ * - Linking intervals to analysis results
+ * - Group-based selection and filtering
+ * - Cross-data-type entity tracking
+ * 
+ * @see DigitalIntervalStorage.hpp for storage implementation details
+ * @see IntervalWithId for the element type returned by iterators
+ * @see TimeFrame for time base management
+ * @see EntityRegistry for entity ID management
+ */
+
 #include "DigitalIntervalStorage.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "Entity/EntityTypes.hpp"
@@ -24,14 +82,58 @@ inline constexpr bool always_false_v = false;
 
 
 /**
- * @brief Digital IntervalSeries class
- *
- * A digital interval series is a series of intervals where each interval is defined by a start and end time.
- * (Compare to DigitalEventSeries which is a series of events at specific times)
- *
- * Use digital events where you wish to specify a beginning and end time for each event.
- *
- *
+ * @brief A sorted collection of time intervals with entity tracking
+ * 
+ * DigitalIntervalSeries stores intervals as (start, end, EntityId) tuples, maintaining
+ * intervals in sorted order by start time. Each interval represents a time range
+ * (compare to DigitalEventSeries for discrete time points).
+ * 
+ * ## Primary Interface
+ * 
+ * - **view()**: Returns a lazy range of IntervalWithId objects for iteration
+ * - **viewInRange()**: Returns intervals overlapping a time range (requires TimeFrame)
+ * - **hasIntervalAtTime()**: Check if any interval contains a time (requires TimeFrame)
+ * - **addEvent()/removeInterval()**: Modify intervals (owning storage only)
+ * - **createView()/createFromView()**: Create view/lazy backed series
+ * - **materialize()**: Convert any storage type to owning storage
+ * 
+ * ## Storage Backends
+ * 
+ * The class supports three storage backends (Owning, View, Lazy) that provide
+ * different performance tradeoffs. See @ref Digital_Interval_Series.hpp for details.
+ * 
+ * ## Example Usage
+ * 
+ * ```cpp
+ * // Create and populate a series
+ * DigitalIntervalSeries series;
+ * series.setTimeFrame(my_time_frame);
+ * series.addEvent(Interval{100, 200});
+ * series.addEvent(Interval{300, 400});
+ * 
+ * // Iterate all intervals
+ * for (auto interval : series.view()) {
+ *     std::cout << "Interval [" << interval.interval.start 
+ *               << ", " << interval.interval.end << "] with id " 
+ *               << interval.entity_id.getValue() << "\n";
+ * }
+ * 
+ * // Query range with timeframe
+ * for (auto interval : series.viewInRange(start, end, source_timeframe)) {
+ *     process(interval);
+ * }
+ * 
+ * // Create filtered view
+ * auto filtered = DigitalIntervalSeries::createView(
+ *     std::make_shared<DigitalIntervalSeries>(series),
+ *     50, 250);  // Intervals overlapping [50, 250]
+ * ```
+ * 
+ * @note Intervals are always sorted by start time.
+ * @note View and Lazy storage will auto-materialize on mutation.
+ * 
+ * @see IntervalWithId for element accessors (time(), id(), value())
+ * @see DigitalEventSeries for discrete event data
  */
 class DigitalIntervalSeries : public ObserverData {
 public:
@@ -39,17 +141,24 @@ public:
     /**
      * @brief Default constructor
      * 
-     * This constructor creates an empty DigitalIntervalSeries
+     * This constructor creates an empty DigitalIntervalSeries with owning storage.
      */
     DigitalIntervalSeries() = default;
 
     /**
      * @brief Constructor for DigitalIntervalSeries from a vector of intervals
      * 
-     * @param digital_vector Vector of intervals
+     * Intervals are sorted during construction. EntityIds are initialized to 0.
+     * 
+     * @param digital_vector Vector of intervals (will be sorted)
      */
     explicit DigitalIntervalSeries(std::vector<Interval> digital_vector);
 
+    /**
+     * @brief Constructor from float pairs (legacy support)
+     * 
+     * @param digital_vector Vector of (start, end) pairs as floats
+     */
     explicit DigitalIntervalSeries(std::vector<std::pair<float, float>> const & digital_vector);
 
     // =============================================================
@@ -80,63 +189,73 @@ public:
     }
 
     /**
-     * @brief Get a view of (TimeFrameIndex, IntervalWithId) pairs for iteration
+     * @brief Get intervals in a time range as a lazy view of IntervalWithId objects
      * 
-     * Provides a consistent interface matching other time series types.
-     * Returns `std::pair<TimeFrameIndex, IntervalWithId>` for backward compatibility
-     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * This is the primary range query interface. It requires a source TimeFrame
+     * parameter to enable proper time conversion when the query time base differs
+     * from the series' internal time base.
      * 
-     * Note: The TimeFrameIndex in the pair is the interval's start time,
-     * which is the canonical time point for this element.
+     * Returns intervals that overlap with the given range [start_index, stop_index].
      * 
-     * Usage: `for(auto [time, interval] : series.elements()) { ... }`
+     * @param start_index Start time index (inclusive)
+     * @param stop_index Stop time index (inclusive)
+     * @param source_time_frame The time frame that start_index/stop_index are expressed in
+     * @return Lazy view of IntervalWithId objects in the range
      * 
-     * @return A lazy range view of (TimeFrameIndex, IntervalWithId) pairs
-     * @see elementsView() for concept-compliant iteration with IntervalWithId
+     * @note If source_time_frame matches the series' time frame, no conversion occurs
+     * @note If the series has no time frame set, indices are used directly
      */
-    [[nodiscard]] auto elements() const {
+    [[nodiscard]] auto viewInRange(TimeFrameIndex start_index,
+                                   TimeFrameIndex stop_index,
+                                   TimeFrame const & source_time_frame) const {
+        auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
+        int64_t const range_start = time_range.first;
+        int64_t const range_stop = time_range.second;
         return std::views::iota(size_t{0}, size())
+             | std::views::filter([this, range_start, range_stop](size_t idx) {
+                   Interval const interval = _storage.getInterval(idx);
+                   // Overlapping: interval.start <= stop_time && interval.end >= start_time
+                   return interval.start <= range_stop && interval.end >= range_start;
+               })
              | std::views::transform([this](size_t idx) {
-                   // Fast path: use cached pointers if valid
-                   if (_cached_storage.isValid()) {
-                       auto interval = _cached_storage.getInterval(idx);
-                       return std::make_pair(
-                               TimeFrameIndex(interval.start),
-                               IntervalWithId(interval, _cached_storage.getEntityId(idx)));
-                   }
-                   // Slow path: virtual dispatch through wrapper
-                   auto interval = _storage.getInterval(idx);
-                   return std::make_pair(
-                           TimeFrameIndex(interval.start),
-                           IntervalWithId(interval, _storage.getEntityId(idx)));
+                   return IntervalWithId(_storage.getInterval(idx), _storage.getEntityId(idx));
                });
     }
 
     /**
-     * @brief Get a view of IntervalWithId objects (concept-compliant)
+     * @brief Get just the Interval values in a range as a lazy view
      * 
-     * Enables iterating over the series as a sequence of IntervalWithId objects.
-     * Each element satisfies the TimeSeriesElement and EntityElement concepts,
-     * enabling use with generic time series algorithms.
-     * 
-     * Use this method when you need concept-compliant elements for generic algorithms.
-     * Use elements() when you need backward-compatible pair iteration.
-     * 
-     * Usage:
-     * ```cpp
-     * for (auto interval : series.elementsView()) {
-     *     auto t = interval.time();     // TimeFrameIndex (start time)
-     *     auto id = interval.id();      // EntityId
-     *     auto v = interval.value();    // Interval const&
-     * }
-     * ```
-     * 
-     * @return A lazy range view of IntervalWithId objects
-     * @see IntervalWithId
-     * @see TimeSeriesConcepts.hpp for concept definitions
+     * @param start_index Start time index (inclusive)
+     * @param stop_index Stop time index (inclusive)
+     * @param source_time_frame The time frame that start_index/stop_index are expressed in
+     * @return Lazy view of Interval values in the range
      */
-    [[nodiscard]] auto elementsView() const {
-        return view();  // view() already returns IntervalWithId objects
+    [[nodiscard]] auto viewIntervalsInRange(TimeFrameIndex start_index,
+                                            TimeFrameIndex stop_index,
+                                            TimeFrame const & source_time_frame) const {
+        auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
+        int64_t const range_start = time_range.first;
+        int64_t const range_stop = time_range.second;
+        return std::views::iota(size_t{0}, size())
+             | std::views::filter([this, range_start, range_stop](size_t idx) {
+                   Interval const interval = _storage.getInterval(idx);
+                   return interval.start <= range_stop && interval.end >= range_start;
+               })
+             | std::views::transform([this](size_t idx) {
+                   return _storage.getInterval(idx);
+               });
+    }
+
+    /**
+     * @brief Check if any interval contains the specified time
+     * 
+     * @param time The time index to check
+     * @param source_time_frame The time frame that the time index is expressed in
+     * @return true if any interval contains the time, false otherwise
+     */
+    [[nodiscard]] bool hasIntervalAtTime(TimeFrameIndex time, TimeFrame const & source_time_frame) const {
+        auto converted_time = _getConvertedTime(time, source_time_frame);
+        return _hasIntervalAtTime(converted_time);
     }
 
     // ========== Setters ==========
@@ -213,20 +332,57 @@ public:
 
     // ========== Getters ==========
 
+    /**
+     * @brief Get the intervals as a const reference vector
+     * 
+     * @deprecated Use view() for iteration instead. This method forces materialization
+     *             and returns a reference to an internal cache, which has suboptimal
+     *             memory behavior for View/Lazy storage backends.
+     * 
+     * @return Const reference to vector of intervals
+     */
+    [[deprecated("Use view() instead - this forces materialization")]]
     [[nodiscard]] std::vector<Interval> const & getDigitalIntervalSeries() const;
 
+    /**
+     * @brief Check if any interval contains the specified time (legacy)
+     * 
+     * @deprecated Prefer hasIntervalAtTime(TimeFrameIndex, TimeFrame const&) which
+     *             handles cross-timeframe queries correctly. This method assumes the
+     *             time is already in the series' internal coordinate system.
+     * 
+     * @param time The time index to check (must be in series' coordinate system)
+     * @return true if any interval contains the time
+     * @see hasIntervalAtTime(TimeFrameIndex, TimeFrame const&) for cross-timeframe queries
+     */
     [[nodiscard]] bool isEventAtTime(TimeFrameIndex time) const;
 
     [[nodiscard]] size_t size() const { return _storage.size(); };
 
 
-    // Defines how to handle intervals that overlap with range boundaries
+    // ========== Range-Mode Interval Queries ==========
+
+    /**
+     * @brief Controls how intervals at range boundaries are handled
+     */
     enum class RangeMode {
-        CONTAINED,  // Only intervals fully contained within range
-        OVERLAPPING,// Any interval that overlaps with range
-        CLIP        // Clip intervals at range boundaries
+        CONTAINED,   ///< Only intervals fully contained within range
+        OVERLAPPING, ///< Any interval that overlaps with range
+        CLIP         ///< Clip intervals at range boundaries
     };
 
+    /**
+     * @brief Get intervals in a time range with configurable boundary handling
+     * 
+     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange() 
+     *             which provide lazy evaluation with TimeFrame support.
+     * 
+     * @tparam mode RangeMode::CONTAINED (default), OVERLAPPING, or CLIP
+     * @param start_time Start time value
+     * @param stop_time Stop time value
+     * @return Lazy view of Interval objects (or vector for CLIP mode)
+     * @see viewIntervalsInRange for TimeFrame-aware alternative
+     */
     template<RangeMode mode = RangeMode::CONTAINED>
     auto getIntervalsInRange(
             int64_t start_time,
@@ -259,6 +415,19 @@ public:
         }
     }
 
+    /**
+     * @brief Get intervals in a time range with TimeFrame conversion
+     * 
+     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange() 
+     *             which provide lazy evaluation.
+     * 
+     * @tparam mode RangeMode::CONTAINED (default), OVERLAPPING, or CLIP
+     * @param start_time Start time index in source_timeframe
+     * @param stop_time Stop time index in source_timeframe
+     * @param source_timeframe TimeFrame the indices are expressed in
+     * @return Lazy view of Interval objects (or vector for CLIP mode)
+     * @see viewIntervalsInRange for preferred alternative
+     */
     template<RangeMode mode = RangeMode::CONTAINED>
     auto getIntervalsInRange(
             TimeFrameIndex start_time,
@@ -303,6 +472,16 @@ public:
         _identity_registry = registry;
     }
     void rebuildAllEntityIds();
+
+    /**
+     * @brief Get the entity IDs as a const reference vector
+     * 
+     * @deprecated Use view() and access .id() on each element instead. This method
+     *             forces materialization and maintains an internal cache.
+     * 
+     * @return Const reference to vector of EntityIds
+     */
+    [[deprecated("Use view() and access .id() on elements instead")]]
     [[nodiscard]] std::vector<EntityId> const & getEntityIds() const;
 
     // ========== Entity Lookup Methods ==========
@@ -339,39 +518,21 @@ public:
      */
     [[nodiscard]] std::vector<std::pair<EntityId, Interval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
-    /**
-     * @brief Get index information for multiple EntityIds.
-     * 
-     * Returns both the EntityId and its corresponding index in the data vector
-     * for batch operations.
-     * 
-     * @param entity_ids Vector of EntityIds to look up
-     * @return Vector of tuples containing {EntityId, index} for found entities
-     */
-    [[nodiscard]] std::vector<std::pair<EntityId, int>> getIndexInfoByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
     // ========== Intervals with EntityIDs ==========
 
     /**
-     * @brief Get intervals in range with their EntityIDs using TimeFrameIndex
+     * @brief Get intervals in range with their EntityIDs (legacy, no TimeFrame)
+     * 
+     * @deprecated Use viewInRange(TimeFrameIndex, TimeFrameIndex, TimeFrame const&) for
+     *             lazy iteration with proper TimeFrame handling. This method assumes
+     *             indices are already in the series' coordinate system.
      * 
      * @param start_time Start time index for the range
      * @param stop_time Stop time index for the range
      * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
+     * @see viewInRange for lazy view-based alternative with TimeFrame support
      */
-    [[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const;
-
-    /**
-     * @brief Get intervals in range with their EntityIDs using time frame conversion
-     * 
-     * @param start_index Start time index in source timeframe
-     * @param stop_index Stop time index in source timeframe
-     * @param source_time_frame Source timeframe for the indices
-     * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
-     */
-    [[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start_index,
-                                                                         TimeFrameIndex stop_index,
-                                                                         TimeFrame const & source_time_frame) const;
+    //[[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const;
 
     // ========== Storage Type Queries ==========
 
@@ -555,6 +716,65 @@ private:
     [[nodiscard]] std::pair<int64_t, int64_t> _getTimeRangeFromIndices(
             TimeFrameIndex start_index,
             TimeFrameIndex stop_index) const;
+
+    // ========== Private Range Query Helpers ==========
+
+    /**
+     * @brief Convert time range from source time frame to internal time values
+     * 
+     * @param start_index Start time index in source_time_frame
+     * @param stop_index Stop time index in source_time_frame
+     * @param source_time_frame The time frame the indices are expressed in
+     * @return Pair of (start_time, stop_time) as int64_t values for internal use
+     */
+    [[nodiscard]] std::pair<int64_t, int64_t> _getConvertedTimeRange(
+            TimeFrameIndex start_index,
+            TimeFrameIndex stop_index,
+            TimeFrame const & source_time_frame) const {
+        // Fast path: same time frame or no conversion needed
+        if (&source_time_frame == _time_frame.get() || !_time_frame.get()) {
+            return {start_index.getValue(), stop_index.getValue()};
+        }
+        // Convert to our time frame
+        auto [target_start, target_stop] = convertTimeFrameRange(
+                start_index, stop_index, source_time_frame, *_time_frame);
+        return {target_start.getValue(), target_stop.getValue()};
+    }
+
+    /**
+     * @brief Convert a single time index from source time frame to internal time value
+     * 
+     * @param time_index Time index in source_time_frame
+     * @param source_time_frame The time frame the index is expressed in
+     * @return int64_t time value for internal use
+     */
+    [[nodiscard]] int64_t _getConvertedTime(
+            TimeFrameIndex time_index,
+            TimeFrame const & source_time_frame) const {
+        if (&source_time_frame == _time_frame.get() || !_time_frame.get()) {
+            return time_index.getValue();
+        }
+        // Convert using the same logic as range conversion
+        auto [target, _] = convertTimeFrameRange(
+                time_index, time_index, source_time_frame, *_time_frame);
+        return target.getValue();
+    }
+
+    /**
+     * @brief Internal implementation of hasIntervalAtTime without TimeFrame conversion
+     * 
+     * @param time The time value to check (already in internal coordinates)
+     * @return true if any interval contains the time
+     */
+    [[nodiscard]] bool _hasIntervalAtTime(int64_t time) const {
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            Interval const& interval = _storage.getInterval(i);
+            if (interval.start <= time && time <= interval.end) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 // =============================================================================
