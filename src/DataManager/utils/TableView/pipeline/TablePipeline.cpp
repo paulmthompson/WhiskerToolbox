@@ -488,7 +488,7 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                 if (source_timeframe && source_timeframe->getTotalFrameCount() > 0) {
                     TimeFrameIndex start_idx(0);
                     TimeFrameIndex end_idx(source_timeframe->getTotalFrameCount() - 1);
-                    auto event_times = event_source->getEventsInRange(start_idx,
+                    auto event_times = event_source->viewTimesInRange(start_idx,
                                                                       end_idx,
                                                                       *source_timeframe);
 

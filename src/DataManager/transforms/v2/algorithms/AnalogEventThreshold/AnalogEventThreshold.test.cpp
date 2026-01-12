@@ -10,6 +10,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
+#include <catch2/matchers/catch_matchers_range_equals.hpp>
 
 // Builder-based test fixtures
 #include "fixtures/scenarios/analog/threshold_scenarios.hpp"
@@ -43,6 +44,10 @@ namespace {
     static RegisterAnalogEventThreshold register_analog_event_threshold;
 }
 
+auto compare_pred = [](EventWithId const & a, TimeFrameIndex const & b) {
+    return a.time() == b;
+};
+
 // ============================================================================
 // Tests: Algorithm Correctness (using builder-based scenarios)
 // ============================================================================
@@ -74,7 +79,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
             "AnalogEventThreshold", *ats, params, ctx);
         
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
         
         // Check progress was reported
         REQUIRE(progress_val == 100);
@@ -91,7 +97,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
             "AnalogEventThreshold", *ats, params, ctx);
         
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Negative threshold, no lockout") {
@@ -104,7 +111,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
             "AnalogEventThreshold", *ats, params, ctx);
         
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+            Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Negative threshold, with lockout") {
@@ -117,7 +125,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
             "AnalogEventThreshold", *ats, params, ctx);
         
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Absolute threshold, no lockout") {
@@ -130,7 +139,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
             "AnalogEventThreshold", *ats, params, ctx);
         
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Absolute threshold, with lockout") {
@@ -143,7 +153,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
             "AnalogEventThreshold", *ats, params, ctx);
         
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("No events expected (threshold too high)") {
@@ -155,7 +166,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
         result_events = registry.executeContainerTransform<AnalogTimeSeries, DigitalEventSeries, AnalogEventThresholdParams>(
             "AnalogEventThreshold", *ats, params, ctx);
         
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
     }
     
     SECTION("All events expected (threshold very low, no lockout)") {
@@ -169,7 +180,8 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Happy Path",
         
         expected_events = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), 
                           TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
 }
 
@@ -191,7 +203,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
             "AnalogEventThreshold", *ats, params, ctx);
         
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
     }
     
     SECTION("Lockout time larger than series duration") {
@@ -204,9 +216,9 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
             "AnalogEventThreshold", *ats, params, ctx);
         
         // Should only get first event
-        REQUIRE(result_events->getEventSeries().size() == 1);
+        REQUIRE(result_events->size() == 1);
     }
-    
+
     SECTION("Cancellation support") {
         auto ats = analog_scenarios::all_events_low_threshold();
         params.threshold_value = 0.1f;
@@ -221,7 +233,7 @@ TEST_CASE("V2 Container Transform: Analog Event Threshold - Edge Cases",
             "AnalogEventThreshold", *ats, params, ctx);
         
         // Should return empty due to cancellation
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->view().empty());
     }
 }
 
@@ -431,7 +443,8 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         
         // Verify the event detection results
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Execute V2 pipeline with lockout") {
@@ -476,7 +489,8 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         
         // With lockout of 150, event at 300 should be skipped
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Execute V2 pipeline with negative threshold") {
@@ -520,7 +534,8 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         REQUIRE(result_events != nullptr);
         
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Execute V2 pipeline with absolute threshold") {
@@ -564,7 +579,8 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         REQUIRE(result_events != nullptr);
         
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto const & event) { return event.time(); }),
+         Catch::Matchers::RangeEquals(expected_events));
     }
     
     SECTION("Execute V2 pipeline - no events expected (high threshold)") {
@@ -606,7 +622,7 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         
         auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_high");
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
     }
     
     SECTION("Execute V2 pipeline - empty signal") {
@@ -648,7 +664,7 @@ TEST_CASE("V2 Container Transform: AnalogEventThreshold - load_data_from_json_co
         
         auto result_events = dm.getData<DigitalEventSeries>("v2_detected_events_empty");
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
     }
     
     // Cleanup

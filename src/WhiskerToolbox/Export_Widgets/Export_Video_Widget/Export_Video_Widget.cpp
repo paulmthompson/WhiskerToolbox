@@ -707,10 +707,9 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         TimeFrameIndex start_index(start_frame);
         TimeFrameIndex end_index(end_frame);
 
-        auto events_with_ids = series->getEventsWithIdsInRange(
-                start_index,
-                end_index,
-                *master_time_frame);
+        auto events_with_ids = series->viewInRange(start_index,
+                                                   end_index,
+                                                   *master_time_frame);
 
         std::cout << "Processing " << events_with_ids.size() << " events from series " << audio_source.key << std::endl;
 

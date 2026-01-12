@@ -20,20 +20,6 @@ DigitalEventSeries::DigitalEventSeries(std::vector<TimeFrameIndex> event_vector)
     _cacheOptimizationPointers();
 }
 
-std::vector<TimeFrameIndex> const & DigitalEventSeries::getEventSeries() const {
-    // Build legacy vector on demand
-    if (!_legacy_vector_valid) {
-        _legacy_event_vector.clear();
-        _legacy_event_vector.reserve(_storage.size());
-        
-        for (size_t i = 0; i < _storage.size(); ++i) {
-            _legacy_event_vector.push_back(_storage.getEvent(i));
-        }
-        _legacy_vector_valid = true;
-    }
-    return _legacy_event_vector;
-}
-
 void DigitalEventSeries::addEvent(TimeFrameIndex const event_time) {
     // Check if storage is mutable (owning)
     auto* owning = _storage.tryGetMutableOwning();
@@ -57,8 +43,6 @@ void DigitalEventSeries::addEvent(TimeFrameIndex const event_time) {
     bool const added = owning->addEvent(event_time, entity_id);
     
     if (added) {
-        _legacy_vector_valid = false;
-        _legacy_entity_id_valid = false;
         _cacheOptimizationPointers();
         notifyObservers();
     }
@@ -73,8 +57,6 @@ bool DigitalEventSeries::removeEvent(TimeFrameIndex const event_time) {
     bool const removed = owning->removeEvent(event_time);
     
     if (removed) {
-        _legacy_vector_valid = false;
-        _legacy_entity_id_valid = false;
         _cacheOptimizationPointers();
         notifyObservers();
     }
@@ -89,8 +71,6 @@ void DigitalEventSeries::clear() {
     }
     
     owning->clear();
-    _legacy_vector_valid = false;
-    _legacy_entity_id_valid = false;
     _cacheOptimizationPointers();
     notifyObservers();
 }
@@ -103,7 +83,6 @@ void DigitalEventSeries::rebuildAllEntityIds() {
     auto* owning = _storage.tryGetMutableOwning();
     if (!owning) {
         // For view/lazy storage, just invalidate the cache
-        _legacy_entity_id_valid = false;
         return;
     }
     
@@ -111,7 +90,6 @@ void DigitalEventSeries::rebuildAllEntityIds() {
         // Clear all entity IDs to zero
         std::vector<EntityId> zero_ids(owning->size(), EntityId{0});
         owning->setEntityIds(std::move(zero_ids));
-        _legacy_entity_id_valid = false;
         _cacheOptimizationPointers();
         return;
     }
@@ -131,54 +109,7 @@ void DigitalEventSeries::rebuildAllEntityIds() {
     }
     
     owning->setEntityIds(std::move(new_ids));
-    _legacy_entity_id_valid = false;
     _cacheOptimizationPointers();
-}
-
-std::vector<EntityId> const& DigitalEventSeries::getEntityIds() const {
-    // Build legacy entity ID vector on demand
-    if (!_legacy_entity_id_valid) {
-        _legacy_entity_id_vector.clear();
-        _legacy_entity_id_vector.reserve(_storage.size());
-        
-        for (size_t i = 0; i < _storage.size(); ++i) {
-            _legacy_entity_id_vector.push_back(_storage.getEntityId(i));
-        }
-        _legacy_entity_id_valid = true;
-    }
-    return _legacy_entity_id_vector;
-}
-
-// ========== Events with EntityIDs ==========
-
-std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-    auto [start_idx, end_idx] = _storage.getTimeRange(start_time, stop_time);
-    
-    std::vector<EventWithId> result;
-    if (end_idx > start_idx) {
-        result.reserve(end_idx - start_idx);
-        
-        for (size_t i = start_idx; i < end_idx; ++i) {
-            result.emplace_back(_storage.getEvent(i), _storage.getEntityId(i));
-        }
-    }
-    return result;
-}
-
-std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_index,
-                                                                     TimeFrameIndex stop_index,
-                                                                     TimeFrame const & source_time_frame) const {
-    if (&source_time_frame == _time_frame.get()) {
-        return getEventsWithIdsInRange(start_index, stop_index);
-    }
-
-    // If either timeframe is null, fall back to original behavior
-    if (!_time_frame.get()) {
-        return getEventsWithIdsInRange(start_index, stop_index);
-    }
-
-    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, source_time_frame, *_time_frame);
-    return getEventsWithIdsInRange(target_start_index, target_stop_index);
 }
 
 // ========== View Factory Methods ==========

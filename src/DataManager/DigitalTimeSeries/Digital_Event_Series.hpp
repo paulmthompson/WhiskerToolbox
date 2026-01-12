@@ -171,13 +171,6 @@ public:
     }
 
     /**
-     * @brief Get all events as a materialized vector (deprecated)
-     * @deprecated Use view() for lazy iteration instead
-     */
-    [[deprecated("Use view() for lazy iteration instead")]]
-    [[nodiscard]] std::vector<TimeFrameIndex> const & getEventSeries() const;
-
-    /**
      * @brief Add a new event at the specified time
      * 
      * Maintains sorted order. Duplicate times are rejected (no-op).
@@ -251,82 +244,6 @@ public:
                });
     }
 
-    // ========== Range Queries (Deprecated - Legacy Compatibility) ==========
-
-    /**
-     * @brief Get events in a time range (deprecated)
-     * @deprecated Use viewTimesInRange() with explicit TimeFrame parameter instead
-     */
-    [[deprecated("Use viewTimesInRange() with TimeFrame parameter instead")]]
-    [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-        auto [start_idx, end_idx] = _storage.getTimeRange(start_time, stop_time);
-        return std::views::iota(start_idx, end_idx) | std::views::transform([this](size_t idx) {
-                   return _storage.getEvent(idx);
-               });
-    }
-
-    /**
-     * @brief Get events in a time range with time frame conversion (deprecated)
-     * @deprecated Use viewTimesInRange() instead
-     */
-    [[deprecated("Use viewTimesInRange() instead")]]
-    [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_index,
-                                        TimeFrameIndex stop_index,
-                                        TimeFrame const & source_time_frame) const {
-        return viewTimesInRange(start_index, stop_index, source_time_frame);
-    }
-
-    /**
-     * @brief Get events as a materialized vector (deprecated)
-     * @deprecated Use viewTimesInRange() and materialize to vector if needed
-     */
-    [[deprecated("Use viewTimesInRange() with ranges::to<vector>() if materialization needed")]]
-    std::vector<TimeFrameIndex> getEventsAsVector(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-        auto [start_idx, end_idx] = _storage.getTimeRange(start_time, stop_time);
-
-        std::vector<TimeFrameIndex> result;
-        if (end_idx > start_idx) {
-            result.reserve(end_idx - start_idx);
-
-            for (size_t i = start_idx; i < end_idx; ++i) {
-                result.push_back(_storage.getEvent(i));
-            }
-        }
-        return result;
-    }
-
-    // ========== Events with EntityIDs (Deprecated - Use viewInRange instead) ==========
-
-    /**
-     * @brief Get events in range with their EntityIDs (deprecated)
-     * 
-     * @deprecated Use viewInRange() with explicit TimeFrame parameter instead.
-     *             viewInRange() returns a lazy view instead of materializing a vector.
-     * 
-     * @param start_time Start time index for the range
-     * @param stop_time Stop time index for the range
-     * @return std::vector<EventWithId> Vector of events with their EntityIDs
-     */
-    [[deprecated("Use viewInRange() with TimeFrame parameter instead")]]
-    [[nodiscard]] std::vector<EventWithId> getEventsWithIdsInRange(TimeFrameIndex start_time,
-                                                                   TimeFrameIndex stop_time) const;
-
-    /**
-     * @brief Get events in range with their EntityIDs (deprecated)
-     * 
-     * @deprecated Use viewInRange() instead. viewInRange() returns a lazy view
-     *             instead of materializing a vector.
-     * 
-     * @param start_index Start time index in source timeframe
-     * @param stop_index Stop time index in source timeframe
-     * @param source_time_frame Source timeframe for the indices
-     * @return std::vector<EventWithId> Vector of events with their EntityIDs
-     */
-    [[deprecated("Use viewInRange() instead")]]
-    [[nodiscard]] std::vector<EventWithId> getEventsWithIdsInRange(TimeFrameIndex start_index,
-                                                                   TimeFrameIndex stop_index,
-                                                                   TimeFrame const & source_time_frame) const;
-
     // ========== Time Frame ==========
 
     /**
@@ -366,12 +283,6 @@ public:
      * Requires setIdentityContext() to have been called first.
      */
     void rebuildAllEntityIds();
-
-    /**
-     * @brief Get all EntityIds as a vector
-     * @return Const reference to vector of EntityIds (parallel to event times)
-     */
-    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const;
 
     // ========== Storage Type Queries ==========
 
@@ -472,12 +383,6 @@ private:
 
     // Cache management
     void _cacheOptimizationPointers();
-
-    // Legacy interface support
-    mutable std::vector<TimeFrameIndex> _legacy_event_vector;
-    mutable bool _legacy_vector_valid{false};
-    mutable std::vector<EntityId> _legacy_entity_id_vector;
-    mutable bool _legacy_entity_id_valid{false};
 
     // Identity
     std::string _identity_data_key;

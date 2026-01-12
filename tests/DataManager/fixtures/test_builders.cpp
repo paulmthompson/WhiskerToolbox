@@ -185,8 +185,7 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
             .build();
         
         REQUIRE(events != nullptr);
-        auto event_times = events->getEventSeries();
-        REQUIRE(event_times.size() == 4);
+        REQUIRE(events->size() == 4);
     }
     
     SECTION("Event series with interval") {
@@ -195,8 +194,7 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
             .build();
         
         REQUIRE(events != nullptr);
-        auto event_times = events->getEventSeries();
-        REQUIRE(event_times.size() == 11); // 0, 10, 20, ..., 100
+        REQUIRE(events->size() == 11); // 0, 10, 20, ..., 100
     }
     
     SECTION("Interval series") {

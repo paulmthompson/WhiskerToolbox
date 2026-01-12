@@ -1539,8 +1539,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         REQUIRE(behavior_source != nullptr);
         REQUIRE(neuron1_source != nullptr);
         
-        auto source_neuron1_entity_ids = neuron1_source->getEntityIds();
-        std::cout << "Source neuron1 data has " << source_neuron1_entity_ids.size() << " EntityIDs" << std::endl;
+        auto source_neuron1_view = neuron1_source->view();
         
         // Create row selector from behavior intervals
         auto behavior_time_frame = dm.getTime(TimeKey("behavior_time"));
@@ -1588,11 +1587,6 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         std::cout << "Table extracted " << table_entity_ids.size() << " unique EntityIDs" << std::endl;
         
-        // Debug: Print source EntityIDs
-        INFO("Source EntityIDs from Neuron1Spikes:");
-        for (size_t i = 0; i < source_neuron1_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_neuron1_entity_ids[i].id);
-        }
         
         // Debug: Print table EntityIDs
         INFO("Table EntityIDs from EventInIntervalComputer:");
@@ -1603,9 +1597,10 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         // Verify that extracted EntityIDs are a subset of source EntityIDs
         // (Not all source EntityIDs may appear in the table due to interval filtering)
         for (const auto& table_entity_id : table_entity_ids) {
-            bool found = std::find(source_neuron1_entity_ids.begin(), 
-                                 source_neuron1_entity_ids.end(), 
-                                 table_entity_id) != source_neuron1_entity_ids.end();
+            bool found =  std::ranges::find_if(source_neuron1_view, 
+                                        [table_entity_id](const auto& event) {
+                                            return event.id() == table_entity_id;
+                                        }) != source_neuron1_view.end();
             REQUIRE(found);
             INFO("✓ Table EntityID " << table_entity_id.id << " found in source data");
         }
@@ -1623,9 +1618,9 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         // Additional verification: check EntityID-to-event mapping
         auto event_data = table.getColumnValues<std::vector<float>>("Neuron1_Events");
-        auto source_events = neuron1_source->getEventSeries();
+        auto source_events = neuron1_source->view();
         
-        std::cout << "Source has " << source_events.size() << " events total" << std::endl;
+        std::cout << "Source has " << neuron1_source->size() << " events total" << std::endl;
         
         for (size_t row = 0; row < table.getRowCount(); ++row) {
             auto row_events = event_data[row];
@@ -1641,15 +1636,10 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
                 
                 // Find this event in the source data
                 bool event_found = false;
-                for (size_t src_idx = 0; src_idx < source_events.size(); ++src_idx) {
-                    if (std::abs(source_events[src_idx].getValue() - static_cast<int64_t>(event_value)) < 1) {
-                        // Found the event, verify the EntityID matches
-                        if (src_idx < source_neuron1_entity_ids.size()) {
-                            // Note: This is a simplified check. The actual mapping might be more complex
-                            // due to time frame conversions and filtering
-                            INFO("Event " << event_value << " at row " << row << " has EntityID " 
-                                 << entity_id.id << ", source index " << src_idx << " has EntityID " 
-                                 << source_neuron1_entity_ids[src_idx].id);
+                for (auto source_event : source_events) {
+                    if (std::abs(source_event.time().getValue() - static_cast<int64_t>(event_value)) < 1) {
+
+                        if (source_event.id() == entity_id) {
                             event_found = true;
                             break;
                         }

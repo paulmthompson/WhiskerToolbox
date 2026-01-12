@@ -1353,8 +1353,7 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
     } else if (source_type == "Events") {
         auto event_series = _data_manager->getData<DigitalEventSeries>(source_name_str);
         if (event_series) {
-            auto events = event_series->getEventSeries();
-            info_text += QString(" - %1 events").arg(events.size());
+            info_text += QString(" - %1 events").arg(event_series->size());
         }
     } else if (source_type == "Intervals") {
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
@@ -1421,7 +1420,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
                 return nullptr;
             }
 
-            auto events = event_series->getEventSeries();
+            auto events = event_series->view();
             auto timeframe_key = _data_manager->getTimeKey(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
@@ -1432,7 +1431,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             // Convert events to TimeFrameIndex
             std::vector<TimeFrameIndex> timestamps;
             for (auto const & event: events) {
-                timestamps.push_back(event);
+                timestamps.push_back(event.time());
             }
 
             return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe_obj);

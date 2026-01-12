@@ -54,8 +54,12 @@ std::unordered_set<EntityId> extractEntityIdsFromRagged(std::shared_ptr<T> const
 // Helper to extract all EntityIds from types with getEntityIds() method
 template<typename T>
 std::unordered_set<EntityId> extractEntityIdsFromVector(std::shared_ptr<T> const & data) {
-    auto const & ids = data->getEntityIds();
-    return std::unordered_set<EntityId>(ids.begin(), ids.end());
+    auto const & ids = data->view();
+    std::unordered_set<EntityId> result;
+    for (auto const & item : ids) {
+        result.insert(item.id());
+    }
+    return result;
 }
 
 // Helper to count elements at a specific time for RaggedTimeSeries
@@ -111,11 +115,10 @@ std::vector<EntityId> DataManagerEntityDataSource::getEntityIds(
 
         case DM_DataType::DigitalEvent:
             if (auto data = _dm->getData<DigitalEventSeries>(data_key)) {
-                auto const & events = data->getEventSeries();
-                auto const & entity_ids = data->getEntityIds();
-                for (std::size_t i = 0; i < events.size(); ++i) {
-                    if (events[i] == time && i < entity_ids.size()) {
-                        return {entity_ids[i]};
+                auto const & events = data->view();
+                for (auto const & event : events) {
+                    if (event.time() == time) {
+                        return {event.id()};
                     }
                 }
             }
@@ -179,11 +182,10 @@ std::vector<EntityId> DataManagerEntityDataSource::getAllEntityIdsAtTime(
         case DM_DataType::DigitalEvent:
             if (auto data = _dm->getData<DigitalEventSeries>(data_key)) {
                 std::vector<EntityId> result;
-                auto const & events = data->getEventSeries();
-                auto const & entity_ids = data->getEntityIds();
-                for (std::size_t i = 0; i < events.size(); ++i) {
-                    if (events[i] == time && i < entity_ids.size()) {
-                        result.push_back(entity_ids[i]);
+                auto const & events = data->view();
+                for (auto const & event : events) {
+                    if (event.time() == time) {
+                        result.push_back(event.id());
                     }
                 }
                 return result;
@@ -310,8 +312,8 @@ std::size_t DataManagerEntityDataSource::getElementCount(
         case DM_DataType::DigitalEvent:
             if (auto data = _dm->getData<DigitalEventSeries>(data_key)) {
                 std::size_t count = 0;
-                for (auto const & event : data->getEventSeries()) {
-                    if (event == time) {
+                for (auto const & event : data->view()) {
+                    if (event.time() == time) {
                         ++count;
                     }
                 }

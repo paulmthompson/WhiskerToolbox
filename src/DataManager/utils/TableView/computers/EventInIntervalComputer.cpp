@@ -82,9 +82,9 @@ std::pair<std::vector<bool>, ColumnEntityIds> EventInIntervalComputer<bool>::com
 
         entity_ids.push_back(std::vector<EntityId>());
 
-        auto events_with_ids = m_source->getEventsWithIdsInRange(interval.start,
-                                                                 interval.end,
-                                                                 *destinationTimeFrame);
+        auto events_with_ids = m_source->viewInRange(interval.start,
+                                                     interval.end,
+                                                     *destinationTimeFrame);
 
         results.push_back(!events_with_ids.empty());
         for (auto const & event_with_id: events_with_ids) {
@@ -132,9 +132,9 @@ std::pair<std::vector<int>, ColumnEntityIds> EventInIntervalComputer<int>::compu
 
     for (auto const & interval: intervals) {
 
-        auto events_with_ids = m_source->getEventsWithIdsInRange(interval.start,
-                                                                 interval.end,
-                                                                 *destinationTimeFrame);
+        auto events_with_ids = m_source->viewInRange(interval.start,
+                                                     interval.end,
+                                                     *destinationTimeFrame);
 
         results.push_back(static_cast<int>(events_with_ids.size()));
         entity_ids.push_back(std::vector<EntityId>());
@@ -195,9 +195,9 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
         results.push_back(std::vector<float>());
         entity_ids.push_back(std::vector<EntityId>());
 
-        auto events_with_ids = m_source->getEventsWithIdsInRange(interval.start,
-                                                                 interval.end,
-                                                                 *destinationTimeFrame);
+        auto events_with_ids = m_source->viewInRange(interval.start,
+                                                     interval.end,
+                                                     *destinationTimeFrame);
 
         for (auto const & event_with_id: events_with_ids) {
             results.back().push_back(static_cast<float>(event_with_id.event_time.getValue()));

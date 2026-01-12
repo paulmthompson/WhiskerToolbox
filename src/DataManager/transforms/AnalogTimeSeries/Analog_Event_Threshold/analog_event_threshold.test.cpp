@@ -1,6 +1,7 @@
 
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_vector.hpp"
+#include "catch2/matchers/catch_matchers_range_equals.hpp"
 #include <fmt/core.h>
 
 #include "DataManager.hpp"
@@ -43,12 +44,14 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
 
         progress_val = -1;
         call_count = 0;
         result_events = event_threshold(ats.get(), params, cb);
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
         REQUIRE(progress_val == 100);
         REQUIRE(call_count == static_cast<int>(ats->getNumSamples() + 1));
     }
@@ -61,12 +64,14 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
 
         progress_val = -1;
         call_count = 0;
         result_events = event_threshold(ats.get(), params, cb);
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
         REQUIRE(progress_val == 100);
         REQUIRE(call_count == static_cast<int>(ats->getNumSamples() + 1));
     }
@@ -79,7 +84,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("Negative threshold, with lockout") {
@@ -90,7 +96,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("Absolute threshold, no lockout") {
@@ -101,7 +108,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("Absolute threshold, with lockout") {
@@ -112,7 +120,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(200), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("No events expected (threshold too high)") {
@@ -122,7 +131,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
         params.lockoutTime = 0.0;
 
         result_events = event_threshold(ats.get(), params);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
     }
 
     SECTION("All events expected (threshold very low, no lockout)") {
@@ -133,7 +142,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][a
 
         result_events = event_threshold(ats.get(), params);
         expected_events = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("Progress callback detailed check") {
@@ -179,13 +189,13 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
 
         result_events = event_threshold(ats, params);
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
 
         progress_val = -1;
         call_count = 0;
         result_events = event_threshold(ats, params, cb);
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
         REQUIRE(progress_val == -1); // Free function returns before calling cb for null ats
         REQUIRE(call_count == 0);
     }
@@ -198,13 +208,13 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
 
         result_events = event_threshold(ats.get(), params);
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
 
         progress_val = -1;
         call_count = 0;
         result_events = event_threshold(ats.get(), params, cb);
         REQUIRE(result_events != nullptr);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
         REQUIRE(progress_val == 100);
         REQUIRE(call_count == 1); // Called once with 100
     }
@@ -217,7 +227,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
 
         result_events = event_threshold(ats.get(), params);
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(100)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("Events exactly at threshold value") {
@@ -228,13 +239,15 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
 
         result_events = event_threshold(ats.get(), params);
         std::vector<TimeFrameIndex> expected_events_pos = {TimeFrameIndex(300)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events_pos));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events_pos));
 
         params.direction = ThresholdParams::ThresholdDirection::NEGATIVE;
         params.thresholdValue = 0.5;
         result_events = event_threshold(ats.get(), params);
         std::vector<TimeFrameIndex> expected_events_neg = {};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events_neg));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events_neg));
     }
 
     SECTION("Timestamps are zero or start from zero") {
@@ -245,7 +258,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
 
         result_events = event_threshold(ats.get(), params);
         std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(0), TimeFrameIndex(20)};
-        REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+        Catch::Matchers::RangeEquals(expected_events));
     }
 
     SECTION("Unknown threshold direction (should return empty and log error)") {
@@ -254,7 +268,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[tra
         params.direction = static_cast<ThresholdParams::ThresholdDirection>(99); // Invalid enum
 
         result_events = event_threshold(ats.get(), params);
-        REQUIRE(result_events->getEventSeries().empty());
+        REQUIRE(result_events->size() == 0);
     }
 }
 
@@ -290,7 +304,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - JSON pipeline", "[transforms
     REQUIRE(event_series != nullptr);
 
     std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-    REQUIRE_THAT(event_series->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    REQUIRE_THAT(event_series->view() | std::views::transform([](auto e) { return e.time(); }), 
+    Catch::Matchers::RangeEquals(expected_events));
 }
 
 TEST_CASE("Data Transform: Analog Event Threshold - Parameter Factory", "[transforms][analog_event_threshold][factory]") {
@@ -371,7 +386,8 @@ TEST_CASE("Data Transform: Analog Event Threshold - load_data_from_json_config",
     REQUIRE(result_events != nullptr);
     
     std::vector<TimeFrameIndex> expected_events = {TimeFrameIndex(200), TimeFrameIndex(400), TimeFrameIndex(500)};
-    REQUIRE_THAT(result_events->getEventSeries(), Catch::Matchers::Equals(expected_events));
+    REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }), 
+    Catch::Matchers::RangeEquals(expected_events));
     
     std::filesystem::remove_all(test_dir);
 }
