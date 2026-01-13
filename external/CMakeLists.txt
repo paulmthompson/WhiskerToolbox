@@ -22,7 +22,7 @@ if(ENABLE_ORTOOLS)
         FetchContent_Declare(
             ortools
             GIT_REPOSITORY https://github.com/google/or-tools.git
-            GIT_TAG        stable
+            GIT_TAG         v9.14
         )
         set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
         set(BUILD_DEPS OFF)
@@ -59,7 +59,7 @@ if(ENABLE_ORTOOLS)
         FetchContent_Declare(
             ortools
             GIT_REPOSITORY https://github.com/google/or-tools.git
-            GIT_TAG        stable
+            GIT_TAG         v9.14
         )
         set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
         set(BUILD_DEPS OFF)
@@ -96,7 +96,7 @@ if(ENABLE_ORTOOLS)
       FetchContent_Declare(
           ortools
           GIT_REPOSITORY https://github.com/google/or-tools.git
-          GIT_TAG        stable
+          GIT_TAG         v9.14
         )
       set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
       set(BUILD_DEPS OFF)
