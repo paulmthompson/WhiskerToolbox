@@ -1,12 +1,12 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
-#include "AnalogDataStorage.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
+#include "storage/AnalogDataStorage.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -314,8 +314,8 @@ public:
      * @see TimeSeriesConcepts.hpp for concept definitions
      */
     struct TimeValuePoint {
-        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};  // Public for backward compatibility
-        float _value{0.0f};                                   // Prefixed to avoid collision with value() method
+        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};// Public for backward compatibility
+        float _value{0.0f};                                // Prefixed to avoid collision with value() method
 
         TimeValuePoint() = default;
         TimeValuePoint(TimeFrameIndex time_idx, float val)

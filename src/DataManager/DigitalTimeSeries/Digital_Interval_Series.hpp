@@ -59,12 +59,12 @@
  * @see EntityRegistry for entity ID management
  */
 
-#include "DigitalIntervalStorage.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "storage/DigitalIntervalStorage.hpp"
 
 #include <cstdint>
 #include <iostream>

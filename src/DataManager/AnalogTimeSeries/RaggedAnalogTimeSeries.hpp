@@ -2,10 +2,10 @@
 #define RAGGED_ANALOG_TIME_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
-#include "RaggedAnalogStorage.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
+#include "storage/RaggedAnalogStorage.hpp"
 
 #include <map>
 #include <memory>
@@ -388,11 +388,13 @@ public:
      * @see TimeSeriesConcepts.hpp for concept definitions
      */
     struct FlatElement {
-        TimeFrameIndex _time{TimeFrameIndex(0)};   // Prefixed to avoid collision with time() method
-        float _value{0.0f};                         // Prefixed to avoid collision with value() method
+        TimeFrameIndex _time{TimeFrameIndex(0)};// Prefixed to avoid collision with time() method
+        float _value{0.0f};                     // Prefixed to avoid collision with value() method
 
         FlatElement() = default;
-        FlatElement(TimeFrameIndex t, float v) : _time(t), _value(v) {}
+        FlatElement(TimeFrameIndex t, float v)
+            : _time(t),
+              _value(v) {}
 
         // ========== Standardized Accessors (for TimeSeriesElement/ValueElement concepts) ==========
 

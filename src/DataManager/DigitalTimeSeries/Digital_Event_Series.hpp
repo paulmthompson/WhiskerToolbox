@@ -59,11 +59,11 @@
  * @see EntityRegistry for entity ID management
  */
 
-#include "DigitalEventStorage.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "storage/DigitalEventStorage.hpp"
 
 #include <compare>
 #include <memory>
@@ -155,8 +155,7 @@ public:
      * Allows iterating over EventWithId objects directly.
      */
     [[nodiscard]] auto view() const {
-        return std::views::iota(size_t{0}, size())
-             | std::views::transform([this](size_t idx) {
+        return std::views::iota(size_t{0}, size()) | std::views::transform([this](size_t idx) {
                    // Fast path: use cached pointers if valid
                    if (_cached_storage.isValid()) {
                        return EventWithId(

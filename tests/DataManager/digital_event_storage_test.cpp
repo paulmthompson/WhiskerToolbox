@@ -11,7 +11,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "DigitalTimeSeries/DigitalEventStorage.hpp"
+#include "DigitalTimeSeries/storage/DigitalEventStorage.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
