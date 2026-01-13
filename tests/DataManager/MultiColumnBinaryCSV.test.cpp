@@ -61,14 +61,14 @@ TEST_CASE("MultiColumnBinaryCSV - Load intervals from real file", "[DataManager]
     
     // The v0 column is all 1s in the test data, so we should get exactly 1 interval
     // covering the entire data range
-    auto const & intervals = result->getDigitalIntervalSeries();
+    auto const & intervals = result->view();
     
     // Should have at least one interval
-    CHECK(intervals.size() >= 1);
+    CHECK(result->size() >= 1);
     
     // First interval should start at 0
     if (!intervals.empty()) {
-        CHECK(intervals[0].start == 0);
+        CHECK(intervals[0].value().start == 0);
     }
 }
 
@@ -142,7 +142,7 @@ TEST_CASE("MultiColumnBinaryCSV - Zero column (no intervals)", "[DataManager][Di
     REQUIRE(result != nullptr);
     
     // The v1 column is all 0s, so we should get no intervals
-    auto const & intervals = result->getDigitalIntervalSeries();
+    auto const & intervals = result->view();
     CHECK(intervals.empty());
 }
 

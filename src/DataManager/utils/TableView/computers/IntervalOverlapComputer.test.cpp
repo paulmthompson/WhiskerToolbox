@@ -1510,14 +1510,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto stimulus_data = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
         REQUIRE(stimulus_data != nullptr);
 
-        auto source_stimulus_entity_ids = stimulus_data->getEntityIds();
-        std::cout << "Source stimulus data has " << source_stimulus_entity_ids.size() << " EntityIDs" << std::endl;
-
-        // Debug: Print source EntityIDs
-        INFO("Source EntityIDs from StimulusIntervals:");
-        for (size_t i = 0; i < source_stimulus_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_stimulus_entity_ids[i].id);
-        }
+        auto source_stimulus_entity_ids = stimulus_data->view();
+        std::cout << "Source stimulus data has " << stimulus_data->size() << " EntityIDs" << std::endl;
 
         // Debug: Print table EntityIDs
         INFO("Table EntityIDs from IntervalOverlapComputer:");
@@ -1528,9 +1522,10 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Verify that extracted EntityIDs are a subset of source EntityIDs
         // (Not all source EntityIDs may appear in the table due to overlap filtering)
         for (auto const & table_entity_id: table_entity_ids) {
-            bool found = std::find(source_stimulus_entity_ids.begin(),
-                                   source_stimulus_entity_ids.end(),
-                                   table_entity_id) != source_stimulus_entity_ids.end();
+            bool found = std::ranges::find_if(source_stimulus_entity_ids,
+                                             [&](IntervalWithId const & interval_with_id) {
+                                                 return interval_with_id.id() == table_entity_id;
+                                             }) != source_stimulus_entity_ids.end();
             REQUIRE(found);
             INFO("✓ Table EntityID " << table_entity_id.id << " found in source data");
         }

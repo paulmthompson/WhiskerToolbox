@@ -31,7 +31,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
     }
 
     // Get interval data
-    auto const & interval_data = intervals.getDigitalIntervalSeries();
+    auto const & interval_data = intervals.view();
     if (interval_data.empty()) {
         if (ctx.progress) ctx.progress(100);
         return std::make_shared<DigitalEventSeries>();
@@ -46,18 +46,18 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
     if (params.isWithinIntervals()) {
         // Search within each interval: [start, end]
         for (auto const & interval: interval_data) {
-            search_ranges.emplace_back(interval.start, interval.end);
+            search_ranges.emplace_back(interval.value().start, interval.value().end);
         }
     } else {
         // Search between interval starts: [start_i, start_{i+1})
-        for (size_t i = 0; i < interval_data.size() - 1; ++i) {
-            search_ranges.emplace_back(interval_data[i].start,
-                                       interval_data[i + 1].start - 1);
+        for (size_t i = 0; i < intervals.size() - 1; ++i) {
+            search_ranges.emplace_back(interval_data[i].value().start,
+                                       interval_data[i + 1].value().start - 1);
         }
         // For the last interval, search from its start to its end
         if (!interval_data.empty()) {
             auto const & last_interval = interval_data.back();
-            search_ranges.emplace_back(last_interval.start, last_interval.end);
+            search_ranges.emplace_back(last_interval.value().start, last_interval.value().end);
         }
     }
 

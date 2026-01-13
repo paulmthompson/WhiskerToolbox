@@ -173,8 +173,7 @@ public:
      * Allows iterating over IntervalWithId objects directly.
      */
     [[nodiscard]] auto view() const {
-        return std::views::iota(size_t{0}, size())
-             | std::views::transform([this](size_t idx) {
+        return std::views::iota(size_t{0}, size()) | std::views::transform([this](size_t idx) {
                    // Fast path: use cached pointers if valid
                    if (_cached_storage.isValid()) {
                        return IntervalWithId(
@@ -211,13 +210,12 @@ public:
         auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
         int64_t const range_start = time_range.first;
         int64_t const range_stop = time_range.second;
-        return std::views::iota(size_t{0}, size())
-             | std::views::filter([this, range_start, range_stop](size_t idx) {
+        return std::views::iota(size_t{0}, size()) | std::views::filter([this, range_start, range_stop](size_t idx) {
                    Interval const interval = _storage.getInterval(idx);
                    // Overlapping: interval.start <= stop_time && interval.end >= start_time
                    return interval.start <= range_stop && interval.end >= range_start;
-               })
-             | std::views::transform([this](size_t idx) {
+               }) |
+               std::views::transform([this](size_t idx) {
                    return IntervalWithId(_storage.getInterval(idx), _storage.getEntityId(idx));
                });
     }
@@ -236,12 +234,11 @@ public:
         auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
         int64_t const range_start = time_range.first;
         int64_t const range_stop = time_range.second;
-        return std::views::iota(size_t{0}, size())
-             | std::views::filter([this, range_start, range_stop](size_t idx) {
+        return std::views::iota(size_t{0}, size()) | std::views::filter([this, range_start, range_stop](size_t idx) {
                    Interval const interval = _storage.getInterval(idx);
                    return interval.start <= range_stop && interval.end >= range_start;
-               })
-             | std::views::transform([this](size_t idx) {
+               }) |
+               std::views::transform([this](size_t idx) {
                    return _storage.getInterval(idx);
                });
     }
@@ -296,18 +293,17 @@ public:
             _setEventAtTimeInternal(TimeFrameIndex(times[i]), events[i]);
         }
         _cacheOptimizationPointers();
-        _invalidateLegacyCache();
         notifyObservers();
     }
 
     template<typename T>
     void createIntervalsFromBool(std::vector<T> const & bool_vector) {
         // Clear existing storage and rebuild
-        auto* owning = _storage.tryGetMutableOwning();
+        auto * owning = _storage.tryGetMutableOwning();
         if (owning) {
             owning->clear();
         }
-        
+
         bool in_interval = false;
         int start = 0;
         for (size_t i = 0; i < bool_vector.size(); ++i) {
@@ -324,38 +320,12 @@ public:
         if (in_interval && owning) {
             owning->addInterval(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)}, EntityId{0});
         }
-        
+
         _cacheOptimizationPointers();
-        _invalidateLegacyCache();
         notifyObservers();
     }
 
     // ========== Getters ==========
-
-    /**
-     * @brief Get the intervals as a const reference vector
-     * 
-     * @deprecated Use view() for iteration instead. This method forces materialization
-     *             and returns a reference to an internal cache, which has suboptimal
-     *             memory behavior for View/Lazy storage backends.
-     * 
-     * @return Const reference to vector of intervals
-     */
-    [[deprecated("Use view() instead - this forces materialization")]]
-    [[nodiscard]] std::vector<Interval> const & getDigitalIntervalSeries() const;
-
-    /**
-     * @brief Check if any interval contains the specified time (legacy)
-     * 
-     * @deprecated Prefer hasIntervalAtTime(TimeFrameIndex, TimeFrame const&) which
-     *             handles cross-timeframe queries correctly. This method assumes the
-     *             time is already in the series' internal coordinate system.
-     * 
-     * @param time The time index to check (must be in series' coordinate system)
-     * @return true if any interval contains the time
-     * @see hasIntervalAtTime(TimeFrameIndex, TimeFrame const&) for cross-timeframe queries
-     */
-    [[nodiscard]] bool isEventAtTime(TimeFrameIndex time) const;
 
     [[nodiscard]] size_t size() const { return _storage.size(); };
 
@@ -366,54 +336,10 @@ public:
      * @brief Controls how intervals at range boundaries are handled
      */
     enum class RangeMode {
-        CONTAINED,   ///< Only intervals fully contained within range
-        OVERLAPPING, ///< Any interval that overlaps with range
-        CLIP         ///< Clip intervals at range boundaries
+        CONTAINED,  ///< Only intervals fully contained within range
+        OVERLAPPING,///< Any interval that overlaps with range
+        CLIP        ///< Clip intervals at range boundaries
     };
-
-    /**
-     * @brief Get intervals in a time range with configurable boundary handling
-     * 
-     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange() 
-     *             which provide lazy evaluation with TimeFrame support.
-     * 
-     * @tparam mode RangeMode::CONTAINED (default), OVERLAPPING, or CLIP
-     * @param start_time Start time value
-     * @param stop_time Stop time value
-     * @return Lazy view of Interval objects (or vector for CLIP mode)
-     * @see viewIntervalsInRange for TimeFrame-aware alternative
-     */
-    template<RangeMode mode = RangeMode::CONTAINED>
-    auto getIntervalsInRange(
-            int64_t start_time,
-            int64_t stop_time) const {
-
-        if constexpr (mode == RangeMode::CONTAINED) {
-            // Direct storage access like DigitalEventSeries - returns by value
-            return std::views::iota(size_t{0}, _storage.size())
-                   | std::views::filter([this, start_time, stop_time](size_t idx) {
-                         Interval const interval = _storage.getInterval(idx);
-                         return interval.start >= start_time && interval.end <= stop_time;
-                     })
-                   | std::views::transform([this](size_t idx) {
-                         return _storage.getInterval(idx);
-                     });
-        } else if constexpr (mode == RangeMode::OVERLAPPING) {
-            return std::views::iota(size_t{0}, _storage.size())
-                   | std::views::filter([this, start_time, stop_time](size_t idx) {
-                         Interval const interval = _storage.getInterval(idx);
-                         return interval.start <= stop_time && interval.end >= start_time;
-                     })
-                   | std::views::transform([this](size_t idx) {
-                         return _storage.getInterval(idx);
-                     });
-        } else if constexpr (mode == RangeMode::CLIP) {
-            // For CLIP mode, we return a vector since we need to modify intervals
-            return _getIntervalsAsVectorClipped(start_time, stop_time);
-        } else {
-            return std::views::empty<Interval>;
-        }
-    }
 
     /**
      * @brief Get intervals in a time range with TimeFrame conversion
@@ -434,12 +360,12 @@ public:
             TimeFrameIndex stop_time,
             TimeFrame const & source_timeframe) const {
         if (&source_timeframe == _time_frame.get()) {
-            return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+            return _getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
         }
 
         // If either timeframe is null, fall back to original behavior
         if (!_time_frame.get()) {
-            return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+            return _getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
         }
 
         // Use helper function for time frame conversion
@@ -447,7 +373,7 @@ public:
                                                                              stop_time,
                                                                              source_timeframe,
                                                                              *_time_frame);
-        return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
+        return _getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
     }
 
     // ========== Time Frame ==========
@@ -473,17 +399,6 @@ public:
     }
     void rebuildAllEntityIds();
 
-    /**
-     * @brief Get the entity IDs as a const reference vector
-     * 
-     * @deprecated Use view() and access .id() on each element instead. This method
-     *             forces materialization and maintains an internal cache.
-     * 
-     * @return Const reference to vector of EntityIds
-     */
-    [[deprecated("Use view() and access .id() on elements instead")]]
-    [[nodiscard]] std::vector<EntityId> const & getEntityIds() const;
-
     // ========== Entity Lookup Methods ==========
 
     /**
@@ -498,16 +413,6 @@ public:
     [[nodiscard]] std::optional<Interval> getIntervalByEntityId(EntityId entity_id) const;
 
     /**
-     * @brief Find the index for a specific EntityId.
-     * 
-     * Returns the index in the interval vector associated with the given EntityId.
-     * 
-     * @param entity_id The EntityId to look up
-     * @return Optional containing the index if found, std::nullopt otherwise
-     */
-    [[nodiscard]] std::optional<int> getIndexByEntityId(EntityId entity_id) const;
-
-    /**
      * @brief Get all intervals that match the given EntityIds.
      * 
      * This method is optimized for batch lookup of multiple EntityIds,
@@ -517,22 +422,6 @@ public:
      * @return Vector of pairs containing {EntityId, Interval} for found entities
      */
     [[nodiscard]] std::vector<std::pair<EntityId, Interval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
-
-    // ========== Intervals with EntityIDs ==========
-
-    /**
-     * @brief Get intervals in range with their EntityIDs (legacy, no TimeFrame)
-     * 
-     * @deprecated Use viewInRange(TimeFrameIndex, TimeFrameIndex, TimeFrame const&) for
-     *             lazy iteration with proper TimeFrame handling. This method assumes
-     *             indices are already in the series' coordinate system.
-     * 
-     * @param start_time Start time index for the range
-     * @param stop_time Stop time index for the range
-     * @return std::vector<IntervalWithId> Vector of intervals with their EntityIDs
-     * @see viewInRange for lazy view-based alternative with TimeFrame support
-     */
-    //[[nodiscard]] std::vector<IntervalWithId> getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const;
 
     // ========== Storage Type Queries ==========
 
@@ -644,27 +533,57 @@ public:
 
 private:
     DigitalIntervalStorageWrapper _storage;
-    DigitalIntervalStorageCache _cached_storage;  // Fast-path cache
+    DigitalIntervalStorageCache _cached_storage;// Fast-path cache
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
-    
-    // Lazy-built cache for legacy API (getDigitalIntervalSeries)
-    mutable std::vector<Interval> _legacy_data_cache;
-    mutable bool _legacy_data_cache_valid{false};
-    mutable std::vector<EntityId> _legacy_entity_id_cache;
-    mutable bool _legacy_entity_id_cache_valid{false};
-    void _invalidateLegacyCache() { 
-        _legacy_data_cache_valid = false; 
-        _legacy_entity_id_cache_valid = false;
-    }
-    void _rebuildLegacyCacheIfNeeded() const;
-    void _rebuildEntityIdCacheIfNeeded() const;
-    
+
     // Cache management
     void _cacheOptimizationPointers();
 
-    void _addEventInternal(Interval new_interval);  // Core mutation logic
+    void _addEventInternal(Interval new_interval);// Core mutation logic
     void _setEventAtTimeInternal(TimeFrameIndex time, bool event);
     void _removeEventAtTimeInternal(TimeFrameIndex time);
+
+    /**
+     * @brief Get intervals in a time range with configurable boundary handling
+     * 
+     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange() 
+     *             which provide lazy evaluation with TimeFrame support.
+     * 
+     * @tparam mode RangeMode::CONTAINED (default), OVERLAPPING, or CLIP
+     * @param start_time Start time value
+     * @param stop_time Stop time value
+     * @return Lazy view of Interval objects (or vector for CLIP mode)
+     * @see viewIntervalsInRange for TimeFrame-aware alternative
+     */
+    template<RangeMode mode = RangeMode::CONTAINED>
+    auto _getIntervalsInRange(
+            int64_t start_time,
+            int64_t stop_time) const {
+
+        if constexpr (mode == RangeMode::CONTAINED) {
+            // Direct storage access like DigitalEventSeries - returns by value
+            return std::views::iota(size_t{0}, _storage.size()) | std::views::filter([this, start_time, stop_time](size_t idx) {
+                       Interval const interval = _storage.getInterval(idx);
+                       return interval.start >= start_time && interval.end <= stop_time;
+                   }) |
+                   std::views::transform([this](size_t idx) {
+                       return _storage.getInterval(idx);
+                   });
+        } else if constexpr (mode == RangeMode::OVERLAPPING) {
+            return std::views::iota(size_t{0}, _storage.size()) | std::views::filter([this, start_time, stop_time](size_t idx) {
+                       Interval const interval = _storage.getInterval(idx);
+                       return interval.start <= stop_time && interval.end >= start_time;
+                   }) |
+                   std::views::transform([this](size_t idx) {
+                       return _storage.getInterval(idx);
+                   });
+        } else if constexpr (mode == RangeMode::CLIP) {
+            // For CLIP mode, we return a vector since we need to modify intervals
+            return _getIntervalsAsVectorClipped(start_time, stop_time);
+        } else {
+            return std::views::empty<Interval>;
+        }
+    }
 
     // Helper method to handle clipping intervals at range boundaries
     std::vector<Interval> _getIntervalsAsVectorClipped(
@@ -768,7 +687,7 @@ private:
      */
     [[nodiscard]] bool _hasIntervalAtTime(int64_t time) const {
         for (size_t i = 0; i < _storage.size(); ++i) {
-            Interval const& interval = _storage.getInterval(i);
+            Interval const & interval = _storage.getInterval(i);
             if (interval.start <= time && time <= interval.end) {
                 return true;
             }

@@ -22,7 +22,7 @@ arma::Row<double> convertToMlpackArray(
     arma::Row<double> result(length, arma::fill::zeros);
 
     for (std::size_t i = 0; i < length; ++i) {
-        if (series->isEventAtTime(TimeFrameIndex(timestamps[i]))) {
+        if (series->hasIntervalAtTime(TimeFrameIndex(timestamps[i]), *(series->getTimeFrame()))) {
             result[i] = 1.0;
         }
     }

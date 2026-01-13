@@ -444,9 +444,9 @@ TEST_CASE("DigitalIntervalSeries storage integration", "[DigitalIntervalSeries][
         
         CHECK(series.size() == 2);
         // Intervals should be sorted
-        auto const& data = series.getDigitalIntervalSeries();
-        CHECK(data[0].start == 10);
-        CHECK(data[1].start == 30);
+        auto const& data = series.view();
+        CHECK(data[0].value().start == 10);
+        CHECK(data[1].value().start == 30);
     }
     
     SECTION("Mutations sync storage") {
@@ -496,24 +496,27 @@ TEST_CASE("DigitalIntervalSeries view creation with DataManager", "[DigitalInter
     REQUIRE(source->size() == 4);
     
     SECTION("Create view by EntityIds") {
-        auto const& ids = source->getEntityIds();
-        REQUIRE(ids.size() == 4);
+        auto const& ids = source->view();
+        REQUIRE(source->size() == 4);
         
         // Verify all IDs are unique
-        std::unordered_set<EntityId> all_ids(ids.begin(), ids.end());
+        std::unordered_set<EntityId> all_ids;
+        for (auto const& item : ids) {
+            all_ids.insert(item.id());
+        }
         REQUIRE(all_ids.size() == 4);
         
         // Filter to keep only intervals at indices 0, 2
-        std::unordered_set<EntityId> filter_ids{ids[0], ids[2]};
+        std::unordered_set<EntityId> filter_ids{ids[0].id(), ids[2].id()};
         auto view = DigitalIntervalSeries::createView(source, filter_ids);
         
         CHECK(view->isView());
         CHECK(view->size() == 2);
         
         // Verify the intervals are the right ones
-        auto const& interval_vec = view->getDigitalIntervalSeries();
-        CHECK(interval_vec[0].start == 10);
-        CHECK(interval_vec[1].start == 50);
+        auto const& interval_vec = view->view();
+        CHECK(interval_vec[0].value().start == 10);
+        CHECK(interval_vec[1].value().start == 50);
     }
 }
 
@@ -536,13 +539,13 @@ TEST_CASE("DigitalIntervalSeries materialization", "[DigitalIntervalSeries][mate
     CHECK(materialized->size() == view->size());
     
     // Verify data was copied
-    auto const& view_data = view->getDigitalIntervalSeries();
-    auto const& mat_data = materialized->getDigitalIntervalSeries();
+    auto const& view_data = view->view();
+    auto const& mat_data = materialized->view();
     
-    REQUIRE(view_data.size() == mat_data.size());
-    for (size_t i = 0; i < view_data.size(); ++i) {
-        CHECK(view_data[i].start == mat_data[i].start);
-        CHECK(view_data[i].end == mat_data[i].end);
+    REQUIRE(view->size() == materialized->size());
+    for (size_t i = 0; i < view->size(); ++i) {
+        CHECK(view_data[i].value().start == mat_data[i].value().start);
+        CHECK(view_data[i].value().end == mat_data[i].value().end);
     }
 }
 
@@ -802,13 +805,13 @@ TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalInterval
         CHECK(materialized->size() == 3);
         
         // Verify values were computed correctly
-        auto const& intervals = materialized->getDigitalIntervalSeries();
-        CHECK(intervals[0].start == 20);   // 10 * 2
-        CHECK(intervals[0].end == 40);     // 20 * 2
-        CHECK(intervals[1].start == 60);   // 30 * 2
-        CHECK(intervals[1].end == 80);     // 40 * 2
-        CHECK(intervals[2].start == 100);  // 50 * 2
-        CHECK(intervals[2].end == 120);    // 60 * 2
+        auto const& intervals = materialized->view();
+        CHECK(intervals[0].value().start == 20);   // 10 * 2
+        CHECK(intervals[0].value().end == 40);     // 20 * 2
+        CHECK(intervals[1].value().start == 60);   // 30 * 2
+        CHECK(intervals[1].value().end == 80);     // 40 * 2
+        CHECK(intervals[2].value().start == 100);  // 50 * 2
+        CHECK(intervals[2].value().end == 120);    // 60 * 2
     }
     
     SECTION("Materialize preserves EntityIds") {
@@ -824,10 +827,10 @@ TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalInterval
         auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
         auto materialized = lazy_series->materialize();
         
-        auto const& entity_ids = materialized->getEntityIds();
-        REQUIRE(entity_ids.size() == 2);
-        CHECK(entity_ids[0] == EntityId{100});
-        CHECK(entity_ids[1] == EntityId{200});
+        auto const& entity_ids = materialized->view();
+        REQUIRE(materialized->size() == 2);
+        CHECK(entity_ids[0].id() == EntityId{100});
+        CHECK(entity_ids[1].id() == EntityId{200});
     }
 }
 
@@ -895,11 +898,11 @@ TEST_CASE("DigitalIntervalSeries::createFromView from existing series", "[Digita
         
         CHECK(final_series->size() == 2);
         
-        auto const& intervals = final_series->getDigitalIntervalSeries();
-        CHECK(intervals[0].start == 200);
-        CHECK(intervals[0].end == 400);
-        CHECK(intervals[1].start == 600);
-        CHECK(intervals[1].end == 800);
+        auto const& intervals = final_series->view();
+        CHECK(intervals[0].value().start == 200);
+        CHECK(intervals[0].value().end == 400);
+        CHECK(intervals[1].value().start == 600);
+        CHECK(intervals[1].value().end == 800);
     }
 }
 

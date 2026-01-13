@@ -126,13 +126,11 @@ std::vector<EntityId> DataManagerEntityDataSource::getEntityIds(
 
         case DM_DataType::DigitalInterval:
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
-                auto const & intervals = data->getDigitalIntervalSeries();
-                auto const & entity_ids = data->getEntityIds();
-                for (std::size_t i = 0; i < intervals.size(); ++i) {
-                    if (TimeFrameIndex(intervals[i].start) <= time &&
-                        time <= TimeFrameIndex(intervals[i].end) &&
-                        i < entity_ids.size()) {
-                        return {entity_ids[i]};
+                auto const & intervals = data->view();
+                for (auto const & interval : intervals) {
+                    if (TimeFrameIndex(interval.value().start) <= time &&
+                        time <= TimeFrameIndex(interval.value().end)) {
+                        return {interval.id()};
                     }
                 }
             }
@@ -195,13 +193,11 @@ std::vector<EntityId> DataManagerEntityDataSource::getAllEntityIdsAtTime(
         case DM_DataType::DigitalInterval:
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
                 std::vector<EntityId> result;
-                auto const & intervals = data->getDigitalIntervalSeries();
-                auto const & entity_ids = data->getEntityIds();
-                for (std::size_t i = 0; i < intervals.size(); ++i) {
-                    if (TimeFrameIndex(intervals[i].start) <= time &&
-                        time <= TimeFrameIndex(intervals[i].end) &&
-                        i < entity_ids.size()) {
-                        result.push_back(entity_ids[i]);
+                auto const & intervals = data->view();
+                for (auto const & interval : intervals) {
+                    if (TimeFrameIndex(interval.value().start) <= time &&
+                        time <= TimeFrameIndex(interval.value().end)) {
+                        result.push_back(interval.id());
                     }
                 }
                 return result;
@@ -324,8 +320,8 @@ std::size_t DataManagerEntityDataSource::getElementCount(
         case DM_DataType::DigitalInterval:
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
                 std::size_t count = 0;
-                for (auto const & interval : data->getDigitalIntervalSeries()) {
-                    if (TimeFrameIndex(interval.start) <= time && time <= TimeFrameIndex(interval.end)) {
+                for (auto const & interval : data->view()) {
+                    if (TimeFrameIndex(interval.value().start) <= time && time <= TimeFrameIndex(interval.value().end)) {
                         ++count;
                     }
                 }

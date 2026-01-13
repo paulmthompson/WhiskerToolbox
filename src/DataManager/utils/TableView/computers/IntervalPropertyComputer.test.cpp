@@ -873,22 +873,13 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         REQUIRE(behavior_data != nullptr);
 
         // Get the EntityIDs directly from the source data
-        auto source_entity_ids = behavior_data->getEntityIds();
-        REQUIRE(source_entity_ids.size() == 5);// Should match the number of intervals
-
-        // Debug: Print source EntityIDs to see if they're valid
-        INFO("Source EntityIDs from DigitalIntervalSeries:");
-        for (size_t i = 0; i < source_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_entity_ids[i].id);
-            REQUIRE(source_entity_ids[i] != EntityId(0));// Verify source EntityIDs are valid
-        }
+        auto source_entity_ids = behavior_data->view();
+        REQUIRE(behavior_data->size() == 5);// Should match the number of intervals
 
         // Verify that TableView EntityIDs match the source EntityIDs
-        REQUIRE(start_entity_ids.size() == source_entity_ids.size());
-        for (size_t i = 0; i < source_entity_ids.size(); ++i) {
-            REQUIRE(start_entity_ids[i] == source_entity_ids[i]);
-            INFO("EntityID " << i << ": Source=" << source_entity_ids[i].id
-                             << ", TableView=" << start_entity_ids[i].id << " ✓");
+        REQUIRE(start_entity_ids.size() == std::ranges::size(source_entity_ids));
+        for (size_t i = 0; i < std::ranges::size(source_entity_ids); ++i) {
+            REQUIRE(start_entity_ids[i] == source_entity_ids[i].id());
         }
 
         INFO("✓ EntityID round-trip successful: " << start_entity_ids.size() << " EntityIDs match source data");

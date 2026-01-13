@@ -42,51 +42,6 @@ DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>
 
 // ========== Getters ==========
 
-std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() const {
-    _rebuildLegacyCacheIfNeeded();
-    return _legacy_data_cache;
-}
-
-void DigitalIntervalSeries::_rebuildLegacyCacheIfNeeded() const {
-    if (_legacy_data_cache_valid) {
-        return;
-    }
-    
-    _legacy_data_cache.clear();
-    _legacy_data_cache.reserve(_storage.size());
-    for (size_t i = 0; i < _storage.size(); ++i) {
-        _legacy_data_cache.push_back(_storage.getInterval(i));
-    }
-    _legacy_data_cache_valid = true;
-}
-
-void DigitalIntervalSeries::_rebuildEntityIdCacheIfNeeded() const {
-    if (_legacy_entity_id_cache_valid) {
-        return;
-    }
-    
-    _legacy_entity_id_cache.clear();
-    _legacy_entity_id_cache.reserve(_storage.size());
-    for (size_t i = 0; i < _storage.size(); ++i) {
-        _legacy_entity_id_cache.push_back(_storage.getEntityId(i));
-    }
-    _legacy_entity_id_cache_valid = true;
-}
-
-std::vector<EntityId> const & DigitalIntervalSeries::getEntityIds() const {
-    _rebuildEntityIdCacheIfNeeded();
-    return _legacy_entity_id_cache;
-}
-
-bool DigitalIntervalSeries::isEventAtTime(TimeFrameIndex const time) const {
-    for (size_t i = 0; i < _storage.size(); ++i) {
-        if (is_contained(_storage.getInterval(i), time.getValue())) {
-            return true;
-        }
-    }
-    return false;
-}
-
 void DigitalIntervalSeries::addEvent(Interval new_interval) {
     auto* owning = _storage.tryGetMutableOwning();
     if (!owning) {
@@ -121,7 +76,6 @@ void DigitalIntervalSeries::addEvent(Interval new_interval) {
     }
     
     _cacheOptimizationPointers();
-    _invalidateLegacyCache();
     notifyObservers();
 }
 
@@ -159,7 +113,6 @@ void DigitalIntervalSeries::_addEventInternal(Interval new_interval) {
 void DigitalIntervalSeries::setEventAtTime(TimeFrameIndex time, bool const event) {
     _setEventAtTimeInternal(time, event);
     _cacheOptimizationPointers();
-    _invalidateLegacyCache();
     notifyObservers();
 }
 
@@ -179,7 +132,6 @@ bool DigitalIntervalSeries::removeInterval(Interval const & interval) {
         if (owning->getInterval(i) == interval) {
             owning->removeAt(i);
             _cacheOptimizationPointers();
-            _invalidateLegacyCache();
             notifyObservers();
             return true;
         }
@@ -222,7 +174,6 @@ size_t DigitalIntervalSeries::removeIntervals(std::vector<Interval> const & inte
     if (removed_count > 0) {
         owning->sort();
         _cacheOptimizationPointers();
-        _invalidateLegacyCache();
         notifyObservers();
     }
 
@@ -285,7 +236,6 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
             owning->setEntityId(i, EntityId{0});
         }
     }
-    _invalidateLegacyCache();
 }
 
 // ========== Entity Lookup Methods ==========
@@ -309,25 +259,6 @@ std::optional<Interval> DigitalIntervalSeries::getIntervalByEntityId(EntityId en
     return _storage.getInterval(static_cast<size_t>(local_index));
 }
 
-std::optional<int> DigitalIntervalSeries::getIndexByEntityId(EntityId entity_id) const {
-    if (!_identity_registry) {
-        return std::nullopt;
-    }
-
-    auto descriptor = _identity_registry->get(entity_id);
-    if (!descriptor || descriptor->kind != EntityKind::IntervalEntity || descriptor->data_key != _identity_data_key) {
-        return std::nullopt;
-    }
-
-    int const local_index = descriptor->local_index;
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= _storage.size()) {
-        return std::nullopt;
-    }
-
-    return local_index;
-}
-
 std::vector<std::pair<EntityId, Interval>> DigitalIntervalSeries::getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const {
     std::vector<std::pair<EntityId, Interval>> result;
     result.reserve(entity_ids.size());
@@ -342,24 +273,7 @@ std::vector<std::pair<EntityId, Interval>> DigitalIntervalSeries::getIntervalsBy
     return result;
 }
 
-// ========== Intervals with EntityIDs ==========
 
-/*
-std::vector<IntervalWithId> DigitalIntervalSeries::getIntervalsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-    
-    std::vector<IntervalWithId> result;
-
-    for (size_t i = 0; i < _storage.size(); ++i) {
-        Interval const interval = _storage.getInterval(i);
-        // Check if interval overlaps with the range (using overlapping logic)
-        if (interval.start <= stop_time.getValue() && interval.end >= start_time.getValue()) {
-            EntityId const entity_id = _storage.getEntityId(i);
-            result.emplace_back(interval, entity_id);
-        }
-    }
-    return result;
-}
-*/
 std::pair<int64_t, int64_t> DigitalIntervalSeries::_getTimeRangeFromIndices(
         TimeFrameIndex start_index,
         TimeFrameIndex stop_index) const {
@@ -375,24 +289,20 @@ std::pair<int64_t, int64_t> DigitalIntervalSeries::_getTimeRangeFromIndices(
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {
-    auto const & events = digital_series->getDigitalIntervalSeries();
+    auto const & intervals = digital_series->view();
 
-    // Check if sorted
-    for (size_t i = 1; i < events.size(); ++i) {
-        if (events[i].start < events[i - 1].start) {
-            throw std::runtime_error("DigitalIntervalSeries is not sorted");
-        }
-    }
     int closest_index = -1;
-    for (size_t i = 0; i < events.size(); ++i) {
-        if (events[i].start <= time.getValue()) {
+    int i = 0;
+    for (auto const & interval : intervals) {
+        if (interval.value().start <= time.getValue()) {
             closest_index = static_cast<int>(i);
-            if (time.getValue() <= events[i].end) {
+            if (time.getValue() <= interval.value().end) {
                 return static_cast<int>(i);
             }
         } else {
             break;
         }
+        ++i;
     }
     return closest_index;
 }

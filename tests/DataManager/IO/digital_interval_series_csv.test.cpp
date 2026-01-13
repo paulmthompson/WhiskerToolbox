@@ -89,16 +89,16 @@ protected:
     
     void verifyIntervalDataEquality(const DigitalIntervalSeries& loaded_data) const {
         // Get intervals from both original and loaded data
-        const std::vector<Interval>& original_intervals = original_interval_data->getDigitalIntervalSeries();
-        const std::vector<Interval>& loaded_intervals = loaded_data.getDigitalIntervalSeries();
+        auto original_intervals = original_interval_data->view();
+        auto loaded_intervals = loaded_data.view();
         
         // Check number of intervals
-        REQUIRE(loaded_intervals.size() == original_intervals.size());
+        REQUIRE(loaded_data.size() == original_interval_data->size());
         
         // Check each interval
-        for (size_t i = 0; i < original_intervals.size(); ++i) {
-            REQUIRE(original_intervals[i].start == loaded_intervals[i].start);
-            REQUIRE(original_intervals[i].end == loaded_intervals[i].end);
+        for (size_t i = 0; i < original_interval_data->size(); ++i) {
+            REQUIRE(original_intervals[i].value().start == loaded_intervals[i].value().start);
+            REQUIRE(original_intervals[i].value().end == loaded_intervals[i].value().end);
         }
     }
 

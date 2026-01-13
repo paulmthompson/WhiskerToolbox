@@ -1358,8 +1358,8 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
     } else if (source_type == "Intervals") {
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
         if (interval_series) {
-            auto intervals = interval_series->getDigitalIntervalSeries();
-            info_text += QString(" - %1 intervals").arg(intervals.size());
+            auto intervals = interval_series->view();
+            info_text += QString(" - %1 intervals").arg(interval_series->size());
 
             // Add capture range and interval setting information
             if (isIntervalItselfSelected()) {
@@ -1444,7 +1444,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
                 return nullptr;
             }
 
-            auto intervals = interval_series->getDigitalIntervalSeries();
+            auto intervals = interval_series->view();
             auto timeframe_key = _data_manager->getTimeKey(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
@@ -1462,14 +1462,14 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             for (auto const & interval: intervals) {
                 if (use_interval_itself) {
                     // Use the interval as-is
-                    tf_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+                    tf_intervals.emplace_back(TimeFrameIndex(interval.value().start), TimeFrameIndex(interval.value().end));
                 } else {
                     // Determine the reference point (beginning or end of interval)
                     int64_t reference_point;
                     if (use_beginning) {
-                        reference_point = interval.start;
+                        reference_point = interval.value().start;
                     } else {
-                        reference_point = interval.end;
+                        reference_point = interval.value().end;
                     }
 
                     // Create a new interval around the reference point

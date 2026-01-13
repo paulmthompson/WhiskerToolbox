@@ -11,12 +11,12 @@
 #include <vector>
 
 // Helper function to validate that grouped intervals don't violate spacing constraints
-auto validateGrouping = [](std::vector<Interval> const & original,
-                           std::vector<Interval> const & grouped,
+auto validateGrouping = [](std::ranges::input_range auto const & original,
+                           std::ranges::input_range auto const & grouped,
                            double maxSpacing) -> bool {
     // Check that all grouped intervals respect the spacing constraint
     for (size_t i = 1; i < grouped.size(); ++i) {
-        int64_t gap = grouped[i].start - grouped[i - 1].end - 1;
+        int64_t gap = grouped[i].value().start - grouped[i - 1].value().end - 1;
         if (gap <= static_cast<int64_t>(maxSpacing)) {
             return false;// Adjacent groups should be separated by more than maxSpacing
         }
@@ -26,7 +26,7 @@ auto validateGrouping = [](std::vector<Interval> const & original,
     for (auto const & orig: original) {
         bool covered = false;
         for (auto const & group: grouped) {
-            if (orig.start >= group.start && orig.end <= group.end) {
+            if (orig.start >= group.value().start && orig.end <= group.value().end) {
                 covered = true;
                 break;
             }
@@ -54,16 +54,15 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 2);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 2);
 
         // First group: (1,2) and (4,5) combined to (1,5)
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 5);
-
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 5);
         // Second group: (10,11) remains separate
-        REQUIRE(grouped[1].start == 10);
-        REQUIRE(grouped[1].end == 11);
+        REQUIRE(grouped[1].value().start == 10);
+        REQUIRE(grouped[1].value().end == 11);
 
         // Validate grouping constraints
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
@@ -78,15 +77,15 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 3);// No grouping should occur
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 3);// No grouping should occur
 
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 2);
-        REQUIRE(grouped[1].start == 10);
-        REQUIRE(grouped[1].end == 11);
-        REQUIRE(grouped[2].start == 20);
-        REQUIRE(grouped[2].end == 21);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 2);
+        REQUIRE(grouped[1].value().start == 10);
+        REQUIRE(grouped[1].value().end == 11);
+        REQUIRE(grouped[2].value().start == 20);
+        REQUIRE(grouped[2].value().end == 21);
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
@@ -100,11 +99,11 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 1);// All should be grouped
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 1);// All should be grouped
 
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 11);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 11);
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
@@ -118,16 +117,16 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 2);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 2);
 
         // (1,2) and (3,4) are adjacent (gap = 0), so they group
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 4);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 4);
 
         // (6,7) is separate (gap = 1 > 0)
-        REQUIRE(grouped[1].start == 6);
-        REQUIRE(grouped[1].end == 7);
+        REQUIRE(grouped[1].value().start == 6);
+        REQUIRE(grouped[1].value().end == 7);
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
@@ -141,12 +140,11 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 1);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 1);
 
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 201);
-
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 201);
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
 
@@ -159,15 +157,15 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 2);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 2);
 
         // Overlapping intervals should be merged into one group
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 7);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 7);
 
-        REQUIRE(grouped[1].start == 10);
-        REQUIRE(grouped[1].end == 12);
+        REQUIRE(grouped[1].value().start == 10);
+        REQUIRE(grouped[1].value().end == 12);
     }
 
     SECTION("Unsorted input intervals") {
@@ -179,14 +177,14 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 2);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 2);
 
         // Should be sorted and grouped properly
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 5);
-        REQUIRE(grouped[1].start == 10);
-        REQUIRE(grouped[1].end == 11);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 5);
+        REQUIRE(grouped[1].value().start == 10);
+        REQUIRE(grouped[1].value().end == 11);
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
@@ -200,11 +198,11 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 1);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 1);
 
-        REQUIRE(grouped[0].start == 5);
-        REQUIRE(grouped[0].end == 10);
+        REQUIRE(grouped[0].value().start == 5);
+        REQUIRE(grouped[0].value().end == 10);
     }
 
     SECTION("Empty input") {
@@ -216,14 +214,14 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
+        auto const & grouped = result->view();
         REQUIRE(grouped.empty());
     }
 
     SECTION("Null input") {
         auto result = group_intervals(nullptr, params);
         REQUIRE(result != nullptr);
-        REQUIRE(result->getDigitalIntervalSeries().empty());
+        REQUIRE(result->view().empty());
     }
 }
 
@@ -272,12 +270,12 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
         auto result_dis = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_dis != nullptr);
 
-        auto const & grouped = result_dis->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 2);
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 5);
-        REQUIRE(grouped[1].start == 10);
-        REQUIRE(grouped[1].end == 11);
+        auto const & grouped = result_dis->view();
+        REQUIRE(result_dis->size() == 2);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 5);
+        REQUIRE(grouped[1].value().start == 10);
+        REQUIRE(grouped[1].value().end == 11);
     }
 
     SECTION("execute with progress callback") {
@@ -344,13 +342,13 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
+        auto const & grouped = result->view();
 
         // All intervals should group into one since all gaps are ≤ 1.5
         // Gap between (1,2) and (4,5) is 1 ≤ 1.5, and gap between (4,5) and (7,8) is 1 ≤ 1.5
-        REQUIRE(grouped.size() == 1);
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 8);
+        REQUIRE(result->size() == 1);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 8);
     }
 
     SECTION("Negative spacing") {
@@ -362,13 +360,13 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 2);// No grouping with negative spacing
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 2);// No grouping with negative spacing
 
-        REQUIRE(grouped[0].start == 1);
-        REQUIRE(grouped[0].end == 2);
-        REQUIRE(grouped[1].start == 4);
-        REQUIRE(grouped[1].end == 5);
+        REQUIRE(grouped[0].value().start == 1);
+        REQUIRE(grouped[0].value().end == 2);
+        REQUIRE(grouped[1].value().start == 4);
+        REQUIRE(grouped[1].value().end == 5);
     }
 
     SECTION("Very large intervals") {
@@ -380,11 +378,11 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 1);// Should group (gap = 999999 ≤ 1000000)
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 1);// Should group (gap = 999999 ≤ 1000000)
 
-        REQUIRE(grouped[0].start == 1000000);
-        REQUIRE(grouped[0].end == 4000000);
+        REQUIRE(grouped[0].value().start == 1000000);
+        REQUIRE(grouped[0].value().end == 4000000);
     }
 
     SECTION("Many small intervals") {
@@ -399,11 +397,11 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         auto result = group_intervals(dis.get(), params);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->getDigitalIntervalSeries();
-        REQUIRE(grouped.size() == 1);
+        auto const & grouped = result->view();
+        REQUIRE(result->size() == 1);
 
-        REQUIRE(grouped[0].start == 0);
-        REQUIRE(grouped[0].end == 99 * 3 + 1);
+        REQUIRE(grouped[0].value().start == 0);
+        REQUIRE(grouped[0].value().end == 99 * 3 + 1);
     }
 }
 
@@ -448,16 +446,16 @@ TEST_CASE("Data Transform: Digital Interval Group - JSON pipeline", "[transforms
     auto grouped_series = dm.getData<DigitalIntervalSeries>("GroupedIntervals");
     REQUIRE(grouped_series != nullptr);
 
-    auto const & grouped = grouped_series->getDigitalIntervalSeries();
-    REQUIRE(grouped.size() == 2);
+    auto const & grouped = grouped_series->view();
+    REQUIRE(grouped_series->size() == 2);
 
     // First group: (1,2) and (4,5) combined to (1,5)
-    REQUIRE(grouped[0].start == 1);
-    REQUIRE(grouped[0].end == 5);
+    REQUIRE(grouped[0].value().start == 1);
+    REQUIRE(grouped[0].value().end == 5);
 
     // Second group: (10,11) remains separate
-    REQUIRE(grouped[1].start == 10);
-    REQUIRE(grouped[1].end == 11);
+    REQUIRE(grouped[1].value().start == 10);
+    REQUIRE(grouped[1].value().end == 11);
 }
 
 TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config", "[transforms][digital_interval_group][json_config]") {
@@ -523,16 +521,16 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
     REQUIRE(result_intervals != nullptr);
     
     // Verify the grouping results - same as documentation example
-    auto const & grouped = result_intervals->getDigitalIntervalSeries();
-    REQUIRE(grouped.size() == 2);
+    auto const & grouped = result_intervals->view();
+    REQUIRE(result_intervals->size() == 2);
     
     // First group: (1,2) and (4,5) combined to (1,5)
-    REQUIRE(grouped[0].start == 1);
-    REQUIRE(grouped[0].end == 5);
+    REQUIRE(grouped[0].value().start == 1);
+    REQUIRE(grouped[0].value().end == 5);
     
     // Second group: (10,11) remains separate
-    REQUIRE(grouped[1].start == 10);
-    REQUIRE(grouped[1].end == 11);
+    REQUIRE(grouped[1].value().start == 10);
+    REQUIRE(grouped[1].value().end == 11);
     
     // Test another pipeline with different parameters (smaller spacing)
     const char* json_config_small_spacing = 
@@ -575,16 +573,16 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
     auto result_intervals_small = dm.getData<DigitalIntervalSeries>("grouped_intervals_small");
     REQUIRE(result_intervals_small != nullptr);
     
-    auto const & grouped_small = result_intervals_small->getDigitalIntervalSeries();
-    REQUIRE(grouped_small.size() == 2);
+    auto const & grouped_small = result_intervals_small->view();
+    REQUIRE(result_intervals_small->size() == 2);
     
     // With spacing=1.0, (1,2) and (4,5) still group (gap=1 ≤ 1.0)
-    REQUIRE(grouped_small[0].start == 1);
-    REQUIRE(grouped_small[0].end == 5);
+    REQUIRE(grouped_small[0].value().start == 1);
+    REQUIRE(grouped_small[0].value().end == 5);
     
     // (10,11) remains separate (gap=4 > 1.0)
-    REQUIRE(grouped_small[1].start == 10);
-    REQUIRE(grouped_small[1].end == 11);
+    REQUIRE(grouped_small[1].value().start == 10);
+    REQUIRE(grouped_small[1].value().end == 11);
     
     // Test zero spacing pipeline (only adjacent intervals group)
     const char* json_config_zero = 
@@ -627,16 +625,16 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
     auto result_intervals_zero = dm.getData<DigitalIntervalSeries>("grouped_intervals_zero");
     REQUIRE(result_intervals_zero != nullptr);
     
-    auto const & grouped_zero = result_intervals_zero->getDigitalIntervalSeries();
-    REQUIRE(grouped_zero.size() == 3);
+    auto const & grouped_zero = result_intervals_zero->view();
+    REQUIRE(result_intervals_zero->size() == 3);
     
     // With spacing=0.0, no intervals group (gaps are 1 and 4, both > 0.0)
-    REQUIRE(grouped_zero[0].start == 1);
-    REQUIRE(grouped_zero[0].end == 2);
-    REQUIRE(grouped_zero[1].start == 4);
-    REQUIRE(grouped_zero[1].end == 5);
-    REQUIRE(grouped_zero[2].start == 10);
-    REQUIRE(grouped_zero[2].end == 11);
+    REQUIRE(grouped_zero[0].value().start == 1);
+    REQUIRE(grouped_zero[0].value().end == 2);
+    REQUIRE(grouped_zero[1].value().start == 4);
+    REQUIRE(grouped_zero[1].value().end == 5);
+    REQUIRE(grouped_zero[2].value().start == 10);
+    REQUIRE(grouped_zero[2].value().end == 11);
     
     // Cleanup
     try {

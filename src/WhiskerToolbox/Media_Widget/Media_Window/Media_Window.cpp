@@ -9,14 +9,14 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
 #include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
-#include "GroupContextMenu/GroupContextMenuHandler.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -298,14 +298,14 @@ void Media_Window::setGroupManager(GroupManager * group_manager) {
     if (_group_manager) {
         disconnect(_group_manager, nullptr, this, nullptr);
     }
-    
+
     _group_manager = group_manager;
-    
+
     // Update the group menu handler with the new group manager
     if (_group_menu_handler) {
         _group_menu_handler->setGroupManager(group_manager);
     }
-    
+
     // Connect to new group manager signals if available
     if (_group_manager) {
         connect(_group_manager, &GroupManager::groupCreated, this, &Media_Window::onGroupChanged);
@@ -809,7 +809,7 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             // Handle selection on left click (when not in drawing mode and group selection is enabled)
             std::string data_key, data_type;
             EntityId entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
-            
+
             if (entity_id != EntityId(0)) {
                 // Use group-based selection for all entity types
                 // Check if Ctrl is held for multi-selection
@@ -828,7 +828,7 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                     _selected_data_key = data_key;
                     _selected_data_type = data_type;
                 }
-                UpdateCanvas(); // Refresh to show selection
+                UpdateCanvas();// Refresh to show selection
             } else if (!(event->modifiers() & Qt::ControlModifier)) {
                 // Clear selection if clicking on empty area without Ctrl
                 clearAllSelections();
@@ -840,7 +840,7 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
         emit leftClickMedia(
                 event->scenePos().x() / getXAspect(),
                 event->scenePos().y() / getYAspect());
-        
+
         // Emit media click signal with modifier information
         emit leftClickMediaWithEvent(
                 event->scenePos().x() / getXAspect(),
@@ -951,7 +951,7 @@ void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
     if (_group_menu_handler) {
         _group_menu_handler->updateMenuState(_context_menu);
     }
-    
+
     _showContextMenu(event->screenPos());
 }
 
@@ -1051,7 +1051,7 @@ void Media_Window::_plotLineData() {
 
             // Check if the entity's group is visible
             if (!_isEntityGroupVisible(entity_id)) {
-                continue; // Skip rendering this entity if its group is not visible
+                continue;// Skip rendering this entity if its group is not visible
             }
 
             // Use group-aware color if available, otherwise use default plot color
@@ -1405,32 +1405,32 @@ void Media_Window::_plotPointData() {
 
         // Ensure we have matching point data and entity IDs
         size_t count = std::min(pointData.size(), entityIds.size());
-        
+
         for (size_t i = 0; i < count; ++i) {
             auto const & single_point = pointData[i];
             EntityId entity_id = entityIds[i];
-            
+
             // Check if the entity's group is visible
             if (!_isEntityGroupVisible(entity_id)) {
-                continue; // Skip rendering this entity if its group is not visible
+                continue;// Skip rendering this entity if its group is not visible
             }
-            
+
             float const x_pos = single_point.x * xAspect;
             float const y_pos = single_point.y * yAspect;
 
             // Use group-aware color if available, otherwise use default plot color
             QColor point_color = _getGroupAwareColor(entity_id, QColor::fromRgba(plot_color));
-            
+
             // Check if this point is selected to add highlight
             bool is_selected = _selected_entities.count(entity_id) > 0;
-            
+
             // Add selection highlight if point is selected
             if (is_selected) {
                 QPen highlight_pen(Qt::yellow);
                 highlight_pen.setWidth(4);
                 QBrush highlight_brush(Qt::transparent);
                 auto highlight_circle = addEllipse(x_pos - point_size, y_pos - point_size,
-                                                   point_size * 2, point_size * 2, 
+                                                   point_size * 2, point_size * 2,
                                                    highlight_pen, highlight_brush);
                 _points.append(highlight_circle);
             }
@@ -1601,7 +1601,8 @@ void Media_Window::_plotDigitalIntervalSeries() {
                 query_time = interval_timeframe->getIndexAtTime(static_cast<float>(video_time_value)).getValue();
             }
 
-            bool const event_present = interval_series->isEventAtTime(TimeFrameIndex(query_time));
+            bool const event_present = interval_series->hasIntervalAtTime(TimeFrameIndex(query_time),
+                                                                          *video_timeframe);
 
             auto color = event_present ? plot_color : QColor(255, 255, 255, 10);// Transparent if no event
 
@@ -1650,19 +1651,9 @@ void Media_Window::_plotDigitalIntervalBorders() {
             continue;
         }
 
-        bool const needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
-
         // Check if an interval is present at the current frame
-        bool interval_present = false;
-        if (needs_conversion) {
-            // Convert current video time to interval timeframe
-            auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
-            auto interval_index = interval_timeframe->getIndexAtTime(video_time);
-            interval_present = interval_series->isEventAtTime(interval_index);
-        } else {
-            // Direct comparison (no timeframe conversion needed)
-            interval_present = interval_series->isEventAtTime(TimeFrameIndex(current_time));
-        }
+        bool interval_present = interval_series->hasIntervalAtTime(TimeFrameIndex(current_time),
+                                                                   *video_timeframe);
 
         // If an interval is present, draw a border around the entire image
         if (interval_present) {
@@ -1853,13 +1844,12 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
     // Use the same aspect ratio calculation as the target line data
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
-    
+
     // If we have a line key, use the same image size scaling as that line data
     if (!line_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(line_key);
         if (line_data) {
             auto image_size = line_data->getImageSize();
-            
         }
     }
 
@@ -1868,11 +1858,11 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
         // Convert media coordinates to canvas coordinates
         float x = points[0].x * xAspect;
         float y = points[0].y * yAspect;
-        
+
         QPen pointPen(Qt::yellow);
         pointPen.setWidth(2);
         QBrush pointBrush(Qt::yellow);
-        
+
         auto pointItem = addEllipse(x - 3, y - 3, 6, 6, pointPen, pointBrush);
         _temporary_line_points.push_back(pointItem);
         return;
@@ -1893,20 +1883,20 @@ void Media_Window::updateTemporaryLine(std::vector<Point2D<float>> const & point
     // Create the line path item
     QPen linePen(Qt::yellow);
     linePen.setWidth(2);
-    linePen.setStyle(Qt::DashLine); // Dashed line to distinguish from permanent lines
-    
+    linePen.setStyle(Qt::DashLine);// Dashed line to distinguish from permanent lines
+
     _temporary_line_item = addPath(path, linePen);
 
     // Add point markers
     QPen pointPen(Qt::yellow);
     pointPen.setWidth(1);
-    QBrush pointBrush(Qt::NoBrush); // Open circles
+    QBrush pointBrush(Qt::NoBrush);// Open circles
 
     for (size_t i = 0; i < points.size(); ++i) {
         // Convert media coordinates to canvas coordinates
         float x = points[i].x * xAspect;
         float y = points[i].y * yAspect;
-        
+
         auto pointItem = addEllipse(x - 2.5, y - 2.5, 5, 5, pointPen, pointBrush);
         _temporary_line_points.push_back(pointItem);
     }
@@ -1921,7 +1911,7 @@ void Media_Window::clearTemporaryLine() {
     }
 
     // Remove and delete all temporary line point markers
-    for (auto pointItem : _temporary_line_points) {
+    for (auto pointItem: _temporary_line_points) {
         if (pointItem) {
             removeItem(pointItem);
             delete pointItem;
@@ -1985,34 +1975,34 @@ void Media_Window::onGroupChanged() {
 QColor Media_Window::_getGroupAwareColor(EntityId entity_id, QColor const & default_color) const {
     // Handle selection highlighting first
     if (_selected_entities.count(entity_id) > 0) {
-        return QColor(255, 255, 0); // Bright yellow for selected entities
+        return QColor(255, 255, 0);// Bright yellow for selected entities
     }
-    
+
     if (!_group_manager || entity_id == EntityId(0)) {
         return default_color;
     }
-    
+
     return _group_manager->getEntityColor(entity_id, default_color);
 }
 
 bool Media_Window::_isEntityGroupVisible(EntityId entity_id) const {
     if (!_group_manager || entity_id == EntityId(0)) {
-        return true; // Entities not in a group or without group manager are always visible
+        return true;// Entities not in a group or without group manager are always visible
     }
-    
+
     return _group_manager->isEntityGroupVisible(entity_id);
 }
 
 QRgb Media_Window::_getGroupAwareColorRgb(EntityId entity_id, QRgb default_color) const {
     // Handle selection highlighting first
     if (_selected_entities.count(entity_id) > 0) {
-        return qRgba(255, 255, 0, 255); // Bright yellow for selected entities
+        return qRgba(255, 255, 0, 255);// Bright yellow for selected entities
     }
-    
+
     if (!_group_manager || entity_id == EntityId(0)) {
         return default_color;
     }
-    
+
     QColor group_color = _group_manager->getEntityColor(entity_id, QColor::fromRgba(default_color));
     return group_color.rgba();
 }
@@ -2024,7 +2014,7 @@ void Media_Window::clearAllSelections() {
         _selected_entities.clear();
         _selected_data_key.clear();
         _selected_data_type.clear();
-        UpdateCanvas(); // Refresh to remove selection highlights
+        UpdateCanvas();// Refresh to remove selection highlights
     }
 }
 
@@ -2061,7 +2051,7 @@ void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key
     _selected_entities.insert(entity_id);
     _selected_data_key = data_key;
     _selected_data_type = data_type;
-    UpdateCanvas(); // Refresh to show selection
+    UpdateCanvas();// Refresh to show selection
 }
 
 EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
@@ -2070,7 +2060,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     float y_media = static_cast<float>(scene_pos.y() / getYAspect());
 
     // Search through lines first (as they're typically most precise)
-    for (auto const & [key, config] : _line_configs) {
+    for (auto const & [key, config]: _line_configs) {
         if (config->is_visible) {
             EntityId entity_id = _findLineAtPosition(scene_pos, key);
             if (entity_id != EntityId(0)) {
@@ -2082,7 +2072,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     }
 
     // Then search points
-    for (auto const & [key, config] : _point_configs) {
+    for (auto const & [key, config]: _point_configs) {
         if (config->is_visible) {
             EntityId entity_id = _findPointAtPosition(scene_pos, key);
             if (entity_id != EntityId(0)) {
@@ -2094,7 +2084,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     }
 
     // Finally search masks (usually less precise)
-    for (auto const & [key, config] : _mask_configs) {
+    for (auto const & [key, config]: _mask_configs) {
         if (config->is_visible) {
             EntityId entity_id = _findMaskAtPosition(scene_pos, key);
             if (entity_id != EntityId(0)) {
@@ -2105,7 +2095,7 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
         }
     }
 
-    return EntityId(0); // No entity found
+    return EntityId(0);// No entity found
 }
 
 EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::string const & line_key) {
@@ -2137,7 +2127,7 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
         xAspect = static_cast<float>(_canvasWidth) / line_width;
     }
 
-    float const threshold = 10.0f; // pixels
+    float const threshold = 10.0f;// pixels
 
     // Find the nearest line (minimum distance) rather than returning on first hit
     float best_dist = std::numeric_limits<float>::max();
@@ -2191,20 +2181,20 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
         return EntityId(0);
     }
 
-    float const threshold = 15.0f; // pixels
+    float const threshold = 15.0f;// pixels
 
     for (size_t i = 0; i < points.size(); ++i) {
         auto const & point = points[i];
-        
+
         // Convert point to scene coordinates
         float x_scene = point.x * getXAspect();
         float y_scene = point.y * getYAspect();
-        
+
         // Calculate distance
         float dx = scene_pos.x() - x_scene;
         float dy = scene_pos.y() - y_scene;
         float distance = std::sqrt(dx * dx + dy * dy);
-        
+
         if (distance <= threshold) {
             return entity_ids[i];
         }
@@ -2230,11 +2220,11 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
 
     for (size_t i = 0; i < masks.size(); ++i) {
         auto const & mask = masks[i];
-        
+
         // Check if the point is inside any of the mask's polygons
-        for (auto const & point : mask) {
+        for (auto const & point: mask) {
             // Simple bounding box check for now (could be improved with proper point-in-polygon)
-            if (std::abs(static_cast<float>(point.x) - x_media) < 5.0f && 
+            if (std::abs(static_cast<float>(point.x) - x_media) < 5.0f &&
                 std::abs(static_cast<float>(point.y) - y_media) < 5.0f) {
                 // Return a synthetic EntityId based on position and mask index
                 // This is temporary until MaskData supports proper EntityIds
@@ -2248,10 +2238,10 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
 
 void Media_Window::_createContextMenu() {
     _context_menu = new QMenu();
-    
+
     // Create the group context menu handler
     _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
-    
+
     // Setup callbacks for the group handler
     GroupContextMenuCallbacks callbacks;
     callbacks.getSelectedEntities = [this]() {
@@ -2267,12 +2257,12 @@ void Media_Window::_createContextMenu() {
         // Trigger a redraw after group operations
         UpdateCanvas();
     };
-    
+
     _group_menu_handler->setCallbacks(callbacks);
-    
+
     // Setup the group menu section
     _group_menu_handler->setupGroupMenuSection(_context_menu, true);
-    
+
     // Add clear selection action
     auto * clear_selection_action = new QAction("Clear Selection", this);
     _context_menu->addAction(clear_selection_action);
@@ -2288,23 +2278,23 @@ void Media_Window::_showContextMenu(QPoint const & global_pos) {
 float Media_Window::_calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2) {
     float dx = x2 - x1;
     float dy = y2 - y1;
-    
+
     if (dx == 0 && dy == 0) {
         // Point to point distance
         float dpx = px - x1;
         float dpy = py - y1;
         return std::sqrt(dpx * dpx + dpy * dpy);
     }
-    
+
     float t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
     t = std::max(0.0f, std::min(1.0f, t));
-    
+
     float projection_x = x1 + t * dx;
     float projection_y = y1 + t * dy;
-    
+
     float dist_x = px - projection_x;
     float dist_y = py - projection_y;
-    
+
     return std::sqrt(dist_x * dist_x + dist_y * dist_y);
 }
 
@@ -2347,4 +2337,3 @@ void Media_Window::keyPressEvent(QKeyEvent * event) {
     // If not handled, pass to parent
     QGraphicsScene::keyPressEvent(event);
 }
-
