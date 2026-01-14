@@ -125,12 +125,26 @@ std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createView(
     DataStorageWrapper storage_wrapper(std::move(view_storage));
     
     // Create time storage for the view range
-    std::vector<TimeFrameIndex> view_time_indices;
-    view_time_indices.reserve(end_idx - start_idx + 1);
-    for (size_t i = start_idx; i <= end_idx; ++i) {
-        view_time_indices.push_back(source->_time_storage->getTimeFrameIndexAt(i));
+    // Optimization: If source has dense time storage, create a new dense storage
+    // with the appropriate start index (O(1)) instead of materializing a vector (O(n))
+    std::shared_ptr<TimeIndexStorage> view_time_storage;
+    
+    auto const* dense_source = dynamic_cast<DenseTimeIndexStorage const*>(source->_time_storage.get());
+    if (dense_source != nullptr) {
+        // Source is dense - create new dense storage with offset applied
+        // The view's time indices are: source_start + start_idx, source_start + start_idx + 1, ...
+        TimeFrameIndex view_start = dense_source->getTimeFrameIndexAt(start_idx);
+        size_t view_count = end_idx - start_idx + 1;
+        view_time_storage = TimeIndexStorageFactory::createDense(view_start, view_count);
+    } else {
+        // Source is sparse - must materialize the time indices for the view range
+        std::vector<TimeFrameIndex> view_time_indices;
+        view_time_indices.reserve(end_idx - start_idx + 1);
+        for (size_t i = start_idx; i <= end_idx; ++i) {
+            view_time_indices.push_back(source->_time_storage->getTimeFrameIndexAt(i));
+        }
+        view_time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(view_time_indices));
     }
-    auto view_time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(view_time_indices));
     
     auto result = std::shared_ptr<AnalogTimeSeries>(
         new AnalogTimeSeries(std::move(storage_wrapper), std::move(view_time_storage)));

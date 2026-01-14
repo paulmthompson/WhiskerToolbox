@@ -42,32 +42,41 @@ Samples per window:    1,000   (contiguous block)
 
 | Approach | Time (µs) | Relative |
 |----------|----------|----------|
-| Baseline (Raw Vectors) | 2,456 | 1.0x |
-| View-Based (Span) | 5,229 | 2.1x slower |
+| Baseline (Raw Vectors) | 2,629 | 1.0x |
+| View-Based (Span) | 2,058 | **0.78x (faster!)** |
 
 ### Phase Breakdown
 
 | Phase | Baseline (µs) | View-Based (µs) | Ratio |
 |-------|---------------|-----------------|-------|
-| Window/View Creation | 253 | 3,415 | 13.5x |
+| Window/View Creation | 310 | 181 | **0.58x (faster!)** |
 | Iteration Only (Span) | 1,069 | 1,078 | 1.01x |
 | Iteration Only (Iterator) | 1,069 | 3,220 | 3.0x |
 
 ## Key Insights
 
-### View Creation is the Bottleneck (13.5x)
+### View Creation is Now Faster Than Copying (0.58x)
 
-Creating 1,000 views takes ~3.4ms vs ~0.25ms for raw vector extraction. This overhead comes from:
+After optimizing time storage creation, views are now **faster to create** than raw vector copies:
 
-| Factor | Cost |
-|--------|------|
-| `shared_ptr` allocation per view | ~400ns each |
-| `ViewAnalogDataStorage` construction | Minimal |
-| Time index lookup (binary search) | ~200ns × 2 per view |
-| Time storage construction | Vector allocation for view time indices |
-| Type erasure wrapper construction | `StorageModel` allocation |
+| Operation | Cost |
+|-----------|------|
+| Baseline: Copy 1000 floats × 1000 windows | ~310 µs (memcpy ~4MB) |
+| View: Create 1000 views with O(1) time storage | ~181 µs |
 
-The baseline copies ~4MB of float data (1000 windows × 1000 samples × 4 bytes), but modern memory bandwidth makes this faster than the allocation overhead of views.
+The optimization detects when the source has `DenseTimeIndexStorage` (the common case for uniformly sampled data) and creates the view's time storage as a new dense range in O(1) instead of materializing a vector in O(n):
+
+```cpp
+auto const* dense_source = dynamic_cast<DenseTimeIndexStorage const*>(source->_time_storage.get());
+if (dense_source != nullptr) {
+    // O(1): Just store new start index and count
+    TimeFrameIndex view_start = dense_source->getTimeFrameIndexAt(start_idx);
+    view_time_storage = TimeIndexStorageFactory::createDense(view_start, view_count);
+} else {
+    // O(n): Sparse case - must materialize time indices
+    // ... fallback to vector construction
+}
+```
 
 ### Iteration Performance is Identical with Span Access (1.01x)
 
@@ -159,19 +168,19 @@ This was the same bug found in `DigitalEventStorageWrapper`. The fix changed to 
 
 ## When to Use Views vs. Raw Vectors
 
-**Views are appropriate for:**
+**Views are now the preferred approach for most use cases:**
 
+- Zero-copy data sharing (no memcpy)
+- Faster creation than raw vector extraction for dense time storage
 - Integration with TimeFrame conversion system
 - Chaining with lazy transforms
-- When you need `AnalogTimeSeries` API (getAtTime, elements, etc.)
-- Interactive applications where ~2x overhead is acceptable
+- Full `AnalogTimeSeries` API (getAtTime, elements, etc.)
 
-**Raw vectors are better for:**
+**Raw vectors may still be preferred for:**
 
-- High-frequency batch processing
-- Simple windowed extraction without time conversion
-- When maximum throughput is required
-- Rendering hot paths with 60+ FPS requirements
+- Sparse time storage sources (where O(n) time materialization is required)
+- When you need to mutate the extracted data
+- Integration with external libraries expecting `std::vector<float>`
 
 ## Access Pattern Recommendations
 
@@ -203,8 +212,17 @@ perf stat -e cache-references,cache-misses,L1-dcache-load-misses \
 
 ## Conclusion
 
-The view-based approach using `AnalogTimeSeries` achieves true zero-copy data sharing via `shared_ptr` with aliasing constructor. Unlike `DigitalEventSeries` views which have iteration overhead due to index indirection, `AnalogTimeSeries` views provide **identical iteration performance** to raw vectors when using span access.
+The view-based approach using `AnalogTimeSeries` achieves true zero-copy data sharing via `shared_ptr` with aliasing constructor. With the optimized dense time storage creation, **views are now faster than raw vector extraction** for the common case of uniformly sampled data.
 
-The overall overhead is ~2.1x compared to raw vectors, entirely from view object allocation (~3.4ms for 1000 views). For applications where views are created once and iterated many times, this overhead amortizes away. For high-frequency window extraction, raw vectors remain the better choice.
+| Metric | Baseline | View-Based | Winner |
+|--------|----------|------------|--------|
+| Creation | 310 µs | 181 µs | **Views (1.7x faster)** |
+| Full Pipeline | 2,629 µs | 2,058 µs | **Views (1.3x faster)** |
+| Iteration (Span) | 1,069 µs | 1,078 µs | Tie |
 
-**Key recommendation**: Always use `getAnalogTimeSeries()` or `getDataInTimeFrameIndexRange()` for span access rather than `elements()` iterator when iterating view data.
+The key optimizations that made this possible:
+
+1. **shared_ptr for storage** (bug fix): Enables zero-copy view creation via aliasing constructor
+2. **O(1) dense time storage**: Detects `DenseTimeIndexStorage` and creates view time storage as `createDense(start, count)` instead of materializing an O(n) vector
+
+**Key recommendation**: Use `createView()` for windowed access to `AnalogTimeSeries` data. Always use `getAnalogTimeSeries()` or `getDataInTimeFrameIndexRange()` for span-based iteration rather than `elements()` iterator.
