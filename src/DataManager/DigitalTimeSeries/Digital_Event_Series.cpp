@@ -119,18 +119,16 @@ std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
     TimeFrameIndex start,
     TimeFrameIndex end)
 {
-    // Get source's owning storage
-    auto const* src_owning = source->_storage.tryGetOwning();
-    if (!src_owning) {
-        // Source is view or lazy - materialize first
+    // Get shared owning storage from source (zero-copy)
+    auto shared_storage = source->_storage.getSharedOwningStorage();
+    if (!shared_storage) {
+        // Source is lazy storage - materialize first
         auto materialized = source->materialize();
         return createView(materialized, start, end);
     }
     
-    // Create view storage
-    auto view_storage = ViewDigitalEventStorage{
-        std::make_shared<OwningDigitalEventStorage const>(*src_owning)
-    };
+    // Create view storage referencing the shared source (no copy!)
+    auto view_storage = ViewDigitalEventStorage{shared_storage};
     view_storage.filterByTimeRange(start, end);
     
     auto result = std::make_shared<DigitalEventSeries>();
@@ -145,18 +143,16 @@ std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
     std::shared_ptr<DigitalEventSeries const> source,
     std::unordered_set<EntityId> const& entity_ids)
 {
-    // Get source's owning storage
-    auto const* src_owning = source->_storage.tryGetOwning();
-    if (!src_owning) {
-        // Source is view or lazy - materialize first
+    // Get shared owning storage from source (zero-copy)
+    auto shared_storage = source->_storage.getSharedOwningStorage();
+    if (!shared_storage) {
+        // Source is lazy storage - materialize first
         auto materialized = source->materialize();
         return createView(materialized, entity_ids);
     }
     
-    // Create view storage
-    auto view_storage = ViewDigitalEventStorage{
-        std::make_shared<OwningDigitalEventStorage const>(*src_owning)
-    };
+    // Create view storage referencing the shared source (no copy!)
+    auto view_storage = ViewDigitalEventStorage{shared_storage};
     view_storage.filterByEntityIds(entity_ids);
     
     auto result = std::make_shared<DigitalEventSeries>();

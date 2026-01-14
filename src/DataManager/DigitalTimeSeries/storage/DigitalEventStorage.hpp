@@ -796,18 +796,18 @@ public:
      */
     template<typename StorageImpl>
     explicit DigitalEventStorageWrapper(StorageImpl storage)
-        : _impl(std::make_unique<StorageModel<StorageImpl>>(std::move(storage))) {}
+        : _impl(std::make_shared<StorageModel<StorageImpl>>(std::move(storage))) {}
 
     // Default constructor creates empty owning storage
     DigitalEventStorageWrapper()
-        : _impl(std::make_unique<StorageModel<OwningDigitalEventStorage>>(
+        : _impl(std::make_shared<StorageModel<OwningDigitalEventStorage>>(
               OwningDigitalEventStorage{})) {}
 
-    // Move-only semantics
+    // Copy and move semantics - shared_ptr allows sharing
     DigitalEventStorageWrapper(DigitalEventStorageWrapper&&) noexcept = default;
     DigitalEventStorageWrapper& operator=(DigitalEventStorageWrapper&&) noexcept = default;
-    DigitalEventStorageWrapper(DigitalEventStorageWrapper const&) = delete;
-    DigitalEventStorageWrapper& operator=(DigitalEventStorageWrapper const&) = delete;
+    DigitalEventStorageWrapper(DigitalEventStorageWrapper const&) = default;
+    DigitalEventStorageWrapper& operator=(DigitalEventStorageWrapper const&) = default;
 
     // ========== Unified Interface ==========
     
@@ -905,6 +905,36 @@ public:
     
     [[nodiscard]] OwningDigitalEventStorage const* tryGetOwning() const {
         return tryGet<OwningDigitalEventStorage>();
+    }
+
+    /**
+     * @brief Get shared pointer to owning storage for creating views
+     * 
+     * If this wrapper contains owning storage, creates a shared copy on first call
+     * and caches it for subsequent calls. This enables zero-copy view creation
+     * while keeping the source data alive.
+     * 
+     * If this wrapper contains a view, returns the view's existing source 
+     * (which is already a shared_ptr).
+     * 
+     * Returns nullptr for lazy storage.
+     * 
+     * @return shared_ptr to owning storage, or nullptr if not available
+     */
+    [[nodiscard]] std::shared_ptr<OwningDigitalEventStorage const> getSharedOwningStorage() const {
+        // Check if we have view storage - return its existing source
+        if (auto const* view_model = dynamic_cast<StorageModel<ViewDigitalEventStorage> const*>(_impl.get())) {
+            return view_model->_storage.source();
+        }
+        
+        // Check if we have owning storage - use aliasing constructor for zero-copy sharing
+        if (auto owning_model = std::dynamic_pointer_cast<StorageModel<OwningDigitalEventStorage> const>(_impl)) {
+            // Aliasing constructor: shares ownership with _impl but points to the inner storage
+            return std::shared_ptr<OwningDigitalEventStorage const>(owning_model, &owning_model->_storage);
+        }
+        
+        // Lazy storage - no shared owning storage available
+        return nullptr;
     }
 
 private:
@@ -1019,7 +1049,7 @@ private:
         }
     };
 
-    std::unique_ptr<StorageConcept> _impl;
+    std::shared_ptr<StorageConcept> _impl;
 };
 
 #endif // DIGITAL_EVENT_STORAGE_HPP
