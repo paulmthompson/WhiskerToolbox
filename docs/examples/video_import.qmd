@@ -1,0 +1,252 @@
+---
+title: "How to Import Video"
+format: html
+---
+
+## Overview
+
+This guide shows you how to import video files into Neuralyzer for visualization and analysis. Videos are used as the primary media backdrop for viewing and annotating behavioral data such as whisker movements, facial expressions, or body tracking.
+
+::: {.callout-warning}
+## Video Encoding Requirements
+Neuralyzer does **not support videos encoded with B-frames**. B-frames (bidirectional frames) use data from both past and future frames for compression, which breaks the simple sequential decoding strategy used for efficient random frame access.
+
+If your video has B-frames, you must re-encode it before importing. See [Checking for and Removing B-frames](#checking-for-and-removing-b-frames) below.
+:::
+
+## Supported Video Formats
+
+Neuralyzer uses FFmpeg for video decoding and supports common formats including:
+
+| Format | Extension | Notes |
+|--------|-----------|-------|
+| MPEG-4 | `.mp4` | Recommended format |
+| AVI | `.avi` | Older format, larger file sizes |
+| QuickTime | `.mov` | Common on macOS |
+
+::: {.callout-note}
+For best performance and compatibility, we recommend using **H.264/H.265 encoded MP4 files without B-frames**.
+:::
+
+## Import via GUI Menu {#gui-import}
+
+The simplest way to import a video is through the application menu:
+
+1. Open Neuralyzer
+2. Navigate to **File → Load Data** (or use the keyboard shortcut)
+3. In the file dialog, select "MP4 (*.mp4)" or "All files (*.*)" from the file type dropdown
+4. Browse to and select your video file
+5. Click **Open**
+
+The video will load and the first frame will be displayed in the Media Viewer.
+
+### What Happens When You Load a Video
+
+When a video is loaded:
+
+- The video metadata (frame count, dimensions) is read
+- The video is assigned to the default "media" slot in the Data Manager
+- A default TimeFrame named "time" is created based on the video frame count
+- The first frame is displayed in the Media Viewer
+
+::: {.callout-tip}
+## User Guide Reference
+For more details on the Media Viewer interface and navigation, see [Media Viewer Overview](../user_guide/media_viewer/overview.qmd).
+:::
+
+---
+
+## Import via JSON Configuration {#json-import}
+
+For reproducible workflows or batch processing, you can define video loading in a JSON configuration file:
+
+### Basic Video Configuration
+
+```json
+{
+  "filepath": "my_video.mp4",
+  "data_type": "video",
+  "name": "media"
+}
+```
+
+### Configuration Options
+
+| Element | Description | Required? | Type | Default |
+|---------|-------------|-----------|------|---------|
+| `filepath` | Path to video file, relative to the JSON config file location | Yes | string | — |
+| `data_type` | Must be `"video"` | Yes | string | — |
+| `name` | Name for this data in Neuralyzer | No | string | `"media"` |
+
+### Loading a JSON Configuration
+
+1. Navigate to **File → Load JSON Configuration**
+2. Select your `.json` configuration file
+3. All data defined in the configuration will be loaded
+
+### Example: Load Video with Other Data
+
+Combine video loading with other data types in a single configuration:
+
+```json
+[
+  {
+    "filepath": "experiment_video.mp4",
+    "data_type": "video",
+    "name": "media"
+  },
+  {
+    "filepath": "whisker_positions.csv",
+    "data_type": "point",
+    "name": "whisker_tip",
+    "clock": "time"
+  },
+  {
+    "filepath": "trial_events.csv",
+    "data_type": "digital_interval",
+    "name": "trials",
+    "format": "csv"
+  }
+]
+```
+
+::: {.callout-tip}
+## User Guide Reference
+See [JSON Loading Reference](../user_guide/data_loading/JSON_loading.qmd) for complete documentation on all JSON configuration options.
+:::
+
+---
+
+## Checking for and Removing B-frames {#checking-for-and-removing-b-frames}
+
+B-frames (bidirectional frames) use temporal compression that references both past and future frames. This breaks random access decoding strategies and will cause frame seeking issues in Neuralyzer.
+
+### Why B-frames Are Problematic
+
+Most video players buffer ahead and can decode B-frames efficiently. However, for frame-by-frame analysis where you need instant random access to any frame, B-frame dependencies create significant overhead:
+
+- Seeking to frame N may require decoding frames before and after N
+- Frame-accurate positioning becomes unreliable
+- Scrubbing through video becomes slow or produces incorrect frames
+
+### Step 1: Check if Your Video Has B-frames
+
+Use `ffprobe` (included with FFmpeg) to inspect the frame types:
+
+```bash
+ffprobe -show_frames my_video.mp4 | grep "pict_type" > frame_types.txt
+```
+
+This creates a file listing the type of each frame:
+
+- `pict_type=I` - Intra frame (keyframe, fully self-contained)
+- `pict_type=P` - Predicted frame (references previous frames only)
+- `pict_type=B` - Bidirectional frame (references past AND future frames) ⚠️
+
+**If you see any `pict_type=B` entries, you need to re-encode the video.**
+
+::: {.callout-tip}
+You can quickly check for B-frames with:
+```bash
+ffprobe -show_frames my_video.mp4 | grep "pict_type=B" | head
+```
+If this produces any output, B-frames are present.
+:::
+
+### Step 2: Re-encode to Remove B-frames
+
+Use FFmpeg to create a B-frame-free version of your video:
+
+```bash
+ffmpeg -i my_video.mp4 -c:v h264_nvenc -profile:v baseline -bf:v 0 my_video_no_bframes.mp4
+```
+
+**Command breakdown:**
+
+| Flag | Description |
+|------|-------------|
+| `-i my_video.mp4` | Input video file |
+| `-c:v h264_nvenc` | Use NVIDIA GPU encoder (fast). Use `libx264` for CPU encoding |
+| `-profile:v baseline` | H.264 baseline profile (no B-frames by definition) |
+| `-bf:v 0` | Explicitly set B-frames to 0 |
+| `my_video_no_bframes.mp4` | Output file name |
+
+::: {.callout-note}
+## CPU vs GPU Encoding
+- **`h264_nvenc`** - NVIDIA GPU encoder (very fast, requires NVIDIA GPU)
+- **`libx264`** - CPU encoder (works everywhere, slower)
+
+For CPU encoding, use:
+```bash
+ffmpeg -i my_video.mp4 -c:v libx264 -profile:v baseline -bf:v 0 my_video_no_bframes.mp4
+```
+:::
+
+### Step 3: Verify the Re-encoded Video
+
+Confirm the new video has no B-frames:
+
+```bash
+ffprobe -show_frames my_video_no_bframes.mp4 | grep "pict_type=B"
+```
+
+This should produce **no output** if the re-encoding was successful.
+
+---
+
+## Troubleshooting
+
+### Video won't load
+
+**Check file extension**: Ensure your video has a supported extension (`.mp4`, `.avi`, `.mov`).
+
+**Check FFmpeg support**: Neuralyzer requires FFmpeg support to be compiled in. If you see an error about FFmpeg not being available, you may need a build with `ENABLE_FFMPEG=ON`.
+
+**Check file path**: Ensure the file path doesn't contain special characters that might cause issues.
+
+### Frame scrubbing is slow or shows wrong frames
+
+This is usually caused by B-frames. Follow the [B-frame removal steps](#checking-for-and-removing-b-frames) above.
+
+### Video appears corrupted or has artifacts
+
+Try re-encoding the video with FFmpeg:
+```bash
+ffmpeg -i problematic_video.mp4 -c:v libx264 -crf 18 fixed_video.mp4
+```
+
+### Large video files load slowly
+
+For very large videos (4K resolution, long duration):
+
+- Consider downscaling for analysis if full resolution isn't needed
+- Ensure you're loading from a fast storage device (SSD recommended)
+- Consider splitting into shorter segments if you only need portions
+
+---
+
+## Best Practices
+
+### For Recording New Videos
+
+When recording videos intended for analysis in Neuralyzer:
+
+1. **Disable B-frames** in your recording software/encoder settings
+2. **Use constant framerate** rather than variable framerate
+3. **Use H.264 baseline profile** for maximum compatibility
+4. **Keep resolution appropriate** - higher resolution increases processing time
+
+### For Existing Videos
+
+1. **Check for B-frames first** before importing
+2. **Re-encode problematic videos** using the FFmpeg commands above
+3. **Keep original files** as backup before re-encoding
+4. **Use the re-encoded version** for all subsequent analysis
+
+---
+
+## See Also
+
+- [Video Loading Reference](../user_guide/data_loading/Video_Loading.qmd) - Complete reference documentation
+- [JSON Configuration Reference](../user_guide/data_loading/JSON_loading.qmd) - All JSON loading options
+- [Media Viewer Overview](../user_guide/media_viewer/overview.qmd) - Working with loaded video

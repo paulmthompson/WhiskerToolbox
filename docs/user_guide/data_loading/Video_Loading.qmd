@@ -3,3 +3,132 @@ title: "Video Loading"
 format: html
 ---
 
+## Overview
+
+Video files are a primary data source in Neuralyzer, providing the visual context for behavioral analysis. This reference guide covers all aspects of loading video data into the application.
+
+::: {.callout-tip}
+## How-To Guide
+For step-by-step instructions including GUI walkthroughs and troubleshooting, see [How to Import Video](../../examples/video_import.qmd).
+:::
+
+## Supported Formats
+
+Neuralyzer uses FFmpeg for video decoding, supporting these common formats:
+
+| Format | Extension | Codec Support |
+|--------|-----------|---------------|
+| MPEG-4 | `.mp4` | H.264, H.265 |
+| AVI | `.avi` | Various |
+| QuickTime | `.mov` | H.264, ProRes |
+
+::: {.callout-warning}
+## B-Frame Limitation
+Videos encoded with **B-frames are not supported**. B-frames use bidirectional compression that breaks sequential decoding required for efficient frame-by-frame access.
+
+See [How to Import Video - B-Frame Section](../../examples/video_import.qmd#checking-for-and-removing-b-frames) for detection and removal instructions.
+:::
+
+## Loading Methods
+
+### GUI: File Menu
+
+Load a video directly through the application menu:
+
+**File → Load Data** → Select video file → **Open**
+
+The video loads into the default "media" slot with an auto-generated TimeFrame.
+
+### JSON Configuration
+
+Define video loading in a configuration file for reproducible workflows:
+
+```json
+{
+  "filepath": "recording.mp4",
+  "data_type": "video",
+  "name": "media"
+}
+```
+
+Load via **File → Load JSON Configuration**.
+
+## JSON Configuration Reference
+
+### Video Data Type
+
+| Element | Description | Required? | Type | Default |
+|---------|-------------|-----------|------|---------|
+| `filepath` | Path to video file, relative to JSON config | Yes | string | — |
+| `data_type` | Must be `"video"` | Yes | string | — |
+| `name` | Identifier for this video in Neuralyzer | No | string | `"media"` |
+
+### Complete Example
+
+Load video along with associated tracking data:
+
+```json
+[
+  {
+    "filepath": "behavior_video.mp4",
+    "data_type": "video",
+    "name": "media"
+  },
+  {
+    "filepath": "dlc_output.csv",
+    "data_type": "point",
+    "name": "nose_tip",
+    "clock": "time"
+  }
+]
+```
+
+## Technical Details
+
+### Frame Decoding
+
+Neuralyzer optimizes video playback using these strategies:
+
+- **Sequential access**: When playing forward, frames decode sequentially without seeking
+- **Keyframe seeking**: For random access (scrubbing, jumping), the decoder seeks to the nearest keyframe
+- **Large jumps**: Forward jumps greater than 100 frames trigger keyframe seeking
+
+### Display Formats
+
+Videos can be displayed in:
+
+- **Grayscale** (`Gray`) - Single channel, 8-bit
+- **Color** (`Color`) - ARGB, 32-bit
+
+The display format affects how the video is processed and rendered but does not modify the source file.
+
+### Memory Considerations
+
+Only the current frame is held in memory. Large videos (4K, long duration) are handled efficiently since the entire video is not loaded at once.
+
+## Programmatic Access
+
+For developers integrating video loading:
+
+```cpp
+#include "DataManager/Media/Video_Data_Loader.hpp"
+
+// Load video into a VideoData object
+auto video_data = load_video_into_VideoData("path/to/video.mp4");
+
+// Access frame count
+int total_frames = video_data->getTotalFrameCount();
+
+// Load a specific frame
+video_data->LoadFrame(100);
+auto& frame_data = video_data->getRawData8(100);
+```
+
+See the [Developer Guide](../../developer/media_widget.qmd) for more details on programmatic media handling.
+
+## Related Topics
+
+- [How to Import Video](../../examples/video_import.qmd) - Step-by-step import guide with troubleshooting
+- [JSON Loading Reference](JSON_loading.qmd) - Complete JSON configuration options
+- [Media Viewer Overview](../media_viewer/overview.qmd) - Working with loaded video
+- [Data Loading Overview](index.qmd) - All data loading options

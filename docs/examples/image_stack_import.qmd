@@ -1,0 +1,332 @@
+---
+title: "How to Import Image Stacks"
+format: html
+---
+
+## Overview
+
+This guide shows you how to import sequences of image files into Neuralyzer. Image stacks are commonly used in neuroscience for:
+
+- **Two-photon (2P) microscopy** - Time-series of fluorescence images
+- **Widefield imaging** - Calcium imaging sequences
+- **High-speed behavioral cameras** - When saved as individual frames
+- **Confocal microscopy** - Z-stacks or time-lapse acquisitions
+
+Neuralyzer treats an image stack as "media" - a sequence of frames that can be navigated and annotated just like a video file.
+
+## Supported Image Formats
+
+Neuralyzer uses OpenCV for image loading, supporting many common formats:
+
+| Format | Extensions | Notes |
+|--------|------------|-------|
+| TIFF | `.tif`, `.tiff`, `.ome.tif` | Recommended for scientific imaging; supports 16-bit |
+| PNG | `.png` | Lossless compression, 8-bit or 16-bit |
+| JPEG | `.jpg`, `.jpeg` | Lossy compression, 8-bit only |
+| BMP | `.bmp` | Uncompressed |
+
+::: {.callout-tip}
+## Recommended Format
+For scientific imaging data, use **TIFF format** which preserves full bit depth (8-bit or 16-bit) without compression artifacts.
+:::
+
+---
+
+## Import via JSON Configuration {#json-import}
+
+For reproducible workflows, especially with multi-channel data, JSON configuration is the recommended approach.
+
+### Basic Image Stack Configuration
+
+Load all TIFF images from a directory:
+
+```json
+{
+  "data_type": "images",
+  "name": "media",
+  "filepath": "imaging_data",
+  "file_extensions": [".tif", ".tiff"],
+  "sort_by_name": true,
+  "display_format": "Gray"
+}
+```
+
+### Configuration Options
+
+| Element | Description | Required? | Type | Default |
+|---------|-------------|-----------|------|---------|
+| `data_type` | Must be `"images"` | Yes | string | — |
+| `name` | Identifier for this data in Neuralyzer | Yes | string | — |
+| `filepath` | Directory containing images, relative to JSON config | Yes | string | — |
+| `file_extensions` | Array of extensions to include | No | array | `[".png", ".jpg", ".jpeg"]` |
+| `filename_pattern` | Regex pattern to filter filenames | No | string | `""` (match all) |
+| `sort_by_name` | Sort files alphabetically | No | boolean | `true` |
+| `display_format` | `"Gray"` or `"Color"` | No | string | `"Color"` |
+| `recursive_search` | Search subdirectories | No | boolean | `false` |
+
+---
+
+## Loading Multi-Channel Data {#multi-channel}
+
+Two-photon and other multi-channel imaging systems often save each channel as separate files with channel identifiers in the filename. You can load multiple channels simultaneously using filename patterns.
+
+### Example: Two-Channel 2P Imaging
+
+Given files like:
+```
+experiment_001_Ch1_000001.ome.tif
+experiment_001_Ch1_000002.ome.tif
+experiment_001_Ch2_000001.ome.tif
+experiment_001_Ch2_000002.ome.tif
+...
+```
+
+Load both channels with this configuration:
+
+```json
+[
+  {
+    "data_type": "images",
+    "name": "media",
+    "filepath": ".",
+    "file_extensions": [".ome.tif", ".tif", ".tiff"],
+    "filename_pattern": "_Ch2_",
+    "sort_by_name": true,
+    "display_format": "Gray",
+    "recursive_search": false
+  },
+  {
+    "data_type": "images",
+    "name": "media_2",
+    "filepath": ".",
+    "file_extensions": [".ome.tif", ".tif", ".tiff"],
+    "filename_pattern": "_Ch1_",
+    "sort_by_name": true,
+    "display_format": "Gray",
+    "recursive_search": false
+  }
+]
+```
+
+::: {.callout-note}
+## Channel Naming Convention
+In this example, `_Ch2_` is loaded as the primary "media" (typically the green channel/GCaMP signal), while `_Ch1_` is loaded as "media_2" (typically red channel/structural marker). Adjust based on your acquisition system's naming convention.
+:::
+
+### Understanding Filename Patterns
+
+The `filename_pattern` field uses **regex (regular expression)** matching. The pattern is searched within each filename, so:
+
+| Pattern | Matches | Does Not Match |
+|---------|---------|----------------|
+| `_Ch1_` | `exp_Ch1_001.tif` | `exp_Ch2_001.tif` |
+| `GCaMP` | `mouse1_GCaMP_trial1.tif` | `mouse1_tdTomato_trial1.tif` |
+| `trial[0-9]+` | `exp_trial1.tif`, `exp_trial99.tif` | `exp_baseline.tif` |
+| `^image_` | `image_001.tif` | `exp_image_001.tif` |
+
+::: {.callout-tip}
+## Simple Patterns
+For most cases, a simple substring like `_Ch1_` or `green` works perfectly. You don't need complex regex unless your naming scheme requires it.
+:::
+
+---
+
+## Import via GUI Menu {#gui-import}
+
+You can also load image stacks through the GUI:
+
+1. Open Neuralyzer
+2. Navigate to **File → Load Data**
+3. Select any single image from your stack (e.g., the first `.tif` file)
+4. Neuralyzer will detect other images in the same directory
+
+::: {.callout-warning}
+## GUI Limitations
+Loading via the GUI menu uses default settings and cannot filter by filename pattern. For multi-channel data or specific filtering requirements, use [JSON configuration](#json-import).
+:::
+
+---
+
+## Working with 16-bit Images
+
+Scientific imaging often produces 16-bit images for higher dynamic range. Neuralyzer handles these automatically:
+
+- **16-bit TIFF files** are detected and processed appropriately
+- **Display normalization** scales values to the visible 0-255 range
+- **Original bit depth** is preserved in the underlying data
+
+### Display Format Options
+
+| Format | Description | Use Case |
+|--------|-------------|----------|
+| `"Gray"` | Single-channel grayscale | Fluorescence imaging, most 2P data |
+| `"Color"` | RGBA color display | Brightfield, histology, multi-color overlays |
+
+For fluorescence data, `"Gray"` is typically appropriate and more efficient.
+
+---
+
+## File Organization Best Practices
+
+### Recommended Directory Structure
+
+```
+experiment/
+├── config.json           # Your loading configuration
+├── imaging/
+│   ├── Ch1/              # Channel 1 images
+│   │   ├── frame_0001.tif
+│   │   ├── frame_0002.tif
+│   │   └── ...
+│   └── Ch2/              # Channel 2 images
+│       ├── frame_0001.tif
+│       ├── frame_0002.tif
+│       └── ...
+├── behavior_video.mp4
+└── tracking_data.csv
+```
+
+With this structure, use `recursive_search: false` and separate `filepath` entries:
+
+```json
+[
+  {
+    "data_type": "images",
+    "name": "media",
+    "filepath": "imaging/Ch2",
+    "file_extensions": [".tif"],
+    "sort_by_name": true,
+    "display_format": "Gray"
+  },
+  {
+    "data_type": "images", 
+    "name": "media_2",
+    "filepath": "imaging/Ch1",
+    "file_extensions": [".tif"],
+    "sort_by_name": true,
+    "display_format": "Gray"
+  }
+]
+```
+
+### Flat Directory with Pattern Matching
+
+If all channels are in one directory with different naming patterns:
+
+```
+experiment/
+├── config.json
+└── imaging/
+    ├── mouse1_GCaMP_0001.tif
+    ├── mouse1_GCaMP_0002.tif
+    ├── mouse1_tdTomato_0001.tif
+    ├── mouse1_tdTomato_0002.tif
+    └── ...
+```
+
+```json
+[
+  {
+    "data_type": "images",
+    "name": "media",
+    "filepath": "imaging",
+    "file_extensions": [".tif"],
+    "filename_pattern": "GCaMP",
+    "sort_by_name": true,
+    "display_format": "Gray"
+  },
+  {
+    "data_type": "images",
+    "name": "media_2", 
+    "filepath": "imaging",
+    "file_extensions": [".tif"],
+    "filename_pattern": "tdTomato",
+    "sort_by_name": true,
+    "display_format": "Gray"
+  }
+]
+```
+
+---
+
+## Troubleshooting
+
+### No images loaded
+
+- **Check directory path**: Ensure `filepath` is relative to the JSON config file location
+- **Check extensions**: Verify `file_extensions` includes your file type (note the leading dot: `.tif` not `tif`)
+- **Check pattern**: If using `filename_pattern`, test your regex. A typo like `_ch1_` won't match `_Ch1_` (regex is case-sensitive)
+
+### Images appear in wrong order
+
+- Ensure `sort_by_name: true` is set
+- Check that your filename numbering has consistent zero-padding (e.g., `0001`, `0002` not `1`, `2`)
+
+### Images appear too dark or washed out
+
+This can happen with 16-bit images. Neuralyzer normalizes display values, but:
+
+- Try adjusting contrast in the Media Viewer after loading
+- Check if your images have valid data (not all zeros or saturated)
+
+### Wrong channel loaded as primary media
+
+Swap the `name` values in your configuration. The entry with `"name": "media"` becomes the primary display in the Media Viewer.
+
+### Pattern matches unwanted files
+
+Make your regex pattern more specific:
+
+- Add underscores or delimiters: `_Ch1_` instead of `Ch1`
+- Use anchors if needed: `^Ch1` for "starts with Ch1"
+
+---
+
+## Complete Example: 2P Calcium Imaging Session
+
+A full configuration loading imaging data with behavioral video and events:
+
+```json
+[
+  {
+    "data_type": "images",
+    "name": "media",
+    "filepath": "2p_data",
+    "file_extensions": [".ome.tif", ".tif"],
+    "filename_pattern": "_Ch2_",
+    "sort_by_name": true,
+    "display_format": "Gray",
+    "recursive_search": false
+  },
+  {
+    "data_type": "images",
+    "name": "structural_channel",
+    "filepath": "2p_data",
+    "file_extensions": [".ome.tif", ".tif"],
+    "filename_pattern": "_Ch1_",
+    "sort_by_name": true,
+    "display_format": "Gray",
+    "recursive_search": false
+  },
+  {
+    "data_type": "video",
+    "name": "behavior",
+    "filepath": "behavior_cam.mp4"
+  },
+  {
+    "data_type": "digital_interval",
+    "name": "stimulus_epochs",
+    "filepath": "trial_times.csv",
+    "format": "csv"
+  }
+]
+```
+
+---
+
+## See Also
+
+- [Image Loading Reference](../user_guide/data_loading/Image_Loading.qmd) - Complete reference documentation
+- [JSON Configuration Reference](../user_guide/data_loading/JSON_loading.qmd) - All JSON loading options
+- [Media Viewer Overview](../user_guide/media_viewer/overview.qmd) - Working with loaded images
+- [How to Import Video](video_import.qmd) - Video file import

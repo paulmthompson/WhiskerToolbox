@@ -24,6 +24,10 @@ website:
             href: labeling/keypoint.qmd
           - text: "Mask Creation"
             href: labeling/mask.qmd
+          - text: "Video Import"
+            href: examples/video_import.qmd
+          - text: "Image Stack Import"
+            href: examples/image_stack_import.qmd
           - text: "Load Tabular Binary Events"
             href: examples/tabular_binary_events.qmd
             
@@ -95,6 +99,7 @@ website:
             - user_guide/data_loading/Point_Loading.qmd
             - user_guide/data_loading/Mask_Loading.qmd
             - user_guide/data_loading/Video_Loading.qmd
+            - user_guide/data_loading/Image_Loading.qmd
             - user_guide/data_loading/Line_Loading.qmd
             - user_guide/data_loading/Tensor_Loading.qmd
         - section: "Media Viewer"
