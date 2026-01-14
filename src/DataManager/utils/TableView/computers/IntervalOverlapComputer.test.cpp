@@ -384,10 +384,10 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create column intervals
+        // Create column intervals - identical intervals are deduplicated
         std::vector<Interval> columnIntervals = {
                 {1, 3},// Interval 0
-                {1, 3} // Interval 1 (identical to interval 0)
+                {1, 3} // Duplicate - will be deduplicated
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -399,7 +399,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
 
         ExecutionPlan plan(rowIntervals, timeFrame);
 
-        // Test AssignID operation (should return the last matching interval)
+        // Test AssignID operation (returns index of matching interval)
         IntervalOverlapComputer<int64_t> assignComputer(intervalSource,
                                                         IntervalOverlapOperation::AssignID,
                                                         "IdenticalIntervals");
@@ -407,7 +407,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto [assignResults, assignEntity_ids] = assignComputer.compute(plan);
 
         REQUIRE(assignResults.size() == 1);
-        REQUIRE(assignResults[0] == 1);// Should return the last matching interval (index 1)
+        REQUIRE(assignResults[0] == 0);// Single deduplicated interval at index 0
     }
 }
 
@@ -1510,14 +1510,8 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         auto stimulus_data = dm.getData<DigitalIntervalSeries>("StimulusIntervals");
         REQUIRE(stimulus_data != nullptr);
 
-        auto source_stimulus_entity_ids = stimulus_data->getEntityIds();
-        std::cout << "Source stimulus data has " << source_stimulus_entity_ids.size() << " EntityIDs" << std::endl;
-
-        // Debug: Print source EntityIDs
-        INFO("Source EntityIDs from StimulusIntervals:");
-        for (size_t i = 0; i < source_stimulus_entity_ids.size(); ++i) {
-            INFO("  Source EntityID[" << i << "] = " << source_stimulus_entity_ids[i].id);
-        }
+        auto source_stimulus_entity_ids = stimulus_data->view();
+        std::cout << "Source stimulus data has " << stimulus_data->size() << " EntityIDs" << std::endl;
 
         // Debug: Print table EntityIDs
         INFO("Table EntityIDs from IntervalOverlapComputer:");
@@ -1528,9 +1522,10 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // Verify that extracted EntityIDs are a subset of source EntityIDs
         // (Not all source EntityIDs may appear in the table due to overlap filtering)
         for (auto const & table_entity_id: table_entity_ids) {
-            bool found = std::find(source_stimulus_entity_ids.begin(),
-                                   source_stimulus_entity_ids.end(),
-                                   table_entity_id) != source_stimulus_entity_ids.end();
+            bool found = std::ranges::find_if(source_stimulus_entity_ids,
+                                             [&](IntervalWithId const & interval_with_id) {
+                                                 return interval_with_id.id() == table_entity_id;
+                                             }) != source_stimulus_entity_ids.end();
             REQUIRE(found);
             INFO("✓ Table EntityID " << table_entity_id.id << " found in source data");
         }

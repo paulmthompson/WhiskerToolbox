@@ -1,0 +1,210 @@
+---
+title: "AnalogTimeSeries View Storage Performance Analysis"
+format: html
+---
+
+This document describes the performance analysis of using `AnalogTimeSeries` views vs. raw vectors for line plot generation, a common operation in neural data visualization.
+
+## Background
+
+A line plot displays continuous analog signals (e.g., LFP, EMG) aligned to trial events. For each alignment event, we need to:
+
+1. Extract samples within a time window around the alignment point
+2. Transform the data for GPU rendering (populate vertex buffers)
+
+We compared two approaches:
+
+1. **Baseline (Raw Vectors)**: Use `std::vector<std::vector<float>>` for windowed signals
+2. **View-Based**: Use `std::vector<shared_ptr<AnalogTimeSeries>>` with view storage backend
+
+## Key Difference from DigitalEventSeries Views
+
+Unlike `DigitalEventSeries` views which use index indirection (each access requires looking up an index, then accessing the source), `AnalogTimeSeries` views provide **contiguous span access** because:
+
+- `ViewAnalogDataStorage` stores start/end offsets into the source `VectorAnalogDataStorage`
+- The source data is always contiguous in memory
+- Views can return `std::span<float const>` directly pointing into source memory
+
+This means iteration performance is essentially identical to raw vectors once views are created.
+
+## Benchmark Configuration
+
+```
+Total samples:       1,000,000 (full analog time series)
+Alignment events:      1,000   (number of trials/windows)
+Window size:           1,000   (±500 samples around each alignment)
+Samples per window:    1,000   (contiguous block)
+```
+
+## Results Summary
+
+### Full Pipeline Performance
+
+| Approach | Time (µs) | Relative |
+|----------|----------|----------|
+| Baseline (Raw Vectors) | 2,456 | 1.0x |
+| View-Based (Span) | 5,229 | 2.1x slower |
+
+### Phase Breakdown
+
+| Phase | Baseline (µs) | View-Based (µs) | Ratio |
+|-------|---------------|-----------------|-------|
+| Window/View Creation | 253 | 3,415 | 13.5x |
+| Iteration Only (Span) | 1,069 | 1,078 | 1.01x |
+| Iteration Only (Iterator) | 1,069 | 3,220 | 3.0x |
+
+## Key Insights
+
+### View Creation is the Bottleneck (13.5x)
+
+Creating 1,000 views takes ~3.4ms vs ~0.25ms for raw vector extraction. This overhead comes from:
+
+| Factor | Cost |
+|--------|------|
+| `shared_ptr` allocation per view | ~400ns each |
+| `ViewAnalogDataStorage` construction | Minimal |
+| Time index lookup (binary search) | ~200ns × 2 per view |
+| Time storage construction | Vector allocation for view time indices |
+| Type erasure wrapper construction | `StorageModel` allocation |
+
+The baseline copies ~4MB of float data (1000 windows × 1000 samples × 4 bytes), but modern memory bandwidth makes this faster than the allocation overhead of views.
+
+### Iteration Performance is Identical with Span Access (1.01x)
+
+Once views are created, span-based iteration matches raw vector performance exactly:
+
+```cpp
+// Both compile to essentially the same code
+for (auto val : vector) { sum += val; }
+for (auto val : view->getAnalogTimeSeries()) { sum += val; }
+```
+
+This is because `ViewAnalogDataStorage::getSpanImpl()` returns a span pointing directly into the source memory.
+
+### Iterator Access Has 3x Overhead
+
+Using `elements()` iterator instead of span access adds overhead:
+
+```cpp
+// This is 3x slower due to virtual dispatch and pair construction
+for (auto const& [time, value] : view->elements()) { sum += value; }
+```
+
+## Architecture: Zero-Copy View Storage
+
+### How It Works
+
+The `DataStorageWrapper` uses `shared_ptr` internally (fixed from previous `unique_ptr` bug):
+
+```cpp
+class DataStorageWrapper {
+    std::shared_ptr<StorageConcept> _impl;  // Shared ownership of storage
+};
+```
+
+When creating a view, we use the **aliasing constructor** of `shared_ptr`:
+
+```cpp
+std::shared_ptr<VectorAnalogDataStorage const> getSharedVectorStorage() const {
+    if (auto vector_model = std::dynamic_pointer_cast<StorageModel<VectorAnalogDataStorage> const>(_impl)) {
+        // Aliasing constructor: shares ownership with _impl but points to inner storage
+        return std::shared_ptr<VectorAnalogDataStorage const>(vector_model, &vector_model->_storage);
+    }
+    return nullptr;
+}
+```
+
+### View Storage Structure
+
+Each view consists of:
+
+1. A `shared_ptr` to the source's `VectorAnalogDataStorage` (shared among all views)
+2. Start and end indices defining the view window
+3. A separate `TimeIndexStorage` for the view's time indices
+
+```
+Source (1M samples)
+    └── _data_storage (DataStorageWrapper)
+            └── _impl (shared_ptr<StorageConcept>)
+                    └── VectorAnalogDataStorage with float* data
+
+View 1 (window around alignment 0)      ──┐
+    └── ViewAnalogDataStorage            │
+        ├── _source (shared_ptr) ────────┼── All share same source
+        ├── _start_index = 1000          │
+        └── _end_index = 2000            │
+                                         │
+View 2 (window around alignment 1)      ──┤
+    └── ViewAnalogDataStorage            │
+        ├── _source (shared_ptr) ────────┘
+        ├── _start_index = 5500
+        └── _end_index = 6500
+...
+```
+
+## Historical Note: The unique_ptr Bug
+
+The original `DataStorageWrapper` implementation used `std::unique_ptr<StorageConcept>`:
+
+```cpp
+// BUG: unique_ptr prevented sharing - had to copy entire storage for views!
+std::unique_ptr<StorageConcept> _impl;
+```
+
+This was the same bug found in `DigitalEventStorageWrapper`. The fix changed to `shared_ptr` to enable:
+
+- Zero-copy view creation via aliasing constructor
+- Correct lifetime management (source outlives views)
+- Multiple views sharing one underlying storage
+
+## When to Use Views vs. Raw Vectors
+
+**Views are appropriate for:**
+
+- Integration with TimeFrame conversion system
+- Chaining with lazy transforms
+- When you need `AnalogTimeSeries` API (getAtTime, elements, etc.)
+- Interactive applications where ~2x overhead is acceptable
+
+**Raw vectors are better for:**
+
+- High-frequency batch processing
+- Simple windowed extraction without time conversion
+- When maximum throughput is required
+- Rendering hot paths with 60+ FPS requirements
+
+## Access Pattern Recommendations
+
+| Access Pattern | Method | Relative Speed |
+|----------------|--------|----------------|
+| **Best** | `getAnalogTimeSeries()` → span | 1.0x |
+| Good | `getDataInTimeFrameIndexRange()` → span | 1.0x |
+| Slower | `elements()` iterator | 3.0x |
+| Slowest | `getAtTime()` per-sample | 10x+ |
+
+## Running the Benchmark
+
+```bash
+# Build
+cmake --preset linux-clang-release -DENABLE_BENCHMARK=ON
+cmake --build --preset linux-clang-release --target benchmark_LinePlotViews
+
+# Run all tests
+./out/build/Clang/Release/benchmark/benchmark_LinePlotViews
+
+# Run specific tests
+./benchmark_LinePlotViews --benchmark_filter="FullPipeline"
+./benchmark_LinePlotViews --benchmark_filter="IterationOnly"
+
+# Cache analysis
+perf stat -e cache-references,cache-misses,L1-dcache-load-misses \
+    ./benchmark_LinePlotViews --benchmark_filter="IterationOnly"
+```
+
+## Conclusion
+
+The view-based approach using `AnalogTimeSeries` achieves true zero-copy data sharing via `shared_ptr` with aliasing constructor. Unlike `DigitalEventSeries` views which have iteration overhead due to index indirection, `AnalogTimeSeries` views provide **identical iteration performance** to raw vectors when using span access.
+
+The overall overhead is ~2.1x compared to raw vectors, entirely from view object allocation (~3.4ms for 1000 views). For applications where views are created once and iterated many times, this overhead amortizes away. For high-frequency window extraction, raw vectors remain the better choice.
+
+**Key recommendation**: Always use `getAnalogTimeSeries()` or `getDataInTimeFrameIndexRange()` for span access rather than `elements()` iterator when iterating view data.

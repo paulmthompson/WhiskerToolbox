@@ -2,9 +2,10 @@
 #define WHISKERTOOLBOX_ENTITY_RESOLVER_HPP
 
 #include "Entity/EntityTypes.hpp"
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_set>
@@ -14,6 +15,13 @@
 class DataManager;
 
 namespace WhiskerToolbox::Lineage {
+class DataManagerEntityDataSource;
+}
+
+namespace WhiskerToolbox::Entity::Lineage {
+
+// Forward declaration
+class LineageResolver;
 
 /**
  * @brief Resolves derived data elements back to their source EntityIds
@@ -44,6 +52,11 @@ public:
      * @param dm Pointer to the DataManager (must outlive this resolver)
      */
     explicit EntityResolver(DataManager * dm);
+
+    /**
+     * @brief Destructor (defined in .cpp to allow forward-declared unique_ptr members)
+     */
+    ~EntityResolver();
 
     // =========================================================================
     // Time-based Resolution
@@ -175,54 +188,21 @@ public:
 private:
     DataManager * _dm;
 
-    // =========================================================================
-    // Resolution Dispatch Methods
-    // =========================================================================
+    // Composition: delegates resolution to the generic LineageResolver
+    // These are created lazily when needed
+    std::unique_ptr<WhiskerToolbox::Lineage::DataManagerEntityDataSource> _data_source;
+    std::unique_ptr<LineageResolver> _resolver;
 
-    // Get EntityIds from a source container at a specific time
-    [[nodiscard]] std::vector<EntityId> getEntityIdsFromContainer(
-            std::string const & data_key,
-            TimeFrameIndex time,
-            std::size_t local_index = 0) const;
-
-    // Get all EntityIds from a source container at a specific time
-    [[nodiscard]] std::vector<EntityId> getAllEntityIdsAtTime(
-            std::string const & data_key,
-            TimeFrameIndex time) const;
-
-    // Resolution strategy dispatch
-    [[nodiscard]] std::vector<EntityId> resolveOneToOne(
-            OneToOneByTime const & lineage,
-            TimeFrameIndex time,
-            std::size_t local_index) const;
-
-    [[nodiscard]] std::vector<EntityId> resolveAllToOne(
-            AllToOneByTime const & lineage,
-            TimeFrameIndex time) const;
-
-    [[nodiscard]] std::vector<EntityId> resolveSubset(
-            SubsetLineage const & lineage,
-            TimeFrameIndex time) const;
-
-    [[nodiscard]] std::vector<EntityId> resolveMultiSource(
-            MultiSourceLineage const & lineage,
-            TimeFrameIndex time,
-            std::size_t local_index) const;
-
-    [[nodiscard]] std::vector<EntityId> resolveExplicit(
-            ExplicitLineage const & lineage,
-            std::size_t derived_index) const;
-
-    [[nodiscard]] std::vector<EntityId> resolveEntityMapped(
-            EntityMappedLineage const & lineage,
-            EntityId derived_entity_id) const;
-
-    [[nodiscard]] std::vector<EntityId> resolveImplicit(
-            ImplicitEntityMapping const & lineage,
-            TimeFrameIndex time,
-            std::size_t local_index) const;
+    /**
+     * @brief Ensure the internal resolver is initialized
+     * 
+     * Creates the DataManagerEntityDataSource and LineageResolver if they
+     * don't exist yet. This lazy initialization avoids issues with
+     * construction order.
+     */
+    void ensureResolverInitialized() const;
 };
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
 
 #endif// WHISKERTOOLBOX_ENTITY_RESOLVER_HPP

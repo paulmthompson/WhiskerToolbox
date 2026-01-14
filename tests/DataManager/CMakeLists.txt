@@ -20,6 +20,12 @@ add_executable(test_data_manager
        test_data_manager.cpp
 
         ragged_storage_test.cpp
+        ragged_analog_storage_test.cpp
+        digital_event_storage_test.cpp
+        digital_interval_storage_test.cpp
+
+        utils/TimeSeriesConcepts.test.cpp
+        utils/TimeSeriesFilters.test.cpp
 
         test_filename_timeframe.cpp
         test_tableview.cpp
@@ -29,12 +35,8 @@ add_executable(test_data_manager
         # Builder tests
         fixtures/test_builders.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Observer/Observer_Data.test.cpp
-
-        ${CMAKE_SOURCE_DIR}/src/Entity/EntityGroupManager.test.cpp
-
-        ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/LineageRegistry.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/EntityResolver.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/DataManagerEntityDataSource.test.cpp
 
         Lineage/test_lineage_recorder.test.cpp
         Lineage/test_transform_lineage_integration.test.cpp

@@ -75,12 +75,12 @@ void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft,
     static_cast<void>(roles);
 
     auto events = _data_manager->getData<DigitalEventSeries>(_active_key);
-    auto event_series = events->getEventSeries();
+    auto event_series = events->view();
 
     for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
         auto newTime = _event_table_model->getEvent(row);
-        if (static_cast<size_t>(row) < event_series.size()) {
-            events->removeEvent(event_series[row]);
+        if (static_cast<size_t>(row) < events->size()) {
+            events->removeEvent(event_series[row].time());
             events->addEvent(newTime);
         }
     }
@@ -102,7 +102,12 @@ void DigitalEventSeries_Widget::_calculateEvents() {
 
     ui->total_events_label->setText(QString::number(events->size()));
 
-    _event_table_model->setEvents(events->getEventSeries());
+    auto event_view = events->view();
+    std::vector<TimeFrameIndex> event_vector;
+    for (auto const & event : event_view) {
+        event_vector.push_back(event.time());
+    }
+    _event_table_model->setEvents(event_vector);
 }
 
 

@@ -1,10 +1,10 @@
 #ifndef COREPLOTTING_MAPPERS_TIMESERIESMAPPER_HPP
 #define COREPLOTTING_MAPPERS_TIMESERIESMAPPER_HPP
 
+#include "CorePlotting/Layout/SeriesLayout.hpp"
 #include "MappedElement.hpp"
 #include "MappedLineView.hpp"
 #include "MapperConcepts.hpp"
-#include "CorePlotting/Layout/SeriesLayout.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -86,17 +86,15 @@ namespace TimeSeriesMapper {
  * @see mapEventsToVector For materialized output
  */
 [[nodiscard]] inline auto mapEvents(
-    DigitalEventSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame
-) {
+        DigitalEventSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame) {
     float const y_center = layout.y_transform.offset;
-    
-    return series.view() 
-        | std::views::transform([&time_frame, y_center](auto const & event_with_id) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time));
-            return MappedElement{x, y_center, event_with_id.entity_id};
-        });
+
+    return series.view() | std::views::transform([&time_frame, y_center](auto const & event_with_id) {
+               float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time));
+               return MappedElement{x, y_center, event_with_id.entity_id};
+           });
 }
 
 /**
@@ -120,21 +118,20 @@ namespace TimeSeriesMapper {
  * @see mapEventsToVector For materializing full series
  */
 [[nodiscard]] inline auto mapEventsInRange(
-    DigitalEventSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & query_time_frame,
-    TimeFrameIndex start_time,
-    TimeFrameIndex end_time
-) {
+        DigitalEventSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & query_time_frame,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time) {
     float const y_center = layout.y_transform.offset;
     auto const * series_tf = series.getTimeFrame().get();
-    
+
     // views::all on an rvalue vector creates an owning_view
-    return std::views::all(series.getEventsWithIdsInRange(start_time, end_time, query_time_frame))
-        | std::views::transform([series_tf, y_center](auto const & event) {
-            float const x = static_cast<float>(series_tf->getTimeAtIndex(event.event_time));
-            return MappedElement{x, y_center, event.entity_id};
-        });
+    return series.viewInRange(start_time, end_time, query_time_frame) |
+           std::views::transform([series_tf, y_center](auto const & event) {
+               float const x = static_cast<float>(series_tf->getTimeAtIndex(event.event_time));
+               return MappedElement{x, y_center, event.entity_id};
+           });
 }
 
 // ============================================================================
@@ -159,23 +156,21 @@ namespace TimeSeriesMapper {
  * @see mapIntervalsToVector For materializing to a vector
  */
 [[nodiscard]] inline auto mapIntervals(
-    DigitalIntervalSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame
-) {
+        DigitalIntervalSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame) {
     float const y_center = layout.y_transform.offset;
-    float const height = layout.y_transform.gain * 2.0f;  // gain is half-height
+    float const height = layout.y_transform.gain * 2.0f;// gain is half-height
     float const y_bottom = y_center - height / 2.0f;
-    
-    return series.view()
-        | std::views::transform([&time_frame, y_bottom, height](auto const & interval_with_id) {
-            float x_start = static_cast<float>(
-                time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.start}));
-            float x_end = static_cast<float>(
-                time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.end}));
-            float width = x_end - x_start;
-            return MappedRectElement{x_start, y_bottom, width, height, interval_with_id.entity_id};
-        });
+
+    return series.view() | std::views::transform([&time_frame, y_bottom, height](auto const & interval_with_id) {
+               float x_start = static_cast<float>(
+                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.start}));
+               float x_end = static_cast<float>(
+                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.end}));
+               float width = x_end - x_start;
+               return MappedRectElement{x_start, y_bottom, width, height, interval_with_id.entity_id};
+           });
 }
 
 /**
@@ -197,37 +192,35 @@ namespace TimeSeriesMapper {
  * @see mapIntervalsToVector For materializing full series
  */
 [[nodiscard]] inline auto mapIntervalsInRange(
-    DigitalIntervalSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & query_time_frame,
-    TimeFrameIndex start_time,
-    TimeFrameIndex end_time
-) {
+        DigitalIntervalSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & query_time_frame,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time) {
     float const y_center = layout.y_transform.offset;
-    float const height = layout.y_transform.gain * 2.0f;  // gain is half-height
+    float const height = layout.y_transform.gain * 2.0f;// gain is half-height
     float const y_bottom = y_center - height / 2.0f;
-    
+
     float const start_time_f = static_cast<float>(query_time_frame.getTimeAtIndex(start_time));
     float const end_time_f = static_cast<float>(query_time_frame.getTimeAtIndex(end_time));
-    
+
     auto const * series_tf = series.getTimeFrame().get();
-    
+
     // views::all on an rvalue vector creates an owning_view
-    return std::views::all(series.getIntervalsWithIdsInRange(start_time, end_time, query_time_frame))
-        | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f](auto const & interval_with_id) {
-            auto x_start = static_cast<float>(
-                series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.start)));
-            auto x_end = static_cast<float>(
-                series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.end)));
-            
-            // Clip to visible range
-            x_start = std::max(x_start, start_time_f);
-            x_end = std::min(x_end, end_time_f);
-            
-            float const width = x_end - x_start;
-            
-            return MappedRectElement{x_start, y_bottom, width, height, interval_with_id.entity_id};
-        });
+    return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f](auto const & interval_with_id) {
+               auto x_start = static_cast<float>(
+                       series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.start)));
+               auto x_end = static_cast<float>(
+                       series_tf->getTimeAtIndex(TimeFrameIndex(interval_with_id.interval.end)));
+
+               // Clip to visible range
+               x_start = std::max(x_start, start_time_f);
+               x_end = std::min(x_end, end_time_f);
+
+               float const width = x_end - x_start;
+
+               return MappedRectElement{x_start, y_bottom, width, height, interval_with_id.entity_id};
+           });
 }
 
 // ============================================================================
@@ -263,21 +256,23 @@ namespace TimeSeriesMapper {
  * @see mapAnalogToVector For materializing to a vector
  */
 [[nodiscard]] inline auto mapAnalogSeries(
-    AnalogTimeSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    float y_scale,
-    TimeFrameIndex start_time,
-    TimeFrameIndex end_time
-) {
+        AnalogTimeSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & query_time_frame,
+        float y_scale,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time) {
     float const y_offset = layout.y_transform.offset;
-    
-    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time)
-        | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
-            float y = tv_point.value * y_scale + y_offset;
-            return MappedVertex{x, y};
-        });
+    auto const * series_tf = series.getTimeFrame().get();
+
+    // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
+    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset](auto const & tv_point) {
+               // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
+               float x = series_tf ? static_cast<float>(series_tf->getTimeAtIndex(tv_point.time_frame_index))
+                                   : static_cast<float>(tv_point.time_frame_index.getValue());
+               float y = tv_point.value() * y_scale + y_offset;
+               return MappedVertex{x, y};
+           });
 }
 
 /**
@@ -295,19 +290,17 @@ namespace TimeSeriesMapper {
  * @see mapAnalogSeriesWithIndices For gap detection support
  */
 [[nodiscard]] inline auto mapAnalogSeriesFull(
-    AnalogTimeSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    float y_scale
-) {
+        AnalogTimeSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame,
+        float y_scale) {
     float const y_offset = layout.y_transform.offset;
-    
-    return series.view()
-        | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
-            float y = tv_point.value * y_scale + y_offset;
-            return MappedVertex{x, y};
-        });
+
+    return series.view() | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
+               float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
+               float y = tv_point.value() * y_scale + y_offset;
+               return MappedVertex{x, y};
+           });
 }
 
 /**
@@ -328,21 +321,23 @@ namespace TimeSeriesMapper {
  * @see MappedAnalogVertex For the vertex structure with time_index
  */
 [[nodiscard]] inline auto mapAnalogSeriesWithIndices(
-    AnalogTimeSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    float y_scale,
-    TimeFrameIndex start_time,
-    TimeFrameIndex end_time
-) {
+        AnalogTimeSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & query_time_frame,
+        float y_scale,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time) {
     float const y_offset = layout.y_transform.offset;
-    
-    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time)
-        | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
-            float y = tv_point.value * y_scale + y_offset;
-            return MappedAnalogVertex{x, y, tv_point.time_frame_index.getValue()};
-        });
+    auto const * series_tf = series.getTimeFrame().get();
+
+    // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
+    return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset](auto const & tv_point) {
+               // Data's TimeFrameIndex is in series timeframe, use series timeframe for X
+               float x = series_tf ? static_cast<float>(series_tf->getTimeAtIndex(tv_point.time_frame_index))
+                                   : static_cast<float>(tv_point.time_frame_index.getValue());
+               float y = tv_point.value() * y_scale + y_offset;
+               return MappedAnalogVertex{x, y, tv_point.time_frame_index.getValue()};
+           });
 }
 
 // ============================================================================
@@ -360,20 +355,10 @@ namespace TimeSeriesMapper {
  * @param time_frame TimeFrame for index→time conversion
  * @return Vector of MappedElement
  */
-[[nodiscard]] inline std::vector<MappedElement> mapEventsToVector(
-    DigitalEventSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame
-) {
-    std::vector<MappedElement> result;
-    result.reserve(series.size());
-    
-    for (auto const & event : mapEvents(series, layout, time_frame)) {
-        result.push_back(event);
-    }
-    
-    return result;
-}
+[[nodiscard]] std::vector<MappedElement> mapEventsToVector(
+        DigitalEventSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame);
 
 /**
  * @brief Map intervals to a vector of MappedRectElement
@@ -383,20 +368,10 @@ namespace TimeSeriesMapper {
  * @param time_frame TimeFrame for conversion
  * @return Vector of MappedRectElement
  */
-[[nodiscard]] inline std::vector<MappedRectElement> mapIntervalsToVector(
-    DigitalIntervalSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame
-) {
-    std::vector<MappedRectElement> result;
-    result.reserve(series.size());
-    
-    for (auto const & rect : mapIntervals(series, layout, time_frame)) {
-        result.push_back(rect);
-    }
-    
-    return result;
-}
+[[nodiscard]] std::vector<MappedRectElement> mapIntervalsToVector(
+        DigitalIntervalSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame);
 
 /**
  * @brief Map analog series to a vector of MappedVertex
@@ -409,27 +384,16 @@ namespace TimeSeriesMapper {
  * @param end_time End of range
  * @return Vector of MappedVertex
  */
-[[nodiscard]] inline std::vector<MappedVertex> mapAnalogToVector(
-    AnalogTimeSeries const & series,
-    SeriesLayout const & layout,
-    TimeFrame const & time_frame,
-    float y_scale,
-    TimeFrameIndex start_time,
-    TimeFrameIndex end_time
-) {
-    std::vector<MappedVertex> result;
-    // Estimate capacity based on range
-    auto range = mapAnalogSeries(series, layout, time_frame, y_scale, start_time, end_time);
-    
-    for (auto const & vertex : range) {
-        result.push_back(vertex);
-    }
-    
-    return result;
-}
+[[nodiscard]] std::vector<MappedVertex> mapAnalogToVector(
+        AnalogTimeSeries const & series,
+        SeriesLayout const & layout,
+        TimeFrame const & time_frame,
+        float y_scale,
+        TimeFrameIndex start_time,
+        TimeFrameIndex end_time);
 
-} // namespace TimeSeriesMapper
+}// namespace TimeSeriesMapper
 
-} // namespace CorePlotting
+}// namespace CorePlotting
 
-#endif // COREPLOTTING_MAPPERS_TIMESERIESMAPPER_HPP
+#endif// COREPLOTTING_MAPPERS_TIMESERIESMAPPER_HPP

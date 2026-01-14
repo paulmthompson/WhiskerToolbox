@@ -22,7 +22,7 @@ template<typename T>
 void IntervalPropertyComputer<T>::_validateRowIntervalsAreSubset(std::vector<TimeFrameInterval> const & rowIntervals,
                                                                  TimeFrame const * destinationTimeFrame) const {
     // Get all intervals from the source
-    auto sourceIntervals = m_source->getDigitalIntervalSeries();
+    auto sourceIntervals = m_source->view();
 
     auto sourceTimeFrame = m_source->getTimeFrame();
     if (sourceTimeFrame.get() != destinationTimeFrame) {
@@ -33,7 +33,7 @@ void IntervalPropertyComputer<T>::_validateRowIntervalsAreSubset(std::vector<Tim
     for (auto const & rowInterval: rowIntervals) {
         bool found = false;
         for (auto const & sourceInterval: sourceIntervals) {
-            if (rowInterval.start.getValue() == sourceInterval.start && rowInterval.end.getValue() == sourceInterval.end) {
+            if (rowInterval.start.getValue() == sourceInterval.value().start && rowInterval.end.getValue() == sourceInterval.value().end) {
                 found = true;
                 break;
             }

@@ -1,8 +1,9 @@
 #include "Lineage/LineageRecorder.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 
 #include <stdexcept>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 void LineageRecorder::record(
         LineageRegistry & registry,
@@ -88,4 +89,4 @@ void LineageRecorder::recordSource(
     registry.setLineage(data_key, Source{});
 }
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage

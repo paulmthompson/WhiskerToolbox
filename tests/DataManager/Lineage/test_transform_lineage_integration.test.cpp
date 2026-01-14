@@ -1,7 +1,7 @@
 #include "Lineage/EntityResolver.hpp"
 #include "Lineage/LineageRecorder.hpp"
-#include "Lineage/LineageRegistry.hpp"
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 #include "DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -13,7 +13,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-using namespace WhiskerToolbox::Lineage;
+using namespace WhiskerToolbox::Entity::Lineage;
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
 using Catch::Matchers::UnorderedEquals;

@@ -95,7 +95,11 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load_into_DigitalEventSeries(st
             
             if (scale != 1.0f) {
                 for (auto & series : loaded_series) {
-                    auto events = series->getEventSeries();  // This returns const&, so we need to copy
+                    auto events_view = series->view();
+                    auto events = std::vector<TimeFrameIndex>();
+                    for (auto e : events_view) {
+                        events.push_back(e.time());
+                    }
                     std::vector<TimeFrameIndex> scaled_events = events;  // Make a copy
                     scale_events(scaled_events, scale, scale_divide);
                     series = std::make_shared<DigitalEventSeries>(scaled_events);

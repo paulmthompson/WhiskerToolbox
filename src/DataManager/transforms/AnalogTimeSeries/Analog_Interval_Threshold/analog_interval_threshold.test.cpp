@@ -26,13 +26,13 @@
 auto validateIntervalsAboveThreshold = [](
                                                auto const & values,
                                                auto const & times,
-                                               std::vector<Interval> const & intervals,
+                                               std::ranges::range auto const & intervals,
                                                IntervalThresholdParams const & params) -> bool {
     for (auto const & interval: intervals) {
         // Find all time indices that fall within this interval
         for (size_t i = 0; i < times.size(); ++i) {
-            if (times[i].getValue() >= static_cast<int64_t>(interval.start) &&
-                times[i].getValue() <= static_cast<int64_t>(interval.end)) {
+            if (times[i].getValue() >= static_cast<int64_t>(interval.value().start) &&
+                times[i].getValue() <= static_cast<int64_t>(interval.value().end)) {
 
                 // Check if this value meets the threshold criteria
                 bool meetsThreshold = false;
@@ -83,13 +83,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);// Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -117,13 +117,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);// Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
 
         // Validate that all values during intervals meet negative threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -142,13 +142,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);// Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
 
         // Validate that all values during intervals meet absolute threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -167,15 +167,15 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 3);// Three separate intervals - lockout prevents starting too soon
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 3);// Three separate intervals - lockout prevents starting too soon
 
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 200);
-        REQUIRE(intervals[1].start == 300);
-        REQUIRE(intervals[1].end == 300);
-        REQUIRE(intervals[2].start == 450);
-        REQUIRE(intervals[2].end == 450);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 200);
+        REQUIRE(intervals[1].value().start == 300);
+        REQUIRE(intervals[1].value().end == 300);
+        REQUIRE(intervals[2].value().start == 450);
+        REQUIRE(intervals[2].value().end == 450);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -194,12 +194,11 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);// Only one interval meets minimum duration
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);// Only one interval meets minimum duration
 
-        REQUIRE(intervals[0].start == 300);
-        REQUIRE(intervals[0].end == 500);
-
+        REQUIRE(intervals[0].value().start == 300);
+        REQUIRE(intervals[0].value().end == 500);
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
@@ -217,12 +216,11 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
 
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 500);// Should extend to end of signal
-
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 500);// Should extend to end of signal
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
@@ -238,7 +236,7 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         REQUIRE(intervals.empty());
     }
 
@@ -287,13 +285,13 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);// Two intervals that meet minimum duration
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);// Two intervals that meet minimum duration
 
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 200);
-        REQUIRE(intervals[1].start == 400);
-        REQUIRE(intervals[1].end == 500);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 200);
+        REQUIRE(intervals[1].value().start == 400);
+        REQUIRE(intervals[1].value().end == 500);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -319,14 +317,14 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         result_intervals = interval_threshold(ats, params);
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
 
         // Test with progress callback
         progress_val = -1;
         call_count = 0;
         result_intervals = interval_threshold(ats, params, cb);
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
         // Progress callback should not be called for null input
         REQUIRE(call_count == 0);
     }
@@ -338,7 +336,7 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
     }
 
     SECTION("Single sample above threshold") {
@@ -354,10 +352,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 100);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 100);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -374,7 +372,7 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         REQUIRE(intervals.empty());
     }
 
@@ -389,10 +387,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 500);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 500);
     }
 
     SECTION("Zero threshold") {
@@ -406,12 +404,12 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
-        REQUIRE(intervals[0].start == 300);
-        REQUIRE(intervals[0].end == 300);
-        REQUIRE(intervals[1].start == 500);
-        REQUIRE(intervals[1].end == 500);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
+        REQUIRE(intervals[0].value().start == 300);
+        REQUIRE(intervals[0].value().end == 300);
+        REQUIRE(intervals[1].value().start == 500);
+        REQUIRE(intervals[1].value().end == 500);
     }
 
     SECTION("Negative threshold value") {
@@ -425,12 +423,12 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 100);
-        REQUIRE(intervals[1].start == 400);
-        REQUIRE(intervals[1].end == 400);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 100);
+        REQUIRE(intervals[1].value().start == 400);
+        REQUIRE(intervals[1].value().end == 400);
     }
 
     SECTION("Very large lockout time") {
@@ -444,10 +442,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);// Only first interval should be detected
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 200);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);// Only first interval should be detected
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 200);
     }
 
     SECTION("Very large minimum duration") {
@@ -461,7 +459,7 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         REQUIRE(intervals.empty());// No intervals meet minimum duration
     }
 
@@ -476,12 +474,12 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
-        REQUIRE(intervals[0].start == 1);
-        REQUIRE(intervals[0].end == 1);
-        REQUIRE(intervals[1].start == 101);
-        REQUIRE(intervals[1].end == 101);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
+        REQUIRE(intervals[0].value().start == 1);
+        REQUIRE(intervals[0].value().end == 1);
+        REQUIRE(intervals[1].value().start == 101);
+        REQUIRE(intervals[1].value().end == 101);
     }
 }
 
@@ -501,13 +499,13 @@ TEST_CASE( "Data Transform: Interval Threshold - Single Sample Above Threshold Z
         auto result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
 
         // The interval should start and end at time 200 (the single sample above threshold)
         // This ensures all signals during the detected interval are above threshold
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 200);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 200);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -528,17 +526,16 @@ TEST_CASE( "Data Transform: Interval Threshold - Single Sample Above Threshold Z
         auto result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 3);// Three isolated single samples above threshold
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 3);// Three isolated single samples above threshold
 
         // Each interval should be a single point in time
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 200);
-        REQUIRE(intervals[1].start == 400);
-        REQUIRE(intervals[1].end == 400);
-        REQUIRE(intervals[2].start == 600);
-        REQUIRE(intervals[2].end == 600);
-
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 200);
+        REQUIRE(intervals[1].value().start == 400);
+        REQUIRE(intervals[1].value().end == 400);
+        REQUIRE(intervals[2].value().start == 600);
+        REQUIRE(intervals[2].value().end == 600);
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
@@ -583,8 +580,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Operation Class Tests", "[trans
         auto result_intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
     }
 
     SECTION("execute with null parameters") {
@@ -649,10 +646,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Operation Class Tests", "[trans
         auto result_intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 200);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 200);
 
         // Test absolute threshold
         params.direction = IntervalThresholdParams::ThresholdDirection::ABSOLUTE;
@@ -664,8 +661,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Operation Class Tests", "[trans
         result_intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & abs_intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(abs_intervals.size() == 2);
+        auto const & abs_intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
     }
 }
 
@@ -687,14 +684,14 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         // Should get: [101,102] (ends when gap with zeros starts), [153,153] (single sample)
-        REQUIRE(intervals.size() == 2);
+        REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].start == 101);
-        REQUIRE(intervals[0].end == 102);// Ends before gap because zeros don't meet threshold
-        REQUIRE(intervals[1].start == 153);
-        REQUIRE(intervals[1].end == 153);
+        REQUIRE(intervals[0].value().start == 101);
+        REQUIRE(intervals[0].value().end == 102);// Ends before gap because zeros don't meet threshold
+        REQUIRE(intervals[1].value().start == 153);
+        REQUIRE(intervals[1].value().end == 153);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -712,15 +709,15 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         // Should get: [101,101], [152,152] (gap with zeros that don't meet negative threshold)
         // Note: zeros (0.0) > -0.5, so they don't meet the negative threshold
-        REQUIRE(intervals.size() == 2);
+        REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].start == 101);
-        REQUIRE(intervals[0].end == 101);
-        REQUIRE(intervals[1].start == 152);
-        REQUIRE(intervals[1].end == 152);
+        REQUIRE(intervals[0].value().start == 101);
+        REQUIRE(intervals[0].value().end == 101);
+        REQUIRE(intervals[1].value().start == 152);
+        REQUIRE(intervals[1].value().end == 152);
     }
 
     SECTION("Missing data treated as zero - negative threshold where zeros DO meet threshold") {
@@ -735,15 +732,15 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         // Should get: [101,150] (interval continues through gap with zeros), [152,152]
         // Note: zeros (0.0) < 0.5, so they meet the negative threshold and extend the interval
-        REQUIRE(intervals.size() == 2);
+        REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].start == 101);
-        REQUIRE(intervals[0].end == 150);// Interval extends through gap to just before next sample
-        REQUIRE(intervals[1].start == 152);
-        REQUIRE(intervals[1].end == 152);
+        REQUIRE(intervals[0].value().start == 101);
+        REQUIRE(intervals[0].value().end == 150);// Interval extends through gap to just before next sample
+        REQUIRE(intervals[1].value().start == 152);
+        REQUIRE(intervals[1].value().end == 152);
     }
 
     SECTION("Missing data ignored mode") {
@@ -760,14 +757,14 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
 
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         // With IGNORE mode, gaps are not considered, so we get: [101,102] and [153,153]
-        REQUIRE(intervals.size() == 2);
+        REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].start == 101);
-        REQUIRE(intervals[0].end == 102);// Continuous despite time gap
-        REQUIRE(intervals[1].start == 153);
-        REQUIRE(intervals[1].end == 153);
+        REQUIRE(intervals[0].value().start == 101);
+        REQUIRE(intervals[0].value().end == 102);// Continuous despite time gap
+        REQUIRE(intervals[1].value().start == 153);
+        REQUIRE(intervals[1].value().end == 153);
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -791,15 +788,15 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         REQUIRE(result_zero_mode != nullptr);
         REQUIRE(result_ignore_mode != nullptr);
 
-        auto const & intervals_zero = result_zero_mode->getDigitalIntervalSeries();
-        auto const & intervals_ignore = result_ignore_mode->getDigitalIntervalSeries();
+        auto const & intervals_zero = result_zero_mode->view();
+        auto const & intervals_ignore = result_ignore_mode->view();
 
-        REQUIRE(intervals_zero.size() == intervals_ignore.size());
-        REQUIRE(intervals_zero.size() == 2);// [101,102] and [104,104]
+        REQUIRE(result_zero_mode->size() == result_ignore_mode->size());
+        REQUIRE(result_zero_mode->size() == 2);// [101,102] and [104,104]
 
-        for (size_t i = 0; i < intervals_zero.size(); ++i) {
-            REQUIRE(intervals_zero[i].start == intervals_ignore[i].start);
-            REQUIRE(intervals_zero[i].end == intervals_ignore[i].end);
+        for (size_t i = 0; i < result_zero_mode->size(); ++i) {
+            REQUIRE(intervals_zero[i].value().start == intervals_ignore[i].value().start);
+            REQUIRE(intervals_zero[i].value().end == intervals_ignore[i].value().end);
         }
     }
 }
@@ -837,13 +834,13 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - JSON pipeline", "[transf
     auto interval_series = dm.getData<DigitalIntervalSeries>("DetectedIntervals");
     REQUIRE(interval_series != nullptr);
 
-    auto const & intervals = interval_series->getDigitalIntervalSeries();
-    REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
+    auto const & intervals = interval_series->view();
+    REQUIRE(interval_series->size() == 2); // Two intervals: [200-400] and [600-700]
 
-    REQUIRE(intervals[0].start == 200);
-    REQUIRE(intervals[0].end == 400);
-    REQUIRE(intervals[1].start == 600);
-    REQUIRE(intervals[1].end == 700);
+    REQUIRE(intervals[0].value().start == 200);
+    REQUIRE(intervals[0].value().end == 400);
+    REQUIRE(intervals[1].value().start == 600);
+    REQUIRE(intervals[1].value().end == 700);
 }
 
 #include "transforms/ParameterFactory.hpp"
@@ -940,13 +937,13 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_conf
     REQUIRE(result_intervals != nullptr);
     
     // Verify the interval detection results
-    auto const & intervals = result_intervals->getDigitalIntervalSeries();
-    REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
+    auto const & intervals = result_intervals->view();
+    REQUIRE(result_intervals->size() == 2); // Two intervals: [200-400] and [600-700]
 
-    REQUIRE(intervals[0].start == 200);
-    REQUIRE(intervals[0].end == 400);
-    REQUIRE(intervals[1].start == 600);
-    REQUIRE(intervals[1].end == 700);
+    REQUIRE(intervals[0].value().start == 200);
+    REQUIRE(intervals[0].value().end == 400);
+    REQUIRE(intervals[1].value().start == 600);
+    REQUIRE(intervals[1].value().end == 700);
     
     // Test another pipeline with different parameters (lockout time and minimum duration)
     const char* json_config_advanced = 
@@ -993,10 +990,10 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_conf
     auto result_intervals_advanced = dm.getData<DigitalIntervalSeries>("detected_intervals_advanced");
     REQUIRE(result_intervals_advanced != nullptr);
     
-    auto const & intervals_advanced = result_intervals_advanced->getDigitalIntervalSeries();
-    REQUIRE(intervals_advanced.size() == 1); // Only one interval meets minimum duration: [200-400]
-    REQUIRE(intervals_advanced[0].start == 200);
-    REQUIRE(intervals_advanced[0].end == 400);
+    auto const & intervals_advanced = result_intervals_advanced->view();
+    REQUIRE(result_intervals_advanced->size() == 1); // Only one interval meets minimum duration: [200-400]
+    REQUIRE(intervals_advanced[0].value().start == 200);
+    REQUIRE(intervals_advanced[0].value().end == 400);
     
     // Test absolute threshold detection
     const char* json_config_absolute = 
@@ -1043,12 +1040,12 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_conf
     auto result_intervals_absolute = dm.getData<DigitalIntervalSeries>("detected_intervals_absolute");
     REQUIRE(result_intervals_absolute != nullptr);
     
-    auto const & intervals_absolute = result_intervals_absolute->getDigitalIntervalSeries();
-    REQUIRE(intervals_absolute.size() == 2); // Two intervals: [200-400] and [600-600]
-    REQUIRE(intervals_absolute[0].start == 200);
-    REQUIRE(intervals_absolute[0].end == 400);
-    REQUIRE(intervals_absolute[1].start == 600);
-    REQUIRE(intervals_absolute[1].end == 600);
+    auto const & intervals_absolute = result_intervals_absolute->view();
+    REQUIRE(result_intervals_absolute->size() == 2); // Two intervals: [200-400] and [600-600]
+    REQUIRE(intervals_absolute[0].value().start == 200);
+    REQUIRE(intervals_absolute[0].value().end == 400);
+    REQUIRE(intervals_absolute[1].value().start == 600);
+    REQUIRE(intervals_absolute[1].value().end == 600);
     
     // Cleanup
     try {

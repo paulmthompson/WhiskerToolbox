@@ -5,7 +5,6 @@
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
-#include "TransformComposers.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
@@ -22,6 +21,7 @@
 #include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeSeriesDataStore.hpp"
+#include "TransformComposers.hpp"
 
 #include <QEvent>
 #include <QMouseEvent>
@@ -742,8 +742,9 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
         series->addEvent(TimeFrameIndex(start_series), TimeFrameIndex(end_series));
 
         // Find and select the newly created/modified interval by its EntityId
-        auto intervals = series->getIntervalsWithIdsInRange(
-                TimeFrameIndex(start_series), TimeFrameIndex(end_series));
+        auto intervals = series->viewInRange(TimeFrameIndex(start_series),
+                                             TimeFrameIndex(end_series),
+                                             *series->getTimeFrame());
 
         for (auto const & interval_with_id: intervals) {
             if (interval_with_id.interval.start == start_series &&

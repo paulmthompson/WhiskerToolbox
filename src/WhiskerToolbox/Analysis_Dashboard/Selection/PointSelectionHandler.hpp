@@ -6,7 +6,6 @@
 #include "ISelectionHandler.hpp"
 #include "SelectionModes.hpp"
 
-#include <QMatrix4x4>
 #include <QMouseEvent>
 #include <QVector2D>
 

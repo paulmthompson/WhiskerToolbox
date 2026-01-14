@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+
 #include <memory>
 
 class PlotContainer;
@@ -20,7 +21,8 @@ class AbstractPlotOrganizer : public QObject {
     Q_OBJECT
 
 public:
-    explicit AbstractPlotOrganizer(QObject* parent = nullptr) : QObject(parent) {}
+    explicit AbstractPlotOrganizer(QObject * parent = nullptr)
+        : QObject(parent) {}
     virtual ~AbstractPlotOrganizer() = default;
 
     /**
@@ -34,14 +36,14 @@ public:
      * @param plot_id The unique ID of the plot to remove
      * @return True if plot was found and removed, false otherwise
      */
-    virtual bool removePlot(const QString& plot_id) = 0;
+    virtual bool removePlot(QString const & plot_id) = 0;
 
     /**
      * @brief Get a plot container by its ID
      * @param plot_id The unique ID of the plot
      * @return Pointer to the plot container, or nullptr if not found
      */
-    virtual PlotContainer* getPlot(const QString& plot_id) const = 0;
+    virtual PlotContainer * getPlot(QString const & plot_id) const = 0;
 
     /**
      * @brief Get all plot IDs managed by this organizer
@@ -59,7 +61,7 @@ public:
      * @brief Select a specific plot (if supported by the organization method)
      * @param plot_id The ID of the plot to select
      */
-    virtual void selectPlot(const QString& plot_id) = 0;
+    virtual void selectPlot(QString const & plot_id) = 0;
 
     /**
      * @brief Clear all plots from the organizer
@@ -70,61 +72,61 @@ public:
      * @brief Get the widget that should be added to the dashboard's layout
      * @return The main widget for this organizer (e.g., QGraphicsView, QWidget, etc.)
      */
-    virtual QWidget* getDisplayWidget() = 0;
+    virtual QWidget * getDisplayWidget() = 0;
 
 signals:
     /**
      * @brief Emitted when a plot is selected
      * @param plot_id The unique ID of the selected plot
      */
-    void plotSelected(const QString& plot_id);
+    void plotSelected(QString const & plot_id);
 
     /**
      * @brief Emitted when a plot is added
      * @param plot_id The unique ID of the added plot
      */
-    void plotAdded(const QString& plot_id);
+    void plotAdded(QString const & plot_id);
 
     /**
      * @brief Emitted when a plot is removed
      * @param plot_id The unique ID of the removed plot
      */
-    void plotRemoved(const QString& plot_id);
+    void plotRemoved(QString const & plot_id);
 
     /**
      * @brief Emitted when user requests to jump to a specific frame
      * @param time_frame_index The frame index to jump to
      * @param data_key The data key associated with the jump
      */
-    void frameJumpRequested(int64_t time_frame_index, const std::string& data_key);
+    void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
 
 protected:
     /**
      * @brief Helper method to emit plotAdded signal
      * @param plot_id The ID of the added plot
      */
-    void emitPlotAdded(const QString& plot_id) { emit plotAdded(plot_id); }
+    void emitPlotAdded(QString const & plot_id) { emit plotAdded(plot_id); }
 
     /**
      * @brief Helper method to emit plotRemoved signal
      * @param plot_id The ID of the removed plot
      */
-    void emitPlotRemoved(const QString& plot_id) { emit plotRemoved(plot_id); }
+    void emitPlotRemoved(QString const & plot_id) { emit plotRemoved(plot_id); }
 
     /**
      * @brief Helper method to emit plotSelected signal
      * @param plot_id The ID of the selected plot
      */
-    void emitPlotSelected(const QString& plot_id) { emit plotSelected(plot_id); }
+    void emitPlotSelected(QString const & plot_id) { emit plotSelected(plot_id); }
 
     /**
      * @brief Helper method to emit frameJumpRequested signal
      * @param time_frame_index The frame index
      * @param data_key The data key
      */
-    void emitFrameJumpRequested(int64_t time_frame_index, const std::string& data_key) {
+    void emitFrameJumpRequested(int64_t time_frame_index, std::string const & data_key) {
         emit frameJumpRequested(time_frame_index, data_key);
     }
 };
 
-#endif // ABSTRACTPLOTORGANIZER_HPP
+#endif// ABSTRACTPLOTORGANIZER_HPP

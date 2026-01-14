@@ -2,8 +2,8 @@
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include "Lineage/EntityResolver.hpp"
-#include "Lineage/LineageRegistry.hpp"
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
@@ -13,7 +13,7 @@
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
-using namespace WhiskerToolbox::Lineage;
+using namespace WhiskerToolbox::Entity::Lineage;
 using Catch::Matchers::UnorderedEquals;
 
 // Helper to create test data

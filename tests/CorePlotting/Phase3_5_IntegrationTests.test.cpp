@@ -37,7 +37,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Observer/Observer_Data.hpp"
+#include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Entity/EntityRegistry.hpp"
 
@@ -246,7 +246,7 @@ TEST_CASE("Scenario 1: DataViewer-style stacked layout with hit testing",
         
         REQUIRE(hit.hasHit());
         REQUIRE(hit.hit_type == HitType::DigitalEvent);
-        REQUIRE(hit.entity_id.value() == events->getEntityIds()[1]);
+        REQUIRE(hit.entity_id.value() == events->view()[1].id());
     }
     
     SECTION("Hit test on analog region returns series_key without EntityId") {
@@ -416,13 +416,13 @@ TEST_CASE("Scenario 3: Raster plot with row-based event layout",
         float trial1_y = trial1_layout->y_transform.offset;
         auto const* hit1 = combined_index->findNearest(50.0f, trial1_y, 10.0f);
         REQUIRE(hit1 != nullptr);
-        REQUIRE(hit1->data == trial1->getEntityIds()[0]);
+        REQUIRE(hit1->data == trial1->view()[0].id());
         
         // Query for event in trial2 (different row)
         float trial2_y = trial2_layout->y_transform.offset;
         auto const* hit2 = combined_index->findNearest(80.0f, trial2_y, 10.0f);
         REQUIRE(hit2 != nullptr);
-        REQUIRE(hit2->data == trial2->getEntityIds()[0]);
+        REQUIRE(hit2->data == trial2->view()[0].id());
     }
     
     SECTION("Y position distinguishes events at similar times") {
@@ -443,12 +443,12 @@ TEST_CASE("Scenario 3: Raster plot with row-based event layout",
         // Event at time 150 is only in trial1
         auto const* r1 = combined_index->findNearest(150.0f, trial1_y, 10.0f);
         REQUIRE(r1 != nullptr);
-        REQUIRE(r1->data == trial1->getEntityIds()[1]);
+        REQUIRE(r1->data == trial1->view()[1].id());
         
         // Event at time 120 is only in trial2
         auto const* r2 = combined_index->findNearest(120.0f, trial2_y, 10.0f);
         REQUIRE(r2 != nullptr);
-        REQUIRE(r2->data == trial2->getEntityIds()[1]);
+        REQUIRE(r2->data == trial2->view()[1].id());
     }
 }
 
@@ -554,7 +554,7 @@ TEST_CASE("Scenario 4: Screen → World → Hit → Verify coordinates",
         
         REQUIRE(result != nullptr);
         // Should find event at time 500 (index 1)
-        REQUIRE(result->data == events->getEntityIds()[1]);
+        REQUIRE(result->data == events->view()[1].id());
     }
     
     SECTION("Panned view correctly transforms coordinates") {
@@ -578,7 +578,7 @@ TEST_CASE("Scenario 4: Screen → World → Hit → Verify coordinates",
         auto const* result = index->findNearest(world.x, world.y, 100.0f);
         
         REQUIRE(result != nullptr);
-        REQUIRE(result->data == events->getEntityIds()[2]);  // Event at 750
+        REQUIRE(result->data == events->view()[2].id());  // Event at 750
     }
 }
 
@@ -747,13 +747,13 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
         float y1 = layout1->y_transform.offset;
         auto const* hit1 = scene.spatial_index->findNearest(100.0f, y1, 20.0f);
         REQUIRE(hit1 != nullptr);
-        REQUIRE(hit1->data == events1->getEntityIds()[0]);
+        REQUIRE(hit1->data == events1->view()[0].id());
         
         // Query for event at time 150 in series2's row
         float y2 = layout2->y_transform.offset;
         auto const* hit2 = scene.spatial_index->findNearest(150.0f, y2, 20.0f);
         REQUIRE(hit2 != nullptr);
-        REQUIRE(hit2->data == events2->getEntityIds()[0]);
+        REQUIRE(hit2->data == events2->view()[0].id());
     }
     
     SECTION("SceneBuilder distinguishes rows by Y position") {
@@ -774,15 +774,15 @@ TEST_CASE("Scenario 7: SceneBuilder high-level API creates scene with spatial in
         float y_tolerance = std::abs(y1 - y2) / 4.0f;  // Less than half the row spacing
         auto const* r1 = scene.spatial_index->findNearest(200.0f, y1, y_tolerance);
         REQUIRE(r1 != nullptr);
-        REQUIRE(r1->data == events1->getEntityIds()[1]);
+        REQUIRE(r1->data == events1->view()[1].id());
         
         // Query at series2's Y with small tolerance should find series2's event only
         // series2 has events at 150, 250 - closest to 200 is either one
         auto const* r2 = scene.spatial_index->findNearest(200.0f, y2, y_tolerance);
         if (r2 != nullptr) {
             // Should be from series2, not series1
-            bool is_series2_event = (r2->data == events2->getEntityIds()[0] || 
-                                     r2->data == events2->getEntityIds()[1]);
+            bool is_series2_event = (r2->data == events2->view()[0].id() || 
+                                     r2->data == events2->view()[1].id());
             REQUIRE(is_series2_event);
         }
     }

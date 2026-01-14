@@ -1,12 +1,12 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
-#include "AnalogDataStorage.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
+#include "storage/AnalogDataStorage.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -108,29 +108,29 @@ public:
      * ```
      */
     template<std::ranges::input_range R>
-    requires requires(std::ranges::range_value_t<R> pair) {
-        { pair.first } -> std::convertible_to<TimeFrameIndex>;
-        { pair.second } -> std::convertible_to<float>;
-    }
-    explicit AnalogTimeSeries(R&& time_value_pairs) 
+        requires requires(std::ranges::range_value_t<R> pair) {
+            { pair.first } -> std::convertible_to<TimeFrameIndex>;
+            { pair.second } -> std::convertible_to<float>;
+        }
+    explicit AnalogTimeSeries(R && time_value_pairs)
         : AnalogTimeSeries() {
-        
+
         // First pass: collect into vectors for efficient construction
         std::vector<TimeFrameIndex> times;
         std::vector<float> values;
-        
+
         // Reserve if we can get size
         if constexpr (std::ranges::sized_range<R>) {
             auto size = std::ranges::size(time_value_pairs);
             times.reserve(size);
             values.reserve(size);
         }
-        
-        for (auto&& [time, value] : time_value_pairs) {
+
+        for (auto && [time, value]: time_value_pairs) {
             times.push_back(time);
             values.push_back(static_cast<float>(value));
         }
-        
+
         // Use existing setData method for efficient storage setup
         setData(std::move(values), std::move(times));
     }
@@ -186,7 +186,7 @@ public:
      * 
      * auto normalized_view = base_series->view()
      *     | std::views::transform([mean, std](auto tv) {
-     *         float z_score = (tv.value - mean) / std;
+     *         float z_score = (tv.value() - mean) / std;
      *         return AnalogTimeSeries::TimeValuePoint{tv.time_frame_index, z_score};
      *     });
      * 
@@ -216,26 +216,73 @@ public:
     template<std::ranges::random_access_range ViewType>
     [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createFromView(
             ViewType view,
-            std::shared_ptr<TimeIndexStorage> time_storage)
-    {
+            std::shared_ptr<TimeIndexStorage> time_storage) {
         size_t num_samples = std::ranges::size(view);
-        
+
         // Validate that view size matches time storage
         if (num_samples != time_storage->size()) {
             throw std::runtime_error(
-                "View size (" + std::to_string(num_samples) + 
-                ") does not match time storage size (" + 
-                std::to_string(time_storage->size()) + ")");
+                    "View size (" + std::to_string(num_samples) +
+                    ") does not match time storage size (" +
+                    std::to_string(time_storage->size()) + ")");
         }
-        
+
         // Create lazy storage
         auto lazy_storage = LazyViewStorage<ViewType>(std::move(view), num_samples);
         DataStorageWrapper storage_wrapper(std::move(lazy_storage));
-        
+
         // Use private constructor with shared time storage
         return std::shared_ptr<AnalogTimeSeries>(
-            new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
+                new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
     }
+
+    /**
+     * @brief Create a zero-copy view of an AnalogTimeSeries within a time range
+     * 
+     * Creates an AnalogTimeSeries that references the source's data without copying.
+     * The view shares ownership of the underlying storage via shared_ptr, ensuring
+     * the source data remains valid for the lifetime of the view.
+     * 
+     * This enables efficient windowed access patterns (e.g., plotting segments of
+     * a long time series) without data duplication.
+     * 
+     * @param source Source AnalogTimeSeries to create a view from
+     * @param start_time Start of the time range (inclusive)
+     * @param end_time End of the time range (inclusive)
+     * @return std::shared_ptr<AnalogTimeSeries> View into the source data
+     * 
+     * @throws std::runtime_error if source storage is not vector-backed (mmap or lazy)
+     * 
+     * @note The source must outlive all views or must be kept alive via shared_ptr.
+     *       Since views share ownership of the underlying data, the data remains valid
+     *       as long as any view exists.
+     * @note View storage is contiguous (supports span access) since it references
+     *       contiguous source data.
+     * @note For lazy or mmap storage, call materialize() first then create views.
+     * 
+     * @example Creating windowed views for multi-trial plotting:
+     * @code
+     * auto full_series = std::make_shared<AnalogTimeSeries>(data, times);
+     * 
+     * std::vector<std::shared_ptr<AnalogTimeSeries>> trial_views;
+     * for (auto const& trial_start : trial_times) {
+     *     auto view = AnalogTimeSeries::createView(
+     *         full_series,
+     *         trial_start,
+     *         TimeFrameIndex{trial_start.getValue() + window_size});
+     *     trial_views.push_back(view);
+     * }
+     * 
+     * // All views share the same underlying data (zero copies)
+     * for (auto const& view : trial_views) {
+     *     plotToBuffer(view->getSpan());
+     * }
+     * @endcode
+     */
+    [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createView(
+            std::shared_ptr<AnalogTimeSeries const> source,
+            TimeFrameIndex start_time,
+            TimeFrameIndex end_time);
 
     // ========== Getting Data ==========
 
@@ -307,151 +354,78 @@ public:
 
     /**
      * @brief Data structure representing a single time-value point
+     * 
+     * Represents a single sample in an AnalogTimeSeries.
+     * Satisfies the TimeSeriesElement and ValueElement<float> concepts.
+     * Does NOT satisfy EntityElement (AnalogTimeSeries has no EntityIds).
+     * 
+     * @see TimeSeriesConcepts.hpp for concept definitions
      */
     struct TimeValuePoint {
-        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};
-        float value{0.0f};
+        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};// Public for backward compatibility
+        float _value{0.0f};                                // Prefixed to avoid collision with value() method
 
         TimeValuePoint() = default;
         TimeValuePoint(TimeFrameIndex time_idx, float val)
             : time_frame_index(time_idx),
-              value(val) {}
+              _value(val) {}
+
+        // ========== Standardized Accessors (for TimeSeriesElement/ValueElement concepts) ==========
+
+        /**
+         * @brief Get the time of this sample (for TimeSeriesElement concept)
+         * @return TimeFrameIndex The sample timestamp
+         */
+        [[nodiscard]] constexpr TimeFrameIndex time() const noexcept { return time_frame_index; }
+
+        /**
+         * @brief Get the value of this sample (for ValueElement concept)
+         * @return float The sample value
+         */
+        [[nodiscard]] constexpr float value() const noexcept { return _value; }
     };
 
-    class TimeValueRangeIterator {
-    public:
-        // 1. Upgrade category to Random Access
-        using iterator_category = std::random_access_iterator_tag;
+    /**
+     * @brief Get a std::ranges compatible view of all samples as TimeValuePoint.
+     * 
+     * Returns a random-access view that synthesizes TimeValuePoint objects on demand.
+     * Uses cached pointers for fast-path iteration when storage is contiguous.
+     */
+    [[nodiscard]] auto view() const {
+        return std::views::iota(size_t{0}, getNumSamples()) | std::views::transform([this](size_t i) {
+                   return TimeValuePoint{
+                           _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
+                           _getDataAtDataArrayIndex(DataArrayIndex(i))};
+               });
+    }
 
-        // 2. C++20 requires distinct iterator_concept for ranges
-        using iterator_concept = std::random_access_iterator_tag;
+    /**
+     * @brief Get a std::ranges compatible view of just the values (no time info).
+     * 
+     * Returns a random-access view of float values only, without time frame indices.
+     */
+    [[nodiscard]] auto viewValues() const {
+        return std::views::iota(size_t{0}, getNumSamples()) | std::views::transform([this](size_t i) {
+                   return _getDataAtDataArrayIndex(DataArrayIndex(i));
+               });
+    }
 
-        using value_type = TimeValuePoint;
-        using difference_type = std::ptrdiff_t;
-        using pointer = TimeValuePoint;  // Proxy pointer (optional, or strictly TimeValuePoint*)
-        using reference = TimeValuePoint;// RETURN BY VALUE
-
-        // 3. Must be default constructible
-        TimeValueRangeIterator() = default;
-
-        TimeValueRangeIterator(AnalogTimeSeries const * series, DataArrayIndex current, DataArrayIndex end)
-            : _series(series),
-              _current_index(current),
-              _end_index(end) {
-            // Cache the contiguous pointer if available for speed
-            if (_series) _contiguous_data_ptr = _series->_data_storage.tryGetContiguousPointer();
-        }
-
-        // Dereference returns by Value (Cleanest for stashing iterators)
-        reference operator*() const {
-            // Use fast path if available
-            float val = (_contiguous_data_ptr)
-                                ? _contiguous_data_ptr[_current_index.getValue()]
-                                : _series->_data_storage.getValueAt(_current_index.getValue());
-
-            // Assume _time_storage has a similar fast lookup, otherwise use existing accessor
-            TimeFrameIndex time = _series->_getTimeFrameIndexAtDataArrayIndex(_current_index);
-
-            return TimeValuePoint{time, val};
-        }
-
-        // Standard Iterator Operations
-        TimeValueRangeIterator & operator++() {
-            // Assuming DataArrayIndex has operator++
-            // _current_index++;
-            // If not, generic increment:
-            _current_index = DataArrayIndex(_current_index.getValue() + 1);
-            return *this;
-        }
-
-        TimeValueRangeIterator operator++(int) {
-            TimeValueRangeIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        TimeValueRangeIterator & operator--() {
-            _current_index = DataArrayIndex(_current_index.getValue() - 1);
-            return *this;
-        }
-
-        TimeValueRangeIterator operator--(int) {
-            TimeValueRangeIterator tmp = *this;
-            --(*this);
-            return tmp;
-        }
-
-        // Random Access Arithmetic
-        TimeValueRangeIterator & operator+=(difference_type n) {
-            _current_index = DataArrayIndex(_current_index.getValue() + n);
-            return *this;
-        }
-
-        TimeValueRangeIterator & operator-=(difference_type n) {
-            _current_index = DataArrayIndex(_current_index.getValue() - n);
-            return *this;
-        }
-
-        friend TimeValueRangeIterator operator+(TimeValueRangeIterator it, difference_type n) { return it += n; }
-        friend TimeValueRangeIterator operator+(difference_type n, TimeValueRangeIterator it) { return it += n; }
-        friend TimeValueRangeIterator operator-(TimeValueRangeIterator it, difference_type n) { return it -= n; }
-
-        friend difference_type operator-(TimeValueRangeIterator const & lhs, TimeValueRangeIterator const & rhs) {
-            return static_cast<difference_type>(lhs._current_index.getValue()) -
-                   static_cast<difference_type>(rhs._current_index.getValue());
-        }
-
-        // Comparisons
-        bool operator==(TimeValueRangeIterator const & other) const {
-            return _current_index.getValue() == other._current_index.getValue();
-        }
-
-        // Default C++20 spaceship operator handles !=, <, >, <=, >= automatically
-        auto operator<=>(TimeValueRangeIterator const & other) const {
-            return _current_index.getValue() <=> other._current_index.getValue();
-        }
-
-        // Random access subscription
-        reference operator[](difference_type n) const {
-            return *(*this + n);
-        }
-
-    private:
-        AnalogTimeSeries const * _series = nullptr;
-        DataArrayIndex _current_index{0};
-        DataArrayIndex _end_index{0};
-        float const * _contiguous_data_ptr{nullptr};
-    };
-
-    class TimeValueRangeView : public std::ranges::view_interface<TimeValueRangeView> {
-    public:
-        // 1. Must be default constructible
-        TimeValueRangeView() = default;
-
-        TimeValueRangeView(AnalogTimeSeries const * series, DataArrayIndex start, DataArrayIndex end)
-            : _series(series),
-              _start_index(start),
-              _end_index(end) {}
-
-        [[nodiscard]] TimeValueRangeIterator begin() const {
-            return TimeValueRangeIterator(_series, _start_index, _end_index);
-        }
-
-        [[nodiscard]] TimeValueRangeIterator end() const {
-            return TimeValueRangeIterator(_series, _end_index, _end_index);
-        }
-
-        // size() is actually provided by view_interface if iterator is RandomAccess and sized
-        // But explicit implementation is often faster/safer if you have the data
-        [[nodiscard]] size_t size() const {
-            return _end_index.getValue() - _start_index.getValue();
-        }
-
-    private:
-        AnalogTimeSeries const * _series = nullptr;
-        DataArrayIndex _start_index{0};
-        DataArrayIndex _end_index{0};
-    };
+    /**
+     * @brief Get time-value pairs in a TimeFrameIndex range as a view.
+     * 
+     * Returns a view over the time-value pairs within the specified range.
+     * Uses internal index lookup to find the range boundaries.
+     * 
+     * @param start_index Starting DataArrayIndex
+     * @param end_index Ending DataArrayIndex (exclusive)
+     */
+    [[nodiscard]] auto viewTimeValueRange(DataArrayIndex start_index, DataArrayIndex end_index) const {
+        return std::views::iota(start_index.getValue(), end_index.getValue()) | std::views::transform([this](size_t i) {
+                   return TimeValuePoint{
+                           _getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)),
+                           _getDataAtDataArrayIndex(DataArrayIndex(i))};
+               });
+    }
 
     /**
      * @brief Time index range abstraction that handles both dense and sparse storage
@@ -492,12 +466,69 @@ public:
      * 
      * @param start_time The start TimeFrameIndex (inclusive boundary)
      * @param end_time The end TimeFrameIndex (inclusive boundary)
-     * @return TimeValueRangeView that supports range-based for loops
+     * @return Range view that supports range-based for loops
      * 
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueSpanInTimeFrameIndexRange() for zero-copy alternative
      */
-    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] inline auto getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+        // Use existing boundary-finding logic
+        auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
+        auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
+
+        // Handle cases where boundaries are not found
+        if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
+            // Return empty range
+            return viewTimeValueRange(DataArrayIndex(0), DataArrayIndex(0));
+        }
+
+        size_t start_idx = start_index_opt.value().getValue();
+        size_t end_idx = end_index_opt.value().getValue();
+
+        // Validate that start <= end
+        if (start_idx > end_idx) {
+            // Return empty range for invalid range
+            return viewTimeValueRange(DataArrayIndex(0), DataArrayIndex(0));
+        }
+
+        // Create range view (end_idx + 1 because end is exclusive for the range)
+        return viewTimeValueRange(DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1));
+    }
+
+    /**
+     * @brief Get time-value pairs as a range with timeframe conversion
+     * 
+     * Similar to getTimeValueRangeInTimeFrameIndexRange, but accepts a source timeframe
+     * to convert the start and end time indices from the source coordinate system to
+     * the analog time series coordinate system.
+     * 
+     * @param start_time The start TimeFrameIndex in source timeframe coordinates
+     * @param end_time The end TimeFrameIndex in source timeframe coordinates
+     * @param source_timeFrame The timeframe that start_time and end_time are expressed in
+     * @return Range view that supports range-based for loops
+     * 
+     * @note If source_timeFrame equals the analog series' timeframe, or if either is null,
+     *       falls back to the non-converting version
+     */
+    [[nodiscard]] inline auto getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time,
+                                                                     TimeFrameIndex end_time,
+                                                                     TimeFrame const & source_timeFrame) const {
+        // If source timeframe is the same as our timeframe, no conversion needed
+        if (&source_timeFrame == _time_frame.get()) {
+            return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+        }
+
+        // If we don't have a timeframe, fall back to non-converting version
+        if (!_time_frame) {
+            return getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+        }
+
+        // Convert the time indices from source timeframe to our timeframe
+        auto [target_start, target_end] = convertTimeFrameRange(
+                start_time, end_time, source_timeFrame, *_time_frame);
+
+        return getTimeValueRangeInTimeFrameIndexRange(target_start, target_end);
+    }
 
     /**
      * @brief Get time-value pairs as span and time iterator for zero-copy access
@@ -513,7 +544,8 @@ public:
      * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
      * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
      */
-    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time,
+                                                                          TimeFrameIndex end_time) const;
 
     /**
      * @brief Get time-value pairs with timeframe conversion
@@ -541,7 +573,7 @@ public:
      * TimeFrameIndex and float values. This is the recommended interface for iterating
      * over all data as it works with any storage backend (vector, memory-mapped, etc.).
      * 
-     * @return TimeValueRangeView that supports range-based for loops
+     * @return Range view that supports range-based for loops
      * 
      * @example
      * ```cpp
@@ -553,7 +585,7 @@ public:
      * @note This provides a uniform interface regardless of underlying storage type
      * @see TimeValuePoint for the structure returned by dereferencing the iterator
      */
-    [[nodiscard]] TimeValueRangeView getAllSamples() const;
+    [[nodiscard]] auto getAllSamples() const { return view(); }
 
     /**
      * @brief Get the time indices as a vector
@@ -602,27 +634,34 @@ public:
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const { return _time_frame; }
 
-    /**
- * @brief Get a ranges-compatible view of the entire series.
- */
-    [[nodiscard]] auto view() const {
-        // Assuming DataArrayIndex can be constructed from size_t 0 and size()
-        return TimeValueRangeView(this, DataArrayIndex(0), DataArrayIndex(getNumSamples()));
-    }
-
 protected:
 private:
     /**
      * @brief Type-erased wrapper for analog data storage
      * 
-     * Provides uniform interface to different storage backends (vector, mmap, etc.)
+     * Provides uniform interface to different storage backends (vector, mmap, view, etc.)
      * while enabling compile-time optimizations through template instantiation.
+     * 
+     * Uses shared_ptr internally to enable zero-copy view creation via aliasing constructor.
+     * When creating a view from a VectorAnalogDataStorage, the view can share ownership
+     * of the source data without copying.
      */
     class DataStorageWrapper {
     public:
         template<typename DataStorageImpl>
         explicit DataStorageWrapper(DataStorageImpl storage)
-            : _impl(std::make_unique<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+            : _impl(std::make_shared<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+
+        // Default constructor creates empty vector storage
+        DataStorageWrapper()
+            : _impl(std::make_shared<StorageModel<VectorAnalogDataStorage>>(
+                  VectorAnalogDataStorage{std::vector<float>{}})) {}
+
+        // Copy and move semantics - shared_ptr allows sharing
+        DataStorageWrapper(DataStorageWrapper&&) noexcept = default;
+        DataStorageWrapper& operator=(DataStorageWrapper&&) noexcept = default;
+        DataStorageWrapper(DataStorageWrapper const&) = default;
+        DataStorageWrapper& operator=(DataStorageWrapper const&) = default;
 
         [[nodiscard]] size_t size() const { return _impl->size(); }
 
@@ -648,6 +687,39 @@ private:
 
         [[nodiscard]] AnalogStorageType getStorageType() const {
             return _impl->getStorageType();
+        }
+
+        [[nodiscard]] bool isView() const {
+            return getStorageType() == AnalogStorageType::View;
+        }
+
+        [[nodiscard]] bool isLazy() const {
+            return getStorageType() == AnalogStorageType::LazyView;
+        }
+
+        /**
+         * @brief Get shared pointer to vector storage for creating views
+         * 
+         * If this wrapper contains vector storage, uses aliasing constructor to share
+         * ownership. If this wrapper contains a view, returns the view's existing source.
+         * Returns nullptr for other storage types (mmap, lazy).
+         * 
+         * @return shared_ptr to VectorAnalogDataStorage, or nullptr if not available
+         */
+        [[nodiscard]] std::shared_ptr<VectorAnalogDataStorage const> getSharedVectorStorage() const {
+            // Check if we have view storage - return its existing source
+            if (auto const* view_model = dynamic_cast<StorageModel<ViewAnalogDataStorage> const*>(_impl.get())) {
+                return view_model->_storage.source();
+            }
+
+            // Check if we have vector storage - use aliasing constructor for zero-copy sharing
+            if (auto vector_model = std::dynamic_pointer_cast<StorageModel<VectorAnalogDataStorage> const>(_impl)) {
+                // Aliasing constructor: shares ownership with _impl but points to the inner storage
+                return std::shared_ptr<VectorAnalogDataStorage const>(vector_model, &vector_model->_storage);
+            }
+
+            // Other storage types (mmap, lazy) - no shared vector storage available
+            return nullptr;
         }
 
     private:
@@ -692,6 +764,8 @@ private:
             float const * tryGetContiguousPointer() const override {
                 if constexpr (std::is_same_v<DataStorageImpl, VectorAnalogDataStorage>) {
                     return _storage.data();
+                } else if constexpr (std::is_same_v<DataStorageImpl, ViewAnalogDataStorage>) {
+                    return _storage.data();
                 }
                 return nullptr;
             }
@@ -701,7 +775,7 @@ private:
             }
         };
 
-        std::unique_ptr<StorageConcept> _impl;
+        std::shared_ptr<StorageConcept> _impl;
     };
 
     DataStorageWrapper _data_storage;
@@ -713,12 +787,11 @@ private:
 
     // Private constructors for factory methods
     AnalogTimeSeries(DataStorageWrapper storage, std::vector<TimeFrameIndex> time_vector);
-    
+
     // Constructor for reusing shared time storage (efficient for lazy views)
     AnalogTimeSeries(DataStorageWrapper storage, std::shared_ptr<TimeIndexStorage> time_storage)
-        : _data_storage(std::move(storage))
-        , _time_storage(std::move(time_storage))
-    {
+        : _data_storage(std::move(storage)),
+          _time_storage(std::move(time_storage)) {
         _cacheOptimizationPointers();
     }
 
@@ -801,17 +874,43 @@ public:
     /**
      * @brief Get a view of (TimeFrameIndex, float) pairs
      * 
-     * Enables iterating over the time series as a sequence of time-value pairs.
+     * Enables iterating over the time series as a sequence of (time, value) pairs.
      * Compatible with TransformPipeline.
+     * 
+     * Returns `std::pair<TimeFrameIndex, float>` for backward compatibility
+     * with existing code that uses `.first`, `.second`, and structured bindings.
+     * 
+     * @return A lazy range view of (TimeFrameIndex, float) pairs
+     * @see elementsView() for concept-compliant iteration with TimeValuePoint
      */
     [[nodiscard]] auto elements() const {
-        return std::views::iota(size_t(0), _data_storage.size()) 
-             | std::views::transform([this](size_t i) {
-                 return std::make_pair(
-                     _time_storage->getTimeFrameIndexAt(i),
-                     _data_storage.getValueAt(i)
-                 );
-             });
+        return std::views::iota(size_t(0), _data_storage.size()) | std::views::transform([this](size_t i) {
+                   return std::make_pair(
+                           _time_storage->getTimeFrameIndexAt(i),
+                           _data_storage.getValueAt(i));
+               });
+    }
+
+    /**
+     * @brief Get a view of TimeValuePoint objects (concept-compliant)
+     * 
+     * Enables iterating over the time series as a sequence of TimeValuePoint objects.
+     * Each element satisfies the TimeSeriesElement and ValueElement<float> concepts,
+     * enabling use with generic time series algorithms.
+     * 
+     * Use this method when you need concept-compliant elements for generic algorithms.
+     * Use elements() when you need backward-compatible pair iteration.
+     * 
+     * @return A lazy range view of TimeValuePoint objects
+     * @see TimeValuePoint
+     * @see TimeSeriesConcepts.hpp for concept definitions
+     */
+    [[nodiscard]] auto elementsView() const {
+        return std::views::iota(size_t(0), _data_storage.size()) | std::views::transform([this](size_t i) {
+                   return TimeValuePoint{
+                           _time_storage->getTimeFrameIndexAt(i),
+                           _data_storage.getValueAt(i)};
+               });
     }
 
     /**
@@ -866,24 +965,22 @@ public:
             auto span = _data_storage.getSpan();
             values.assign(span.begin(), span.end());
             return std::make_shared<AnalogTimeSeries>(
-                std::move(values), 
-                _time_storage->getAllTimeIndices()
-            );
+                    std::move(values),
+                    _time_storage->getAllTimeIndices());
         }
-        
+
         // Slow path: evaluate all values from storage
         size_t n = _data_storage.size();
         std::vector<float> values;
         values.reserve(n);
-        
+
         for (size_t i = 0; i < n; ++i) {
             values.push_back(_data_storage.getValueAt(i));
         }
-        
+
         return std::make_shared<AnalogTimeSeries>(
-            std::move(values),
-            _time_storage->getAllTimeIndices()
-        );
+                std::move(values),
+                _time_storage->getAllTimeIndices());
     }
 };
 

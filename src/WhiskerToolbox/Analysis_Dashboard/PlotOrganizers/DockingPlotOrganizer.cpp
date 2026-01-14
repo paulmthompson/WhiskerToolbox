@@ -1,28 +1,23 @@
 #include "DockingPlotOrganizer.hpp"
+
 #include "PlotContainer.hpp"
-#include "Plots/AbstractPlotWidget.hpp"
 #include "PlotDockWidget.hpp"
 #include "PlotDockWidgetContent.hpp"
+#include "Plots/AbstractPlotWidget.hpp"
 
-// Third-party
-#include "DockManager.h"
 #include "DockAreaWidget.h"
+#include "DockManager.h"
 
-#include <QDebug>
-#include <QOpenGLWidget>
-
-DockingPlotOrganizer::DockingPlotOrganizer(ads::CDockManager* dock_manager, QObject* parent)
-    : AbstractPlotOrganizer(parent)
-    , _dock_manager(dock_manager)
-    , _placeholder_widget(new QWidget())
-{
+DockingPlotOrganizer::DockingPlotOrganizer(ads::CDockManager * dock_manager, QObject * parent)
+    : AbstractPlotOrganizer(parent),
+      _dock_manager(dock_manager),
+      _placeholder_widget(new QWidget()) {
     // Placeholder is a minimal widget to satisfy the dashboard center panel
 }
 
 DockingPlotOrganizer::~DockingPlotOrganizer() = default;
 
-void DockingPlotOrganizer::addPlot(std::unique_ptr<PlotContainer> plot_container)
-{
+void DockingPlotOrganizer::addPlot(std::unique_ptr<PlotContainer> plot_container) {
     if (!_dock_manager) {
         qWarning() << "DockingPlotOrganizer::addPlot: dock manager is null";
         return;
@@ -32,8 +27,8 @@ void DockingPlotOrganizer::addPlot(std::unique_ptr<PlotContainer> plot_container
         return;
     }
 
-    const QString plot_id = plot_container->getPlotId();
-    AbstractPlotWidget* plot_item = plot_container->getPlotWidget();
+    QString const plot_id = plot_container->getPlotId();
+    AbstractPlotWidget * plot_item = plot_container->getPlotWidget();
     if (!plot_item) {
         qWarning() << "DockingPlotOrganizer::addPlot: null plot item for" << plot_id;
         return;
@@ -43,10 +38,10 @@ void DockingPlotOrganizer::addPlot(std::unique_ptr<PlotContainer> plot_container
     plot_item->setFrameAndTitleVisible(false);
 
     // Create per-plot content widget (scene + view + GL viewport)
-    auto* content = new PlotDockWidgetContent(plot_id, plot_item);
+    auto * content = new PlotDockWidgetContent(plot_id, plot_item);
 
     // Wrap in a dock widget
-    auto* dock_widget = new PlotDockWidget(plot_id, content);
+    auto * dock_widget = new PlotDockWidget(plot_id, content);
 
     // Add to dock manager, let ADS choose placement
     _dock_manager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
@@ -72,14 +67,13 @@ void DockingPlotOrganizer::addPlot(std::unique_ptr<PlotContainer> plot_container
     emitPlotAdded(plot_id);
 }
 
-bool DockingPlotOrganizer::removePlot(QString const& plot_id)
-{
+bool DockingPlotOrganizer::removePlot(QString const & plot_id) {
     auto it = _entries.find(plot_id);
     if (it == _entries.end()) {
         return false;
     }
 
-    PlotContainer* container = it->second._container.get();
+    PlotContainer * container = it->second._container.get();
     _disconnectContainerSignals(container);
 
     // Remove dock widget without re-emitting closeRequested
@@ -95,38 +89,34 @@ bool DockingPlotOrganizer::removePlot(QString const& plot_id)
     return true;
 }
 
-PlotContainer* DockingPlotOrganizer::getPlot(QString const& plot_id) const
-{
+PlotContainer * DockingPlotOrganizer::getPlot(QString const & plot_id) const {
     auto it = _entries.find(plot_id);
     return (it != _entries.end()) ? it->second._container.get() : nullptr;
 }
 
-QStringList DockingPlotOrganizer::getAllPlotIds() const
-{
+QStringList DockingPlotOrganizer::getAllPlotIds() const {
     QStringList ids;
     ids.reserve(static_cast<int>(_entries.size()));
-    for (auto const& kv : _entries) {
+    for (auto const & kv: _entries) {
         ids.append(kv.first);
     }
     return ids;
 }
 
-int DockingPlotOrganizer::getPlotCount() const
-{
+int DockingPlotOrganizer::getPlotCount() const {
     return static_cast<int>(_entries.size());
 }
 
-void DockingPlotOrganizer::selectPlot(QString const& plot_id)
-{
+void DockingPlotOrganizer::selectPlot(QString const & plot_id) {
     auto it = _entries.find(plot_id);
     if (it == _entries.end()) {
         return;
     }
 
     // Show and focus the dock
-    if (auto* dock = it->second._dock) {
+    if (auto * dock = it->second._dock) {
         dock->show();
-        if (auto* content = it->second._content) {
+        if (auto * content = it->second._content) {
             content->setFocus(Qt::OtherFocusReason);
         }
     }
@@ -134,33 +124,29 @@ void DockingPlotOrganizer::selectPlot(QString const& plot_id)
     emitPlotSelected(plot_id);
 }
 
-void DockingPlotOrganizer::clearAllPlots()
-{
+void DockingPlotOrganizer::clearAllPlots() {
     // Copy keys to avoid iterator invalidation
     QStringList ids = getAllPlotIds();
-    for (auto const& id : ids) {
+    for (auto const & id: ids) {
         removePlot(id);
     }
 }
 
-QWidget* DockingPlotOrganizer::getDisplayWidget()
-{
+QWidget * DockingPlotOrganizer::getDisplayWidget() {
     return _placeholder_widget;
 }
 
-void DockingPlotOrganizer::_onContentActivated(QString const& plot_id)
-{
+void DockingPlotOrganizer::_onContentActivated(QString const & plot_id) {
     selectPlot(plot_id);
 }
 
-void DockingPlotOrganizer::_onDockCloseRequested(QString const& plot_id)
-{
+void DockingPlotOrganizer::_onDockCloseRequested(QString const & plot_id) {
     // Cleanup without recursive close calls
     auto it = _entries.find(plot_id);
     if (it == _entries.end()) {
         return;
     }
-    PlotContainer* container = it->second._container.get();
+    PlotContainer * container = it->second._container.get();
     _disconnectContainerSignals(container);
     if (it->second._dock) {
         it->second._dock->deleteLater();
@@ -169,8 +155,7 @@ void DockingPlotOrganizer::_onDockCloseRequested(QString const& plot_id)
     emitPlotRemoved(plot_id);
 }
 
-void DockingPlotOrganizer::_connectContainerSignals(PlotContainer* container)
-{
+void DockingPlotOrganizer::_connectContainerSignals(PlotContainer * container) {
     if (!container) { return; }
     QObject::connect(container, &PlotContainer::plotSelected,
                      this, &DockingPlotOrganizer::_onPlotSelected);
@@ -178,23 +163,18 @@ void DockingPlotOrganizer::_connectContainerSignals(PlotContainer* container)
                      this, &DockingPlotOrganizer::_onFrameJumpRequested);
 }
 
-void DockingPlotOrganizer::_disconnectContainerSignals(PlotContainer* container)
-{
+void DockingPlotOrganizer::_disconnectContainerSignals(PlotContainer * container) {
     if (!container) { return; }
     QObject::disconnect(container, &PlotContainer::plotSelected,
                         this, &DockingPlotOrganizer::_onPlotSelected);
     QObject::disconnect(container, &PlotContainer::frameJumpRequested,
                         this, &DockingPlotOrganizer::_onFrameJumpRequested);
-
 }
 
-void DockingPlotOrganizer::_onPlotSelected(QString const& plot_id)
-{
+void DockingPlotOrganizer::_onPlotSelected(QString const & plot_id) {
     emitPlotSelected(plot_id);
 }
 
-void DockingPlotOrganizer::_onFrameJumpRequested(int64_t time_frame_index, const std::string& data_key)
-{
+void DockingPlotOrganizer::_onFrameJumpRequested(int64_t time_frame_index, std::string const & data_key) {
     emitFrameJumpRequested(time_frame_index, data_key);
 }
-

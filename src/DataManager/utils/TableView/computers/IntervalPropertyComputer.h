@@ -77,9 +77,9 @@ public:
 
         for (auto const & interval: intervals) {
 
-            auto intervals_with_ids = m_source->getIntervalsWithIdsInRange(interval.start,
-                                                                           interval.end,
-                                                                           *destinationTimeFrame);
+            auto intervals_with_ids = m_source->viewInRange(interval.start,
+                                                            interval.end,
+                                                            *destinationTimeFrame);
 
             auto this_interval = intervals_with_ids.back();
             entity_ids.push_back(this_interval.entity_id);

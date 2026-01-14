@@ -54,13 +54,13 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);  // Two intervals: [200-400] and [600-700]
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
         
         // Check progress was reported
         REQUIRE(progress_val == 100);
@@ -79,13 +79,13 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);  // Two intervals: [200-400] and [600-700]
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
     }
     
     SECTION("Absolute threshold") {
@@ -100,13 +100,13 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);  // Two intervals: [200-400] and [600-700]
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
     }
     
     SECTION("With lockout time") {
@@ -121,15 +121,15 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 3);  // Three separate intervals - lockout prevents starting too soon
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 3);  // Three separate intervals - lockout prevents starting too soon
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 200);
-        REQUIRE(intervals[1].start == 300);
-        REQUIRE(intervals[1].end == 300);
-        REQUIRE(intervals[2].start == 450);
-        REQUIRE(intervals[2].end == 450);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 200);
+        REQUIRE(intervals[1].value().start == 300);
+        REQUIRE(intervals[1].value().end == 300);
+        REQUIRE(intervals[2].value().start == 450);
+        REQUIRE(intervals[2].value().end == 450);
     }
     
     SECTION("With minimum duration") {
@@ -144,11 +144,11 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);  // Only one interval meets minimum duration
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);  // Only one interval meets minimum duration
         
-        REQUIRE(intervals[0].start == 300);
-        REQUIRE(intervals[0].end == 500);
+        REQUIRE(intervals[0].value().start == 300);
+        REQUIRE(intervals[0].value().end == 500);
     }
     
     SECTION("Signal ends while above threshold") {
@@ -163,11 +163,11 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 500);  // Should extend to end of signal
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 500);  // Should extend to end of signal
     }
     
     SECTION("No intervals detected") {
@@ -182,7 +182,7 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         REQUIRE(intervals.empty());
     }
     
@@ -198,13 +198,13 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals that meet minimum duration
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);  // Two intervals that meet minimum duration
         
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 200);
-        REQUIRE(intervals[1].start == 400);
-        REQUIRE(intervals[1].end == 500);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 200);
+        REQUIRE(intervals[1].value().start == 400);
+        REQUIRE(intervals[1].value().end == 500);
     }
 }
 
@@ -228,7 +228,7 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
     }
     
     SECTION("Single sample above threshold") {
@@ -243,10 +243,10 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 100);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 100);
     }
     
     SECTION("Single sample below threshold") {
@@ -261,7 +261,7 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
     }
     
     SECTION("All values above threshold") {
@@ -276,10 +276,10 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 500);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 500);
     }
     
     SECTION("Cancellation support") {
@@ -297,7 +297,7 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         // Should return empty due to cancellation
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
     }
     
     SECTION("Very large lockout time") {
@@ -313,7 +313,7 @@ TEST_CASE(
         
         REQUIRE(result_intervals != nullptr);
         // Should only get first interval since lockout is so large
-        REQUIRE(result_intervals->getDigitalIntervalSeries().size() == 1);
+        REQUIRE(result_intervals->size() == 1);
     }
     
     SECTION("Very large minimum duration") {
@@ -328,7 +328,7 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
+        REQUIRE(result_intervals->view().empty());
     }
 }
 
@@ -354,8 +354,8 @@ TEST_CASE(
         
         REQUIRE(result_intervals != nullptr);
         // With treat_as_zero, the gap should break the interval
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
     }
     
     SECTION("Missing data ignore mode") {
@@ -371,8 +371,8 @@ TEST_CASE(
         
         REQUIRE(result_intervals != nullptr);
         // With ignore mode, the gap doesn't break the interval
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);
     }
     
     SECTION("No gaps in data") {
@@ -387,9 +387,9 @@ TEST_CASE(
             "AnalogIntervalThreshold", *ats, params, ctx);
         
         REQUIRE(result_intervals != nullptr);
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        auto const & intervals = result_intervals->view();
         // Should detect intervals normally when there are no gaps
-        REQUIRE(intervals.size() == 2);
+        REQUIRE(result_intervals->size() == 2);
     }
 }
 
@@ -629,13 +629,13 @@ TEST_CASE(
         auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals");
         REQUIRE(interval_series != nullptr);
         
-        auto const & intervals = interval_series->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals: [200-400] and [600-700]
+        auto const & intervals = interval_series->view();
+        REQUIRE(interval_series->size() == 2);  // Two intervals: [200-400] and [600-700]
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
     }
     
     SECTION("Execute pipeline with lockout and min_duration parameters") {
@@ -671,13 +671,13 @@ TEST_CASE(
         auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals_advanced");
         REQUIRE(interval_series != nullptr);
         
-        auto const & intervals = interval_series->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals that meet minimum duration
+        auto const & intervals = interval_series->view();
+        REQUIRE(interval_series->size() == 2);  // Two intervals that meet minimum duration
         
-        REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 200);
-        REQUIRE(intervals[1].start == 400);
-        REQUIRE(intervals[1].end == 500);
+        REQUIRE(intervals[0].value().start == 100);
+        REQUIRE(intervals[0].value().end == 200);
+        REQUIRE(intervals[1].value().start == 400);
+        REQUIRE(intervals[1].value().end == 500);
     }
     
     SECTION("Execute pipeline with absolute threshold") {
@@ -713,13 +713,13 @@ TEST_CASE(
         auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals_absolute");
         REQUIRE(interval_series != nullptr);
         
-        auto const & intervals = interval_series->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals: [200-400] and [600-700]
+        auto const & intervals = interval_series->view();
+        REQUIRE(interval_series->size() == 2);  // Two intervals: [200-400] and [600-700]
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
     }
     
     SECTION("Execute pipeline with negative threshold") {
@@ -755,13 +755,13 @@ TEST_CASE(
         auto interval_series = dm.getData<DigitalIntervalSeries>("detected_intervals_negative");
         REQUIRE(interval_series != nullptr);
         
-        auto const & intervals = interval_series->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);
+        auto const & intervals = interval_series->view();
+        REQUIRE(interval_series->size() == 2);
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
     }
 }
 
@@ -828,13 +828,13 @@ TEST_CASE(
         REQUIRE(result_intervals != nullptr);
         
         // Verify the interval detection results
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2);  // Two intervals: [200-400] and [600-700]
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 2);  // Two intervals: [200-400] and [600-700]
         
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
-        REQUIRE(intervals[1].start == 600);
-        REQUIRE(intervals[1].end == 700);
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
+        REQUIRE(intervals[1].value().start == 600);
+        REQUIRE(intervals[1].value().end == 700);
     }
     
     SECTION("Execute V2 pipeline with advanced parameters") {
@@ -886,10 +886,10 @@ TEST_CASE(
         auto result_intervals = dm.getData<DigitalIntervalSeries>("v2_detected_intervals_advanced");
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1);  // Only one interval meets minimum duration: [200-400]
-        REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 400);
+        auto const & intervals = result_intervals->view();
+        REQUIRE(result_intervals->size() == 1);  // Only one interval meets minimum duration: [200-400]
+        REQUIRE(intervals[0].value().start == 200);
+        REQUIRE(intervals[0].value().end == 400);
     }
     
     // Cleanup

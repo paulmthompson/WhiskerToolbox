@@ -2,10 +2,23 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "loaders/CSV_Loaders.hpp"
 
 #include <fstream>
 #include <vector>
+
+namespace {
+// Helper to create a simple TimeFrame for testing
+std::shared_ptr<TimeFrame> makeTestTimeFrame(int64_t num_frames) {
+    std::vector<int> times;
+    times.reserve(static_cast<size_t>(num_frames));
+    for (int64_t i = 0; i < num_frames; ++i) {
+        times.push_back(static_cast<int>(i));
+    }
+    return std::make_shared<TimeFrame>(times);
+}
+} // namespace
 
 TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     DigitalEventSeries des;
@@ -15,11 +28,14 @@ TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     DigitalEventSeries des2(events);
 
     // Verify that the constructor sorts the events
-    auto data = des2.getEventSeries();
-    REQUIRE(data.size() == 3);
-    REQUIRE(data[0] == TimeFrameIndex(1));
-    REQUIRE(data[1] == TimeFrameIndex(2));
-    REQUIRE(data[2] == TimeFrameIndex(3));
+    REQUIRE(des2.size() == 3);
+    std::vector<TimeFrameIndex> collected;
+    for (auto event : des2.view()) {
+        collected.push_back(event.time());
+    }
+    REQUIRE(collected[0] == TimeFrameIndex(1));
+    REQUIRE(collected[1] == TimeFrameIndex(2));
+    REQUIRE(collected[2] == TimeFrameIndex(3));
 }
 
 TEST_CASE("Digital Event Series - Add Event", "[DataManager]") {
@@ -32,12 +48,15 @@ TEST_CASE("Digital Event Series - Add Event", "[DataManager]") {
     des.addEvent(TimeFrameIndex(2));
 
     // Verify that events are sorted after each addition
-    auto data = des.getEventSeries();
-    REQUIRE(data.size() == 4);
-    REQUIRE(data[0] == TimeFrameIndex(1));
-    REQUIRE(data[1] == TimeFrameIndex(2));
-    REQUIRE(data[2] == TimeFrameIndex(3));
-    REQUIRE(data[3] == TimeFrameIndex(5));
+    REQUIRE(des.size() == 4);
+    std::vector<TimeFrameIndex> collected;
+    for (auto event : des.view()) {
+        collected.push_back(event.time());
+    }
+    REQUIRE(collected[0] == TimeFrameIndex(1));
+    REQUIRE(collected[1] == TimeFrameIndex(2));
+    REQUIRE(collected[2] == TimeFrameIndex(3));
+    REQUIRE(collected[3] == TimeFrameIndex(5));
 }
 
 TEST_CASE("Digital Event Series - Remove Event", "[DataManager]") {
@@ -49,17 +68,20 @@ TEST_CASE("Digital Event Series - Remove Event", "[DataManager]") {
     REQUIRE(removed);
 
     // Check that the event was removed
-    auto data = des.getEventSeries();
-    REQUIRE(data.size() == 4);
-    REQUIRE(data[0] == TimeFrameIndex(1));
-    REQUIRE(data[1] == TimeFrameIndex(2));
-    REQUIRE(data[2] == TimeFrameIndex(4));
-    REQUIRE(data[3] == TimeFrameIndex(5));
+    REQUIRE(des.size() == 4);
+    std::vector<TimeFrameIndex> collected;
+    for (auto event : des.view()) {
+        collected.push_back(event.time());
+    }
+    REQUIRE(collected[0] == TimeFrameIndex(1));
+    REQUIRE(collected[1] == TimeFrameIndex(2));
+    REQUIRE(collected[2] == TimeFrameIndex(4));
+    REQUIRE(collected[3] == TimeFrameIndex(5));
 
     // Try to remove an event that doesn't exist
     removed = des.removeEvent(TimeFrameIndex(10));
     REQUIRE_FALSE(removed);
-    REQUIRE(data.size() == 4);
+    REQUIRE(des.size() == 4);
 }
 
 TEST_CASE("Digital Event Series - Clear", "[DataManager]") {
@@ -99,14 +121,15 @@ TEST_CASE("Digital Event Series - Load From CSV", "[DataManager]") {
             }
 
             auto des = DigitalEventSeries(events);
-            auto data = des.getEventSeries();
 
             // Check that the data is loaded and sorted
-            REQUIRE(data.size() > 0);
+            REQUIRE(des.size() > 0);
 
-            // Verify data is sorted
-            for (size_t i = 1; i < data.size(); ++i) {
-                REQUIRE(data[i - 1] <= data[i]);
+            // Verify data is sorted via view()
+            TimeFrameIndex prev{std::numeric_limits<int64_t>::min()};
+            for (auto event : des.view()) {
+                REQUIRE(prev <= event.time());
+                prev = event.time();
             }
         }
     }
@@ -123,19 +146,22 @@ TEST_CASE("Digital Event Series - Duplicate Events", "[DataManager]") {
     des.addEvent(TimeFrameIndex(1));
 
     // Verify that duplicates are not added and sorted
-    auto data = des.getEventSeries();
-    REQUIRE(data.size() == 3);
-    REQUIRE(data[0] == TimeFrameIndex(1));
-    REQUIRE(data[1] == TimeFrameIndex(2));
-    REQUIRE(data[2] == TimeFrameIndex(3));
+    REQUIRE(des.size() == 3);
+    std::vector<TimeFrameIndex> collected;
+    for (auto event : des.view()) {
+        collected.push_back(event.time());
+    }
+    REQUIRE(collected[0] == TimeFrameIndex(1));
+    REQUIRE(collected[1] == TimeFrameIndex(2));
+    REQUIRE(collected[2] == TimeFrameIndex(3));
 }
 
 TEST_CASE("Digital Event Series - Empty Series", "[DataManager]") {
     DigitalEventSeries des;
 
     // Test with empty series
-    auto data = des.getEventSeries();
-    REQUIRE(data.empty());
+    REQUIRE(des.size() == 0);
+    REQUIRE(std::ranges::empty(des.view()));
 
     // Removing from empty series should return false
     bool removed = des.removeEvent(TimeFrameIndex(1));
@@ -152,10 +178,12 @@ TEST_CASE("Digital Event Series - Empty Series", "[DataManager]") {
 TEST_CASE("DigitalEventSeries - Range-based access (C++20)", "[DataManager]") {
     std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(10)};
     DigitalEventSeries des(events);
+    auto tf = makeTestTimeFrame(100);
+    des.setTimeFrame(tf);
 
-    SECTION("getEventsInRange returns correct view") {
-        // Get events between 2.0 and 7.5 inclusive
-        auto range = des.getEventsInRange(TimeFrameIndex(2), TimeFrameIndex(8));
+    SECTION("viewTimesInRange returns correct view") {
+        // Get events between 2 and 8 inclusive
+        auto range = des.viewTimesInRange(TimeFrameIndex(2), TimeFrameIndex(8), *tf);
 
         // Count elements in the range
         size_t count = 0;
@@ -172,110 +200,215 @@ TEST_CASE("DigitalEventSeries - Range-based access (C++20)", "[DataManager]") {
         REQUIRE(collected[3] == TimeFrameIndex(7));
     }
 
-    SECTION("getEventsAsVector returns correct vector") {
-        // Get events between 3.0 and 9.0 inclusive
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(3), TimeFrameIndex(9));
+    SECTION("viewInRange returns EventWithId objects") {
+        // Get events between 3 and 9 inclusive
+        auto range = des.viewInRange(TimeFrameIndex(3), TimeFrameIndex(9), *tf);
 
-        REQUIRE(vector_range.size() == 3);
-        REQUIRE(vector_range[0] == TimeFrameIndex(3));
-        REQUIRE(vector_range[1] == TimeFrameIndex(5));
-        REQUIRE(vector_range[2] == TimeFrameIndex(7));
+        std::vector<TimeFrameIndex> collected;
+        for (auto event : range) {
+            collected.push_back(event.time());
+        }
+
+        REQUIRE(collected.size() == 3);
+        REQUIRE(collected[0] == TimeFrameIndex(3));
+        REQUIRE(collected[1] == TimeFrameIndex(5));
+        REQUIRE(collected[2] == TimeFrameIndex(7));
     }
 }
 
 TEST_CASE("DigitalEventSeries - Range edge cases", "[DataManager]") {
     std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4), TimeFrameIndex(5)};
     DigitalEventSeries des(events);
+    auto tf = makeTestTimeFrame(100);
+    des.setTimeFrame(tf);
 
     SECTION("Exact boundary matches") {
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(2), TimeFrameIndex(4));
-        REQUIRE(vector_range.size() == 3);
-        REQUIRE(vector_range[0] == TimeFrameIndex(2));
-        REQUIRE(vector_range[1] == TimeFrameIndex(3));
-        REQUIRE(vector_range[2] == TimeFrameIndex(4));
+        auto range = des.viewTimesInRange(TimeFrameIndex(2), TimeFrameIndex(4), *tf);
+        std::vector<TimeFrameIndex> collected;
+        for (auto t : range) { collected.push_back(t); }
+        REQUIRE(collected.size() == 3);
+        REQUIRE(collected[0] == TimeFrameIndex(2));
+        REQUIRE(collected[1] == TimeFrameIndex(3));
+        REQUIRE(collected[2] == TimeFrameIndex(4));
     }
 
     SECTION("Range includes all events") {
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(0), TimeFrameIndex(10));
-        REQUIRE(vector_range.size() == 5);
+        auto range = des.viewTimesInRange(TimeFrameIndex(0), TimeFrameIndex(10), *tf);
+        REQUIRE(std::ranges::distance(range) == 5);
     }
 
     SECTION("Range outside all events (before)") {
-        auto range = des.getEventsInRange(TimeFrameIndex(-5), TimeFrameIndex(0));
-        bool is_empty = std::ranges::empty(range);
-        REQUIRE(is_empty);
-
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(-5), TimeFrameIndex(0));
-        REQUIRE(vector_range.empty());
+        auto range = des.viewTimesInRange(TimeFrameIndex(-5), TimeFrameIndex(0), *tf);
+        REQUIRE(std::ranges::empty(range));
     }
 
     SECTION("Range outside all events (after)") {
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(6), TimeFrameIndex(10));
-        REQUIRE(vector_range.empty());
+        auto range = des.viewTimesInRange(TimeFrameIndex(6), TimeFrameIndex(10), *tf);
+        REQUIRE(std::ranges::empty(range));
     }
 
     SECTION("Single point range") {
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(3), TimeFrameIndex(3));
-        REQUIRE(vector_range.size() == 1);
-        REQUIRE(vector_range[0] == TimeFrameIndex(3));
-    }
-
-    SECTION("Empty range (start > stop)") {
-        auto vector_range = des.getEventsAsVector(TimeFrameIndex(4), TimeFrameIndex(2));
-        REQUIRE(vector_range.empty());
+        auto range = des.viewTimesInRange(TimeFrameIndex(3), TimeFrameIndex(3), *tf);
+        std::vector<TimeFrameIndex> collected;
+        for (auto t : range) { collected.push_back(t); }
+        REQUIRE(collected.size() == 1);
+        REQUIRE(collected[0] == TimeFrameIndex(3));
     }
 }
 
 TEST_CASE("DigitalEventSeries - Range with empty series", "[DataManager]") {
     DigitalEventSeries des;
+    auto tf = makeTestTimeFrame(100);
+    des.setTimeFrame(tf);
 
-    auto range = des.getEventsInRange(TimeFrameIndex(1), TimeFrameIndex(10));
-    bool is_empty = std::ranges::empty(range);
-    REQUIRE(is_empty);
+    auto range = des.viewTimesInRange(TimeFrameIndex(1), TimeFrameIndex(10), *tf);
+    REQUIRE(std::ranges::empty(range));
 
-    auto vector_range = des.getEventsAsVector(TimeFrameIndex(1), TimeFrameIndex(10));
-    REQUIRE(vector_range.empty());
+    auto range_with_ids = des.viewInRange(TimeFrameIndex(1), TimeFrameIndex(10), *tf);
+    REQUIRE(std::ranges::empty(range_with_ids));
 }
 
 TEST_CASE("DigitalEventSeries - Range with duplicate events", "[DataManager]") {
+    // Note: DigitalEventSeries allows duplicates when constructed from vector
+    // (only addEvent() rejects duplicates)
     std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(3), TimeFrameIndex(3)};
     DigitalEventSeries des(events);
+    auto tf = makeTestTimeFrame(100);
+    des.setTimeFrame(tf);
 
-    auto vector_range = des.getEventsAsVector(TimeFrameIndex(2), TimeFrameIndex(3));
-    REQUIRE(vector_range.size() == 5);
-    REQUIRE(vector_range[0] == TimeFrameIndex(2));
-    REQUIRE(vector_range[1] == TimeFrameIndex(2));
-    REQUIRE(vector_range[2] == TimeFrameIndex(3));
-    REQUIRE(vector_range[3] == TimeFrameIndex(3));
-    REQUIRE(vector_range[4] == TimeFrameIndex(3));
+    // All duplicates are preserved from the constructor
+    auto range = des.viewTimesInRange(TimeFrameIndex(2), TimeFrameIndex(3), *tf);
+    std::vector<TimeFrameIndex> collected;
+    for (auto t : range) { collected.push_back(t); }
+    REQUIRE(collected.size() == 5);
+    REQUIRE(collected[0] == TimeFrameIndex(2));
+    REQUIRE(collected[1] == TimeFrameIndex(2));
+    REQUIRE(collected[2] == TimeFrameIndex(3));
+    REQUIRE(collected[3] == TimeFrameIndex(3));
+    REQUIRE(collected[4] == TimeFrameIndex(3));
 }
 
 TEST_CASE("DigitalEventSeries - Range interaction with add/remove", "[DataManager]") {
     DigitalEventSeries des;
+    auto tf = makeTestTimeFrame(100);
+    des.setTimeFrame(tf);
 
     // Add events
     des.addEvent(TimeFrameIndex(1));
     des.addEvent(TimeFrameIndex(3));
     des.addEvent(TimeFrameIndex(5));
 
+    // Helper to collect range
+    auto collectRange = [&](TimeFrameIndex start, TimeFrameIndex stop) {
+        std::vector<TimeFrameIndex> result;
+        for (auto t : des.viewTimesInRange(start, stop, *tf)) {
+            result.push_back(t);
+        }
+        return result;
+    };
+
     // Initial check
-    auto vector_range = des.getEventsAsVector(TimeFrameIndex(2), TimeFrameIndex(6));
-    REQUIRE(vector_range.size() == 2);
-    REQUIRE(vector_range[0] == TimeFrameIndex(3));
-    REQUIRE(vector_range[1] == TimeFrameIndex(5));
+    auto collected = collectRange(TimeFrameIndex(2), TimeFrameIndex(6));
+    REQUIRE(collected.size() == 2);
+    REQUIRE(collected[0] == TimeFrameIndex(3));
+    REQUIRE(collected[1] == TimeFrameIndex(5));
 
     // Add another event in range
     des.addEvent(TimeFrameIndex(4));
-    vector_range = des.getEventsAsVector(TimeFrameIndex(2), TimeFrameIndex(6));
-    REQUIRE(vector_range.size() == 3);
-    REQUIRE(vector_range[0] == TimeFrameIndex(3));
-    REQUIRE(vector_range[1] == TimeFrameIndex(4));
-    REQUIRE(vector_range[2] == TimeFrameIndex(5));
+    collected = collectRange(TimeFrameIndex(2), TimeFrameIndex(6));
+    REQUIRE(collected.size() == 3);
+    REQUIRE(collected[0] == TimeFrameIndex(3));
+    REQUIRE(collected[1] == TimeFrameIndex(4));
+    REQUIRE(collected[2] == TimeFrameIndex(5));
 
     // Remove an event
     des.removeEvent(TimeFrameIndex(3));
-    vector_range = des.getEventsAsVector(TimeFrameIndex(2), TimeFrameIndex(6));
-    REQUIRE(vector_range.size() == 2);
-    REQUIRE(vector_range[0] == TimeFrameIndex(4));
-    REQUIRE(vector_range[1] == TimeFrameIndex(5));
+    collected = collectRange(TimeFrameIndex(2), TimeFrameIndex(6));
+    REQUIRE(collected.size() == 2);
+    REQUIRE(collected[0] == TimeFrameIndex(4));
+    REQUIRE(collected[1] == TimeFrameIndex(5));
+}
+
+// =============================================================================
+// Test view() method - primary iteration interface
+// =============================================================================
+
+TEST_CASE("DigitalEventSeries - view() method", "[DataManager][view]") {
+    std::vector<TimeFrameIndex> events = {TimeFrameIndex(1), TimeFrameIndex(3), TimeFrameIndex(5)};
+    DigitalEventSeries des(events);
+
+    SECTION("Basic iteration with EventWithId accessors") {
+        std::vector<TimeFrameIndex> collected_times;
+        std::vector<TimeFrameIndex> collected_values;
+        std::vector<EntityId> collected_ids;
+
+        for (auto event : des.view()) {
+            collected_times.push_back(event.time());
+            collected_values.push_back(event.value());
+            collected_ids.push_back(event.id());
+        }
+
+        REQUIRE(collected_times.size() == 3);
+        REQUIRE(collected_times[0] == TimeFrameIndex(1));
+        REQUIRE(collected_times[1] == TimeFrameIndex(3));
+        REQUIRE(collected_times[2] == TimeFrameIndex(5));
+
+        // For events, value() returns the same as time()
+        REQUIRE(collected_times[0] == collected_values[0]);
+        REQUIRE(collected_times[1] == collected_values[1]);
+        REQUIRE(collected_times[2] == collected_values[2]);
+    }
+
+    SECTION("Empty series") {
+        DigitalEventSeries empty_des;
+
+        size_t count = 0;
+        for ([[maybe_unused]] auto event : empty_des.view()) {
+            count++;
+        }
+        REQUIRE(count == 0);
+    }
+
+    SECTION("Direct member access via event_time and entity_id") {
+        auto v = des.view();
+        auto it = std::ranges::begin(v);
+        auto first_event = *it;
+
+        // Test direct member access
+        REQUIRE(first_event.event_time == TimeFrameIndex(1));
+        REQUIRE(first_event.time() == TimeFrameIndex(1));
+    }
+
+    SECTION("Works with range algorithms") {
+        // Count elements in range
+        auto count = std::ranges::distance(des.view());
+        REQUIRE(count == 3);
+    }
+}
+
+TEST_CASE("DigitalEventSeries - view() concept-compliant iteration", "[DataManager][view]") {
+    std::vector<TimeFrameIndex> events = {TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+    DigitalEventSeries des(events);
+
+    SECTION("EventWithId satisfies concept requirements") {
+        std::vector<TimeFrameIndex> collected_times;
+        std::vector<EntityId> collected_ids;
+        std::vector<TimeFrameIndex> collected_values;
+
+        for (auto event : des.view()) {
+            collected_times.push_back(event.time());
+            collected_ids.push_back(event.id());
+            collected_values.push_back(event.value());
+        }
+
+        REQUIRE(collected_times.size() == 3);
+        REQUIRE(collected_times[0] == TimeFrameIndex(10));
+        REQUIRE(collected_times[1] == TimeFrameIndex(20));
+        REQUIRE(collected_times[2] == TimeFrameIndex(30));
+
+        // For events, value() returns the same as time()
+        REQUIRE(collected_times[0] == collected_values[0]);
+        REQUIRE(collected_times[1] == collected_values[1]);
+        REQUIRE(collected_times[2] == collected_values[2]);
+    }
 }

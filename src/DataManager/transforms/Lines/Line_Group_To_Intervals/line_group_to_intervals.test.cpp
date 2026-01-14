@@ -169,16 +169,16 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Two separate intervals
+        auto intervals = result->view();
+        REQUIRE(result->size() == 2); // Two separate intervals
 
         // First interval: frames 0-4
-        REQUIRE(intervals[0].start == 0);
-        REQUIRE(intervals[0].end == 4);
+        REQUIRE(intervals[0].value().start == 0);
+        REQUIRE(intervals[0].value().end == 4);
 
         // Second interval: frames 10-14
-        REQUIRE(intervals[1].start == 10);
-        REQUIRE(intervals[1].end == 14);
+        REQUIRE(intervals[1].value().start == 10);
+        REQUIRE(intervals[1].value().end == 14);
     }
 
     SECTION("Track presence of Group B (discontinuous)") {
@@ -191,16 +191,16 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Two separate intervals
+        auto intervals = result->view();
+        REQUIRE(result->size() == 2); // Two separate intervals
 
         // First interval: frames 5-9
-        REQUIRE(intervals[0].start == 5);
-        REQUIRE(intervals[0].end == 9);
+        REQUIRE(intervals[0].value().start == 5);
+        REQUIRE(intervals[0].value().end == 9);
 
         // Second interval: frames 15-19
-        REQUIRE(intervals[1].start == 15);
-        REQUIRE(intervals[1].end == 19);
+        REQUIRE(intervals[1].value().start == 15);
+        REQUIRE(intervals[1].value().end == 19);
     }
 
     SECTION("Track presence of Group C (discontinuous)") {
@@ -213,16 +213,16 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Two separate intervals
+        auto intervals = result->view();
+        REQUIRE(result->size() == 2); // Two separate intervals
 
         // First interval: frames 5-9
-        REQUIRE(intervals[0].start == 5);
-        REQUIRE(intervals[0].end == 9);
+        REQUIRE(intervals[0].value().start == 5);
+        REQUIRE(intervals[0].value().end == 9);
 
         // Second interval: frames 20-24
-        REQUIRE(intervals[1].start == 20);
-        REQUIRE(intervals[1].end == 24);
+        REQUIRE(intervals[1].value().start == 20);
+        REQUIRE(intervals[1].value().end == 24);
     }
 }
 
@@ -240,16 +240,16 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Two gaps
+        auto intervals = result->view();
+        REQUIRE(result->size() == 2); // Two gaps
 
         // First gap: frames 5-9
-        REQUIRE(intervals[0].start == 5);
-        REQUIRE(intervals[0].end == 9);
+        REQUIRE(intervals[0].value().start == 5);
+        REQUIRE(intervals[0].value().end == 9);
 
         // Second gap: frames 15-24
-        REQUIRE(intervals[1].start == 15);
-        REQUIRE(intervals[1].end == 24);
+        REQUIRE(intervals[1].value().start == 15);
+        REQUIRE(intervals[1].value().end == 24);
     }
 
     SECTION("Track absence of Group B") {
@@ -262,20 +262,19 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 3); // Three gaps
+        auto intervals = result->view();
+        REQUIRE(result->size() == 3); // Three gaps
 
         // First gap: frames 0-4
-        REQUIRE(intervals[0].start == 0);
-        REQUIRE(intervals[0].end == 4);
+        REQUIRE(intervals[0].value().start == 0);
+        REQUIRE(intervals[0].value().end == 4);
 
         // Second gap: frames 10-14
-        REQUIRE(intervals[1].start == 10);
-        REQUIRE(intervals[1].end == 14);
-
+        REQUIRE(intervals[1].value().start == 10);
+        REQUIRE(intervals[1].value().end == 14);
         // Third gap: frames 20-24
-        REQUIRE(intervals[2].start == 20);
-        REQUIRE(intervals[2].end == 24);
+        REQUIRE(intervals[2].value().start == 20);
+        REQUIRE(intervals[2].value().end == 24);
     }
 }
 
@@ -294,7 +293,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
+        auto intervals = result->view();
         REQUIRE(intervals.empty()); // Both intervals are length 5, should be filtered out
     }
 
@@ -309,8 +308,8 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Both intervals should pass
+        auto intervals = result->view();
+        REQUIRE(result->size() == 2); // Both intervals should pass
     }
 
     SECTION("Filter with min_interval_length on absence tracking") {
@@ -324,7 +323,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
+        auto intervals = result->view();
         // Group B absent in: frames 0-4 (5 frames), 10-14 (5 frames), 20-24 (5 frames)
         // All are length 5, so all should be filtered out
         REQUIRE(intervals.empty());
@@ -346,12 +345,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1); // Should be merged into one
+        auto intervals = result->view();
+        REQUIRE(result->size() == 1); // Should be merged into one
 
         // Merged interval: frames 0-14
-        REQUIRE(intervals[0].start == 0);
-        REQUIRE(intervals[0].end == 14);
+        REQUIRE(intervals[0].value().start == 0);
+        REQUIRE(intervals[0].value().end == 14);
     }
 
     SECTION("Do not merge intervals with gap_threshold = 4") {
@@ -365,8 +364,8 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Should remain separate
+        auto intervals = result->view();
+        REQUIRE(result->size() == 2); // Should remain separate
     }
 
     SECTION("Merge multiple gaps with high threshold") {
@@ -380,12 +379,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
-        REQUIRE(intervals.size() == 1); // Should be merged
+        auto intervals = result->view();
+        REQUIRE(result->size() == 1); // Should be merged
 
         // Merged interval: frames 5-19
-        REQUIRE(intervals[0].start == 5);
-        REQUIRE(intervals[0].end == 19);
+        REQUIRE(intervals[0].value().start == 5);
+        REQUIRE(intervals[0].value().end == 19);
     }
 }
 
@@ -405,12 +404,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
+        auto intervals = result->view();
         // After merge: 5-24 (length 20)
         // After filter: length 20 passes
-        REQUIRE(intervals.size() == 1);
-        REQUIRE(intervals[0].start == 5);
-        REQUIRE(intervals[0].end == 24);
+        REQUIRE(result->size() == 1);
+        REQUIRE(intervals[0].value().start == 5);
+        REQUIRE(intervals[0].value().end == 24);
     }
 
     SECTION("Merge then filter out") {
@@ -425,7 +424,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         REQUIRE(result != nullptr);
         
-        auto intervals = result->getDigitalIntervalSeries();
+        auto intervals = result->view();
         REQUIRE(intervals.empty()); // Should be filtered out
     }
 }
@@ -445,7 +444,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto result = lineGroupToIntervals(empty_line_data, &params);
 
         REQUIRE(result != nullptr);
-        REQUIRE(result->getDigitalIntervalSeries().empty());
+        REQUIRE(result->view().empty());
     }
 
     SECTION("Null line data") {
@@ -488,7 +487,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto result = lineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        REQUIRE(result->getDigitalIntervalSeries().empty());
+        REQUIRE(result->view().empty());
     }
 
     SECTION("Zero target_group_id") {
@@ -551,7 +550,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         
         auto result = std::get<std::shared_ptr<DigitalIntervalSeries>>(result_variant);
         REQUIRE(result != nullptr);
-        REQUIRE(result->getDigitalIntervalSeries().size() == 2);
+        REQUIRE(result->size() == 2);
     }
 
     SECTION("Operation execute with progress callback") {
@@ -593,22 +592,22 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         // Check frames in first interval
         for (int i = 0; i <= 4; ++i) {
-            REQUIRE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
 
         // Check frames in gap
         for (int i = 5; i <= 9; ++i) {
-            REQUIRE_FALSE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
 
         // Check frames in second interval
         for (int i = 10; i <= 14; ++i) {
-            REQUIRE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
 
         // Check frames after
         for (int i = 15; i <= 24; ++i) {
-            REQUIRE_FALSE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
     }
 
@@ -623,22 +622,22 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
         // Check frames in first interval (should be absent)
         for (int i = 0; i <= 4; ++i) {
-            REQUIRE_FALSE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
 
         // Check frames in first absence interval
         for (int i = 5; i <= 9; ++i) {
-            REQUIRE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
 
         // Check frames in second interval (should be absent)
         for (int i = 10; i <= 14; ++i) {
-            REQUIRE_FALSE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
 
         // Check frames in second absence interval
         for (int i = 15; i <= 24; ++i) {
-            REQUIRE(result->isEventAtTime(TimeFrameIndex(i)));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), *(result->getTimeFrame())));
         }
     }
 }

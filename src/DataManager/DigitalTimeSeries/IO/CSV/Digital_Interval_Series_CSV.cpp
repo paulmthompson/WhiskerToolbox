@@ -144,11 +144,11 @@ void save(
         fout << opts.header << opts.line_delim;
     }
 
-    std::vector<Interval> const & intervals = interval_data->getDigitalIntervalSeries();
+    auto const intervals = interval_data->view();
 
     for (auto const & interval : intervals) {
         // Using interval.start and interval.end directly as they are int64_t
-        fout << interval.start << opts.delimiter << interval.end << opts.line_delim;
+        fout << interval.value().start << opts.delimiter << interval.value().end << opts.line_delim;
         if (fout.fail()) {
             std::cerr << "Error: Failed while writing data to file: " << full_path << std::endl;
             fout.close();

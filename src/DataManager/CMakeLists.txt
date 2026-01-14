@@ -14,7 +14,8 @@ find_package(Armadillo REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 
-add_subdirectory(Observer)
+# Note: Observer library has been promoted to top-level (src/Observer)
+# DataManager gets Observer includes via transitive dependency from Entity
 
 add_subdirectory(Lines)
 
@@ -254,9 +255,11 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.cpp
 
-        Lineage/LineageTypes.hpp
-        Lineage/LineageRegistry.hpp
-        Lineage/LineageRegistry.cpp
+        # Lineage subsystem (only DataManager-specific files remain here)
+        # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library
+        # EntityResolver now uses composition with LineageResolver from Entity
+        Lineage/DataManagerEntityDataSource.hpp
+        Lineage/DataManagerEntityDataSource.cpp
         Lineage/EntityResolver.hpp
         Lineage/EntityResolver.cpp
         Lineage/LineageRecorder.hpp

@@ -184,9 +184,9 @@ CorePlotting::RenderableRectangleBatch buildIntervalSeriesBatchSimplified(
             series, local_layout, *master_time_frame, params.start_time, params.end_time);
 
     // Reserve space
-    batch.bounds.reserve(mapped_intervals.size());
-    batch.colors.reserve(mapped_intervals.size());
-    batch.entity_ids.reserve(mapped_intervals.size());
+    //batch.bounds.reserve(mapped_intervals.size());
+    //batch.colors.reserve(mapped_intervals.size());
+    //batch.entity_ids.reserve(mapped_intervals.size());
 
     // Extract bounds, colors, and entity IDs from mapped elements
     for (auto const & interval: mapped_intervals) {
@@ -248,30 +248,50 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         return batch;
     }
 
+    // Convert master timeframe indices to series timeframe indices for cache operations
+    // The cache stores vertices with series timeframe indices, so all cache queries
+    // must use series timeframe coordinates
+    auto const * series_tf = series.getTimeFrame().get();
+    TimeFrameIndex cache_start = params.start_time;
+    TimeFrameIndex cache_end = params.end_time;
+    
+    if (series_tf && series_tf != master_time_frame.get()) {
+        std::tie(cache_start, cache_end) = convertTimeFrameRange(
+            params.start_time, params.end_time, *master_time_frame, *series_tf);
+    }
+
     // Initialize cache if needed (use 3x visible window for smooth scrolling)
-    size_t const visible_points = static_cast<size_t>(params.end_time.getValue() - params.start_time.getValue());
+    size_t const visible_points = static_cast<size_t>(cache_end.getValue() - cache_start.getValue());
     size_t const desired_capacity = visible_points * 3;
 
     if (!cache.isInitialized() || cache.capacity() < desired_capacity) {
         cache.initialize(desired_capacity);
     }
 
-    // Check if we need to update the cache
-    if (cache.needsUpdate(params.start_time, params.end_time)) {
-        auto missing_ranges = cache.getMissingRanges(params.start_time, params.end_time);
+    // Check if we need to update the cache (using series timeframe indices)
+    if (cache.needsUpdate(cache_start, cache_end)) {
+        auto missing_ranges = cache.getMissingRanges(cache_start, cache_end);
 
         if (missing_ranges.size() == 1 &&
-            missing_ranges[0].start == params.start_time &&
-            missing_ranges[0].end == params.end_time) {
+            missing_ranges[0].start == cache_start &&
+            missing_ranges[0].end == cache_end) {
             // Complete cache miss - regenerate all vertices
+            // Note: generateVerticesForRange takes master timeframe indices and converts internally
             auto vertices = generateVerticesForRange(series, master_time_frame,
                                                      params.start_time, params.end_time);
-            cache.setVertices(vertices, params.start_time, params.end_time);
+            cache.setVertices(vertices, cache_start, cache_end);
         } else {
             // Incremental update - only generate missing ranges
+            // Convert the missing ranges back to master timeframe for generateVerticesForRange
             for (auto const & range: missing_ranges) {
+                TimeFrameIndex master_start = range.start;
+                TimeFrameIndex master_end = range.end;
+                if (series_tf && series_tf != master_time_frame.get()) {
+                    std::tie(master_start, master_end) = convertTimeFrameRange(
+                        range.start, range.end, *series_tf, *master_time_frame);
+                }
                 auto vertices = generateVerticesForRange(series, master_time_frame,
-                                                         range.start, range.end);
+                                                         master_start, master_end);
                 if (range.prepend) {
                     cache.prependVertices(vertices);
                 } else {
@@ -281,8 +301,8 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         }
     }
 
-    // Extract vertices for the requested range
-    auto flat_vertices = cache.getVerticesForRange(params.start_time, params.end_time);
+    // Extract vertices for the requested range (using series timeframe indices)
+    auto flat_vertices = cache.getVerticesForRange(cache_start, cache_end);
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)

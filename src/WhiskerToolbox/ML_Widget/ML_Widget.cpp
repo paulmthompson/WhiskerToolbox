@@ -1125,11 +1125,11 @@ arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & 
     return normalized_matrix;
 }
 
-std::vector<std::size_t> create_timestamps(std::vector<Interval> & intervals) {
+std::vector<std::size_t> create_timestamps(std::ranges::range auto & intervals) {
     std::vector<std::size_t> timestamps;
     for (auto interval: intervals) {
         //I want to generate timestamps for each value between interval.start and interval.end
-        for (std::size_t i = interval.start; i < interval.end; i++) {
+        for (std::size_t i = interval.value().start; i < interval.value().end; i++) {
             timestamps.push_back(i);
         }
     }
@@ -1138,7 +1138,7 @@ std::vector<std::size_t> create_timestamps(std::vector<Interval> & intervals) {
 }
 
 std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries> & series) {
-    auto intervals = series->getDigitalIntervalSeries();
+    auto intervals = series->view();
     return create_timestamps(intervals);
 }
 

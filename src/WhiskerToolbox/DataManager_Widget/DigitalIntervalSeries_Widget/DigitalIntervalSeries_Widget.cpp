@@ -114,7 +114,11 @@ void DigitalIntervalSeries_Widget::_calculateIntervals() {
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (intervals) {
         ui->total_interval_label->setText(QString::number(intervals->size()));
-        _interval_table_model->setIntervals(intervals->getDigitalIntervalSeries());
+        std::vector<Interval> interval_vector;
+        for (auto const & interval_with_id: intervals->view()) {
+            interval_vector.push_back(interval_with_id.value());
+        }
+        _interval_table_model->setIntervals(interval_vector);
     } else {
         ui->total_interval_label->setText("0");
         _interval_table_model->setIntervals({});
@@ -177,14 +181,15 @@ void DigitalIntervalSeries_Widget::_removeIntervalButton() {
 
 void DigitalIntervalSeries_Widget::_flipIntervalButton() {
 
-    auto current_time = _data_manager->getCurrentTime();
+    auto current_time_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    if (intervals->isEventAtTime(TimeFrameIndex(current_time))) {
-        intervals->setEventAtTime(TimeFrameIndex(current_time), false);
+    if (intervals->hasIntervalAtTime(current_time_and_frame.index,
+                                    *current_time_and_frame.time_frame)) {
+        intervals->setEventAtTime(current_time_and_frame.index, false);
     } else {
-        intervals->setEventAtTime(TimeFrameIndex(current_time), true);
+        intervals->setEventAtTime(current_time_and_frame.index, true);
     }
 }
 

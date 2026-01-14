@@ -103,7 +103,7 @@ TEST_CASE("Analog Binary JSON Loading - Single File", "[analog][binary][json][da
         
         for (size_t i = 0; i < original->getNumSamples(); ++i) {
             // int16 round-trip should preserve integer values
-            REQUIRE(loaded_samples[i].value == static_cast<int16_t>(original_samples[i].value));
+            REQUIRE(loaded_samples[i].value() == static_cast<int16_t>(original_samples[i].value()));
         }
     }
     
@@ -136,7 +136,7 @@ TEST_CASE("Analog Binary JSON Loading - Single File", "[analog][binary][json][da
         // Verify constant value is preserved
         auto loaded_samples = loaded->getAllSamples();
         for (auto const& sample : loaded_samples) {
-            REQUIRE(sample.value == 42.0f);
+            REQUIRE(sample.value() == 42.0f);
         }
     }
     
@@ -169,8 +169,8 @@ TEST_CASE("Analog Binary JSON Loading - Single File", "[analog][binary][json][da
         bool has_positive = false;
         bool has_negative = false;
         for (auto const& sample : loaded_samples) {
-            if (sample.value > 500.0f) has_positive = true;
-            if (sample.value < -500.0f) has_negative = true;
+            if (sample.value() > 500.0f) has_positive = true;
+            if (sample.value() < -500.0f) has_negative = true;
         }
         REQUIRE(has_positive);
         REQUIRE(has_negative);
@@ -229,11 +229,11 @@ TEST_CASE("Analog Binary JSON Loading - Multiple Files", "[analog][binary][json]
         
         // Verify first file is ramp (increasing values)
         auto ramp_samples = loaded_ramp->getAllSamples();
-        REQUIRE(ramp_samples[0].value < ramp_samples[99].value);
+        REQUIRE(ramp_samples[0].value() < ramp_samples[99].value());
         
         // Verify second file is constant
         auto constant_samples = loaded_constant->getAllSamples();
-        REQUIRE(constant_samples[0].value == constant_samples[50].value);
+        REQUIRE(constant_samples[0].value() == constant_samples[50].value());
     }
     
     SECTION("Load multi-channel binary file") {
@@ -269,13 +269,13 @@ TEST_CASE("Analog Binary JSON Loading - Multiple Files", "[analog][binary][json]
         
         // Channel 0 should be increasing (0 -> 99)
         auto ch0_samples = channel0->getAllSamples();
-        REQUIRE(ch0_samples[0].value < ch0_samples[99].value);
-        REQUIRE_THAT(ch0_samples[0].value, WithinAbs(0.0f, 1.0f));
+        REQUIRE(ch0_samples[0].value() < ch0_samples[99].value());
+        REQUIRE_THAT(ch0_samples[0].value(), WithinAbs(0.0f, 1.0f));
         
         // Channel 1 should be decreasing (99 -> 0)
         auto ch1_samples = channel1->getAllSamples();
-        REQUIRE(ch1_samples[0].value > ch1_samples[99].value);
-        REQUIRE_THAT(ch1_samples[0].value, WithinAbs(99.0f, 1.0f));
+        REQUIRE(ch1_samples[0].value() > ch1_samples[99].value());
+        REQUIRE_THAT(ch1_samples[0].value(), WithinAbs(99.0f, 1.0f));
     }
     
     SECTION("Load 4-channel binary file") {
@@ -306,7 +306,7 @@ TEST_CASE("Analog Binary JSON Loading - Multiple Files", "[analog][binary][json]
             
             float expected_value = static_cast<float>((ch + 1) * 10);
             auto samples = channel->getAllSamples();
-            REQUIRE_THAT(samples[0].value, WithinAbs(expected_value, 1.0f));
+            REQUIRE_THAT(samples[0].value(), WithinAbs(expected_value, 1.0f));
         }
     }
 }
@@ -346,8 +346,8 @@ TEST_CASE("Analog Binary JSON Loading - Memory Mapped", "[analog][binary][json][
         
         // Verify data is correct
         auto loaded_samples = loaded->getAllSamples();
-        REQUIRE_THAT(loaded_samples[0].value, WithinAbs(0.0f, 1.0f));
-        REQUIRE_THAT(loaded_samples[99].value, WithinAbs(99.0f, 1.0f));
+        REQUIRE_THAT(loaded_samples[0].value(), WithinAbs(0.0f, 1.0f));
+        REQUIRE_THAT(loaded_samples[99].value(), WithinAbs(99.0f, 1.0f));
     }
     
     SECTION("Memory mapped loading - with scale factor") {
@@ -378,7 +378,7 @@ TEST_CASE("Analog Binary JSON Loading - Memory Mapped", "[analog][binary][json][
         
         // Original value was 42, scaled by 2 should be 84
         auto samples = loaded->getAllSamples();
-        REQUIRE_THAT(samples[0].value, WithinAbs(84.0f, 1.0f));
+        REQUIRE_THAT(samples[0].value(), WithinAbs(84.0f, 1.0f));
     }
     
     SECTION("Memory mapped loading - with offset") {
@@ -409,7 +409,7 @@ TEST_CASE("Analog Binary JSON Loading - Memory Mapped", "[analog][binary][json][
         
         // Original value was 42, with offset 100 should be 142
         auto samples = loaded->getAllSamples();
-        REQUIRE_THAT(samples[0].value, WithinAbs(142.0f, 1.0f));
+        REQUIRE_THAT(samples[0].value(), WithinAbs(142.0f, 1.0f));
     }
     
     SECTION("Memory mapped loading - multi-channel with stride") {
@@ -445,10 +445,10 @@ TEST_CASE("Analog Binary JSON Loading - Memory Mapped", "[analog][binary][json][
         auto ch1_samples = ch1->getAllSamples();
         
         // Channel 0: 0 -> 99 (increasing)
-        REQUIRE(ch0_samples[0].value < ch0_samples[ch0->getNumSamples() - 1].value);
+        REQUIRE(ch0_samples[0].value() < ch0_samples[ch0->getNumSamples() - 1].value());
         
         // Channel 1: 99 -> 0 (decreasing)
-        REQUIRE(ch1_samples[0].value > ch1_samples[ch1->getNumSamples() - 1].value);
+        REQUIRE(ch1_samples[0].value() > ch1_samples[ch1->getNumSamples() - 1].value());
     }
     
     SECTION("Memory mapped loading - with header") {
@@ -480,8 +480,8 @@ TEST_CASE("Analog Binary JSON Loading - Memory Mapped", "[analog][binary][json][
         
         // Verify header was skipped correctly
         auto samples = loaded->getAllSamples();
-        REQUIRE_THAT(samples[0].value, WithinAbs(0.0f, 1.0f));
-        REQUIRE_THAT(samples[99].value, WithinAbs(99.0f, 1.0f));
+        REQUIRE_THAT(samples[0].value(), WithinAbs(0.0f, 1.0f));
+        REQUIRE_THAT(samples[99].value(), WithinAbs(99.0f, 1.0f));
     }
 }
 
@@ -547,8 +547,8 @@ TEST_CASE("Analog Binary JSON Loading - Edge Cases", "[analog][binary][json][dat
         bool has_low = false;
         bool has_high = false;
         for (auto const& sample : samples) {
-            if (sample.value < 1.0f) has_low = true;
-            if (sample.value > 99.0f) has_high = true;
+            if (sample.value() < 1.0f) has_low = true;
+            if (sample.value() > 99.0f) has_high = true;
         }
         REQUIRE(has_low);
         REQUIRE(has_high);

@@ -689,17 +689,17 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         data_manager.setData<DigitalIntervalSeries>("test_intervals", interval_data, TimeKey("test_time"));
 
         // Verify EntityIds were generated correctly
-        auto all_entity_ids = interval_data->getEntityIds();
-        REQUIRE(all_entity_ids.size() == 5);
+        auto all_entity_ids = interval_data->view();
+        REQUIRE(interval_data->size() == 5);
 
-        for (EntityId entity_id: all_entity_ids) {
-            REQUIRE(entity_id != EntityId(0));// All should be valid, non-zero EntityIds
+        for (auto const & entity_id: all_entity_ids) {
+            REQUIRE(entity_id.id() != EntityId(0));// All should be valid, non-zero EntityIds
         }
 
         // Test entity lookup functionality
-        EntityId first_entity = all_entity_ids[0];
-        EntityId third_entity = all_entity_ids[2];
-        EntityId last_entity = all_entity_ids[4];
+        EntityId first_entity = all_entity_ids[0].id();
+        EntityId third_entity = all_entity_ids[2].id();
+        EntityId last_entity = all_entity_ids[4].id();
 
         // Test getIntervalByEntityId
         auto first_interval = interval_data->getIntervalByEntityId(first_entity);
@@ -717,19 +717,6 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         REQUIRE(last_interval->start == 1200);
         REQUIRE(last_interval->end == 1300);
 
-        // Test getIndexByEntityId
-        auto first_index = interval_data->getIndexByEntityId(first_entity);
-        auto third_index = interval_data->getIndexByEntityId(third_entity);
-        auto last_index = interval_data->getIndexByEntityId(last_entity);
-
-        REQUIRE(first_index.has_value());
-        REQUIRE(third_index.has_value());
-        REQUIRE(last_index.has_value());
-
-        REQUIRE(*first_index == 0);
-        REQUIRE(*third_index == 2);
-        REQUIRE(*last_index == 4);
-
         // Create groups using EntityGroupManager
         auto * group_manager = data_manager.getEntityGroupManager();
 
@@ -740,15 +727,15 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         std::vector<EntityId> short_entities;
         std::vector<EntityId> long_entities;
 
-        for (size_t i = 0; i < all_entity_ids.size(); ++i) {
-            auto interval = interval_data->getIntervalByEntityId(all_entity_ids[i]);
+        for (auto const & entity_id : all_entity_ids) {
+            auto interval = interval_data->getIntervalByEntityId(entity_id.id());
             REQUIRE(interval.has_value());
 
             int64_t duration = interval->end - interval->start;
             if (duration <= 100) {
-                short_entities.push_back(all_entity_ids[i]);
+                short_entities.push_back(entity_id.id());
             } else {
-                long_entities.push_back(all_entity_ids[i]);
+                long_entities.push_back(entity_id.id());
             }
         }
 
@@ -787,27 +774,21 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         }
 
         // Test batch operations
-        std::vector<EntityId> batch_entities = {all_entity_ids[0], all_entity_ids[2], all_entity_ids[4]};
+        std::vector<EntityId> batch_entities = {all_entity_ids[0].id(),
+             all_entity_ids[2].id(), 
+             all_entity_ids[4].id()};
         auto batch_intervals = interval_data->getIntervalsByEntityIds(batch_entities);
-        auto batch_index_info = interval_data->getIndexInfoByEntityIds(batch_entities);
 
         REQUIRE(batch_intervals.size() == 3);
-        REQUIRE(batch_index_info.size() == 3);
 
         // Verify batch results
-        REQUIRE(batch_intervals[0].first == all_entity_ids[0]);
+        REQUIRE(batch_intervals[0].first == all_entity_ids[0].id());
         REQUIRE(batch_intervals[0].second.start == 100);
         REQUIRE(batch_intervals[0].second.end == 200);
 
-        REQUIRE(batch_index_info[0].first == all_entity_ids[0]);
-        REQUIRE(batch_index_info[0].second == 0);
-
-        REQUIRE(batch_intervals[1].first == all_entity_ids[2]);
+        REQUIRE(batch_intervals[1].first == all_entity_ids[2].id());
         REQUIRE(batch_intervals[1].second.start == 500);
         REQUIRE(batch_intervals[1].second.end == 800);
-
-        REQUIRE(batch_index_info[1].first == all_entity_ids[2]);
-        REQUIRE(batch_index_info[1].second == 2);
 
         INFO("Successfully tested DigitalIntervalSeries entity lookup and group membership integration");
     }

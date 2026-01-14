@@ -11,13 +11,13 @@
 // ========== Constructors ==========
 
 AnalogTimeSeries::AnalogTimeSeries()
-    : _data_storage(VectorAnalogDataStorage(std::vector<float>())),
+    : _data_storage(),
       _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
     _cacheOptimizationPointers();
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map)
-    : _data_storage(VectorAnalogDataStorage(std::vector<float>())),
+    : _data_storage(),
       _time_storage(TimeIndexStorageFactory::createDenseFromZero(0)) {
     setData(std::move(analog_map));
 }
@@ -69,6 +69,74 @@ std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createMemoryMapped(
     // Since we can't use make_shared with private constructors directly, use new
     return std::shared_ptr<AnalogTimeSeries>(
         new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_vector)));
+}
+
+std::shared_ptr<AnalogTimeSeries> AnalogTimeSeries::createView(
+    std::shared_ptr<AnalogTimeSeries const> source,
+    TimeFrameIndex start_time,
+    TimeFrameIndex end_time)
+{
+    // Get shared vector storage from source (zero-copy via aliasing constructor)
+    auto shared_storage = source->_data_storage.getSharedVectorStorage();
+    if (!shared_storage) {
+        // Source is mmap or lazy storage - materialize first
+        auto materialized = source->materialize();
+        return createView(materialized, start_time, end_time);
+    }
+    
+    // Find the data array indices for the time range
+    auto start_index_opt = source->_findDataArrayIndexGreaterOrEqual(start_time);
+    auto end_index_opt = source->_findDataArrayIndexLessOrEqual(end_time);
+    
+    // Handle empty range
+    if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
+        // Return empty view
+        auto view_storage = ViewAnalogDataStorage{shared_storage, 0, 0};
+        DataStorageWrapper storage_wrapper(std::move(view_storage));
+        
+        auto result = std::shared_ptr<AnalogTimeSeries>(
+            new AnalogTimeSeries(
+                std::move(storage_wrapper), 
+                TimeIndexStorageFactory::createDenseFromZero(0)));
+        result->_time_frame = source->_time_frame;
+        return result;
+    }
+    
+    size_t start_idx = start_index_opt.value().getValue();
+    size_t end_idx = end_index_opt.value().getValue();
+    
+    // Validate indices
+    if (start_idx > end_idx) {
+        // Return empty view
+        auto view_storage = ViewAnalogDataStorage{shared_storage, 0, 0};
+        DataStorageWrapper storage_wrapper(std::move(view_storage));
+        
+        auto result = std::shared_ptr<AnalogTimeSeries>(
+            new AnalogTimeSeries(
+                std::move(storage_wrapper),
+                TimeIndexStorageFactory::createDenseFromZero(0)));
+        result->_time_frame = source->_time_frame;
+        return result;
+    }
+    
+    // Create view storage referencing the shared source (no copy!)
+    // end_idx + 1 because ViewAnalogDataStorage uses exclusive end
+    auto view_storage = ViewAnalogDataStorage{shared_storage, start_idx, end_idx + 1};
+    DataStorageWrapper storage_wrapper(std::move(view_storage));
+    
+    // Create time storage for the view range
+    std::vector<TimeFrameIndex> view_time_indices;
+    view_time_indices.reserve(end_idx - start_idx + 1);
+    for (size_t i = start_idx; i <= end_idx; ++i) {
+        view_time_indices.push_back(source->_time_storage->getTimeFrameIndexAt(i));
+    }
+    auto view_time_storage = TimeIndexStorageFactory::createFromTimeIndices(std::move(view_time_indices));
+    
+    auto result = std::shared_ptr<AnalogTimeSeries>(
+        new AnalogTimeSeries(std::move(storage_wrapper), std::move(view_time_storage)));
+    result->_time_frame = source->_time_frame;
+    
+    return result;
 }
 
 void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
@@ -214,30 +282,6 @@ AnalogTimeSeries::TimeValueSpanPair::TimeValueSpanPair(std::span<float const> da
     : values(data_span),
       time_indices(series, start_index, end_index) {}
 
-AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
-    // Use existing boundary-finding logic
-    auto start_index_opt = _findDataArrayIndexGreaterOrEqual(start_time);
-    auto end_index_opt = _findDataArrayIndexLessOrEqual(end_time);
-
-    // Handle cases where boundaries are not found
-    if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
-        // Return empty range
-        return {this, DataArrayIndex(0), DataArrayIndex(0)};
-    }
-
-    size_t start_idx = start_index_opt.value().getValue();
-    size_t end_idx = end_index_opt.value().getValue();
-
-    // Validate that start <= end
-    if (start_idx > end_idx) {
-        // Return empty range for invalid range
-        return {this, DataArrayIndex(0), DataArrayIndex(0)};
-    }
-
-    // Create range view (end_idx + 1 because end is exclusive for the range)
-    return {this, DataArrayIndex(start_idx), DataArrayIndex(end_idx + 1)};
-}
-
 AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
     // Use existing getDataInTimeFrameIndexRange for the span
     auto data_span = getDataInTimeFrameIndexRange(start_time, end_time);
@@ -290,9 +334,4 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getTimeValueSpanInTimeFrameIndexRange(target_start_index, target_end_index);
-}
-
-AnalogTimeSeries::TimeValueRangeView AnalogTimeSeries::getAllSamples() const {
-    // Return a range view over all samples (from index 0 to size)
-    return {this, DataArrayIndex(0), DataArrayIndex(_data_storage.size())};
 }

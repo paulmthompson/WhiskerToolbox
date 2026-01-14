@@ -139,13 +139,13 @@ void save(DigitalEventSeries const * event_data, CSVEventSaverOptions const & op
         fout << opts.header << opts.line_delim;
     }
 
-    std::vector<TimeFrameIndex> const & events = event_data->getEventSeries();
+    auto const & events = event_data->view();
 
     // Set precision for floating point output
     fout << std::fixed << std::setprecision(opts.precision);
 
     for (auto const & event_time : events) {
-        fout << event_time.getValue() << opts.line_delim;
+        fout << event_time.time().getValue() << opts.line_delim;
         if (fout.fail()) {
             std::cerr << "Error: Failed while writing data to file: " << full_path << std::endl;
             fout.close();

@@ -1,7 +1,16 @@
-#ifndef WHISKERTOOLBOX_LINEAGE_REGISTRY_HPP
-#define WHISKERTOOLBOX_LINEAGE_REGISTRY_HPP
+/**
+ * @file LineageRegistry.hpp
+ * @brief Storage and query interface for container lineage metadata
+ * @ingroup Entity
+ *
+ * The LineageRegistry maintains the parent-child relationships between data
+ * containers, enabling provenance tracking and lineage resolution. Supports
+ * staleness tracking for cache invalidation.
+ */
+#ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
+#define WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
 
-#include "Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
 
 #include <chrono>
 #include <functional>
@@ -10,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 /**
  * @brief Entry in the lineage registry with metadata
@@ -161,12 +170,12 @@ public:
     /**
      * @brief Get total number of registered lineages
      */
-    [[nodiscard]] std::size_t size() const { return _lineages.size(); }
+    [[nodiscard]] std::size_t size() const noexcept { return _lineages.size(); }
 
     /**
      * @brief Check if registry is empty
      */
-    [[nodiscard]] bool empty() const { return _lineages.empty(); }
+    [[nodiscard]] bool empty() const noexcept { return _lineages.empty(); }
 
     // ========== Staleness ==========
 
@@ -206,12 +215,8 @@ public:
 private:
     std::unordered_map<std::string, LineageEntry> _lineages;
     InvalidationCallback _invalidation_callback;
-
-    /// Build reverse dependency map (source → dependents)
-    [[nodiscard]] std::unordered_map<std::string, std::vector<std::string>>
-    buildDependencyMap() const;
 };
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_LINEAGE_REGISTRY_HPP
+#endif// WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP

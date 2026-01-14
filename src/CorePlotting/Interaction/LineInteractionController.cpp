@@ -18,7 +18,7 @@ void LineInteractionController::start(
     _end_point = _start_point;// Start with zero-length line
 }
 
-inline void LineInteractionController::startEndpointDrag(
+void LineInteractionController::startEndpointDrag(
         float canvas_x, float canvas_y,
         std::string series_key,
         EntityId entity_id,
@@ -46,7 +46,7 @@ inline void LineInteractionController::startEndpointDrag(
     static_cast<void>(canvas_y);
 }
 
-inline void LineInteractionController::update(float canvas_x, float canvas_y) {
+void LineInteractionController::update(float canvas_x, float canvas_y) {
     if (!_is_active) return;
 
     glm::vec2 const new_point{canvas_x, canvas_y};
@@ -65,12 +65,12 @@ inline void LineInteractionController::update(float canvas_x, float canvas_y) {
     }
 }
 
-inline void LineInteractionController::complete() {
+void LineInteractionController::complete() {
     _is_active = false;
     // Preview remains valid for coordinate conversion
 }
 
-inline void LineInteractionController::cancel() {
+void LineInteractionController::cancel() {
     _is_active = false;
 
     // Reset to original line if we were modifying
@@ -83,7 +83,7 @@ inline void LineInteractionController::cancel() {
     _dragged_endpoint = LineEndpoint::None;
 }
 
-inline GlyphPreview LineInteractionController::getPreview() const {
+GlyphPreview LineInteractionController::getPreview() const {
     GlyphPreview preview;
     preview.type = GlyphPreview::Type::Line;
     preview.line_start = _start_point;
@@ -101,7 +101,7 @@ inline GlyphPreview LineInteractionController::getPreview() const {
     return preview;
 }
 
-inline glm::vec2 LineInteractionController::applyConstraints(
+glm::vec2 LineInteractionController::applyConstraints(
         glm::vec2 point, glm::vec2 anchor) const {
 
     // Horizontal only constraint

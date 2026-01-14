@@ -5,89 +5,182 @@
 
 #include <algorithm>// std::sort
 
-DigitalEventSeries::DigitalEventSeries(std::vector<TimeFrameIndex> event_vector) {
-    _data = std::move(event_vector);
-    _sortEvents();
+DigitalEventSeries::DigitalEventSeries()
+    : _storage()
+    , _cached_storage()
+{
+    _cacheOptimizationPointers();
 }
 
-std::vector<TimeFrameIndex> const & DigitalEventSeries::getEventSeries() const {
-    return _data;
+DigitalEventSeries::DigitalEventSeries(std::vector<TimeFrameIndex> event_vector) {
+    // Use owning storage with the provided events
+    _storage = DigitalEventStorageWrapper{
+        OwningDigitalEventStorage{std::move(event_vector)}
+    };
+    _cacheOptimizationPointers();
 }
 
 void DigitalEventSeries::addEvent(TimeFrameIndex const event_time) {
-
-    if (std::ranges::find(_data, event_time) != _data.end()) {
-        return;
+    // Check if storage is mutable (owning)
+    auto* owning = _storage.tryGetMutableOwning();
+    if (!owning) {
+        throw std::runtime_error("Cannot add events to view or lazy storage");
     }
-
-    _data.push_back(event_time);
-
-    _sortEvents();
-
-    notifyObservers();
+    
+    // Generate EntityId if registry is set
+    EntityId entity_id{0};
     if (_identity_registry) {
-        // Rebuild to ensure order alignment
-        rebuildAllEntityIds();
+        // Use size as local index for consistent ID generation
+        size_t const local_idx = owning->size();
+        entity_id = _identity_registry->ensureId(
+            _identity_data_key, 
+            EntityKind::EventEntity, 
+            event_time, 
+            static_cast<int>(local_idx)
+        );
+    }
+    
+    bool const added = owning->addEvent(event_time, entity_id);
+    
+    if (added) {
+        _cacheOptimizationPointers();
+        notifyObservers();
     }
 }
 
 bool DigitalEventSeries::removeEvent(TimeFrameIndex const event_time) {
-    auto it = std::ranges::find(_data, event_time);
-    if (it != _data.end()) {
-        _data.erase(it);
-        notifyObservers();
-        if (_identity_registry) {
-            rebuildAllEntityIds();
-        }
-        return true;
+    auto* owning = _storage.tryGetMutableOwning();
+    if (!owning) {
+        throw std::runtime_error("Cannot remove events from view or lazy storage");
     }
-    return false;
+    
+    bool const removed = owning->removeEvent(event_time);
+    
+    if (removed) {
+        _cacheOptimizationPointers();
+        notifyObservers();
+    }
+    
+    return removed;
 }
 
-void DigitalEventSeries::_sortEvents() {
-    std::ranges::sort(_data);
+void DigitalEventSeries::clear() {
+    auto* owning = _storage.tryGetMutableOwning();
+    if (!owning) {
+        throw std::runtime_error("Cannot clear view or lazy storage");
+    }
+    
+    owning->clear();
+    _cacheOptimizationPointers();
+    notifyObservers();
+}
+
+void DigitalEventSeries::_cacheOptimizationPointers() {
+    _cached_storage = _storage.tryGetCache();
 }
 
 void DigitalEventSeries::rebuildAllEntityIds() {
-    if (!_identity_registry) {
-        _entity_ids.assign(_data.size(), EntityId(0));
+    auto* owning = _storage.tryGetMutableOwning();
+    if (!owning) {
+        // For view/lazy storage, just invalidate the cache
         return;
     }
-    _entity_ids.clear();
-    _entity_ids.reserve(_data.size());
-    for (int i = 0; i < static_cast<int>(_data.size()); ++i) {
-        // Use time index = i (since data is float times, but consistent order gives stable local index)
-        _entity_ids.push_back(_identity_registry->ensureId(_identity_data_key, EntityKind::EventEntity, TimeFrameIndex{i}, i));
+    
+    if (!_identity_registry) {
+        // Clear all entity IDs to zero
+        std::vector<EntityId> zero_ids(owning->size(), EntityId{0});
+        owning->setEntityIds(std::move(zero_ids));
+        _cacheOptimizationPointers();
+        return;
     }
+    
+    std::vector<EntityId> new_ids;
+    new_ids.reserve(owning->size());
+    
+    for (size_t i = 0; i < owning->size(); ++i) {
+        // Use index as local_index for stable ID generation
+        EntityId const id = _identity_registry->ensureId(
+            _identity_data_key, 
+            EntityKind::EventEntity, 
+            TimeFrameIndex{static_cast<int64_t>(i)}, 
+            static_cast<int>(i)
+        );
+        new_ids.push_back(id);
+    }
+    
+    owning->setEntityIds(std::move(new_ids));
+    _cacheOptimizationPointers();
 }
 
-// ========== Events with EntityIDs ==========
+// ========== View Factory Methods ==========
 
-std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
-    std::vector<EventWithId> result;
-    //result.reserve(_data.size());// Reserve space for potential worst case
-
-    for (size_t i = 0; i < _data.size(); ++i) {
-        if (_data[i] >= start_time && _data[i] <= stop_time) {
-            EntityId const entity_id = (i < _entity_ids.size()) ? _entity_ids[i] : EntityId(0);
-            result.emplace_back(_data[i], entity_id);
-        }
+std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
+    std::shared_ptr<DigitalEventSeries const> source,
+    TimeFrameIndex start,
+    TimeFrameIndex end)
+{
+    // Get shared owning storage from source (zero-copy)
+    auto shared_storage = source->_storage.getSharedOwningStorage();
+    if (!shared_storage) {
+        // Source is lazy storage - materialize first
+        auto materialized = source->materialize();
+        return createView(materialized, start, end);
     }
+    
+    // Create view storage referencing the shared source (no copy!)
+    auto view_storage = ViewDigitalEventStorage{shared_storage};
+    view_storage.filterByTimeRange(start, end);
+    
+    auto result = std::make_shared<DigitalEventSeries>();
+    result->_storage = DigitalEventStorageWrapper{std::move(view_storage)};
+    result->_time_frame = source->_time_frame;
+    result->_cacheOptimizationPointers();
+    
     return result;
 }
 
-std::vector<EventWithId> DigitalEventSeries::getEventsWithIdsInRange(TimeFrameIndex start_index,
-                                                                     TimeFrameIndex stop_index,
-                                                                     TimeFrame const & source_time_frame) const {
-    if (&source_time_frame == _time_frame.get()) {
-        return getEventsWithIdsInRange(start_index, stop_index);
+std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
+    std::shared_ptr<DigitalEventSeries const> source,
+    std::unordered_set<EntityId> const& entity_ids)
+{
+    // Get shared owning storage from source (zero-copy)
+    auto shared_storage = source->_storage.getSharedOwningStorage();
+    if (!shared_storage) {
+        // Source is lazy storage - materialize first
+        auto materialized = source->materialize();
+        return createView(materialized, entity_ids);
     }
+    
+    // Create view storage referencing the shared source (no copy!)
+    auto view_storage = ViewDigitalEventStorage{shared_storage};
+    view_storage.filterByEntityIds(entity_ids);
+    
+    auto result = std::make_shared<DigitalEventSeries>();
+    result->_storage = DigitalEventStorageWrapper{std::move(view_storage)};
+    result->_time_frame = source->_time_frame;
+    result->_cacheOptimizationPointers();
+    
+    return result;
+}
 
-    // If either timeframe is null, fall back to original behavior
-    if (!_time_frame.get()) {
-        return getEventsWithIdsInRange(start_index, stop_index);
+std::shared_ptr<DigitalEventSeries> DigitalEventSeries::materialize() const {
+    std::vector<TimeFrameIndex> events;
+    std::vector<EntityId> entity_ids;
+    
+    events.reserve(_storage.size());
+    entity_ids.reserve(_storage.size());
+    
+    for (size_t i = 0; i < _storage.size(); ++i) {
+        events.push_back(_storage.getEvent(i));
+        entity_ids.push_back(_storage.getEntityId(i));
     }
-
-    auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_index, stop_index, source_time_frame, *_time_frame);
-    return getEventsWithIdsInRange(target_start_index, target_stop_index);
+    
+    auto result = std::make_shared<DigitalEventSeries>();
+    result->_storage = DigitalEventStorageWrapper{
+        OwningDigitalEventStorage{std::move(events), std::move(entity_ids)}
+    };
+    result->_time_frame = _time_frame;
+    result->_cacheOptimizationPointers();
+    
+    return result;
 }

@@ -1,5 +1,21 @@
-#ifndef WHISKERTOOLBOX_LINEAGE_TYPES_HPP
-#define WHISKERTOOLBOX_LINEAGE_TYPES_HPP
+/**
+ * @file LineageTypes.hpp
+ * @brief Type definitions for data lineage tracking
+ * @ingroup Entity
+ *
+ * Defines the 8 lineage strategies that describe how derived data containers
+ * relate to their source containers:
+ * - Source: Root data with no parent
+ * - OneToOneByTime: 1:1 element mapping by time
+ * - AllToOneByTime: N:1 aggregation by time
+ * - SubsetLineage: Filtered subset of source entities
+ * - MultiSourceLineage: Combined from multiple sources
+ * - ExplicitLineage: Manual per-element contributor lists
+ * - EntityMappedLineage: Explicit EntityId-to-EntityId mapping
+ * - ImplicitEntityMapping: Cardinality-based inference
+ */
+#ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_TYPES_HPP
+#define WHISKERTOOLBOX_ENTITY_LINEAGE_TYPES_HPP
 
 #include "Entity/EntityTypes.hpp"
 
@@ -10,7 +26,7 @@
 #include <variant>
 #include <vector>
 
-namespace WhiskerToolbox::Lineage {
+namespace WhiskerToolbox::Entity::Lineage {
 
 /**
  * @brief No lineage - this is source data or data loaded from file
@@ -220,6 +236,6 @@ using Descriptor = std::variant<
                       desc);
 }
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace WhiskerToolbox::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_LINEAGE_TYPES_HPP
+#endif// WHISKERTOOLBOX_ENTITY_LINEAGE_TYPES_HPP

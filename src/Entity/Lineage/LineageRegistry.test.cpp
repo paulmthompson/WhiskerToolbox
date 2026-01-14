@@ -1,15 +1,15 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
-#include "Lineage/LineageTypes.hpp"
-#include "Lineage/LineageRegistry.hpp"
+#include "Entity/Lineage/LineageTypes.hpp"
+#include "Entity/Lineage/LineageRegistry.hpp"
 
 #include <algorithm>
 
-using namespace WhiskerToolbox::Lineage;
+using namespace WhiskerToolbox::Entity::Lineage;
 using Catch::Matchers::UnorderedEquals;
 
-TEST_CASE("Lineage Types - Basic Construction", "[lineage][types]") {
+TEST_CASE("Lineage Types - Basic Construction", "[entity][lineage][types]") {
     
     SECTION("Source type") {
         Source src{};
@@ -124,7 +124,7 @@ TEST_CASE("Lineage Types - Basic Construction", "[lineage][types]") {
     }
 }
 
-TEST_CASE("LineageRegistry - Basic Operations", "[lineage][registry]") {
+TEST_CASE("LineageRegistry - Basic Operations", "[entity][lineage][registry]") {
     LineageRegistry registry;
     
     SECTION("Empty registry") {
@@ -185,7 +185,7 @@ TEST_CASE("LineageRegistry - Basic Operations", "[lineage][registry]") {
     }
 }
 
-TEST_CASE("LineageRegistry - Dependency Tracking", "[lineage][registry][dependency]") {
+TEST_CASE("LineageRegistry - Dependency Tracking", "[entity][lineage][registry][dependency]") {
     LineageRegistry registry;
     
     // Setup a lineage chain: source -> intermediate -> output
@@ -230,7 +230,7 @@ TEST_CASE("LineageRegistry - Dependency Tracking", "[lineage][registry][dependen
     }
 }
 
-TEST_CASE("LineageRegistry - Staleness Tracking", "[lineage][registry][staleness]") {
+TEST_CASE("LineageRegistry - Staleness Tracking", "[entity][lineage][registry][staleness]") {
     LineageRegistry registry;
     
     registry.setLineage("source", Source{});
@@ -281,7 +281,7 @@ TEST_CASE("LineageRegistry - Staleness Tracking", "[lineage][registry][staleness
     }
 }
 
-TEST_CASE("LineageRegistry - Invalidation Callback", "[lineage][registry][callback]") {
+TEST_CASE("LineageRegistry - Invalidation Callback", "[entity][lineage][registry][callback]") {
     LineageRegistry registry;
     
     registry.setLineage("source", Source{});
@@ -315,7 +315,7 @@ TEST_CASE("LineageRegistry - Invalidation Callback", "[lineage][registry][callba
     }
 }
 
-TEST_CASE("LineageRegistry - Edge Cases", "[lineage][registry][edge]") {
+TEST_CASE("LineageRegistry - Edge Cases", "[entity][lineage][registry][edge]") {
     LineageRegistry registry;
     
     SECTION("Self-referential lineage (should handle gracefully)") {
@@ -364,4 +364,19 @@ TEST_CASE("LineageRegistry - Edge Cases", "[lineage][registry][edge]") {
         REQUIRE(sources.size() == 1);
         REQUIRE(sources[0] == "parent");
     }
+}
+
+TEST_CASE("Namespace accessibility", "[entity][lineage][namespace]") {
+    // Test that the types are accessible in Entity::Lineage namespace
+    using namespace WhiskerToolbox::Entity::Lineage;
+    
+    LineageRegistry registry;
+    registry.setLineage("test", Source{});
+    REQUIRE(registry.hasLineage("test"));
+    
+    // Types should be accessible via Entity::Lineage namespace
+    WhiskerToolbox::Entity::Lineage::OneToOneByTime lin1{"key"};
+    OneToOneByTime lin2{"key"};
+    
+    REQUIRE(lin1.source_key == lin2.source_key);
 }

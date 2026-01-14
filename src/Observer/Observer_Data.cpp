@@ -2,11 +2,8 @@
 #include "Observer_Data.hpp"
 
 ObserverData::CallbackID ObserverData::addObserver(ObserverCallback callback) {
-
-    auto id = static_cast<int>(_observers.size() + 1);
-
+    auto id = _next_id++;
     _observers[id] = std::move(callback);
-
     return id;
 }
 

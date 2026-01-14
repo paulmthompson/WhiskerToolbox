@@ -1,0 +1,191 @@
+---
+title: "DigitalEventSeries View Storage Performance Analysis"
+format: html
+---
+
+This document describes the performance analysis of using `DigitalEventSeries` views vs. raw vectors for raster plot generation, a common operation in neural data visualization.
+
+## Background
+
+A raster plot displays events (e.g., neural spikes) aligned to trial events (e.g., stimulus onsets). For each alignment event, we need to:
+
+1. Extract events within a time window around the alignment point
+2. Transform the data for GPU rendering (populate vertex buffers)
+
+We compared two approaches:
+
+1. **Baseline (Raw Vectors)**: Use `std::vector<std::vector<TimeFrameIndex>>` for windowed events
+2. **View-Based**: Use `std::vector<std::shared_ptr<DigitalEventSeries>>` with view storage backend
+
+## Benchmark Configuration
+
+```
+Raster events:     100,000 (total events to filter)
+Alignment events:    1,000 (number of trials/windows)
+Window size:         1,000 (±500 around each alignment)
+Expected events/window: ~100 (based on density)
+```
+
+## Results Summary
+
+### Full Pipeline Performance
+
+| Approach | Time (µs) | Relative |
+|----------|----------|----------|
+| Baseline (Raw Vectors) | 364 | 1.0x |
+| View-Based | 1,253 | 3.4x slower |
+
+### Phase Breakdown
+
+| Phase | Baseline (µs) | View-Based (µs) | Ratio |
+|-------|---------------|-----------------|-------|
+| Window/View Creation | 182 | 1,022 | 5.6x |
+| Buffer Population | 175 | 215 | 1.2x |
+| Iteration Only | 18.5 | 29.5 | 1.6x |
+
+## Architecture: Zero-Copy View Storage
+
+### How It Works
+
+The `DigitalEventStorageWrapper` uses a type-erased `shared_ptr` design that enables true zero-copy view creation:
+
+```cpp
+class DigitalEventStorageWrapper {
+    std::shared_ptr<StorageConcept> _impl;  // Shared ownership of storage
+};
+```
+
+When creating a view, we use the **aliasing constructor** of `shared_ptr`:
+
+```cpp
+std::shared_ptr<OwningDigitalEventStorage const> getSharedOwningStorage() const {
+    if (auto owning_model = std::dynamic_pointer_cast<StorageModel<OwningDigitalEventStorage> const>(_impl)) {
+        // Aliasing constructor: shares ownership with _impl but points to inner storage
+        return std::shared_ptr<OwningDigitalEventStorage const>(owning_model, &owning_model->_storage);
+    }
+    return nullptr;
+}
+```
+
+This allows:
+
+- **Zero data copying**: The returned `shared_ptr` points directly into the existing storage
+- **Correct lifetime management**: The source storage stays alive as long as any view exists
+- **Shared references**: Multiple views from the same source share one underlying storage
+
+### View Storage Structure
+
+Each view consists of:
+
+1. A `shared_ptr` to the source's owning storage (shared among all views)
+2. A vector of indices specifying which events are visible
+3. Time range bounds for filtering
+
+```
+Source (100K events)
+    └── _storage (DigitalEventStorageWrapper)
+            └── _impl (shared_ptr<StorageConcept>)
+                    └── OwningDigitalEventStorage with actual data
+
+View 1 (window around alignment 0)      ──┐
+View 2 (window around alignment 1)      ──┼── All share same source via shared_ptr
+...                                       │
+View 1000 (window around alignment 999) ──┘
+```
+
+## Performance Characteristics
+
+### View Creation Overhead (5.6x)
+
+Creating 1,000 views takes ~1ms. This overhead comes from:
+
+| Factor | Cost |
+|--------|------|
+| `shared_ptr` allocation per view | ~400ns each |
+| `ViewDigitalEventStorage` setup | Index vector allocation |
+| `filterByTimeRange()` | Binary search + index copy |
+| Type erasure wrapper construction | `StorageModel` allocation |
+
+### Iteration Overhead (1.6x)
+
+Once views are created, iterating through them is reasonably efficient:
+
+| Factor | Baseline | View-Based | Impact |
+|--------|----------|------------|--------|
+| **Access Pattern** | `events[i]` | `source->getEvent(indices[i])` | Double indirection |
+| **Data Layout** | Contiguous | Index + data arrays | Reduced cache locality |
+| **Virtual Dispatch** | None | Through type erasure | Minimal (~1-2ns/call) |
+
+The 1.6x iteration overhead is acceptable for most use cases.
+
+## Scalability Analysis
+
+| Alignments | Baseline (µs) | View-Based (µs) | Ratio |
+|------------|---------------|-----------------|-------|
+| 100 | 31 | 116 | 3.7x |
+| 500 | 193 | 594 | 3.1x |
+| 1,000 | 386 | 1,235 | 3.2x |
+| 2,000 | 746 | 2,859 | 3.8x |
+| 5,000 | 2,008 | 7,770 | 3.9x |
+
+The view-based approach scales linearly with alignment count, confirming zero-copy behavior.
+
+## Historical Note: The Copy Bug
+
+An earlier implementation had a critical bug causing ~5000x slowdown:
+
+```cpp
+// BUG: This copied the entire storage for every view!
+auto view_storage = ViewDigitalEventStorage{
+    std::make_shared<OwningDigitalEventStorage const>(*src_owning)  // COPIES!
+};
+```
+
+With 1,000 views of 100K events, this meant 100 million unnecessary event copies. The fix was changing `DigitalEventStorageWrapper` from `unique_ptr` to `shared_ptr` with aliasing constructor support.
+
+## When to Use Views vs. Raw Vectors
+
+**Views are appropriate for:**
+
+- Interactive selection/highlighting with entity tracking
+- Operations requiring lazy filtering
+- Read-only access with shared ownership semantics
+- When ~3-4x overhead is acceptable
+
+**Raw vectors are better for:**
+
+- High-frequency rendering loops (60+ FPS animation)
+- Simple iteration without entity tracking
+- When data is already filtered at load time
+- Performance-critical hot paths
+
+## Alternative Approaches
+
+For specific use cases, consider:
+
+1. **Span-based views**: For contiguous time ranges, return `std::span<TimeFrameIndex>` directly
+2. **Index pairs**: For windowed queries, return `(start_idx, end_idx)` into source
+3. **Materialized views**: For repeated iteration, call `materialize()` once and reuse
+
+## Running the Benchmark
+
+```bash
+# Build
+cmake --preset linux-clang-release -DENABLE_BENCHMARK=ON
+cmake --build --preset linux-clang-release --target benchmark_RasterPlotViews
+
+# Run all tests
+./out/build/Clang/Release/benchmark/benchmark_RasterPlotViews
+
+# Run specific tests
+./benchmark_RasterPlotViews --benchmark_filter="FullPipeline"
+./benchmark_RasterPlotViews --benchmark_filter="IterationOnly"
+
+# Cache analysis
+perf stat -e cache-references,cache-misses,L1-dcache-load-misses \
+    ./benchmark_RasterPlotViews --benchmark_filter="IterationOnly"
+```
+
+## Conclusion
+
+The view-based approach using `DigitalEventSeries` achieves true zero-copy storage sharing via `shared_ptr` with aliasing constructor. The overall overhead is ~3.4x compared to raw vectors, primarily from view object allocation (~1ms for 1000 views) and index indirection during iteration (~1.6x). This overhead is acceptable for most interactive visualization use cases. For performance-critical rendering loops requiring maximum throughput, raw vectors or span-based approaches remain the better choice.

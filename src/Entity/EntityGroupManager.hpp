@@ -1,3 +1,12 @@
+/**
+ * @file EntityGroupManager.hpp
+ * @brief User-defined grouping of entities with observer notifications
+ * @ingroup Entity
+ *
+ * Provides fast lookup and manipulation of entity groups to support linking data
+ * across different formats (e.g., from TableView rows back to raw LineData).
+ * Optimized for hundreds of thousands of entities with O(1) group operations.
+ */
 #ifndef ENTITYGROUPMANAGER_HPP
 #define ENTITYGROUPMANAGER_HPP
 
@@ -10,7 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "DataManager/Observer/Observer_Data.hpp"
+#include "Observer/Observer_Data.hpp"
 
 /**
  * @brief Unique identifier for user-defined groups of entities.
@@ -33,6 +42,10 @@ struct GroupDescriptor {
  * @details This class provides fast lookup and manipulation of entity groups to support
  * linking data across different formats (e.g., from TableView rows back to raw LineData).
  * Optimized for hundreds of thousands of entities with O(1) group operations.
+ *
+ * @note Thread Safety: This class is **not** thread-safe. Callers must synchronize
+ *       access when using from multiple threads. Consider wrapping operations in a
+ *       mutex or using from a single thread (e.g., the Qt UI thread).
  */
 class EntityGroupManager {
 public:
@@ -98,6 +111,7 @@ public:
 
     /**
      * @brief Add multiple entities to a group.
+     * @tparam Range A range type satisfying std::ranges::range containing EntityId elements
      * @param group_id The group to add to
      * @param entity_ids The entities to add
      * @return Number of entities successfully added (excludes duplicates and invalid group)

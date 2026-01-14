@@ -25,7 +25,7 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
         return std::make_shared<DigitalIntervalSeries>();;
     }
 
-    auto const & intervals = digital_interval_series->getDigitalIntervalSeries();
+    auto const & intervals = digital_interval_series->view();
 
     if (intervals.empty()) {
         return std::make_shared<DigitalIntervalSeries>();;
@@ -36,7 +36,10 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
     }
 
     // Create a copy and sort by start time to ensure proper ordering
-    std::vector<Interval> sorted_intervals = intervals;
+    std::vector<Interval> sorted_intervals;
+    for (auto const & interval_with_id : intervals) {
+        sorted_intervals.push_back(interval_with_id.value());
+    }
     std::sort(sorted_intervals.begin(), sorted_intervals.end(), [](Interval const & a, Interval const & b) {
         return a.start < b.start;
     });

@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -24,7 +25,63 @@ template<typename TData> class ViewRaggedStorage;
  */
 enum class RaggedStorageType {
     Owning,  ///< Owns the data in SoA layout
-    View     ///< References another storage via indices
+    View,    ///< References another storage via indices
+    Lazy     ///< Lazy-evaluated transform (future support)
+};
+
+// =============================================================================
+// Cache Optimization Structure
+// =============================================================================
+
+/**
+ * @brief Cache structure for fast-path access to contiguous storage
+ * 
+ * When storage is contiguous (OwningRaggedStorage), iterators can use
+ * cached pointers for zero-overhead access. For non-contiguous storage
+ * (ViewRaggedStorage, LazyRaggedStorage), the cache is invalid and
+ * iterators fall back to virtual dispatch.
+ * 
+ * This optimization mirrors the pattern used in AnalogTimeSeries where
+ * contiguous storage gets pointer caching for fast iteration.
+ * 
+ * @tparam TData The data type stored (e.g., Mask2D, Line2D, Point2D<float>)
+ */
+template<typename TData>
+struct RaggedStorageCache {
+    TimeFrameIndex const* times_ptr = nullptr;
+    TData const* data_ptr = nullptr;
+    EntityId const* entity_ids_ptr = nullptr;
+    size_t cache_size = 0;
+    bool is_contiguous = false;  ///< True if storage is contiguous (owning)
+    
+    /**
+     * @brief Check if the cache is valid for fast-path access
+     * 
+     * A valid cache indicates that the underlying storage is contiguous
+     * and pointer arithmetic can be used for iteration. Note that an
+     * empty owning storage still has a valid cache (is_contiguous=true),
+     * it just has cache_size=0.
+     * 
+     * @return true if storage is contiguous (can use direct pointer access)
+     * @return false if storage is non-contiguous (must use virtual dispatch)
+     */
+    [[nodiscard]] constexpr bool isValid() const noexcept {
+        return is_contiguous;
+    }
+    
+    // Convenience accessors for cached data (only valid if isValid() && idx < cache_size)
+    
+    [[nodiscard]] TimeFrameIndex getTime(size_t idx) const noexcept {
+        return times_ptr[idx];
+    }
+    
+    [[nodiscard]] TData const& getData(size_t idx) const noexcept {
+        return data_ptr[idx];
+    }
+    
+    [[nodiscard]] EntityId getEntityId(size_t idx) const noexcept {
+        return entity_ids_ptr[idx];
+    }
 };
 
 // =============================================================================
@@ -140,6 +197,21 @@ public:
      */
     [[nodiscard]] bool isView() const {
         return getStorageType() == RaggedStorageType::View;
+    }
+
+    // ========== Cache Optimization ==========
+    
+    /**
+     * @brief Try to get cached pointers for fast-path access
+     * 
+     * Returns a cache structure with direct pointers to contiguous data.
+     * If the storage is non-contiguous (e.g., ViewRaggedStorage), returns
+     * an invalid cache and callers must use the virtual dispatch path.
+     * 
+     * @return RaggedStorageCache<TData> with valid pointers if contiguous, invalid otherwise
+     */
+    [[nodiscard]] RaggedStorageCache<TData> tryGetCache() const {
+        return static_cast<Derived const*>(this)->tryGetCacheImpl();
     }
 
 protected:
@@ -307,6 +379,22 @@ public:
     
     [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::Owning; }
 
+    /**
+     * @brief Get cache with pointers to contiguous data
+     * 
+     * OwningRaggedStorage stores data contiguously in SoA layout,
+     * so it always returns a valid cache for fast-path iteration.
+     */
+    [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
+        return RaggedStorageCache<TData>{
+            _times.data(),
+            _data.data(),
+            _entity_ids.data(),
+            _times.size(),
+            true  // is_contiguous - owning storage is always contiguous
+        };
+    }
+
     // ========== Direct Array Access (for views and iteration) ==========
     
     [[nodiscard]] std::vector<TimeFrameIndex> const& times() const { return _times; }
@@ -359,6 +447,159 @@ private:
     std::vector<EntityId> _entity_ids;
     std::unordered_map<EntityId, size_t> _entity_to_index;
     std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;
+};
+
+// =============================================================================
+// Lazy Storage (View-based Computation on Demand)
+// =============================================================================
+
+/**
+ * @brief Lazy ragged storage that computes values on-demand from a view
+ * 
+ * Stores a computation pipeline as a random-access view that transforms data
+ * on-demand. Enables efficient composition of transforms without materializing
+ * intermediate results. Works with any random-access range that yields tuples
+ * of (TimeFrameIndex, EntityId, TData).
+ * 
+ * Performance characteristics:
+ * - Zero memory overhead for intermediate results
+ * - Each access computes the value (no caching)
+ * - Not contiguous in memory (cache always invalid)
+ * - Ideal for sequential iteration (e.g., saving transformed results)
+ * - Call materialize() before random access-heavy operations
+ * 
+ * @tparam TData The data type stored (e.g., Mask2D, Line2D, Point2D<float>)
+ * @tparam ViewType Type of the random-access range view
+ * 
+ * @example Transform pipeline applied lazily:
+ * @code
+ * auto transformed_view = mask_data.flattened_data()
+ *     | std::views::transform([](auto tuple) {
+ *         auto [time, eid, mask] = tuple;
+ *         return std::make_tuple(time, eid, dilate(mask.get()));
+ *     });
+ * auto lazy_masks = MaskData::createFromView(transformed_view);
+ * @endcode
+ */
+template<typename TData, typename ViewType>
+class LazyRaggedStorage : public RaggedStorageBase<LazyRaggedStorage<TData, ViewType>, TData> {
+public:
+    /**
+     * @brief Construct lazy storage from a random-access view
+     * 
+     * The view must yield elements that can be accessed as tuples of
+     * (TimeFrameIndex, EntityId, TData) or (TimeFrameIndex, EntityId, TData const&).
+     * 
+     * @param view Random-access range view (must support operator[] and size())
+     * @param num_elements Number of elements in the view
+     * 
+     * @throws static_assert if view is not random-access
+     */
+    explicit LazyRaggedStorage(ViewType view, size_t num_elements)
+        : _view(std::move(view))
+        , _num_elements(num_elements) {
+        static_assert(std::ranges::random_access_range<ViewType>,
+                      "LazyRaggedStorage requires random access range");
+        _buildLocalIndices();
+    }
+
+    virtual ~LazyRaggedStorage() = default;
+
+    // ========== CRTP Implementation ==========
+
+    [[nodiscard]] size_t sizeImpl() const { return _num_elements; }
+
+    [[nodiscard]] TimeFrameIndex getTimeImpl(size_t idx) const {
+        auto element = _view[idx];
+        return std::get<0>(element);
+    }
+
+    [[nodiscard]] TData const& getDataImpl(size_t idx) const {
+        auto element = _view[idx];
+        // Handle both std::cref<TData> and TData directly
+        if constexpr (requires { element; std::get<2>(element).get(); }) {
+            // std::reference_wrapper case
+            _cached_data = std::get<2>(element).get();
+        } else {
+            // Direct TData case
+            _cached_data = std::get<2>(element);
+        }
+        return _cached_data;
+    }
+
+    [[nodiscard]] EntityId getEntityIdImpl(size_t idx) const {
+        auto element = _view[idx];
+        return std::get<1>(element);
+    }
+
+    [[nodiscard]] std::optional<size_t> findByEntityIdImpl(EntityId id) const {
+        auto it = _entity_to_index.find(id);
+        return it != _entity_to_index.end() ? std::optional{it->second} : std::nullopt;
+    }
+
+    [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex time) const {
+        auto it = _time_ranges.find(time);
+        return it != _time_ranges.end() ? it->second : std::pair<size_t, size_t>{0, 0};
+    }
+
+    [[nodiscard]] size_t getTimeCountImpl() const { return _time_ranges.size(); }
+
+    [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::Lazy; }
+
+    /**
+     * @brief Lazy storage is never contiguous in memory
+     * 
+     * Returns an invalid cache, forcing callers to use virtual dispatch.
+     * This is correct since lazy storage computes values on-demand.
+     */
+    [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
+        return RaggedStorageCache<TData>{};  // Invalid cache
+    }
+
+    /**
+     * @brief Get reference to underlying view (for advanced use)
+     */
+    [[nodiscard]] ViewType const& getView() const {
+        return _view;
+    }
+
+private:
+    /**
+     * @brief Build local EntityId and time range indices on construction
+     * 
+     * We need to iterate through the view once to build acceleration structures.
+     * This allows O(1) EntityId lookup and O(log n) time range lookup.
+     */
+    void _buildLocalIndices() {
+        _entity_to_index.clear();
+        _time_ranges.clear();
+        
+        for (size_t i = 0; i < _num_elements; ++i) {
+            auto element = _view[i];
+            TimeFrameIndex time = std::get<0>(element);
+            EntityId eid = std::get<1>(element);
+            
+            _entity_to_index[eid] = i;
+            
+            auto it = _time_ranges.find(time);
+            if (it == _time_ranges.end()) {
+                _time_ranges[time] = {i, i + 1};
+            } else {
+                // Extend the end (assumes elements are time-ordered)
+                it->second.second = i + 1;
+            }
+        }
+    }
+
+    ViewType _view;
+    size_t _num_elements;
+    
+    // Acceleration structures built on construction
+    std::unordered_map<EntityId, size_t> _entity_to_index;
+    std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;
+    
+    // Mutable cache for getDataImpl (required for returning const ref)
+    mutable TData _cached_data;
 };
 
 // =============================================================================
@@ -498,6 +739,57 @@ public:
     [[nodiscard]] size_t getTimeCountImpl() const { return _local_time_ranges.size(); }
     
     [[nodiscard]] RaggedStorageType getStorageTypeImpl() const { return RaggedStorageType::View; }
+
+    /**
+     * @brief Return cache if view is contiguous, otherwise invalid cache
+     * 
+     * ViewRaggedStorage can provide a valid cache when the indices form
+     * a contiguous range (e.g., all elements, or a consecutive subset).
+     * This enables zero-overhead iteration for common view patterns.
+     * 
+     * Contiguous cases:
+     * - All indices: _indices == [0, 1, 2, ..., n-1]
+     * - Consecutive range: _indices == [k, k+1, ..., m]
+     * 
+     * Non-contiguous cases (must use virtual dispatch):
+     * - Filtered by entity IDs (sparse)
+     * - Non-consecutive time ranges
+     */
+    [[nodiscard]] RaggedStorageCache<TData> tryGetCacheImpl() const {
+        // Empty view is trivially contiguous
+        if (_indices.empty()) {
+            return RaggedStorageCache<TData>{nullptr, nullptr, nullptr, 0, true};
+        }
+        
+        // Check if indices form a contiguous range [start, start+1, ..., start+n-1]
+        size_t const start_idx = _indices[0];
+        bool is_contiguous = true;
+        
+        for (size_t i = 1; i < _indices.size(); ++i) {
+            if (_indices[i] != start_idx + i) {
+                is_contiguous = false;
+                break;
+            }
+        }
+        
+        if (is_contiguous) {
+            // Return cache pointing to the contiguous range in source
+            auto const& src_times = _source->times();
+            auto const& src_data = _source->data();
+            auto const& src_entity_ids = _source->entityIds();
+            
+            return RaggedStorageCache<TData>{
+                src_times.data() + start_idx,
+                src_data.data() + start_idx,
+                src_entity_ids.data() + start_idx,
+                _indices.size(),
+                true  // is_contiguous
+            };
+        }
+        
+        // Non-contiguous - return invalid cache
+        return RaggedStorageCache<TData>{};
+    }
 
 private:
     void _rebuildLocalEntityIndex() {
@@ -664,6 +956,389 @@ public:
 
 private:
     VariantType _storage;
+};
+
+// =============================================================================
+// Type-Erased Storage Wrapper (Virtual Dispatch)
+// =============================================================================
+
+/**
+ * @brief Type-erased storage wrapper using virtual dispatch
+ * 
+ * This wrapper provides a uniform interface for any storage backend while
+ * hiding the concrete storage type. Unlike RaggedStorageVariant (which uses
+ * std::variant and requires a closed set of types), this wrapper can hold
+ * any storage type including future lazy transform storage that has unbounded
+ * template parameters.
+ * 
+ * The trade-off is virtual dispatch overhead per access. However, the
+ * tryGetCache() optimization allows iterators to bypass virtual dispatch
+ * when storage is contiguous (OwningRaggedStorage), achieving zero-overhead
+ * iteration for the common case.
+ * 
+ * Design rationale (from AnalogTimeSeries::DataStorageWrapper):
+ * - Lazy transforms like `LazyViewStorage<ViewType>` cannot be stored in
+ *   std::variant because ViewType is unbounded
+ * - Type erasure allows open extension without modifying the wrapper
+ * - Cache optimization mitigates virtual dispatch overhead for hot paths
+ * 
+ * @tparam TData The data type stored (e.g., Mask2D, Line2D, Point2D<float>)
+ */
+template<typename TData>
+class RaggedStorageWrapper {
+public:
+    /**
+     * @brief Construct wrapper from any storage implementation
+     * 
+     * The storage is moved into a heap-allocated wrapper that provides
+     * virtual dispatch to the actual storage methods.
+     * 
+     * @tparam StorageImpl Concrete storage type (must satisfy storage interface)
+     * @param storage Storage implementation (will be moved)
+     */
+    template<typename StorageImpl>
+    explicit RaggedStorageWrapper(StorageImpl storage)
+        : _impl(std::make_unique<StorageModel<StorageImpl>>(std::move(storage))) {}
+
+    // Default constructor creates empty owning storage
+    RaggedStorageWrapper()
+        : _impl(std::make_unique<StorageModel<OwningRaggedStorage<TData>>>(
+              OwningRaggedStorage<TData>{})) {}
+
+    // Move-only semantics (unique_ptr member)
+    RaggedStorageWrapper(RaggedStorageWrapper&&) noexcept = default;
+    RaggedStorageWrapper& operator=(RaggedStorageWrapper&&) noexcept = default;
+    RaggedStorageWrapper(RaggedStorageWrapper const&) = delete;
+    RaggedStorageWrapper& operator=(RaggedStorageWrapper const&) = delete;
+
+    // ========== Unified Interface (Virtual Dispatch) ==========
+    
+    [[nodiscard]] size_t size() const { 
+        return _impl->size(); 
+    }
+    
+    [[nodiscard]] bool empty() const { 
+        return _impl->size() == 0; 
+    }
+
+    [[nodiscard]] TimeFrameIndex getTime(size_t idx) const {
+        return _impl->getTime(idx);
+    }
+
+    [[nodiscard]] TData const& getData(size_t idx) const {
+        return _impl->getData(idx);
+    }
+
+    [[nodiscard]] EntityId getEntityId(size_t idx) const {
+        return _impl->getEntityId(idx);
+    }
+
+    [[nodiscard]] std::optional<size_t> findByEntityId(EntityId id) const {
+        return _impl->findByEntityId(id);
+    }
+
+    [[nodiscard]] std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const {
+        return _impl->getTimeRange(time);
+    }
+
+    [[nodiscard]] size_t getTimeCount() const {
+        return _impl->getTimeCount();
+    }
+
+    [[nodiscard]] RaggedStorageType getStorageType() const {
+        return _impl->getStorageType();
+    }
+
+    [[nodiscard]] bool isView() const {
+        return getStorageType() == RaggedStorageType::View;
+    }
+
+    // ========== Cache Optimization ==========
+    
+    /**
+     * @brief Try to get cached pointers for fast-path iteration
+     * 
+     * If the underlying storage is contiguous, returns a valid cache
+     * with direct pointers for zero-overhead iteration. Otherwise,
+     * returns an invalid cache and callers must use virtual dispatch.
+     * 
+     * @return RaggedStorageCache<TData> Valid if contiguous, invalid otherwise
+     */
+    [[nodiscard]] RaggedStorageCache<TData> tryGetCache() const {
+        return _impl->tryGetCache();
+    }
+
+    // ========== Mutation Operations ==========
+    
+    /**
+     * @brief Append a new entry (move version)
+     * 
+     * Only valid for owning storage. Throws if storage is a view.
+     * 
+     * @param time The TimeFrameIndex for this entry
+     * @param data The data to store (will be moved)
+     * @param entity_id The EntityId for this entry
+     * @throws std::runtime_error if storage is not owning
+     */
+    void append(TimeFrameIndex time, TData&& data, EntityId entity_id) {
+        _impl->append(time, std::move(data), entity_id);
+    }
+
+    /**
+     * @brief Append a new entry (copy version)
+     * 
+     * Only valid for owning storage. Throws if storage is a view.
+     */
+    void append(TimeFrameIndex time, TData const& data, EntityId entity_id) {
+        _impl->append(time, data, entity_id);
+    }
+
+    /**
+     * @brief Reserve capacity for expected number of entries
+     * 
+     * Only valid for owning storage.
+     */
+    void reserve(size_t capacity) {
+        _impl->reserve(capacity);
+    }
+
+    /**
+     * @brief Clear all data
+     * 
+     * Only valid for owning storage.
+     */
+    void clear() {
+        _impl->clear();
+    }
+
+    /**
+     * @brief Remove entry by EntityId
+     * 
+     * Only valid for owning storage.
+     * 
+     * @param entity_id The EntityId to remove
+     * @return true if found and removed, false otherwise
+     */
+    bool removeByEntityId(EntityId entity_id) {
+        return _impl->removeByEntityId(entity_id);
+    }
+
+    /**
+     * @brief Remove all entries at a specific time
+     * 
+     * Only valid for owning storage.
+     * 
+     * @param time The TimeFrameIndex to remove all entries for
+     * @return Number of entries removed
+     */
+    size_t removeAtTime(TimeFrameIndex time) {
+        return _impl->removeAtTime(time);
+    }
+
+    /**
+     * @brief Get mutable reference to data (use with caution)
+     * 
+     * Modifications through this reference do not trigger cache invalidation.
+     * Only valid for owning storage.
+     * 
+     * @param idx Flat index in [0, size())
+     * @return Mutable reference to data
+     */
+    [[nodiscard]] TData& getMutableData(size_t idx) {
+        return _impl->getMutableData(idx);
+    }
+
+    /**
+     * @brief Get the time ranges map for iteration (owning storage only)
+     * 
+     * @return Const reference to time ranges map, or throws if not owning
+     */
+    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const {
+        return _impl->timeRanges();
+    }
+
+    // ========== Type Access ==========
+    
+    /**
+     * @brief Try to get underlying storage as specific type
+     * 
+     * Returns nullptr if the underlying storage is not the requested type.
+     * Use sparingly - prefer the virtual interface for most operations.
+     * 
+     * @tparam StorageType Expected concrete storage type
+     * @return Pointer to underlying storage, or nullptr
+     */
+    template<typename StorageType>
+    [[nodiscard]] StorageType* tryGet() {
+        auto* model = dynamic_cast<StorageModel<StorageType>*>(_impl.get());
+        return model ? &model->_storage : nullptr;
+    }
+
+    template<typename StorageType>
+    [[nodiscard]] StorageType const* tryGet() const {
+        auto const* model = dynamic_cast<StorageModel<StorageType> const*>(_impl.get());
+        return model ? &model->_storage : nullptr;
+    }
+
+private:
+    /**
+     * @brief Abstract interface for storage operations (type-erased)
+     */
+    struct StorageConcept {
+        virtual ~StorageConcept() = default;
+        
+        // Size & bounds
+        virtual size_t size() const = 0;
+        
+        // Element access (const)
+        virtual TimeFrameIndex getTime(size_t idx) const = 0;
+        virtual TData const& getData(size_t idx) const = 0;
+        virtual EntityId getEntityId(size_t idx) const = 0;
+        
+        // Lookups
+        virtual std::optional<size_t> findByEntityId(EntityId id) const = 0;
+        virtual std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const = 0;
+        virtual size_t getTimeCount() const = 0;
+        
+        // Type identification
+        virtual RaggedStorageType getStorageType() const = 0;
+        
+        // Cache optimization
+        virtual RaggedStorageCache<TData> tryGetCache() const = 0;
+        
+        // Mutation operations (may throw for read-only storage types)
+        virtual void append(TimeFrameIndex time, TData&& data, EntityId entity_id) = 0;
+        virtual void append(TimeFrameIndex time, TData const& data, EntityId entity_id) = 0;
+        virtual void reserve(size_t capacity) = 0;
+        virtual void clear() = 0;
+        virtual bool removeByEntityId(EntityId entity_id) = 0;
+        virtual size_t removeAtTime(TimeFrameIndex time) = 0;
+        virtual TData& getMutableData(size_t idx) = 0;
+        virtual std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const = 0;
+    };
+
+    /**
+     * @brief Concrete storage model wrapping a specific implementation
+     * 
+     * @tparam StorageImpl Concrete storage type (OwningRaggedStorage, ViewRaggedStorage, etc.)
+     */
+    template<typename StorageImpl>
+    struct StorageModel : StorageConcept {
+        StorageImpl _storage;
+
+        explicit StorageModel(StorageImpl storage)
+            : _storage(std::move(storage)) {}
+
+        size_t size() const override {
+            return _storage.size();
+        }
+
+        TimeFrameIndex getTime(size_t idx) const override {
+            return _storage.getTime(idx);
+        }
+
+        TData const& getData(size_t idx) const override {
+            return _storage.getData(idx);
+        }
+
+        EntityId getEntityId(size_t idx) const override {
+            return _storage.getEntityId(idx);
+        }
+
+        std::optional<size_t> findByEntityId(EntityId id) const override {
+            return _storage.findByEntityId(id);
+        }
+
+        std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const override {
+            return _storage.getTimeRange(time);
+        }
+
+        size_t getTimeCount() const override {
+            return _storage.getTimeCount();
+        }
+
+        RaggedStorageType getStorageType() const override {
+            return _storage.getStorageType();
+        }
+
+        RaggedStorageCache<TData> tryGetCache() const override {
+            // Use if-constexpr to call tryGetCache if it exists,
+            // otherwise return invalid cache
+            if constexpr (requires { _storage.tryGetCache(); }) {
+                return _storage.tryGetCache();
+            } else {
+                return RaggedStorageCache<TData>{};
+            }
+        }
+
+        // Mutation operations - only supported for OwningRaggedStorage
+        void append(TimeFrameIndex time, TData&& data, EntityId entity_id) override {
+            if constexpr (requires { _storage.append(time, std::move(data), entity_id); }) {
+                _storage.append(time, std::move(data), entity_id);
+            } else {
+                throw std::runtime_error("append() not supported for view/lazy storage");
+            }
+        }
+
+        void append(TimeFrameIndex time, TData const& data, EntityId entity_id) override {
+            if constexpr (requires { _storage.append(time, data, entity_id); }) {
+                _storage.append(time, data, entity_id);
+            } else {
+                throw std::runtime_error("append() not supported for view/lazy storage");
+            }
+        }
+
+        void reserve(size_t capacity) override {
+            if constexpr (requires { _storage.reserve(capacity); }) {
+                _storage.reserve(capacity);
+            }
+            // No-op for storage types that don't support reserve
+        }
+
+        void clear() override {
+            if constexpr (requires { _storage.clear(); }) {
+                _storage.clear();
+            } else {
+                throw std::runtime_error("clear() not supported for view/lazy storage");
+            }
+        }
+
+        bool removeByEntityId(EntityId entity_id) override {
+            if constexpr (requires { _storage.removeByEntityId(entity_id); }) {
+                return _storage.removeByEntityId(entity_id);
+            } else {
+                throw std::runtime_error("removeByEntityId() not supported for view/lazy storage");
+            }
+        }
+
+        size_t removeAtTime(TimeFrameIndex time) override {
+            if constexpr (requires { _storage.removeAtTime(time); }) {
+                return _storage.removeAtTime(time);
+            } else {
+                throw std::runtime_error("removeAtTime() not supported for view/lazy storage");
+            }
+        }
+
+        TData& getMutableData(size_t idx) override {
+            if constexpr (requires { _storage.getMutableData(idx); }) {
+                return _storage.getMutableData(idx);
+            } else {
+                throw std::runtime_error("getMutableData() not supported for view/lazy storage");
+            }
+        }
+
+        std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const override {
+            if constexpr (requires { _storage.timeRanges(); }) {
+                return _storage.timeRanges();
+            } else {
+                // Return empty map for non-owning storage - this should rarely be called
+                static std::map<TimeFrameIndex, std::pair<size_t, size_t>> const empty_map{};
+                return empty_map;
+            }
+        }
+    };
+
+    std::unique_ptr<StorageConcept> _impl;
 };
 
 #endif // RAGGED_STORAGE_HPP

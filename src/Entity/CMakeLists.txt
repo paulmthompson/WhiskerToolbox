@@ -1,12 +1,21 @@
 # Entity Shared Library
-# This library provides entity management and registration functionality
+# This library provides entity management, registration, and lineage tracking functionality
 
 add_library(Entity SHARED
+    # Core types
     EntityTypes.hpp
     EntityRegistry.hpp
     EntityRegistry.cpp
     EntityGroupManager.hpp
     EntityGroupManager.cpp
+    
+    # Lineage subsystem (moved from DataManager in Phase 2)
+    Lineage/LineageTypes.hpp
+    Lineage/LineageRegistry.hpp
+    Lineage/LineageRegistry.cpp
+    # Abstract resolver interface and implementation (Phase 3)
+    Lineage/LineageResolver.hpp
+    Lineage/LineageResolver.cpp
 )
 
 # Set up include directories
@@ -17,7 +26,11 @@ target_include_directories(Entity PUBLIC
 )
 
 # Link to TimeFrame library since EntityRegistry depends on TimeFrameIndex
-target_link_libraries(Entity PUBLIC WhiskerToolbox::TimeFrame)
+# Link to ObserverData since EntityGroupManager uses observer pattern
+target_link_libraries(Entity PUBLIC 
+    WhiskerToolbox::TimeFrame
+    WhiskerToolbox::ObserverData
+)
 
 # Apply the same compiler flags as the main project
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

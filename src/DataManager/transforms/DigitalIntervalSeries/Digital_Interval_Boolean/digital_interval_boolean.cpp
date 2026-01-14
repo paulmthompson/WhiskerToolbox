@@ -28,7 +28,7 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
         return std::make_shared<DigitalIntervalSeries>();
     }
 
-    auto const & intervals = digital_interval_series->getDigitalIntervalSeries();
+    auto const & intervals = digital_interval_series->view();
     auto input_timeframe = digital_interval_series->getTimeFrame();
 
     // For NOT operation, we don't need the other series
@@ -41,11 +41,11 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
         }
 
         // Find the overall range
-        int64_t min_time = intervals[0].start;
-        int64_t max_time = intervals[0].end;
+        int64_t min_time = intervals[0].value().start;
+        int64_t max_time = intervals[0].value().end;
         for (auto const & interval : intervals) {
-            min_time = std::min(min_time, interval.start);
-            max_time = std::max(max_time, interval.end);
+            min_time = std::min(min_time, interval.value().start);
+            max_time = std::max(max_time, interval.value().end);
         }
 
         if (progressCallback) {
@@ -60,7 +60,7 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
 
         // Mark all intervals as true
         for (auto const & interval : intervals) {
-            for (int64_t t = interval.start; t <= interval.end; ++t) {
+            for (int64_t t = interval.value().start; t <= interval.value().end; ++t) {
                 time_map[t] = true;
             }
         }
@@ -109,7 +109,7 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
         return std::make_shared<DigitalIntervalSeries>();
     }
 
-    auto const & other_intervals = booleanParams.other_series->getDigitalIntervalSeries();
+    auto const & other_intervals = booleanParams.other_series->view();
     auto other_timeframe = booleanParams.other_series->getTimeFrame();
 
     if (intervals.empty() && other_intervals.empty()) {
@@ -128,8 +128,8 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
         // Need to convert other intervals to input timeframe
         for (auto const & interval : other_intervals) {
             // Convert start and end times from other timeframe to input timeframe
-            auto start_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.start});
-            auto end_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.end});
+            auto start_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.value().start});
+            auto end_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.value().end});
             
             auto converted_start = input_timeframe->getIndexAtTime(static_cast<float>(start_time), false);
             auto converted_end = input_timeframe->getIndexAtTime(static_cast<float>(end_time), true);
@@ -138,7 +138,9 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
         }
     } else {
         // Same timeframe or no timeframe, use intervals directly
-        converted_other_intervals = other_intervals;
+        for (auto const & interval : other_intervals) {
+            converted_other_intervals.push_back(interval.value());
+        }
     }
 
     if (progressCallback) {
@@ -150,8 +152,8 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
     int64_t max_time = std::numeric_limits<int64_t>::min();
 
     for (auto const & interval : intervals) {
-        min_time = std::min(min_time, interval.start);
-        max_time = std::max(max_time, interval.end);
+        min_time = std::min(min_time, interval.value().start);
+        max_time = std::max(max_time, interval.value().end);
     }
 
     for (auto const & interval : converted_other_intervals) {
@@ -186,7 +188,7 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
 
     // Mark intervals as true in input_map
     for (auto const & interval : intervals) {
-        for (int64_t t = interval.start; t <= interval.end; ++t) {
+        for (int64_t t = interval.value().start; t <= interval.value().end; ++t) {
             input_map[t] = true;
         }
     }

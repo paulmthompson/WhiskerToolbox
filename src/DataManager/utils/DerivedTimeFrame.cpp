@@ -23,12 +23,12 @@ std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromIntervalsO
     std::vector<int> derived_times;
     derived_times.reserve(options.interval_series->size());
 
-    auto const & intervals = options.interval_series->getDigitalIntervalSeries();
+    auto const & intervals = options.interval_series->view();
     
     for (auto const & interval : intervals) {
         TimeFrameIndex index = (options.edge == IntervalEdge::START) 
-            ? TimeFrameIndex(interval.start) 
-            : TimeFrameIndex(interval.end);
+            ? TimeFrameIndex(interval.value().start) 
+            : TimeFrameIndex(interval.value().end);
         
         // Get the actual time value from the source timeframe at this index
         int const time_value = options.source_timeframe->getTimeAtIndex(index);
@@ -61,11 +61,11 @@ std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromEventsOpti
     std::vector<int> derived_times;
     derived_times.reserve(options.event_series->size());
 
-    auto const & events = options.event_series->getEventSeries();
+    auto const & events = options.event_series->view();
     
     for (auto const & event : events) {
         // Get the actual time value from the source timeframe at this index
-        int const time_value = options.source_timeframe->getTimeAtIndex(event);
+        int const time_value = options.source_timeframe->getTimeAtIndex(event.time());
         derived_times.push_back(time_value);
     }
 

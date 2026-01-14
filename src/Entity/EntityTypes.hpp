@@ -1,3 +1,15 @@
+/**
+ * @file EntityTypes.hpp
+ * @brief Core type definitions for the Entity identification system
+ * @ingroup Entity
+ *
+ * This header defines the fundamental types used throughout the Entity library:
+ * - EntityId: Opaque identifier for discrete entities
+ * - EntityKind: Classification of entity types
+ * - EntityDescriptor: Full metadata for an entity
+ * - EntityTupleKey: Composite key for entity registry lookups
+ * - DataEntry: Template wrapper pairing data with EntityId
+ */
 #ifndef ENTITYTYPES_HPP
 #define ENTITYTYPES_HPP
 

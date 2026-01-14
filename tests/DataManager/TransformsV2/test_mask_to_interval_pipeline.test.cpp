@@ -244,21 +244,21 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
             auto intervals = dm->getData<DigitalIntervalSeries>("detected_intervals");
             REQUIRE(intervals != nullptr);
             
-            auto const& interval_list = intervals->getDigitalIntervalSeries();
+            auto const& interval_list = intervals->view();
             
             // Should have 2 intervals where area > 10:
             // Interval 1: indices 2-4 (times 200-400)
             // Interval 2: indices 7-8 (times 700-800)
             // Note: Intervals use TimeFrameIndex values, not absolute time
-            REQUIRE(interval_list.size() == 2);
+            REQUIRE(intervals->size() == 2);
             
             // First interval: index 2 to index 4
-            REQUIRE(interval_list[0].start == 2);
-            REQUIRE(interval_list[0].end == 4);
+            REQUIRE(interval_list[0].value().start == 2);
+            REQUIRE(interval_list[0].value().end == 4);
             
             // Second interval: index 7 to index 8
-            REQUIRE(interval_list[1].start == 7);
-            REQUIRE(interval_list[1].end == 8);
+            REQUIRE(interval_list[1].value().start == 7);
+            REQUIRE(interval_list[1].value().end == 8);
         }
     }
 
@@ -303,7 +303,7 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
         auto intervals = dm->getData<DigitalIntervalSeries>("detected_intervals_v2");
         REQUIRE(intervals != nullptr);
         
-        auto const& interval_list = intervals->getDigitalIntervalSeries();
+        auto const& interval_list = intervals->view();
         
         // With threshold=15, only values > 15 are included (strictly greater):
         // Time 200 (idx 2): 15 (at threshold, NOT included since 15 > 15 is false)
@@ -311,13 +311,13 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
         // Time 700 (idx 7): 18 (above, included)
         // Time 800 (idx 8): 25 (above, included)
         // So intervals: [3] (just index 3) and [7-8]
-        REQUIRE(interval_list.size() == 2);
+        REQUIRE(intervals->size() == 2);
         
-        REQUIRE(interval_list[0].start == 3);
-        REQUIRE(interval_list[0].end == 3);
+        REQUIRE(interval_list[0].value().start == 3);
+        REQUIRE(interval_list[0].value().end == 3);
         
-        REQUIRE(interval_list[1].start == 7);
-        REQUIRE(interval_list[1].end == 8);
+        REQUIRE(interval_list[1].value().start == 7);
+        REQUIRE(interval_list[1].value().end == 8);
     }
 
     SECTION("Execute pipeline with min_duration filter") {
@@ -362,15 +362,15 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
         auto intervals = dm->getData<DigitalIntervalSeries>("detected_intervals_v3");
         REQUIRE(intervals != nullptr);
         
-        auto const& interval_list = intervals->getDigitalIntervalSeries();
+        auto const& interval_list = intervals->view();
         
         // min_duration uses index difference: end - start + 1
         // First interval [2-4]: 4 - 2 + 1 = 3 indices
         // Second interval [7-8]: 8 - 7 + 1 = 2 indices
         // With min_duration=3, only first interval passes
-        REQUIRE(interval_list.size() == 1);
-        REQUIRE(interval_list[0].start == 2);
-        REQUIRE(interval_list[0].end == 4);
+        REQUIRE(intervals->size() == 1);
+        REQUIRE(interval_list[0].value().start == 2);
+        REQUIRE(interval_list[0].value().end == 4);
     }
 }
 

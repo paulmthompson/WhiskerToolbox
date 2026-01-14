@@ -36,8 +36,9 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
         return std::make_shared<DigitalEventSeries>();
     }
 
-    auto const & intervals = intervalPeakParams.interval_series->getDigitalIntervalSeries();
-    if (intervals.empty()) {
+    auto intervals_view = intervalPeakParams.interval_series->view();
+    auto const num_intervals = intervalPeakParams.interval_series->size();
+    if (num_intervals == 0) {
         if (progressCallback) progressCallback(100);
         return std::make_shared<DigitalEventSeries>();
     }
@@ -53,20 +54,19 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
     
     if (intervalPeakParams.search_mode == IntervalPeakParams::SearchMode::WITHIN_INTERVALS) {
         // Search within each interval: [start, end]
-        for (auto const & interval : intervals) {
+        for (auto const & interval_with_id : intervals_view) {
+            auto const & interval = interval_with_id.value();
             search_ranges.emplace_back(interval.start, interval.end);
         }
     } else {
         // Search between interval starts: [start_i, start_{i+1})
-        for (size_t i = 0; i < intervals.size() - 1; ++i) {
-            search_ranges.emplace_back(intervals[i].start, 
-                                      intervals[i + 1].start - 1);
+        for (size_t i = 0; i < num_intervals - 1; ++i) {
+            search_ranges.emplace_back(intervals_view[i].value().start, 
+                                      intervals_view[i + 1].value().start - 1);
         }
         // For the last interval, search from its start to its end
-        if (!intervals.empty()) {
-            auto const & last_interval = intervals.back();
-            search_ranges.emplace_back(last_interval.start, last_interval.end);
-        }
+        auto const & last_interval = intervals_view[num_intervals - 1].value();
+        search_ranges.emplace_back(last_interval.start, last_interval.end);
     }
 
     if (progressCallback) progressCallback(10);
