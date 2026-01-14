@@ -236,6 +236,54 @@ public:
                 new AnalogTimeSeries(std::move(storage_wrapper), std::move(time_storage)));
     }
 
+    /**
+     * @brief Create a zero-copy view of an AnalogTimeSeries within a time range
+     * 
+     * Creates an AnalogTimeSeries that references the source's data without copying.
+     * The view shares ownership of the underlying storage via shared_ptr, ensuring
+     * the source data remains valid for the lifetime of the view.
+     * 
+     * This enables efficient windowed access patterns (e.g., plotting segments of
+     * a long time series) without data duplication.
+     * 
+     * @param source Source AnalogTimeSeries to create a view from
+     * @param start_time Start of the time range (inclusive)
+     * @param end_time End of the time range (inclusive)
+     * @return std::shared_ptr<AnalogTimeSeries> View into the source data
+     * 
+     * @throws std::runtime_error if source storage is not vector-backed (mmap or lazy)
+     * 
+     * @note The source must outlive all views or must be kept alive via shared_ptr.
+     *       Since views share ownership of the underlying data, the data remains valid
+     *       as long as any view exists.
+     * @note View storage is contiguous (supports span access) since it references
+     *       contiguous source data.
+     * @note For lazy or mmap storage, call materialize() first then create views.
+     * 
+     * @example Creating windowed views for multi-trial plotting:
+     * @code
+     * auto full_series = std::make_shared<AnalogTimeSeries>(data, times);
+     * 
+     * std::vector<std::shared_ptr<AnalogTimeSeries>> trial_views;
+     * for (auto const& trial_start : trial_times) {
+     *     auto view = AnalogTimeSeries::createView(
+     *         full_series,
+     *         trial_start,
+     *         TimeFrameIndex{trial_start.getValue() + window_size});
+     *     trial_views.push_back(view);
+     * }
+     * 
+     * // All views share the same underlying data (zero copies)
+     * for (auto const& view : trial_views) {
+     *     plotToBuffer(view->getSpan());
+     * }
+     * @endcode
+     */
+    [[nodiscard]] static std::shared_ptr<AnalogTimeSeries> createView(
+            std::shared_ptr<AnalogTimeSeries const> source,
+            TimeFrameIndex start_time,
+            TimeFrameIndex end_time);
+
     // ========== Getting Data ==========
 
     [[nodiscard]] size_t getNumSamples() const { return _data_storage.size(); };
@@ -591,14 +639,29 @@ private:
     /**
      * @brief Type-erased wrapper for analog data storage
      * 
-     * Provides uniform interface to different storage backends (vector, mmap, etc.)
+     * Provides uniform interface to different storage backends (vector, mmap, view, etc.)
      * while enabling compile-time optimizations through template instantiation.
+     * 
+     * Uses shared_ptr internally to enable zero-copy view creation via aliasing constructor.
+     * When creating a view from a VectorAnalogDataStorage, the view can share ownership
+     * of the source data without copying.
      */
     class DataStorageWrapper {
     public:
         template<typename DataStorageImpl>
         explicit DataStorageWrapper(DataStorageImpl storage)
-            : _impl(std::make_unique<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+            : _impl(std::make_shared<StorageModel<DataStorageImpl>>(std::move(storage))) {}
+
+        // Default constructor creates empty vector storage
+        DataStorageWrapper()
+            : _impl(std::make_shared<StorageModel<VectorAnalogDataStorage>>(
+                  VectorAnalogDataStorage{std::vector<float>{}})) {}
+
+        // Copy and move semantics - shared_ptr allows sharing
+        DataStorageWrapper(DataStorageWrapper&&) noexcept = default;
+        DataStorageWrapper& operator=(DataStorageWrapper&&) noexcept = default;
+        DataStorageWrapper(DataStorageWrapper const&) = default;
+        DataStorageWrapper& operator=(DataStorageWrapper const&) = default;
 
         [[nodiscard]] size_t size() const { return _impl->size(); }
 
@@ -624,6 +687,39 @@ private:
 
         [[nodiscard]] AnalogStorageType getStorageType() const {
             return _impl->getStorageType();
+        }
+
+        [[nodiscard]] bool isView() const {
+            return getStorageType() == AnalogStorageType::View;
+        }
+
+        [[nodiscard]] bool isLazy() const {
+            return getStorageType() == AnalogStorageType::LazyView;
+        }
+
+        /**
+         * @brief Get shared pointer to vector storage for creating views
+         * 
+         * If this wrapper contains vector storage, uses aliasing constructor to share
+         * ownership. If this wrapper contains a view, returns the view's existing source.
+         * Returns nullptr for other storage types (mmap, lazy).
+         * 
+         * @return shared_ptr to VectorAnalogDataStorage, or nullptr if not available
+         */
+        [[nodiscard]] std::shared_ptr<VectorAnalogDataStorage const> getSharedVectorStorage() const {
+            // Check if we have view storage - return its existing source
+            if (auto const* view_model = dynamic_cast<StorageModel<ViewAnalogDataStorage> const*>(_impl.get())) {
+                return view_model->_storage.source();
+            }
+
+            // Check if we have vector storage - use aliasing constructor for zero-copy sharing
+            if (auto vector_model = std::dynamic_pointer_cast<StorageModel<VectorAnalogDataStorage> const>(_impl)) {
+                // Aliasing constructor: shares ownership with _impl but points to the inner storage
+                return std::shared_ptr<VectorAnalogDataStorage const>(vector_model, &vector_model->_storage);
+            }
+
+            // Other storage types (mmap, lazy) - no shared vector storage available
+            return nullptr;
         }
 
     private:
@@ -668,6 +764,8 @@ private:
             float const * tryGetContiguousPointer() const override {
                 if constexpr (std::is_same_v<DataStorageImpl, VectorAnalogDataStorage>) {
                     return _storage.data();
+                } else if constexpr (std::is_same_v<DataStorageImpl, ViewAnalogDataStorage>) {
+                    return _storage.data();
                 }
                 return nullptr;
             }
@@ -677,7 +775,7 @@ private:
             }
         };
 
-        std::unique_ptr<StorageConcept> _impl;
+        std::shared_ptr<StorageConcept> _impl;
     };
 
     DataStorageWrapper _data_storage;

@@ -37,7 +37,8 @@
 enum class AnalogStorageType {
     Vector,
     MemoryMapped,
-    LazyView,// View-based lazy storage
+    View,     // View-based storage (references parent)
+    LazyView, // View-based lazy storage
     Custom
 };
 
@@ -198,6 +199,109 @@ public:
 
 private:
     std::vector<float> _data;
+};
+
+/**
+ * @brief View-based analog data storage that references another storage
+ * 
+ * Holds a shared_ptr to a source VectorAnalogDataStorage and start/end indices
+ * into that source. Enables zero-copy filtered views for range queries.
+ * 
+ * Unlike lazy storage, view storage provides contiguous span access when the
+ * underlying source is contiguous (which VectorAnalogDataStorage always is).
+ */
+class ViewAnalogDataStorage : public AnalogDataStorageBase<ViewAnalogDataStorage> {
+public:
+    /**
+     * @brief Construct a view referencing source storage
+     * 
+     * @param source Shared pointer to source vector storage
+     * @param start_index Starting index (inclusive)
+     * @param end_index Ending index (exclusive)
+     */
+    ViewAnalogDataStorage(
+        std::shared_ptr<VectorAnalogDataStorage const> source,
+        size_t start_index,
+        size_t end_index)
+        : _source(std::move(source))
+        , _start_index(start_index)
+        , _end_index(end_index) {
+        if (_start_index > _end_index) {
+            throw std::invalid_argument("ViewAnalogDataStorage: start_index > end_index");
+        }
+        if (_end_index > _source->size()) {
+            throw std::out_of_range("ViewAnalogDataStorage: end_index exceeds source size");
+        }
+    }
+    
+    virtual ~ViewAnalogDataStorage() = default;
+    
+    // CRTP implementation methods
+
+    [[nodiscard]] float getValueAtImpl(size_t index) const {
+        return _source->getValueAt(_start_index + index);
+    }
+
+    [[nodiscard]] size_t sizeImpl() const {
+        return _end_index - _start_index;
+    }
+
+    /**
+     * @brief Get span over the view's data range
+     * 
+     * Since source is contiguous, we can provide efficient span access.
+     */
+    [[nodiscard]] std::span<float const> getSpanImpl() const {
+        return std::span<float const>(
+            _source->data() + _start_index, 
+            _end_index - _start_index);
+    }
+
+    [[nodiscard]] std::span<float const> getSpanRangeImpl(size_t start, size_t end) const {
+        if (start > end || end > sizeImpl()) {
+            throw std::out_of_range("ViewAnalogDataStorage: invalid range");
+        }
+        return std::span<float const>(
+            _source->data() + _start_index + start,
+            end - start);
+    }
+
+    [[nodiscard]] bool isContiguousImpl() const {
+        return true;  // Views into contiguous source are also contiguous
+    }
+
+    [[nodiscard]] AnalogStorageType getStorageType() const override {
+        return AnalogStorageType::View;
+    }
+
+    /**
+     * @brief Get the source storage
+     */
+    [[nodiscard]] std::shared_ptr<VectorAnalogDataStorage const> const& source() const {
+        return _source;
+    }
+
+    /**
+     * @brief Get raw pointer to contiguous data
+     */
+    [[nodiscard]] float const* data() const {
+        return _source->data() + _start_index;
+    }
+
+    /**
+     * @brief Get the start index in source storage
+     */
+    [[nodiscard]] size_t startIndex() const { return _start_index; }
+
+    /**
+     * @brief Get the end index in source storage
+     */
+    [[nodiscard]] size_t endIndex() const { return _end_index; }
+
+private:
+    std::shared_ptr<VectorAnalogDataStorage const> _source;
+    size_t _start_index;
+    size_t _end_index;
 };
 
 /**
