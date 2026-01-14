@@ -4,15 +4,13 @@
 #include "ColumnTypeInfo.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "IColumn.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
 
 #include <memory>
 #include <string>
 #include <typeinfo>
 #include <variant>
 #include <vector>
-
-template<typename>
-class IColumnComputer;
 
 class TableView;
 
