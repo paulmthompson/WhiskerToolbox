@@ -1,6 +1,6 @@
 This is a Qt6/C++ project used for neural data analysis and visualization. It provides tools for loading, processing, and visualizing neural datasets, with a focus on usability and performance.
 
-This is a C++20 project. Catch2 is used for testing. CMake is used as the build system. Qt6 is used for the GUI components.
+This is a C++23 project. Catch2 is used for testing. CMake is used as the build system. Qt6 is used for the GUI components.
 
 Cross platform (Windows, Linux, MacOS) support is provided via CMake.
 
