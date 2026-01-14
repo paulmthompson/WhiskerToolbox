@@ -320,33 +320,23 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
     int64_t start,
     int64_t end)
 {
+    // Get shared owning storage from source (zero-copy via aliasing constructor)
+    auto shared_owning = source->_storage.getSharedOwningStorage();
+    if (!shared_owning) {
+        // Source is lazy storage - materialize first, then recursively create view
+        auto materialized = source->materialize();
+        return createView(materialized, start, end);
+    }
+    
+    // Create view from shared owning storage (no data copy)
+    ViewDigitalIntervalStorage view{shared_owning};
+    view.filterByOverlappingRange(start, end);
+    
     auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
     result->_time_frame = source->_time_frame;
     result->_identity_data_key = source->_identity_data_key;
     result->_identity_registry = source->_identity_registry;
-    
-    // Get owning storage from source
-    auto const* source_owning = source->_storage.tryGetOwning();
-    if (!source_owning) {
-        // Source is not owning - materialize first
-        auto materialized = source->materialize();
-        source_owning = materialized->_storage.tryGetOwning();
-        if (!source_owning) {
-            throw std::runtime_error("Failed to materialize source for view creation");
-        }
-        // Create view from materialized storage
-        auto view_storage = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
-        ViewDigitalIntervalStorage view{view_storage};
-        view.filterByOverlappingRange(start, end);
-        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
-    } else {
-        // Create view from source owning storage
-        auto shared_source = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
-        ViewDigitalIntervalStorage view{shared_source};
-        view.filterByOverlappingRange(start, end);
-        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
-    }
-    
     result->_cacheOptimizationPointers();
     return result;
 }
@@ -360,25 +350,21 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
     result->_identity_data_key = source->_identity_data_key;
     result->_identity_registry = source->_identity_registry;
     
-    // Get owning storage from source
-    auto const* source_owning = source->_storage.tryGetOwning();
-    if (!source_owning) {
-        // Source is not owning - materialize first
+    // Get shared owning storage from source (zero-copy via aliasing constructor)
+    auto shared_owning = source->_storage.getSharedOwningStorage();
+    if (!shared_owning) {
+        // Source is lazy storage - materialize first, then get shared storage
         auto materialized = source->materialize();
-        source_owning = materialized->_storage.tryGetOwning();
-        if (!source_owning) {
-            throw std::runtime_error("Failed to materialize source for view creation");
+        shared_owning = materialized->_storage.getSharedOwningStorage();
+        if (!shared_owning) {
+            throw std::runtime_error("Failed to get shared storage for view creation");
         }
-        auto view_storage = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
-        ViewDigitalIntervalStorage view{view_storage};
-        view.filterByEntityIds(entity_ids);
-        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
-    } else {
-        auto shared_source = std::make_shared<OwningDigitalIntervalStorage const>(*source_owning);
-        ViewDigitalIntervalStorage view{shared_source};
-        view.filterByEntityIds(entity_ids);
-        result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
     }
+    
+    // Create view from shared owning storage (no data copy)
+    ViewDigitalIntervalStorage view{shared_owning};
+    view.filterByEntityIds(entity_ids);
+    result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
     
     result->_cacheOptimizationPointers();
     return result;

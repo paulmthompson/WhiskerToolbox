@@ -11,6 +11,7 @@
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <utility>
@@ -497,26 +498,29 @@ public:
         if (_intervals.empty() || start > end) {
             return {0, 0};
         }
-        
+
         // An interval overlaps [start, end] if interval.start <= end && interval.end >= start
-        // Find first interval where start > end (these cannot overlap)
+        // 
+        // Key insight: Since intervals are disjoint (merged on insertion) and sorted by start,
+        // they are ALSO sorted by end. This enables O(log n) binary search for both bounds.
+
+        // 1. Find the STOP index (Upper Bound on Start Time)
+        // We want the first interval that starts strictly AFTER our range ends.
+        // Everything before this is a candidate.
         auto it_end = std::ranges::upper_bound(_intervals, end, {},
             [](Interval const& i) { return i.start; });
-        
-        // Find first interval in [begin, it_end) where interval.end >= start
-        size_t start_idx = 0;
-        for (size_t i = 0; i < static_cast<size_t>(std::distance(_intervals.begin(), it_end)); ++i) {
-            if (_intervals[i].end >= start) {
-                start_idx = i;
-                break;
-            }
-            if (i + 1 == static_cast<size_t>(std::distance(_intervals.begin(), it_end))) {
-                // No overlapping intervals found
-                return {0, 0};
-            }
-        }
-        
-        return {start_idx, static_cast<size_t>(std::distance(_intervals.begin(), it_end))};
+
+        // 2. Find the START index (Lower Bound on End Time)
+        // We want the first interval that ends at or after our range starts.
+        // Since disjoint intervals sorted by start are also sorted by end,
+        // we can binary search this!
+        auto it_start = std::ranges::lower_bound(_intervals.begin(), it_end, start, {},
+            [](Interval const& i) { return i.end; });
+
+        size_t start_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_start));
+        size_t end_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_end));
+
+        return {start_idx, end_idx};
     }
     
     [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const {
@@ -757,19 +761,23 @@ public:
             return {0, 0};
         }
         
-        // Linear scan for view (indices may not be contiguous)
-        size_t start_idx = _indices.size();
-        size_t end_idx = 0;
+        // Views maintain sorted order from source, so we can use binary search.
+        // Key insight: Since source intervals are disjoint and sorted by start,
+        // and we preserve that order in our indices, we can binary search by
+        // looking up the interval at each index.
         
-        for (size_t i = 0; i < _indices.size(); ++i) {
-            Interval const& interval = _source->getInterval(_indices[i]);
-            if (interval.start <= end && interval.end >= start) {
-                start_idx = std::min(start_idx, i);
-                end_idx = std::max(end_idx, i + 1);
-            }
-        }
+        // Find first index where source interval ends at or after start
+        auto it_start = std::ranges::lower_bound(_indices, start, {},
+            [this](size_t idx) { return _source->getInterval(idx).end; });
         
-        return start_idx <= end_idx ? std::pair{start_idx, end_idx} : std::pair<size_t, size_t>{0, 0};
+        // Find first index where source interval starts strictly after end
+        auto it_end = std::ranges::upper_bound(_indices, end, {},
+            [this](size_t idx) { return _source->getInterval(idx).start; });
+        
+        size_t start_idx = static_cast<size_t>(std::distance(_indices.begin(), it_start));
+        size_t end_idx = static_cast<size_t>(std::distance(_indices.begin(), it_end));
+        
+        return {start_idx, end_idx};
     }
     
     [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const {
@@ -934,19 +942,30 @@ public:
             return {0, 0};
         }
         
-        // Linear scan for lazy storage
-        size_t start_idx = _num_elements;
-        size_t end_idx = 0;
+        // Lazy storage also maintains sorted disjoint intervals, so we can use binary search.
+        // Use std::views::iota to create an index range for binary searching.
+        auto indices = std::views::iota(size_t{0}, _num_elements);
         
-        for (size_t i = 0; i < _num_elements; ++i) {
-            Interval const& interval = getIntervalImpl(i);
-            if (interval.start <= end && interval.end >= start) {
-                start_idx = std::min(start_idx, i);
-                end_idx = std::max(end_idx, i + 1);
-            }
+        // Find first index where interval ends at or after start
+        auto it_start = std::ranges::lower_bound(indices, start, {},
+            [this](size_t idx) { return getIntervalImpl(idx).end; });
+        
+        // Find first index where interval starts strictly after end
+        auto it_end = std::ranges::upper_bound(indices, end, {},
+            [this](size_t idx) { return getIntervalImpl(idx).start; });
+        
+        size_t start_idx = *it_start;
+        size_t end_idx = *it_end;
+        
+        // Handle edge cases where iterators are at end
+        if (it_start == indices.end()) {
+            return {0, 0};
+        }
+        if (it_end == indices.end()) {
+            end_idx = _num_elements;
         }
         
-        return start_idx <= end_idx ? std::pair{start_idx, end_idx} : std::pair<size_t, size_t>{0, 0};
+        return {start_idx, end_idx};
     }
     
     [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const {
@@ -1025,18 +1044,18 @@ public:
      */
     template<typename StorageImpl>
     explicit DigitalIntervalStorageWrapper(StorageImpl storage)
-        : _impl(std::make_unique<StorageModel<StorageImpl>>(std::move(storage))) {}
+        : _impl(std::make_shared<StorageModel<StorageImpl>>(std::move(storage))) {}
 
     // Default constructor creates empty owning storage
     DigitalIntervalStorageWrapper()
-        : _impl(std::make_unique<StorageModel<OwningDigitalIntervalStorage>>(
+        : _impl(std::make_shared<StorageModel<OwningDigitalIntervalStorage>>(
               OwningDigitalIntervalStorage{})) {}
 
-    // Move-only semantics
+    // Copy and move semantics - shared_ptr allows sharing
     DigitalIntervalStorageWrapper(DigitalIntervalStorageWrapper&&) noexcept = default;
     DigitalIntervalStorageWrapper& operator=(DigitalIntervalStorageWrapper&&) noexcept = default;
-    DigitalIntervalStorageWrapper(DigitalIntervalStorageWrapper const&) = delete;
-    DigitalIntervalStorageWrapper& operator=(DigitalIntervalStorageWrapper const&) = delete;
+    DigitalIntervalStorageWrapper(DigitalIntervalStorageWrapper const&) = default;
+    DigitalIntervalStorageWrapper& operator=(DigitalIntervalStorageWrapper const&) = default;
 
     // ========== Unified Interface ==========
     
@@ -1138,6 +1157,37 @@ public:
     
     [[nodiscard]] OwningDigitalIntervalStorage const* tryGetOwning() const {
         return tryGet<OwningDigitalIntervalStorage>();
+    }
+
+    /**
+     * @brief Get shared pointer to owning storage for creating views
+     * 
+     * If this wrapper contains owning storage, uses the aliasing constructor
+     * to create a shared_ptr that shares ownership with the wrapper but points
+     * to the inner storage. This enables zero-copy view creation while keeping
+     * the source data alive.
+     * 
+     * If this wrapper contains a view, returns the view's existing source 
+     * (which is already a shared_ptr).
+     * 
+     * Returns nullptr for lazy storage.
+     * 
+     * @return shared_ptr to owning storage, or nullptr if not available
+     */
+    [[nodiscard]] std::shared_ptr<OwningDigitalIntervalStorage const> getSharedOwningStorage() const {
+        // Check if we have view storage - return its existing source
+        if (auto const* view_model = dynamic_cast<StorageModel<ViewDigitalIntervalStorage> const*>(_impl.get())) {
+            return view_model->_storage.source();
+        }
+        
+        // Check if we have owning storage - use aliasing constructor for zero-copy sharing
+        if (auto owning_model = std::dynamic_pointer_cast<StorageModel<OwningDigitalIntervalStorage> const>(_impl)) {
+            // Aliasing constructor: shares ownership with _impl but points to the inner storage
+            return std::shared_ptr<OwningDigitalIntervalStorage const>(owning_model, &owning_model->_storage);
+        }
+        
+        // Lazy storage - no shared owning storage available
+        return nullptr;
     }
 
 private:
@@ -1262,7 +1312,7 @@ private:
         }
     };
 
-    std::unique_ptr<StorageConcept> _impl;
+    std::shared_ptr<StorageConcept> _impl;
 };
 
 #endif // DIGITAL_INTERVAL_STORAGE_HPP
