@@ -61,6 +61,7 @@ set(DATAMANAGER_SOURCES
         utils/color.hpp
         utils/color.cpp
         utils/json_helpers.hpp
+        utils/GatherResult.hpp
         utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
         utils/polynomial/polynomial_fit.hpp
