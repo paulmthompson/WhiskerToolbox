@@ -474,35 +474,21 @@ for (auto const& event : trial_view) {
 The only compile-time requirement is knowing the **input element type** (from the 
 container type) and the **final scalar type** (from the reduction or projection).
 
-### Step 5.1: Define Value Projection Types
+### Step 5.1: Define Value Projection Types ✅
 
 **File**: `src/DataManager/transforms/v2/core/ValueProjectionTypes.hpp`
 
-```cpp
-/**
- * @brief Value projection function type
- * 
- * Takes a source element and returns a computed value.
- * EntityId and other identity info comes from the source element directly.
- */
-template<typename InElement, typename Value>
-using ValueProjectionFn = std::function<Value(InElement const&)>;
+Implemented:
+- `ValueProjectionFn<InElement, Value>`: Function type for element → value projection
+- `ValueProjectionFactory<InElement, Value>`: Factory that creates projections from TrialContext
+- `ErasedValueProjectionFn` / `ErasedValueProjectionFactory`: Type-erased versions for runtime composition
+- `makeProjectedView()`: Lazy view yielding (element_ref, value) pairs
+- `makeValueView()`: Lazy view yielding only projected values
+- `eraseValueProjection()` / `eraseValueProjectionFactory()`: Type erasure helpers
+- `recoverValueProjection()` / `recoverValueProjectionFactory()`: Type recovery helpers
+- `ValueProjection` / `ValueProjectionFactoryConcept`: Concepts for validation
 
-/**
- * @brief Factory that creates value projections from TrialContext
- */
-template<typename InElement, typename Value>
-using ValueProjectionFactory = std::function<ValueProjectionFn<InElement, Value>(TrialContext const&)>;
-
-/**
- * @brief Lazy view that pairs source elements with projected values
- * 
- * This is a zero-allocation view adaptor that yields (source_ref, projected_value)
- * pairs on iteration.
- */
-template<typename InElement, typename Value>
-using ProjectedView = /* ranges view returning std::pair<InElement const&, Value> */;
-```
+**Tests**: `tests/DataManager/TransformsV2/test_value_projection_types.test.cpp` ✅
 
 ### Step 5.2: Update NormalizeTime to Return Float
 
