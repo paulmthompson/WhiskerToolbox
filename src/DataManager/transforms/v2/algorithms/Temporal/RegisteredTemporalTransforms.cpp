@@ -116,6 +116,70 @@ auto const register_normalize_value_time = RegisterTransform<
                 .is_deterministic = true,
                 .supports_cancellation = false});
 
+// ============================================================================
+// Value Projection Registrations (Return float directly)
+// ============================================================================
+
+/**
+ * @brief Register NormalizeEventTimeValue transform (value projection)
+ *
+ * Transforms EventWithId → float by computing normalized time.
+ * This is the value projection version - returns only the normalized time,
+ * allowing EntityId to be accessed from the source element.
+ *
+ * Use this for:
+ * - Raster plot drawing (need time for position, EntityId for color)
+ * - Range reductions (FirstPositiveLatency, etc.)
+ * - Lazy iteration without intermediate type allocation
+ */
+auto const register_normalize_event_time_value = RegisterTransform<
+        EventWithId,
+        float,
+        NormalizeTimeParams>(
+        "NormalizeEventTimeValue",
+        normalizeEventTimeValue,
+        TransformMetadata{
+                .name = "NormalizeEventTimeValue",
+                .description = "Compute normalized event time as float (value projection)",
+                .category = "Temporal",
+                .input_type = typeid(EventWithId),
+                .output_type = typeid(float),
+                .params_type = typeid(NormalizeTimeParams),
+                .lineage_type = TransformLineageType::None,  // No entity tracking for scalar output
+                .input_type_name = "EventWithId",
+                .output_type_name = "float",
+                .params_type_name = "NormalizeTimeParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+/**
+ * @brief Register NormalizeSampleTimeValue transform (value projection)
+ *
+ * Transforms TimeValuePoint → float by computing normalized time.
+ * This is the value projection version for analog samples.
+ */
+auto const register_normalize_sample_time_value = RegisterTransform<
+        AnalogTimeSeries::TimeValuePoint,
+        float,
+        NormalizeTimeParams>(
+        "NormalizeSampleTimeValue",
+        normalizeSampleTimeValue,
+        TransformMetadata{
+                .name = "NormalizeSampleTimeValue",
+                .description = "Compute normalized sample time as float (value projection)",
+                .category = "Temporal",
+                .input_type = typeid(AnalogTimeSeries::TimeValuePoint),
+                .output_type = typeid(float),
+                .params_type = typeid(NormalizeTimeParams),
+                .lineage_type = TransformLineageType::None,
+                .input_type_name = "TimeValuePoint",
+                .output_type_name = "float",
+                .params_type_name = "NormalizeTimeParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
 }  // anonymous namespace
 
 // ============================================================================
@@ -132,6 +196,8 @@ void registerTemporalTransforms() {
     // Force instantiation of static registrations
     (void)register_normalize_event_time;
     (void)register_normalize_value_time;
+    (void)register_normalize_event_time_value;
+    (void)register_normalize_sample_time_value;
     (void)init_pipeline_factories;
     (void)register_context_injector;
 }

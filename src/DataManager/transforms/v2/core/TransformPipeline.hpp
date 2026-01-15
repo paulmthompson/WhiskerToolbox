@@ -12,6 +12,7 @@
 #include "PreProcessingRegistry.hpp"
 #include "RangeReductionRegistry.hpp"
 #include "TransformTypes.hpp"
+#include "ValueProjectionTypes.hpp"
 #include "ViewAdaptorTypes.hpp"
 
 #include <any>
@@ -1202,6 +1203,90 @@ template<typename InElement, typename Scalar>
 ReducerFactory<InElement, Scalar> bindReducerWithContext(TransformPipeline const & pipeline);
 
 
+// ============================================================================
+// Value Projection Binding Methods
+// ============================================================================
+
+/**
+ * @brief Bind a pipeline to produce a value projection function
+ *
+ * Creates a function that transforms a single input element into a scalar value
+ * by applying all pipeline steps. Unlike ViewAdaptorFn which processes batches,
+ * this operates on individual elements.
+ *
+ * **Value Projection Pattern:**
+ * Instead of creating intermediate element types (e.g., NormalizedEvent),
+ * value projections compute only the derived value (e.g., float for normalized time).
+ * The source element retains identity information (EntityId, etc.) that can be
+ * accessed directly without duplication.
+ *
+ * **Requirements:**
+ * - Pipeline must have at least one step
+ * - All steps must be element-level transforms (not time-grouped)
+ * - Pipeline must not have context-aware transforms (use bindValueProjectionWithContext)
+ * - Final output type must match Value
+ *
+ * @tparam InElement Input element type (e.g., EventWithId)
+ * @tparam Value Output value type (e.g., float for normalized time)
+ * @param pipeline The transform pipeline to bind
+ * @return ValueProjectionFn that transforms InElement → Value
+ *
+ * @throws std::runtime_error if pipeline is empty or contains unsupported transforms
+ *
+ * @see bindValueProjectionWithContext For context-aware transforms
+ * @see ValueProjectionTypes.hpp For type definitions
+ *
+ * @example
+ * ```cpp
+ * auto pipeline = TransformPipeline()
+ *     .addStep("ScaleValue", ScaleParams{.factor = 2.0f});
+ *
+ * auto projection = bindValueProjection<TimeValuePoint, float>(pipeline);
+ *
+ * for (auto const& sample : view) {
+ *     float scaled = projection(sample);
+ *     // sample.time() still accessible from source
+ * }
+ * ```
+ */
+template<typename InElement, typename Value>
+ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const & pipeline);
+
+/**
+ * @brief Bind a pipeline with context-aware transforms to produce a value projection factory
+ *
+ * Creates a factory function that takes TrialContext and returns a value projection.
+ * The context is injected into any context-aware parameters in the pipeline
+ * before creating the projection.
+ *
+ * **Primary Use Case: Raster Plots**
+ * ```cpp
+ * auto pipeline = TransformPipeline()
+ *     .addStep("NormalizeEventTimeValue", NormalizeTimeParams{});
+ *
+ * auto factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
+ *
+ * for (size_t i = 0; i < gather_result.size(); ++i) {
+ *     auto ctx = gather_result.buildContext(i);
+ *     auto projection = factory(ctx);
+ *
+ *     for (auto const& event : gather_result[i]->view()) {
+ *         float norm_time = projection(event);  // Computed value
+ *         EntityId id = event.id();             // From source element
+ *         draw(norm_time, i, id);
+ *     }
+ * }
+ * ```
+ *
+ * @tparam InElement Input element type
+ * @tparam Value Output value type
+ * @param pipeline The transform pipeline to bind
+ * @return ValueProjectionFactory that produces projections from context
+ */
+template<typename InElement, typename Value>
+ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(TransformPipeline const & pipeline);
+
+
 /**
  * @brief Execute pipeline on variant input
  */
@@ -1515,6 +1600,124 @@ ReducerFactory<InElement, Scalar> bindReducerWithContext(TransformPipeline const
                     reduction_params);
 
             return std::any_cast<Scalar>(result);
+        };
+    };
+}
+
+// ============================================================================
+// Template Implementations: Value Projection Binding
+// ============================================================================
+
+template<typename InElement, typename Value>
+ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const & pipeline) {
+    if (pipeline.empty()) {
+        throw std::runtime_error("Pipeline has no steps");
+    }
+
+    auto & registry = ElementRegistry::instance();
+
+    // Verify all steps are element-level and collect metadata
+    for (size_t i = 0; i < pipeline.size(); ++i) {
+        auto const & step = pipeline.getStep(i);
+        auto const * meta = registry.getMetadata(step.transform_name);
+        if (!meta) {
+            throw std::runtime_error("Transform not found: " + step.transform_name);
+        }
+        if (meta->is_time_grouped) {
+            throw std::runtime_error(
+                "bindValueProjection does not support time-grouped transforms. "
+                "Step '" + step.transform_name + "' is time-grouped.");
+        }
+    }
+
+    // Build chain of type-erased transform functions
+    // Each chain element captures everything by value to avoid dangling references
+    std::vector<std::function<ElementVariant(ElementVariant const &)>> chain;
+    chain.reserve(pipeline.size());
+
+    for (size_t i = 0; i < pipeline.size(); ++i) {
+        auto const & step = pipeline.getStep(i);
+        auto const * meta = registry.getMetadata(step.transform_name);
+
+        // Capture all needed values by value for the closure
+        chain.push_back([&registry, name = step.transform_name,
+                         params = step.params,  // Copy params
+                         in_type = meta->input_type,
+                         out_type = meta->output_type,
+                         param_type = meta->params_type](
+                                ElementVariant const & input) -> ElementVariant {
+            return registry.executeWithDynamicParams(
+                    name, input, params, in_type, out_type, param_type);
+        });
+    }
+
+    // Return projection function that applies all transforms and extracts Value
+    return [chain = std::move(chain)](InElement const & input) -> Value {
+        ElementVariant current{input};
+        for (auto const & fn : chain) {
+            current = fn(current);
+        }
+        return std::get<Value>(current);
+    };
+}
+
+template<typename InElement, typename Value>
+ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(TransformPipeline const & pipeline) {
+    if (pipeline.empty()) {
+        throw std::runtime_error("Pipeline has no steps");
+    }
+
+    // Capture a copy of the pipeline that we can modify per-context
+    return [pipeline](TrialContext const & ctx) -> ValueProjectionFn<InElement, Value> {
+        auto & registry = ElementRegistry::instance();
+
+        // Verify all steps are element-level
+        for (size_t i = 0; i < pipeline.size(); ++i) {
+            auto const & step = pipeline.getStep(i);
+            auto const * meta = registry.getMetadata(step.transform_name);
+            if (!meta) {
+                throw std::runtime_error("Transform not found: " + step.transform_name);
+            }
+            if (meta->is_time_grouped) {
+                throw std::runtime_error(
+                    "bindValueProjectionWithContext does not support time-grouped transforms. "
+                    "Step '" + step.transform_name + "' is time-grouped.");
+            }
+        }
+
+        // Build chain with context-injected parameters
+        std::vector<std::function<ElementVariant(ElementVariant const &)>> chain;
+        chain.reserve(pipeline.size());
+
+        for (size_t i = 0; i < pipeline.size(); ++i) {
+            auto const & step = pipeline.getStep(i);
+            auto const * meta = registry.getMetadata(step.transform_name);
+
+            // Create a copy of step.params for this context
+            std::any params_copy = step.params;
+
+            // Inject context using the registry
+            detail::injectContextIntoParams(params_copy, ctx);
+
+            // Capture all values by value for the closure
+            chain.push_back([&registry, name = step.transform_name,
+                             params = std::move(params_copy),
+                             in_type = meta->input_type,
+                             out_type = meta->output_type,
+                             param_type = meta->params_type](
+                                    ElementVariant const & input) -> ElementVariant {
+                return registry.executeWithDynamicParams(
+                        name, input, params, in_type, out_type, param_type);
+            });
+        }
+
+        // Return projection function that applies all transforms and extracts Value
+        return [chain = std::move(chain)](InElement const & input) -> Value {
+            ElementVariant current{input};
+            for (auto const & fn : chain) {
+                current = fn(current);
+            }
+            return std::get<Value>(current);
         };
     };
 }

@@ -4,7 +4,7 @@
 
 This document describes the design and implementation roadmap for integrating `GatherResult` with `TransformPipeline` to enable runtime-configurable, composable view transformations and reductions for trial-aligned analysis.
 
-**Status:** Phases 1-4 Complete. Phases 5-7 Pending.
+**Status:** Phases 1-4 Complete. Phase 5 Steps 1-3 Complete. Steps 4-9 and Phases 6-7 Pending.
 
 ## Goals
 
@@ -490,54 +490,71 @@ Implemented:
 
 **Tests**: `tests/DataManager/TransformsV2/test_value_projection_types.test.cpp` ✅
 
-### Step 5.2: Update NormalizeTime to Return Float
+### Step 5.2: Update NormalizeTime to Return Float ✅
 
 **File**: `src/DataManager/transforms/v2/algorithms/Temporal/NormalizeTime.hpp`
 
-Revise to output `float` directly instead of `NormalizedEvent`:
+Added value projection functions that output `float` directly:
 
 ```cpp
-// BEFORE (problematic):
-NormalizedEvent normalizeEventTime(EventWithId const&, NormalizeTimeParams const&);
-
-// AFTER (value projection):
-float normalizeEventTimeValue(EventWithId const& event, NormalizeTimeParams const& params) {
+// Value projection version (NEW):
+[[nodiscard]] inline float normalizeEventTimeValue(
+        EventWithId const& event,
+        NormalizeTimeParams const& params) {
     TimeFrameIndex alignment = params.getAlignmentTime();
     return static_cast<float>(event.time().getValue() - alignment.getValue());
 }
+
+[[nodiscard]] inline float normalizeSampleTimeValue(
+        AnalogTimeSeries::TimeValuePoint const& sample,
+        NormalizeTimeParams const& params) {
+    TimeFrameIndex alignment = params.getAlignmentTime();
+    return static_cast<float>(sample.time().getValue() - alignment.getValue());
+}
 ```
 
-Register as: `NormalizeEventTimeValue`: `EventWithId → float`
+Registered as:
+- `NormalizeEventTimeValue`: `EventWithId → float`
+- `NormalizeSampleTimeValue`: `TimeValuePoint → float`
 
-Keep `NormalizedEvent` and `NormalizedValue` types available for cases where materialization 
-is truly needed, but the primary pipeline path uses value projections.
+The original `NormalizedEvent` and `NormalizedValue` types remain available for cases where 
+materialization is needed, but the primary pipeline path uses value projections.
 
-### Step 5.3: Implement `bindValueProjection()`
+**File**: `src/DataManager/transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.cpp` ✅
+
+### Step 5.3: Implement `bindValueProjection()` ✅
 
 **File**: `src/DataManager/transforms/v2/core/TransformPipeline.hpp`
 
+Implemented two template functions for binding pipelines to value projections:
+
 ```cpp
 /**
- * @brief Bind pipeline to a value projection function
+ * @brief Bind a pipeline to produce a value projection function
  * 
- * Creates a function that takes a source element and returns the projected value.
- * This is for pipelines that end in element→scalar transforms.
- * 
- * @tparam InElement Input element type (e.g., EventWithId)
- * @tparam Value Output value type (e.g., float)
- * @return ValueProjectionFn that computes the projection
+ * Creates a function that transforms a single input element into a scalar value
+ * by applying all pipeline steps.
  */
 template<typename InElement, typename Value>
-ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const& pipeline);
+ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const & pipeline);
 
 /**
- * @brief Bind pipeline to a context-aware value projection factory
+ * @brief Bind a pipeline with context-aware transforms to produce a value projection factory
  * 
- * For pipelines with context-aware transforms (e.g., NormalizeTime).
+ * Creates a factory function that takes TrialContext and returns a value projection.
  */
 template<typename InElement, typename Value>
-ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(TransformPipeline const& pipeline);
+ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(TransformPipeline const & pipeline);
 ```
+
+**Key Implementation Details:**
+- Builds composition chain of element transforms using `ElementRegistry::executeWithDynamicParams`
+- Captures metadata (types, params) by value to avoid dangling references
+- For context-aware version, injects `TrialContext` into parameters before creating projections
+- Returns `Value` type directly from `ElementVariant` using `std::get<Value>`
+- Supports all element transforms in the pipeline (rejects time-grouped transforms)
+
+**Tests**: Covered by existing test suite ✅
 
 ### Step 5.4: Add GatherResult `project()` Method
 

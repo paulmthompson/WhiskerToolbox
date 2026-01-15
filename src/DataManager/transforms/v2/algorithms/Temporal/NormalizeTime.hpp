@@ -356,6 +356,82 @@ struct NormalizeTimeParams {
     };
 }
 
+// ============================================================================
+// Value Projection Functions (Return float directly)
+// ============================================================================
+
+/**
+ * @brief Normalize event time to float value (value projection)
+ *
+ * This is the **value projection** version of normalizeEventTime.
+ * Instead of returning a NormalizedEvent struct, it returns just the
+ * normalized time as a float. The EntityId can be obtained from the
+ * source EventWithId directly.
+ *
+ * ## Use Case: Trial-Aligned Analysis
+ *
+ * When drawing raster plots or computing statistics, you often need:
+ * - The normalized time (computed via projection)
+ * - The EntityId (from the source element)
+ *
+ * Using value projection avoids creating intermediate types and keeps
+ * the transform pipeline simpler.
+ *
+ * @param event Input event with absolute time
+ * @param params Parameters containing alignment time from context
+ * @return float The normalized time (event.time() - alignment_time)
+ * @throws std::runtime_error if params.alignment_time is not set
+ *
+ * Example:
+ * ```cpp
+ * EventWithId event{TimeFrameIndex{125}, EntityId{1}};
+ * NormalizeTimeParams params;
+ * params.setAlignmentTime(TimeFrameIndex{100});
+ *
+ * float norm_time = normalizeEventTimeValue(event, params);
+ * // norm_time == 25.0f
+ * // event.id() still available from source
+ * ```
+ *
+ * @see ValueProjectionTypes.hpp for value projection infrastructure
+ * @see makeValueView() for lazy iteration with projections
+ */
+[[nodiscard]] inline float normalizeEventTimeValue(
+        EventWithId const& event,
+        NormalizeTimeParams const& params) {
+    TimeFrameIndex alignment = params.getAlignmentTime();
+    return static_cast<float>(event.time().getValue() - alignment.getValue());
+}
+
+/**
+ * @brief Normalize analog sample time to float value (value projection)
+ *
+ * This is the **value projection** version of normalizeValueTime.
+ * Returns only the normalized time, not the sample value.
+ *
+ * @param sample Input sample with absolute time
+ * @param params Parameters containing alignment time from context
+ * @return float The normalized time (sample.time() - alignment_time)
+ * @throws std::runtime_error if params.alignment_time is not set
+ *
+ * Example:
+ * ```cpp
+ * TimeValuePoint sample{TimeFrameIndex{150}, 3.5f};
+ * NormalizeTimeParams params;
+ * params.setAlignmentTime(TimeFrameIndex{100});
+ *
+ * float norm_time = normalizeSampleTimeValue(sample, params);
+ * // norm_time == 50.0f
+ * // sample.value() still available from source
+ * ```
+ */
+[[nodiscard]] inline float normalizeSampleTimeValue(
+        AnalogTimeSeries::TimeValuePoint const& sample,
+        NormalizeTimeParams const& params) {
+    TimeFrameIndex alignment = params.getAlignmentTime();
+    return static_cast<float>(sample.time().getValue() - alignment.getValue());
+}
+
 }  // namespace WhiskerToolbox::Transforms::V2
 
 #endif  // WHISKERTOOLBOX_V2_NORMALIZE_TIME_HPP
