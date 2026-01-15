@@ -257,6 +257,10 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.cpp
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp
         transforms/v2/algorithms/MaskCentroid/MaskCentroid.cpp
+        transforms/v2/algorithms/RangeReductions/EventRangeReductions.hpp
+        transforms/v2/algorithms/RangeReductions/ValueRangeReductions.hpp
+        transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.hpp
+        transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.cpp
 
         # Lineage subsystem (only DataManager-specific files remain here)
         # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library

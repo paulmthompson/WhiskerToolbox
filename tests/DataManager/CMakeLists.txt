@@ -125,6 +125,7 @@ add_executable(test_data_manager
         TransformsV2/test_multi_input_pipeline.test.cpp
         TransformsV2/test_range_reduction_types.test.cpp
         TransformsV2/test_range_reduction_registry.test.cpp
+        TransformsV2/test_range_reductions.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp

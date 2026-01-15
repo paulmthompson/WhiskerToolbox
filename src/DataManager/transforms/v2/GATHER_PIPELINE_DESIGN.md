@@ -4,7 +4,7 @@
 
 This document describes the design and implementation roadmap for integrating `GatherResult` with `TransformPipeline` to enable runtime-configurable, composable view transformations and reductions for trial-aligned analysis.
 
-**Status:** Phase 1 (RangeReductionRegistry) Complete. Phases 2-7 Pending.
+**Status:** Phases 1-2 Complete. Phases 3-7 Pending.
 
 ## Goals
 
@@ -191,52 +191,62 @@ Tests cover:
 
 ---
 
-## Phase 2: Example Range Reductions
+## Phase 2: Example Range Reductions ✅ COMPLETED
 
 **Goal**: Implement common range reductions that demonstrate the pattern.
 
-**Status**: Not started
+**Status**: Complete
 
 **Note**: These are distinct from existing `TimeGroupedTransform` reductions like `SumReduction`.
 Range reductions collapse an entire range to a scalar, while TimeGroupedTransforms
 operate per-time-point within a container's temporal structure.
 
-### Step 2.1: Event Range Reductions
+### Step 2.1: Event Range Reductions ✅
 
-**File**: `src/DataManager/transforms/v2/algorithms/RangeReductions/EventRangeReductions.hpp` (pending)
+**File**: [src/DataManager/transforms/v2/algorithms/RangeReductions/EventRangeReductions.hpp](../algorithms/RangeReductions/EventRangeReductions.hpp)
 
 | Reduction | Input | Output | Description |
 |-----------|-------|--------|-------------|
+| `EventCount` | `EventWithId` | `int` | Number of events |
 | `FirstPositiveLatency` | `EventWithId` | `float` | Time of first event with t > 0 |
 | `LastNegativeLatency` | `EventWithId` | `float` | Time of last event with t < 0 |
-| `EventCount` | `EventWithId` | `int` | Number of events |
-| `EventCountInWindow` | `EventWithId` | `int` | Events within time window |
+| `EventCountInWindow` | `EventWithId` | `int` | Events within time window (parameterized) |
+| `MeanInterEventInterval` | `EventWithId` | `float` | Mean interval between events |
+| `EventTimeSpan` | `EventWithId` | `float` | Duration from first to last event |
 
-### Step 2.2: Value Range Reductions
+### Step 2.2: Value Range Reductions ✅
 
-**File**: `src/DataManager/transforms/v2/algorithms/RangeReductions/ValueRangeReductions.hpp` (pending)
+**File**: [src/DataManager/transforms/v2/algorithms/RangeReductions/ValueRangeReductions.hpp](../algorithms/RangeReductions/ValueRangeReductions.hpp)
 
 | Reduction | Input | Output | Description |
 |-----------|-------|--------|-------------|
-| `MaxValue` | `ValueElement` | `float` | Maximum value |
-| `MinValue` | `ValueElement` | `float` | Minimum value |
-| `MeanValue` | `ValueElement` | `float` | Mean value |
-| `TimeOfMax` | `ValueElement` | `float` | Time at which max occurs |
-| `TimeOfMin` | `ValueElement` | `float` | Time at which min occurs |
-| `TimeOfThresholdCross` | `ValueElement` | `float` | First time value crosses threshold |
+| `MaxValue` | `TimeValuePoint` | `float` | Maximum value |
+| `MinValue` | `TimeValuePoint` | `float` | Minimum value |
+| `MeanValue` | `TimeValuePoint` | `float` | Mean value |
+| `StdValue` | `TimeValuePoint` | `float` | Standard deviation |
+| `TimeOfMax` | `TimeValuePoint` | `float` | Time at which max occurs |
+| `TimeOfMin` | `TimeValuePoint` | `float` | Time at which min occurs |
+| `TimeOfThresholdCross` | `TimeValuePoint` | `float` | First time value crosses threshold (parameterized) |
+| `SumValue` | `TimeValuePoint` | `float` | Sum of all values |
+| `ValueRange` | `TimeValuePoint` | `float` | Max - Min |
+| `AreaUnderCurve` | `TimeValuePoint` | `float` | Trapezoidal integration |
+| `CountAboveThreshold` | `TimeValuePoint` | `int` | Samples above threshold (parameterized) |
+| `FractionAboveThreshold` | `TimeValuePoint` | `float` | Fraction above threshold (parameterized) |
 
-### Step 2.3: Registration
+### Step 2.3: Registration ✅
 
-**File**: `src/DataManager/transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.cpp` (pending)
+**File**: [src/DataManager/transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.cpp](../algorithms/RangeReductions/RegisteredRangeReductions.cpp)
 
-Register all reductions with metadata for discoverability.
+All reductions registered with metadata for discoverability at static initialization time.
 
-### Step 2.4: Tests
+### Step 2.4: Tests ✅
 
-**File**: `tests/DataManager/TransformsV2/test_range_reductions.test.cpp` (pending)
+**File**: [tests/DataManager/TransformsV2/test_range_reductions.test.cpp](../../../../tests/DataManager/TransformsV2/test_range_reductions.test.cpp)
 
-- Test each reduction with known inputs
-- Test edge cases (empty range, no match, etc.)
+- All reductions tested with known inputs
+- Edge cases covered (empty range, no match, NaN results)
+- Registry integration tests verify discovery API
+- All tests passing ✅
 
 ---
 
@@ -404,15 +414,15 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
 | Phase | Status | Effort | Dependencies | Priority |
 |-------|--------|--------|--------------|----------|
 | 1. RangeReductionRegistry | ✅ Complete | 2-3 days | None | Critical |
-| 2. Example Range Reductions | Not Started | 1-2 days | Phase 1 | Critical |
+| 2. Example Range Reductions | ✅ Complete | 1-2 days | Phase 1 | Critical |
 | 3. Context-Aware Params | Not Started | 1-2 days | None | Critical |
 | 4. Pipeline Adaptor API | Not Started | 3-4 days | Phases 1-3 | Critical |
 | 5. GatherResult Integration | Not Started | 2-3 days | Phase 4 | Critical |
 | 6. JSON Serialization | Not Started | 1-2 days | Phases 1-5 | High |
 | 7. Documentation | Not Started | 1-2 days | All | Medium |
 
-**Completed Effort**: 2-3 days (Phase 1)  
-**Remaining Estimated Effort**: 9-15 days
+**Completed Effort**: 3-5 days (Phases 1-2)  
+**Remaining Estimated Effort**: 8-14 days
 
 ---
 
