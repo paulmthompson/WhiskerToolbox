@@ -59,9 +59,13 @@
 
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <any>
 #include <concepts>
+#include <functional>
 #include <optional>
+#include <typeindex>
 #include <type_traits>
+#include <unordered_map>
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -239,6 +243,91 @@ template<typename Params>
         return true;
     }
 }
+
+// ============================================================================
+// Type-Erased Context Injection for std::any Parameters
+// ============================================================================
+
+/**
+ * @brief Registry for type-erased context injection
+ *
+ * Allows registering context injectors for specific parameter types,
+ * enabling context injection into std::any parameters at runtime.
+ *
+ * This is used by TransformPipeline to inject TrialContext into
+ * parameters without knowing their concrete types at compile time.
+ */
+class ContextInjectorRegistry {
+public:
+    using Injector = std::function<void(std::any&, TrialContext const&)>;
+
+    ContextInjectorRegistry() = default;
+
+    /**
+     * @brief Get the global singleton instance
+     */
+    static ContextInjectorRegistry& instance() {
+        static ContextInjectorRegistry registry;
+        return registry;
+    }
+
+    /**
+     * @brief Register a context injector for a specific parameter type
+     *
+     * @tparam Params The parameter type (must be context-aware)
+     */
+    template<typename Params>
+        requires TrialContextAwareParams<Params>
+    void registerInjector() {
+        std::type_index type_idx = typeid(Params);
+        injectors_[type_idx] = [](std::any& params_any, TrialContext const& ctx) {
+            auto& params = std::any_cast<Params&>(params_any);
+            params.setContext(ctx);
+        };
+    }
+
+    /**
+     * @brief Try to inject context into a type-erased parameter
+     *
+     * @param params_any The std::any containing parameters
+     * @param ctx The context to inject
+     * @return true if injection was performed, false if no injector registered
+     */
+    bool tryInject(std::any& params_any, TrialContext const& ctx) const {
+        auto it = injectors_.find(std::type_index(params_any.type()));
+        if (it != injectors_.end()) {
+            it->second(params_any, ctx);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @brief Check if an injector is registered for a type
+     */
+    bool hasInjector(std::type_index type_idx) const {
+        return injectors_.find(type_idx) != injectors_.end();
+    }
+
+private:
+    std::unordered_map<std::type_index, Injector> injectors_;
+};
+
+/**
+ * @brief Helper to register a context injector
+ *
+ * Use at static initialization time:
+ * ```cpp
+ * static RegisterContextInjector<NormalizeTimeParams> reg_normalizer;
+ * ```
+ */
+template<typename Params>
+    requires TrialContextAwareParams<Params>
+struct RegisterContextInjector {
+    RegisterContextInjector() {
+        ContextInjectorRegistry::instance().registerInjector<Params>();
+    }
+};
 
 }  // namespace WhiskerToolbox::Transforms::V2
 

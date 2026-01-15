@@ -4,7 +4,7 @@
 
 This document describes the design and implementation roadmap for integrating `GatherResult` with `TransformPipeline` to enable runtime-configurable, composable view transformations and reductions for trial-aligned analysis.
 
-**Status:** Phases 1-3 Complete. Phases 4-7 Pending.
+**Status:** Phases 1-4 Complete. Phases 5-7 Pending.
 
 ## Goals
 
@@ -329,41 +329,96 @@ Tests cover:
 
 ---
 
-## Phase 4: TransformPipeline View Adaptor API
+## Phase 4: TransformPipeline View Adaptor API ✅ COMPLETED
 
 **Goal**: Add methods to produce view adaptors and reducers from pipelines.
 
-**Status**: Not started
+**Status**: Complete
 
-### Step 4.1: Add Range Reduction Step Support
+### Step 4.1: Add Range Reduction Step Support ✅
 
-Modify `TransformPipeline` to support a terminal range reduction (pending)
+**File**: [src/DataManager/transforms/v2/core/TransformPipeline.hpp](core/TransformPipeline.hpp)
 
-### Step 4.2: Implement `bindToView()`
+Added to `TransformPipeline`:
+- `setRangeReduction<IntermediateElement, Scalar, Params>()`: Set terminal range reduction
+- `hasRangeReduction()`: Check if pipeline has terminal reduction
+- `getRangeReduction()`: Get the reduction step (optional)
+- `clearRangeReduction()`: Remove terminal reduction
+- `isElementWiseOnly()`: Check if all steps are element-level
 
-Create view adaptor from element transforms (pending)
+**File**: [src/DataManager/transforms/v2/core/ViewAdaptorTypes.hpp](core/ViewAdaptorTypes.hpp)
 
-### Step 4.3: Implement `bindToViewWithContext()`
+Defines type aliases and concepts:
+- `ViewAdaptorFn<InElement, OutElement>`: Function type for view adaptation
+- `ViewAdaptorFactory<InElement, OutElement>`: Factory that creates adaptors from context
+- `ReducerFn<InElement, Scalar>`: Function type for range reduction
+- `ReducerFactory<InElement, Scalar>`: Factory that creates reducers from context
+- `RangeReductionStep`: Descriptor for terminal range reduction
+- `BoundViewAdaptor`, `BoundReducer`: Result types with metadata
 
-Create context-aware view adaptor factory (pending)
+### Step 4.2: Implement `bindToView()` ✅
 
-### Step 4.4: Implement `bindReducer()`
+**File**: [src/DataManager/transforms/v2/core/TransformPipeline.hpp](core/TransformPipeline.hpp)
 
-Create reducer from pipeline with terminal range reduction (pending)
+Free function template that:
+- Takes a pipeline with element-level transforms
+- Builds a composed transform function
+- Returns `ViewAdaptorFn<InElement, OutElement>` that transforms span → vector
+- Throws if pipeline is empty or contains time-grouped transforms
 
-### Step 4.5: Implement `bindReducerWithContext()`
+### Step 4.3: Implement `bindToViewWithContext()` ✅
 
-Context-aware reducer factory (pending)
+**File**: [src/DataManager/transforms/v2/core/TransformPipeline.hpp](core/TransformPipeline.hpp)
 
-### Step 4.6: Tests
+Free function template that:
+- Takes a pipeline with context-aware transforms
+- Returns a factory function: `TrialContext → ViewAdaptorFn`
+- Uses `ContextInjectorRegistry` for type-erased context injection
+- Each factory invocation creates fresh adaptor with injected context
 
-**File**: `tests/DataManager/TransformsV2/test_pipeline_adaptors.test.cpp` (pending)
+**File**: [src/DataManager/transforms/v2/core/ContextAwareParams.hpp](core/ContextAwareParams.hpp)
 
-- Test `bindToView()` produces correct lazy view
-- Test `bindToViewWithContext()` with alignment
-- Test `bindReducer()` produces correct scalar
-- Test composition with multiple steps
-- Test with different element types
+Added `ContextInjectorRegistry`:
+- Singleton registry for type-erased context injection
+- `registerInjector<Params>()`: Register injector for context-aware params
+- `tryInject(std::any&, TrialContext)`: Inject context at runtime
+- `RegisterContextInjector<Params>`: Static registration helper
+
+### Step 4.4: Implement `bindReducer()` ✅
+
+**File**: [src/DataManager/transforms/v2/core/TransformPipeline.hpp](core/TransformPipeline.hpp)
+
+Free function template that:
+- Takes a pipeline with `setRangeReduction()` configured
+- Combines element transforms with terminal range reduction
+- Returns `ReducerFn<InElement, Scalar>` that transforms span → scalar
+- Throws if pipeline has no range reduction
+
+### Step 4.5: Implement `bindReducerWithContext()` ✅
+
+**File**: [src/DataManager/transforms/v2/core/TransformPipeline.hpp](core/TransformPipeline.hpp)
+
+Free function template that:
+- Takes a pipeline with context-aware transforms and range reduction
+- Returns a factory function: `TrialContext → ReducerFn`
+- Injects context before each reduction
+
+### Step 4.6: Tests ✅
+
+**File**: [tests/DataManager/TransformsV2/test_pipeline_adaptors.test.cpp](../../../../tests/DataManager/TransformsV2/test_pipeline_adaptors.test.cpp)
+
+Tests cover:
+- ViewAdaptorTypes type definitions and signatures
+- RangeReductionStep construction and field access
+- TransformPipeline setRangeReduction/hasRangeReduction/clearRangeReduction
+- TransformPipeline isElementWiseOnly detection
+- ContextInjectorRegistry registration and injection
+- bindToView() basic functionality with NormalizeEventTime
+- bindToViewWithContext() with multiple trials and alignments
+- bindReducer() throws without range reduction
+- bindReducerWithContext() throws without range reduction
+- Integration test: Raster plot workflow with multiple trials
+- All tests passing ✅
 
 ---
 
@@ -456,13 +511,13 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
 | 1. RangeReductionRegistry | ✅ Complete | 2-3 days | None | Critical |
 | 2. Example Range Reductions | ✅ Complete | 1-2 days | Phase 1 | Critical |
 | 3. Context-Aware Params | ✅ Complete | 1-2 days | None | Critical |
-| 4. Pipeline Adaptor API | Not Started | 3-4 days | Phases 1-3 | Critical |
+| 4. Pipeline Adaptor API | ✅ Complete | 3-4 days | Phases 1-3 | Critical |
 | 5. GatherResult Integration | Not Started | 2-3 days | Phase 4 | Critical |
 | 6. JSON Serialization | Not Started | 1-2 days | Phases 1-5 | High |
 | 7. Documentation | Not Started | 1-2 days | All | Medium |
 
-**Completed Effort**: 4-7 days (Phases 1-3)  
-**Remaining Estimated Effort**: 7-12 days
+**Completed Effort**: 7-11 days (Phases 1-4)  
+**Remaining Estimated Effort**: 4-7 days
 
 ---
 

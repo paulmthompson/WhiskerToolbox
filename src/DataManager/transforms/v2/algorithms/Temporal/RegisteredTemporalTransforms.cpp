@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "transforms/v2/algorithms/Temporal/NormalizeTime.hpp"
+#include "transforms/v2/core/ContextAwareParams.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
 
@@ -16,6 +17,13 @@ using WhiskerToolbox::Transforms::V2::Examples::registerPipelineStepFactoryFor;
 // ============================================================================
 
 namespace {
+
+/**
+ * @brief Register context injector for NormalizeTimeParams
+ *
+ * This enables automatic context injection in TransformPipeline binding.
+ */
+static RegisterContextInjector<NormalizeTimeParams> const register_context_injector;
 
 /**
  * @brief Register PipelineStep factories for temporal parameter types
@@ -125,6 +133,7 @@ void registerTemporalTransforms() {
     (void)register_normalize_event_time;
     (void)register_normalize_value_time;
     (void)init_pipeline_factories;
+    (void)register_context_injector;
 }
 
 }  // namespace WhiskerToolbox::Transforms::V2::Temporal

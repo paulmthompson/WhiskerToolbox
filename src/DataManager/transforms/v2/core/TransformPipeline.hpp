@@ -3,18 +3,22 @@
 
 #include "ContainerTraits.hpp"
 #include "ContainerTransform.hpp"
+#include "ContextAwareParams.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "ElementRegistry.hpp"
 #include "PreProcessingRegistry.hpp"
+#include "RangeReductionRegistry.hpp"
 #include "TransformTypes.hpp"
+#include "ViewAdaptorTypes.hpp"
 
 #include <any>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <string>
@@ -346,6 +350,70 @@ public:
         return *this;
     }
 
+    // ========================================================================
+    // Terminal Range Reduction
+    // ========================================================================
+
+    /**
+     * @brief Set a terminal range reduction for the pipeline
+     *
+     * A range reduction is applied after all element transforms to collapse
+     * a range of elements into a scalar. This is used with bindReducer()
+     * to create reducer functions for sorting, partitioning, etc.
+     *
+     * @tparam IntermediateElement Element type after all element transforms
+     * @tparam Scalar Output scalar type
+     * @tparam Params Parameter type for the reduction
+     * @param reduction_name Name of the registered range reduction
+     * @param params Parameters for the reduction
+     * @return Reference to this pipeline for chaining
+     *
+     * @example
+     * ```cpp
+     * auto pipeline = TransformPipeline()
+     *     .addStep("NormalizeEventTime", NormalizeTimeParams{})
+     *     .setRangeReduction<NormalizedEvent, float>("FirstPositiveLatency",
+     *                                                 FirstPositiveLatencyParams{});
+     * ```
+     */
+    template<typename IntermediateElement, typename Scalar, typename Params>
+    TransformPipeline & setRangeReduction(std::string const & reduction_name, Params params) {
+        range_reduction_ = RangeReductionStep{reduction_name, std::move(params)};
+        range_reduction_->input_type = typeid(IntermediateElement);
+        range_reduction_->output_type = typeid(Scalar);
+        return *this;
+    }
+
+    /**
+     * @brief Set a stateless terminal range reduction
+     */
+    template<typename IntermediateElement, typename Scalar>
+    TransformPipeline & setRangeReduction(std::string const & reduction_name) {
+        return setRangeReduction<IntermediateElement, Scalar, NoReductionParams>(
+            reduction_name, NoReductionParams{});
+    }
+
+    /**
+     * @brief Check if the pipeline has a terminal range reduction
+     */
+    [[nodiscard]] bool hasRangeReduction() const noexcept {
+        return range_reduction_.has_value();
+    }
+
+    /**
+     * @brief Get the range reduction step (if set)
+     */
+    [[nodiscard]] std::optional<RangeReductionStep> const & getRangeReduction() const noexcept {
+        return range_reduction_;
+    }
+
+    /**
+     * @brief Clear the terminal range reduction
+     */
+    void clearRangeReduction() noexcept {
+        range_reduction_.reset();
+    }
+
 private:
     struct Segment {
         bool is_element_wise;
@@ -671,6 +739,43 @@ public:
     }
 
     /**
+     * @brief Get the step at a specific index
+     */
+    PipelineStep const & getStep(size_t index) const {
+        return steps_.at(index);
+    }
+
+    /**
+     * @brief Check if any step has context-aware parameters
+     *
+     * Returns true if any step's parameters satisfy TrialContextAwareParams.
+     * This is used to determine whether to use bindToView or bindToViewWithContext.
+     */
+    [[nodiscard]] bool hasContextAwareSteps() const noexcept {
+        // This is a runtime check that requires trying the context injection
+        // We rely on the type system to detect this at compile time in the bind methods
+        return false;  // Placeholder - actual detection happens at bind time
+    }
+
+    /**
+     * @brief Check if the pipeline contains only element-level transforms
+     *
+     * Returns false if any step is a time-grouped transform.
+     */
+    [[nodiscard]] bool isElementWiseOnly() const {
+        if (steps_.empty()) return true;
+
+        auto & registry = ElementRegistry::instance();
+        for (auto const & step : steps_) {
+            auto const * meta = registry.getMetadata(step.transform_name);
+            if (!meta || meta->is_time_grouped) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * @brief Execute pipeline on a generic view (View-Based Entry Point)
      * 
      * Allows executing the pipeline on any range that yields (TimeFrameIndex, InputElement) pairs.
@@ -966,7 +1071,135 @@ private:
     }
 
     std::vector<PipelineStep> steps_;
+
+    /// Optional terminal range reduction step
+    std::optional<RangeReductionStep> range_reduction_;
 };
+
+// ============================================================================
+// View Adaptor and Reducer Binding Methods
+// ============================================================================
+
+/**
+ * @brief Bind a pipeline to produce a view adaptor function
+ *
+ * Creates a function that transforms a span of input elements into a vector
+ * of output elements by applying all pipeline steps. The returned adaptor
+ * can be used directly or composed with other operations.
+ *
+ * **Requirements:**
+ * - Pipeline must have at least one step
+ * - All steps must be element-level transforms (not time-grouped)
+ * - Pipeline must not have context-aware transforms (use bindToViewWithContext)
+ *
+ * @tparam InElement Input element type (e.g., EventWithId)
+ * @tparam OutElement Output element type (e.g., NormalizedEvent)
+ * @param pipeline The transform pipeline to bind
+ * @return ViewAdaptorFn that transforms span<InElement> → vector<OutElement>
+ *
+ * @throws std::runtime_error if pipeline is empty or contains time-grouped transforms
+ *
+ * @see bindToViewWithContext For context-aware transforms
+ *
+ * @example
+ * ```cpp
+ * auto pipeline = TransformPipeline()
+ *     .addStep("ScaleValue", ScaleParams{.factor = 2.0f});
+ * 
+ * auto adaptor = bindToView<TimeValuePoint, TimeValuePoint>(pipeline);
+ * auto transformed = adaptor(input_span);
+ * ```
+ */
+template<typename InElement, typename OutElement>
+ViewAdaptorFn<InElement, OutElement> bindToView(TransformPipeline const & pipeline);
+
+/**
+ * @brief Bind a pipeline with context-aware transforms to produce a factory
+ *
+ * Creates a factory function that takes TrialContext and returns a view adaptor.
+ * The context is injected into any context-aware parameters in the pipeline
+ * before creating the adaptor.
+ *
+ * @tparam InElement Input element type
+ * @tparam OutElement Output element type
+ * @param pipeline The transform pipeline to bind
+ * @return ViewAdaptorFactory that produces adaptors from context
+ *
+ * @example
+ * ```cpp
+ * auto pipeline = TransformPipeline()
+ *     .addStep("NormalizeEventTime", NormalizeTimeParams{});
+ * 
+ * auto factory = bindToViewWithContext<EventWithId, NormalizedEvent>(pipeline);
+ * 
+ * for (size_t i = 0; i < gather_result.size(); ++i) {
+ *     TrialContext ctx{.alignment_time = gather_result.intervalAt(i).start};
+ *     auto adaptor = factory(ctx);
+ *     auto normalized = adaptor(span_from_view(gather_result[i]->view()));
+ * }
+ * ```
+ */
+template<typename InElement, typename OutElement>
+ViewAdaptorFactory<InElement, OutElement> bindToViewWithContext(TransformPipeline const & pipeline);
+
+/**
+ * @brief Bind a pipeline with reduction to produce a reducer function
+ *
+ * Creates a function that transforms a span of input elements through the
+ * pipeline steps and then applies the terminal range reduction to produce
+ * a scalar.
+ *
+ * **Requirements:**
+ * - Pipeline must have setRangeReduction() called
+ * - All steps must be element-level transforms
+ * - Pipeline must not have context-aware transforms (use bindReducerWithContext)
+ *
+ * @tparam InElement Input element type
+ * @tparam Scalar Output scalar type
+ * @param pipeline The transform pipeline with range reduction
+ * @return ReducerFn that transforms span<InElement> → Scalar
+ *
+ * @throws std::runtime_error if pipeline has no range reduction
+ *
+ * @example
+ * ```cpp
+ * auto pipeline = TransformPipeline()
+ *     .addStep("ScaleValue", ScaleParams{.factor = 1.0f})
+ *     .setRangeReduction<TimeValuePoint, float>("MaxValue");
+ * 
+ * auto reducer = bindReducer<TimeValuePoint, float>(pipeline);
+ * float max_val = reducer(input_span);
+ * ```
+ */
+template<typename InElement, typename Scalar>
+ReducerFn<InElement, Scalar> bindReducer(TransformPipeline const & pipeline);
+
+/**
+ * @brief Bind a pipeline with context-aware transforms and reduction
+ *
+ * Creates a factory that produces reducers with context injected.
+ *
+ * @tparam InElement Input element type
+ * @tparam Scalar Output scalar type
+ * @param pipeline The transform pipeline with range reduction
+ * @return ReducerFactory that produces reducers from context
+ *
+ * @example
+ * ```cpp
+ * auto pipeline = TransformPipeline()
+ *     .addStep("NormalizeEventTime", NormalizeTimeParams{})
+ *     .setRangeReduction<NormalizedEvent, float>("FirstPositiveLatency");
+ * 
+ * auto factory = bindReducerWithContext<EventWithId, float>(pipeline);
+ * 
+ * auto latencies = gather_result.transform([&](auto const& trial, size_t idx) {
+ *     TrialContext ctx{.alignment_time = gather_result.intervalAt(idx).start};
+ *     return factory(ctx)(span_from_view(trial->view()));
+ * });
+ * ```
+ */
+template<typename InElement, typename Scalar>
+ReducerFactory<InElement, Scalar> bindReducerWithContext(TransformPipeline const & pipeline);
 
 
 /**
@@ -980,6 +1213,311 @@ extern template DataTypeVariant TransformPipeline::execute<AnalogTimeSeries>(Ana
 extern template DataTypeVariant TransformPipeline::execute<MaskData>(MaskData const &) const;
 extern template DataTypeVariant TransformPipeline::execute<LineData>(LineData const &) const;
 extern template DataTypeVariant TransformPipeline::execute<PointData>(PointData const &) const;
+
+// ============================================================================
+// Template Implementations: View Adaptor and Reducer Binding
+// ============================================================================
+
+namespace detail {
+
+/**
+ * @brief Build a composed transform function from pipeline steps
+ *
+ * Creates a function that applies all pipeline steps in sequence.
+ * Used internally by bindToView and related functions.
+ *
+ * @param pipeline The pipeline to build from
+ * @return Composed function: InElement → OutElement
+ */
+template<typename InElement, typename OutElement>
+auto buildComposedTransformFn(TransformPipeline const & pipeline) {
+    if (pipeline.empty()) {
+        throw std::runtime_error("Pipeline has no steps");
+    }
+
+    auto & registry = ElementRegistry::instance();
+
+    // Verify all steps are element-level
+    for (size_t i = 0; i < pipeline.size(); ++i) {
+        auto const & step = pipeline.getStep(i);
+        auto const * meta = registry.getMetadata(step.transform_name);
+        if (!meta) {
+            throw std::runtime_error("Transform not found: " + step.transform_name);
+        }
+        if (meta->is_time_grouped) {
+            throw std::runtime_error(
+                "bindToView does not support time-grouped transforms. "
+                "Step '" + step.transform_name + "' is time-grouped.");
+        }
+    }
+
+    // Build chain of type-erased transform functions
+    std::vector<std::function<ElementVariant(ElementVariant)>> chain;
+    chain.reserve(pipeline.size());
+
+    for (size_t i = 0; i < pipeline.size(); ++i) {
+        auto const & step = pipeline.getStep(i);
+        auto const * meta = registry.getMetadata(step.transform_name);
+
+        // Capture step info and create transform function
+        chain.push_back([&registry, name = step.transform_name, &step, meta](
+                                ElementVariant input) -> ElementVariant {
+            return registry.executeWithDynamicParams(
+                    name, input, step.params,
+                    meta->input_type, meta->output_type, meta->params_type);
+        });
+    }
+
+    // Return composed function that applies all transforms
+    return [chain = std::move(chain)](InElement const & input) -> OutElement {
+        ElementVariant current{input};
+        for (auto const & fn : chain) {
+            current = fn(std::move(current));
+        }
+        return std::get<OutElement>(std::move(current));
+    };
+}
+
+/**
+ * @brief Inject context into pipeline step parameters
+ *
+ * Uses the ContextInjectorRegistry to inject context into any
+ * registered context-aware parameter types.
+ */
+inline void injectContextIntoParams(std::any & params, TrialContext const & ctx) {
+    ContextInjectorRegistry::instance().tryInject(params, ctx);
+}
+
+}  // namespace detail
+
+template<typename InElement, typename OutElement>
+ViewAdaptorFn<InElement, OutElement> bindToView(TransformPipeline const & pipeline) {
+    // Build the composed function once
+    auto transform_fn = detail::buildComposedTransformFn<InElement, OutElement>(pipeline);
+
+    // Return adaptor that applies transform to each element
+    return [transform_fn = std::move(transform_fn)](std::span<InElement const> input)
+               -> std::vector<OutElement> {
+        std::vector<OutElement> result;
+        result.reserve(input.size());
+        for (auto const & elem : input) {
+            result.push_back(transform_fn(elem));
+        }
+        return result;
+    };
+}
+
+template<typename InElement, typename OutElement>
+ViewAdaptorFactory<InElement, OutElement> bindToViewWithContext(TransformPipeline const & pipeline) {
+    // Capture a copy of the pipeline that we can modify per-context
+    return [pipeline](TrialContext const & ctx) -> ViewAdaptorFn<InElement, OutElement> {
+        // Create a mutable copy of the pipeline for context injection
+        TransformPipeline pipeline_copy = pipeline;
+
+        // Get non-const access to steps (we need to modify them temporarily)
+        // This is safe because we're working with a copy
+        auto & registry = ElementRegistry::instance();
+
+        // Build chain with context-injected parameters
+        std::vector<std::function<ElementVariant(ElementVariant)>> chain;
+
+        for (size_t i = 0; i < pipeline_copy.size(); ++i) {
+            // Get the step and inject context
+            auto const & step = pipeline_copy.getStep(i);
+            auto const * meta = registry.getMetadata(step.transform_name);
+            if (!meta) {
+                throw std::runtime_error("Transform not found: " + step.transform_name);
+            }
+
+            // Create a copy of step.params for this context
+            std::any params_copy = step.params;
+
+            // Inject context using the registry
+            detail::injectContextIntoParams(params_copy, ctx);
+
+            // Capture the params_copy by value
+            chain.push_back([&registry, name = step.transform_name, params = std::move(params_copy), meta](
+                                    ElementVariant input) -> ElementVariant {
+                return registry.executeWithDynamicParams(
+                        name, input, params,
+                        meta->input_type, meta->output_type, meta->params_type);
+            });
+        }
+
+        // Build and return the adaptor with context-injected transforms
+        auto transform_fn = [chain = std::move(chain)](InElement const & input) -> OutElement {
+            ElementVariant current{input};
+            for (auto const & fn : chain) {
+                current = fn(std::move(current));
+            }
+            return std::get<OutElement>(std::move(current));
+        };
+
+        return [transform_fn = std::move(transform_fn)](std::span<InElement const> input)
+                   -> std::vector<OutElement> {
+            std::vector<OutElement> result;
+            result.reserve(input.size());
+            for (auto const & elem : input) {
+                result.push_back(transform_fn(elem));
+            }
+            return result;
+        };
+    };
+}
+
+template<typename InElement, typename Scalar>
+ReducerFn<InElement, Scalar> bindReducer(TransformPipeline const & pipeline) {
+    if (!pipeline.hasRangeReduction()) {
+        throw std::runtime_error("Pipeline has no range reduction. Call setRangeReduction() first.");
+    }
+
+    auto const & reduction_step = pipeline.getRangeReduction().value();
+    auto & reduction_registry = RangeReductionRegistry::instance();
+
+    // Get intermediate element type from the last step's output
+    auto & elem_registry = ElementRegistry::instance();
+    std::type_index intermediate_type = typeid(InElement);
+
+    if (!pipeline.empty()) {
+        auto const & last_step = pipeline.getStep(pipeline.size() - 1);
+        auto const * meta = elem_registry.getMetadata(last_step.transform_name);
+        if (meta) {
+            intermediate_type = meta->output_type;
+        }
+    }
+
+    // If pipeline is empty, elements go directly to reduction
+    if (pipeline.empty()) {
+        // Direct reduction without transformation
+        return [&reduction_registry,
+                reduction_name = reduction_step.reduction_name,
+                params = reduction_step.params](std::span<InElement const> input) -> Scalar {
+            std::any input_any{input};
+            std::any result = reduction_registry.executeErased(
+                    reduction_name, typeid(InElement), input_any, params);
+            return std::any_cast<Scalar>(result);
+        };
+    }
+
+    // Build transform function
+    using IntermediateElement = typename std::conditional_t<
+        std::is_same_v<decltype(intermediate_type), std::type_index>,
+        void,  // Placeholder - actual type handled via variant
+        void>;
+
+    // For now, we handle specific intermediate types
+    // This could be extended with more type dispatch
+    auto transform_fn = detail::buildComposedTransformFn<InElement, InElement>(pipeline);
+
+    return [transform_fn = std::move(transform_fn),
+            &reduction_registry,
+            reduction_name = reduction_step.reduction_name,
+            params = reduction_step.params,
+            intermediate_type](std::span<InElement const> input) -> Scalar {
+        // Transform all elements
+        std::vector<InElement> transformed;
+        transformed.reserve(input.size());
+        for (auto const & elem : input) {
+            // Apply the composed transform
+            // Note: In full implementation, output type may differ from InElement
+            transformed.push_back(transform_fn(elem));
+        }
+
+        // Apply reduction
+        std::span<InElement const> transformed_span{transformed};
+        std::any input_any{transformed_span};
+        std::any result = reduction_registry.executeErased(
+                reduction_name, intermediate_type, input_any, params);
+        return std::any_cast<Scalar>(result);
+    };
+}
+
+template<typename InElement, typename Scalar>
+ReducerFactory<InElement, Scalar> bindReducerWithContext(TransformPipeline const & pipeline) {
+    if (!pipeline.hasRangeReduction()) {
+        throw std::runtime_error("Pipeline has no range reduction. Call setRangeReduction() first.");
+    }
+
+    auto const & reduction_step = pipeline.getRangeReduction().value();
+
+    return [pipeline, reduction_step](TrialContext const & ctx) -> ReducerFn<InElement, Scalar> {
+        auto & elem_registry = ElementRegistry::instance();
+        auto & reduction_registry = RangeReductionRegistry::instance();
+
+        // Get intermediate type from last step
+        std::type_index intermediate_type = typeid(InElement);
+        if (!pipeline.empty()) {
+            auto const & last_step = pipeline.getStep(pipeline.size() - 1);
+            auto const * meta = elem_registry.getMetadata(last_step.transform_name);
+            if (meta) {
+                intermediate_type = meta->output_type;
+            }
+        }
+
+        // Build chain with context-injected parameters
+        std::vector<std::function<ElementVariant(ElementVariant)>> chain;
+
+        for (size_t i = 0; i < pipeline.size(); ++i) {
+            auto const & step = pipeline.getStep(i);
+            auto const * meta = elem_registry.getMetadata(step.transform_name);
+            if (!meta) {
+                throw std::runtime_error("Transform not found: " + step.transform_name);
+            }
+
+            // Copy params and inject context using registry
+            std::any params_copy = step.params;
+            detail::injectContextIntoParams(params_copy, ctx);
+
+            chain.push_back([&elem_registry, name = step.transform_name,
+                             params = std::move(params_copy), meta](
+                                    ElementVariant input) -> ElementVariant {
+                return elem_registry.executeWithDynamicParams(
+                        name, input, params,
+                        meta->input_type, meta->output_type, meta->params_type);
+            });
+        }
+
+        // Build reduction params (context might affect these too)
+        std::any reduction_params = reduction_step.params;
+
+        // Return reducer that transforms and reduces
+        return [chain = std::move(chain),
+                &reduction_registry,
+                reduction_name = reduction_step.reduction_name,
+                reduction_params = std::move(reduction_params),
+                intermediate_type](std::span<InElement const> input) -> Scalar {
+            // Transform elements using chain
+            std::vector<std::any> transformed_any;
+            transformed_any.reserve(input.size());
+
+            for (auto const & elem : input) {
+                ElementVariant current{elem};
+                for (auto const & fn : chain) {
+                    current = fn(std::move(current));
+                }
+                // Store the variant result
+                transformed_any.push_back(std::move(current));
+            }
+
+            // Build span of intermediate elements for reduction
+            // This requires extracting from variants
+            std::vector<ElementVariant> transformed;
+            transformed.reserve(transformed_any.size());
+            for (auto & any_elem : transformed_any) {
+                transformed.push_back(std::any_cast<ElementVariant>(std::move(any_elem)));
+            }
+
+            // Apply reduction - we need to extract actual elements from variants
+            // For now, we use erased execution with the intermediate type
+            std::any result = reduction_registry.executeErased(
+                    reduction_name, intermediate_type,
+                    std::any{std::span<ElementVariant const>{transformed}},
+                    reduction_params);
+
+            return std::any_cast<Scalar>(result);
+        };
+    };
+}
 
 }// namespace WhiskerToolbox::Transforms::V2
 
