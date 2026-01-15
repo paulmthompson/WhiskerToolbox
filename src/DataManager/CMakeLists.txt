@@ -220,6 +220,8 @@ set(DATAMANAGER_SOURCES
         transforms/v2/core/ElementTransform.hpp
         transforms/v2/core/PipelineLoader.hpp
         transforms/v2/core/PipelineLoader.cpp
+        transforms/v2/core/RangeReductionRegistry.hpp
+        transforms/v2/core/RangeReductionTypes.hpp
         transforms/v2/core/RegisteredTransforms.cpp
         transforms/v2/core/TransformPipeline.hpp
         transforms/v2/core/TransformPipeline.cpp
