@@ -491,6 +491,38 @@ public:
         return it->second(json_params);
     }
 
+    /**
+     * @brief Deserialize parameters from JSON string
+     *
+     * Looks up the reduction's parameter type and uses the registered deserializer.
+     *
+     * @param reduction_name Name of the reduction
+     * @param json_str JSON string containing parameters
+     * @return std::any containing typed parameters, or empty std::any on failure
+     */
+    std::any deserializeParameters(
+            std::string const & reduction_name,
+            std::string const & json_str) const {
+        // Get metadata to find parameter type
+        auto const * meta = getMetadata(reduction_name);
+        if (!meta) {
+            return std::any{};  // Reduction not found
+        }
+
+        // Look up deserializer for this parameter type
+        auto it = param_deserializers_.find(meta->params_type);
+        if (it == param_deserializers_.end()) {
+            return std::any{};  // No deserializer registered
+        }
+
+        // Deserialize
+        try {
+            return it->second(json_str);
+        } catch (...) {
+            return std::any{};  // Deserialization failed
+        }
+    }
+
     // ========================================================================
     // Type-Erased Execution (for pipeline use)
     // ========================================================================
@@ -544,6 +576,19 @@ private:
                     reduction, std::move(*params));
         };
 
+        // Register parameter deserializer (by params_type for lookup via metadata)
+        auto params_type_index = std::type_index(typeid(Params));
+        if (param_deserializers_.find(params_type_index) == param_deserializers_.end()) {
+            param_deserializers_[params_type_index] = [](std::string const & json) -> std::any {
+                auto result = rfl::json::read<Params>(json);
+                if (!result) {
+                    throw std::runtime_error("Failed to parse parameters: " +
+                                             std::string(result.error()->what()));
+                }
+                return std::any{std::move(*result)};
+            };
+        }
+
         // Store type triple for discovery
         ReductionTypeTriple triple{
                 std::type_index(typeid(Element)),
@@ -564,6 +609,10 @@ private:
     std::unordered_map<std::string,
                        std::function<std::unique_ptr<IRangeReductionParamExecutor>(std::string const &)>>
             param_executor_factories_;
+
+    // Parameter deserializers (params_type -> deserializer function)
+    std::unordered_map<std::type_index, std::function<std::any(std::string const &)>>
+            param_deserializers_;
 
     // Type triple to name mapping
     std::unordered_map<ReductionTypeTriple, std::string, ReductionTypeTripleHash> type_to_name_;

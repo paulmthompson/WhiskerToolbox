@@ -395,6 +395,35 @@ public:
     }
 
     /**
+     * @brief Set a terminal range reduction with type-erased parameters
+     *
+     * This is used when loading pipelines from JSON where parameter types
+     * are resolved at runtime via the registry. The input/output types will
+     * be determined from the reduction's metadata.
+     *
+     * @param reduction_name Name of the registered range reduction
+     * @param params Type-erased parameters (must match the reduction's expected type)
+     * @return Reference to this pipeline for chaining
+     */
+    TransformPipeline & setRangeReductionErased(std::string const & reduction_name,
+                                                 std::any params) {
+        auto & registry = RangeReductionRegistry::instance();
+        auto const * meta = registry.getMetadata(reduction_name);
+
+        range_reduction_ = RangeReductionStep{};
+        range_reduction_->reduction_name = reduction_name;
+        range_reduction_->params = std::move(params);
+
+        if (meta) {
+            range_reduction_->input_type = meta->input_type;
+            range_reduction_->output_type = meta->output_type;
+            range_reduction_->params_type = meta->params_type;
+        }
+
+        return *this;
+    }
+
+    /**
      * @brief Check if the pipeline has a terminal range reduction
      */
     [[nodiscard]] bool hasRangeReduction() const noexcept {

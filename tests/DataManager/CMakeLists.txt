@@ -122,6 +122,7 @@ add_executable(test_data_manager
         TransformsV2/test_line_min_point_dist_v2.test.cpp
         #TransformsV2/test_zipping_logic.test.cpp
         TransformsV2/test_pipeline_adaptors.test.cpp
+        TransformsV2/test_pipeline_loader.test.cpp
         TransformsV2/test_pipeline_zipping.test.cpp
         TransformsV2/test_mask_to_interval_pipeline.test.cpp
         TransformsV2/test_multi_input_pipeline.test.cpp

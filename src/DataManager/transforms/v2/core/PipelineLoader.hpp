@@ -3,6 +3,7 @@
 
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
+#include "transforms/v2/core/RangeReductionRegistry.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 
 #include <fstream>
@@ -69,9 +70,41 @@ struct PipelineStepDescriptor {
 };
 
 /**
- * @brief Complete pipeline descriptor
+ * @brief Descriptor for a terminal range reduction step
+ * 
+ * Range reductions consume an entire range of elements and produce a scalar.
+ * This is used for trial-based analysis where each trial needs to be reduced
+ * to a single value (e.g., for sorting, partitioning, coloring).
  * 
  * Example JSON:
+ * ```json
+ * {
+ *   "reduction_name": "FirstPositiveLatency",
+ *   "parameters": {
+ *     "normalize_by": "trial_duration"
+ *   }
+ * }
+ * ```
+ */
+struct RangeReductionStepDescriptor {
+    // Name of the reduction (must exist in RangeReductionRegistry)
+    std::string reduction_name;
+
+    // Raw JSON parameters - will be parsed based on reduction_name
+    std::optional<rfl::Generic> parameters;
+
+    // Optional description for documentation
+    std::optional<std::string> description;
+};
+
+/**
+ * @brief Complete pipeline descriptor
+ * 
+ * A pipeline consists of element transform steps and an optional terminal
+ * range reduction. The steps are applied in order to transform elements,
+ * and the range reduction (if present) collapses the result to a scalar.
+ * 
+ * Example JSON without range reduction:
  * ```json
  * {
  *   "metadata": {
@@ -89,10 +122,31 @@ struct PipelineStepDescriptor {
  *   ]
  * }
  * ```
+ * 
+ * Example JSON with range reduction:
+ * ```json
+ * {
+ *   "metadata": {
+ *     "name": "Spike Latency Pipeline",
+ *     "version": "1.0"
+ *   },
+ *   "steps": [
+ *     {
+ *       "step_id": "normalize",
+ *       "transform_name": "NormalizeTimeValue"
+ *     }
+ *   ],
+ *   "range_reduction": {
+ *     "reduction_name": "FirstPositiveLatency",
+ *     "description": "First spike latency after alignment"
+ *   }
+ * }
+ * ```
  */
 struct PipelineDescriptor {
     std::optional<PipelineMetadata> metadata;
     std::vector<PipelineStepDescriptor> steps;
+    std::optional<RangeReductionStepDescriptor> range_reduction;
 };
 
 // ============================================================================
@@ -181,6 +235,20 @@ PipelineStep createPipelineStepFromRegistry(
  * @return rfl::Result<PipelineStep> Success or error message
  */
 rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & descriptor);
+
+/**
+ * @brief Load a range reduction from JSON descriptor
+ * 
+ * This function:
+ * 1. Validates that reduction_name exists in RangeReductionRegistry
+ * 2. Loads parameters using the registry's automatic deserializer
+ * 3. Returns metadata needed to configure the pipeline's range reduction
+ * 
+ * @param descriptor Range reduction descriptor from JSON
+ * @return rfl::Result containing (name, params_any) pair or error message
+ */
+rfl::Result<std::pair<std::string, std::any>> loadRangeReductionFromDescriptor(
+        RangeReductionStepDescriptor const & descriptor);
 
 /**
  * @brief Load a complete pipeline from JSON string

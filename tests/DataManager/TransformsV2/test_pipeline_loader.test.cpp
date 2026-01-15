@@ -1,8 +1,9 @@
 // Unit tests for V2 Pipeline Loader
 // Tests JSON loading, validation, and error handling
 
-#include "transforms/v2/examples/PipelineLoader.hpp"
-#include "transforms/v2/examples/RegisteredTransforms.hpp"
+#include "transforms/v2/core/PipelineLoader.hpp"
+#include "transforms/v2/core/RegisteredTransforms.hpp"
+#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -336,4 +337,224 @@ TEST_CASE("Pipeline descriptor round-trips through JSON", "[pipeline][json][roun
     REQUIRE(recovered.steps[0].step_id == "step1");
     REQUIRE(recovered.steps[0].transform_name == "CalculateMaskArea");
     REQUIRE(recovered.steps[0].parameters.has_value());
+}
+
+// ============================================================================
+// Range Reduction Loading Tests
+// ============================================================================
+
+TEST_CASE("loadPipelineFromJson loads pipeline with range reduction", "[pipeline][json][range_reduction]") {
+    std::string json = R"({
+        "steps": [
+            {
+                "step_id": "step1",
+                "transform_name": "CalculateMaskArea"
+            }
+        ],
+        "range_reduction": {
+            "reduction_name": "EventCount"
+        }
+    })";
+
+    auto result = loadPipelineFromJson(json);
+    REQUIRE(result);
+
+    auto pipeline = result.value();
+    REQUIRE(pipeline.hasRangeReduction());
+
+    auto const& reduction = pipeline.getRangeReduction();
+    REQUIRE(reduction.has_value());
+    REQUIRE(reduction->reduction_name == "EventCount");
+}
+
+TEST_CASE("loadPipelineFromJson loads pipeline with parameterized range reduction", "[pipeline][json][range_reduction]") {
+    std::string json = R"({
+        "steps": [
+            {
+                "step_id": "step1",
+                "transform_name": "CalculateMaskArea"
+            }
+        ],
+        "range_reduction": {
+            "reduction_name": "EventCountInWindow",
+            "parameters": {
+                "window_start": -0.5,
+                "window_end": 1.0
+            }
+        }
+    })";
+
+    auto result = loadPipelineFromJson(json);
+    REQUIRE(result);
+
+    auto pipeline = result.value();
+    REQUIRE(pipeline.hasRangeReduction());
+
+    auto const& reduction = pipeline.getRangeReduction();
+    REQUIRE(reduction.has_value());
+    REQUIRE(reduction->reduction_name == "EventCountInWindow");
+    REQUIRE(reduction->params.has_value());
+}
+
+TEST_CASE("loadPipelineFromJson loads pipeline without range reduction", "[pipeline][json][range_reduction]") {
+    std::string json = R"({
+        "steps": [
+            {
+                "step_id": "step1",
+                "transform_name": "CalculateMaskArea"
+            }
+        ]
+    })";
+
+    auto result = loadPipelineFromJson(json);
+    REQUIRE(result);
+
+    auto pipeline = result.value();
+    REQUIRE_FALSE(pipeline.hasRangeReduction());
+}
+
+TEST_CASE("loadPipelineFromJson rejects unknown range reduction", "[pipeline][json][range_reduction][error]") {
+    std::string json = R"({
+        "steps": [
+            {
+                "step_id": "step1",
+                "transform_name": "CalculateMaskArea"
+            }
+        ],
+        "range_reduction": {
+            "reduction_name": "NonExistentReduction"
+        }
+    })";
+
+    auto result = loadPipelineFromJson(json);
+    REQUIRE_FALSE(result);
+    REQUIRE(std::string(result.error()->what()).find("not found") != std::string::npos);
+}
+
+TEST_CASE("loadRangeReductionFromDescriptor loads stateless reduction", "[pipeline][range_reduction]") {
+    RangeReductionStepDescriptor descriptor{
+        .reduction_name = "EventCount"
+    };
+
+    auto result = loadRangeReductionFromDescriptor(descriptor);
+    REQUIRE(result);
+
+    auto const& [name, params] = result.value();
+    REQUIRE(name == "EventCount");
+    REQUIRE(params.has_value());
+}
+
+TEST_CASE("loadRangeReductionFromDescriptor loads parameterized reduction", "[pipeline][range_reduction]") {
+    std::string param_json = R"({"window_start": 0.0, "window_end": 2.0})";
+    auto param_generic = rfl::json::read<rfl::Generic>(param_json).value();
+
+    RangeReductionStepDescriptor descriptor{
+        .reduction_name = "EventCountInWindow",
+        .parameters = param_generic
+    };
+
+    auto result = loadRangeReductionFromDescriptor(descriptor);
+    REQUIRE(result);
+
+    auto const& [name, params] = result.value();
+    REQUIRE(name == "EventCountInWindow");
+    REQUIRE(params.has_value());
+}
+
+TEST_CASE("loadRangeReductionFromDescriptor rejects unknown reduction", "[pipeline][range_reduction][error]") {
+    RangeReductionStepDescriptor descriptor{
+        .reduction_name = "UnknownReduction"
+    };
+
+    auto result = loadRangeReductionFromDescriptor(descriptor);
+    REQUIRE_FALSE(result);
+    REQUIRE(std::string(result.error()->what()).find("not found") != std::string::npos);
+}
+
+TEST_CASE("RangeReductionStepDescriptor can be serialized to JSON", "[pipeline][json][range_reduction]") {
+    PipelineDescriptor descriptor;
+    descriptor.metadata = PipelineMetadata{
+        .name = "Reduction Pipeline",
+        .version = "1.0"
+    };
+
+    descriptor.steps = {
+        PipelineStepDescriptor{
+            .step_id = "step1",
+            .transform_name = "CalculateMaskArea"
+        }
+    };
+
+    descriptor.range_reduction = RangeReductionStepDescriptor{
+        .reduction_name = "FirstPositiveLatency",
+        .description = "First spike latency"
+    };
+
+    auto json = savePipelineToJson(descriptor);
+    REQUIRE(!json.empty());
+    REQUIRE(json.find("FirstPositiveLatency") != std::string::npos);
+    REQUIRE(json.find("range_reduction") != std::string::npos);
+}
+
+TEST_CASE("Pipeline descriptor with range reduction round-trips through JSON", "[pipeline][json][range_reduction][roundtrip]") {
+    PipelineDescriptor original;
+    original.metadata = PipelineMetadata{
+        .name = "Reduction Pipeline",
+        .version = "1.0"
+    };
+
+    original.steps = {
+        PipelineStepDescriptor{
+            .step_id = "step1",
+            .transform_name = "CalculateMaskArea"
+        }
+    };
+
+    std::string param_json = R"({"window_start": -1.0, "window_end": 1.0})";
+    auto param_generic = rfl::json::read<rfl::Generic>(param_json).value();
+
+    original.range_reduction = RangeReductionStepDescriptor{
+        .reduction_name = "EventCountInWindow",
+        .parameters = param_generic,
+        .description = "Count events in window"
+    };
+
+    // Serialize
+    auto json = savePipelineToJson(original);
+
+    // Deserialize
+    auto result = rfl::json::read<PipelineDescriptor>(json);
+    REQUIRE(result);
+
+    auto recovered = result.value();
+    REQUIRE(recovered.range_reduction.has_value());
+    REQUIRE(recovered.range_reduction->reduction_name == "EventCountInWindow");
+    REQUIRE(recovered.range_reduction->parameters.has_value());
+    REQUIRE(recovered.range_reduction->description.has_value());
+    REQUIRE(recovered.range_reduction->description.value() == "Count events in window");
+}
+
+TEST_CASE("Pipeline with only range reduction (no steps) can be loaded", "[pipeline][json][range_reduction]") {
+    std::string json = R"({
+        "steps": [],
+        "range_reduction": {
+            "reduction_name": "EventCount"
+        }
+    })";
+
+    auto result = loadPipelineFromJson(json);
+    REQUIRE(result);
+
+    auto pipeline = result.value();
+    REQUIRE(pipeline.hasRangeReduction());
+}
+
+TEST_CASE("Pipeline with no steps and no range reduction is rejected", "[pipeline][json][error]") {
+    std::string json = R"({
+        "steps": []
+    })";
+
+    auto result = loadPipelineFromJson(json);
+    REQUIRE_FALSE(result);
+    REQUIRE(std::string(result.error()->what()).find("at least one step or a range reduction") != std::string::npos);
 }

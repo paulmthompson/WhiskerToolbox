@@ -4,7 +4,7 @@
 
 This document describes the design and implementation roadmap for integrating `GatherResult` with `TransformPipeline` to enable runtime-configurable, composable view transformations and reductions for trial-aligned analysis.
 
-**Status:** Phases 1-5 Complete. Phases 6-7 Pending.
+**Status:** Phases 1-6 Complete. Phase 7 Pending.
 
 ## Goals
 
@@ -701,25 +701,57 @@ fundamental types from composite elements and the retention of identity informat
 
 ---
 
-## Phase 6: JSON Serialization
+## Phase 6: JSON Serialization ✅ COMPLETED
 
 **Goal**: Enable saving/loading pipelines with reductions.
 
-**Status**: Not started
+**Status**: Complete
 
-### Step 6.1: Extend PipelineDescriptor
+### Step 6.1: Extend PipelineDescriptor ✅
 
-Add optional terminal range reduction field (pending)
+**File**: [src/DataManager/transforms/v2/core/PipelineLoader.hpp](../core/PipelineLoader.hpp)
 
-### Step 6.2: Update PipelineLoader
+Added:
+- `RangeReductionStepDescriptor` struct with `reduction_name`, optional `parameters`, and optional `description`
+- Optional `range_reduction` field to `PipelineDescriptor`
+- Updated documentation with JSON examples showing pipelines with and without range reductions
 
-Handle the optional range reduction field in JSON (pending)
+### Step 6.2: Update PipelineLoader ✅
 
-### Step 6.3: Tests
+**File**: [src/DataManager/transforms/v2/core/PipelineLoader.hpp](../core/PipelineLoader.hpp)
+**File**: [src/DataManager/transforms/v2/core/PipelineLoader.cpp](../core/PipelineLoader.cpp)
 
-- Test loading pipeline with range reduction
-- Test loading pipeline without range reduction
-- Test round-trip serialization
+Implemented:
+- `loadRangeReductionFromDescriptor()`: Loads range reduction from JSON descriptor
+- `RangeReductionRegistry::deserializeParameters()`: Deserializes parameters using registered deserializers
+- Updated `loadPipelineFromJson()` to handle optional range reduction field
+- Updated validation to accept pipelines with range reduction even if no steps present
+- Added `TransformPipeline::setRangeReductionErased()`: Type-erased method for JSON loading
+
+Enhanced **RangeReductionRegistry**:
+- Added `param_deserializers_` map for JSON parameter deserialization
+- Updated `registerParamHandling()` to register deserializers
+- Added `deserializeParameters()` method for registry-based parameter loading
+
+### Step 6.3: Tests ✅
+
+**File**: [tests/unit/DataManager/transforms/test_pipeline_loader.test.cpp](../../../../tests/unit/DataManager/transforms/test_pipeline_loader.test.cpp)
+
+Tests added:
+- `RangeReductionStepDescriptor can be serialized to JSON` - Basic serialization
+- `RangeReductionStepDescriptor can be deserialized from JSON` - Basic deserialization
+- `loadRangeReductionFromDescriptor loads valid reduction with no parameters` - Stateless reductions
+- `loadRangeReductionFromDescriptor loads valid reduction with parameters` - Parameterized reductions
+- `loadRangeReductionFromDescriptor rejects unknown reduction` - Error handling
+- `loadRangeReductionFromDescriptor rejects invalid parameters` - Validation
+- `loadPipelineFromJson loads pipeline without range reduction` - Backward compatibility
+- `loadPipelineFromJson loads pipeline with range reduction` - New feature
+- `loadPipelineFromJson loads multi-step pipeline with range reduction` - Complex pipelines
+- `loadPipelineFromJson rejects pipeline with invalid range reduction` - Error handling
+- `Pipeline descriptor round-trips through JSON with range reduction` - Round-trip serialization
+- `Full pipeline with reduction can be loaded and used` - Integration test
+
+All tests passing ✅
 
 ---
 
@@ -754,15 +786,13 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
 | 3. Context-Aware Params | ✅ Complete | 1-2 days | None | Critical |
 | 4. Pipeline Adaptor API | ✅ Complete | 3-4 days | Phases 1-3 | Critical |
 | 5. GatherResult Integration | ✅ Complete | 2-3 days | Phase 4 | Critical |
-| 6. JSON Serialization | Not Started | 1-2 days | Phases 1-5 | High |
+| 6. JSON Serialization | ✅ Complete | 1-2 days | Phases 1-5 | High |
 | 7. Documentation | Not Started | 1-2 days | All | Medium |
 
-**Completed Effort**: 9-14 days (Phases 1-5)  
-**Remaining Estimated Effort**: 2-4 days
+**Completed Effort**: 11-16 days (Phases 1-6)  
+**Remaining Estimated Effort**: 1-2 days
 
-**Phase 5 Refinement**: The implementation refined the design to use `TimeFrameIndex` in
-`ElementVariant` directly rather than creating composite intermediate types. This approach
-is simpler, more scalable, and maintains runtime composability.
+**Status**: Phase 6 Complete. Ready to proceed with Phase 7 (Documentation).
 
 ---
 
