@@ -41,6 +41,8 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/GatherResult.hpp"
+#include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/algorithms/Temporal/NormalizeTime.hpp"
 
 #include <benchmark/benchmark.h>
 #include <memory>
@@ -176,6 +178,63 @@ void populateGPUBufferBaseline(
         for (auto const& event : windowed_events[trial_idx]) {
             // X is relative to alignment event
             auto const x = static_cast<float>(event.getValue() - center);
+            buffer.addPoint(x, y);
+        }
+    }
+}
+
+/**
+ * @brief Extract windows with time normalization
+ * 
+ * This version normalizes event times relative to alignment during extraction.
+ * Used in the baseline comparison to show the cost of normalization.
+ */
+void extractWindowsWithNormalization(
+    std::vector<TimeFrameIndex> const& all_events,
+    std::vector<TimeFrameIndex> const& alignment_events,
+    int64_t half_window,
+    std::vector<std::vector<float>>& normalized_windows)
+{
+    normalized_windows.clear();
+    normalized_windows.resize(alignment_events.size());
+    
+    for (size_t trial_idx = 0; trial_idx < alignment_events.size(); ++trial_idx) {
+        int64_t const center = alignment_events[trial_idx].getValue();
+        int64_t const start = center - half_window;
+        int64_t const end = center + half_window;
+        
+        auto it_start = std::ranges::lower_bound(all_events, TimeFrameIndex{start});
+        auto it_end = std::ranges::upper_bound(all_events, TimeFrameIndex{end});
+        
+        // Normalize times during extraction
+        for (auto it = it_start; it != it_end; ++it) {
+            float normalized_time = static_cast<float>(it->getValue() - center);
+            normalized_windows[trial_idx].push_back(normalized_time);
+        }
+    }
+}
+
+/**
+ * @brief Populate GPU buffer from normalized float vectors
+ */
+void populateGPUBufferFromNormalized(
+    std::vector<std::vector<float>> const& normalized_windows,
+    MockGPUBuffer& buffer)
+{
+    buffer.clear();
+    
+    // Estimate total events for reservation
+    size_t total_events = 0;
+    for (auto const& window : normalized_windows) {
+        total_events += window.size();
+    }
+    buffer.reserve(total_events);
+    
+    // Populate buffer
+    for (size_t trial_idx = 0; trial_idx < normalized_windows.size(); ++trial_idx) {
+        auto const y = static_cast<float>(trial_idx);
+        
+        for (auto const& x : normalized_windows[trial_idx]) {
             buffer.addPoint(x, y);
         }
     }
@@ -694,6 +753,39 @@ void populateGPUBufferGather(
 }
 
 /**
+ * @brief Populate GPU buffer from GatherResult with value projections
+ * 
+ * This version uses the transform pipeline to project normalized times.
+ * The projections are pre-computed and passed in.
+ */
+void populateGPUBufferGatherWithProjection(
+    GatherResult<DigitalEventSeries> const& gathered,
+    std::vector<WhiskerToolbox::Transforms::V2::ValueProjectionFn<EventWithId, float>> const& projections,
+    MockGPUBuffer& buffer)
+{
+    buffer.clear();
+    
+    // Estimate total events
+    size_t total_events = 0;
+    for (auto const& view : gathered) {
+        total_events += view->size();
+    }
+    buffer.reserve(total_events);
+    
+    // Populate buffer using projections
+    for (size_t trial_idx = 0; trial_idx < gathered.size(); ++trial_idx) {
+        auto const y = static_cast<float>(trial_idx);
+        auto const& projection = projections[trial_idx];
+        
+        for (auto const& event : gathered[trial_idx]->view()) {
+            // Use projection to get normalized time
+            float normalized_time = projection(event);
+            buffer.addPoint(normalized_time, y);
+        }
+    }
+}
+
+/**
  * @brief Benchmark: Create views using gather() function
  * 
  * Uses the GatherResult utility to create all views at once.
@@ -835,6 +927,167 @@ BENCHMARK_DEFINE_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)(benchmark
 
 BENCHMARK_REGISTER_F(RasterScalabilityBenchmark, ScaleAlignments_Gather)
     ->Arg(100)->Arg(500)->Arg(1000)->Arg(2000)->Arg(5000)
+    ->Unit(benchmark::kMicrosecond);
+
+// ============================================================================
+// Normalization Benchmarks - Baseline vs Transform Pipeline
+// ============================================================================
+
+/**
+ * @brief Benchmark: Baseline with normalization (extract + normalize + buffer)
+ * 
+ * Measures the cost of extracting windows and normalizing times in the 
+ * baseline approach (raw vectors with manual normalization).
+ */
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Baseline_Normalized)(benchmark::State& state) {
+    // Pre-generate the alignment interval data structure
+    auto alignment_intervals = createAlignmentIntervals(
+        alignment_events_, config_.window_half_size);
+    
+    // Storage for normalized windows
+    std::vector<std::vector<float>> normalized_windows;
+    
+    for (auto _ : state) {
+        // Phase 1: Extract windows with normalization
+        extractWindowsWithNormalization(raster_events_, alignment_events_, 
+                                        config_.window_half_size, normalized_windows);
+        
+        // Phase 2: Populate buffer from normalized data
+        populateGPUBufferFromNormalized(normalized_windows, buffer_);
+        
+        benchmark::DoNotOptimize(buffer_.x_coords.data());
+    }
+    
+    ReportStats(state);
+}
+
+BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Baseline_Normalized)
+    ->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Benchmark: Gather with transform pipeline normalization
+ * 
+ * Uses NormalizeTimeValue projection to normalize times through the 
+ * transform pipeline. Measures the cost of using context-aware transforms
+ * vs manual normalization.
+ */
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)(benchmark::State& state) {
+    // Create alignment intervals
+    auto alignment_intervals = createAlignmentIntervals(
+        alignment_events_, config_.window_half_size);
+    
+    // Build projection pipeline once (outside benchmark loop)
+    using namespace WhiskerToolbox::Transforms::V2;
+    
+    // Create a factory that produces projections for each trial
+    auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
+        // Create params for this trial
+        NormalizeTimeParams params;
+        params.setContext(ctx);
+        
+        // Return a projection function that uses these params
+        return [params](EventWithId const& event) -> float {
+            return normalizeTimeValue(event.time(), params);
+        };
+    };
+    
+    for (auto _ : state) {
+        // Phase 1: Create gather result
+        auto gathered = gather(raster_series_, alignment_intervals);
+        
+        // Phase 2: Build projections for each trial (context injection)
+        std::vector<ValueProjectionFn<EventWithId, float>> projections;
+        projections.reserve(gathered.size());
+        for (size_t i = 0; i < gathered.size(); ++i) {
+            auto ctx = gathered.buildContext(i);
+            projections.push_back(projection_factory(ctx));
+        }
+        
+        // Phase 3: Populate buffer using projections
+        populateGPUBufferGatherWithProjection(gathered, projections, buffer_);
+        
+        benchmark::DoNotOptimize(buffer_.x_coords.data());
+    }
+    
+    ReportStats(state);
+}
+
+BENCHMARK_REGISTER_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)
+    ->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Benchmark: Isolated normalization cost for baseline
+ * 
+ * Measures just the extraction and normalization phase without buffer population.
+ * Separates allocation overhead from normalization computation cost.
+ */
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Baseline)(benchmark::State& state) {
+    std::vector<std::vector<float>> normalized_windows;
+    
+    for (auto _ : state) {
+        extractWindowsWithNormalization(raster_events_, alignment_events_,
+                                        config_.window_half_size, normalized_windows);
+        
+        benchmark::DoNotOptimize(normalized_windows.data());
+    }
+    
+    state.counters["alignments"] = static_cast<double>(alignment_events_.size());
+    state.counters["events"] = static_cast<double>(raster_events_.size());
+}
+
+BENCHMARK_REGISTER_F(RasterPlotBenchmark, Normalization_Baseline)
+    ->Unit(benchmark::kMicrosecond);
+
+/**
+ * @brief Benchmark: Isolated normalization cost for gather with projections
+ * 
+ * Measures the projection creation and application without buffer population.
+ * Shows the overhead of context injection and transform pipeline execution.
+ */
+BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Gather)(benchmark::State& state) {
+    // Create alignment intervals
+    auto alignment_intervals = createAlignmentIntervals(
+        alignment_events_, config_.window_half_size);
+    
+    // Create projection factory
+    using namespace WhiskerToolbox::Transforms::V2;
+    auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
+        NormalizeTimeParams params;
+        params.setContext(ctx);
+        return [params](EventWithId const& event) -> float {
+            return normalizeTimeValue(event.time(), params);
+        };
+    };
+    
+    for (auto _ : state) {
+        // Create gather result
+        auto gathered = gather(raster_series_, alignment_intervals);
+        
+        // Create projections with context injection
+        std::vector<ValueProjectionFn<EventWithId, float>> projections;
+        projections.reserve(gathered.size());
+        for (size_t i = 0; i < gathered.size(); ++i) {
+            auto ctx = gathered.buildContext(i);
+            projections.push_back(projection_factory(ctx));
+        }
+        
+        // Compute sum of normalized times to ensure projections are actually evaluated
+        int64_t sum = 0;
+        for (size_t i = 0; i < gathered.size(); ++i) {
+            auto const& projection = projections[i];
+            for (auto const& event : gathered[i]->view()) {
+                sum += static_cast<int64_t>(projection(event));
+            }
+        }
+        
+        benchmark::DoNotOptimize(sum);
+    }
+    
+    state.counters["alignments"] = static_cast<double>(alignment_events_.size());
+    state.counters["events"] = static_cast<double>(raster_events_.size());
+}
+
+BENCHMARK_REGISTER_F(RasterPlotBenchmark, Normalization_Gather)
     ->Unit(benchmark::kMicrosecond);
 
 }  // namespace RasterPlotBenchmarks

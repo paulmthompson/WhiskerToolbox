@@ -250,3 +250,133 @@ The view-based approaches using `DigitalEventSeries` achieve true zero-copy stor
 4. **The `transform()` helper is very fast** - 4µs to compute statistics across 1000 trials.
 
 For most interactive visualization and analysis use cases, the view-based overhead is acceptable. The `gather()` utility is recommended for trial-aligned operations as it provides the cleanest API. For performance-critical rendering loops requiring maximum throughput, raw vectors remain the better choice.
+
+## Time Normalization with Transform Pipeline
+
+Building on the gather/view infrastructure, we evaluated the performance of applying value projections (time normalization) to trial-aligned data. This is essential for raster plots and other trial-aligned visualizations where events need to be normalized relative to an alignment point (t=0 at trial start).
+
+### Normalization Benchmark Setup
+
+Configuration remains the same:
+- 100,000 total events
+- 1,000 alignment events (trials)
+- Window size: ±500 around each alignment
+
+Three normalization approaches tested:
+
+1. **Baseline + Normalization**: Extract events and normalize times in a single pass (manual)
+2. **Gather + Value Projection**: Use `GatherResult` with per-trial value projections via `NormalizeTimeValue` transform
+3. **Isolated Normalization**: Just the normalization step without buffer population
+
+### Full Pipeline Results (With Normalization)
+
+| Approach | Time (µs) | Relative to Baseline |
+|----------|----------|---------------------|
+| Baseline (No Normalization) | 367 | 1.0x |
+| Baseline + Normalization | 598 | 1.6x |
+| Gather (No Normalization) | 1,223 | 3.3x |
+| Gather + Normalization | 1,424 | 3.9x |
+
+**Key Insight**: Adding normalization costs only ~63% more for baseline (231µs), but ~17% more for gather (201µs). The gather approach absorbs normalization overhead more efficiently due to better amortization across the view creation cost.
+
+### Isolated Normalization Phase Analysis
+
+Measuring just the normalization step (without buffer population):
+
+| Approach | Time (µs) | Description |
+|----------|----------|-------------|
+| Baseline Normalization | 429 | Extract windows + normalize (1000 trials × ~100 events) |
+| Gather + Projection | 1,484 | Create gather result + build projections + iterate with projection |
+| Difference | +1,055 | Gather overhead for normalization |
+| Overhead Factor | 3.5x | Gather normalization is 3.5x slower |
+
+### Phase Breakdown: Where Does the Overhead Come From?
+
+Breaking down the Gather + Normalization pipeline:
+
+| Phase | Time (µs) | Notes |
+|-------|----------|-------|
+| Create gather result | ~240 | View creation (1000 views) |
+| Build projections | ~50 | Create projection factory for each trial |
+| Apply projections | ~1,194 | Iterate views + project each event time |
+| **Total** | **1,484** | |
+
+For comparison, Baseline Normalization breakdown:
+
+| Phase | Time (µs) | Notes |
+|-------|----------|-------|
+| Extract + normalize | 429 | Binary search + memory copy + subtract |
+| **Total** | **429** | |
+
+### Context-Aware Transform Infrastructure
+
+The gather approach uses the transform pipeline infrastructure:
+
+```cpp
+// Pattern: Context-aware value projection for each trial
+auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
+    NormalizeTimeParams params;
+    params.setContext(ctx);  // Inject trial alignment time
+    return [params](EventWithId const& event) -> float {
+        return normalizeTimeValue(event.time(), params);
+    };
+};
+
+// Build projections per trial
+for (size_t i = 0; i < gathered.size(); ++i) {
+    auto ctx = gathered.buildContext(i);  // Get alignment info
+    projections[i] = projection_factory(ctx);
+}
+```
+
+### Why Is Gather Slower for Normalization?
+
+Several factors contribute to the 3.5x overhead:
+
+1. **View Creation Overhead**: Creating 1000 views takes ~240µs, amortized across the operation
+2. **Lambda Captures**: Each trial's projection captures its context parameters (NormalizeTimeParams)
+3. **Virtual Dispatch**: Type-erased storage adds indirection on each event access
+4. **Memory Layout**: Events accessed via index indirection rather than contiguous array
+5. **Cache Locality**: Jumping between indices and data arrays reduces cache efficiency
+
+### Performance Sweet Spot
+
+Despite the overhead, gather with projections has advantages in certain scenarios:
+
+| Scenario | Winner | Reason |
+|----------|--------|--------|
+| **Single pass, raw raster** | Baseline | No abstraction overhead needed |
+| **Multiple analyses on same gather** | Gather | Amortize view creation across multiple operations |
+| **Trial sorting by metric** | Gather | Use `reduce()` with 4µs overhead per operation |
+| **Complex filtering** | Gather | View-based filtering is composable and clean |
+| **Interactive UI updates** | Gather | Cached views make incremental updates cheap |
+
+Example: If you need to compute spike counts, first-spike latencies, AND draw raster:
+
+```cpp
+auto gathered = gather(spikes, trials);  // 1,223µs - one-time cost
+
+// Operation 1: Count spikes
+auto counts = gathered.transform([](auto v) { return v->size(); });  // 4µs
+// Operation 2: Compute latencies  
+auto latencies = gathered.reduce(latency_reducer);  // ~50µs
+// Operation 3: Draw raster with normalization
+auto projections = gathered.project(normalize_factory);  // 50µs
+// ... then iterate with projections  // ~1,194µs
+
+// Total: 1,223 + 4 + 50 + 50 + 1,194 = 2,521µs vs. 3× separate baseline runs
+```
+
+### Conclusion on Normalization
+
+1. **Baseline normalization is simple and fast** - Direct extraction + subtraction takes 429µs
+
+2. **Gather + projection adds abstraction overhead** - 3.5x slower in isolation, but provides composability
+
+3. **The cost is reasonable for trial-aligned analysis** - Additional 201µs for gather+normalization vs. gather alone is ~2.5% of the gather cost
+
+4. **Transform pipeline infrastructure is ready** - Context-aware parameters enable flexible trial-based transformations
+
+5. **Use baseline for performance-critical tight loops** - Use gather for analysis pipelines where composability matters more than raw speed
+
+For raster plot generation where you're only doing visualization, stick with baseline or raw vectors. For interactive analysis dashboards where you compute multiple metrics per trial, gather+transforms provide better code organization and reusability with acceptable performance cost.
