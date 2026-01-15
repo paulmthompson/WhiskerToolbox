@@ -39,7 +39,7 @@ private:
     void _create_memory_tensors();
 
     std::shared_ptr<torch::jit::Module> module {nullptr};
-    std::unique_ptr<memory_encoder_tensors> _memory_tensors {nullptr};
+    std::unique_ptr<memory_encoder_tensors> _memory_tensors;
     std::string module_path;
     std::map<int, memory_frame_pair> _memory;
     int memory_frames {4};

@@ -91,7 +91,7 @@ private:
     /*
      * DL Model for whisker tracing
      */
-    std::unique_ptr<dl::SCM> dl_model{nullptr};
+    std::unique_ptr<dl::SCM> dl_model;
 
     Ui::Whisker_Widget * ui;
 
