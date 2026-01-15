@@ -422,41 +422,301 @@ Tests cover:
 
 ---
 
-## Phase 5: GatherResult Integration
+## Phase 5: GatherResult Integration (REVISED)
 
-**Goal**: Add methods to GatherResult that consume pipeline adaptors.
+**Goal**: Add methods to GatherResult that consume pipeline adaptors using lazy value projections.
 
 **Status**: Not started
 
-### Step 5.1: Add `applyPipeline()` Method
+### Design Revision: Value Projection Instead of New Types
 
-Apply pipeline to all trials, returning lazy transformed views (pending)
+**Problem Identified**: Phase 3 introduced `NormalizedEvent` which doesn't fit in `ElementVariant` 
+and would cause type explosion as more transforms are added.
 
-### Step 5.2: Add `reducePipeline()` Method
+**Solution**: Use **lazy value projections** instead of intermediate element types.
 
-Apply pipeline with reduction to all trials (pending)
+#### Key Insight: Separate Value from Identity
 
-### Step 5.3: Add `sortBy()` Method
+For time-series elements, we can decompose the transform output:
+- **Value projection**: The computed result (e.g., normalized time as `float`)
+- **Identity passthrough**: EntityId comes from the **source element**, not the transform
 
-Sort trials by pipeline reduction result (pending)
+```
+Source Element (EventWithId)
+    │
+    ├── .id() ────────────────────────────────→ EntityId (passthrough)
+    │
+    └── .time() ──→ [NormalizeTime] ──→ float (value projection)
+```
 
-### Step 5.4: Add `partitionBy()` Method
+This avoids creating `NormalizedEvent` entirely. The consumer iterates the source and 
+applies the projection inline:
 
-Partition trials by threshold on reduction result (pending)
+```cpp
+auto value_fn = pipeline.bindValueProjection<EventWithId, float>(ctx);
 
-### Step 5.5: Add Cross-Data Sorting Support
+for (auto const& event : trial_view) {
+    EntityId id = event.id();           // From source
+    float norm_time = value_fn(event);  // Computed projection
+    draw_point(norm_time, trial_row, id);
+}
+```
 
-Reorder GatherResult by indices (pending)
+#### Why This Is Still Runtime Composable
 
-### Step 5.6: Tests
+| Aspect | Runtime Composability |
+|--------|----------------------|
+| Pipeline configuration | ✅ JSON/UI selects transforms by name |
+| Transform chaining | ✅ `A → B → C` composed at runtime |
+| Context injection | ✅ TrialContext injected per-trial |
+| Type erasure | ✅ `std::function<float(EventWithId const&)>` |
 
-**File**: `tests/DataManager/utils/test_gather_result_pipeline.test.cpp` (pending)
+The only compile-time requirement is knowing the **input element type** (from the 
+container type) and the **final scalar type** (from the reduction or projection).
 
-- Test `applyPipeline()` with normalize transform
-- Test `reducePipeline()` with count, latency
-- Test `sortBy()` produces correct order
-- Test `partitionBy()` produces correct split
-- Test cross-data sorting workflow
+### Step 5.1: Define Value Projection Types
+
+**File**: `src/DataManager/transforms/v2/core/ValueProjectionTypes.hpp`
+
+```cpp
+/**
+ * @brief Value projection function type
+ * 
+ * Takes a source element and returns a computed value.
+ * EntityId and other identity info comes from the source element directly.
+ */
+template<typename InElement, typename Value>
+using ValueProjectionFn = std::function<Value(InElement const&)>;
+
+/**
+ * @brief Factory that creates value projections from TrialContext
+ */
+template<typename InElement, typename Value>
+using ValueProjectionFactory = std::function<ValueProjectionFn<InElement, Value>(TrialContext const&)>;
+
+/**
+ * @brief Lazy view that pairs source elements with projected values
+ * 
+ * This is a zero-allocation view adaptor that yields (source_ref, projected_value)
+ * pairs on iteration.
+ */
+template<typename InElement, typename Value>
+using ProjectedView = /* ranges view returning std::pair<InElement const&, Value> */;
+```
+
+### Step 5.2: Update NormalizeTime to Return Float
+
+**File**: `src/DataManager/transforms/v2/algorithms/Temporal/NormalizeTime.hpp`
+
+Revise to output `float` directly instead of `NormalizedEvent`:
+
+```cpp
+// BEFORE (problematic):
+NormalizedEvent normalizeEventTime(EventWithId const&, NormalizeTimeParams const&);
+
+// AFTER (value projection):
+float normalizeEventTimeValue(EventWithId const& event, NormalizeTimeParams const& params) {
+    TimeFrameIndex alignment = params.getAlignmentTime();
+    return static_cast<float>(event.time().getValue() - alignment.getValue());
+}
+```
+
+Register as: `NormalizeEventTimeValue`: `EventWithId → float`
+
+Keep `NormalizedEvent` and `NormalizedValue` types available for cases where materialization 
+is truly needed, but the primary pipeline path uses value projections.
+
+### Step 5.3: Implement `bindValueProjection()`
+
+**File**: `src/DataManager/transforms/v2/core/TransformPipeline.hpp`
+
+```cpp
+/**
+ * @brief Bind pipeline to a value projection function
+ * 
+ * Creates a function that takes a source element and returns the projected value.
+ * This is for pipelines that end in element→scalar transforms.
+ * 
+ * @tparam InElement Input element type (e.g., EventWithId)
+ * @tparam Value Output value type (e.g., float)
+ * @return ValueProjectionFn that computes the projection
+ */
+template<typename InElement, typename Value>
+ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const& pipeline);
+
+/**
+ * @brief Bind pipeline to a context-aware value projection factory
+ * 
+ * For pipelines with context-aware transforms (e.g., NormalizeTime).
+ */
+template<typename InElement, typename Value>
+ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(TransformPipeline const& pipeline);
+```
+
+### Step 5.4: Add GatherResult `project()` Method
+
+**File**: `src/DataManager/utils/GatherResult.hpp`
+
+```cpp
+/**
+ * @brief Project values across all trials using a pipeline
+ * 
+ * Returns a lazy view adaptor that, when applied to each trial's view,
+ * yields (element_ref, projected_value) pairs.
+ * 
+ * @tparam Value The projected value type
+ * @param factory Context-aware projection factory
+ * @return Object that can be iterated to get projected views per trial
+ * 
+ * @example
+ * @code
+ * auto projection_factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
+ * 
+ * for (size_t i = 0; i < result.size(); ++i) {
+ *     auto ctx = result.buildContext(i);
+ *     auto projection = projection_factory(ctx);
+ *     
+ *     for (auto const& event : (*result[i])->view()) {
+ *         float norm_time = projection(event);
+ *         EntityId id = event.id();
+ *         // Draw using norm_time and id
+ *     }
+ * }
+ * @endcode
+ */
+template<typename Value>
+auto project(ValueProjectionFactory<element_type, Value> const& factory) const;
+```
+
+### Step 5.5: Add GatherResult Helper Methods
+
+```cpp
+/**
+ * @brief Build TrialContext for a specific trial index
+ * 
+ * @param trial_idx Index of the trial
+ * @return TrialContext with alignment_time, trial_index, etc.
+ */
+[[nodiscard]] TrialContext buildContext(size_type trial_idx) const {
+    auto interval = intervalAt(trial_idx);
+    return TrialContext{
+        .alignment_time = TimeFrameIndex(interval.start),
+        .trial_index = trial_idx,
+        .trial_duration = interval.end - interval.start,
+        .end_time = TimeFrameIndex(interval.end)
+    };
+}
+
+/**
+ * @brief Apply reduction across all trials
+ * 
+ * @tparam Scalar Result type of reduction
+ * @param reducer_factory Context-aware reducer factory
+ * @return Vector of reduction results, one per trial
+ */
+template<typename Scalar>
+[[nodiscard]] std::vector<Scalar> reduce(
+    ReducerFactory<element_type, Scalar> const& reducer_factory) const;
+
+/**
+ * @brief Get sort indices by reduction result
+ * 
+ * @tparam Scalar Reduction result type (must be comparable)
+ * @param reducer_factory Context-aware reducer factory
+ * @param ascending Sort order
+ * @return Vector of indices that would sort trials by reduction result
+ */
+template<typename Scalar>
+[[nodiscard]] std::vector<size_type> sortIndicesBy(
+    ReducerFactory<element_type, Scalar> const& reducer_factory,
+    bool ascending = true) const;
+
+/**
+ * @brief Create reordered GatherResult using index permutation
+ * 
+ * @param indices Permutation of trial indices
+ * @return New GatherResult with trials in specified order
+ */
+[[nodiscard]] GatherResult reorder(std::vector<size_type> const& indices) const;
+```
+
+### Step 5.6: Define element_type Alias
+
+Add to GatherResult:
+
+```cpp
+/// Element type yielded by view iteration
+using element_type = typename T::element_type;  // e.g., EventWithId for DigitalEventSeries
+```
+
+This requires data containers to define their element type, which most already do.
+
+### Step 5.7: Implementation Details
+
+#### Reduce Implementation
+
+```cpp
+template<typename Scalar>
+std::vector<Scalar> GatherResult<T>::reduce(
+        ReducerFactory<element_type, Scalar> const& reducer_factory) const {
+    std::vector<Scalar> results;
+    results.reserve(size());
+    
+    for (size_type i = 0; i < size(); ++i) {
+        auto ctx = buildContext(i);
+        auto reducer = reducer_factory(ctx);
+        
+        auto view = (*this)[i]->view();
+        std::vector<element_type> elements(view.begin(), view.end());
+        
+        results.push_back(reducer(std::span{elements}));
+    }
+    
+    return results;
+}
+```
+
+#### SortIndicesBy Implementation
+
+```cpp
+template<typename Scalar>
+std::vector<size_type> GatherResult<T>::sortIndicesBy(
+        ReducerFactory<element_type, Scalar> const& reducer_factory,
+        bool ascending) const {
+    
+    auto values = reduce(reducer_factory);
+    
+    std::vector<size_type> indices(size());
+    std::iota(indices.begin(), indices.end(), 0);
+    
+    std::sort(indices.begin(), indices.end(), 
+        [&values, ascending](size_type a, size_type b) {
+            return ascending ? values[a] < values[b] : values[a] > values[b];
+        });
+    
+    return indices;
+}
+```
+
+### Step 5.8: Tests
+
+**File**: `tests/DataManager/utils/test_gather_result_pipeline.test.cpp`
+
+- Test `buildContext()` produces correct TrialContext
+- Test `reduce()` with EventCount reduction
+- Test `reduce()` with FirstPositiveLatency (requires NormalizeEventTimeValue)
+- Test `sortIndicesBy()` produces correct order
+- Test `reorder()` creates correct trial order
+- Test full workflow: gather → project → draw (mock)
+- Test full workflow: gather → reduce → sort → reorder → draw
+
+### Step 5.9: Deprecation of NormalizedEvent (Future)
+
+`NormalizedEvent` and `NormalizedValue` types from Phase 3 can be:
+1. **Kept for materialization use cases** where storing normalized data is needed
+2. **Deprecated** if value projections cover all practical use cases
+
+Decision deferred until Phase 5 implementation validates the value projection approach.
 
 ---
 
@@ -557,15 +817,79 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
    - Could add `ComputeContext` parameter
    - Defer to future if not immediately needed
 
-4. **Type deduction for template parameters?**
-   - Currently requires explicit `<InElement, OutElement>` 
-   - Could add convenience overloads that deduce from container type
+4. ~~**Type deduction for template parameters?**~~
+   - ✅ RESOLVED: Value projections require explicit `<InElement, Value>` which is acceptable
+   - Input element type known from container, output value type known from pipeline terminal
 
 5. **Relationship between RangeReduction and TimeGroupedTransform?**
    - They are distinct concepts with different purposes
    - RangeReduction: `range<Element>` → `Scalar` (collapses all time)
    - TimeGroupedTransform: `span<Element>` at time T → `vector<Element>` at time T
    - Both are "reductions" but operate at different scopes
+
+6. ~~**Intermediate types like NormalizedEvent in ElementVariant?**~~
+   - ✅ RESOLVED: Use value projections instead of intermediate element types
+   - Value projection: `EventWithId → float` (just the normalized time)
+   - EntityId obtained from source element via `.id()` accessor
+   - Avoids type explosion in ElementVariant
+   - Maintains runtime composability
+
+7. **What about transforms that genuinely need to modify multiple fields?**
+   - Example: Transform that filters AND normalizes
+   - Could use tuple projection: `EventWithId → std::tuple<float, bool>`
+   - Or chain projections: filter view → normalize projection
+   - Defer to implementation phase
+
+---
+
+## Appendix: Value Projection vs Element Transform
+
+The Phase 5 revision introduces **value projections** as distinct from **element transforms**.
+
+### Comparison
+
+| Aspect | Element Transform | Value Projection |
+|--------|-------------------|------------------|
+| **Signature** | `Element → Element'` | `Element → Value` |
+| **Output** | New element type | Scalar or tuple |
+| **Identity** | Carried in output type | From source element |
+| **Storage** | Can materialize containers | Computed on-demand |
+| **Use Case** | Container transforms | View analysis |
+| **Registry** | `ElementRegistry` | Same registry, different binding |
+
+### When to Use Each
+
+**Element Transform** (existing):
+- Transforming container data types: `MaskData → LineData`
+- Output will be stored in DataManager
+- New element type needed (e.g., `Mask2D → Line2D`)
+
+**Value Projection** (new):
+- Trial-aligned analysis: `EventWithId → float`
+- Output consumed immediately (drawing, reduction)
+- Source element provides identity info
+
+### How Value Projections Use the Same Registry
+
+Value projections are **element transforms** under the hood - they're just registered
+with scalar output types and bound differently:
+
+```cpp
+// Registration (same as any element transform):
+registry.registerElement<EventWithId, float, NormalizeTimeParams>(
+    "NormalizeEventTimeValue",
+    normalizeEventTimeValue,
+    {...}
+);
+
+// Binding for container transforms:
+auto adaptor = bindToView<EventWithId, float>(pipeline);  // span<In> → vector<Out>
+
+// Binding for value projection:
+auto projection = bindValueProjection<EventWithId, float>(pipeline);  // In → Out (single element)
+```
+
+The difference is in **how the bound function is used**, not in how transforms are registered.
 
 ---
 
