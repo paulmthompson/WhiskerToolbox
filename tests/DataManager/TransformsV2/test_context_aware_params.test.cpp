@@ -6,9 +6,7 @@
  * 1. ContextAwareParams concept and detection
  * 2. TrialContext creation and usage
  * 3. NormalizeTimeParams context injection
- * 4. NormalizeEventTime transform
- * 5. NormalizeValueTime transform
- * 6. Edge cases and error handling
+ * 4. Value projection transforms (normalizeTimeValue, normalizeSampleTimeValue)
  */
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -194,122 +192,43 @@ TEST_CASE("NormalizeTimeParams - context injection", "[ContextAware][NormalizeTi
 }
 
 // ============================================================================
-// NormalizedEvent Tests
+// Value Projection Transform Tests
 // ============================================================================
 
-TEST_CASE("NormalizedEvent - construction and accessors", "[ContextAware][NormalizedEvent]") {
-    SECTION("Default construction") {
-        NormalizedEvent event;
-        CHECK(event.normalized_time == 0.0f);
-        CHECK(event.original_time == TimeFrameIndex{0});
-        CHECK(event.entity_id == EntityId{0});
-    }
-
-    SECTION("Parameterized construction") {
-        NormalizedEvent event{25.5f, TimeFrameIndex{125}, EntityId{42}};
-        
-        CHECK(event.normalized_time == 25.5f);
-        CHECK(event.original_time == TimeFrameIndex{125});
-        CHECK(event.entity_id == EntityId{42});
-    }
-
-    SECTION("Concept accessors") {
-        NormalizedEvent event{-15.7f, TimeFrameIndex{85}, EntityId{7}};
-        
-        // time() truncates to integer
-        CHECK(event.time() == TimeFrameIndex{-15});
-        CHECK(event.id() == EntityId{7});
-        CHECK(event.value() == -15.7f);
-    }
-
-    SECTION("Equality comparison") {
-        NormalizedEvent a{25.0f, TimeFrameIndex{125}, EntityId{1}};
-        NormalizedEvent b{25.0f, TimeFrameIndex{125}, EntityId{1}};
-        NormalizedEvent c{26.0f, TimeFrameIndex{125}, EntityId{1}};
-        
-        CHECK(a == b);
-        CHECK_FALSE(a == c);
-    }
-}
-
-// ============================================================================
-// NormalizedValue Tests
-// ============================================================================
-
-TEST_CASE("NormalizedValue - construction and accessors", "[ContextAware][NormalizedValue]") {
-    SECTION("Default construction") {
-        NormalizedValue val;
-        CHECK(val.normalized_time == 0.0f);
-        CHECK(val.sample_value == 0.0f);
-        CHECK(val.original_time == TimeFrameIndex{0});
-    }
-
-    SECTION("Parameterized construction") {
-        NormalizedValue val{50.5f, 3.14f, TimeFrameIndex{150}};
-        
-        CHECK(val.normalized_time == 50.5f);
-        CHECK(val.sample_value == 3.14f);
-        CHECK(val.original_time == TimeFrameIndex{150});
-    }
-
-    SECTION("Concept accessors - value returns sample, not time") {
-        NormalizedValue val{50.0f, 3.14f, TimeFrameIndex{150}};
-        
-        CHECK(val.time() == TimeFrameIndex{50});
-        CHECK(val.value() == 3.14f);  // Returns sample_value, not normalized_time
-    }
-
-    SECTION("Equality comparison") {
-        NormalizedValue a{50.0f, 3.14f, TimeFrameIndex{150}};
-        NormalizedValue b{50.0f, 3.14f, TimeFrameIndex{150}};
-        NormalizedValue c{50.0f, 2.71f, TimeFrameIndex{150}};  // Different value
-        
-        CHECK(a == b);
-        CHECK_FALSE(a == c);
-    }
-}
-
-// ============================================================================
-// NormalizeEventTime Transform Tests
-// ============================================================================
-
-TEST_CASE("normalizeEventTime - event normalization", "[ContextAware][NormalizeEventTime]") {
+TEST_CASE("normalizeTimeValue - value projection", "[ContextAware][NormalizeTimeValue]") {
     NormalizeTimeParams params;
     params.setAlignmentTime(TimeFrameIndex{100});
 
-    SECTION("Positive offset (event after alignment)") {
-        EventWithId event{TimeFrameIndex{125}, EntityId{1}};
+    SECTION("Positive offset (time after alignment)") {
+        TimeFrameIndex time{125};
         
-        auto normalized = normalizeEventTime(event, params);
+        float normalized = normalizeTimeValue(time, params);
         
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(25.0f, 0.001f));
-        CHECK(normalized.original_time == TimeFrameIndex{125});
-        CHECK(normalized.entity_id == EntityId{1});
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(25.0f, 0.001f));
     }
 
-    SECTION("Negative offset (event before alignment)") {
-        EventWithId event{TimeFrameIndex{75}, EntityId{2}};
+    SECTION("Negative offset (time before alignment)") {
+        TimeFrameIndex time{75};
         
-        auto normalized = normalizeEventTime(event, params);
+        float normalized = normalizeTimeValue(time, params);
         
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(-25.0f, 0.001f));
-        CHECK(normalized.original_time == TimeFrameIndex{75});
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(-25.0f, 0.001f));
     }
 
-    SECTION("Zero offset (event at alignment)") {
-        EventWithId event{TimeFrameIndex{100}, EntityId{3}};
+    SECTION("Zero offset (time at alignment)") {
+        TimeFrameIndex time{100};
         
-        auto normalized = normalizeEventTime(event, params);
+        float normalized = normalizeTimeValue(time, params);
         
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        CHECK_THAT(normalized, Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 
     SECTION("Large offset") {
-        EventWithId event{TimeFrameIndex{1000}, EntityId{4}};
+        TimeFrameIndex time{1000};
         
-        auto normalized = normalizeEventTime(event, params);
+        float normalized = normalizeTimeValue(time, params);
         
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(900.0f, 0.001f));
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(900.0f, 0.001f));
     }
 
     SECTION("With context injection via TrialContext") {
@@ -317,55 +236,44 @@ TEST_CASE("normalizeEventTime - event normalization", "[ContextAware][NormalizeE
         TrialContext ctx{.alignment_time = TimeFrameIndex{50}};
         ctx_params.setContext(ctx);
 
-        EventWithId event{TimeFrameIndex{75}, EntityId{5}};
-        auto normalized = normalizeEventTime(event, ctx_params);
+        TimeFrameIndex time{75};
+        float normalized = normalizeTimeValue(time, ctx_params);
 
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(25.0f, 0.001f));
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(25.0f, 0.001f));
     }
 }
 
-TEST_CASE("normalizeEventTime - error handling", "[ContextAware][NormalizeEventTime]") {
+TEST_CASE("normalizeTimeValue - error handling", "[ContextAware][NormalizeTimeValue]") {
     SECTION("Throws when context not set") {
         NormalizeTimeParams params;
-        EventWithId event{TimeFrameIndex{100}, EntityId{1}};
+        TimeFrameIndex time{100};
         
-        CHECK_THROWS_AS(normalizeEventTime(event, params), std::runtime_error);
+        CHECK_THROWS_AS(normalizeTimeValue(time, params), std::runtime_error);
     }
 }
 
 // ============================================================================
-// NormalizeValueTime Transform Tests
+// NormalizeSampleTimeValue Transform Tests
 // ============================================================================
 
-TEST_CASE("normalizeValueTime - value normalization", "[ContextAware][NormalizeValueTime]") {
+TEST_CASE("normalizeSampleTimeValue - value projection", "[ContextAware][NormalizeSampleTimeValue]") {
     NormalizeTimeParams params;
     params.setAlignmentTime(TimeFrameIndex{100});
 
-    SECTION("Positive offset with value preservation") {
+    SECTION("Positive offset") {
         AnalogTimeSeries::TimeValuePoint sample{TimeFrameIndex{150}, 3.14f};
         
-        auto normalized = normalizeValueTime(sample, params);
+        float normalized = normalizeSampleTimeValue(sample, params);
         
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(50.0f, 0.001f));
-        CHECK_THAT(normalized.sample_value, Catch::Matchers::WithinRel(3.14f, 0.001f));
-        CHECK(normalized.original_time == TimeFrameIndex{150});
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(50.0f, 0.001f));
     }
 
     SECTION("Negative offset") {
         AnalogTimeSeries::TimeValuePoint sample{TimeFrameIndex{80}, -2.5f};
         
-        auto normalized = normalizeValueTime(sample, params);
+        float normalized = normalizeSampleTimeValue(sample, params);
         
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(-20.0f, 0.001f));
-        CHECK_THAT(normalized.sample_value, Catch::Matchers::WithinRel(-2.5f, 0.001f));
-    }
-
-    SECTION("Zero value preserved") {
-        AnalogTimeSeries::TimeValuePoint sample{TimeFrameIndex{120}, 0.0f};
-        
-        auto normalized = normalizeValueTime(sample, params);
-        
-        CHECK_THAT(normalized.sample_value, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(-20.0f, 0.001f));
     }
 
     SECTION("With context injection") {
@@ -374,9 +282,9 @@ TEST_CASE("normalizeValueTime - value normalization", "[ContextAware][NormalizeV
         ctx_params.setContext(ctx);
 
         AnalogTimeSeries::TimeValuePoint sample{TimeFrameIndex{250}, 1.0f};
-        auto normalized = normalizeValueTime(sample, ctx_params);
+        float normalized = normalizeSampleTimeValue(sample, ctx_params);
 
-        CHECK_THAT(normalized.normalized_time, Catch::Matchers::WithinRel(50.0f, 0.001f));
+        CHECK_THAT(normalized, Catch::Matchers::WithinRel(50.0f, 0.001f));
     }
 }
 
@@ -384,10 +292,11 @@ TEST_CASE("normalizeValueTime - value normalization", "[ContextAware][NormalizeV
 // Batch Normalization Tests
 // ============================================================================
 
-TEST_CASE("normalizeEventTime - batch processing", "[ContextAware][Batch]") {
+TEST_CASE("normalizeEventTimeValue - batch processing", "[ContextAware][Batch]") {
     NormalizeTimeParams params;
     params.setAlignmentTime(TimeFrameIndex{100});
 
+    // Events have EntityId which can be accessed separately
     std::vector<EventWithId> events{
         {TimeFrameIndex{75}, EntityId{1}},   // -25
         {TimeFrameIndex{100}, EntityId{2}},  // 0
@@ -395,52 +304,29 @@ TEST_CASE("normalizeEventTime - batch processing", "[ContextAware][Batch]") {
         {TimeFrameIndex{200}, EntityId{4}}   // +100
     };
 
-    SECTION("Transform all events in sequence") {
-        std::vector<NormalizedEvent> normalized;
+    SECTION("Transform all event times in sequence") {
+        std::vector<float> normalized;
         normalized.reserve(events.size());
         
         for (auto const& event : events) {
-            normalized.push_back(normalizeEventTime(event, params));
+            // Extract .time() from EventWithId to pass to normalizeTimeValue
+            normalized.push_back(normalizeTimeValue(event.time(), params));
         }
 
         REQUIRE(normalized.size() == 4);
-        CHECK_THAT(normalized[0].normalized_time, Catch::Matchers::WithinRel(-25.0f, 0.001f));
-        CHECK_THAT(normalized[1].normalized_time, Catch::Matchers::WithinAbs(0.0f, 0.001f));
-        CHECK_THAT(normalized[2].normalized_time, Catch::Matchers::WithinRel(25.0f, 0.001f));
-        CHECK_THAT(normalized[3].normalized_time, Catch::Matchers::WithinRel(100.0f, 0.001f));
+        CHECK_THAT(normalized[0], Catch::Matchers::WithinRel(-25.0f, 0.001f));
+        CHECK_THAT(normalized[1], Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        CHECK_THAT(normalized[2], Catch::Matchers::WithinRel(25.0f, 0.001f));
+        CHECK_THAT(normalized[3], Catch::Matchers::WithinRel(100.0f, 0.001f));
     }
 
-    SECTION("Entity IDs preserved") {
-        std::vector<NormalizedEvent> normalized;
-        for (auto const& event : events) {
-            normalized.push_back(normalizeEventTime(event, params));
+    SECTION("Source events retain entity IDs") {
+        for (size_t i = 0; i < events.size(); ++i) {
+            // Extract .time() from EventWithId
+            float norm_time = normalizeTimeValue(events[i].time(), params);
+            // Entity ID still accessible from source event
+            CHECK(events[i].id() == EntityId{static_cast<uint64_t>(i + 1)});
+            (void)norm_time;  // Use the result to avoid unused warning
         }
-
-        CHECK(normalized[0].entity_id == EntityId{1});
-        CHECK(normalized[1].entity_id == EntityId{2});
-        CHECK(normalized[2].entity_id == EntityId{3});
-        CHECK(normalized[3].entity_id == EntityId{4});
-    }
-}
-
-// ============================================================================
-// Type Trait Tests
-// ============================================================================
-
-TEST_CASE("Type traits - concept satisfaction", "[ContextAware][TypeTraits]") {
-    SECTION("NormalizedEvent satisfies concepts") {
-        using namespace WhiskerToolbox::Concepts;
-        
-        STATIC_CHECK(TimeSeriesElement<NormalizedEvent>);
-        STATIC_CHECK(EntityElement<NormalizedEvent>);
-        STATIC_CHECK(ValueElement<NormalizedEvent, float>);
-    }
-
-    SECTION("NormalizedValue satisfies concepts") {
-        using namespace WhiskerToolbox::Concepts;
-        
-        STATIC_CHECK(TimeSeriesElement<NormalizedValue>);
-        STATIC_CHECK(ValueElement<NormalizedValue, float>);
-        // NormalizedValue does NOT satisfy EntityElement (no id())
     }
 }

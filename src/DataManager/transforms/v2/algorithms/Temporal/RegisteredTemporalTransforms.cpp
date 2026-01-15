@@ -59,94 +59,40 @@ struct RegisterTransform {
 };
 
 // ============================================================================
-// Transform Registrations
-// ============================================================================
-
-/**
- * @brief Register NormalizeEventTime transform
- *
- * Transforms EventWithId → NormalizedEvent by shifting time relative to alignment.
- * Uses context-aware NormalizeTimeParams that receives alignment from TrialContext.
- */
-auto const register_normalize_event_time = RegisterTransform<
-        EventWithId,
-        NormalizedEvent,
-        NormalizeTimeParams>(
-        "NormalizeEventTime",
-        normalizeEventTime,
-        TransformMetadata{
-                .name = "NormalizeEventTime",
-                .description = "Normalize event times relative to alignment point (t=0)",
-                .category = "Temporal",
-                .input_type = typeid(EventWithId),
-                .output_type = typeid(NormalizedEvent),
-                .params_type = typeid(NormalizeTimeParams),
-                .lineage_type = TransformLineageType::OneToOneByTime,
-                .input_type_name = "EventWithId",
-                .output_type_name = "NormalizedEvent",
-                .params_type_name = "NormalizeTimeParams",
-                .is_expensive = false,
-                .is_deterministic = true,
-                .supports_cancellation = false});
-
-/**
- * @brief Register NormalizeValueTime transform
- *
- * Transforms TimeValuePoint → NormalizedValue by shifting time relative to alignment.
- * The sample value is preserved unchanged.
- */
-auto const register_normalize_value_time = RegisterTransform<
-        AnalogTimeSeries::TimeValuePoint,
-        NormalizedValue,
-        NormalizeTimeParams>(
-        "NormalizeValueTime",
-        normalizeValueTime,
-        TransformMetadata{
-                .name = "NormalizeValueTime",
-                .description = "Normalize analog sample times relative to alignment point (t=0)",
-                .category = "Temporal",
-                .input_type = typeid(AnalogTimeSeries::TimeValuePoint),
-                .output_type = typeid(NormalizedValue),
-                .params_type = typeid(NormalizeTimeParams),
-                .lineage_type = TransformLineageType::OneToOneByTime,
-                .input_type_name = "TimeValuePoint",
-                .output_type_name = "NormalizedValue",
-                .params_type_name = "NormalizeTimeParams",
-                .is_expensive = false,
-                .is_deterministic = true,
-                .supports_cancellation = false});
-
-// ============================================================================
 // Value Projection Registrations (Return float directly)
 // ============================================================================
 
 /**
- * @brief Register NormalizeEventTimeValue transform (value projection)
+ * @brief Register NormalizeTimeValue transform (value projection)
  *
- * Transforms EventWithId → float by computing normalized time.
- * This is the value projection version - returns only the normalized time,
- * allowing EntityId to be accessed from the source element.
+ * Transforms TimeFrameIndex → float by computing normalized time.
+ * This is the fundamental temporal normalization transform.
  *
  * Use this for:
- * - Raster plot drawing (need time for position, EntityId for color)
+ * - Raster plot drawing: extract .time() from EventWithId, normalize, draw
  * - Range reductions (FirstPositiveLatency, etc.)
- * - Lazy iteration without intermediate type allocation
+ * - Any case where you need a time offset as a float
+ *
+ * The caller extracts the TimeFrameIndex from their element type:
+ * - EventWithId: event.time()
+ * - TimeValuePoint: sample.time()
+ * - Custom types: element.time()
  */
-auto const register_normalize_event_time_value = RegisterTransform<
-        EventWithId,
+auto const register_normalize_time_value = RegisterTransform<
+        TimeFrameIndex,
         float,
         NormalizeTimeParams>(
-        "NormalizeEventTimeValue",
-        normalizeEventTimeValue,
+        "NormalizeTimeValue",
+        normalizeTimeValue,
         TransformMetadata{
-                .name = "NormalizeEventTimeValue",
-                .description = "Compute normalized event time as float (value projection)",
+                .name = "NormalizeTimeValue",
+                .description = "Compute normalized time offset as float (value projection)",
                 .category = "Temporal",
-                .input_type = typeid(EventWithId),
+                .input_type = typeid(TimeFrameIndex),
                 .output_type = typeid(float),
                 .params_type = typeid(NormalizeTimeParams),
                 .lineage_type = TransformLineageType::None,  // No entity tracking for scalar output
-                .input_type_name = "EventWithId",
+                .input_type_name = "TimeFrameIndex",
                 .output_type_name = "float",
                 .params_type_name = "NormalizeTimeParams",
                 .is_expensive = false,
@@ -194,9 +140,7 @@ void registerTemporalTransforms() {
     // 3. Forcing the translation unit to be linked
 
     // Force instantiation of static registrations
-    (void)register_normalize_event_time;
-    (void)register_normalize_value_time;
-    (void)register_normalize_event_time_value;
+    (void)register_normalize_time_value;
     (void)register_normalize_sample_time_value;
     (void)init_pipeline_factories;
     (void)register_context_injector;

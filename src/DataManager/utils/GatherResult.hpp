@@ -71,14 +71,21 @@
  * @see AnalogTimeSeries::createView() for analog series views
  */
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "transforms/v2/core/ContextAwareParams.hpp"
+#include "transforms/v2/core/ValueProjectionTypes.hpp"
+#include "transforms/v2/core/ViewAdaptorTypes.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <concepts>
 #include <iterator>
 #include <memory>
+#include <numeric>
 #include <ranges>
 #include <type_traits>
 #include <vector>
@@ -130,6 +137,52 @@ concept CopyableTimeRangeDataType = requires(
     { source.createTimeRangeCopy(start, end) } -> std::same_as<T>;
 };
 
+/**
+ * @brief Concept for types that define an element_type alias
+ *
+ * Data containers that expose their element type (e.g., EventWithId for DigitalEventSeries)
+ * satisfy this concept. This enables type-safe pipeline binding.
+ */
+template<typename T>
+concept HasElementType = requires {
+    typename T::element_type;
+};
+
+/**
+ * @brief Helper to get element type from a data container
+ *
+ * Provides compile-time mapping from container types to their element types.
+ * - DigitalEventSeries → EventWithId
+ * - AnalogTimeSeries → AnalogTimeSeries::TimeValuePoint
+ * - Types with element_type alias → T::element_type
+ */
+template<typename T>
+struct element_type_of {
+    // Primary template: attempt to use T::element_type if available
+    using type = typename T::element_type;
+};
+
+// Specialization: DigitalEventSeries uses EventWithId
+template<>
+struct element_type_of<DigitalEventSeries> {
+    using type = EventWithId;
+};
+
+// Specialization: AnalogTimeSeries uses TimeValuePoint
+template<>
+struct element_type_of<AnalogTimeSeries> {
+    using type = AnalogTimeSeries::TimeValuePoint;
+};
+
+// Specialization: DigitalIntervalSeries uses IntervalWithId  
+template<>
+struct element_type_of<DigitalIntervalSeries> {
+    using type = IntervalWithId;
+};
+
+template<typename T>
+using element_type_of_t = typename element_type_of<T>::type;
+
 }// namespace WhiskerToolbox::Gather
 
 // =============================================================================
@@ -151,6 +204,9 @@ public:
     using value_type = std::shared_ptr<T>;
     using const_iterator = typename std::vector<value_type>::const_iterator;
     using size_type = typename std::vector<value_type>::size_type;
+
+    /// Element type yielded by view iteration (e.g., EventWithId for DigitalEventSeries)
+    using element_type = WhiskerToolbox::Gather::element_type_of_t<T>;
 
     // ========== Constructors ==========
 
@@ -441,10 +497,277 @@ public:
         return result;
     }
 
+    // ========== Pipeline Integration Methods ==========
+
+    /**
+     * @brief Build TrialContext for a specific trial index
+     *
+     * Creates a context object that can be used with context-aware pipeline
+     * transforms. The context includes alignment time (trial start), trial
+     * index, duration, and end time.
+     *
+     * @param trial_idx Index of the trial
+     * @return TrialContext with alignment_time, trial_index, etc.
+     * @throws std::out_of_range if trial_idx >= size()
+     *
+     * @example
+     * @code
+     * auto projection_factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
+     *
+     * for (size_t i = 0; i < result.size(); ++i) {
+     *     auto ctx = result.buildContext(i);
+     *     auto projection = projection_factory(ctx);
+     *     // Use projection on trial events...
+     * }
+     * @endcode
+     */
+    [[nodiscard]] WhiskerToolbox::Transforms::V2::TrialContext buildContext(size_type trial_idx) const {
+        if (trial_idx >= size()) {
+            throw std::out_of_range("GatherResult::buildContext: index out of range");
+        }
+        // Get the interval for the original trial at this position
+        // If reordered, we need the interval from the original trial, not the position
+        auto interval = intervalAtReordered(trial_idx);
+        size_type orig_idx = originalIndex(trial_idx);
+        return WhiskerToolbox::Transforms::V2::TrialContext{
+            .alignment_time = TimeFrameIndex(interval.start),
+            .trial_index = orig_idx,
+            .trial_duration = interval.end - interval.start,
+            .end_time = TimeFrameIndex(interval.end)
+        };
+    }
+
+    /**
+     * @brief Project values across all trials using a context-aware pipeline
+     *
+     * This method enables lazy, per-trial value projection using a pipeline
+     * that normalizes or transforms element properties (e.g., time normalization).
+     * The projection factory is called once per trial with the trial's context,
+     * producing a projection function for that trial.
+     *
+     * @tparam Value The projected value type (e.g., float for normalized time)
+     * @param factory Context-aware projection factory from bindValueProjectionWithContext()
+     * @return Vector of projection functions, one per trial
+     *
+     * @example
+     * @code
+     * auto factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
+     * auto projections = result.project(factory);
+     *
+     * for (size_t i = 0; i < result.size(); ++i) {
+     *     auto const& projection = projections[i];
+     *     for (auto const& event : result[i]->view()) {
+     *         float norm_time = projection(event);
+     *         EntityId id = event.id();
+     *         draw_point(norm_time, i, id);
+     *     }
+     * }
+     * @endcode
+     */
+    template<typename Value>
+    [[nodiscard]] auto project(
+            WhiskerToolbox::Transforms::V2::ValueProjectionFactory<element_type, Value> const& factory) const {
+        using ProjectionFn = WhiskerToolbox::Transforms::V2::ValueProjectionFn<element_type, Value>;
+        std::vector<ProjectionFn> projections;
+        projections.reserve(size());
+
+        for (size_type i = 0; i < size(); ++i) {
+            auto ctx = buildContext(i);
+            projections.push_back(factory(ctx));
+        }
+
+        return projections;
+    }
+
+    /**
+     * @brief Apply reduction across all trials
+     *
+     * Executes a range reduction on each trial's view, producing a scalar per trial.
+     * The reducer factory is called once per trial with the trial's context, enabling
+     * context-aware reductions (e.g., counting events after alignment).
+     *
+     * @tparam Scalar Result type of reduction (e.g., int for count, float for latency)
+     * @param reducer_factory Context-aware reducer factory from bindReducerWithContext()
+     * @return Vector of reduction results, one per trial
+     *
+     * @example
+     * @code
+     * auto factory = bindReducerWithContext<EventWithId, float>(pipeline);
+     * auto latencies = result.reduce(factory);
+     *
+     * // latencies[i] is the first-spike latency for trial i
+     * @endcode
+     *
+     * @note This requires T to have a view() method that returns a range
+     */
+    template<typename Scalar>
+    [[nodiscard]] std::vector<Scalar> reduce(
+            WhiskerToolbox::Transforms::V2::ReducerFactory<element_type, Scalar> const& reducer_factory) const {
+        std::vector<Scalar> results;
+        results.reserve(size());
+
+        for (size_type i = 0; i < size(); ++i) {
+            auto ctx = buildContext(i);
+            auto reducer = reducer_factory(ctx);
+
+            // Materialize view into vector for reducer (takes span)
+            auto view = _views[i]->view();
+            std::vector<element_type> elements(view.begin(), view.end());
+
+            results.push_back(reducer(std::span<element_type const>{elements}));
+        }
+
+        return results;
+    }
+
+    /**
+     * @brief Get sort indices by reduction result
+     *
+     * Computes a reduction for each trial and returns the indices that would
+     * sort the trials by their reduction values. Useful for sorting trials
+     * by first-spike latency, event count, or other metrics.
+     *
+     * @tparam Scalar Reduction result type (must be comparable)
+     * @param reducer_factory Context-aware reducer factory
+     * @param ascending Sort order (true = smallest first, false = largest first)
+     * @return Vector of indices that would sort trials by reduction result
+     *
+     * @example
+     * @code
+     * // Sort trials by first-spike latency (ascending)
+     * auto factory = bindReducerWithContext<EventWithId, float>(pipeline);
+     * auto sort_order = result.sortIndicesBy(factory, true);
+     *
+     * // Draw trials in sorted order
+     * for (size_t row = 0; row < sort_order.size(); ++row) {
+     *     size_t trial_idx = sort_order[row];
+     *     // Draw trial trial_idx at row position...
+     * }
+     * @endcode
+     */
+    template<typename Scalar>
+    [[nodiscard]] std::vector<size_type> sortIndicesBy(
+            WhiskerToolbox::Transforms::V2::ReducerFactory<element_type, Scalar> const& reducer_factory,
+            bool ascending = true) const {
+        
+        auto values = reduce(reducer_factory);
+
+        std::vector<size_type> indices(size());
+        std::iota(indices.begin(), indices.end(), size_type{0});
+
+        if (ascending) {
+            std::sort(indices.begin(), indices.end(),
+                [&values](size_type a, size_type b) {
+                    // Handle NaN: NaN values sort to end
+                    if constexpr (std::is_floating_point_v<Scalar>) {
+                        if (std::isnan(values[a])) return false;
+                        if (std::isnan(values[b])) return true;
+                    }
+                    return values[a] < values[b];
+                });
+        } else {
+            std::sort(indices.begin(), indices.end(),
+                [&values](size_type a, size_type b) {
+                    // Handle NaN: NaN values sort to end
+                    if constexpr (std::is_floating_point_v<Scalar>) {
+                        if (std::isnan(values[a])) return false;
+                        if (std::isnan(values[b])) return true;
+                    }
+                    return values[a] > values[b];
+                });
+        }
+
+        return indices;
+    }
+
+    /**
+     * @brief Create reordered GatherResult using index permutation
+     *
+     * Creates a new GatherResult with trials in the order specified by indices.
+     * The new result shares the same source data and intervals, but views and
+     * iteration order follow the provided permutation.
+     *
+     * @param indices Permutation of trial indices (must be valid permutation of [0, size()))
+     * @return New GatherResult with trials in specified order
+     * @throws std::invalid_argument if indices has wrong size
+     * @throws std::out_of_range if any index is >= size()
+     *
+     * @example
+     * @code
+     * auto sort_order = result.sortIndicesBy(reducer_factory, true);
+     * auto sorted_result = result.reorder(sort_order);
+     *
+     * // sorted_result[0] is now the trial with smallest reduction value
+     * @endcode
+     */
+    [[nodiscard]] GatherResult reorder(std::vector<size_type> const& indices) const {
+        if (indices.size() != size()) {
+            throw std::invalid_argument(
+                "GatherResult::reorder: indices size must match result size");
+        }
+
+        GatherResult result;
+        result._source = _source;
+        // Note: We keep the original intervals - reordering is logical only
+        result._intervals = _intervals;
+        result._views.reserve(size());
+        result._reorder_indices = indices;  // Store the reorder mapping
+
+        for (auto idx : indices) {
+            if (idx >= size()) {
+                throw std::out_of_range(
+                    "GatherResult::reorder: index out of range");
+            }
+            result._views.push_back(_views[idx]);
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Get the original trial index for a position in a reordered result
+     *
+     * After reordering, this returns the original trial index for a given
+     * position in the reordered sequence.
+     *
+     * @param reordered_idx Index in the reordered result
+     * @return Original trial index, or reordered_idx if not reordered
+     */
+    [[nodiscard]] size_type originalIndex(size_type reordered_idx) const {
+        if (reordered_idx >= size()) {
+            throw std::out_of_range("GatherResult::originalIndex: index out of range");
+        }
+        if (_reorder_indices.empty()) {
+            return reordered_idx;  // Not reordered
+        }
+        return _reorder_indices[reordered_idx];
+    }
+
+    /**
+     * @brief Check if this result has been reordered
+     */
+    [[nodiscard]] bool isReordered() const noexcept {
+        return !_reorder_indices.empty();
+    }
+
+    /**
+     * @brief Get the interval for a position in a reordered result
+     *
+     * This is the interval from the original trial, not the reordered position.
+     * Use originalIndex() to map reordered position to original trial index.
+     *
+     * @param reordered_idx Index in the (possibly reordered) result
+     * @return The Interval for the original trial at this position
+     */
+    [[nodiscard]] Interval intervalAtReordered(size_type reordered_idx) const {
+        return intervalAt(originalIndex(reordered_idx));
+    }
+
 private:
     std::shared_ptr<T const> _source;
     std::shared_ptr<DigitalIntervalSeries const> _intervals;
     std::vector<value_type> _views;
+    std::vector<size_type> _reorder_indices;  // Maps reordered position → original index
 };
 
 // =============================================================================

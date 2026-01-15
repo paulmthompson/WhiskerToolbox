@@ -37,17 +37,12 @@
  *
  * ## Output Types
  *
- * The transforms produce new element types with normalized time values:
- *
- * - `NormalizedEvent`: Like EventWithId but with float normalized_time
- * - `NormalizedValue`: Like TimeValuePoint but with float normalized_time
- *
- * Using float for normalized time allows sub-frame precision and negative values
+ * The transforms return float values representing normalized time offsets.
+ * Using float allows sub-frame precision and negative values
  * (events before alignment point).
  *
  * @see ContextAwareParams.hpp for context injection infrastructure
  * @see GatherResult for trial-aligned data gathering
- * @see EventRangeReductions.hpp for reductions on normalized events
  */
 
 #include "DigitalTimeSeries/EventWithId.hpp"
@@ -61,137 +56,6 @@
 #include <stdexcept>
 
 namespace WhiskerToolbox::Transforms::V2 {
-
-// ============================================================================
-// Normalized Element Types
-// ============================================================================
-
-/**
- * @brief Event with normalized time relative to alignment point
- *
- * Represents an event whose time has been shifted relative to a reference point.
- * The original entity information is preserved.
- *
- * ## Time Representation
- *
- * - `normalized_time`: Float offset from alignment (can be negative)
- * - `original_time`: Original TimeFrameIndex (for reference)
- *
- * ## Concept Satisfaction
- *
- * Satisfies TimeSeriesElement via time() (returns normalized_time as float-based index)
- * Satisfies EntityElement via id()
- * Satisfies ValueElement via value() (returns normalized_time)
- *
- * Note: time() returns the normalized_time cast to TimeFrameIndex, which may
- * truncate sub-frame precision. Use normalized_time directly when precision matters.
- */
-struct NormalizedEvent {
-    /// Time offset from alignment point (can be negative, sub-frame precision)
-    float normalized_time{0.0f};
-
-    /// Original absolute time (for reference/debugging)
-    TimeFrameIndex original_time{0};
-
-    /// Entity ID from original event
-    EntityId entity_id{0};
-
-    NormalizedEvent() = default;
-
-    NormalizedEvent(float norm_time, TimeFrameIndex orig_time, EntityId id)
-        : normalized_time(norm_time),
-          original_time(orig_time),
-          entity_id(id) {}
-
-    // ========== Concept Accessors ==========
-
-    /**
-     * @brief Get normalized time as TimeFrameIndex (for TimeSeriesElement concept)
-     * @return TimeFrameIndex The normalized time (truncated to integer)
-     * @note Use normalized_time field directly for full float precision
-     */
-    [[nodiscard]] constexpr TimeFrameIndex time() const noexcept {
-        return TimeFrameIndex{static_cast<int64_t>(normalized_time)};
-    }
-
-    /**
-     * @brief Get entity ID (for EntityElement concept)
-     */
-    [[nodiscard]] constexpr EntityId id() const noexcept { return entity_id; }
-
-    /**
-     * @brief Get normalized time as value (for ValueElement concept)
-     */
-    [[nodiscard]] constexpr float value() const noexcept { return normalized_time; }
-
-    // ========== Comparison ==========
-
-    [[nodiscard]] bool operator==(NormalizedEvent const& other) const noexcept {
-        return normalized_time == other.normalized_time &&
-               original_time == other.original_time &&
-               entity_id == other.entity_id;
-    }
-};
-
-/**
- * @brief Analog value with normalized time relative to alignment point
- *
- * Represents a time-value sample whose time has been shifted relative to
- * a reference point. The original value is preserved.
- *
- * ## Time Representation
- *
- * - `normalized_time`: Float offset from alignment (can be negative)
- * - `sample_value`: Original analog value (unchanged)
- *
- * ## Concept Satisfaction
- *
- * Satisfies TimeSeriesElement via time()
- * Satisfies ValueElement via value() (returns sample_value, NOT normalized_time)
- *
- * Note: Unlike NormalizedEvent, value() returns the sample_value, not the time.
- * This preserves the original semantic of "value" for analog data.
- */
-struct NormalizedValue {
-    /// Time offset from alignment point (can be negative, sub-frame precision)
-    float normalized_time{0.0f};
-
-    /// Original sample value (unchanged)
-    float sample_value{0.0f};
-
-    /// Original absolute time (for reference/debugging)
-    TimeFrameIndex original_time{0};
-
-    NormalizedValue() = default;
-
-    NormalizedValue(float norm_time, float value, TimeFrameIndex orig_time)
-        : normalized_time(norm_time),
-          sample_value(value),
-          original_time(orig_time) {}
-
-    // ========== Concept Accessors ==========
-
-    /**
-     * @brief Get normalized time as TimeFrameIndex (for TimeSeriesElement concept)
-     */
-    [[nodiscard]] constexpr TimeFrameIndex time() const noexcept {
-        return TimeFrameIndex{static_cast<int64_t>(normalized_time)};
-    }
-
-    /**
-     * @brief Get sample value (for ValueElement concept)
-     * @note This returns the analog value, NOT the normalized time
-     */
-    [[nodiscard]] constexpr float value() const noexcept { return sample_value; }
-
-    // ========== Comparison ==========
-
-    [[nodiscard]] bool operator==(NormalizedValue const& other) const noexcept {
-        return normalized_time == other.normalized_time &&
-               sample_value == other.sample_value &&
-               original_time == other.original_time;
-    }
-};
 
 // ============================================================================
 // Parameters
@@ -285,122 +149,48 @@ struct NormalizeTimeParams {
 // Transform Functions
 // ============================================================================
 
-/**
- * @brief Normalize event time relative to alignment point
- *
- * Computes: normalized_time = event.time() - alignment_time
- *
- * @param event Input event with absolute time
- * @param params Parameters containing alignment time from context
- * @return NormalizedEvent with time offset from alignment
- * @throws std::runtime_error if params.alignment_time is not set
- *
- * Example:
- * ```cpp
- * EventWithId event{TimeFrameIndex{125}, EntityId{1}};
- * NormalizeTimeParams params;
- * params.setAlignmentTime(TimeFrameIndex{100});
- *
- * auto normalized = normalizeEventTime(event, params);
- * // normalized.normalized_time == 25.0f
- * // normalized.original_time == 125
- * // normalized.entity_id == 1
- * ```
- */
-[[nodiscard]] inline NormalizedEvent normalizeEventTime(
-        EventWithId const& event,
-        NormalizeTimeParams const& params) {
-    TimeFrameIndex alignment = params.getAlignmentTime();
-    float offset = static_cast<float>(event.time().getValue() - alignment.getValue());
-
-    return NormalizedEvent{
-        offset,
-        event.time(),
-        event.id()
-    };
-}
-
-/**
- * @brief Normalize analog sample time relative to alignment point
- *
- * Computes: normalized_time = sample.time() - alignment_time
- * The sample value is preserved unchanged.
- *
- * @param sample Input sample with absolute time
- * @param params Parameters containing alignment time from context
- * @return NormalizedValue with time offset from alignment and original value
- * @throws std::runtime_error if params.alignment_time is not set
- *
- * Example:
- * ```cpp
- * TimeValuePoint sample{TimeFrameIndex{150}, 3.5f};
- * NormalizeTimeParams params;
- * params.setAlignmentTime(TimeFrameIndex{100});
- *
- * auto normalized = normalizeValueTime(sample, params);
- * // normalized.normalized_time == 50.0f
- * // normalized.sample_value == 3.5f
- * // normalized.original_time == 150
- * ```
- */
-[[nodiscard]] inline NormalizedValue normalizeValueTime(
-        AnalogTimeSeries::TimeValuePoint const& sample,
-        NormalizeTimeParams const& params) {
-    TimeFrameIndex alignment = params.getAlignmentTime();
-    float offset = static_cast<float>(sample.time().getValue() - alignment.getValue());
-
-    return NormalizedValue{
-        offset,
-        sample.value(),
-        sample.time()
-    };
-}
-
 // ============================================================================
 // Value Projection Functions (Return float directly)
 // ============================================================================
 
 /**
- * @brief Normalize event time to float value (value projection)
+ * @brief Normalize a TimeFrameIndex to float value (value projection)
  *
- * This is the **value projection** version of normalizeEventTime.
- * Instead of returning a NormalizedEvent struct, it returns just the
- * normalized time as a float. The EntityId can be obtained from the
- * source EventWithId directly.
+ * Computes the offset from an alignment time as a float.
+ * This is the fundamental temporal normalization transform.
  *
  * ## Use Case: Trial-Aligned Analysis
  *
- * When drawing raster plots or computing statistics, you often need:
- * - The normalized time (computed via projection)
- * - The EntityId (from the source element)
+ * When drawing raster plots or computing statistics, you typically:
+ * 1. Extract `.time()` from an EventWithId or similar element
+ * 2. Pass the TimeFrameIndex through this transform
+ * 3. Use the float result for plotting/analysis
+ * 4. Access EntityId directly from the source element
  *
- * Using value projection avoids creating intermediate types and keeps
- * the transform pipeline simpler.
+ * This separation keeps transforms simple and focused.
  *
- * @param event Input event with absolute time
+ * @param time Input time to normalize
  * @param params Parameters containing alignment time from context
- * @return float The normalized time (event.time() - alignment_time)
+ * @return float The normalized time (time - alignment_time)
  * @throws std::runtime_error if params.alignment_time is not set
  *
  * Example:
  * ```cpp
- * EventWithId event{TimeFrameIndex{125}, EntityId{1}};
+ * TimeFrameIndex event_time{125};
  * NormalizeTimeParams params;
  * params.setAlignmentTime(TimeFrameIndex{100});
  *
- * float norm_time = normalizeEventTimeValue(event, params);
+ * float norm_time = normalizeTimeValue(event_time, params);
  * // norm_time == 25.0f
- * // event.id() still available from source
  * ```
  *
  * @see ValueProjectionTypes.hpp for value projection infrastructure
- * @see makeValueView() for lazy iteration with projections
  */
-[[nodiscard]] inline float normalizeEventTimeValue(
-        EventWithId const& event,
+[[nodiscard]] inline float normalizeTimeValue(
+        TimeFrameIndex const& time,
         NormalizeTimeParams const& params) {
     TimeFrameIndex alignment = params.getAlignmentTime();
-    return static_cast<float>(event.time().getValue() - alignment.getValue());
+    return static_cast<float>(time.getValue() - alignment.getValue());
 }
 
 /**

@@ -4,7 +4,7 @@
 
 This document describes the design and implementation roadmap for integrating `GatherResult` with `TransformPipeline` to enable runtime-configurable, composable view transformations and reductions for trial-aligned analysis.
 
-**Status:** Phases 1-4 Complete. Phase 5 Steps 1-3 Complete. Steps 4-9 and Phases 6-7 Pending.
+**Status:** Phases 1-5 Complete. Phases 6-7 Pending.
 
 ## Goals
 
@@ -426,7 +426,7 @@ Tests cover:
 
 **Goal**: Add methods to GatherResult that consume pipeline adaptors using lazy value projections.
 
-**Status**: Not started
+**Status**: ✅ Complete
 
 ### Design Revision: Value Projection Instead of New Types
 
@@ -435,32 +435,38 @@ and would cause type explosion as more transforms are added.
 
 **Solution**: Use **lazy value projections** instead of intermediate element types.
 
-#### Key Insight: Separate Value from Identity
+#### Key Insight: Extract Fundamental Type, Process in Pipeline, Retain Identity at Call Site
 
-For time-series elements, we can decompose the transform output:
-- **Value projection**: The computed result (e.g., normalized time as `float`)
-- **Identity passthrough**: EntityId comes from the **source element**, not the transform
+Instead of passing composite types like `EventWithId` through the pipeline, extract
+the fundamental value (`TimeFrameIndex`) and pass that instead:
 
 ```
 Source Element (EventWithId)
     │
-    ├── .id() ────────────────────────────────→ EntityId (passthrough)
+    ├── .id() ─────────────────────────────────────────────────→ EntityId (retained at caller)
     │
-    └── .time() ──→ [NormalizeTime] ──→ float (value projection)
+    └── .time() ─→ TimeFrameIndex ──→ [Pipeline: NormalizeTime] ──→ float
 ```
 
-This avoids creating `NormalizedEvent` entirely. The consumer iterates the source and 
-applies the projection inline:
+This avoids creating intermediate types and keeps transforms focused on fundamental values.
+The consumer extracts the `.time()` component and uses it in the pipeline:
 
 ```cpp
-auto value_fn = pipeline.bindValueProjection<EventWithId, float>(ctx);
+auto projection_fn = pipeline.bindValueProjection<TimeFrameIndex, float>(ctx);
 
 for (auto const& event : trial_view) {
-    EntityId id = event.id();           // From source
-    float norm_time = value_fn(event);  // Computed projection
+    TimeFrameIndex time = event.time();       // Extract fundamental type
+    float norm_time = projection_fn(time);    // Process in pipeline
+    EntityId id = event.id();                 // Retain identity from source
     draw_point(norm_time, trial_row, id);
 }
 ```
+
+**Why this approach**:
+- `TimeFrameIndex` is now a first-class member of `ElementVariant` and `BatchVariant`
+- Transforms work on fundamental types, reducing type explosion
+- Caller explicitly manages the relationship between extracted value and source identity
+- Cleaner separation of concerns: pipeline handles temporal values, caller handles entity tracking
 
 #### Why This Is Still Runtime Composable
 
@@ -490,19 +496,36 @@ Implemented:
 
 **Tests**: `tests/DataManager/TransformsV2/test_value_projection_types.test.cpp` ✅
 
-### Step 5.2: Update NormalizeTime to Return Float ✅
+### Step 5.2: Add TimeFrameIndex to ElementVariant and Update Transforms ✅
+
+**File**: `src/DataManager/transforms/v2/core/TransformTypes.hpp`
+
+Added `TimeFrameIndex` as a fundamental type in both variant aliases:
+
+```cpp
+using ElementVariant = std::variant<float, TimeFrameIndex, Point2D<float>, Line2D, Mask2D>;
+using BatchVariant = std::variant<
+    std::vector<float>,
+    std::vector<TimeFrameIndex>,
+    std::vector<Point2D<float>>,
+    std::vector<Line2D>,
+    std::vector<Mask2D>
+>;
+```
+
+**Note**: `float` is placed first to ensure `ElementVariant{}` can be default-constructed in pipeline code.
 
 **File**: `src/DataManager/transforms/v2/algorithms/Temporal/NormalizeTime.hpp`
 
-Added value projection functions that output `float` directly:
+Implemented value projection functions that accept `TimeFrameIndex` and output `float`:
 
 ```cpp
-// Value projection version (NEW):
-[[nodiscard]] inline float normalizeEventTimeValue(
-        EventWithId const& event,
+// Value projection version (operates on fundamental type):
+[[nodiscard]] inline float normalizeTimeValue(
+        TimeFrameIndex const& time,
         NormalizeTimeParams const& params) {
     TimeFrameIndex alignment = params.getAlignmentTime();
-    return static_cast<float>(event.time().getValue() - alignment.getValue());
+    return static_cast<float>(time.getValue() - alignment.getValue());
 }
 
 [[nodiscard]] inline float normalizeSampleTimeValue(
@@ -514,11 +537,11 @@ Added value projection functions that output `float` directly:
 ```
 
 Registered as:
-- `NormalizeEventTimeValue`: `EventWithId → float`
+- `NormalizeTimeValue`: `TimeFrameIndex → float`
 - `NormalizeSampleTimeValue`: `TimeValuePoint → float`
 
-The original `NormalizedEvent` and `NormalizedValue` types remain available for cases where 
-materialization is needed, but the primary pipeline path uses value projections.
+The original `NormalizedEvent` and `NormalizedValue` types are no longer used, as the
+value projection approach (fundamental type → float) is simpler and more flexible.
 
 **File**: `src/DataManager/transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.cpp` ✅
 
@@ -556,9 +579,11 @@ ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(Transfor
 
 **Tests**: Covered by existing test suite ✅
 
-### Step 5.4: Add GatherResult `project()` Method
+### Step 5.4: Add GatherResult `project()` Method ✅
 
 **File**: `src/DataManager/utils/GatherResult.hpp`
+
+Implemented `project()` method that:
 
 ```cpp
 /**
@@ -591,135 +616,88 @@ template<typename Value>
 auto project(ValueProjectionFactory<element_type, Value> const& factory) const;
 ```
 
-### Step 5.5: Add GatherResult Helper Methods
+### Step 5.5: Add GatherResult Helper Methods ✅
 
-```cpp
-/**
- * @brief Build TrialContext for a specific trial index
- * 
- * @param trial_idx Index of the trial
- * @return TrialContext with alignment_time, trial_index, etc.
- */
-[[nodiscard]] TrialContext buildContext(size_type trial_idx) const {
-    auto interval = intervalAt(trial_idx);
-    return TrialContext{
-        .alignment_time = TimeFrameIndex(interval.start),
-        .trial_index = trial_idx,
-        .trial_duration = interval.end - interval.start,
-        .end_time = TimeFrameIndex(interval.end)
-    };
-}
+Implemented in `src/DataManager/utils/GatherResult.hpp`:
 
-/**
- * @brief Apply reduction across all trials
- * 
- * @tparam Scalar Result type of reduction
- * @param reducer_factory Context-aware reducer factory
- * @return Vector of reduction results, one per trial
- */
-template<typename Scalar>
-[[nodiscard]] std::vector<Scalar> reduce(
-    ReducerFactory<element_type, Scalar> const& reducer_factory) const;
+- `buildContext(trial_idx)`: Creates TrialContext with alignment_time, trial_index, duration, end_time
+- `reduce(reducer_factory)`: Applies reducer to all trials, returns vector of scalars
+- `sortIndicesBy(reducer_factory, ascending)`: Sorts trials by reduction result, handles NaN values
+- `reorder(indices)`: Creates new GatherResult with trials in specified order
+- `originalIndex(reordered_idx)`: Maps reordered position to original trial index
+- `isReordered()`: Check if result has been reordered
+- `intervalAtReordered(idx)`: Gets interval accounting for reordering
 
-/**
- * @brief Get sort indices by reduction result
- * 
- * @tparam Scalar Reduction result type (must be comparable)
- * @param reducer_factory Context-aware reducer factory
- * @param ascending Sort order
- * @return Vector of indices that would sort trials by reduction result
- */
-template<typename Scalar>
-[[nodiscard]] std::vector<size_type> sortIndicesBy(
-    ReducerFactory<element_type, Scalar> const& reducer_factory,
-    bool ascending = true) const;
+### Step 5.6: Define element_type Alias ✅
 
-/**
- * @brief Create reordered GatherResult using index permutation
- * 
- * @param indices Permutation of trial indices
- * @return New GatherResult with trials in specified order
- */
-[[nodiscard]] GatherResult reorder(std::vector<size_type> const& indices) const;
-```
-
-### Step 5.6: Define element_type Alias
-
-Add to GatherResult:
+Added to `src/DataManager/utils/GatherResult.hpp`:
 
 ```cpp
 /// Element type yielded by view iteration
-using element_type = typename T::element_type;  // e.g., EventWithId for DigitalEventSeries
+using element_type = WhiskerToolbox::Gather::element_type_of_t<T>;
 ```
 
-This requires data containers to define their element type, which most already do.
+Implemented `element_type_of<T>` trait with specializations for:
+- `DigitalEventSeries` → `EventWithId`
+- `AnalogTimeSeries` → `AnalogTimeSeries::TimeValuePoint`
+- `DigitalIntervalSeries` → `IntervalWithId`
 
-### Step 5.7: Implementation Details
+### Step 5.7: Implementation Details ✅
 
-#### Reduce Implementation
+All implementations completed with proper handling for:
+- Reordered results (buildContext uses intervalAtReordered)
+- NaN values in sorting (sort to end)
+- Empty trials in reductions
+- Bounds checking with appropriate exceptions
 
-```cpp
-template<typename Scalar>
-std::vector<Scalar> GatherResult<T>::reduce(
-        ReducerFactory<element_type, Scalar> const& reducer_factory) const {
-    std::vector<Scalar> results;
-    results.reserve(size());
-    
-    for (size_type i = 0; i < size(); ++i) {
-        auto ctx = buildContext(i);
-        auto reducer = reducer_factory(ctx);
-        
-        auto view = (*this)[i]->view();
-        std::vector<element_type> elements(view.begin(), view.end());
-        
-        results.push_back(reducer(std::span{elements}));
-    }
-    
-    return results;
-}
-```
+### Step 5.8: Tests ✅
 
-#### SortIndicesBy Implementation
+**File**: `tests/DataManager/utils/GatherResult_Pipeline.test.cpp`
 
-```cpp
-template<typename Scalar>
-std::vector<size_type> GatherResult<T>::sortIndicesBy(
-        ReducerFactory<element_type, Scalar> const& reducer_factory,
-        bool ascending) const {
-    
-    auto values = reduce(reducer_factory);
-    
-    std::vector<size_type> indices(size());
-    std::iota(indices.begin(), indices.end(), 0);
-    
-    std::sort(indices.begin(), indices.end(), 
-        [&values, ascending](size_type a, size_type b) {
-            return ascending ? values[a] < values[b] : values[a] > values[b];
-        });
-    
-    return indices;
-}
-```
+All tests implemented and passing:
+- `element_type` alias verification for all container types
+- `buildContext()` produces correct TrialContext for each trial
+- `project()` creates per-trial projections with correct alignment
+- `reduce()` with event count and first-spike latency
+- `reduce()` handles empty trials correctly
+- `sortIndicesBy()` ascending and descending order
+- `sortIndicesBy()` handles NaN values
+- `reorder()` creates correctly ordered result
+- `reorder()` tracks original indices
+- `reorder()` validation (wrong size, out-of-range)
+- `intervalAtReordered()` returns correct interval
+- Full raster plot workflow integration test
 
-### Step 5.8: Tests
+### Step 5.9: Remove Deprecated Types and Refactor to TimeFrameIndex ✅
 
-**File**: `tests/DataManager/utils/test_gather_result_pipeline.test.cpp`
+**Status**: Complete
 
-- Test `buildContext()` produces correct TrialContext
-- Test `reduce()` with EventCount reduction
-- Test `reduce()` with FirstPositiveLatency (requires NormalizeEventTimeValue)
-- Test `sortIndicesBy()` produces correct order
-- Test `reorder()` creates correct trial order
-- Test full workflow: gather → project → draw (mock)
-- Test full workflow: gather → reduce → sort → reorder → draw
+The following types and functions have been completely removed since the refined
+approach uses fundamental types (`TimeFrameIndex`) instead of composite types:
 
-### Step 5.9: Deprecation of NormalizedEvent (Future)
+**Removed Types**:
+- `NormalizedEvent` struct (no longer needed)
+- `NormalizedValue` struct (no longer needed)
 
-`NormalizedEvent` and `NormalizedValue` types from Phase 3 can be:
-1. **Kept for materialization use cases** where storing normalized data is needed
-2. **Deprecated** if value projections cover all practical use cases
+**Removed Functions**:
+- `normalizeEventTime(EventWithId)` - replaced by `normalizeTimeValue(TimeFrameIndex)`
+- `normalizeValueTime(TimeValuePoint)` - kept as-is for direct use
 
-Decision deferred until Phase 5 implementation validates the value projection approach.
+**Removed Registry Entries**:
+- `NormalizeEventTime` transform registration
+- `NormalizeValueTime` transform registration
+
+**Refactored Pattern**:
+- Old: `EventWithId → NormalizedEvent` (creates new composite type)
+- New: `TimeFrameIndex → float` (operates on extracted fundamental value)
+
+**Updated Tests**:
+- `test_context_aware_params.test.cpp` - updated to extract `.time()` before calling transforms
+- `test_pipeline_adaptors.test.cpp` - refactored to use `TimeFrameIndex` directly
+
+**Key Insight**: By adding `TimeFrameIndex` to `ElementVariant`, we avoid type explosion
+and enable cleaner transform signatures. Callers explicitly manage the extraction of
+fundamental types from composite elements and the retention of identity information.
 
 ---
 
@@ -775,12 +753,16 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
 | 2. Example Range Reductions | ✅ Complete | 1-2 days | Phase 1 | Critical |
 | 3. Context-Aware Params | ✅ Complete | 1-2 days | None | Critical |
 | 4. Pipeline Adaptor API | ✅ Complete | 3-4 days | Phases 1-3 | Critical |
-| 5. GatherResult Integration | Not Started | 2-3 days | Phase 4 | Critical |
+| 5. GatherResult Integration | ✅ Complete | 2-3 days | Phase 4 | Critical |
 | 6. JSON Serialization | Not Started | 1-2 days | Phases 1-5 | High |
 | 7. Documentation | Not Started | 1-2 days | All | Medium |
 
-**Completed Effort**: 7-11 days (Phases 1-4)  
-**Remaining Estimated Effort**: 4-7 days
+**Completed Effort**: 9-14 days (Phases 1-5)  
+**Remaining Estimated Effort**: 2-4 days
+
+**Phase 5 Refinement**: The implementation refined the design to use `TimeFrameIndex` in
+`ElementVariant` directly rather than creating composite intermediate types. This approach
+is simpler, more scalable, and maintains runtime composability.
 
 ---
 
@@ -808,13 +790,14 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
 
 ## Open Questions
 
-1. **Should `reorder()` create new intervals or reuse source?**
-   - Current design assumes views reference source intervals
-   - May need to store interval order separately
+1. ~~**Should `reorder()` create new intervals or reuse source?**~~
+   - ✅ RESOLVED: Reordered result stores `_reorder_indices` vector
+   - Views are reordered, intervals are accessed via `originalIndex()` mapping
+   - `buildContext()` and `intervalAtReordered()` account for reordering
 
-2. **How to handle TimeFrame in reordered GatherResult?**
-   - Views reference source TimeFrame
-   - Reordering doesn't change time bases
+2. ~~**How to handle TimeFrame in reordered GatherResult?**~~
+   - ✅ RESOLVED: Views reference source TimeFrame unchanged
+   - Reordering is logical only (view order), not temporal
 
 3. **Should range reductions support cancellation like element transforms?**
    - Could add `ComputeContext` parameter
@@ -842,6 +825,61 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
    - Could use tuple projection: `EventWithId → std::tuple<float, bool>`
    - Or chain projections: filter view → normalize projection
    - Defer to implementation phase
+
+---
+
+## Appendix: TimeFrameIndex in ElementVariant - Design Rationale
+
+The implementation adds `TimeFrameIndex` as a first-class member of `ElementVariant` and
+`BatchVariant`. This represents a refined understanding of how transforms should work
+with time-series data.
+
+### Original Design vs Refined Design
+
+**Original Approach (Phase 3)**:
+- Create composite types (`NormalizedEvent`, `NormalizedValue`) that carry both value and metadata
+- Put these types in `ElementVariant`
+- Problem: Type explosion as more transforms are added; `ElementVariant` becomes unwieldy
+
+**Refined Approach (Phase 5)**:
+- Extract fundamental types (`TimeFrameIndex`) from composite types before pipeline
+- Add fundamental types to `ElementVariant` directly
+- Process fundamental types in transforms
+- Caller manages relationship between extracted value and original identity
+- Result: Simpler variant, cleaner signatures, explicit responsibility boundaries
+
+### Benefits
+
+| Aspect | Original | Refined |
+|--------|----------|---------|
+| **Transform Signature** | `EventWithId → NormalizedEvent` | `TimeFrameIndex → float` |
+| **ElementVariant Size** | Grows with each new output type | Fixed (fundamental types only) |
+| **Type Complexity** | Creates many intermediate types | Minimizes intermediate types |
+| **Caller Responsibility** | Implicit (identity in output type) | Explicit (retain identity from source) |
+| **Composability** | Transforms can't easily chain | Clear composition rules |
+| **Performance** | May require materializing composites | Lazy evaluation of fundamentals |
+
+### Implementation Pattern
+
+When using transforms with identity-bearing types:
+
+```cpp
+// Source: EventWithId has both .time() and .id()
+auto event = /* ... */;
+
+// Step 1: Extract fundamental type
+TimeFrameIndex time = event.time();
+EntityId id = event.id();
+
+// Step 2: Process fundamental type through pipeline
+float norm_time = normalizeTimeValue(time, params);
+
+// Step 3: Use result with retained identity
+draw_point(norm_time, trial_row, id);
+```
+
+This pattern scales well: as new transforms are added, they operate on fundamental
+types without requiring new entries in `ElementVariant`.
 
 ---
 
