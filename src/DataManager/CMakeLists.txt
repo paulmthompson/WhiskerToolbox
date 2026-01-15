@@ -261,6 +261,10 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/RangeReductions/ValueRangeReductions.hpp
         transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.hpp
         transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.cpp
+        transforms/v2/algorithms/Temporal/NormalizeTime.hpp
+        transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.hpp
+        transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.cpp
+        transforms/v2/core/ContextAwareParams.hpp
 
         # Lineage subsystem (only DataManager-specific files remain here)
         # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library

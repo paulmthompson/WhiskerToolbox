@@ -4,7 +4,7 @@
 
 This document describes the design and implementation roadmap for integrating `GatherResult` with `TransformPipeline` to enable runtime-configurable, composable view transformations and reductions for trial-aligned analysis.
 
-**Status:** Phases 1-2 Complete. Phases 3-7 Pending.
+**Status:** Phases 1-3 Complete. Phases 4-7 Pending.
 
 ## Goals
 
@@ -250,42 +250,82 @@ All reductions registered with metadata for discoverability at static initializa
 
 ---
 
-## Phase 3: Context-Aware Parameters
+## Phase 3: Context-Aware Parameters ✅ COMPLETED
 
 **Goal**: Enable transforms to receive per-trial context (e.g., alignment time).
 
-**Status**: Not started
+**Status**: Complete
 
-### Step 3.1: Define Context Injection Convention
+### Step 3.1: Define Context Injection Convention ✅
+
+**File**: [src/DataManager/transforms/v2/core/ContextAwareParams.hpp](core/ContextAwareParams.hpp)
 
 Parameters that need context implement a `setContext` method:
 
 ```cpp
-// Detection trait
+// Detection concept
 template<typename Params, typename Context>
-concept ContextAwareParams = requires(Params& p, Context ctx) {
+concept ContextAwareParams = requires(Params& p, Context const& ctx) {
     { p.setContext(ctx) };
 };
+
+// Convenience alias for trial context
+template<typename Params>
+concept TrialContextAwareParams = ContextAwareParams<Params, TrialContext>;
 ```
 
-### Step 3.2: Implement Context Injection in PipelineStep
+Also defines:
+- `TrialContext` struct with alignment_time, trial_index, trial_duration, end_time
+- `is_context_aware_params_v<Params, Context>` type trait
+- `injectContext(params, ctx)` helper function (no-op for non-context-aware params)
+- `hasRequiredContext(params)` helper to check if context has been set
 
-**File**: Modify `src/DataManager/transforms/v2/core/TransformPipeline.hpp` (pending)
+### Step 3.2: Create NormalizeTime Transform ✅
 
-Add context injection mechanism to `PipelineStep`.
+**File**: [src/DataManager/transforms/v2/algorithms/Temporal/NormalizeTime.hpp](algorithms/Temporal/NormalizeTime.hpp)
 
-### Step 3.3: Create NormalizeTime Transform
+Implements temporal normalization for trial-aligned analysis:
 
-**File**: `src/DataManager/transforms/v2/algorithms/Temporal/NormalizeTime.hpp` (pending)
+**Output Types**:
+- `NormalizedEvent`: EventWithId with float normalized_time (satisfies TimeSeriesElement, EntityElement, ValueElement)
+- `NormalizedValue`: TimeValuePoint with float normalized_time (satisfies TimeSeriesElement, ValueElement)
 
-Implement temporal normalization for event and analog time series elements.
+**Parameters**:
+- `NormalizeTimeParams`: Context-aware params with `setContext(TrialContext)` and `setAlignmentTime(TimeFrameIndex)`
 
-### Step 3.4: Register Temporal Transforms
+**Transform Functions**:
 
-### Step 3.5: Tests
+| Transform | Input | Output | Description |
+|-----------|-------|--------|-------------|
+| `normalizeEventTime` | `EventWithId` | `NormalizedEvent` | Normalize event time relative to alignment |
+| `normalizeValueTime` | `TimeValuePoint` | `NormalizedValue` | Normalize sample time relative to alignment |
 
-- Test context injection works
-- Test normalization produces correct offsets
+### Step 3.3: Register Temporal Transforms ✅
+
+**File**: [src/DataManager/transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.cpp](algorithms/Temporal/RegisteredTemporalTransforms.cpp)
+
+Registers with ElementRegistry:
+- `NormalizeEventTime`: EventWithId → NormalizedEvent
+- `NormalizeValueTime`: TimeValuePoint → NormalizedValue
+
+Pipeline step factory registered for `NormalizeTimeParams`.
+
+### Step 3.4: Tests ✅
+
+**File**: [tests/DataManager/TransformsV2/test_context_aware_params.test.cpp](../../../tests/DataManager/TransformsV2/test_context_aware_params.test.cpp)
+
+Tests cover:
+- Concept detection (ContextAwareParams, TrialContextAwareParams)
+- TrialContext construction and field access
+- Context injection helpers (injectContext, hasRequiredContext)
+- NormalizeTimeParams context injection and manual configuration
+- NormalizedEvent construction, accessors, and concept satisfaction
+- NormalizedValue construction, accessors, and concept satisfaction
+- normalizeEventTime with positive/negative/zero offsets
+- normalizeValueTime with value preservation
+- Batch processing with entity ID preservation
+- Error handling (throws when context not set)
+- All tests passing ✅
 
 ---
 
@@ -415,14 +455,14 @@ Add to `docs/user_guide/` explaining core concepts and workflows (pending)
 |-------|--------|--------|--------------|----------|
 | 1. RangeReductionRegistry | ✅ Complete | 2-3 days | None | Critical |
 | 2. Example Range Reductions | ✅ Complete | 1-2 days | Phase 1 | Critical |
-| 3. Context-Aware Params | Not Started | 1-2 days | None | Critical |
+| 3. Context-Aware Params | ✅ Complete | 1-2 days | None | Critical |
 | 4. Pipeline Adaptor API | Not Started | 3-4 days | Phases 1-3 | Critical |
 | 5. GatherResult Integration | Not Started | 2-3 days | Phase 4 | Critical |
 | 6. JSON Serialization | Not Started | 1-2 days | Phases 1-5 | High |
 | 7. Documentation | Not Started | 1-2 days | All | Medium |
 
-**Completed Effort**: 3-5 days (Phases 1-2)  
-**Remaining Estimated Effort**: 8-14 days
+**Completed Effort**: 4-7 days (Phases 1-3)  
+**Remaining Estimated Effort**: 7-12 days
 
 ---
 
