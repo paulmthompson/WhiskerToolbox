@@ -39,6 +39,7 @@ rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & 
     }
 
     // Load parameters if provided
+    PipelineStep step{descriptor.transform_name};
     if (descriptor.parameters.has_value()) {
         // Convert rfl::Generic back to JSON string for registry-based loading
         auto json_str = rfl::json::write(descriptor.parameters.value());
@@ -53,16 +54,68 @@ rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & 
 
         // Create PipelineStep using factory registry (no manual dispatch!)
         try {
-            auto step = createPipelineStepFromRegistry(registry, descriptor.transform_name, params_any);
-            return rfl::Result<PipelineStep>(std::move(step));
+            step = createPipelineStepFromRegistry(registry, descriptor.transform_name, params_any);
         } catch (std::exception const & e) {
             return rfl::Error("Failed to create pipeline step for transform '" +
                               descriptor.transform_name + "': " + e.what());
         }
-    } else {
-        // No parameters - create step with NoParams
-        return rfl::Result<PipelineStep>(PipelineStep(descriptor.transform_name));
     }
+
+    // Apply param_bindings if provided
+    if (descriptor.param_bindings.has_value()) {
+        for (auto const & [param_name, store_key] : descriptor.param_bindings.value()) {
+            step.param_bindings[param_name] = store_key;
+        }
+    }
+
+    return rfl::Result<PipelineStep>(std::move(step));
+}
+
+rfl::Result<ReductionStep> loadPreReductionFromDescriptor(
+        PreReductionStepDescriptor const & descriptor) {
+    auto & registry = RangeReductionRegistry::instance();
+
+    // Validate reduction exists
+    auto const * metadata = registry.getMetadata(descriptor.reduction_name);
+    if (!metadata) {
+        return rfl::Error("Range reduction '" + descriptor.reduction_name + "' not found in registry");
+    }
+
+    // Create the ReductionStep
+    ReductionStep reduction;
+    reduction.reduction_name = descriptor.reduction_name;
+    reduction.output_key = descriptor.output_key;
+    
+    // Copy type information from metadata
+    reduction.input_type = metadata->input_type;
+    reduction.output_type = metadata->output_type;
+    reduction.params_type = metadata->params_type;
+
+    // Load parameters if provided
+    if (descriptor.parameters.has_value()) {
+        // Convert rfl::Generic back to JSON string for registry-based loading
+        auto json_str = rfl::json::write(descriptor.parameters.value());
+
+        // Use registry to deserialize parameters based on reduction metadata
+        auto params_any = registry.deserializeParameters(descriptor.reduction_name, json_str);
+        if (!params_any.has_value()) {
+            return rfl::Error("Failed to load parameters for reduction '" +
+                              descriptor.reduction_name + "'. Check that parameters match the expected type.");
+        }
+        reduction.params = std::move(params_any);
+    } else {
+        // No parameters - use NoReductionParams
+        reduction.params = std::any{NoReductionParams{}};
+    }
+
+    // Apply param_bindings if provided
+    if (descriptor.param_bindings.has_value()) {
+        for (auto const & [param_name, store_key] : descriptor.param_bindings.value()) {
+            reduction.param_bindings[param_name] = store_key;
+        }
+    }
+
+    return rfl::Result<ReductionStep>(std::move(reduction));
 }
 
 rfl::Result<std::pair<std::string, std::any>> loadRangeReductionFromDescriptor(
@@ -113,6 +166,23 @@ rfl::Result<TransformPipeline> loadPipelineFromJson(std::string const & json_str
 
     // Create empty pipeline
     TransformPipeline pipeline;
+
+    // Load pre-reductions if present
+    if (descriptor.pre_reductions.has_value()) {
+        for (size_t i = 0; i < descriptor.pre_reductions.value().size(); ++i) {
+            auto const & reduction_desc = descriptor.pre_reductions.value()[i];
+
+            auto reduction_result = loadPreReductionFromDescriptor(reduction_desc);
+            if (!reduction_result) {
+                return rfl::Error("Failed to load pre-reduction " + std::to_string(i) +
+                                  " ('" + reduction_desc.reduction_name + "'): " +
+                                  std::string(reduction_result.error()->what()));
+            }
+
+            // Add pre-reduction to pipeline
+            pipeline.addPreReduction(std::move(reduction_result.value()));
+        }
+    }
 
     // Load each step
     for (size_t i = 0; i < descriptor.steps.size(); ++i) {

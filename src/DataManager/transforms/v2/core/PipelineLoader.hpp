@@ -5,8 +5,10 @@
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/RangeReductionRegistry.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/detail/ReductionStep.hpp"
 
 #include <fstream>
+#include <map>
 #include <optional>
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -51,6 +53,19 @@ struct PipelineMetadata {
  *   }
  * }
  * ```
+ * 
+ * Example JSON with parameter bindings:
+ * ```json
+ * {
+ *   "step_id": "zscore_normalize",
+ *   "transform_name": "ZScoreNormalize",
+ *   "parameters": {},
+ *   "param_bindings": {
+ *     "mean": "computed_mean",
+ *     "std_dev": "computed_std"
+ *   }
+ * }
+ * ```
  */
 struct PipelineStepDescriptor {
     // Unique identifier for this step (for error reporting and dependencies)
@@ -63,10 +78,62 @@ struct PipelineStepDescriptor {
     // Using rfl::Generic to preserve arbitrary JSON structure
     std::optional<rfl::Generic> parameters;
 
+    // Parameter bindings from PipelineValueStore keys to parameter fields
+    // Key: parameter field name, Value: store key to bind from
+    std::optional<std::map<std::string, std::string>> param_bindings;
+
     // Optional fields for organization and control
     std::optional<std::string> description;
     std::optional<bool> enabled;
     std::optional<std::vector<std::string>> tags;
+};
+
+/**
+ * @brief Descriptor for a pre-execution reduction step
+ * 
+ * Pre-reductions compute values from the input data before any transforms
+ * run. The computed values are stored in the PipelineValueStore and can be
+ * bound to transform parameters.
+ * 
+ * Example JSON:
+ * ```json
+ * {
+ *   "reduction_name": "Mean",
+ *   "output_key": "computed_mean",
+ *   "parameters": {}
+ * }
+ * ```
+ * 
+ * Example JSON with bindings for reduction parameters:
+ * ```json
+ * {
+ *   "reduction_name": "Percentile",
+ *   "output_key": "p95_value",
+ *   "parameters": {
+ *     "percentile": 95.0
+ *   },
+ *   "param_bindings": {
+ *     "baseline": "some_other_key"
+ *   }
+ * }
+ * ```
+ */
+struct PreReductionStepDescriptor {
+    // Name of the reduction (must exist in RangeReductionRegistry)
+    std::string reduction_name;
+
+    // Key under which to store the result in PipelineValueStore
+    std::string output_key;
+
+    // Raw JSON parameters - will be parsed based on reduction_name
+    std::optional<rfl::Generic> parameters;
+
+    // Parameter bindings for the reduction's own parameters (optional)
+    // Key: param field name, Value: store key
+    std::optional<std::map<std::string, std::string>> param_bindings;
+
+    // Optional description for documentation
+    std::optional<std::string> description;
 };
 
 /**
@@ -142,9 +209,34 @@ struct RangeReductionStepDescriptor {
  *   }
  * }
  * ```
+ * 
+ * Example JSON with pre-reductions and parameter bindings:
+ * ```json
+ * {
+ *   "metadata": {
+ *     "name": "ZScore Normalization Pipeline",
+ *     "version": "1.0"
+ *   },
+ *   "pre_reductions": [
+ *     {"reduction_name": "Mean", "output_key": "computed_mean"},
+ *     {"reduction_name": "StandardDeviation", "output_key": "computed_std"}
+ *   ],
+ *   "steps": [
+ *     {
+ *       "step_id": "zscore",
+ *       "transform_name": "ZScoreNormalize",
+ *       "param_bindings": {
+ *         "mean": "computed_mean",
+ *         "std_dev": "computed_std"
+ *       }
+ *     }
+ *   ]
+ * }
+ * ```
  */
 struct PipelineDescriptor {
     std::optional<PipelineMetadata> metadata;
+    std::optional<std::vector<PreReductionStepDescriptor>> pre_reductions;
     std::vector<PipelineStepDescriptor> steps;
     std::optional<RangeReductionStepDescriptor> range_reduction;
 };
@@ -235,6 +327,20 @@ PipelineStep createPipelineStepFromRegistry(
  * @return rfl::Result<PipelineStep> Success or error message
  */
 rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & descriptor);
+
+/**
+ * @brief Load a pre-reduction from JSON descriptor
+ * 
+ * This function:
+ * 1. Validates that reduction_name exists in RangeReductionRegistry
+ * 2. Loads parameters using the registry's automatic deserializer
+ * 3. Returns a ReductionStep ready to be added to the pipeline
+ * 
+ * @param descriptor Pre-reduction step descriptor from JSON
+ * @return rfl::Result<ReductionStep> Success or error message
+ */
+rfl::Result<ReductionStep> loadPreReductionFromDescriptor(
+        PreReductionStepDescriptor const & descriptor);
 
 /**
  * @brief Load a range reduction from JSON descriptor

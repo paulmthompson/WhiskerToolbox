@@ -2,7 +2,9 @@
 #define WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 
 #include "ElementRegistry.hpp"
+#include "PipelineValueStore.hpp"
 #include "RangeReductionRegistry.hpp"
+#include "transforms/v2/detail/ReductionStep.hpp"
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 #include "transforms/v2/extension/ViewAdaptorTypes.hpp"
 #include "transforms/v2/detail/ContainerTraits.hpp"
@@ -105,6 +107,121 @@ public:
     TransformPipeline & addStep(PipelineStep step) {
         steps_.push_back(std::move(step));
         return *this;
+    }
+
+    // ========================================================================
+    // Pre-Execution Reductions (V2 Value Store Pattern)
+    // ========================================================================
+
+    /**
+     * @brief Add a pre-execution reduction that populates the value store
+     *
+     * Pre-execution reductions compute scalar values from the input data
+     * BEFORE transform steps execute. The results are stored in the
+     * PipelineValueStore and can be bound to transform parameters.
+     *
+     * This enables patterns like ZScore normalization where mean and std
+     * must be computed first, then used in the transform.
+     *
+     * @param reduction_name Name of registered range reduction (e.g., "Mean")
+     * @param output_key Key to store result under in the value store
+     * @return Reference to this pipeline for chaining
+     *
+     * @example
+     * ```cpp
+     * auto pipeline = TransformPipeline()
+     *     .addPreReduction("Mean", "computed_mean")
+     *     .addPreReduction("StandardDeviation", "computed_std")
+     *     .addStep("ZScoreNormalize", ZScoreParams{})
+     *     .withBindings("ZScoreNormalize", {{"mean", "computed_mean"}, {"std_dev", "computed_std"}});
+     * ```
+     */
+    TransformPipeline & addPreReduction(std::string const & reduction_name,
+                                         std::string const & output_key) {
+        ReductionStep step(reduction_name, output_key);
+        
+        // Populate type info from registry if available
+        auto & registry = RangeReductionRegistry::instance();
+        if (auto const * meta = registry.getMetadata(reduction_name)) {
+            step.input_type = meta->input_type;
+            step.output_type = meta->output_type;
+            step.params_type = meta->params_type;
+        }
+        
+        pre_reductions_.push_back(std::move(step));
+        return *this;
+    }
+
+    /**
+     * @brief Add a pre-execution reduction with parameters
+     *
+     * @tparam Params Parameter type for the reduction
+     * @param reduction_name Name of registered range reduction
+     * @param output_key Key to store result under
+     * @param params Parameters for the reduction
+     * @return Reference to this pipeline for chaining
+     */
+    template<typename Params>
+    TransformPipeline & addPreReduction(std::string const & reduction_name,
+                                         std::string const & output_key,
+                                         Params params) {
+        ReductionStep step(reduction_name, output_key, std::move(params));
+        
+        auto & registry = RangeReductionRegistry::instance();
+        if (auto const * meta = registry.getMetadata(reduction_name)) {
+            step.input_type = meta->input_type;
+            step.output_type = meta->output_type;
+        }
+        
+        pre_reductions_.push_back(std::move(step));
+        return *this;
+    }
+
+    /**
+     * @brief Add a pre-constructed reduction step
+     *
+     * Useful for loading from JSON where the step is constructed separately.
+     *
+     * @param step Pre-constructed reduction step
+     * @return Reference to this pipeline for chaining
+     */
+    TransformPipeline & addPreReduction(ReductionStep step) {
+        pre_reductions_.push_back(std::move(step));
+        return *this;
+    }
+
+    /**
+     * @brief Add multiple pre-execution reductions at once
+     *
+     * @param reductions Vector of reduction steps
+     * @return Reference to this pipeline for chaining
+     */
+    TransformPipeline & addPreReductions(std::vector<ReductionStep> reductions) {
+        for (auto & r : reductions) {
+            pre_reductions_.push_back(std::move(r));
+        }
+        return *this;
+    }
+
+    /**
+     * @brief Check if the pipeline has pre-execution reductions
+     */
+    [[nodiscard]] bool hasPreReductions() const noexcept {
+        return !pre_reductions_.empty();
+    }
+
+    /**
+     * @brief Get the pre-execution reduction steps
+     */
+    [[nodiscard]] std::vector<ReductionStep> const & getPreReductions() const noexcept {
+        return pre_reductions_;
+    }
+
+    /**
+     * @brief Clear all pre-execution reductions
+     */
+    void clearPreReductions() noexcept {
+        pre_reductions_.clear();
     }
 
     // ========================================================================
@@ -783,6 +900,70 @@ public:
 
 private:
     /**
+     * @brief Execute pre-reductions and populate the value store
+     *
+     * This helper runs all pre-execution reductions on the input data and
+     * stores the results in the provided PipelineValueStore. The store can
+     * then be used to apply bindings to transform step parameters.
+     *
+     * @tparam InputElement The element type of the input data
+     * @param input_span Span of input elements to reduce
+     * @param store Value store to populate with reduction results
+     */
+    template<typename InputElement>
+    void executePreReductions(std::span<InputElement const> input_span,
+                              PipelineValueStore & store) const {
+        if (pre_reductions_.empty()) {
+            return;
+        }
+
+        auto & registry = RangeReductionRegistry::instance();
+
+        for (auto const & reduction : pre_reductions_) {
+            // Wrap the input span in std::any for type-erased execution
+            std::any input_any{input_span};
+
+            // Execute the reduction using the registry's type-erased interface
+            std::any result_any = registry.executeErased(
+                reduction.reduction_name,
+                reduction.input_type,
+                input_any,
+                reduction.params);
+
+            // Store the result based on output type
+            // Try common scalar types and store in the value store
+            if (reduction.output_type == std::type_index(typeid(float))) {
+                store.set(reduction.output_key, std::any_cast<float>(result_any));
+            } else if (reduction.output_type == std::type_index(typeid(double))) {
+                store.set(reduction.output_key, static_cast<float>(std::any_cast<double>(result_any)));
+            } else if (reduction.output_type == std::type_index(typeid(int))) {
+                store.set(reduction.output_key, std::any_cast<int>(result_any));
+            } else if (reduction.output_type == std::type_index(typeid(int64_t))) {
+                store.set(reduction.output_key, std::any_cast<int64_t>(result_any));
+            } else if (reduction.output_type == std::type_index(typeid(std::string))) {
+                store.set(reduction.output_key, std::any_cast<std::string>(result_any));
+            }
+            // Other types are silently ignored - could log warning in the future
+        }
+    }
+
+    /**
+     * @brief Apply value store bindings to all pipeline steps
+     *
+     * Iterates through all steps and applies any configured bindings
+     * from the value store to their parameters.
+     *
+     * @param store Value store containing bound values
+     */
+    void applyBindingsToSteps(PipelineValueStore const & store) const {
+        for (auto const & step : steps_) {
+            if (step.hasBindings()) {
+                step.applyBindings(store);
+            }
+        }
+    }
+
+    /**
      * @brief Build a type-erased transform function for runtime composition
      * 
      * Creates a std::function<ElementVariant(ElementVariant)> that:
@@ -857,6 +1038,9 @@ private:
     }
 
     std::vector<PipelineStep> steps_;
+
+    /// Pre-execution reductions that populate the value store (V2 pattern)
+    std::vector<ReductionStep> pre_reductions_;
 
     /// Optional terminal range reduction step
     std::optional<RangeReductionStep> range_reduction_;

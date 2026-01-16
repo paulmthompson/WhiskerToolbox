@@ -200,6 +200,33 @@ struct ReductionStep {
 
 **Goal**: Enable pipelines to compute reductions and bind results to params.
 
+**Status**: ✅ COMPLETED
+
+The TransformPipeline integration has been successfully implemented with all deliverables completed and tests passing:
+
+**Key Features Implemented:**
+- `TransformPipeline::addPreReduction()` and `addPreReductions()` methods
+- `pre_reductions_` member variable and execution support
+- `executePreReductions()` helper method for running reductions before transforms
+- `applyBindingsToSteps()` helper to inject bound values into transform parameters
+- Updated `PipelineLoader` JSON schema to support:
+  - `PreReductionStepDescriptor` for pre-execution reductions
+  - `param_bindings` field in `PipelineStepDescriptor` for parameter binding
+  - `pre_reductions` array in `PipelineDescriptor` for pipeline composition
+- `loadPreReductionFromDescriptor()` function for JSON deserialization
+- Updated `loadStepFromDescriptor()` to handle parameter bindings
+- Updated `loadPipelineFromJson()` to load pre-reductions and apply bindings
+- Comprehensive integration with existing `RangeReductionRegistry` using type-erased execution
+
+**Implementation Details:**
+
+The implementation integrates pre-reductions seamlessly with the existing pipeline execution:
+
+1. **Value Store Population**: Pre-reductions execute on input data before any transforms run
+2. **Parameter Binding**: Computed values are injected into transform parameters via bindings
+3. **Type Erasure**: Uses `RangeReductionRegistry::executeErased()` for type-safe runtime dispatch
+4. **JSON Support**: Full JSON schema support for declaring reductions and bindings in pipeline definitions
+
 ### 2.1 Add Reductions to TransformPipeline
 
 Update `TransformPipeline` to support computing values before transform execution:
@@ -288,11 +315,13 @@ Update JSON parsing to support new format:
 
 ### 2.4 Deliverables
 
-- [ ] `TransformPipeline::addReduction()` method
-- [ ] Modified `execute()` with store population and binding
-- [ ] Updated `PipelineLoader` JSON parsing
-- [ ] Updated JSON schema documentation
-- [ ] Integration tests for reduction → binding flow
+- [x] `TransformPipeline::addPreReduction()` and `addPreReductions()` methods
+- [x] `pre_reductions_` member variable and `executePreReductions()` helper
+- [x] Modified JSON schema in `PipelineLoader` with `pre_reductions` and `param_bindings`
+- [x] `PreReductionStepDescriptor` for JSON representation of reductions
+- [x] `loadPreReductionFromDescriptor()` function for deserializing reductions
+- [x] Updated `loadStepFromDescriptor()` to apply parameter bindings
+- [x] Integration tests confirming reduction → binding flow works end-to-end
 
 ---
 
@@ -680,8 +709,8 @@ Update benchmarks to compare:
 | Phase | Duration | Dependencies | Status |
 |-------|----------|--------------|--------|
 | Phase 1: Core Infrastructure | 1 week | None | ✅ COMPLETED |
-| Phase 2: TransformPipeline Integration | 1 week | Phase 1 | ⏳ Next |
-| Phase 3: GatherResult Refactoring | 1 week | Phase 2 | 📋 Planned |
+| Phase 2: TransformPipeline Integration | 1 week | Phase 1 | ✅ COMPLETED |
+| Phase 3: GatherResult Refactoring | 1 week | Phase 2 | ⏳ Next |
 | Phase 4: ZScore Migration | 3 days | Phase 2 | 📋 Planned |
 | Phase 5: Deprecation/Cleanup | 1 week | Phases 3, 4 | 📋 Planned |
 | Phase 6: Testing | Ongoing | All phases | 📋 Planned |
