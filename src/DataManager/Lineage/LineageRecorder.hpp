@@ -3,7 +3,7 @@
 
 #include "Entity/Lineage/LineageRegistry.hpp"
 #include "Entity/Lineage/LineageTypes.hpp"
-#include "transforms/v2/core/TransformTypes.hpp"
+#include "transforms/v2/extension/TransformTypes.hpp"
 
 #include <stdexcept>
 #include <string>

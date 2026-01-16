@@ -76,9 +76,9 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "transforms/v2/core/ContextAwareParams.hpp"
-#include "transforms/v2/core/ValueProjectionTypes.hpp"
-#include "transforms/v2/core/ViewAdaptorTypes.hpp"
+#include "transforms/v2/extension/ContextAwareParams.hpp"
+#include "transforms/v2/extension/ValueProjectionTypes.hpp"
+#include "transforms/v2/extension/ViewAdaptorTypes.hpp"
 
 #include <algorithm>
 #include <cmath>

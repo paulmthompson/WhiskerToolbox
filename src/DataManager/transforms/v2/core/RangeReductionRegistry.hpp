@@ -43,7 +43,7 @@
  * @see ElementRegistry.hpp for parallel element transform registry
  */
 
-#include "RangeReductionTypes.hpp"
+#include "transforms/v2/extension/RangeReductionTypes.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

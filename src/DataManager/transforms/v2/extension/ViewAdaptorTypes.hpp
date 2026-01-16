@@ -67,8 +67,8 @@
  * @see GatherResult.hpp for trial-aligned analysis
  */
 
-#include "ContextAwareParams.hpp"
-#include "TransformTypes.hpp"
+#include "transforms/v2/extension/ContextAwareParams.hpp"
+#include "transforms/v2/extension/TransformTypes.hpp"
 
 #include <any>
 #include <concepts>

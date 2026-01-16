@@ -217,11 +217,11 @@ set(DATAMANAGER_SOURCES
         transforms/v2/core/DataManagerIntegration.hpp
         transforms/v2/core/DataManagerIntegration.cpp
         transforms/v2/core/ElementRegistry.hpp 
-        transforms/v2/core/ElementTransform.hpp
+        transforms/v2/extension/ElementTransform.hpp
         transforms/v2/core/PipelineLoader.hpp
         transforms/v2/core/PipelineLoader.cpp
         transforms/v2/core/RangeReductionRegistry.hpp
-        transforms/v2/core/RangeReductionTypes.hpp
+        transforms/v2/extension/RangeReductionTypes.hpp
         transforms/v2/core/RegisteredTransforms.cpp
         transforms/v2/core/TransformPipeline.hpp
         transforms/v2/core/TransformPipeline.cpp
@@ -264,7 +264,7 @@ set(DATAMANAGER_SOURCES
         transforms/v2/algorithms/Temporal/NormalizeTime.hpp
         transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.hpp
         transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.cpp
-        transforms/v2/core/ContextAwareParams.hpp
+        transforms/v2/extension/ContextAwareParams.hpp
 
         # Lineage subsystem (only DataManager-specific files remain here)
         # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library

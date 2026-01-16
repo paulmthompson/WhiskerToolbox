@@ -3,7 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "transforms/v2/algorithms/Temporal/NormalizeTime.hpp"
-#include "transforms/v2/core/ContextAwareParams.hpp"
+#include "transforms/v2/extension/ContextAwareParams.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
 

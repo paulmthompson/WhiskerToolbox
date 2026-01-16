@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_ANGLE_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_ANGLE_TRANSFORM_HPP
 
-#include "transforms/v2/core/ElementTransform.hpp"
+#include "transforms/v2/extension/ElementTransform.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

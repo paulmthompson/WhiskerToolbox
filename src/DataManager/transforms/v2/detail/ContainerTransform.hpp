@@ -2,8 +2,8 @@
 #define WHISKERTOOLBOX_V2_CONTAINER_TRANSFORM_HPP
 
 #include "transforms/v2/detail/ContainerTraits.hpp"
-#include "ElementRegistry.hpp"
-#include "ElementTransform.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/extension/ElementTransform.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"

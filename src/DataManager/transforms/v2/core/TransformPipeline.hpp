@@ -1,17 +1,15 @@
 #ifndef WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 #define WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 
-#include "ContainerTransform.hpp"
-#include "ContextAwareParams.hpp"
 #include "ElementRegistry.hpp"
-#include "PreProcessingRegistry.hpp"
 #include "RangeReductionRegistry.hpp"
-#include "TransformTypes.hpp"
-#include "ValueProjectionTypes.hpp"
-#include "ViewAdaptorTypes.hpp"
+#include "transforms/v2/extension/ValueProjectionTypes.hpp"
+#include "transforms/v2/extension/ViewAdaptorTypes.hpp"
 #include "transforms/v2/detail/ContainerTraits.hpp"
+#include "transforms/v2/detail/ContainerTransform.hpp"
 #include "transforms/v2/detail/PipelineOutputBuilder.hpp"
 #include "transforms/v2/detail/PipelineStep.hpp"
+#include "transforms/v2/extension/TransformTypes.hpp"
 
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
@@ -33,7 +31,6 @@
 #include <vector>
 
 namespace WhiskerToolbox::Transforms::V2 {
-
 
 
 // ============================================================================

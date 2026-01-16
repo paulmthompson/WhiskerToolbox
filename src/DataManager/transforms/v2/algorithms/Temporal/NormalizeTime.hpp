@@ -47,7 +47,7 @@
 
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "transforms/v2/core/ContextAwareParams.hpp"
+#include "transforms/v2/extension/ContextAwareParams.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

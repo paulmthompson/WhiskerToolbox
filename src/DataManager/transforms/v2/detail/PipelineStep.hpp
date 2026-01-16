@@ -2,7 +2,7 @@
 #define PIPELINE_STEP_HPP
 
 #include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/TransformTypes.hpp"
+#include "transforms/v2/extension/TransformTypes.hpp"
 
 #include <any>
 #include <functional>

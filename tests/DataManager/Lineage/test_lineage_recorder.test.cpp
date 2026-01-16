@@ -1,7 +1,7 @@
 #include "Lineage/LineageRecorder.hpp"
 #include "Entity/Lineage/LineageRegistry.hpp"
 #include "Entity/Lineage/LineageTypes.hpp"
-#include "transforms/v2/core/TransformTypes.hpp"
+#include "transforms/v2/extension/TransformTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

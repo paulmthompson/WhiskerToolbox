@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
 
-#include "transforms/v2/core/ElementTransform.hpp"
+#include "transforms/v2/extension/ElementTransform.hpp"
 #include "CoreGeometry/line_geometry.hpp"
 
 #include <rfl.hpp>
