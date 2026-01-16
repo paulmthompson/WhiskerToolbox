@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_V2_CONTAINER_TRANSFORM_HPP
 #define WHISKERTOOLBOX_V2_CONTAINER_TRANSFORM_HPP
 
-#include "ContainerTraits.hpp"
+#include "transforms/v2/detail/ContainerTraits.hpp"
 #include "ElementRegistry.hpp"
 #include "ElementTransform.hpp"
 

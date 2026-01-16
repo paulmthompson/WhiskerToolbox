@@ -11,13 +11,13 @@
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Tensors/Tensor_Data.hpp"
 #include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
-#include "transforms/v2/core/ContainerTraits.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/FlatZipView.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/detail/ContainerTraits.hpp"
+#include "transforms/v2/detail/FlatZipView.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -113,7 +113,7 @@ bool DataManagerPipelineExecutor::parseJsonFormat(nlohmann::json const & json_co
             // Parse additional_input_keys for multi-input transforms
             if (step_json.contains("additional_input_keys") && step_json["additional_input_keys"].is_array()) {
                 std::vector<std::string> additional_keys;
-                for (auto const & key_json : step_json["additional_input_keys"]) {
+                for (auto const & key_json: step_json["additional_input_keys"]) {
                     if (key_json.is_string()) {
                         additional_keys.push_back(key_json.get<std::string>());
                     }
@@ -426,7 +426,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeContainerTran
 
     try {
         std::any params_any;
-        
+
         // Load parameters if provided, otherwise use default
         if (parameters.has_value()) {
             std::string params_json = rfl::json::write(parameters.value());
@@ -469,20 +469,19 @@ namespace {
  */
 template<typename Container1, typename Container2>
 auto executeBinaryTransformImpl(
-    std::shared_ptr<Container1> const & data1_ptr,
-    std::shared_ptr<Container2> const & data2_ptr,
-    std::string const & transform_name,
-    std::any const & params_any,
-    std::vector<DataManagerStepDescriptor> const & steps,
-    size_t step_index,
-    DataManagerPipelineExecutor const & executor)
-    -> std::enable_if_t<
-        has_element_type_v<Container1> && has_element_type_v<Container2>,
-        std::optional<DataTypeVariant>>
-{
+        std::shared_ptr<Container1> const & data1_ptr,
+        std::shared_ptr<Container2> const & data2_ptr,
+        std::string const & transform_name,
+        std::any const & params_any,
+        std::vector<DataManagerStepDescriptor> const & steps,
+        size_t step_index,
+        DataManagerPipelineExecutor const & executor)
+        -> std::enable_if_t<
+                has_element_type_v<Container1> && has_element_type_v<Container2>,
+                std::optional<DataTypeVariant>> {
     auto & registry = ElementRegistry::instance();
     auto const & step = steps[step_index];
-    
+
     using Element1 = ElementForSafe_t<Container1>;
     using Element2 = ElementForSafe_t<Container2>;
     using TupleType = std::tuple<Element1, Element2>;
@@ -492,9 +491,9 @@ auto executeBinaryTransformImpl(
 
     // Adapt to (time, tuple) format for pipeline
     auto pipeline_input = zip_view | std::views::transform([](auto const & triplet) {
-        auto const & [time, e1, e2] = triplet;
-        return std::make_pair(time, std::make_tuple(e1, e2));
-    });
+                              auto const & [time, e1, e2] = triplet;
+                              return std::make_pair(time, std::make_tuple(e1, e2));
+                          });
 
     // Build pipeline - include this step and any following fusible steps
     TransformPipeline pipeline;
@@ -502,7 +501,7 @@ auto executeBinaryTransformImpl(
     // Add current step
     try {
         auto pipeline_step = Examples::createPipelineStepFromRegistry(
-            registry, transform_name, params_any);
+                registry, transform_name, params_any);
         pipeline.addStep(std::move(pipeline_step));
     } catch (std::exception const & e) {
         std::cerr << "Failed to create pipeline step: " << e.what() << std::endl;
@@ -527,7 +526,7 @@ auto executeBinaryTransformImpl(
 
         try {
             auto next_pipeline_step = Examples::createPipelineStepFromRegistry(
-                registry, next_step.transform_name, next_params);
+                    registry, next_step.transform_name, next_params);
             pipeline.addStep(std::move(next_pipeline_step));
         } catch (...) {
             break;
@@ -556,7 +555,7 @@ auto executeBinaryTransformImpl(
                 output->setTimeFrame(data1_ptr->getTimeFrame());
             }
 
-            for (auto const & [time, result_variant] : result_view) {
+            for (auto const & [time, result_variant]: result_view) {
                 if (auto const * val = std::get_if<float>(&result_variant)) {
                     output->appendAtTime(time, std::vector<float>{*val}, NotifyObservers::No);
                 }
@@ -572,7 +571,7 @@ auto executeBinaryTransformImpl(
                 output->setTimeFrame(data1_ptr->getTimeFrame());
             }
 
-            for (auto const & [time, result_variant] : result_view) {
+            for (auto const & [time, result_variant]: result_view) {
                 if (auto const * val = std::get_if<Line2D>(&result_variant)) {
                     if (!val->empty()) {
                         output->addAtTime(time, *val, NotifyObservers::No);
@@ -598,17 +597,16 @@ auto executeBinaryTransformImpl(
  */
 template<typename Container1, typename Container2>
 auto executeBinaryTransformImpl(
-    std::shared_ptr<Container1> const &,
-    std::shared_ptr<Container2> const &,
-    std::string const &,
-    std::any const &,
-    std::vector<DataManagerStepDescriptor> const &,
-    size_t,
-    DataManagerPipelineExecutor const &)
-    -> std::enable_if_t<
-        !(has_element_type_v<Container1> && has_element_type_v<Container2>),
-        std::optional<DataTypeVariant>>
-{
+        std::shared_ptr<Container1> const &,
+        std::shared_ptr<Container2> const &,
+        std::string const &,
+        std::any const &,
+        std::vector<DataManagerStepDescriptor> const &,
+        size_t,
+        DataManagerPipelineExecutor const &)
+        -> std::enable_if_t<
+                !(has_element_type_v<Container1> && has_element_type_v<Container2>),
+                std::optional<DataTypeVariant>> {
     std::cerr << "Container types do not support element-level transforms" << std::endl;
     return std::nullopt;
 }
@@ -627,48 +625,48 @@ auto executeBinaryTransformImpl(
  */
 template<typename Container1, typename Container2, typename Params>
 std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
-    std::shared_ptr<Container1> const & data1_ptr,
-    std::shared_ptr<Container2> const & data2_ptr,
-    std::string const & transform_name,
-    Params const & params) {
-    
+        std::shared_ptr<Container1> const & data1_ptr,
+        std::shared_ptr<Container2> const & data2_ptr,
+        std::string const & transform_name,
+        Params const & params) {
+
     auto & registry = ElementRegistry::instance();
     ComputeContext ctx;
-    
+
     // Check if this specific combination is registered
     auto const * meta = registry.getContainerMetadata(transform_name);
     if (!meta || !meta->is_multi_input || meta->input_arity != 2) {
         return std::nullopt;
     }
-    
+
     // Verify input types match what's registered
     bool types_match = false;
     if (meta->individual_input_types.size() >= 2) {
-        types_match = 
-            (meta->individual_input_types[0] == std::type_index(typeid(Container1))) &&
-            (meta->individual_input_types[1] == std::type_index(typeid(Container2)));
+        types_match =
+                (meta->individual_input_types[0] == std::type_index(typeid(Container1))) &&
+                (meta->individual_input_types[1] == std::type_index(typeid(Container2)));
     }
-    
+
     if (!types_match) {
         return std::nullopt;
     }
-    
+
     // For DigitalIntervalSeries x DigitalIntervalSeries -> DigitalIntervalSeries
     // This is the specific case we need to handle
-    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> && 
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
                   std::is_same_v<Container2, DigitalIntervalSeries>) {
         try {
             auto result = registry.executeBinaryContainerTransform<
-                DigitalIntervalSeries,
-                DigitalIntervalSeries,
-                DigitalIntervalSeries,
-                Params>(
-                transform_name,
-                *data1_ptr,
-                *data2_ptr,
-                params,
-                ctx);
-            
+                    DigitalIntervalSeries,
+                    DigitalIntervalSeries,
+                    DigitalIntervalSeries,
+                    Params>(
+                    transform_name,
+                    *data1_ptr,
+                    *data2_ptr,
+                    params,
+                    ctx);
+
             if (result) {
                 return DataTypeVariant{result};
             }
@@ -676,7 +674,7 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
             std::cerr << "Binary container transform failed: " << e.what() << std::endl;
         }
     }
-    
+
     return std::nullopt;
 }
 
@@ -685,14 +683,14 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
  */
 template<typename Container1, typename Container2>
 std::optional<DataTypeVariant> tryExecuteBinaryContainerTransformAny(
-    std::shared_ptr<Container1> const & data1_ptr,
-    std::shared_ptr<Container2> const & data2_ptr,
-    std::string const & transform_name,
-    std::any const & params_any) {
-    
+        std::shared_ptr<Container1> const & data1_ptr,
+        std::shared_ptr<Container2> const & data2_ptr,
+        std::string const & transform_name,
+        std::any const & params_any) {
+
     // Try known parameter types for binary container transforms
     // DigitalIntervalBoolean uses DigitalIntervalBooleanParams
-    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> && 
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
                   std::is_same_v<Container2, DigitalIntervalSeries>) {
         try {
             auto const & params = std::any_cast<DigitalIntervalBooleanParams const &>(params_any);
@@ -701,13 +699,13 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransformAny(
             // Not the right param type, continue
         }
     }
-    
+
     // Add more binary container transform parameter types here as needed
-    
+
     return std::nullopt;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // Multi-Input Pipeline Execution
@@ -764,9 +762,9 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeMultiInputSte
     // Check if this is a binary CONTAINER transform (operates on whole containers)
     // vs a binary ELEMENT transform (operates element-by-element with FlatZipView)
     auto const * container_meta = registry.getContainerMetadata(step.transform_name);
-    bool is_binary_container_transform = container_meta && 
-                                          container_meta->is_multi_input && 
-                                          container_meta->input_arity == 2;
+    bool is_binary_container_transform = container_meta &&
+                                         container_meta->is_multi_input &&
+                                         container_meta->input_arity == 2;
 
     // Type-dispatch to execute the binary transform
     return std::visit([&](auto const & data1_ptr) -> std::optional<DataTypeVariant> {
@@ -774,27 +772,29 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeMultiInputSte
             if (!data1_ptr || !data2_ptr) {
                 return std::nullopt;
             }
-            
+
             // First, try binary container transform (whole-container operations)
             if (is_binary_container_transform) {
                 auto result = tryExecuteBinaryContainerTransformAny(
-                    data1_ptr, data2_ptr,
-                    step.transform_name, params_any);
+                        data1_ptr, data2_ptr,
+                        step.transform_name, params_any);
                 if (result.has_value()) {
                     return result;
                 }
                 // If container transform didn't match types, fall through to element-level
             }
-            
+
             // Fall back to element-level binary transform (FlatZipView approach)
             // This is used for transforms like LineMinPointDist that work on
             // std::tuple<Element1, Element2> -> OutputElement
             return executeBinaryTransformImpl(
-                data1_ptr, data2_ptr,
-                step.transform_name, params_any,
-                steps_, step_index, *this);
-        }, *input2_opt);
-    }, *input1_opt);
+                    data1_ptr, data2_ptr,
+                    step.transform_name, params_any,
+                    steps_, step_index, *this);
+        },
+                          *input2_opt);
+    },
+                      *input1_opt);
 }
 
 bool DataManagerPipelineExecutor::canFuseStep(size_t step_index) const {
@@ -870,7 +870,7 @@ std::optional<DataTypeVariant> DataManagerPipelineExecutor::executeSegment(
         PipelineSegment const & segment) {
     // For now, delegate to existing step-by-step execution
     // Full segment fusion will be implemented in a future iteration
-    
+
     if (segment.is_multi_input) {
         return executeMultiInputStep(segment.start_step);
     }

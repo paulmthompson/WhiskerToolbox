@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
-#include "transforms/v2/core/FlatZipView.hpp"
+#include "transforms/v2/detail/FlatZipView.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "DataManager/Points/Point_Data.hpp"

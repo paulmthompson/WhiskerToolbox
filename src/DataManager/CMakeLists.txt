@@ -212,8 +212,8 @@ set(DATAMANAGER_SOURCES
         transforms/Media/whisker_tracing.cpp
         transforms/Media/whisker_tracing.hpp
 
-        transforms/v2/core/ContainerTraits.hpp
-        transforms/v2/core/ContainerTraits.cpp 
+        transforms/v2/detail/ContainerTraits.hpp
+        transforms/v2/detail/ContainerTraits.cpp 
         transforms/v2/core/DataManagerIntegration.hpp
         transforms/v2/core/DataManagerIntegration.cpp
         transforms/v2/core/ElementRegistry.hpp 

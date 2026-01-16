@@ -1,19 +1,22 @@
 #ifndef WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 #define WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
 
-#include "ContainerTraits.hpp"
 #include "ContainerTransform.hpp"
 #include "ContextAwareParams.hpp"
-#include "CoreGeometry/lines.hpp"
-#include "CoreGeometry/masks.hpp"
-#include "CoreGeometry/points.hpp"
-#include "DataManager/DataManagerTypes.hpp"
 #include "ElementRegistry.hpp"
 #include "PreProcessingRegistry.hpp"
 #include "RangeReductionRegistry.hpp"
 #include "TransformTypes.hpp"
 #include "ValueProjectionTypes.hpp"
 #include "ViewAdaptorTypes.hpp"
+#include "transforms/v2/detail/ContainerTraits.hpp"
+#include "transforms/v2/detail/PipelineOutputBuilder.hpp"
+#include "transforms/v2/detail/PipelineStep.hpp"
+
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
+#include "DataManager/DataManagerTypes.hpp"
 
 #include <any>
 #include <functional>
@@ -31,251 +34,7 @@
 
 namespace WhiskerToolbox::Transforms::V2 {
 
-// ============================================================================
-// Helper for Adding Elements to Different Container Types
-// ============================================================================
 
-// Helper for static_assert in else branch
-template<typename>
-inline constexpr bool always_false = false;
-
-/**
- * @brief Add element to output container, handling different container APIs
- * 
- * Different containers have different methods:
- * - RaggedTimeSeries<T>: addAtTime(time, T, notify)
- * - RaggedAnalogTimeSeries: appendAtTime(time, std::vector<float>, notify)
- * 
- * This helper uses compile-time checks to call the right method.
- */
-template<typename Container, typename Element>
-void addElementToContainer(Container & container, TimeFrameIndex time, Element && element) {
-    // Check if container has appendAtTime (like RaggedAnalogTimeSeries)
-    if constexpr (requires { container.appendAtTime(time, std::vector<Element>{}, NotifyObservers::No); }) {
-        // Wrap single element in vector for appendAtTime
-        container.appendAtTime(time, std::vector<Element>{std::forward<Element>(element)}, NotifyObservers::No);
-    }
-    // Check if container has addAtTime for single elements (like RaggedTimeSeries<T>)
-    else if constexpr (requires { container.addAtTime(time, std::forward<Element>(element), NotifyObservers::No); }) {
-        container.addAtTime(time, std::forward<Element>(element), NotifyObservers::No);
-    } else {
-        static_assert(always_false<Container>, "Container type does not support addAtTime or appendAtTime");
-    }
-}
-
-// ============================================================================
-// Pipeline Output Builder
-// ============================================================================
-
-/**
- * @brief Helper to build output containers efficiently
- * 
- * Handles both incremental addition (RaggedTimeSeries) and batch loading (AnalogTimeSeries).
- */
-template<typename Container, typename Element>
-class PipelineOutputBuilder {
-public:
-    PipelineOutputBuilder(std::shared_ptr<TimeFrame> tf)
-        : tf_(tf) {
-        if constexpr (use_incremental) {
-            container_ = std::make_shared<Container>();
-            if constexpr (requires { container_->setTimeFrame(tf); }) {
-                container_->setTimeFrame(tf);
-            }
-        }
-    }
-
-    void add(TimeFrameIndex time, Element element) {
-        if constexpr (use_incremental) {
-            addElementToContainer(*container_, time, std::move(element));
-        } else {
-            times_.push_back(time);
-            values_.push_back(std::move(element));
-        }
-    }
-
-    std::shared_ptr<Container> finalize() {
-        if constexpr (use_incremental) {
-            return container_;
-        } else {
-            auto container = std::make_shared<Container>(std::move(values_),
-                                                         std::move(times_));
-            if constexpr (requires { container->setTimeFrame(tf_); }) {
-                container->setTimeFrame(tf_);
-            }
-            return container;
-        }
-    }
-
-private:
-    // Detect incremental capabilities
-    static constexpr bool has_add_at_time = requires(Container & c, TimeFrameIndex t, Element e) {
-        c.addAtTime(t, e, NotifyObservers::No);
-    };
-
-    static constexpr bool has_append_at_time = requires(Container & c, TimeFrameIndex t, std::vector<Element> v) {
-        c.appendAtTime(t, v, NotifyObservers::No);
-    };
-
-    // Prefer incremental if available, otherwise fallback to batch
-    static constexpr bool use_incremental = has_add_at_time || has_append_at_time;
-
-    std::shared_ptr<Container> container_;
-    std::shared_ptr<TimeFrame> tf_;
-
-    std::vector<TimeFrameIndex> times_;
-    std::vector<Element> values_;
-};
-
-// ============================================================================
-// Pipeline Step Definition
-// ============================================================================
-
-// Forward declare for ADL
-struct PipelineStep;
-
-// Default implementation declared but not defined
-// RegisteredTransforms.hpp provides the definition
-template<typename View>
-void tryAllRegisteredPreprocessing(PipelineStep const &, View const &);
-
-/**
- * @brief Represents a single step in a transform pipeline
- * 
- * Each step contains:
- * - Transform name (for registry lookup)
- * - Type-erased parameters
- * - Type-erased execution functions for both element and time-grouped transforms
- * 
- * The executors are captured at the time of step creation, eliminating the need
- * for runtime type checking or reflection.
- */
-struct PipelineStep {
-    std::string transform_name;
-    mutable std::any params;// Type-erased parameters (mutable for preprocessing/caching)
-
-    // Type-erased executors that know the correct parameter type
-    // These are set when the step is added to the pipeline
-    std::function<ElementVariant(ElementVariant const &, std::any const &)> element_executor;
-    std::function<BatchVariant(BatchVariant const &, std::any const &)> time_grouped_executor;
-
-    template<typename Params>
-    PipelineStep(std::string name, Params p)
-        : transform_name(std::move(name)),
-          params(std::move(p)) {
-        // Create type-erased executors that capture the parameter type
-        auto & registry = ElementRegistry::instance();
-        auto const * meta = registry.getMetadata(transform_name);
-
-        if (meta && !meta->is_time_grouped) {
-            // Element transform executor
-            element_executor = [name = transform_name, p = this->params](
-                                       ElementVariant const & input, std::any const &) -> ElementVariant {
-                // This will be called with the correct types by the pipeline
-                // The actual execution is deferred until we know InputElement and OutputElement
-                return ElementVariant{};// Placeholder - will be replaced by specialized executor
-            };
-        } else if (meta && meta->is_time_grouped) {
-            // Time-grouped transform executor
-            time_grouped_executor = [name = transform_name, p = this->params](
-                                            BatchVariant const & input, std::any const &) -> BatchVariant {
-                return BatchVariant{};// Placeholder
-            };
-        }
-    }
-
-    PipelineStep(std::string name)
-        : PipelineStep(std::move(name), NoParams{}) {}
-
-    /**
-     * @brief Try preprocessing using registry lookup
-     * 
-     * This is a compile-time template that gets instantiated with both
-     * the View type and the Params type known. The Params type is discovered
-     * by trying registered types from the preprocessing registry.
-     * 
-     * @tparam View The view type (known at call site)
-     * @tparam Params The parameter type (tried from registry)
-     */
-    template<typename View, typename Params>
-    bool tryPreprocessTyped(View const & view) const {
-        // Check type without throwing
-        if (params.type() != typeid(Params)) {
-            return false;
-        }
-
-        // Cast to concrete type (non-const since we're modifying it)
-        auto & params_ref = std::any_cast<Params &>(params);
-
-        // Check if this type has preprocess() method that's callable with this view type
-        // The requires constraint on the preprocess method ensures type safety
-        if constexpr (requires { params_ref.preprocess(view); }) {
-            // Check for idempotency guard
-            if constexpr (requires { params_ref.isPreprocessed(); }) {
-                if (!params_ref.isPreprocessed()) {
-                    params_ref.preprocess(view);
-                }
-            } else {
-                params_ref.preprocess(view);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @brief Main preprocessing entry point
-     * 
-     * Calls free function that can be overloaded in RegisteredTransforms.hpp
-     */
-    template<typename View>
-    void maybePreprocess(View const & view) const {
-        // Call ADL-found free function
-        // Default version does nothing, RegisteredTransforms.hpp provides the real version
-        tryAllRegisteredPreprocessing(*this, view);
-    }
-
-private:
-public:
-    /**
-     * @brief Create element executor for specific types
-     * 
-     * This template method creates a properly typed executor that can be called
-     * from the pipeline without knowing the parameter type.
-     */
-    template<typename InputElement, typename OutputElement, typename Params>
-    void createElementExecutor() {
-        auto & registry = ElementRegistry::instance();
-        element_executor = [&registry, name = transform_name, p = std::any_cast<Params>(params)](
-                                   ElementVariant const & input_variant, std::any const &) -> ElementVariant {
-            // Extract input from variant
-            if (auto const * input = std::get_if<InputElement>(&input_variant)) {
-                OutputElement result = registry.execute<InputElement, OutputElement, Params>(
-                        name, *input, p);
-                return ElementVariant{result};
-            }
-            throw std::runtime_error("Input variant does not hold expected type: " + std::string(typeid(InputElement).name()));
-        };
-    }
-
-    /**
-     * @brief Create time-grouped executor for specific types
-     */
-    template<typename InputElement, typename OutputElement, typename Params>
-    void createTimeGroupedExecutor() {
-        auto & registry = ElementRegistry::instance();
-        time_grouped_executor = [&registry, name = transform_name, p = std::any_cast<Params>(params)](
-                                        BatchVariant const & input_batch, std::any const &) -> BatchVariant {
-            if (auto const * input_vec = std::get_if<std::vector<InputElement>>(&input_batch)) {
-                std::span<InputElement const> input_span(*input_vec);
-                std::vector<OutputElement> result = registry.executeTimeGrouped<InputElement, OutputElement, Params>(
-                        name, input_span, p);
-                return BatchVariant{result};
-            }
-            throw std::runtime_error("Input batch does not hold expected type: " + std::string(typeid(std::vector<InputElement>).name()));
-        };
-    }
-};
 
 // ============================================================================
 // Batch Variant Helpers
@@ -391,7 +150,7 @@ public:
     template<typename IntermediateElement, typename Scalar>
     TransformPipeline & setRangeReduction(std::string const & reduction_name) {
         return setRangeReduction<IntermediateElement, Scalar, NoReductionParams>(
-            reduction_name, NoReductionParams{});
+                reduction_name, NoReductionParams{});
     }
 
     /**
@@ -406,7 +165,7 @@ public:
      * @return Reference to this pipeline for chaining
      */
     TransformPipeline & setRangeReductionErased(std::string const & reduction_name,
-                                                 std::any params) {
+                                                std::any params) {
         auto & registry = RangeReductionRegistry::instance();
         auto const * meta = registry.getMetadata(reduction_name);
 
@@ -784,7 +543,7 @@ public:
     [[nodiscard]] bool hasContextAwareSteps() const noexcept {
         // This is a runtime check that requires trying the context injection
         // We rely on the type system to detect this at compile time in the bind methods
-        return false;  // Placeholder - actual detection happens at bind time
+        return false;// Placeholder - actual detection happens at bind time
     }
 
     /**
@@ -796,7 +555,7 @@ public:
         if (steps_.empty()) return true;
 
         auto & registry = ElementRegistry::instance();
-        for (auto const & step : steps_) {
+        for (auto const & step: steps_) {
             auto const * meta = registry.getMetadata(step.transform_name);
             if (!meta || meta->is_time_grouped) {
                 return false;
@@ -1360,8 +1119,9 @@ auto buildComposedTransformFn(TransformPipeline const & pipeline) {
         }
         if (meta->is_time_grouped) {
             throw std::runtime_error(
-                "bindToView does not support time-grouped transforms. "
-                "Step '" + step.transform_name + "' is time-grouped.");
+                    "bindToView does not support time-grouped transforms. "
+                    "Step '" +
+                    step.transform_name + "' is time-grouped.");
         }
     }
 
@@ -1385,7 +1145,7 @@ auto buildComposedTransformFn(TransformPipeline const & pipeline) {
     // Return composed function that applies all transforms
     return [chain = std::move(chain)](InElement const & input) -> OutElement {
         ElementVariant current{input};
-        for (auto const & fn : chain) {
+        for (auto const & fn: chain) {
             current = fn(std::move(current));
         }
         return std::get<OutElement>(std::move(current));
@@ -1402,7 +1162,7 @@ inline void injectContextIntoParams(std::any & params, TrialContext const & ctx)
     ContextInjectorRegistry::instance().tryInject(params, ctx);
 }
 
-}  // namespace detail
+}// namespace detail
 
 template<typename InElement, typename OutElement>
 ViewAdaptorFn<InElement, OutElement> bindToView(TransformPipeline const & pipeline) {
@@ -1411,10 +1171,10 @@ ViewAdaptorFn<InElement, OutElement> bindToView(TransformPipeline const & pipeli
 
     // Return adaptor that applies transform to each element
     return [transform_fn = std::move(transform_fn)](std::span<InElement const> input)
-               -> std::vector<OutElement> {
+                   -> std::vector<OutElement> {
         std::vector<OutElement> result;
         result.reserve(input.size());
-        for (auto const & elem : input) {
+        for (auto const & elem: input) {
             result.push_back(transform_fn(elem));
         }
         return result;
@@ -1461,17 +1221,17 @@ ViewAdaptorFactory<InElement, OutElement> bindToViewWithContext(TransformPipelin
         // Build and return the adaptor with context-injected transforms
         auto transform_fn = [chain = std::move(chain)](InElement const & input) -> OutElement {
             ElementVariant current{input};
-            for (auto const & fn : chain) {
+            for (auto const & fn: chain) {
                 current = fn(std::move(current));
             }
             return std::get<OutElement>(std::move(current));
         };
 
         return [transform_fn = std::move(transform_fn)](std::span<InElement const> input)
-                   -> std::vector<OutElement> {
+                       -> std::vector<OutElement> {
             std::vector<OutElement> result;
             result.reserve(input.size());
-            for (auto const & elem : input) {
+            for (auto const & elem: input) {
                 result.push_back(transform_fn(elem));
             }
             return result;
@@ -1515,9 +1275,9 @@ ReducerFn<InElement, Scalar> bindReducer(TransformPipeline const & pipeline) {
 
     // Build transform function
     using IntermediateElement = typename std::conditional_t<
-        std::is_same_v<decltype(intermediate_type), std::type_index>,
-        void,  // Placeholder - actual type handled via variant
-        void>;
+            std::is_same_v<decltype(intermediate_type), std::type_index>,
+            void,// Placeholder - actual type handled via variant
+            void>;
 
     // For now, we handle specific intermediate types
     // This could be extended with more type dispatch
@@ -1531,7 +1291,7 @@ ReducerFn<InElement, Scalar> bindReducer(TransformPipeline const & pipeline) {
         // Transform all elements
         std::vector<InElement> transformed;
         transformed.reserve(input.size());
-        for (auto const & elem : input) {
+        for (auto const & elem: input) {
             // Apply the composed transform
             // Note: In full implementation, output type may differ from InElement
             transformed.push_back(transform_fn(elem));
@@ -1604,9 +1364,9 @@ ReducerFactory<InElement, Scalar> bindReducerWithContext(TransformPipeline const
             std::vector<std::any> transformed_any;
             transformed_any.reserve(input.size());
 
-            for (auto const & elem : input) {
+            for (auto const & elem: input) {
                 ElementVariant current{elem};
-                for (auto const & fn : chain) {
+                for (auto const & fn: chain) {
                     current = fn(std::move(current));
                 }
                 // Store the variant result
@@ -1617,7 +1377,7 @@ ReducerFactory<InElement, Scalar> bindReducerWithContext(TransformPipeline const
             // This requires extracting from variants
             std::vector<ElementVariant> transformed;
             transformed.reserve(transformed_any.size());
-            for (auto & any_elem : transformed_any) {
+            for (auto & any_elem: transformed_any) {
                 transformed.push_back(std::any_cast<ElementVariant>(std::move(any_elem)));
             }
 
@@ -1654,8 +1414,9 @@ ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const 
         }
         if (meta->is_time_grouped) {
             throw std::runtime_error(
-                "bindValueProjection does not support time-grouped transforms. "
-                "Step '" + step.transform_name + "' is time-grouped.");
+                    "bindValueProjection does not support time-grouped transforms. "
+                    "Step '" +
+                    step.transform_name + "' is time-grouped.");
         }
     }
 
@@ -1670,7 +1431,7 @@ ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const 
 
         // Capture all needed values by value for the closure
         chain.push_back([&registry, name = step.transform_name,
-                         params = step.params,  // Copy params
+                         params = step.params,// Copy params
                          in_type = meta->input_type,
                          out_type = meta->output_type,
                          param_type = meta->params_type](
@@ -1683,7 +1444,7 @@ ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const 
     // Return projection function that applies all transforms and extracts Value
     return [chain = std::move(chain)](InElement const & input) -> Value {
         ElementVariant current{input};
-        for (auto const & fn : chain) {
+        for (auto const & fn: chain) {
             current = fn(current);
         }
         return std::get<Value>(current);
@@ -1709,8 +1470,9 @@ ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(Transfor
             }
             if (meta->is_time_grouped) {
                 throw std::runtime_error(
-                    "bindValueProjectionWithContext does not support time-grouped transforms. "
-                    "Step '" + step.transform_name + "' is time-grouped.");
+                        "bindValueProjectionWithContext does not support time-grouped transforms. "
+                        "Step '" +
+                        step.transform_name + "' is time-grouped.");
             }
         }
 
@@ -1743,7 +1505,7 @@ ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(Transfor
         // Return projection function that applies all transforms and extracts Value
         return [chain = std::move(chain)](InElement const & input) -> Value {
             ElementVariant current{input};
-            for (auto const & fn : chain) {
+            for (auto const & fn: chain) {
                 current = fn(current);
             }
             return std::get<Value>(current);
