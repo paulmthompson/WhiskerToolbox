@@ -2,10 +2,13 @@
 #define PIPELINE_STEP_HPP
 
 #include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/core/PipelineValueStore.hpp"
+#include "transforms/v2/extension/ParameterBinding.hpp"
 #include "transforms/v2/extension/TransformTypes.hpp"
 
 #include <any>
 #include <functional>
+#include <map>
 #include <string>
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -30,13 +33,41 @@ void tryAllRegisteredPreprocessing(PipelineStep const &, View const &);
  * - Transform name (for registry lookup)
  * - Type-erased parameters
  * - Type-erased execution functions for both element and time-grouped transforms
+ * - Parameter bindings from value store keys to parameter fields
  * 
  * The executors are captured at the time of step creation, eliminating the need
  * for runtime type checking or reflection.
+ * 
+ * ## Parameter Bindings
+ * 
+ * The `param_bindings` map allows pipeline steps to receive values from a
+ * PipelineValueStore at execution time. This enables:
+ * - Wiring reduction outputs into transform parameters
+ * - Trial-specific context injection (alignment time, trial index)
+ * - Dynamic parameter configuration from computed values
+ * 
+ * Example:
+ * ```cpp
+ * PipelineStep step("ZScoreNormalize", ZScoreParams{});
+ * step.param_bindings = {
+ *     {"mean", "computed_mean"},     // field_name -> store_key
+ *     {"std_dev", "computed_std"}
+ * };
+ * 
+ * PipelineValueStore store;
+ * store.set("computed_mean", 0.5f);
+ * store.set("computed_std", 0.1f);
+ * 
+ * step.applyBindings(store);  // Updates params with bound values
+ * ```
  */
 struct PipelineStep {
     std::string transform_name;
     mutable std::any params;// Type-erased parameters (mutable for preprocessing/caching)
+    
+    /// Bindings from value store to param fields
+    /// Key: param field name, Value: store key
+    std::map<std::string, std::string> param_bindings;
 
     // Type-erased executors that know the correct parameter type
     // These are set when the step is added to the pipeline
@@ -117,6 +148,52 @@ struct PipelineStep {
         // Call ADL-found free function
         // Default version does nothing, RegisteredTransforms.hpp provides the real version
         tryAllRegisteredPreprocessing(*this, view);
+    }
+
+    // ========================================================================
+    // Value Store Bindings (V2 pattern)
+    // ========================================================================
+
+    /**
+     * @brief Apply value store bindings to parameters
+     * 
+     * If this step has param_bindings configured, this method applies values
+     * from the store to the corresponding parameter fields. The binding is
+     * done via JSON serialization/deserialization through reflect-cpp.
+     * 
+     * This is the V2 pattern for parameter injection, replacing the older
+     * preprocessing and context injection patterns.
+     * 
+     * @param store The value store containing bound values
+     * @throws std::runtime_error if binding fails (missing key, type mismatch)
+     * 
+     * @example
+     * ```cpp
+     * step.param_bindings = {{"mean", "computed_mean"}, {"std_dev", "computed_std"}};
+     * store.set("computed_mean", 0.5f);
+     * store.set("computed_std", 0.1f);
+     * step.applyBindings(store);  // params now has mean=0.5f, std_dev=0.1f
+     * ```
+     */
+    void applyBindings(PipelineValueStore const& store) const {
+        if (param_bindings.empty()) {
+            return;
+        }
+        
+        // Use type-erased binding application from registry
+        params = tryApplyBindingsErased(
+            params.type(),
+            params,
+            param_bindings,
+            store);
+    }
+
+    /**
+     * @brief Check if this step has any parameter bindings
+     * @return true if param_bindings is not empty
+     */
+    [[nodiscard]] bool hasBindings() const noexcept {
+        return !param_bindings.empty();
     }
 
 private:
