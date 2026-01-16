@@ -21,6 +21,7 @@
 #include "transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
+#include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
@@ -57,6 +58,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
+    registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     return true;
 }();
 
@@ -480,6 +482,26 @@ auto const register_zscore_normalization = RegisterTransform<float, float, ZScor
                 .input_type_name = "float",
                 .output_type_name = "float",
                 .params_type_name = "ZScoreNormalizationParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register ZScoreNormalizationV2 (Value Store Binding Transform)
+// Uses pre_reductions to compute mean/std instead of preprocessing
+auto const register_zscore_normalization_v2 = RegisterTransform<float, float, ZScoreNormalizationParamsV2>(
+        "ZScoreNormalizeV2",
+        zScoreNormalizationV2,
+        TransformMetadata{
+                .name = "ZScoreNormalizeV2",
+                .description = "Normalize values to z-scores using value store bindings for mean and std_dev",
+                .category = "Statistics",
+                .input_type = typeid(float),
+                .output_type = typeid(float),
+                .params_type = typeid(ZScoreNormalizationParamsV2),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "float",
+                .output_type_name = "float",
+                .params_type_name = "ZScoreNormalizationParamsV2",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = false});

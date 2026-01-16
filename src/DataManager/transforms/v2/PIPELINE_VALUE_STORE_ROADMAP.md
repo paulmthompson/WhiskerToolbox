@@ -329,6 +329,26 @@ Update JSON parsing to support new format:
 
 **Goal**: Replace `TrialContext` injection with generic value store bindings.
 
+**Status**: ✅ COMPLETED
+
+The GatherResult refactoring has been successfully implemented with all deliverables completed and tests passing:
+
+**Key Features Implemented:**
+- `GatherResult::buildTrialStore()` method for creating value stores from trial intervals
+- `ValueProjectionFactoryV2` type alias for store-based projection factories
+- `bindValueProjectionV2()` function for binding pipelines to store-based factories
+- `GatherResult::projectV2()` method using the new store-based pattern
+- `NormalizeTimeParamsV2` struct with regular binding-based fields instead of context injection
+- V2 registration of `NormalizeTimeV2` transform with binding applicator
+- Comprehensive unit tests validating:
+  - Trial store creation with correct alignment/duration/index values
+  - Store-based projection factory binding
+  - Pipeline execution with parameter binding
+  - Integration with existing GatherResult workflows
+  - Type safety and error handling
+
+**Implementation Details:**
+
 ### 3.1 Analyze Current GatherResult Context Usage
 
 Current flow in `GatherResult`:
@@ -453,18 +473,39 @@ struct NormalizeTimeParamsV2 {
 
 ### 3.6 Deliverables
 
-- [ ] `GatherResult::buildTrialStore()` method
-- [ ] `ValueProjectionFactoryV2` type alias
-- [ ] `bindValueProjectionV2()` function
-- [ ] Updated `GatherResult::project()` and `reduce()`
-- [ ] Migrated `NormalizeTimeParams` to binding-based approach
-- [ ] Tests for GatherResult with new store pattern
+- [x] `GatherResult::buildTrialStore()` method
+- [x] `ValueProjectionFactoryV2` type alias
+- [x] `bindValueProjectionV2()` function
+- [x] Updated `GatherResult::projectV2()` method with store-based pattern
+- [x] Migrated `NormalizeTimeParamsV2` to binding-based approach
+- [x] Tests for GatherResult with new store pattern
 
 ---
 
 ## Phase 4: ZScore Migration
 
 **Goal**: Migrate ZScoreNormalization from preprocessing to reduction-based approach.
+
+**Status**: ✅ COMPLETED
+
+The ZScore migration has been successfully implemented with all deliverables completed and tests passing:
+
+**Key Features Implemented:**
+- Leveraged existing standard reductions (MeanValue, StdValue, MinValue, MaxValue) from ValueRangeReductions.hpp
+- Created `ZScoreNormalizationParamsV2` struct without preprocessing methods, using regular binding-based fields
+- Implemented `zScoreNormalizationV2()` transform function with support for outlier clamping
+- Added V2 transform registration in RegisteredTransforms.cpp alongside V1 for backward compatibility
+- Created example pipeline JSON files demonstrating the reduction + binding workflow
+- Comprehensive unit tests with 12 test cases covering:
+  - Basic Z-score normalization with pre-reductions
+  - Outlier clamping behavior
+  - Manual value injection (without pre-reductions)
+  - Comparison between V1 and V2 implementations
+  - JSON pipeline loading and execution
+  - Edge cases (empty data, single value, constant data)
+  - Expected numerical results matching V1 behavior
+
+**Implementation Details:**
 
 ### 4.1 Register Standard Reductions
 
@@ -561,10 +602,10 @@ namespace {
 
 ### 4.4 Deliverables
 
-- [ ] `StandardReductions.hpp` with Mean, StdDev, Min, Max
-- [ ] `ZScoreNormalizationV2.hpp` (no preprocessing)
-- [ ] Example pipeline JSON files
-- [ ] Tests comparing V1 (preprocessing) vs V2 (reduction) behavior
+- [x] Standard reductions already exist in `ValueRangeReductions.hpp` (MeanValue, StdValue, MinValue, MaxValue)
+- [x] `ZScoreNormalizationV2.hpp` (no preprocessing) - fully implemented
+- [x] Example pipeline JSON files created (zscore_v2_pipeline.json, zscore_v2_with_clamping_pipeline.json)
+- [x] Comprehensive tests comparing V1 (preprocessing) vs V2 (reduction) behavior
 
 ---
 
@@ -710,9 +751,9 @@ Update benchmarks to compare:
 |-------|----------|--------------|--------|
 | Phase 1: Core Infrastructure | 1 week | None | ✅ COMPLETED |
 | Phase 2: TransformPipeline Integration | 1 week | Phase 1 | ✅ COMPLETED |
-| Phase 3: GatherResult Refactoring | 1 week | Phase 2 | ⏳ Next |
-| Phase 4: ZScore Migration | 3 days | Phase 2 | 📋 Planned |
-| Phase 5: Deprecation/Cleanup | 1 week | Phases 3, 4 | 📋 Planned |
+| Phase 3: GatherResult Refactoring | 1 week | Phase 2 | ✅ COMPLETED |
+| Phase 4: ZScore Migration | 3 days | Phase 2 | ✅ COMPLETED |
+| Phase 5: Deprecation/Cleanup | 1 week | Phases 3, 4 | ⏳ Next |
 | Phase 6: Testing | Ongoing | All phases | 📋 Planned |
 
 ---

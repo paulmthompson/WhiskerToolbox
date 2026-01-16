@@ -5,6 +5,7 @@
 #include "PipelineValueStore.hpp"
 #include "RangeReductionRegistry.hpp"
 #include "transforms/v2/detail/ReductionStep.hpp"
+#include "transforms/v2/extension/ParameterBinding.hpp"
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 #include "transforms/v2/extension/ViewAdaptorTypes.hpp"
 #include "transforms/v2/detail/ContainerTraits.hpp"
@@ -1255,6 +1256,60 @@ ValueProjectionFn<InElement, Value> bindValueProjection(TransformPipeline const 
 template<typename InElement, typename Value>
 ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(TransformPipeline const & pipeline);
 
+/**
+ * @brief Bind a pipeline with parameter bindings to produce a value projection factory (V2 pattern)
+ *
+ * Creates a factory function that takes PipelineValueStore and returns a value projection.
+ * Values from the store are bound to transform parameters via the param_bindings field.
+ * This is the V2 replacement for bindValueProjectionWithContext that uses generic
+ * value binding instead of specialized context injection.
+ *
+ * **Primary Use Case: Raster Plots with Value Store**
+ * @code
+ * // Pipeline with param bindings (loaded from JSON)
+ * auto pipeline = loadPipelineFromJson(R"({
+ *     "steps": [{
+ *         "transform": "NormalizeTimeV2",
+ *         "params": {},
+ *         "param_bindings": {"alignment_time": "alignment_time"}
+ *     }]
+ * })");
+ *
+ * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+ *
+ * for (size_t i = 0; i < gather_result.size(); ++i) {
+ *     auto store = gather_result.buildTrialStore(i);  // V2 method
+ *     auto projection = factory(store);
+ *
+ *     for (auto const& event : gather_result[i]->view()) {
+ *         float norm_time = projection(event);  // Computed value
+ *         EntityId id = event.id();             // From source element
+ *         draw(norm_time, i, id);
+ *     }
+ * }
+ * @endcode
+ *
+ * ## Binding Mechanism
+ *
+ * 1. Store receives values: `store.set("alignment_time", trial_start);`
+ * 2. Pipeline steps have bindings: `{"alignment_time": "alignment_time"}`
+ * 3. Factory applies bindings: step.params.alignment_time = store["alignment_time"]
+ * 4. Projection uses bound params for transform
+ *
+ * @tparam InElement Input element type (e.g., EventWithId)
+ * @tparam Value Output value type (e.g., float)
+ * @param pipeline The transform pipeline with param_bindings
+ * @return ValueProjectionFactoryV2 that produces projections from value store
+ *
+ * @throws std::runtime_error if pipeline is empty or contains unsupported transforms
+ *
+ * @see bindValueProjectionWithContext For legacy TrialContext-based approach
+ * @see PipelineValueStore For value store documentation
+ * @see GatherResult::buildTrialStore() For populating store with trial values
+ */
+template<typename InElement, typename Value>
+ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeline const & pipeline);
+
 
 /**
  * @brief Execute pipeline on variant input
@@ -1670,6 +1725,72 @@ ValueProjectionFactory<InElement, Value> bindValueProjectionWithContext(Transfor
 
             // Inject context using the registry
             detail::injectContextIntoParams(params_copy, ctx);
+
+            // Capture all values by value for the closure
+            chain.push_back([&registry, name = step.transform_name,
+                             params = std::move(params_copy),
+                             in_type = meta->input_type,
+                             out_type = meta->output_type,
+                             param_type = meta->params_type](
+                                    ElementVariant const & input) -> ElementVariant {
+                return registry.executeWithDynamicParams(
+                        name, input, params, in_type, out_type, param_type);
+            });
+        }
+
+        // Return projection function that applies all transforms and extracts Value
+        return [chain = std::move(chain)](InElement const & input) -> Value {
+            ElementVariant current{input};
+            for (auto const & fn: chain) {
+                current = fn(current);
+            }
+            return std::get<Value>(current);
+        };
+    };
+}
+
+template<typename InElement, typename Value>
+ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeline const & pipeline) {
+    if (pipeline.empty()) {
+        throw std::runtime_error("Pipeline has no steps");
+    }
+
+    // Capture a copy of the pipeline that we can modify per-store
+    return [pipeline](PipelineValueStore const & store) -> ValueProjectionFn<InElement, Value> {
+        auto & registry = ElementRegistry::instance();
+
+        // Verify all steps are element-level
+        for (size_t i = 0; i < pipeline.size(); ++i) {
+            auto const & step = pipeline.getStep(i);
+            auto const * meta = registry.getMetadata(step.transform_name);
+            if (!meta) {
+                throw std::runtime_error("Transform not found: " + step.transform_name);
+            }
+            if (meta->is_time_grouped) {
+                throw std::runtime_error(
+                        "bindValueProjectionV2 does not support time-grouped transforms. "
+                        "Step '" +
+                        step.transform_name + "' is time-grouped.");
+            }
+        }
+
+        // Build chain with store-bound parameters
+        std::vector<std::function<ElementVariant(ElementVariant const &)>> chain;
+        chain.reserve(pipeline.size());
+
+        for (size_t i = 0; i < pipeline.size(); ++i) {
+            auto const & step = pipeline.getStep(i);
+            auto const * meta = registry.getMetadata(step.transform_name);
+
+            // Apply bindings from store to parameters
+            std::any params_copy = step.params;
+            if (!step.param_bindings.empty()) {
+                params_copy = applyBindingsErased(
+                    meta->params_type,
+                    step.params,
+                    step.param_bindings,
+                    store);
+            }
 
             // Capture all values by value for the closure
             chain.push_back([&registry, name = step.transform_name,

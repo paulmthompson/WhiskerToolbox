@@ -222,6 +222,106 @@ struct NormalizeTimeParams {
     return static_cast<float>(sample.time().getValue() - alignment.getValue());
 }
 
+// ============================================================================
+// V2 Parameters (using param bindings instead of context injection)
+// ============================================================================
+
+/**
+ * @brief Parameters for time normalization using value store bindings (V2 pattern)
+ *
+ * This is the V2 replacement for NormalizeTimeParams that uses regular fields
+ * populated via JSON parameter bindings instead of context injection.
+ *
+ * ## Key Differences from NormalizeTimeParams
+ *
+ * - `alignment_time` is a regular int64_t field, not rfl::Skip
+ * - No setContext() method - values come from pipeline bindings
+ * - Fully serializable via reflect-cpp
+ *
+ * ## Usage with Pipeline Bindings
+ *
+ * @code
+ * // JSON pipeline definition
+ * {
+ *   "steps": [{
+ *     "transform": "NormalizeTimeValueV2",
+ *     "params": {},
+ *     "param_bindings": {"alignment_time": "alignment_time"}
+ *   }]
+ * }
+ *
+ * // At runtime
+ * PipelineValueStore store;
+ * store.set("alignment_time", trial_start);  // From buildTrialStore()
+ *
+ * // Bindings automatically populate params.alignment_time
+ * @endcode
+ *
+ * @see NormalizeTimeParams for legacy context-injection approach
+ * @see PipelineValueStore for value store documentation
+ * @see ParameterBinding.hpp for binding mechanism
+ */
+struct NormalizeTimeParamsV2 {
+    /// Alignment time (t=0 reference point) - populated via binding
+    int64_t alignment_time = 0;
+};
+
+// ============================================================================
+// V2 Transform Functions
+// ============================================================================
+
+/**
+ * @brief Normalize a TimeFrameIndex to float value (V2 - uses bound params)
+ *
+ * This is the V2 version that uses NormalizeTimeParamsV2 with regular fields
+ * populated via parameter bindings.
+ *
+ * @param time Input time to normalize
+ * @param params Parameters with alignment_time bound from store
+ * @return float The normalized time (time - alignment_time)
+ *
+ * @code
+ * TimeFrameIndex event_time{125};
+ * NormalizeTimeParamsV2 params{.alignment_time = 100};
+ *
+ * float norm_time = normalizeTimeValueV2(event_time, params);
+ * // norm_time == 25.0f
+ * @endcode
+ */
+[[nodiscard]] inline float normalizeTimeValueV2(
+        TimeFrameIndex const& time,
+        NormalizeTimeParamsV2 const& params) {
+    return static_cast<float>(time.getValue() - params.alignment_time);
+}
+
+/**
+ * @brief Normalize event time to float value (V2 - uses bound params)
+ *
+ * Convenience function for EventWithId that extracts time and normalizes.
+ *
+ * @param event Input event with absolute time
+ * @param params Parameters with alignment_time bound from store
+ * @return float The normalized time (event.time() - alignment_time)
+ */
+[[nodiscard]] inline float normalizeEventTimeValueV2(
+        EventWithId const& event,
+        NormalizeTimeParamsV2 const& params) {
+    return static_cast<float>(event.time().getValue() - params.alignment_time);
+}
+
+/**
+ * @brief Normalize analog sample time to float value (V2 - uses bound params)
+ *
+ * @param sample Input sample with absolute time
+ * @param params Parameters with alignment_time bound from store
+ * @return float The normalized time (sample.time() - alignment_time)
+ */
+[[nodiscard]] inline float normalizeSampleTimeValueV2(
+        AnalogTimeSeries::TimeValuePoint const& sample,
+        NormalizeTimeParamsV2 const& params) {
+    return static_cast<float>(sample.time().getValue() - params.alignment_time);
+}
+
 }  // namespace WhiskerToolbox::Transforms::V2
 
 #endif  // WHISKERTOOLBOX_V2_NORMALIZE_TIME_HPP

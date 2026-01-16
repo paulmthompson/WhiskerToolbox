@@ -76,6 +76,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "transforms/v2/core/PipelineValueStore.hpp"
 #include "transforms/v2/extension/ContextAwareParams.hpp"
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 #include "transforms/v2/extension/ViewAdaptorTypes.hpp"
@@ -538,6 +539,59 @@ public:
     }
 
     /**
+     * @brief Build value store for a specific trial (V2 pattern)
+     *
+     * Creates a PipelineValueStore populated with standard trial values that can
+     * be bound to transform parameters. This is the V2 replacement for buildContext()
+     * that enables generic parameter binding without specialized context structs.
+     *
+     * ## Store Keys
+     *
+     * - "alignment_time": int64_t - Trial start time (used as t=0 reference)
+     * - "trial_index": int64_t - Original trial index (0-based)
+     * - "trial_duration": int64_t - Duration (end - start)
+     * - "end_time": int64_t - Trial end time
+     *
+     * ## Usage with Pipeline Bindings
+     *
+     * @code
+     * // Pipeline with bindings
+     * // {"transform": "NormalizeTimeV2", "bindings": {"alignment_time": "alignment_time"}}
+     * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+     *
+     * for (size_t i = 0; i < result.size(); ++i) {
+     *     auto store = result.buildTrialStore(i);
+     *     auto projection = factory(store);
+     *     // Use projection on trial events...
+     * }
+     * @endcode
+     *
+     * @param trial_idx Index of the trial (0-based, respects reordering)
+     * @return PipelineValueStore populated with trial values
+     * @throws std::out_of_range if trial_idx >= size()
+     *
+     * @see buildContext() for legacy TrialContext-based approach
+     * @see PipelineValueStore for store documentation
+     * @see projectV2() for applying store-based projections to all trials
+     */
+    [[nodiscard]] WhiskerToolbox::Transforms::V2::PipelineValueStore buildTrialStore(size_type trial_idx) const {
+        if (trial_idx >= size()) {
+            throw std::out_of_range("GatherResult::buildTrialStore: index out of range");
+        }
+        
+        auto interval = intervalAtReordered(trial_idx);
+        size_type orig_idx = originalIndex(trial_idx);
+        
+        WhiskerToolbox::Transforms::V2::PipelineValueStore store;
+        store.set("alignment_time", static_cast<int64_t>(interval.start));
+        store.set("trial_index", static_cast<int64_t>(orig_idx));
+        store.set("trial_duration", interval.end - interval.start);
+        store.set("end_time", static_cast<int64_t>(interval.end));
+        
+        return store;
+    }
+
+    /**
      * @brief Project values across all trials using a context-aware pipeline
      *
      * This method enables lazy, per-trial value projection using a pipeline
@@ -574,6 +628,58 @@ public:
         for (size_type i = 0; i < size(); ++i) {
             auto ctx = buildContext(i);
             projections.push_back(factory(ctx));
+        }
+
+        return projections;
+    }
+
+    /**
+     * @brief Project values across all trials using value store bindings (V2 pattern)
+     *
+     * This is the V2 replacement for project() that uses PipelineValueStore instead of
+     * TrialContext. The projection factory receives a value store populated with trial
+     * values and applies parameter bindings to produce per-trial projections.
+     *
+     * ## Differences from project()
+     *
+     * - Uses buildTrialStore() instead of buildContext()
+     * - Factory takes PipelineValueStore instead of TrialContext
+     * - Parameters are bound via JSON bindings, not context injection
+     *
+     * @tparam Value The projected value type (e.g., float for normalized time)
+     * @param factory Store-based projection factory from bindValueProjectionV2()
+     * @return Vector of projection functions, one per trial
+     *
+     * @example
+     * @code
+     * // Pipeline with param bindings
+     * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+     * auto projections = result.projectV2(factory);
+     *
+     * for (size_t i = 0; i < result.size(); ++i) {
+     *     auto const& projection = projections[i];
+     *     for (auto const& event : result[i]->view()) {
+     *         float norm_time = projection(event);
+     *         EntityId id = event.id();
+     *         draw_point(norm_time, i, id);
+     *     }
+     * }
+     * @endcode
+     *
+     * @see project() for legacy TrialContext-based approach
+     * @see buildTrialStore() for store population
+     * @see bindValueProjectionV2() for creating factories
+     */
+    template<typename Value>
+    [[nodiscard]] auto projectV2(
+            WhiskerToolbox::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const& factory) const {
+        using ProjectionFn = WhiskerToolbox::Transforms::V2::ValueProjectionFn<element_type, Value>;
+        std::vector<ProjectionFn> projections;
+        projections.reserve(size());
+
+        for (size_type i = 0; i < size(); ++i) {
+            auto store = buildTrialStore(i);
+            projections.push_back(factory(store));
         }
 
         return projections;

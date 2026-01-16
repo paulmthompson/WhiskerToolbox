@@ -78,6 +78,7 @@
  * @see GatherResult.hpp for trial-aligned analysis
  */
 
+#include "transforms/v2/core/PipelineValueStore.hpp"
 #include "transforms/v2/extension/ContextAwareParams.hpp"
 
 #include <concepts>
@@ -145,6 +146,53 @@ using ValueProjectionFn = std::function<Value(InElement const&)>;
 template<typename InElement, typename Value>
 using ValueProjectionFactory = std::function<ValueProjectionFn<InElement, Value>(TrialContext const&)>;
 
+/**
+ * @brief Factory that creates value projections from PipelineValueStore (V2 pattern)
+ *
+ * This is the V2 replacement for ValueProjectionFactory that uses the generic
+ * PipelineValueStore instead of specialized TrialContext. The factory receives
+ * per-trial values from the store and produces a projection function with those
+ * values bound to parameters.
+ *
+ * ## Design Goals
+ *
+ * 1. **Generic**: No specialized context struct needed
+ * 2. **Composable**: Store can be populated from any source (reductions, trial info, etc.)
+ * 3. **JSON-friendly**: Works seamlessly with parameter binding via reflect-cpp
+ *
+ * ## Usage with GatherResult
+ *
+ * @code
+ * // Create pipeline with bindings
+ * auto pipeline = loadPipelineFromJson(R"({
+ *     "steps": [{
+ *         "transform": "NormalizeTimeV2",
+ *         "bindings": {"alignment_time": "alignment_time"}
+ *     }]
+ * })");
+ *
+ * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+ *
+ * for (size_t i = 0; i < result.size(); ++i) {
+ *     auto store = result.buildTrialStore(i);  // V2 method
+ *     auto projection = factory(store);
+ *
+ *     for (auto const& event : result[i]->view()) {
+ *         float norm_time = projection(event);
+ *     }
+ * }
+ * @endcode
+ *
+ * @tparam InElement Input element type (e.g., EventWithId)
+ * @tparam Value Output value type (e.g., float)
+ *
+ * @see PipelineValueStore for store documentation
+ * @see bindValueProjectionV2() for creating factories from pipelines
+ * @see GatherResult::buildTrialStore() for populating store with trial values
+ */
+template<typename InElement, typename Value>
+using ValueProjectionFactoryV2 = std::function<ValueProjectionFn<InElement, Value>(PipelineValueStore const&)>;
+
 // ============================================================================
 // Type-Erased Versions (for runtime composition)
 // ============================================================================
@@ -161,6 +209,13 @@ using ErasedValueProjectionFn = std::function<std::any(std::any const&)>;
  * @brief Type-erased value projection factory
  */
 using ErasedValueProjectionFactory = std::function<ErasedValueProjectionFn(TrialContext const&)>;
+
+/**
+ * @brief Type-erased value projection factory (V2 pattern)
+ *
+ * Uses PipelineValueStore instead of TrialContext.
+ */
+using ErasedValueProjectionFactoryV2 = std::function<ErasedValueProjectionFn(PipelineValueStore const&)>;
 
 // ============================================================================
 // Concepts for Value Projections
