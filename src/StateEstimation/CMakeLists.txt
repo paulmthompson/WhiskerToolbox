@@ -49,7 +49,7 @@ set(STATE_ESTIMATION_EXAMPLES
     examples/tracking_framework_demo.cpp
 )
 
-add_library(StateEstimation STATIC ${STATE_ESTIMATION_SOURCES})
+add_library(StateEstimation SHARED ${STATE_ESTIMATION_SOURCES})
 set_target_properties(StateEstimation PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(StateEstimation PUBLIC

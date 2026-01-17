@@ -3,6 +3,7 @@
 
 #include "data_transforms.hpp"
 #include "DataManager.hpp"
+#include "datamanager_export.h"
 
 #include <nlohmann/json.hpp>
 
@@ -30,7 +31,7 @@ using ParameterSetter = std::function<bool(TransformParametersBase * param_obj,
 /**
  * @brief Registry for parameter setters for different transform types and parameter names
  */
-class ParameterFactory {
+class DATAMANAGER_EXPORT ParameterFactory {
 public:
     /**
      * @brief Register a parameter setter for a specific transform and parameter

@@ -3,6 +3,7 @@
 
 #include "TableView.h"
 
+#include "datamanager_export.h"
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/columns/IColumn.h"
 #include "utils/TableView/interfaces/MultiComputerOutputView.hpp"
@@ -24,7 +25,7 @@ class IRowSelector;
  * The TableViewBuilder provides a step-by-step, fluent API for constructing
  * TableView objects, simplifying the setup of complex configurations.
  */
-class TableViewBuilder {
+class DATAMANAGER_EXPORT TableViewBuilder {
 public:
     /**
      * @brief Constructs a TableViewBuilder with the given data manager.

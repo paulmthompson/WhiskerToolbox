@@ -2,6 +2,7 @@
 #define REFACTORED_WHISKER_TRACING_HPP
 
 #include "transforms/data_transforms.hpp"
+#include "datamanager_export.h"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "Lines/Line_Data.hpp"
@@ -23,7 +24,7 @@ class MaskData;
 /**
  * @brief Converts mask data to a binary mask image sized to the media frame.
  */
-std::vector<uint8_t> convert_mask_to_binary(MaskData const* mask_data,
+std::vector<uint8_t> DATAMANAGER_EXPORT convert_mask_to_binary(MaskData const* mask_data,
                                             int time_index,
                                             ImageSize const& image_size);
 

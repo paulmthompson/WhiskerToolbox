@@ -2,6 +2,7 @@
 #define TRANSFORMREGISTRY_HPP
 
 #include "data_transforms.hpp"
+#include "datamanager_export.h"
 
 #include <map>
 #include <memory>// unique_ptr
@@ -10,7 +11,7 @@
 #include <vector>
 
 
-class TransformRegistry {
+class DATAMANAGER_EXPORT TransformRegistry {
 public:
     TransformRegistry();
 

@@ -1,6 +1,8 @@
 #ifndef ANALOG_TIME_SERIES_STATISTICS_HPP
 #define ANALOG_TIME_SERIES_STATISTICS_HPP
 
+#include "datamanager_export.h"
+
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -81,7 +83,7 @@ float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t 
  * @param series The time series to calculate the mean from
  * @return float The mean value
  */
-float calculate_mean(AnalogTimeSeries const & series);
+float DATAMANAGER_EXPORT calculate_mean(AnalogTimeSeries const & series);
 
 /**
  * @brief Calculate the mean value of an AnalogTimeSeries in a specific range
@@ -179,7 +181,7 @@ float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size
  * @param series The time series to calculate the standard deviation from
  * @return float The standard deviation
  */
-float calculate_std_dev(AnalogTimeSeries const & series);
+float DATAMANAGER_EXPORT calculate_std_dev(AnalogTimeSeries const & series);
 
 /**
  * @brief Calculate the standard deviation of an AnalogTimeSeries in a specific range
@@ -216,7 +218,7 @@ float calculate_std_dev_in_time_range(AnalogTimeSeries const & series, TimeFrame
  * @param min_sample_threshold Minimum number of samples before falling back to exact calculation
  * @return float The approximate standard deviation
  */
-float calculate_std_dev_approximate(AnalogTimeSeries const & series,
+float DATAMANAGER_EXPORT calculate_std_dev_approximate(AnalogTimeSeries const & series,
                                     float sample_percentage = 0.1f,
                                     size_t min_sample_threshold = 1000);
 

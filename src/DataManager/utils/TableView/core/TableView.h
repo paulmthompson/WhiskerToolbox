@@ -1,10 +1,12 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
+#include "datamanager_export.h"
 #include "utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/core/RowDescriptor.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
 
 #include <map>
 #include <memory>
@@ -16,7 +18,6 @@
 
 class DataManagerExtension;
 class IColumn;
-class IRowSelector;
 class TableViewBuilder;
 
 /**
@@ -27,7 +28,7 @@ class TableViewBuilder;
  * individual columns and ExecutionPlans. The TableView handles dependency 
  * resolution and ensures columns are computed in the correct order.
  */
-class TableView {
+class DATAMANAGER_EXPORT TableView {
 public:
 
     // Movable but not copyable

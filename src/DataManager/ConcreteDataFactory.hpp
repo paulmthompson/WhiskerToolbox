@@ -7,6 +7,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
+#include "datamanager_export.h"
 
 /**
  * @brief Concrete factory implementation that creates actual data objects
@@ -14,7 +15,7 @@
  * This implementation is provided by DataManager and injected into plugins.
  * It has access to all the concrete data type implementations.
  */
-class ConcreteDataFactory : public DataFactory {
+class DATAMANAGER_EXPORT ConcreteDataFactory : public DataFactory {
 public:
     LoadedDataVariant createLineData() override;
     LoadedDataVariant createLineData(std::map<TimeFrameIndex, std::vector<Line2D>> const& data) override;

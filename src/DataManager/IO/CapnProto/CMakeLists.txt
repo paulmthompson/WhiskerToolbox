@@ -35,10 +35,22 @@ target_include_directories(DataManagerIO_CapnProto PRIVATE
 target_link_libraries(DataManagerIO_CapnProto PRIVATE
  #   DataManagerIO
     WhiskerToolbox::LineData  # Link to LineData library instead of accessing headers
-    CapnProto::capnp
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
 )
+
+if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # Adjust the path to match your vcpkg install location
+    set(CAPNP_RELEASE_LIB "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-windows/lib/capnp.lib")
+    set(KJ_RELEASE_LIB "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-windows/lib/kj.lib")
+    target_link_libraries(DataManagerIO_CapnProto PRIVATE ${CAPNP_RELEASE_LIB} ${KJ_RELEASE_LIB})
+
+    set_property(TARGET DataManagerIO_CapnProto PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
+    )
+else()
+    target_link_libraries(DataManagerIO_CapnProto PRIVATE CapnProto::capnp)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManagerIO_CapnProto PRIVATE ${CLANG_OPTIONS})

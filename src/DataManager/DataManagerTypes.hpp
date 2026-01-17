@@ -4,6 +4,7 @@
 
 #include "DataManager/DataManagerFwd.hpp"
 #include "IO/interface/IOTypes.hpp"
+#include "datamanager_export.h"
 
 #include <memory>
 #include <string>
@@ -14,12 +15,12 @@
 /**
  * @brief Convert from DM_DataType to IODataType
  */
-IODataType toIODataType(DM_DataType dm_type);
+IODataType DATAMANAGER_EXPORT toIODataType(DM_DataType dm_type);
 
 /**
  * @brief Convert from IODataType to DM_DataType
  */
-DM_DataType fromIODataType(IODataType io_type);
+DM_DataType DATAMANAGER_EXPORT fromIODataType(IODataType io_type);
 
 using DataTypeVariant = std::variant<
         std::shared_ptr<MediaData>,

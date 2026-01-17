@@ -2,6 +2,7 @@
 #define POINT_DATA_CSV_HPP
 
 #include "CoreGeometry/points.hpp"
+#include "datamanager_export.h"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <map>
@@ -10,7 +11,7 @@
 
 class PointData;
 
-struct CSVPointLoaderOptions {
+struct DATAMANAGER_EXPORT CSVPointLoaderOptions {
     std::string filename;
     int frame_column = 0;
     int x_column = 1;
@@ -18,7 +19,7 @@ struct CSVPointLoaderOptions {
     char column_delim = ' ';
 };
 
-std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
+std::map<TimeFrameIndex, Point2D<float>> DATAMANAGER_EXPORT load(CSVPointLoaderOptions const & opts);
 
 /**
  * @struct CSVPointSaverOptions
@@ -34,7 +35,7 @@ std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts
  * @var CSVPointSaverOptions::line_delim
  * The line delimiter to use.
  */
-struct CSVPointSaverOptions {
+struct DATAMANAGER_EXPORT CSVPointSaverOptions {
     std::string filename; 
     std::string parent_dir = ".";
     std::string delimiter = ",";
@@ -43,7 +44,7 @@ struct CSVPointSaverOptions {
     std::string header = "frame,x,y";
 };
 
-void save(PointData const * point_data, CSVPointSaverOptions const & opts);
+void DATAMANAGER_EXPORT save(PointData const * point_data, CSVPointSaverOptions const & opts);
 
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
@@ -61,7 +62,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_po
  * @var DLCPointLoaderOptions::likelihood_threshold
  * Minimum likelihood score for points to be included (default 0.0).
  */
-struct DLCPointLoaderOptions {
+struct DATAMANAGER_EXPORT DLCPointLoaderOptions {
     std::string filename;
     int frame_column = 0;
     float likelihood_threshold = 0.0f;

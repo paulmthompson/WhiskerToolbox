@@ -2,6 +2,7 @@
 #define DATA_MANAGER_EXTENSION_H
 
 #include "DataManagerTypes.hpp"
+#include "datamanager_export.h"
 
 #include <map>
 #include <memory>
@@ -24,7 +25,7 @@ class IAnalogSource;
  * as described in the TableView design document. It can create and cache IAnalogSource
  * adapters for both physical data (AnalogTimeSeries) and virtual data (PointData components).
  */
-class DataManagerExtension {
+class DATAMANAGER_EXPORT DataManagerExtension {
 public:
     // Variant handle for strongly-typed source adapters resolved from a name
     using SourceHandle = std::variant<

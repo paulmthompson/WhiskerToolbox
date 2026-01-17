@@ -3,6 +3,7 @@
 
 #include "TableEvents.hpp"
 #include "utils/TableView/TableInfo.hpp"
+#include "datamanager_export.h"
 
 #include <map>
 #include <memory>
@@ -19,7 +20,7 @@ struct ComputerInfo;
 /**
  * @brief Non-Qt registry managing table definitions and built TableView instances.
  */
-class TableRegistry {
+class DATAMANAGER_EXPORT TableRegistry {
 public:
     explicit TableRegistry(DataManager & data_manager);
 

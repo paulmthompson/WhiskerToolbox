@@ -106,6 +106,8 @@ public:
     virtual ~RaggedTimeSeries() = default;
 
     // Delete copy constructor and copy assignment
+    RaggedTimeSeries(RaggedTimeSeries &&) = default;
+    RaggedTimeSeries& operator=(RaggedTimeSeries&&) noexcept = default;
     RaggedTimeSeries(RaggedTimeSeries const &) = delete;
     RaggedTimeSeries & operator=(RaggedTimeSeries const &) = delete;
 

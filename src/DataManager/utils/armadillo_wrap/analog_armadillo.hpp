@@ -1,6 +1,8 @@
 #ifndef ANALOG_ARMADILLO_HPP
 #define ANALOG_ARMADILLO_HPP
 
+#include "datamanager_export.h"
+
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -15,7 +17,7 @@ class AnalogTimeSeries;
  * @param timestamps The timestamps to convert
  * @return arma::Row<double> The mlpack row vector
  */
-arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
+arma::Row<double> DATAMANAGER_EXPORT convertAnalogTimeSeriesToMlpackArray(
         AnalogTimeSeries const * analogTimeSeries,
         std::vector<size_t> const & timestamps);
 

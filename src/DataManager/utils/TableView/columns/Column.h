@@ -5,6 +5,7 @@
 #include "Entity/EntityTypes.hpp"
 #include "IColumn.h"
 #include "utils/TableView/interfaces/IColumnComputer.h"
+#include "datamanager_export.h"
 
 #include <memory>
 #include <string>
@@ -22,7 +23,7 @@ class TableView;
  * type T that can be stored in a std::vector<T>.
  */
 template<SupportedColumnType T>
-class Column : public IColumn {
+class DATAMANAGER_EXPORT Column : public IColumn {
 public:
     /**
      * @brief Gets the values of this column.

@@ -1,6 +1,7 @@
 #ifndef MULTI_COLUMN_BINARY_CSV_HPP
 #define MULTI_COLUMN_BINARY_CSV_HPP
 
+#include "datamanager_export.h"
 #include "utils/LoaderOptionsConcepts.hpp"
 #include "TimeFrame/interval_data.hpp"
 
@@ -36,7 +37,7 @@ class TimeFrame;
  * 
  * Uses reflect-cpp for automatic JSON serialization/deserialization.
  */
-struct MultiColumnBinaryCSVLoaderOptions {
+struct DATAMANAGER_EXPORT MultiColumnBinaryCSVLoaderOptions {
     /// Path to the CSV file (required)
     std::string filepath;
     
@@ -95,7 +96,7 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVLoaderOptio
  * Extracts the time column and converts to integer time values using
  * the specified sampling rate.
  */
-struct MultiColumnBinaryCSVTimeFrameOptions {
+struct DATAMANAGER_EXPORT MultiColumnBinaryCSVTimeFrameOptions {
     /// Path to the CSV file (required)
     std::string filepath;
     
@@ -142,7 +143,7 @@ static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVTimeFrameOp
  * @param opts Configuration options for loading
  * @return Shared pointer to DigitalIntervalSeries, or nullptr on error
  */
-std::shared_ptr<DigitalIntervalSeries> load(MultiColumnBinaryCSVLoaderOptions const & opts);
+std::shared_ptr<DigitalIntervalSeries> DATAMANAGER_EXPORT load(MultiColumnBinaryCSVLoaderOptions const & opts);
 
 /**
  * @brief Load TimeFrame from a multi-column binary CSV file
@@ -153,7 +154,7 @@ std::shared_ptr<DigitalIntervalSeries> load(MultiColumnBinaryCSVLoaderOptions co
  * @param opts Configuration options for loading
  * @return Shared pointer to TimeFrame, or nullptr on error
  */
-std::shared_ptr<TimeFrame> load(MultiColumnBinaryCSVTimeFrameOptions const & opts);
+std::shared_ptr<TimeFrame> DATAMANAGER_EXPORT load(MultiColumnBinaryCSVTimeFrameOptions const & opts);
 
 /**
  * @brief Extract column names from a multi-column binary CSV file

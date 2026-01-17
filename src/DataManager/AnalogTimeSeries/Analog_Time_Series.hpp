@@ -1,6 +1,7 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
+#include "datamanager_export.h"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -25,7 +26,7 @@
  * The data may be sampled at irregular intervals as long as the time vector is provided
  *
  */
-class AnalogTimeSeries : public ObserverData {
+class DATAMANAGER_EXPORT AnalogTimeSeries : public ObserverData {
 public:
     // ========== Type Traits ==========
     /**

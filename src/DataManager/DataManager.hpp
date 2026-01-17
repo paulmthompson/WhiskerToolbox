@@ -2,6 +2,7 @@
 #define DATAMANAGER_HPP
 
 #include "DataManagerTypes.hpp"
+#include "datamanager_export.h"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -27,7 +28,7 @@ namespace WhiskerToolbox::Entity::Lineage {
 class LineageRegistry;
 }
 
-class DataManager {
+class DATAMANAGER_EXPORT DataManager {
 
 public:
     DataManager();
@@ -404,43 +405,43 @@ private:
  */
 using JsonLoadProgressCallback = std::function<bool(int current, int total, std::string const & message)>;
 
-std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
-std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback progress_callback);
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path);
-std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback);
+std::vector<DataInfo> DATAMANAGER_EXPORT load_data_from_json_config(DataManager *, std::string const & json_filepath);
+std::vector<DataInfo> DATAMANAGER_EXPORT load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback progress_callback);
+std::vector<DataInfo> DATAMANAGER_EXPORT load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path);
+std::vector<DataInfo> DATAMANAGER_EXPORT load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback);
 
-std::string convert_data_type_to_string(DM_DataType type);
+std::string DATAMANAGER_EXPORT convert_data_type_to_string(DM_DataType type);
 
 
-extern template std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
-extern template void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
 
-extern template std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
-extern template void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
 
-extern template std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
-extern template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
 
-extern template std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
-extern template void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
 
-extern template std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
-extern template void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
 
-extern template std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
 
-extern template std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
-extern template void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
 
-extern template std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
-extern template void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
-extern template void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
+extern template DATAMANAGER_EXPORT void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);
 
 
 #endif// DATAMANAGER_HPP

@@ -59,6 +59,7 @@
  * @see EntityRegistry for entity ID management
  */
 
+#include "datamanager_export.h"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
@@ -127,7 +128,7 @@ class EntityRegistry;
  * @see EventWithId for element accessors (time(), id(), value())
  * @see DigitalIntervalSeries for time interval data
  */
-class DigitalEventSeries : public ObserverData {
+class DATAMANAGER_EXPORT DigitalEventSeries : public ObserverData {
 public:
     /**
      * @brief Default constructor creating an empty series with owning storage

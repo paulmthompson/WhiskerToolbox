@@ -1117,32 +1117,32 @@ std::string convert_data_type_to_string(DM_DataType type) {
     }
 }
 
-template std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
-template void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<AnalogTimeSeries> DataManager::getData<AnalogTimeSeries>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<AnalogTimeSeries>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<AnalogTimeSeries>(std::string const & key, std::shared_ptr<AnalogTimeSeries> data, TimeKey const & time_key);
 
-template std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
-template void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<DigitalEventSeries> DataManager::getData<DigitalEventSeries>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<DigitalEventSeries>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<DigitalEventSeries>(std::string const & key, std::shared_ptr<DigitalEventSeries> data, TimeKey const & time_key);
 
-template std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
-template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<DigitalIntervalSeries> DataManager::getData<DigitalIntervalSeries>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<DigitalIntervalSeries>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<DigitalIntervalSeries>(std::string const & key, std::shared_ptr<DigitalIntervalSeries> data, TimeKey const & time_key);
 
-template std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
-template void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<LineData> DataManager::getData<LineData>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<LineData>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<LineData>(std::string const & key, std::shared_ptr<LineData> data, TimeKey const & time_key);
 
-template std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
-template void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<MaskData> DataManager::getData<MaskData>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<MaskData>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<MaskData>(std::string const & key, std::shared_ptr<MaskData> data, TimeKey const & time_key);
 
-template std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
+template DATAMANAGER_EXPORT std::shared_ptr<MediaData> DataManager::getData<MediaData>(std::string const & key);
 
-template std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
-template void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<PointData> DataManager::getData<PointData>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<PointData>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<PointData>(std::string const & key, std::shared_ptr<PointData> data, TimeKey const & time_key);
 
-template std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
-template void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
-template void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);
+template DATAMANAGER_EXPORT std::shared_ptr<TensorData> DataManager::getData<TensorData>(std::string const & key);
+template DATAMANAGER_EXPORT void DataManager::setData<TensorData>(std::string const & key, TimeKey const & time_key);
+template DATAMANAGER_EXPORT void DataManager::setData<TensorData>(std::string const & key, std::shared_ptr<TensorData> data, TimeKey const & time_key);
