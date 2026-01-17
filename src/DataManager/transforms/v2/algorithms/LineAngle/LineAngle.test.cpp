@@ -8,7 +8,6 @@
 #include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>

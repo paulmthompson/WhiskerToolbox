@@ -1,6 +1,5 @@
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"

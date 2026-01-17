@@ -1,10 +1,10 @@
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
+#include "transforms/v2/core/ElementRegistry.hpp"
+#include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/PipelineLoader.hpp"
 #include "transforms/v2/core/RangeReductionRegistry.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
-#include "transforms/v2/detail/ReductionStep.hpp"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -12,11 +12,72 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+
 #include <cmath>
 #include <memory>
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::Transforms::V2::Examples;
+
+TEST_CASE("ZScoreNormalizationV2 - Parameter Deserialization", "[transforms][zscore][v2][debug]") {
+    // Verify that the transform is registered
+    auto& registry = ElementRegistry::instance();
+    
+    // Check what transforms are available
+    auto all_names = registry.getAllTransformNames();
+    INFO("Total registered transforms: " << all_names.size());
+    
+    bool found_zscore = false;
+    bool found_mask = false;
+    for (auto const& name : all_names) {
+        if (name == "ZScoreNormalizeV2") found_zscore = true;
+        if (name == "CalculateMaskArea") found_mask = true;
+    }
+    INFO("Found ZScoreNormalizeV2: " << found_zscore);
+    INFO("Found CalculateMaskArea: " << found_mask);
+    
+    // First check MaskArea (which should work)
+    auto const* mask_metadata = registry.getMetadata("CalculateMaskArea");
+    REQUIRE(mask_metadata != nullptr);
+    std::string const mask_params_json = R"({"scale_factor": 1.5})";
+    auto mask_params_any = loadParametersForTransform("CalculateMaskArea", mask_params_json);
+    INFO("MaskArea params has_value: " << mask_params_any.has_value());
+    REQUIRE(mask_params_any.has_value());
+    
+    // Now check ZScoreNormalizeV2
+    auto const* metadata = registry.getMetadata("ZScoreNormalizeV2");
+    REQUIRE(metadata != nullptr);
+    INFO("Transform metadata found");
+    INFO("params_type name: " << metadata->params_type.name());
+    
+    // Check if the deserializer exists by trying direct rfl::json::read
+    std::string const params_json = R"({"clamp_outliers": false, "outlier_threshold": 3.0, "epsilon": 0.00000001})";
+    
+    auto direct_result = rfl::json::read<ZScoreNormalizationParamsV2>(params_json);
+    if (direct_result) {
+        INFO("Direct rfl::json::read succeeded");
+        INFO("Direct result clamp_outliers: " << direct_result.value().getClampOutliers());
+    } else {
+        FAIL("Direct rfl::json::read FAILED: " << direct_result.error()->what());
+    }
+    REQUIRE(direct_result);
+
+    // Try the registry deserialize
+    auto params_any = loadParametersForTransform("ZScoreNormalizeV2", params_json);
+    
+    if (!params_any.has_value()) {
+        FAIL("Parameter deserialization returned empty any");
+    }
+    REQUIRE(params_any.has_value());
+    
+    // Try to cast to the correct type
+    auto params = std::any_cast<ZScoreNormalizationParamsV2>(params_any);
+    CHECK(params.getClampOutliers() == false);
+    CHECK(params.getOutlierThreshold() == 3.0f);
+}
 
 TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v2]") {
 
@@ -35,14 +96,8 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
         TransformPipeline pipeline;
 
         // Add pre-reductions to compute mean and std
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         // Add transform step with bindings
         ZScoreNormalizationParamsV2 params;
@@ -51,7 +106,7 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
 
-        pipeline.addStep("ZScoreNormalizeV2", params, bindings);
+        pipeline.addStepWithBindings("ZScoreNormalizeV2", params, bindings);
 
         // Execute pipeline
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
@@ -68,12 +123,12 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
         float result_mean = sum / static_cast<float>(result_data.size());
         REQUIRE_THAT(result_mean, Catch::Matchers::WithinAbs(0.0f, 1e-5f));
 
-        // Check that std is approximately 1
+        // Check that std is approximately 1 (using population std, same as stdValueRaw)
         float sum_sq = 0.0f;
         for (auto val: result_data) {
             sum_sq += (val - result_mean) * (val - result_mean);
         }
-        float result_std = std::sqrt(sum_sq / static_cast<float>(result_data.size() - 1));
+        float result_std = std::sqrt(sum_sq / static_cast<float>(result_data.size()));
         REQUIRE_THAT(result_std, Catch::Matchers::WithinAbs(1.0f, 1e-5f));
     }
 
@@ -90,14 +145,8 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
         // Create pipeline with outlier clamping
         TransformPipeline pipeline;
 
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         ZScoreNormalizationParamsV2 params;
         params.clamp_outliers = true;
@@ -107,7 +156,7 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
 
-        pipeline.addStep("ZScoreNormalizeV2", params, bindings);
+        pipeline.addStepWithBindings("ZScoreNormalizeV2", params, bindings);
 
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
@@ -116,8 +165,8 @@ TEST_CASE("ZScoreNormalizationV2 - Value Store Pattern", "[transforms][zscore][v
 
         // Last value should be clamped to threshold
         auto const & result_data = result->getAnalogTimeSeries();
-        REQUIRE(result_data[4] <= params.outlier_threshold);
-        REQUIRE(result_data[4] >= -params.outlier_threshold);
+        REQUIRE(result_data[4] <= params.getOutlierThreshold());
+        REQUIRE(result_data[4] >= -params.getOutlierThreshold());
     }
 
     SECTION("V2 manual value injection (without pre-reductions)") {
@@ -165,27 +214,31 @@ TEST_CASE("ZScoreNormalizationV2 - Comparison with V1", "[transforms][zscore][v2
 
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
-        // V1 pipeline (uses preprocessing)
+        // Compute statistics manually for V1
+        float sum = 0.0f;
+        for (auto v : data) sum += v;
+        float mean = sum / static_cast<float>(data.size());
+        float sum_sq = 0.0f;
+        for (auto v : data) sum_sq += (v - mean) * (v - mean);
+        float std_dev = std::sqrt(sum_sq / static_cast<float>(data.size() - 1));
+
+        // V1 pipeline (uses manual statistics)
+        ZScoreNormalizationParams v1_params;
+        v1_params.setStatistics(mean, std_dev);
         TransformPipeline v1_pipeline;
-        v1_pipeline.addStep("ZScoreNormalization", ZScoreNormalizationParams{});
+        v1_pipeline.addStep("ZScoreNormalization", v1_params);
         auto v1_result = v1_pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
         // V2 pipeline (uses pre-reductions + bindings)
         TransformPipeline v2_pipeline;
-        v2_pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        v2_pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        v2_pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        v2_pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         ZScoreNormalizationParamsV2 v2_params;
         std::map<std::string, std::string> bindings{
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
-        v2_pipeline.addStep("ZScoreNormalizeV2", v2_params, bindings);
+        v2_pipeline.addStepWithBindings("ZScoreNormalizeV2", v2_params, bindings);
 
         auto v2_result = v2_pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
@@ -215,8 +268,17 @@ TEST_CASE("ZScoreNormalizationV2 - Comparison with V1", "[transforms][zscore][v2
 
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
+        // Compute statistics manually for V1
+        float sum = 0.0f;
+        for (auto v : data) sum += v;
+        float mean = sum / static_cast<float>(data.size());
+        float sum_sq = 0.0f;
+        for (auto v : data) sum_sq += (v - mean) * (v - mean);
+        float std_dev = std::sqrt(sum_sq / static_cast<float>(data.size() - 1));
+
         // V1 with clamping
         ZScoreNormalizationParams v1_params;
+        v1_params.setStatistics(mean, std_dev);
         v1_params.clamp_outliers = true;
         v1_params.outlier_threshold = 2.5f;
 
@@ -226,14 +288,8 @@ TEST_CASE("ZScoreNormalizationV2 - Comparison with V1", "[transforms][zscore][v2
 
         // V2 with clamping
         TransformPipeline v2_pipeline;
-        v2_pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        v2_pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        v2_pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        v2_pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         ZScoreNormalizationParamsV2 v2_params;
         v2_params.clamp_outliers = true;
@@ -242,7 +298,7 @@ TEST_CASE("ZScoreNormalizationV2 - Comparison with V1", "[transforms][zscore][v2
         std::map<std::string, std::string> bindings{
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
-        v2_pipeline.addStep("ZScoreNormalizeV2", v2_params, bindings);
+        v2_pipeline.addStepWithBindings("ZScoreNormalizeV2", v2_params, bindings);
 
         auto v2_result = v2_pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
@@ -256,8 +312,8 @@ TEST_CASE("ZScoreNormalizationV2 - Comparison with V1", "[transforms][zscore][v2
         for (size_t i = 0; i < v1_data.size(); ++i) {
             REQUIRE(v1_data[i] <= v1_params.outlier_threshold);
             REQUIRE(v1_data[i] >= -v1_params.outlier_threshold);
-            REQUIRE(v2_data[i] <= v2_params.outlier_threshold);
-            REQUIRE(v2_data[i] >= -v2_params.outlier_threshold);
+            REQUIRE(v2_data[i] <= v2_params.getOutlierThreshold());
+            REQUIRE(v2_data[i] >= -v2_params.getOutlierThreshold());
         }
     }
 }
@@ -266,18 +322,19 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
 
     SECTION("Load V2 pipeline from JSON string") {
         std::string const json_pipeline = R"({
-            "name": "TestZScoreV2",
+            "metadata": {"name": "TestZScoreV2"},
             "pre_reductions": [
-                {"reduction": "MeanValue", "output_key": "computed_mean"},
-                {"reduction": "StdValue", "output_key": "computed_std"}
+                {"reduction_name": "MeanValueRaw", "output_key": "computed_mean"},
+                {"reduction_name": "StdValueRaw", "output_key": "computed_std"}
             ],
             "steps": [
                 {
-                    "transform": "ZScoreNormalizeV2",
-                    "params": {
+                    "step_id": "zscore",
+                    "transform_name": "ZScoreNormalizeV2",
+                    "parameters": {
                         "clamp_outliers": false,
                         "outlier_threshold": 3.0,
-                        "epsilon": 1e-8
+                        "epsilon": 0.00000001
                     },
                     "param_bindings": {
                         "mean": "computed_mean",
@@ -288,7 +345,10 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
         })";
 
         auto pipeline = loadPipelineFromJson(json_pipeline);
-        REQUIRE(pipeline.has_value());
+        if (!pipeline) {
+            FAIL("Pipeline loading failed: " << pipeline.error()->what());
+        }
+        REQUIRE(pipeline);  // rfl::Result is truthy on success
 
         // Create test data
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
@@ -300,7 +360,7 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
         // Execute the loaded pipeline
-        auto result = pipeline->executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
+        auto result = pipeline.value().executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->getNumSamples() == 5);
@@ -317,18 +377,19 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
 
     SECTION("Load V2 pipeline with clamping from JSON") {
         std::string const json_pipeline = R"({
-            "name": "TestZScoreV2WithClamping",
+            "metadata": {"name": "TestZScoreV2WithClamping"},
             "pre_reductions": [
-                {"reduction": "MeanValue", "output_key": "computed_mean"},
-                {"reduction": "StdValue", "output_key": "computed_std"}
+                {"reduction_name": "MeanValueRaw", "output_key": "computed_mean"},
+                {"reduction_name": "StdValueRaw", "output_key": "computed_std"}
             ],
             "steps": [
                 {
-                    "transform": "ZScoreNormalizeV2",
-                    "params": {
+                    "step_id": "zscore_clamp",
+                    "transform_name": "ZScoreNormalizeV2",
+                    "parameters": {
                         "clamp_outliers": true,
                         "outlier_threshold": 2.0,
-                        "epsilon": 1e-8
+                        "epsilon": 0.00000001
                     },
                     "param_bindings": {
                         "mean": "computed_mean",
@@ -339,7 +400,10 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
         })";
 
         auto pipeline = loadPipelineFromJson(json_pipeline);
-        REQUIRE(pipeline.has_value());
+        if (!pipeline) {
+            FAIL("Pipeline loading failed: " << pipeline.error()->what());
+        }
+        REQUIRE(pipeline);  // rfl::Result is truthy on success
 
         // Create data with outlier
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 50.0f};
@@ -350,7 +414,7 @@ TEST_CASE("ZScoreNormalizationV2 - JSON Pipeline Loading", "[transforms][zscore]
 
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
-        auto result = pipeline->executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
+        auto result = pipeline.value().executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
         REQUIRE(result != nullptr);
 
@@ -372,20 +436,14 @@ TEST_CASE("ZScoreNormalizationV2 - Edge Cases", "[transforms][zscore][v2][edge]"
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
         TransformPipeline pipeline;
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         ZScoreNormalizationParamsV2 params;
         std::map<std::string, std::string> bindings{
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
-        pipeline.addStep("ZScoreNormalizeV2", params, bindings);
+        pipeline.addStepWithBindings("ZScoreNormalizeV2", params, bindings);
 
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
@@ -400,20 +458,14 @@ TEST_CASE("ZScoreNormalizationV2 - Edge Cases", "[transforms][zscore][v2][edge]"
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
         TransformPipeline pipeline;
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         ZScoreNormalizationParamsV2 params;
         std::map<std::string, std::string> bindings{
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
-        pipeline.addStep("ZScoreNormalizeV2", params, bindings);
+        pipeline.addStepWithBindings("ZScoreNormalizeV2", params, bindings);
 
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 
@@ -432,21 +484,15 @@ TEST_CASE("ZScoreNormalizationV2 - Edge Cases", "[transforms][zscore][v2][edge]"
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
 
         TransformPipeline pipeline;
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "MeanValue",
-                .output_key = "computed_mean",
-                .params = {}});
-        pipeline.addPreReduction(ReductionStep{
-                .reduction_name = "StdValue",
-                .output_key = "computed_std",
-                .params = {}});
+        pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+        pipeline.addPreReduction("StdValueRaw", "computed_std");
 
         ZScoreNormalizationParamsV2 params;
         params.epsilon = 1e-8f;// Prevent division by zero
         std::map<std::string, std::string> bindings{
                 {"mean", "computed_mean"},
                 {"std_dev", "computed_std"}};
-        pipeline.addStep("ZScoreNormalizeV2", params, bindings);
+        pipeline.addStepWithBindings("ZScoreNormalizeV2", params, bindings);
 
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
 

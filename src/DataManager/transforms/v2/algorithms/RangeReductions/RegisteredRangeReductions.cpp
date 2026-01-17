@@ -223,9 +223,9 @@ void registerValueRangeReductions() {
             RangeReductionMetadata{
                     .description = "Area under curve (trapezoidal integration)",
                     .category = "Value Statistics",
+                    .is_expensive = true,
                     .requires_time_series_element = true,
-                    .requires_value_element = true,
-                    .is_expensive = true});
+                    .requires_value_element = true});
 
     // CountAboveThreshold - parameterized
     registry.registerReduction<TimeValuePoint, int, ThresholdCrossParams>(
@@ -250,6 +250,58 @@ void registerValueRangeReductions() {
                     .category = "Value Statistics",
                     .requires_time_series_element = true,
                     .requires_value_element = true});
+
+    // ========================================================================
+    // Raw Float Reductions (for direct AnalogTimeSeries data without copying)
+    // ========================================================================
+
+    // MeanValueRaw - works on raw float spans
+    registry.registerStatelessReduction<float, float>(
+            "MeanValueRaw",
+            [](std::span<float const> values) -> float {
+                return meanValueRaw(values);
+            },
+            RangeReductionMetadata{
+                    .description = "Mean value from raw float data",
+                    .category = "Value Statistics (Raw)",
+                    .requires_time_series_element = false,
+                    .requires_value_element = false});
+
+    // StdValueRaw - works on raw float spans
+    registry.registerStatelessReduction<float, float>(
+            "StdValueRaw",
+            [](std::span<float const> values) -> float {
+                return stdValueRaw(values);
+            },
+            RangeReductionMetadata{
+                    .description = "Standard deviation from raw float data",
+                    .category = "Value Statistics (Raw)",
+                    .requires_time_series_element = false,
+                    .requires_value_element = false});
+
+    // MaxValueRaw - works on raw float spans
+    registry.registerStatelessReduction<float, float>(
+            "MaxValueRaw",
+            [](std::span<float const> values) -> float {
+                return maxValueRaw(values);
+            },
+            RangeReductionMetadata{
+                    .description = "Maximum value from raw float data",
+                    .category = "Value Statistics (Raw)",
+                    .requires_time_series_element = false,
+                    .requires_value_element = false});
+
+    // MinValueRaw - works on raw float spans
+    registry.registerStatelessReduction<float, float>(
+            "MinValueRaw",
+            [](std::span<float const> values) -> float {
+                return minValueRaw(values);
+            },
+            RangeReductionMetadata{
+                    .description = "Minimum value from raw float data",
+                    .category = "Value Statistics (Raw)",
+                    .requires_time_series_element = false,
+                    .requires_value_element = false});
 }
 
 // ============================================================================

@@ -133,21 +133,24 @@ add_executable(test_data_manager
         TransformsV2/test_value_projection_types.test.cpp
         TransformsV2/test_pipeline_value_store.test.cpp
         TransformsV2/test_parameter_binding.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineAngle/LineAngle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineClip/LineClip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineCurvature/LineCurvature.test.cpp
+        #${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineResample/LineResample.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineSubsegment/LineSubsegment.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskCentroid/MaskCentroid.test.cpp
+        #Range Reductions
+        #SumReduction
+        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.test.cpp
 
 )
 

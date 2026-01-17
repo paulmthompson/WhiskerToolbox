@@ -3,7 +3,6 @@
 
 #include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/detail/FlatZipView.hpp"
 

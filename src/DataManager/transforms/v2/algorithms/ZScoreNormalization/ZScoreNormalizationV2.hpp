@@ -61,6 +61,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -82,23 +83,25 @@ struct ZScoreNormalizationParamsV2 {
      *
      * This field is populated via param_bindings from a pre-reduction.
      * In the pipeline JSON, use: "param_bindings": {"mean": "computed_mean"}
+     * Optional in JSON - uses default 0.0 if not provided.
      */
-    float mean = 0.0f;
+    std::optional<float> mean;
 
     /**
      * @brief Standard deviation for normalization
      *
      * This field is populated via param_bindings from a pre-reduction.
      * In the pipeline JSON, use: "param_bindings": {"std_dev": "computed_std"}
+     * Optional in JSON - uses default 1.0 if not provided.
      */
-    float std_dev = 1.0f;
+    std::optional<float> std_dev;
 
     // ========== User-Specified Configuration ==========
 
     /**
      * @brief Whether to clamp outliers beyond threshold
      */
-    bool clamp_outliers = false;
+    std::optional<bool> clamp_outliers;
 
     /**
      * @brief Number of standard deviations for outlier threshold
@@ -106,12 +109,19 @@ struct ZScoreNormalizationParamsV2 {
      * Only used if clamp_outliers is true.
      * Values beyond mean ± (threshold * std) are clamped.
      */
-    float outlier_threshold = 3.0f;
+    std::optional<float> outlier_threshold;
 
     /**
      * @brief Epsilon to avoid division by zero
      */
-    float epsilon = 1e-8f;
+    std::optional<float> epsilon;
+
+    // Helper methods to get values with defaults
+    [[nodiscard]] float getMean() const { return mean.value_or(0.0f); }
+    [[nodiscard]] float getStdDev() const { return std_dev.value_or(1.0f); }
+    [[nodiscard]] bool getClampOutliers() const { return clamp_outliers.value_or(false); }
+    [[nodiscard]] float getOutlierThreshold() const { return outlier_threshold.value_or(3.0f); }
+    [[nodiscard]] float getEpsilon() const { return epsilon.value_or(1e-8f); }
 };
 
 /**
@@ -130,12 +140,12 @@ struct ZScoreNormalizationParamsV2 {
         float value,
         ZScoreNormalizationParamsV2 const & params) {
 
-    // Compute z-score
-    float z_score = (value - params.mean) / (params.std_dev + params.epsilon);
+    // Compute z-score using getter methods
+    float z_score = (value - params.getMean()) / (params.getStdDev() + params.getEpsilon());
 
     // Optionally clamp outliers
-    if (params.clamp_outliers) {
-        z_score = std::clamp(z_score, -params.outlier_threshold, params.outlier_threshold);
+    if (params.getClampOutliers()) {
+        z_score = std::clamp(z_score, -params.getOutlierThreshold(), params.getOutlierThreshold());
     }
 
     return z_score;

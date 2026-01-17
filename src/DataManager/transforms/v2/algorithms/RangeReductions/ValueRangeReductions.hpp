@@ -373,6 +373,104 @@ template<typename Element>
     return static_cast<float>(count) / static_cast<float>(points.size());
 }
 
+// ============================================================================
+// Raw Float Overloads (for direct AnalogTimeSeries data access)
+// ============================================================================
+
+/**
+ * @brief Compute mean value from raw float span
+ * 
+ * This overload works directly on float data without requiring a `.value()` accessor,
+ * enabling efficient processing of AnalogTimeSeries data without materialization.
+ *
+ * @param values Raw float values
+ * @return Mean value, or NaN if empty
+ */
+[[nodiscard]] inline float meanValueRaw(std::span<float const> values) {
+    if (values.empty()) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    double sum = 0.0;
+    for (float v : values) {
+        sum += static_cast<double>(v);
+    }
+    return static_cast<float>(sum / static_cast<double>(values.size()));
+}
+
+/**
+ * @brief Compute standard deviation from raw float span
+ *
+ * Uses Welford's online algorithm for numerical stability.
+ *
+ * @param values Raw float values
+ * @return Population standard deviation, or NaN if empty
+ */
+[[nodiscard]] inline float stdValueRaw(std::span<float const> values) {
+    if (values.empty()) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    if (values.size() == 1) {
+        return 0.0f;
+    }
+
+    // Welford's algorithm for numerical stability
+    double mean = 0.0;
+    double M2 = 0.0;
+    size_t n = 0;
+
+    for (float v : values) {
+        ++n;
+        double val = static_cast<double>(v);
+        double delta = val - mean;
+        mean += delta / static_cast<double>(n);
+        double delta2 = val - mean;
+        M2 += delta * delta2;
+    }
+
+    return static_cast<float>(std::sqrt(M2 / static_cast<double>(n)));
+}
+
+/**
+ * @brief Find maximum value from raw float span
+ *
+ * @param values Raw float values
+ * @return Maximum value, or -infinity if empty
+ */
+[[nodiscard]] inline float maxValueRaw(std::span<float const> values) {
+    if (values.empty()) {
+        return -std::numeric_limits<float>::infinity();
+    }
+
+    float max_val = -std::numeric_limits<float>::infinity();
+    for (float v : values) {
+        if (v > max_val) {
+            max_val = v;
+        }
+    }
+    return max_val;
+}
+
+/**
+ * @brief Find minimum value from raw float span
+ *
+ * @param values Raw float values
+ * @return Minimum value, or +infinity if empty
+ */
+[[nodiscard]] inline float minValueRaw(std::span<float const> values) {
+    if (values.empty()) {
+        return std::numeric_limits<float>::infinity();
+    }
+
+    float min_val = std::numeric_limits<float>::infinity();
+    for (float v : values) {
+        if (v < min_val) {
+            min_val = v;
+        }
+    }
+    return min_val;
+}
+
 }// namespace WhiskerToolbox::Transforms::V2::RangeReductions
 
 #endif// WHISKERTOOLBOX_V2_VALUE_RANGE_REDUCTIONS_HPP

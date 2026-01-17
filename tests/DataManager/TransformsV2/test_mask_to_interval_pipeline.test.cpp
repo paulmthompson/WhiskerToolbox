@@ -15,7 +15,6 @@
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 #include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"

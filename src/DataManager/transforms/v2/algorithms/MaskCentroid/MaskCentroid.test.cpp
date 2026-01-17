@@ -6,7 +6,6 @@
 #include "transforms/v2/core/DataManagerIntegration.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include "fixtures/scenarios/mask/centroid_scenarios.hpp"
 

@@ -2,7 +2,6 @@
 // Tests JSON loading, validation, and error handling
 
 #include "transforms/v2/core/PipelineLoader.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
 
 #include <catch2/catch_test_macros.hpp>

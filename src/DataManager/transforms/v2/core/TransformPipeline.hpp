@@ -110,6 +110,36 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Add a transform step with parameters and value store bindings
+     * 
+     * This is a convenience method that combines addStep with parameter bindings
+     * for the V2 value store pattern. Bindings map value store keys to parameter
+     * field names.
+     * 
+     * @tparam Params Parameter type for this transform
+     * @param transform_name Name of the registered transform
+     * @param params Parameters for the transform
+     * @param bindings Map of param field names to value store keys
+     * @return Reference to this pipeline for chaining
+     * 
+     * @example
+     * ```cpp
+     * pipeline.addStepWithBindings("ZScoreNormalizeV2", ZScoreParams{},
+     *     {{"mean", "computed_mean"}, {"std_dev", "computed_std"}});
+     * ```
+     */
+    template<typename Params>
+    TransformPipeline & addStepWithBindings(
+            std::string const & transform_name,
+            Params params,
+            std::map<std::string, std::string> bindings) {
+        PipelineStep step(transform_name, std::move(params));
+        step.param_bindings = std::move(bindings);
+        steps_.push_back(std::move(step));
+        return *this;
+    }
+
     // ========================================================================
     // Pre-Execution Reductions (V2 Value Store Pattern)
     // ========================================================================
@@ -593,8 +623,26 @@ public:
 
         auto & registry = ElementRegistry::instance();
 
-        // Note: V2 pattern uses pre-reductions and parameter bindings instead of preprocessing.
-        // Statistics should be computed via pre-reductions and bound to parameters.
+        // V2 Pattern: Execute pre-reductions and apply bindings before transforms
+        using InputElement = ElementFor_t<InputContainer>;
+        
+        PipelineValueStore store;
+        if (hasPreReductions()) {
+            // For AnalogTimeSeries, use raw float span directly (no copying)
+            // Pre-reductions should use "Raw" variants (MeanValueRaw, StdValueRaw, etc.)
+            if constexpr (requires { input.getAnalogTimeSeries(); }) {
+                auto data_span = input.getAnalogTimeSeries();
+                executePreReductions<float>(data_span, store);
+            } else if constexpr (requires { input.getData(); }) {
+                // Generic getData() path for other container types
+                auto const & data = input.getData();
+                std::span<InputElement const> data_span(data.data(), data.size());
+                executePreReductions<InputElement>(data_span, store);
+            }
+            // Apply computed values to step parameters via bindings
+            applyBindingsToSteps(store);
+        }
+
         auto view = input.elements();
 
         std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
@@ -920,12 +968,17 @@ private:
             // Wrap the input span in std::any for type-erased execution
             std::any input_any{input_span};
 
+            // For stateless reductions, provide NoReductionParams if params is empty
+            std::any params_to_use = reduction.params.has_value()
+                ? reduction.params
+                : std::any{NoReductionParams{}};
+
             // Execute the reduction using the registry's type-erased interface
             std::any result_any = registry.executeErased(
                 reduction.reduction_name,
                 reduction.input_type,
                 input_any,
-                reduction.params);
+                params_to_use);
 
             // Store the result based on output type
             // Try common scalar types and store in the value store

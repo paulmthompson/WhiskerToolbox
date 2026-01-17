@@ -452,7 +452,6 @@ TEST_CASE("V2 Element Transform: LineSubsegment - Registry Integration",
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager.hpp"
 #include "transforms/v2/core/DataManagerIntegration.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
 
 #include <filesystem>
 #include <fstream>
