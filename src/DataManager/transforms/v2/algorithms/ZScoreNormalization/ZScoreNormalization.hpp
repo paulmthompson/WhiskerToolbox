@@ -1,27 +1,34 @@
 #ifndef WHISKERTOOLBOX_V2_ZSCORE_NORMALIZATION_HPP
 #define WHISKERTOOLBOX_V2_ZSCORE_NORMALIZATION_HPP
 
-#include "transforms/v2/extension/PreProcessingRegistry.hpp"
+/**
+ * @file ZScoreNormalization.hpp
+ * @brief Z-Score normalization transform parameters and function
+ *
+ * @note For the recommended V2 pattern using parameter bindings instead of
+ * cached statistics, see ZScoreNormalizationV2.hpp. The V2 pattern uses
+ * pre-reductions and parameter bindings instead of a preprocess() method.
+ *
+ * @see ZScoreNormalizationV2.hpp for the V2 implementation
+ */
 
 #include <rfl.hpp>
 
 #include <cmath>
 #include <optional>
-#include <ranges>
+#include <stdexcept>
 
 namespace WhiskerToolbox::Transforms::V2 {
 
 /**
  * @brief Parameters for Z-Score normalization transform
- * 
- * This demonstrates the multi-pass preprocessing pattern:
- * - User-specified parameters are serialized to/from JSON
- * - Computed statistics (mean, std) are cached using rfl::Skip
- * - preprocess() method computes statistics in first pass over data
- * - Transform function uses cached statistics in second pass
- * 
- * This approach avoids intermediate container materialization while
- * enabling transforms that need global statistics.
+ *
+ * Contains user-configurable options and cached statistics.
+ * The statistics can be manually set via setStatistics() or the
+ * V2 pattern using parameter bindings can be used instead.
+ *
+ * @note Consider using ZScoreNormalizationParamsV2 with parameter bindings
+ * for a more composable approach where statistics come from pre-reductions.
  */
 struct ZScoreNormalizationParams {
     // ========== User-Specified Configuration (Serialized) ==========
@@ -33,7 +40,7 @@ struct ZScoreNormalizationParams {
 
     /**
      * @brief Number of standard deviations for outlier threshold
-     * 
+     *
      * Only used if clamp_outliers is true.
      * Values beyond mean ± (threshold * std) are clamped.
      */
@@ -47,129 +54,55 @@ struct ZScoreNormalizationParams {
     // ========== Computed State (NOT Serialized) ==========
 
     /**
-     * @brief Cached mean value computed during preprocessing
-     * 
-     * rfl::Skip prevents this field from being serialized to/from JSON.
+     * @brief Cached mean value
+     *
+     * Set via setStatistics(). rfl::Skip prevents serialization.
      */
     rfl::Skip<std::optional<float>> cached_mean;
 
     /**
-     * @brief Cached standard deviation computed during preprocessing
-     * 
-     * rfl::Skip prevents this field from being serialized to/from JSON.
+     * @brief Cached standard deviation
+     *
+     * Set via setStatistics(). rfl::Skip prevents serialization.
      */
     rfl::Skip<std::optional<float>> cached_std;
 
-    /**
-     * @brief Flag indicating whether preprocessing has been performed
-     * 
-     * Used to ensure idempotency - preprocessing only happens once.
-     * rfl::Skip prevents this field from being serialized to/from JSON.
-     */
-    rfl::Skip<bool> preprocessed = false;
-
-    // ========== Preprocessing Interface ==========
+    // ========== Statistics Interface ==========
 
     /**
-     * @brief Preprocess step: compute mean and standard deviation
-     * 
-     * This method is automatically detected and invoked by TransformPipeline
-     * before the main execution loop. It performs a first pass over the data
-     * to compute statistics, which are then used during transformation.
-     * 
-     * @tparam View Range type yielding (TimeFrameIndex, Value) pairs where Value is convertible to float
-     * @param view_in Input data view
+     * @brief Set the cached statistics for normalization
+     *
+     * @param mean The mean value to use
+     * @param std_dev The standard deviation to use
      */
-    template<typename View>
-        requires requires(View v) {
-            std::ranges::begin(v);
-            // Check that we can extract a float from pair.second in at least one way
-            // AND that the extracted value is convertible to float
-            requires(
-                    (requires { std::declval<decltype(*std::ranges::begin(v))>().second.data; } &&
-                     std::convertible_to<decltype(std::declval<decltype(*std::ranges::begin(v))>().second.data), float>) ||
-                    (requires { std::declval<decltype(*std::ranges::begin(v))>().second.get().data; } &&
-                     std::convertible_to<decltype(std::declval<decltype(*std::ranges::begin(v))>().second.get().data), float>) ||
-                    std::convertible_to<decltype(std::declval<decltype(*std::ranges::begin(v))>().second), float>);
-        }
-    void preprocess(View view_in) {
-        if (preprocessed.value()) {
-            return;// Already preprocessed
-        }
-
-        // Online algorithm for mean and variance (Welford's method)
-        // This is numerically stable and requires only one pass
-        size_t count = 0;
-        double mean = 0.0;
-        double M2 = 0.0;// Sum of squared differences from mean
-
-        for (auto const & pair: view_in) {
-            // Extract the float value from the pair
-            // Different container types have different structures:
-            // - AnalogTimeSeries: (TimeFrameIndex, float)
-            // - RaggedTimeSeries: (TimeFrameIndex, reference_wrapper<DataEntry<float>>)
-            float value;
-            if constexpr (requires { pair.second.data; }) {
-                // RaggedTimeSeries case: has .data member
-                value = pair.second.data;
-            } else if constexpr (requires { pair.second.get().data; }) {
-                // RaggedTimeSeries with reference_wrapper case
-                value = pair.second.get().data;
-            } else {
-                // AnalogTimeSeries case: second is directly the float
-                value = static_cast<float>(pair.second);
-            }
-
-            count++;
-            double delta = value - mean;
-            mean += delta / count;
-            double delta2 = value - mean;
-            M2 += delta * delta2;
-        }
-
-        if (count == 0) {
-            // No data - set defaults
-            cached_mean = 0.0f;
-            cached_std = 1.0f;
-        } else if (count == 1) {
-            // Single value - set std to 1 to avoid division by zero
-            cached_mean = static_cast<float>(mean);
-            cached_std = 1.0f;
-        } else {
-            // Normal case - compute variance and std
-            double variance = M2 / (count - 1);// Sample variance (Bessel's correction)
-            cached_mean = static_cast<float>(mean);
-            cached_std = static_cast<float>(std::sqrt(variance));
-        }
-
-        preprocessed = true;
+    void setStatistics(float mean, float std_dev) {
+        cached_mean.value() = mean;
+        cached_std.value() = std_dev;
     }
 
     /**
-     * @brief Check if preprocessing has been performed
-     * 
-     * Used by TransformPipeline to ensure idempotency.
+     * @brief Check if statistics have been set
      */
-    bool isPreprocessed() const {
-        return preprocessed.value();
+    [[nodiscard]] bool hasStatistics() const noexcept {
+        return cached_mean.value().has_value() && cached_std.value().has_value();
     }
 
     /**
-     * @brief Get cached mean (throws if not preprocessed)
+     * @brief Get cached mean (throws if not set)
      */
-    float getMean() const {
+    [[nodiscard]] float getMean() const {
         if (!cached_mean.value().has_value()) {
-            throw std::runtime_error("ZScoreNormalization: preprocess() must be called before getMean()");
+            throw std::runtime_error("ZScoreNormalization: mean not set. Call setStatistics() first.");
         }
         return cached_mean.value().value();
     }
 
     /**
-     * @brief Get cached standard deviation (throws if not preprocessed)
+     * @brief Get cached standard deviation (throws if not set)
      */
-    float getStd() const {
+    [[nodiscard]] float getStd() const {
         if (!cached_std.value().has_value()) {
-            throw std::runtime_error("ZScoreNormalization: preprocess() must be called before getStd()");
+            throw std::runtime_error("ZScoreNormalization: std not set. Call setStatistics() first.");
         }
         return cached_std.value().value();
     }
@@ -177,17 +110,15 @@ struct ZScoreNormalizationParams {
 
 /**
  * @brief Apply Z-Score normalization to a single value
- * 
+ *
  * Transforms value to z-score: z = (x - mean) / std
- * 
- * This function assumes params.preprocess() has already been called
- * by the pipeline to populate cached_mean and cached_std.
- * 
+ *
  * @param value Input value to normalize
  * @param params Parameters containing cached statistics
  * @return Normalized z-score value
+ * @throws std::runtime_error if statistics have not been set
  */
-inline float zScoreNormalization(float value, ZScoreNormalizationParams const & params) {
+[[nodiscard]] inline float zScoreNormalization(float value, ZScoreNormalizationParams const & params) {
     float mean = params.getMean();
     float std = params.getStd();
 
@@ -206,17 +137,6 @@ inline float zScoreNormalization(float value, ZScoreNormalizationParams const & 
 
     return z_score;
 }
-
-// ============================================================================
-// Preprocessing Registration
-// ============================================================================
-
-namespace {
-// Register this parameter type for preprocessing
-// This tells the pipeline system that ZScoreNormalizationParams supports preprocess()
-inline auto const register_zscore_preprocessing =
-        RegisterPreprocessing<ZScoreNormalizationParams>();
-}// namespace
 
 }// namespace WhiskerToolbox::Transforms::V2
 

@@ -62,22 +62,55 @@
  * ```
  *
  * @see TransformPipeline for methods that create these types
- * @see ContextAwareParams.hpp for context injection
  * @see RangeReductionRegistry.hpp for range reductions
  * @see GatherResult.hpp for trial-aligned analysis
+ * @see PipelineValueStore for the V2 pattern replacing TrialContext
  */
 
-#include "transforms/v2/extension/ContextAwareParams.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
 #include "transforms/v2/extension/TransformTypes.hpp"
 
 #include <any>
 #include <concepts>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <typeindex>
 #include <vector>
+
+namespace WhiskerToolbox::Transforms::V2 {
+
+// ============================================================================
+// Legacy Context Types (for backward compatibility)
+// ============================================================================
+
+/**
+ * @brief Context for trial-aligned analysis (legacy - use PipelineValueStore for V2)
+ *
+ * This struct is kept for backward compatibility with existing code that uses
+ * the context injection pattern. For new code, prefer using PipelineValueStore
+ * with parameter bindings.
+ *
+ * @see PipelineValueStore for the V2 pattern
+ * @see GatherResult::buildTrialStore() for V2 trial value population
+ */
+struct TrialContext {
+    /// The time to use as the reference point (t=0) for normalization
+    TimeFrameIndex alignment_time{0};
+
+    /// Optional: Index of the current trial (for debugging/logging)
+    std::optional<std::size_t> trial_index{std::nullopt};
+
+    /// Optional: Duration of the trial (end_time - start_time)
+    std::optional<int64_t> trial_duration{std::nullopt};
+
+    /// Optional: End time of the trial interval
+    std::optional<TimeFrameIndex> end_time{std::nullopt};
+};
+
+}  // namespace WhiskerToolbox::Transforms::V2
 
 namespace WhiskerToolbox::Transforms::V2 {
 

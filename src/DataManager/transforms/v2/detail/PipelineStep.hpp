@@ -18,14 +18,6 @@ namespace WhiskerToolbox::Transforms::V2 {
 // Pipeline Step Definition
 // ============================================================================
 
-// Forward declare for ADL
-struct PipelineStep;
-
-// Default implementation declared but not defined
-// RegisteredTransforms.hpp provides the definition
-template<typename View>
-void tryAllRegisteredPreprocessing(PipelineStep const &, View const &);
-
 /**
  * @brief Represents a single step in a transform pipeline
  * 
@@ -102,54 +94,6 @@ struct PipelineStep {
     PipelineStep(std::string name)
         : PipelineStep(std::move(name), NoParams{}) {}
 
-    /**
-     * @brief Try preprocessing using registry lookup
-     * 
-     * This is a compile-time template that gets instantiated with both
-     * the View type and the Params type known. The Params type is discovered
-     * by trying registered types from the preprocessing registry.
-     * 
-     * @tparam View The view type (known at call site)
-     * @tparam Params The parameter type (tried from registry)
-     */
-    template<typename View, typename Params>
-    bool tryPreprocessTyped(View const & view) const {
-        // Check type without throwing
-        if (params.type() != typeid(Params)) {
-            return false;
-        }
-
-        // Cast to concrete type (non-const since we're modifying it)
-        auto & params_ref = std::any_cast<Params &>(params);
-
-        // Check if this type has preprocess() method that's callable with this view type
-        // The requires constraint on the preprocess method ensures type safety
-        if constexpr (requires { params_ref.preprocess(view); }) {
-            // Check for idempotency guard
-            if constexpr (requires { params_ref.isPreprocessed(); }) {
-                if (!params_ref.isPreprocessed()) {
-                    params_ref.preprocess(view);
-                }
-            } else {
-                params_ref.preprocess(view);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @brief Main preprocessing entry point
-     * 
-     * Calls free function that can be overloaded in RegisteredTransforms.hpp
-     */
-    template<typename View>
-    void maybePreprocess(View const & view) const {
-        // Call ADL-found free function
-        // Default version does nothing, RegisteredTransforms.hpp provides the real version
-        tryAllRegisteredPreprocessing(*this, view);
-    }
-
     // ========================================================================
     // Value Store Bindings (V2 pattern)
     // ========================================================================
@@ -161,7 +105,7 @@ struct PipelineStep {
      * from the store to the corresponding parameter fields. The binding is
      * done via JSON serialization/deserialization through reflect-cpp.
      * 
-     * This is the V2 pattern for parameter injection, replacing the older
+     * This is the V2 pattern for parameter injection that replaces the older
      * preprocessing and context injection patterns.
      * 
      * @param store The value store containing bound values

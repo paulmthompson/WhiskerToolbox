@@ -1,21 +1,40 @@
 #ifndef WHISKERTOOLBOX_V2_REGISTERED_TRANSFORMS_HPP
 #define WHISKERTOOLBOX_V2_REGISTERED_TRANSFORMS_HPP
 
-#include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
+/**
+ * @file RegisteredTransforms.hpp
+ * @brief Central header for all registered V2 transforms
+ *
+ * This header includes the PipelineLoader and core transform types.
+ * 
+ * ## V2 Pattern (Recommended)
+ * The V2 pattern uses pre-reductions and parameter bindings instead of preprocessing:
+ * 
+ * 1. Use pre-reductions to compute statistics before pipeline execution
+ * 2. Use parameter bindings to wire reduction outputs to transform parameters
+ * 3. Store values in PipelineValueStore for access during pipeline execution
+ * 
+ * Example JSON pipeline:
+ * ```json
+ * {
+ *   "pre_reductions": [{"type": "mean"}, {"type": "std"}],
+ *   "bindings": {
+ *     "mean": {"key": "mean"},
+ *     "std": {"key": "std"}
+ *   },
+ *   "steps": [{"name": "zscore_normalization_v2"}]
+ * }
+ * ```
+ * 
+ * See PipelineValueStore.hpp and ParameterBinding.hpp for the V2 mechanisms.
+ */
+
 #include "transforms/v2/core/PipelineLoader.hpp"
 
 namespace WhiskerToolbox::Transforms::V2 {
 
-// Overload tryAllRegisteredPreprocessing to actually try preprocessing types
-// This overload will be found by ADL when RegisteredTransforms.hpp is included
-
-template<typename View>
-inline void tryAllRegisteredPreprocessing(PipelineStep const& step, View const& view) {
-    // Try each registered parameter type
-    // Only the matching type will succeed; others return false immediately
-    if (step.template tryPreprocessTyped<View, ZScoreNormalizationParams>(view)) return;
-    // Add more types here as they're created
-}
+// V2 transforms use pre-reductions and parameter bindings instead of preprocessing.
+// Include PipelineLoader.hpp for pipeline construction and execution.
 
 } // namespace WhiskerToolbox::Transforms::V2
 

@@ -79,7 +79,7 @@
  */
 
 #include "transforms/v2/core/PipelineValueStore.hpp"
-#include "transforms/v2/extension/ContextAwareParams.hpp"
+#include "transforms/v2/extension/ViewAdaptorTypes.hpp"  // For TrialContext (legacy)
 
 #include <concepts>
 #include <functional>

@@ -981,9 +981,9 @@ BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)(benchmar
     
     // Create a factory that produces projections for each trial
     auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
-        // Create params for this trial
+        // Create params for this trial using alignment_time from context
         NormalizeTimeParams params;
-        params.setContext(ctx);
+        params.setAlignmentTime(ctx.alignment_time);
         
         // Return a projection function that uses these params
         return [params](EventWithId const& event) -> float {
@@ -1053,7 +1053,7 @@ BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Gather)(benchmark::State& 
     using namespace WhiskerToolbox::Transforms::V2;
     auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
         NormalizeTimeParams params;
-        params.setContext(ctx);
+        params.setAlignmentTime(ctx.alignment_time);
         return [params](EventWithId const& event) -> float {
             return normalizeTimeValue(event.time(), params);
         };

@@ -12,7 +12,7 @@
  */
 
 #include "DigitalTimeSeries/EventWithId.hpp"
-#include "transforms/v2/extension/ContextAwareParams.hpp"
+#include "transforms/v2/extension/ViewAdaptorTypes.hpp"  // Contains TrialContext
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>

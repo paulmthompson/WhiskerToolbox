@@ -1,4 +1,5 @@
 #include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
+#include "transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "transforms/v2/core/RegisteredTransforms.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 
@@ -10,15 +11,32 @@
 
 #include <cmath>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 using namespace WhiskerToolbox::Transforms::V2;
 
-TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore][multipass]") {
+// Helper function to compute mean of a vector
+inline float computeMean(std::vector<float> const& data) {
+    if (data.empty()) return 0.0f;
+    return std::accumulate(data.begin(), data.end(), 0.0f) / data.size();
+}
+
+// Helper function to compute sample standard deviation
+inline float computeStd(std::vector<float> const& data, float mean) {
+    if (data.size() <= 1) return 1.0f;  // Default to 1 for single value
+    float sum_sq = 0.0f;
+    for (auto val : data) {
+        sum_sq += (val - mean) * (val - mean);
+    }
+    return std::sqrt(sum_sq / (data.size() - 1));  // Sample std
+}
+
+TEST_CASE("ZScoreNormalization - Manual Statistics", "[transforms][zscore]") {
     
-    SECTION("Basic z-score normalization") {
+    SECTION("Basic z-score normalization with manual statistics") {
         // Create test data: {1, 2, 3, 4, 5}
-        // Mean = 3, Std = sqrt(2) ≈ 1.414
+        // Mean = 3, Std = sqrt(2.5) ≈ 1.581
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         std::vector<TimeFrameIndex> times;
         for (size_t i = 0; i < data.size(); ++i) {
@@ -27,9 +45,17 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
         
+        // Compute statistics manually
+        float mean = computeMean(data);
+        float std_dev = computeStd(data, mean);
+        
+        // Create params with manual statistics
+        ZScoreNormalizationParams params;
+        params.setStatistics(mean, std_dev);
+        
         // Create pipeline with z-score normalization
         TransformPipeline pipeline;
-        pipeline.addStep("ZScoreNormalization", ZScoreNormalizationParams{});
+        pipeline.addStep("ZScoreNormalization", params);
         
         // Execute pipeline
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
@@ -39,25 +65,16 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         
         // Check that mean is approximately 0
         auto const& result_data = result->getAnalogTimeSeries();
-        float sum = 0.0f;
-        for (auto val : result_data) {
-            sum += val;
-        }
-        float result_mean = sum / result_data.size();
+        float result_mean = computeMean(std::vector<float>(result_data.begin(), result_data.end()));
         REQUIRE_THAT(result_mean, Catch::Matchers::WithinAbs(0.0f, 1e-5f));
         
         // Check that std is approximately 1
-        float sum_sq = 0.0f;
-        for (auto val : result_data) {
-            sum_sq += (val - result_mean) * (val - result_mean);
-        }
-        float result_std = std::sqrt(sum_sq / (result_data.size() - 1));
+        float result_std = computeStd(std::vector<float>(result_data.begin(), result_data.end()), result_mean);
         REQUIRE_THAT(result_std, Catch::Matchers::WithinAbs(1.0f, 1e-5f));
     }
     
     SECTION("Z-score with outlier clamping") {
         // Create data with outlier: {1, 2, 3, 4, 100}
-        // Mean = 22, outlier should be clamped
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 100.0f};
         std::vector<TimeFrameIndex> times;
         for (size_t i = 0; i < data.size(); ++i) {
@@ -66,8 +83,13 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
         
+        // Compute statistics manually
+        float mean = computeMean(data);
+        float std_dev = computeStd(data, mean);
+        
         // Create pipeline with outlier clamping at 3 std
         ZScoreNormalizationParams params;
+        params.setStatistics(mean, std_dev);
         params.clamp_outliers = true;
         params.outlier_threshold = 3.0f;
         
@@ -85,10 +107,7 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         REQUIRE(result_data[4] >= -params.outlier_threshold);
     }
     
-    SECTION("Multi-pass does not materialize intermediate containers") {
-        // This test verifies that preprocessing works with views
-        // and doesn't require intermediate container materialization
-        
+    SECTION("Large dataset with manual statistics") {
         std::vector<float> data;
         for (int i = 0; i < 1000; ++i) {
             data.push_back(static_cast<float>(i));
@@ -100,9 +119,15 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
         
-        // Create pipeline - preprocessing should work on view
+        // Compute statistics
+        float mean = computeMean(data);
+        float std_dev = computeStd(data, mean);
+        
+        ZScoreNormalizationParams params;
+        params.setStatistics(mean, std_dev);
+        
         TransformPipeline pipeline;
-        pipeline.addStep("ZScoreNormalization", ZScoreNormalizationParams{});
+        pipeline.addStep("ZScoreNormalization", params);
         
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
         
@@ -111,16 +136,43 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         
         // Verify normalization worked
         auto const& result_data = result->getAnalogTimeSeries();
-        float sum = 0.0f;
-        for (auto val : result_data) {
-            sum += val;
-        }
-        float result_mean = sum / result_data.size();
+        float result_mean = computeMean(std::vector<float>(result_data.begin(), result_data.end()));
         REQUIRE_THAT(result_mean, Catch::Matchers::WithinAbs(0.0f, 1e-4f));
     }
     
-    SECTION("Preprocessing is idempotent") {
-        // Verify that preprocessing only happens once even if called multiple times
+    SECTION("Manual statistics setting") {
+        // Verify that manually setting statistics works correctly
+        
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<TimeFrameIndex> times;
+        for (size_t i = 0; i < data.size(); ++i) {
+            times.emplace_back(i);
+        }
+        
+        auto input = std::make_shared<AnalogTimeSeries>(data, times);
+        
+        // Manually set statistics (mean=3, std~=1.414)
+        ZScoreNormalizationParams params;
+        params.setStatistics(3.0f, std::sqrt(2.0f));
+        
+        TransformPipeline pipeline;
+        pipeline.addStep("ZScoreNormalization", params);
+        
+        auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
+        
+        REQUIRE(result != nullptr);
+        REQUIRE(result->getNumSamples() == 5);
+        
+        // Check that the transform used the manually set statistics
+        auto const& result_data = result->getAnalogTimeSeries();
+        // First value: (1-3)/sqrt(2) ≈ -1.414
+        REQUIRE_THAT(result_data[0], Catch::Matchers::WithinAbs(-std::sqrt(2.0f), 1e-4f));
+        // Third value: (3-3)/sqrt(2) = 0
+        REQUIRE_THAT(result_data[2], Catch::Matchers::WithinAbs(0.0f, 1e-5f));
+    }
+    
+    SECTION("Chained transforms with manual statistics") {
+        // Verify that setting statistics works in a pipeline
         
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         std::vector<TimeFrameIndex> times;
@@ -131,38 +183,11 @@ TEST_CASE("ZScoreNormalization - Multi-Pass Preprocessing", "[transforms][zscore
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
         
         ZScoreNormalizationParams params;
+        params.setStatistics(3.0f, std::sqrt(2.0f));  // Pre-set statistics
         
-        // Manually preprocess multiple times
-        auto view = input->elements();
-        params.preprocess(view);
-        float first_mean = params.getMean();
-        float first_std = params.getStd();
-        
-        params.preprocess(view);  // Should be no-op
-        float second_mean = params.getMean();
-        float second_std = params.getStd();
-        
-        REQUIRE(first_mean == second_mean);
-        REQUIRE(first_std == second_std);
-        REQUIRE(params.isPreprocessed());
-    }
-    
-    SECTION("Chained transforms with preprocessing") {
-        // Verify that preprocessing works in a chain with other transforms
-        
-        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<TimeFrameIndex> times;
-        for (size_t i = 0; i < data.size(); ++i) {
-            times.emplace_back(i);
-        }
-        
-        auto input = std::make_shared<AnalogTimeSeries>(data, times);
-        
-        // Create pipeline: normalize then sum (should sum to ~0)
+        // Create pipeline with z-score normalization
         TransformPipeline pipeline;
-        pipeline.addStep("ZScoreNormalization", ZScoreNormalizationParams{});
-        // Note: Would need a suitable second transform that makes sense
-        // For now, just verify single-step works
+        pipeline.addStep("ZScoreNormalization", params);
         
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
         
@@ -179,8 +204,12 @@ TEST_CASE("ZScoreNormalization - Edge Cases", "[transforms][zscore][edge]") {
         
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
         
+        // Even for empty data, we need to set statistics
+        ZScoreNormalizationParams params;
+        params.setStatistics(0.0f, 1.0f);
+        
         TransformPipeline pipeline;
-        pipeline.addStep("ZScoreNormalization", ZScoreNormalizationParams{});
+        pipeline.addStep("ZScoreNormalization", params);
         
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
         
@@ -194,15 +223,19 @@ TEST_CASE("ZScoreNormalization - Edge Cases", "[transforms][zscore][edge]") {
         
         auto input = std::make_shared<AnalogTimeSeries>(data, times);
         
+        // For single value, std would be 0 or undefined, so use 1
+        ZScoreNormalizationParams params;
+        params.setStatistics(42.0f, 1.0f);
+        
         TransformPipeline pipeline;
-        pipeline.addStep("ZScoreNormalization", ZScoreNormalizationParams{});
+        pipeline.addStep("ZScoreNormalization", params);
         
         auto result = pipeline.executeOptimized<AnalogTimeSeries, AnalogTimeSeries>(*input);
         
         REQUIRE(result != nullptr);
         REQUIRE(result->getNumSamples() == 1);
         
-        // With single value, std defaults to 1, so z-score = (value - value) / 1 = 0
+        // With single value, std=1, so z-score = (42 - 42) / 1 = 0
         auto const& result_data = result->getAnalogTimeSeries();
         REQUIRE_THAT(result_data[0], Catch::Matchers::WithinAbs(0.0f, 1e-5f));
     }
@@ -218,6 +251,8 @@ TEST_CASE("ZScoreNormalization - Edge Cases", "[transforms][zscore][edge]") {
         
         ZScoreNormalizationParams params;
         params.epsilon = 1e-8f;  // Prevent division by zero
+        // For constant values, std=0, so we use epsilon
+        params.setStatistics(5.0f, params.epsilon);
         
         TransformPipeline pipeline;
         pipeline.addStep("ZScoreNormalization", params);

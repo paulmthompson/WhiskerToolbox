@@ -77,7 +77,6 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "transforms/v2/core/PipelineValueStore.hpp"
-#include "transforms/v2/extension/ContextAwareParams.hpp"
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 #include "transforms/v2/extension/ViewAdaptorTypes.hpp"
 

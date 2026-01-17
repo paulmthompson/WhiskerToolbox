@@ -2,15 +2,18 @@
  * @file test_pipeline_adaptors.test.cpp
  * @brief Tests for TransformPipeline view adaptor and reducer binding
  *
- * These tests verify Phase 4 of the GatherResult + TransformPipeline integration:
+ * These tests verify:
  * 1. bindToView() - produces view adaptors from pipelines
- * 2. bindToViewWithContext() - context-aware view adaptor factories
- * 3. bindReducer() - produces reducers from pipelines with range reductions
- * 4. bindReducerWithContext() - context-aware reducer factories
+ * 2. bindReducer() - produces reducers from pipelines with range reductions
+ * 3. ViewAdaptorTypes - type definitions and factories
  *
  * The transform pipeline works with TimeFrameIndex (which is in ElementVariant).
  * Callers extract .time() from their element types (EventWithId, TimeValuePoint, etc.)
  * before passing through the pipeline.
+ *
+ * @note Context injection via ContextInjectorRegistry has been removed.
+ * Use the V2 pattern with PipelineValueStore and parameter bindings instead.
+ * See PIPELINE_VALUE_STORE_ROADMAP.md for details.
  *
  * @see GATHER_PIPELINE_DESIGN.md for the complete design document
  */
@@ -20,7 +23,6 @@
 #include "transforms/v2/algorithms/Temporal/NormalizeTime.hpp"
 #include "transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.hpp"
 #include "transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.hpp"
-#include "transforms/v2/extension/ContextAwareParams.hpp"
 #include "transforms/v2/core/RangeReductionRegistry.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
 #include "transforms/v2/extension/ViewAdaptorTypes.hpp"
@@ -149,104 +151,14 @@ TEST_CASE("TransformPipeline - setRangeReduction", "[PipelineAdaptors][Pipeline]
 
     SECTION("setRangeReduction sets the reduction") {
         TransformPipeline pipeline;
-        pipeline.setRangeReduction<EventWithId, int>("EventCount");
+        
+        // Use the stateless version with template arguments
+        pipeline.setRangeReduction<TimeFrameIndex, int>("Count");
         
         CHECK(pipeline.hasRangeReduction());
-        auto const & reduction = pipeline.getRangeReduction();
-        REQUIRE(reduction.has_value());
-        CHECK(reduction->reduction_name == "EventCount");
-        CHECK(reduction->input_type == typeid(EventWithId));
-        CHECK(reduction->output_type == typeid(int));
-    }
-
-    SECTION("setRangeReduction with parameters") {
-        struct WindowParams { float start{0.0f}; float end{100.0f}; };
-        
-        TransformPipeline pipeline;
-        pipeline.setRangeReduction<EventWithId, int, WindowParams>(
-            "EventCountInWindow", WindowParams{.start = 10.0f, .end = 50.0f});
-        
-        CHECK(pipeline.hasRangeReduction());
-        auto const & reduction = pipeline.getRangeReduction();
-        REQUIRE(reduction.has_value());
-        CHECK(reduction->params_type == typeid(WindowParams));
-    }
-
-    SECTION("clearRangeReduction removes the reduction") {
-        TransformPipeline pipeline;
-        pipeline.setRangeReduction<EventWithId, int>("EventCount");
-        CHECK(pipeline.hasRangeReduction());
-        
-        pipeline.clearRangeReduction();
-        CHECK_FALSE(pipeline.hasRangeReduction());
-    }
-
-    SECTION("Chaining with addStep") {
-        TransformPipeline pipeline;
-        
-        // Should be able to chain addStep and setRangeReduction
-        pipeline
-            .addStep("SomeTransform")
-            .setRangeReduction<EventWithId, float>("SomeReduction");
-        
-        CHECK(pipeline.size() == 1);
-        CHECK(pipeline.hasRangeReduction());
-    }
-}
-
-TEST_CASE("TransformPipeline - isElementWiseOnly", "[PipelineAdaptors][Pipeline]") {
-    TemporalTransformFixture fixture;
-
-    SECTION("Empty pipeline is element-wise only") {
-        TransformPipeline pipeline;
-        CHECK(pipeline.isElementWiseOnly());
-    }
-
-    SECTION("Pipeline with element-wise transform is element-wise only") {
-        TransformPipeline pipeline;
-        pipeline.addStep("NormalizeTimeValue", NormalizeTimeParams{});
-        CHECK(pipeline.isElementWiseOnly());
-    }
-}
-
-// ============================================================================
-// ContextInjectorRegistry Tests
-// ============================================================================
-
-TEST_CASE("ContextInjectorRegistry - registration and injection", "[PipelineAdaptors][Context]") {
-    TemporalTransformFixture fixture;
-
-    SECTION("NormalizeTimeParams injector is registered") {
-        auto & registry = ContextInjectorRegistry::instance();
-        CHECK(registry.hasInjector(typeid(NormalizeTimeParams)));
-    }
-
-    SECTION("Can inject context into NormalizeTimeParams via registry") {
-        auto & registry = ContextInjectorRegistry::instance();
-        
-        std::any params_any = NormalizeTimeParams{};
-        TrialContext ctx{.alignment_time = TimeFrameIndex{500}};
-        
-        bool injected = registry.tryInject(params_any, ctx);
-        CHECK(injected);
-        
-        auto & params = std::any_cast<NormalizeTimeParams &>(params_any);
-        CHECK(params.hasContext());
-        CHECK(params.getAlignmentTime() == TimeFrameIndex{500});
-    }
-
-    SECTION("Returns false for non-registered types") {
-        auto & registry = ContextInjectorRegistry::instance();
-        
-        struct UnregisteredParams { int value{0}; };
-        std::any params_any = UnregisteredParams{.value = 42};
-        TrialContext ctx{.alignment_time = TimeFrameIndex{100}};
-        
-        bool injected = registry.tryInject(params_any, ctx);
-        CHECK_FALSE(injected);
-        
-        // Original value unchanged
-        CHECK(std::any_cast<UnregisteredParams>(params_any).value == 42);
+        auto opt_step = pipeline.getRangeReduction();
+        REQUIRE(opt_step.has_value());
+        CHECK(opt_step->reduction_name == "Count");
     }
 }
 
@@ -293,64 +205,6 @@ TEST_CASE("bindToView - basic functionality", "[PipelineAdaptors][bindToView]") 
 }
 
 // ============================================================================
-// bindToViewWithContext Tests
-// ============================================================================
-
-TEST_CASE("bindToViewWithContext - basic functionality", "[PipelineAdaptors][bindToViewWithContext]") {
-    TemporalTransformFixture fixture;
-
-    SECTION("Creates factory that produces context-aware adaptors") {
-        TransformPipeline pipeline;
-        pipeline.addStep("NormalizeTimeValue", NormalizeTimeParams{});
-        
-        auto factory = bindToViewWithContext<TimeFrameIndex, float>(pipeline);
-        REQUIRE(factory);
-        
-        // Create adaptor with context for trial 1 (alignment at 100)
-        TrialContext ctx1{.alignment_time = TimeFrameIndex{100}};
-        auto adaptor1 = factory(ctx1);
-        
-        std::vector<TimeFrameIndex> times1 = {
-            TimeFrameIndex{120}
-        };
-        auto result1 = adaptor1(std::span<TimeFrameIndex const>{times1});
-        REQUIRE(result1.size() == 1);
-        CHECK_THAT(result1[0], WithinAbs(20.0f, 0.001f));  // 120 - 100
-        
-        // Create adaptor with context for trial 2 (alignment at 300)
-        TrialContext ctx2{.alignment_time = TimeFrameIndex{300}};
-        auto adaptor2 = factory(ctx2);
-        
-        std::vector<TimeFrameIndex> times2 = {
-            TimeFrameIndex{350}
-        };
-        auto result2 = adaptor2(std::span<TimeFrameIndex const>{times2});
-        REQUIRE(result2.size() == 1);
-        CHECK_THAT(result2[0], WithinAbs(50.0f, 0.001f));  // 350 - 300
-    }
-
-    SECTION("Each factory call gets fresh context") {
-        TransformPipeline pipeline;
-        pipeline.addStep("NormalizeTimeValue", NormalizeTimeParams{});
-        
-        auto factory = bindToViewWithContext<TimeFrameIndex, float>(pipeline);
-        
-        // Same times, different alignments
-        std::vector<TimeFrameIndex> times = {
-            TimeFrameIndex{500}
-        };
-        
-        TrialContext ctx_a{.alignment_time = TimeFrameIndex{400}};
-        auto result_a = factory(ctx_a)(std::span<TimeFrameIndex const>{times});
-        CHECK_THAT(result_a[0], WithinAbs(100.0f, 0.001f));  // 500 - 400
-        
-        TrialContext ctx_b{.alignment_time = TimeFrameIndex{450}};
-        auto result_b = factory(ctx_b)(std::span<TimeFrameIndex const>{times});
-        CHECK_THAT(result_b[0], WithinAbs(50.0f, 0.001f));   // 500 - 450
-    }
-}
-
-// ============================================================================
 // bindReducer Tests
 // ============================================================================
 
@@ -358,8 +212,11 @@ TEST_CASE("bindReducer - basic functionality", "[PipelineAdaptors][bindReducer]"
     TemporalTransformFixture fixture;
 
     SECTION("Pipeline without range reduction throws") {
+        NormalizeTimeParams params;
+        params.setAlignmentTime(TimeFrameIndex{100});
+        
         TransformPipeline pipeline;
-        pipeline.addStep("NormalizeTimeValue", NormalizeTimeParams{});
+        pipeline.addStep("NormalizeTimeValue", params);
         
         CHECK_THROWS_AS(
             (bindReducer<TimeFrameIndex, int>(pipeline)),
@@ -372,37 +229,46 @@ TEST_CASE("bindReducer - basic functionality", "[PipelineAdaptors][bindReducer]"
 }
 
 // ============================================================================
-// bindReducerWithContext Tests  
-// ============================================================================
-
-TEST_CASE("bindReducerWithContext - basic functionality", "[PipelineAdaptors][bindReducerWithContext]") {
-    TemporalTransformFixture fixture;
-
-    SECTION("Pipeline without range reduction throws") {
-        TransformPipeline pipeline;
-        pipeline.addStep("NormalizeTimeValue", NormalizeTimeParams{});
-        
-        CHECK_THROWS_AS(
-            (bindReducerWithContext<TimeFrameIndex, int>(pipeline)),
-            std::runtime_error);
-    }
-}
-
-// ============================================================================
 // Integration Tests
 // ============================================================================
 
-TEST_CASE("Integration - Raster plot workflow", "[PipelineAdaptors][Integration]") {
+TEST_CASE("Integration - Raster plot workflow with pre-set alignment", "[PipelineAdaptors][Integration]") {
     TemporalTransformFixture fixture;
 
-    SECTION("Normalize multiple trials with different alignments") {
+    SECTION("Normalize times with pre-set alignment") {
+        // In V2 pattern, alignment time is set via parameter bindings from PipelineValueStore
+        // This test shows the simpler pre-set alignment approach
+        NormalizeTimeParams params;
+        params.setAlignmentTime(TimeFrameIndex{100});
+        
         TransformPipeline pipeline;
-        pipeline.addStep("NormalizeTimeValue", NormalizeTimeParams{});
+        pipeline.addStep("NormalizeTimeValue", params);
         
-        auto factory = bindToViewWithContext<TimeFrameIndex, float>(pipeline);
+        auto adaptor = bindToView<TimeFrameIndex, float>(pipeline);
         
-        // Simulate three trials with different alignment times
-        // In real usage, times would be extracted from EventWithId via .time()
+        std::vector<TimeFrameIndex> times = {
+            TimeFrameIndex{80},   // Before alignment
+            TimeFrameIndex{100},  // At alignment
+            TimeFrameIndex{150},  // After alignment
+            TimeFrameIndex{200}   // After alignment
+        };
+        
+        auto result = adaptor(std::span<TimeFrameIndex const>{times});
+        
+        REQUIRE(result.size() == 4);
+        CHECK_THAT(result[0], WithinAbs(-20.0f, 0.001f));  // 80-100
+        CHECK_THAT(result[1], WithinAbs(0.0f, 0.001f));    // 100-100
+        CHECK_THAT(result[2], WithinAbs(50.0f, 0.001f));   // 150-100
+        CHECK_THAT(result[3], WithinAbs(100.0f, 0.001f));  // 200-100
+    }
+}
+
+TEST_CASE("Integration - Multiple trials with different alignments", "[PipelineAdaptors][Integration]") {
+    TemporalTransformFixture fixture;
+
+    SECTION("Process trials by creating new pipelines with pre-set alignment") {
+        // For per-trial alignment, create a new pipeline or params for each trial
+        // This is the approach when not using V2 parameter bindings
         struct Trial {
             TimeFrameIndex alignment;
             std::vector<TimeFrameIndex> times;
@@ -427,8 +293,14 @@ TEST_CASE("Integration - Raster plot workflow", "[PipelineAdaptors][Integration]
         std::vector<std::vector<float>> normalized_trials;
         
         for (auto const & trial : trials) {
-            TrialContext ctx{.alignment_time = trial.alignment};
-            auto adaptor = factory(ctx);
+            // Create params with this trial's alignment
+            NormalizeTimeParams params;
+            params.setAlignmentTime(trial.alignment);
+            
+            TransformPipeline pipeline;
+            pipeline.addStep("NormalizeTimeValue", params);
+            
+            auto adaptor = bindToView<TimeFrameIndex, float>(pipeline);
             auto normalized = adaptor(std::span<TimeFrameIndex const>{trial.times});
             normalized_trials.push_back(std::move(normalized));
         }

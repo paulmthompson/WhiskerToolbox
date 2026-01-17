@@ -593,12 +593,9 @@ public:
 
         auto & registry = ElementRegistry::instance();
 
-        // Preprocessing phase: Allow params to compute statistics/allocate buffers
-        // Automatically tries all registered parameter types
+        // Note: V2 pattern uses pre-reductions and parameter bindings instead of preprocessing.
+        // Statistics should be computed via pre-reductions and bound to parameters.
         auto view = input.elements();
-        for (auto const & step: steps_) {
-            step.maybePreprocess(view);
-        }
 
         std::vector<std::function<ElementVariant(ElementVariant)>> transform_chain;
 
@@ -652,8 +649,10 @@ public:
     /**
      * @brief Check if any step has context-aware parameters
      *
-     * Returns true if any step's parameters satisfy TrialContextAwareParams.
+     * Returns true if any step's parameters require context injection.
      * This is used to determine whether to use bindToView or bindToViewWithContext.
+     *
+     * @note For the V2 pattern, use parameter bindings with PipelineValueStore instead.
      */
     [[nodiscard]] bool hasContextAwareSteps() const noexcept {
         // This is a runtime check that requires trying the context injection
@@ -698,11 +697,8 @@ public:
 
         auto & registry = ElementRegistry::instance();
 
-        // Preprocessing phase: Allow params to compute statistics/allocate buffers
-        // Automatically tries all registered parameter types
-        for (auto const & step: steps_) {
-            step.maybePreprocess(view);
-        }
+        // Note: V2 pattern uses pre-reductions and parameter bindings instead of preprocessing.
+        // Statistics should be computed via pre-reductions and bound to parameters.
 
         // Verify all steps are element-level (not time-grouped)
         for (auto const & step: steps_) {
@@ -1389,13 +1385,17 @@ auto buildComposedTransformFn(TransformPipeline const & pipeline) {
 }
 
 /**
- * @brief Inject context into pipeline step parameters
+ * @brief Inject context into pipeline step parameters (legacy - no-op)
  *
- * Uses the ContextInjectorRegistry to inject context into any
- * registered context-aware parameter types.
+ * This function is kept for backward compatibility but is a no-op since
+ * ContextInjectorRegistry has been removed. For the V2 pattern, use
+ * PipelineValueStore with parameter bindings instead.
+ *
+ * @note For V2, call step.applyBindings(store) with a populated PipelineValueStore.
  */
-inline void injectContextIntoParams(std::any & params, TrialContext const & ctx) {
-    ContextInjectorRegistry::instance().tryInject(params, ctx);
+inline void injectContextIntoParams(std::any & /*params*/, TrialContext const & /*ctx*/) {
+    // No-op - ContextInjectorRegistry has been removed
+    // For V2 pattern, use PipelineValueStore with parameter bindings
 }
 
 }// namespace detail
