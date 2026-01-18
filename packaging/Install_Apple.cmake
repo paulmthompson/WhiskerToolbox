@@ -36,6 +36,7 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/libWhisker-Analysis.dylib"
         "${CMAKE_BINARY_DIR}/bin/libqt6advanceddocking.dylib"
         "${CMAKE_BINARY_DIR}/libDataManager.dylib"
+        "${CMAKE_BINARY_DIR}/libStateEstimation.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMath6_Release.5.0.0.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMathText6_Release.5.0.0.dylib"
@@ -67,7 +68,7 @@ update_install_name("DataManager" "@executable_path/../Frameworks/libDataManager
 update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.dylib" "bin/libqt6advanceddocking.4.3.1.dylib")
 #update_install_name("JKQTPlotter6" "@executable_path/../Frameworks/libJKQTPlotter6_Release.5.0.0.dylib" "_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib")
 #update_install_name("Torch" "@executable_path/../Frameworks/libtorch.dylib" "_deps/torch-src/lib/libtorch.dylib")
-
+update_install_name("StateEstimation" "@executable_path/../Frameworks/libStateEstimation.dylib" "libStateEstimation.dylib")
 copy_items_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 copy_items_during_install("${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns" "WhiskerToolbox.app/Contents/Resources/")
 

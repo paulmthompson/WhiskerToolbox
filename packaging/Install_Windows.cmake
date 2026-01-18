@@ -31,6 +31,7 @@ set(MAIN_TARGETS
     TimeFrame
     Entity
     DataViewer
+    StateEstimation
     WhiskerToolbox
 )
 
