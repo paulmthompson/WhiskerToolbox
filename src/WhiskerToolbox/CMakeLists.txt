@@ -18,6 +18,7 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
+add_subdirectory(EditorState)
 add_subdirectory(Collapsible_Widget)
 add_subdirectory(ColorPicker_Widget)
 add_subdirectory(GroupManagementWidget)

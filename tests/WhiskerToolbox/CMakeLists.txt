@@ -1,6 +1,7 @@
 
 
 
+add_subdirectory(EditorState)
 add_subdirectory(GroupManagementWidget)
 #add_subdirectory(DataViewer)
 add_subdirectory(Analysis_Dashboard)
