@@ -11,8 +11,6 @@ set(EDITOR_STATE_SOURCES
     SelectionContext.hpp
     WorkspaceManager.cpp
     WorkspaceManager.hpp
-    states/MediaWidgetState.cpp
-    states/MediaWidgetState.hpp
 )
 
 add_library(EditorState STATIC ${EDITOR_STATE_SOURCES})

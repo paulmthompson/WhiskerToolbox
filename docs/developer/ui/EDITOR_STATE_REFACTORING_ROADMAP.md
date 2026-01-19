@@ -41,7 +41,6 @@ The refactoring introduces three core abstractions:
 - ✅ [EditorState.hpp](../../WhiskerToolbox/EditorState/EditorState.hpp) - Base class for serializable widget state
 - ✅ [SelectionContext.hpp](../../WhiskerToolbox/EditorState/SelectionContext.hpp) - Centralized selection and focus management
 - ✅ [WorkspaceManager.hpp](../../WhiskerToolbox/EditorState/WorkspaceManager.hpp) - Registry for editor states
-- ✅ [MediaWidgetState.hpp](../../WhiskerToolbox/EditorState/states/MediaWidgetState.hpp) - Example concrete state (template for migrations)
 - ✅ [EditorState.test.cpp](../../WhiskerToolbox/EditorState/EditorState.test.cpp) - Comprehensive unit tests (50+ passing)
 
 **Test Results**: All tests passing
@@ -50,494 +49,295 @@ The refactoring introduces three core abstractions:
 - WorkspaceManager: State registry, factory system, workspace serialization
 - Signal/slot behavior validated across all components
 
-### 1.1 EditorState Base Class
+**Key Design Points**:
+- EditorState provides base functionality for all widget states
+- SelectionContext enables widgets to communicate without direct dependencies
+- WorkspaceManager acts as central registry and provides workspace-level serialization
+- All core classes use Qt signals for reactive updates
+- Full reflect-cpp integration for JSON serialization
 
-Create a base class that all widget states will inherit from:
+### 1.1 Concrete State Classes
 
-```cpp
-// src/WhiskerToolbox/EditorState/EditorState.hpp
+**Important**: Concrete EditorState subclasses (like `MediaWidgetState`, `DataViewerState`, etc.) should be implemented alongside their corresponding widgets, **not** in the EditorState library itself. This keeps widget-specific state logic co-located with the widget implementation.
 
-#ifndef EDITOR_STATE_HPP
-#define EDITOR_STATE_HPP
+Example locations:
+- `src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp` (not in EditorState/states/)
+- `src/WhiskerToolbox/DataViewer_Widget/DataViewerState.hpp`
+- `src/WhiskerToolbox/Analysis_Dashboard/AnalysisDashboardState.hpp`
 
-#include <QObject>
-#include <QString>
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-#include <memory>
-#include <string>
+The EditorState library provides only the base infrastructure. Each widget module is responsible for defining its own state class.
 
-/**
- * @brief Base class for all editor/widget states
- * 
- * EditorState provides a common interface for:
- * - Serialization to/from JSON (via reflect-cpp)
- * - Unique identification
- * - State change notifications via Qt signals
- * 
- * Subclasses should:
- * 1. Define their state as reflect-cpp compatible structs
- * 2. Override getTypeName() to return a unique type identifier
- * 3. Emit stateChanged() when state is modified
- */
-class EditorState : public QObject {
-    Q_OBJECT
-
-public:
-    explicit EditorState(QObject* parent = nullptr);
-    virtual ~EditorState() = default;
-
-    /// @brief Get unique type name for this editor state (e.g., "MediaWidgetState")
-    [[nodiscard]] virtual QString getTypeName() const = 0;
-
-    /// @brief Get display name for UI (e.g., "Media Viewer 1")
-    [[nodiscard]] virtual QString getDisplayName() const = 0;
-    
-    /// @brief Set display name (user-customizable)
-    virtual void setDisplayName(QString const& name);
-
-    /// @brief Get unique instance ID
-    [[nodiscard]] QString getInstanceId() const { return _instance_id; }
-
-    /// @brief Serialize state to JSON string
-    [[nodiscard]] virtual std::string toJson() const = 0;
-
-    /// @brief Restore state from JSON string
-    /// @return true if successful, false if JSON was invalid
-    virtual bool fromJson(std::string const& json) = 0;
-
-    /// @brief Check if this state has unsaved changes
-    [[nodiscard]] bool isDirty() const { return _is_dirty; }
-
-    /// @brief Mark state as clean (after save)
-    void markClean() { _is_dirty = false; }
-
-signals:
-    /// @brief Emitted when any state property changes
-    void stateChanged();
-
-    /// @brief Emitted when display name changes
-    void displayNameChanged(QString const& newName);
-
-    /// @brief Emitted when dirty state changes
-    void dirtyChanged(bool isDirty);
-
-protected:
-    /// @brief Mark state as modified (call from setters)
-    void markDirty();
-
-    /// @brief Generate a new unique instance ID
-    static QString generateInstanceId();
-
-private:
-    QString _instance_id;
-    QString _display_name;
-    bool _is_dirty = false;
-};
-
-#endif // EDITOR_STATE_HPP
-```
-
-### 1.2 WorkspaceManager
-
-Central registry for all editor states:
-
-```cpp
-// src/WhiskerToolbox/EditorState/WorkspaceManager.hpp
-
-#ifndef WORKSPACE_MANAGER_HPP
-#define WORKSPACE_MANAGER_HPP
-
-#include <QObject>
-#include <memory>
-#include <vector>
-#include <unordered_map>
-#include <string>
-
-class EditorState;
-class SelectionContext;
-class DataManager;
-
-/**
- * @brief Central manager for all open editor states
- * 
- * WorkspaceManager provides:
- * - Registry of all active EditorState instances
- * - Factory methods for creating new editor states
- * - Workspace serialization (all states + layout)
- * - Access to SelectionContext for inter-widget communication
- */
-class WorkspaceManager : public QObject {
-    Q_OBJECT
-
-public:
-    explicit WorkspaceManager(std::shared_ptr<DataManager> data_manager,
-                              QObject* parent = nullptr);
-    ~WorkspaceManager();
-
-    // === State Management ===
-    
-    /// @brief Register an editor state
-    void registerState(std::shared_ptr<EditorState> state);
-
-    /// @brief Unregister an editor state
-    void unregisterState(QString const& instance_id);
-
-    /// @brief Get state by instance ID
-    [[nodiscard]] std::shared_ptr<EditorState> getState(QString const& instance_id) const;
-
-    /// @brief Get all states of a specific type
-    [[nodiscard]] std::vector<std::shared_ptr<EditorState>> 
-        getStatesByType(QString const& type_name) const;
-
-    /// @brief Get all registered states
-    [[nodiscard]] std::vector<std::shared_ptr<EditorState>> getAllStates() const;
-
-    // === Selection Context ===
-    
-    /// @brief Get the global selection context
-    [[nodiscard]] SelectionContext* selectionContext() const { return _selection_context.get(); }
-
-    // === Serialization ===
-    
-    /// @brief Serialize entire workspace to JSON
-    [[nodiscard]] std::string toJson() const;
-
-    /// @brief Restore workspace from JSON
-    /// @return true if successful
-    bool fromJson(std::string const& json);
-
-    /// @brief Check if any state has unsaved changes
-    [[nodiscard]] bool hasUnsavedChanges() const;
-
-signals:
-    /// @brief Emitted when a new state is registered
-    void stateRegistered(QString const& instance_id, QString const& type_name);
-
-    /// @brief Emitted when a state is unregistered
-    void stateUnregistered(QString const& instance_id);
-
-    /// @brief Emitted when any state changes
-    void workspaceChanged();
-
-private:
-    std::shared_ptr<DataManager> _data_manager;
-    std::unique_ptr<SelectionContext> _selection_context;
-    std::unordered_map<std::string, std::shared_ptr<EditorState>> _states;
-};
-
-#endif // WORKSPACE_MANAGER_HPP
-```
-
-### 1.3 SelectionContext
-
-Centralized selection and focus management:
-
-```cpp
-// src/WhiskerToolbox/EditorState/SelectionContext.hpp
-
-#ifndef SELECTION_CONTEXT_HPP
-#define SELECTION_CONTEXT_HPP
-
-#include <QObject>
-#include <QString>
-#include <QPointer>
-#include <set>
-#include <string>
-#include <vector>
-#include <optional>
-
-class EditorState;
-class QWidget;
-
-/**
- * @brief Source of a selection change
- * 
- * Allows widgets to know if they should respond to a selection change
- * (e.g., don't respond to your own selection).
- */
-struct SelectionSource {
-    QString editor_instance_id;  // Which editor made the selection
-    QString widget_id;           // Specific widget within editor (optional)
-};
-
-/**
- * @brief Represents a selected data item
- */
-struct SelectedItem {
-    QString data_key;            // Key in DataManager
-    std::optional<int64_t> entity_id;  // Specific entity (optional)
-    std::optional<int> time_index;     // Specific time (optional)
-    
-    bool operator<(SelectedItem const& other) const;
-    bool operator==(SelectedItem const& other) const;
-};
-
-/**
- * @brief Centralized selection and focus context
- * 
- * SelectionContext manages:
- * - Current data selection (which data keys are selected)
- * - Active editor state (which editor has focus)
- * - Last interaction context (for property panel routing)
- * - Entity selection within data objects
- * 
- * Widgets observe SelectionContext to stay synchronized.
- */
-class SelectionContext : public QObject {
-    Q_OBJECT
-
-public:
-    explicit SelectionContext(QObject* parent = nullptr);
-    ~SelectionContext() = default;
-
-    // === Data Selection ===
-    
-    /// @brief Set the primary selected data key
-    void setSelectedData(QString const& data_key, SelectionSource const& source);
-
-    /// @brief Add to the current selection (for multi-select)
-    void addToSelection(QString const& data_key, SelectionSource const& source);
-
-    /// @brief Remove from current selection
-    void removeFromSelection(QString const& data_key, SelectionSource const& source);
-
-    /// @brief Clear all selections
-    void clearSelection(SelectionSource const& source);
-
-    /// @brief Get primary selected data key
-    [[nodiscard]] QString primarySelectedData() const;
-
-    /// @brief Get all selected data keys
-    [[nodiscard]] std::set<QString> allSelectedData() const;
-
-    /// @brief Check if specific data is selected
-    [[nodiscard]] bool isSelected(QString const& data_key) const;
-
-    // === Entity Selection ===
-    
-    /// @brief Set selected entities within current data
-    void setSelectedEntities(std::vector<int64_t> const& entity_ids, 
-                            SelectionSource const& source);
-
-    /// @brief Get selected entity IDs
-    [[nodiscard]] std::vector<int64_t> selectedEntities() const;
-
-    // === Active Editor ===
-    
-    /// @brief Set the currently active (focused) editor
-    void setActiveEditor(QString const& instance_id);
-
-    /// @brief Get the active editor instance ID
-    [[nodiscard]] QString activeEditorId() const;
-
-    /// @brief Get the active editor state (may be null)
-    [[nodiscard]] EditorState* activeEditorState() const;
-
-    // === Property Panel Context ===
-    
-    /**
-     * @brief Context for determining which properties panel to show
-     * 
-     * This helps the properties zone know which editor's properties
-     * to display based on user interaction patterns.
-     */
-    struct PropertiesContext {
-        QString last_interacted_editor;  // Editor that had last meaningful interaction
-        QString selected_data_key;       // Currently selected data
-        QString data_type;               // Type of selected data
-    };
-
-    /// @brief Get current properties context
-    [[nodiscard]] PropertiesContext propertiesContext() const;
-
-    /// @brief Notify that an editor had meaningful user interaction
-    void notifyInteraction(QString const& editor_instance_id);
-
-signals:
-    /// @brief Emitted when data selection changes
-    void selectionChanged(SelectionSource const& source);
-
-    /// @brief Emitted when entity selection changes
-    void entitySelectionChanged(SelectionSource const& source);
-
-    /// @brief Emitted when active editor changes
-    void activeEditorChanged(QString const& instance_id);
-
-    /// @brief Emitted when properties context changes
-    void propertiesContextChanged();
-
-private:
-    QString _primary_selected;
-    std::set<QString> _selected_data;
-    std::vector<int64_t> _selected_entities;
-    QString _active_editor_id;
-    QString _last_interacted_editor;
-
-    // Weak reference to workspace manager (set by WorkspaceManager)
-    friend class WorkspaceManager;
-    class WorkspaceManager* _workspace_manager = nullptr;
-};
-
-#endif // SELECTION_CONTEXT_HPP
-```
-
-### 1.4 Directory Structure
+### 1.2 Directory Structure
 
 ```
 src/WhiskerToolbox/EditorState/
 ├── CMakeLists.txt
-├── EditorState.hpp
+├── EditorState.hpp            # Base class for all states
 ├── EditorState.cpp
-├── WorkspaceManager.hpp
+├── WorkspaceManager.hpp       # Central state registry
 ├── WorkspaceManager.cpp
-├── SelectionContext.hpp
+├── SelectionContext.hpp       # Inter-widget communication
 ├── SelectionContext.cpp
-├── states/                    # Concrete state implementations
-│   ├── MediaWidgetState.hpp
-│   ├── DataViewerState.hpp
-│   └── ...
-└── EditorState.test.cpp
+└── EditorState.test.cpp       # Unit tests
+
+src/WhiskerToolbox/Media_Widget/
+├── Media_Widget.hpp
+├── Media_Widget.cpp
+├── MediaWidgetState.hpp       # State for Media_Widget
+├── MediaWidgetState.cpp
+└── ...
+
+src/WhiskerToolbox/DataViewer_Widget/
+├── DataViewer_Widget.hpp
+├── DataViewer_Widget.cpp
+├── DataViewerState.hpp        # State for DataViewer_Widget
+├── DataViewerState.cpp
+└── ...
 ```
 
-### 1.5 Integration with MainWindow
+## Phase 2: Incremental State Integration and Communication (Weeks 4-8)
+
+**Strategy**: Create minimal EditorState subclasses first, establish inter-widget communication, then gradually migrate state. Do NOT attempt to replace widget internals all at once.
+
+### 2.1 Create Minimal State Classes (Week 4)
+
+Create empty/minimal state classes that widgets can hold alongside existing members:
 
 ```cpp
-// In MainWindow
-class MainWindow : public QMainWindow {
-    // ...
+// src/WhiskerToolbox/DataManager_Widget/DataManagerWidgetState.hpp
+class DataManagerWidgetState : public EditorState {
+    Q_OBJECT
+public:
+    explicit DataManagerWidgetState(QObject* parent = nullptr);
+    
+    QString getTypeName() const override { return "DataManagerWidget"; }
+    QString getDisplayName() const override { return _display_name; }
+    
+    // Minimal state: just track selected data key
+    void setSelectedDataKey(QString const& key);
+    QString selectedDataKey() const { return _selected_key; }
+    
+    std::string toJson() const override;
+    bool fromJson(std::string const& json) override;
+
+signals:
+    void selectedDataKeyChanged(QString const& key);
+
 private:
-    std::unique_ptr<WorkspaceManager> _workspace_manager;
-    
-    // Properties dock (always visible, content changes based on context)
-    ads::CDockWidget* _properties_dock;
-    QStackedWidget* _properties_stack;
-};
-```
-
-## Phase 2: First Widget Migration - Media_Widget (Weeks 4-6)
-
-### 2.1 MediaWidgetState
-
-Extract state from Media_Widget:
-
-```cpp
-// src/WhiskerToolbox/EditorState/states/MediaWidgetState.hpp
-
-struct MediaWidgetStateData {
-    // Displayed features with their enable state
-    std::map<std::string, bool> displayed_features;
-    
-    // Per-feature colors
-    std::map<std::string, std::string> feature_colors;
-    
-    // Viewport state
-    double zoom_level = 1.0;
-    double pan_x = 0.0;
-    double pan_y = 0.0;
-    
-    // Canvas size
-    int canvas_width = 800;
-    int canvas_height = 600;
-    
-    // Current frame (synchronized via TimeScrollBar)
-    // Note: This is shared state, may not be serialized per-widget
+    QString _selected_key;
+    QString _display_name = "Data Manager";
 };
 
+// src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp
 class MediaWidgetState : public EditorState {
     Q_OBJECT
 public:
-    // ... standard interface ...
+    explicit MediaWidgetState(QObject* parent = nullptr);
     
-    // Typed accessors
-    void setFeatureEnabled(std::string const& key, bool enabled);
-    bool isFeatureEnabled(std::string const& key) const;
+    QString getTypeName() const override { return "MediaWidget"; }
+    QString getDisplayName() const override { return _display_name; }
     
-    void setFeatureColor(std::string const& key, std::string const& hex);
-    std::string getFeatureColor(std::string const& key) const;
+    // Start minimal - just track what data this viewer is displaying
+    void setDisplayedDataKey(QString const& key);
+    QString displayedDataKey() const { return _displayed_key; }
     
-    void setZoom(double zoom);
-    double getZoom() const;
+    std::string toJson() const override;
+    bool fromJson(std::string const& json) override;
 
 signals:
-    void featureEnabledChanged(QString const& key, bool enabled);
-    void featureColorChanged(QString const& key, QString const& color);
-    void viewportChanged();
+    void displayedDataKeyChanged(QString const& key);
 
 private:
-    MediaWidgetStateData _data;
+    QString _displayed_key;
+    QString _display_name = "Media Viewer";
 };
 ```
 
-### 2.2 Refactored Media_Widget
+**Deliverables**:
+- [ ] Create `DataManagerWidgetState.hpp/.cpp` in DataManager_Widget directory
+- [ ] Create `MediaWidgetState.hpp/.cpp` in Media_Widget directory  
+- [ ] Update widget constructors to create and hold state object
+- [ ] Register state with WorkspaceManager when widget is created
+- [ ] Unregister state when widget is destroyed
+- [ ] Widgets keep all existing member variables - state is additional
+
+### 2.2 Integrate WorkspaceManager into MainWindow (Week 4)
 
 ```cpp
-class Media_Widget : public QWidget {
+// In MainWindow.hpp
+class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit Media_Widget(std::shared_ptr<MediaWidgetState> state,
-                          std::shared_ptr<DataManager> data_manager,
-                          SelectionContext* selection_context,
-                          QWidget* parent = nullptr);
-
-    // State is now external - widget observes it
-    MediaWidgetState* state() const { return _state.get(); }
-
+    // Provide access to workspace manager for widgets
+    WorkspaceManager* workspaceManager() { return _workspace_manager.get(); }
+    
 private:
-    std::shared_ptr<MediaWidgetState> _state;
-    SelectionContext* _selection_context;
+    std::shared_ptr<DataManager> _data_manager;
+    std::unique_ptr<WorkspaceManager> _workspace_manager;
     
-    // Connect state signals to widget updates
-    void connectStateSignals();
-    
-    // Connect selection context
-    void connectSelectionContext();
+    // Initialize in constructor
+    void initializeWorkspaceManager();
 };
+
+// In MainWindow.cpp constructor
+MainWindow::MainWindow() {
+    _data_manager = std::make_shared<DataManager>();
+    _workspace_manager = std::make_unique<WorkspaceManager>(_data_manager, this);
+    // ... rest of setup
+}
 ```
 
-### 2.3 Central Feature Table
+**Deliverables**:
+- [ ] Add WorkspaceManager member to MainWindow
+- [ ] Initialize in constructor after DataManager
+- [ ] Provide accessor for child widgets
+- [ ] Update widget creation to pass workspace_manager pointer
 
-Replace per-widget Feature_Table_Widget with a central one in MainWindow:
+### 2.3 Connect DataManager_Widget Selection (Week 5)
+
+Establish first communication path: DataManager_Widget → SelectionContext
 
 ```cpp
-// Properties panel zone contains Feature_Table_Widget
-// It observes SelectionContext to show appropriate properties
-
-class CentralFeatureTable : public QWidget {
-    Q_OBJECT
-public:
-    CentralFeatureTable(WorkspaceManager* workspace_manager,
-                        std::shared_ptr<DataManager> data_manager,
-                        QWidget* parent = nullptr);
-
-private slots:
-    // When user selects data in table
-    void onFeatureSelected(QString const& feature);
+// In DataManager_Widget constructor
+DataManager_Widget::DataManager_Widget(WorkspaceManager* workspace_manager, ...) {
+    _state = std::make_shared<DataManagerWidgetState>();
+    workspace_manager->registerState(_state);
+    _selection_context = workspace_manager->selectionContext();
     
-    // When selection context changes
-    void onSelectionContextChanged();
+    // When feature table selection changes, update state
+    connect(_feature_table, &Feature_Table_Widget::highlightedFeatureChanged,
+            this, [this](QString const& key) {
+        _state->setSelectedDataKey(key);
+    });
     
-    // When active editor changes
-    void onActiveEditorChanged(QString const& editor_id);
-
-private:
-    WorkspaceManager* _workspace_manager;
-    Feature_Table_Widget* _feature_table;
-    
-    // Filter based on active editor's capabilities
-    void updateFilterForEditor(EditorState* editor);
-};
+    // When state changes, notify SelectionContext
+    connect(_state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
+            this, [this](QString const& key) {
+        SelectionSource source{_state->getInstanceId(), "feature_table"};
+        _selection_context->setSelectedData(key, source);
+    });
+}
 ```
 
-## Phase 3: Properties Zone Architecture (Weeks 7-9)
+**Deliverables**:
+- [ ] Update DataManager_Widget to create and register state
+- [ ] Connect Feature_Table_Widget signals to state
+- [ ] Connect state signals to SelectionContext
+- [ ] Test: Selecting in feature table should update SelectionContext
 
-### 3.1 Properties Panel System
+### 2.4 Connect Media_Widget as Listener (Week 5)
+
+Make Media_Widget respond to SelectionContext changes:
 
 ```cpp
-// src/WhiskerToolbox/PropertiesPanel/PropertiesHost.hpp
+// In Media_Widget constructor
+Media_Widget::Media_Widget(WorkspaceManager* workspace_manager, ...) {
+    _state = std::make_shared<MediaWidgetState>();
+    workspace_manager->registerState(_state);
+    _selection_context = workspace_manager->selectionContext();
+    
+    // Listen to SelectionContext
+    connect(_selection_context, &SelectionContext::selectionChanged,
+            this, [this](SelectionSource const& source) {
+        // Don't respond to our own changes
+        if (source.editor_instance_id == _state->getInstanceId()) {
+            return;
+        }
+        
+        // Get selected data from context
+        QString selected_key = _selection_context->primarySelectedData();
+        
+        // If we can display this data type, offer to load it
+        // (for now, just highlight it if already loaded)
+        highlightFeatureIfPresent(selected_key);
+    });
+}
+```
 
-/**
- * @brief Widget that hosts context-sensitive properties panels
+**Deliverables**:
+- [ ] Update Media_Widget to create and register state
+- [ ] Connect to SelectionContext::selectionChanged
+- [ ] Implement response to external selection changes
+- [ ] Test: Selecting in DataManager should highlight in Media_Widget
+
+### 2.5 Validate Communication (Week 6)
+
+**Test the communication chain**:
+1. Open DataManager_Widget and Media_Widget
+2. Select a feature in DataManager's feature table
+3. Verify SelectionContext receives the selection
+4. Verify Media_Widget responds to the selection
+5. Verify Media_Widget doesn't respond to its own selections (no loops)
+
+**Deliverables**:
+- [ ] Write integration test for selection propagation
+- [ ] Add logging to track selection flow
+- [ ] Verify no circular update loops
+- [ ] Document any edge cases discovered
+
+### 2.6 Gradually Migrate State (Weeks 7-8)
+
+**Only after communication works**, start moving individual pieces of state:
+
+**Week 7 - Simple state migration**:
+```cpp
+// Add to MediaWidgetState incrementally
+struct MediaWidgetStateData {
+    QString displayed_data_key;  // Already there
+    double zoom_level = 1.0;     // Add zoom
+    double pan_x = 0.0;          // Add pan
+    double pan_y = 0.0;
+};
+
+// In Media_Widget, replace member variables one at a time:
+// Before: double _zoom_level;
+// After:  Use _state->getZoom() instead
+
+// Keep existing Feature_Table_Widget for now!
+```
+
+**Week 8 - Feature visibility state**:
+```cpp
+// Add feature configuration to state
+struct MediaWidgetStateData {
+    QString displayed_data_key;
+    double zoom_level = 1.0;
+    double pan_x = 0.0;
+    double pan_y = 0.0;
+    std::map<std::string, bool> feature_enabled;     // New
+    std::map<std::string, std::string> feature_colors;  // New
+};
+
+// Widget still has Feature_Table_Widget - it now reads/writes state
+```
+
+**Deliverables**:
+- [ ] Move viewport state (zoom/pan) to MediaWidgetState
+- [ ] Update Media_Widget to use state for viewport
+- [ ] Move feature enable/color state to MediaWidgetState
+- [ ] Update Media_Widget to use state for features
+- [ ] Keep existing Feature_Table_Widget - it becomes a view of state
+- [ ] Test serialization of migrated state
+
+### 2.7 Summary of Phase 2 Approach
+
+**Key principles**:
+1. ✅ State classes start minimal - just enough for communication
+2. ✅ Widgets hold state alongside existing members - not replacing them
+3. ✅ Establish communication first, validate it works
+4. ✅ Migrate state piece by piece, not all at once
+5. ✅ Keep existing UI elements - they become views of state
+6. ❌ Don't remove Feature_Table_Widget yet - that's Phase 3
+
+## Phase 3: Central Properties Zone (Weeks 9-11)
+
+**Prerequisites**: Phase 2 complete - widgets have state objects and communicate via SelectionContext.
+
+**Goal**: Create a unified properties panel that replaces per-widget Feature_Table_Widget instances.
+
+### 3.1 PropertiesHost Widget (Week 9)
+
+Create a context-sensitive properties container:
  * 
  * PropertiesHost observes SelectionContext and shows the appropriate
  * properties panel based on:
@@ -1074,42 +874,60 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | Phase | Status | Duration | Deliverables |
 |-------|--------|----------|--------------|
 | 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, WorkspaceManager, SelectionContext |
-| 2. Media_Widget Migration | ⏭️ NEXT | 3 weeks | MediaWidgetState, refactored Media_Widget |
-| 3. Properties Zone | 📋 PLANNED | 3 weeks | PropertiesHost, ZoneManager, central Feature_Table |
+| 2. State Integration & Communication | ⏭️ NEXT | 5 weeks | Minimal states, inter-widget communication, incremental migration |
+| 3. Central Properties Zone | 📋 PLANNED | 3 weeks | PropertiesHost, unified Feature_Table_Widget |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
-| 5. Widget Migrations | 📋 PLANNED | 8 weeks | All major widgets migrated |
+| 5. Widget Migrations | 📋 PLANNED | 8 weeks | Remaining widgets (DataViewer, Analysis, Tables) |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~3 weeks | Remaining: ~21 weeks (~5 months)**
+**Elapsed: ~3 weeks | Remaining: ~23 weeks (~5.5 months)**
 
-**Progress**: 12.5% Complete (Phase 1 of 6)
+**Progress**: 11.5% Complete (Phase 1 of 6)
 
-## Next Steps (Phase 2 - Media_Widget Migration)
+## Next Steps (Phase 2 - Incremental Integration)
 
-1. **Integrate WorkspaceManager into MainWindow**
-   - Create workspace manager instance as member of MainWindow
-   - Register MediaWidgetState factory with editor type info
-   - Initialize SelectionContext observers for UI updates
-   - Set up signal routing between selection context and widgets
+### Step 1: Create Minimal State Classes (Week 4, Days 1-2)
+- Create `DataManagerWidgetState.hpp/.cpp` with just `selectedDataKey` property
+- Create `MediaWidgetState.hpp/.cpp` with just `displayedDataKey` property
+- Both classes inherit from EditorState, implement virtual methods
+- Add basic JSON serialization (just the one field)
+- Add co-located unit tests for each state class
 
-2. **Begin Media_Widget Refactoring**
-   - Update Media_Widget constructor to accept shared_ptr<MediaWidgetState>
-   - Connect widget to state signals for reactive updates (featureEnabledChanged, zoomChanged, etc.)
-   - Connect widget to SelectionContext for inter-widget communication
-   - Preserve all existing functionality during transition
-   - Add tests verifying state/widget integration
+### Step 2: Integrate WorkspaceManager (Week 4, Days 3-4)
+- Add `std::unique_ptr<WorkspaceManager>` to MainWindow
+- Initialize after DataManager in constructor
+- Add `workspaceManager()` accessor method
+- Pass workspace_manager pointer to widgets during construction
 
-3. **Create Properties Zone Infrastructure**
-   - Implement PropertiesHost widget (context-sensitive properties panel)
-   - Design properties panel routing logic based on SelectionContext
-   - Create central Feature_Table_Widget for properties zone (replacing per-widget copies)
-   - Connect central feature table to SelectionContext
+### Step 3: Wire DataManager_Widget Selection (Week 5, Days 1-3)
+- Update DataManager_Widget constructor to accept WorkspaceManager pointer
+- Create and register DataManagerWidgetState instance
+- Connect Feature_Table_Widget::highlightedFeatureChanged to state
+- Connect state change to SelectionContext::setSelectedData
+- Add debug logging to track selection changes
 
-4. **Post-Phase 2 Validation**
-   - Verify Media_Widget state can be serialized/deserialized
-   - Test workspace save/load with media viewer state
-   - Validate multi-widget communication via SelectionContext
-   - Profile for any performance regressions
+### Step 4: Wire Media_Widget as Listener (Week 5, Days 4-5)
+- Update Media_Widget constructor to accept WorkspaceManager pointer
+- Create and register MediaWidgetState instance
+- Connect to SelectionContext::selectionChanged signal
+- Implement handler that highlights/loads selected data
+- Check SelectionSource to avoid responding to own changes
+
+### Step 5: Test Communication Chain (Week 6)
+- Manual testing: Select in DataManager → verify Media_Widget responds
+- Add integration test for selection propagation
+- Verify no circular update loops
+- Document behavior and edge cases
+- Fix any issues discovered
+
+### Step 6: Begin Incremental State Migration (Weeks 7-8)
+**Only after communication validated!**
+- Week 7: Add zoom/pan to MediaWidgetState, migrate viewport code
+- Week 8: Add feature_enabled/feature_colors to state, update widget to use it
+- Keep Feature_Table_Widget in Media_Widget - it reads from state now
+- Test serialization works for migrated properties
+
+**Priority**: Communication first, state migration second. Don't remove UI elements yet.
 
 ## References
 
