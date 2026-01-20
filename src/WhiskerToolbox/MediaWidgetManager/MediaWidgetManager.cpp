@@ -8,9 +8,12 @@
 #include <algorithm>
 #include <iostream>
 
-MediaWidgetManager::MediaWidgetManager(std::shared_ptr<DataManager> data_manager, QObject* parent)
+MediaWidgetManager::MediaWidgetManager(std::shared_ptr<DataManager> data_manager,
+                                       WorkspaceManager* workspace_manager,
+                                       QObject* parent)
     : QObject(parent)
-    , _data_manager(std::move(data_manager)) {
+    , _data_manager(std::move(data_manager))
+    , _workspace_manager(workspace_manager) {
 }
 
 MediaWidgetManager::~MediaWidgetManager() = default;
@@ -33,8 +36,8 @@ Media_Widget* MediaWidgetManager::createMediaWidget(const std::string& id, QWidg
         return nullptr;
     }
 
-    // Create Media_Widget - it will create its own Media_Window when setDataManager is called
-    auto media_widget = std::make_unique<Media_Widget>(parent);
+    // Create Media_Widget with WorkspaceManager - it will create its own Media_Window when setDataManager is called
+    auto media_widget = std::make_unique<Media_Widget>(_workspace_manager, parent);
     media_widget->setDataManager(_data_manager);
     
     // Set group manager if available

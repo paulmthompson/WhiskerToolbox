@@ -26,6 +26,13 @@ target_link_libraries(test_editor_state PRIVATE
     Qt6::Test
 )
 
+# Enable Qt MOC for the test
+set_target_properties(test_editor_state PROPERTIES
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
+)
+
 if (WIN32)
     catch_discover_tests(test_editor_state
         DL_PATHS
@@ -35,3 +42,55 @@ if (WIN32)
 else()
     catch_discover_tests(test_editor_state)
 endif()
+
+# DataManagerWidgetState tests
+add_executable(test_data_manager_widget_state
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager_Widget/DataManagerWidgetState.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager_Widget/DataManagerWidgetState.test.cpp
+)
+
+target_link_libraries(test_data_manager_widget_state PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::EditorState
+    Qt6::Core
+    Qt6::Test
+)
+
+target_include_directories(test_data_manager_widget_state PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager_Widget>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+)
+
+set_target_properties(test_data_manager_widget_state PROPERTIES
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
+)
+
+catch_discover_tests(test_data_manager_widget_state)
+
+# MediaWidgetState tests
+add_executable(test_media_widget_state
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/MediaWidgetState.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/MediaWidgetState.test.cpp
+)
+
+target_link_libraries(test_media_widget_state PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::EditorState
+    Qt6::Core
+    Qt6::Test
+)
+
+target_include_directories(test_media_widget_state PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+)
+
+set_target_properties(test_media_widget_state PROPERTIES
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
+)
+
+catch_discover_tests(test_media_widget_state)

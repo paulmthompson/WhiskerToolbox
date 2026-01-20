@@ -57,6 +57,8 @@ set(PROJECT_SOURCES
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
         DataManager_Widget/DataManager_Widget.ui
+        DataManager_Widget/DataManagerWidgetState.hpp
+        DataManager_Widget/DataManagerWidgetState.cpp
 
         DataManager_Widget/Mask_Widget/Mask_Widget.hpp
         DataManager_Widget/Mask_Widget/Mask_Widget.cpp
@@ -291,6 +293,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataManagerIO TensorData)
 target_link_libraries(WhiskerToolbox PRIVATE ImageProcessing)
 target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
+target_link_libraries(WhiskerToolbox PRIVATE EditorState)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)

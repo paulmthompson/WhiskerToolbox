@@ -40,11 +40,13 @@
 DataManager_Widget::DataManager_Widget(
         std::shared_ptr<DataManager> data_manager,
         TimeScrollBar * time_scrollbar,
+        WorkspaceManager * workspace_manager,
         QWidget * parent)
     : QScrollArea(parent),
       ui(new Ui::DataManager_Widget),
       _time_scrollbar{time_scrollbar},
-      _data_manager{std::move(data_manager)} {
+      _data_manager{std::move(data_manager)},
+      _workspace_manager{workspace_manager} {
     ui->setupUi(this);
 
     // Set explicit size policy and minimum size

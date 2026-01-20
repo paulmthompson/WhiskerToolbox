@@ -9,6 +9,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
+#include "EditorState/WorkspaceManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
@@ -60,6 +61,7 @@ MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       _data_manager{std::make_shared<DataManager>()},
+      _workspace_manager{std::make_unique<WorkspaceManager>(_data_manager, this)},
       _group_manager(nullptr),
       _group_management_widget(nullptr),
       _data_manager_widget(nullptr)
@@ -92,16 +94,16 @@ MainWindow::MainWindow(QWidget * parent)
     _time_scrollbar = new TimeScrollBar(this);
     _time_scrollbar->setDataManager(_data_manager);
 
-    // Create the DataManager_Widget 
-    _data_manager_widget = new DataManager_Widget(_data_manager, _time_scrollbar, this);
+    // Create the DataManager_Widget with WorkspaceManager
+    _data_manager_widget = new DataManager_Widget(_data_manager, _time_scrollbar, _workspace_manager.get(), this);
     
     // Set the GroupManager for the DataManager_Widget
     if (_group_manager) {
         _data_manager_widget->setGroupManager(_group_manager.get());
     }
 
-    // Create media widget manager
-    _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, this);
+    // Create media widget manager with WorkspaceManager
+    _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, _workspace_manager.get(), this);
     
     // Connect the group manager to the media widget manager
     if (_group_manager) {

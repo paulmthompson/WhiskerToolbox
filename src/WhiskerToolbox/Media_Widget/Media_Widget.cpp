@@ -34,9 +34,10 @@
 
 #include <algorithm>
 
-Media_Widget::Media_Widget(QWidget * parent)
+Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * parent)
     : QWidget(parent),
-      ui(new Ui::Media_Widget) {
+      ui(new Ui::Media_Widget),
+      _workspace_manager{workspace_manager} {
     ui->setupUi(this);
 
     // Configure splitter behavior

@@ -16,6 +16,7 @@ class DataManager_Widget;
 class GroupManager;
 class GroupManagementWidget;
 class MediaWidgetManager;
+class WorkspaceManager;
 
 
 namespace Ui {
@@ -63,6 +64,18 @@ public:
      */
     GroupManager * getGroupManager() const { return _group_manager.get(); }
 
+    /**
+     * @brief Get the workspace manager for editor state management
+     * 
+     * WorkspaceManager provides:
+     * - Registry for all EditorState instances
+     * - Access to SelectionContext for inter-widget communication
+     * - Workspace serialization support
+     * 
+     * @return Pointer to the WorkspaceManager
+     */
+    WorkspaceManager * workspaceManager() const { return _workspace_manager.get(); }
+
     void processLoadedData(std::vector<DataInfo> const & data_info);
 
 
@@ -80,6 +93,7 @@ private:
     bool _verbose;
 
     std::shared_ptr<DataManager> _data_manager;
+    std::unique_ptr<WorkspaceManager> _workspace_manager;
 
     std::unique_ptr<GroupManager> _group_manager;
     GroupManagementWidget * _group_management_widget;

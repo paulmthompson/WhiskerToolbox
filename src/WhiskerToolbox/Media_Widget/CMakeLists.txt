@@ -11,6 +11,8 @@ set(MEDIA_WIDGET_SOURCES
     Media_Widget.hpp
     Media_Widget.cpp
     Media_Widget.ui
+    MediaWidgetState.hpp
+    MediaWidgetState.cpp
     DisplayOptions/DisplayOptions.hpp
     DisplayOptions/CoordinateTypes.hpp
 
@@ -106,6 +108,7 @@ add_library(Media_Widget STATIC ${MEDIA_WIDGET_SOURCES})
 
 target_link_libraries(Media_Widget PRIVATE Qt6::Widgets)
 target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
+target_link_libraries(Media_Widget PRIVATE EditorState)
 target_link_libraries(Media_Widget PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(Media_Widget PRIVATE TimeScrollBar)
 target_link_libraries(Media_Widget PRIVATE DataManager)

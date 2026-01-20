@@ -99,99 +99,25 @@ src/WhiskerToolbox/DataViewer_Widget/
 
 **Strategy**: Create minimal EditorState subclasses first, establish inter-widget communication, then gradually migrate state. Do NOT attempt to replace widget internals all at once.
 
-### 2.1 Create Minimal State Classes (Week 4)
+### 2.1 Create Minimal State Classes (Week 4) ✅ COMPLETE
 
 Create empty/minimal state classes that widgets can hold alongside existing members:
 
-```cpp
-// src/WhiskerToolbox/DataManager_Widget/DataManagerWidgetState.hpp
-class DataManagerWidgetState : public EditorState {
-    Q_OBJECT
-public:
-    explicit DataManagerWidgetState(QObject* parent = nullptr);
-    
-    QString getTypeName() const override { return "DataManagerWidget"; }
-    QString getDisplayName() const override { return _display_name; }
-    
-    // Minimal state: just track selected data key
-    void setSelectedDataKey(QString const& key);
-    QString selectedDataKey() const { return _selected_key; }
-    
-    std::string toJson() const override;
-    bool fromJson(std::string const& json) override;
+**Deliverables**:
+- [x] Create `DataManagerWidgetState.hpp/.cpp` in DataManager_Widget directory
+- [x] Create `MediaWidgetState.hpp/.cpp` in Media_Widget directory  
+- [x] Update widget constructors to create and hold state object
+- [x] Register state with WorkspaceManager when widget is created
+- [x] Unregister state when widget is destroyed
+- [x] Widgets keep all existing member variables - state is additional
 
-signals:
-    void selectedDataKeyChanged(QString const& key);
-
-private:
-    QString _selected_key;
-    QString _display_name = "Data Manager";
-};
-
-// src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp
-class MediaWidgetState : public EditorState {
-    Q_OBJECT
-public:
-    explicit MediaWidgetState(QObject* parent = nullptr);
-    
-    QString getTypeName() const override { return "MediaWidget"; }
-    QString getDisplayName() const override { return _display_name; }
-    
-    // Start minimal - just track what data this viewer is displaying
-    void setDisplayedDataKey(QString const& key);
-    QString displayedDataKey() const { return _displayed_key; }
-    
-    std::string toJson() const override;
-    bool fromJson(std::string const& json) override;
-
-signals:
-    void displayedDataKeyChanged(QString const& key);
-
-private:
-    QString _displayed_key;
-    QString _display_name = "Media Viewer";
-};
-```
+### 2.2 Integrate WorkspaceManager into MainWindow (Week 4) ✅ COMPLETE
 
 **Deliverables**:
-- [ ] Create `DataManagerWidgetState.hpp/.cpp` in DataManager_Widget directory
-- [ ] Create `MediaWidgetState.hpp/.cpp` in Media_Widget directory  
-- [ ] Update widget constructors to create and hold state object
-- [ ] Register state with WorkspaceManager when widget is created
-- [ ] Unregister state when widget is destroyed
-- [ ] Widgets keep all existing member variables - state is additional
-
-### 2.2 Integrate WorkspaceManager into MainWindow (Week 4)
-
-```cpp
-// In MainWindow.hpp
-class MainWindow : public QMainWindow {
-    Q_OBJECT
-public:
-    // Provide access to workspace manager for widgets
-    WorkspaceManager* workspaceManager() { return _workspace_manager.get(); }
-    
-private:
-    std::shared_ptr<DataManager> _data_manager;
-    std::unique_ptr<WorkspaceManager> _workspace_manager;
-    
-    // Initialize in constructor
-    void initializeWorkspaceManager();
-};
-
-// In MainWindow.cpp constructor
-MainWindow::MainWindow() {
-    _data_manager = std::make_shared<DataManager>();
-    _workspace_manager = std::make_unique<WorkspaceManager>(_data_manager, this);
-    // ... rest of setup
-}
-```
-
-**Deliverables**:
-- [ ] Add WorkspaceManager member to MainWindow
-- [ ] Initialize in constructor after DataManager
-- [ ] Provide accessor for child widgets
-- [ ] Update widget creation to pass workspace_manager pointer
+- [x] Add WorkspaceManager member to MainWindow
+- [x] Initialize in constructor after DataManager
+- [x] Provide accessor for child widgets
+- [x] Update widget creation to pass workspace_manager pointer
 
 ### 2.3 Connect DataManager_Widget Selection (Week 5)
 
@@ -874,60 +800,39 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | Phase | Status | Duration | Deliverables |
 |-------|--------|----------|--------------|
 | 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, WorkspaceManager, SelectionContext |
-| 2. State Integration & Communication | ⏭️ NEXT | 5 weeks | Minimal states, inter-widget communication, incremental migration |
+| 2. State Integration & Communication | 🔄 IN PROGRESS | 5 weeks | Minimal states, inter-widget communication, incremental migration |
 | 3. Central Properties Zone | 📋 PLANNED | 3 weeks | PropertiesHost, unified Feature_Table_Widget |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
 | 5. Widget Migrations | 📋 PLANNED | 8 weeks | Remaining widgets (DataViewer, Analysis, Tables) |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~3 weeks | Remaining: ~23 weeks (~5.5 months)**
+**Elapsed: ~4 weeks | Remaining: ~22 weeks (~5 months)**
 
-**Progress**: 11.5% Complete (Phase 1 of 6)
+**Progress**: 25% Complete (Phase 1 complete, Phase 2.1 & 2.2 complete)
 
-## Next Steps (Phase 2 - Incremental Integration)
+## Next Steps (Phase 2.3 - Connect DataManager_Widget Selection)
 
-### Step 1: Create Minimal State Classes (Week 4, Days 1-2)
-- Create `DataManagerWidgetState.hpp/.cpp` with just `selectedDataKey` property
-- Create `MediaWidgetState.hpp/.cpp` with just `displayedDataKey` property
-- Both classes inherit from EditorState, implement virtual methods
-- Add basic JSON serialization (just the one field)
-- Add co-located unit tests for each state class
+### Step 1: Create DataManagerWidgetState signal (Week 5, Days 1-2)
+- Add `selectedDataKeyChanged(QString const& key)` signal to DataManagerWidgetState
+- Add `setSelectedDataKey(QString const& key)` method to trigger signal
 
-### Step 2: Integrate WorkspaceManager (Week 4, Days 3-4)
-- Add `std::unique_ptr<WorkspaceManager>` to MainWindow
-- Initialize after DataManager in constructor
-- Add `workspaceManager()` accessor method
-- Pass workspace_manager pointer to widgets during construction
+### Step 2: Connect Feature Table to State (Week 5, Days 3-4)
+- In DataManager_Widget constructor, connect Feature_Table_Widget selection to state
+- When feature_table emits selection, update state
+- Verify signal propagates correctly
 
-### Step 3: Wire DataManager_Widget Selection (Week 5, Days 1-3)
-- Update DataManager_Widget constructor to accept WorkspaceManager pointer
-- Create and register DataManagerWidgetState instance
-- Connect Feature_Table_Widget::highlightedFeatureChanged to state
-- Connect state change to SelectionContext::setSelectedData
-- Add debug logging to track selection changes
+### Step 3: Connect State to SelectionContext (Week 5, Days 5 & Week 6, Days 1-2)
+- In DataManager_Widget constructor, connect state signals to SelectionContext
+- Create SelectionSource with widget instance ID and "feature_table" context
+- Call selectionContext()->setSelectedData(key, source)
 
-### Step 4: Wire Media_Widget as Listener (Week 5, Days 4-5)
-- Update Media_Widget constructor to accept WorkspaceManager pointer
-- Create and register MediaWidgetState instance
-- Connect to SelectionContext::selectionChanged signal
-- Implement handler that highlights/loads selected data
-- Check SelectionSource to avoid responding to own changes
+### Step 4: Test Selection Flow (Week 6, Days 3-5)
+- Manual testing: select feature in DataManager_Widget
+- Verify SelectionContext receives update
+- Add logging for debugging
+- Document any issues or edge cases
 
-### Step 5: Test Communication Chain (Week 6)
-- Manual testing: Select in DataManager → verify Media_Widget responds
-- Add integration test for selection propagation
-- Verify no circular update loops
-- Document behavior and edge cases
-- Fix any issues discovered
-
-### Step 6: Begin Incremental State Migration (Weeks 7-8)
-**Only after communication validated!**
-- Week 7: Add zoom/pan to MediaWidgetState, migrate viewport code
-- Week 8: Add feature_enabled/feature_colors to state, update widget to use it
-- Keep Feature_Table_Widget in Media_Widget - it reads from state now
-- Test serialization works for migrated properties
-
-**Priority**: Communication first, state migration second. Don't remove UI elements yet.
+**Next Milestone**: DataManager_Widget successfully propagates feature selection to SelectionContext.
 
 ## References
 
