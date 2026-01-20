@@ -38,6 +38,8 @@ add_subdirectory(MediaWidgetManager)
 add_subdirectory(TableViewerWidget)
 add_subdirectory(TableDesignerWidget)
 add_subdirectory(ML_Widget)
+add_subdirectory(Terminal_Widget)
+add_subdirectory(DataTransform_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -54,110 +56,6 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.ui
         Main_Window/video_loader.hpp
         Main_Window/video_loader.cpp
-
-        DataTransform_Widget/DataTransform_Widget.ui
-        DataTransform_Widget/DataTransform_Widget.cpp
-        DataTransform_Widget/DataTransform_Widget.hpp
-        DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp
-        DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.hpp
-        DataTransform_Widget/TransformParameter_Widget/DataManagerParameter_Widget.cpp
-
-        DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp
-        DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.cpp
-        DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.ui
-        DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp
-        DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.cpp
-        DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.ui
-        DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp
-        DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.cpp
-        DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.ui
-        DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.hpp
-        DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.cpp
-        DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.ui
-        DataTransform_Widget/Masks/MaskMedianFilter_Widget/MaskMedianFilter_Widget.hpp
-        DataTransform_Widget/Masks/MaskMedianFilter_Widget/MaskMedianFilter_Widget.cpp
-        DataTransform_Widget/Masks/MaskMedianFilter_Widget/MaskMedianFilter_Widget.ui
-        DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp
-        DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.cpp
-        DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.ui
-        DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.cpp
-        DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp
-        DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.ui
-        DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.cpp
-        DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp
-        DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.ui
-        DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp
-        DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.cpp
-        DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.ui
-        DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp
-        DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.cpp
-        DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.ui
-        DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.hpp
-        DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.cpp
-        DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.ui
-        DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.hpp
-        DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.cpp
-        DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.ui
-        DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.cpp
-        DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp
-        DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.ui
-        DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.cpp
-        DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp
-        DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.ui
-        DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.cpp
-        DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp
-        DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.ui
-        DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.cpp
-        DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp
-        DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.ui
-        DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.cpp
-        DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp
-        DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.ui
-        DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.cpp
-        DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp
-        DataTransform_Widget/Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.ui
-        DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.cpp
-        DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.hpp
-        DataTransform_Widget/Lines/Line_Kalman_Grouping/LineKalmanGrouping_Widget.ui
-        DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.cpp
-        DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.hpp
-        DataTransform_Widget/Lines/Line_Outlier_Detection/LineOutlierDetection_Widget.ui
-        DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.cpp
-        DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp
-        DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.ui
-        DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.cpp
-        DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.hpp
-        DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.ui
-        DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.cpp
-        DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.hpp
-        DataTransform_Widget/Points/PointParticleFilter_Widget/PointParticleFilter_Widget.ui
-        DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.cpp
-        DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp
-        DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.ui
-        DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.cpp
-        DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.hpp
-        DataTransform_Widget/DigitalIntervalSeries/BooleanOperation_Widget/BooleanOperation_Widget.ui
-        DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp
-        DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.cpp
-        DataTransform_Widget/Media/WhiskerTracing_Widget/WhiskerTracing_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
@@ -196,10 +94,6 @@ set(PROJECT_SOURCES
 
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
-
-        Terminal_Widget/TerminalWidget.hpp
-        Terminal_Widget/TerminalWidget.cpp
-        Terminal_Widget/TerminalWidget.ui
 
         Test_Widget/Test_Widget.hpp
         Test_Widget/Test_Widget.cpp
@@ -247,6 +141,7 @@ target_link_libraries(WhiskerToolbox PRIVATE MediaWidgetManager)
 target_link_libraries(WhiskerToolbox PRIVATE TableViewerWidget)
 target_link_libraries(WhiskerToolbox PRIVATE TableDesignerWidget)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
@@ -266,6 +161,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
 
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
