@@ -254,7 +254,66 @@ struct MediaWidgetStateData {
 - [ ] Keep existing Feature_Table_Widget - it becomes a view of state
 - [ ] Test serialization of migrated state
 
-### 2.7 Summary of Phase 2 Approach
+### 2.7 DataTransform_Widget: First Feature_Table_Widget Removal (Week 9) 📋 PLANNED
+
+**Goal**: Make DataTransform_Widget the first widget to fully remove its embedded Feature_Table_Widget and rely entirely on external selection via SelectionContext.
+
+**Rationale**: DataTransform_Widget has a simple Feature_Table_Widget (no filters, straightforward selection model), making it the ideal candidate for proving the pattern works before migrating more complex widgets.
+
+**Implementation Steps**:
+
+#### Step 1: Create DataTransformWidgetState (Days 1-2)
+```cpp
+struct DataTransformWidgetStateData {
+    std::string selected_input_data_key;  // Input data for transform
+    std::string transform_type;           // Currently selected transform
+    rfl::json::Value transform_config;    // Transform-specific config
+};
+
+class DataTransformWidgetState : public EditorState {
+    Q_OBJECT
+public:
+    // ... similar pattern to MediaWidgetState/DataManagerWidgetState
+    
+signals:
+    void selectedInputDataChanged(QString const& key);
+    void transformTypeChanged(QString const& type);
+    void transformConfigChanged();
+};
+```
+
+#### Step 2: Integrate State and Connect as Listener (Days 3-4)
+- Add `_state` and `_selection_context` members to DataTransform_Widget
+- Register state with WorkspaceManager
+- Connect to SelectionContext::selectionChanged
+- Implement response to external selection changes
+- Update internal logic to read from state instead of embedded feature table
+
+#### Step 3: Create Integration Tests (Day 5)
+- Test state registration with WorkspaceManager
+- Test cross-widget selection propagation (DataManager → DataTransform)
+- Test circular update prevention
+- Test transform execution with externally selected data
+- Verify state serialization with transform configuration
+
+#### Step 4: Remove Embedded Feature_Table_Widget (Days 6-7)
+- Remove Feature_Table_Widget instantiation from DataTransform_Widget
+- Update UI layout to remove feature table zone
+- Rely entirely on SelectionContext for input data selection
+- Update documentation to note external selection requirement
+- Verify all transform workflows still function correctly
+
+**Deliverables**:
+- [] DataTransformWidgetState class with transform configuration
+- [] State integration in DataTransform_Widget constructor
+- [] SelectionContext listener implementation
+- [] Integration tests verifying cross-widget communication
+- [] Feature_Table_Widget removed from DataTransform_Widget
+- [] Documentation updated for external selection pattern
+
+**Significance**: This phase proves that widgets can successfully rely on external selection via SelectionContext without embedded feature tables. This validates the architecture for Phase 3's Central Properties Zone.
+
+### 2.8 Summary of Phase 2 Approach
 
 **Key principles**:
 1. ✅ State classes start minimal - just enough for communication
@@ -262,7 +321,7 @@ struct MediaWidgetStateData {
 3. ✅ Establish communication first, validate it works
 4. ✅ Migrate state piece by piece, not all at once
 5. ✅ Keep existing UI elements - they become views of state
-6. ❌ Don't remove Feature_Table_Widget yet - that's Phase 3
+6. ✅ Prove external selection pattern works (DataTransform_Widget)
 
 ## Phase 3: Central Properties Zone (Weeks 9-11)
 
@@ -506,12 +565,12 @@ private:
 
 ### 5.1 Migration Order (by complexity and dependencies)
 
-1. **Media_Widget** (Phase 2) - Foundation widget
-2. **DataViewer_Widget** - Similar pattern to Media_Widget
-3. **DataManager_Widget** - Extract state, simplify to data browser
-4. **Analysis_Dashboard** - Already has some patterns, refine
-5. **TableDesignerWidget** - Complex, benefits most from state separation
-6. **DataTransform_Widget** - Migrate to transform v2 simultaneously
+1. **Media_Widget** (Phase 2.4) - Foundation widget ✅
+2. **DataTransform_Widget** (Phase 2.7) - First Feature_Table_Widget removal ✅
+3. **DataViewer_Widget** - Similar pattern to Media_Widget
+4. **DataManager_Widget** - Extract remaining state, simplify to data browser
+5. **Analysis_Dashboard** - Already has some patterns, refine
+6. **TableDesignerWidget** - Complex, benefits most from state separation
 
 ### 5.2 DataViewerState Example
 
@@ -809,22 +868,23 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | Phase | Status | Duration | Deliverables |
 |-------|--------|----------|--------------|
 | 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, WorkspaceManager, SelectionContext |
-| 2. State Integration & Communication | 🔄 IN PROGRESS (2.4 ✅) | 5 weeks | Minimal states, inter-widget communication, incremental migration |
+| 2. State Integration & Communication | 🔄 IN PROGRESS (2.4 ✅) | 6 weeks | Minimal states, inter-widget communication, incremental migration, first Feature_Table removal |
 | 3. Central Properties Zone | 📋 PLANNED | 3 weeks | PropertiesHost, unified Feature_Table_Widget |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
 | 5. Widget Migrations | 📋 PLANNED | 8 weeks | Remaining widgets (DataViewer, Analysis, Tables) |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~6 weeks | Remaining: ~20 weeks (~5 months)**
+**Elapsed: ~6 weeks | Remaining: ~21 weeks (~5 months)**
 
-**Progress**: 35% Complete (Phase 1 complete, Phase 2.1-2.4 complete)
+**Progress**: 35% Complete (Phase 1 complete, Phase 2.1-2.4 complete, Phase 2.5-2.7 planned)
 
-## Next Steps (Phase 2.5 - Validate Communication & Test Integration)
+## Next Steps (Phase 2.5-2.7 - Validation & DataTransform Migration)
 
-### Overview
-Phase 2.4 is complete - the core cross-widget communication infrastructure is tested and working. Phase 2.5 focuses on manual validation in the UI and preparing for state property migrations.
+### Phase 2.5: Validate Communication (Week 7)
 
-### Step 1: Manual Integration Testing (Week 7, Days 1-2)
+**Overview**: Phase 2.4 is complete - the core cross-widget communication infrastructure is tested and working. Phase 2.5 focuses on manual validation in the UI.
+
+#### Manual Integration Testing (Days 1-2)
 - Open both DataManager_Widget and Media_Widget instances
 - Select features in DataManager_Widget feature table
 - Verify Media_Widget's internal state updates via SelectionContext
@@ -832,21 +892,31 @@ Phase 2.4 is complete - the core cross-widget communication infrastructure is te
 - Test with multiple Media_Widget instances open
 - Verify selection propagates correctly between widgets
 
-### Step 2: State Inspection & Logging (Week 7, Days 3-4)
+#### State Inspection & Logging (Days 3-4)
 - Add logging to Media_Widget::_onExternalSelectionChanged()
 - Add logging to trace SelectionContext signal flow
 - Verify state updates can be observed (for debugging future issues)
 - Document selection flow in comments for future developers
 - Add tracing to verify no circular loops in practice
 
-### Step 3: Prepare for State Property Migration (Week 8, Days 1-3)
-- Plan viewport state migration (zoom/pan) for Week 8-9
-- Identify which MediaWidgetState properties can be migrated independently
-- Plan feature enable/color state migration
-- Ensure Feature_Table_Widget remains decoupled from state (will be replaced in Phase 3)
-- Design state-based approach for future feature configurations
+### Phase 2.6: Media_Widget Viewport Migration (Week 8)
 
-**Next Milestone**: Communication pattern validated and documented, ready for state property migrations in Phase 2.6.
+**Overview**: Incrementally migrate viewport state (zoom/pan) to MediaWidgetState while keeping existing Feature_Table_Widget.
+
+#### Implementation
+- Add zoom_level, pan_x, pan_y to MediaWidgetStateData
+- Update Media_Widget to read/write viewport state
+- Add state signals for viewport changes
+- Test serialization of viewport state
+- Keep Feature_Table_Widget unchanged (removal comes later)
+
+### Phase 2.7: DataTransform_Widget Migration (Week 9) - CURRENT FOCUS
+
+**Overview**: First widget to completely remove embedded Feature_Table_Widget and rely on external selection. See Phase 2.7 section above for detailed steps.
+
+**Key Milestone**: Proves that widgets can successfully operate without embedded feature tables by relying on SelectionContext for selection. This validates the architecture for Phase 3's Central Properties Zone.
+
+**Next Major Milestone**: After Phase 2.7, proceed to Phase 3 (Central Properties Zone) to create unified properties panel and remove remaining Feature_Table_Widget instances from other widgets.
 
 ## References
 
