@@ -2,6 +2,9 @@
 #include "ui_DataManager_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManagerWidgetState.hpp"
+#include "EditorState/SelectionContext.hpp"
+#include "EditorState/WorkspaceManager.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -97,9 +100,40 @@ DataManager_Widget::DataManager_Widget(
     connect(ui->output_dir_widget, &OutputDirectoryWidget::dirChanged, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
     connect(ui->new_data_widget, &NewDataWidget::createNewData, this, &DataManager_Widget::_createNewData);
+
+    // === Phase 2.3: Editor State Integration ===
+    // Initialize state and register with WorkspaceManager for serialization and inter-widget communication
+
+    _state = std::make_shared<DataManagerWidgetState>();
+
+    if (_workspace_manager) {
+        _workspace_manager->registerState(_state);
+        _selection_context = _workspace_manager->selectionContext();
+
+        // Connect feature table selection to state
+        // When user selects a feature in the table, update the state
+        connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
+                this, [this](QString const & key) {
+            _state->setSelectedDataKey(key);
+        });
+
+        // Connect state changes to SelectionContext for inter-widget communication
+        // When state's selected data key changes, notify SelectionContext
+        connect(_state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
+                this, [this](QString const & key) {
+            if (_selection_context) {
+                SelectionSource source{_state->getInstanceId(), QStringLiteral("feature_table")};
+                _selection_context->setSelectedData(key, source);
+            }
+        });
+    }
 }
 
 DataManager_Widget::~DataManager_Widget() {
+    // Unregister state from WorkspaceManager when widget is destroyed
+    if (_workspace_manager && _state) {
+        _workspace_manager->unregisterState(_state->getInstanceId());
+    }
     delete ui;
 }
 

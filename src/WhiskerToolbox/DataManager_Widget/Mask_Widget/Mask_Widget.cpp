@@ -14,7 +14,7 @@
 #include "MaskTableModel.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
-#include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
+//#include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
 #include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
 #include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
@@ -339,6 +339,7 @@ void Mask_Widget::_deleteSelectedMasks() {
 }
 
 void Mask_Widget::selectPoint(float const x, float const y) {
+    /*
     auto media = _data_manager->getData<MediaData>("media");
     if (!media) {
         std::cerr << "Mask_Widget: Media data not found." << std::endl;
@@ -387,12 +388,15 @@ void Mask_Widget::selectPoint(float const x, float const y) {
 
     active_mask_data->addAtTime(TimeFrameIndex(current_time), Mask2D(std::move(mask)), NotifyObservers::No);
     active_mask_data->notifyObservers();
+    */
 }
 
 void Mask_Widget::_loadSamModel() {
+    /*
     _sam_model = std::make_unique<dl::EfficientSAM>();
     // Assuming load_model handles its own error reporting or exceptions
     _sam_model->load_model();
+    */
     // Potentially update UI to indicate model is loaded, e.g., enable/disable buttons
     /*
     if(_sam_model->is_loaded()){

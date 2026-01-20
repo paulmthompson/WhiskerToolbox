@@ -14,6 +14,8 @@ class DataManager_Widget;
 }
 
 class DataManager;
+class DataManagerWidgetState;
+class SelectionContext;
 class TimeScrollBar;
 class GroupManager;
 class QResizeEvent;
@@ -63,6 +65,10 @@ private:
     
     // Store references to widgets for group manager setup
     class Line_Widget * _line_widget{nullptr};
+
+    // Editor state for workspace serialization and inter-widget communication
+    std::shared_ptr<DataManagerWidgetState> _state;
+    SelectionContext * _selection_context{nullptr};
 
 
 private slots:

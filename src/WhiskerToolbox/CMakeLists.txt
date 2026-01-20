@@ -31,6 +31,7 @@ add_subdirectory(Analysis_Dashboard)
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
 add_subdirectory(IO_Widgets)
+add_subdirectory(DataManager_Widget)
 add_subdirectory(DataViewer_Widget)
 add_subdirectory(Media_Widget)
 add_subdirectory(MediaWidgetManager)
@@ -53,63 +54,6 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.ui
         Main_Window/video_loader.hpp
         Main_Window/video_loader.cpp
-
-        DataManager_Widget/DataManager_Widget.hpp
-        DataManager_Widget/DataManager_Widget.cpp
-        DataManager_Widget/DataManager_Widget.ui
-        DataManager_Widget/DataManagerWidgetState.hpp
-        DataManager_Widget/DataManagerWidgetState.cpp
-
-        DataManager_Widget/Mask_Widget/Mask_Widget.hpp
-        DataManager_Widget/Mask_Widget/Mask_Widget.cpp
-        DataManager_Widget/Mask_Widget/Mask_Widget.ui
-        DataManager_Widget/Mask_Widget/MaskTableModel.cpp
-        DataManager_Widget/Mask_Widget/MaskTableModel.hpp
-
-        DataManager_Widget/Point_Widget/Point_Widget.hpp
-        DataManager_Widget/Point_Widget/Point_Widget.cpp
-        DataManager_Widget/Point_Widget/Point_Widget.ui
-        DataManager_Widget/Point_Widget/PointTableModel.cpp
-        DataManager_Widget/Point_Widget/PointTableModel.hpp
-
-        DataManager_Widget/Line_Widget/Line_Widget.hpp
-        DataManager_Widget/Line_Widget/Line_Widget.cpp
-        DataManager_Widget/Line_Widget/Line_Widget.ui
-        DataManager_Widget/Line_Widget/LineTableModel.cpp
-        DataManager_Widget/Line_Widget/LineTableModel.hpp
-
-        DataManager_Widget/Image_Widget/Image_Widget.hpp
-        DataManager_Widget/Image_Widget/Image_Widget.cpp
-        DataManager_Widget/Image_Widget/Image_Widget.ui
-        DataManager_Widget/Image_Widget/ImageTableModel.hpp
-        DataManager_Widget/Image_Widget/ImageTableModel.cpp
-
-        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp
-        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.cpp
-        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.ui
-
-        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp
-        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.cpp
-        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.ui
-        DataManager_Widget/DigitalIntervalSeries_Widget/IntervalTableModel.hpp
-
-        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp
-        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.cpp
-        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.ui
-        DataManager_Widget/DigitalEventSeries_Widget/EventTableModel.hpp
-
-        DataManager_Widget/Tensor_Widget/Tensor_Widget.hpp
-        DataManager_Widget/Tensor_Widget/Tensor_Widget.cpp
-        DataManager_Widget/Tensor_Widget/Tensor_Widget.ui
-        DataManager_Widget/Tensor_Widget/TensorTableModel.hpp
-
-        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.hpp
-        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.ui
-        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.cpp
-
-        DataManager_Widget/NewDataWidget/NewDataWidget.hpp
-        DataManager_Widget/NewDataWidget/NewDataWidget.cpp
-        DataManager_Widget/NewDataWidget/NewDataWidget.ui
 
         DataTransform_Widget/DataTransform_Widget.ui
         DataTransform_Widget/DataTransform_Widget.cpp
@@ -302,6 +246,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE MediaWidgetManager)
 target_link_libraries(WhiskerToolbox PRIVATE TableViewerWidget)
 target_link_libraries(WhiskerToolbox PRIVATE TableDesignerWidget)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

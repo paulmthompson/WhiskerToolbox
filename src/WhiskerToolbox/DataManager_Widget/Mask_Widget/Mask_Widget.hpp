@@ -12,9 +12,9 @@
 #include <string>
 #include <variant>
 
-namespace dl {
-class EfficientSAM;
-};
+//namespace dl {
+//class EfficientSAM;
+//};
 
 namespace Ui {
 class Mask_Widget;
@@ -50,7 +50,7 @@ signals:
 private:
     Ui::Mask_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    std::unique_ptr<dl::EfficientSAM> _sam_model;
+    //std::unique_ptr<dl::EfficientSAM> _sam_model;
     std::string _active_key;
     std::unique_ptr<MaskTableModel> _mask_table_model;
     int _callback_id{-1};

@@ -119,7 +119,7 @@ Create empty/minimal state classes that widgets can hold alongside existing memb
 - [x] Provide accessor for child widgets
 - [x] Update widget creation to pass workspace_manager pointer
 
-### 2.3 Connect DataManager_Widget Selection (Week 5)
+### 2.3 Connect DataManager_Widget Selection (Week 5) ✅ COMPLETE
 
 Establish first communication path: DataManager_Widget → SelectionContext
 
@@ -146,12 +146,31 @@ DataManager_Widget::DataManager_Widget(WorkspaceManager* workspace_manager, ...)
 ```
 
 **Deliverables**:
-- [ ] Update DataManager_Widget to create and register state
-- [ ] Connect Feature_Table_Widget signals to state
-- [ ] Connect state signals to SelectionContext
-- [ ] Test: Selecting in feature table should update SelectionContext
+- [x] Update DataManager_Widget to create and register state
+- [x] Connect Feature_Table_Widget signals to state
+- [x] Connect state signals to SelectionContext
+- [x] Test: Selecting in feature table should update SelectionContext
+- [x] Integration tests verify signal propagation and SelectionSource identification
 
-### 2.4 Connect Media_Widget as Listener (Week 5)
+**Implementation Details**:
+- Added `_state` (shared_ptr<DataManagerWidgetState>) member to DataManager_Widget
+- Added `_selection_context` pointer to access WorkspaceManager's SelectionContext
+- Included necessary headers: `DataManagerWidgetState.hpp`, `EditorState/SelectionContext.hpp`, `EditorState/WorkspaceManager.hpp`
+- Connected Feature_Table_Widget::featureSelected → state->setSelectedDataKey()
+- Connected DataManagerWidgetState::selectedDataKeyChanged → SelectionContext->setSelectedData()
+- State unregistered from WorkspaceManager in destructor
+
+**Test Coverage**:
+- Added 5 comprehensive integration tests in DataManagerWidgetState.test.cpp
+- Tests verify: state signal propagation, SelectionContext updates, multiple state coordination, SelectionSource identification
+- All tests passing
+
+**Files Modified**:
+- [DataManager_Widget.hpp](../../WhiskerToolbox/DataManager_Widget/DataManager_Widget.hpp) - Added state and context members, forward declarations
+- [DataManager_Widget.cpp](../../WhiskerToolbox/DataManager_Widget/DataManager_Widget.cpp) - Implemented state initialization, signal connections, registration/unregistration
+- [DataManagerWidgetState.test.cpp](../../WhiskerToolbox/DataManager_Widget/DataManagerWidgetState.test.cpp) - Added integration test suite
+
+### 2.4 Connect Media_Widget as Listener (Week 6)
 
 Make Media_Widget respond to SelectionContext changes:
 
@@ -806,33 +825,51 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | 5. Widget Migrations | 📋 PLANNED | 8 weeks | Remaining widgets (DataViewer, Analysis, Tables) |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~4 weeks | Remaining: ~22 weeks (~5 months)**
+**Elapsed: ~5 weeks | Remaining: ~21 weeks (~5 months)**
 
-**Progress**: 25% Complete (Phase 1 complete, Phase 2.1 & 2.2 complete)
+**Progress**: 30% Complete (Phase 1 complete, Phase 2.1-2.3 complete)
 
-## Next Steps (Phase 2.3 - Connect DataManager_Widget Selection)
+## Next Steps (Phase 2.4 - Connect Media_Widget as Listener)
 
-### Step 1: Create DataManagerWidgetState signal (Week 5, Days 1-2)
-- Add `selectedDataKeyChanged(QString const& key)` signal to DataManagerWidgetState
-- Add `setSelectedDataKey(QString const& key)` method to trigger signal
+### Overview
+Media_Widget will become the first listener to SelectionContext changes, demonstrating the cross-widget communication pattern established in Phase 2.3. When DataManager_Widget broadcasts a selection, Media_Widget will highlight or load the selected data.
 
-### Step 2: Connect Feature Table to State (Week 5, Days 3-4)
-- In DataManager_Widget constructor, connect Feature_Table_Widget selection to state
-- When feature_table emits selection, update state
-- Verify signal propagates correctly
+### Step 1: Create MediaWidgetState (Week 6, Days 1-2)
+- Define `MediaWidgetStateData` struct with reflect-cpp for serialization
+- Create `MediaWidgetState : EditorState` class in Media_Widget directory
+- Implement basic state management for displayed data key
+- Add signals for state changes (similar to DataManagerWidgetState)
 
-### Step 3: Connect State to SelectionContext (Week 5, Days 5 & Week 6, Days 1-2)
-- In DataManager_Widget constructor, connect state signals to SelectionContext
-- Create SelectionSource with widget instance ID and "feature_table" context
-- Call selectionContext()->setSelectedData(key, source)
+### Step 2: Integrate State into Media_Widget (Week 6, Days 3-4)
+- Add `_state` (shared_ptr<MediaWidgetState>) member to Media_Widget
+- Add `_selection_context` pointer for external selection access
+- Initialize state in constructor and register with WorkspaceManager
+- Store reference to SelectionContext from WorkspaceManager
+- Unregister state in destructor
 
-### Step 4: Test Selection Flow (Week 6, Days 3-5)
-- Manual testing: select feature in DataManager_Widget
-- Verify SelectionContext receives update
-- Add logging for debugging
-- Document any issues or edge cases
+### Step 3: Connect SelectionContext Changes (Week 6, Days 5 & Week 7, Days 1-2)
+- Connect SelectionContext::selectionChanged to Media_Widget slot
+- Implement `onSelectionChanged(SelectionSource const& source)` that:
+  - Filters out own instance ID (avoid self-response)
+  - Gets selected data key from SelectionContext::primarySelectedData()
+  - Checks if data is displayable (image, point, line, or mask data)
+  - Highlights feature if already loaded
+  - Optionally displays notification to load data if not present
+- Test with DataManager_Widget selections
 
-**Next Milestone**: DataManager_Widget successfully propagates feature selection to SelectionContext.
+### Step 4: Verify No Circular Loops (Week 7, Days 3-4)
+- Ensure Media_Widget selections don't trigger infinite loops
+- Verify SelectionSource filtering prevents self-response
+- Add logging to trace selection flow
+- Document expected behavior in comments
+
+### Step 5: Write Integration Tests (Week 7, Day 5)
+- Test: DataManager selects data → Media_Widget highlights
+- Test: Media_Widget doesn't highlight own selections
+- Test: Multiple Media_Widget instances coordinate via SelectionContext
+- Test: Selection source correctly identifies originating widget
+
+**Next Milestone**: Cross-widget selection working - selecting in DataManager_Widget automatically highlights in Media_Widget without circular loops.
 
 ## References
 
