@@ -835,6 +835,7 @@ void MainWindow::openDataTransforms() {
     if (!_widgets.contains(key)) {
         auto dt_widget = std::make_unique<DataTransform_Widget>(
                 _data_manager,
+                _workspace_manager.get(),
                 this);
 
         dt_widget->setObjectName(key);

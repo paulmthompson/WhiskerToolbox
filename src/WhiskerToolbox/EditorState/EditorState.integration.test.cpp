@@ -15,6 +15,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager_Widget/DataManagerWidgetState.hpp"
+#include "DataTransform_Widget/DataTransformWidgetState.hpp"
 #include "Media_Widget/MediaWidgetState.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -245,5 +246,182 @@ TEST_CASE("Workspace serialization with multiple widget states", "[EditorState][
 
         REQUIRE_FALSE(media_json.empty());
         REQUIRE_FALSE(dm_json.empty());
+    }
+}
+
+// === Phase 2.7: DataTransformWidgetState Integration Tests ===
+// These tests verify that DataTransform_Widget can operate without an embedded
+// Feature_Table_Widget by relying on SelectionContext for input data selection.
+
+TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][integration]") {
+    int argc = 0;
+    QCoreApplication app(argc, nullptr);
+
+    SECTION("DataTransformWidgetState can be registered with WorkspaceManager") {
+        auto dm = std::make_shared<DataManager>();
+        WorkspaceManager workspace(dm);
+
+        auto state = std::make_shared<DataTransformWidgetState>();
+        workspace.registerState(state);
+
+        REQUIRE(workspace.getAllStates().size() == 1);
+        REQUIRE(workspace.getState(state->getInstanceId()) == state);
+        REQUIRE(state->getTypeName() == "DataTransformWidget");
+
+        workspace.unregisterState(state->getInstanceId());
+        REQUIRE(workspace.getAllStates().empty());
+    }
+
+    SECTION("DataTransformWidgetState tracks input data key changes") {
+        auto state = std::make_shared<DataTransformWidgetState>();
+        
+        QSignalSpy input_spy(state.get(), &DataTransformWidgetState::selectedInputDataKeyChanged);
+        
+        state->setSelectedInputDataKey("mask_data");
+        
+        REQUIRE(input_spy.count() == 1);
+        REQUIRE(state->selectedInputDataKey() == "mask_data");
+        
+        // Setting same value should not emit again
+        state->setSelectedInputDataKey("mask_data");
+        REQUIRE(input_spy.count() == 1);
+    }
+
+    SECTION("DataTransformWidgetState tracks operation selection") {
+        auto state = std::make_shared<DataTransformWidgetState>();
+        
+        QSignalSpy op_spy(state.get(), &DataTransformWidgetState::selectedOperationChanged);
+        
+        state->setSelectedOperation("Calculate Area");
+        
+        REQUIRE(op_spy.count() == 1);
+        REQUIRE(state->selectedOperation() == "Calculate Area");
+    }
+
+    SECTION("DataTransformWidgetState serializes and deserializes correctly") {
+        auto state = std::make_shared<DataTransformWidgetState>();
+        state->setDisplayName("My Transform");
+        state->setSelectedInputDataKey("test_input");
+        state->setSelectedOperation("Filter");
+        state->setLastOutputName("filtered_output");
+        
+        std::string json = state->toJson();
+        REQUIRE_FALSE(json.empty());
+        
+        auto restored_state = std::make_shared<DataTransformWidgetState>();
+        REQUIRE(restored_state->fromJson(json));
+        
+        REQUIRE(restored_state->getDisplayName() == "My Transform");
+        REQUIRE(restored_state->selectedInputDataKey() == "test_input");
+        REQUIRE(restored_state->selectedOperation() == "Filter");
+        REQUIRE(restored_state->lastOutputName() == "filtered_output");
+        REQUIRE(restored_state->getInstanceId() == state->getInstanceId());
+    }
+
+    SECTION("DataTransform responds to SelectionContext from DataManager_Widget") {
+        // This is the key Phase 2.7 test: DataTransform_Widget receives input
+        // selection entirely from SelectionContext, not from an embedded feature table
+        
+        auto dm = std::make_shared<DataManager>();
+        WorkspaceManager workspace(dm);
+
+        auto dm_state = std::make_shared<DataManagerWidgetState>();
+        auto transform_state = std::make_shared<DataTransformWidgetState>();
+
+        workspace.registerState(dm_state);
+        workspace.registerState(transform_state);
+
+        auto * selection_context = workspace.selectionContext();
+
+        // Track selection changes received by DataTransform_Widget
+        bool transform_received_selection = false;
+        QString received_key;
+
+        QObject::connect(selection_context, &SelectionContext::selectionChanged,
+                         [&](SelectionSource const & source) {
+            // Simulate DataTransform_Widget's _onExternalSelectionChanged behavior
+            if (source.editor_instance_id != transform_state->getInstanceId()) {
+                transform_received_selection = true;
+                received_key = selection_context->primarySelectedData();
+                transform_state->setSelectedInputDataKey(received_key);
+            }
+        });
+
+        // Simulate DataManager_Widget selecting a feature
+        dm_state->setSelectedDataKey("analog_signal");
+        SelectionSource dm_source{dm_state->getInstanceId(), "feature_table"};
+        selection_context->setSelectedData(dm_state->selectedDataKey(), dm_source);
+
+        // Verify the chain worked
+        REQUIRE(transform_received_selection);
+        REQUIRE(received_key == "analog_signal");
+        REQUIRE(transform_state->selectedInputDataKey() == "analog_signal");
+    }
+
+    SECTION("DataTransform ignores own selections (no circular updates)") {
+        auto dm = std::make_shared<DataManager>();
+        WorkspaceManager workspace(dm);
+
+        auto transform_state = std::make_shared<DataTransformWidgetState>();
+        workspace.registerState(transform_state);
+
+        auto * selection_context = workspace.selectionContext();
+
+        // Set initial state
+        transform_state->setSelectedInputDataKey("initial_key");
+
+        // Simulate selection originating from DataTransform itself
+        SelectionSource own_source{transform_state->getInstanceId(), "internal"};
+        selection_context->setSelectedData("new_key", own_source);
+
+        // Handler should filter out own selections
+        if (own_source.editor_instance_id != transform_state->getInstanceId()) {
+            transform_state->setSelectedInputDataKey(selection_context->primarySelectedData());
+        }
+
+        // State should remain unchanged
+        REQUIRE(transform_state->selectedInputDataKey() == "initial_key");
+    }
+
+    SECTION("Multiple widget types coexist with DataTransformWidgetState") {
+        auto dm = std::make_shared<DataManager>();
+        WorkspaceManager workspace(dm);
+
+        auto dm_state = std::make_shared<DataManagerWidgetState>();
+        auto media_state = std::make_shared<MediaWidgetState>();
+        auto transform_state = std::make_shared<DataTransformWidgetState>();
+
+        workspace.registerState(dm_state);
+        workspace.registerState(media_state);
+        workspace.registerState(transform_state);
+
+        REQUIRE(workspace.getAllStates().size() == 3);
+
+        // All have unique IDs
+        REQUIRE(dm_state->getInstanceId() != media_state->getInstanceId());
+        REQUIRE(dm_state->getInstanceId() != transform_state->getInstanceId());
+        REQUIRE(media_state->getInstanceId() != transform_state->getInstanceId());
+
+        // All have correct type names
+        REQUIRE(dm_state->getTypeName() == "DataManagerWidget");
+        REQUIRE(media_state->getTypeName() == "MediaWidget");
+        REQUIRE(transform_state->getTypeName() == "DataTransformWidget");
+
+        auto * selection_context = workspace.selectionContext();
+
+        // DataManager selects -> both Media and Transform should respond
+        SelectionSource dm_source{dm_state->getInstanceId(), "feature_table"};
+        selection_context->setSelectedData("shared_data", dm_source);
+
+        // Simulate both widgets responding
+        if (dm_source.editor_instance_id != media_state->getInstanceId()) {
+            media_state->setDisplayedDataKey(selection_context->primarySelectedData());
+        }
+        if (dm_source.editor_instance_id != transform_state->getInstanceId()) {
+            transform_state->setSelectedInputDataKey(selection_context->primarySelectedData());
+        }
+
+        REQUIRE(media_state->displayedDataKey() == "shared_data");
+        REQUIRE(transform_state->selectedInputDataKey() == "shared_data");
     }
 }

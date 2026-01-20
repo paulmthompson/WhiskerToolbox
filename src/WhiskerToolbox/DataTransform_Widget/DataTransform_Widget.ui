@@ -45,19 +45,38 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,1,0">
     <item>
-     <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <widget class="QGroupBox" name="inputSelectionGroup">
+      <property name="title">
+       <string>Input Data (Select from Data Manager)</string>
       </property>
-      <property name="minimumSize">
-       <size>
-        <width>200</width>
-        <height>150</height>
-       </size>
-      </property>
+      <layout class="QVBoxLayout" name="inputLayout">
+       <item>
+        <widget class="QLabel" name="selected_data_label">
+         <property name="text">
+          <string>No data selected</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLabel { 
+  padding: 8px; 
+  background-color: palette(base); 
+  border: 1px solid palette(mid);
+  border-radius: 4px;
+  font-weight: bold;
+}</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="data_type_label">
+         <property name="text">
+          <string>Type: -</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>
@@ -151,14 +170,6 @@
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>Feature_Table_Widget</class>
-   <extends>QWidget</extends>
-   <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

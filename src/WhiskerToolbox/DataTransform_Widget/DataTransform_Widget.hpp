@@ -16,22 +16,33 @@ class DataTransform_Widget;
 }
 
 class DataManager;
+class DataTransformWidgetState;
 class QLabel;
 class QProgressBar;
 class QPushButton;
 class QResizeEvent;
 class QTextEdit;
 class Section;
+class SelectionContext;
+struct SelectionSource;
 class TransformOperation;
 class TransformParameter_Widget;
 class TransformRegistry;
 class TransformPipeline;
+class WorkspaceManager;
 
 
 class DataTransform_Widget : public QScrollArea {
     Q_OBJECT
 public:
+    /**
+     * @brief Construct DataTransform_Widget
+     * @param data_manager Shared pointer to the DataManager
+     * @param workspace_manager Pointer to the WorkspaceManager for state registration and SelectionContext access
+     * @param parent Parent widget
+     */
     DataTransform_Widget(std::shared_ptr<DataManager> data_manager,
+                         WorkspaceManager * workspace_manager = nullptr,
                          QWidget * parent = nullptr);
     ~DataTransform_Widget() override;
 
@@ -53,6 +64,12 @@ private:
     TransformOperation * _currentSelectedOperation = nullptr;
     DataTypeVariant _currentSelectedDataVariant;
     int _current_progress = 0;
+
+    // === Phase 2.7: Editor State Integration ===
+    // State and workspace integration for SelectionContext-based input selection
+    WorkspaceManager * _workspace_manager = nullptr;
+    std::shared_ptr<DataTransformWidgetState> _state;
+    SelectionContext * _selection_context = nullptr;
 
     // JSON Pipeline members
     Section* _jsonPipelineSection;
@@ -90,7 +107,6 @@ private:
     void _updateOutputName();
 
 private slots:
-    void _handleFeatureSelected(QString const & feature);
     void _doTransform();
     void _onOperationSelected(int index);
     void _updateProgress(int progress);
@@ -100,6 +116,18 @@ private slots:
     void _onJsonTextChanged();
     void _executeJsonPipeline();
     void _validateJsonSyntax();
+    
+    // === Phase 2.7: SelectionContext integration ===
+    /**
+     * @brief Handle external selection changes from SelectionContext
+     * 
+     * This is the key Phase 2.7 integration point. When data is selected
+     * in another widget (e.g., DataManager_Widget), this slot updates
+     * the transform input selection.
+     * 
+     * @param source Information about which widget made the selection
+     */
+    void _onExternalSelectionChanged(SelectionSource const & source);
 };
 
 

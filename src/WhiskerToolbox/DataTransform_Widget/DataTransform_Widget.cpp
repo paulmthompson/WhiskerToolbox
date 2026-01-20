@@ -6,7 +6,9 @@
 #include "DataManager/transforms/ParameterFactory.hpp"
 #include "DataManager/transforms/TransformPipeline.hpp"
 #include "DataManager/transforms/TransformRegistry.hpp"
-#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
+#include "DataTransformWidgetState.hpp"
+#include "EditorState/SelectionContext.hpp"
+#include "EditorState/WorkspaceManager.hpp"
 
 #include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
 #include "Collapsible_Widget/Section.hpp"
@@ -63,10 +65,12 @@
 
 DataTransform_Widget::DataTransform_Widget(
         std::shared_ptr<DataManager> data_manager,
+        WorkspaceManager * workspace_manager,
         QWidget * parent)
     : QScrollArea(parent),
       ui(new Ui::DataTransform_Widget),
       _data_manager{std::move(data_manager)},
+      _workspace_manager{workspace_manager},
       _jsonPipelineSection(nullptr),
       _loadJsonButton(nullptr),
       _jsonTextEdit(nullptr),
@@ -97,23 +101,44 @@ DataTransform_Widget::DataTransform_Widget(
     // Initialize parameter factory
     ParameterFactory::getInstance().initializeDefaultSetters();
 
-    ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
-    ui->feature_table_widget->setDataManager(_data_manager);
-
     _initializeParameterWidgetFactories();
     _setupJsonPipelineUI();
 
-    connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataTransform_Widget::_handleFeatureSelected);
     connect(ui->do_transform_button, &QPushButton::clicked, this, &DataTransform_Widget::_doTransform);
     connect(ui->operationComboBox, &QComboBox::currentIndexChanged, this, &DataTransform_Widget::_onOperationSelected);
+
+    // === Phase 2.7: Editor State Integration ===
+    // Initialize state and register with WorkspaceManager for serialization and inter-widget communication
+    _state = std::make_shared<DataTransformWidgetState>();
+
+    if (_workspace_manager) {
+        _workspace_manager->registerState(_state);
+        _selection_context = _workspace_manager->selectionContext();
+
+        // Connect to SelectionContext to receive input data selection from other widgets
+        // This is the key Phase 2.7 integration: input selection comes from SelectionContext
+        if (_selection_context) {
+            connect(_selection_context, &SelectionContext::selectionChanged,
+                    this, &DataTransform_Widget::_onExternalSelectionChanged);
+        }
+
+        // Sync operation selection to state
+        connect(ui->operationComboBox, &QComboBox::currentTextChanged,
+                this, [this](QString const & text) {
+            _state->setSelectedOperation(text);
+        });
+    }
 }
 
 DataTransform_Widget::~DataTransform_Widget() {
+    // Unregister state from WorkspaceManager when widget is destroyed
+    if (_workspace_manager && _state) {
+        _workspace_manager->unregisterState(_state->getInstanceId());
+    }
     delete ui;
 }
 
 void DataTransform_Widget::openWidget() {
-    ui->feature_table_widget->populateTable();
     this->show();
 }
 
@@ -278,49 +303,6 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
     };
 }
 
-
-void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
-    _highlighted_available_feature = feature;
-
-    auto key = feature.toStdString();
-    auto data_variant = _data_manager->getDataVariant(key);
-
-    if (data_variant == std::nullopt) return;
-    std::vector<std::string> const operation_names = _registry->getOperationNamesForVariant(data_variant.value());
-
-    ui->operationComboBox->clear();
-
-    if (operation_names.empty()) {
-        ui->operationComboBox->addItem("No operations available");
-        ui->operationComboBox->setEnabled(false);
-        ui->do_transform_button->setEnabled(false);
-    } else {
-        for (std::string const & op_name: operation_names) {
-            ui->operationComboBox->addItem(QString::fromStdString(op_name));
-        }
-        ui->operationComboBox->setEnabled(true);
-        ui->do_transform_button->setEnabled(true);
-        ui->operationComboBox->setCurrentIndex(0);
-    }
-
-    _currentSelectedDataVariant = data_variant.value();
-
-    // Update current parameter widget if it's a scaling widget or boolean operation widget
-    if (_currentParameterWidget) {
-        auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(_currentParameterWidget);
-        if (scalingWidget) {
-            scalingWidget->setCurrentDataKey(feature);
-        }
-
-        auto booleanWidget = dynamic_cast<BooleanOperation_Widget *>(_currentParameterWidget);
-        if (booleanWidget) {
-            booleanWidget->setCurrentInputKey(key);
-        }
-    }
-
-    // Update the output name based on the selected feature and current operation
-    _updateOutputName();
-}
 
 void DataTransform_Widget::_onOperationSelected(int index) {
     _currentParameterWidget = nullptr;
@@ -817,8 +799,8 @@ void DataTransform_Widget::_executeJsonPipeline() {
                                          .arg(result.total_steps)
                                          .arg(result.total_execution_time_ms, 0, 'f', 1));
 
-        // Refresh the feature table to show new data
-        ui->feature_table_widget->populateTable();
+        // Note: With Phase 2.7, data selection happens via SelectionContext
+        // No need to refresh an embedded feature table
     } else {
         _pipelineProgressBar->setFormat("Pipeline failed");
         _pipelineProgressBar->setStyleSheet("QProgressBar::chunk { background-color: red; }");
@@ -848,4 +830,90 @@ void DataTransform_Widget::_executeJsonPipeline() {
 
 QString DataTransform_Widget::_getCurrentJsonContent() const {
     return _jsonTextEdit ? _jsonTextEdit->toPlainText() : QString();
+}
+
+void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
+    if (!_selection_context || !_state) {
+        return;
+    }
+
+    // Don't respond to our own selection changes to avoid circular updates
+    if (source.editor_instance_id == _state->getInstanceId()) {
+        return;
+    }
+
+    QString selected_key = _selection_context->primarySelectedData();
+    if (selected_key.isEmpty()) {
+        // Clear UI when nothing is selected
+        ui->selected_data_label->setText("No data selected");
+        ui->data_type_label->setText("Type: -");
+        ui->operationComboBox->clear();
+        ui->operationComboBox->addItem("Select data in Data Manager");
+        ui->operationComboBox->setEnabled(false);
+        ui->do_transform_button->setEnabled(false);
+        return;
+    }
+
+    // Update our state with the externally selected data key
+    _state->setSelectedInputDataKey(selected_key);
+
+    // Also update the highlighted feature for the transform logic
+    // This bridges the state to the existing widget functionality
+    _highlighted_available_feature = selected_key;
+
+    // Validate that the data exists and update the UI
+    auto data_variant = _data_manager->getDataVariant(selected_key.toStdString());
+
+    if (data_variant == std::nullopt) {
+        // Data doesn't exist - clear operations
+        ui->selected_data_label->setText(selected_key);
+        ui->data_type_label->setText("Type: Unknown");
+        ui->operationComboBox->clear();
+        ui->operationComboBox->addItem("Data not found");
+        ui->operationComboBox->setEnabled(false);
+        ui->do_transform_button->setEnabled(false);
+        return;
+    }
+
+    // Update UI labels with selected data info
+    ui->selected_data_label->setText(selected_key);
+    DM_DataType data_type = _data_manager->getType(selected_key.toStdString());
+    QString type_name = QString::fromStdString(convert_data_type_to_string(data_type));
+    ui->data_type_label->setText(QString("Type: %1").arg(type_name));
+
+    // Get available operations for this data type
+    std::vector<std::string> const operation_names = _registry->getOperationNamesForVariant(data_variant.value());
+
+    ui->operationComboBox->clear();
+
+    if (operation_names.empty()) {
+        ui->operationComboBox->addItem("No operations available");
+        ui->operationComboBox->setEnabled(false);
+        ui->do_transform_button->setEnabled(false);
+    } else {
+        for (std::string const & op_name : operation_names) {
+            ui->operationComboBox->addItem(QString::fromStdString(op_name));
+        }
+        ui->operationComboBox->setEnabled(true);
+        ui->do_transform_button->setEnabled(true);
+        ui->operationComboBox->setCurrentIndex(0);
+    }
+
+    _currentSelectedDataVariant = data_variant.value();
+
+    // Update current parameter widget if it's a scaling widget or boolean operation widget
+    if (_currentParameterWidget) {
+        auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(_currentParameterWidget);
+        if (scalingWidget) {
+            scalingWidget->setCurrentDataKey(selected_key);
+        }
+
+        auto booleanWidget = dynamic_cast<BooleanOperation_Widget *>(_currentParameterWidget);
+        if (booleanWidget) {
+            booleanWidget->setCurrentInputKey(selected_key.toStdString());
+        }
+    }
+
+    // Update the output name based on the selected feature and current operation
+    _updateOutputName();
 }

@@ -6,6 +6,8 @@ set(DATA_TRANSFORM_WIDGET_SOURCES
         DataTransform_Widget.ui
         DataTransform_Widget.cpp
         DataTransform_Widget.hpp
+        DataTransformWidgetState.hpp
+        DataTransformWidgetState.cpp
         TransformParameter_Widget/TransformParameter_Widget.hpp
         TransformParameter_Widget/DataManagerParameter_Widget.hpp
         TransformParameter_Widget/DataManagerParameter_Widget.cpp
@@ -123,7 +125,7 @@ target_link_libraries(DataTransform_Widget PRIVATE
 )
 
 target_link_libraries(DataTransform_Widget PRIVATE DataManager)
-target_link_libraries(DataTransform_Widget PRIVATE Feature_Table_Widget)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::EditorState)
 target_link_libraries(DataTransform_Widget PRIVATE NEURALYZER_GEOMETRY)
 
 # Include directories

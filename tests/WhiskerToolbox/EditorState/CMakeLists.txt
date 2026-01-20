@@ -44,7 +44,7 @@ else()
 endif()
 
 # EditorState integration tests - tests cross-widget communication patterns
-# These depend on concrete widget state implementations (MediaWidgetState, DataManagerWidgetState)
+# These depend on concrete widget state implementations (MediaWidgetState, DataManagerWidgetState, DataTransformWidgetState)
 add_executable(test_editor_state_integration
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/EditorState/EditorState.integration.test.cpp
 )
@@ -55,6 +55,7 @@ target_link_libraries(test_editor_state_integration PRIVATE
     DataManager
     DataManager_Widget
     Media_Widget
+    DataTransform_Widget
     Qt6::Core
     Qt6::Widgets
     Qt6::Test
