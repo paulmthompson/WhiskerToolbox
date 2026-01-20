@@ -42,8 +42,8 @@ void MediaTensor_Widget::setActiveKey(std::string const & key) {
             // Set the color picker to the current tensor color if available
             auto config = _scene->getTensorConfig(key);
             if (config) {
-                ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
-                ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+                ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color()));
+                ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha() * 100));
             }
         }
     }
@@ -63,7 +63,7 @@ void MediaTensor_Widget::_setTensorColor(const QString& hex_color) {
     if (!_active_key.empty()) {
         auto tensor_opts = _scene->getTensorConfig(_active_key);
         if (tensor_opts.has_value()) {
-            tensor_opts.value()->hex_color = hex_color.toStdString();
+            tensor_opts.value()->hex_color() = hex_color.toStdString();
         }
         _scene->UpdateCanvas();
     }
@@ -75,7 +75,7 @@ void MediaTensor_Widget::_setTensorAlpha(int alpha) {
     if (!_active_key.empty()) {
         auto tensor_opts = _scene->getTensorConfig(_active_key);
         if (tensor_opts.has_value()) {
-            tensor_opts.value()->alpha = alpha_float;
+            tensor_opts.value()->alpha() = alpha_float;
         }
         _scene->UpdateCanvas();
     }

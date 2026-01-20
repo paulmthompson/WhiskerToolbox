@@ -43,8 +43,8 @@ void MediaInterval_Widget::setActiveKey(std::string const & key) {
         auto config = _scene->getIntervalConfig(key);
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color()));
+            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha() * 100));
             
             // Set the plotting style and corresponding widget
             ui->plotting_style_combobox->setCurrentIndex(static_cast<int>(config.value()->plotting_style));
@@ -70,7 +70,7 @@ void MediaInterval_Widget::_setIntervalAlpha(int alpha) {
     if (!_active_key.empty()) {
         auto interval_opts = _scene->getIntervalConfig(_active_key);
         if (interval_opts.has_value()) {
-            interval_opts.value()->alpha = alpha_float;
+            interval_opts.value()->alpha() = alpha_float;
         }
         _scene->UpdateCanvas();
     }
@@ -80,7 +80,7 @@ void MediaInterval_Widget::_setIntervalColor(QString const & hex_color) {
     if (!_active_key.empty()) {
         auto interval_opts = _scene->getIntervalConfig(_active_key);
         if (interval_opts.has_value()) {
-            interval_opts.value()->hex_color = hex_color.toStdString();
+            interval_opts.value()->hex_color() = hex_color.toStdString();
         }
         _scene->UpdateCanvas();
     }

@@ -363,6 +363,20 @@ signals:
     void leftClickMediaWithEvent(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers);
 };
 
-QRgb plot_color_with_alpha(BaseDisplayOptions const * opts);
+/**
+ * @brief Convert display options to QRgb color with alpha
+ * 
+ * Works with any display options type that has hex_color() and alpha() accessor methods.
+ * 
+ * @tparam DisplayOptionsT Type with hex_color() and alpha() methods
+ * @param opts Pointer to display options
+ * @return QRgb color value with alpha
+ */
+template<typename DisplayOptionsT>
+QRgb plot_color_with_alpha(DisplayOptionsT const * opts) {
+    auto color = QColor(QString::fromStdString(opts->hex_color()));
+    auto output_color = qRgba(color.red(), color.green(), color.blue(), std::lround(opts->alpha() * 255.0f));
+    return output_color;
+}
 
 #endif// MEDIA_WINDOW_HPP

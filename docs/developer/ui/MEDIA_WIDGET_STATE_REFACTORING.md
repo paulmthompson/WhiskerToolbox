@@ -129,252 +129,68 @@ This gives the organizational benefits of composition while producing flat JSON.
 
 ---
 
-## Phase 1: Refactor DisplayOptions to be Serializable
+## Phase 1: Refactor DisplayOptions to be Serializable ✅ COMPLETE
 
 **Goal**: Modify existing DisplayOptions structs to be directly serializable with reflect-cpp (no inheritance, no conversion functions)
 
-**Duration**: 1 week
+**Status**: ✅ Complete (January 20, 2026)
 
-### 1.1 Refactor DisplayOptions.hpp
+**Duration**: Completed in 1 day
 
-Replace the inheritance-based approach with composition using `rfl::Flatten`:
+**Key Changes**:
+- Replaced inheritance-based `BaseDisplayOptions` with composition using `rfl::Flatten<CommonDisplayFields>`
+- Added convenience accessor methods to all display option types for backward compatibility
+- Converted `plot_color_with_alpha` to a template function supporting all display option types
+- Updated ~60 usage sites across 7 files to use accessor methods
+- All tests pass with no regressions
 
+**Files Modified**: [DisplayOptions.hpp](../../../src/WhiskerToolbox/Media_Widget/DisplayOptions/DisplayOptions.hpp), [Media_Window.hpp](../../../src/WhiskerToolbox/Media_Widget/Media_Window/Media_Window.hpp), [Media_Window.cpp](../../../src/WhiskerToolbox/Media_Widget/Media_Window/Media_Window.cpp)
+
+### 1.1 Key Transformation Pattern
+
+**Before** (inheritance-based):
 ```cpp
-// src/WhiskerToolbox/Media_Widget/DisplayOptions/DisplayOptions.hpp
-
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-#include <string>
-
-// ==================== Enums ====================
-// reflect-cpp natively serializes enums as strings (e.g., PointMarkerShape::Circle → "Circle")
-// No rfl::Literal or special handling needed!
-
-enum class PointMarkerShape { Circle, Square, Triangle, Cross, X, Diamond };
-enum class IntervalPlottingStyle { Box, Border };
-enum class IntervalLocation { TopLeft, TopRight, BottomLeft, BottomRight };
-enum class ColormapType {
-    None, Jet, Hot, Cool, Spring, Summer, Autumn, Winter,
-    Rainbow, Ocean, Pink, HSV, Parula, Viridis, Plasma,
-    Inferno, Magma, Turbo, Red, Green, Blue, Cyan, Magenta, Yellow
+struct BaseDisplayOptions {
+    std::string hex_color;
+    float alpha;
+    bool is_visible;
 };
 
-// ==================== Processing Options ====================
-// These are already flat structs - just ensure they're serializable
-
-struct ContrastOptions {
-    bool active = false;
-    double alpha = 1.0;
-    int beta = 0;
-    double display_min = 0.0;
-    double display_max = 255.0;
-    
-    // Runtime method - not serialized
-    void calculateAlphaBetaFromMinMax();
-    void calculateMinMaxFromAlphaBeta();
+struct LineDisplayOptions : BaseDisplayOptions {  // ❌ Won't serialize correctly
+    int line_thickness = 2;
 };
+```
 
-struct GammaOptions {
-    bool active = false;
-    double gamma = 1.0;
-};
-
-struct SharpenOptions {
-    bool active = false;
-    double sigma = 3.0;
-};
-
-struct ClaheOptions {
-    bool active = false;
-    int grid_size = 8;
-    double clip_limit = 2.0;
-};
-
-struct BilateralOptions {
-    bool active = false;
-    int diameter = 5;
-    double sigma_color = 20.0;
-    double sigma_spatial = 20.0;
-};
-
-struct MedianOptions {
-    bool active = false;
-    int kernel_size = 5;
-};
-
-struct ColormapOptions {
-    bool active = false;
-    ColormapType colormap = ColormapType::None;  // Serializes as "None"
-    double alpha = 1.0;
-    bool normalize = true;
-};
-
-// MagicEraserOptions contains runtime mask data - NOT serialized
-// Keep separate for runtime use only
-
-// ==================== Common Display Fields ====================
-// Shared fields that appear in multiple display option types
-// Use rfl::Flatten to compose into other structs
-
+**After** (composition with `rfl::Flatten`):
+```cpp
 struct CommonDisplayFields {
     std::string hex_color = "#007bff";
     float alpha = 1.0f;
     bool is_visible = false;
 };
 
-// ==================== Display Options (Composition, not Inheritance) ====================
-
-struct MediaDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  // Flatten to replace inheritance
-    ContrastOptions contrast;                   // Nested object in JSON
-    GammaOptions gamma;                         // Nested object in JSON
-    SharpenOptions sharpen;                     // Nested object in JSON
-    ClaheOptions clahe;                         // Nested object in JSON
-    BilateralOptions bilateral;                 // Nested object in JSON
-    MedianOptions median;                       // Nested object in JSON
-    ColormapOptions colormap;                   // Nested object in JSON
-    // Note: MagicEraser excluded - contains runtime mask data
-};
-
-struct PointDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  // Flatten to replace inheritance
-    int point_size = 5;
-    PointMarkerShape marker_shape = PointMarkerShape::Circle;  // Serializes as "Circle"
-};
-
 struct LineDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  // Flatten to replace inheritance
+    rfl::Flatten<CommonDisplayFields> common;  // ✅ Flattens in JSON
     int line_thickness = 2;
-    bool show_points = false;
-    bool edge_snapping = false;
-    bool show_position_marker = false;
-    int position_percentage = 20;
-    bool show_segment = false;
-    int segment_start_percentage = 0;
-    int segment_end_percentage = 100;
-    // Note: selected_line_index is transient, not serialized
-};
-
-struct MaskDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  // Flatten to replace inheritance
-    bool show_bounding_box = false;
-    bool show_outline = false;
-    bool use_as_transparency = false;
-};
-
-struct TensorDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  // Flatten to replace inheritance
-    int display_channel = 0;
-};
-
-struct DigitalIntervalDisplayOptions {
-    rfl::Flatten<CommonDisplayFields> common;  // Flatten to replace inheritance
-    IntervalPlottingStyle plotting_style = IntervalPlottingStyle::Box;  // Serializes as "Box"
-    int box_size = 20;
-    int frame_range = 2;
-    IntervalLocation location = IntervalLocation::TopRight;  // Serializes as "TopRight"
-    int border_thickness = 5;
-};
-```
-
-Example JSON for `MediaDisplayOptions`:
-```json
-{
-  "enabled": true,
-  "is_visible": true,
-  "hex_color": "#007bff",
-  "alpha": 1.0,
-  "contrast": {
-    "active": true,
-    "alpha": 1.5,
-    "beta": 10,
-    "display_min": 0.0,
-    "display_max": 200.0
-  },
-  "gamma": {
-    "active": false,
-    "gamma": 1.0
-  },
-  "colormap": {
-    "active": true,
-    "colormap": "Viridis",
-    "alpha": 0.8,
-    "normalize": true
-  }
-}
-```
-
-Only `CommonDisplayFields` is flattened (so `enabled`, `is_visible`, `hex_color`, `alpha` appear at the top level). Processing options remain as nested objects for clarity.
-
-### 1.2 Native Enum Serialization
-
-**No conversion helpers needed!** reflect-cpp automatically serializes C++ enums as strings:
-
-```cpp
-// Example: enum serialization is automatic
-enum class PointMarkerShape { Circle, Square, Triangle, Cross, X, Diamond };
-
-struct PointDisplayOptions {
-    PointMarkerShape marker_shape = PointMarkerShape::Diamond;
-};
-
-// Serializes to: {"marker_shape":"Diamond"}
-// Deserializes from: {"marker_shape":"Diamond"} → PointMarkerShape::Diamond
-```
-
-This means:
-- Use native `enum class` types directly in structs
-- No `rfl::Literal` type aliases needed
-- No conversion functions between strings and enums
-- Switch statements work naturally with enum values
-
-### 1.3 Update Existing Code
-
-Existing code that accesses `opts.hex_color` now accesses `opts.common.get().hex_color` or use a helper:
-
-```cpp
-// Helper to access common fields
-template<typename T>
-CommonDisplayFields& getCommon(T& opts) {
-    return opts.common.get();
-}
-
-template<typename T>
-CommonDisplayFields const& getCommon(T const& opts) {
-    return opts.common.get();
-}
-
-// Usage:
-QRgb plot_color_with_alpha(LineDisplayOptions const& opts) {
-    auto const& c = getCommon(opts);
-    QColor color(QString::fromStdString(c.hex_color));
-    color.setAlphaF(c.alpha);
-    return color.rgba();
-}
-```
-
-### 1.4 Unit Tests
-
-```cpp
-TEST_CASE("LineDisplayOptions serialization") {
-    LineDisplayOptions opts;
-    opts.common.get().hex_color = "#ff0000";
-    opts.common.get().alpha = 0.8f;
-    opts.line_thickness = 3;
-    opts.show_points = true;
     
-    auto json = rfl::json::write(opts);
-    
-    // Verify flat JSON structure (no nested "common" object)
-    REQUIRE(json.find("\"hex_color\":\"#ff0000\"") != std::string::npos);
-    REQUIRE(json.find("\"line_thickness\":3") != std::string::npos);
-    
-    auto restored = rfl::json::read<LineDisplayOptions>(json);
-    REQUIRE(restored);
-    REQUIRE(restored->common.get().hex_color == "#ff0000");
-    REQUIRE(restored->line_thickness == 3);
-}
+    // Accessor methods for backward compatibility
+    std::string & hex_color() { return common.get().hex_color; }
+    float & alpha() { return common.get().alpha; }
+};
 ```
+
+**Result**: JSON output is flat (no nested "common" object), while C++ code benefits from composition.
+
+### 1.2 Enum Serialization
+
+reflect-cpp automatically serializes C++ enums as strings - no conversion helpers needed:
+- `PointMarkerShape::Circle` → JSON: `"Circle"`
+- Native `enum class` types work directly in structs
+- No `rfl::Literal` or manual string conversion required
+
+### 1.3 Outcome
+
+All six display option types (Media, Line, Mask, Point, Tensor, DigitalInterval) are now directly serializable with reflect-cpp. No separate "runtime" vs "serializable" type hierarchies needed.
 
 ---
 
@@ -1081,16 +897,16 @@ TEST_CASE("MediaWidgetState workspace integration") {
 
 ## Implementation Timeline
 
-| Phase | Duration | Deliverables |
-|-------|----------|--------------|
-| 1. Refactor DisplayOptions | 1 week | Make DisplayOptions.hpp serializable with rfl::Flatten |
-| 2. MediaWidgetStateData | 1 week | Complete state data structure |
-| 3. Expanded MediaWidgetState | 2 weeks | Full Qt wrapper with signals |
-| 4. Media_Widget Integration | 2 weeks | State reads/writes from Media_Widget |
-| 5. Sub-Widget Integration | 2 weeks | All sub-widgets connected to state |
-| 6. Testing | 1 week | Unit tests, integration tests |
+| Phase | Duration | Status | Deliverables |
+|-------|----------|--------|--------------|
+| 1. Refactor DisplayOptions | 1 day | ✅ Complete | DisplayOptions.hpp serializable with rfl::Flatten + accessor methods |
+| 2. MediaWidgetStateData | 1 week | 🔲 Not Started | Complete state data structure |
+| 3. Expanded MediaWidgetState | 2 weeks | 🔲 Not Started | Full Qt wrapper with signals |
+| 4. Media_Widget Integration | 2 weeks | 🔲 Not Started | State reads/writes from Media_Widget |
+| 5. Sub-Widget Integration | 2 weeks | 🔲 Not Started | All sub-widgets connected to state |
+| 6. Testing | 1 week | 🔲 Not Started | Unit tests, integration tests |
 
-**Total: 9 weeks**
+**Total: 9 weeks** (originally estimated) → **Actual: Phase 1 completed in 1 day**
 
 ---
 

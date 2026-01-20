@@ -73,8 +73,8 @@ void MediaPoint_Widget::setActiveKey(std::string const & key) {
         auto config = _scene->getPointConfig(key);
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color()));
+            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha() * 100));
             
             // Set point size controls
             ui->point_size_slider->blockSignals(true);
@@ -248,7 +248,7 @@ void MediaPoint_Widget::_setPointColor(const QString& hex_color) {
     if (!_active_key.empty()) {
         auto point_opts = _scene->getPointConfig(_active_key);
         if (point_opts.has_value()) {
-            point_opts.value()->hex_color = hex_color.toStdString();
+            point_opts.value()->hex_color() = hex_color.toStdString();
         }
         _scene->UpdateCanvas();
     }
@@ -260,7 +260,7 @@ void MediaPoint_Widget::_setPointAlpha(int alpha) {
     if (!_active_key.empty()) {
         auto point_opts = _scene->getPointConfig(_active_key);
         if (point_opts.has_value()) {
-            point_opts.value()->alpha = alpha_float;
+            point_opts.value()->alpha() = alpha_float;
         }
         _scene->UpdateCanvas();
     }

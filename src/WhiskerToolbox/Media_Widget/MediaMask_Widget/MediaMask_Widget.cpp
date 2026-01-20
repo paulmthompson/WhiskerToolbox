@@ -121,8 +121,8 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
         auto config = _scene->getMaskConfig(key);
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color()));
+            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha() * 100));
 
             // Set bounding box checkbox
             ui->show_bounding_box_checkbox->blockSignals(true);
@@ -148,7 +148,7 @@ void MediaMask_Widget::_setMaskAlpha(int alpha) {
     if (!_active_key.empty()) {
         auto mask_opts = _scene->getMaskConfig(_active_key);
         if (mask_opts.has_value()) {
-            mask_opts.value()->alpha = alpha_float;
+            mask_opts.value()->alpha() = alpha_float;
         }
         _scene->UpdateCanvas();
     }
@@ -158,7 +158,7 @@ void MediaMask_Widget::_setMaskColor(QString const & hex_color) {
     if (!_active_key.empty()) {
         auto mask_opts = _scene->getMaskConfig(_active_key);
         if (mask_opts.has_value()) {
-            mask_opts.value()->hex_color = hex_color.toStdString();
+            mask_opts.value()->hex_color() = hex_color.toStdString();
         }
         _scene->UpdateCanvas();
     }

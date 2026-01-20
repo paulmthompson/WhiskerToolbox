@@ -402,7 +402,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        opts.value()->is_visible = enabled;
+        opts.value()->is_visible() = enabled;
     } else if (type == DM_DataType::Mask) {
         auto opts = _scene->getMaskConfig(feature_key);
         if (!opts.has_value()) {
@@ -412,7 +412,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        opts.value()->is_visible = enabled;
+        opts.value()->is_visible() = enabled;
     } else if (type == DM_DataType::Points) {
         auto opts = _scene->getPointConfig(feature_key);
         if (!opts.has_value()) {
@@ -422,7 +422,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        opts.value()->is_visible = enabled;
+        opts.value()->is_visible() = enabled;
     } else if (type == DM_DataType::DigitalInterval) {
         auto opts = _scene->getIntervalConfig(feature_key);
         if (!opts.has_value()) {
@@ -432,7 +432,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
                       << std::endl;
             return;
         }
-        opts.value()->is_visible = enabled;
+        opts.value()->is_visible() = enabled;
     } else if (type == DM_DataType::Tensor) {
         auto opts = _scene->getTensorConfig(feature_key);
         if (!opts.has_value()) {
@@ -445,10 +445,10 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
 
         if (enabled) {
             std::cout << "Enabling tensor data in scene" << std::endl;
-            opts.value()->is_visible = true;
+            opts.value()->is_visible() = true;
         } else {
             std::cout << "Disabling tensor data from scene" << std::endl;
-            opts.value()->is_visible = false;
+            opts.value()->is_visible() = false;
         }
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
         auto opts = _scene->getMediaConfig(feature_key);
@@ -461,7 +461,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         }
         if (enabled) {
             std::cout << "Enabling media data in scene" << std::endl;
-            opts.value()->is_visible = true;
+            opts.value()->is_visible() = true;
 
             // This ensures new media is loaded from disk
             // Before the update
@@ -470,7 +470,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
 
         } else {
             std::cout << "Disabling media data from scene" << std::endl;
-            opts.value()->is_visible = false;
+            opts.value()->is_visible() = false;
         }
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
@@ -495,27 +495,27 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     if (type == DM_DataType::Line) {
         auto opts = _scene->getLineConfig(feature);
         if (opts.has_value()) {
-            opts.value()->hex_color = hex_color;
+            opts.value()->hex_color() = hex_color;
         }
     } else if (type == DM_DataType::Mask) {
         auto opts = _scene->getMaskConfig(feature);
         if (opts.has_value()) {
-            opts.value()->hex_color = hex_color;
+            opts.value()->hex_color() = hex_color;
         }
     } else if (type == DM_DataType::Points) {
         auto opts = _scene->getPointConfig(feature);
         if (opts.has_value()) {
-            opts.value()->hex_color = hex_color;
+            opts.value()->hex_color() = hex_color;
         }
     } else if (type == DM_DataType::DigitalInterval) {
         auto opts = _scene->getIntervalConfig(feature);
         if (opts.has_value()) {
-            opts.value()->hex_color = hex_color;
+            opts.value()->hex_color() = hex_color;
         }
     } else if (type == DM_DataType::Tensor) {
         auto opts = _scene->getTensorConfig(feature);
         if (opts.has_value()) {
-            opts.value()->hex_color = hex_color;
+            opts.value()->hex_color() = hex_color;
         }
     }
 
