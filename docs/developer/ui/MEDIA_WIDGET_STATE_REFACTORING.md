@@ -245,199 +245,109 @@ Typical serialized state:
 
 ---
 
-## Phase 3: Expand MediaWidgetState Class
+## Phase 3: Expand MediaWidgetState Class ✅ COMPLETE
 
 **Goal**: Implement the Qt wrapper that holds `MediaWidgetStateData` and provides typed signals
 
-**Duration**: 2 weeks
+**Status**: ✅ Complete (January 20, 2026)
 
-### 3.1 Using rfl::Flatten for EditorState Composition
+**Duration**: 1 day (completed same day as Phases 1-2)
 
-The key insight: `MediaWidgetState` IS-A `EditorState` in Qt terms (for signals/slots), but the **data** uses composition with `rfl::Flatten`:
+### 3.1 Key Changes ✅
 
-```cpp
-// The data struct uses Flatten for EditorState base data
-struct EditorStateBaseData {
-    std::string instance_id;
-    std::string type_name;
-};
+The MediaWidgetState class has been fully expanded with:
 
-struct MediaWidgetStateData {
-    rfl::Flatten<EditorStateBaseData> base;  // Flattened into JSON
-    std::string display_name = "Media Viewer";
-    std::string displayed_media_key;
-    ViewportState viewport;
-    // ... rest of state
-};
+**Viewport State Management**:
+- `setZoom()`, `zoom()` - Zoom level control
+- `setPan()`, `pan()` - Pan offset control
+- `setCanvasSize()`, `canvasSize()` - Canvas dimension control
+- `setViewport()`, `viewport()` - Complete viewport state access
+- Signals: `zoomChanged`, `panChanged`, `canvasSizeChanged`, `viewportChanged`
 
-// The Qt class still uses inheritance for signals/slots
-class MediaWidgetState : public EditorState {
-    Q_OBJECT
-    // ...
-private:
-    MediaWidgetStateData _data;  // Composition for data
-};
-```
+**Feature Management**:
+- `setFeatureEnabled()` - Enable/disable features by data type
+- `isFeatureEnabled()` - Check feature visibility
+- `enabledFeatures()` - Get list of enabled features for a type
+- Signals: `featureEnabledChanged`
 
-### 3.2 Extended MediaWidgetState Interface
+**Display Options (All 6 Types)**:
+- Line, Mask, Point, Tensor, Interval, Media
+- CRUD operations: `set*Options()`, `*Options()`, `remove*Options()`
+- Signals: `displayOptionsChanged`, `displayOptionsRemoved`
 
-```cpp
-// src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp (expanded)
+**Interaction Preferences**:
+- `setLinePrefs()`, `linePrefs()` - Line tool preferences
+- `setMaskPrefs()`, `maskPrefs()` - Mask tool preferences
+- `setPointPrefs()`, `pointPrefs()` - Point tool preferences
+- Signals: `linePrefsChanged`, `maskPrefsChanged`, `pointPrefsChanged`
 
-#include "EditorState/EditorState.hpp"
-#include "MediaWidgetStateData.hpp"
+**Text Overlays**:
+- `addTextOverlay()` - Add with auto-assigned ID
+- `removeTextOverlay()` - Remove by ID
+- `updateTextOverlay()` - Update existing overlay
+- `clearTextOverlays()` - Remove all overlays
+- `getTextOverlay()` - Retrieve by ID
+- `textOverlays()` - Get all overlays
+- Signals: `textOverlayAdded`, `textOverlayRemoved`, `textOverlayUpdated`, `textOverlaysCleared`
 
-#include <QObject>
+**Active Tool Modes**:
+- `setActiveLineMode()`, `activeLineMode()` - Line tool mode
+- `setActiveMaskMode()`, `activeMaskMode()` - Mask tool mode
+- `setActivePointMode()`, `activePointMode()` - Point tool mode
+- Signals: `activeLineModeChanged`, `activeMaskModeChanged`, `activePointModeChanged`
 
-class MediaWidgetState : public EditorState {
-    Q_OBJECT
+**Direct Data Access**:
+- `data()` - Const reference to underlying MediaWidgetStateData for efficient batch reads
+- `viewport()` - Const reference to viewport state
 
-public:
-    explicit MediaWidgetState(QObject* parent = nullptr);
-    ~MediaWidgetState() override = default;
+### 3.2 Implementation Details ✅
 
-    // === Type Identification ===
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("MediaWidget"); }
-    [[nodiscard]] QString getDisplayName() const override;
-    void setDisplayName(QString const& name) override;
+All setters implement:
+- Value change detection to avoid unnecessary signals
+- Dirty state tracking via `markDirty()`
+- Qt signal emission for each property change
+- Floating-point comparison with epsilon for viewport values
 
-    // === Serialization ===
-    [[nodiscard]] std::string toJson() const override;
-    bool fromJson(std::string const& json) override;
-    
-    // === Direct Data Access (for efficiency) ===
-    [[nodiscard]] MediaWidgetStateData const& data() const { return _data; }
+Feature management auto-creates display options with defaults when enabling a feature that doesn't exist yet.
 
-    // === Viewport State ===
-    void setZoom(double zoom);
-    [[nodiscard]] double zoom() const { return _data.viewport.zoom; }
-    
-    void setPan(double x, double y);
-    [[nodiscard]] std::pair<double, double> pan() const;
-    
-    void setCanvasSize(int width, int height);
-    [[nodiscard]] std::pair<int, int> canvasSize() const;
+Text overlay IDs are auto-assigned using an incrementing counter stored in the state data.
 
-    // === Feature Management ===
-    void setFeatureEnabled(QString const& data_key, QString const& data_type, bool enabled);
-    [[nodiscard]] bool isFeatureEnabled(QString const& data_key, QString const& data_type) const;
-    [[nodiscard]] QStringList enabledFeatures(QString const& data_type) const;
+### 3.3 Testing ✅
 
-    // === Display Options Access ===
-    // Returns pointer for read; use setter for modification
-    [[nodiscard]] LineDisplayOptions const* lineOptions(QString const& key) const;
-    void setLineOptions(QString const& key, LineDisplayOptions const& options);
-    
-    [[nodiscard]] MaskDisplayOptions const* maskOptions(QString const& key) const;
-    void setMaskOptions(QString const& key, MaskDisplayOptions const& options);
-    
-    [[nodiscard]] PointDisplayOptions const* pointOptions(QString const& key) const;
-    void setPointOptions(QString const& key, PointDisplayOptions const& options);
-    
-    // ... similar for other types ...
+**Test Coverage**: Comprehensive unit tests in [MediaWidgetState.test.cpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetState.test.cpp)
 
-    // === Interaction Preferences ===
-    [[nodiscard]] LineInteractionPrefs const& linePrefs() const { return _data.line_prefs; }
-    void setLinePrefs(LineInteractionPrefs const& prefs);
-    
-    [[nodiscard]] MaskInteractionPrefs const& maskPrefs() const { return _data.mask_prefs; }
-    void setMaskPrefs(MaskInteractionPrefs const& prefs);
-    
-    [[nodiscard]] PointInteractionPrefs const& pointPrefs() const { return _data.point_prefs; }
-    void setPointPrefs(PointInteractionPrefs const& prefs);
+Test categories:
+- Basic state properties (instance ID, type name, display name, dirty tracking)
+- Serialization (round-trip, instance ID preservation, invalid JSON)
+- Qt signals (all 20+ signal types verified with QSignalSpy)
+- Viewport state (zoom, pan, canvas size, complete viewport)
+- Feature management (enable/disable, all 6 types, enabled list)
+- Display options CRUD (all 6 types with proper signal emission)
+- Interaction preferences (line, mask, point)
+- Text overlays (add, remove, update, clear, get by ID)
+- Tool modes (line, mask, point with enum serialization)
+- Direct data access (`data()`, `viewport()`)
+- Complex state round-trip (all properties simultaneously)
 
-    // === Text Overlays ===
-    [[nodiscard]] std::vector<TextOverlayData> const& textOverlays() const { return _data.text_overlays; }
-    int addTextOverlay(TextOverlayData overlay);  // Returns assigned ID
-    void removeTextOverlay(int overlay_id);
-    void updateTextOverlay(int overlay_id, TextOverlayData const& overlay);
-    void clearTextOverlays();
+**Result**: All tests passing ✅
 
-    // === Active Tool State ===
-    void setActiveLineMode(QString const& mode);
-    [[nodiscard]] QString activeLineMode() const;
-    
-    void setActiveMaskMode(QString const& mode);
-    [[nodiscard]] QString activeMaskMode() const;
+### 3.4 Files Modified ✅
 
-signals:
-    // === Viewport Signals ===
-    void zoomChanged(double zoom);
-    void panChanged(double x, double y);
-    void canvasSizeChanged(int width, int height);
+- [MediaWidgetState.hpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp) - Full interface with 60+ methods and 20+ signals
+- [MediaWidgetState.cpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetState.cpp) - Complete implementation (~600 lines)
+- [MediaWidgetState.test.cpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetState.test.cpp) - Comprehensive tests (~850 lines)
 
-    // === Feature Signals ===
-    void featureEnabledChanged(QString const& data_key, QString const& data_type, bool enabled);
-    void displayOptionsChanged(QString const& data_key, QString const& data_type);
+### 3.5 Design Patterns Used ✅
 
-    // === Interaction Preference Signals ===
-    void linePrefsChanged();
-    void maskPrefsChanged();
-    void pointPrefsChanged();
+**Signal-Driven Architecture**: Each state property emits both a specific signal (e.g., `zoomChanged`) and the generic `stateChanged` signal, enabling both fine-grained and coarse-grained observation.
 
-    // === Text Overlay Signals ===
-    void textOverlayAdded(int overlay_id);
-    void textOverlayRemoved(int overlay_id);
-    void textOverlayUpdated(int overlay_id);
-    void textOverlaysCleared();
+**Const-Correctness**: All getters return const references or values. Modification only through setters ensures signal emission.
 
-    // === Tool Mode Signals ===
-    void activeLineModeChanged(QString const& mode);
-    void activeMaskModeChanged(QString const& mode);
+**Automatic Option Creation**: `setFeatureEnabled(..., true)` auto-creates default display options if they don't exist, simplifying widget integration.
 
-private:
-    MediaWidgetStateData _data;
-};
-```
+**ID Management**: Text overlays use auto-incrementing IDs stored in state, ensuring uniqueness across serialization cycles.
 
-### 3.3 Implementation Pattern
-
-```cpp
-// MediaWidgetState.cpp
-
-void MediaWidgetState::setZoom(double zoom) {
-    if (std::abs(_data.viewport.zoom - zoom) > 1e-6) {
-        _data.viewport.zoom = zoom;
-        markDirty();
-        emit zoomChanged(zoom);
-    }
-}
-
-void MediaWidgetState::setLineOptions(QString const& key, LineDisplayOptions const& options) {
-    std::string key_std = key.toStdString();
-    _data.line_options[key_std] = options;
-    markDirty();
-    emit displayOptionsChanged(key, QStringLiteral("line"));
-}
-
-int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {
-    overlay.id = _data.next_overlay_id++;
-    _data.text_overlays.push_back(overlay);
-    markDirty();
-    emit textOverlayAdded(overlay.id);
-    return overlay.id;
-}
-
-std::string MediaWidgetState::toJson() const {
-    return rfl::json::write(_data);
-}
-
-bool MediaWidgetState::fromJson(std::string const& json) {
-    auto result = rfl::json::read<MediaWidgetStateData>(json);
-    if (result) {
-        _data = std::move(*result);
-        
-        // Restore instance ID from data
-        if (!_data.instance_id.empty()) {
-            setInstanceId(QString::fromStdString(_data.instance_id));
-        }
-        
-        emit stateChanged();
-        return true;
-    }
-    return false;
-}
-```
+**Reference**: See [MediaWidgetState.hpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp) and [MediaWidgetState.cpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetState.cpp) for the complete implementation.
 
 ---
 
@@ -770,12 +680,12 @@ TEST_CASE("MediaWidgetState workspace integration") {
 |-------|----------|--------|--------------|
 | 1. Refactor DisplayOptions | 1 day | ✅ Complete | DisplayOptions.hpp serializable with rfl::Flatten + accessor methods |
 | 2. MediaWidgetStateData | 1 day | ✅ Complete | Complete state data structure + comprehensive tests |
-| 3. Expanded MediaWidgetState | 2 weeks | 🔲 Not Started | Full Qt wrapper with signals |
+| 3. Expanded MediaWidgetState | 1 day | ✅ Complete | Full Qt wrapper with signals + comprehensive tests |
 | 4. Media_Widget Integration | 2 weeks | 🔲 Not Started | State reads/writes from Media_Widget |
 | 5. Sub-Widget Integration | 2 weeks | 🔲 Not Started | All sub-widgets connected to state |
 | 6. Testing | 1 week | 🔲 Not Started | Integration tests (unit tests done) |
 
-**Total: 9 weeks** (originally estimated) → **Actual: Phases 1-2 completed in 1 day**
+**Total: 9 weeks** (originally estimated) → **Actual: Phases 1-3 completed in 1 day**
 
 ---
 
@@ -786,8 +696,9 @@ src/WhiskerToolbox/Media_Widget/
 ├── DisplayOptions/
 │   ├── DisplayOptions.hpp              # ✅ MODIFIED: Serializable with rfl::Flatten, native enums
 │   ├── CoordinateTypes.hpp             # Existing (unchanged)
-├── MediaWidgetState.hpp                # ✅ UPDATED: Uses MediaWidgetStateData (Phase 3 will expand)
-├── MediaWidgetState.cpp                # ✅ UPDATED: Field name corrections
+├── MediaWidgetState.hpp                # ✅ COMPLETE: Full Qt wrapper with 60+ methods and 20+ signals
+├── MediaWidgetState.cpp                # ✅ COMPLETE: ~600 lines of implementation
+├── MediaWidgetState.test.cpp           # ✅ COMPLETE: ~850 lines of comprehensive tests
 ├── MediaWidgetStateData.hpp            # ✅ NEW: Complete reflect-cpp data struct
 ├── MediaWidgetStateData.test.cpp       # ✅ NEW: Comprehensive unit tests
 ├── Media_Widget.hpp                    # TODO: Phase 4 - State integration
