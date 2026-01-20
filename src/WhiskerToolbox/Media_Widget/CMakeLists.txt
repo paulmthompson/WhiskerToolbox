@@ -14,6 +14,8 @@ set(MEDIA_WIDGET_SOURCES
     MediaWidgetState.hpp
     MediaWidgetState.cpp
     MediaWidgetStateData.hpp
+    DisplayOptionsRegistry.hpp
+    DisplayOptionsRegistry.cpp
     DisplayOptions/DisplayOptions.hpp
     DisplayOptions/CoordinateTypes.hpp
 

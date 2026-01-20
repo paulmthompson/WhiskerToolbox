@@ -15,6 +15,7 @@ class MediaProcessing_Widget;
 
 class DataManager;
 class Media_Window;
+class MediaWidgetState;
 class ContrastWidget;
 class GammaWidget;
 class SharpenWidget;
@@ -28,7 +29,7 @@ class Section;
 class MediaProcessing_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit MediaProcessing_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
+    explicit MediaProcessing_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent = nullptr);
     ~MediaProcessing_Widget() override;
 
     void setActiveKey(std::string const & key);
@@ -40,6 +41,7 @@ private:
     Ui::MediaProcessing_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
+    MediaWidgetState * _state;
     std::string _active_key;
 
     // Processing widgets

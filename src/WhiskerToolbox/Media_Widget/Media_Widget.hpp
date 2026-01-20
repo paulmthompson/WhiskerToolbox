@@ -36,6 +36,12 @@ public:
      */
     [[nodiscard]] Media_Window * getMediaWindow() const { return _scene.get(); }
 
+    /**
+     * @brief Get the state object for this widget
+     * @return Shared pointer to MediaWidgetState
+     */
+    [[nodiscard]] std::shared_ptr<MediaWidgetState> getState() const { return _state; }
+
     void updateMedia();
 
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
@@ -47,6 +53,14 @@ public:
     void zoomIn();
     void zoomOut();
     void resetZoom();
+
+    /**
+     * @brief Restore widget state from the state object
+     * 
+     * Call this after loading a workspace to apply serialized state
+     * (zoom, pan, display options, etc.) to the widget.
+     */
+    void restoreFromState();
 
 protected:
     void resizeEvent(QResizeEvent * event) override;
@@ -87,12 +101,21 @@ private:
     void _createMediaWindow();
     void _connectTextWidgetToScene();
 
+    // State synchronization helpers
+    void _syncZoomToState();
+    void _syncPanToState();
+    void _syncCanvasSizeToState();
+    void _syncFeatureEnabledToState(QString const & feature_key, QString const & data_type, bool enabled);
+    void _connectStateSignals();
+
 
 private slots:
     void _updateCanvasSize();
     void _addFeatureToDisplay(QString const & feature, bool enabled);
     void _featureSelected(QString const & feature);
     void _onExternalSelectionChanged(SelectionSource const & source);
+    void _onStateZoomChanged(double zoom);
+    void _onStatePanChanged(double x, double y);
 signals:
 };
 

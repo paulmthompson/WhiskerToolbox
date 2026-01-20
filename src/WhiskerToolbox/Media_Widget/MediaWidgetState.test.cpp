@@ -367,7 +367,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.line_thickness = 3;
         opts.is_visible() = true;
         
-        state.setLineOptions("whisker_1", opts);
+        state.setOptions("whisker_1", opts);
         
         auto* retrieved = state.lineOptions("whisker_1");
         REQUIRE(retrieved != nullptr);
@@ -378,7 +378,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         REQUIRE(changed_spy.at(0).at(1).toString() == "line");
 
         // Remove options
-        state.removeLineOptions("whisker_1");
+        state.removeOptions("whisker_1", DisplayType::Line);
         REQUIRE(state.lineOptions("whisker_1") == nullptr);
         REQUIRE(removed_spy.count() == 1);
     }
@@ -391,7 +391,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.show_bounding_box = true;
         opts.show_outline = true;
         
-        state.setMaskOptions("mask_1", opts);
+        state.setOptions("mask_1", opts);
         
         auto* retrieved = state.maskOptions("mask_1");
         REQUIRE(retrieved != nullptr);
@@ -399,7 +399,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         REQUIRE(retrieved->show_bounding_box == true);
         REQUIRE(retrieved->show_outline == true);
 
-        state.removeMaskOptions("mask_1");
+        state.removeOptions("mask_1", DisplayType::Mask);
         REQUIRE(state.maskOptions("mask_1") == nullptr);
     }
 
@@ -411,7 +411,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.point_size = 10;
         opts.marker_shape = PointMarkerShape::Square;
         
-        state.setPointOptions("point_1", opts);
+        state.setOptions("point_1", opts);
         
         auto* retrieved = state.pointOptions("point_1");
         REQUIRE(retrieved != nullptr);
@@ -419,7 +419,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         REQUIRE(retrieved->point_size == 10);
         REQUIRE(retrieved->marker_shape == PointMarkerShape::Square);
 
-        state.removePointOptions("point_1");
+        state.removeOptions("point_1", DisplayType::Point);
         REQUIRE(state.pointOptions("point_1") == nullptr);
     }
 
@@ -430,14 +430,14 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.display_channel = 2;
         opts.alpha() = 0.5f;
         
-        state.setTensorOptions("tensor_1", opts);
+        state.setOptions("tensor_1", opts);
         
         auto* retrieved = state.tensorOptions("tensor_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->display_channel == 2);
         REQUIRE(retrieved->alpha() == 0.5f);
 
-        state.removeTensorOptions("tensor_1");
+        state.removeOptions("tensor_1", DisplayType::Tensor);
         REQUIRE(state.tensorOptions("tensor_1") == nullptr);
     }
 
@@ -448,14 +448,14 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.plotting_style = IntervalPlottingStyle::Border;
         opts.border_thickness = 10;
         
-        state.setIntervalOptions("interval_1", opts);
+        state.setOptions("interval_1", opts);
         
         auto* retrieved = state.intervalOptions("interval_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->plotting_style == IntervalPlottingStyle::Border);
         REQUIRE(retrieved->border_thickness == 10);
 
-        state.removeIntervalOptions("interval_1");
+        state.removeOptions("interval_1", DisplayType::Interval);
         REQUIRE(state.intervalOptions("interval_1") == nullptr);
     }
 
@@ -467,7 +467,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.contrast_options.active = true;
         opts.contrast_options.alpha = 1.5;
         
-        state.setMediaOptions("video_1", opts);
+        state.setOptions("video_1", opts);
         
         auto* retrieved = state.mediaOptions("video_1");
         REQUIRE(retrieved != nullptr);
@@ -475,7 +475,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         REQUIRE(retrieved->contrast_options.active == true);
         REQUIRE(retrieved->contrast_options.alpha == 1.5);
 
-        state.removeMediaOptions("video_1");
+        state.removeOptions("video_1", DisplayType::Media);
         REQUIRE(state.mediaOptions("video_1") == nullptr);
     }
 
@@ -486,12 +486,12 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         line_opts.hex_color() = "#ff0000";
         line_opts.line_thickness = 5;
         line_opts.is_visible() = true;
-        original.setLineOptions("line_1", line_opts);
+        original.setOptions("line_1", line_opts);
 
         MaskDisplayOptions mask_opts;
         mask_opts.hex_color() = "#00ff00";
         mask_opts.show_outline = true;
-        original.setMaskOptions("mask_1", mask_opts);
+        original.setOptions("mask_1", mask_opts);
 
         auto json = original.toJson();
         MediaWidgetState restored;
@@ -859,13 +859,13 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
     line_opts.hex_color() = "#ff0000";
     line_opts.line_thickness = 4;
     line_opts.is_visible() = true;
-    original.setLineOptions("whisker_1", line_opts);
+    original.setOptions("whisker_1", line_opts);
     
     MaskDisplayOptions mask_opts;
     mask_opts.hex_color() = "#00ff00";
     mask_opts.show_outline = true;
     mask_opts.is_visible() = true;
-    original.setMaskOptions("mask_1", mask_opts);
+    original.setOptions("mask_1", mask_opts);
     
     // Interaction preferences
     LineInteractionPrefs line_prefs;

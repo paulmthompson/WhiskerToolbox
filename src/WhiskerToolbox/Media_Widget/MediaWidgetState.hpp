@@ -74,6 +74,7 @@
 
 #include "EditorState/EditorState.hpp"
 #include "MediaWidgetStateData.hpp"
+#include "DisplayOptionsRegistry.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -82,6 +83,34 @@
 
 #include <string>
 #include <utility>
+#include <variant>
+
+/**
+ * @brief Enumeration of display option types for unified API
+ */
+enum class DisplayType {
+    Line,
+    Mask,
+    Point,
+    Tensor,
+    Interval,
+    Media
+};
+
+/**
+ * @brief Variant type holding any display options type
+ * 
+ * Used with setOptions() for type-safe, unified option setting.
+ * The type is inferred from the variant alternative passed.
+ */
+using DisplayOptionsVariant = std::variant<
+    LineDisplayOptions,
+    MaskDisplayOptions,
+    PointDisplayOptions,
+    TensorDisplayOptions,
+    DigitalIntervalDisplayOptions,
+    MediaDisplayOptions
+>;
 
 /**
  * @brief State class for Media_Widget
@@ -159,6 +188,31 @@ public:
      * @return Const reference to MediaWidgetStateData
      */
     [[nodiscard]] MediaWidgetStateData const & data() const { return _data; }
+
+    // === Display Options Registry (NEW - Phase 4A) ===
+
+    /**
+     * @brief Get the display options registry for generic access
+     * 
+     * The registry provides a unified API for all display option types:
+     * 
+     * ```cpp
+     * // Set options (type inferred)
+     * LineDisplayOptions opts;
+     * opts.line_thickness = 3;
+     * state->displayOptions().set("whisker_1", opts);
+     * 
+     * // Get options (type explicit)
+     * auto* opts = state->displayOptions().get<LineDisplayOptions>("whisker_1");
+     * 
+     * // Get enabled keys
+     * QStringList enabled = state->displayOptions().enabledKeys<LineDisplayOptions>();
+     * ```
+     * 
+     * @return Reference to DisplayOptionsRegistry
+     */
+    [[nodiscard]] DisplayOptionsRegistry & displayOptions() { return _display_options; }
+    [[nodiscard]] DisplayOptionsRegistry const & displayOptions() const { return _display_options; }
 
     // === Displayed Data Key ===
 
@@ -265,21 +319,10 @@ public:
      * @brief Get line display options for a key
      * @param key The data key
      * @return Pointer to options, or nullptr if not found
+     * @deprecated Use displayOptions().get<LineDisplayOptions>(key) instead
      */
+    [[deprecated("Use displayOptions().get<LineDisplayOptions>(key)")]]
     [[nodiscard]] LineDisplayOptions const * lineOptions(QString const & key) const;
-
-    /**
-     * @brief Set line display options for a key
-     * @param key The data key
-     * @param options The display options
-     */
-    void setLineOptions(QString const & key, LineDisplayOptions const & options);
-
-    /**
-     * @brief Remove line display options for a key
-     * @param key The data key
-     */
-    void removeLineOptions(QString const & key);
 
     // === Display Options: Mask ===
 
@@ -287,21 +330,10 @@ public:
      * @brief Get mask display options for a key
      * @param key The data key
      * @return Pointer to options, or nullptr if not found
+     * @deprecated Use displayOptions().get<MaskDisplayOptions>(key) instead
      */
+    [[deprecated("Use displayOptions().get<MaskDisplayOptions>(key)")]]
     [[nodiscard]] MaskDisplayOptions const * maskOptions(QString const & key) const;
-
-    /**
-     * @brief Set mask display options for a key
-     * @param key The data key
-     * @param options The display options
-     */
-    void setMaskOptions(QString const & key, MaskDisplayOptions const & options);
-
-    /**
-     * @brief Remove mask display options for a key
-     * @param key The data key
-     */
-    void removeMaskOptions(QString const & key);
 
     // === Display Options: Point ===
 
@@ -309,21 +341,10 @@ public:
      * @brief Get point display options for a key
      * @param key The data key
      * @return Pointer to options, or nullptr if not found
+     * @deprecated Use displayOptions().get<PointDisplayOptions>(key) instead
      */
+    [[deprecated("Use displayOptions().get<PointDisplayOptions>(key)")]]
     [[nodiscard]] PointDisplayOptions const * pointOptions(QString const & key) const;
-
-    /**
-     * @brief Set point display options for a key
-     * @param key The data key
-     * @param options The display options
-     */
-    void setPointOptions(QString const & key, PointDisplayOptions const & options);
-
-    /**
-     * @brief Remove point display options for a key
-     * @param key The data key
-     */
-    void removePointOptions(QString const & key);
 
     // === Display Options: Tensor ===
 
@@ -331,21 +352,10 @@ public:
      * @brief Get tensor display options for a key
      * @param key The data key
      * @return Pointer to options, or nullptr if not found
+     * @deprecated Use displayOptions().get<TensorDisplayOptions>(key) instead
      */
+    [[deprecated("Use displayOptions().get<TensorDisplayOptions>(key)")]]
     [[nodiscard]] TensorDisplayOptions const * tensorOptions(QString const & key) const;
-
-    /**
-     * @brief Set tensor display options for a key
-     * @param key The data key
-     * @param options The display options
-     */
-    void setTensorOptions(QString const & key, TensorDisplayOptions const & options);
-
-    /**
-     * @brief Remove tensor display options for a key
-     * @param key The data key
-     */
-    void removeTensorOptions(QString const & key);
 
     // === Display Options: Interval ===
 
@@ -353,43 +363,76 @@ public:
      * @brief Get interval display options for a key
      * @param key The data key
      * @return Pointer to options, or nullptr if not found
+     * @deprecated Use displayOptions().get<DigitalIntervalDisplayOptions>(key) instead
      */
+    [[deprecated("Use displayOptions().get<DigitalIntervalDisplayOptions>(key)")]]
     [[nodiscard]] DigitalIntervalDisplayOptions const * intervalOptions(QString const & key) const;
-
-    /**
-     * @brief Set interval display options for a key
-     * @param key The data key
-     * @param options The display options
-     */
-    void setIntervalOptions(QString const & key, DigitalIntervalDisplayOptions const & options);
-
-    /**
-     * @brief Remove interval display options for a key
-     * @param key The data key
-     */
-    void removeIntervalOptions(QString const & key);
 
     // === Display Options: Media ===
 
     /**
-     * @brief Get media display options for a key
+     * @brief Get media display options for a key (const)
      * @param key The data key
      * @return Pointer to options, or nullptr if not found
+     * @deprecated Use displayOptions().get<MediaDisplayOptions>(key) instead
      */
+    [[deprecated("Use displayOptions().get<MediaDisplayOptions>(key)")]]
     [[nodiscard]] MediaDisplayOptions const * mediaOptions(QString const & key) const;
 
     /**
-     * @brief Set media display options for a key
-     * @param key The data key
-     * @param options The display options
+     * @brief Get all media option keys
+     * @return Vector of all keys that have media options
+     * @deprecated Use displayOptions().keys<MediaDisplayOptions>() instead
      */
-    void setMediaOptions(QString const & key, MediaDisplayOptions const & options);
+    [[deprecated("Use displayOptions().keys<MediaDisplayOptions>()")]]
+    [[nodiscard]] std::vector<std::string> mediaOptionKeys() const;
 
     /**
-     * @brief Remove media display options for a key
+     * @brief Check if media options exist for a key
      * @param key The data key
+     * @return true if options exist
+     * @deprecated Use displayOptions().has<MediaDisplayOptions>(key) instead
      */
-    void removeMediaOptions(QString const & key);
+    [[deprecated("Use displayOptions().has<MediaDisplayOptions>(key)")]]
+    [[nodiscard]] bool hasMediaOptions(QString const & key) const;
+
+    // === Unified Display Options API ===
+
+    /**
+     * @brief Set display options for a key (unified API)
+     * 
+     * This is a type-safe unified setter that accepts any display options type.
+     * The correct map is selected based on the variant alternative.
+     * 
+     * Example:
+     * @code
+     * LineDisplayOptions line_opts;
+     * line_opts.line_thickness = 3;
+     * state->setOptions("whisker_1", line_opts);  // Type inferred
+     * 
+     * MaskDisplayOptions mask_opts;
+     * mask_opts.alpha = 0.5f;
+     * state->setOptions("mask_1", mask_opts);  // Type inferred
+     * @endcode
+     * 
+     * @param key The data key
+     * @param options Variant containing the display options (type is inferred)
+     * @deprecated Use displayOptions().set(key, options) instead
+     */
+    [[deprecated("Use displayOptions().set(key, options)")]]
+    void setOptions(QString const & key, DisplayOptionsVariant const & options);
+
+    /**
+     * @brief Remove display options for a key (unified API)
+     * 
+     * Removes options from the map corresponding to the specified type.
+     * 
+     * @param key The data key
+     * @param type The display type to remove
+     * @deprecated Use displayOptions().remove<T>(key) instead
+     */
+    [[deprecated("Use displayOptions().remove<T>(key)")]]
+    void removeOptions(QString const & key, DisplayType type);
 
     // === Interaction Preferences ===
 
@@ -636,6 +679,26 @@ signals:
 
 private:
     MediaWidgetStateData _data;
+    DisplayOptionsRegistry _display_options{&_data, this};
+
+    // Helper to forward registry signals to state signals
+    void _connectRegistrySignals();
+
+
+    void removeMaskOptions(QString const & key);
+    void removeLineOptions(QString const & key);
+    void removePointOptions(QString const & key);
+    void removeTensorOptions(QString const & key);
+    void removeIntervalOptions(QString const & key);
+    void removeMediaOptions(QString const & key);
+
+
+    void setLineOptions(QString const & key, LineDisplayOptions const & options);
+    void setMaskOptions(QString const & key, MaskDisplayOptions const & options);
+    void setPointOptions(QString const & key, PointDisplayOptions const & options);
+    void setTensorOptions(QString const & key, TensorDisplayOptions const & options);
+    void setIntervalOptions(QString const & key, DigitalIntervalDisplayOptions const & options);
+    void setMediaOptions(QString const & key, MediaDisplayOptions const & options);
 };
 
 #endif // MEDIA_WIDGET_STATE_HPP

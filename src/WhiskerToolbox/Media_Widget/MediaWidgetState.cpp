@@ -2,11 +2,39 @@
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 
 MediaWidgetState::MediaWidgetState(QObject * parent)
     : EditorState(parent) {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
+    
+    // Connect registry signals to state signals for backward compatibility
+    _connectRegistrySignals();
+}
+
+void MediaWidgetState::_connectRegistrySignals() {
+    // Forward registry signals to state signals
+    connect(&_display_options, &DisplayOptionsRegistry::optionsChanged,
+            this, [this](QString const & key, QString const & type) {
+        markDirty();
+        emit displayOptionsChanged(key, type);
+        emit stateChanged();
+    });
+    
+    connect(&_display_options, &DisplayOptionsRegistry::optionsRemoved,
+            this, [this](QString const & key, QString const & type) {
+        markDirty();
+        emit displayOptionsRemoved(key, type);
+        emit stateChanged();
+    });
+    
+    connect(&_display_options, &DisplayOptionsRegistry::visibilityChanged,
+            this, [this](QString const & key, QString const & type, bool visible) {
+        markDirty();
+        emit featureEnabledChanged(key, type, visible);
+        emit stateChanged();
+    });
 }
 
 // === Type Identification ===
@@ -309,6 +337,11 @@ LineDisplayOptions const * MediaWidgetState::lineOptions(QString const & key) co
     return nullptr;
 }
 
+/**
+* @brief Set line display options for a key
+* @param key The data key
+* @param options The display options
+*/
 void MediaWidgetState::setLineOptions(QString const & key, LineDisplayOptions const & options) {
     std::string const key_std = key.toStdString();
     _data.line_options[key_std] = options;
@@ -316,6 +349,10 @@ void MediaWidgetState::setLineOptions(QString const & key, LineDisplayOptions co
     emit displayOptionsChanged(key, QStringLiteral("line"));
 }
 
+/**
+* @brief Remove line display options for a key
+* @param key The data key
+*/
 void MediaWidgetState::removeLineOptions(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.line_options.erase(key_std) > 0) {
@@ -335,6 +372,11 @@ MaskDisplayOptions const * MediaWidgetState::maskOptions(QString const & key) co
     return nullptr;
 }
 
+/**
+* @brief Set mask display options for a key
+* @param key The data key
+* @param options The display options
+*/
 void MediaWidgetState::setMaskOptions(QString const & key, MaskDisplayOptions const & options) {
     std::string const key_std = key.toStdString();
     _data.mask_options[key_std] = options;
@@ -342,6 +384,11 @@ void MediaWidgetState::setMaskOptions(QString const & key, MaskDisplayOptions co
     emit displayOptionsChanged(key, QStringLiteral("mask"));
 }
 
+    
+/**
+* @brief Remove mask display options for a key
+* @param key The data key
+*/
 void MediaWidgetState::removeMaskOptions(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.mask_options.erase(key_std) > 0) {
@@ -361,6 +408,11 @@ PointDisplayOptions const * MediaWidgetState::pointOptions(QString const & key) 
     return nullptr;
 }
 
+/**
+* @brief Set point display options for a key
+* @param key The data key
+* @param options The display options
+*/
 void MediaWidgetState::setPointOptions(QString const & key, PointDisplayOptions const & options) {
     std::string const key_std = key.toStdString();
     _data.point_options[key_std] = options;
@@ -368,6 +420,10 @@ void MediaWidgetState::setPointOptions(QString const & key, PointDisplayOptions 
     emit displayOptionsChanged(key, QStringLiteral("point"));
 }
 
+/**
+* @brief Remove point display options for a key
+* @param key The data key
+*/
 void MediaWidgetState::removePointOptions(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.point_options.erase(key_std) > 0) {
@@ -387,6 +443,11 @@ TensorDisplayOptions const * MediaWidgetState::tensorOptions(QString const & key
     return nullptr;
 }
 
+/**
+* @brief Set tensor display options for a key
+* @param key The data key
+* @param options The display options
+*/
 void MediaWidgetState::setTensorOptions(QString const & key, TensorDisplayOptions const & options) {
     std::string const key_std = key.toStdString();
     _data.tensor_options[key_std] = options;
@@ -394,6 +455,10 @@ void MediaWidgetState::setTensorOptions(QString const & key, TensorDisplayOption
     emit displayOptionsChanged(key, QStringLiteral("tensor"));
 }
 
+/**
+* @brief Remove tensor display options for a key
+* @param key The data key
+*/
 void MediaWidgetState::removeTensorOptions(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.tensor_options.erase(key_std) > 0) {
@@ -413,6 +478,11 @@ DigitalIntervalDisplayOptions const * MediaWidgetState::intervalOptions(QString 
     return nullptr;
 }
 
+/**
+* @brief Set interval display options for a key
+* @param key The data key
+* @param options The display options
+*/
 void MediaWidgetState::setIntervalOptions(QString const & key, DigitalIntervalDisplayOptions const & options) {
     std::string const key_std = key.toStdString();
     _data.interval_options[key_std] = options;
@@ -420,6 +490,11 @@ void MediaWidgetState::setIntervalOptions(QString const & key, DigitalIntervalDi
     emit displayOptionsChanged(key, QStringLiteral("interval"));
 }
 
+
+/**
+* @brief Remove interval display options for a key
+* @param key The data key
+*/
 void MediaWidgetState::removeIntervalOptions(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.interval_options.erase(key_std) > 0) {
@@ -439,6 +514,26 @@ MediaDisplayOptions const * MediaWidgetState::mediaOptions(QString const & key) 
     return nullptr;
 }
 
+
+
+std::vector<std::string> MediaWidgetState::mediaOptionKeys() const {
+    std::vector<std::string> keys;
+    keys.reserve(_data.media_options.size());
+    for (auto const & [key, _] : _data.media_options) {
+        keys.push_back(key);
+    }
+    return keys;
+}
+
+bool MediaWidgetState::hasMediaOptions(QString const & key) const {
+    return _data.media_options.contains(key.toStdString());
+}
+
+/**
+* @brief Set media display options for a key
+* @param key The data key
+* @param options The display options
+*/
 void MediaWidgetState::setMediaOptions(QString const & key, MediaDisplayOptions const & options) {
     std::string const key_std = key.toStdString();
     _data.media_options[key_std] = options;
@@ -446,11 +541,60 @@ void MediaWidgetState::setMediaOptions(QString const & key, MediaDisplayOptions 
     emit displayOptionsChanged(key, QStringLiteral("media"));
 }
 
+/**
+* @brief Remove media display options for a key
+* @param key The data key
+*/
 void MediaWidgetState::removeMediaOptions(QString const & key) {
     std::string const key_std = key.toStdString();
     if (_data.media_options.erase(key_std) > 0) {
         markDirty();
         emit displayOptionsRemoved(key, QStringLiteral("media"));
+    }
+}
+
+// === Unified Display Options API ===
+
+void MediaWidgetState::setOptions(QString const & key, DisplayOptionsVariant const & options) {
+    std::visit([this, &key](auto const & opts) {
+        using T = std::decay_t<decltype(opts)>;
+        
+        if constexpr (std::is_same_v<T, LineDisplayOptions>) {
+            setLineOptions(key, opts);
+        } else if constexpr (std::is_same_v<T, MaskDisplayOptions>) {
+            setMaskOptions(key, opts);
+        } else if constexpr (std::is_same_v<T, PointDisplayOptions>) {
+            setPointOptions(key, opts);
+        } else if constexpr (std::is_same_v<T, TensorDisplayOptions>) {
+            setTensorOptions(key, opts);
+        } else if constexpr (std::is_same_v<T, DigitalIntervalDisplayOptions>) {
+            setIntervalOptions(key, opts);
+        } else if constexpr (std::is_same_v<T, MediaDisplayOptions>) {
+            setMediaOptions(key, opts);
+        }
+    }, options);
+}
+
+void MediaWidgetState::removeOptions(QString const & key, DisplayType type) {
+    switch (type) {
+        case DisplayType::Line:
+            removeLineOptions(key);
+            break;
+        case DisplayType::Mask:
+            removeMaskOptions(key);
+            break;
+        case DisplayType::Point:
+            removePointOptions(key);
+            break;
+        case DisplayType::Tensor:
+            removeTensorOptions(key);
+            break;
+        case DisplayType::Interval:
+            removeIntervalOptions(key);
+            break;
+        case DisplayType::Media:
+            removeMediaOptions(key);
+            break;
     }
 }
 

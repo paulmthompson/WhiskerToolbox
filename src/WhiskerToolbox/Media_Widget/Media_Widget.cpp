@@ -36,6 +36,7 @@
 #include <QWheelEvent>
 
 #include <algorithm>
+#include <cmath>
 
 Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * parent)
     : QWidget(parent),
@@ -101,6 +102,7 @@ Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * paren
     // Initialize state and register with WorkspaceManager for serialization and inter-widget communication
 
     _state = std::make_shared<MediaWidgetState>();
+    _connectStateSignals();
 
     if (_workspace_manager) {
         _workspace_manager->registerState(_state);
@@ -177,7 +179,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get()));
 
     // Create and store reference to MediaProcessing_Widget
-    _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get());
+    _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get(), _state.get());
     ui->stackedWidget->addWidget(_processing_widget);
 
     // Connect text widget to scene if both are available
@@ -213,8 +215,7 @@ void Media_Widget::_createOptions() {
     //Setup Media Data
     auto media_keys = _data_manager->getKeys<MediaData>();
     for (auto const & media_key: media_keys) {
-        auto opts = _scene->getMediaConfig(media_key);
-        if (opts.has_value()) continue;
+        if (_state->hasMediaOptions(QString::fromStdString(media_key))) continue;
 
         _scene->addMediaDataToScene(media_key);
     }
@@ -372,6 +373,10 @@ void Media_Widget::_updateCanvasSize() {
             ui->graphicsView->resetTransform();
             _current_zoom = 1.0;
         }
+        
+        // Sync canvas size to state
+        _syncCanvasSizeToState();
+        
         // Fit disabled: we manage zoom manually now
         // Update left panel sizing
         int scrollAreaWidth = ui->scrollArea->width();
@@ -392,6 +397,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
 
     auto const feature_key = feature.toStdString();
     auto const type = _data_manager->getType(feature_key);
+    QString state_type;  // Type string for state synchronization
 
     if (type == DM_DataType::Line) {
         auto opts = _scene->getLineConfig(feature_key);
@@ -403,6 +409,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             return;
         }
         opts.value()->is_visible() = enabled;
+        state_type = QStringLiteral("line");
     } else if (type == DM_DataType::Mask) {
         auto opts = _scene->getMaskConfig(feature_key);
         if (!opts.has_value()) {
@@ -413,6 +420,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             return;
         }
         opts.value()->is_visible() = enabled;
+        state_type = QStringLiteral("mask");
     } else if (type == DM_DataType::Points) {
         auto opts = _scene->getPointConfig(feature_key);
         if (!opts.has_value()) {
@@ -423,6 +431,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             return;
         }
         opts.value()->is_visible() = enabled;
+        state_type = QStringLiteral("point");
     } else if (type == DM_DataType::DigitalInterval) {
         auto opts = _scene->getIntervalConfig(feature_key);
         if (!opts.has_value()) {
@@ -433,6 +442,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             return;
         }
         opts.value()->is_visible() = enabled;
+        state_type = QStringLiteral("interval");
     } else if (type == DM_DataType::Tensor) {
         auto opts = _scene->getTensorConfig(feature_key);
         if (!opts.has_value()) {
@@ -450,18 +460,22 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Disabling tensor data from scene" << std::endl;
             opts.value()->is_visible() = false;
         }
+        state_type = QStringLiteral("tensor");
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
-        auto opts = _scene->getMediaConfig(feature_key);
-        if (!opts.has_value()) {
+        auto const key = QString::fromStdString(feature_key);
+        auto const * opts = _state->mediaOptions(key);
+        if (!opts) {
             std::cerr << "Table feature key "
                       << feature_key
                       << " not found in Media_Window Display Options"
                       << std::endl;
             return;
         }
+        auto modified = *opts;
         if (enabled) {
             std::cout << "Enabling media data in scene" << std::endl;
-            opts.value()->is_visible() = true;
+            modified.is_visible() = true;
+            _state->setOptions(key, modified);
 
             // This ensures new media is loaded from disk
             // Before the update
@@ -470,11 +484,19 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
 
         } else {
             std::cout << "Disabling media data from scene" << std::endl;
-            opts.value()->is_visible() = false;
+            modified.is_visible() = false;
+            _state->setOptions(key, modified);
         }
+        state_type = QStringLiteral("media");
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
+    
+    // Sync feature enabled state to MediaWidgetState
+    if (!state_type.isEmpty()) {
+        _syncFeatureEnabledToState(feature, state_type, enabled);
+    }
+    
     _scene->UpdateCanvas();
 
     if (enabled) {
@@ -544,6 +566,9 @@ void Media_Widget::resetZoom() {
     ui->graphicsView->resetTransform();
     _current_zoom = 1.0;
     _user_zoom_active = false;
+    
+    // Sync zoom reset to state
+    _syncZoomToState();
 }
 
 void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
@@ -560,6 +585,9 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
     ui->graphicsView->scale(factor, factor);
     _current_zoom = new_zoom;
     _user_zoom_active = (_current_zoom != 1.0);
+    
+    // Sync zoom to state
+    _syncZoomToState();
 }
 
 bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
@@ -609,6 +637,10 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
             if (mouseEvent->button() == Qt::LeftButton && _is_panning) {
                 _is_panning = false;
                 ui->graphicsView->viewport()->setCursor(Qt::ArrowCursor);
+                
+                // Sync final pan position to state
+                _syncPanToState();
+                
                 mouseEvent->accept();
                 return true; // Consume the event
             }
@@ -623,6 +655,11 @@ void Media_Widget::_createMediaWindow() {
 
         // Set parent widget reference for accessing enabled media keys
         _scene->setParentWidget(this);
+        
+        // Connect Media_Window to state for display options synchronization
+        if (_state) {
+            _scene->setMediaWidgetState(_state.get());
+        }
 
         _connectTextWidgetToScene();
     }
@@ -648,4 +685,150 @@ void Media_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
     // Note: This intentionally doesn't update the Feature_Table_Widget highlight -
     // the feature table will be removed in Phase 3, so we keep them decoupled for now
     _state->setDisplayedDataKey(selected_key);
+}
+
+// === Phase 4: State Synchronization Methods ===
+
+void Media_Widget::_syncZoomToState() {
+    if (_state) {
+        _state->setZoom(_current_zoom);
+    }
+}
+
+void Media_Widget::_syncPanToState() {
+    if (_state && ui->graphicsView) {
+        // Get scroll bar values as pan offset
+        double pan_x = ui->graphicsView->horizontalScrollBar()->value();
+        double pan_y = ui->graphicsView->verticalScrollBar()->value();
+        _state->setPan(pan_x, pan_y);
+    }
+}
+
+void Media_Widget::_syncCanvasSizeToState() {
+    if (_state && _scene) {
+        auto [width, height] = _scene->getCanvasSize();
+        _state->setCanvasSize(width, height);
+    }
+}
+
+void Media_Widget::_syncFeatureEnabledToState(QString const & feature_key, QString const & data_type, bool enabled) {
+    if (_state) {
+        _state->setFeatureEnabled(feature_key, data_type, enabled);
+    }
+}
+
+void Media_Widget::_connectStateSignals() {
+    if (!_state) return;
+    
+    // Connect to state signals to respond to external state changes
+    // (e.g., from properties panel or workspace restore)
+    connect(_state.get(), &MediaWidgetState::zoomChanged,
+            this, &Media_Widget::_onStateZoomChanged);
+    connect(_state.get(), &MediaWidgetState::panChanged,
+            this, &Media_Widget::_onStatePanChanged);
+}
+
+void Media_Widget::_onStateZoomChanged(double zoom) {
+    // Only apply if different from current zoom (avoid feedback loop)
+    if (std::abs(_current_zoom - zoom) > 1e-6) {
+        if (!ui->graphicsView) return;
+        
+        // Calculate scale factor to reach target zoom
+        double factor = zoom / _current_zoom;
+        ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+        ui->graphicsView->scale(factor, factor);
+        _current_zoom = zoom;
+        _user_zoom_active = (zoom != 1.0);
+    }
+}
+
+void Media_Widget::_onStatePanChanged(double x, double y) {
+    if (!ui->graphicsView) return;
+    
+    // Only apply if different from current pan
+    int current_x = ui->graphicsView->horizontalScrollBar()->value();
+    int current_y = ui->graphicsView->verticalScrollBar()->value();
+    
+    if (std::abs(current_x - x) > 0.5 || std::abs(current_y - y) > 0.5) {
+        ui->graphicsView->horizontalScrollBar()->setValue(static_cast<int>(x));
+        ui->graphicsView->verticalScrollBar()->setValue(static_cast<int>(y));
+    }
+}
+
+void Media_Widget::restoreFromState() {
+    if (!_state) return;
+    
+    // Restore zoom
+    double saved_zoom = _state->zoom();
+    if (saved_zoom > 0 && ui->graphicsView) {
+        ui->graphicsView->resetTransform();
+        if (std::abs(saved_zoom - 1.0) > 1e-6) {
+            ui->graphicsView->scale(saved_zoom, saved_zoom);
+        }
+        _current_zoom = saved_zoom;
+        _user_zoom_active = (saved_zoom != 1.0);
+    }
+    
+    // Restore pan position
+    auto [pan_x, pan_y] = _state->pan();
+    if (ui->graphicsView) {
+        ui->graphicsView->horizontalScrollBar()->setValue(static_cast<int>(pan_x));
+        ui->graphicsView->verticalScrollBar()->setValue(static_cast<int>(pan_y));
+    }
+    
+    // Restore display options in Media_Window
+    if (_scene) {
+        _scene->restoreOptionsFromState();
+    }
+    
+    // Restore enabled features by iterating through the state's options
+    // and setting is_visible on the corresponding Media_Window configs
+    auto const & data = _state->data();
+    
+    // Restore line features
+    for (auto const & [key, opts] : data.line_options) {
+        if (opts.is_visible()) {
+            _addFeatureToDisplay(QString::fromStdString(key), true);
+        }
+    }
+    
+    // Restore mask features
+    for (auto const & [key, opts] : data.mask_options) {
+        if (opts.is_visible()) {
+            _addFeatureToDisplay(QString::fromStdString(key), true);
+        }
+    }
+    
+    // Restore point features
+    for (auto const & [key, opts] : data.point_options) {
+        if (opts.is_visible()) {
+            _addFeatureToDisplay(QString::fromStdString(key), true);
+        }
+    }
+    
+    // Restore tensor features
+    for (auto const & [key, opts] : data.tensor_options) {
+        if (opts.is_visible()) {
+            _addFeatureToDisplay(QString::fromStdString(key), true);
+        }
+    }
+    
+    // Restore interval features
+    for (auto const & [key, opts] : data.interval_options) {
+        if (opts.is_visible()) {
+            _addFeatureToDisplay(QString::fromStdString(key), true);
+        }
+    }
+    
+    // Restore media features
+    for (auto const & [key, opts] : data.media_options) {
+        if (opts.is_visible()) {
+            _addFeatureToDisplay(QString::fromStdString(key), true);
+        }
+    }
+    
+    // Update canvas to reflect restored state
+    if (_scene) {
+        _scene->UpdateCanvas();
+    }
 }

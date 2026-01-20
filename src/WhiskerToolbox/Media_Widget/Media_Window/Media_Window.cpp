@@ -16,6 +16,7 @@
 #include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
 #include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
+#include "Media_Widget/MediaWidgetState.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -86,9 +87,19 @@ Media_Window::~Media_Window() {
 }
 
 void Media_Window::addMediaDataToScene(std::string const & media_key) {
-    auto media_config = std::make_unique<MediaDisplayOptions>();
-
-    _media_configs[media_key] = std::move(media_config);
+    if (!_media_widget_state) {
+        std::cerr << "Warning: Cannot add media data - no MediaWidgetState set" << std::endl;
+        return;
+    }
+    
+    QString const key_q = QString::fromStdString(media_key);
+    
+    // Check if options already exist in state
+    if (!_media_widget_state->hasMediaOptions(key_q)) {
+        // Create default options in state
+        MediaDisplayOptions media_config;
+        _media_widget_state->setOptions(key_q, media_config);
+    }
 
     UpdateCanvas();
 }
@@ -100,21 +111,37 @@ void Media_Window::_clearMedia() {
 }
 
 void Media_Window::removeMediaDataFromScene(std::string const & media_key) {
-    auto mediaItem = _media_configs.find(media_key);
-    if (mediaItem != _media_configs.end()) {
-        _media_configs.erase(mediaItem);
+    if (_media_widget_state) {
+        _media_widget_state->removeOptions(QString::fromStdString(media_key), DisplayType::Media);
     }
 
     UpdateCanvas();
 }
 
 void Media_Window::addLineDataToScene(std::string const & line_key) {
+    // Check if state has saved options for this key
+    if (_media_widget_state) {
+        auto const * saved_opts = _media_widget_state->lineOptions(QString::fromStdString(line_key));
+        if (saved_opts) {
+            // Options already exist in state - use them
+            _line_configs[line_key] = std::make_unique<LineDisplayOptions>(*saved_opts);
+            UpdateCanvas();
+            return;
+        }
+    }
+    
+    // No saved options - create with default color
     auto line_config = std::make_unique<LineDisplayOptions>();
 
     // Assign color based on the current number of line configs
     line_config->hex_color() = DefaultDisplayValues::getColorForIndex(_line_configs.size());
 
     _line_configs[line_key] = std::move(line_config);
+    
+    // Sync new options to state
+    if (_media_widget_state && _line_configs.contains(line_key)) {
+        _media_widget_state->setOptions(QString::fromStdString(line_key), *_line_configs[line_key]);
+    }
 
     UpdateCanvas();
 }
@@ -139,12 +166,30 @@ void Media_Window::removeLineDataFromScene(std::string const & line_key) {
 }
 
 void Media_Window::addMaskDataToScene(std::string const & mask_key) {
+    // Check if state has saved options for this key
+    if (_media_widget_state) {
+        auto const * saved_opts = _media_widget_state->maskOptions(QString::fromStdString(mask_key));
+        if (saved_opts) {
+            // Options already exist in state - use them
+            _mask_configs[mask_key] = std::make_unique<MaskDisplayOptions>(*saved_opts);
+            UpdateCanvas();
+            return;
+        }
+    }
+    
+    // No saved options - create with default color
     auto mask_config = std::make_unique<MaskDisplayOptions>();
 
     // Assign color based on the current number of mask configs
     mask_config->hex_color() = DefaultDisplayValues::getColorForIndex(_mask_configs.size());
 
     _mask_configs[mask_key] = std::move(mask_config);
+    
+    // Sync new options to state
+    if (_media_widget_state && _mask_configs.contains(mask_key)) {
+        _media_widget_state->setOptions(QString::fromStdString(mask_key), *_mask_configs[mask_key]);
+    }
+    
     UpdateCanvas();
 }
 
@@ -191,12 +236,30 @@ void Media_Window::removeMaskDataFromScene(std::string const & mask_key) {
 }
 
 void Media_Window::addPointDataToScene(std::string const & point_key) {
+    // Check if state has saved options for this key
+    if (_media_widget_state) {
+        auto const * saved_opts = _media_widget_state->pointOptions(QString::fromStdString(point_key));
+        if (saved_opts) {
+            // Options already exist in state - use them
+            _point_configs[point_key] = std::make_unique<PointDisplayOptions>(*saved_opts);
+            UpdateCanvas();
+            return;
+        }
+    }
+    
+    // No saved options - create with default color
     auto point_config = std::make_unique<PointDisplayOptions>();
 
     // Assign color based on the current number of point configs
     point_config->hex_color() = DefaultDisplayValues::getColorForIndex(_point_configs.size());
 
     _point_configs[point_key] = std::move(point_config);
+    
+    // Sync new options to state
+    if (_media_widget_state && _point_configs.contains(point_key)) {
+        _media_widget_state->setOptions(QString::fromStdString(point_key), *_point_configs[point_key]);
+    }
+    
     UpdateCanvas();
 }
 
@@ -229,12 +292,30 @@ void Media_Window::removePointDataFromScene(std::string const & point_key) {
 }
 
 void Media_Window::addDigitalIntervalSeries(std::string const & key) {
+    // Check if state has saved options for this key
+    if (_media_widget_state) {
+        auto const * saved_opts = _media_widget_state->intervalOptions(QString::fromStdString(key));
+        if (saved_opts) {
+            // Options already exist in state - use them
+            _interval_configs[key] = std::make_unique<DigitalIntervalDisplayOptions>(*saved_opts);
+            UpdateCanvas();
+            return;
+        }
+    }
+    
+    // No saved options - create with default color
     auto interval_config = std::make_unique<DigitalIntervalDisplayOptions>();
 
     // Assign color based on the current number of interval configs
     interval_config->hex_color() = DefaultDisplayValues::getColorForIndex(_interval_configs.size());
 
     _interval_configs[key] = std::move(interval_config);
+    
+    // Sync new options to state
+    if (_media_widget_state && _interval_configs.contains(key)) {
+        _media_widget_state->setOptions(QString::fromStdString(key), *_interval_configs[key]);
+    }
+    
     UpdateCanvas();
 }
 
@@ -259,12 +340,29 @@ void Media_Window::_clearIntervals() {
 }
 
 void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
+    // Check if state has saved options for this key
+    if (_media_widget_state) {
+        auto const * saved_opts = _media_widget_state->tensorOptions(QString::fromStdString(tensor_key));
+        if (saved_opts) {
+            // Options already exist in state - use them
+            _tensor_configs[tensor_key] = std::make_unique<TensorDisplayOptions>(*saved_opts);
+            UpdateCanvas();
+            return;
+        }
+    }
+    
+    // No saved options - create with default color
     auto tensor_config = std::make_unique<TensorDisplayOptions>();
 
     // Assign color based on the current number of tensor configs
     tensor_config->hex_color() = DefaultDisplayValues::getColorForIndex(_tensor_configs.size());
 
     _tensor_configs[tensor_key] = std::move(tensor_config);
+    
+    // Sync new options to state
+    if (_media_widget_state && _tensor_configs.contains(tensor_key)) {
+        _media_widget_state->setOptions(QString::fromStdString(tensor_key), *_tensor_configs[tensor_key]);
+    }
 
     UpdateCanvas();
 }
@@ -312,6 +410,104 @@ void Media_Window::setGroupManager(GroupManager * group_manager) {
         connect(_group_manager, &GroupManager::groupRemoved, this, &Media_Window::onGroupChanged);
         connect(_group_manager, &GroupManager::groupModified, this, &Media_Window::onGroupChanged);
     }
+}
+
+void Media_Window::setMediaWidgetState(MediaWidgetState * state) {
+    _media_widget_state = state;
+    
+    // Initial sync: push current options to state
+    if (_media_widget_state) {
+        syncAllOptionsToState();
+    }
+}
+
+void Media_Window::syncAllOptionsToState() {
+    if (!_media_widget_state) return;
+    
+    // Sync line options
+    for (auto const & [key, opts] : _line_configs) {
+        if (opts) {
+            _media_widget_state->setOptions(QString::fromStdString(key), *opts);
+        }
+    }
+    
+    // Sync mask options
+    for (auto const & [key, opts] : _mask_configs) {
+        if (opts) {
+            _media_widget_state->setOptions(QString::fromStdString(key), *opts);
+        }
+    }
+    
+    // Sync point options
+    for (auto const & [key, opts] : _point_configs) {
+        if (opts) {
+            _media_widget_state->setOptions(QString::fromStdString(key), *opts);
+        }
+    }
+    
+    // Sync tensor options
+    for (auto const & [key, opts] : _tensor_configs) {
+        if (opts) {
+            _media_widget_state->setOptions(QString::fromStdString(key), *opts);
+        }
+    }
+    
+    // Sync interval options
+    for (auto const & [key, opts] : _interval_configs) {
+        if (opts) {
+            _media_widget_state->setOptions(QString::fromStdString(key), *opts);
+        }
+    }
+    
+    // Note: media_configs is now stored directly in state - no sync needed
+}
+
+void Media_Window::restoreOptionsFromState() {
+    if (!_media_widget_state) return;
+    
+    auto const & data = _media_widget_state->data();
+    
+    // Restore line options
+    for (auto const & [key, opts] : data.line_options) {
+        auto it = _line_configs.find(key);
+        if (it != _line_configs.end() && it->second) {
+            *(it->second) = opts;
+        }
+    }
+    
+    // Restore mask options
+    for (auto const & [key, opts] : data.mask_options) {
+        auto it = _mask_configs.find(key);
+        if (it != _mask_configs.end() && it->second) {
+            *(it->second) = opts;
+        }
+    }
+    
+    // Restore point options
+    for (auto const & [key, opts] : data.point_options) {
+        auto it = _point_configs.find(key);
+        if (it != _point_configs.end() && it->second) {
+            *(it->second) = opts;
+        }
+    }
+    
+    // Restore tensor options
+    for (auto const & [key, opts] : data.tensor_options) {
+        auto it = _tensor_configs.find(key);
+        if (it != _tensor_configs.end() && it->second) {
+            *(it->second) = opts;
+        }
+    }
+    
+    // Restore interval options
+    for (auto const & [key, opts] : data.interval_options) {
+        auto it = _interval_configs.find(key);
+        if (it != _interval_configs.end() && it->second) {
+            *(it->second) = opts;
+        }
+    }
+    
+    // Note: media_options are stored directly in state - no restore needed
 }
 
 void Media_Window::_plotTextOverlays() {
@@ -367,9 +563,12 @@ void Media_Window::_clearTextOverlays() {
 }
 
 void Media_Window::LoadFrame(int frame_id) {
-    // Get MediaData using the active media key
-    for (auto const & [media_key, media_config]: _media_configs) {
-        if (!media_config.get()->is_visible()) {
+    if (!_media_widget_state) return;
+    
+    // Get MediaData using the media keys from state
+    for (auto const & media_key : _media_widget_state->mediaOptionKeys()) {
+        auto const * media_config = _media_widget_state->mediaOptions(QString::fromStdString(media_key));
+        if (!media_config || !media_config->is_visible()) {
             continue;
         }
 
@@ -488,6 +687,7 @@ QImage::Format Media_Window::_getQImageFormat(std::string const & media_key) {
 }
 
 void Media_Window::_plotMediaData() {
+    if (!_media_widget_state) return;
 
     auto const current_time = _data_manager->getCurrentTime();
 
@@ -495,8 +695,9 @@ void Media_Window::_plotMediaData() {
 
     int total_visible_media = 0;
     std::string active_media_key;
-    for (auto const & [media_key, _media_config]: _media_configs) {
-        if (!_media_config.get()->is_visible()) continue;
+    for (auto const & media_key : _media_widget_state->mediaOptionKeys()) {
+        auto const * media_config = _media_widget_state->mediaOptions(QString::fromStdString(media_key));
+        if (!media_config || !media_config->is_visible()) continue;
         total_visible_media++;
         active_media_key = media_key;
     }
@@ -514,10 +715,13 @@ void Media_Window::_plotMediaData() {
             return;
         }
 
+        auto const * active_media_config = _media_widget_state->mediaOptions(QString::fromStdString(active_media_key));
+        if (!active_media_config) return;
+
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
             // Handle grayscale images with potential colormap application
-            bool apply_colormap = _media_configs[active_media_key].get()->colormap_options.active &&
-                                  _media_configs[active_media_key].get()->colormap_options.colormap != ColormapType::None;
+            bool apply_colormap = active_media_config->colormap_options.active &&
+                                  active_media_config->colormap_options.colormap != ColormapType::None;
 
             if (media->is8Bit()) {
                 // 8-bit grayscale processing
@@ -527,7 +731,7 @@ void Media_Window::_plotMediaData() {
                     auto colormap_data = ImageProcessing::apply_colormap_for_display(
                             unscaled_image_data_8bit,
                             media->getImageSize(),
-                            _media_configs[active_media_key].get()->colormap_options);
+                            active_media_config->colormap_options);
 
                     // Apply colormap and get BGRA data (OpenCV returns BGRA format)
                     unscaled_image = QImage(colormap_data.data(),
@@ -562,7 +766,7 @@ void Media_Window::_plotMediaData() {
                     auto colormap_data = ImageProcessing::apply_colormap_for_display(
                             converted_8bit,
                             media->getImageSize(),
-                            _media_configs[active_media_key].get()->colormap_options);
+                            active_media_config->colormap_options);
 
                     // Apply colormap and get BGRA data - make a deep copy to avoid use-after-free
                     unscaled_image = QImage(colormap_data.data(),
@@ -635,13 +839,15 @@ void Media_Window::_plotMediaData() {
 
 
 QImage Media_Window::_combineMultipleMedia() {
+    if (!_media_widget_state) return QImage();
 
     auto current_time = _data_manager->getCurrentTime();
 
     // Loop through configs and get the largest image size
     std::vector<ImageSize> media_sizes;
-    for (auto const & [media_key, media_config]: _media_configs) {
-        if (!media_config->is_visible()) continue;
+    for (auto const & media_key : _media_widget_state->mediaOptionKeys()) {
+        auto const * media_config = _media_widget_state->mediaOptions(QString::fromStdString(media_key));
+        if (!media_config || !media_config->is_visible()) continue;
 
         auto media = _data_manager->getData<MediaData>(media_key);
         if (!media) continue;
@@ -663,16 +869,17 @@ QImage Media_Window::_combineMultipleMedia() {
     QImage combined_image(width, height, QImage::Format_RGBA8888);
     combined_image.fill(qRgba(0, 0, 0, 255));// Start with black background
 
-    for (auto const & [media_key, media_config]: _media_configs) {
-        if (!media_config->is_visible()) continue;
+    for (auto const & media_key : _media_widget_state->mediaOptionKeys()) {
+        auto const * media_config = _media_widget_state->mediaOptions(QString::fromStdString(media_key));
+        if (!media_config || !media_config->is_visible()) continue;
 
         auto media = _data_manager->getData<MediaData>(media_key);
         if (!media || media->getFormat() != MediaData::DisplayFormat::Gray) {
             continue;// Skip non-grayscale media
         }
 
-        bool apply_colormap = media_config.get()->colormap_options.active &&
-                              media_config.get()->colormap_options.colormap != ColormapType::None;
+        bool apply_colormap = media_config->colormap_options.active &&
+                              media_config->colormap_options.colormap != ColormapType::None;
 
         if (media->is8Bit()) {
             // Handle 8-bit media data
@@ -682,7 +889,7 @@ QImage Media_Window::_combineMultipleMedia() {
                 auto colormap_data = ImageProcessing::apply_colormap_for_display(
                         media_data_8bit,
                         media->getImageSize(),
-                        media_config.get()->colormap_options);
+                        media_config->colormap_options);
 
                 // Use colormap data (BGRA format from OpenCV)
                 for (int y = 0; y < media->getHeight(); ++y) {
@@ -741,7 +948,7 @@ QImage Media_Window::_combineMultipleMedia() {
                 auto colormap_data = ImageProcessing::apply_colormap_for_display(
                         converted_8bit,
                         media->getImageSize(),
-                        media_config.get()->colormap_options);
+                        media_config->colormap_options);
 
                 // Use colormap data (BGRA format from OpenCV)
                 for (int y = 0; y < media->getHeight(); ++y) {
@@ -956,10 +1163,14 @@ void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
 }
 
 float Media_Window::getXAspect() const {
+    if (!_media_widget_state) {
+        return 1.0f;
+    }
 
     std::string active_media_key;
-    for (auto const & [config_key, config]: _media_configs) {
-        if (config->is_visible()) {
+    for (auto const & config_key : _media_widget_state->mediaOptionKeys()) {
+        auto const * config = _media_widget_state->mediaOptions(QString::fromStdString(config_key));
+        if (config && config->is_visible()) {
             active_media_key = config_key;
             break;
         }
@@ -980,10 +1191,14 @@ float Media_Window::getXAspect() const {
 }
 
 float Media_Window::getYAspect() const {
+    if (!_media_widget_state) {
+        return 1.0f;
+    }
 
     std::string active_media_key;
-    for (auto const & [config_key, config]: _media_configs) {
-        if (config->is_visible()) {
+    for (auto const & config_key : _media_widget_state->mediaOptionKeys()) {
+        auto const * config = _media_widget_state->mediaOptions(QString::fromStdString(config_key));
+        if (config && config->is_visible()) {
             active_media_key = config_key;
             break;
         }

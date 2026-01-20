@@ -28,6 +28,7 @@ class QKeyEvent;
 class QMenu;
 class MediaMask_Widget;
 class MediaText_Widget;
+class MediaWidgetState;
 class Media_Widget;
 class GroupManager;
 class LineData;
@@ -97,6 +98,30 @@ public:
     void setGroupManager(GroupManager * group_manager);
 
     /**
+     * @brief Set the MediaWidgetState for state synchronization
+     * 
+     * When set, display options will be synced to the state when they change,
+     * and can be restored from the state on workspace load.
+     * 
+     * @param state Pointer to the MediaWidgetState (owned by Media_Widget)
+     */
+    void setMediaWidgetState(MediaWidgetState * state);
+
+    /**
+     * @brief Sync all display options to the state object
+     * 
+     * Call this after loading options or when state needs to be updated.
+     */
+    void syncAllOptionsToState();
+
+    /**
+     * @brief Restore display options from the state object
+     * 
+     * Call this when restoring from a saved workspace.
+     */
+    void restoreOptionsFromState();
+
+    /**
      *
      *
      */
@@ -144,13 +169,6 @@ public:
     // Public methods for entity finding
     EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
     EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
-
-    [[nodiscard]] std::optional<MediaDisplayOptions *> getMediaConfig(std::string const & media_key) const {
-        if (_media_configs.find(media_key) == _media_configs.end()) {
-            return std::nullopt;
-        }
-        return _media_configs.at(media_key).get();
-    }
 
     [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
         if (_line_configs.find(line_key) == _line_configs.end()) {
@@ -222,6 +240,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     QWidget * _parent_widget = nullptr;
     GroupManager * _group_manager = nullptr;
+    MediaWidgetState * _media_widget_state = nullptr;  // Non-owning pointer for state sync
 
     QGraphicsPixmapItem * _canvasPixmap = nullptr;
     QImage _canvasImage;
@@ -254,7 +273,7 @@ private:
 
     std::vector<QPointF> _drawing_points;
 
-    std::unordered_map<std::string, std::unique_ptr<MediaDisplayOptions>> _media_configs;
+    // Display options stored in MediaWidgetState (media_configs removed - use state directly)
     std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
     std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
     std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
