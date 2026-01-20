@@ -1,6 +1,8 @@
 #ifndef MEDIA_WIDGET_HPP
 #define MEDIA_WIDGET_HPP
 
+#include "EditorState/SelectionContext.hpp"  // For SelectionSource
+
 #include <QWidget>
 
 #include <memory>
@@ -10,6 +12,7 @@ class DataManager;
 class Media_Window;
 class MediaText_Widget;
 class MediaProcessing_Widget;
+class MediaWidgetState;
 class Section;
 class WorkspaceManager;
 
@@ -74,6 +77,10 @@ private:
     bool _is_panning{false};
     QPoint _last_pan_point;
 
+    // Editor state for workspace serialization and inter-widget communication
+    std::shared_ptr<MediaWidgetState> _state;
+    SelectionContext * _selection_context{nullptr};
+
     void _applyZoom(double factor, bool anchor_under_mouse);
 
     void _createOptions();
@@ -85,6 +92,7 @@ private slots:
     void _updateCanvasSize();
     void _addFeatureToDisplay(QString const & feature, bool enabled);
     void _featureSelected(QString const & feature);
+    void _onExternalSelectionChanged(SelectionSource const & source);
 signals:
 };
 

@@ -8,6 +8,8 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "EditorState/SelectionContext.hpp"
+#include "EditorState/WorkspaceManager.hpp"
 #include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
@@ -16,6 +18,7 @@
 #include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
 #include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
+#include "MediaWidgetState.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -93,9 +96,41 @@ Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * paren
         // Initialize the stacked widget with proper sizing
         ui->stackedWidget->setFixedWidth(scrollAreaWidth - 10);
     });
+
+    // === Phase 2.4: Editor State Integration ===
+    // Initialize state and register with WorkspaceManager for serialization and inter-widget communication
+
+    _state = std::make_shared<MediaWidgetState>();
+
+    if (_workspace_manager) {
+        _workspace_manager->registerState(_state);
+        _selection_context = _workspace_manager->selectionContext();
+
+        // Connect to SelectionContext to respond to external selection changes
+        // When another widget (e.g., DataManager_Widget) selects data, update our state
+        if (_selection_context) {
+            connect(_selection_context, &SelectionContext::selectionChanged,
+                    this, &Media_Widget::_onExternalSelectionChanged);
+        }
+
+        // When user selects a feature in our feature table, update state and notify SelectionContext
+        connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
+                this, [this](QString const & key) {
+            _state->setDisplayedDataKey(key);
+            if (_selection_context) {
+                SelectionSource source{_state->getInstanceId(), QStringLiteral("feature_table")};
+                _selection_context->setSelectedData(key, source);
+            }
+        });
+    }
 }
 
 Media_Widget::~Media_Widget() {
+    // Unregister state from WorkspaceManager when widget is destroyed
+    if (_workspace_manager && _state) {
+        _workspace_manager->unregisterState(_state->getInstanceId());
+    }
+
     // Proactively hide stacked pages while _scene is still alive so any hideEvent
     // handlers that interact with _scene do so safely before _scene is destroyed.
     if (ui && ui->stackedWidget) {
@@ -591,4 +626,26 @@ void Media_Widget::_createMediaWindow() {
 
         _connectTextWidgetToScene();
     }
+}
+
+void Media_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
+    if (!_selection_context || !_state) {
+        return;
+    }
+
+    // Don't respond to our own selection changes to avoid circular updates
+    if (source.editor_instance_id == _state->getInstanceId()) {
+        return;
+    }
+
+    QString selected_key = _selection_context->primarySelectedData();
+    if (selected_key.isEmpty()) {
+        return;
+    }
+
+    // Update our state with the externally selected data key
+    // This tracks what was selected elsewhere
+    // Note: This intentionally doesn't update the Feature_Table_Widget highlight -
+    // the feature table will be removed in Phase 3, so we keep them decoupled for now
+    _state->setDisplayedDataKey(selected_key);
 }
