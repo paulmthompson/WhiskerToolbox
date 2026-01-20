@@ -36,7 +36,7 @@ bool MediaWidgetState::fromJson(std::string const & json) {
         }
 
         emit stateChanged();
-        emit displayedDataKeyChanged(QString::fromStdString(_data.displayed_data_key));
+        emit displayedDataKeyChanged(QString::fromStdString(_data.displayed_media_key));
         return true;
     }
     return false;
@@ -44,13 +44,13 @@ bool MediaWidgetState::fromJson(std::string const & json) {
 
 void MediaWidgetState::setDisplayedDataKey(QString const & key) {
     std::string const key_std = key.toStdString();
-    if (_data.displayed_data_key != key_std) {
-        _data.displayed_data_key = key_std;
+    if (_data.displayed_media_key != key_std) {
+        _data.displayed_media_key = key_std;
         markDirty();
         emit displayedDataKeyChanged(key);
     }
 }
 
 QString MediaWidgetState::displayedDataKey() const {
-    return QString::fromStdString(_data.displayed_data_key);
+    return QString::fromStdString(_data.displayed_media_key);
 }

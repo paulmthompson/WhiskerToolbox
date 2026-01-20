@@ -8,37 +8,35 @@
  * MediaWidgetState manages the serializable state for the Media_Widget,
  * enabling workspace save/restore and inter-widget communication via SelectionContext.
  * 
- * This is a minimal implementation for Phase 2.1 that tracks:
- * - Displayed data key (primary media being viewed)
+ * ## Current Implementation (Phase 2)
  * 
- * Future phases will add:
- * - Enabled features and their colors
- * - Zoom level and pan position
- * - Canvas size
- * - Per-feature display options
+ * This implementation uses MediaWidgetStateData which contains:
+ * - Displayed data key (primary media being viewed)
+ * - Viewport state (zoom, pan, canvas size)
+ * - Per-feature display options for all data types
+ * - Interaction preferences (line tools, mask brush, point selection)
+ * - Text overlays
+ * - Active tool modes
+ * 
+ * ## Future Phases
+ * 
+ * Phase 3 will expand this class with:
+ * - Full typed accessors for all state properties
+ * - Qt signals for state change notifications
+ * - Integration with sub-widgets
  * 
  * @see EditorState for base class documentation
+ * @see MediaWidgetStateData for the complete state structure
  * @see SelectionContext for inter-widget communication
  */
 
 #include "EditorState/EditorState.hpp"
+#include "MediaWidgetStateData.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
 #include <string>
-
-/**
- * @brief Serializable data structure for MediaWidgetState
- * 
- * This struct is designed for reflect-cpp serialization.
- * All members should be default-constructible and serializable.
- */
-struct MediaWidgetStateData {
-    std::string displayed_data_key;  ///< Primary data key being displayed
-    std::string instance_id;         ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Media Viewer";  ///< User-visible name
-};
 
 /**
  * @brief State class for Media_Widget

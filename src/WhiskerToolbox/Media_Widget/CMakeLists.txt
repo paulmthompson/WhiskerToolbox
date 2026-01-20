@@ -13,6 +13,7 @@ set(MEDIA_WIDGET_SOURCES
     Media_Widget.ui
     MediaWidgetState.hpp
     MediaWidgetState.cpp
+    MediaWidgetStateData.hpp
     DisplayOptions/DisplayOptions.hpp
     DisplayOptions/CoordinateTypes.hpp
 

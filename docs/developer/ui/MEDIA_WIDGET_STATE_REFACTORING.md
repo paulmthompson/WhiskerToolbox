@@ -194,185 +194,54 @@ All six display option types (Media, Line, Mask, Point, Tensor, DigitalInterval)
 
 ---
 
-## Phase 2: Create Comprehensive MediaWidgetStateData
+## Phase 2: Create Comprehensive MediaWidgetStateData ✅ COMPLETE
 
 **Goal**: Define the full state structure that MediaWidgetState will serialize
 
-**Duration**: 1 week
+**Status**: ✅ Complete (January 20, 2026)
 
-### 2.1 Define State Structure
+**Duration**: 1 day (completed same day as Phase 1)
 
-Use nested objects for clarity in the JSON output. `rfl::Flatten` is used within DisplayOptions (Phase 1) but **not** at the top-level state structure:
+### 2.1 Define State Structure ✅
 
-```cpp
-// src/WhiskerToolbox/Media_Widget/MediaWidgetStateData.hpp
+**Implementation**: [MediaWidgetStateData.hpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetStateData.hpp)
 
-#include "DisplayOptions/DisplayOptions.hpp"
-#include <rfl.hpp>
-#include <rfl/json.hpp>
-#include <map>
-#include <string>
-#include <vector>
+The complete state structure has been implemented with:
 
-// ==================== Text Overlay Data ====================
+The complete state structure has been implemented with:
+- `TextOverlayData` - Serializable text annotations with position, color, orientation
+- Interaction preferences - `LineInteractionPrefs`, `MaskInteractionPrefs`, `PointInteractionPrefs`
+- `ViewportState` - Zoom, pan, canvas dimensions
+- Tool mode enums - `LineToolMode`, `MaskToolMode`, `PointToolMode` (serialize as strings)
+- `MediaWidgetStateData` - Main structure containing all persistent state
 
-enum class TextOrientation { Horizontal, Vertical };
+**Key Design Decisions**:
+- Nested objects at top level for clear JSON structure (not `rfl::Flatten`)
+- Native enum serialization (e.g., `LineToolMode::Add` → `"Add"`)
+- All std:: types (no Qt dependencies)
+- Transient state excluded (hover positions, drag state, etc.)
 
-struct TextOverlayData {
-    int id = -1;
-    std::string text;
-    TextOrientation orientation = TextOrientation::Horizontal;  // Serializes as "Horizontal"
-    float x_position = 0.5f;
-    float y_position = 0.5f;
-    std::string color = "#ffffff";
-    int font_size = 12;
-    bool enabled = true;
-};
+### 2.2 Testing ✅
 
-// ==================== Interaction Preferences ====================
-// User preferences for tools (not per-feature state)
+**Tests**: [MediaWidgetStateData.test.cpp](../../../src/WhiskerToolbox/Media_Widget/MediaWidgetStateData.test.cpp)
 
-struct LineInteractionPrefs {
-    std::string smoothing_mode = "SimpleSmooth";  // "SimpleSmooth" or "PolynomialFit"
-    int polynomial_order = 3;
-    bool edge_snapping_enabled = false;
-    int edge_threshold = 100;
-    int edge_search_radius = 20;
-    int eraser_radius = 10;
-    float selection_threshold = 15.0f;
-};
+Comprehensive unit tests implemented covering:
+- Individual component serialization (TextOverlayData, ViewportState, preferences)
+- Enum string serialization validation
+- `rfl::Flatten` flat JSON structure verification  
+- Complex state round-trip serialization with all fields
+- JSON structure validation (nested vs flat)
 
-struct MaskInteractionPrefs {
-    int brush_size = 15;
-    bool hover_circle_visible = true;
-    bool allow_empty_mask = false;
-};
-
-struct PointInteractionPrefs {
-    float selection_threshold = 10.0f;
-};
-
-// ==================== Viewport State ====================
-
-struct ViewportState {
-    double zoom = 1.0;
-    double pan_x = 0.0;
-    double pan_y = 0.0;
-    int canvas_width = 640;
-    int canvas_height = 480;
-};
-
-// ==================== Tool Mode Enums ====================
-// Native enums serialize as strings automatically
-
-enum class LineMode { None, Add, Erase, Select, DrawAllFrames };
-enum class MaskMode { None, Brush };
-enum class PointMode { None, Select };
-
-// ==================== Main State Structure ====================
-
-/**
- * @brief Complete serializable state for MediaWidget
- * 
- * This struct contains all persistent state that should be saved/restored
- * when serializing a workspace. Transient state (hover positions, active
- * drag operations, etc.) is intentionally excluded.
- * 
- * Uses nested objects (not rfl::Flatten) for clear JSON structure.
- */
-struct MediaWidgetStateData {
-    // === Identity ===
-    std::string instance_id;
-    std::string display_name = "Media Viewer";
-    
-    // === Primary Display ===
-    std::string displayed_media_key;
-    
-    // === Viewport (nested object) ===
-    ViewportState viewport;
-    
-    // === Per-Feature Display Options ===
-    // Each DisplayOptions contains 'enabled' field via CommonDisplayFields
-    std::map<std::string, MediaDisplayOptions> media_options;
-    std::map<std::string, LineDisplayOptions> line_options;
-    std::map<std::string, MaskDisplayOptions> mask_options;
-    std::map<std::string, PointDisplayOptions> point_options;
-    std::map<std::string, DigitalIntervalDisplayOptions> interval_options;
-    std::map<std::string, TensorDisplayOptions> tensor_options;
-    
-    // === Interaction Preferences (nested objects) ===
-    LineInteractionPrefs line_prefs;
-    MaskInteractionPrefs mask_prefs;
-    PointInteractionPrefs point_prefs;
-    
-    // === Text Overlays ===
-    std::vector<TextOverlayData> text_overlays;
-    int next_overlay_id = 0;
-    
-    // === Active Tool State ===
-    LineMode active_line_mode = LineMode::None;  // Serializes as "None"
-    MaskMode active_mask_mode = MaskMode::None;
-    PointMode active_point_mode = PointMode::None;
-};
-```
-
-### 2.2 Example JSON Output
-
-The nested structure produces clear, readable JSON:
-
-```json
-{
-  "instance_id": "abc123",
-  "display_name": "Media Viewer",
-  "displayed_media_key": "video.mp4",
-  "viewport": {
-    "zoom": 2.0,
-    "pan_x": 100.0,
-    "pan_y": 50.0,
-    "canvas_width": 1920,
-    "canvas_height": 1080
-  },
-  "enabled_lines": {
-    "whisker_1": true,
-    "whisker_2": true
-  },
-  "line_options": {
-    "whisker_1": {
-      "hex_color": "#ff0000",
-      "alpha": 0.8,
-      "is_visible": true,
-      "line_thickness": 3,
-      "show_points": true
-    }
-  },
-  "line_prefs": {
-    "smoothing_mode": "PolynomialFit",
-    "polynomial_order": 5,
-    "edge_snapping_enabled": true
-  },
-  "text_overlays": [
-    {
-      "id": 0,
-      "text": "Frame: 100",
-      "orientation": "Horizontal",
-      "x_position": 0.1,
-      "y_position": 0.1
-    }
-  ],
-  "active_line_mode": "Add"
-}
-```
-
-Note: Within `line_options`, the `LineDisplayOptions` struct uses `rfl::Flatten<CommonDisplayFields>`, so its common fields (`enabled`, `is_visible`, `hex_color`, `alpha`) appear flat alongside type-specific fields (`line_thickness`, `show_points`).
+**All tests passing** ✅
 
 ### 2.3 State Size Estimation
 
-The structure serializes to approximately:
+Typical serialized state:
+Typical serialized state:
 - Base structure: ~500 bytes
 - Per enabled feature: ~200-500 bytes
 - Text overlays: ~100 bytes each
-
-Typical session (5-10 features): **2-5 KB** of JSON
+- **Typical session (5-10 features): 2-5 KB of JSON**
 
 ---
 
@@ -900,13 +769,13 @@ TEST_CASE("MediaWidgetState workspace integration") {
 | Phase | Duration | Status | Deliverables |
 |-------|----------|--------|--------------|
 | 1. Refactor DisplayOptions | 1 day | ✅ Complete | DisplayOptions.hpp serializable with rfl::Flatten + accessor methods |
-| 2. MediaWidgetStateData | 1 week | 🔲 Not Started | Complete state data structure |
+| 2. MediaWidgetStateData | 1 day | ✅ Complete | Complete state data structure + comprehensive tests |
 | 3. Expanded MediaWidgetState | 2 weeks | 🔲 Not Started | Full Qt wrapper with signals |
 | 4. Media_Widget Integration | 2 weeks | 🔲 Not Started | State reads/writes from Media_Widget |
 | 5. Sub-Widget Integration | 2 weeks | 🔲 Not Started | All sub-widgets connected to state |
-| 6. Testing | 1 week | 🔲 Not Started | Unit tests, integration tests |
+| 6. Testing | 1 week | 🔲 Not Started | Integration tests (unit tests done) |
 
-**Total: 9 weeks** (originally estimated) → **Actual: Phase 1 completed in 1 day**
+**Total: 9 weeks** (originally estimated) → **Actual: Phases 1-2 completed in 1 day**
 
 ---
 
@@ -915,13 +784,14 @@ TEST_CASE("MediaWidgetState workspace integration") {
 ```
 src/WhiskerToolbox/Media_Widget/
 ├── DisplayOptions/
-│   ├── DisplayOptions.hpp              # MODIFIED: Serializable with rfl::Flatten, native enums
+│   ├── DisplayOptions.hpp              # ✅ MODIFIED: Serializable with rfl::Flatten, native enums
 │   ├── CoordinateTypes.hpp             # Existing (unchanged)
-├── MediaWidgetState.hpp                # EXPANDED: Full state interface
-├── MediaWidgetState.cpp                # EXPANDED: Full implementation
-├── MediaWidgetStateData.hpp            # NEW: reflect-cpp data struct
-├── Media_Widget.hpp                    # Modified: Uses state
-├── Media_Widget.cpp                    # Modified: State integration
+├── MediaWidgetState.hpp                # ✅ UPDATED: Uses MediaWidgetStateData (Phase 3 will expand)
+├── MediaWidgetState.cpp                # ✅ UPDATED: Field name corrections
+├── MediaWidgetStateData.hpp            # ✅ NEW: Complete reflect-cpp data struct
+├── MediaWidgetStateData.test.cpp       # ✅ NEW: Comprehensive unit tests
+├── Media_Widget.hpp                    # TODO: Phase 4 - State integration
+├── Media_Widget.cpp                    # TODO: Phase 4 - State integration
 ├── Media_Window/
 │   └── Media_Window.hpp                # Modified: Reads from state
 ├── MediaLine_Widget/

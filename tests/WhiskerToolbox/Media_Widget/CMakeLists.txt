@@ -17,6 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_media_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/Media_Widget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/MediaWidgetState.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/MediaWidgetStateData.test.cpp
 )
 
 target_link_libraries(test_media_widget PRIVATE 
