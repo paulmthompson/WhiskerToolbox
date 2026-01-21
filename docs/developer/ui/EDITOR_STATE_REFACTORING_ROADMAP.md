@@ -408,47 +408,670 @@ signals:
 
 **Goal**: Create a unified properties panel that replaces per-widget Feature_Table_Widget instances.
 
+### 3.0 Widget Migration Tracking Table
+
+This table tracks all widgets managed by MainWindow and their migration progress toward the EditorState architecture.
+
+#### Primary Widgets (Dock-based, Core Functionality)
+
+| Widget | EditorState Class | SelectionContext | Factory | Notes |
+|--------|:------------------:|:----------------:|:-------:|-------|
+| **Media_Widget** | ✅ `MediaWidgetState` | ✅ | ❌ | Reference implementation - full hybrid architecture |
+| **DataManager_Widget** | ✅ `DataManagerWidgetState` | ✅ | ❌ | Basic state, selection propagation working |
+| **DataTransform_Widget** | ✅ `DataTransformWidgetState` | ✅ | ❌ | First Feature_Table_Widget removal - proved external selection |
+| **DataViewer_Widget** | ❌ | ❌ | ❌ | Next candidate for hybrid architecture migration |
+| **Analysis_Dashboard** | ❌ | ❌ | ❌ | Multiple sub-plot widgets, complex coordination |
+| **GroupManagementWidget** | ❌ | ❌ | ❌ | Interacts with EntityGroupManager |
+| **TableDesignerWidget** | ❌ | ❌ | ❌ | Complex table design state |
+| **TimeScrollBar** | ❌ | ❌ | ❌ | Global time navigation, may not need full state |
+| **Terminal_Widget** | ❌ | ❌ | ❌ | Output widget, minimal state needed |
+
+#### Secondary Widgets (Feature-specific)
+
+| Widget | EditorState Class | SelectionContext | Factory | Notes |
+|--------|:------------------:|:----------------:|:-------:|-------|
+| **Whisker_Widget** | ❌ | ❌ | ❌ | Whisker tracking controls |
+| **Tongue_Widget** | ❌ | ❌ | ❌ | Tongue tracking controls |
+| **ML_Widget** | ❌ | ❌ | ❌ | Machine learning inference |
+| **BatchProcessing_Widget** | ❌ | ❌ | ❌ | Batch pipeline execution |
+| **Export_Video_Widget** | ❌ | ❌ | ❌ | Video export configuration |
+| **Test_Widget** | ❌ | ❌ | ❌ | **Proof-of-concept candidate** for view/properties split |
+
+#### Loader Widgets (Modal/Semi-modal Data Import)
+
+| Widget | EditorState Class | SelectionContext | Factory | Notes |
+|--------|:------------------:|:----------------:|:-------:|-------|
+| **Point_Loader_Widget** | ❌ | ❌ | ❌ | Point data import |
+| **Mask_Loader_Widget** | ❌ | ❌ | ❌ | Mask data import |
+| **Line_Loader_Widget** | ❌ | ❌ | ❌ | Line data import |
+| **Digital_Interval_Loader_Widget** | ❌ | ❌ | ❌ | Interval data import |
+| **Digital_Event_Loader_Widget** | ❌ | ❌ | ❌ | Event data import |
+| **Tensor_Loader_Widget** | ❌ | ❌ | ❌ | Tensor data import |
+
+#### Legend
+- ✅ Implemented and tested
+- 🔄 In progress
+- ❌ Not yet implemented
+
+#### Migration Statistics
+- **Total Primary Widgets**: 9
+- **With EditorState**: 3 (33%)
+- **With SelectionContext**: 3 (33%)
+- **With Factory**: 0 (0%)
+
+#### Migration Priority for Phase 3
+
+1. **High Priority (Phase 3 prerequisites)**:
+   - DataViewer_Widget - Similar complexity to Media_Widget, good test of hybrid pattern
+   - Test_Widget - Ideal for PropertiesHost proof-of-concept (simple, isolated)
+
+2. **Medium Priority (Phase 5)**:
+   - Analysis_Dashboard - Benefits from state serialization for plot layouts
+   - GroupManagementWidget - Selection coordination with other widgets
+   - TableDesignerWidget - Complex state benefits from separation
+
+3. **Lower Priority (Phase 6+)**:
+   - Secondary widgets (Whisker, Tongue, ML, Batch, Export)
+   - Loader widgets (may only need minimal state for "recent" configurations)
+   - TimeScrollBar, Terminal_Widget (utility widgets with minimal state)
+
+#### Notes on Loader Widgets
+
+Loader widgets have a different lifecycle than primary widgets:
+- Often modal or transient (open, configure, load, close)
+- State needed primarily for "remember last configuration"
+- May not need full EditorState integration
+- Consider: `LoaderConfiguration` base class with simpler serialization
+
+**Decision (2026-01-21)**: Loader widgets remain as-is for now (lower priority).
+- Focus on primary widgets first
+- Loaders can emit signal on successful load
+- DataManager_Widget or SelectionContext can listen and auto-select newly loaded data
+- Revisit loader state management in Phase 6+ if needed
+
+#### Design Decisions Record
+
+| Decision | Date | Choice | Rationale |
+|----------|------|--------|-----------|
+| Loader widget priority | 2026-01-21 | Defer (Phase 6+) | Focus on primary widgets, loaders are transient |
+| EditorFactory adoption | 2026-01-21 | Incremental (new/refactored only) | Prove pattern first, special needs will reduce with refactoring |
+| State ownership | 2026-01-21 | shared_ptr in both WorkspaceManager and widgets | WM needs ownership for serialization/undo; widgets need direct access |
+| UI zones layout | 2026-01-21 | Left: Feature_Table + Groups; Right: Properties | Clear separation of selection (left) vs configuration (right) |
+
 ### 3.1 PropertiesHost Widget (Week 9)
 
-Create a context-sensitive properties container:
+**Goal**: Create a context-sensitive properties container that can display appropriate property panels based on the active editor and selected data.
+
+**Core Concept**: Instead of each widget having its own embedded properties/Feature_Table_Widget, we create a single PropertiesHost that:
+1. Observes SelectionContext for active editor and selected data
+2. Dynamically swaps the appropriate properties panel
+3. Allows widgets to be "split" into view + properties components sharing the same state
+
+#### 3.1.1 PropertiesHost Design
+
+```cpp
+// src/WhiskerToolbox/EditorState/PropertiesHost.hpp
+
+/**
+ * @brief Context-sensitive properties container
  * 
  * PropertiesHost observes SelectionContext and shows the appropriate
  * properties panel based on:
- * 1. Active editor type
- * 2. Selected data type
- * 3. Last interaction context
+ * 1. Active editor type (e.g., MediaWidget properties when Media_Widget is focused)
+ * 2. Selected data type (e.g., LineData properties when a line is selected)
+ * 3. Last interaction context (prioritizes most recent meaningful interaction)
+ * 
+ * The PropertiesHost uses a QStackedWidget internally to efficiently swap
+ * between property panels without recreating them.
+ * 
+ * ## Usage Pattern
+ * 
+ * 1. MainWindow creates PropertiesHost and places it in the Properties zone
+ * 2. Each widget type registers its properties factory
+ * 3. When user interacts with a widget, SelectionContext updates
+ * 4. PropertiesHost responds by showing the appropriate panel
+ * 
+ * ## View/Properties Split
+ * 
+ * Widgets that want to support the split pattern must:
+ * - Derive their EditorState from EditorState
+ * - Implement a "View" component that displays data
+ * - Implement a "Properties" component that edits state
+ * - Both components reference the SAME state instance
+ * 
+ * Example: Test_Widget could be split into:
+ * - TestWidgetView: Shows visualization, receives state
+ * - TestWidgetProperties: Shows controls, modifies state
+ * - TestWidgetState: Shared between both, owned by WorkspaceManager
  */
 class PropertiesHost : public QWidget {
     Q_OBJECT
 
 public:
-    PropertiesHost(WorkspaceManager* workspace_manager,
-                   QWidget* parent = nullptr);
+    explicit PropertiesHost(WorkspaceManager* workspace_manager,
+                            QWidget* parent = nullptr);
+    ~PropertiesHost() override;
 
-    /// @brief Register a properties widget for a specific editor type
-    void registerPropertiesWidget(QString const& editor_type,
-                                  std::function<QWidget*(EditorState*)> factory);
+    // ========== Factory Registration ==========
 
-    /// @brief Register a properties widget for a specific data type
-    void registerDataPropertiesWidget(QString const& data_type,
-                                      std::function<QWidget*(QString const& data_key)> factory);
+    /**
+     * @brief Register a properties widget factory for an editor type
+     * 
+     * When the active editor is of this type, the factory is called
+     * to create (or reuse) the properties widget for that editor.
+     * 
+     * @param editor_type The EditorState::typeId() this factory handles
+     * @param factory Function that creates properties widget given the state
+     */
+    void registerEditorPropertiesFactory(
+        QString const& editor_type,
+        std::function<QWidget*(std::shared_ptr<EditorState>)> factory);
+
+    /**
+     * @brief Register a properties widget factory for a data type
+     * 
+     * When data of this type is selected, the factory creates a
+     * properties widget for inspecting/editing that data.
+     * 
+     * @param data_type DM_DataType string representation
+     * @param factory Function that creates properties widget given data key
+     */
+    void registerDataPropertiesFactory(
+        QString const& data_type,
+        std::function<QWidget*(QString const& data_key, DataManager*)> factory);
+
+    // ========== Mode Control ==========
+
+    enum class DisplayMode {
+        EditorProperties,    // Show active editor's properties
+        DataProperties,      // Show selected data's properties
+        Auto                 // Automatically choose based on context
+    };
+
+    void setDisplayMode(DisplayMode mode);
+    [[nodiscard]] DisplayMode displayMode() const;
 
 private slots:
-    void onPropertiesContextChanged();
+    void onActiveEditorChanged(QString const& editor_id);
+    void onSelectionChanged(SelectionSource const& source);
+    void onPropertiesContextChanged(QString const& context_id);
 
 private:
     WorkspaceManager* _workspace_manager;
     QStackedWidget* _stack;
+    QLabel* _empty_label;  // Shown when no context available
     
-    // Cache of created property widgets
-    std::map<QString, QWidget*> _editor_properties;
-    std::map<QString, QWidget*> _data_properties;
+    DisplayMode _mode = DisplayMode::Auto;
+    
+    // Cache of created property widgets (avoid recreation)
+    // Key: editor instance ID or "data:" + data_key
+    std::map<QString, QWidget*> _cached_widgets;
     
     // Factories
-    std::map<QString, std::function<QWidget*(EditorState*)>> _editor_factories;
-    std::map<QString, std::function<QWidget*(QString)>> _data_factories;
+    std::map<QString, std::function<QWidget*(std::shared_ptr<EditorState>)>> _editor_factories;
+    std::map<QString, std::function<QWidget*(QString, DataManager*)>> _data_factories;
+
+    void updateDisplay();
+    QWidget* getOrCreateEditorProperties(std::shared_ptr<EditorState> state);
+    QWidget* getOrCreateDataProperties(QString const& data_key, QString const& data_type);
 };
 ```
+
+#### 3.1.2 View/Properties Split Pattern
+
+The key architectural pattern is that a "widget" becomes two components sharing state:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     EditorState                             │
+│  (e.g., TestWidgetState - holds all serializable state)    │
+└─────────────────────────────────────────────────────────────┘
+         │                                    │
+         │ shared_ptr                         │ shared_ptr
+         ▼                                    ▼
+┌─────────────────────┐          ┌─────────────────────────────┐
+│   View Component    │          │   Properties Component      │
+│  (TestWidgetView)   │          │  (TestWidgetProperties)     │
+│                     │          │                             │
+│  - Displays data    │          │  - Controls/settings        │
+│  - User interaction │          │  - Feature enable/disable   │
+│  - Canvas/viewport  │          │  - Color pickers            │
+│                     │          │  - Configuration            │
+└─────────────────────┘          └─────────────────────────────┘
+         │                                    │
+         │ reads state                        │ writes state
+         │ emits user actions                 │ (through setters)
+         │                                    │
+         ▼                                    ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 State signals notify both                   │
+│           (e.g., zoomChanged, featureEnabledChanged)       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**State Ownership Model**:
+
+Both `WorkspaceManager` and widgets hold `shared_ptr<EditorState>`. This is intentional:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    WorkspaceManager                         │
+│  (holds shared_ptr for each registered state)              │
+│                                                             │
+│  Responsibilities:                                          │
+│  - Registry of all active states                           │
+│  - Workspace serialization (save/restore)                  │
+│  - State restoration after undo/redo                       │
+│  - Can send restored state to widgets                      │
+└─────────────────────────────────────────────────────────────┘
+         │
+         │ shared_ptr (WorkspaceManager owns for persistence)
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     EditorState                             │
+│  (e.g., TestWidgetState, MediaWidgetState)                 │
+└─────────────────────────────────────────────────────────────┘
+         ▲
+         │ shared_ptr (widgets also hold for direct access)
+         │
+┌────────┴────────┐
+│   View/Props    │
+│    Widgets      │
+└─────────────────┘
+```
+
+**Why shared_ptr for both?**
+1. **WorkspaceManager needs ownership** for serialization, command pattern, undo/redo
+2. **Widgets need direct access** without going through WorkspaceManager for every read/write
+3. **State outlives widgets** - when a dock is closed and reopened, state persists
+4. **Restoration flow**: WorkspaceManager can restore state → widgets automatically see changes via signals
+
+**Implementation Pattern**:
+
+```cpp
+// TestWidgetState - the shared state
+class TestWidgetState : public EditorState {
+    Q_OBJECT
+public:
+    explicit TestWidgetState(std::shared_ptr<DataManager> data_manager);
+    
+    // Standard pattern: hold DataManager reference
+    [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
+    
+    // Getters
+    [[nodiscard]] bool featureEnabled(QString const& key) const;
+    [[nodiscard]] QColor featureColor(QString const& key) const;
+    [[nodiscard]] double zoom() const;
+    
+    // Setters (emit signals)
+    void setFeatureEnabled(QString const& key, bool enabled);
+    void setFeatureColor(QString const& key, QColor color);
+    void setZoom(double zoom);
+    
+signals:
+    void featureEnabledChanged(QString key, bool enabled);
+    void featureColorChanged(QString key, QColor color);
+    void zoomChanged(double zoom);
+
+private:
+    std::shared_ptr<DataManager> _data_manager;
+    TestWidgetStateData _data;
+};
+
+// TestWidgetView - the visualization component
+class TestWidgetView : public QWidget {
+    Q_OBJECT
+public:
+    explicit TestWidgetView(std::shared_ptr<TestWidgetState> state,
+                           QWidget* parent = nullptr);
+    
+private slots:
+    void onZoomChanged(double zoom);
+    void onFeatureChanged(QString key, bool enabled);
+    
+private:
+    std::shared_ptr<TestWidgetState> _state;  // Shared ownership
+    // Access DataManager via _state->dataManager()
+    // Canvas, graphics view, etc.
+};
+
+// TestWidgetProperties - the properties component
+class TestWidgetProperties : public QWidget {
+    Q_OBJECT
+public:
+    explicit TestWidgetProperties(std::shared_ptr<TestWidgetState> state,
+                                  QWidget* parent = nullptr);
+    
+private slots:
+    void onEnableCheckboxToggled(bool checked);
+    void onColorButtonClicked();
+    
+private:
+    std::shared_ptr<TestWidgetState> _state;  // Shared ownership
+    // Checkboxes, color pickers, sliders, etc.
+};
+```
+
+#### 3.1.3 Test_Widget Proof-of-Concept
+
+**Rationale**: Test_Widget is the ideal candidate for proving the View/Properties split because:
+1. It's simple and isolated (no complex data dependencies)
+2. It's already designed for testing new features
+3. Changes won't affect production workflows
+4. We can iterate quickly on the pattern
+
+**Concrete Features for Test_Widget**:
+
+The Test_Widget should demonstrate the View/Properties split with meaningful but simple features:
+
+```cpp
+// TestWidgetStateData.hpp
+struct TestWidgetStateData {
+    // Feature toggles (demonstrated with checkboxes in properties)
+    bool show_grid = true;
+    bool show_crosshair = false;
+    bool enable_animation = false;
+    
+    // Color (demonstrated with color picker in properties)
+    std::string highlight_color = "#FF5500";
+    
+    // Numeric value (demonstrated with slider in properties)
+    double zoom_level = 1.0;
+    int grid_spacing = 50;
+    
+    // Text (demonstrated with line edit in properties)
+    std::string label_text = "Test Label";
+};
+```
+
+**TestWidgetView** should display:
+- A simple canvas/graphics area
+- Optional grid overlay (controlled by `show_grid`, `grid_spacing`)
+- Optional crosshair (controlled by `show_crosshair`)
+- A label showing `label_text` in `highlight_color`
+- Zoom controlled by `zoom_level`
+- Optional animation (simple moving element when `enable_animation` is true)
+
+**TestWidgetProperties** should provide:
+- Checkboxes for `show_grid`, `show_crosshair`, `enable_animation`
+- Color picker button for `highlight_color`
+- Slider for `zoom_level` (range 0.1 to 5.0)
+- Spinbox for `grid_spacing` (range 10 to 200)
+- Line edit for `label_text`
+
+**Implementation Steps**:
+
+1. **Create TestWidgetState** (Day 1)
+   - Define `TestWidgetStateData` with properties above
+   - Implement serialization with reflect-cpp
+   - Add signals for each property change
+   - Accept `shared_ptr<DataManager>` (standard pattern)
+
+2. **Create TestWidgetView** (Day 2)
+   - Simple QGraphicsView-based canvas
+   - Accept `shared_ptr<TestWidgetState>` and `shared_ptr<DataManager>`
+   - Render grid, crosshair, label based on state
+   - Connect to state signals to update display
+
+3. **Create TestWidgetProperties** (Day 2)
+   - QWidget with form layout
+   - Accept `shared_ptr<TestWidgetState>`
+   - UI controls that read/write state
+   - Connect UI signals to state setters
+
+4. **Register with PropertiesHost** (Day 3)
+   - Register factory: `"TestWidget"` → TestWidgetProperties
+   - Verify properties appear in right panel when TestWidgetView is active
+
+5. **Validate Pattern** (Day 4)
+   - Confirm state changes reflect in both components
+   - Confirm serialization works (save/restore workspace)
+   - Document lessons learned
+
+**Files to Create**:
+```
+src/WhiskerToolbox/Test_Widget/
+├── TestWidgetState.hpp
+├── TestWidgetState.cpp
+├── TestWidgetStateData.hpp
+├── TestWidgetView.hpp
+├── TestWidgetView.cpp
+├── TestWidgetProperties.hpp
+├── TestWidgetProperties.cpp
+└── Test_Widget.hpp/.cpp (legacy, eventually remove)
+```
+
+### 3.1.4 EditorFactory and Widget Creation
+
+Currently, MainWindow directly creates widgets with hardcoded logic. The EditorFactory centralizes this:
+
+```cpp
+// src/WhiskerToolbox/EditorState/EditorFactory.hpp
+
+/**
+ * @brief Centralized widget creation and registration
+ * 
+ * EditorFactory provides:
+ * 1. Registry of all editor types that can be created
+ * 2. Factory functions for creating state + view pairs
+ * 3. Factory functions for creating properties widgets
+ * 4. Metadata about editors (name, icon, default zone)
+ * 
+ * This replaces the scattered widget creation code in MainWindow.
+ */
+class EditorFactory : public QObject {
+    Q_OBJECT
+
+public:
+    /// @brief Describes an editor type
+    struct EditorTypeInfo {
+        QString type_id;           // Unique identifier (e.g., "MediaWidget")
+        QString display_name;      // User-facing name (e.g., "Media Viewer")
+        QString icon_path;         // Path to icon resource
+        QString menu_path;         // Menu location (e.g., "View/Widgets")
+        ZoneManager::Zone default_zone;  // Where to initially place the widget
+        bool allow_multiple;       // Can user open multiple instances?
+    };
+
+    /// @brief Result of creating an editor
+    struct EditorInstance {
+        std::shared_ptr<EditorState> state;
+        QWidget* view;
+        QWidget* properties;  // May be nullptr if not split
+    };
+
+    explicit EditorFactory(WorkspaceManager* workspace_manager,
+                          DataManager* data_manager,
+                          QObject* parent = nullptr);
+
+    // ========== Registration ==========
+
+    /**
+     * @brief Register an editor type with its factories
+     * 
+     * @param info Metadata about the editor type
+     * @param state_factory Creates the EditorState subclass
+     * @param view_factory Creates the view widget given state
+     * @param properties_factory Creates the properties widget (optional)
+     */
+    void registerEditorType(
+        EditorTypeInfo const& info,
+        std::function<std::shared_ptr<EditorState>()> state_factory,
+        std::function<QWidget*(std::shared_ptr<EditorState>)> view_factory,
+        std::function<QWidget*(std::shared_ptr<EditorState>)> properties_factory = nullptr
+    );
+
+    // ========== Creation ==========
+
+    /// @brief Create a new editor instance (state + view + optional properties)
+    [[nodiscard]] EditorInstance createEditor(QString const& type_id);
+
+    /// @brief Create only the state (for deserialization)
+    [[nodiscard]] std::shared_ptr<EditorState> createState(QString const& type_id);
+
+    /// @brief Create properties widget for existing state
+    [[nodiscard]] QWidget* createProperties(std::shared_ptr<EditorState> state);
+
+    // ========== Queries ==========
+
+    [[nodiscard]] std::vector<EditorTypeInfo> availableEditors() const;
+    [[nodiscard]] bool hasEditorType(QString const& type_id) const;
+    [[nodiscard]] EditorTypeInfo getEditorInfo(QString const& type_id) const;
+
+signals:
+    void editorTypeRegistered(QString type_id);
+    void editorCreated(QString instance_id);
+
+private:
+    WorkspaceManager* _workspace_manager;
+    DataManager* _data_manager;
+    
+    struct EditorRegistration {
+        EditorTypeInfo info;
+        std::function<std::shared_ptr<EditorState>()> state_factory;
+        std::function<QWidget*(std::shared_ptr<EditorState>)> view_factory;
+        std::function<QWidget*(std::shared_ptr<EditorState>)> properties_factory;
+    };
+    
+    std::map<QString, EditorRegistration> _registrations;
+};
+```
+
+#### 3.1.5 Registration Example
+
+When the application starts, MainWindow registers all editor types:
+
+```cpp
+void MainWindow::registerEditorTypes() {
+    // Media Widget
+    _editor_factory->registerEditorType(
+        {
+            .type_id = "MediaWidget",
+            .display_name = "Media Viewer",
+            .icon_path = ":/icons/media.png",
+            .menu_path = "View/Widgets",
+            .default_zone = ZoneManager::Zone::MainEditor,
+            .allow_multiple = true
+        },
+        // State factory
+        []() { return std::make_shared<MediaWidgetState>(); },
+        // View factory
+        [this](auto state) {
+            auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
+            return new MediaWidgetView(_data_manager, _time_scrollbar, media_state, this);
+        },
+        // Properties factory
+        [this](auto state) {
+            auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
+            return new MediaWidgetProperties(media_state, this);
+        }
+    );
+    
+    // Test Widget (proof of concept)
+    _editor_factory->registerEditorType(
+        {
+            .type_id = "TestWidget",
+            .display_name = "Test Widget",
+            .icon_path = ":/icons/test.png",
+            .menu_path = "View/Development",
+            .default_zone = ZoneManager::Zone::MainEditor,
+            .allow_multiple = false
+        },
+        []() { return std::make_shared<TestWidgetState>(); },
+        [this](auto state) {
+            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
+            return new TestWidgetView(test_state, this);
+        },
+        [this](auto state) {
+            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
+            return new TestWidgetProperties(test_state, this);
+        }
+    );
+    
+    // DataViewer (future)
+    // Analysis Dashboard (future)
+    // etc.
+}
+```
+
+#### 3.1.6 MainWindow Simplification
+
+With EditorFactory, MainWindow's widget creation becomes uniform:
+
+```cpp
+// Before (scattered, duplicated code in openXXXWidget methods)
+void MainWindow::openTestWidget() {
+    std::string const key = "Test_widget";
+    if (!_widgets.contains(key)) {
+        auto test_widget = std::make_unique<Test_Widget>(this);
+        test_widget->setObjectName(key);
+        registerDockWidget(key, test_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(test_widget);
+    }
+    showDockWidget(key);
+}
+
+// After (unified through factory)
+void MainWindow::openEditor(QString const& type_id) {
+    auto info = _editor_factory->getEditorInfo(type_id);
+    
+    // Check if single-instance and already open
+    if (!info.allow_multiple) {
+        auto existing = _workspace_manager->getStatesByType(type_id);
+        if (!existing.empty()) {
+            // Just show existing
+            showDockWidget(existing[0]->getInstanceId());
+            return;
+        }
+    }
+    
+    // Create new instance
+    auto instance = _editor_factory->createEditor(type_id);
+    
+    // Register state with workspace
+    _workspace_manager->registerState(instance.state);
+    
+    // Create dock widget
+    QString dock_key = instance.state->getInstanceId();
+    auto dock_widget = new ads::CDockWidget(dock_key);
+    dock_widget->setWidget(instance.view);
+    
+    // Add to appropriate zone
+    _zone_manager->addToZone(dock_widget, info.default_zone);
+    
+    showDockWidget(dock_key.toStdString());
+}
+
+// Menu action connects to generic open
+connect(ui->actionTest_Widget, &QAction::triggered, this, 
+    [this]() { openEditor("TestWidget"); });
+```
+
+### 3.1.7 Phase 3.1 Deliverables
+
+| Deliverable | Priority | Status |
+|-------------|----------|--------|
+| `PropertiesHost.hpp/.cpp` | High | 📋 |
+| `EditorFactory.hpp/.cpp` | High | 📋 |
+| `TestWidgetState.hpp/.cpp` | High | 📋 |
+| `TestWidgetView.hpp/.cpp` | High | 📋 |
+| `TestWidgetProperties.hpp/.cpp` | High | 📋 |
+| Register Test_Widget with EditorFactory | High | 📋 |
+| Integrate PropertiesHost into MainWindow layout | High | 📋 |
+| Unit tests for PropertiesHost | Medium | 📋 |
+| Unit tests for EditorFactory | Medium | 📋 |
+| Integration test: TestWidget view/properties split | High | 📋 |
+| Documentation update | Medium | 📋 |
+
+**Success Criteria**:
+1. ✅ Test_Widget can be opened via EditorFactory
+2. ✅ TestWidgetView appears in main editor zone
+3. ✅ TestWidgetProperties appears in PropertiesHost when TestWidgetView is active
+4. ✅ State changes in properties reflect in view (and vice versa)
+5. ✅ State serializes/deserializes correctly
+6. ✅ Pattern documented for other widgets to follow
+
 
 ### 3.2 Standard UI Zones
 
@@ -459,16 +1082,17 @@ Define standard zones in MainWindow layout:
 │  Menu Bar                                                        │
 ├────────────────┬─────────────────────────────┬───────────────────┤
 │                │                             │                   │
-│   Toolbox      │     Main Editor Area        │   Properties      │
-│   (Outliner)   │     (Media, DataViewer,     │   (Context-       │
-│                │      Plots, etc.)           │    sensitive)     │
-│   - Data Tree  │                             │                   │
-│   - Groups     │                             │   - Feature       │
-│                │                             │     Table         │
-│                │                             │   - Editor        │
-│                │                             │     Properties    │
-│                │                             │   - Data          │
-│                │                             │     Properties    │
+│   Outliner     │     Main Editor Area        │   Properties      │
+│   (Left)       │     (Center)                │   (Right)         │
+│                │                             │                   │
+│   - Feature    │     Media_Widget            │   - Editor-       │
+│     Table      │     DataViewer_Widget       │     specific      │
+│     (from DM)  │     Analysis plots          │     properties    │
+│                │     Test_Widget view        │   - Data-type     │
+│   - Group      │     etc.                    │     properties    │
+│     Manager    │                             │   - Context-      │
+│                │                             │     sensitive     │
+│                │                             │     controls      │
 │                │                             │                   │
 ├────────────────┴─────────────────────────────┴───────────────────┤
 │  Timeline / DataViewer Strip (optional)                          │
@@ -476,6 +1100,21 @@ Define standard zones in MainWindow layout:
 │  Status Bar / Terminal                                           │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+**Zone Responsibilities**:
+
+| Zone | Contents | Purpose |
+|------|----------|--------|
+| **Left (Outliner)** | Feature_Table_Widget, GroupManagementWidget | Data selection, entity management, global navigation |
+| **Center (Main Editor)** | Media_Widget, DataViewer_Widget, plots, views | Primary visualization and interaction |
+| **Right (Properties)** | PropertiesHost with context-sensitive panels | Editor-specific settings, data-type properties |
+| **Bottom (Timeline)** | TimeScrollBar, optional DataViewer strip | Time navigation, temporal context |
+| **Bottom (Output)** | Terminal_Widget | Logs, command output |
+
+**Key Design Decision**: Feature_Table_Widget (currently in DataManager_Widget) and GroupManagementWidget move to the **left** panel as the primary data selection interface. The **right** panel becomes the unified PropertiesHost that shows context-sensitive properties based on:
+1. Which editor is active (e.g., MediaWidgetProperties when Media_Widget is focused)
+2. What data type is selected (e.g., LineDataProperties when a line key is selected)
+3. Last meaningful interaction context
 
 ### 3.3 Zone Manager
 
@@ -970,18 +1609,21 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, WorkspaceManager, SelectionContext |
 | 2. State Integration & Communication | ✅ COMPLETE | 8 weeks | Minimal states, inter-widget communication, **comprehensive Media_Widget migration**, first Feature_Table removal |
 | 2.6.1 Media_Widget Hybrid Architecture | ✅ COMPLETE | 2 weeks | DisplayOptionsRegistry, signal consolidation, viewport state, 6 sub-widgets integrated |
-| 3. Central Properties Zone | 📋 PLANNED | 3 weeks | PropertiesHost, unified Feature_Table_Widget |
+| 3.0 Widget Migration Tracking | 📋 PLANNED | - | Migration tracking table, priority assessment |
+| 3.1 PropertiesHost & EditorFactory | 📋 PLANNED | 2 weeks | PropertiesHost, EditorFactory, Test_Widget proof-of-concept |
+| 3.2-3.3 UI Zones | 📋 PLANNED | 1 week | Standard UI zones, ZoneManager |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
 | 5. Widget Migrations | 🔄 IN PROGRESS | 8 weeks | DataViewer (follow Media pattern), Analysis, Tables |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~11 weeks | Remaining: ~19 weeks (~4.5 months)**
+**Elapsed: ~11 weeks | Remaining: ~21 weeks (~5 months)**
 
-**Progress**: 52% Complete
+**Progress**: 48% Complete
 - Phase 1: Core infrastructure ✅
 - Phase 2: State integration & communication ✅  
   - Phase 2.6.1: Media_Widget hybrid architecture ✅ (reference implementation)
   - Phase 2.7: DataTransform external selection ✅
+- Phase 3: Widget tracking table and PropertiesHost design 📋
 - Phase 5: Widget migrations 🔄 (1 of 6 widgets complete)
 
 **Key Accomplishment**: Media_Widget serves as comprehensive reference implementation with:
@@ -990,11 +1632,47 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 - Single source of truth enforcement (no duplicate storage)
 - Full state serialization (viewport, options, preferences, overlays, modes)
 
-**Next Steps**: Apply Media_Widget patterns to DataViewer_Widget
+**Widget Migration Status** (from Phase 3.0 tracking table):
+- Primary widgets with EditorState: 3/9 (33%)
+- Primary widgets with SelectionContext: 3/9 (33%)
+- Primary widgets with Factory: 0/9 (0%)
+
+**Next Steps**: 
+1. **Immediate**: Implement Test_Widget proof-of-concept for view/properties split
+2. **Then**: Implement PropertiesHost and EditorFactory
+3. **Parallel**: Continue DataViewer_Widget state migration
 
 ## Next Steps
 
-### Immediate: Phase 5 - DataViewer_Widget Migration (Weeks 11-13)
+### Immediate: Phase 3.1 - Test_Widget Proof-of-Concept (Week 12)
+
+**Goal**: Use Test_Widget to prove the View/Properties split pattern before applying to complex widgets.
+
+**Approach**:
+1. Create TestWidgetState with simple properties (2-3 features, zoom, etc.)
+2. Split Test_Widget into TestWidgetView and TestWidgetProperties
+3. Both components share the same TestWidgetState instance
+4. Create basic PropertiesHost infrastructure
+5. Register TestWidgetProperties with PropertiesHost
+6. Validate the pattern works end-to-end
+
+**Why Test_Widget First**:
+- Simple, isolated, won't break production workflows
+- Fast iteration on the pattern
+- Clear success criteria (state shared, both respond to changes)
+- Lessons learned inform Media_Widget migration later
+
+### Then: Phase 3.1 continued - EditorFactory (Week 13)
+
+**Goal**: Replace scattered widget creation in MainWindow with centralized factory.
+
+**Approach**:
+1. Create EditorFactory with registration API
+2. Register Test_Widget (already has state/view/properties)
+3. Migrate openTestWidget() to use factory
+4. Validate pattern before applying to other widgets
+
+### Parallel: Phase 5 - DataViewer_Widget Migration (Weeks 11-14)
 
 **Prerequisites**: 
 - Phase 2 complete ✅
@@ -1019,11 +1697,12 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 - Full serialization support
 - Second reference implementation validated
 
-### Future: Phase 3 - Central Properties Zone (Weeks 14-16)
+### Future: Phase 3.2-3.3 - UI Zones (Weeks 15-16)
 
 **Prerequisites**: 
-- Multiple widgets with mature state implementations (Media ✅, DataTransform ✅, DataViewer 🔄)
-- Pattern validation across different widget types
+- Test_Widget proof-of-concept complete
+- PropertiesHost and EditorFactory working
+- Pattern validated
 
 **Goal**: Create unified properties panel that replaces per-widget Feature_Table_Widget instances
 
