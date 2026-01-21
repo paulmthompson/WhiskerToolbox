@@ -47,14 +47,14 @@ bool EditorRegistry::registerType(EditorTypeInfo info) {
         return false;
     }
 
-    if (!info.create_state) {
-        std::cerr << "EditorRegistry::registerType: create_state cannot be null for "
-                  << info.type_id.toStdString() << std::endl;
+    // Validate factory requirements:
+    // - Either create_editor_custom is set (handles everything), or
+    // - create_state must be set (create_view is optional for state-only types)
+    if (!info.create_editor_custom && !info.create_state) {
+        std::cerr << "EditorRegistry::registerType: either create_state or create_editor_custom "
+                  << "must be provided for " << info.type_id.toStdString() << std::endl;
         return false;
     }
-
-    // Note: create_view is optional for state-only registrations (e.g., testing)
-    // createEditor() will fail if called without create_view, but createState() will work
 
     if (_types.contains(info.type_id)) {
         std::cerr << "EditorRegistry::registerType: type_id already registered: "
@@ -124,10 +124,20 @@ EditorRegistry::EditorInstance EditorRegistry::createEditor(QString const & type
 
     auto const & type = it->second;
 
-    // Check that we have a view factory (required for createEditor)
+    // Use custom factory if provided
+    if (type.create_editor_custom) {
+        auto instance = type.create_editor_custom(this);
+        if (instance.state && instance.view) {
+            emit editorCreated(instance.state->getInstanceId(), type_id);
+        }
+        return instance;
+    }
+
+    // Standard factory path: check that we have a view factory (required)
     if (!type.create_view) {
         std::cerr << "EditorRegistry::createEditor: create_view is null for "
-                  << type_id.toStdString() << ". Use createState() for state-only types." << std::endl;
+                  << type_id.toStdString() << ". Use createState() for state-only types "
+                  << "or provide create_editor_custom." << std::endl;
         return EditorInstance{nullptr, nullptr, nullptr};
     }
 

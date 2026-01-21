@@ -41,6 +41,9 @@
 #include "Test_Widget/TestWidgetView.hpp"
 #include "Test_Widget/TestWidgetProperties.hpp"
 
+// Module registration headers - each module defines its own factory functions
+#include "Media_Widget/MediaWidgetRegistration.hpp"
+
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QFileDialog>
@@ -931,7 +934,14 @@ void MainWindow::_registerEditorTypes() {
     // Capture 'this' and data_manager for lambdas
     auto dm = _data_manager;
 
+    // === Module-based registration ===
+    // Each module defines its own factory functions - MainWindow doesn't need
+    // to know implementation details like MediaWidgetState, MediaViewWidget, etc.
+    
+    MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+
     // === Test Widget (View/Properties split proof-of-concept) ===
+    // This is kept inline as an example of direct registration
     _editor_registry->registerType({
         .type_id = QStringLiteral("TestWidget"),
         .display_name = QStringLiteral("Test Widget"),
@@ -953,8 +963,9 @@ void MainWindow::_registerEditorTypes() {
         }
     });
 
-    // Future: Add more editor types here
-    // _editor_registry->registerType({...});
+    // Future: Add more module registrations here
+    // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);
+    // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
 }
 
 void MainWindow::openEditor(QString const & type_id) {

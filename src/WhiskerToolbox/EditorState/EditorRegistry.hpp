@@ -74,6 +74,9 @@ public:
      * Factory functions are part of the type definition. This ensures
      * that serialization can always recreate editors of registered types.
      */
+    // Forward declaration for custom factory signature
+    struct EditorInstance;
+
     struct EditorTypeInfo {
         QString type_id;       ///< Unique identifier (e.g., "MediaWidget")
         QString display_name;  ///< User-visible name (e.g., "Media Viewer")
@@ -85,11 +88,32 @@ public:
         /// Creates the EditorState subclass
         std::function<std::shared_ptr<EditorState>()> create_state;
 
-        /// Creates the view widget given state (required)
+        /// Creates the view widget given state (required unless create_editor_custom is set)
         std::function<QWidget *(std::shared_ptr<EditorState>)> create_view;
 
         /// Creates the properties widget given state (optional, may be null)
         std::function<QWidget *(std::shared_ptr<EditorState>)> create_properties;
+
+        /**
+         * @brief Custom factory for complex editor creation (optional)
+         * 
+         * When set, this function is called instead of the standard
+         * create_state + create_view + create_properties sequence.
+         * 
+         * Use this when:
+         * - View and properties widgets need to share resources
+         * - Complex initialization order is required
+         * - Widgets need cross-references (e.g., properties needs view's child)
+         * 
+         * The custom factory is responsible for:
+         * - Creating the state
+         * - Creating view and properties widgets
+         * - Registering the state with the registry
+         * 
+         * @param registry Pointer to the EditorRegistry (for registerState)
+         * @return Complete EditorInstance with state, view, and optional properties
+         */
+        std::function<EditorInstance(EditorRegistry *)> create_editor_custom;
     };
 
     /**
