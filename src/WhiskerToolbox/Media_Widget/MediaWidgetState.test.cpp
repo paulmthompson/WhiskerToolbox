@@ -359,7 +359,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         QSignalSpy removed_spy(&state, &MediaWidgetState::displayOptionsRemoved);
 
         // Initially null
-        REQUIRE(state.lineOptions("whisker_1") == nullptr);
+        REQUIRE(state.displayOptions().get<LineDisplayOptions>("whisker_1") == nullptr);
 
         // Set options
         LineDisplayOptions opts;
@@ -367,9 +367,9 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.line_thickness = 3;
         opts.is_visible() = true;
         
-        state.setOptions("whisker_1", opts);
+        state.displayOptions().set("whisker_1", opts);
         
-        auto* retrieved = state.lineOptions("whisker_1");
+        auto* retrieved = state.displayOptions().get<LineDisplayOptions>("whisker_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#ff0000");
         REQUIRE(retrieved->line_thickness == 3);
@@ -378,8 +378,8 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         REQUIRE(changed_spy.at(0).at(1).toString() == "line");
 
         // Remove options
-        state.removeOptions("whisker_1", DisplayType::Line);
-        REQUIRE(state.lineOptions("whisker_1") == nullptr);
+        state.displayOptions().remove<LineDisplayOptions>("whisker_1");
+        REQUIRE(state.displayOptions().get<LineDisplayOptions>("whisker_1") == nullptr);
         REQUIRE(removed_spy.count() == 1);
     }
 
@@ -391,16 +391,16 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.show_bounding_box = true;
         opts.show_outline = true;
         
-        state.setOptions("mask_1", opts);
+        state.displayOptions().set("mask_1", opts);
         
-        auto* retrieved = state.maskOptions("mask_1");
+        auto* retrieved = state.displayOptions().get<MaskDisplayOptions>("mask_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#00ff00");
         REQUIRE(retrieved->show_bounding_box == true);
         REQUIRE(retrieved->show_outline == true);
 
-        state.removeOptions("mask_1", DisplayType::Mask);
-        REQUIRE(state.maskOptions("mask_1") == nullptr);
+        state.displayOptions().remove<MaskDisplayOptions>("mask_1");
+        REQUIRE(state.displayOptions().get<MaskDisplayOptions>("mask_1") == nullptr);
     }
 
     SECTION("Point options CRUD") {
@@ -411,16 +411,16 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.point_size = 10;
         opts.marker_shape = PointMarkerShape::Square;
         
-        state.setOptions("point_1", opts);
+        state.displayOptions().set("point_1", opts);
         
-        auto* retrieved = state.pointOptions("point_1");
+        auto* retrieved = state.displayOptions().get<PointDisplayOptions>("point_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#0000ff");
         REQUIRE(retrieved->point_size == 10);
         REQUIRE(retrieved->marker_shape == PointMarkerShape::Square);
 
-        state.removeOptions("point_1", DisplayType::Point);
-        REQUIRE(state.pointOptions("point_1") == nullptr);
+        state.displayOptions().remove<PointDisplayOptions>("point_1");
+        REQUIRE(state.displayOptions().get<PointDisplayOptions>("point_1") == nullptr);
     }
 
     SECTION("Tensor options CRUD") {
@@ -430,15 +430,15 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.display_channel = 2;
         opts.alpha() = 0.5f;
         
-        state.setOptions("tensor_1", opts);
+        state.displayOptions().set("tensor_1", opts);
         
-        auto* retrieved = state.tensorOptions("tensor_1");
+        auto* retrieved = state.displayOptions().get<TensorDisplayOptions>("tensor_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->display_channel == 2);
         REQUIRE(retrieved->alpha() == 0.5f);
 
-        state.removeOptions("tensor_1", DisplayType::Tensor);
-        REQUIRE(state.tensorOptions("tensor_1") == nullptr);
+        state.displayOptions().remove<TensorDisplayOptions>("tensor_1");
+        REQUIRE(state.displayOptions().get<TensorDisplayOptions>("tensor_1") == nullptr);
     }
 
     SECTION("Interval options CRUD") {
@@ -448,15 +448,15 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.plotting_style = IntervalPlottingStyle::Border;
         opts.border_thickness = 10;
         
-        state.setOptions("interval_1", opts);
+        state.displayOptions().set("interval_1", opts);
         
-        auto* retrieved = state.intervalOptions("interval_1");
+        auto* retrieved = state.displayOptions().get<DigitalIntervalDisplayOptions>("interval_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->plotting_style == IntervalPlottingStyle::Border);
         REQUIRE(retrieved->border_thickness == 10);
 
-        state.removeOptions("interval_1", DisplayType::Interval);
-        REQUIRE(state.intervalOptions("interval_1") == nullptr);
+        state.displayOptions().remove<DigitalIntervalDisplayOptions>("interval_1");
+        REQUIRE(state.displayOptions().get<DigitalIntervalDisplayOptions>("interval_1") == nullptr);
     }
 
     SECTION("Media options CRUD") {
@@ -467,16 +467,16 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         opts.contrast_options.active = true;
         opts.contrast_options.alpha = 1.5;
         
-        state.setOptions("video_1", opts);
+        state.displayOptions().set("video_1", opts);
         
-        auto* retrieved = state.mediaOptions("video_1");
+        auto* retrieved = state.displayOptions().get<MediaDisplayOptions>("video_1");
         REQUIRE(retrieved != nullptr);
         REQUIRE(retrieved->hex_color() == "#ffffff");
         REQUIRE(retrieved->contrast_options.active == true);
         REQUIRE(retrieved->contrast_options.alpha == 1.5);
 
-        state.removeOptions("video_1", DisplayType::Media);
-        REQUIRE(state.mediaOptions("video_1") == nullptr);
+        state.displayOptions().remove<MediaDisplayOptions>("video_1");
+        REQUIRE(state.displayOptions().get<MediaDisplayOptions>("video_1") == nullptr);
     }
 
     SECTION("Display options round-trip serialization") {
@@ -486,24 +486,24 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
         line_opts.hex_color() = "#ff0000";
         line_opts.line_thickness = 5;
         line_opts.is_visible() = true;
-        original.setOptions("line_1", line_opts);
+        original.displayOptions().set("line_1", line_opts);
 
         MaskDisplayOptions mask_opts;
         mask_opts.hex_color() = "#00ff00";
         mask_opts.show_outline = true;
-        original.setOptions("mask_1", mask_opts);
+        original.displayOptions().set("mask_1", mask_opts);
 
         auto json = original.toJson();
         MediaWidgetState restored;
         REQUIRE(restored.fromJson(json));
 
-        auto* restored_line = restored.lineOptions("line_1");
+        auto* restored_line = restored.displayOptions().get<LineDisplayOptions>("line_1");
         REQUIRE(restored_line != nullptr);
         REQUIRE(restored_line->hex_color() == "#ff0000");
         REQUIRE(restored_line->line_thickness == 5);
         REQUIRE(restored_line->is_visible() == true);
 
-        auto* restored_mask = restored.maskOptions("mask_1");
+        auto* restored_mask = restored.displayOptions().get<MaskDisplayOptions>("mask_1");
         REQUIRE(restored_mask != nullptr);
         REQUIRE(restored_mask->hex_color() == "#00ff00");
         REQUIRE(restored_mask->show_outline == true);
@@ -859,13 +859,13 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
     line_opts.hex_color() = "#ff0000";
     line_opts.line_thickness = 4;
     line_opts.is_visible() = true;
-    original.setOptions("whisker_1", line_opts);
+    original.displayOptions().set("whisker_1", line_opts);
     
     MaskDisplayOptions mask_opts;
     mask_opts.hex_color() = "#00ff00";
     mask_opts.show_outline = true;
     mask_opts.is_visible() = true;
-    original.setOptions("mask_1", mask_opts);
+    original.displayOptions().set("mask_1", mask_opts);
     
     // Interaction preferences
     LineInteractionPrefs line_prefs;
@@ -907,13 +907,13 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
     REQUIRE(ch == 1080);
     
     // Display options
-    auto* r_line = restored.lineOptions("whisker_1");
+    auto* r_line = restored.displayOptions().get<LineDisplayOptions>("whisker_1");
     REQUIRE(r_line != nullptr);
     REQUIRE(r_line->hex_color() == "#ff0000");
     REQUIRE(r_line->line_thickness == 4);
     REQUIRE(r_line->is_visible() == true);
     
-    auto* r_mask = restored.maskOptions("mask_1");
+    auto* r_mask = restored.displayOptions().get<MaskDisplayOptions>("mask_1");
     REQUIRE(r_mask != nullptr);
     REQUIRE(r_mask->hex_color() == "#00ff00");
     REQUIRE(r_mask->show_outline == true);

@@ -238,10 +238,10 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.contrast_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applyContrastFilter(options);
         }
     }
@@ -253,10 +253,10 @@ void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const & o
 void MediaProcessing_Widget::_onGammaOptionsChanged(GammaOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.gamma_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applyGammaFilter(options);
         }
     }
@@ -268,10 +268,10 @@ void MediaProcessing_Widget::_onGammaOptionsChanged(GammaOptions const & options
 void MediaProcessing_Widget::_onSharpenOptionsChanged(SharpenOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.sharpen_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applySharpenFilter(options);
         }
     }
@@ -283,10 +283,10 @@ void MediaProcessing_Widget::_onSharpenOptionsChanged(SharpenOptions const & opt
 void MediaProcessing_Widget::_onClaheOptionsChanged(ClaheOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.clahe_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applyClaheFilter(options);
         }
     }
@@ -298,10 +298,10 @@ void MediaProcessing_Widget::_onClaheOptionsChanged(ClaheOptions const & options
 void MediaProcessing_Widget::_onBilateralOptionsChanged(BilateralOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.bilateral_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applyBilateralFilter(options);
         }
     }
@@ -314,10 +314,10 @@ void MediaProcessing_Widget::_onBilateralOptionsChanged(BilateralOptions const &
 void MediaProcessing_Widget::_onMedianOptionsChanged(MedianOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.median_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applyMedianFilter(options);
         }
     }
@@ -329,14 +329,14 @@ void MediaProcessing_Widget::_onMedianOptionsChanged(MedianOptions const & optio
 void MediaProcessing_Widget::_onMagicEraserOptionsChanged(MagicEraserOptions const & options) {
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.magic_eraser_options = options;
             if (!options.active) {
                 modified.magic_eraser_options.mask.clear();
                 modified.magic_eraser_options.image_size = {0, 0};
             }
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _applyMagicEraser(options);
         }
     }
@@ -349,7 +349,7 @@ void MediaProcessing_Widget::_onMagicEraserOptionsChanged(MagicEraserOptions con
 void MediaProcessing_Widget::_onMagicEraserDrawingModeChanged(bool enabled) {
 
     if (!_active_key.empty() && _state) {
-        auto const * media_opts = _state->mediaOptions(QString::fromStdString(_active_key));
+        auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(QString::fromStdString(_active_key));
         if (media_opts) {
             auto const & magic_eraser_options = media_opts->magic_eraser_options;
             if (_scene && magic_eraser_options.active) {
@@ -371,11 +371,11 @@ void MediaProcessing_Widget::_onMagicEraserClearMaskRequested() {
 
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.magic_eraser_options.mask.clear();
             modified.magic_eraser_options.image_size = {0, 0};
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
 
             _applyMagicEraser(modified.magic_eraser_options);
         }
@@ -403,7 +403,7 @@ void MediaProcessing_Widget::_onDrawingFinished() {
         return;
     }
     auto const key = QString::fromStdString(_active_key);
-    auto const * media_opts = _state->mediaOptions(key);
+    auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key);
     if (!media_opts) {
         return;
     }
@@ -448,7 +448,7 @@ void MediaProcessing_Widget::_onDrawingFinished() {
     magic_eraser_options.image_size = image_size;
 
     // Save modified options back to state
-    _state->setOptions(key, modified);
+    _state->displayOptions().set(key, modified);
 
     // Apply the magic eraser to the process chain
     _applyMagicEraser(magic_eraser_options);
@@ -646,10 +646,10 @@ void MediaProcessing_Widget::_onColormapOptionsChanged(ColormapOptions const & o
     
     if (!_active_key.empty() && _state) {
         auto const key = QString::fromStdString(_active_key);
-        if (auto const * media_opts = _state->mediaOptions(key); media_opts) {
+        if (auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key); media_opts) {
             auto modified = *media_opts;
             modified.colormap_options = options;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
             _scene->UpdateCanvas();
         }
 
@@ -680,7 +680,7 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
         return;
     }
     auto const key = QString::fromStdString(_active_key);
-    auto const * options = _state->mediaOptions(key);
+    auto const * options = _state->displayOptions().get<MediaDisplayOptions>(key);
     if (!options) {
         std::cout << "No media config found for key: " << _active_key << std::endl;
         return;
@@ -741,7 +741,7 @@ void MediaProcessing_Widget::_loadProcessingChainFromMedia() {
 
     // Save back if any processing steps were found
     if (needs_update) {
-        _state->setOptions(key, modified);
+        _state->displayOptions().set(key, modified);
     }
 
     // Update all UI widgets with the loaded options

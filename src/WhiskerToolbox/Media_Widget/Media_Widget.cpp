@@ -215,7 +215,7 @@ void Media_Widget::_createOptions() {
     //Setup Media Data
     auto media_keys = _data_manager->getKeys<MediaData>();
     for (auto const & media_key: media_keys) {
-        if (_state->hasMediaOptions(QString::fromStdString(media_key))) continue;
+        if (_state->displayOptions().has<MediaDisplayOptions>(QString::fromStdString(media_key))) continue;
 
         _scene->addMediaDataToScene(media_key);
     }
@@ -463,7 +463,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         state_type = QStringLiteral("tensor");
     } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
         auto const key = QString::fromStdString(feature_key);
-        auto const * opts = _state->mediaOptions(key);
+        auto const * opts = _state->displayOptions().get<MediaDisplayOptions>(key);
         if (!opts) {
             std::cerr << "Table feature key "
                       << feature_key
@@ -475,7 +475,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         if (enabled) {
             std::cout << "Enabling media data in scene" << std::endl;
             modified.is_visible() = true;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
 
             // This ensures new media is loaded from disk
             // Before the update
@@ -485,7 +485,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         } else {
             std::cout << "Disabling media data from scene" << std::endl;
             modified.is_visible() = false;
-            _state->setOptions(key, modified);
+            _state->displayOptions().set(key, modified);
         }
         state_type = QStringLiteral("media");
     } else {
