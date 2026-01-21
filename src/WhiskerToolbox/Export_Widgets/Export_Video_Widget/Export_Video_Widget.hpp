@@ -9,8 +9,8 @@
 #include <vector>
 
 class DataManager;
-class Media_Window;
-class MediaWidgetManager;
+class EditorRegistry;
+class MediaWidgetState;
 class TimeScrollBar;
 class DigitalEventSeries;
 class TimeFrame;
@@ -61,7 +61,7 @@ class Export_Video_Widget : public QWidget {
 public:
     Export_Video_Widget(
             std::shared_ptr<DataManager> data_manager,
-            MediaWidgetManager * media_manager,
+            EditorRegistry * editor_registry,
             TimeScrollBar * time_scrollbar,
             QWidget * parent = nullptr);
     ~Export_Video_Widget() override;
@@ -71,12 +71,12 @@ public:
 private:
     Ui::Export_Video_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    MediaWidgetManager * _media_manager;
+    EditorRegistry * _editor_registry;
     TimeScrollBar * _time_scrollbar;
     std::unique_ptr<cv::VideoWriter> _video_writer;
 
-    // Currently selected media widget for export
-    std::string _selected_media_widget_id;
+    // Currently selected media widget state for export
+    std::shared_ptr<MediaWidgetState> _selected_state;
 
     // Multi-sequence support
     std::vector<VideoSequence> _video_sequences;
@@ -104,7 +104,7 @@ private:
     QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
     void _writeFrameToVideo(QImage const & frame);
     std::pair<int, int> _getMediaDimensions() const;
-    Media_Window* _getCurrentMediaWindow() const;
+    std::shared_ptr<MediaWidgetState> _getSelectedState() const;
     void _updateMediaWidgetComboBox();
 
     // Audio generation methods

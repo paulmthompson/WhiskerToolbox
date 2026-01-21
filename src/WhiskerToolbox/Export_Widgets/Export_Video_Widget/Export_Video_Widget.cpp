@@ -9,8 +9,8 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include "MediaWidgetManager/MediaWidgetManager.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "EditorState/EditorRegistry.hpp"
+#include "Media_Widget/MediaWidgetState.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "ffmpeg_wrapper/videoencoder.h"
@@ -30,13 +30,13 @@
 
 Export_Video_Widget::Export_Video_Widget(
         std::shared_ptr<DataManager> data_manager,
-        MediaWidgetManager * media_manager,
+        EditorRegistry * editor_registry,
         TimeScrollBar * time_scrollbar,
         QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Export_Video_Widget),
       _data_manager{std::move(data_manager)},
-      _media_manager{media_manager},
+      _editor_registry{editor_registry},
       _time_scrollbar{time_scrollbar} {
     ui->setupUi(this);
 
@@ -79,9 +79,16 @@ Export_Video_Widget::Export_Video_Widget(
     // Initialize media widget selection
     _updateMediaWidgetComboBox();
 
-    // Connect to media manager signals
-    connect(_media_manager, &MediaWidgetManager::mediaWidgetCreated, this, &Export_Video_Widget::_updateMediaWidgetComboBox);
-    connect(_media_manager, &MediaWidgetManager::mediaWidgetRemoved, this, &Export_Video_Widget::_updateMediaWidgetComboBox);
+    // Connect to editor registry signals for state changes
+    connect(_editor_registry, &EditorRegistry::stateRegistered, this, [this](QString instance_id, QString type_id) {
+        if (type_id == QStringLiteral("MediaWidget")) {
+            _updateMediaWidgetComboBox();
+        }
+    });
+    connect(_editor_registry, &EditorRegistry::stateUnregistered, this, [this](QString instance_id) {
+        // Check if we need to update - the unregistered state might have been a MediaWidget
+        _updateMediaWidgetComboBox();
+    });
 
     // Initialize output size to media dimensions
     _resetToMediaSize();
@@ -122,20 +129,26 @@ void Export_Video_Widget::_exportVideo() {
 
     int const fps = ui->frame_rate_spinbox->value();// Get frame rate from user control
     std::cout << "Using frame rate: " << fps << " fps" << std::endl;
-    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(output_width, output_height), true);
+    
+    // Use MJPG codec - widely available without FFmpeg backend
+    // Alternative codecs: 'XVID', 'DIVX', 'mp4v' (MPEG-4)
+    // X264 requires FFmpeg backend which may not be available
+    _video_writer->open(filename, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(output_width, output_height), true);
 
     if (!_video_writer->isOpened()) {
         std::cout << "Could not open the output video file for write" << std::endl;
         return;
     }
 
-    auto * scene = _getCurrentMediaWindow();
-    if (!scene) {
+    auto selected_state = _getSelectedState();
+    if (!selected_state) {
         std::cout << "No media widget selected for export" << std::endl;
         return;
     }
 
-    connect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+    // Connect to state's canvasImageChanged signal
+    auto connection = connect(selected_state.get(), &MediaWidgetState::canvasImageChanged,
+                              this, &Export_Video_Widget::_handleCanvasUpdated);
 
     if (!_video_sequences.empty()) {
         // Multi-sequence mode
@@ -174,9 +187,7 @@ void Export_Video_Widget::_exportVideo() {
 
         if (start_num >= end_num) {
             std::cout << "Start frame must be less than end frame" << std::endl;
-            if (auto * scene = _getCurrentMediaWindow()) {
-                disconnect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
-            }
+            disconnect(connection);
             _video_writer->release();
             return;
         }
@@ -203,9 +214,7 @@ void Export_Video_Widget::_exportVideo() {
         }
     }
 
-    if (auto * scene = _getCurrentMediaWindow()) {
-        disconnect(scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
-    }
+    disconnect(connection);
     _video_writer->release();
 
     // Generate audio track if enabled
@@ -831,39 +840,41 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
     std::cout << "Audio file written successfully: " << audio_filename << std::endl;
 }
 
-Media_Window * Export_Video_Widget::_getCurrentMediaWindow() const {
-    if (_selected_media_widget_id.empty()) {
-        return nullptr;
-    }
-    return _media_manager->getMediaWindow(_selected_media_widget_id);
+std::shared_ptr<MediaWidgetState> Export_Video_Widget::_getSelectedState() const {
+    return _selected_state;
 }
 
 void Export_Video_Widget::_updateMediaWidgetComboBox() {
-    if (!ui->media_widget_combobox) {
+    if (!ui->media_widget_combobox || !_editor_registry) {
         return;
     }
 
     ui->media_widget_combobox->clear();
-    auto widget_ids = _media_manager->getMediaWidgetIds();
 
-    for (auto const & id: widget_ids) {
-        ui->media_widget_combobox->addItem(QString::fromStdString(id), QString::fromStdString(id));
+    // Get all MediaWidgetState instances from the registry
+    auto states = _editor_registry->statesByType(QStringLiteral("MediaWidget"));
+
+    for (auto const & state: states) {
+        QString instance_id = state->getInstanceId();
+        QString display_name = state->getDisplayName();
+        ui->media_widget_combobox->addItem(display_name, instance_id);
     }
 
     // Select the first available widget if none is selected
-    if (_selected_media_widget_id.empty() && !widget_ids.empty()) {
-        _selected_media_widget_id = widget_ids[0];
+    if (!_selected_state && !states.empty()) {
+        _selected_state = std::dynamic_pointer_cast<MediaWidgetState>(states[0]);
         ui->media_widget_combobox->setCurrentIndex(0);
     }
 }
 
 void Export_Video_Widget::_onMediaWidgetSelectionChanged() {
-    if (!ui->media_widget_combobox) {
+    if (!ui->media_widget_combobox || !_editor_registry) {
         return;
     }
 
-    QString selected = ui->media_widget_combobox->currentData().toString();
-    _selected_media_widget_id = selected.toStdString();
+    QString selected_id = ui->media_widget_combobox->currentData().toString();
+    auto state = _editor_registry->state(selected_id);
+    _selected_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
 
-    std::cout << "Selected media widget for export: " << _selected_media_widget_id << std::endl;
+    std::cout << "Selected media widget for export: " << selected_id.toStdString() << std::endl;
 }

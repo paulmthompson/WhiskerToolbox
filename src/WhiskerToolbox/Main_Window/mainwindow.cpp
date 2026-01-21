@@ -31,7 +31,8 @@
 #include "IO_Widgets/Tensors/Tensor_Loader_Widget.hpp"
 #include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
-#include "MediaWidgetManager/MediaWidgetManager.hpp"
+#include "Media_Widget/MediaWidgetState.hpp"
+#include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
@@ -121,18 +122,7 @@ MainWindow::MainWindow(QWidget * parent)
         _data_manager_widget->setGroupManager(_group_manager.get());
     }
 
-    // Create media widget manager with EditorRegistry
-    _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, _editor_registry.get(), this);
-    
-    // Connect the group manager to the media widget manager
-    if (_group_manager) {
-        _media_manager->setGroupManager(_group_manager.get());
-    }
-
     _verbose = false;
-
-    // Create the main media widget through the manager
-    _media_widget = _media_manager->createMediaWidget("main", this);
 
     _createActions();// Creates callback functions
 
@@ -179,9 +169,13 @@ void MainWindow::_buildInitialLayout() {
 
     // === CENTER ZONE: Primary visualization ===
     
-    // Add media widget to center zone
+    // Create and add media widget to center zone using EditorRegistry
+    // GroupManager is automatically set by MediaWidgetRegistration
+    auto editor_instance = _editor_registry->createEditor(QStringLiteral("MediaWidget"));
+    auto * media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
+    
     auto * media_dock = new ads::CDockWidget(QStringLiteral("media"));
-    media_dock->setWidget(_media_widget);
+    media_dock->setWidget(media_widget);
     media_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     _zone_manager->addToZone(media_dock, Zone::Center);
 
@@ -210,7 +204,9 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
-    connect(_time_scrollbar, &TimeScrollBar::timeChanged, _media_manager.get(), &MediaWidgetManager::loadFrameForAll);
+    // Connect TimeScrollBar to EditorRegistry for global time propagation
+    connect(_time_scrollbar, &TimeScrollBar::timeChanged, 
+            _editor_registry.get(), &EditorRegistry::setCurrentTime);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
@@ -234,28 +230,57 @@ void MainWindow::_createActions() {
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
 
-    // Zoom actions (custom handling)
-    if (ui->actionZoom_In && _media_widget) {
+    // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
+    // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
+    auto getActiveMediaWidget = [this]() -> Media_Widget* {
+        auto * ctx = _editor_registry->selectionContext();
+        if (!ctx) return nullptr;
+        
+        QString active_id = ctx->activeEditorId();
+        if (active_id.isEmpty()) return nullptr;
+        
+        // Find the Media_Widget with matching state instance_id
+        for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+            if (auto * mw = dynamic_cast<Media_Widget*>(dock->widget())) {
+                if (mw->getState() && mw->getState()->getInstanceId() == active_id) {
+                    return mw;
+                }
+            }
+        }
+        return nullptr;
+    };
+    
+    if (ui->actionZoom_In) {
         ui->actionZoom_In->setShortcuts({}); // clear
         ui->actionZoom_In->setShortcut(QKeySequence());
         // Explicit shortcuts below; set text AFTER clearing to force display
         ui->actionZoom_In->setText("Zoom In\tCtrl+");
-        connect(ui->actionZoom_In, &QAction::triggered, this, [this]() { _media_widget->zoomIn(); });
+        connect(ui->actionZoom_In, &QAction::triggered, this, [getActiveMediaWidget]() { 
+            if (auto * mw = getActiveMediaWidget()) mw->zoomIn(); 
+        });
         auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this); // Ctrl++ (numpad or main with shift)
         s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [this]() { _media_widget->zoomIn(); });
+        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() { 
+            if (auto * mw = getActiveMediaWidget()) mw->zoomIn(); 
+        });
         auto * s2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this); // Ctrl+= (produces '+')
         s2->setContext(Qt::ApplicationShortcut);
-        connect(s2, &QShortcut::activated, this, [this]() { _media_widget->zoomIn(); });
+        connect(s2, &QShortcut::activated, this, [getActiveMediaWidget]() { 
+            if (auto * mw = getActiveMediaWidget()) mw->zoomIn(); 
+        });
     }
-    if (ui->actionZoom_Out && _media_widget) {
+    if (ui->actionZoom_Out) {
         ui->actionZoom_Out->setShortcuts({});
         ui->actionZoom_Out->setShortcut(QKeySequence());
         ui->actionZoom_Out->setText("Zoom Out\tCtrl-");
-        connect(ui->actionZoom_Out, &QAction::triggered, this, [this]() { _media_widget->zoomOut(); });
+        connect(ui->actionZoom_Out, &QAction::triggered, this, [getActiveMediaWidget]() { 
+            if (auto * mw = getActiveMediaWidget()) mw->zoomOut(); 
+        });
         auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus), this);
         s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [this]() { _media_widget->zoomOut(); });
+        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() { 
+            if (auto * mw = getActiveMediaWidget()) mw->zoomOut(); 
+        });
     }
 }
 
@@ -362,7 +387,21 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
                 (data.data_class == "LineData")) {
             // Only set color if one is specified, otherwise let Media_Window auto-assign
             if (!data.color.empty()) {
-                _media_manager->setFeatureColorForAll(data.key, data.color);
+                // Set feature color on all MediaWidget instances via EditorRegistry
+                auto states = _editor_registry->statesByType(QStringLiteral("MediaWidget"));
+                for (auto const & state : states) {
+                    auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
+                    if (media_state) {
+                        // Use displayOptions registry to set the color
+                        // This will be picked up by Media_Window on next UpdateCanvas
+                        auto key_q = QString::fromStdString(data.key);
+                        if (media_state->displayOptions().has<LineDisplayOptions>(key_q)) {
+                            auto opts = *media_state->displayOptions().get<LineDisplayOptions>(key_q);
+                            opts.hex_color() = data.color;
+                            media_state->displayOptions().set(key_q, opts);
+                        }
+                    }
+                }
             }
         }
     }
@@ -381,7 +420,14 @@ void MainWindow::loadData() {
 
     _updateFrameCount();
 
-    _media_manager->updateMediaForAll();
+    // Update media for all MediaWidget instances via dock manager
+    // Each widget will refresh its view when time changes (via EditorRegistry::timeChanged)
+    // but we also need to call updateMedia() to initialize the graphics view
+    for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+        if (auto * media_widget = dynamic_cast<Media_Widget*>(dock->widget())) {
+            media_widget->updateMedia();
+        }
+    }
 }
 
 void MainWindow::_updateFrameCount() {
@@ -556,8 +602,10 @@ void MainWindow::openNewMediaWidget() {
     // Generate unique ID for the new media widget
     std::string const key = "MediaWidget_" + std::to_string(_media_widget_counter++);
     
-    // Create the media widget through the manager
-    auto* media_widget = _media_manager->createMediaWidget(key, this);
+    // Create the media widget using EditorRegistry
+    // GroupManager is automatically set by MediaWidgetRegistration
+    auto editor_instance = _editor_registry->createEditor(QStringLiteral("MediaWidget"));
+    auto* media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
     if (!media_widget) {
         std::cerr << "Failed to create media widget with ID: " << key << std::endl;
         return;
@@ -569,9 +617,13 @@ void MainWindow::openNewMediaWidget() {
     // Find the dock widget that was just created and connect close signal
     auto* dock_widget = findDockWidget(key);
     if (dock_widget) {
-        connect(dock_widget, &ads::CDockWidget::closed, this, [this, key]() {
-            // Remove from media manager (this will properly destroy the widget)
-            _media_manager->removeMediaWidget(key);
+        // Get the state's instance_id for cleanup
+        QString instance_id = editor_instance.state ? editor_instance.state->getInstanceId() : QString();
+        connect(dock_widget, &ads::CDockWidget::closed, this, [this, key, instance_id]() {
+            // Unregister state from EditorRegistry
+            if (!instance_id.isEmpty()) {
+                _editor_registry->unregisterState(instance_id);
+            }
             std::cout << "Media widget " << key << " destroyed on close" << std::endl;
         });
     }
@@ -815,7 +867,7 @@ void MainWindow::openVideoExportWidget() {
     if (!_widgets.contains(key)) {
         auto vid_widget = std::make_unique<Export_Video_Widget>(
                 _data_manager,
-                _media_manager.get(),
+                _editor_registry.get(),
                 _time_scrollbar,
                 this);
 

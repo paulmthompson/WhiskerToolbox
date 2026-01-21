@@ -79,6 +79,7 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <QImage>
 #include <QStringList>
 
 #include <string>
@@ -519,9 +520,42 @@ signals:
      */
     void toolModesChanged(QString const & category);
 
+    // === Canvas Image (Transient - for video export) ===
+
+    /**
+     * @brief Emitted when the rendered canvas image changes
+     * @param image The new canvas image
+     * 
+     * This signal is emitted by Media_Window after rendering completes.
+     * Export_Video_Widget connects to this to capture frames.
+     */
+    void canvasImageChanged(QImage const & image);
+
+public:
+    // === Canvas Image (Transient - not serialized) ===
+
+    /**
+     * @brief Set the current canvas image
+     * 
+     * Called by Media_Window after rendering to update the transient canvas image.
+     * This is NOT serialized - it's only for inter-widget communication.
+     * 
+     * @param image The rendered canvas image
+     */
+    void setCanvasImage(QImage const & image);
+
+    /**
+     * @brief Get the current canvas image
+     * @return The most recently rendered canvas image (may be null)
+     */
+    [[nodiscard]] QImage const & canvasImage() const { return _canvas_image; }
+
 private:
     MediaWidgetStateData _data;
     DisplayOptionsRegistry _display_options{&_data, this};
+
+    /// Transient canvas image (not serialized) - updated by Media_Window
+    QImage _canvas_image;
 
     // Helper to forward registry signals to state signals
     void _connectRegistrySignals();

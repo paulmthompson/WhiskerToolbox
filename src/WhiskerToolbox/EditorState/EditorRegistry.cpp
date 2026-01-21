@@ -388,6 +388,15 @@ void EditorRegistry::markAllClean() {
     }
 }
 
+// === Global Time ===
+
+void EditorRegistry::setCurrentTime(int64_t time) {
+    if (_current_time != time) {
+        _current_time = time;
+        emit timeChanged(time);
+    }
+}
+
 // === Private ===
 
 void EditorRegistry::onStateChanged() {

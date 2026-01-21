@@ -281,6 +281,27 @@ public:
      */
     void markAllClean();
 
+    // ========== Global Time ==========
+
+    /**
+     * @brief Set the current visualization time
+     * 
+     * This represents which point in time the UI is currently displaying.
+     * All time-aware widgets should connect to timeChanged() to update their views.
+     * 
+     * Note: This is a UI/visualization concept, not data storage. The actual
+     * time data lives in DataManager's TimeFrame objects.
+     * 
+     * @param time The frame index to display
+     */
+    void setCurrentTime(int64_t time);
+
+    /**
+     * @brief Get the current visualization time
+     * @return Current frame index being displayed
+     */
+    [[nodiscard]] int64_t currentTime() const { return _current_time; }
+
 signals:
     /// Emitted when a new type is registered
     void typeRegistered(QString type_id);
@@ -303,6 +324,16 @@ signals:
     /// Emitted when dirty state changes
     void unsavedChangesChanged(bool has_unsaved);
 
+    /**
+     * @brief Emitted when the visualization time changes
+     * 
+     * Connect to this signal to update views when the user scrubs
+     * through time (e.g., via TimeScrollBar).
+     * 
+     * @param time The new frame index to display
+     */
+    void timeChanged(int64_t time);
+
 private slots:
     void onStateChanged();
     void onStateDirtyChanged(bool is_dirty);
@@ -316,6 +347,9 @@ private:
 
     /// Active states (instance_id -> state)
     std::map<QString, std::shared_ptr<EditorState>> _states;
+
+    /// Current visualization time (frame index)
+    int64_t _current_time{0};
 
     void connectStateSignals(EditorState * state);
 };

@@ -590,3 +590,10 @@ void MediaWidgetState::setActivePointMode(PointToolMode mode) {
         emit toolModesChanged(QStringLiteral("point"));
     }
 }
+
+// === Canvas Image (Transient) ===
+
+void MediaWidgetState::setCanvasImage(QImage const & image) {
+    _canvas_image = image;
+    emit canvasImageChanged(image);
+}

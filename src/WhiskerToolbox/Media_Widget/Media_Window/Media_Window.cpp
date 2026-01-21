@@ -605,6 +605,11 @@ void Media_Window::UpdateCanvas() {
     this->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight),
                  QRect(0, 0, _canvasWidth, _canvasHeight));
 
+    // Update canvas image on state (for Export_Video_Widget and other observers)
+    if (_media_widget_state) {
+        _media_widget_state->setCanvasImage(scene_image);
+    }
+
     emit canvasUpdated(scene_image);
 }
 

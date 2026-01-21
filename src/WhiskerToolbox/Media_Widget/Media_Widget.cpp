@@ -108,6 +108,10 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
         _editor_registry->registerState(_state);
         _selection_context = _editor_registry->selectionContext();
 
+        // Connect to global time changes for frame loading
+        connect(_editor_registry, &EditorRegistry::timeChanged,
+                this, &Media_Widget::LoadFrame);
+
         // Connect to SelectionContext to respond to external selection changes
         // When another widget (e.g., DataManager_Widget) selects data, update our state
         if (_selection_context) {

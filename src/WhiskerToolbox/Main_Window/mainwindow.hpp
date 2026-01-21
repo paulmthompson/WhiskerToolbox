@@ -16,8 +16,8 @@ class DataManager_Widget;
 class EditorRegistry;
 class GroupManager;
 class GroupManagementWidget;
-class MediaWidgetManager;
 class PropertiesHost;
+class TimeScrollBar;
 class ZoneManager;
 
 
@@ -89,8 +89,6 @@ protected:
 private:
     Ui::MainWindow * ui;
 
-    std::unique_ptr<MediaWidgetManager> _media_manager;
-
     ads::CDockManager * _m_DockManager;
 
     bool _verbose;
@@ -105,8 +103,7 @@ private:
     DataManager_Widget * _data_manager_widget;
 
     // Main widgets created programmatically (not in UI file)
-    class Media_Widget * _media_widget;
-    class TimeScrollBar * _time_scrollbar;
+    TimeScrollBar * _time_scrollbar;
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
     
