@@ -172,11 +172,11 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 
-    ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene.get()));
-    ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene.get()));
-    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get()));
-    ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get()));
-    ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get()));
+    ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene.get(), _state.get()));
+    ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene.get(), _state.get()));
+    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get(), _state.get()));
+    ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get(), _state.get()));
+    ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get(), _state.get()));
 
     // Create and store reference to MediaProcessing_Widget
     _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get(), _state.get());

@@ -11,11 +11,12 @@ class MediaInterval_Widget;
 
 class DataManager;
 class Media_Window;
+class MediaWidgetState;
 
 class MediaInterval_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit MediaInterval_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
+    explicit MediaInterval_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state = nullptr, QWidget * parent = nullptr);
     ~MediaInterval_Widget() override;
 
     void setActiveKey(std::string const & key);
@@ -24,6 +25,7 @@ private:
     Ui::MediaInterval_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
+    MediaWidgetState * _state{nullptr};
     std::string _active_key;
 
 private slots:

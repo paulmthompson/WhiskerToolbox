@@ -13,11 +13,12 @@ class MediaTensor_Widget;
 
 class DataManager;
 class Media_Window;
+class MediaWidgetState;
 
 class MediaTensor_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit MediaTensor_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
+    explicit MediaTensor_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state = nullptr, QWidget * parent = nullptr);
     ~MediaTensor_Widget() override;
 
     void setActiveKey(std::string const & key);
@@ -26,6 +27,7 @@ private:
     Ui::MediaTensor_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
+    MediaWidgetState * _state{nullptr};
     std::string _active_key;
 
 private slots:

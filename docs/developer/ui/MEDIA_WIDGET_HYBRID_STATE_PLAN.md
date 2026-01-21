@@ -219,7 +219,7 @@ Methods like `getLineConfig()` forward to state's display options registry.
 
 **Goal**: Sub-widgets read/write display options through state.
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Complete (January 2026)
 
 **Duration**: 3-4 days
 
@@ -284,7 +284,7 @@ void Media_Widget::restoreFromState() {
 | 4A: DisplayOptionsRegistry | 3-4 days | ✅ Complete | Generic registry, deprecate old methods |
 | 4B: Simplify Accessors | 1-2 days | ✅ Complete | Consolidated signals, audit complete |
 | 4C: Media_Window Integration | 2-3 days | ✅ Complete | Remove duplicate storage, use state |
-| 4D: Sub-Widget Integration | 3-4 days | 🔲 Not Started | All 6 sub-widgets wired up |
+| 4D: Sub-Widget Integration | 3-4 days | ✅ Complete | All 6 sub-widgets wired up |
 | 4E: Viewport Integration | 1 day | 🔲 Not Started | Zoom/pan persistence |
 | **Total** | **~2 weeks** | | Full hybrid architecture |
 

@@ -10,6 +10,7 @@
 #include "DataManager/utils/polynomial/polynomial_fit.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "Media_Widget/MediaWidgetState.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
 #include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"
@@ -29,11 +30,12 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
+MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::MediaLine_Widget),
       _data_manager{std::move(data_manager)},
-      _scene{scene} {
+      _scene{scene},
+      _state{state} {
     ui->setupUi(this);
 
     _selection_modes["(None)"] = Selection_Mode::None;
@@ -194,54 +196,54 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
 
     // Set the color picker to the current line color if available
-    if (!key.empty()) {
-        auto config = _scene->getLineConfig(key);
+    if (!key.empty() && _state) {
+        auto const * config = _state->displayOptions().get<LineDisplayOptions>(QString::fromStdString(key));
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color()));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha() * 100));
+            ui->color_picker->setColor(QString::fromStdString(config->hex_color()));
+            ui->color_picker->setAlpha(static_cast<int>(config->alpha() * 100));
 
             // Set line thickness controls
             ui->line_thickness_slider->blockSignals(true);
             ui->line_thickness_spinbox->blockSignals(true);
-            ui->line_thickness_slider->setValue(config.value()->line_thickness);
-            ui->line_thickness_spinbox->setValue(config.value()->line_thickness);
+            ui->line_thickness_slider->setValue(config->line_thickness);
+            ui->line_thickness_spinbox->setValue(config->line_thickness);
             ui->line_thickness_slider->blockSignals(false);
             ui->line_thickness_spinbox->blockSignals(false);
 
             // Update the show points checkbox directly from the UI file
             ui->show_points_checkbox->blockSignals(true);
-            ui->show_points_checkbox->setChecked(config.value()->show_points);
+            ui->show_points_checkbox->setChecked(config->show_points);
             ui->show_points_checkbox->blockSignals(false);
 
             // Set position marker controls
             ui->show_position_marker_checkbox->blockSignals(true);
-            ui->show_position_marker_checkbox->setChecked(config.value()->show_position_marker);
+            ui->show_position_marker_checkbox->setChecked(config->show_position_marker);
             ui->show_position_marker_checkbox->blockSignals(false);
 
             ui->position_percentage_slider->blockSignals(true);
             ui->position_percentage_spinbox->blockSignals(true);
-            ui->position_percentage_slider->setValue(config.value()->position_percentage);
-            ui->position_percentage_spinbox->setValue(config.value()->position_percentage);
+            ui->position_percentage_slider->setValue(config->position_percentage);
+            ui->position_percentage_spinbox->setValue(config->position_percentage);
             ui->position_percentage_slider->blockSignals(false);
             ui->position_percentage_spinbox->blockSignals(false);
 
             // Set segment controls
             ui->show_segment_checkbox->blockSignals(true);
-            ui->show_segment_checkbox->setChecked(config.value()->show_segment);
+            ui->show_segment_checkbox->setChecked(config->show_segment);
             ui->show_segment_checkbox->blockSignals(false);
 
             ui->segment_start_slider->blockSignals(true);
             ui->segment_start_spinbox->blockSignals(true);
-            ui->segment_start_slider->setValue(config.value()->segment_start_percentage);
-            ui->segment_start_spinbox->setValue(config.value()->segment_start_percentage);
+            ui->segment_start_slider->setValue(config->segment_start_percentage);
+            ui->segment_start_spinbox->setValue(config->segment_start_percentage);
             ui->segment_start_slider->blockSignals(false);
             ui->segment_start_spinbox->blockSignals(false);
 
             ui->segment_end_slider->blockSignals(true);
             ui->segment_end_spinbox->blockSignals(true);
-            ui->segment_end_slider->setValue(config.value()->segment_end_percentage);
-            ui->segment_end_spinbox->setValue(config.value()->segment_end_percentage);
+            ui->segment_end_slider->setValue(config->segment_end_percentage);
+            ui->segment_end_spinbox->setValue(config->segment_end_percentage);
             ui->segment_end_slider->blockSignals(false);
             ui->segment_end_spinbox->blockSignals(false);
 
@@ -254,20 +256,24 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
 void MediaLine_Widget::_setLineAlpha(int alpha) {
     float const alpha_float = static_cast<float>(alpha) / 100;
 
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->alpha() = alpha_float;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->alpha() = alpha_float;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
 }
 
 void MediaLine_Widget::_setLineColor(QString const & hex_color) {
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->hex_color() = hex_color.toStdString();
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->hex_color() = hex_color.toStdString();
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -381,9 +387,11 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
 
     // Check if edge snapping is enabled
     bool use_edge_snapping = false;
-    auto line_opts = _scene->getLineConfig(_active_key);
-    if (line_opts.has_value()) {
-        use_edge_snapping = line_opts.value()->edge_snapping;
+    if (_state) {
+        auto const * line_opts = _state->displayOptions().get<LineDisplayOptions>(QString::fromStdString(_active_key));
+        if (line_opts) {
+            use_edge_snapping = line_opts->edge_snapping;
+        }
     }
 
     if (use_edge_snapping && _edge_snapping_enabled) {
@@ -589,10 +597,12 @@ void MediaLine_Widget::_toggleSelectionMode(QString text) {
 }
 
 void MediaLine_Widget::_toggleShowPoints(bool checked) {
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->show_points = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->show_points = checked;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -601,10 +611,12 @@ void MediaLine_Widget::_toggleShowPoints(bool checked) {
 void MediaLine_Widget::_toggleEdgeSnapping(bool checked) {
     _edge_snapping_enabled = checked;
 
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->edge_snapping = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->edge_snapping = checked;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
 
         // If enabling edge snapping, perform edge detection immediately
@@ -766,10 +778,12 @@ void MediaLine_Widget::_toggleShowHoverCircle(bool checked) {
 }
 
 void MediaLine_Widget::_setLineThickness(int thickness) {
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->line_thickness = thickness;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->line_thickness = thickness;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -790,10 +804,12 @@ void MediaLine_Widget::_setLineThickness(int thickness) {
 }
 
 void MediaLine_Widget::_toggleShowPositionMarker(bool checked) {
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->show_position_marker = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->show_position_marker = checked;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -801,10 +817,12 @@ void MediaLine_Widget::_toggleShowPositionMarker(bool checked) {
 }
 
 void MediaLine_Widget::_setPositionPercentage(int percentage) {
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->position_percentage = percentage;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->position_percentage = percentage;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -825,10 +843,12 @@ void MediaLine_Widget::_setPositionPercentage(int percentage) {
 }
 
 void MediaLine_Widget::_toggleShowSegment(bool checked) {
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->show_segment = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->show_segment = checked;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -839,11 +859,12 @@ void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
     if (_is_updating_percentages) return;
     _is_updating_percentages = true;
 
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
             // Ensure start percentage doesn't exceed end percentage - 1%
-            int max_start_percentage = line_opts.value()->segment_end_percentage - 1;
+            int max_start_percentage = line_opts->segment_end_percentage - 1;
             if (percentage > max_start_percentage) {
                 // Don't allow start to exceed end - 1%
                 QObject * sender_obj = sender();
@@ -859,7 +880,8 @@ void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
                 percentage = max_start_percentage;
             }
 
-            line_opts.value()->segment_start_percentage = percentage;
+            line_opts->segment_start_percentage = percentage;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -884,11 +906,12 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
     if (_is_updating_percentages) return;
     _is_updating_percentages = true;
 
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
             // Ensure end percentage doesn't go below start percentage + 1%
-            int min_end_percentage = line_opts.value()->segment_start_percentage + 1;
+            int min_end_percentage = line_opts->segment_start_percentage + 1;
             if (percentage < min_end_percentage) {
                 // Don't allow end to go below start + 1%
                 QObject * sender_obj = sender();
@@ -904,7 +927,8 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
                 percentage = min_end_percentage;
             }
 
-            line_opts.value()->segment_end_percentage = percentage;
+            line_opts->segment_end_percentage = percentage;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -1048,10 +1072,12 @@ void MediaLine_Widget::_selectLine(int line_index) {
     _selected_line_index = line_index;
 
     // Update the line display options to show the selected line differently
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->selected_line_index = line_index;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->selected_line_index = line_index;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -1061,10 +1087,12 @@ void MediaLine_Widget::_clearLineSelection() {
     _selected_line_index = -1;
 
     // Update the line display options to clear selection
-    if (!_active_key.empty()) {
-        auto line_opts = _scene->getLineConfig(_active_key);
-        if (line_opts.has_value()) {
-            line_opts.value()->selected_line_index = -1;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * line_opts = _state->displayOptions().getMutable<LineDisplayOptions>(key);
+        if (line_opts) {
+            line_opts->selected_line_index = -1;
+            _state->displayOptions().notifyChanged<LineDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }

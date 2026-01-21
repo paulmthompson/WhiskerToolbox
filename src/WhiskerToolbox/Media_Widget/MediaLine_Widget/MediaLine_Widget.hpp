@@ -28,11 +28,12 @@ class LineDrawAllFramesSelectionWidget;
 
 class DataManager;
 class Media_Window;
+class MediaWidgetState;
 
 class MediaLine_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
+    explicit MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state = nullptr, QWidget * parent = nullptr);
     ~MediaLine_Widget() override;
     void showEvent(QShowEvent * event) override;
     void hideEvent(QHideEvent * event) override;
@@ -46,6 +47,7 @@ private:
     Ui::MediaLine_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
+    MediaWidgetState * _state{nullptr};
     std::string _active_key;
     enum class Selection_Mode {
         None,

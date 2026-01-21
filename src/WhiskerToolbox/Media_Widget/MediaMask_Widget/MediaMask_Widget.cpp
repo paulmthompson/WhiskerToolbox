@@ -8,6 +8,7 @@
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
 #include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "Media_Widget/MediaWidgetState.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
@@ -18,11 +19,12 @@
 #include <iostream>
 #include <set>
 
-MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
+MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::MediaMask_Widget),
       _data_manager{std::move(data_manager)},
-      _scene{scene} {
+      _scene{scene},
+      _state{state} {
     ui->setupUi(this);
 
     // Set size policy for proper resizing
@@ -117,26 +119,26 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
 
     // Set the color picker to the current mask color if available
-    if (!key.empty()) {
-        auto config = _scene->getMaskConfig(key);
+    if (!key.empty() && _state) {
+        auto const * config = _state->displayOptions().get<MaskDisplayOptions>(QString::fromStdString(key));
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color()));
-            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha() * 100));
+            ui->color_picker->setColor(QString::fromStdString(config->hex_color()));
+            ui->color_picker->setAlpha(static_cast<int>(config->alpha() * 100));
 
             // Set bounding box checkbox
             ui->show_bounding_box_checkbox->blockSignals(true);
-            ui->show_bounding_box_checkbox->setChecked(config.value()->show_bounding_box);
+            ui->show_bounding_box_checkbox->setChecked(config->show_bounding_box);
             ui->show_bounding_box_checkbox->blockSignals(false);
 
             // Set outline checkbox
             ui->show_outline_checkbox->blockSignals(true);
-            ui->show_outline_checkbox->setChecked(config.value()->show_outline);
+            ui->show_outline_checkbox->setChecked(config->show_outline);
             ui->show_outline_checkbox->blockSignals(false);
 
             // Set transparency checkbox
             ui->use_as_transparency_checkbox->blockSignals(true);
-            ui->use_as_transparency_checkbox->setChecked(config.value()->use_as_transparency);
+            ui->use_as_transparency_checkbox->setChecked(config->use_as_transparency);
             ui->use_as_transparency_checkbox->blockSignals(false);
         }
     }
@@ -145,20 +147,24 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
 void MediaMask_Widget::_setMaskAlpha(int alpha) {
     float const alpha_float = static_cast<float>(alpha) / 100;
 
-    if (!_active_key.empty()) {
-        auto mask_opts = _scene->getMaskConfig(_active_key);
-        if (mask_opts.has_value()) {
-            mask_opts.value()->alpha() = alpha_float;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * mask_opts = _state->displayOptions().getMutable<MaskDisplayOptions>(key);
+        if (mask_opts) {
+            mask_opts->alpha() = alpha_float;
+            _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
 }
 
 void MediaMask_Widget::_setMaskColor(QString const & hex_color) {
-    if (!_active_key.empty()) {
-        auto mask_opts = _scene->getMaskConfig(_active_key);
-        if (mask_opts.has_value()) {
-            mask_opts.value()->hex_color() = hex_color.toStdString();
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * mask_opts = _state->displayOptions().getMutable<MaskDisplayOptions>(key);
+        if (mask_opts) {
+            mask_opts->hex_color() = hex_color.toStdString();
+            _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -231,10 +237,12 @@ void MediaMask_Widget::_toggleShowHoverCircle(bool checked) {
 }
 
 void MediaMask_Widget::_toggleShowBoundingBox(bool checked) {
-    if (!_active_key.empty()) {
-        auto mask_opts = _scene->getMaskConfig(_active_key);
-        if (mask_opts.has_value()) {
-            mask_opts.value()->show_bounding_box = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * mask_opts = _state->displayOptions().getMutable<MaskDisplayOptions>(key);
+        if (mask_opts) {
+            mask_opts->show_bounding_box = checked;
+            _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -242,10 +250,12 @@ void MediaMask_Widget::_toggleShowBoundingBox(bool checked) {
 }
 
 void MediaMask_Widget::_toggleShowOutline(bool checked) {
-    if (!_active_key.empty()) {
-        auto mask_opts = _scene->getMaskConfig(_active_key);
-        if (mask_opts.has_value()) {
-            mask_opts.value()->show_outline = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * mask_opts = _state->displayOptions().getMutable<MaskDisplayOptions>(key);
+        if (mask_opts) {
+            mask_opts->show_outline = checked;
+            _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
         }
         _scene->UpdateCanvas();
     }
@@ -255,17 +265,19 @@ void MediaMask_Widget::_toggleShowOutline(bool checked) {
 void MediaMask_Widget::_toggleUseAsTransparency(bool checked) {
     std::cout << "Transparency checkbox toggled: " << (checked ? "enabled" : "disabled") << std::endl;
 
-    if (!_active_key.empty()) {
-        auto mask_opts = _scene->getMaskConfig(_active_key);
-        if (mask_opts.has_value()) {
-            mask_opts.value()->use_as_transparency = checked;
+    if (!_active_key.empty() && _state) {
+        auto const key = QString::fromStdString(_active_key);
+        auto * mask_opts = _state->displayOptions().getMutable<MaskDisplayOptions>(key);
+        if (mask_opts) {
+            mask_opts->use_as_transparency = checked;
+            _state->displayOptions().notifyChanged<MaskDisplayOptions>(key);
             std::cout << "Updated mask config for key: " << _active_key << std::endl;
         } else {
             std::cout << "No mask config found for key: " << _active_key << std::endl;
         }
         _scene->UpdateCanvas();
     } else {
-        std::cout << "No active key set" << std::endl;
+        std::cout << "No active key set or no state available" << std::endl;
     }
     std::cout << "Use as transparency " << (checked ? "enabled" : "disabled") << std::endl;
 }

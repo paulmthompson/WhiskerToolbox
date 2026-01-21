@@ -25,12 +25,13 @@ class DataManager;
 class Media_Window;
 class MaskDilationWidget;
 class Section;
+class MediaWidgetState;
 
 class MediaMask_Widget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
+    explicit MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state = nullptr, QWidget * parent = nullptr);
     ~MediaMask_Widget() override;
 
     void setActiveKey(std::string const & key);
@@ -44,6 +45,7 @@ private:
     Ui::MediaMask_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
+    MediaWidgetState * _state{nullptr};
     std::string _active_key;
 
     // Selection mode enum
