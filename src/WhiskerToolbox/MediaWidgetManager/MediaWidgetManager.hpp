@@ -12,7 +12,7 @@ class DataManager;
 class Media_Widget;
 class Media_Window;
 class GroupManager;
-class WorkspaceManager;
+class EditorRegistry;
 
 /**
  * @brief Manager class for multiple Media_Widget instances
@@ -26,7 +26,7 @@ class MediaWidgetManager : public QObject {
 
 public:
     explicit MediaWidgetManager(std::shared_ptr<DataManager> data_manager,
-                                WorkspaceManager * workspace_manager = nullptr,
+                                EditorRegistry * editor_registry = nullptr,
                                 QObject * parent = nullptr);
     ~MediaWidgetManager();
 
@@ -132,7 +132,7 @@ signals:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
-    WorkspaceManager * _workspace_manager{nullptr};
+    EditorRegistry * _editor_registry{nullptr};
     std::unordered_map<std::string, std::unique_ptr<Media_Widget>> _media_widgets;
     GroupManager * _group_manager{nullptr};
 

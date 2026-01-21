@@ -2,7 +2,7 @@
 
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
-#include "EditorState/WorkspaceManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -400,20 +400,20 @@ TEST_CASE("SelectionContext properties context", "[SelectionContext]") {
     }
 }
 
-// === WorkspaceManager Tests ===
+// === EditorRegistry Tests ===
 
-TEST_CASE("WorkspaceManager state registration", "[WorkspaceManager]") {
+TEST_CASE("EditorRegistry state registration", "[EditorRegistry]") {
     int argc = 0;
     QCoreApplication app(argc, nullptr);
 
-    WorkspaceManager mgr(nullptr);
+    EditorRegistry mgr(nullptr);
 
     SECTION("Register and retrieve state") {
         auto state = std::make_shared<TestState>();
         mgr.registerState(state);
 
         REQUIRE(mgr.stateCount() == 1);
-        REQUIRE(mgr.getState(state->getInstanceId()) == state);
+        REQUIRE(mgr.state(state->getInstanceId()) == state);
     }
 
     SECTION("Get states by type") {
@@ -422,7 +422,7 @@ TEST_CASE("WorkspaceManager state registration", "[WorkspaceManager]") {
         mgr.registerState(state1);
         mgr.registerState(state2);
 
-        auto states = mgr.getStatesByType("TestState");
+        auto states = mgr.statesByType("TestState");
         REQUIRE(states.size() == 2);
     }
 
@@ -432,11 +432,11 @@ TEST_CASE("WorkspaceManager state registration", "[WorkspaceManager]") {
 
         mgr.unregisterState(state->getInstanceId());
         REQUIRE(mgr.stateCount() == 0);
-        REQUIRE(mgr.getState(state->getInstanceId()) == nullptr);
+        REQUIRE(mgr.state(state->getInstanceId()) == nullptr);
     }
 
     SECTION("stateRegistered signal") {
-        QSignalSpy spy(&mgr, &WorkspaceManager::stateRegistered);
+        QSignalSpy spy(&mgr, &EditorRegistry::stateRegistered);
 
         auto state = std::make_shared<TestState>();
         mgr.registerState(state);
@@ -447,21 +447,34 @@ TEST_CASE("WorkspaceManager state registration", "[WorkspaceManager]") {
     }
 }
 
-TEST_CASE("WorkspaceManager editor type factory", "[WorkspaceManager]") {
+TEST_CASE("EditorRegistry editor type factory", "[EditorRegistry]") {
     int argc = 0;
     QCoreApplication app(argc, nullptr);
 
-    WorkspaceManager mgr(nullptr);
+    EditorRegistry mgr(nullptr);
 
     SECTION("Register and create via factory") {
-        EditorTypeInfo info{"TestState", "Test State", "", "main"};
-        mgr.registerEditorType(info, []() { return std::make_shared<TestState>(); });
+        EditorRegistry::EditorTypeInfo info{
+            .type_id = "TestState",
+            .display_name = "Test State",
+            .icon_path = "",
+            .menu_path = "",
+            .default_zone = "main",
+            .allow_multiple = true,
+            .create_state = []() { return std::make_shared<TestState>(); },
+            .create_view = nullptr,
+            .create_properties = nullptr
+        };
+        mgr.registerType(info);
 
-        REQUIRE(mgr.isEditorTypeRegistered("TestState"));
+        REQUIRE(mgr.hasType("TestState"));
 
         auto state = mgr.createState("TestState");
         REQUIRE(state != nullptr);
         REQUIRE(state->getTypeName() == "TestState");
+        
+        // createState is a factory method - must explicitly register
+        mgr.registerState(state);
         REQUIRE(mgr.stateCount() == 1);
     }
 
@@ -470,22 +483,31 @@ TEST_CASE("WorkspaceManager editor type factory", "[WorkspaceManager]") {
         REQUIRE(state == nullptr);
     }
 
-    SECTION("registeredEditorTypes returns info") {
-        EditorTypeInfo info{"TestState", "Test State", ":/icon.png", "main"};
-        mgr.registerEditorType(info, []() { return std::make_shared<TestState>(); });
+    SECTION("allTypes returns info") {
+        EditorRegistry::EditorTypeInfo info{
+            .type_id = "TestState",
+            .display_name = "Test State",
+            .icon_path = ":/icon.png",
+            .menu_path = "",
+            .default_zone = "main",
+            .allow_multiple = true,
+            .create_state = []() { return std::make_shared<TestState>(); },
+            .create_view = nullptr,
+            .create_properties = nullptr
+        };
+        mgr.registerType(info);
 
-        auto types = mgr.registeredEditorTypes();
+        auto types = mgr.allTypes();
         REQUIRE(types.size() == 1);
-        REQUIRE(types[0].type_name == "TestState");
-        REQUIRE(types[0].display_name == "Test State");
+        REQUIRE(types[0].type_id == "TestState");
     }
 }
 
-TEST_CASE("WorkspaceManager selection context access", "[WorkspaceManager]") {
+TEST_CASE("EditorRegistry selection context access", "[EditorRegistry]") {
     int argc = 0;
     QCoreApplication app(argc, nullptr);
 
-    WorkspaceManager mgr(nullptr);
+    EditorRegistry mgr(nullptr);
 
     SECTION("selectionContext is not null") {
         REQUIRE(mgr.selectionContext() != nullptr);
@@ -498,11 +520,11 @@ TEST_CASE("WorkspaceManager selection context access", "[WorkspaceManager]") {
     }
 }
 
-TEST_CASE("WorkspaceManager dirty state tracking", "[WorkspaceManager]") {
+TEST_CASE("EditorRegistry dirty state tracking", "[EditorRegistry]") {
     int argc = 0;
     QCoreApplication app(argc, nullptr);
 
-    WorkspaceManager mgr(nullptr);
+    EditorRegistry mgr(nullptr);
 
     SECTION("hasUnsavedChanges reflects state") {
         auto state = std::make_shared<TestState>();
@@ -521,7 +543,7 @@ TEST_CASE("WorkspaceManager dirty state tracking", "[WorkspaceManager]") {
         auto state = std::make_shared<TestState>();
         mgr.registerState(state);
 
-        QSignalSpy spy(&mgr, &WorkspaceManager::unsavedChangesChanged);
+        QSignalSpy spy(&mgr, &EditorRegistry::unsavedChangesChanged);
 
         state->setValue(42);
         REQUIRE(spy.count() == 1);
@@ -529,22 +551,34 @@ TEST_CASE("WorkspaceManager dirty state tracking", "[WorkspaceManager]") {
     }
 }
 
-TEST_CASE("WorkspaceManager serialization", "[WorkspaceManager]") {
+TEST_CASE("EditorRegistry serialization", "[EditorRegistry]") {
     int argc = 0;
     QCoreApplication app(argc, nullptr);
 
     SECTION("Round-trip serialization") {
         // Create workspace with states
-        WorkspaceManager original(nullptr);
-        EditorTypeInfo info{"TestState", "Test State", "", "main"};
-        original.registerEditorType(info, []() { return std::make_shared<TestState>(); });
+        EditorRegistry original(nullptr);
+        EditorRegistry::EditorTypeInfo info{
+            .type_id = "TestState",
+            .display_name = "Test State",
+            .icon_path = "",
+            .menu_path = "",
+            .default_zone = "main",
+            .allow_multiple = true,
+            .create_state = []() { return std::make_shared<TestState>(); },
+            .create_view = nullptr,
+            .create_properties = nullptr
+        };
+        original.registerType(info);
 
         auto state1 = std::dynamic_pointer_cast<TestState>(original.createState("TestState"));
+        original.registerState(state1);  // Explicitly register
         state1->setDisplayName("State 1");
         state1->setName("first");
         state1->setValue(100);
 
         auto state2 = std::dynamic_pointer_cast<TestState>(original.createState("TestState"));
+        original.registerState(state2);  // Explicitly register
         state2->setDisplayName("State 2");
         state2->setName("second");
         state2->setValue(200);
@@ -558,8 +592,8 @@ TEST_CASE("WorkspaceManager serialization", "[WorkspaceManager]") {
         REQUIRE_FALSE(json.empty());
 
         // Restore to new workspace
-        WorkspaceManager restored(nullptr);
-        restored.registerEditorType(info, []() { return std::make_shared<TestState>(); });
+        EditorRegistry restored(nullptr);
+        restored.registerType(info);
 
         REQUIRE(restored.fromJson(json));
         REQUIRE(restored.stateCount() == 2);

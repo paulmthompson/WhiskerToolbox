@@ -6,14 +6,12 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(EDITOR_STATE_SOURCES
-    EditorFactory.cpp
-    EditorFactory.hpp
+    EditorRegistry.cpp
+    EditorRegistry.hpp
     EditorState.cpp
     EditorState.hpp
     SelectionContext.cpp
     SelectionContext.hpp
-    WorkspaceManager.cpp
-    WorkspaceManager.hpp
 )
 
 add_library(EditorState STATIC ${EDITOR_STATE_SOURCES})

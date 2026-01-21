@@ -14,10 +14,9 @@ The goals are:
 4. **Support serialization**: Enable save/restore of complete application state
 5. **Prepare for undo/redo**: Lay groundwork for command pattern
 
-The refactoring introduces three core abstractions:
+The refactoring introduces two core abstractions:
 - **EditorState**: Base class for serializable widget state
-- **WorkspaceManager**: Registry for all open editor states
-- **SelectionContext**: Centralized selection and focus management
+- **EditorRegistry**: Central registry for editor types, instances, and selection (includes SelectionContext)
 
 ## Inspirations
 
@@ -40,19 +39,19 @@ The refactoring introduces three core abstractions:
 **Deliverables**:
 - ✅ [EditorState.hpp](../../WhiskerToolbox/EditorState/EditorState.hpp) - Base class for serializable widget state
 - ✅ [SelectionContext.hpp](../../WhiskerToolbox/EditorState/SelectionContext.hpp) - Centralized selection and focus management
-- ✅ [WorkspaceManager.hpp](../../WhiskerToolbox/EditorState/WorkspaceManager.hpp) - Registry for editor states
-- ✅ [EditorState.test.cpp](../../WhiskerToolbox/EditorState/EditorState.test.cpp) - Comprehensive unit tests (50+ passing)
+- ✅ [EditorRegistry.hpp](../../WhiskerToolbox/EditorState/EditorRegistry.hpp) - Central registry for types, instances, and selection
+- ✅ [EditorRegistry.test.cpp](../../WhiskerToolbox/EditorState/EditorRegistry.test.cpp) - Comprehensive unit tests (50+ passing)
 
 **Test Results**: All tests passing
 - EditorState: Instance IDs, dirty state tracking, JSON serialization
 - SelectionContext: Data/entity selection, active editor tracking, properties context routing
-- WorkspaceManager: State registry, factory system, workspace serialization
+- EditorRegistry: Type registration, state registry, factory system, workspace serialization
 - Signal/slot behavior validated across all components
 
 **Key Design Points**:
 - EditorState provides base functionality for all widget states
 - SelectionContext enables widgets to communicate without direct dependencies
-- WorkspaceManager acts as central registry and provides workspace-level serialization
+- EditorRegistry consolidates type registration, state registry, and factory functions into a single cohesive class
 - All core classes use Qt signals for reactive updates
 - Full reflect-cpp integration for JSON serialization
 
@@ -72,13 +71,15 @@ The EditorState library provides only the base infrastructure. Each widget modul
 ```
 src/WhiskerToolbox/EditorState/
 ├── CMakeLists.txt
-├── EditorState.hpp            # Base class for all states
+├── EditorState.hpp              # Base class for all states
 ├── EditorState.cpp
-├── WorkspaceManager.hpp       # Central state registry
-├── WorkspaceManager.cpp
-├── SelectionContext.hpp       # Inter-widget communication
+├── EditorRegistry.hpp           # Central registry (types + instances + selection)
+├── EditorRegistry.cpp
+├── SelectionContext.hpp         # Inter-widget communication
 ├── SelectionContext.cpp
-└── EditorState.test.cpp       # Unit tests
+├── EditorRegistry.test.cpp      # Unit tests for registry
+├── EditorState.test.cpp         # Unit tests for state
+└── EditorState.integration.test.cpp  # Cross-widget integration tests
 
 src/WhiskerToolbox/Media_Widget/
 ├── Media_Widget.hpp
@@ -107,17 +108,17 @@ Create empty/minimal state classes that widgets can hold alongside existing memb
 - [x] Create `DataManagerWidgetState.hpp/.cpp` in DataManager_Widget directory
 - [x] Create `MediaWidgetState.hpp/.cpp` in Media_Widget directory  
 - [x] Update widget constructors to create and hold state object
-- [x] Register state with WorkspaceManager when widget is created
+- [x] Register state with EditorRegistry when widget is created
 - [x] Unregister state when widget is destroyed
 - [x] Widgets keep all existing member variables - state is additional
 
-### 2.2 Integrate WorkspaceManager into MainWindow (Week 4) ✅ COMPLETE
+### 2.2 Integrate EditorRegistry into MainWindow (Week 4) ✅ COMPLETE
 
 **Deliverables**:
-- [x] Add WorkspaceManager member to MainWindow
+- [x] Add EditorRegistry member to MainWindow
 - [x] Initialize in constructor after DataManager
-- [x] Provide accessor for child widgets
-- [x] Update widget creation to pass workspace_manager pointer
+- [x] Provide accessor for child widgets (`editorRegistry()` method)
+- [x] Update widget creation to pass EditorRegistry pointer
 
 ### 2.3 Connect DataManager_Widget Selection (Week 5) ✅ COMPLETE
 
@@ -132,11 +133,11 @@ Establish first communication path: DataManager_Widget → SelectionContext
 
 **Implementation Details**:
 - Added `_state` (shared_ptr<DataManagerWidgetState>) member to DataManager_Widget
-- Added `_selection_context` pointer to access WorkspaceManager's SelectionContext
-- Included necessary headers: `DataManagerWidgetState.hpp`, `EditorState/SelectionContext.hpp`, `EditorState/WorkspaceManager.hpp`
+- Added `_selection_context` pointer to access EditorRegistry's SelectionContext
+- Included necessary headers: `DataManagerWidgetState.hpp`, `EditorState/SelectionContext.hpp`, `EditorState/EditorRegistry.hpp`
 - Connected Feature_Table_Widget::featureSelected → state->setSelectedDataKey()
 - Connected DataManagerWidgetState::selectedDataKeyChanged → SelectionContext->setSelectedData()
-- State unregistered from WorkspaceManager in destructor
+- State unregistered from EditorRegistry in destructor
 
 **Test Coverage**:
 - Added 5 comprehensive integration tests in DataManagerWidgetState.test.cpp
@@ -154,21 +155,21 @@ Media_Widget now responds to SelectionContext changes:
 
 **Implementation Details**:
 - Added `_state` (shared_ptr<MediaWidgetState>) member to Media_Widget
-- Added `_selection_context` pointer to access WorkspaceManager's SelectionContext
-- Included necessary headers: `EditorState/SelectionContext.hpp`, `EditorState/WorkspaceManager.hpp`, `MediaWidgetState.hpp`
-- Implemented constructor initialization: state creation, WorkspaceManager registration, SelectionContext connection
+- Added `_selection_context` pointer to access EditorRegistry's SelectionContext
+- Included necessary headers: `EditorState/SelectionContext.hpp`, `EditorState/EditorRegistry.hpp`, `MediaWidgetState.hpp`
+- Implemented constructor initialization: state creation, EditorRegistry registration, SelectionContext connection
 - Connected Feature_Table_Widget::featureSelected → state->setDisplayedDataKey() → SelectionContext::setSelectedData()
 - Implemented `_onExternalSelectionChanged(SelectionSource const& source)` slot that:
   - Filters out own instance ID to prevent self-response
   - Gets selected data key from SelectionContext::primarySelectedData()
   - Updates MediaWidgetState with externally selected data
   - Intentionally decoupled from Feature_Table_Widget (will be removed in Phase 3)
-- State unregistered from WorkspaceManager in destructor
+- State unregistered from EditorRegistry in destructor
 
 **Test Coverage**:
 - Created `EditorState.integration.test.cpp` with comprehensive cross-widget tests
 - Tests verify:
-  - MediaWidgetState registration with WorkspaceManager
+  - MediaWidgetState registration with EditorRegistry
   - DataManagerWidgetState registration
   - Cross-widget selection propagation (DataManager → SelectionContext → Media_Widget)
   - Circular update prevention via SelectionSource filtering
@@ -351,13 +352,13 @@ signals:
 
 #### Step 2: Integrate State and Connect as Listener (Days 3-4) ✅
 - Add `_state` and `_selection_context` members to DataTransform_Widget
-- Register state with WorkspaceManager
+- Register state with EditorRegistry
 - Connect to SelectionContext::selectionChanged
 - Implement response to external selection changes
 - Update internal logic to read from state instead of embedded feature table
 
 #### Step 3: Create Integration Tests (Day 5) ✅
-- Test state registration with WorkspaceManager
+- Test state registration with EditorRegistry
 - Test cross-widget selection propagation (DataManager → DataTransform)
 - Test circular update prevention
 - Test transform execution with externally selected data
@@ -384,11 +385,11 @@ signals:
 - [DataTransformWidgetState.cpp](../../WhiskerToolbox/DataTransform_Widget/DataTransformWidgetState.cpp) - State implementation
 
 **Files Modified**:
-- [DataTransform_Widget.hpp](../../WhiskerToolbox/DataTransform_Widget/DataTransform_Widget.hpp) - Added state members, WorkspaceManager parameter
+- [DataTransform_Widget.hpp](../../WhiskerToolbox/DataTransform_Widget/DataTransform_Widget.hpp) - Added state members, EditorRegistry parameter
 - [DataTransform_Widget.cpp](../../WhiskerToolbox/DataTransform_Widget/DataTransform_Widget.cpp) - Implemented state integration, external selection handler
 - [DataTransform_Widget.ui](../../WhiskerToolbox/DataTransform_Widget/DataTransform_Widget.ui) - Removed Feature_Table_Widget, added input selection labels
 - [DataTransform_Widget/CMakeLists.txt](../../WhiskerToolbox/DataTransform_Widget/CMakeLists.txt) - Added state files, EditorState dependency, removed Feature_Table_Widget dependency
-- [mainwindow.cpp](../../WhiskerToolbox/Main_Window/mainwindow.cpp) - Pass WorkspaceManager to DataTransform_Widget constructor
+- [mainwindow.cpp](../../WhiskerToolbox/Main_Window/mainwindow.cpp) - Pass EditorRegistry to DataTransform_Widget constructor
 
 **Significance**: This phase proves that widgets can successfully rely on external selection via SelectionContext without embedded feature tables. This validates the architecture for Phase 3's Central Properties Zone.
 
@@ -435,7 +436,7 @@ This table tracks all widgets managed by MainWindow and their migration progress
 | **ML_Widget** | ❌ | ❌ | ❌ | Machine learning inference |
 | **BatchProcessing_Widget** | ❌ | ❌ | ❌ | Batch pipeline execution |
 | **Export_Video_Widget** | ❌ | ❌ | ❌ | Video export configuration |
-| **Test_Widget** | ✅ `TestWidgetState` | ✅ | ✅ | **Proof-of-concept complete** - View/Properties split validated, EditorFactory integration complete |
+| **Test_Widget** | ✅ `TestWidgetState` | ✅ | ✅ | **Proof-of-concept complete** - View/Properties split validated, EditorRegistry integration complete |
 
 #### Loader Widgets (Modal/Semi-modal Data Import)
 
@@ -497,8 +498,8 @@ Loader widgets have a different lifecycle than primary widgets:
 | Decision | Date | Choice | Rationale |
 |----------|------|--------|-----------|
 | Loader widget priority | 2026-01-21 | Defer (Phase 6+) | Focus on primary widgets, loaders are transient |
-| EditorFactory adoption | 2026-01-21 | Incremental (new/refactored only) | Prove pattern first, special needs will reduce with refactoring |
-| State ownership | 2026-01-21 | shared_ptr in both WorkspaceManager and widgets | WM needs ownership for serialization/undo; widgets need direct access |
+| EditorRegistry adoption | 2026-01-21 | Incremental (new/refactored only) | Prove pattern first, special needs will reduce with refactoring |
+| State ownership | 2026-01-21 | shared_ptr in both EditorRegistry and widgets | Registry needs ownership for serialization/undo; widgets need direct access |
 | UI zones layout | 2026-01-21 | Left: Feature_Table + Groups; Right: Properties | Clear separation of selection (left) vs configuration (right) |
 
 ### 3.1 PropertiesHost Widget (Week 9)
@@ -545,13 +546,13 @@ Loader widgets have a different lifecycle than primary widgets:
  * Example: Test_Widget could be split into:
  * - TestWidgetView: Shows visualization, receives state
  * - TestWidgetProperties: Shows controls, modifies state
- * - TestWidgetState: Shared between both, owned by WorkspaceManager
+ * - TestWidgetState: Shared between both, owned by EditorRegistry
  */
 class PropertiesHost : public QWidget {
     Q_OBJECT
 
 public:
-    explicit PropertiesHost(WorkspaceManager* workspace_manager,
+    explicit PropertiesHost(EditorRegistry* editor_registry,
                             QWidget* parent = nullptr);
     ~PropertiesHost() override;
 
@@ -600,7 +601,7 @@ private slots:
     void onPropertiesContextChanged(QString const& context_id);
 
 private:
-    WorkspaceManager* _workspace_manager;
+    EditorRegistry* _editor_registry;
     QStackedWidget* _stack;
     QLabel* _empty_label;  // Shown when no context available
     
@@ -654,11 +655,11 @@ The key architectural pattern is that a "widget" becomes two components sharing 
 
 **State Ownership Model**:
 
-Both `WorkspaceManager` and widgets hold `shared_ptr<EditorState>`. This is intentional:
+Both `EditorRegistry` and widgets hold `shared_ptr<EditorState>`. This is intentional:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    WorkspaceManager                         │
+│                    EditorRegistry                           │
 │  (holds shared_ptr for each registered state)              │
 │                                                             │
 │  Responsibilities:                                          │
@@ -668,7 +669,7 @@ Both `WorkspaceManager` and widgets hold `shared_ptr<EditorState>`. This is inte
 │  - Can send restored state to widgets                      │
 └─────────────────────────────────────────────────────────────┘
          │
-         │ shared_ptr (WorkspaceManager owns for persistence)
+         │ shared_ptr (EditorRegistry owns for persistence)
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -685,10 +686,10 @@ Both `WorkspaceManager` and widgets hold `shared_ptr<EditorState>`. This is inte
 ```
 
 **Why shared_ptr for both?**
-1. **WorkspaceManager needs ownership** for serialization, command pattern, undo/redo
-2. **Widgets need direct access** without going through WorkspaceManager for every read/write
+1. **EditorRegistry needs ownership** for serialization, command pattern, undo/redo
+2. **Widgets need direct access** without going through EditorRegistry for every read/write
 3. **State outlives widgets** - when a dock is closed and reopened, state persists
-4. **Restoration flow**: WorkspaceManager can restore state → widgets automatically see changes via signals
+4. **Restoration flow**: EditorRegistry can restore state → widgets automatically see changes via signals
 
 **Implementation Notes**:
 
@@ -713,231 +714,43 @@ Both `WorkspaceManager` and widgets hold `shared_ptr<EditorState>`. This is inte
 - Numeric: `zoom_level` (slider), `grid_spacing` (spinbox)
 - Text: `label_text` (line edit)
 
-### 3.1.4 EditorFactory and Widget Creation
+### 3.1.4 EditorRegistry and Widget Creation
 
-Currently, MainWindow directly creates widgets with hardcoded logic. The EditorFactory centralizes this:
+✅ **IMPLEMENTED** - See [EditorRegistry.hpp](../../WhiskerToolbox/EditorState/EditorRegistry.hpp)
 
-```cpp
-// src/WhiskerToolbox/EditorState/EditorFactory.hpp
-
-/**
- * @brief Centralized widget creation and registration
- * 
- * EditorFactory provides:
- * 1. Registry of all editor types that can be created
- * 2. Factory functions for creating state + view pairs
- * 3. Factory functions for creating properties widgets
- * 4. Metadata about editors (name, icon, default zone)
- * 
- * This replaces the scattered widget creation code in MainWindow.
- */
-class EditorFactory : public QObject {
-    Q_OBJECT
-
-public:
-    /// @brief Describes an editor type
-    struct EditorTypeInfo {
-        QString type_id;           // Unique identifier (e.g., "MediaWidget")
-        QString display_name;      // User-facing name (e.g., "Media Viewer")
-        QString icon_path;         // Path to icon resource
-        QString menu_path;         // Menu location (e.g., "View/Widgets")
-        ZoneManager::Zone default_zone;  // Where to initially place the widget
-        bool allow_multiple;       // Can user open multiple instances?
-    };
-
-    /// @brief Result of creating an editor
-    struct EditorInstance {
-        std::shared_ptr<EditorState> state;
-        QWidget* view;
-        QWidget* properties;  // May be nullptr if not split
-    };
-
-    explicit EditorFactory(WorkspaceManager* workspace_manager,
-                          DataManager* data_manager,
-                          QObject* parent = nullptr);
-
-    // ========== Registration ==========
-
-    /**
-     * @brief Register an editor type with its factories
-     * 
-     * @param info Metadata about the editor type
-     * @param state_factory Creates the EditorState subclass
-     * @param view_factory Creates the view widget given state
-     * @param properties_factory Creates the properties widget (optional)
-     */
-    void registerEditorType(
-        EditorTypeInfo const& info,
-        std::function<std::shared_ptr<EditorState>()> state_factory,
-        std::function<QWidget*(std::shared_ptr<EditorState>)> view_factory,
-        std::function<QWidget*(std::shared_ptr<EditorState>)> properties_factory = nullptr
-    );
-
-    // ========== Creation ==========
-
-    /// @brief Create a new editor instance (state + view + optional properties)
-    [[nodiscard]] EditorInstance createEditor(QString const& type_id);
-
-    /// @brief Create only the state (for deserialization)
-    [[nodiscard]] std::shared_ptr<EditorState> createState(QString const& type_id);
-
-    /// @brief Create properties widget for existing state
-    [[nodiscard]] QWidget* createProperties(std::shared_ptr<EditorState> state);
-
-    // ========== Queries ==========
-
-    [[nodiscard]] std::vector<EditorTypeInfo> availableEditors() const;
-    [[nodiscard]] bool hasEditorType(QString const& type_id) const;
-    [[nodiscard]] EditorTypeInfo getEditorInfo(QString const& type_id) const;
-
-signals:
-    void editorTypeRegistered(QString type_id);
-    void editorCreated(QString instance_id);
-
-private:
-    WorkspaceManager* _workspace_manager;
-    DataManager* _data_manager;
-    
-    struct EditorRegistration {
-        EditorTypeInfo info;
-        std::function<std::shared_ptr<EditorState>()> state_factory;
-        std::function<QWidget*(std::shared_ptr<EditorState>)> view_factory;
-        std::function<QWidget*(std::shared_ptr<EditorState>)> properties_factory;
-    };
-    
-    std::map<QString, EditorRegistration> _registrations;
-};
-```
+EditorRegistry consolidates what was originally planned as separate WorkspaceManager and EditorFactory classes into a single cohesive class. Factory functions are stored as part of type metadata.
 
 #### 3.1.5 Registration Example
 
-When the application starts, MainWindow registers all editor types:
+✅ **IMPLEMENTED** - See [mainwindow.cpp](../../WhiskerToolbox/Main_Window/mainwindow.cpp) `_registerEditorTypes()`
 
-```cpp
-void MainWindow::registerEditorTypes() {
-    // Media Widget
-    _editor_factory->registerEditorType(
-        {
-            .type_id = "MediaWidget",
-            .display_name = "Media Viewer",
-            .icon_path = ":/icons/media.png",
-            .menu_path = "View/Widgets",
-            .default_zone = ZoneManager::Zone::MainEditor,
-            .allow_multiple = true
-        },
-        // State factory
-        []() { return std::make_shared<MediaWidgetState>(); },
-        // View factory
-        [this](auto state) {
-            auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
-            return new MediaWidgetView(_data_manager, _time_scrollbar, media_state, this);
-        },
-        // Properties factory
-        [this](auto state) {
-            auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
-            return new MediaWidgetProperties(media_state, this);
-        }
-    );
-    
-    // Test Widget (proof of concept)
-    _editor_factory->registerEditorType(
-        {
-            .type_id = "TestWidget",
-            .display_name = "Test Widget",
-            .icon_path = ":/icons/test.png",
-            .menu_path = "View/Development",
-            .default_zone = ZoneManager::Zone::MainEditor,
-            .allow_multiple = false
-        },
-        []() { return std::make_shared<TestWidgetState>(); },
-        [this](auto state) {
-            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
-            return new TestWidgetView(test_state, this);
-        },
-        [this](auto state) {
-            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
-            return new TestWidgetProperties(test_state, this);
-        }
-    );
-    
-    // DataViewer (future)
-    // Analysis Dashboard (future)
-    // etc.
-}
-```
+When the application starts, MainWindow registers editor types with EditorRegistry. Factory functions are embedded in the type definition:
 
 #### 3.1.6 MainWindow Simplification
 
-With EditorFactory, MainWindow's widget creation becomes uniform:
+✅ **IMPLEMENTED** - See [mainwindow.cpp](../../WhiskerToolbox/Main_Window/mainwindow.cpp) `openEditor()`
 
-```cpp
-// Before (scattered, duplicated code in openXXXWidget methods)
-void MainWindow::openTestWidget() {
-    std::string const key = "Test_widget";
-    if (!_widgets.contains(key)) {
-        auto test_widget = std::make_unique<Test_Widget>(this);
-        test_widget->setObjectName(key);
-        registerDockWidget(key, test_widget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(test_widget);
-    }
-    showDockWidget(key);
-}
-
-// After (unified through factory)
-void MainWindow::openEditor(QString const& type_id) {
-    auto info = _editor_factory->getEditorInfo(type_id);
-    
-    // Check if single-instance and already open
-    if (!info.allow_multiple) {
-        auto existing = _workspace_manager->getStatesByType(type_id);
-        if (!existing.empty()) {
-            // Just show existing
-            showDockWidget(existing[0]->getInstanceId());
-            return;
-        }
-    }
-    
-    // Create new instance
-    auto instance = _editor_factory->createEditor(type_id);
-    
-    // Register state with workspace
-    _workspace_manager->registerState(instance.state);
-    
-    // Create dock widget
-    QString dock_key = instance.state->getInstanceId();
-    auto dock_widget = new ads::CDockWidget(dock_key);
-    dock_widget->setWidget(instance.view);
-    
-    // Add to appropriate zone
-    _zone_manager->addToZone(dock_widget, info.default_zone);
-    
-    showDockWidget(dock_key.toStdString());
-}
-
-// Menu action connects to generic open
-connect(ui->actionTest_Widget, &QAction::triggered, this, 
-    [this]() { openEditor("TestWidget"); });
-```
+With EditorRegistry, MainWindow's widget creation becomes uniform:
 
 ### 3.1.7 Phase 3.1 Deliverables
 
 | Deliverable | Priority | Status |
 |-------------|----------|--------|
 | `PropertiesHost.hpp/.cpp` | High | 📋 (deferred to Phase 3.2) |
-| `EditorFactory.hpp/.cpp` | High | ✅ |
+| `EditorRegistry.hpp/.cpp` | High | ✅ |
 | `TestWidgetState.hpp/.cpp` | High | ✅ |
 | `TestWidgetStateData.hpp` | High | ✅ |
 | `TestWidgetView.hpp/.cpp` | High | ✅ |
 | `TestWidgetProperties.hpp/.cpp` | High | ✅ |
-| Register Test_Widget with EditorFactory | High | ✅ |
+| Register Test_Widget with EditorRegistry | High | ✅ |
 | Integrate PropertiesHost into MainWindow layout | High | 📋 (deferred to Phase 3.2) |
 | Unit tests for PropertiesHost | Medium | 📋 (deferred to Phase 3.2) |
-| Unit tests for EditorFactory | Medium | ✅ |
+| Unit tests for EditorRegistry | Medium | ✅ |
 | Integration test: TestWidget view/properties split | High | ✅ |
 | Documentation update | Medium | ✅ |
 
 **Success Criteria**:
-1. ✅ Test_Widget can be opened via EditorFactory - **COMPLETE**
+1. ✅ Test_Widget can be opened via EditorRegistry - **COMPLETE**
 2. ✅ TestWidgetView appears in dock widget
 3. ✅ TestWidgetProperties shown side-by-side with view (via QSplitter)
 4. ✅ State changes in properties reflect in view (and vice versa) - **VALIDATED**
@@ -951,14 +764,14 @@ connect(ui->actionTest_Widget, &QAction::triggered, this,
 - `TestWidgetState.hpp/.cpp` - EditorState subclass with full signal support
 - `TestWidgetView.hpp/.cpp` - QGraphicsView-based visualization component
 - `TestWidgetProperties.hpp/.cpp` - Properties panel with UI controls
-- `EditorFactory.hpp/.cpp` - Centralized editor creation system
-- `EditorFactory.test.cpp` - Comprehensive unit tests for factory
+- `EditorRegistry.hpp/.cpp` - Consolidated type/instance/selection registry
+- `EditorRegistry.test.cpp` - Comprehensive unit tests for registry
 
 **Integration**:
-- EditorFactory registered with Test_Widget factories in MainWindow
+- EditorRegistry registered with Test_Widget factories in MainWindow
 - MainWindow::openTestWidget() delegates to openEditor("TestWidget")
-- Factory creates state, view, and properties in single call
-- Automatic state registration with WorkspaceManager
+- Registry creates state, view, and properties in single call
+- Automatic state registration with EditorRegistry
 - Single-instance enforcement for Test_Widget
 - Demonstrated features: grid, crosshair, animation, color picker, zoom slider, text edit
 
@@ -967,7 +780,7 @@ connect(ui->actionTest_Widget, &QAction::triggered, this,
 2. ✅ Shared state via shared_ptr is effective
 3. ✅ Signal-based synchronization prevents update loops with `_updating_from_state` flag
 4. ✅ reflect-cpp serialization works seamlessly
-5. ✅ EditorFactory simplifies widget creation significantly
+5. ✅ EditorRegistry simplifies widget creation significantly
 6. ✅ Pattern is proven and ready for other widgets
 7. 📋 PropertiesHost deferred to Phase 3.2 (current QSplitter approach works for proof-of-concept)
 
@@ -1236,30 +1049,25 @@ class DataViewerState : public EditorState {
 };
 ```
 
-### 5.3 Widget Factory
+### 5.3 Widget Factory Pattern
 
+Widget creation is now handled by EditorRegistry. See [Section 3.1.4](#314-editorregistry-and-widget-creation) for the actual implementation.
+
+**Key API Summary:**
 ```cpp
-// Centralized widget creation
-class EditorFactory {
-public:
-    struct EditorInfo {
-        QString type_id;
-        QString display_name;
-        QString icon_path;
-        ZoneManager::Zone default_zone;
-    };
+// Register an editor type with embedded factories
+registry.registerType({
+    .type_id = "DataViewer",
+    .display_name = "Data Viewer",
+    .default_zone = "main",
+    .allow_multiple = true,
+    .create_state = []() { return std::make_shared<DataViewerState>(); },
+    .create_view = [](auto s) { return new DataViewerView(s); },
+    .create_properties = nullptr  // optional
+});
 
-    /// @brief Register an editor type
-    template<typename StateT, typename WidgetT>
-    void registerEditor(EditorInfo info);
-
-    /// @brief Get available editor types
-    std::vector<EditorInfo> availableEditors() const;
-
-    /// @brief Create new editor with state
-    std::pair<std::shared_ptr<EditorState>, QWidget*> 
-        createEditor(QString const& type_id, WorkspaceManager* workspace);
-};
+// Create editor (state is auto-registered)
+auto [state, view, props] = registry.createEditor("DataViewer");
 ```
 
 ## Phase 6: Drag and Drop & Advanced Features (Weeks 21-24)
@@ -1437,24 +1245,33 @@ TEST_CASE("Command undo/redo") {
 // Workspace serialization with multiple editors
 TEST_CASE("Workspace round-trip") {
     auto dm = std::make_shared<DataManager>();
-    WorkspaceManager workspace(dm);
+    EditorRegistry registry(dm);
+    
+    // Register types first
+    registry.registerType({
+        .type_id = "MediaWidget",
+        .create_state = []() { return std::make_shared<MediaWidgetState>(); },
+        // ... other factories
+    });
     
     // Create multiple editors
-    auto media_state = std::make_shared<MediaWidgetState>();
+    auto media_state = registry.createState("MediaWidget");
     media_state->setDisplayName("Media 1");
-    workspace.registerState(media_state);
+    registry.registerState(media_state);
     
     auto viewer_state = std::make_shared<DataViewerState>();
     viewer_state->setDisplayName("Viewer 1");
-    workspace.registerState(viewer_state);
+    registry.registerState(viewer_state);
     
     // Serialize
-    auto json = workspace.toJson();
+    auto json = registry.toJson();
     
-    // Restore to new workspace
-    WorkspaceManager restored(dm);
+    // Restore to new registry
+    EditorRegistry restored(dm);
+    // Register types before restoring
+    restored.registerType({/* same types */});
     REQUIRE(restored.fromJson(json));
-    REQUIRE(restored.getAllStates().size() == 2);
+    REQUIRE(restored.allStates().size() == 2);
 }
 ```
 
@@ -1477,9 +1294,9 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 - [ ] Connect widget to state signals
 - [ ] Connect widget to SelectionContext
 - [ ] Create properties widget for this editor type
-- [ ] Register with EditorFactory
+- [ ] Register with EditorRegistry
 - [ ] Add unit tests for state serialization
-- [ ] Add integration tests with WorkspaceManager
+- [ ] Add integration tests with EditorRegistry
 - [ ] Update MainWindow to use new pattern
 - [ ] Remove redundant Feature_Table_Widget instances
 
@@ -1505,11 +1322,11 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 
 | Phase | Status | Duration | Deliverables |
 |-------|--------|----------|--------------|
-| 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, WorkspaceManager, SelectionContext |
+| 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, EditorRegistry, SelectionContext |
 | 2. State Integration & Communication | ✅ COMPLETE | 8 weeks | Minimal states, inter-widget communication, **comprehensive Media_Widget migration**, first Feature_Table removal |
 | 2.6.1 Media_Widget Hybrid Architecture | ✅ COMPLETE | 2 weeks | DisplayOptionsRegistry, signal consolidation, viewport state, 6 sub-widgets integrated |
 | 3.0 Widget Migration Tracking | ✅ COMPLETE | - | Migration tracking table, priority assessment |
-| 3.1 EditorFactory & Test_Widget Integration | ✅ COMPLETE | 1 week | EditorFactory implementation, Test_Widget registration, unified widget creation |
+| 3.1 EditorRegistry & Test_Widget Integration | ✅ COMPLETE | 1 week | EditorRegistry implementation, Test_Widget registration, unified widget creation |
 | 3.2-3.3 UI Zones & PropertiesHost | 📋 PLANNED | 2 weeks | Standard UI zones, ZoneManager, PropertiesHost |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
 | 5. Widget Migrations | 🔄 IN PROGRESS | 8 weeks | DataViewer (follow Media pattern), Analysis, Tables |
@@ -1524,7 +1341,7 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
   - Phase 2.7: DataTransform external selection ✅
 - Phase 3: Central Properties Zone 🔄
   - Phase 3.0: Widget tracking table ✅
-  - Phase 3.1: EditorFactory & Test_Widget integration ✅ **Factory pattern validated**
+  - Phase 3.1: EditorRegistry & Test_Widget integration ✅ **Factory pattern validated**
   - Phase 3.2-3.3: UI Zones & PropertiesHost 📋
 - Phase 5: Widget migrations 🔄 (1 of 6 widgets complete)
 
@@ -1537,12 +1354,12 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 **Widget Migration Status** (from Phase 3.0 tracking table):
 - Primary widgets with EditorState: 3/9 (33%)
 - Primary widgets with SelectionContext: 3/9 (33%)
-- Primary widgets with Factory: 1/9 (11%) - Test_Widget ✅
-- Secondary widgets with Factory: 0/6 (0%)
+- Primary widgets with EditorRegistry: 1/9 (11%) - Test_Widget ✅
+- Secondary widgets with EditorRegistry: 0/6 (0%)
 
 **Next Steps**: 
 1. **Immediate**: Implement PropertiesHost for unified properties panel (Phase 3.2)
-2. **Then**: Migrate more widgets to EditorFactory pattern (Media_Widget, DataViewer_Widget)
+2. **Then**: Migrate more widgets to EditorRegistry pattern (Media_Widget, DataViewer_Widget)
 3. **Parallel**: Continue DataViewer_Widget state migration (Phase 5)
 
 ## Next Steps
@@ -1556,7 +1373,7 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 2. ✅ Implemented TestWidgetView (QGraphicsView with grid, crosshair, animation)
 3. ✅ Implemented TestWidgetProperties (form with checkboxes, color picker, sliders)
 4. ✅ Both components share TestWidgetState via shared_ptr
-5. ✅ State registered with WorkspaceManager
+5. ✅ State registered with EditorRegistry
 6. ✅ Full signal-based synchronization working
 7. ✅ All tests passing
 
@@ -1613,7 +1430,7 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 
 **Prerequisites**: 
 - Test_Widget proof-of-concept complete
-- PropertiesHost and EditorFactory working
+- PropertiesHost and EditorRegistry working
 - Pattern validated
 
 **Goal**: Create unified properties panel that replaces per-widget Feature_Table_Widget instances

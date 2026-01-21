@@ -19,14 +19,14 @@ class SelectionContext;
 class TimeScrollBar;
 class GroupManager;
 class QResizeEvent;
-class WorkspaceManager;
+class EditorRegistry;
 
 class DataManager_Widget : public QScrollArea {
     Q_OBJECT
 public:
     DataManager_Widget(std::shared_ptr<DataManager> data_manager,
                        TimeScrollBar * time_scrollbar,
-                       WorkspaceManager * workspace_manager = nullptr,
+                       EditorRegistry * editor_registry = nullptr,
                        QWidget * parent = nullptr);
     ~DataManager_Widget() override;
 
@@ -58,7 +58,7 @@ private:
     Ui::DataManager_Widget * ui;
     TimeScrollBar * _time_scrollbar;
     std::shared_ptr<DataManager> _data_manager;
-    WorkspaceManager * _workspace_manager{nullptr};
+    EditorRegistry * _editor_registry{nullptr};
     QString _highlighted_available_feature;
     std::vector<int> _current_data_callbacks;
     GroupManager * _group_manager{nullptr};

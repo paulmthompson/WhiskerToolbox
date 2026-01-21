@@ -4,7 +4,7 @@
 #include "DataManager.hpp"
 #include "DataManagerWidgetState.hpp"
 #include "EditorState/SelectionContext.hpp"
-#include "EditorState/WorkspaceManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -43,13 +43,13 @@
 DataManager_Widget::DataManager_Widget(
         std::shared_ptr<DataManager> data_manager,
         TimeScrollBar * time_scrollbar,
-        WorkspaceManager * workspace_manager,
+        EditorRegistry * editor_registry,
         QWidget * parent)
     : QScrollArea(parent),
       ui(new Ui::DataManager_Widget),
       _time_scrollbar{time_scrollbar},
       _data_manager{std::move(data_manager)},
-      _workspace_manager{workspace_manager} {
+      _editor_registry{editor_registry} {
     ui->setupUi(this);
 
     // Set explicit size policy and minimum size
@@ -102,13 +102,13 @@ DataManager_Widget::DataManager_Widget(
     connect(ui->new_data_widget, &NewDataWidget::createNewData, this, &DataManager_Widget::_createNewData);
 
     // === Phase 2.3: Editor State Integration ===
-    // Initialize state and register with WorkspaceManager for serialization and inter-widget communication
+    // Initialize state and register with EditorRegistry for serialization and inter-widget communication
 
     _state = std::make_shared<DataManagerWidgetState>();
 
-    if (_workspace_manager) {
-        _workspace_manager->registerState(_state);
-        _selection_context = _workspace_manager->selectionContext();
+    if (_editor_registry) {
+        _editor_registry->registerState(_state);
+        _selection_context = _editor_registry->selectionContext();
 
         // Connect feature table selection to state
         // When user selects a feature in the table, update the state
@@ -130,9 +130,9 @@ DataManager_Widget::DataManager_Widget(
 }
 
 DataManager_Widget::~DataManager_Widget() {
-    // Unregister state from WorkspaceManager when widget is destroyed
-    if (_workspace_manager && _state) {
-        _workspace_manager->unregisterState(_state->getInstanceId());
+    // Unregister state from EditorRegistry when widget is destroyed
+    if (_editor_registry && _state) {
+        _editor_registry->unregisterState(_state->getInstanceId());
     }
     delete ui;
 }

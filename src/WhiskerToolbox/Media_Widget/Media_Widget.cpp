@@ -9,7 +9,7 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "EditorState/SelectionContext.hpp"
-#include "EditorState/WorkspaceManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
@@ -38,10 +38,10 @@
 #include <algorithm>
 #include <cmath>
 
-Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * parent)
+Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Media_Widget),
-      _workspace_manager{workspace_manager} {
+      _editor_registry{editor_registry} {
     ui->setupUi(this);
 
     // Configure splitter behavior
@@ -99,14 +99,14 @@ Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * paren
     });
 
     // === Phase 2.4: Editor State Integration ===
-    // Initialize state and register with WorkspaceManager for serialization and inter-widget communication
+    // Initialize state and register with EditorRegistry for serialization and inter-widget communication
 
     _state = std::make_shared<MediaWidgetState>();
     _connectStateSignals();
 
-    if (_workspace_manager) {
-        _workspace_manager->registerState(_state);
-        _selection_context = _workspace_manager->selectionContext();
+    if (_editor_registry) {
+        _editor_registry->registerState(_state);
+        _selection_context = _editor_registry->selectionContext();
 
         // Connect to SelectionContext to respond to external selection changes
         // When another widget (e.g., DataManager_Widget) selects data, update our state
@@ -128,9 +128,9 @@ Media_Widget::Media_Widget(WorkspaceManager * workspace_manager, QWidget * paren
 }
 
 Media_Widget::~Media_Widget() {
-    // Unregister state from WorkspaceManager when widget is destroyed
-    if (_workspace_manager && _state) {
-        _workspace_manager->unregisterState(_state->getInstanceId());
+    // Unregister state from EditorRegistry when widget is destroyed
+    if (_editor_registry && _state) {
+        _editor_registry->unregisterState(_state->getInstanceId());
     }
 
     // Proactively hide stacked pages while _scene is still alive so any hideEvent

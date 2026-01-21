@@ -29,7 +29,7 @@ class TransformOperation;
 class TransformParameter_Widget;
 class TransformRegistry;
 class TransformPipeline;
-class WorkspaceManager;
+class EditorRegistry;
 
 
 class DataTransform_Widget : public QScrollArea {
@@ -38,11 +38,11 @@ public:
     /**
      * @brief Construct DataTransform_Widget
      * @param data_manager Shared pointer to the DataManager
-     * @param workspace_manager Pointer to the WorkspaceManager for state registration and SelectionContext access
+     * @param editor_registry Pointer to the EditorRegistry for state registration and SelectionContext access
      * @param parent Parent widget
      */
     DataTransform_Widget(std::shared_ptr<DataManager> data_manager,
-                         WorkspaceManager * workspace_manager = nullptr,
+                         EditorRegistry * editor_registry = nullptr,
                          QWidget * parent = nullptr);
     ~DataTransform_Widget() override;
 
@@ -67,7 +67,7 @@ private:
 
     // === Phase 2.7: Editor State Integration ===
     // State and workspace integration for SelectionContext-based input selection
-    WorkspaceManager * _workspace_manager = nullptr;
+    EditorRegistry * _editor_registry = nullptr;
     std::shared_ptr<DataTransformWidgetState> _state;
     SelectionContext * _selection_context = nullptr;
 

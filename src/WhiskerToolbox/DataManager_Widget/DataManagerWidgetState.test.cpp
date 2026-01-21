@@ -1,6 +1,6 @@
 #include "DataManagerWidgetState.hpp"
 #include "EditorState/SelectionContext.hpp"
-#include "EditorState/WorkspaceManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -266,20 +266,20 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
     }
 }
 
-TEST_CASE("DataManagerWidgetState works with WorkspaceManager", "[DataManagerWidgetState][WorkspaceManager][Integration]") {
+TEST_CASE("DataManagerWidgetState works with EditorRegistry", "[DataManagerWidgetState][EditorRegistry][Integration]") {
     int argc = 0;
     QCoreApplication app(argc, nullptr);
 
-    SECTION("State registered with WorkspaceManager can update shared SelectionContext") {
-        // Create workspace manager (similar to how MainWindow does it)
-        WorkspaceManager workspace_manager(nullptr);
+    SECTION("State registered with EditorRegistry can update shared SelectionContext") {
+        // Create editor registry (similar to how MainWindow does it)
+        EditorRegistry editor_registry(nullptr);
 
         // Create and register state
         auto state = std::make_shared<DataManagerWidgetState>();
-        workspace_manager.registerState(state);
+        editor_registry.registerState(state);
 
         // Get the shared selection context
-        SelectionContext * selection_context = workspace_manager.selectionContext();
+        SelectionContext * selection_context = editor_registry.selectionContext();
         REQUIRE(selection_context != nullptr);
 
         // Connect state to selection context
@@ -297,15 +297,15 @@ TEST_CASE("DataManagerWidgetState works with WorkspaceManager", "[DataManagerWid
     }
 
     SECTION("Multiple states can share the same SelectionContext") {
-        WorkspaceManager workspace_manager(nullptr);
+        EditorRegistry editor_registry(nullptr);
 
         auto state1 = std::make_shared<DataManagerWidgetState>();
         auto state2 = std::make_shared<DataManagerWidgetState>();
 
-        workspace_manager.registerState(state1);
-        workspace_manager.registerState(state2);
+        editor_registry.registerState(state1);
+        editor_registry.registerState(state2);
 
-        SelectionContext * selection_context = workspace_manager.selectionContext();
+        SelectionContext * selection_context = editor_registry.selectionContext();
 
         // Connect both states
         QObject::connect(state1.get(), &DataManagerWidgetState::selectedDataKeyChanged,
@@ -334,15 +334,15 @@ TEST_CASE("DataManagerWidgetState works with WorkspaceManager", "[DataManagerWid
     }
 
     SECTION("SelectionSource correctly identifies which state made selection") {
-        WorkspaceManager workspace_manager(nullptr);
+        EditorRegistry editor_registry(nullptr);
 
         auto state1 = std::make_shared<DataManagerWidgetState>();
         auto state2 = std::make_shared<DataManagerWidgetState>();
 
-        workspace_manager.registerState(state1);
-        workspace_manager.registerState(state2);
+        editor_registry.registerState(state1);
+        editor_registry.registerState(state2);
 
-        SelectionContext * selection_context = workspace_manager.selectionContext();
+        SelectionContext * selection_context = editor_registry.selectionContext();
         QSignalSpy spy(selection_context, &SelectionContext::selectionChanged);
 
         QObject::connect(state1.get(), &DataManagerWidgetState::selectedDataKeyChanged,

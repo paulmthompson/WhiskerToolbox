@@ -9,8 +9,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
-#include "EditorState/EditorFactory.hpp"
-#include "EditorState/WorkspaceManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
@@ -67,8 +66,7 @@ MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       _data_manager{std::make_shared<DataManager>()},
-      _workspace_manager{std::make_unique<WorkspaceManager>(_data_manager, this)},
-      _editor_factory{std::make_unique<EditorFactory>(_workspace_manager.get(), _data_manager, this)},
+      _editor_registry{std::make_unique<EditorRegistry>(_data_manager, this)},
       _group_manager(nullptr),
       _group_management_widget(nullptr),
       _data_manager_widget(nullptr)
@@ -104,16 +102,16 @@ MainWindow::MainWindow(QWidget * parent)
     _time_scrollbar = new TimeScrollBar(this);
     _time_scrollbar->setDataManager(_data_manager);
 
-    // Create the DataManager_Widget with WorkspaceManager
-    _data_manager_widget = new DataManager_Widget(_data_manager, _time_scrollbar, _workspace_manager.get(), this);
+    // Create the DataManager_Widget with EditorRegistry
+    _data_manager_widget = new DataManager_Widget(_data_manager, _time_scrollbar, _editor_registry.get(), this);
     
     // Set the GroupManager for the DataManager_Widget
     if (_group_manager) {
         _data_manager_widget->setGroupManager(_group_manager.get());
     }
 
-    // Create media widget manager with WorkspaceManager
-    _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, _workspace_manager.get(), this);
+    // Create media widget manager with EditorRegistry
+    _media_manager = std::make_unique<MediaWidgetManager>(_data_manager, _editor_registry.get(), this);
     
     // Connect the group manager to the media widget manager
     if (_group_manager) {
@@ -845,7 +843,7 @@ void MainWindow::openDataTransforms() {
     if (!_widgets.contains(key)) {
         auto dt_widget = std::make_unique<DataTransform_Widget>(
                 _data_manager,
-                _workspace_manager.get(),
+                _editor_registry.get(),
                 this);
 
         dt_widget->setObjectName(key);
@@ -943,35 +941,33 @@ void MainWindow::_registerEditorTypes() {
     auto dm = _data_manager;
 
     // === Test Widget (View/Properties split proof-of-concept) ===
-    _editor_factory->registerEditorType(
-        EditorFactory::EditorTypeInfo{
-            .type_id = QStringLiteral("TestWidget"),
-            .display_name = QStringLiteral("Test Widget"),
-            .icon_path = QString{},
-            .menu_path = QStringLiteral("View/Development"),
-            .default_zone = QStringLiteral("right"),
-            .allow_multiple = false  // Single instance only
-        },
+    _editor_registry->registerType({
+        .type_id = QStringLiteral("TestWidget"),
+        .display_name = QStringLiteral("Test Widget"),
+        .icon_path = QString{},
+        .menu_path = QStringLiteral("View/Development"),
+        .default_zone = QStringLiteral("right"),
+        .allow_multiple = false,  // Single instance only
         // State factory
-        [dm]() { return std::make_shared<TestWidgetState>(dm); },
+        .create_state = [dm]() { return std::make_shared<TestWidgetState>(dm); },
         // View factory
-        [](std::shared_ptr<EditorState> state) {
+        .create_view = [](std::shared_ptr<EditorState> state) {
             auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
             return new TestWidgetView(test_state);
         },
         // Properties factory
-        [](std::shared_ptr<EditorState> state) {
+        .create_properties = [](std::shared_ptr<EditorState> state) {
             auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
             return new TestWidgetProperties(test_state);
         }
-    );
+    });
 
     // Future: Add more editor types here
-    // _editor_factory->registerEditorType(...);
+    // _editor_registry->registerType({...});
 }
 
 void MainWindow::openEditor(QString const & type_id) {
-    auto info = _editor_factory->getEditorInfo(type_id);
+    auto info = _editor_registry->typeInfo(type_id);
 
     if (info.type_id.isEmpty()) {
         std::cerr << "MainWindow::openEditor: Unknown editor type: "
@@ -981,7 +977,7 @@ void MainWindow::openEditor(QString const & type_id) {
 
     // For single-instance editors, check if already open
     if (!info.allow_multiple) {
-        auto existing = _workspace_manager->getStatesByType(type_id);
+        auto existing = _editor_registry->statesByType(type_id);
         if (!existing.empty()) {
             // Find and show the existing widget
             QString instance_id = existing[0]->getInstanceId();
@@ -994,12 +990,12 @@ void MainWindow::openEditor(QString const & type_id) {
             std::cerr << "MainWindow::openEditor: State exists but widget missing, recreating: "
                       << type_id.toStdString() << std::endl;
             // Unregister the orphan state
-            _workspace_manager->unregisterState(instance_id);
+            _editor_registry->unregisterState(instance_id);
         }
     }
 
-    // Create new instance via factory
-    auto instance = _editor_factory->createEditor(type_id);
+    // Create new instance via registry
+    auto instance = _editor_registry->createEditor(type_id);
 
     if (!instance.state || !instance.view) {
         std::cerr << "MainWindow::openEditor: Failed to create editor: "
@@ -1046,12 +1042,12 @@ void MainWindow::openEditor(QString const & type_id) {
     _widgets[key] = std::unique_ptr<QWidget>(main_widget);
 
     std::cout << "Created " << info.display_name.toStdString()
-              << " via EditorFactory (instance: " << key << ")" << std::endl;
+              << " via EditorRegistry (instance: " << key << ")" << std::endl;
 
     showDockWidget(key);
 }
 
 void MainWindow::openTestWidget() {
-    // Delegate to generic openEditor using EditorFactory
+    // Delegate to generic openEditor using EditorRegistry
     openEditor(QStringLiteral("TestWidget"));
 }

@@ -14,7 +14,7 @@ class MediaText_Widget;
 class MediaProcessing_Widget;
 class MediaWidgetState;
 class Section;
-class WorkspaceManager;
+class EditorRegistry;
 
 namespace Ui {
 class Media_Widget;
@@ -23,7 +23,7 @@ class Media_Widget;
 class Media_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit Media_Widget(WorkspaceManager * workspace_manager = nullptr,
+    explicit Media_Widget(EditorRegistry * editor_registry = nullptr,
                           QWidget * parent = nullptr);
 
     ~Media_Widget() override;
@@ -69,7 +69,7 @@ protected:
 private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    WorkspaceManager * _workspace_manager{nullptr};
+    EditorRegistry * _editor_registry{nullptr};
     std::unique_ptr<Media_Window> _scene;
     std::map<std::string, std::vector<int>> _callback_ids;
 

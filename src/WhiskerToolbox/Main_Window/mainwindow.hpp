@@ -13,11 +13,10 @@
 
 class DataManager;
 class DataManager_Widget;
-class EditorFactory;
+class EditorRegistry;
 class GroupManager;
 class GroupManagementWidget;
 class MediaWidgetManager;
-class WorkspaceManager;
 
 
 namespace Ui {
@@ -66,16 +65,17 @@ public:
     GroupManager * getGroupManager() const { return _group_manager.get(); }
 
     /**
-     * @brief Get the workspace manager for editor state management
+     * @brief Get the editor registry for state and type management
      * 
-     * WorkspaceManager provides:
+     * EditorRegistry provides:
+     * - Type registration (metadata + factory functions)
      * - Registry for all EditorState instances
      * - Access to SelectionContext for inter-widget communication
      * - Workspace serialization support
      * 
-     * @return Pointer to the WorkspaceManager
+     * @return Pointer to the EditorRegistry
      */
-    WorkspaceManager * workspaceManager() const { return _workspace_manager.get(); }
+    EditorRegistry * editorRegistry() const { return _editor_registry.get(); }
 
     void processLoadedData(std::vector<DataInfo> const & data_info);
 
@@ -94,8 +94,7 @@ private:
     bool _verbose;
 
     std::shared_ptr<DataManager> _data_manager;
-    std::unique_ptr<WorkspaceManager> _workspace_manager;
-    std::unique_ptr<EditorFactory> _editor_factory;
+    std::unique_ptr<EditorRegistry> _editor_registry;
 
     std::unique_ptr<GroupManager> _group_manager;
     GroupManagementWidget * _group_management_widget;
@@ -115,11 +114,11 @@ private:
     void _registerEditorTypes();
 
     /**
-     * @brief Open an editor using the EditorFactory
+     * @brief Open an editor using the EditorRegistry
      * 
      * This method handles:
      * - Single-instance checking (for allow_multiple=false editors)
-     * - State registration with WorkspaceManager
+     * - State registration
      * - Dock widget creation and placement
      * 
      * @param type_id The editor type to open
