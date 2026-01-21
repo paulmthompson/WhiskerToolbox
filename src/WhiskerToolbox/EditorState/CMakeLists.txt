@@ -10,6 +10,8 @@ set(EDITOR_STATE_SOURCES
     EditorRegistry.hpp
     EditorState.cpp
     EditorState.hpp
+    PropertiesHost.cpp
+    PropertiesHost.hpp
     SelectionContext.cpp
     SelectionContext.hpp
 )

@@ -17,6 +17,8 @@ class EditorRegistry;
 class GroupManager;
 class GroupManagementWidget;
 class MediaWidgetManager;
+class PropertiesHost;
+class ZoneManager;
 
 
 namespace Ui {
@@ -95,6 +97,8 @@ private:
 
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<EditorRegistry> _editor_registry;
+    std::unique_ptr<ZoneManager> _zone_manager;
+    PropertiesHost * _properties_host;
 
     std::unique_ptr<GroupManager> _group_manager;
     GroupManagementWidget * _group_management_widget;

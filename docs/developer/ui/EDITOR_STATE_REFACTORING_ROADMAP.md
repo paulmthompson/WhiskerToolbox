@@ -1327,22 +1327,22 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | 2.6.1 Media_Widget Hybrid Architecture | ✅ COMPLETE | 2 weeks | DisplayOptionsRegistry, signal consolidation, viewport state, 6 sub-widgets integrated |
 | 3.0 Widget Migration Tracking | ✅ COMPLETE | - | Migration tracking table, priority assessment |
 | 3.1 EditorRegistry & Test_Widget Integration | ✅ COMPLETE | 1 week | EditorRegistry implementation, Test_Widget registration, unified widget creation |
-| 3.2-3.3 UI Zones & PropertiesHost | 📋 PLANNED | 2 weeks | Standard UI zones, ZoneManager, PropertiesHost |
+| 3.2-3.3 UI Zones & PropertiesHost | ✅ COMPLETE | 2 weeks | Standard UI zones, ZoneManager, PropertiesHost |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
 | 5. Widget Migrations | 🔄 IN PROGRESS | 8 weeks | DataViewer (follow Media pattern), Analysis, Tables |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~12 weeks | Remaining: ~20 weeks (~5 months)**
+**Elapsed: ~14 weeks | Remaining: ~18 weeks (~4.5 months)**
 
-**Progress**: 56% Complete
+**Progress**: 65% Complete
 - Phase 1: Core infrastructure ✅
 - Phase 2: State integration & communication ✅  
   - Phase 2.6.1: Media_Widget hybrid architecture ✅ (reference implementation)
   - Phase 2.7: DataTransform external selection ✅
-- Phase 3: Central Properties Zone 🔄
+- Phase 3: Central Properties Zone ✅
   - Phase 3.0: Widget tracking table ✅
   - Phase 3.1: EditorRegistry & Test_Widget integration ✅ **Factory pattern validated**
-  - Phase 3.2-3.3: UI Zones & PropertiesHost 📋
+  - Phase 3.2-3.3: UI Zones & PropertiesHost ✅ **Zone-based layout complete**
 - Phase 5: Widget migrations 🔄 (1 of 6 widgets complete)
 
 **Key Accomplishment**: Media_Widget serves as comprehensive reference implementation with:
@@ -1358,13 +1358,43 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 - Secondary widgets with EditorRegistry: 0/6 (0%)
 
 **Next Steps**: 
-1. **Immediate**: Implement PropertiesHost for unified properties panel (Phase 3.2)
-2. **Then**: Migrate more widgets to EditorRegistry pattern (Media_Widget, DataViewer_Widget)
-3. **Parallel**: Continue DataViewer_Widget state migration (Phase 5)
+1. **Immediate**: Migrate more widgets to EditorRegistry pattern (Media_Widget, DataViewer_Widget)
+2. **Then**: Continue DataViewer_Widget state migration (Phase 5)
+3. **Future**: Implement Command Pattern for undo/redo (Phase 4)
 
 ## Next Steps
 
-### Immediate: Phase 3.1 - Test_Widget Proof-of-Concept ✅ COMPLETE (Week 12)
+### Immediate: Phase 3.2-3.3 - ZoneManager & PropertiesHost ✅ COMPLETE (Week 14)
+
+**Status**: Implementation complete (2026-01-21). Zone-based layout and PropertiesHost working.
+
+**What Was Accomplished**:
+1. ✅ Created ZoneManager class to manage Left/Center/Right/Bottom zones
+2. ✅ Created PropertiesHost widget that observes SelectionContext
+3. ✅ Integrated ZoneManager into MainWindow for layout management
+4. ✅ DataManager_Widget and GroupManagementWidget placed in Left zone
+5. ✅ Media_Widget placed in Center zone
+6. ✅ PropertiesHost placed in Right zone
+7. ✅ TimeScrollBar placed in Bottom zone
+8. ✅ openEditor() updated to use ZoneManager and route properties to PropertiesHost
+9. ✅ All tests passing
+
+**Key Design Decisions**:
+- PropertiesHost is **editor-centric**, not data-type-centric
+- Each editor's properties widget handles its own data-type-specific layout
+- Properties are cached to avoid recreation when switching editors
+- ZoneManager provides simplified API over raw ADS dock areas
+
+**Files Created**:
+- `src/WhiskerToolbox/Main_Window/ZoneManager.hpp/.cpp` - Zone management for ADS dock system
+- `src/WhiskerToolbox/Main_Window/PropertiesHost.hpp/.cpp` - Context-sensitive properties container
+
+**Files Modified**:
+- `src/WhiskerToolbox/Main_Window/mainwindow.hpp` - Added ZoneManager and PropertiesHost members
+- `src/WhiskerToolbox/Main_Window/mainwindow.cpp` - Refactored _buildInitialLayout() to use zones
+- `src/WhiskerToolbox/CMakeLists.txt` - Added ZoneManager and PropertiesHost sources
+
+### Then: Phase 3.1 - Test_Widget Proof-of-Concept ✅ COMPLETE (Week 12)
 
 **Status**: Implementation complete (2026-01-21). View/Properties split pattern validated.
 
@@ -1383,30 +1413,13 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 - ✅ No circular update loops (prevented with `_updating_from_state` flag)
 - ✅ Pattern is clean and maintainable
 
-### Then: Phase 3.2 - PropertiesHost Implementation (Week 13)
-
-**Goal**: Create unified properties panel that replaces per-widget embedded properties.
-
-**Approach**:
-1. Create PropertiesHost widget with factory registration system
-2. Register Test_Widget properties factory with PropertiesHost
-3. Integrate PropertiesHost into MainWindow right panel
-4. Connect to SelectionContext for context-sensitive display
-5. Update Test_Widget to NOT create QSplitter (view only in dock, properties in PropertiesHost)
-6. Validate dynamic properties swapping works
-
-**Success Criteria**:
-- PropertiesHost appears in right dock area
-- Selecting Test_Widget shows TestWidgetProperties in PropertiesHost
-- Switching between different widget types swaps properties panels
-- No performance issues with panel switching
-
-### Parallel: Phase 5 - DataViewer_Widget Migration (Weeks 11-14)
+### Next: Phase 5 - DataViewer_Widget Migration (Weeks 15-18)
 
 **Prerequisites**: 
 - Phase 2 complete ✅
 - Media_Widget hybrid architecture complete ✅ (reference implementation)
 - DataTransform_Widget external selection validated ✅
+- ZoneManager & PropertiesHost complete ✅
 
 **Goal**: Apply Media_Widget's hybrid architecture pattern to DataViewer_Widget
 
@@ -1426,24 +1439,15 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 - Full serialization support
 - Second reference implementation validated
 
-### Future: Phase 3.2-3.3 - UI Zones (Weeks 15-16)
+### Future: Phase 4 - Command Pattern (Weeks 19-21)
 
-**Prerequisites**: 
-- Test_Widget proof-of-concept complete
-- PropertiesHost and EditorRegistry working
-- Pattern validated
+**Goal**: Implement undo/redo support via command pattern
 
-**Goal**: Create unified properties panel that replaces per-widget Feature_Table_Widget instances
-
-**Timing Rationale**: Delaying Phase 3 until more widgets have mature state allows us to:
-- Identify common patterns across widget types
-- Design PropertiesHost based on real usage patterns  
-- Avoid premature abstraction
-- Ensure external selection pattern is proven at scale
-
-### Phase 3.1 PropertiesHost Widget (Week 14)
-
-Create a context-sensitive properties container that observes SelectionContext and displays appropriate properties based on active editor and selected data type.
+**Approach**:
+1. Create Command base class with execute/undo/redo
+2. Create CommandManager to track command history
+3. Implement example commands (SetFeatureEnabled, CreateData)
+4. Integrate with EditorState changes
 
 ## References
 

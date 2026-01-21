@@ -10,6 +10,9 @@
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/PropertiesHost.hpp"
+#include "EditorState/SelectionContext.hpp"
+#include "ZoneManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
@@ -67,6 +70,8 @@ MainWindow::MainWindow(QWidget * parent)
       ui(new Ui::MainWindow),
       _data_manager{std::make_shared<DataManager>()},
       _editor_registry{std::make_unique<EditorRegistry>(_data_manager, this)},
+      _zone_manager(nullptr),
+      _properties_host(nullptr),
       _group_manager(nullptr),
       _group_management_widget(nullptr),
       _data_manager_widget(nullptr)
@@ -87,6 +92,9 @@ MainWindow::MainWindow(QWidget * parent)
                                      | ads::CDockManager::DragPreviewIsDynamic);
 
     _m_DockManager = new ads::CDockManager(this);
+
+    // Create ZoneManager to manage standard UI zones
+    _zone_manager = std::make_unique<ZoneManager>(_m_DockManager, this);
 
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
@@ -140,73 +148,56 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::_buildInitialLayout() {
-    // Add media widget to top
-    auto media_dock_widget = new ads::CDockWidget(QString::fromStdString("media"));
-    media_dock_widget->setWidget(_media_widget);
-    // Don't delete on close, but allow all other default features (floatable, movable, closable, pinnable)
-    media_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-    auto media_dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
+    // Initialize the zone manager first
+    // This creates placeholder areas for Left/Center/Right/Bottom zones
+    _zone_manager->initializeZones();
 
-    // Add time scrollbar below media widget
-    auto scrollbar_dock_widget = new ads::CDockWidget(QString::fromStdString("scrollbar"));
-    scrollbar_dock_widget->setWidget(_time_scrollbar);
-    // Don't delete on close, but allow all other default features (floatable, movable, closable, pinnable)
-    scrollbar_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-    _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, scrollbar_dock_widget, media_dockArea);
+    // Configure zone proportions
+    _zone_manager->setZoneWidthRatios(0.18f, 0.64f, 0.18f);  // Left, Center, Right
+    _zone_manager->setBottomHeightRatio(0.10f);              // Bottom
 
-    // Adjust splitter so scrollbar takes minimal space (e.g., 12%)
-    auto * media_scrollbar_splitter = ads::internal::findParent<ads::CDockSplitter *>(_time_scrollbar);
-    if (media_scrollbar_splitter) {
-        int const height = media_scrollbar_splitter->height();
-        media_scrollbar_splitter->setSizes({height * 88 / 100, height * 12 / 100});
+    // === LEFT ZONE: Data selection and navigation ===
+    
+    // Add GroupManagementWidget to left zone (first, will be on top)
+    if (_group_management_widget) {
+        auto * group_dock = new ads::CDockWidget(QStringLiteral("group_management"));
+        group_dock->setWidget(_group_management_widget);
+        group_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+        _zone_manager->addToZone(group_dock, Zone::Left);
+    }
+    
+    // Add DataManager_Widget below GroupManagement in left zone
+    if (_data_manager_widget) {
+        auto * dm_dock = new ads::CDockWidget(QStringLiteral("data_manager"));
+        dm_dock->setWidget(_data_manager_widget);
+        dm_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+        _zone_manager->addBelowInZone(dm_dock, Zone::Left, 0.25f);  // Group gets 25%, DM gets 75%
     }
 
-    // Add the group management widget to the top right corner
-    ads::CDockWidget* group_dock_widget = nullptr;
-    if (!_group_management_widget) {
-        std::cerr << "Warning: No GroupManagementWidget available!" << std::endl;
-        return;
-    }
-    group_dock_widget = new ads::CDockWidget(QString::fromStdString("group_management"));
-    group_dock_widget->setWidget(_group_management_widget);
-        
-    // Don't delete on close, but allow all other default features
-    group_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-        
-    _m_DockManager->addDockWidget(ads::RightDockWidgetArea, group_dock_widget);
+    // === CENTER ZONE: Primary visualization ===
+    
+    // Add media widget to center zone
+    auto * media_dock = new ads::CDockWidget(QStringLiteral("media"));
+    media_dock->setWidget(_media_widget);
+    media_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    _zone_manager->addToZone(media_dock, Zone::Center);
 
-    auto group_splitter = ads::internal::findParent<ads::CDockSplitter *>(_group_management_widget);
-    if (group_splitter) {
-        int const width = group_splitter->width();
-        group_splitter->setSizes({width * 85 / 100, width * 15 / 100});
-    }
+    // === BOTTOM ZONE: Timeline ===
+    
+    // Add time scrollbar to bottom zone
+    auto * scrollbar_dock = new ads::CDockWidget(QStringLiteral("scrollbar"));
+    scrollbar_dock->setWidget(_time_scrollbar);
+    scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    _zone_manager->addToZone(scrollbar_dock, Zone::Bottom);
 
-    // Add the data manager widget underneath the group management widget
-    if (!_data_manager_widget) {
-        std::cerr << "Warning: No DataManager_Widget available!" << std::endl;
-        return;
-    }
-    auto data_manager_dock_widget = new ads::CDockWidget(QString::fromStdString("data_manager"));
-    data_manager_dock_widget->setWidget(_data_manager_widget);
-        
-    // Don't delete on close, but allow all other default features
-    data_manager_dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-        
-    // Add underneath the group management widget
-    _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, data_manager_dock_widget, group_dock_widget->dockAreaWidget());
-
-    // adjust splitter between group and data manager so data manager is 70% of height
-    auto * dm_splitter = ads::internal::findParent<ads::CDockSplitter *>(_data_manager_widget);
-    if (dm_splitter) {
-        int const height = dm_splitter->height();
-        dm_splitter->setSizes({height * 30 / 100, height * 70 / 100});
-    }
-
-    if (group_splitter) {
-        int const width = group_splitter->width();
-        group_splitter->setSizes({width * 80 / 100, width * 20 / 100});
-    }
-
+    // === RIGHT ZONE: Properties ===
+    
+    // Create and add PropertiesHost to right zone
+    _properties_host = new PropertiesHost(_editor_registry.get(), this);
+    auto * props_dock = new ads::CDockWidget(QStringLiteral("properties"));
+    props_dock->setWidget(_properties_host);
+    props_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    _zone_manager->addToZone(props_dock, Zone::Right);
 }
 
 void MainWindow::_createActions() {
@@ -946,7 +937,7 @@ void MainWindow::_registerEditorTypes() {
         .display_name = QStringLiteral("Test Widget"),
         .icon_path = QString{},
         .menu_path = QStringLiteral("View/Development"),
-        .default_zone = QStringLiteral("right"),
+        .default_zone = QStringLiteral("center"),  // View goes to center, properties go to PropertiesHost
         .allow_multiple = false,  // Single instance only
         // State factory
         .create_state = [dm]() { return std::make_shared<TestWidgetState>(dm); },
@@ -955,7 +946,7 @@ void MainWindow::_registerEditorTypes() {
             auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
             return new TestWidgetView(test_state);
         },
-        // Properties factory
+        // Properties factory (used by PropertiesHost)
         .create_properties = [](std::shared_ptr<EditorState> state) {
             auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
             return new TestWidgetProperties(test_state);
@@ -984,6 +975,8 @@ void MainWindow::openEditor(QString const & type_id) {
             std::string key = instance_id.toStdString();
             if (_widgets.contains(key)) {
                 showDockWidget(key);
+                // Also set this as the active editor so PropertiesHost shows its properties
+                _editor_registry->selectionContext()->setActiveEditor(instance_id);
                 return;
             }
             // State exists but widget doesn't - unusual, recreate widget
@@ -1006,43 +999,43 @@ void MainWindow::openEditor(QString const & type_id) {
     QString instance_id = instance.state->getInstanceId();
     std::string key = instance_id.toStdString();
 
-    // If both view and properties exist, put them in a splitter
-    QWidget * main_widget = nullptr;
-    if (instance.view && instance.properties) {
-        auto * splitter = new QSplitter(Qt::Horizontal, this);
-        splitter->setObjectName(instance_id);
-        splitter->addWidget(instance.view);
-        splitter->addWidget(instance.properties);
-        splitter->setSizes({700, 300});  // 70% view, 30% properties
-        main_widget = splitter;
-    } else {
-        main_widget = instance.view;
-        main_widget->setObjectName(instance_id);
-    }
+    // View goes to its designated zone (typically Center)
+    // Properties will be shown in PropertiesHost when this editor is active
+    QWidget * main_widget = instance.view;
+    main_widget->setObjectName(instance_id);
 
-    // Create dock widget
+    // Create dock widget for the view
     auto * dock_widget = new ads::CDockWidget(instance_id);
     dock_widget->setWidget(main_widget, ads::CDockWidget::ForceNoScrollArea);
     dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
     dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
 
-    // Determine dock area from zone string
-    ads::DockWidgetArea area = ads::RightDockWidgetArea;
-    if (info.default_zone == "main") {
-        area = ads::CenterDockWidgetArea;
-    } else if (info.default_zone == "left") {
-        area = ads::LeftDockWidgetArea;
-    } else if (info.default_zone == "right") {
-        area = ads::RightDockWidgetArea;
-    } else if (info.default_zone == "bottom") {
-        area = ads::BottomDockWidgetArea;
+    // Determine zone from type info
+    Zone zone = zoneFromString(info.default_zone);
+    
+    // Use ZoneManager if initialized, otherwise fall back to direct dock manager
+    if (_zone_manager && _zone_manager->zonesInitialized()) {
+        _zone_manager->addToZone(dock_widget, zone);
+    } else {
+        // Fallback: convert zone to dock area
+        ads::DockWidgetArea area = ads::CenterDockWidgetArea;
+        switch (zone) {
+        case Zone::Left:   area = ads::LeftDockWidgetArea; break;
+        case Zone::Center: area = ads::CenterDockWidgetArea; break;
+        case Zone::Right:  area = ads::RightDockWidgetArea; break;
+        case Zone::Bottom: area = ads::BottomDockWidgetArea; break;
+        }
+        _m_DockManager->addDockWidget(area, dock_widget);
     }
 
-    _m_DockManager->addDockWidget(area, dock_widget);
     _widgets[key] = std::unique_ptr<QWidget>(main_widget);
 
+    // Set this editor as active so PropertiesHost shows its properties
+    _editor_registry->selectionContext()->setActiveEditor(instance_id);
+
     std::cout << "Created " << info.display_name.toStdString()
-              << " via EditorRegistry (instance: " << key << ")" << std::endl;
+              << " via EditorRegistry (instance: " << key << ", zone: "
+              << zoneToString(zone).toStdString() << ")" << std::endl;
 
     showDockWidget(key);
 }
