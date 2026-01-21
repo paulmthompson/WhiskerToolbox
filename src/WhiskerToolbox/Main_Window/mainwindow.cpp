@@ -9,6 +9,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
+#include "EditorState/EditorFactory.hpp"
 #include "EditorState/WorkspaceManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
@@ -33,7 +34,11 @@
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
-#include "Test_Widget/Test_Widget.hpp"
+
+#include "Test_Widget/TestWidgetState.hpp"
+#include "Test_Widget/TestWidgetView.hpp"
+#include "Test_Widget/TestWidgetProperties.hpp"
+
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QFileDialog>
@@ -48,6 +53,7 @@
 #include <QTableWidget>
 #include <QTreeWidget>
 #include <QShortcut>
+#include <QSplitter>
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -62,12 +68,16 @@ MainWindow::MainWindow(QWidget * parent)
       ui(new Ui::MainWindow),
       _data_manager{std::make_shared<DataManager>()},
       _workspace_manager{std::make_unique<WorkspaceManager>(_data_manager, this)},
+      _editor_factory{std::make_unique<EditorFactory>(_workspace_manager.get(), _data_manager, this)},
       _group_manager(nullptr),
       _group_management_widget(nullptr),
       _data_manager_widget(nullptr)
 
 {
     ui->setupUi(this);
+
+    // Register editor types with the factory
+    _registerEditorTypes();
 
     // Configure dock manager BEFORE creating it
     // Using native title bars for floating widgets (works smoothly on all platforms)
@@ -928,21 +938,120 @@ void MainWindow::openGroupManagement() {
     }
 }
 
-void MainWindow::openTestWidget() {
-    std::string const key = "Test_widget";
+void MainWindow::_registerEditorTypes() {
+    // Capture 'this' and data_manager for lambdas
+    auto dm = _data_manager;
 
-    if (!_widgets.contains(key)) {
-        auto test_widget = std::make_unique<Test_Widget>(this);
+    // === Test Widget (View/Properties split proof-of-concept) ===
+    _editor_factory->registerEditorType(
+        EditorFactory::EditorTypeInfo{
+            .type_id = QStringLiteral("TestWidget"),
+            .display_name = QStringLiteral("Test Widget"),
+            .icon_path = QString{},
+            .menu_path = QStringLiteral("View/Development"),
+            .default_zone = QStringLiteral("right"),
+            .allow_multiple = false  // Single instance only
+        },
+        // State factory
+        [dm]() { return std::make_shared<TestWidgetState>(dm); },
+        // View factory
+        [](std::shared_ptr<EditorState> state) {
+            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
+            return new TestWidgetView(test_state);
+        },
+        // Properties factory
+        [](std::shared_ptr<EditorState> state) {
+            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
+            return new TestWidgetProperties(test_state);
+        }
+    );
 
-        test_widget->setObjectName(key);
-        //registerDockWidget(key, test_widget.get(), ads::RightDockWidgetArea);
-        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
-        dock_widget->setWidget(test_widget.get(),
-                               ads::CDockWidget::ForceNoScrollArea);
-        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
-        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
-        _widgets[key] = std::move(test_widget);
+    // Future: Add more editor types here
+    // _editor_factory->registerEditorType(...);
+}
+
+void MainWindow::openEditor(QString const & type_id) {
+    auto info = _editor_factory->getEditorInfo(type_id);
+
+    if (info.type_id.isEmpty()) {
+        std::cerr << "MainWindow::openEditor: Unknown editor type: "
+                  << type_id.toStdString() << std::endl;
+        return;
     }
 
+    // For single-instance editors, check if already open
+    if (!info.allow_multiple) {
+        auto existing = _workspace_manager->getStatesByType(type_id);
+        if (!existing.empty()) {
+            // Find and show the existing widget
+            QString instance_id = existing[0]->getInstanceId();
+            std::string key = instance_id.toStdString();
+            if (_widgets.contains(key)) {
+                showDockWidget(key);
+                return;
+            }
+            // State exists but widget doesn't - unusual, recreate widget
+            std::cerr << "MainWindow::openEditor: State exists but widget missing, recreating: "
+                      << type_id.toStdString() << std::endl;
+            // Unregister the orphan state
+            _workspace_manager->unregisterState(instance_id);
+        }
+    }
+
+    // Create new instance via factory
+    auto instance = _editor_factory->createEditor(type_id);
+
+    if (!instance.state || !instance.view) {
+        std::cerr << "MainWindow::openEditor: Failed to create editor: "
+                  << type_id.toStdString() << std::endl;
+        return;
+    }
+
+    QString instance_id = instance.state->getInstanceId();
+    std::string key = instance_id.toStdString();
+
+    // If both view and properties exist, put them in a splitter
+    QWidget * main_widget = nullptr;
+    if (instance.view && instance.properties) {
+        auto * splitter = new QSplitter(Qt::Horizontal, this);
+        splitter->setObjectName(instance_id);
+        splitter->addWidget(instance.view);
+        splitter->addWidget(instance.properties);
+        splitter->setSizes({700, 300});  // 70% view, 30% properties
+        main_widget = splitter;
+    } else {
+        main_widget = instance.view;
+        main_widget->setObjectName(instance_id);
+    }
+
+    // Create dock widget
+    auto * dock_widget = new ads::CDockWidget(instance_id);
+    dock_widget->setWidget(main_widget, ads::CDockWidget::ForceNoScrollArea);
+    dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
+    dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+
+    // Determine dock area from zone string
+    ads::DockWidgetArea area = ads::RightDockWidgetArea;
+    if (info.default_zone == "main") {
+        area = ads::CenterDockWidgetArea;
+    } else if (info.default_zone == "left") {
+        area = ads::LeftDockWidgetArea;
+    } else if (info.default_zone == "right") {
+        area = ads::RightDockWidgetArea;
+    } else if (info.default_zone == "bottom") {
+        area = ads::BottomDockWidgetArea;
+    }
+
+    _m_DockManager->addDockWidget(area, dock_widget);
+    _widgets[key] = std::unique_ptr<QWidget>(main_widget);
+
+    std::cout << "Created " << info.display_name.toStdString()
+              << " via EditorFactory (instance: " << key << ")" << std::endl;
+
     showDockWidget(key);
+}
+
+void MainWindow::openTestWidget() {
+    // Delegate to generic openEditor using EditorFactory
+    openEditor(QStringLiteral("TestWidget"));
 }

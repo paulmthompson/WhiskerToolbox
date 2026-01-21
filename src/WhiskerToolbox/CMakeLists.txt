@@ -98,6 +98,13 @@ set(PROJECT_SOURCES
         Test_Widget/Test_Widget.hpp
         Test_Widget/Test_Widget.cpp
         Test_Widget/Test_Widget.ui
+        Test_Widget/TestWidgetStateData.hpp
+        Test_Widget/TestWidgetState.hpp
+        Test_Widget/TestWidgetState.cpp
+        Test_Widget/TestWidgetView.hpp
+        Test_Widget/TestWidgetView.cpp
+        Test_Widget/TestWidgetProperties.hpp
+        Test_Widget/TestWidgetProperties.cpp
 )
 
 qt_add_executable(WhiskerToolbox

@@ -13,6 +13,7 @@
 
 class DataManager;
 class DataManager_Widget;
+class EditorFactory;
 class GroupManager;
 class GroupManagementWidget;
 class MediaWidgetManager;
@@ -94,6 +95,7 @@ private:
 
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<WorkspaceManager> _workspace_manager;
+    std::unique_ptr<EditorFactory> _editor_factory;
 
     std::unique_ptr<GroupManager> _group_manager;
     GroupManagementWidget * _group_management_widget;
@@ -110,6 +112,19 @@ private:
 
     void _createActions();
     void _buildInitialLayout();
+    void _registerEditorTypes();
+
+    /**
+     * @brief Open an editor using the EditorFactory
+     * 
+     * This method handles:
+     * - Single-instance checking (for allow_multiple=false editors)
+     * - State registration with WorkspaceManager
+     * - Dock widget creation and placement
+     * 
+     * @param type_id The editor type to open
+     */
+    void openEditor(QString const & type_id);
 
     void loadData();
     void _updateFrameCount();

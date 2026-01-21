@@ -2,9 +2,12 @@
 # Provides the core infrastructure for widget state management,
 # inter-widget communication, and workspace serialization.
 
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(EDITOR_STATE_SOURCES
+    EditorFactory.cpp
+    EditorFactory.hpp
     EditorState.cpp
     EditorState.hpp
     SelectionContext.cpp
@@ -18,6 +21,7 @@ add_library(EditorState STATIC ${EDITOR_STATE_SOURCES})
 target_link_libraries(EditorState
     PUBLIC
         Qt6::Core
+        Qt6::Widgets
         reflectcpp::reflectcpp
 )
 
