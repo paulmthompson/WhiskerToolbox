@@ -497,64 +497,27 @@ signals:
     // === Interaction Preference Signals ===
 
     /**
-     * @brief Emitted when line interaction preferences change
+     * @brief Emitted when any interaction preferences change (consolidated)
+     * @param category "line", "mask", or "point"
      */
-    void linePrefsChanged();
-
-    /**
-     * @brief Emitted when mask interaction preferences change
-     */
-    void maskPrefsChanged();
-
-    /**
-     * @brief Emitted when point interaction preferences change
-     */
-    void pointPrefsChanged();
+    void interactionPrefsChanged(QString const & category);
 
     // === Text Overlay Signals ===
 
     /**
-     * @brief Emitted when a text overlay is added
-     * @param overlay_id The new overlay's ID
+     * @brief Emitted when any text overlay operation occurs (consolidated)
+     * 
+     * This signal is emitted after any add/remove/update/clear operation.
      */
-    void textOverlayAdded(int overlay_id);
-
-    /**
-     * @brief Emitted when a text overlay is removed
-     * @param overlay_id The removed overlay's ID
-     */
-    void textOverlayRemoved(int overlay_id);
-
-    /**
-     * @brief Emitted when a text overlay is updated
-     * @param overlay_id The updated overlay's ID
-     */
-    void textOverlayUpdated(int overlay_id);
-
-    /**
-     * @brief Emitted when all text overlays are cleared
-     */
-    void textOverlaysCleared();
+    void textOverlaysChanged();
 
     // === Tool Mode Signals ===
 
     /**
-     * @brief Emitted when the active line tool mode changes
-     * @param mode New line tool mode
+     * @brief Emitted when any active tool mode changes (consolidated)
+     * @param category "line", "mask", or "point"
      */
-    void activeLineModeChanged(LineToolMode mode);
-
-    /**
-     * @brief Emitted when the active mask tool mode changes
-     * @param mode New mask tool mode
-     */
-    void activeMaskModeChanged(MaskToolMode mode);
-
-    /**
-     * @brief Emitted when the active point tool mode changes
-     * @param mode New point tool mode
-     */
-    void activePointModeChanged(PointToolMode mode);
+    void toolModesChanged(QString const & category);
 
 private:
     MediaWidgetStateData _data;

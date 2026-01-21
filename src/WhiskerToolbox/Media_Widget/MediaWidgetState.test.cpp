@@ -518,7 +518,7 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
 
     SECTION("Line preferences") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::linePrefsChanged);
+        QSignalSpy spy(&state, &MediaWidgetState::interactionPrefsChanged);
 
         // Check defaults
         auto const& initial = state.linePrefs();
@@ -534,6 +534,7 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
         
         state.setLinePrefs(prefs);
         REQUIRE(spy.count() == 1);
+        REQUIRE(spy.at(0).at(0).toString() == "line");
         
         auto const& updated = state.linePrefs();
         REQUIRE(updated.smoothing_mode == "PolynomialFit");
@@ -544,7 +545,7 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
 
     SECTION("Mask preferences") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::maskPrefsChanged);
+        QSignalSpy spy(&state, &MediaWidgetState::interactionPrefsChanged);
 
         MaskInteractionPrefs prefs;
         prefs.brush_size = 25;
@@ -553,6 +554,7 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
         
         state.setMaskPrefs(prefs);
         REQUIRE(spy.count() == 1);
+        REQUIRE(spy.at(0).at(0).toString() == "mask");
         
         auto const& updated = state.maskPrefs();
         REQUIRE(updated.brush_size == 25);
@@ -562,14 +564,15 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
 
     SECTION("Point preferences") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::pointPrefsChanged);
+        QSignalSpy spy(&state, &MediaWidgetState::interactionPrefsChanged);
 
         PointInteractionPrefs prefs;
         prefs.selection_threshold = 20.0f;
         
         state.setPointPrefs(prefs);
         REQUIRE(spy.count() == 1);
-        
+        REQUIRE(spy.at(0).at(0).toString() == "point");
+
         auto const& updated = state.pointPrefs();
         REQUIRE(updated.selection_threshold == 20.0f);
     }
@@ -604,7 +607,7 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
 
     SECTION("Add text overlay") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::textOverlayAdded);
+        QSignalSpy spy(&state, &MediaWidgetState::textOverlaysChanged);
 
         TextOverlayData overlay;
         overlay.text = "Frame: 100";
@@ -616,7 +619,6 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         int id = state.addTextOverlay(overlay);
         REQUIRE(id >= 0);
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toInt() == id);
 
         REQUIRE(state.textOverlays().size() == 1);
         REQUIRE(state.textOverlays()[0].text == "Frame: 100");
@@ -629,11 +631,10 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         overlay.text = "Test";
         int id = state.addTextOverlay(overlay);
 
-        QSignalSpy spy(&state, &MediaWidgetState::textOverlayRemoved);
+        QSignalSpy spy(&state, &MediaWidgetState::textOverlaysChanged);
 
         REQUIRE(state.removeTextOverlay(id) == true);
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toInt() == id);
         REQUIRE(state.textOverlays().empty());
 
         // Removing non-existent returns false
@@ -647,7 +648,7 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         overlay.text = "Original";
         int id = state.addTextOverlay(overlay);
 
-        QSignalSpy spy(&state, &MediaWidgetState::textOverlayUpdated);
+        QSignalSpy spy(&state, &MediaWidgetState::textOverlaysChanged);
 
         TextOverlayData updated;
         updated.text = "Updated";
@@ -655,7 +656,6 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
 
         REQUIRE(state.updateTextOverlay(id, updated) == true);
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toInt() == id);
 
         auto* retrieved = state.getTextOverlay(id);
         REQUIRE(retrieved != nullptr);
@@ -674,7 +674,7 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
         state.addTextOverlay(TextOverlayData{.text = "Two"});
         REQUIRE(state.textOverlays().size() == 2);
 
-        QSignalSpy spy(&state, &MediaWidgetState::textOverlaysCleared);
+        QSignalSpy spy(&state, &MediaWidgetState::textOverlaysChanged);
 
         state.clearTextOverlays();
         REQUIRE(spy.count() == 1);
@@ -748,7 +748,7 @@ TEST_CASE("MediaWidgetState tool modes", "[MediaWidgetState]") {
 
     SECTION("Line tool mode") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::activeLineModeChanged);
+        QSignalSpy spy(&state, &MediaWidgetState::toolModesChanged);
 
         REQUIRE(state.activeLineMode() == LineToolMode::None);
 
@@ -773,7 +773,7 @@ TEST_CASE("MediaWidgetState tool modes", "[MediaWidgetState]") {
 
     SECTION("Mask tool mode") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::activeMaskModeChanged);
+        QSignalSpy spy(&state, &MediaWidgetState::toolModesChanged);
 
         REQUIRE(state.activeMaskMode() == MaskToolMode::None);
 
@@ -784,7 +784,7 @@ TEST_CASE("MediaWidgetState tool modes", "[MediaWidgetState]") {
 
     SECTION("Point tool mode") {
         MediaWidgetState state;
-        QSignalSpy spy(&state, &MediaWidgetState::activePointModeChanged);
+        QSignalSpy spy(&state, &MediaWidgetState::toolModesChanged);
 
         REQUIRE(state.activePointMode() == PointToolMode::None);
 
@@ -930,4 +930,143 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
     // Tool modes
     REQUIRE(restored.activeLineMode() == LineToolMode::Add);
     REQUIRE(restored.activeMaskMode() == MaskToolMode::Brush);
+}
+
+// === Phase 4B: Consolidated Signal Tests ===
+
+TEST_CASE("MediaWidgetState consolidated signals", "[MediaWidgetState][Phase4B]") {
+    int argc = 0;
+    QCoreApplication app(argc, nullptr);
+
+    SECTION("interactionPrefsChanged emitted for line prefs") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::interactionPrefsChanged);
+
+        LineInteractionPrefs prefs;
+        prefs.smoothing_mode = "NewMode";
+        state.setLinePrefs(prefs);
+
+        REQUIRE(consolidated_spy.count() == 1);
+        REQUIRE(consolidated_spy.at(0).at(0).toString() == "line");
+    }
+
+    SECTION("interactionPrefsChanged emitted for mask prefs") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::interactionPrefsChanged);
+
+        MaskInteractionPrefs prefs;
+        prefs.brush_size = 30;
+        state.setMaskPrefs(prefs);
+
+        REQUIRE(consolidated_spy.count() == 1);
+        REQUIRE(consolidated_spy.at(0).at(0).toString() == "mask");
+    }
+
+    SECTION("interactionPrefsChanged emitted for point prefs") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::interactionPrefsChanged);
+
+        PointInteractionPrefs prefs;
+        prefs.selection_threshold = 25.0f;
+        state.setPointPrefs(prefs);
+
+        REQUIRE(consolidated_spy.count() == 1);
+        REQUIRE(consolidated_spy.at(0).at(0).toString() == "point");
+    }
+
+    SECTION("textOverlaysChanged emitted on add") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::textOverlaysChanged);
+
+        TextOverlayData overlay;
+        overlay.text = "Test";
+        state.addTextOverlay(overlay);
+
+        REQUIRE(consolidated_spy.count() == 1);
+    }
+
+    SECTION("textOverlaysChanged emitted on remove") {
+        MediaWidgetState state;
+        TextOverlayData overlay;
+        overlay.text = "Test";
+        int id = state.addTextOverlay(overlay);
+
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::textOverlaysChanged);
+
+        state.removeTextOverlay(id);
+
+        REQUIRE(consolidated_spy.count() == 1);
+    }
+
+    SECTION("textOverlaysChanged emitted on update") {
+        MediaWidgetState state;
+        TextOverlayData overlay;
+        overlay.text = "Original";
+        int id = state.addTextOverlay(overlay);
+
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::textOverlaysChanged);
+
+        overlay.text = "Updated";
+        state.updateTextOverlay(id, overlay);
+
+
+        REQUIRE(consolidated_spy.count() == 1);
+    }
+
+    SECTION("textOverlaysChanged emitted on clear") {
+        MediaWidgetState state;
+        state.addTextOverlay(TextOverlayData{.text = "One"});
+        state.addTextOverlay(TextOverlayData{.text = "Two"});
+
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::textOverlaysChanged);
+
+        state.clearTextOverlays();
+
+        REQUIRE(consolidated_spy.count() == 1);
+    }
+
+    SECTION("toolModesChanged emitted for line mode") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::toolModesChanged);
+
+        state.setActiveLineMode(LineToolMode::Add);
+
+        REQUIRE(consolidated_spy.count() == 1);
+        REQUIRE(consolidated_spy.at(0).at(0).toString() == "line");
+    }
+
+    SECTION("toolModesChanged emitted for mask mode") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::toolModesChanged);
+
+        state.setActiveMaskMode(MaskToolMode::Brush);
+
+        REQUIRE(consolidated_spy.count() == 1);
+        REQUIRE(consolidated_spy.at(0).at(0).toString() == "mask");
+    }
+
+    SECTION("toolModesChanged emitted for point mode") {
+        MediaWidgetState state;
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::toolModesChanged);
+
+        state.setActivePointMode(PointToolMode::Select);
+
+        REQUIRE(consolidated_spy.count() == 1);
+        REQUIRE(consolidated_spy.at(0).at(0).toString() == "point");
+    }
+
+    SECTION("toolModesChanged not emitted when same mode set") {
+        MediaWidgetState state;
+        state.setActiveLineMode(LineToolMode::Add);
+
+        QSignalSpy consolidated_spy(&state, &MediaWidgetState::toolModesChanged);
+
+        // Setting same mode should not emit
+        state.setActiveLineMode(LineToolMode::Add);
+        REQUIRE(consolidated_spy.count() == 0);
+
+        // Setting different mode should emit
+        state.setActiveLineMode(LineToolMode::Erase);
+        REQUIRE(consolidated_spy.count() == 1);
+    }
 }

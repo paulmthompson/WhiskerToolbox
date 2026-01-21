@@ -153,7 +153,7 @@ Create unit tests covering:
 
 **Goal**: Keep direct accessors for non-display-option state, but consolidate signals.
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Complete (January 2026)
 
 **Duration**: 1-2 days
 
@@ -170,26 +170,28 @@ Create unit tests covering:
 
 ### Step 4B.2: Consolidate signals
 
-Reduce ~20 signals to ~8:
+Replaced fine-grained signals with 3 new consolidated signals:
 
 ```cpp
 signals:
-    // === Coarse-grained (always emitted) ===
-    void stateChanged();  // Any change
-    
-    // === Category signals (one per category) ===
-    void viewportChanged();
+    // === Consolidated category signals (ONLY) ===
     void interactionPrefsChanged(QString const& category);  // "line", "mask", "point"
-    void textOverlaysChanged();
-    void toolModesChanged();
+    void textOverlaysChanged();  // After any add/remove/update/clear
+    void toolModesChanged(QString const& category);  // "line", "mask", "point"
     
     // === Display options (from registry) ===
     // optionsChanged, optionsRemoved, visibilityChanged - from DisplayOptionsRegistry
 ```
 
-### Step 4B.3: Deprecate fine-grained signals
+Old fine-grained signals (`linePrefsChanged`, `maskPrefsChanged`, `pointPrefsChanged`, `textOverlayAdded`, `textOverlayRemoved`, `textOverlayUpdated`, `textOverlaysCleared`, `activeLineModeChanged`, `activeMaskModeChanged`, `activePointModeChanged`) have been completely removed.
 
-Mark old signals as deprecated, have them still emit but forward to coarser signals.
+### Step 4B.3: Tests updated
+
+Existing test cases have been removed and consolidated signals are now the only ones tested:
+- `interactionPrefsChanged` verified with correct category for line/mask/point prefs
+- `textOverlaysChanged` verified on add/remove/update/clear operations
+- `toolModesChanged` verified with correct category for line/mask/point modes
+- No spurious emissions when setting same value
 
 ---
 
@@ -290,7 +292,7 @@ void Media_Widget::restoreFromState() {
 | Phase | Duration | Status | Deliverables |
 |-------|----------|--------|--------------|
 | 4A: DisplayOptionsRegistry | 3-4 days | ✅ Complete | Generic registry, deprecate old methods |
-| 4B: Simplify Accessors | 1-2 days | 🔲 Not Started | Consolidated signals, audit complete |
+| 4B: Simplify Accessors | 1-2 days | ✅ Complete | Consolidated signals, audit complete |
 | 4C: Media_Window Integration | 2-3 days | 🔲 Not Started | Remove duplicate storage, use state |
 | 4D: Sub-Widget Integration | 3-4 days | 🔲 Not Started | All 6 sub-widgets wired up |
 | 4E: Viewport Integration | 1 day | 🔲 Not Started | Zoom/pan persistence |

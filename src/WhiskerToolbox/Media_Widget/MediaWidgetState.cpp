@@ -489,19 +489,19 @@ void MediaWidgetState::removeMediaOptions(QString const & key) {
 void MediaWidgetState::setLinePrefs(LineInteractionPrefs const & prefs) {
     _data.line_prefs = prefs;
     markDirty();
-    emit linePrefsChanged();
+    emit interactionPrefsChanged(QStringLiteral("line"));
 }
 
 void MediaWidgetState::setMaskPrefs(MaskInteractionPrefs const & prefs) {
     _data.mask_prefs = prefs;
     markDirty();
-    emit maskPrefsChanged();
+    emit interactionPrefsChanged(QStringLiteral("mask"));
 }
 
 void MediaWidgetState::setPointPrefs(PointInteractionPrefs const & prefs) {
     _data.point_prefs = prefs;
     markDirty();
-    emit pointPrefsChanged();
+    emit interactionPrefsChanged(QStringLiteral("point"));
 }
 
 // === Text Overlays ===
@@ -510,7 +510,7 @@ int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {
     overlay.id = _data.next_overlay_id++;
     _data.text_overlays.push_back(overlay);
     markDirty();
-    emit textOverlayAdded(overlay.id);
+    emit textOverlaysChanged();
     return overlay.id;
 }
 
@@ -521,7 +521,7 @@ bool MediaWidgetState::removeTextOverlay(int overlay_id) {
     if (it != _data.text_overlays.end()) {
         _data.text_overlays.erase(it);
         markDirty();
-        emit textOverlayRemoved(overlay_id);
+        emit textOverlaysChanged();
         return true;
     }
     return false;
@@ -541,7 +541,7 @@ bool MediaWidgetState::updateTextOverlay(int overlay_id, TextOverlayData const &
         it->font_size = overlay.font_size;
         it->enabled = overlay.enabled;
         markDirty();
-        emit textOverlayUpdated(overlay_id);
+        emit textOverlaysChanged();
         return true;
     }
     return false;
@@ -551,7 +551,7 @@ void MediaWidgetState::clearTextOverlays() {
     if (!_data.text_overlays.empty()) {
         _data.text_overlays.clear();
         markDirty();
-        emit textOverlaysCleared();
+        emit textOverlaysChanged();
     }
 }
 
@@ -571,7 +571,7 @@ void MediaWidgetState::setActiveLineMode(LineToolMode mode) {
     if (_data.active_line_mode != mode) {
         _data.active_line_mode = mode;
         markDirty();
-        emit activeLineModeChanged(mode);
+        emit toolModesChanged(QStringLiteral("line"));
     }
 }
 
@@ -579,7 +579,7 @@ void MediaWidgetState::setActiveMaskMode(MaskToolMode mode) {
     if (_data.active_mask_mode != mode) {
         _data.active_mask_mode = mode;
         markDirty();
-        emit activeMaskModeChanged(mode);
+        emit toolModesChanged(QStringLiteral("mask"));
     }
 }
 
@@ -587,6 +587,6 @@ void MediaWidgetState::setActivePointMode(PointToolMode mode) {
     if (_data.active_point_mode != mode) {
         _data.active_point_mode = mode;
         markDirty();
-        emit activePointModeChanged(mode);
+        emit toolModesChanged(QStringLiteral("point"));
     }
 }
