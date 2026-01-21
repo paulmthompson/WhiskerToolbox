@@ -170,40 +170,40 @@ public:
     EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
     EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
 
-    [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
-        if (_line_configs.find(line_key) == _line_configs.end()) {
-            return std::nullopt;
-        }
-        return _line_configs.at(line_key).get();
-    }
+    /**
+     * @brief Get mutable line display options for a key (Phase 4C: forwards to state registry)
+     * @param line_key The line data key
+     * @return Pointer to options if found, nullopt otherwise
+     */
+    [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const;
 
-    [[nodiscard]] std::optional<MaskDisplayOptions *> getMaskConfig(std::string const & mask_key) const {
-        if (_mask_configs.find(mask_key) == _mask_configs.end()) {
-            return std::nullopt;
-        }
-        return _mask_configs.at(mask_key).get();
-    }
+    /**
+     * @brief Get mutable mask display options for a key (Phase 4C: forwards to state registry)
+     * @param mask_key The mask data key
+     * @return Pointer to options if found, nullopt otherwise
+     */
+    [[nodiscard]] std::optional<MaskDisplayOptions *> getMaskConfig(std::string const & mask_key) const;
 
-    [[nodiscard]] std::optional<PointDisplayOptions *> getPointConfig(std::string const & point_key) const {
-        if (_point_configs.find(point_key) == _point_configs.end()) {
-            return std::nullopt;
-        }
-        return _point_configs.at(point_key).get();
-    }
+    /**
+     * @brief Get mutable point display options for a key (Phase 4C: forwards to state registry)
+     * @param point_key The point data key
+     * @return Pointer to options if found, nullopt otherwise
+     */
+    [[nodiscard]] std::optional<PointDisplayOptions *> getPointConfig(std::string const & point_key) const;
 
-    [[nodiscard]] std::optional<DigitalIntervalDisplayOptions *> getIntervalConfig(std::string const & interval_key) const {
-        if (_interval_configs.find(interval_key) == _interval_configs.end()) {
-            return std::nullopt;
-        }
-        return _interval_configs.at(interval_key).get();
-    }
+    /**
+     * @brief Get mutable interval display options for a key (Phase 4C: forwards to state registry)
+     * @param interval_key The interval data key
+     * @return Pointer to options if found, nullopt otherwise
+     */
+    [[nodiscard]] std::optional<DigitalIntervalDisplayOptions *> getIntervalConfig(std::string const & interval_key) const;
 
-    [[nodiscard]] std::optional<TensorDisplayOptions *> getTensorConfig(std::string const & tensor_key) const {
-        if (_tensor_configs.find(tensor_key) == _tensor_configs.end()) {
-            return std::nullopt;
-        }
-        return _tensor_configs.at(tensor_key).get();
-    }
+    /**
+     * @brief Get mutable tensor display options for a key (Phase 4C: forwards to state registry)
+     * @param tensor_key The tensor data key
+     * @return Pointer to options if found, nullopt otherwise
+     */
+    [[nodiscard]] std::optional<TensorDisplayOptions *> getTensorConfig(std::string const & tensor_key) const;
 
     /**
      * @brief Check if preview mask data is available for a given key
@@ -273,12 +273,9 @@ private:
 
     std::vector<QPointF> _drawing_points;
 
-    // Display options stored in MediaWidgetState (media_configs removed - use state directly)
-    std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
-    std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
-    std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
-    std::unordered_map<std::string, std::unique_ptr<DigitalIntervalDisplayOptions>> _interval_configs;
-    std::unordered_map<std::string, std::unique_ptr<TensorDisplayOptions>> _tensor_configs;
+    // Display options are now stored in MediaWidgetState's DisplayOptionsRegistry
+    // (Phase 4C: removed _line_configs, _mask_configs, _point_configs, 
+    //  _interval_configs, _tensor_configs - use _media_widget_state->displayOptions() instead)
 
     // Preview data storage for masks
     std::unordered_map<std::string, std::vector<Mask2D>> _preview_mask_data;

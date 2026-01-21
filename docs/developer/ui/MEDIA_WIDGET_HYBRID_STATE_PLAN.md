@@ -199,21 +199,11 @@ Existing test cases have been removed and consolidated signals are now the only 
 
 **Goal**: Media_Window uses state for display options instead of local maps.
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Complete (January 2026)
 
 **Duration**: 2-3 days
 
 ### Step 4C.1: Remove duplicate storage from Media_Window
-
-Remove these member variables:
-```cpp
-// REMOVE from Media_Window.hpp:
-std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
-std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
-std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
-std::unordered_map<std::string, std::unique_ptr<TensorDisplayOptions>> _tensor_configs;
-std::unordered_map<std::string, std::unique_ptr<DigitalIntervalDisplayOptions>> _interval_configs;
-```
 
 ### Step 4C.2: Update Media_Window methods
 
@@ -293,7 +283,7 @@ void Media_Widget::restoreFromState() {
 |-------|----------|--------|--------------|
 | 4A: DisplayOptionsRegistry | 3-4 days | ✅ Complete | Generic registry, deprecate old methods |
 | 4B: Simplify Accessors | 1-2 days | ✅ Complete | Consolidated signals, audit complete |
-| 4C: Media_Window Integration | 2-3 days | 🔲 Not Started | Remove duplicate storage, use state |
+| 4C: Media_Window Integration | 2-3 days | ✅ Complete | Remove duplicate storage, use state |
 | 4D: Sub-Widget Integration | 3-4 days | 🔲 Not Started | All 6 sub-widgets wired up |
 | 4E: Viewport Integration | 1 day | 🔲 Not Started | Zoom/pan persistence |
 | **Total** | **~2 weeks** | | Full hybrid architecture |

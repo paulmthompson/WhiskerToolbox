@@ -119,29 +119,20 @@ void Media_Window::removeMediaDataFromScene(std::string const & media_key) {
 }
 
 void Media_Window::addLineDataToScene(std::string const & line_key) {
-    // Check if state has saved options for this key
-    if (_media_widget_state) {
-        auto const * saved_opts = _media_widget_state->displayOptions().get<LineDisplayOptions>(
-                QString::fromStdString(line_key));
-        if (saved_opts) {
-            // Options already exist in state - use them
-            _line_configs[line_key] = std::make_unique<LineDisplayOptions>(*saved_opts);
-            UpdateCanvas();
-            return;
-        }
+    if (!_media_widget_state) {
+        std::cerr << "Warning: Cannot add line data - no MediaWidgetState set" << std::endl;
+        return;
     }
 
-    // No saved options - create with default color
-    auto line_config = std::make_unique<LineDisplayOptions>();
+    QString const key_q = QString::fromStdString(line_key);
 
-    // Assign color based on the current number of line configs
-    line_config->hex_color() = DefaultDisplayValues::getColorForIndex(_line_configs.size());
-
-    _line_configs[line_key] = std::move(line_config);
-
-    // Sync new options to state
-    if (_media_widget_state && _line_configs.contains(line_key)) {
-        _media_widget_state->displayOptions().set(QString::fromStdString(line_key), *_line_configs[line_key]);
+    // Check if options already exist in state
+    if (!_media_widget_state->displayOptions().has<LineDisplayOptions>(key_q)) {
+        // Create default options with auto-assigned color
+        LineDisplayOptions line_config;
+        line_config.hex_color() = DefaultDisplayValues::getColorForIndex(
+            _media_widget_state->displayOptions().count<LineDisplayOptions>());
+        _media_widget_state->displayOptions().set(key_q, line_config);
     }
 
     UpdateCanvas();
@@ -158,38 +149,28 @@ void Media_Window::_clearLines() {
 }
 
 void Media_Window::removeLineDataFromScene(std::string const & line_key) {
-    auto lineItem = _line_configs.find(line_key);
-    if (lineItem != _line_configs.end()) {
-        _line_configs.erase(lineItem);
+    if (_media_widget_state) {
+        _media_widget_state->displayOptions().remove<LineDisplayOptions>(QString::fromStdString(line_key));
     }
 
     UpdateCanvas();
 }
 
 void Media_Window::addMaskDataToScene(std::string const & mask_key) {
-    // Check if state has saved options for this key
-    if (_media_widget_state) {
-        auto const * saved_opts = _media_widget_state->displayOptions().get<MaskDisplayOptions>(
-                QString::fromStdString(mask_key));
-        if (saved_opts) {
-            // Options already exist in state - use them
-            _mask_configs[mask_key] = std::make_unique<MaskDisplayOptions>(*saved_opts);
-            UpdateCanvas();
-            return;
-        }
+    if (!_media_widget_state) {
+        std::cerr << "Warning: Cannot add mask data - no MediaWidgetState set" << std::endl;
+        return;
     }
 
-    // No saved options - create with default color
-    auto mask_config = std::make_unique<MaskDisplayOptions>();
+    QString const key_q = QString::fromStdString(mask_key);
 
-    // Assign color based on the current number of mask configs
-    mask_config->hex_color() = DefaultDisplayValues::getColorForIndex(_mask_configs.size());
-
-    _mask_configs[mask_key] = std::move(mask_config);
-
-    // Sync new options to state
-    if (_media_widget_state && _mask_configs.contains(mask_key)) {
-        _media_widget_state->displayOptions().set(QString::fromStdString(mask_key), *_mask_configs[mask_key]);
+    // Check if options already exist in state
+    if (!_media_widget_state->displayOptions().has<MaskDisplayOptions>(key_q)) {
+        // Create default options with auto-assigned color
+        MaskDisplayOptions mask_config;
+        mask_config.hex_color() = DefaultDisplayValues::getColorForIndex(
+            _media_widget_state->displayOptions().count<MaskDisplayOptions>());
+        _media_widget_state->displayOptions().set(key_q, mask_config);
     }
 
     UpdateCanvas();
@@ -229,38 +210,28 @@ void Media_Window::_clearMaskOutlines() {
 }
 
 void Media_Window::removeMaskDataFromScene(std::string const & mask_key) {
-    auto maskItem = _mask_configs.find(mask_key);
-    if (maskItem != _mask_configs.end()) {
-        _mask_configs.erase(maskItem);
+    if (_media_widget_state) {
+        _media_widget_state->displayOptions().remove<MaskDisplayOptions>(QString::fromStdString(mask_key));
     }
 
     UpdateCanvas();
 }
 
 void Media_Window::addPointDataToScene(std::string const & point_key) {
-    // Check if state has saved options for this key
-    if (_media_widget_state) {
-        auto const * saved_opts = _media_widget_state->displayOptions().get<PointDisplayOptions>(
-            QString::fromStdString(point_key));
-        if (saved_opts) {
-            // Options already exist in state - use them
-            _point_configs[point_key] = std::make_unique<PointDisplayOptions>(*saved_opts);
-            UpdateCanvas();
-            return;
-        }
+    if (!_media_widget_state) {
+        std::cerr << "Warning: Cannot add point data - no MediaWidgetState set" << std::endl;
+        return;
     }
 
-    // No saved options - create with default color
-    auto point_config = std::make_unique<PointDisplayOptions>();
+    QString const key_q = QString::fromStdString(point_key);
 
-    // Assign color based on the current number of point configs
-    point_config->hex_color() = DefaultDisplayValues::getColorForIndex(_point_configs.size());
-
-    _point_configs[point_key] = std::move(point_config);
-
-    // Sync new options to state
-    if (_media_widget_state && _point_configs.contains(point_key)) {
-        _media_widget_state->displayOptions().set(QString::fromStdString(point_key), *_point_configs[point_key]);
+    // Check if options already exist in state
+    if (!_media_widget_state->displayOptions().has<PointDisplayOptions>(key_q)) {
+        // Create default options with auto-assigned color
+        PointDisplayOptions point_config;
+        point_config.hex_color() = DefaultDisplayValues::getColorForIndex(
+            _media_widget_state->displayOptions().count<PointDisplayOptions>());
+        _media_widget_state->displayOptions().set(key_q, point_config);
     }
 
     UpdateCanvas();
@@ -286,47 +257,36 @@ void Media_Window::_clearPoints() {
 }
 
 void Media_Window::removePointDataFromScene(std::string const & point_key) {
-    auto pointItem = _point_configs.find(point_key);
-    if (pointItem != _point_configs.end()) {
-        _point_configs.erase(pointItem);
+    if (_media_widget_state) {
+        _media_widget_state->displayOptions().remove<PointDisplayOptions>(QString::fromStdString(point_key));
     }
 
     UpdateCanvas();
 }
 
 void Media_Window::addDigitalIntervalSeries(std::string const & key) {
-    // Check if state has saved options for this key
-    if (_media_widget_state) {
-        auto const * saved_opts = _media_widget_state->displayOptions().get<DigitalIntervalDisplayOptions>(
-            QString::fromStdString(key));
-        if (saved_opts) {
-            // Options already exist in state - use them
-            _interval_configs[key] = std::make_unique<DigitalIntervalDisplayOptions>(*saved_opts);
-            UpdateCanvas();
-            return;
-        }
+    if (!_media_widget_state) {
+        std::cerr << "Warning: Cannot add interval data - no MediaWidgetState set" << std::endl;
+        return;
     }
 
-    // No saved options - create with default color
-    auto interval_config = std::make_unique<DigitalIntervalDisplayOptions>();
+    QString const key_q = QString::fromStdString(key);
 
-    // Assign color based on the current number of interval configs
-    interval_config->hex_color() = DefaultDisplayValues::getColorForIndex(_interval_configs.size());
-
-    _interval_configs[key] = std::move(interval_config);
-
-    // Sync new options to state
-    if (_media_widget_state && _interval_configs.contains(key)) {
-        _media_widget_state->displayOptions().set(QString::fromStdString(key), *_interval_configs[key]);
+    // Check if options already exist in state
+    if (!_media_widget_state->displayOptions().has<DigitalIntervalDisplayOptions>(key_q)) {
+        // Create default options with auto-assigned color
+        DigitalIntervalDisplayOptions interval_config;
+        interval_config.hex_color() = DefaultDisplayValues::getColorForIndex(
+            _media_widget_state->displayOptions().count<DigitalIntervalDisplayOptions>());
+        _media_widget_state->displayOptions().set(key_q, interval_config);
     }
 
     UpdateCanvas();
 }
 
 void Media_Window::removeDigitalIntervalSeries(std::string const & key) {
-    auto item = _interval_configs.find(key);
-    if (item != _interval_configs.end()) {
-        _interval_configs.erase(item);
+    if (_media_widget_state) {
+        _media_widget_state->displayOptions().remove<DigitalIntervalDisplayOptions>(QString::fromStdString(key));
     }
 
     UpdateCanvas();
@@ -344,38 +304,28 @@ void Media_Window::_clearIntervals() {
 }
 
 void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
-    // Check if state has saved options for this key
-    if (_media_widget_state) {
-        auto const * saved_opts = _media_widget_state->displayOptions().get<TensorDisplayOptions>(
-            QString::fromStdString(tensor_key));
-        if (saved_opts) {
-            // Options already exist in state - use them
-            _tensor_configs[tensor_key] = std::make_unique<TensorDisplayOptions>(*saved_opts);
-            UpdateCanvas();
-            return;
-        }
+    if (!_media_widget_state) {
+        std::cerr << "Warning: Cannot add tensor data - no MediaWidgetState set" << std::endl;
+        return;
     }
 
-    // No saved options - create with default color
-    auto tensor_config = std::make_unique<TensorDisplayOptions>();
+    QString const key_q = QString::fromStdString(tensor_key);
 
-    // Assign color based on the current number of tensor configs
-    tensor_config->hex_color() = DefaultDisplayValues::getColorForIndex(_tensor_configs.size());
-
-    _tensor_configs[tensor_key] = std::move(tensor_config);
-
-    // Sync new options to state
-    if (_media_widget_state && _tensor_configs.contains(tensor_key)) {
-        _media_widget_state->displayOptions().set(QString::fromStdString(tensor_key), *_tensor_configs[tensor_key]);
+    // Check if options already exist in state
+    if (!_media_widget_state->displayOptions().has<TensorDisplayOptions>(key_q)) {
+        // Create default options with auto-assigned color
+        TensorDisplayOptions tensor_config;
+        tensor_config.hex_color() = DefaultDisplayValues::getColorForIndex(
+            _media_widget_state->displayOptions().count<TensorDisplayOptions>());
+        _media_widget_state->displayOptions().set(key_q, tensor_config);
     }
 
     UpdateCanvas();
 }
 
 void Media_Window::removeTensorDataFromScene(std::string const & tensor_key) {
-    auto tensorItem = _tensor_configs.find(tensor_key);
-    if (tensorItem != _tensor_configs.end()) {
-        _tensor_configs.erase(tensorItem);
+    if (_media_widget_state) {
+        _media_widget_state->displayOptions().remove<TensorDisplayOptions>(QString::fromStdString(tensor_key));
     }
 
     UpdateCanvas();
@@ -427,92 +377,80 @@ void Media_Window::setMediaWidgetState(MediaWidgetState * state) {
 }
 
 void Media_Window::syncAllOptionsToState() {
-    if (!_media_widget_state) return;
-
-    // Sync line options
-    for (auto const & [key, opts]: _line_configs) {
-        if (opts) {
-            _media_widget_state->displayOptions().set(QString::fromStdString(key), *opts);
-        }
-    }
-
-    // Sync mask options
-    for (auto const & [key, opts]: _mask_configs) {
-        if (opts) {
-            _media_widget_state->displayOptions().set(QString::fromStdString(key), *opts);
-        }
-    }
-
-    // Sync point options
-    for (auto const & [key, opts]: _point_configs) {
-        if (opts) {
-            _media_widget_state->displayOptions().set(QString::fromStdString(key), *opts);
-        }
-    }
-
-    // Sync tensor options
-    for (auto const & [key, opts]: _tensor_configs) {
-        if (opts) {
-            _media_widget_state->displayOptions().set(QString::fromStdString(key), *opts);
-        }
-    }
-
-    // Sync interval options
-    for (auto const & [key, opts]: _interval_configs) {
-        if (opts) {
-            _media_widget_state->displayOptions().set(QString::fromStdString(key), *opts);
-        }
-    }
-
-    // Note: media_configs is now stored directly in state - no sync needed
+    // Phase 4C: State is now the single source of truth for display options.
+    // This method is kept for API compatibility but is now a no-op since
+    // all options are stored directly in the state registry.
+    // No synchronization needed - there are no local _*_configs maps to sync.
 }
 
 void Media_Window::restoreOptionsFromState() {
-    if (!_media_widget_state) return;
+    // Phase 4C: State is now the single source of truth for display options.
+    // This method is kept for API compatibility but is now a no-op since
+    // all plotting methods read directly from the state registry.
+    // Just refresh the canvas to apply any state changes.
+    UpdateCanvas();
+}
 
-    auto const & data = _media_widget_state->data();
+// === get*Config accessor implementations (Phase 4C: forward to state registry) ===
 
-    // Restore line options
-    for (auto const & [key, opts]: data.line_options) {
-        auto it = _line_configs.find(key);
-        if (it != _line_configs.end() && it->second) {
-            *(it->second) = opts;
-        }
+std::optional<LineDisplayOptions *> Media_Window::getLineConfig(std::string const & line_key) const {
+    if (!_media_widget_state) {
+        return std::nullopt;
     }
-
-    // Restore mask options
-    for (auto const & [key, opts]: data.mask_options) {
-        auto it = _mask_configs.find(key);
-        if (it != _mask_configs.end() && it->second) {
-            *(it->second) = opts;
-        }
+    auto * opts = _media_widget_state->displayOptions().getMutable<LineDisplayOptions>(
+        QString::fromStdString(line_key));
+    if (!opts) {
+        return std::nullopt;
     }
+    return opts;
+}
 
-    // Restore point options
-    for (auto const & [key, opts]: data.point_options) {
-        auto it = _point_configs.find(key);
-        if (it != _point_configs.end() && it->second) {
-            *(it->second) = opts;
-        }
+std::optional<MaskDisplayOptions *> Media_Window::getMaskConfig(std::string const & mask_key) const {
+    if (!_media_widget_state) {
+        return std::nullopt;
     }
-
-    // Restore tensor options
-    for (auto const & [key, opts]: data.tensor_options) {
-        auto it = _tensor_configs.find(key);
-        if (it != _tensor_configs.end() && it->second) {
-            *(it->second) = opts;
-        }
+    auto * opts = _media_widget_state->displayOptions().getMutable<MaskDisplayOptions>(
+        QString::fromStdString(mask_key));
+    if (!opts) {
+        return std::nullopt;
     }
+    return opts;
+}
 
-    // Restore interval options
-    for (auto const & [key, opts]: data.interval_options) {
-        auto it = _interval_configs.find(key);
-        if (it != _interval_configs.end() && it->second) {
-            *(it->second) = opts;
-        }
+std::optional<PointDisplayOptions *> Media_Window::getPointConfig(std::string const & point_key) const {
+    if (!_media_widget_state) {
+        return std::nullopt;
     }
+    auto * opts = _media_widget_state->displayOptions().getMutable<PointDisplayOptions>(
+        QString::fromStdString(point_key));
+    if (!opts) {
+        return std::nullopt;
+    }
+    return opts;
+}
 
-    // Note: media_options are stored directly in state - no restore needed
+std::optional<DigitalIntervalDisplayOptions *> Media_Window::getIntervalConfig(std::string const & interval_key) const {
+    if (!_media_widget_state) {
+        return std::nullopt;
+    }
+    auto * opts = _media_widget_state->displayOptions().getMutable<DigitalIntervalDisplayOptions>(
+        QString::fromStdString(interval_key));
+    if (!opts) {
+        return std::nullopt;
+    }
+    return opts;
+}
+
+std::optional<TensorDisplayOptions *> Media_Window::getTensorConfig(std::string const & tensor_key) const {
+    if (!_media_widget_state) {
+        return std::nullopt;
+    }
+    auto * opts = _media_widget_state->displayOptions().getMutable<TensorDisplayOptions>(
+        QString::fromStdString(tensor_key));
+    if (!opts) {
+        return std::nullopt;
+    }
+    return opts;
 }
 
 void Media_Window::_plotTextOverlays() {
@@ -827,12 +765,15 @@ void Media_Window::_plotMediaData() {
 
     std::cout << "Scaled image" << std::endl;
 
-    // Check if any masks are in transparency mode
+    // Check if any masks are in transparency mode (from state registry)
     bool has_transparency_mask = false;
-    for (auto const & [mask_key, mask_config]: _mask_configs) {
-        if (mask_config->is_visible() && mask_config->use_as_transparency) {
-            has_transparency_mask = true;
-            break;
+    if (_media_widget_state) {
+        for (auto const & mask_key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
+            auto const * mask_config = _media_widget_state->displayOptions().get<MaskDisplayOptions>(mask_key_q);
+            if (mask_config && mask_config->is_visible() && mask_config->use_as_transparency) {
+                has_transparency_mask = true;
+                break;
+            }
         }
     }
 
@@ -1229,6 +1170,8 @@ float Media_Window::getYAspect() const {
 }
 
 void Media_Window::_plotLineData() {
+    if (!_media_widget_state) return;
+
     auto const current_time = _data_manager->getCurrentTime();
 
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
@@ -1236,13 +1179,17 @@ void Media_Window::_plotLineData() {
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
 
-    for (auto const & [line_key, _line_config]: _line_configs) {
+    // Iterate over line options from state registry
+    for (auto const & line_key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
+        auto const * line_config = _media_widget_state->displayOptions().get<LineDisplayOptions>(line_key_q);
+        if (!line_config || !line_config->is_visible()) continue;
 
-        if (!_line_config.get()->is_visible()) continue;
-
-        auto plot_color = plot_color_with_alpha(_line_config.get());
+        std::string const line_key = line_key_q.toStdString();
+        auto plot_color = plot_color_with_alpha(line_config);
 
         auto line_data = _data_manager->getData<LineData>(line_key);
+        if (!line_data) continue;
+
         auto lineData = line_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
         auto entityIds = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), *video_timeframe);
 
@@ -1284,9 +1231,9 @@ void Media_Window::_plotLineData() {
 
             // Use segment if enabled, otherwise use full line
             Line2D line_to_plot;
-            if (_line_config.get()->show_segment) {
-                float const start_percentage = static_cast<float>(_line_config.get()->segment_start_percentage) / 100.0f;
-                float const end_percentage = static_cast<float>(_line_config.get()->segment_end_percentage) / 100.0f;
+            if (line_config->show_segment) {
+                float const start_percentage = static_cast<float>(line_config->segment_start_percentage) / 100.0f;
+                float const end_percentage = static_cast<float>(line_config->segment_end_percentage) / 100.0f;
                 line_to_plot = get_segment_between_percentages(single_line, start_percentage, end_percentage);
 
                 // If segment is empty (invalid percentages), skip this line
@@ -1317,7 +1264,7 @@ void Media_Window::_plotLineData() {
             // Create pen with group-aware color and configurable thickness
             QPen linePen;
             linePen.setColor(line_color);
-            linePen.setWidth(_line_config.get()->line_thickness);
+            linePen.setWidth(line_config->line_thickness);
 
             auto linePath = addPath(path, linePen);
             _line_paths.append(linePath);
@@ -1333,7 +1280,7 @@ void Media_Window::_plotLineData() {
             _points.append(ellipse);
 
             // If show_points is enabled, add open circles at each point on the line
-            if (_line_config.get()->show_points) {
+            if (line_config->show_points) {
                 // Create pen and brush for open circles
                 QPen pointPen(dot_color);
                 pointPen.setWidth(1);
@@ -1354,8 +1301,8 @@ void Media_Window::_plotLineData() {
             }
 
             // If position marker is enabled, add a marker at the specified percentage
-            if (_line_config.get()->show_position_marker) {
-                float const percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
+            if (line_config->show_position_marker) {
+                float const percentage = static_cast<float>(line_config->position_percentage) / 100.0f;
                 Point2D<float> const marker_pos = get_position_at_percentage(line_to_plot, percentage);
 
                 float const marker_x = marker_pos.x * xAspect;
@@ -1379,18 +1326,25 @@ void Media_Window::_plotLineData() {
 }
 
 void Media_Window::_plotMaskData() {
+    if (!_media_widget_state) return;
+
     // Note: MaskData does not currently support EntityIds for group-aware coloring
     // This would need to be implemented similar to PointData and LineData
     auto const current_time = _data_manager->getCurrentTime();
 
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
-    for (auto const & [mask_key, _mask_config]: _mask_configs) {
-        if (!_mask_config.get()->is_visible()) continue;
+    // Iterate over mask options from state registry
+    for (auto const & mask_key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
+        auto const * mask_config = _media_widget_state->displayOptions().get<MaskDisplayOptions>(mask_key_q);
+        if (!mask_config || !mask_config->is_visible()) continue;
 
-        auto plot_color = plot_color_with_alpha(_mask_config.get());
+        std::string const mask_key = mask_key_q.toStdString();
+        auto plot_color = plot_color_with_alpha(mask_config);
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
+        if (!mask) continue;
+
         auto image_size = mask->getImageSize();
 
         // Check for preview data first
@@ -1409,11 +1363,11 @@ void Media_Window::_plotMaskData() {
             maskData2 = std::vector<Mask2D>(mask_data_view2.begin(), mask_data_view2.end());
         }
 
-        _plotSingleMaskData(maskData, image_size, plot_color, _mask_config.get());
-        _plotSingleMaskData(maskData2, image_size, plot_color, _mask_config.get());
+        _plotSingleMaskData(maskData, image_size, plot_color, mask_config);
+        _plotSingleMaskData(maskData2, image_size, plot_color, mask_config);
 
         // Plot bounding boxes if enabled
-        if (_mask_config.get()->show_bounding_box) {
+        if (mask_config->show_bounding_box) {
             // Calculate scaling factors based on mask image size, not media aspect ratio
             float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
             float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
@@ -1468,7 +1422,7 @@ void Media_Window::_plotMaskData() {
         }
 
         // Plot outlines if enabled
-        if (_mask_config.get()->show_outline) {
+        if (mask_config->show_outline) {
             // Create a slightly darker color for outlines
             QRgb const outline_color = plot_color;
 
@@ -1480,7 +1434,7 @@ void Media_Window::_plotMaskData() {
 
                     if (!outline_mask.empty()) {
                         // Plot the outline mask using the same approach as regular masks
-                        _plotSingleMaskData({outline_mask}, image_size, outline_color, _mask_config.get());
+                        _plotSingleMaskData({outline_mask}, image_size, outline_color, mask_config);
                     }
                 }
             }
@@ -1493,7 +1447,7 @@ void Media_Window::_plotMaskData() {
 
                     if (!outline_mask.empty()) {
                         // Plot the outline mask using the same approach as regular masks
-                        _plotSingleMaskData({outline_mask}, image_size, outline_color, _mask_config.get());
+                        _plotSingleMaskData({outline_mask}, image_size, outline_color, mask_config);
                     }
                 }
             }
@@ -1530,6 +1484,8 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     std::cout << "Media image size: " << media_image.width() << "x" << media_image.height() << std::endl;
     std::cout << "Canvas dimensions: " << _canvasWidth << "x" << _canvasHeight << std::endl;
 
+    if (!_media_widget_state) return media_image;
+
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
     QImage final_image = media_image;
@@ -1537,16 +1493,20 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     int transparency_mask_count = 0;
     int const total_mask_points = 0;
 
-    // Process all transparency masks
-    for (auto const & [mask_key, mask_config]: _mask_configs) {
-        if (!mask_config->is_visible() || !mask_config->use_as_transparency) {
+    // Process all transparency masks from state registry
+    for (auto const & mask_key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
+        auto const * mask_config = _media_widget_state->displayOptions().get<MaskDisplayOptions>(mask_key_q);
+        if (!mask_config || !mask_config->is_visible() || !mask_config->use_as_transparency) {
             continue;
         }
 
+        std::string const mask_key = mask_key_q.toStdString();
         transparency_mask_count++;
         std::cout << "Processing transparency mask: " << mask_key << std::endl;
 
         auto mask_data = _data_manager->getData<MaskData>(mask_key);
+        if (!mask_data) continue;
+
         auto image_size = mask_data->getImageSize();
 
         std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
@@ -1591,6 +1551,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
 }
 
 void Media_Window::_plotPointData() {
+    if (!_media_widget_state) return;
 
     auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
@@ -1600,12 +1561,16 @@ void Media_Window::_plotPointData() {
         return;
     }
 
-    for (auto const & [point_key, _point_config]: _point_configs) {
-        if (!_point_config.get()->is_visible()) continue;
+    // Iterate over point options from state registry
+    for (auto const & point_key_q: _media_widget_state->displayOptions().keys<PointDisplayOptions>()) {
+        auto const * point_config = _media_widget_state->displayOptions().get<PointDisplayOptions>(point_key_q);
+        if (!point_config || !point_config->is_visible()) continue;
 
-        auto plot_color = plot_color_with_alpha(_point_config.get());
+        std::string const point_key = point_key_q.toStdString();
+        auto plot_color = plot_color_with_alpha(point_config);
 
         auto point = _data_manager->getData<PointData>(point_key);
+        if (!point) continue;
 
         auto xAspect = getXAspect();
         auto yAspect = getYAspect();
@@ -1626,7 +1591,7 @@ void Media_Window::_plotPointData() {
         auto entityIds = point->getEntityIdsAtTime(current_time);
 
         // Get configurable point size
-        float const point_size = static_cast<float>(_point_config.get()->point_size);
+        float const point_size = static_cast<float>(point_config->point_size);
 
         // Ensure we have matching point data and entity IDs
         size_t count = std::min(pointData.size(), entityIds.size());
@@ -1661,7 +1626,7 @@ void Media_Window::_plotPointData() {
             }
 
             // Create the appropriate marker shape based on configuration
-            switch (_point_config.get()->marker_shape) {
+            switch (point_config->marker_shape) {
                 case PointMarkerShape::Circle: {
                     QPen pen(point_color);
                     pen.setWidth(2);
@@ -1749,18 +1714,24 @@ void Media_Window::_plotPointData() {
 }
 
 void Media_Window::_plotDigitalIntervalSeries() {
+    if (!_media_widget_state) return;
+
     auto const current_time = _data_manager->getCurrentTime();
     auto video_timeframe = _data_manager->getTime(TimeKey("time"));
 
-    for (auto const & [key, _interval_config]: _interval_configs) {
-        if (!_interval_config.get()->is_visible()) continue;
+    // Iterate over interval options from state registry
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<DigitalIntervalDisplayOptions>()) {
+        auto const * interval_config = _media_widget_state->displayOptions().get<DigitalIntervalDisplayOptions>(key_q);
+        if (!interval_config || !interval_config->is_visible()) continue;
 
         // Only render if using Box plotting style
-        if (_interval_config.get()->plotting_style != IntervalPlottingStyle::Box) continue;
+        if (interval_config->plotting_style != IntervalPlottingStyle::Box) continue;
 
-        auto plot_color = plot_color_with_alpha(_interval_config.get());
+        std::string const key = key_q.toStdString();
+        auto plot_color = plot_color_with_alpha(interval_config);
 
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
+        if (!interval_series) continue;
 
         // Get the timeframes for conversion
         auto interval_timeframe_key = _data_manager->getTimeKey(key);
@@ -1785,16 +1756,16 @@ void Media_Window::_plotDigitalIntervalSeries() {
 
         // Generate relative times based on frame range setting
         std::vector<int> relative_times;
-        int const frame_range = _interval_config->frame_range;
+        int const frame_range = interval_config->frame_range;
         for (int i = -frame_range; i <= frame_range; ++i) {
             relative_times.push_back(i);
         }
 
-        int const square_size = _interval_config->box_size;
+        int const square_size = interval_config->box_size;
 
         // Calculate position based on location setting
         int start_x, start_y;
-        switch (_interval_config->location) {
+        switch (interval_config->location) {
             case IntervalLocation::TopLeft:
                 start_x = 0;
                 start_y = 0;
@@ -1846,15 +1817,21 @@ void Media_Window::_plotDigitalIntervalSeries() {
 }
 
 void Media_Window::_plotDigitalIntervalBorders() {
+    if (!_media_widget_state) return;
+
     auto const current_time = _data_manager->getCurrentTime();
 
-    for (auto const & [key, _interval_config]: _interval_configs) {
-        if (!_interval_config.get()->is_visible()) continue;
+    // Iterate over interval options from state registry
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<DigitalIntervalDisplayOptions>()) {
+        auto const * interval_config = _media_widget_state->displayOptions().get<DigitalIntervalDisplayOptions>(key_q);
+        if (!interval_config || !interval_config->is_visible()) continue;
 
         // Only render if using Border plotting style
-        if (_interval_config.get()->plotting_style != IntervalPlottingStyle::Border) continue;
+        if (interval_config->plotting_style != IntervalPlottingStyle::Border) continue;
 
+        std::string const key = key_q.toStdString();
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
+        if (!interval_series) continue;
 
         // Get the timeframes for conversion
         auto interval_timeframe_key = _data_manager->getTimeKey(key);
@@ -1882,10 +1859,10 @@ void Media_Window::_plotDigitalIntervalBorders() {
 
         // If an interval is present, draw a border around the entire image
         if (interval_present) {
-            auto plot_color = plot_color_with_alpha(_interval_config.get());
+            auto plot_color = plot_color_with_alpha(interval_config);
 
             // Get border thickness from config
-            int const thickness = _interval_config->border_thickness;
+            int const thickness = interval_config->border_thickness;
 
             QPen border_pen(plot_color);
             border_pen.setWidth(thickness);
@@ -1911,17 +1888,22 @@ void Media_Window::_plotDigitalIntervalBorders() {
 }
 
 void Media_Window::_plotTensorData() {
+    if (!_media_widget_state) return;
 
     auto const current_time = _data_manager->getCurrentTime();
 
-    for (auto const & [key, config]: _tensor_configs) {
-        if (!config.get()->is_visible()) continue;
+    // Iterate over tensor options from state registry
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<TensorDisplayOptions>()) {
+        auto const * tensor_config = _media_widget_state->displayOptions().get<TensorDisplayOptions>(key_q);
+        if (!tensor_config || !tensor_config->is_visible()) continue;
 
+        std::string const key = key_q.toStdString();
         auto tensor_data = _data_manager->getData<TensorData>(key);
+        if (!tensor_data) continue;
 
         auto tensor_shape = tensor_data->getFeatureShape();
 
-        auto tensor_slice = tensor_data->getChannelSlice(TimeFrameIndex(current_time), config->display_channel);
+        auto tensor_slice = tensor_data->getChannelSlice(TimeFrameIndex(current_time), tensor_config->display_channel);
 
         // Create a QImage from the tensor data
         QImage tensor_image(static_cast<int>(tensor_shape[1]), static_cast<int>(tensor_shape[0]), QImage::Format::Format_ARGB32);
@@ -1931,8 +1913,8 @@ void Media_Window::_plotTensorData() {
                 //int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
 
                 // Use the config color with alpha
-                QColor const color(QString::fromStdString(config->hex_color()));
-                int const alpha = std::lround(config->alpha() * 255.0f * (value > 0 ? 1.0f : 0.0f));
+                QColor const color(QString::fromStdString(tensor_config->hex_color()));
+                int const alpha = std::lround(tensor_config->alpha() * 255.0f * (value > 0 ? 1.0f : 0.0f));
                 QRgb const rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
 
                 tensor_image.setPixel(x, y, rgb);
@@ -2274,13 +2256,17 @@ void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key
 }
 
 EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
+    if (!_media_widget_state) return EntityId(0);
+
     // Convert scene coordinates to media coordinates
     float x_media = static_cast<float>(scene_pos.x() / getXAspect());
     float y_media = static_cast<float>(scene_pos.y() / getYAspect());
 
     // Search through lines first (as they're typically most precise)
-    for (auto const & [key, config]: _line_configs) {
-        if (config->is_visible()) {
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
+        auto const * config = _media_widget_state->displayOptions().get<LineDisplayOptions>(key_q);
+        if (config && config->is_visible()) {
+            std::string const key = key_q.toStdString();
             EntityId entity_id = _findLineAtPosition(scene_pos, key);
             if (entity_id != EntityId(0)) {
                 data_key = key;
@@ -2291,8 +2277,10 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     }
 
     // Then search points
-    for (auto const & [key, config]: _point_configs) {
-        if (config->is_visible()) {
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<PointDisplayOptions>()) {
+        auto const * config = _media_widget_state->displayOptions().get<PointDisplayOptions>(key_q);
+        if (config && config->is_visible()) {
+            std::string const key = key_q.toStdString();
             EntityId entity_id = _findPointAtPosition(scene_pos, key);
             if (entity_id != EntityId(0)) {
                 data_key = key;
@@ -2303,8 +2291,10 @@ EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::str
     }
 
     // Finally search masks (usually less precise)
-    for (auto const & [key, config]: _mask_configs) {
-        if (config->is_visible()) {
+    for (auto const & key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
+        auto const * config = _media_widget_state->displayOptions().get<MaskDisplayOptions>(key_q);
+        if (config && config->is_visible()) {
+            std::string const key = key_q.toStdString();
             EntityId entity_id = _findMaskAtPosition(scene_pos, key);
             if (entity_id != EntityId(0)) {
                 data_key = key;
