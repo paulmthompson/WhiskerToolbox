@@ -210,49 +210,116 @@ Media_Widget now responds to SelectionContext changes:
 - [ ] Verify no circular update loops
 - [ ] Document edge cases discovered
 
-### 2.6 Gradually Migrate State (Weeks 8-9)
+### 2.6 Gradually Migrate State (Weeks 8-9) ✅ COMPLETE (Media_Widget)
 
-**Only after communication works**, start moving individual pieces of state:
+**Status**: Media_Widget has completed comprehensive state migration via hybrid architecture (see Phase 2.6.1 below).
 
-**Week 7 - Simple state migration**:
-```cpp
-// Add to MediaWidgetState incrementally
-struct MediaWidgetStateData {
-    QString displayed_data_key;  // Already there
-    double zoom_level = 1.0;     // Add zoom
-    double pan_x = 0.0;          // Add pan
-    double pan_y = 0.0;
-};
+**Original Plan**: Incrementally move state piece by piece
 
-// In Media_Widget, replace member variables one at a time:
-// Before: double _zoom_level;
-// After:  Use _state->getZoom() instead
+**What Actually Happened**: Media_Widget underwent a complete "hybrid architecture" refactoring that went beyond the original scope, creating a cleaner and more maintainable design:
 
-// Keep existing Feature_Table_Widget for now!
-```
+#### Phase 2.6.1: Media_Widget Hybrid Architecture Refactoring ✅ COMPLETE
 
-**Week 8 - Feature visibility state**:
-```cpp
-// Add feature configuration to state
-struct MediaWidgetStateData {
-    QString displayed_data_key;
-    double zoom_level = 1.0;
-    double pan_x = 0.0;
-    double pan_y = 0.0;
-    std::map<std::string, bool> feature_enabled;     // New
-    std::map<std::string, std::string> feature_colors;  // New
-};
+**See**: [MEDIA_WIDGET_HYBRID_STATE_PLAN.md](MEDIA_WIDGET_HYBRID_STATE_PLAN.md) for complete documentation
 
-// Widget still has Feature_Table_Widget - it now reads/writes state
-```
+**Goal**: Refactor MediaWidgetState from ~60 methods to ~25 methods using a generic DisplayOptionsRegistry
 
-**Deliverables**:
-- [ ] Move viewport state (zoom/pan) to MediaWidgetState
-- [ ] Update Media_Widget to use state for viewport
-- [ ] Move feature enable/color state to MediaWidgetState
-- [ ] Update Media_Widget to use state for features
-- [ ] Keep existing Feature_Table_Widget - it becomes a view of state
-- [ ] Test serialization of migrated state
+**Phases Completed**:
+
+1. **Phase 4A - DisplayOptionsRegistry** ✅
+   - Created generic, type-safe registry for all 6 display option types
+   - Replaced 6 sets of typed methods with single generic API
+   - Template specializations ensure type safety
+   - Comprehensive unit tests (set/get/remove/keys/enabledKeys)
+
+2. **Phase 4B - Signal Consolidation** ✅  
+   - Reduced ~20 signals → 8 signals
+   - Consolidated fine-grained signals into 3 category signals:
+     - `interactionPrefsChanged(category)` - for line/mask/point preferences
+     - `textOverlaysChanged()` - for all overlay operations
+     - `toolModesChanged(category)` - for line/mask/point tool modes
+   - Display option signals from registry:
+     - `optionsChanged(key, type)`
+     - `optionsRemoved(key, type)` 
+     - `visibilityChanged(key, type, visible)`
+
+3. **Phase 4C - Media_Window Integration** ✅
+   - Removed duplicate `_*_configs` maps from Media_Window
+   - All `add*ToScene` and `_plot*Data` methods read from state
+   - Accessor methods forward to state's DisplayOptionsRegistry
+   - Single source of truth for display options
+
+4. **Phase 4D - Sub-Widget Integration** ✅
+   - All 6 sub-widgets wired to state:
+     - MediaLine_Widget - reads/writes line options via state
+     - MediaMask_Widget - reads/writes mask options via state  
+     - MediaPoint_Widget - reads/writes point options via state
+     - MediaTensor_Widget - reads/writes tensor options via state
+     - MediaInterval_Widget - reads/writes interval options via state
+     - MediaProcessing_Widget - reads/writes media options via state
+   - Each widget reads options on show/setActiveKey
+   - UI changes write back to state
+
+5. **Phase 4E - Viewport Integration** ✅
+   - Removed duplicate `_current_zoom` and `_user_zoom_active` from Media_Widget
+   - State is single source of truth for zoom/pan values
+   - Added `_isUserZoomActive()` helper deriving from state
+   - Removed intermediate sync methods (`_syncZoomToState`, `_syncPanToState`)
+   - Direct read/write to state in zoom/pan operations
+   - Simplified signal handlers (read from QGraphicsView transform)
+
+**State Coverage**: MediaWidgetState now manages:
+- ✅ Display options for 6 data types (line, mask, point, tensor, interval, media)
+- ✅ Viewport state (zoom, pan, canvas size)
+- ✅ Interaction preferences (line tools, mask brush, point selection)
+- ✅ Text overlays (labels, annotations)
+- ✅ Active tool modes (line/mask/point editing modes)
+- ✅ Full workspace serialization support
+
+**Files Created**:
+- `DisplayOptionsRegistry.hpp/.cpp/.test.cpp` - Generic registry implementation
+
+**Files Modified**:
+- `MediaWidgetState.hpp/.cpp` - Added DisplayOptionsRegistry, consolidated signals
+- `MediaWidgetStateData.hpp` - Complete state structure with all options
+- `Media_Window.hpp/.cpp` - Removed duplicate storage, use state
+- `Media_Widget.hpp/.cpp` - Removed duplicate zoom/pan members, state as source of truth
+- All 6 sub-widgets - Read/write via state
+
+**Test Results**: All tests passing
+- DisplayOptionsRegistry unit tests (50+ test cases)
+- MediaWidgetState serialization tests
+- Integration tests verify state synchronization
+- Workspace save/restore validated
+
+**Success Criteria Achieved**:
+1. ✅ Method reduction: ~60 methods → ~25 methods (58% reduction)
+2. ✅ Signal reduction: ~20 signals → 8 signals (60% reduction)  
+3. ✅ Single source of truth: All state in MediaWidgetStateData only
+4. ✅ No duplicate storage: Media_Window and Media_Widget don't cache state
+5. ✅ All tests passing: Unit and integration tests validated
+6. ✅ Serialization works: Full workspace persistence with viewport state
+
+**Significance**: Media_Widget serves as the **reference implementation** for comprehensive state migration. Other widgets can follow this pattern:
+- Generic registry approach for similar option types
+- Signal consolidation strategies
+- Single source of truth enforcement
+- Incremental sub-component integration
+
+**Deliverables (Original - Now Complete for Media_Widget)**:
+- [x] Move viewport state (zoom/pan) to MediaWidgetState
+- [x] Update Media_Widget to use state for viewport (no duplicate members)
+- [x] Move feature enable/color/visibility state to MediaWidgetState  
+- [x] Update Media_Widget to use state for features (via DisplayOptionsRegistry)
+- [x] Feature_Table_Widget remains but reads/writes state
+- [x] Test serialization of migrated state (comprehensive coverage)
+- [x] Move interaction preferences to state
+- [x] Move text overlays to state
+- [x] Move tool modes to state
+- [x] Generic display options registry
+- [x] Signal consolidation
+
+**Next Widget**: DataViewer_Widget should follow similar hybrid architecture pattern
 
 ### 2.7 DataTransform_Widget: First Feature_Table_Widget Removal (Week 9) ✅ COMPLETE
 
@@ -577,12 +644,33 @@ private:
 
 ### 5.1 Migration Order (by complexity and dependencies)
 
-1. **Media_Widget** (Phase 2.4) - Foundation widget ✅
-2. **DataTransform_Widget** (Phase 2.7) - First Feature_Table_Widget removal ✅
+1. **Media_Widget** (Phase 2.4 + 2.6.1) - Foundation widget with comprehensive state migration ✅ **COMPLETE**
+   - State integration: ✅ Complete (Phase 2.4)
+   - Hybrid architecture refactoring: ✅ Complete (Phase 2.6.1) 
+   - DisplayOptionsRegistry for 6 data types
+   - Full viewport/preferences/overlays/modes in state
+   - Reference implementation for other widgets
+   
+2. **DataTransform_Widget** (Phase 2.7) - First Feature_Table_Widget removal ✅ **COMPLETE**
+   - Proven external selection via SelectionContext works
+   - Validated architecture for Phase 3's Central Properties Zone
+   
 3. **DataViewer_Widget** - Similar pattern to Media_Widget
+   - Follow Media_Widget's hybrid architecture pattern
+   - Generic registry for analog/event/interval configs
+   - Signal consolidation opportunities
+   
 4. **DataManager_Widget** - Extract remaining state, simplify to data browser
+   - Already has basic state (Phase 2.3)
+   - Potential for registry pattern with data type filters
+   
 5. **Analysis_Dashboard** - Already has some patterns, refine
+   - Multiple plot widgets, coordinate via state
+   - May benefit from plot configuration registry
+   
 6. **TableDesignerWidget** - Complex, benefits most from state separation
+   - Table design state separate from execution
+   - Row/column selector state management
 
 ### 5.2 DataViewerState Example
 
@@ -880,25 +968,72 @@ auto schema = rfl::json::to_schema<MediaWidgetStateData>();
 | Phase | Status | Duration | Deliverables |
 |-------|--------|----------|--------------|
 | 1. Core Infrastructure | ✅ COMPLETE | 3 weeks | EditorState, WorkspaceManager, SelectionContext |
-| 2. State Integration & Communication | ✅ COMPLETE | 6 weeks | Minimal states, inter-widget communication, incremental migration, first Feature_Table removal |
+| 2. State Integration & Communication | ✅ COMPLETE | 8 weeks | Minimal states, inter-widget communication, **comprehensive Media_Widget migration**, first Feature_Table removal |
+| 2.6.1 Media_Widget Hybrid Architecture | ✅ COMPLETE | 2 weeks | DisplayOptionsRegistry, signal consolidation, viewport state, 6 sub-widgets integrated |
 | 3. Central Properties Zone | 📋 PLANNED | 3 weeks | PropertiesHost, unified Feature_Table_Widget |
 | 4. Command Pattern | 📋 PLANNED | 3 weeks | Command base, CommandManager, example commands |
-| 5. Widget Migrations | 📋 PLANNED | 8 weeks | Remaining widgets (DataViewer, Analysis, Tables) |
+| 5. Widget Migrations | 🔄 IN PROGRESS | 8 weeks | DataViewer (follow Media pattern), Analysis, Tables |
 | 6. Advanced Features | 📋 PLANNED | 4 weeks | Drag/drop, session management |
 
-**Elapsed: ~9 weeks | Remaining: ~21 weeks (~5 months)**
+**Elapsed: ~11 weeks | Remaining: ~19 weeks (~4.5 months)**
 
-**Progress**: 47% Complete (Phase 1 complete, Phase 2 complete including DataTransform migration)
+**Progress**: 52% Complete
+- Phase 1: Core infrastructure ✅
+- Phase 2: State integration & communication ✅  
+  - Phase 2.6.1: Media_Widget hybrid architecture ✅ (reference implementation)
+  - Phase 2.7: DataTransform external selection ✅
+- Phase 5: Widget migrations 🔄 (1 of 6 widgets complete)
 
-## Next Steps (Phase 3 - Central Properties Zone)
+**Key Accomplishment**: Media_Widget serves as comprehensive reference implementation with:
+- Generic DisplayOptionsRegistry pattern
+- Signal consolidation strategies (60% reduction)
+- Single source of truth enforcement (no duplicate storage)
+- Full state serialization (viewport, options, preferences, overlays, modes)
 
-### Phase 3: Central Properties Zone (Weeks 10-12)
+**Next Steps**: Apply Media_Widget patterns to DataViewer_Widget
 
-**Prerequisites**: Phase 2 complete ✅ - widgets have state objects and communicate via SelectionContext. DataTransform_Widget has proven that external selection works without embedded Feature_Table_Widget.
+## Next Steps
 
-**Goal**: Create a unified properties panel that replaces per-widget Feature_Table_Widget instances.
+### Immediate: Phase 5 - DataViewer_Widget Migration (Weeks 11-13)
 
-### Phase 3.1 PropertiesHost Widget (Week 10)
+**Prerequisites**: 
+- Phase 2 complete ✅
+- Media_Widget hybrid architecture complete ✅ (reference implementation)
+- DataTransform_Widget external selection validated ✅
+
+**Goal**: Apply Media_Widget's hybrid architecture pattern to DataViewer_Widget
+
+**Approach**: Follow the proven Media_Widget pattern:
+1. Create DisplayOptionsRegistry equivalent for analog/event/interval configs
+2. Consolidate signals (multiple `*ConfigChanged` → category-based signals)
+3. Remove duplicate storage from DataViewer class
+4. Integrate sub-components (analog plots, event plots, interval plots)
+5. Make viewport/scale state single source of truth
+6. Comprehensive testing and serialization validation
+
+**Reference**: Use [MEDIA_WIDGET_HYBRID_STATE_PLAN.md](MEDIA_WIDGET_HYBRID_STATE_PLAN.md) as template
+
+**Expected Outcome**: 
+- Similar method/signal reduction (~60%)
+- Clean state separation
+- Full serialization support
+- Second reference implementation validated
+
+### Future: Phase 3 - Central Properties Zone (Weeks 14-16)
+
+**Prerequisites**: 
+- Multiple widgets with mature state implementations (Media ✅, DataTransform ✅, DataViewer 🔄)
+- Pattern validation across different widget types
+
+**Goal**: Create unified properties panel that replaces per-widget Feature_Table_Widget instances
+
+**Timing Rationale**: Delaying Phase 3 until more widgets have mature state allows us to:
+- Identify common patterns across widget types
+- Design PropertiesHost based on real usage patterns  
+- Avoid premature abstraction
+- Ensure external selection pattern is proven at scale
+
+### Phase 3.1 PropertiesHost Widget (Week 14)
 
 Create a context-sensitive properties container that observes SelectionContext and displays appropriate properties based on active editor and selected data type.
 

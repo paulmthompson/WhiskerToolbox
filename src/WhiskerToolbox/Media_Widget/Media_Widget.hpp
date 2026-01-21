@@ -80,12 +80,10 @@ private:
     // Processing widget for colormap options
     MediaProcessing_Widget * _processing_widget = nullptr;
 
-    // Zoom state
-    double _current_zoom{1.0};
-    bool _user_zoom_active{false};
-    double _zoom_step{1.15};// multiplicative step per wheel/action
-    double _min_zoom{0.1};
-    double _max_zoom{20.0};
+    // Zoom configuration constants (actual zoom value stored in state)
+    static constexpr double _zoom_step{1.15};// multiplicative step per wheel/action
+    static constexpr double _min_zoom{0.1};
+    static constexpr double _max_zoom{20.0};
 
     // Canvas panning state for shift+drag
     bool _is_panning{false};
@@ -96,14 +94,15 @@ private:
     SelectionContext * _selection_context{nullptr};
 
     void _applyZoom(double factor, bool anchor_under_mouse);
+    
+    // Helper to check if user has applied a non-default zoom
+    [[nodiscard]] bool _isUserZoomActive() const;
 
     void _createOptions();
     void _createMediaWindow();
     void _connectTextWidgetToScene();
 
     // State synchronization helpers
-    void _syncZoomToState();
-    void _syncPanToState();
     void _syncCanvasSizeToState();
     void _syncFeatureEnabledToState(QString const & feature_key, QString const & data_type, bool enabled);
     void _connectStateSignals();

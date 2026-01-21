@@ -348,7 +348,7 @@ void Media_Widget::_featureSelected(QString const & feature) {
 void Media_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     // When user has zoomed, avoid rescaling scene contents destructively; just adjust scene rect
-    if (_user_zoom_active) {
+    if (_isUserZoomActive()) {
         if (_scene) {
             auto size = ui->graphicsView->size();
             _scene->setSceneRect(0, 0, size.width(), size.height());
@@ -369,9 +369,11 @@ void Media_Widget::_updateCanvasSize() {
 
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
-        if (!_user_zoom_active) {
+        if (!_isUserZoomActive()) {
             ui->graphicsView->resetTransform();
-            _current_zoom = 1.0;
+            if (_state) {
+                _state->setZoom(1.0);
+            }
         }
         
         // Sync canvas size to state
@@ -562,20 +564,17 @@ void Media_Widget::LoadFrame(int frame_id) {
 void Media_Widget::zoomIn() { _applyZoom(_zoom_step, false); }
 void Media_Widget::zoomOut() { _applyZoom(1.0 / _zoom_step, false); }
 void Media_Widget::resetZoom() {
-    if (!ui->graphicsView) return;
+    if (!ui->graphicsView || !_state) return;
     ui->graphicsView->resetTransform();
-    _current_zoom = 1.0;
-    _user_zoom_active = false;
-    
-    // Sync zoom reset to state
-    _syncZoomToState();
+    _state->setZoom(1.0);
 }
 
 void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
-    if (!ui->graphicsView) return;
-    double new_zoom = _current_zoom * factor;
+    if (!ui->graphicsView || !_state) return;
+    double current_zoom = _state->zoom();
+    double new_zoom = current_zoom * factor;
     new_zoom = std::clamp(new_zoom, _min_zoom, _max_zoom);
-    factor = new_zoom / _current_zoom;// Adjust factor if clamped
+    factor = new_zoom / current_zoom;// Adjust factor if clamped
     if (qFuzzyCompare(factor, 1.0)) return;
     if (anchor_under_mouse) {
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
@@ -583,11 +582,7 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
     }
     ui->graphicsView->scale(factor, factor);
-    _current_zoom = new_zoom;
-    _user_zoom_active = (_current_zoom != 1.0);
-    
-    // Sync zoom to state
-    _syncZoomToState();
+    _state->setZoom(new_zoom);
 }
 
 bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
@@ -638,8 +633,12 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
                 _is_panning = false;
                 ui->graphicsView->viewport()->setCursor(Qt::ArrowCursor);
                 
-                // Sync final pan position to state
-                _syncPanToState();
+                // Sync final pan position to state directly
+                if (_state && ui->graphicsView) {
+                    double pan_x = ui->graphicsView->horizontalScrollBar()->value();
+                    double pan_y = ui->graphicsView->verticalScrollBar()->value();
+                    _state->setPan(pan_x, pan_y);
+                }
                 
                 mouseEvent->accept();
                 return true; // Consume the event
@@ -687,21 +686,11 @@ void Media_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
     _state->setDisplayedDataKey(selected_key);
 }
 
-// === Phase 4: State Synchronization Methods ===
+// === Phase 4E: State as Single Source of Truth ===
 
-void Media_Widget::_syncZoomToState() {
-    if (_state) {
-        _state->setZoom(_current_zoom);
-    }
-}
-
-void Media_Widget::_syncPanToState() {
-    if (_state && ui->graphicsView) {
-        // Get scroll bar values as pan offset
-        double pan_x = ui->graphicsView->horizontalScrollBar()->value();
-        double pan_y = ui->graphicsView->verticalScrollBar()->value();
-        _state->setPan(pan_x, pan_y);
-    }
+bool Media_Widget::_isUserZoomActive() const {
+    if (!_state) return false;
+    return std::abs(_state->zoom() - 1.0) > 1e-6;
 }
 
 void Media_Widget::_syncCanvasSizeToState() {
@@ -729,16 +718,20 @@ void Media_Widget::_connectStateSignals() {
 }
 
 void Media_Widget::_onStateZoomChanged(double zoom) {
-    // Only apply if different from current zoom (avoid feedback loop)
-    if (std::abs(_current_zoom - zoom) > 1e-6) {
-        if (!ui->graphicsView) return;
-        
+    // State is the source of truth - update the QGraphicsView to match
+    // This handles both internal changes and external changes (e.g., workspace restore)
+    if (!ui->graphicsView) return;
+    
+    // Get current transform scale
+    QTransform const transform = ui->graphicsView->transform();
+    double current_scale = transform.m11();  // Assumes uniform scaling
+    
+    // Only apply if different from current transform (avoid feedback loop)
+    if (std::abs(current_scale - zoom) > 1e-6) {
         // Calculate scale factor to reach target zoom
-        double factor = zoom / _current_zoom;
+        double factor = zoom / current_scale;
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         ui->graphicsView->scale(factor, factor);
-        _current_zoom = zoom;
-        _user_zoom_active = (zoom != 1.0);
     }
 }
 
@@ -758,15 +751,13 @@ void Media_Widget::_onStatePanChanged(double x, double y) {
 void Media_Widget::restoreFromState() {
     if (!_state) return;
     
-    // Restore zoom
+    // Restore zoom - state is the source of truth
     double saved_zoom = _state->zoom();
     if (saved_zoom > 0 && ui->graphicsView) {
         ui->graphicsView->resetTransform();
         if (std::abs(saved_zoom - 1.0) > 1e-6) {
             ui->graphicsView->scale(saved_zoom, saved_zoom);
         }
-        _current_zoom = saved_zoom;
-        _user_zoom_active = (saved_zoom != 1.0);
     }
     
     // Restore pan position

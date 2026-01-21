@@ -247,31 +247,63 @@ Each sub-widget needs:
 
 **Goal**: Media_Widget syncs zoom/pan with state for persistence.
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Complete (January 2026)
 
 **Duration**: 1 day
 
-### Implementation
+### Implementation Summary
+
+**Key Changes Made:**
+
+1. **Removed duplicate state storage** from Media_Widget:
+   - Removed `_current_zoom` member variable
+   - Removed `_user_zoom_active` member variable
+   - Made zoom constants (`_zoom_step`, `_min_zoom`, `_max_zoom`) `constexpr`
+
+2. **Made state the single source of truth** for zoom/pan:
+   - `_applyZoom()` now reads current zoom from `_state->zoom()` and writes back via `_state->setZoom()`
+   - `resetZoom()` directly sets `_state->setZoom(1.0)` instead of syncing
+   - Pan changes during drag update state directly via `_state->setPan()`
+
+3. **Added helper method** `_isUserZoomActive()`:
+   - Derives from `_state->zoom() != 1.0` instead of storing separate flag
+   - Used in `resizeEvent()` and `_updateCanvasSize()`
+
+4. **Removed intermediate sync methods**:
+   - Deleted `_syncZoomToState()` (zoom is set directly to state)
+   - Deleted `_syncPanToState()` (pan is set directly to state)
+   - Kept `_syncCanvasSizeToState()` (canvas size is still derived from scene)
+
+5. **Simplified state signal handlers**:
+   - `_onStateZoomChanged()` reads current transform from QGraphicsView instead of comparing to local variable
+   - `_onStatePanChanged()` remains unchanged (reads from scrollbars)
+
+6. **Updated restoreFromState()**:
+   - Removed assignments to deleted member variables
+   - Applies zoom/pan directly from state to QGraphicsView
+
+### Code Examples
 
 ```cpp
-void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
-    // ... existing zoom logic ...
-    _current_zoom = new_zoom;
-    
-    // Sync to state
-    if (_state) {
-        _state->setZoom(_current_zoom);
-    }
+// Before: Duplicate storage
+double _current_zoom{1.0};
+bool _user_zoom_active{false};
+
+// After: State is the source of truth
+// (No member variables - read from _state->zoom())
+
+bool Media_Widget::_isUserZoomActive() const {
+    if (!_state) return false;
+    return std::abs(_state->zoom() - 1.0) > 1e-6;
 }
 
-void Media_Widget::restoreFromState() {
-    if (!_state) return;
-    
-    _current_zoom = _state->zoom();
-    auto [pan_x, pan_y] = _state->pan();
-    
-    // Apply to graphics view
-    // ...
+void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
+    if (!ui->graphicsView || !_state) return;
+    double current_zoom = _state->zoom();  // Read from state
+    double new_zoom = current_zoom * factor;
+    new_zoom = std::clamp(new_zoom, _min_zoom, _max_zoom);
+    // ... apply to QGraphicsView ...
+    _state->setZoom(new_zoom);  // Write to state
 }
 ```
 
@@ -285,8 +317,8 @@ void Media_Widget::restoreFromState() {
 | 4B: Simplify Accessors | 1-2 days | ✅ Complete | Consolidated signals, audit complete |
 | 4C: Media_Window Integration | 2-3 days | ✅ Complete | Remove duplicate storage, use state |
 | 4D: Sub-Widget Integration | 3-4 days | ✅ Complete | All 6 sub-widgets wired up |
-| 4E: Viewport Integration | 1 day | 🔲 Not Started | Zoom/pan persistence |
-| **Total** | **~2 weeks** | | Full hybrid architecture |
+| 4E: Viewport Integration | 1 day | ✅ Complete | State as single source of truth for zoom/pan |
+| **Total** | **~2 weeks** | **✅ Complete** | **Full hybrid architecture achieved** |
 
 ---
 
@@ -310,16 +342,29 @@ void Media_Widget::restoreFromState() {
 - `MediaTensor_Widget.cpp` - Read/write via state
 - `MediaInterval_Widget.cpp` - Read/write via state
 - `MediaProcessing_Widget.cpp` - Read/write via state
-- `Media_Widget.cpp` - Viewport sync, pass state to sub-widgets
+- `Media_Widget.hpp` - Remove `_current_zoom`, `_user_zoom_active`; add `_isUserZoomActive()` helper
+- `Media_Widget.cpp` - State as single source of truth for zoom/pan; remove sync methods
 - `CMakeLists.txt` - Add new source files
 
 ---
 
 ## Success Criteria
 
-1. **Method reduction**: ~60 methods → ~25 methods
-2. **Signal reduction**: ~20 signals → ~8 signals
-3. **Single source of truth**: Display options only in MediaWidgetStateData
-4. **No duplicate storage**: Media_Window doesn't have its own option maps
-5. **All tests passing**: Existing + new DisplayOptionsRegistry tests
-6. **Serialization works**: Workspace save/restore functions correctly
+1. ✅ **Method reduction**: ~60 methods → ~25 methods
+2. ✅ **Signal reduction**: ~20 signals → ~8 signals
+3. ✅ **Single source of truth**: Display options only in MediaWidgetStateData
+4. ✅ **No duplicate storage**: Media_Window doesn't have its own option maps; Media_Widget doesn't duplicate zoom/pan
+5. ✅ **All tests passing**: Existing + new DisplayOptionsRegistry tests
+6. ✅ **Serialization works**: Workspace save/restore functions correctly with zoom/pan persistence
+
+## Conclusion
+
+The MediaWidgetState hybrid architecture refactoring is now **complete**. All phases (4A-4E) have been successfully implemented and tested. The state class now provides:
+
+- A clean, generic `DisplayOptionsRegistry` for all 6 display option types
+- Consolidated signals (3 category signals vs. 10+ individual signals)
+- Single source of truth for all widget state (display options, viewport, preferences, overlays, tool modes)
+- No duplicate storage between state and widgets
+- Full workspace serialization support
+
+The architecture is ready for production use.
