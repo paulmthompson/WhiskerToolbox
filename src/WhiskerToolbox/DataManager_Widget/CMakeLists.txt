@@ -6,6 +6,8 @@ set(DATA_MANAGER_WIDGET_SOURCES
         DataManager_Widget.ui
         DataManagerWidgetState.hpp
         DataManagerWidgetState.cpp
+        DataManagerWidgetRegistration.hpp
+        DataManagerWidgetRegistration.cpp
 
         Mask_Widget/Mask_Widget.hpp
         Mask_Widget/Mask_Widget.cpp

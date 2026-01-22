@@ -99,8 +99,6 @@ private:
     std::unique_ptr<EditorCreationController> _editor_creation_controller;
 
     std::unique_ptr<GroupManager> _group_manager;
-    GroupManagementWidget * _group_management_widget;
-    DataManager_Widget * _data_manager_widget;
 
     // Main widgets created programmatically (not in UI file)
     TimeScrollBar * _time_scrollbar;

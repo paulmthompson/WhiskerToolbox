@@ -43,6 +43,8 @@
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
+#include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
+#include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -74,15 +76,10 @@ MainWindow::MainWindow(QWidget * parent)
       _data_manager{std::make_shared<DataManager>()},
       _editor_registry{std::make_unique<EditorRegistry>(_data_manager, this)},
       _zone_manager(nullptr),
-      _group_manager(nullptr),
-      _group_management_widget(nullptr),
-      _data_manager_widget(nullptr)
+      _group_manager(nullptr)
 
 {
     ui->setupUi(this);
-
-    // Register editor types with the factory
-    _registerEditorTypes();
 
     // Configure dock manager BEFORE creating it
     // Using native title bars for floating widgets (works smoothly on all platforms)
@@ -106,23 +103,19 @@ MainWindow::MainWindow(QWidget * parent)
     this->setFocusPolicy(Qt::StrongFocus);
 
     // Create the GroupManager with the DataManager's EntityGroupManager
+    // Note: GroupManagementWidget is created via EditorCreationController in _buildInitialLayout
     auto* entity_group_manager = _data_manager->getEntityGroupManager();
     if (entity_group_manager) {
         _group_manager = std::make_unique<GroupManager>(entity_group_manager, _data_manager, this);
-        _group_management_widget = new GroupManagementWidget(_group_manager.get(), this);
     }
 
     // Create TimeScrollBar programmatically (no longer in UI)
     _time_scrollbar = new TimeScrollBar(this);
     _time_scrollbar->setDataManager(_data_manager);
 
-    // Create the DataManager_Widget with EditorRegistry
-    _data_manager_widget = new DataManager_Widget(_data_manager, _time_scrollbar, _editor_registry.get(), this);
-    
-    // Set the GroupManager for the DataManager_Widget
-    if (_group_manager) {
-        _data_manager_widget->setGroupManager(_group_manager.get());
-    }
+    // Register editor types with the factory
+    // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager)
+    _registerEditorTypes();
 
     _verbose = false;
 
@@ -152,21 +145,31 @@ void MainWindow::_buildInitialLayout() {
     _zone_manager->setBottomHeightRatio(0.10f);              // Bottom
 
     // === LEFT ZONE: Data selection and navigation ===
+    // Layout: GroupManagementWidget (30% height) on top, DataManager_Widget (70% height) below
     
-    // Add GroupManagementWidget to left zone (first, will be on top)
-    if (_group_management_widget) {
-        auto * group_dock = new ads::CDockWidget(QStringLiteral("group_management"));
-        group_dock->setWidget(_group_management_widget);
-        group_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-        _zone_manager->addToZone(group_dock, Zone::Left);
+    // Create GroupManagementWidget first (goes to top of left zone)
+    auto placed_group = _editor_creation_controller->createAndPlaceWithTitle(
+        EditorLib::EditorTypeId(QStringLiteral("GroupManagementWidget")), 
+        QStringLiteral("Group Manager"),
+        true);  // raise_view
+    
+    if (placed_group.view_dock) {
+        // Mark as non-closable since it's a core navigation widget
+        placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+        placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
     }
     
-    // Add DataManager_Widget below GroupManagement in left zone
-    if (_data_manager_widget) {
-        auto * dm_dock = new ads::CDockWidget(QStringLiteral("data_manager"));
-        dm_dock->setWidget(_data_manager_widget);
+    // Create DataManager_Widget - we need manual placement with split
+    // Create via EditorRegistry but don't use controller's automatic placement
+    auto dm_instance = _editor_registry->createEditor(EditorLib::EditorTypeId(QStringLiteral("DataManagerWidget")));
+    if (dm_instance.state && dm_instance.view) {
+        auto * dm_dock = new ads::CDockWidget(QStringLiteral("Data Manager"));
+        dm_dock->setWidget(dm_instance.view);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-        _zone_manager->addBelowInZone(dm_dock, Zone::Left, 0.25f);  // Group gets 25%, DM gets 75%
+        dm_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+        
+        // Add below GroupManagement with 30/70 split (0.3 = top widget gets 30%)
+        _zone_manager->addBelowInZone(dm_dock, Zone::Left, 0.30f);
     }
 
     // === CENTER ZONE: Primary visualization ===
@@ -801,23 +804,6 @@ void MainWindow::openBatchProcessingWidget() {
     showDockWidget(key);
 }
 
-void MainWindow::openDataManager() {
-    // Find and show the existing data manager dock widget
-    auto dock_widget = findDockWidget("data_manager");
-    if (dock_widget) {
-        dock_widget->show();
-        dock_widget->raise();
-        dock_widget->setAsCurrentTab();
-    }
-    
-    // Open the widget (call any initialization methods if needed)
-    if (_data_manager_widget) {
-        _data_manager_widget->openWidget();
-    }
-
-    showDockWidget("data_manager");
-}
-
 void MainWindow::openTerminalWidget() {
     std::string const key = "Terminal_widget";
 
@@ -875,22 +861,29 @@ void MainWindow::openTableDesignerWidget() {
     showDockWidget(key);
 }
 
-void MainWindow::openGroupManagement() {
-    // Show the group management widget if it exists
-    if (_group_management_widget) {
-        showDockWidget("group_management");
-    }
-}
 
 //=================================
 // New Editor Instances
 //=================================
 
+void MainWindow::openDataManager() {
+    // Use the standard editor opening mechanism
+    // DataManagerWidget is registered as a single-instance widget,
+    // so openEditor will find and show the existing instance
+    openEditor(QStringLiteral("DataManagerWidget"));
+}
+
+void MainWindow::openGroupManagement() {
+    // Use the standard editor opening mechanism
+    // GroupManagementWidget is registered as a single-instance widget,
+    // so openEditor will find and show the existing instance
+    openEditor(QStringLiteral("GroupManagementWidget"));
+}
+
 void MainWindow::openTestWidget() {
     // Delegate to generic openEditor using EditorRegistry
     openEditor(QStringLiteral("TestWidget"));
 }
-
 
 void MainWindow::openDataTransforms() {
      openEditor(QStringLiteral("DataTransformWidget"));
@@ -944,6 +937,10 @@ void MainWindow::_registerEditorTypes() {
     ExportVideoWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
 
     TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar, _group_manager.get());
+
+    GroupManagementWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);

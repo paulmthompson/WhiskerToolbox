@@ -5,6 +5,10 @@ set(GROUPMANAGEMENTWIDGET_SOURCES
     GroupManagementWidget.hpp
     GroupManagementWidget.cpp
     GroupManagementWidget.ui
+    GroupManagementWidgetState.hpp
+    GroupManagementWidgetState.cpp
+    GroupManagementWidgetRegistration.hpp
+    GroupManagementWidgetRegistration.cpp
     GroupManager.hpp
     GroupManager.cpp
 )
@@ -23,6 +27,7 @@ target_link_libraries(GroupManagementWidget PRIVATE
     Qt6::Gui
 
     DataManager
+    EditorState
 )
 
 # Include directories
