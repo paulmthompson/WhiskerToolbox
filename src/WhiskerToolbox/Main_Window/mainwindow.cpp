@@ -33,7 +33,6 @@
 #include "Media_Widget/MediaWidgetState.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
 
@@ -43,6 +42,7 @@
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
+#include "Tongue_Widget/TongueWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -718,22 +718,6 @@ void MainWindow::openWhiskerTracking() {
     showDockWidget(key);
 }
 
-void MainWindow::openTongueTracking() {
-    std::string const key = "tongue_widget";
-
-    if (!_widgets.contains(key)) {
-        auto tongueWidget = std::make_unique<Tongue_Widget>(_data_manager);
-        tongueWidget->setObjectName(key);
-        registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(tongueWidget);
-    }
-
-    auto ptr = dynamic_cast<Tongue_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
 void MainWindow::openMLWidget() {
     std::string const key = "ML_widget";
 
@@ -834,11 +818,6 @@ void MainWindow::openDataManager() {
     showDockWidget("data_manager");
 }
 
-void MainWindow::openVideoExportWidget() {
-    // Use EditorCreationController pattern - delegate to openEditor
-    openEditor(QStringLiteral("ExportVideoWidget"));
-}
-
 void MainWindow::openTerminalWidget() {
     std::string const key = "Terminal_widget";
 
@@ -937,6 +916,16 @@ void MainWindow::openNewMediaWidget() {
               << placed.state->getInstanceId().toStdString() << std::endl;
 }
 
+void MainWindow::openVideoExportWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("ExportVideoWidget"));
+}
+
+void MainWindow::openTongueTracking() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("TongueWidget"));
+}
+
 //=================================
 // Editor Registration and Opening
 //=================================
@@ -953,6 +942,8 @@ void MainWindow::_registerEditorTypes() {
     TestWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     ExportVideoWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+
+    TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);

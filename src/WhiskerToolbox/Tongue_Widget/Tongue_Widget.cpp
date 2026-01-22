@@ -1,5 +1,6 @@
 
 #include "Tongue_Widget.hpp"
+#include "TongueWidgetState.hpp"
 
 #include "ui_Tongue_Widget.h"
 
@@ -19,9 +20,12 @@
 #include <string>
 
 
-Tongue_Widget::Tongue_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+Tongue_Widget::Tongue_Widget(std::shared_ptr<DataManager> data_manager,
+                             std::shared_ptr<TongueWidgetState> state,
+                             QWidget *parent) :
     QMainWindow(parent),
       _data_manager{std::move(data_manager)},
+      _state{std::move(state)},
     ui(new Ui::Tongue_Widget)
 {
     ui->setupUi(this);
@@ -77,7 +81,9 @@ void Tongue_Widget::_startGrabCut(){
     }
 
     _grabcut_widget->setup(img, current_time);
-    drawn.push_back(current_time);
+    if (_state) {
+        _state->addProcessedFrame(current_time);
+    }
     _grabcut_widget->openWidget();
 }
 

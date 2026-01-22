@@ -70,6 +70,10 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
+        Tongue_Widget/TongueWidgetState.hpp
+        Tongue_Widget/TongueWidgetState.cpp
+        Tongue_Widget/TongueWidgetRegistration.hpp
+        Tongue_Widget/TongueWidgetRegistration.cpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
