@@ -13,6 +13,7 @@
 #include "EditorState/SelectionContext.hpp"
 #include "EditorCreationController.hpp"
 #include "ZoneManager.hpp"
+#include "ZoneManagerWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
@@ -141,8 +142,8 @@ void MainWindow::_buildInitialLayout() {
     _zone_manager->initializeZones();
 
     // Configure zone proportions
-    _zone_manager->setZoneWidthRatios(0.18f, 0.64f, 0.18f);  // Left, Center, Right
-    _zone_manager->setBottomHeightRatio(0.10f);              // Bottom
+    _zone_manager->setZoneWidthRatios(0.20f, 0.58f, 0.22f);  // Left, Center, Right
+    _zone_manager->setBottomHeightRatio(0.14f);              // Bottom
 
     // === LEFT ZONE: Data selection and navigation ===
     // Layout: GroupManagementWidget (30% height) on top, DataManager_Widget (70% height) below
@@ -199,6 +200,11 @@ void MainWindow::_buildInitialLayout() {
     // Properties widgets are now placed directly in Zone::Right as persistent tabs
     // by EditorCreationController when editors are created.
     // No more PropertiesHost container - properties persist independently.
+
+    // === Apply Zone Ratios ===
+    // Defer the splitter size application to after the window is shown and laid out
+    // This ensures the splitters have valid dimensions when sizes are applied
+    _zone_manager->reapplySplitterSizes(200);  // 200ms delay for layout to stabilize
 }
 
 void MainWindow::_createActions() {
@@ -233,6 +239,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTime_Scroll_Bar, &QAction::triggered, this, &MainWindow::openTimeScrollBar);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
+    connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
@@ -885,6 +892,11 @@ void MainWindow::openTestWidget() {
     openEditor(QStringLiteral("TestWidget"));
 }
 
+void MainWindow::openZoneLayoutManager() {
+    // Delegate to generic openEditor using EditorRegistry
+    openEditor(QStringLiteral("ZoneManagerWidget"));
+}
+
 void MainWindow::openDataTransforms() {
      openEditor(QStringLiteral("DataTransformWidget"));
 }
@@ -941,6 +953,8 @@ void MainWindow::_registerEditorTypes() {
     DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar, _group_manager.get());
 
     GroupManagementWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+
+    ZoneManagerWidgetRegistration::registerType(_editor_registry.get(), _zone_manager.get());
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);

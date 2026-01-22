@@ -154,5 +154,6 @@ private slots:
     void openTimeScrollBar();
     void openTestWidget();
     void openTableDesignerWidget();
+    void openZoneLayoutManager();
 };
 #endif// MAINWINDOW_HPP

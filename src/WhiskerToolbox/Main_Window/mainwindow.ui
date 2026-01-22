@@ -84,6 +84,7 @@
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionAnalysis_Dashboard"/>
     <addaction name="actionTime_Scroll_Bar"/>
+    <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
    </widget>
    <addaction name="menuFile"/>
@@ -260,6 +261,11 @@
   <action name="actionTest_Widget">
    <property name="text">
     <string>Test Widget</string>
+   </property>
+  </action>
+  <action name="actionZone_Layout_Manager">
+   <property name="text">
+    <string>Zone Layout Manager</string>
    </property>
   </action>
  </widget>

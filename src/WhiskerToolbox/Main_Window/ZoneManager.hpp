@@ -6,7 +6,30 @@
  * @brief Manages standard UI zones (dock areas) for consistent widget placement
  * 
  * ZoneManager provides a standardized way to place widgets into predictable
- * UI zones, following the architecture:
+ * UI zones, following the architecture.
+ * 
+ * ## Runtime Configuration
+ * 
+ * Zone layouts can be persisted to JSON and loaded at runtime:
+ * ```cpp
+ * // Save current layout
+ * auto config = zone_manager->captureCurrentConfig();
+ * ZoneConfig::saveToFile(config, "layout.json");
+ * 
+ * // Load and apply layout
+ * auto result = ZoneConfig::loadFromFile("layout.json");
+ * if (result) {
+ *     zone_manager->applyConfig(*result);
+ * }
+ * ```
+ * 
+ * Enable auto-save to persist layout changes automatically:
+ * ```cpp
+ * zone_manager->setAutoSaveEnabled(true);
+ * zone_manager->setAutoSaveFilePath("~/.config/whisker/layout.json");
+ * ```
+ * 
+ * Layout follows this architecture:
  * 
  * ```
  * ┌──────────────────────────────────────────────────────────────────┐
@@ -56,9 +79,11 @@
  */
 
 #include "EditorState/ZoneTypes.hpp"
+#include "ZoneConfig.hpp"
 
 #include <QObject>
 #include <QString>
+#include <QTimer>
 
 #include <map>
 
@@ -67,6 +92,7 @@ namespace ads {
 class CDockManager;
 class CDockWidget;
 class CDockAreaWidget;
+class CDockSplitter;
 }
 
 // Zone enum and conversion functions are now in EditorState/ZoneTypes.hpp
@@ -184,6 +210,100 @@ public:
      */
     [[nodiscard]] ads::CDockManager * dockManager() const { return _dock_manager; }
 
+    // ========== Runtime Configuration ==========
+
+    /**
+     * @brief Capture the current layout configuration
+     * 
+     * Creates a ZoneLayoutConfig that reflects the current state of the UI,
+     * including zone ratios and widget placement. This can be serialized
+     * to JSON for persistence.
+     * 
+     * @return Current layout configuration
+     */
+    [[nodiscard]] ZoneConfig::ZoneLayoutConfig captureCurrentConfig() const;
+
+    /**
+     * @brief Apply a layout configuration
+     * 
+     * Updates zone ratios from the configuration. Note that this only
+     * applies size ratios - widget placement must be handled separately
+     * by EditorCreationController during startup.
+     * 
+     * @param config Configuration to apply
+     * @return true if applied successfully, false on error
+     */
+    bool applyConfig(ZoneConfig::ZoneLayoutConfig const & config);
+
+    /**
+     * @brief Load and apply configuration from file
+     * 
+     * @param file_path Path to JSON configuration file
+     * @return Error message if failed, empty string on success
+     */
+    QString loadConfigFromFile(QString const & file_path);
+
+    /**
+     * @brief Save current configuration to file
+     * 
+     * @param file_path Path to output JSON file
+     * @return true if saved successfully
+     */
+    bool saveConfigToFile(QString const & file_path) const;
+
+    /**
+     * @brief Enable/disable automatic saving of layout changes
+     * 
+     * When enabled, layout changes (splitter resizing) will be automatically
+     * saved to the configured file path after a debounce delay.
+     * 
+     * @param enabled Whether to enable auto-save
+     */
+    void setAutoSaveEnabled(bool enabled);
+
+    /**
+     * @brief Check if auto-save is enabled
+     */
+    [[nodiscard]] bool isAutoSaveEnabled() const { return _auto_save_enabled; }
+
+    /**
+     * @brief Set the file path for auto-save
+     * 
+     * @param file_path Path where configuration will be saved
+     */
+    void setAutoSaveFilePath(QString const & file_path);
+
+    /**
+     * @brief Get the current auto-save file path
+     */
+    [[nodiscard]] QString autoSaveFilePath() const { return _auto_save_path; }
+
+    /**
+     * @brief Set the debounce delay for auto-save
+     * 
+     * After a layout change, the system will wait this long before saving
+     * to avoid excessive writes during continuous resizing.
+     * 
+     * @param milliseconds Delay in milliseconds (default: 500)
+     */
+    void setAutoSaveDebounceMs(int milliseconds);
+
+    /**
+     * @brief Get current zone ratios
+     */
+    [[nodiscard]] ZoneConfig::ZoneRatios currentRatios() const;
+
+    /**
+     * @brief Force reapplication of zone ratios to splitters
+     * 
+     * Call this after the main window is shown and has been sized.
+     * The sizes are applied via a single-shot timer to ensure the
+     * layout has been fully computed.
+     * 
+     * @param delay_ms Delay before applying sizes (default 100ms)
+     */
+    void reapplySplitterSizes(int delay_ms = 100);
+
 signals:
     /**
      * @brief Emitted when zones are initialized
@@ -197,6 +317,42 @@ signals:
      */
     void widgetAddedToZone(ads::CDockWidget * dock_widget, Zone zone);
 
+    /**
+     * @brief Emitted when zone ratios change
+     * 
+     * This is emitted after splitter resizing is complete (debounced).
+     */
+    void zoneRatiosChanged();
+
+    /**
+     * @brief Emitted when configuration is loaded
+     * @param file_path Path that was loaded
+     */
+    void configLoaded(QString const & file_path);
+
+    /**
+     * @brief Emitted when configuration is saved
+     * @param file_path Path that was saved to
+     */
+    void configSaved(QString const & file_path);
+
+    /**
+     * @brief Emitted when configuration load fails
+     * @param error_message Description of the error
+     */
+    void configLoadError(QString const & error_message);
+
+private slots:
+    /**
+     * @brief Handle splitter movement
+     */
+    void onSplitterMoved(int pos, int index);
+
+    /**
+     * @brief Trigger auto-save after debounce delay
+     */
+    void triggerAutoSave();
+
 private:
     ads::CDockManager * _dock_manager;
     bool _zones_initialized = false;
@@ -208,10 +364,20 @@ private:
     std::map<Zone, ads::CDockWidget *> _placeholder_docks;
 
     // Zone size ratios
-    float _left_ratio = 0.15f;
-    float _center_ratio = 0.70f;
-    float _right_ratio = 0.15f;
-    float _bottom_ratio = 0.10f;
+    float _left_ratio = 0.20f;
+    float _center_ratio = 0.58f;
+    float _right_ratio = 0.22f;
+    float _bottom_ratio = 0.14f;
+
+    // Auto-save configuration
+    bool _auto_save_enabled = false;
+    QString _auto_save_path;
+    int _auto_save_debounce_ms = 500;
+    QTimer * _auto_save_timer = nullptr;
+
+    // Tracked splitters for ratio updates
+    ads::CDockSplitter * _horizontal_splitter = nullptr;
+    ads::CDockSplitter * _vertical_splitter = nullptr;
 
     /**
      * @brief Create a placeholder dock widget for a zone
@@ -222,6 +388,16 @@ private:
      * @brief Apply splitter sizes based on current ratios
      */
     void applySplitterSizes();
+
+    /**
+     * @brief Update internal ratios from current splitter positions
+     */
+    void updateRatiosFromSplitters();
+
+    /**
+     * @brief Connect to splitter signals for tracking changes
+     */
+    void connectSplitterSignals();
 };
 
 #endif  // ZONE_MANAGER_HPP

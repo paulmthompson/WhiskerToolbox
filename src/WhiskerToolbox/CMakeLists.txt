@@ -57,6 +57,11 @@ set(PROJECT_SOURCES
         Main_Window/video_loader.cpp
         Main_Window/ZoneManager.hpp
         Main_Window/ZoneManager.cpp
+        Main_Window/ZoneConfig.hpp
+        Main_Window/ZoneManagerWidget.hpp
+        Main_Window/ZoneManagerWidget.cpp
+        Main_Window/ZoneManagerWidgetRegistration.hpp
+        Main_Window/ZoneManagerWidgetRegistration.cpp
         Main_Window/EditorCreationController.hpp
         Main_Window/EditorCreationController.cpp
 
