@@ -121,12 +121,52 @@ bool SelectionContext::isEntitySelected(int64_t entity_id) const {
            _selected_entities.end();
 }
 
-// === Active Editor ===
+// === Data Focus (Phase 1 - Passive Awareness) ===
+
+void SelectionContext::setDataFocus(SelectedDataKey const & data_key,
+                                     QString const & data_type,
+                                     SelectionSource const & source) {
+    bool const focus_changed = (_data_focus != data_key || _data_focus_type != data_type);
+    
+    _data_focus = data_key;
+    _data_focus_type = data_type;
+    
+    // Also update legacy selection for backward compatibility
+    _selected_data.clear();
+    _selected_entities.clear();
+    if (data_key.isValid()) {
+        _selected_data.insert(data_key);
+        _primary_selected = data_key;
+    } else {
+        _primary_selected.clear();
+    }
+    _selected_data_type = data_type;
+    
+    if (focus_changed) {
+        // Emit the new dataFocusChanged signal (primary for passive awareness)
+        emit dataFocusChanged(data_key, data_type, source);
+        
+        // Also emit legacy signals for backward compatibility
+        emit selectionChanged(source);
+        emit propertiesContextChanged();
+    }
+}
+
+SelectedDataKey SelectionContext::dataFocus() const {
+    return _data_focus;
+}
+
+QString SelectionContext::dataFocusType() const {
+    return _data_focus_type;
+}
+
+// === Active Editor / Widget Focus ===
 
 void SelectionContext::setActiveEditor(EditorInstanceId const & instance_id) {
     if (_active_editor_id != instance_id) {
         _active_editor_id = instance_id;
         emit activeEditorChanged(instance_id);
+        emit widgetFocusChanged(instance_id);  // New signal for Phase 1
     }
 }
 

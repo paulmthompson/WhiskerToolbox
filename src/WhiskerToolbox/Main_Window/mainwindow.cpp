@@ -10,8 +10,8 @@
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
 #include "EditorState/EditorRegistry.hpp"
-#include "EditorState/PropertiesHost.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "EditorCreationController.hpp"
 #include "ZoneManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
@@ -75,7 +75,6 @@ MainWindow::MainWindow(QWidget * parent)
       _data_manager{std::make_shared<DataManager>()},
       _editor_registry{std::make_unique<EditorRegistry>(_data_manager, this)},
       _zone_manager(nullptr),
-      _properties_host(nullptr),
       _group_manager(nullptr),
       _group_management_widget(nullptr),
       _data_manager_widget(nullptr)
@@ -99,6 +98,10 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Create ZoneManager to manage standard UI zones
     _zone_manager = std::make_unique<ZoneManager>(_m_DockManager, this);
+
+    // Create EditorCreationController to handle unified editor creation and zone placement
+    _editor_creation_controller = std::make_unique<EditorCreationController>(
+        _editor_registry.get(), _zone_manager.get(), _m_DockManager, this);
 
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
@@ -169,15 +172,18 @@ void MainWindow::_buildInitialLayout() {
 
     // === CENTER ZONE: Primary visualization ===
     
-    // Create and add media widget to center zone using EditorRegistry
-    // GroupManager is automatically set by MediaWidgetRegistration
-    auto editor_instance = _editor_registry->createEditor(EditorTypeId(QStringLiteral("MediaWidget")));
-    auto * media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
+    // Create and add media widget to center zone using EditorCreationController
+    // This respects EditorTypeInfo zone preferences and handles dock widget creation
+    auto placed_media = _editor_creation_controller->createAndPlaceWithTitle(
+        EditorLib::EditorTypeId(QStringLiteral("MediaWidget")), 
+        QStringLiteral("Media Viewer"),
+        true);  // raise_view
     
-    auto * media_dock = new ads::CDockWidget(QStringLiteral("media"));
-    media_dock->setWidget(media_widget);
-    media_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-    _zone_manager->addToZone(media_dock, Zone::Center);
+    if (placed_media.view_dock) {
+        // Mark the initial media widget as non-closable
+        placed_media.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+        placed_media.view_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+    }
 
     // === BOTTOM ZONE: Timeline ===
     
@@ -188,13 +194,9 @@ void MainWindow::_buildInitialLayout() {
     _zone_manager->addToZone(scrollbar_dock, Zone::Bottom);
 
     // === RIGHT ZONE: Properties ===
-    
-    // Create and add PropertiesHost to right zone
-    _properties_host = new PropertiesHost(_editor_registry.get(), this);
-    auto * props_dock = new ads::CDockWidget(QStringLiteral("properties"));
-    props_dock->setWidget(_properties_host);
-    props_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-    _zone_manager->addToZone(props_dock, Zone::Right);
+    // Properties widgets are now placed directly in Zone::Right as persistent tabs
+    // by EditorCreationController when editors are created.
+    // No more PropertiesHost container - properties persist independently.
 }
 
 void MainWindow::_createActions() {
@@ -800,41 +802,23 @@ void MainWindow::openDataViewer() {
 }
 
 void MainWindow::openNewMediaWidget() {
-    // Generate unique ID for the new media widget
-    std::string const key = "MediaWidget_" + std::to_string(_media_widget_counter++);
+    // Create a new media widget using EditorCreationController
+    // The controller handles:
+    // - Creating the editor via EditorRegistry
+    // - Wrapping in dock widgets
+    // - Placing in appropriate zones (view -> Center, properties -> Right)
+    // - Connecting cleanup signals for state unregistration
+    auto placed = _editor_creation_controller->createAndPlace(
+        EditorLib::EditorTypeId(QStringLiteral("MediaWidget")), 
+        true);  // raise_view
     
-    // Create the media widget using EditorRegistry
-    // GroupManager is automatically set by MediaWidgetRegistration
-    auto editor_instance = _editor_registry->createEditor(EditorTypeId(QStringLiteral("MediaWidget")));
-    auto* media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
-    if (!media_widget) {
-        std::cerr << "Failed to create media widget with ID: " << key << std::endl;
+    if (!placed.isValid()) {
+        std::cerr << "Failed to create new media widget" << std::endl;
         return;
     }
     
-    // Register the dock widget in the system
-    registerDockWidget(key, media_widget, ads::RightDockWidgetArea);
-    
-    // Find the dock widget that was just created and connect close signal
-    auto* dock_widget = findDockWidget(key);
-    if (dock_widget) {
-        // Get the state's instance_id for cleanup
-        EditorInstanceId instance_id = editor_instance.state 
-            ? EditorInstanceId(editor_instance.state->getInstanceId()) 
-            : EditorInstanceId{};
-        connect(dock_widget, &ads::CDockWidget::closed, this, [this, key, instance_id]() {
-            // Unregister state from EditorRegistry
-            if (instance_id.isValid()) {
-                _editor_registry->unregisterState(instance_id);
-            }
-            std::cout << "Media widget " << key << " destroyed on close" << std::endl;
-        });
-    }
-    
-    // Show the dock widget
-    showDockWidget(key);
-    
-    std::cout << "Created new media widget: " << key << std::endl;
+    std::cout << "Created new media widget: " 
+              << placed.state->getInstanceId().toStdString() << std::endl;
 }
 
 void MainWindow::openBatchProcessingWidget() {
@@ -1009,7 +993,11 @@ void MainWindow::_registerEditorTypes() {
         .display_name = QStringLiteral("Test Widget"),
         .icon_path = QString{},
         .menu_path = QStringLiteral("View/Development"),
-        .default_zone = QStringLiteral("center"),  // View goes to center, properties go to PropertiesHost
+        .preferred_zone = Zone::Center,       // View goes to center
+        .properties_zone = Zone::Right,       // Properties as tab on right
+        .prefers_split = false,
+        .properties_as_tab = true,
+        .auto_raise_properties = true,        // Show properties when test widget opens
         .allow_multiple = false,  // Single instance only
         // State factory
         .create_state = [dm]() { return std::make_shared<TestWidgetState>(dm); },
@@ -1031,7 +1019,7 @@ void MainWindow::_registerEditorTypes() {
 }
 
 void MainWindow::openEditor(QString const & type_id) {
-    auto info = _editor_registry->typeInfo(EditorTypeId(type_id));
+    auto info = _editor_registry->typeInfo(EditorLib::EditorTypeId(type_id));
 
     if (info.type_id.isEmpty()) {
         std::cerr << "MainWindow::openEditor: Unknown editor type: "
@@ -1041,76 +1029,60 @@ void MainWindow::openEditor(QString const & type_id) {
 
     // For single-instance editors, check if already open
     if (!info.allow_multiple) {
-        auto existing = _editor_registry->statesByType(EditorTypeId(type_id));
+        auto existing = _editor_registry->statesByType(EditorLib::EditorTypeId(type_id));
         if (!existing.empty()) {
-            // Find and show the existing widget
-            EditorInstanceId instance_id(existing[0]->getInstanceId());
-            std::string key = instance_id.toStdString();
-            if (_widgets.contains(key)) {
-                showDockWidget(key);
-                // Also set this as the active editor so PropertiesHost shows its properties
-                _editor_registry->selectionContext()->setActiveEditor(instance_id);
-                return;
+            // Find the existing dock widget and show it
+            // The dock widget title should contain the display name
+            for (auto const & state : existing) {
+                EditorLib::EditorInstanceId instance_id(state->getInstanceId());
+                
+                // Search all dock widgets for one containing this state's widget
+                for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+                    // Check if this dock's widget matches
+                    if (dock && dock->widget()) {
+                        // Show and raise the existing dock
+                        dock->show();
+                        dock->raise();
+                        dock->setAsCurrentTab();
+                        
+                        // Set as active editor for PropertiesHost
+                        _editor_registry->selectionContext()->setActiveEditor(instance_id);
+                        return;
+                    }
+                }
             }
-            // State exists but widget doesn't - unusual, recreate widget
-            std::cerr << "MainWindow::openEditor: State exists but widget missing, recreating: "
+            // State exists but dock widget not found - clean up orphan state
+            std::cerr << "MainWindow::openEditor: State exists but dock widget missing, recreating: "
                       << type_id.toStdString() << std::endl;
-            // Unregister the orphan state
-            _editor_registry->unregisterState(instance_id);
+            _editor_registry->unregisterState(EditorLib::EditorInstanceId(existing[0]->getInstanceId()));
         }
     }
 
-    // Create new instance via registry
-    auto instance = _editor_registry->createEditor(EditorTypeId(type_id));
+    // Create new instance via EditorCreationController
+    // This handles:
+    // - Creating editor via EditorRegistry::createEditor()
+    // - Creating dock widgets for view and properties
+    // - Placing in appropriate zones from EditorTypeInfo
+    // - Connecting cleanup signals
+    auto placed = _editor_creation_controller->createAndPlace(
+        EditorLib::EditorTypeId(type_id), 
+        true);  // raise_view
 
-    if (!instance.state || !instance.view) {
+    if (!placed.isValid()) {
         std::cerr << "MainWindow::openEditor: Failed to create editor: "
                   << type_id.toStdString() << std::endl;
         return;
     }
 
-    EditorInstanceId instance_id(instance.state->getInstanceId());
-    std::string key = instance_id.toStdString();
-
-    // View goes to its designated zone (typically Center)
-    // Properties will be shown in PropertiesHost when this editor is active
-    QWidget * main_widget = instance.view;
-    main_widget->setObjectName(instance_id.toString());
-
-    // Create dock widget for the view
-    auto * dock_widget = new ads::CDockWidget(instance_id.toString());
-    dock_widget->setWidget(main_widget, ads::CDockWidget::ForceNoScrollArea);
-    dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
-    dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-
-    // Determine zone from type info
-    Zone zone = zoneFromString(info.default_zone);
-    
-    // Use ZoneManager if initialized, otherwise fall back to direct dock manager
-    if (_zone_manager && _zone_manager->zonesInitialized()) {
-        _zone_manager->addToZone(dock_widget, zone);
-    } else {
-        // Fallback: convert zone to dock area
-        ads::DockWidgetArea area = ads::CenterDockWidgetArea;
-        switch (zone) {
-        case Zone::Left:   area = ads::LeftDockWidgetArea; break;
-        case Zone::Center: area = ads::CenterDockWidgetArea; break;
-        case Zone::Right:  area = ads::RightDockWidgetArea; break;
-        case Zone::Bottom: area = ads::BottomDockWidgetArea; break;
-        }
-        _m_DockManager->addDockWidget(area, dock_widget);
-    }
-
-    _widgets[key] = std::unique_ptr<QWidget>(main_widget);
+    EditorLib::EditorInstanceId instance_id(placed.state->getInstanceId());
 
     // Set this editor as active so PropertiesHost shows its properties
     _editor_registry->selectionContext()->setActiveEditor(instance_id);
 
     std::cout << "Created " << info.display_name.toStdString()
-              << " via EditorRegistry (instance: " << key << ", zone: "
-              << zoneToString(zone).toStdString() << ")" << std::endl;
-
-    showDockWidget(key);
+              << " via EditorCreationController (instance: " 
+              << instance_id.toStdString() << ", zone: "
+              << zoneToString(info.preferred_zone).toStdString() << ")" << std::endl;
 }
 
 void MainWindow::openTestWidget() {

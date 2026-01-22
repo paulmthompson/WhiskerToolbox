@@ -13,10 +13,10 @@
 
 class DataManager;
 class DataManager_Widget;
+class EditorCreationController;
 class EditorRegistry;
 class GroupManager;
 class GroupManagementWidget;
-class PropertiesHost;
 class TimeScrollBar;
 class ZoneManager;
 
@@ -96,7 +96,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<EditorRegistry> _editor_registry;
     std::unique_ptr<ZoneManager> _zone_manager;
-    PropertiesHost * _properties_host;
+    std::unique_ptr<EditorCreationController> _editor_creation_controller;
 
     std::unique_ptr<GroupManager> _group_manager;
     GroupManagementWidget * _group_management_widget;

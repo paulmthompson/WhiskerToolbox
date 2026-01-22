@@ -23,20 +23,22 @@
  * - Connects to state signals to keep controls synchronized
  * - Does NOT display the main visualization (that's TestWidgetView)
  * 
- * ## PropertiesHost Integration
+ * ## Zone Placement
  * 
- * TestWidgetProperties is designed to be shown in the PropertiesHost
- * when the corresponding TestWidgetView is active:
+ * TestWidgetProperties is placed in Zone::Right as a persistent tab
+ * by EditorCreationController when the TestWidget editor is created:
  * 
  * ```cpp
- * // Register with PropertiesHost
- * properties_host->registerEditorPropertiesFactory(
- *     "TestWidget",
- *     [](std::shared_ptr<EditorState> state) {
+ * // In EditorRegistry registration
+ * registry->registerType({
+ *     .type_id = "TestWidget",
+ *     .preferred_zone = Zone::Center,      // View goes to center
+ *     .properties_zone = Zone::Right,      // Properties goes to right as tab
+ *     .create_properties = [](auto state) {
  *         auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
  *         return new TestWidgetProperties(test_state);
  *     }
- * );
+ * });
  * ```
  * 
  * @see TestWidgetState for the shared state

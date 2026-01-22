@@ -104,7 +104,16 @@ struct PropertiesContext {
  * 
  * ## Key Concepts
  * 
- * ### Data Selection
+ * ### Data Focus (Phase 1 Refactoring - Passive Awareness)
+ * "Data Focus" represents what data the user is currently working with,
+ * separate from which widget has keyboard focus. When data focus changes,
+ * all "passively aware" widgets update their content accordingly.
+ * 
+ * ### Widget Focus  
+ * Which editor/widget has keyboard focus. This affects keyboard shortcuts
+ * but does NOT automatically change property panels.
+ * 
+ * ### Data Selection (Legacy)
  * One or more data objects (by key) can be selected. There is always
  * a "primary" selection which is the most recently selected item.
  * 
@@ -112,21 +121,20 @@ struct PropertiesContext {
  * Within the currently selected data, specific entities can be selected.
  * This is useful for line/mask/point data where each element has an EntityID.
  * 
- * ### Active Editor
- * The editor that currently has focus. This affects keyboard shortcuts
- * and determines which editor's commands are available.
- * 
- * ### Properties Context
- * Determines which properties panel should be shown. This follows
- * "last meaningful interaction" logic - if the user clicks on data
- * in the data manager, then clicks in a media widget (but doesn't
- * interact with it), the properties for the data manager selection
- * should persist.
+ * ### Properties Context (Deprecated - Phase 6 removal)
+ * Legacy mechanism for determining which properties panel to show.
+ * Being replaced by passive awareness pattern.
  * 
  * ## Usage Pattern
  * 
  * ```cpp
- * // In a widget constructor
+ * // Modern pattern - connect to dataFocusChanged for passive awareness
+ * connect(_selection_context, &SelectionContext::dataFocusChanged,
+ *         this, [this](auto key, auto type, auto source) {
+ *             onDataFocusChanged(key, type);
+ *         });
+ * 
+ * // Legacy pattern - still supported
  * connect(_selection_context, &SelectionContext::selectionChanged,
  *         this, &MyWidget::onSelectionChanged);
  * 
@@ -248,7 +256,38 @@ public:
      */
     [[nodiscard]] bool isEntitySelected(int64_t entity_id) const;
 
-    // === Active Editor ===
+    // === Data Focus (Phase 1 - Passive Awareness) ===
+
+    /**
+     * @brief Set the data focus without changing widget focus
+     * 
+     * This is the primary mechanism for the "Passive Awareness" pattern.
+     * When data focus changes, all listening widgets should update their
+     * internal state and UI, regardless of whether they are currently visible.
+     * 
+     * This also updates the legacy selection API for backward compatibility.
+     * 
+     * @param data_key Key in DataManager
+     * @param data_type Type of the data (e.g., "LineData", "MaskData")
+     * @param source Who is making this selection
+     */
+    void setDataFocus(SelectedDataKey const & data_key, 
+                      QString const & data_type,
+                      SelectionSource const & source);
+
+    /**
+     * @brief Get current data focus key
+     * @return The focused data key, or invalid if nothing focused
+     */
+    [[nodiscard]] SelectedDataKey dataFocus() const;
+
+    /**
+     * @brief Get the type of the focused data
+     * @return Type string (e.g., "LineData", "MaskData"), or empty if nothing focused
+     */
+    [[nodiscard]] QString dataFocusType() const;
+
+    // === Active Editor / Widget Focus ===
 
     /**
      * @brief Set the currently active (focused) editor
@@ -304,6 +343,35 @@ public:
     void setSelectedDataType(QString const & data_type);
 
 signals:
+    // === Modern Signals (Phase 1 - Passive Awareness) ===
+
+    /**
+     * @brief Emitted when data focus changes
+     * 
+     * This is the PRIMARY signal for passive awareness pattern.
+     * Widgets connect to this to update their content based on the
+     * currently focused data, regardless of whether they are visible.
+     * 
+     * @param data_key The focused data key
+     * @param data_type The type of the focused data (e.g., "LineData")
+     * @param source Who made the focus change
+     */
+    void dataFocusChanged(SelectedDataKey const & data_key,
+                          QString const & data_type,
+                          SelectionSource const & source);
+
+    /**
+     * @brief Emitted when widget focus changes (keyboard shortcuts, etc.)
+     * 
+     * This does NOT automatically change properties - that's user choice.
+     * Use this for keyboard shortcut routing and similar widget-focus needs.
+     * 
+     * @param instance_id Instance ID of the newly focused widget
+     */
+    void widgetFocusChanged(EditorInstanceId const & instance_id);
+
+    // === Legacy Signals (still functional, consider migrating to above) ===
+
     /**
      * @brief Emitted when data selection changes
      * @param source Who made the selection change
@@ -318,6 +386,10 @@ signals:
 
     /**
      * @brief Emitted when active editor changes
+     * 
+     * Note: For passive awareness, prefer connecting to dataFocusChanged
+     * and/or widgetFocusChanged instead.
+     * 
      * @param instance_id Instance ID of the new active editor
      */
     void activeEditorChanged(EditorInstanceId const & instance_id);
@@ -325,11 +397,19 @@ signals:
     /**
      * @brief Emitted when properties context changes
      * 
+     * @deprecated This signal is deprecated and will be removed in Phase 6.
+     * Use dataFocusChanged for passive widget updates instead.
+     * 
      * PropertiesHost listens to this to switch property panels.
      */
     void propertiesContextChanged();
 
 private:
+    // Data focus (Phase 1 - primary mechanism for passive awareness)
+    SelectedDataKey _data_focus;
+    QString _data_focus_type;
+
+    // Legacy selection (kept for backward compatibility)
     SelectedDataKey _primary_selected;
     std::set<SelectedDataKey> _selected_data;
     std::vector<int64_t> _selected_entities;

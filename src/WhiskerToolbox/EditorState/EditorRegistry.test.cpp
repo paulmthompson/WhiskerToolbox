@@ -92,7 +92,8 @@ protected:
         _registry->registerType({
             .type_id = type_id,
             .display_name = "Mock Editor",
-            .default_zone = "main",
+            .preferred_zone = Zone::Center,
+            .properties_zone = Zone::Right,
             .create_state = [type_id]() { return std::make_shared<MockState>(type_id); },
             .create_view = [](auto) { return new QLabel("View"); },
             .create_properties = nullptr});
@@ -102,7 +103,8 @@ protected:
         _registry->registerType({
             .type_id = type_id,
             .display_name = "Mock With Properties",
-            .default_zone = "main",
+            .preferred_zone = Zone::Center,
+            .properties_zone = Zone::Right,
             .create_state = [type_id]() { return std::make_shared<MockState>(type_id); },
             .create_view = [](auto s) { return new QLabel("View:" + s->getInstanceId()); },
             .create_properties = [](auto s) { return new QLabel("Props:" + s->getInstanceId()); }});
@@ -208,7 +210,8 @@ TEST_CASE_METHOD(RegistryTestFixture,
         .type_id = "Type1",
         .display_name = "Type One",
         .menu_path = "View/Group1",
-        .default_zone = "main",
+        .preferred_zone = Zone::Center,
+        .properties_zone = Zone::Right,
         .create_state = []() { return std::make_shared<MockState>("Type1"); },
         .create_view = [](auto) { return new QLabel(); }});
 
@@ -216,7 +219,8 @@ TEST_CASE_METHOD(RegistryTestFixture,
         .type_id = "Type2",
         .display_name = "Type Two",
         .menu_path = "View/Group1",
-        .default_zone = "right",
+        .preferred_zone = Zone::Right,
+        .properties_zone = Zone::Right,
         .create_state = []() { return std::make_shared<MockState>("Type2"); },
         .create_view = [](auto) { return new QLabel(); }});
 
@@ -224,7 +228,8 @@ TEST_CASE_METHOD(RegistryTestFixture,
         .type_id = "Type3",
         .display_name = "Type Three",
         .menu_path = "View/Group2",
-        .default_zone = "main",
+        .preferred_zone = Zone::Center,
+        .properties_zone = Zone::Right,
         .create_state = []() { return std::make_shared<MockState>("Type3"); },
         .create_view = [](auto) { return new QLabel(); }});
 
@@ -233,7 +238,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
         REQUIRE(info.type_id == "Type1");
         REQUIRE(info.display_name == "Type One");
         REQUIRE(info.menu_path == "View/Group1");
-        REQUIRE(info.default_zone == "main");
+        REQUIRE(info.preferred_zone == Zone::Center);
     }
 
     SECTION("typeInfo returns empty for unknown") {
@@ -619,7 +624,11 @@ TEST_CASE_METHOD(RegistryTestFixture,
             .type_id = "WorkflowTest",
             .display_name = "Workflow Test",
             .menu_path = "View/Test",
-            .default_zone = "main",
+            .preferred_zone = Zone::Center,
+            .properties_zone = Zone::Right,
+            .prefers_split = false,
+            .properties_as_tab = true,
+            .auto_raise_properties = false,
             .allow_multiple = true,
             .create_state = []() { return std::make_shared<MockState>("WorkflowTest"); },
             .create_view = [](auto s) { return new QLabel("View:" + s->getInstanceId()); },

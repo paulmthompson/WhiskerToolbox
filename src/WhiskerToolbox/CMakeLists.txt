@@ -57,6 +57,8 @@ set(PROJECT_SOURCES
         Main_Window/video_loader.cpp
         Main_Window/ZoneManager.hpp
         Main_Window/ZoneManager.cpp
+        Main_Window/EditorCreationController.hpp
+        Main_Window/EditorCreationController.cpp
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui

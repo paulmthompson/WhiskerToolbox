@@ -6,6 +6,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(reflectcpp CONFIG REQUIRED)
 
 set(EDITOR_STATE_SOURCES
+    DataFocusAware.hpp
     EditorRegistry.cpp
     EditorRegistry.hpp
     EditorState.cpp
@@ -13,11 +14,10 @@ set(EDITOR_STATE_SOURCES
     OperationContext.cpp
     OperationContext.hpp
     OperationResult.hpp
-    PropertiesHost.cpp
-    PropertiesHost.hpp
     SelectionContext.cpp
     SelectionContext.hpp
     StrongTypes.hpp
+    ZoneTypes.hpp
 )
 
 add_library(EditorState STATIC ${EDITOR_STATE_SOURCES})

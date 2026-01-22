@@ -33,7 +33,7 @@
  * |-------------|--------------------------------|----------------------------|
  * | **Left**    | DataManager, GroupManagement   | Data selection, navigation |
  * | **Center**  | Media, DataViewer, views       | Primary visualization      |
- * | **Right**   | PropertiesHost                 | Context-sensitive settings |
+ * | **Right**   | Properties tabs, Data Transforms| Persistent editor settings |
  * | **Bottom**  | TimeScrollBar, Terminal        | Time navigation, output    |
  * 
  * ## Usage
@@ -51,9 +51,11 @@
  * _zone_manager->addToZone(properties_dock, Zone::Right);
  * ```
  * 
- * @see PropertiesHost for the right-panel properties container
+ * @see EditorCreationController for unified editor creation with zone placement
  * @see EditorRegistry for widget type registration
  */
+
+#include "EditorState/ZoneTypes.hpp"
 
 #include <QObject>
 #include <QString>
@@ -67,29 +69,7 @@ class CDockWidget;
 class CDockAreaWidget;
 }
 
-/**
- * @brief Standard UI zones for widget placement
- */
-enum class Zone {
-    Left,      ///< Left panel - outliner, data tree, group management
-    Center,    ///< Center - primary editing/visualization area
-    Right,     ///< Right panel - properties, context-sensitive controls
-    Bottom     ///< Bottom - timeline, terminal, output
-};
-
-/**
- * @brief Converts zone string to Zone enum
- * @param zone_str String representation ("left", "center", "right", "bottom", "main")
- * @return Corresponding Zone enum, defaults to Center for unknown strings
- */
-Zone zoneFromString(QString const & zone_str);
-
-/**
- * @brief Converts Zone enum to string
- * @param zone Zone enum value
- * @return String representation
- */
-QString zoneToString(Zone zone);
+// Zone enum and conversion functions are now in EditorState/ZoneTypes.hpp
 
 /**
  * @brief Manages standard dock zones for consistent UI layout

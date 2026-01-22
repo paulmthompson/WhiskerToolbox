@@ -10,35 +10,8 @@
 
 #include <iostream>
 
-// === Free Functions ===
-
-Zone zoneFromString(QString const & zone_str) {
-    QString const lower = zone_str.toLower();
-    if (lower == "left" || lower == "outliner" || lower == "toolbox") {
-        return Zone::Left;
-    }
-    if (lower == "center" || lower == "main" || lower == "editor") {
-        return Zone::Center;
-    }
-    if (lower == "right" || lower == "properties") {
-        return Zone::Right;
-    }
-    if (lower == "bottom" || lower == "timeline" || lower == "output") {
-        return Zone::Bottom;
-    }
-    // Default to Center for unknown zones
-    return Zone::Center;
-}
-
-QString zoneToString(Zone zone) {
-    switch (zone) {
-    case Zone::Left:   return QStringLiteral("left");
-    case Zone::Center: return QStringLiteral("center");
-    case Zone::Right:  return QStringLiteral("right");
-    case Zone::Bottom: return QStringLiteral("bottom");
-    }
-    return QStringLiteral("center");
-}
+// Note: Zone enum and zoneFromString/zoneToString functions are now
+// defined as inline functions in EditorState/ZoneTypes.hpp
 
 // === ZoneManager Implementation ===
 

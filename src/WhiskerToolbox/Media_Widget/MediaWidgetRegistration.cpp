@@ -29,7 +29,11 @@ void registerTypes(EditorRegistry * registry,
         .display_name = QStringLiteral("Media Viewer"),
         .icon_path = QStringLiteral(":/icons/media.png"),
         .menu_path = QStringLiteral("View/Visualization"),
-        .default_zone = QStringLiteral("center"),
+        .preferred_zone = Zone::Center,
+        .properties_zone = Zone::Right,
+        .prefers_split = false,
+        .properties_as_tab = true,
+        .auto_raise_properties = false,
         .allow_multiple = true,
 
         // State factory - creates the shared state object

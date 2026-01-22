@@ -27,7 +27,9 @@
  * registry.registerType({
  *     .type_id = "MediaWidget",
  *     .display_name = "Media Viewer",
- *     .default_zone = "main",
+ *     .preferred_zone = Zone::Center,      // View goes to center
+ *     .properties_zone = Zone::Right,      // Properties as persistent tab
+ *     .auto_raise_properties = false,      // Don't obscure other tools
  *     .allow_multiple = true,
  *     .create_state = []() { return std::make_shared<MediaWidgetState>(); },
  *     .create_view = [](auto s) { return new MediaWidgetView(s); },
@@ -43,6 +45,7 @@
  */
 
 #include "StrongTypes.hpp"
+#include "ZoneTypes.hpp"
 
 #include <QObject>
 #include <QString>
@@ -91,7 +94,15 @@ public:
         QString display_name;  ///< User-visible name (e.g., "Media Viewer")
         QString icon_path;     ///< Path to icon resource (optional)
         QString menu_path;     ///< Menu location (e.g., "View/Widgets")
-        QString default_zone;  ///< Default dock zone ("main", "left", "right")
+        
+        // === Zone Placement (Phase 1 Refactoring) ===
+        
+        Zone preferred_zone = Zone::Center;     ///< Where View widget goes
+        Zone properties_zone = Zone::Right;     ///< Where Properties widget goes
+        bool prefers_split = false;             ///< Hint for transient operations (split zone if needed)
+        bool properties_as_tab = true;          ///< Add properties as tab vs replace content
+        bool auto_raise_properties = false;     ///< Bring properties to front on editor activation
+        
         bool allow_multiple = true;  ///< Can user open multiple instances?
 
         /// Creates the EditorState subclass
