@@ -56,6 +56,10 @@ class DataManager;
 class EditorState;
 class SelectionContext;
 
+namespace EditorLib {
+class OperationContext;
+}
+
 /**
  * @brief Central registry for editor types, instances, and selection
  *
@@ -248,6 +252,15 @@ public:
     [[nodiscard]] SelectionContext * selectionContext() const;
 
     /**
+     * @brief Get the operation context for transient data pipes
+     * 
+     * OperationContext manages temporary connections where one widget
+     * requests output from another (e.g., LinePlot requesting transform
+     * configuration from DataTransformWidget).
+     */
+    [[nodiscard]] EditorLib::OperationContext * operationContext() const;
+
+    /**
      * @brief Get the DataManager
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const;
@@ -341,6 +354,7 @@ private slots:
 private:
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<SelectionContext> _selection_context;
+    std::unique_ptr<EditorLib::OperationContext> _operation_context;
 
     /// Registered types (type_id -> info)
     std::map<QString, EditorTypeInfo> _types;

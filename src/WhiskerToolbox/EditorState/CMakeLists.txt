@@ -10,10 +10,14 @@ set(EDITOR_STATE_SOURCES
     EditorRegistry.hpp
     EditorState.cpp
     EditorState.hpp
+    OperationContext.cpp
+    OperationContext.hpp
+    OperationResult.hpp
     PropertiesHost.cpp
     PropertiesHost.hpp
     SelectionContext.cpp
     SelectionContext.hpp
+    StrongTypes.hpp
 )
 
 add_library(EditorState STATIC ${EDITOR_STATE_SOURCES})

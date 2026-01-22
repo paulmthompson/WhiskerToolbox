@@ -1,7 +1,9 @@
 #include "EditorRegistry.hpp"
 
 #include "EditorState.hpp"
+#include "OperationContext.hpp"
 #include "SelectionContext.hpp"
+#include "StrongTypes.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -34,7 +36,13 @@ struct SerializedWorkspace {
 EditorRegistry::EditorRegistry(std::shared_ptr<DataManager> data_manager, QObject * parent)
     : QObject(parent)
     , _data_manager(std::move(data_manager))
-    , _selection_context(std::make_unique<SelectionContext>(this)) {
+    , _selection_context(std::make_unique<SelectionContext>(this))
+    , _operation_context(std::make_unique<EditorLib::OperationContext>(this, this)) {
+    
+    // Wire SelectionContext changes to OperationContext
+    // (operations may auto-close when selection changes)
+    connect(_selection_context.get(), &SelectionContext::selectionChanged,
+            _operation_context.get(), &EditorLib::OperationContext::onSelectionChanged);
 }
 
 EditorRegistry::~EditorRegistry() = default;
@@ -253,6 +261,10 @@ void EditorRegistry::unregisterState(QString const & instance_id) {
 
     _states.erase(it);
 
+    // Notify OperationContext to close any operations involving this editor
+    _operation_context->onEditorUnregistered(
+        EditorLib::EditorInstanceId(instance_id));
+
     emit stateUnregistered(instance_id);
     emit workspaceChanged();
     emit unsavedChangesChanged(hasUnsavedChanges());
@@ -294,6 +306,10 @@ size_t EditorRegistry::stateCount() const {
 
 SelectionContext * EditorRegistry::selectionContext() const {
     return _selection_context.get();
+}
+
+EditorLib::OperationContext * EditorRegistry::operationContext() const {
+    return _operation_context.get();
 }
 
 std::shared_ptr<DataManager> EditorRegistry::dataManager() const {
