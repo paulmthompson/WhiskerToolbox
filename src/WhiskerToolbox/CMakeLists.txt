@@ -83,6 +83,10 @@ set(PROJECT_SOURCES
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
+        Export_Widgets/Export_Video_Widget/ExportVideoWidgetState.hpp
+        Export_Widgets/Export_Video_Widget/ExportVideoWidgetState.cpp
+        Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp
+        Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.cpp
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp

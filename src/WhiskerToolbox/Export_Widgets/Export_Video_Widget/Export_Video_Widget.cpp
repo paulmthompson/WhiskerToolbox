@@ -1,4 +1,5 @@
 #include "Export_Video_Widget.hpp"
+#include "ExportVideoWidgetState.hpp"
 
 #include "ui_Export_Video_Widget.h"
 
@@ -32,12 +33,14 @@ Export_Video_Widget::Export_Video_Widget(
         std::shared_ptr<DataManager> data_manager,
         EditorRegistry * editor_registry,
         TimeScrollBar * time_scrollbar,
+        std::shared_ptr<ExportVideoWidgetState> state,
         QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Export_Video_Widget),
       _data_manager{std::move(data_manager)},
       _editor_registry{editor_registry},
-      _time_scrollbar{time_scrollbar} {
+      _time_scrollbar{time_scrollbar},
+      _state{std::move(state)} {
     ui->setupUi(this);
 
     connect(ui->export_video_button, &QPushButton::clicked, this, &Export_Video_Widget::_exportVideo);

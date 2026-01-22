@@ -22,7 +22,6 @@
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
-#include "Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp"
 #include "IO_Widgets/Lines/Line_Loader_Widget.hpp"
@@ -43,6 +42,7 @@
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
+#include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -835,25 +835,8 @@ void MainWindow::openDataManager() {
 }
 
 void MainWindow::openVideoExportWidget() {
-    std::string const key = "VideoExport_widget";
-
-    if (!_widgets.contains(key)) {
-        auto vid_widget = std::make_unique<Export_Video_Widget>(
-                _data_manager,
-                _editor_registry.get(),
-                _time_scrollbar,
-                this);
-
-        vid_widget->setObjectName(key);
-        registerDockWidget(key, vid_widget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(vid_widget);
-    }
-
-    auto ptr = dynamic_cast<Export_Video_Widget *>(_widgets[key].get());
-    //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
-    ptr->openWidget();
-
-    showDockWidget(key);
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("ExportVideoWidget"));
 }
 
 void MainWindow::openTerminalWidget() {
@@ -968,6 +951,8 @@ void MainWindow::_registerEditorTypes() {
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TestWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    ExportVideoWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);

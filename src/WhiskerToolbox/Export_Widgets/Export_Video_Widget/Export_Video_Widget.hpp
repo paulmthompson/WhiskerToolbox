@@ -10,6 +10,7 @@
 
 class DataManager;
 class EditorRegistry;
+class ExportVideoWidgetState;
 class MediaWidgetState;
 class TimeScrollBar;
 class DigitalEventSeries;
@@ -63,16 +64,24 @@ public:
             std::shared_ptr<DataManager> data_manager,
             EditorRegistry * editor_registry,
             TimeScrollBar * time_scrollbar,
+            std::shared_ptr<ExportVideoWidgetState> state,
             QWidget * parent = nullptr);
     ~Export_Video_Widget() override;
 
     void openWidget();
+
+    /**
+     * @brief Get the widget's state object
+     * @return Shared pointer to ExportVideoWidgetState
+     */
+    [[nodiscard]] std::shared_ptr<ExportVideoWidgetState> state() const { return _state; }
 
 private:
     Ui::Export_Video_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     EditorRegistry * _editor_registry;
     TimeScrollBar * _time_scrollbar;
+    std::shared_ptr<ExportVideoWidgetState> _state;
     std::unique_ptr<cv::VideoWriter> _video_writer;
 
     // Currently selected media widget state for export
