@@ -8,6 +8,8 @@ set(DATA_TRANSFORM_WIDGET_SOURCES
         DataTransform_Widget.hpp
         DataTransformWidgetState.hpp
         DataTransformWidgetState.cpp
+        DataTransformWidgetRegistration.hpp
+        DataTransformWidgetRegistration.cpp
         TransformParameter_Widget/TransformParameter_Widget.hpp
         TransformParameter_Widget/DataManagerParameter_Widget.hpp
         TransformParameter_Widget/DataManagerParameter_Widget.cpp

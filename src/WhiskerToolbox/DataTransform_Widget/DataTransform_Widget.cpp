@@ -107,7 +107,7 @@ DataTransform_Widget::DataTransform_Widget(
     connect(ui->do_transform_button, &QPushButton::clicked, this, &DataTransform_Widget::_doTransform);
     connect(ui->operationComboBox, &QComboBox::currentIndexChanged, this, &DataTransform_Widget::_onOperationSelected);
 
-    // === Phase 2.7: Editor State Integration ===
+    // === Phase 4.2: Passive Awareness via DataFocusAware ===
     // Initialize state and register with EditorRegistry for serialization and inter-widget communication
     _state = std::make_shared<DataTransformWidgetState>();
 
@@ -115,11 +115,11 @@ DataTransform_Widget::DataTransform_Widget(
         _editor_registry->registerState(_state);
         _selection_context = _editor_registry->selectionContext();
 
-        // Connect to SelectionContext to receive input data selection from other widgets
-        // This is the key Phase 2.7 integration: input selection comes from SelectionContext
+        // Connect to SelectionContext::dataFocusChanged for passive awareness
+        // This replaces the older selectionChanged connection
+        // The widget now responds to data focus changes regardless of active editor
         if (_selection_context) {
-            connect(_selection_context, &SelectionContext::selectionChanged,
-                    this, &DataTransform_Widget::_onExternalSelectionChanged);
+            connectToSelectionContext(_selection_context, this);
         }
 
         // Sync operation selection to state
@@ -832,17 +832,18 @@ QString DataTransform_Widget::_getCurrentJsonContent() const {
     return _jsonTextEdit ? _jsonTextEdit->toPlainText() : QString();
 }
 
-void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
-    if (!_selection_context || !_state) {
+// === Phase 4.2: DataFocusAware Implementation ===
+
+void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
+                                               QString const & data_type) {
+    Q_UNUSED(data_type);  // We look up the type ourselves for more detailed info
+    
+    if (!_state) {
         return;
     }
 
-    // Don't respond to our own selection changes to avoid circular updates
-    if (source.editor_instance_id.toString() == _state->getInstanceId()) {
-        return;
-    }
-
-    QString selected_key = _selection_context->primarySelectedData().toString();
+    QString selected_key = data_key.toString();
+    
     if (selected_key.isEmpty()) {
         // Clear UI when nothing is selected
         ui->selected_data_label->setText("No data selected");
@@ -877,8 +878,8 @@ void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & s
 
     // Update UI labels with selected data info
     ui->selected_data_label->setText(selected_key);
-    DM_DataType data_type = _data_manager->getType(selected_key.toStdString());
-    QString type_name = QString::fromStdString(convert_data_type_to_string(data_type));
+    DM_DataType dm_data_type = _data_manager->getType(selected_key.toStdString());
+    QString type_name = QString::fromStdString(convert_data_type_to_string(dm_data_type));
     ui->data_type_label->setText(QString("Type: %1").arg(type_name));
 
     // Get available operations for this data type
@@ -916,4 +917,21 @@ void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & s
 
     // Update the output name based on the selected feature and current operation
     _updateOutputName();
+}
+
+// Deprecated: Kept for backward compatibility during migration
+// This will be removed in Phase 6
+void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
+    if (!_selection_context || !_state) {
+        return;
+    }
+
+    // Don't respond to our own selection changes to avoid circular updates
+    if (source.editor_instance_id.toString() == _state->getInstanceId()) {
+        return;
+    }
+
+    // Delegate to the new DataFocusAware implementation
+    QString selected_key = _selection_context->primarySelectedData().toString();
+    onDataFocusChanged(EditorLib::SelectedDataKey(selected_key), QString{});
 }

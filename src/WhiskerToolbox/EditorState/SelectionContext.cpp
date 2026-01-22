@@ -19,6 +19,16 @@ void SelectionContext::setSelectedData(SelectedDataKey const & data_key, Selecti
         _primary_selected.clear();
     }
 
+    // Also update data focus for passive awareness widgets
+    // This bridges the legacy setSelectedData API to the new dataFocusChanged pattern
+    bool const focus_changed = (_data_focus != data_key);
+    _data_focus = data_key;
+    // Note: We don't know the data type here, so keep existing _data_focus_type
+    
+    if (focus_changed) {
+        emit dataFocusChanged(data_key, _data_focus_type, source);
+    }
+
     emit selectionChanged(source);
     emit propertiesContextChanged();
 }

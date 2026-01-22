@@ -3,6 +3,7 @@
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 #include "DataManagerTypes.hpp"
+#include "EditorState/DataFocusAware.hpp"
 
 #include <QString>
 #include <QScrollArea>
@@ -32,7 +33,7 @@ class TransformPipeline;
 class EditorRegistry;
 
 
-class DataTransform_Widget : public QScrollArea {
+class DataTransform_Widget : public QScrollArea, public DataFocusAware {
     Q_OBJECT
 public:
     /**
@@ -47,6 +48,20 @@ public:
     ~DataTransform_Widget() override;
 
     void openWidget();// Call
+
+    // === DataFocusAware Interface ===
+    /**
+     * @brief Handle data focus changes from SelectionContext
+     * 
+     * This is the Phase 4.2 implementation of passive awareness.
+     * When data is focused in another widget (e.g., DataManager_Widget),
+     * this method updates the transform input selection.
+     * 
+     * @param data_key The newly focused data key
+     * @param data_type The type of the focused data (e.g., "LineData", "MaskData")
+     */
+    void onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
+                            QString const & data_type) override;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;

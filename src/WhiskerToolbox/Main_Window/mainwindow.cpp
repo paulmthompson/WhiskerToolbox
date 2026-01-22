@@ -38,12 +38,11 @@
 #include "Whisker_Widget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
 
-#include "Test_Widget/TestWidgetState.hpp"
-#include "Test_Widget/TestWidgetView.hpp"
-#include "Test_Widget/TestWidgetProperties.hpp"
 
 // Module registration headers - each module defines its own factory functions
 #include "Media_Widget/MediaWidgetRegistration.hpp"
+#include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
+#include "Test_Widget/TestWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -700,7 +699,7 @@ void MainWindow::openTensorLoaderWidget() {
 }
 
 //=================================
-// Editor State Widgets
+// Old Interface Widgets (No EditorRegistry)
 //=================================
 
 void MainWindow::openWhiskerTracking() {
@@ -801,26 +800,6 @@ void MainWindow::openDataViewer() {
     showDockWidget(key);
 }
 
-void MainWindow::openNewMediaWidget() {
-    // Create a new media widget using EditorCreationController
-    // The controller handles:
-    // - Creating the editor via EditorRegistry
-    // - Wrapping in dock widgets
-    // - Placing in appropriate zones (view -> Center, properties -> Right)
-    // - Connecting cleanup signals for state unregistration
-    auto placed = _editor_creation_controller->createAndPlace(
-        EditorLib::EditorTypeId(QStringLiteral("MediaWidget")), 
-        true);  // raise_view
-    
-    if (!placed.isValid()) {
-        std::cerr << "Failed to create new media widget" << std::endl;
-        return;
-    }
-    
-    std::cout << "Created new media widget: " 
-              << placed.state->getInstanceId().toStdString() << std::endl;
-}
-
 void MainWindow::openBatchProcessingWidget() {
     std::string const key = "BatchProcessing_widget";
 
@@ -872,41 +851,6 @@ void MainWindow::openVideoExportWidget() {
 
     auto ptr = dynamic_cast<Export_Video_Widget *>(_widgets[key].get());
     //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
-void MainWindow::openDataTransforms() {
-    std::string const key = "DataTransform_widget";
-
-    if (!_widgets.contains(key)) {
-        auto dt_widget = std::make_unique<DataTransform_Widget>(
-                _data_manager,
-                _editor_registry.get(),
-                this);
-
-        dt_widget->setObjectName(key);
-
-        // Set explicit minimum size constraints - increased for better visibility
-        dt_widget->setMinimumSize(350, 700);
-        dt_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-
-        // Create dock widget with appropriate settings
-        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
-
-        // Use ForceNoScrollArea to prevent adding another scroll area
-        dock_widget->setWidget(dt_widget.get(), ads::CDockWidget::ForceNoScrollArea);
-
-        // Ensure the dock widget sizes based on content
-        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
-
-        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
-
-        _widgets[key] = std::move(dt_widget);
-    }
-
-    auto ptr = dynamic_cast<DataTransform_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
@@ -976,42 +920,54 @@ void MainWindow::openGroupManagement() {
     }
 }
 
-void MainWindow::_registerEditorTypes() {
-    // Capture 'this' and data_manager for lambdas
-    auto dm = _data_manager;
+//=================================
+// New Editor Instances
+//=================================
 
+void MainWindow::openTestWidget() {
+    // Delegate to generic openEditor using EditorRegistry
+    openEditor(QStringLiteral("TestWidget"));
+}
+
+
+void MainWindow::openDataTransforms() {
+     openEditor(QStringLiteral("DataTransformWidget"));
+}
+
+void MainWindow::openNewMediaWidget() {
+    // Create a new media widget using EditorCreationController
+    // The controller handles:
+    // - Creating the editor via EditorRegistry
+    // - Wrapping in dock widgets
+    // - Placing in appropriate zones (view -> Center, properties -> Right)
+    // - Connecting cleanup signals for state unregistration
+    auto placed = _editor_creation_controller->createAndPlace(
+        EditorLib::EditorTypeId(QStringLiteral("MediaWidget")), 
+        true);  // raise_view
+    
+    if (!placed.isValid()) {
+        std::cerr << "Failed to create new media widget" << std::endl;
+        return;
+    }
+    
+    std::cout << "Created new media widget: " 
+              << placed.state->getInstanceId().toStdString() << std::endl;
+}
+
+//=================================
+// Editor Registration and Opening
+//=================================
+
+void MainWindow::_registerEditorTypes() {
     // === Module-based registration ===
     // Each module defines its own factory functions - MainWindow doesn't need
     // to know implementation details like MediaWidgetState, MediaViewWidget, etc.
     
     MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+    
+    DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    // === Test Widget (View/Properties split proof-of-concept) ===
-    // This is kept inline as an example of direct registration
-    _editor_registry->registerType({
-        .type_id = QStringLiteral("TestWidget"),
-        .display_name = QStringLiteral("Test Widget"),
-        .icon_path = QString{},
-        .menu_path = QStringLiteral("View/Development"),
-        .preferred_zone = Zone::Center,       // View goes to center
-        .properties_zone = Zone::Right,       // Properties as tab on right
-        .prefers_split = false,
-        .properties_as_tab = true,
-        .auto_raise_properties = true,        // Show properties when test widget opens
-        .allow_multiple = false,  // Single instance only
-        // State factory
-        .create_state = [dm]() { return std::make_shared<TestWidgetState>(dm); },
-        // View factory
-        .create_view = [](std::shared_ptr<EditorState> state) {
-            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
-            return new TestWidgetView(test_state);
-        },
-        // Properties factory (used by PropertiesHost)
-        .create_properties = [](std::shared_ptr<EditorState> state) {
-            auto test_state = std::dynamic_pointer_cast<TestWidgetState>(state);
-            return new TestWidgetProperties(test_state);
-        }
-    });
+    TestWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);
@@ -1085,7 +1041,4 @@ void MainWindow::openEditor(QString const & type_id) {
               << zoneToString(info.preferred_zone).toStdString() << ")" << std::endl;
 }
 
-void MainWindow::openTestWidget() {
-    // Delegate to generic openEditor using EditorRegistry
-    openEditor(QStringLiteral("TestWidget"));
-}
+
