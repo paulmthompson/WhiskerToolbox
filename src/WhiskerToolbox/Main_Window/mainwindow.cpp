@@ -171,7 +171,7 @@ void MainWindow::_buildInitialLayout() {
     
     // Create and add media widget to center zone using EditorRegistry
     // GroupManager is automatically set by MediaWidgetRegistration
-    auto editor_instance = _editor_registry->createEditor(QStringLiteral("MediaWidget"));
+    auto editor_instance = _editor_registry->createEditor(EditorTypeId(QStringLiteral("MediaWidget")));
     auto * media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
     
     auto * media_dock = new ads::CDockWidget(QStringLiteral("media"));
@@ -236,13 +236,13 @@ void MainWindow::_createActions() {
         auto * ctx = _editor_registry->selectionContext();
         if (!ctx) return nullptr;
         
-        QString active_id = ctx->activeEditorId();
-        if (active_id.isEmpty()) return nullptr;
+        auto active_id = ctx->activeEditorId();
+        if (!active_id.isValid()) return nullptr;
         
         // Find the Media_Widget with matching state instance_id
         for (auto * dock : _m_DockManager->dockWidgetsMap()) {
             if (auto * mw = dynamic_cast<Media_Widget*>(dock->widget())) {
-                if (mw->getState() && mw->getState()->getInstanceId() == active_id) {
+                if (mw->getState() && mw->getState()->getInstanceId() == active_id.toString()) {
                     return mw;
                 }
             }
@@ -388,7 +388,7 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
             // Only set color if one is specified, otherwise let Media_Window auto-assign
             if (!data.color.empty()) {
                 // Set feature color on all MediaWidget instances via EditorRegistry
-                auto states = _editor_registry->statesByType(QStringLiteral("MediaWidget"));
+                auto states = _editor_registry->statesByType(EditorTypeId(QStringLiteral("MediaWidget")));
                 for (auto const & state : states) {
                     auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
                     if (media_state) {
@@ -461,22 +461,6 @@ void MainWindow::_updateFrameCount() {
     _time_scrollbar->changeScrollBarValue(0);
 }
 
-void MainWindow::openWhiskerTracking() {
-    std::string const key = "whisker_widget";
-
-    if (!_widgets.contains(key)) {
-        auto whiskerWidget = std::make_unique<Whisker_Widget>(
-                _data_manager);
-        connect(_time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
-
-        _widgets[key] = std::move(whiskerWidget);
-        registerDockWidget(key, _widgets[key].get(), ads::RightDockWidgetArea);
-    }
-
-    dynamic_cast<Whisker_Widget *>(_widgets[key].get())->openWidget();
-    showDockWidget(key);
-}
-
 void MainWindow::registerDockWidget(std::string const & key, QWidget * widget, ads::DockWidgetArea area) {
     auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
     //dock_widget->setWidget(widget, ads::CDockWidget::ForceScrollArea);
@@ -514,141 +498,6 @@ void MainWindow::showDockWidget(std::string const & key) {
 
 ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
     return _m_DockManager->findDockWidget(QString::fromStdString(key));
-}
-
-void MainWindow::openTongueTracking() {
-    std::string const key = "tongue_widget";
-
-    if (!_widgets.contains(key)) {
-        auto tongueWidget = std::make_unique<Tongue_Widget>(_data_manager);
-        tongueWidget->setObjectName(key);
-        registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(tongueWidget);
-    }
-
-    auto ptr = dynamic_cast<Tongue_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
-void MainWindow::openMLWidget() {
-    std::string const key = "ML_widget";
-
-    if (!_widgets.contains(key)) {
-        auto MLWidget = std::make_unique<ML_Widget>(
-                _data_manager);
-
-        MLWidget->setObjectName(key);
-        registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(MLWidget);
-    }
-
-    auto ptr = dynamic_cast<ML_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
-void MainWindow::openDataViewer() {
-    std::string const key = "DataViewer_widget";
-
-    if (!_widgets.contains(key)) {
-        auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
-                _data_manager,
-                _time_scrollbar);
-
-        DataViewerWidget->setObjectName(key);
-        
-        // Insert DataViewer between media and scrollbar
-        // First, find the scrollbar dock widget
-        auto scrollbar_dock = findDockWidget("scrollbar");
-        if (scrollbar_dock && scrollbar_dock->dockAreaWidget()) {
-            // Create dock widget for DataViewer
-            auto dataviewer_dock = new ads::CDockWidget(QString::fromStdString(key));
-            dataviewer_dock->setWidget(DataViewerWidget.get());
-            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetClosable, true);
-            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-            
-            // Add DataViewer above the scrollbar (in the same dock area)
-            _m_DockManager->addDockWidget(ads::TopDockWidgetArea, dataviewer_dock, scrollbar_dock->dockAreaWidget());
-            
-            // Adjust splitter: give DataViewer most space, scrollbar minimal space
-            // The splitter now contains: media, dataviewer, scrollbar
-            auto media_dock = findDockWidget("media");
-            if (media_dock) {
-                auto * main_splitter = ads::internal::findParent<ads::CDockSplitter *>(media_dock->widget());
-                if (main_splitter) {
-                    int const height = main_splitter->height();
-                    // Split: 45% media, 50% dataviewer, 5% scrollbar
-                    main_splitter->setSizes({height * 45 / 100, height * 50 / 100, height * 5 / 100});
-                }
-            }
-        } else {
-            // Fallback to old behavior if scrollbar dock not found
-            registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
-        }
-        
-        _widgets[key] = std::move(DataViewerWidget);
-    }
-
-    auto ptr = dynamic_cast<DataViewer_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
-void MainWindow::openNewMediaWidget() {
-    // Generate unique ID for the new media widget
-    std::string const key = "MediaWidget_" + std::to_string(_media_widget_counter++);
-    
-    // Create the media widget using EditorRegistry
-    // GroupManager is automatically set by MediaWidgetRegistration
-    auto editor_instance = _editor_registry->createEditor(QStringLiteral("MediaWidget"));
-    auto* media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
-    if (!media_widget) {
-        std::cerr << "Failed to create media widget with ID: " << key << std::endl;
-        return;
-    }
-    
-    // Register the dock widget in the system
-    registerDockWidget(key, media_widget, ads::RightDockWidgetArea);
-    
-    // Find the dock widget that was just created and connect close signal
-    auto* dock_widget = findDockWidget(key);
-    if (dock_widget) {
-        // Get the state's instance_id for cleanup
-        QString instance_id = editor_instance.state ? editor_instance.state->getInstanceId() : QString();
-        connect(dock_widget, &ads::CDockWidget::closed, this, [this, key, instance_id]() {
-            // Unregister state from EditorRegistry
-            if (!instance_id.isEmpty()) {
-                _editor_registry->unregisterState(instance_id);
-            }
-            std::cout << "Media widget " << key << " destroyed on close" << std::endl;
-        });
-    }
-    
-    // Show the dock widget
-    showDockWidget(key);
-    
-    std::cout << "Created new media widget: " << key << std::endl;
-}
-
-void MainWindow::openBatchProcessingWidget() {
-    std::string const key = "BatchProcessing_widget";
-
-    if (!_widgets.contains(key)) {
-        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(_data_manager, this, this);
-
-        batchProcessingWidget->setObjectName(key);
-        registerDockWidget(key, batchProcessingWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(batchProcessingWidget);
-    }
-
-    auto ptr = dynamic_cast<BatchProcessing_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
 }
 
 bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
@@ -735,6 +584,10 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
     // This is mainly for direct main window key events
     QMainWindow::keyPressEvent(event);
 }
+
+//=================================
+// Loader Widgets
+//=================================
 
 void MainWindow::openPointLoaderWidget() {
     std::string const key = "PointLoader_widget";
@@ -840,6 +693,163 @@ void MainWindow::openTensorLoaderWidget() {
     }
 
     auto ptr = dynamic_cast<Tensor_Loader_Widget *>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+//=================================
+// Editor State Widgets
+//=================================
+
+void MainWindow::openWhiskerTracking() {
+    std::string const key = "whisker_widget";
+
+    if (!_widgets.contains(key)) {
+        auto whiskerWidget = std::make_unique<Whisker_Widget>(
+                _data_manager);
+        connect(_time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
+
+        _widgets[key] = std::move(whiskerWidget);
+        registerDockWidget(key, _widgets[key].get(), ads::RightDockWidgetArea);
+    }
+
+    dynamic_cast<Whisker_Widget *>(_widgets[key].get())->openWidget();
+    showDockWidget(key);
+}
+
+void MainWindow::openTongueTracking() {
+    std::string const key = "tongue_widget";
+
+    if (!_widgets.contains(key)) {
+        auto tongueWidget = std::make_unique<Tongue_Widget>(_data_manager);
+        tongueWidget->setObjectName(key);
+        registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(tongueWidget);
+    }
+
+    auto ptr = dynamic_cast<Tongue_Widget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openMLWidget() {
+    std::string const key = "ML_widget";
+
+    if (!_widgets.contains(key)) {
+        auto MLWidget = std::make_unique<ML_Widget>(
+                _data_manager);
+
+        MLWidget->setObjectName(key);
+        registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(MLWidget);
+    }
+
+    auto ptr = dynamic_cast<ML_Widget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openDataViewer() {
+    std::string const key = "DataViewer_widget";
+
+    if (!_widgets.contains(key)) {
+        auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
+                _data_manager,
+                _time_scrollbar);
+
+        DataViewerWidget->setObjectName(key);
+        
+        // Insert DataViewer between media and scrollbar
+        // First, find the scrollbar dock widget
+        auto scrollbar_dock = findDockWidget("scrollbar");
+        if (scrollbar_dock && scrollbar_dock->dockAreaWidget()) {
+            // Create dock widget for DataViewer
+            auto dataviewer_dock = new ads::CDockWidget(QString::fromStdString(key));
+            dataviewer_dock->setWidget(DataViewerWidget.get());
+            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetClosable, true);
+            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+            
+            // Add DataViewer above the scrollbar (in the same dock area)
+            _m_DockManager->addDockWidget(ads::TopDockWidgetArea, dataviewer_dock, scrollbar_dock->dockAreaWidget());
+            
+            // Adjust splitter: give DataViewer most space, scrollbar minimal space
+            // The splitter now contains: media, dataviewer, scrollbar
+            auto media_dock = findDockWidget("media");
+            if (media_dock) {
+                auto * main_splitter = ads::internal::findParent<ads::CDockSplitter *>(media_dock->widget());
+                if (main_splitter) {
+                    int const height = main_splitter->height();
+                    // Split: 45% media, 50% dataviewer, 5% scrollbar
+                    main_splitter->setSizes({height * 45 / 100, height * 50 / 100, height * 5 / 100});
+                }
+            }
+        } else {
+            // Fallback to old behavior if scrollbar dock not found
+            registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
+        }
+        
+        _widgets[key] = std::move(DataViewerWidget);
+    }
+
+    auto ptr = dynamic_cast<DataViewer_Widget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openNewMediaWidget() {
+    // Generate unique ID for the new media widget
+    std::string const key = "MediaWidget_" + std::to_string(_media_widget_counter++);
+    
+    // Create the media widget using EditorRegistry
+    // GroupManager is automatically set by MediaWidgetRegistration
+    auto editor_instance = _editor_registry->createEditor(EditorTypeId(QStringLiteral("MediaWidget")));
+    auto* media_widget = dynamic_cast<Media_Widget*>(editor_instance.view);
+    if (!media_widget) {
+        std::cerr << "Failed to create media widget with ID: " << key << std::endl;
+        return;
+    }
+    
+    // Register the dock widget in the system
+    registerDockWidget(key, media_widget, ads::RightDockWidgetArea);
+    
+    // Find the dock widget that was just created and connect close signal
+    auto* dock_widget = findDockWidget(key);
+    if (dock_widget) {
+        // Get the state's instance_id for cleanup
+        EditorInstanceId instance_id = editor_instance.state 
+            ? EditorInstanceId(editor_instance.state->getInstanceId()) 
+            : EditorInstanceId{};
+        connect(dock_widget, &ads::CDockWidget::closed, this, [this, key, instance_id]() {
+            // Unregister state from EditorRegistry
+            if (instance_id.isValid()) {
+                _editor_registry->unregisterState(instance_id);
+            }
+            std::cout << "Media widget " << key << " destroyed on close" << std::endl;
+        });
+    }
+    
+    // Show the dock widget
+    showDockWidget(key);
+    
+    std::cout << "Created new media widget: " << key << std::endl;
+}
+
+void MainWindow::openBatchProcessingWidget() {
+    std::string const key = "BatchProcessing_widget";
+
+    if (!_widgets.contains(key)) {
+        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(_data_manager, this, this);
+
+        batchProcessingWidget->setObjectName(key);
+        registerDockWidget(key, batchProcessingWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(batchProcessingWidget);
+    }
+
+    auto ptr = dynamic_cast<BatchProcessing_Widget *>(_widgets[key].get());
+    ptr->openWidget();
 
     showDockWidget(key);
 }
@@ -1021,7 +1031,7 @@ void MainWindow::_registerEditorTypes() {
 }
 
 void MainWindow::openEditor(QString const & type_id) {
-    auto info = _editor_registry->typeInfo(type_id);
+    auto info = _editor_registry->typeInfo(EditorTypeId(type_id));
 
     if (info.type_id.isEmpty()) {
         std::cerr << "MainWindow::openEditor: Unknown editor type: "
@@ -1031,10 +1041,10 @@ void MainWindow::openEditor(QString const & type_id) {
 
     // For single-instance editors, check if already open
     if (!info.allow_multiple) {
-        auto existing = _editor_registry->statesByType(type_id);
+        auto existing = _editor_registry->statesByType(EditorTypeId(type_id));
         if (!existing.empty()) {
             // Find and show the existing widget
-            QString instance_id = existing[0]->getInstanceId();
+            EditorInstanceId instance_id(existing[0]->getInstanceId());
             std::string key = instance_id.toStdString();
             if (_widgets.contains(key)) {
                 showDockWidget(key);
@@ -1051,7 +1061,7 @@ void MainWindow::openEditor(QString const & type_id) {
     }
 
     // Create new instance via registry
-    auto instance = _editor_registry->createEditor(type_id);
+    auto instance = _editor_registry->createEditor(EditorTypeId(type_id));
 
     if (!instance.state || !instance.view) {
         std::cerr << "MainWindow::openEditor: Failed to create editor: "
@@ -1059,16 +1069,16 @@ void MainWindow::openEditor(QString const & type_id) {
         return;
     }
 
-    QString instance_id = instance.state->getInstanceId();
+    EditorInstanceId instance_id(instance.state->getInstanceId());
     std::string key = instance_id.toStdString();
 
     // View goes to its designated zone (typically Center)
     // Properties will be shown in PropertiesHost when this editor is active
     QWidget * main_widget = instance.view;
-    main_widget->setObjectName(instance_id);
+    main_widget->setObjectName(instance_id.toString());
 
     // Create dock widget for the view
-    auto * dock_widget = new ads::CDockWidget(instance_id);
+    auto * dock_widget = new ads::CDockWidget(instance_id.toString());
     dock_widget->setWidget(main_widget, ads::CDockWidget::ForceNoScrollArea);
     dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
     dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);

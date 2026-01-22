@@ -122,8 +122,8 @@ DataManager_Widget::DataManager_Widget(
         connect(_state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                 this, [this](QString const & key) {
             if (_selection_context) {
-                SelectionSource source{_state->getInstanceId(), QStringLiteral("feature_table")};
-                _selection_context->setSelectedData(key, source);
+                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("feature_table")};
+                _selection_context->setSelectedData(SelectedDataKey(key), source);
             }
         });
     }
@@ -132,7 +132,7 @@ DataManager_Widget::DataManager_Widget(
 DataManager_Widget::~DataManager_Widget() {
     // Unregister state from EditorRegistry when widget is destroyed
     if (_editor_registry && _state) {
-        _editor_registry->unregisterState(_state->getInstanceId());
+        _editor_registry->unregisterState(EditorInstanceId(_state->getInstanceId()));
     }
     delete ui;
 }

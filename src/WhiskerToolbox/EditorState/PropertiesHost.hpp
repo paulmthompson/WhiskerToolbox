@@ -65,6 +65,8 @@
  * @see ZoneManager for UI zone management
  */
 
+#include "StrongTypes.hpp"
+
 #include <QWidget>
 #include <QStackedWidget>
 #include <QLabel>
@@ -72,6 +74,8 @@
 
 #include <map>
 #include <memory>
+
+using EditorLib::EditorInstanceId;
 
 // Forward declarations
 class EditorRegistry;
@@ -110,9 +114,9 @@ public:
 
     /**
      * @brief Get the instance ID of the currently displayed properties
-     * @return Instance ID or empty string if showing placeholder
+     * @return Instance ID or invalid if showing placeholder
      */
-    [[nodiscard]] QString currentInstanceId() const;
+    [[nodiscard]] EditorInstanceId currentInstanceId() const;
 
     /**
      * @brief Force display of properties for a specific editor
@@ -121,7 +125,7 @@ public:
      * 
      * @param instance_id The editor instance ID
      */
-    void showPropertiesFor(QString const & instance_id);
+    void showPropertiesFor(EditorInstanceId const & instance_id);
 
     /**
      * @brief Clear cached properties widget for an editor
@@ -130,7 +134,7 @@ public:
      * 
      * @param instance_id The editor instance ID to clear
      */
-    void clearCachedProperties(QString const & instance_id);
+    void clearCachedProperties(EditorInstanceId const & instance_id);
 
     /**
      * @brief Clear all cached properties widgets
@@ -140,16 +144,16 @@ public:
 signals:
     /**
      * @brief Emitted when the displayed properties widget changes
-     * @param instance_id The editor instance ID, or empty if placeholder
+     * @param instance_id The editor instance ID, or invalid if placeholder
      */
-    void propertiesChanged(QString const & instance_id);
+    void propertiesChanged(EditorInstanceId const & instance_id);
 
 private slots:
     /**
      * @brief Handle active editor changes from SelectionContext
      * @param instance_id The new active editor instance ID
      */
-    void onActiveEditorChanged(QString const & instance_id);
+    void onActiveEditorChanged(EditorInstanceId const & instance_id);
 
     /**
      * @brief Handle selection changes from SelectionContext
@@ -161,7 +165,7 @@ private slots:
      * @brief Handle editor unregistration from EditorRegistry
      * @param instance_id The unregistered editor instance ID
      */
-    void onEditorUnregistered(QString const & instance_id);
+    void onEditorUnregistered(EditorInstanceId const & instance_id);
 
 private:
     EditorRegistry * _editor_registry;
@@ -171,10 +175,10 @@ private:
     QWidget * _placeholder;
     
     // Cached properties widgets (instance_id -> widget)
-    std::map<QString, QWidget *> _cached_widgets;
+    std::map<EditorInstanceId, QWidget *> _cached_widgets;
     
-    // Currently displayed instance ID (empty for placeholder)
-    QString _current_instance_id;
+    // Currently displayed instance ID (invalid for placeholder)
+    EditorInstanceId _current_instance_id;
 
     /**
      * @brief Set up the UI
@@ -191,7 +195,7 @@ private:
      * @param instance_id The editor instance ID
      * @return Properties widget or nullptr if editor has no properties
      */
-    QWidget * getOrCreateProperties(QString const & instance_id);
+    QWidget * getOrCreateProperties(EditorInstanceId const & instance_id);
 
     /**
      * @brief Show the placeholder widget

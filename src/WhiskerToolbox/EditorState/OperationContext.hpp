@@ -287,11 +287,9 @@ private:
 
 }  // namespace EditorLib
 
-// Qt metatype registration for signal/slot use
+// Qt metatype registration for signal/slot use (types defined in this file)
 Q_DECLARE_METATYPE(EditorLib::PendingOperation)
 Q_DECLARE_METATYPE(EditorLib::OperationResult)
-Q_DECLARE_METATYPE(EditorLib::OperationId)
-Q_DECLARE_METATYPE(EditorLib::EditorTypeId)
 Q_DECLARE_METATYPE(EditorLib::OperationCloseReason)
 
 #endif  // OPERATION_CONTEXT_HPP

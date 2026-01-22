@@ -42,6 +42,8 @@
  * @see SelectionContext for inter-widget selection
  */
 
+#include "StrongTypes.hpp"
+
 #include <QObject>
 #include <QString>
 #include <QWidget>
@@ -51,6 +53,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+using EditorLib::EditorInstanceId;
+using EditorLib::EditorTypeId;
 
 class DataManager;
 class EditorState;
@@ -154,17 +159,17 @@ public:
      * @param type_id Type to unregister
      * @return true if was registered and removed
      */
-    bool unregisterType(QString const & type_id);
+    bool unregisterType(EditorTypeId const & type_id);
 
     /**
      * @brief Check if a type is registered
      */
-    [[nodiscard]] bool hasType(QString const & type_id) const;
+    [[nodiscard]] bool hasType(EditorTypeId const & type_id) const;
 
     /**
      * @brief Get type info (returns default-constructed if not found)
      */
-    [[nodiscard]] EditorTypeInfo typeInfo(QString const & type_id) const;
+    [[nodiscard]] EditorTypeInfo typeInfo(EditorTypeId const & type_id) const;
 
     /**
      * @brief Get all registered types
@@ -187,7 +192,7 @@ public:
      * @param type_id Type of editor to create
      * @return EditorInstance with all components, or empty if type not found
      */
-    [[nodiscard]] EditorInstance createEditor(QString const & type_id);
+    [[nodiscard]] EditorInstance createEditor(EditorTypeId const & type_id);
 
     /**
      * @brief Create only the state (not auto-registered)
@@ -195,7 +200,7 @@ public:
      * Use registerState() after calling this to add to the registry.
      * Useful for deserialization where you need to restore state before registering.
      */
-    [[nodiscard]] std::shared_ptr<EditorState> createState(QString const & type_id);
+    [[nodiscard]] std::shared_ptr<EditorState> createState(EditorTypeId const & type_id);
 
     /**
      * @brief Create view widget for an existing state
@@ -220,19 +225,19 @@ public:
     /**
      * @brief Unregister a state by instance ID
      */
-    void unregisterState(QString const & instance_id);
+    void unregisterState(EditorInstanceId const & instance_id);
 
     /**
      * @brief Get state by instance ID
      * @return State or nullptr if not found
      */
-    [[nodiscard]] std::shared_ptr<EditorState> state(QString const & instance_id) const;
+    [[nodiscard]] std::shared_ptr<EditorState> state(EditorInstanceId const & instance_id) const;
 
     /**
      * @brief Get all states of a specific type
      */
     [[nodiscard]] std::vector<std::shared_ptr<EditorState>>
-    statesByType(QString const & type_id) const;
+    statesByType(EditorTypeId const & type_id) const;
 
     /**
      * @brief Get all registered states
@@ -317,19 +322,19 @@ public:
 
 signals:
     /// Emitted when a new type is registered
-    void typeRegistered(QString type_id);
+    void typeRegistered(EditorTypeId type_id);
 
     /// Emitted when a type is unregistered
-    void typeUnregistered(QString type_id);
+    void typeUnregistered(EditorTypeId type_id);
 
     /// Emitted when a state is registered
-    void stateRegistered(QString instance_id, QString type_id);
+    void stateRegistered(EditorInstanceId instance_id, EditorTypeId type_id);
 
     /// Emitted when a state is unregistered
-    void stateUnregistered(QString instance_id);
+    void stateUnregistered(EditorInstanceId instance_id);
 
     /// Emitted when createEditor() succeeds
-    void editorCreated(QString instance_id, QString type_id);
+    void editorCreated(EditorInstanceId instance_id, EditorTypeId type_id);
 
     /// Emitted when any state changes
     void workspaceChanged();
@@ -357,10 +362,10 @@ private:
     std::unique_ptr<EditorLib::OperationContext> _operation_context;
 
     /// Registered types (type_id -> info)
-    std::map<QString, EditorTypeInfo> _types;
+    std::map<EditorTypeId, EditorTypeInfo> _types;
 
     /// Active states (instance_id -> state)
-    std::map<QString, std::shared_ptr<EditorState>> _states;
+    std::map<EditorInstanceId, std::shared_ptr<EditorState>> _states;
 
     /// Current visualization time (frame index)
     int64_t _current_time{0};

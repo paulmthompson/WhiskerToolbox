@@ -3,6 +3,7 @@
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/StrongTypes.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -203,7 +204,7 @@ TEST_CASE("SelectionContext data selection", "[SelectionContext]") {
     QCoreApplication app(argc, nullptr);
 
     SelectionContext ctx;
-    SelectionSource source{"editor1", "table"};
+    SelectionSource source{EditorInstanceId("editor1"), "table"};
 
     SECTION("Initial state is empty") {
         REQUIRE(ctx.primarySelectedData().isEmpty());
@@ -211,40 +212,40 @@ TEST_CASE("SelectionContext data selection", "[SelectionContext]") {
     }
 
     SECTION("Single selection") {
-        ctx.setSelectedData("data1", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
 
-        REQUIRE(ctx.primarySelectedData() == "data1");
+        REQUIRE(ctx.primarySelectedData().toString() == "data1");
         REQUIRE(ctx.allSelectedData().size() == 1);
-        REQUIRE(ctx.isSelected("data1"));
-        REQUIRE_FALSE(ctx.isSelected("data2"));
+        REQUIRE(ctx.isSelected(SelectedDataKey("data1")));
+        REQUIRE_FALSE(ctx.isSelected(SelectedDataKey("data2")));
     }
 
     SECTION("Multi-selection") {
-        ctx.setSelectedData("data1", source);
-        ctx.addToSelection("data2", source);
-        ctx.addToSelection("data3", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
+        ctx.addToSelection(SelectedDataKey("data2"), source);
+        ctx.addToSelection(SelectedDataKey("data3"), source);
 
-        REQUIRE(ctx.primarySelectedData() == "data1");
+        REQUIRE(ctx.primarySelectedData().toString() == "data1");
         REQUIRE(ctx.allSelectedData().size() == 3);
-        REQUIRE(ctx.isSelected("data1"));
-        REQUIRE(ctx.isSelected("data2"));
-        REQUIRE(ctx.isSelected("data3"));
+        REQUIRE(ctx.isSelected(SelectedDataKey("data1")));
+        REQUIRE(ctx.isSelected(SelectedDataKey("data2")));
+        REQUIRE(ctx.isSelected(SelectedDataKey("data3")));
     }
 
     SECTION("Remove from selection") {
-        ctx.setSelectedData("data1", source);
-        ctx.addToSelection("data2", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
+        ctx.addToSelection(SelectedDataKey("data2"), source);
 
-        ctx.removeFromSelection("data1", source);
+        ctx.removeFromSelection(SelectedDataKey("data1"), source);
 
-        REQUIRE(ctx.primarySelectedData() == "data2");
+        REQUIRE(ctx.primarySelectedData().toString() == "data2");
         REQUIRE(ctx.allSelectedData().size() == 1);
-        REQUIRE_FALSE(ctx.isSelected("data1"));
+        REQUIRE_FALSE(ctx.isSelected(SelectedDataKey("data1")));
     }
 
     SECTION("Clear selection") {
-        ctx.setSelectedData("data1", source);
-        ctx.addToSelection("data2", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
+        ctx.addToSelection(SelectedDataKey("data2"), source);
 
         ctx.clearSelection(source);
 
@@ -253,12 +254,12 @@ TEST_CASE("SelectionContext data selection", "[SelectionContext]") {
     }
 
     SECTION("Setting selection clears previous") {
-        ctx.setSelectedData("data1", source);
-        ctx.addToSelection("data2", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
+        ctx.addToSelection(SelectedDataKey("data2"), source);
 
-        ctx.setSelectedData("data3", source);
+        ctx.setSelectedData(SelectedDataKey("data3"), source);
 
-        REQUIRE(ctx.primarySelectedData() == "data3");
+        REQUIRE(ctx.primarySelectedData().toString() == "data3");
         REQUIRE(ctx.allSelectedData().size() == 1);
     }
 }
@@ -268,7 +269,7 @@ TEST_CASE("SelectionContext entity selection", "[SelectionContext]") {
     QCoreApplication app(argc, nullptr);
 
     SelectionContext ctx;
-    SelectionSource source{"editor1", "canvas"};
+    SelectionSource source{EditorInstanceId("editor1"), "canvas"};
 
     SECTION("Entity selection") {
         ctx.setSelectedEntities({1, 2, 3}, source);
@@ -297,7 +298,7 @@ TEST_CASE("SelectionContext entity selection", "[SelectionContext]") {
 
     SECTION("Data selection clears entity selection") {
         ctx.setSelectedEntities({1, 2, 3}, source);
-        ctx.setSelectedData("data1", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
 
         REQUIRE(ctx.selectedEntities().empty());
     }
@@ -314,19 +315,19 @@ TEST_CASE("SelectionContext active editor", "[SelectionContext]") {
     }
 
     SECTION("Set active editor") {
-        ctx.setActiveEditor("editor1");
-        REQUIRE(ctx.activeEditorId() == "editor1");
+        ctx.setActiveEditor(EditorInstanceId("editor1"));
+        REQUIRE(ctx.activeEditorId().toString() == "editor1");
     }
 
     SECTION("activeEditorChanged signal") {
         QSignalSpy spy(&ctx, &SelectionContext::activeEditorChanged);
 
-        ctx.setActiveEditor("editor1");
+        ctx.setActiveEditor(EditorInstanceId("editor1"));
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toString() == "editor1");
+        REQUIRE(spy.at(0).at(0).value<EditorInstanceId>().toString() == "editor1");
 
         // Same editor doesn't emit
-        ctx.setActiveEditor("editor1");
+        ctx.setActiveEditor(EditorInstanceId("editor1"));
         REQUIRE(spy.count() == 1);
     }
 }
@@ -336,18 +337,18 @@ TEST_CASE("SelectionContext signals", "[SelectionContext]") {
     QCoreApplication app(argc, nullptr);
 
     SelectionContext ctx;
-    SelectionSource source{"editor1", "table"};
+    SelectionSource source{EditorInstanceId("editor1"), "table"};
 
     SECTION("selectionChanged emitted") {
         QSignalSpy spy(&ctx, &SelectionContext::selectionChanged);
 
-        ctx.setSelectedData("data1", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
         REQUIRE(spy.count() == 1);
 
-        ctx.addToSelection("data2", source);
+        ctx.addToSelection(SelectedDataKey("data2"), source);
         REQUIRE(spy.count() == 2);
 
-        ctx.removeFromSelection("data1", source);
+        ctx.removeFromSelection(SelectedDataKey("data1"), source);
         REQUIRE(spy.count() == 3);
 
         ctx.clearSelection(source);
@@ -373,26 +374,26 @@ TEST_CASE("SelectionContext properties context", "[SelectionContext]") {
     QCoreApplication app(argc, nullptr);
 
     SelectionContext ctx;
-    SelectionSource source{"editor1", "table"};
+    SelectionSource source{EditorInstanceId("editor1"), "table"};
 
     SECTION("propertiesContext updated on interaction") {
-        ctx.notifyInteraction("editor1");
-        ctx.setSelectedData("data1", source);
+        ctx.notifyInteraction(EditorInstanceId("editor1"));
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
         ctx.setSelectedDataType("LineData");
 
         auto props = ctx.propertiesContext();
-        REQUIRE(props.last_interacted_editor == "editor1");
-        REQUIRE(props.selected_data_key == "data1");
+        REQUIRE(props.last_interacted_editor.toString() == "editor1");
+        REQUIRE(props.selected_data_key.toString() == "data1");
         REQUIRE(props.data_type == "LineData");
     }
 
     SECTION("propertiesContextChanged signal") {
         QSignalSpy spy(&ctx, &SelectionContext::propertiesContextChanged);
 
-        ctx.notifyInteraction("editor1");
+        ctx.notifyInteraction(EditorInstanceId("editor1"));
         REQUIRE(spy.count() == 1);
 
-        ctx.setSelectedData("data1", source);
+        ctx.setSelectedData(SelectedDataKey("data1"), source);
         REQUIRE(spy.count() == 2);
 
         ctx.setSelectedDataType("LineData");
@@ -413,7 +414,7 @@ TEST_CASE("EditorRegistry state registration", "[EditorRegistry]") {
         mgr.registerState(state);
 
         REQUIRE(mgr.stateCount() == 1);
-        REQUIRE(mgr.state(state->getInstanceId()) == state);
+        REQUIRE(mgr.state(EditorInstanceId(state->getInstanceId())) == state);
     }
 
     SECTION("Get states by type") {
@@ -422,7 +423,7 @@ TEST_CASE("EditorRegistry state registration", "[EditorRegistry]") {
         mgr.registerState(state1);
         mgr.registerState(state2);
 
-        auto states = mgr.statesByType("TestState");
+        auto states = mgr.statesByType(EditorTypeId("TestState"));
         REQUIRE(states.size() == 2);
     }
 
@@ -430,9 +431,9 @@ TEST_CASE("EditorRegistry state registration", "[EditorRegistry]") {
         auto state = std::make_shared<TestState>();
         mgr.registerState(state);
 
-        mgr.unregisterState(state->getInstanceId());
+        mgr.unregisterState(EditorInstanceId(state->getInstanceId()));
         REQUIRE(mgr.stateCount() == 0);
-        REQUIRE(mgr.state(state->getInstanceId()) == nullptr);
+        REQUIRE(mgr.state(EditorInstanceId(state->getInstanceId())) == nullptr);
     }
 
     SECTION("stateRegistered signal") {
@@ -442,8 +443,8 @@ TEST_CASE("EditorRegistry state registration", "[EditorRegistry]") {
         mgr.registerState(state);
 
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toString() == state->getInstanceId());
-        REQUIRE(spy.at(0).at(1).toString() == "TestState");
+        REQUIRE(spy.at(0).at(0).value<EditorInstanceId>().toString() == state->getInstanceId());
+        REQUIRE(spy.at(0).at(1).value<EditorTypeId>().toString() == "TestState");
     }
 }
 
@@ -467,9 +468,9 @@ TEST_CASE("EditorRegistry editor type factory", "[EditorRegistry]") {
         };
         mgr.registerType(info);
 
-        REQUIRE(mgr.hasType("TestState"));
+        REQUIRE(mgr.hasType(EditorTypeId("TestState")));
 
-        auto state = mgr.createState("TestState");
+        auto state = mgr.createState(EditorTypeId("TestState"));
         REQUIRE(state != nullptr);
         REQUIRE(state->getTypeName() == "TestState");
         
@@ -479,7 +480,7 @@ TEST_CASE("EditorRegistry editor type factory", "[EditorRegistry]") {
     }
 
     SECTION("Unknown type returns nullptr") {
-        auto state = mgr.createState("UnknownType");
+        auto state = mgr.createState(EditorTypeId("UnknownType"));
         REQUIRE(state == nullptr);
     }
 
@@ -571,21 +572,21 @@ TEST_CASE("EditorRegistry serialization", "[EditorRegistry]") {
         };
         original.registerType(info);
 
-        auto state1 = std::dynamic_pointer_cast<TestState>(original.createState("TestState"));
+        auto state1 = std::dynamic_pointer_cast<TestState>(original.createState(EditorTypeId("TestState")));
         original.registerState(state1);  // Explicitly register
         state1->setDisplayName("State 1");
         state1->setName("first");
         state1->setValue(100);
 
-        auto state2 = std::dynamic_pointer_cast<TestState>(original.createState("TestState"));
+        auto state2 = std::dynamic_pointer_cast<TestState>(original.createState(EditorTypeId("TestState")));
         original.registerState(state2);  // Explicitly register
         state2->setDisplayName("State 2");
         state2->setName("second");
         state2->setValue(200);
 
         // Set selection
-        SelectionSource source{"test", "test"};
-        original.selectionContext()->setSelectedData("data1", source);
+        SelectionSource source{EditorInstanceId("test"), "test"};
+        original.selectionContext()->setSelectedData(SelectedDataKey("data1"), source);
 
         // Serialize
         auto json = original.toJson();
@@ -599,6 +600,6 @@ TEST_CASE("EditorRegistry serialization", "[EditorRegistry]") {
         REQUIRE(restored.stateCount() == 2);
 
         // Verify selection was restored
-        REQUIRE(restored.selectionContext()->primarySelectedData() == "data1");
+        REQUIRE(restored.selectionContext()->primarySelectedData().toString() == "data1");
     }
 }

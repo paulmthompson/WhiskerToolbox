@@ -27,7 +27,7 @@ PropertiesHost::~PropertiesHost() {
 }
 
 QWidget * PropertiesHost::currentProperties() const {
-    if (_current_instance_id.isEmpty()) {
+    if (!_current_instance_id.isValid()) {
         return nullptr;
     }
     auto it = _cached_widgets.find(_current_instance_id);
@@ -37,12 +37,12 @@ QWidget * PropertiesHost::currentProperties() const {
     return nullptr;
 }
 
-QString PropertiesHost::currentInstanceId() const {
+EditorInstanceId PropertiesHost::currentInstanceId() const {
     return _current_instance_id;
 }
 
-void PropertiesHost::showPropertiesFor(QString const & instance_id) {
-    if (instance_id.isEmpty()) {
+void PropertiesHost::showPropertiesFor(EditorInstanceId const & instance_id) {
+    if (!instance_id.isValid()) {
         showPlaceholder();
         return;
     }
@@ -62,7 +62,7 @@ void PropertiesHost::showPropertiesFor(QString const & instance_id) {
     emit propertiesChanged(instance_id);
 }
 
-void PropertiesHost::clearCachedProperties(QString const & instance_id) {
+void PropertiesHost::clearCachedProperties(EditorInstanceId const & instance_id) {
     auto it = _cached_widgets.find(instance_id);
     if (it != _cached_widgets.end()) {
         // If this is the current widget, switch to placeholder
@@ -87,7 +87,7 @@ void PropertiesHost::clearAllCached() {
     _cached_widgets.clear();
 }
 
-void PropertiesHost::onActiveEditorChanged(QString const & instance_id) {
+void PropertiesHost::onActiveEditorChanged(EditorInstanceId const & instance_id) {
     showPropertiesFor(instance_id);
 }
 
@@ -98,7 +98,7 @@ void PropertiesHost::onSelectionChanged(SelectionSource const & source) {
     Q_UNUSED(source)
 }
 
-void PropertiesHost::onEditorUnregistered(QString const & instance_id) {
+void PropertiesHost::onEditorUnregistered(EditorInstanceId const & instance_id) {
     clearCachedProperties(instance_id);
 }
 
@@ -134,7 +134,7 @@ void PropertiesHost::connectSignals() {
             this, &PropertiesHost::onEditorUnregistered);
 }
 
-QWidget * PropertiesHost::getOrCreateProperties(QString const & instance_id) {
+QWidget * PropertiesHost::getOrCreateProperties(EditorInstanceId const & instance_id) {
     // Check cache first
     auto it = _cached_widgets.find(instance_id);
     if (it != _cached_widgets.end()) {
@@ -165,11 +165,11 @@ QWidget * PropertiesHost::getOrCreateProperties(QString const & instance_id) {
 
 void PropertiesHost::showPlaceholder() {
     _stack->setCurrentWidget(_placeholder);
-    QString old_id = _current_instance_id;
-    _current_instance_id.clear();
+    EditorInstanceId old_id = _current_instance_id;
+    _current_instance_id = EditorInstanceId{};
     
-    if (!old_id.isEmpty()) {
-        emit propertiesChanged(QString{});
+    if (old_id.isValid()) {
+        emit propertiesChanged(EditorInstanceId{});
     }
 }
 

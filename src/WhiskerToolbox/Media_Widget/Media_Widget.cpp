@@ -124,8 +124,8 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
                 this, [this](QString const & key) {
             _state->setDisplayedDataKey(key);
             if (_selection_context) {
-                SelectionSource source{_state->getInstanceId(), QStringLiteral("feature_table")};
-                _selection_context->setSelectedData(key, source);
+                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("feature_table")};
+                _selection_context->setSelectedData(SelectedDataKey(key), source);
             }
         });
     }
@@ -134,7 +134,7 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
 Media_Widget::~Media_Widget() {
     // Unregister state from EditorRegistry when widget is destroyed
     if (_editor_registry && _state) {
-        _editor_registry->unregisterState(_state->getInstanceId());
+        _editor_registry->unregisterState(EditorInstanceId(_state->getInstanceId()));
     }
 
     // Proactively hide stacked pages while _scene is still alive so any hideEvent
@@ -674,11 +674,11 @@ void Media_Widget::_onExternalSelectionChanged(SelectionSource const & source) {
     }
 
     // Don't respond to our own selection changes to avoid circular updates
-    if (source.editor_instance_id == _state->getInstanceId()) {
+    if (source.editor_instance_id.toString() == _state->getInstanceId()) {
         return;
     }
 
-    QString selected_key = _selection_context->primarySelectedData();
+    QString selected_key = _selection_context->primarySelectedData().toString();
     if (selected_key.isEmpty()) {
         return;
     }

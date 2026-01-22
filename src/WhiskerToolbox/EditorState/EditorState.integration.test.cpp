@@ -12,6 +12,7 @@
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/StrongTypes.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager_Widget/DataManagerWidgetState.hpp"
@@ -39,9 +40,9 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         workspace.registerState(state);
 
         REQUIRE(workspace.allStates().size() == 1);
-        REQUIRE(workspace.state(state->getInstanceId()) == state);
+        REQUIRE(workspace.state(EditorInstanceId(state->getInstanceId())) == state);
 
-        workspace.unregisterState(state->getInstanceId());
+        workspace.unregisterState(EditorInstanceId(state->getInstanceId()));
         REQUIRE(workspace.allStates().empty());
     }
 
@@ -53,9 +54,9 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         workspace.registerState(state);
 
         REQUIRE(workspace.allStates().size() == 1);
-        REQUIRE(workspace.state(state->getInstanceId()) == state);
+        REQUIRE(workspace.state(EditorInstanceId(state->getInstanceId())) == state);
 
-        workspace.unregisterState(state->getInstanceId());
+        workspace.unregisterState(EditorInstanceId(state->getInstanceId()));
         REQUIRE(workspace.allStates().empty());
     }
 
@@ -74,16 +75,16 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         auto * selection_context = workspace.selectionContext();
 
         // Simulate external selection (from DataManager_Widget)
-        SelectionSource external_source{external_state->getInstanceId(), "feature_table"};
-        selection_context->setSelectedData("external_data_key", external_source);
+        SelectionSource external_source{EditorInstanceId(external_state->getInstanceId()), "feature_table"};
+        selection_context->setSelectedData(SelectedDataKey("external_data_key"), external_source);
 
         // Verify SelectionContext received the selection
-        REQUIRE(selection_context->primarySelectedData() == "external_data_key");
+        REQUIRE(selection_context->primarySelectedData().toString() == "external_data_key");
 
         // In the actual widget, we would update state in the slot handler.
         // Here we simulate that behavior:
-        if (external_source.editor_instance_id != media_state->getInstanceId()) {
-            media_state->setDisplayedDataKey(selection_context->primarySelectedData());
+        if (external_source.editor_instance_id.toString() != media_state->getInstanceId()) {
+            media_state->setDisplayedDataKey(selection_context->primarySelectedData().toString());
         }
 
         REQUIRE(media_state->displayedDataKey() == "external_data_key");
@@ -99,18 +100,18 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         auto * selection_context = workspace.selectionContext();
 
         // Simulate selection originating from Media_Widget itself
-        SelectionSource own_source{media_state->getInstanceId(), "feature_table"};
+        SelectionSource own_source{EditorInstanceId(media_state->getInstanceId()), "feature_table"};
 
         // First set a value
         media_state->setDisplayedDataKey("initial_key");
 
         // Now simulate receiving a selection change from ourselves
-        selection_context->setSelectedData("new_key", own_source);
+        selection_context->setSelectedData(SelectedDataKey("new_key"), own_source);
 
         // The handler should check source and NOT update if it's our own
         // (This simulates the filtering logic in _onExternalSelectionChanged)
-        if (own_source.editor_instance_id != media_state->getInstanceId()) {
-            media_state->setDisplayedDataKey(selection_context->primarySelectedData());
+        if (own_source.editor_instance_id.toString() != media_state->getInstanceId()) {
+            media_state->setDisplayedDataKey(selection_context->primarySelectedData().toString());
         }
 
         // State should remain unchanged since we ignored our own selection
@@ -132,18 +133,18 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         auto * selection_context = workspace.selectionContext();
 
         // Media 1 selects something
-        SelectionSource source1{media_state1->getInstanceId(), "feature_table"};
-        selection_context->setSelectedData("data_from_media1", source1);
+        SelectionSource source1{EditorInstanceId(media_state1->getInstanceId()), "feature_table"};
+        selection_context->setSelectedData(SelectedDataKey("data_from_media1"), source1);
 
         // Media 2 should respond (simulating the slot handler)
-        if (source1.editor_instance_id != media_state2->getInstanceId()) {
-            media_state2->setDisplayedDataKey(selection_context->primarySelectedData());
+        if (source1.editor_instance_id.toString() != media_state2->getInstanceId()) {
+            media_state2->setDisplayedDataKey(selection_context->primarySelectedData().toString());
         }
 
         REQUIRE(media_state2->displayedDataKey() == "data_from_media1");
 
         // Media 1 should NOT respond to its own selection
-        if (source1.editor_instance_id != media_state1->getInstanceId()) {
+        if (source1.editor_instance_id.toString() != media_state1->getInstanceId()) {
             // This block should not execute
             media_state1->setDisplayedDataKey("should_not_happen");
         }
@@ -166,13 +167,13 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         REQUIRE(media_state->getInstanceId() != dm_state->getInstanceId());
 
         // Create selection sources
-        SelectionSource media_source{media_state->getInstanceId(), "feature_table"};
-        SelectionSource dm_source{dm_state->getInstanceId(), "feature_table"};
+        SelectionSource media_source{EditorInstanceId(media_state->getInstanceId()), "feature_table"};
+        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
 
         // They should be distinguishable
         REQUIRE_FALSE(media_source == dm_source);
-        REQUIRE(media_source.editor_instance_id == media_state->getInstanceId());
-        REQUIRE(dm_source.editor_instance_id == dm_state->getInstanceId());
+        REQUIRE(media_source.editor_instance_id.toString() == media_state->getInstanceId());
+        REQUIRE(dm_source.editor_instance_id.toString() == dm_state->getInstanceId());
     }
 
     SECTION("DataManager_Widget selection propagates to Media_Widget state") {
@@ -197,9 +198,9 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         QObject::connect(selection_context, &SelectionContext::selectionChanged,
                          [&](SelectionSource const & source) {
             // Simulate Media_Widget's _onExternalSelectionChanged behavior
-            if (source.editor_instance_id != media_state->getInstanceId()) {
+            if (source.editor_instance_id.toString() != media_state->getInstanceId()) {
                 media_received_selection = true;
-                received_key = selection_context->primarySelectedData();
+                received_key = selection_context->primarySelectedData().toString();
                 media_state->setDisplayedDataKey(received_key);
             }
         });
@@ -209,8 +210,8 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
 
         // This would normally trigger the state -> SelectionContext connection in the widget
         // Here we simulate it:
-        SelectionSource dm_source{dm_state->getInstanceId(), "feature_table"};
-        selection_context->setSelectedData(dm_state->selectedDataKey(), dm_source);
+        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        selection_context->setSelectedData(SelectedDataKey(dm_state->selectedDataKey()), dm_source);
 
         // Verify the chain worked
         REQUIRE(media_received_selection);
@@ -265,10 +266,10 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         workspace.registerState(state);
 
         REQUIRE(workspace.allStates().size() == 1);
-        REQUIRE(workspace.state(state->getInstanceId()) == state);
+        REQUIRE(workspace.state(EditorInstanceId(state->getInstanceId())) == state);
         REQUIRE(state->getTypeName() == "DataTransformWidget");
 
-        workspace.unregisterState(state->getInstanceId());
+        workspace.unregisterState(EditorInstanceId(state->getInstanceId()));
         REQUIRE(workspace.allStates().empty());
     }
 
@@ -340,17 +341,17 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         QObject::connect(selection_context, &SelectionContext::selectionChanged,
                          [&](SelectionSource const & source) {
             // Simulate DataTransform_Widget's _onExternalSelectionChanged behavior
-            if (source.editor_instance_id != transform_state->getInstanceId()) {
+            if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
                 transform_received_selection = true;
-                received_key = selection_context->primarySelectedData();
+                received_key = selection_context->primarySelectedData().toString();
                 transform_state->setSelectedInputDataKey(received_key);
             }
         });
 
         // Simulate DataManager_Widget selecting a feature
         dm_state->setSelectedDataKey("analog_signal");
-        SelectionSource dm_source{dm_state->getInstanceId(), "feature_table"};
-        selection_context->setSelectedData(dm_state->selectedDataKey(), dm_source);
+        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        selection_context->setSelectedData(SelectedDataKey(dm_state->selectedDataKey()), dm_source);
 
         // Verify the chain worked
         REQUIRE(transform_received_selection);
@@ -371,12 +372,12 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         transform_state->setSelectedInputDataKey("initial_key");
 
         // Simulate selection originating from DataTransform itself
-        SelectionSource own_source{transform_state->getInstanceId(), "internal"};
-        selection_context->setSelectedData("new_key", own_source);
+        SelectionSource own_source{EditorInstanceId(transform_state->getInstanceId()), "internal"};
+        selection_context->setSelectedData(SelectedDataKey("new_key"), own_source);
 
         // Handler should filter out own selections
-        if (own_source.editor_instance_id != transform_state->getInstanceId()) {
-            transform_state->setSelectedInputDataKey(selection_context->primarySelectedData());
+        if (own_source.editor_instance_id.toString() != transform_state->getInstanceId()) {
+            transform_state->setSelectedInputDataKey(selection_context->primarySelectedData().toString());
         }
 
         // State should remain unchanged
@@ -410,15 +411,15 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         auto * selection_context = workspace.selectionContext();
 
         // DataManager selects -> both Media and Transform should respond
-        SelectionSource dm_source{dm_state->getInstanceId(), "feature_table"};
-        selection_context->setSelectedData("shared_data", dm_source);
+        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        selection_context->setSelectedData(SelectedDataKey("shared_data"), dm_source);
 
         // Simulate both widgets responding
-        if (dm_source.editor_instance_id != media_state->getInstanceId()) {
-            media_state->setDisplayedDataKey(selection_context->primarySelectedData());
+        if (dm_source.editor_instance_id.toString() != media_state->getInstanceId()) {
+            media_state->setDisplayedDataKey(selection_context->primarySelectedData().toString());
         }
-        if (dm_source.editor_instance_id != transform_state->getInstanceId()) {
-            transform_state->setSelectedInputDataKey(selection_context->primarySelectedData());
+        if (dm_source.editor_instance_id.toString() != transform_state->getInstanceId()) {
+            transform_state->setSelectedInputDataKey(selection_context->primarySelectedData().toString());
         }
 
         REQUIRE(media_state->displayedDataKey() == "shared_data");

@@ -8,11 +8,11 @@ SelectionContext::SelectionContext(QObject * parent)
 
 // === Data Selection ===
 
-void SelectionContext::setSelectedData(QString const & data_key, SelectionSource const & source) {
+void SelectionContext::setSelectedData(SelectedDataKey const & data_key, SelectionSource const & source) {
     _selected_data.clear();
     _selected_entities.clear();// Clear entity selection when data changes
 
-    if (!data_key.isEmpty()) {
+    if (data_key.isValid()) {
         _selected_data.insert(data_key);
         _primary_selected = data_key;
     } else {
@@ -23,8 +23,8 @@ void SelectionContext::setSelectedData(QString const & data_key, SelectionSource
     emit propertiesContextChanged();
 }
 
-void SelectionContext::addToSelection(QString const & data_key, SelectionSource const & source) {
-    if (data_key.isEmpty()) {
+void SelectionContext::addToSelection(SelectedDataKey const & data_key, SelectionSource const & source) {
+    if (!data_key.isValid()) {
         return;
     }
 
@@ -38,7 +38,7 @@ void SelectionContext::addToSelection(QString const & data_key, SelectionSource 
     emit selectionChanged(source);
 }
 
-void SelectionContext::removeFromSelection(QString const & data_key, SelectionSource const & source) {
+void SelectionContext::removeFromSelection(SelectedDataKey const & data_key, SelectionSource const & source) {
     auto it = _selected_data.find(data_key);
     if (it == _selected_data.end()) {
         return;
@@ -61,7 +61,7 @@ void SelectionContext::removeFromSelection(QString const & data_key, SelectionSo
 }
 
 void SelectionContext::clearSelection(SelectionSource const & source) {
-    if (_selected_data.empty() && _primary_selected.isEmpty()) {
+    if (_selected_data.empty() && !_primary_selected.isValid()) {
         return;// Nothing to clear
     }
 
@@ -73,15 +73,15 @@ void SelectionContext::clearSelection(SelectionSource const & source) {
     emit propertiesContextChanged();
 }
 
-QString SelectionContext::primarySelectedData() const {
+SelectedDataKey SelectionContext::primarySelectedData() const {
     return _primary_selected;
 }
 
-std::set<QString> SelectionContext::allSelectedData() const {
+std::set<SelectedDataKey> SelectionContext::allSelectedData() const {
     return _selected_data;
 }
 
-bool SelectionContext::isSelected(QString const & data_key) const {
+bool SelectionContext::isSelected(SelectedDataKey const & data_key) const {
     return _selected_data.contains(data_key);
 }
 
@@ -123,14 +123,14 @@ bool SelectionContext::isEntitySelected(int64_t entity_id) const {
 
 // === Active Editor ===
 
-void SelectionContext::setActiveEditor(QString const & instance_id) {
+void SelectionContext::setActiveEditor(EditorInstanceId const & instance_id) {
     if (_active_editor_id != instance_id) {
         _active_editor_id = instance_id;
         emit activeEditorChanged(instance_id);
     }
 }
 
-QString SelectionContext::activeEditorId() const {
+EditorInstanceId SelectionContext::activeEditorId() const {
     return _active_editor_id;
 }
 
@@ -143,7 +143,7 @@ PropertiesContext SelectionContext::propertiesContext() const {
             .data_type = _selected_data_type};
 }
 
-void SelectionContext::notifyInteraction(QString const & editor_instance_id) {
+void SelectionContext::notifyInteraction(EditorInstanceId const & editor_instance_id) {
     if (_last_interacted_editor != editor_instance_id) {
         _last_interacted_editor = editor_instance_id;
         emit propertiesContextChanged();

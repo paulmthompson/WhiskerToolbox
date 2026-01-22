@@ -180,8 +180,8 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
         // Connect state to selection context (mirroring what DataManager_Widget does)
         QObject::connect(state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         &selection_context, [&state, &selection_context](QString const & key) {
-            SelectionSource source{state->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context.setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context.setSelectedData(SelectedDataKey(key), source);
         });
 
         // Initially nothing is selected
@@ -190,8 +190,8 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
         // When state's selected key changes, SelectionContext should update
         state->setSelectedDataKey("whisker_data");
 
-        REQUIRE(selection_context.primarySelectedData() == "whisker_data");
-        REQUIRE(selection_context.isSelected("whisker_data"));
+        REQUIRE(selection_context.primarySelectedData().toString() == "whisker_data");
+        REQUIRE(selection_context.isSelected(SelectedDataKey("whisker_data")));
     }
 
     SECTION("Multiple state changes propagate correctly to SelectionContext") {
@@ -200,23 +200,23 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
 
         QObject::connect(state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         &selection_context, [&state, &selection_context](QString const & key) {
-            SelectionSource source{state->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context.setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context.setSelectedData(SelectedDataKey(key), source);
         });
 
         // Select first item
         state->setSelectedDataKey("data_1");
-        REQUIRE(selection_context.primarySelectedData() == "data_1");
+        REQUIRE(selection_context.primarySelectedData().toString() == "data_1");
 
         // Select second item (should replace, not add)
         state->setSelectedDataKey("data_2");
-        REQUIRE(selection_context.primarySelectedData() == "data_2");
-        REQUIRE_FALSE(selection_context.isSelected("data_1"));
+        REQUIRE(selection_context.primarySelectedData().toString() == "data_2");
+        REQUIRE_FALSE(selection_context.isSelected(SelectedDataKey("data_1")));
         REQUIRE(selection_context.allSelectedData().size() == 1);
 
         // Select third item
         state->setSelectedDataKey("data_3");
-        REQUIRE(selection_context.primarySelectedData() == "data_3");
+        REQUIRE(selection_context.primarySelectedData().toString() == "data_3");
     }
 
     SECTION("SelectionContext emits signal when state updates it") {
@@ -226,8 +226,8 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
 
         QObject::connect(state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         &selection_context, [&state, &selection_context](QString const & key) {
-            SelectionSource source{state->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context.setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context.setSelectedData(SelectedDataKey(key.toStdString()), source);
         });
 
         state->setSelectedDataKey("test_key");
@@ -236,7 +236,7 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
 
         // Verify the selection source is correct
         auto source = spy.at(0).at(0).value<SelectionSource>();
-        REQUIRE(source.editor_instance_id == state->getInstanceId());
+        REQUIRE(source.editor_instance_id.toString() == state->getInstanceId());
         REQUIRE(source.widget_id == "feature_table");
     }
 
@@ -247,21 +247,21 @@ TEST_CASE("DataManagerWidgetState integrates with SelectionContext", "[DataManag
         QObject::connect(state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         &selection_context, [&state, &selection_context](QString const & key) {
             if (key.isEmpty()) {
-                SelectionSource source{state->getInstanceId(), QStringLiteral("feature_table")};
+                SelectionSource source{EditorInstanceId(state->getInstanceId()), QStringLiteral("feature_table")};
                 selection_context.clearSelection(source);
             } else {
-                SelectionSource source{state->getInstanceId(), QStringLiteral("feature_table")};
-                selection_context.setSelectedData(key, source);
+                SelectionSource source{EditorInstanceId(state->getInstanceId()), QStringLiteral("feature_table")};
+                selection_context.setSelectedData(SelectedDataKey(key.toStdString()), source);
             }
         });
 
         // Select something
         state->setSelectedDataKey("some_data");
-        REQUIRE(selection_context.isSelected("some_data"));
+        REQUIRE(selection_context.isSelected(SelectedDataKey("some_data")));
 
         // Clear by setting empty key
         state->setSelectedDataKey("");
-        REQUIRE(selection_context.primarySelectedData().isEmpty());
+        REQUIRE(selection_context.primarySelectedData().toString().isEmpty());
         REQUIRE(selection_context.allSelectedData().empty());
     }
 }
@@ -285,15 +285,15 @@ TEST_CASE("DataManagerWidgetState works with EditorRegistry", "[DataManagerWidge
         // Connect state to selection context
         QObject::connect(state.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         selection_context, [&state, selection_context](QString const & key) {
-            SelectionSource source{state->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context->setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context->setSelectedData(SelectedDataKey(key.toStdString()), source);
         });
 
         // Update state
         state->setSelectedDataKey("workspace_data");
 
         // Verify SelectionContext was updated
-        REQUIRE(selection_context->primarySelectedData() == "workspace_data");
+        REQUIRE(selection_context->primarySelectedData().toString() == "workspace_data");
     }
 
     SECTION("Multiple states can share the same SelectionContext") {
@@ -310,27 +310,27 @@ TEST_CASE("DataManagerWidgetState works with EditorRegistry", "[DataManagerWidge
         // Connect both states
         QObject::connect(state1.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         selection_context, [&state1, selection_context](QString const & key) {
-            SelectionSource source{state1->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context->setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state1->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context->setSelectedData(SelectedDataKey(key.toStdString()), source);
         });
 
         QObject::connect(state2.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         selection_context, [&state2, selection_context](QString const & key) {
-            SelectionSource source{state2->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context->setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state2->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context->setSelectedData(SelectedDataKey(key.toStdString()), source);
         });
 
         // State1 selects
         state1->setSelectedDataKey("from_state1");
-        REQUIRE(selection_context->primarySelectedData() == "from_state1");
+        REQUIRE(selection_context->primarySelectedData().toString() == "from_state1");
 
         // State2 selects (should override)
         state2->setSelectedDataKey("from_state2");
-        REQUIRE(selection_context->primarySelectedData() == "from_state2");
+        REQUIRE(selection_context->primarySelectedData().toString() == "from_state2");
 
         // State1 selects again
         state1->setSelectedDataKey("back_to_state1");
-        REQUIRE(selection_context->primarySelectedData() == "back_to_state1");
+        REQUIRE(selection_context->primarySelectedData().toString() == "back_to_state1");
     }
 
     SECTION("SelectionSource correctly identifies which state made selection") {
@@ -347,27 +347,27 @@ TEST_CASE("DataManagerWidgetState works with EditorRegistry", "[DataManagerWidge
 
         QObject::connect(state1.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         selection_context, [&state1, selection_context](QString const & key) {
-            SelectionSource source{state1->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context->setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state1->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context->setSelectedData(SelectedDataKey(key.toStdString()), source);
         });
 
         QObject::connect(state2.get(), &DataManagerWidgetState::selectedDataKeyChanged,
                         selection_context, [&state2, selection_context](QString const & key) {
-            SelectionSource source{state2->getInstanceId(), QStringLiteral("feature_table")};
-            selection_context->setSelectedData(key, source);
+            SelectionSource source{EditorInstanceId(state2->getInstanceId()), QStringLiteral("feature_table")};
+            selection_context->setSelectedData(SelectedDataKey(key.toStdString()), source);
         });
 
         // State1 makes selection
         state1->setSelectedDataKey("data1");
         REQUIRE(spy.count() == 1);
         auto source1 = spy.at(0).at(0).value<SelectionSource>();
-        REQUIRE(source1.editor_instance_id == state1->getInstanceId());
+        REQUIRE(source1.editor_instance_id.toString() == state1->getInstanceId());
 
         // State2 makes selection
         state2->setSelectedDataKey("data2");
         REQUIRE(spy.count() == 2);
         auto source2 = spy.at(1).at(0).value<SelectionSource>();
-        REQUIRE(source2.editor_instance_id == state2->getInstanceId());
+        REQUIRE(source2.editor_instance_id.toString() == state2->getInstanceId());
 
         // Verify the sources are different
         REQUIRE(source1.editor_instance_id != source2.editor_instance_id);

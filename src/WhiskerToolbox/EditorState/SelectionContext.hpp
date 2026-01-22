@@ -18,6 +18,8 @@
  * @see WorkspaceManager for state registry
  */
 
+#include "StrongTypes.hpp"
+
 #include <QObject>
 #include <QString>
 
@@ -26,6 +28,9 @@
 #include <set>
 #include <string>
 #include <vector>
+
+using EditorLib::SelectedDataKey;
+using EditorLib::EditorInstanceId;
 
 /**
  * @brief Identifies the source of a selection change
@@ -43,8 +48,8 @@
  * ```
  */
 struct SelectionSource {
-    QString editor_instance_id;  ///< Instance ID of the editor that made the selection
-    QString widget_id;           ///< Specific widget within editor (optional, for compound editors)
+    EditorInstanceId editor_instance_id;  ///< Instance ID of the editor that made the selection
+    QString widget_id;                     ///< Specific widget within editor (optional, for compound editors)
 
     bool operator==(SelectionSource const & other) const {
         return editor_instance_id == other.editor_instance_id && widget_id == other.widget_id;
@@ -61,7 +66,7 @@ struct SelectionSource {
  * - All three for maximum specificity
  */
 struct SelectedItem {
-    QString data_key;                    ///< Key in DataManager
+    SelectedDataKey data_key;                    ///< Key in DataManager
     std::optional<int64_t> entity_id;    ///< Specific entity within data (optional)
     std::optional<int> time_index;       ///< Specific time frame (optional)
 
@@ -85,9 +90,9 @@ struct SelectedItem {
  * interaction pattern.
  */
 struct PropertiesContext {
-    QString last_interacted_editor;  ///< Editor that had last meaningful interaction
-    QString selected_data_key;       ///< Currently selected data
-    QString data_type;               ///< Type of selected data (e.g., "LineData", "MaskData")
+    EditorInstanceId last_interacted_editor;  ///< Editor that had last meaningful interaction
+    SelectedDataKey selected_data_key;                ///< Currently selected data
+    QString data_type;                        ///< Type of selected data (e.g., "LineData", "MaskData")
 };
 
 /**
@@ -157,7 +162,7 @@ public:
      * @param data_key Key in DataManager
      * @param source Who is making this selection
      */
-    void setSelectedData(QString const & data_key, SelectionSource const & source);
+    void setSelectedData(SelectedDataKey const & data_key, SelectionSource const & source);
 
     /**
      * @brief Add to the current selection (for multi-select)
@@ -167,7 +172,7 @@ public:
      * @param data_key Key to add to selection
      * @param source Who is making this selection
      */
-    void addToSelection(QString const & data_key, SelectionSource const & source);
+    void addToSelection(SelectedDataKey const & data_key, SelectionSource const & source);
 
     /**
      * @brief Remove from current selection
@@ -177,7 +182,7 @@ public:
      * @param data_key Key to remove from selection
      * @param source Who is making this change
      */
-    void removeFromSelection(QString const & data_key, SelectionSource const & source);
+    void removeFromSelection(SelectedDataKey const & data_key, SelectionSource const & source);
 
     /**
      * @brief Clear all selections
@@ -187,22 +192,22 @@ public:
 
     /**
      * @brief Get primary selected data key
-     * @return Primary selection, or empty QString if nothing selected
+     * @return Primary selection, or invalid SelectedDataKey if nothing selected
      */
-    [[nodiscard]] QString primarySelectedData() const;
+    [[nodiscard]] SelectedDataKey primarySelectedData() const;
 
     /**
      * @brief Get all selected data keys
      * @return Set of all selected data keys
      */
-    [[nodiscard]] std::set<QString> allSelectedData() const;
+    [[nodiscard]] std::set<SelectedDataKey> allSelectedData() const;
 
     /**
      * @brief Check if specific data is selected
      * @param data_key Key to check
      * @return true if data_key is in the current selection
      */
-    [[nodiscard]] bool isSelected(QString const & data_key) const;
+    [[nodiscard]] bool isSelected(SelectedDataKey const & data_key) const;
 
     // === Entity Selection ===
 
@@ -254,13 +259,13 @@ public:
      * 
      * @param instance_id Instance ID of the active editor
      */
-    void setActiveEditor(QString const & instance_id);
+    void setActiveEditor(EditorInstanceId const & instance_id);
 
     /**
      * @brief Get the active editor instance ID
-     * @return Instance ID, or empty QString if none active
+     * @return Instance ID, or invalid EditorInstanceId if none active
      */
-    [[nodiscard]] QString activeEditorId() const;
+    [[nodiscard]] EditorInstanceId activeEditorId() const;
 
     // === Properties Context ===
 
@@ -286,7 +291,7 @@ public:
      * 
      * @param editor_instance_id Instance ID of the interacted editor
      */
-    void notifyInteraction(QString const & editor_instance_id);
+    void notifyInteraction(EditorInstanceId const & editor_instance_id);
 
     /**
      * @brief Set data type for properties context
@@ -315,7 +320,7 @@ signals:
      * @brief Emitted when active editor changes
      * @param instance_id Instance ID of the new active editor
      */
-    void activeEditorChanged(QString const & instance_id);
+    void activeEditorChanged(EditorInstanceId const & instance_id);
 
     /**
      * @brief Emitted when properties context changes
@@ -325,11 +330,11 @@ signals:
     void propertiesContextChanged();
 
 private:
-    QString _primary_selected;
-    std::set<QString> _selected_data;
+    SelectedDataKey _primary_selected;
+    std::set<SelectedDataKey> _selected_data;
     std::vector<int64_t> _selected_entities;
-    QString _active_editor_id;
-    QString _last_interacted_editor;
+    EditorInstanceId _active_editor_id;
+    EditorInstanceId _last_interacted_editor;
     QString _selected_data_type;
 };
 

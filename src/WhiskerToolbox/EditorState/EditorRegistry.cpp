@@ -64,20 +64,20 @@ bool EditorRegistry::registerType(EditorTypeInfo info) {
         return false;
     }
 
-    if (_types.contains(info.type_id)) {
+    EditorTypeId type_id(info.type_id);
+    if (_types.contains(type_id)) {
         std::cerr << "EditorRegistry::registerType: type_id already registered: "
                   << info.type_id.toStdString() << std::endl;
         return false;
     }
 
-    QString type_id = info.type_id;
     _types[type_id] = std::move(info);
 
     emit typeRegistered(type_id);
     return true;
 }
 
-bool EditorRegistry::unregisterType(QString const & type_id) {
+bool EditorRegistry::unregisterType(EditorTypeId const & type_id) {
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         return false;
@@ -88,11 +88,11 @@ bool EditorRegistry::unregisterType(QString const & type_id) {
     return true;
 }
 
-bool EditorRegistry::hasType(QString const & type_id) const {
+bool EditorRegistry::hasType(EditorTypeId const & type_id) const {
     return _types.contains(type_id);
 }
 
-EditorRegistry::EditorTypeInfo EditorRegistry::typeInfo(QString const & type_id) const {
+EditorRegistry::EditorTypeInfo EditorRegistry::typeInfo(EditorTypeId const & type_id) const {
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         return EditorTypeInfo{};
@@ -122,7 +122,7 @@ EditorRegistry::typesByMenuPath(QString const & path) const {
 
 // === Editor Creation ===
 
-EditorRegistry::EditorInstance EditorRegistry::createEditor(QString const & type_id) {
+EditorRegistry::EditorInstance EditorRegistry::createEditor(EditorTypeId const & type_id) {
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         std::cerr << "EditorRegistry::createEditor: unknown type_id: "
@@ -136,7 +136,7 @@ EditorRegistry::EditorInstance EditorRegistry::createEditor(QString const & type
     if (type.create_editor_custom) {
         auto instance = type.create_editor_custom(this);
         if (instance.state && instance.view) {
-            emit editorCreated(instance.state->getInstanceId(), type_id);
+            emit editorCreated(EditorInstanceId(instance.state->getInstanceId()), type_id);
         }
         return instance;
     }
@@ -165,7 +165,7 @@ EditorRegistry::EditorInstance EditorRegistry::createEditor(QString const & type
     if (!view) {
         std::cerr << "EditorRegistry::createEditor: create_view returned nullptr for "
                   << type_id.toStdString() << std::endl;
-        unregisterState(state->getInstanceId());
+        unregisterState(EditorInstanceId(state->getInstanceId()));
         return EditorInstance{nullptr, nullptr, nullptr};
     }
 
@@ -175,7 +175,7 @@ EditorRegistry::EditorInstance EditorRegistry::createEditor(QString const & type
         properties = type.create_properties(state);
     }
 
-    emit editorCreated(state->getInstanceId(), type_id);
+    emit editorCreated(EditorInstanceId(state->getInstanceId()), type_id);
 
     return EditorInstance{
         .state = std::move(state),
@@ -183,7 +183,7 @@ EditorRegistry::EditorInstance EditorRegistry::createEditor(QString const & type
         .properties = properties};
 }
 
-std::shared_ptr<EditorState> EditorRegistry::createState(QString const & type_id) {
+std::shared_ptr<EditorState> EditorRegistry::createState(EditorTypeId const & type_id) {
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         std::cerr << "EditorRegistry::createState: unknown type_id: "
@@ -199,7 +199,7 @@ QWidget * EditorRegistry::createView(std::shared_ptr<EditorState> state) {
         return nullptr;
     }
 
-    QString type_id = state->getTypeName();
+    EditorTypeId type_id(state->getTypeName());
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         std::cerr << "EditorRegistry::createView: unknown type_id: "
@@ -215,7 +215,7 @@ QWidget * EditorRegistry::createProperties(std::shared_ptr<EditorState> state) {
         return nullptr;
     }
 
-    QString type_id = state->getTypeName();
+    EditorTypeId type_id(state->getTypeName());
     auto it = _types.find(type_id);
     if (it == _types.end()) {
         std::cerr << "EditorRegistry::createProperties: unknown type_id: "
@@ -237,7 +237,7 @@ void EditorRegistry::registerState(std::shared_ptr<EditorState> state) {
         return;
     }
 
-    QString instance_id = state->getInstanceId();
+    EditorInstanceId instance_id(state->getInstanceId());
 
     if (_states.contains(instance_id)) {
         return;  // Already registered
@@ -246,11 +246,11 @@ void EditorRegistry::registerState(std::shared_ptr<EditorState> state) {
     _states[instance_id] = state;
     connectStateSignals(state.get());
 
-    emit stateRegistered(instance_id, state->getTypeName());
+    emit stateRegistered(instance_id, EditorTypeId(state->getTypeName()));
     emit workspaceChanged();
 }
 
-void EditorRegistry::unregisterState(QString const & instance_id) {
+void EditorRegistry::unregisterState(EditorInstanceId const & instance_id) {
     auto it = _states.find(instance_id);
     if (it == _states.end()) {
         return;
@@ -262,15 +262,14 @@ void EditorRegistry::unregisterState(QString const & instance_id) {
     _states.erase(it);
 
     // Notify OperationContext to close any operations involving this editor
-    _operation_context->onEditorUnregistered(
-        EditorLib::EditorInstanceId(instance_id));
+    _operation_context->onEditorUnregistered(instance_id);
 
     emit stateUnregistered(instance_id);
     emit workspaceChanged();
     emit unsavedChangesChanged(hasUnsavedChanges());
 }
 
-std::shared_ptr<EditorState> EditorRegistry::state(QString const & instance_id) const {
+std::shared_ptr<EditorState> EditorRegistry::state(EditorInstanceId const & instance_id) const {
     auto it = _states.find(instance_id);
     if (it != _states.end()) {
         return it->second;
@@ -279,10 +278,10 @@ std::shared_ptr<EditorState> EditorRegistry::state(QString const & instance_id) 
 }
 
 std::vector<std::shared_ptr<EditorState>>
-EditorRegistry::statesByType(QString const & type_id) const {
+EditorRegistry::statesByType(EditorTypeId const & type_id) const {
     std::vector<std::shared_ptr<EditorState>> result;
     for (auto const & [id, s] : _states) {
-        if (s->getTypeName() == type_id) {
+        if (s->getTypeName() == type_id.toString()) {
             result.push_back(s);
         }
     }
@@ -350,12 +349,12 @@ bool EditorRegistry::fromJson(std::string const & json) {
     // Clear existing states
     auto old_states = allStates();
     for (auto const & s : old_states) {
-        unregisterState(s->getInstanceId());
+        unregisterState(EditorInstanceId(s->getInstanceId()));
     }
 
     // Restore states
     for (auto const & serialized : workspace.states) {
-        QString type_id = QString::fromStdString(serialized.type_id);
+        EditorTypeId type_id(QString::fromStdString(serialized.type_id));
 
         auto it = _types.find(type_id);
         if (it == _types.end()) {
@@ -380,14 +379,14 @@ bool EditorRegistry::fromJson(std::string const & json) {
     }
 
     // Restore selection
-    SelectionSource source{"EditorRegistry", "fromJson"};
+    SelectionSource source{EditorInstanceId("EditorRegistry"), "fromJson"};
     _selection_context->clearSelection(source);
     for (auto const & key : workspace.all_selections) {
-        _selection_context->addToSelection(QString::fromStdString(key), source);
+        _selection_context->addToSelection(SelectedDataKey(QString::fromStdString(key)), source);
     }
     if (!workspace.primary_selection.empty()) {
         _selection_context->setSelectedData(
-            QString::fromStdString(workspace.primary_selection), source);
+            SelectedDataKey(QString::fromStdString(workspace.primary_selection)), source);
     }
 
     return true;

@@ -133,7 +133,7 @@ DataTransform_Widget::DataTransform_Widget(
 DataTransform_Widget::~DataTransform_Widget() {
     // Unregister state from EditorRegistry when widget is destroyed
     if (_editor_registry && _state) {
-        _editor_registry->unregisterState(_state->getInstanceId());
+        _editor_registry->unregisterState(EditorInstanceId(_state->getInstanceId()));
     }
     delete ui;
 }
@@ -838,11 +838,11 @@ void DataTransform_Widget::_onExternalSelectionChanged(SelectionSource const & s
     }
 
     // Don't respond to our own selection changes to avoid circular updates
-    if (source.editor_instance_id == _state->getInstanceId()) {
+    if (source.editor_instance_id.toString() == _state->getInstanceId()) {
         return;
     }
 
-    QString selected_key = _selection_context->primarySelectedData();
+    QString selected_key = _selection_context->primarySelectedData().toString();
     if (selected_key.isEmpty()) {
         // Clear UI when nothing is selected
         ui->selected_data_label->setText("No data selected");

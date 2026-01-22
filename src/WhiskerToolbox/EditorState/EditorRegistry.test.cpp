@@ -6,6 +6,7 @@
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "EditorState/StrongTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -122,7 +123,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
             .create_view = [](auto) { return new QLabel(); }});
 
         REQUIRE(result == true);
-        REQUIRE(_registry->hasType("TestType") == true);
+        REQUIRE(_registry->hasType(EditorTypeId("TestType")) == true);
     }
 
     SECTION("cannot register with empty type_id") {
@@ -178,21 +179,21 @@ TEST_CASE_METHOD(RegistryTestFixture,
         registerMockType("SignalTest");
 
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toString() == "SignalTest");
+        REQUIRE(spy.at(0).at(0).value<EditorTypeId>().toString() == "SignalTest");
     }
 
     SECTION("can unregister type") {
         registerMockType("ToRemove");
-        REQUIRE(_registry->hasType("ToRemove") == true);
+        REQUIRE(_registry->hasType(EditorTypeId("ToRemove")) == true);
 
-        bool result = _registry->unregisterType("ToRemove");
+        bool result = _registry->unregisterType(EditorTypeId("ToRemove"));
 
         REQUIRE(result == true);
-        REQUIRE(_registry->hasType("ToRemove") == false);
+        REQUIRE(_registry->hasType(EditorTypeId("ToRemove")) == false);
     }
 
     SECTION("unregister returns false for non-existent type") {
-        bool result = _registry->unregisterType("NonExistent");
+        bool result = _registry->unregisterType(EditorTypeId("NonExistent"));
         REQUIRE(result == false);
     }
 }
@@ -228,7 +229,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
         .create_view = [](auto) { return new QLabel(); }});
 
     SECTION("typeInfo returns correct info") {
-        auto info = _registry->typeInfo("Type1");
+        auto info = _registry->typeInfo(EditorTypeId("Type1"));
         REQUIRE(info.type_id == "Type1");
         REQUIRE(info.display_name == "Type One");
         REQUIRE(info.menu_path == "View/Group1");
@@ -236,7 +237,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
     }
 
     SECTION("typeInfo returns empty for unknown") {
-        auto info = _registry->typeInfo("Unknown");
+        auto info = _registry->typeInfo(EditorTypeId("Unknown"));
         REQUIRE(info.type_id.isEmpty());
     }
 
@@ -266,7 +267,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
     registerMockTypeWithProperties("TestEditor");
 
     SECTION("returns all components") {
-        auto inst = _registry->createEditor("TestEditor");
+        auto inst = _registry->createEditor(EditorTypeId("TestEditor"));
 
         REQUIRE(inst.state != nullptr);
         REQUIRE(inst.view != nullptr);
@@ -278,17 +279,17 @@ TEST_CASE_METHOD(RegistryTestFixture,
     }
 
     SECTION("auto-registers state") {
-        auto inst = _registry->createEditor("TestEditor");
+        auto inst = _registry->createEditor(EditorTypeId("TestEditor"));
 
         REQUIRE(_registry->stateCount() == 1);
-        REQUIRE(_registry->state(inst.state->getInstanceId()) == inst.state);
+        REQUIRE(_registry->state(EditorInstanceId(inst.state->getInstanceId())) == inst.state);
 
         delete inst.view;
         delete inst.properties;
     }
 
     SECTION("returns empty for unknown type") {
-        auto inst = _registry->createEditor("Unknown");
+        auto inst = _registry->createEditor(EditorTypeId("Unknown"));
 
         REQUIRE(inst.state == nullptr);
         REQUIRE(inst.view == nullptr);
@@ -297,11 +298,11 @@ TEST_CASE_METHOD(RegistryTestFixture,
 
     SECTION("emits editorCreated signal") {
         QSignalSpy spy(_registry.get(), &EditorRegistry::editorCreated);
-        auto inst = _registry->createEditor("TestEditor");
+        auto inst = _registry->createEditor(EditorTypeId("TestEditor"));
 
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toString() == inst.state->getInstanceId());
-        REQUIRE(spy.at(0).at(1).toString() == "TestEditor");
+        REQUIRE(spy.at(0).at(0).value<EditorInstanceId>().toString() == inst.state->getInstanceId());
+        REQUIRE(spy.at(0).at(1).value<EditorTypeId>().toString() == "TestEditor");
 
         delete inst.view;
         delete inst.properties;
@@ -309,7 +310,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
 
     SECTION("properties is null when no factory") {
         registerMockType("NoPropsType");
-        auto inst = _registry->createEditor("NoPropsType");
+        auto inst = _registry->createEditor(EditorTypeId("NoPropsType"));
 
         REQUIRE(inst.state != nullptr);
         REQUIRE(inst.view != nullptr);
@@ -326,14 +327,14 @@ TEST_CASE_METHOD(RegistryTestFixture,
     registerMockType();
 
     SECTION("creates state without registering") {
-        auto state = _registry->createState("MockState");
+        auto state = _registry->createState(EditorTypeId("MockState"));
 
         REQUIRE(state != nullptr);
         REQUIRE(_registry->stateCount() == 0);  // Not auto-registered
     }
 
     SECTION("returns nullptr for unknown type") {
-        auto state = _registry->createState("Unknown");
+        auto state = _registry->createState(EditorTypeId("Unknown"));
         REQUIRE(state == nullptr);
     }
 }
@@ -393,7 +394,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
         _registry->registerState(state);
 
         REQUIRE(_registry->stateCount() == 1);
-        REQUIRE(_registry->state(state->getInstanceId()) == state);
+        REQUIRE(_registry->state(EditorInstanceId(state->getInstanceId())) == state);
     }
 
     SECTION("registerState is idempotent") {
@@ -413,31 +414,31 @@ TEST_CASE_METHOD(RegistryTestFixture,
         auto state = std::make_shared<MockState>();
         _registry->registerState(state);
 
-        _registry->unregisterState(state->getInstanceId());
+        _registry->unregisterState(EditorInstanceId(state->getInstanceId()));
 
         REQUIRE(_registry->stateCount() == 0);
-        REQUIRE(_registry->state(state->getInstanceId()) == nullptr);
+        REQUIRE(_registry->state(EditorInstanceId(state->getInstanceId())) == nullptr);
     }
 
     SECTION("statesByType filters correctly") {
         registerMockType("TypeA");
         registerMockType("TypeB");
 
-        _registry->createEditor("TypeA");
-        _registry->createEditor("TypeA");
-        _registry->createEditor("TypeB");
+        _registry->createEditor(EditorTypeId("TypeA"));
+        _registry->createEditor(EditorTypeId("TypeA"));
+        _registry->createEditor(EditorTypeId("TypeB"));
 
-        auto typeA = _registry->statesByType("TypeA");
+        auto typeA = _registry->statesByType(EditorTypeId("TypeA"));
         REQUIRE(typeA.size() == 2);
 
-        auto typeB = _registry->statesByType("TypeB");
+        auto typeB = _registry->statesByType(EditorTypeId("TypeB"));
         REQUIRE(typeB.size() == 1);
     }
 
     SECTION("allStates returns all") {
         registerMockType();
-        _registry->createEditor("MockState");
-        _registry->createEditor("MockState");
+        _registry->createEditor(EditorTypeId("MockState"));
+        _registry->createEditor(EditorTypeId("MockState"));
 
         auto all = _registry->allStates();
         REQUIRE(all.size() == 2);
@@ -450,8 +451,8 @@ TEST_CASE_METHOD(RegistryTestFixture,
         _registry->registerState(state);
 
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toString() == state->getInstanceId());
-        REQUIRE(spy.at(0).at(1).toString() == "TestType");
+        REQUIRE(spy.at(0).at(0).value<EditorInstanceId>().toString() == state->getInstanceId());
+        REQUIRE(spy.at(0).at(1).value<EditorTypeId>().toString() == "TestType");
     }
 
     SECTION("emits stateUnregistered signal") {
@@ -459,10 +460,10 @@ TEST_CASE_METHOD(RegistryTestFixture,
         _registry->registerState(state);
 
         QSignalSpy spy(_registry.get(), &EditorRegistry::stateUnregistered);
-        _registry->unregisterState(state->getInstanceId());
+        _registry->unregisterState(EditorInstanceId(state->getInstanceId()));
 
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.at(0).at(0).toString() == state->getInstanceId());
+        REQUIRE(spy.at(0).at(0).value<EditorInstanceId>().toString() == state->getInstanceId());
     }
 }
 
@@ -492,7 +493,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
     registerMockType();
 
     SECTION("hasUnsavedChanges reflects state") {
-        auto inst = _registry->createEditor("MockState");
+        auto inst = _registry->createEditor(EditorTypeId("MockState"));
         auto mock = std::dynamic_pointer_cast<MockState>(inst.state);
 
         REQUIRE(_registry->hasUnsavedChanges() == false);
@@ -507,7 +508,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
     }
 
     SECTION("emits unsavedChangesChanged") {
-        auto inst = _registry->createEditor("MockState");
+        auto inst = _registry->createEditor(EditorTypeId("MockState"));
         auto mock = std::dynamic_pointer_cast<MockState>(inst.state);
 
         QSignalSpy spy(_registry.get(), &EditorRegistry::unsavedChangesChanged);
@@ -529,7 +530,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
     registerMockType();
 
     SECTION("toJson produces valid JSON") {
-        auto inst = _registry->createEditor("MockState");
+        auto inst = _registry->createEditor(EditorTypeId("MockState"));
         auto json = _registry->toJson();
 
         REQUIRE_FALSE(json.empty());
@@ -541,15 +542,15 @@ TEST_CASE_METHOD(RegistryTestFixture,
 
     SECTION("round-trip serialization") {
         // Create and configure state
-        auto inst = _registry->createEditor("MockState");
+        auto inst = _registry->createEditor(EditorTypeId("MockState"));
         auto mock = std::dynamic_pointer_cast<MockState>(inst.state);
         mock->setDisplayName("Test Instance");
         mock->setName("custom_name");
         mock->setValue(123);
 
         // Set selection
-        SelectionSource src{"test", "test"};
-        _registry->selectionContext()->setSelectedData("data_key", src);
+        SelectionSource src{EditorInstanceId("test"), "test"};
+        _registry->selectionContext()->setSelectedData(SelectedDataKey("data_key"), src);
 
         auto json = _registry->toJson();
 
@@ -569,14 +570,14 @@ TEST_CASE_METHOD(RegistryTestFixture,
         REQUIRE(restoredMock->getName() == "custom_name");
         REQUIRE(restoredMock->getValue() == 123);
 
-        REQUIRE(restored.selectionContext()->primarySelectedData() == "data_key");
+        REQUIRE(restored.selectionContext()->primarySelectedData().toString() == "data_key");
 
         delete inst.view;
     }
 
     SECTION("fromJson clears existing states") {
-        _registry->createEditor("MockState");
-        _registry->createEditor("MockState");
+        _registry->createEditor(EditorTypeId("MockState"));
+        _registry->createEditor(EditorTypeId("MockState"));
         REQUIRE(_registry->stateCount() == 2);
 
         EditorRegistry other(nullptr);
@@ -584,7 +585,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
             .type_id = "MockState",
             .create_state = []() { return std::make_shared<MockState>("MockState"); },
             .create_view = [](auto) { return new QLabel(); }});
-        other.createEditor("MockState");
+        other.createEditor(EditorTypeId("MockState"));
         auto json = other.toJson();
 
         _registry->fromJson(json);
@@ -597,7 +598,7 @@ TEST_CASE_METHOD(RegistryTestFixture,
             .type_id = "UnknownType",
             .create_state = []() { return std::make_shared<MockState>("UnknownType"); },
             .create_view = [](auto) { return new QLabel(); }});
-        other.createEditor("UnknownType");
+        other.createEditor(EditorTypeId("UnknownType"));
         auto json = other.toJson();
 
         // _registry doesn't have "UnknownType" registered
@@ -625,16 +626,16 @@ TEST_CASE_METHOD(RegistryTestFixture,
             .create_properties = [](auto s) { return new QLabel("Props:" + s->getInstanceId()); }});
 
         // Create editor
-        auto inst1 = _registry->createEditor("WorkflowTest");
+        auto inst1 = _registry->createEditor(EditorTypeId("WorkflowTest"));
         REQUIRE(inst1.state != nullptr);
         REQUIRE(_registry->stateCount() == 1);
 
         // Create second editor (allow_multiple = true)
-        auto inst2 = _registry->createEditor("WorkflowTest");
+        auto inst2 = _registry->createEditor(EditorTypeId("WorkflowTest"));
         REQUIRE(_registry->stateCount() == 2);
 
         // Query by type
-        auto byType = _registry->statesByType("WorkflowTest");
+        auto byType = _registry->statesByType(EditorTypeId("WorkflowTest"));
         REQUIRE(byType.size() == 2);
 
         // Make changes
@@ -643,15 +644,15 @@ TEST_CASE_METHOD(RegistryTestFixture,
         REQUIRE(_registry->hasUnsavedChanges());
 
         // Selection
-        SelectionSource src{inst1.state->getInstanceId(), "view"};
-        _registry->selectionContext()->setSelectedData("test_data", src);
-        REQUIRE(_registry->selectionContext()->primarySelectedData() == "test_data");
+        SelectionSource src{EditorInstanceId(inst1.state->getInstanceId()), "view"};
+        _registry->selectionContext()->setSelectedData(SelectedDataKey("test_data"), src);
+        REQUIRE(_registry->selectionContext()->primarySelectedData().toString() == "test_data");
 
         // Serialize
         auto json = _registry->toJson();
 
         // Close one editor
-        _registry->unregisterState(inst1.state->getInstanceId());
+        _registry->unregisterState(EditorInstanceId(inst1.state->getInstanceId()));
         REQUIRE(_registry->stateCount() == 1);
 
         // Restore

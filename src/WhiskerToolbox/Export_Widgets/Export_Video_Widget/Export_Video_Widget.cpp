@@ -80,12 +80,12 @@ Export_Video_Widget::Export_Video_Widget(
     _updateMediaWidgetComboBox();
 
     // Connect to editor registry signals for state changes
-    connect(_editor_registry, &EditorRegistry::stateRegistered, this, [this](QString instance_id, QString type_id) {
-        if (type_id == QStringLiteral("MediaWidget")) {
+    connect(_editor_registry, &EditorRegistry::stateRegistered, this, [this](EditorInstanceId instance_id, EditorTypeId type_id) {
+        if (type_id.toString() == QStringLiteral("MediaWidget")) {
             _updateMediaWidgetComboBox();
         }
     });
-    connect(_editor_registry, &EditorRegistry::stateUnregistered, this, [this](QString instance_id) {
+    connect(_editor_registry, &EditorRegistry::stateUnregistered, this, [this](EditorInstanceId instance_id) {
         // Check if we need to update - the unregistered state might have been a MediaWidget
         _updateMediaWidgetComboBox();
     });
@@ -852,7 +852,7 @@ void Export_Video_Widget::_updateMediaWidgetComboBox() {
     ui->media_widget_combobox->clear();
 
     // Get all MediaWidgetState instances from the registry
-    auto states = _editor_registry->statesByType(QStringLiteral("MediaWidget"));
+    auto states = _editor_registry->statesByType(EditorTypeId(QStringLiteral("MediaWidget")));
 
     for (auto const & state: states) {
         QString instance_id = state->getInstanceId();
@@ -872,7 +872,7 @@ void Export_Video_Widget::_onMediaWidgetSelectionChanged() {
         return;
     }
 
-    QString selected_id = ui->media_widget_combobox->currentData().toString();
+    EditorInstanceId selected_id(ui->media_widget_combobox->currentData().toString());
     auto state = _editor_registry->state(selected_id);
     _selected_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
 

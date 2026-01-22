@@ -21,6 +21,7 @@
 #include <QString>
 #include <QHash>
 #include <QUuid>
+#include <QMetaType>
 
 #include <compare>
 #include <functional>
@@ -96,15 +97,14 @@ struct EditorTypeId : StrongStringId<EditorTypeId> {
 };
 
 /**
- * @brief Key for data in DataManager
+ * @brief Key for selected data in SelectionContext
  *
- * Identifies a data object stored in DataManager (e.g., "whisker_1", "emg_channel_0").
- * Used for:
- * - Data selection
- * - Feature display configuration
- * - Transform input/output specification
+ * Identifies selected data (e.g., "whisker_1", "emg_channel_0").
+ * Used for tracking which data objects are currently selected
+ * in the UI. This is separate from DataKey used in DataManager
+ * to allow for QString-based operations with Qt signals/slots.
  */
-struct DataKey : StrongStringId<DataKey> {
+struct SelectedDataKey : StrongStringId<SelectedDataKey> {
     using StrongStringId::StrongStringId;
 };
 
@@ -168,8 +168,8 @@ struct hash<EditorLib::EditorTypeId> {
 };
 
 template<>
-struct hash<EditorLib::DataKey> {
-    size_t operator()(EditorLib::DataKey const & id) const {
+struct hash<EditorLib::SelectedDataKey> {
+    size_t operator()(EditorLib::SelectedDataKey const & id) const {
         return qHash(id.value);
     }
 };
@@ -189,5 +189,13 @@ struct hash<EditorLib::DataChannel> {
 };
 
 }  // namespace std
+
+// Qt metatype registration for signal/slot use
+// These must be at global scope, after the types are fully defined
+Q_DECLARE_METATYPE(EditorLib::EditorInstanceId)
+Q_DECLARE_METATYPE(EditorLib::EditorTypeId)
+Q_DECLARE_METATYPE(EditorLib::SelectedDataKey)
+Q_DECLARE_METATYPE(EditorLib::OperationId)
+Q_DECLARE_METATYPE(EditorLib::DataChannel)
 
 #endif  // EDITOR_STATE_STRONG_TYPES_HPP
