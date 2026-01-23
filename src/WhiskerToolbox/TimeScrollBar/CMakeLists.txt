@@ -8,6 +8,10 @@ set(TIMESCROLLBAR_SOURCES
     TimeScrollBar.hpp
     TimeScrollBar.cpp
     TimeScrollBar.ui
+    TimeScrollBarState.hpp
+    TimeScrollBarState.cpp
+    TimeScrollBarRegistration.hpp
+    TimeScrollBarRegistration.cpp
 )
 
 # Add conditional video support
@@ -35,6 +39,7 @@ target_link_libraries(TimeScrollBar PRIVATE
 )
 
 target_link_libraries(TimeScrollBar PRIVATE DataManager)
+target_link_libraries(TimeScrollBar PRIVATE EditorState)
 
 # Conditionally link to MediaData when FFMPEG is enabled for video-specific functionality
 if(ENABLE_FFMPEG)
@@ -42,10 +47,15 @@ if(ENABLE_FFMPEG)
     #target_compile_definitions(TimeScrollBar PRIVATE ENABLE_FFMPEG)
 endif()
 
+# Link reflectcpp for state serialization
+find_package(reflectcpp CONFIG REQUIRED)
+target_link_libraries(TimeScrollBar PRIVATE reflectcpp::reflectcpp)
+
 # Include directories
 target_include_directories(TimeScrollBar PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../DataManager>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 

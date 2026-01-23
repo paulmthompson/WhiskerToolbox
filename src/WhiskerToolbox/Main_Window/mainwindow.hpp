@@ -12,12 +12,12 @@
 #include <string>
 
 class DataManager;
-class DataManager_Widget;
 class EditorCreationController;
 class EditorRegistry;
 class GroupManager;
 class GroupManagementWidget;
 class TimeScrollBar;
+class TimeScrollBarState;
 class ZoneManager;
 
 
@@ -102,6 +102,7 @@ private:
 
     // Main widgets created programmatically (not in UI file)
     TimeScrollBar * _time_scrollbar;
+    std::shared_ptr<TimeScrollBarState> _time_scrollbar_state;
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
     

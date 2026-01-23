@@ -43,11 +43,13 @@
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
+#include "TimeScrollBar/TimeScrollBarRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
 #include "Whisker_Widget/WhiskerWidgetRegistration.hpp"
 #include "ZoneManagerWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
+#include "TimeScrollBar/TimeScrollBarState.hpp"
 
 #include <QComboBox>
 #include <QFileDialog>
@@ -117,13 +119,19 @@ MainWindow::MainWindow(QWidget * parent)
         _group_manager = std::make_unique<GroupManager>(entity_group_manager, _data_manager, this);
     }
 
-    // Create TimeScrollBar programmatically (no longer in UI)
-    _time_scrollbar = new TimeScrollBar(this);
-    _time_scrollbar->setDataManager(_data_manager);
+    // Create TimeScrollBar with state support
+    // Note: TimeScrollBar is created here (before registration) because other modules
+    // need a reference to it during their registration (e.g., ExportVideoWidget, WhiskerWidget)
+    _time_scrollbar_state = std::make_shared<TimeScrollBarState>();
+    _time_scrollbar = new TimeScrollBar(_data_manager, _time_scrollbar_state, this);
 
     // Register editor types with the factory
     // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager)
     _registerEditorTypes();
+
+    // Register the TimeScrollBar state that was created before registration
+    // This is done after registration so the type is known
+    _editor_registry->registerState(_time_scrollbar_state);
 
     _verbose = false;
 
@@ -198,9 +206,12 @@ void MainWindow::_buildInitialLayout() {
     // === BOTTOM ZONE: Timeline ===
 
     // Add time scrollbar to bottom zone
-    auto * scrollbar_dock = new ads::CDockWidget(QStringLiteral("scrollbar"));
+    // Note: TimeScrollBar is created in the constructor (with state) because other modules
+    // need it during registration. Here we just wrap it in a dock widget.
+    auto * scrollbar_dock = new ads::CDockWidget(QStringLiteral("Timeline"));
     scrollbar_dock->setWidget(_time_scrollbar);
     scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
     _zone_manager->addToZone(scrollbar_dock, Zone::Bottom);
 
     // === RIGHT ZONE: Properties ===
@@ -956,6 +967,8 @@ void MainWindow::_registerEditorTypes() {
     TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+
+    TimeScrollBarModule::registerTypes(_editor_registry.get(), _data_manager);
 
     DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar, _group_manager.get());
 

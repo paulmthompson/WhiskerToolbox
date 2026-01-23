@@ -7,6 +7,7 @@
 
 class DataManager;
 class QTimer;
+class TimeScrollBarState;
 
 namespace Ui {
 class TimeScrollBar;
@@ -17,6 +18,25 @@ class TimeScrollBar : public QWidget
     Q_OBJECT
 public:
 
+    /**
+     * @brief Construct TimeScrollBar with EditorState support
+     * 
+     * This is the preferred constructor when using EditorRegistry.
+     * The state manages serializable configuration and enables
+     * workspace save/restore.
+     * 
+     * @param data_manager Shared DataManager for data access
+     * @param state Shared TimeScrollBarState for configuration persistence
+     * @param parent Parent widget
+     */
+    explicit TimeScrollBar(std::shared_ptr<DataManager> data_manager,
+                           std::shared_ptr<TimeScrollBarState> state,
+                           QWidget * parent = nullptr);
+
+    /**
+     * @brief Legacy constructor without state (backward compatible)
+     * @deprecated Use the constructor with TimeScrollBarState instead
+     */
     explicit TimeScrollBar(QWidget *parent = nullptr);
 
     ~TimeScrollBar() override;
@@ -33,6 +53,8 @@ protected:
 private:
     Ui::TimeScrollBar *ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::shared_ptr<TimeScrollBarState> _state;  // EditorState for serialization
+    
     bool _verbose {false};
     int _play_speed {1};
     bool _play_mode {false};
@@ -42,6 +64,10 @@ private:
 
     void _updateFrameLabels(int frame_num);
     void _vidLoop();
+    
+    // State management helpers
+    void _setupConnections();
+    void _initializeFromState();
     
     /**
      * @brief Handle snap-to-keyframe logic for video data

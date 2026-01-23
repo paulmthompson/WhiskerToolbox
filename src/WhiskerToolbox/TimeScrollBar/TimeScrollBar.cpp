@@ -4,24 +4,21 @@
 
 #include "DataManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeScrollBarState.hpp"
 
 #include <QFileDialog>
 #include <QTimer>
 
 #include <iostream>
 
-TimeScrollBar::TimeScrollBar(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::TimeScrollBar)
-{
-    ui->setupUi(this);
-
-    _timer = new QTimer(this);
-
+/**
+ * @brief Helper function to setup common UI connections
+ */
+void TimeScrollBar::_setupConnections() {
     connect(_timer, &QTimer::timeout, this, &TimeScrollBar::_vidLoop);
 
     connect(ui->horizontalScrollBar, &QScrollBar::valueChanged, this, &TimeScrollBar::Slider_Scroll);
-    connect(ui->horizontalScrollBar, &QScrollBar::sliderMoved, this, &TimeScrollBar::Slider_Drag); // For drag events
+    connect(ui->horizontalScrollBar, &QScrollBar::sliderMoved, this, &TimeScrollBar::Slider_Drag);
 
     connect(ui->play_button, &QPushButton::clicked, this, &TimeScrollBar::PlayButton);
     connect(ui->rewind, &QPushButton::clicked, this, &TimeScrollBar::RewindButton);
@@ -30,6 +27,72 @@ TimeScrollBar::TimeScrollBar(QWidget *parent) :
     // Set up spin box with keyboard tracking disabled (only update on Enter key or arrow clicks)
     ui->frame_spinbox->setKeyboardTracking(false);
     connect(ui->frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &TimeScrollBar::FrameSpinBoxChanged);
+    
+    // Connect frame jump spinbox to state if available
+    connect(ui->frame_jump_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+        if (_state) {
+            _state->setFrameJump(value);
+        }
+    });
+}
+
+/**
+ * @brief Initialize UI from state values
+ */
+void TimeScrollBar::_initializeFromState() {
+    if (!_state) return;
+
+    // Block signals during initialization to avoid feedback loops
+    ui->frame_jump_spinbox->blockSignals(true);
+
+    // Set UI values from state
+    _play_speed = _state->playSpeed();
+    ui->frame_jump_spinbox->setValue(_state->frameJump());
+    
+    // Update the FPS label based on play speed
+    const int play_speed_base_fps = 25;
+    ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
+
+    // Unblock signals
+    ui->frame_jump_spinbox->blockSignals(false);
+}
+
+/**
+ * @brief TimeScrollBar constructor with EditorState support
+ */
+TimeScrollBar::TimeScrollBar(std::shared_ptr<DataManager> data_manager,
+                             std::shared_ptr<TimeScrollBarState> state,
+                             QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::TimeScrollBar),
+      _data_manager{std::move(data_manager)},
+      _state{std::move(state)}
+{
+    ui->setupUi(this);
+
+    _timer = new QTimer(this);
+
+    _setupConnections();
+
+    // Initialize UI from state if provided
+    if (_state) {
+        _initializeFromState();
+    }
+}
+
+/**
+ * @brief Legacy TimeScrollBar constructor (backward compatible)
+ */
+TimeScrollBar::TimeScrollBar(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::TimeScrollBar),
+    _state{nullptr}
+{
+    ui->setupUi(this);
+
+    _timer = new QTimer(this);
+
+    _setupConnections();
 };
 
 TimeScrollBar::~TimeScrollBar() {
@@ -111,6 +174,10 @@ void TimeScrollBar::PlayButton()
         _timer->start(timer_period_ms);
         _play_mode = true;
     }
+    
+    if (_state) {
+        _state->setIsPlaying(_play_mode);
+    }
 }
 
 /*
@@ -123,6 +190,10 @@ void TimeScrollBar::RewindButton()
     {
         _play_speed--;
         ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
+        
+        if (_state) {
+            _state->setPlaySpeed(_play_speed);
+        }
     }
 }
 
@@ -135,6 +206,10 @@ void TimeScrollBar::FastForwardButton()
 
     _play_speed++;
     ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
+    
+    if (_state) {
+        _state->setPlaySpeed(_play_speed);
+    }
 }
 
 void TimeScrollBar::_vidLoop()
