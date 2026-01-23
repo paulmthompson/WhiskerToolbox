@@ -38,7 +38,6 @@ void TimeSeriesDataStore::addAnalogSeries(std::string const & key,
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
 
-    display_options->scale_factor = display_options->data_cache.cached_std_dev * 5.0f;
     display_options->user_scale_factor = 1.0f;// Default user scale
 
     // Configure gap detection based on data density

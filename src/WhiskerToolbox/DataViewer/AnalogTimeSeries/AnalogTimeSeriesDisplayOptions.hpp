@@ -68,9 +68,7 @@ struct NewAnalogTimeSeriesDisplayOptions {
     AnalogScalingConfig scaling;
 
     // Legacy compatibility members for backward compatibility with OpenGLWidget
-    float scale_factor{1.0f};                                        ///< Legacy scale factor (computed from std dev)
     float user_scale_factor{1.0f};                                   ///< Legacy user scale factor
-    float y_offset{0.0f};                                            ///< Legacy Y offset for positioning
     AnalogGapHandling gap_handling{AnalogGapHandling::AlwaysConnect};///< Gap handling mode
     bool enable_gap_detection{false};                                ///< Enable automatic gap detection
     float gap_threshold{5.0f};                                       ///< Threshold for gap detection
