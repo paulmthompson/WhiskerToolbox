@@ -70,7 +70,7 @@ add_subdirectory(TableDesignerWidget)
 
 # Qt, DataManager, TensorData,
 # OpenBLAS, armadillo, LAPACK, nlohmann_json, MLPACK
-# Feature_Table_Widget
+# Feature_Table_Widget, EditorState
 add_subdirectory(ML_Widget)
 
  # Qt, DataManager, EditorState, Geometry

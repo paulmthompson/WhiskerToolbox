@@ -16,6 +16,11 @@ set(ML_WIDGET_SOURCES
     ML_Widget.hpp
     ML_Widget.cpp
     ML_Widget.ui
+    MLWidgetState.hpp
+    MLWidgetState.cpp
+    MLWidgetStateData.hpp
+    MLWidgetRegistration.hpp
+    MLWidgetRegistration.cpp
     mlpack_conversion.hpp
     mlpack_conversion.cpp
     MLModelOperation.hpp
@@ -86,6 +91,7 @@ target_link_libraries(ML_Widget PRIVATE
     DataManager
     TensorData
     Feature_Table_Widget
+    EditorState
 )
 
 # Apply compiler warnings (if defined in parent scope) but remove OpenMP flags

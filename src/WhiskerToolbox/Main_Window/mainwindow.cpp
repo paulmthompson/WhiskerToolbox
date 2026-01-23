@@ -26,7 +26,6 @@
 #include "IO_Widgets/Masks/Mask_Loader_Widget.hpp"
 #include "IO_Widgets/Points/Point_Loader_Widget.hpp"
 #include "IO_Widgets/Tensors/Tensor_Loader_Widget.hpp"
-#include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/MediaWidgetState.hpp"
 #include "Media_Widget/Media_Widget.hpp"
@@ -41,6 +40,7 @@
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
+#include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
@@ -738,24 +738,6 @@ void MainWindow::openTensorLoaderWidget() {
 // Old Interface Widgets (No EditorRegistry)
 //=================================
 
-void MainWindow::openMLWidget() {
-    std::string const key = "ML_widget";
-
-    if (!_widgets.contains(key)) {
-        auto MLWidget = std::make_unique<ML_Widget>(
-                _data_manager);
-
-        MLWidget->setObjectName(key);
-        registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(MLWidget);
-    }
-
-    auto ptr = dynamic_cast<ML_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
 void MainWindow::openDataViewer() {
     std::string const key = "DataViewer_widget";
 
@@ -866,6 +848,12 @@ void MainWindow::openTableDesignerWidget() {
 // New Editor Instances
 //=================================
 
+void MainWindow::openMLWidget() {
+    // Use EditorCreationController for ML_Widget
+    // This handles single-instance checking, state registration, and zone placement
+    openEditor(QStringLiteral("MLWidget"));
+}
+
 void MainWindow::openTerminalWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("TerminalWidget"));
@@ -964,6 +952,8 @@ void MainWindow::_registerEditorTypes() {
     ZoneManagerWidgetRegistration::registerType(_editor_registry.get(), _zone_manager.get());
 
     TerminalWidgetModule::registerTypes(_editor_registry.get());
+
+    MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);
