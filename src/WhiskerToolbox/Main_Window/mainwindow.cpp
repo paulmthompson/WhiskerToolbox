@@ -31,7 +31,6 @@
 #include "Media_Widget/MediaWidgetState.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
-#include "Terminal_Widget/TerminalWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
 
@@ -42,6 +41,7 @@
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
+#include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
@@ -821,23 +821,6 @@ void MainWindow::openBatchProcessingWidget() {
     showDockWidget(key);
 }
 
-void MainWindow::openTerminalWidget() {
-    std::string const key = "Terminal_widget";
-
-    if (!_widgets.contains(key)) {
-        auto terminal_widget = std::make_unique<TerminalWidget>(this);
-
-        terminal_widget->setObjectName(key);
-        registerDockWidget(key, terminal_widget.get(), ads::BottomDockWidgetArea);
-        _widgets[key] = std::move(terminal_widget);
-    }
-
-    auto ptr = dynamic_cast<TerminalWidget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
 void MainWindow::openAnalysisDashboard() {
     std::string const key = "Analysis_Dashboard_widget";
 
@@ -883,6 +866,10 @@ void MainWindow::openTableDesignerWidget() {
 // New Editor Instances
 //=================================
 
+void MainWindow::openTerminalWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("TerminalWidget"));
+}
 
 void MainWindow::openWhiskerTracking() {
     // Use EditorCreationController pattern - delegate to openEditor
@@ -975,6 +962,8 @@ void MainWindow::_registerEditorTypes() {
     GroupManagementWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     ZoneManagerWidgetRegistration::registerType(_editor_registry.get(), _zone_manager.get());
+
+    TerminalWidgetModule::registerTypes(_editor_registry.get());
 
     // Future: Add more module registrations here
     // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);

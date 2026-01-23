@@ -1,10 +1,16 @@
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(reflectcpp CONFIG REQUIRED)
 
 add_library(Terminal_Widget STATIC 
         TerminalWidget.hpp 
         TerminalWidget.cpp 
         TerminalWidget.ui
+        TerminalWidgetState.hpp
+        TerminalWidgetState.cpp
+        TerminalWidgetStateData.hpp
+        TerminalWidgetRegistration.hpp
+        TerminalWidgetRegistration.cpp
 )
 
 set_target_properties(Terminal_Widget PROPERTIES
@@ -13,10 +19,14 @@ set_target_properties(Terminal_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(Terminal_Widget PRIVATE 
-    Qt6::Widgets 
-    Qt6::Core 
-    Qt6::Gui
+target_link_libraries(Terminal_Widget 
+    PUBLIC
+        EditorState
+    PRIVATE 
+        Qt6::Widgets 
+        Qt6::Core 
+        Qt6::Gui
+        reflectcpp::reflectcpp
 )
 
 target_include_directories(Terminal_Widget PUBLIC
