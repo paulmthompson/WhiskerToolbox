@@ -61,6 +61,12 @@ void MediaPoint_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Hide Event" << std::endl;
+    
+    // Guard against _scene being destroyed before hideEvent is called
+    if (!_scene) {
+        return;
+    }
+    
     disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaPoint_Widget::_handlePointClickWithModifiers);
     _clearPointSelection(); // Clear selection when widget is hidden
 }

@@ -83,6 +83,12 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "MediaMask_Widget Hide Event" << std::endl;
+    
+    // Guard against _scene being destroyed before hideEvent is called
+    if (!_scene) {
+        return;
+    }
+    
     disconnect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
     disconnect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
     disconnect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);

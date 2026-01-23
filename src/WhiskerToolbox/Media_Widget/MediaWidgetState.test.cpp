@@ -2,16 +2,30 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <QSignalSpy>
 
+#include <array>
 #include <string>
+
+namespace {
+// Ensures a QApplication exists for the process. Must be called before using any Qt widgets/signals.
+// Uses a leaked pointer intentionally - QApplication must outlive all Qt objects in tests.
+void ensureQApplication()
+{
+    if (!QApplication::instance()) {
+        static int argc = 1;
+        static char app_name[] = "test";
+        static std::array<char *, 1> argv = {app_name};
+        new QApplication(argc, argv.data());// NOLINT: Intentionally leaked
+    }
+}
+}// namespace
 
 // === MediaWidgetState Tests ===
 
 TEST_CASE("MediaWidgetState basics", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Instance ID is unique") {
         MediaWidgetState state1;
@@ -59,8 +73,7 @@ TEST_CASE("MediaWidgetState basics", "[MediaWidgetState]") {
 }
 
 TEST_CASE("MediaWidgetState serialization", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Round-trip serialization") {
         MediaWidgetState original;
@@ -106,8 +119,7 @@ TEST_CASE("MediaWidgetState serialization", "[MediaWidgetState]") {
 }
 
 TEST_CASE("MediaWidgetState signals", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("stateChanged emitted on modification") {
         MediaWidgetState state;
@@ -166,8 +178,7 @@ TEST_CASE("MediaWidgetState signals", "[MediaWidgetState]") {
 // === Phase 3: Viewport State Tests ===
 
 TEST_CASE("MediaWidgetState viewport state", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Default viewport values") {
         MediaWidgetState state;
@@ -283,8 +294,7 @@ TEST_CASE("MediaWidgetState viewport state", "[MediaWidgetState]") {
 // === Phase 3: Feature Management Tests ===
 
 TEST_CASE("MediaWidgetState feature management", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Set and check feature enabled - line") {
         MediaWidgetState state;
@@ -350,8 +360,7 @@ TEST_CASE("MediaWidgetState feature management", "[MediaWidgetState]") {
 // === Phase 3: Display Options Tests ===
 
 TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Line options CRUD") {
         MediaWidgetState state;
@@ -513,8 +522,7 @@ TEST_CASE("MediaWidgetState display options", "[MediaWidgetState]") {
 // === Phase 3: Interaction Preferences Tests ===
 
 TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Line preferences") {
         MediaWidgetState state;
@@ -602,8 +610,7 @@ TEST_CASE("MediaWidgetState interaction preferences", "[MediaWidgetState]") {
 // === Phase 3: Text Overlay Tests ===
 
 TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Add text overlay") {
         MediaWidgetState state;
@@ -743,8 +750,7 @@ TEST_CASE("MediaWidgetState text overlays", "[MediaWidgetState]") {
 // === Phase 3: Tool Mode Tests ===
 
 TEST_CASE("MediaWidgetState tool modes", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("Line tool mode") {
         MediaWidgetState state;
@@ -812,8 +818,7 @@ TEST_CASE("MediaWidgetState tool modes", "[MediaWidgetState]") {
 // === Phase 3: Direct Data Access Tests ===
 
 TEST_CASE("MediaWidgetState direct data access", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("data() returns const reference") {
         MediaWidgetState state;
@@ -840,8 +845,7 @@ TEST_CASE("MediaWidgetState direct data access", "[MediaWidgetState]") {
 // === Phase 3: Complex State Round-Trip Test ===
 
 TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     MediaWidgetState original;
     
@@ -935,8 +939,7 @@ TEST_CASE("MediaWidgetState complex state round-trip", "[MediaWidgetState]") {
 // === Phase 4B: Consolidated Signal Tests ===
 
 TEST_CASE("MediaWidgetState consolidated signals", "[MediaWidgetState][Phase4B]") {
-    int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    ensureQApplication();
 
     SECTION("interactionPrefsChanged emitted for line prefs") {
         MediaWidgetState state;

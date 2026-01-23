@@ -181,6 +181,12 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Hide Event" << std::endl;
+    
+    // Guard against _scene being destroyed before hideEvent is called
+    if (!_scene) {
+        return;
+    }
+    
     disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
     disconnect(_scene, &Media_Window::mouseMove, this, nullptr);

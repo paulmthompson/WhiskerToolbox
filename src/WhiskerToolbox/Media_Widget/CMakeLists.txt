@@ -21,6 +21,10 @@ set(MEDIA_WIDGET_SOURCES
     DisplayOptions/DisplayOptions.hpp
     DisplayOptions/CoordinateTypes.hpp
 
+    MediaPropertiesWidget/MediaPropertiesWidget.hpp
+    MediaPropertiesWidget/MediaPropertiesWidget.cpp
+    MediaPropertiesWidget/MediaPropertiesWidget.ui
+
         MediaProcessing_Widget/MediaProcessing_Widget.cpp
         MediaProcessing_Widget/MediaProcessing_Widget.hpp
         MediaProcessing_Widget/MediaProcessing_Widget.ui
