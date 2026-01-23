@@ -17,14 +17,18 @@
  * 
  * Both widgets share the same MediaWidgetState for coordination.
  * 
- * ## Phase 1: Empty Widget
+ * ## Components
  * 
- * This is the initial empty implementation. Components will be migrated
- * incrementally from Media_Widget's left panel:
- * 
- * 1. Feature_Table_Widget (feature selection and visibility)
- * 2. MediaText_Widget (text overlays)
- * 3. Stacked widgets for data-type specific editing
+ * Currently migrated components:
+ * - Feature_Table_Widget: Feature selection and visibility toggles
+ * - MediaText_Widget: Text overlays (in collapsible section)
+ * - QStackedWidget: Per-data-type editing widgets
+ *   - MediaPoint_Widget
+ *   - MediaLine_Widget
+ *   - MediaMask_Widget
+ *   - MediaInterval_Widget
+ *   - MediaTensor_Widget
+ *   - MediaProcessing_Widget
  * 
  * @see Media_Widget for the view component
  * @see MediaWidgetState for shared state
@@ -38,6 +42,9 @@
 class DataManager;
 class MediaWidgetState;
 class Media_Window;
+class MediaProcessing_Widget;
+class MediaText_Widget;
+class Section;
 
 namespace Ui {
 class MediaPropertiesWidget;
@@ -90,7 +97,37 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _media_window{nullptr};
 
+    // Processing widget reference for colormap options
+    MediaProcessing_Widget * _processing_widget{nullptr};
+
+    // Text overlay widgets
+    Section * _text_section{nullptr};
+    MediaText_Widget * _text_widget{nullptr};
+
     void _connectStateSignals();
+    void _setupFeatureTable();
+    void _setupTextOverlays();
+    void _createStackedWidgets();
+    void _connectTextWidgetToScene();
+
+private slots:
+    void _featureSelected(QString const & feature);
+    void _addFeatureToDisplay(QString const & feature, bool enabled);
+
+signals:
+    /**
+     * @brief Emitted when a feature is enabled or disabled
+     * 
+     * Media_Widget listens to this to update the canvas display.
+     */
+    void featureEnabledChanged(QString const & feature, bool enabled);
+
+    /**
+     * @brief Emitted when a feature is selected in the table
+     * 
+     * Media_Widget may use this to synchronize selection.
+     */
+    void featureSelected(QString const & feature);
 };
 
 #endif // MEDIA_PROPERTIES_WIDGET_HPP

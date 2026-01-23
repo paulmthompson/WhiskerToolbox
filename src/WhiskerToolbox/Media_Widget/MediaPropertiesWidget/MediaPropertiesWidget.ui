@@ -54,18 +54,30 @@
         <number>4</number>
        </property>
        <item>
-        <widget class="QLabel" name="placeholderLabel">
-         <property name="text">
-          <string>Media Properties Panel
-
-Components will be migrated here from the Media Widget left panel.</string>
+        <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>1</horstretch>
+           <verstretch>1</verstretch>
+          </sizepolicy>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
+         <property name="minimumSize">
+          <size>
+           <width>190</width>
+           <height>0</height>
+          </size>
          </property>
-         <property name="wordWrap">
-          <bool>true</bool>
+        </widget>
+       </item>
+       <item>
+        <widget class="QStackedWidget" name="stackedWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
+         <widget class="QWidget" name="page"/>
         </widget>
        </item>
        <item>
@@ -87,6 +99,14 @@ Components will be migrated here from the Media Widget left panel.</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Feature_Table_Widget</class>
+   <extends>QWidget</extends>
+   <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -10,10 +10,7 @@
 
 class DataManager;
 class Media_Window;
-class MediaText_Widget;
-class MediaProcessing_Widget;
 class MediaWidgetState;
-class Section;
 class EditorRegistry;
 
 namespace Ui {
@@ -62,6 +59,17 @@ public:
      */
     void restoreFromState();
 
+    /**
+     * @brief Enable or disable a feature in the display
+     * 
+     * This method is called by MediaPropertiesWidget when features
+     * are toggled in the feature table.
+     * 
+     * @param feature Feature key (data manager key)
+     * @param enabled Whether to show or hide the feature
+     */
+    void setFeatureEnabled(QString const & feature, bool enabled);
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
     bool eventFilter(QObject * watched, QEvent * event) override;// intercept wheel events for zoom
@@ -72,13 +80,6 @@ private:
     EditorRegistry * _editor_registry{nullptr};
     std::unique_ptr<Media_Window> _scene;
     std::map<std::string, std::vector<int>> _callback_ids;
-
-    // Text overlay widgets
-    Section * _text_section = nullptr;
-    MediaText_Widget * _text_widget = nullptr;
-
-    // Processing widget for colormap options
-    MediaProcessing_Widget * _processing_widget = nullptr;
 
     // Zoom configuration constants (actual zoom value stored in state)
     static constexpr double _zoom_step{1.15};// multiplicative step per wheel/action
@@ -100,7 +101,6 @@ private:
 
     void _createOptions();
     void _createMediaWindow();
-    void _connectTextWidgetToScene();
 
     // State synchronization helpers
     void _syncCanvasSizeToState();
@@ -111,7 +111,6 @@ private:
 private slots:
     void _updateCanvasSize();
     void _addFeatureToDisplay(QString const & feature, bool enabled);
-    void _featureSelected(QString const & feature);
     void _onExternalSelectionChanged(SelectionSource const & source);
     void _onStateZoomChanged(double zoom);
     void _onStatePanChanged(double x, double y);

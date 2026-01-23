@@ -102,6 +102,10 @@ void registerTypes(EditorRegistry * registry,
             // Pass Media_Window from the view for coordination
             auto * props = new MediaPropertiesWidget(state, dm, view->getMediaWindow());
 
+            // Connect properties widget signals to view
+            QObject::connect(props, &MediaPropertiesWidget::featureEnabledChanged,
+                             view, &Media_Widget::setFeatureEnabled);
+
             // Register the state
             reg->registerState(state);
 

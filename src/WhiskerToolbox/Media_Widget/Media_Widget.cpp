@@ -1,7 +1,6 @@
 #include "Media_Widget.hpp"
 #include "ui_Media_Widget.h"
 
-#include "Collapsible_Widget/Section.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -10,13 +9,6 @@
 #include "DataManager/Points/Point_Data.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/EditorRegistry.hpp"
-#include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
-#include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
-#include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
-#include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
-#include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
-#include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
-#include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "MediaWidgetState.hpp"
 
@@ -30,9 +22,7 @@
 #include <QMouseEvent>
 #include <QResizeEvent>
 #include <QScrollBar>
-#include <QSplitter>
 #include <QTimer>
-#include <QVBoxLayout>
 #include <QWheelEvent>
 
 #include <algorithm>
@@ -44,59 +34,12 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
       _editor_registry{editor_registry} {
     ui->setupUi(this);
 
-    // Configure splitter behavior
-    ui->splitter->setStretchFactor(0, 0);// Left panel (scroll area) doesn't stretch
-    ui->splitter->setStretchFactor(1, 1);// Right panel (graphics view) stretches
-
-    // Set initial sizes: 250px for left panel, rest for canvas (reduced from 350px)
-    ui->splitter->setSizes({250, 513});
-
-    // Set collapsible behavior
-    ui->splitter->setCollapsible(0, false);// Prevent left panel from collapsing
-    ui->splitter->setCollapsible(1, false);// Prevent canvas from collapsing
-
-    // Connect splitter moved signal to update canvas size
-    connect(ui->splitter, &QSplitter::splitterMoved, this, &Media_Widget::_updateCanvasSize);
-
     // Install event filter on graphics view viewport for wheel zoom
     if (ui->graphicsView && ui->graphicsView->viewport()) {
         ui->graphicsView->viewport()->installEventFilter(this);
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         ui->graphicsView->setResizeAnchor(QGraphicsView::AnchorViewCenter);
     }
-
-    // Create text overlay section
-    _text_section = new Section(this, "Text Overlays");
-    _text_widget = new MediaText_Widget(this);
-    _text_section->setContentLayout(*new QVBoxLayout());
-    _text_section->layout()->addWidget(_text_widget);
-    _text_section->autoSetContentLayout();
-
-    // Add text section to the vertical layout in scroll area
-    // Insert before the feature table widget (at index 0, after the Zoom button)
-    ui->verticalLayout->insertWidget(1, _text_section);
-
-    connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &Media_Widget::_featureSelected);
-
-    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](QString const & feature) {
-        Media_Widget::_addFeatureToDisplay(feature, true);
-    });
-
-    connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
-        Media_Widget::_addFeatureToDisplay(feature, false);
-    });
-
-    // Ensure the feature table and other widgets are properly sized on startup
-    QTimer::singleShot(0, this, [this]() {
-        int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 10);
-
-        // Call the update function to size everything properly
-        _updateCanvasSize();
-
-        // Initialize the stacked widget with proper sizing
-        ui->stackedWidget->setFixedWidth(scrollAreaWidth - 10);
-    });
 
     // === Phase 2.4: Editor State Integration ===
     // Initialize state and register with EditorRegistry for serialization and inter-widget communication
@@ -118,16 +61,6 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
             connect(_selection_context, &SelectionContext::selectionChanged,
                     this, &Media_Widget::_onExternalSelectionChanged);
         }
-
-        // When user selects a feature in our feature table, update state and notify SelectionContext
-        connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
-                this, [this](QString const & key) {
-            _state->setDisplayedDataKey(key);
-            if (_selection_context) {
-                SelectionSource source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("feature_table")};
-                _selection_context->setSelectedData(SelectedDataKey(key), source);
-            }
-        });
     }
 }
 
@@ -135,17 +68,6 @@ Media_Widget::~Media_Widget() {
     // Unregister state from EditorRegistry when widget is destroyed
     if (_editor_registry && _state) {
         _editor_registry->unregisterState(EditorInstanceId(_state->getInstanceId()));
-    }
-
-    // Proactively hide stacked pages while _scene is still alive so any hideEvent
-    // handlers that interact with _scene do so safely before _scene is destroyed.
-    if (ui && ui->stackedWidget) {
-        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
-            QWidget * w = ui->stackedWidget->widget(i);
-            if (w && w->isVisible()) {
-                w->hide();
-            }
-        }
     }
 
     // Ensure hover circle is cleared before scene destruction
@@ -170,44 +92,6 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     // Create the Media_Window now that we have a DataManager
     _createMediaWindow();
     _createOptions();
-
-    ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({DM_DataType::Line, DM_DataType::Mask, DM_DataType::Points, DM_DataType::DigitalInterval, DM_DataType::Tensor, DM_DataType::Video, DM_DataType::Images});
-    ui->feature_table_widget->setDataManager(_data_manager);
-    ui->feature_table_widget->populateTable();
-
-    ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene.get(), _state.get()));
-    ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene.get(), _state.get()));
-    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene.get(), _state.get()));
-    ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene.get(), _state.get()));
-    ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene.get(), _state.get()));
-
-    // Create and store reference to MediaProcessing_Widget
-    _processing_widget = new MediaProcessing_Widget(_data_manager, _scene.get(), _state.get());
-    ui->stackedWidget->addWidget(_processing_widget);
-
-    // Connect text widget to scene if both are available
-    _connectTextWidgetToScene();
-
-    // Ensure all widgets in the stacked widget are properly sized
-    QTimer::singleShot(100, this, [this]() {
-        int scrollAreaWidth = ui->scrollArea->width();
-        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
-            QWidget * widget = ui->stackedWidget->widget(i);
-            if (widget) {
-                widget->setFixedWidth(scrollAreaWidth - 10);
-                widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-                // If this is a MediaProcessing_Widget, make sure it fills its container
-                auto processingWidget = qobject_cast<MediaProcessing_Widget *>(widget);
-                if (processingWidget) {
-                    processingWidget->setMinimumWidth(scrollAreaWidth - 10);
-                    processingWidget->adjustSize();
-                }
-            }
-        }
-        _updateCanvasSize();
-    });
 
     _data_manager->addObserver([this]() {
         _createOptions();
@@ -270,85 +154,6 @@ void Media_Widget::_createOptions() {
     }
 }
 
-void Media_Widget::_connectTextWidgetToScene() {
-    if (_scene && _text_widget) {
-        _scene->setTextWidget(_text_widget);
-
-        // Connect text widget signals to update canvas when overlays change
-        connect(_text_widget, &MediaText_Widget::textOverlayAdded, _scene.get(), &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlayRemoved, _scene.get(), &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlayUpdated, _scene.get(), &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlaysCleared, _scene.get(), &Media_Window::UpdateCanvas);
-    }
-}
-
-void Media_Widget::_featureSelected(QString const & feature) {
-    auto const type = _data_manager->getType(feature.toStdString());
-    auto key = feature.toStdString();
-
-    if (type == DM_DataType::Points) {
-
-        int const stacked_widget_index = 1;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto point_widget = dynamic_cast<MediaPoint_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        point_widget->setActiveKey(key);
-
-    } else if (type == DM_DataType::Line) {
-
-        int const stacked_widget_index = 2;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto line_widget = dynamic_cast<MediaLine_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        line_widget->setActiveKey(key);
-
-    } else if (type == DM_DataType::Mask) {
-
-        int const stacked_widget_index = 3;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto mask_widget = dynamic_cast<MediaMask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        mask_widget->setActiveKey(key);
-
-
-    } else if (type == DM_DataType::DigitalInterval) {
-        int const stacked_widget_index = 4;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto interval_widget = dynamic_cast<MediaInterval_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        interval_widget->setActiveKey(key);
-
-    } else if (type == DM_DataType::Tensor) {
-        int const stacked_widget_index = 5;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto tensor_widget = dynamic_cast<MediaTensor_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        tensor_widget->setActiveKey(key);
-    } else if (type == DM_DataType::Video) {
-        int const stacked_widget_index = 6;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        processing_widget->setActiveKey(key);
-
-        // Do NOT set as active media key or update canvas - only show controls for configuration
-        // The media will only be displayed when it's enabled via the checkbox
-
-    } else if (type == DM_DataType::Images) {
-        int const stacked_widget_index = 6;
-
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        processing_widget->setActiveKey(key);
-
-        // Do NOT set as active media key or update canvas - only show controls for configuration
-        // The media will only be displayed when it's enabled via the checkbox
-    } else {
-        ui->stackedWidget->setCurrentIndex(0);
-        std::cout << "Unsupported feature type" << std::endl;
-    }
-}
-
 void Media_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     // When user has zoomed, avoid rescaling scene contents destructively; just adjust scene rect
@@ -382,19 +187,6 @@ void Media_Widget::_updateCanvasSize() {
         
         // Sync canvas size to state
         _syncCanvasSizeToState();
-        
-        // Fit disabled: we manage zoom manually now
-        // Update left panel sizing
-        int scrollAreaWidth = ui->scrollArea->width();
-        int featureTableWidth = scrollAreaWidth - 10;
-        ui->feature_table_widget->setFixedWidth(featureTableWidth);
-        ui->stackedWidget->setFixedWidth(featureTableWidth);
-        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
-            QWidget * widget = ui->stackedWidget->widget(i);
-            if (widget) {
-                widget->setFixedWidth(featureTableWidth);
-            }
-        }
     }
 }
 
@@ -517,6 +309,10 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     }
 }
 
+void Media_Widget::setFeatureEnabled(QString const & feature, bool enabled) {
+    _addFeatureToDisplay(feature, enabled);
+}
+
 void Media_Widget::setFeatureColor(std::string const & feature, std::string const & hex_color) {
     auto const type = _data_manager->getType(feature);
 
@@ -553,14 +349,6 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
 void Media_Widget::LoadFrame(int frame_id) {
     if (_scene) {
         _scene->LoadFrame(frame_id);
-    }
-    int currentIndex = ui->stackedWidget->currentIndex();
-    if (currentIndex > 0) {
-        auto currentWidget = ui->stackedWidget->currentWidget();
-        auto lineWidget = dynamic_cast<MediaLine_Widget *>(currentWidget);
-        if (lineWidget) {
-            lineWidget->LoadFrame(frame_id);
-        }
     }
 }
 
@@ -663,8 +451,6 @@ void Media_Widget::_createMediaWindow() {
         if (_state) {
             _scene->setMediaWidgetState(_state.get());
         }
-
-        _connectTextWidgetToScene();
     }
 }
 
