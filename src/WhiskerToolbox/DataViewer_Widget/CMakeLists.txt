@@ -19,6 +19,7 @@ set(DATAVIEWER_WIDGET_SOURCES
         DataViewerInteractionManager.hpp
         DataViewerSelectionManager.cpp
         DataViewerSelectionManager.hpp
+        DataViewerStateData.hpp
         DataViewerTooltipController.cpp
         DataViewerTooltipController.hpp
         OpenGLWidget.cpp

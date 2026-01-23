@@ -408,10 +408,24 @@ struct DataViewerStateData {
 
 ### Success Criteria
 
-- [ ] All structs compile and serialize to JSON correctly
-- [ ] Round-trip serialization tests pass
-- [ ] Enum values serialize as strings
-- [ ] JSON structure is flat where appropriate (via `rfl::Flatten`)
+- [x] All structs compile and serialize to JSON correctly ✅ (2025-01-XX)
+- [x] Round-trip serialization tests pass ✅ (173 assertions, 11 test cases)
+- [x] Enum values serialize as strings ✅
+- [x] JSON structure is flat where appropriate (via `rfl::Flatten`) ✅
+
+### Implementation Notes
+
+**Phase 1 COMPLETED**
+
+Files created:
+- [DataViewerStateData.hpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewerStateData.hpp) - All serializable state structs
+- [DataViewerStateData.test.cpp](../../../tests/WhiskerToolbox/DataViewer_Widget/DataViewerStateData.test.cpp) - Comprehensive unit tests
+
+Key design decisions:
+1. Used `rfl::Flatten<SeriesStyleData>` for flat JSON structure (no "style" nesting)
+2. All enums serialize as strings for human-readable JSON
+3. Separated user-configurable options from computed fields (layout_transform, data_cache)
+4. Maps keyed by series data key for per-series options
 
 ---
 
