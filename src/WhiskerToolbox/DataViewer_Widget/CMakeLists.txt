@@ -20,6 +20,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         DataViewerSelectionManager.cpp
         DataViewerSelectionManager.hpp
         DataViewerStateData.hpp
+        DataViewerState.cpp
+        DataViewerState.hpp
         DataViewerTooltipController.cpp
         DataViewerTooltipController.hpp
         SeriesOptionsRegistry.cpp
@@ -72,6 +74,7 @@ target_link_libraries(DataViewer_Widget PRIVATE PlottingOpenGL)  # Contains Shad
 target_link_libraries(DataViewer_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE TimeScrollBar)
 target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)
+target_link_libraries(DataViewer_Widget PRIVATE EditorState)
 
 target_include_directories(DataViewer_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

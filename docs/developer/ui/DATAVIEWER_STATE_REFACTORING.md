@@ -628,11 +628,38 @@ Implement all methods with appropriate signal emission.
 
 - `src/WhiskerToolbox/DataViewer_Widget/DataViewerState.hpp`
 - `src/WhiskerToolbox/DataViewer_Widget/DataViewerState.cpp`
-- `src/WhiskerToolbox/DataViewer_Widget/DataViewerState.test.cpp`
+- `tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.test.cpp`
 
 ### Files to Modify
 
 - `src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt`
+- `tests/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt`
+
+### Success Criteria
+
+- [x] EditorState interface implemented (getTypeName, toJson, fromJson) ✅
+- [x] All typed accessors for view, theme, grid, UI, interaction ✅
+- [x] Consolidated signals (viewStateChanged, themeChanged, etc.) ✅
+- [x] Registry signals forwarded to state signals ✅
+- [x] Serialization round-trip preserves all state ✅
+- [x] Unit tests pass (86 assertions in 10 test cases) ✅
+
+### Implementation Notes
+
+**Phase 3 COMPLETED**
+
+Files created:
+- [DataViewerState.hpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewerState.hpp) - EditorState subclass (~430 lines)
+- [DataViewerState.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewerState.cpp) - Implementation (~290 lines)
+- [DataViewerState.test.cpp](../../../tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.test.cpp) - Comprehensive unit tests (~400 lines)
+
+Key implementation details:
+1. Inherits from EditorState base class
+2. Follows same pattern as MediaWidgetState
+3. Uses SeriesOptionsRegistry for per-series options (connected via signals)
+4. Consolidated signals reduce signal count (~10 signals instead of per-property)
+5. All setters use epsilon comparison for floats, emit signals only on change
+6. fromJson() emits all appropriate signals for UI refresh
 
 ---
 

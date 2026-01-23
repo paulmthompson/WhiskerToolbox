@@ -18,6 +18,7 @@ add_executable(test_data_viewer_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewerStateData.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/AnalogVertexCache.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/whiskertoolbox.qrc
