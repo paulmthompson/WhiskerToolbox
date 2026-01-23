@@ -25,7 +25,6 @@ class ModelMetricsWidget;
 class MLModelOperation;
 class MLModelRegistry;
 class TableView;
-class TimeScrollBar;
 
 namespace Ui {
 class ML_Widget;
@@ -117,7 +116,6 @@ private:
                          std::vector<std::size_t> const & training_timestamps);
 
     std::shared_ptr<DataManager> _data_manager;
-    TimeScrollBar * _time_scrollbar;
     Ui::ML_Widget * ui;
 
     std::unique_ptr<MLModelRegistry> _ml_model_registry;

@@ -84,12 +84,8 @@ target_link_libraries(ML_Widget PRIVATE
     LAPACK::LAPACK
     OpenBLAS::OpenBLAS
     DataManager
-    DataManagerIO
     TensorData
-    TimeScrollBar
-    Analysis_Dashboard
     Feature_Table_Widget
-    Feature_Tree_Widget
 )
 
 # Apply compiler warnings (if defined in parent scope) but remove OpenMP flags

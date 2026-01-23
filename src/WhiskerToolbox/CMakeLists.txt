@@ -18,29 +18,63 @@ find_package(glm CONFIG REQUIRED)
 
 qt_standard_project_setup()
 
-add_subdirectory(EditorState)
-add_subdirectory(Collapsible_Widget)
-add_subdirectory(ColorPicker_Widget)
+add_subdirectory(EditorState) # reflectcpp, Qt
+add_subdirectory(Collapsible_Widget) # Qt
+add_subdirectory(Terminal_Widget) # Qt
+add_subdirectory(ColorPicker_Widget) # Qt, DataManager
 
-add_subdirectory(GroupManagementWidget)
-add_subdirectory(GroupContextMenu)
-add_subdirectory(MediaExport)
-add_subdirectory(DataViewer)
-# ShaderManager moved to PlottingOpenGL library
+add_subdirectory(GroupManagementWidget) # Qt, DataManager, EditorState
+add_subdirectory(GroupContextMenu) # Qt, Entity, GroupManagementWidget
+
+add_subdirectory(MediaExport) # Qt, DataManager
+add_subdirectory(DataViewer) # DataManager, glm
+
+ # Qt, DataManager, EditorState, MediaData (optional), reflectcpp
 add_subdirectory(TimeScrollBar)
+
+add_subdirectory(Feature_Table_Widget) # Qt, DataManager
+add_subdirectory(Feature_Tree_Widget) # Qt, DataManager
+
+add_subdirectory(TableViewerWidget) # Qt, DataManager
+
+add_subdirectory(ZoneManager) #Qt, EditorState, reflectcpp, qt6advanceddocking
+
+# Qt, DataManager, qt6advanceddocking, TimeScrollBar,
+# NEURALYZER_GEOMETRY, PlottingOpenGL, Feature_Table_Widget,
+# GroupManagementWidget, GroupContextMenu, nlohmann_json
+# coreplotting
 add_subdirectory(Analysis_Dashboard)
-add_subdirectory(Feature_Table_Widget)
-add_subdirectory(Feature_Tree_Widget)
-add_subdirectory(IO_Widgets)
+
+
+add_subdirectory(IO_Widgets) # Qt, DataManager
+
+# Qt, DataManager, DataManagerIO, TensorData,
+# EditorState, MediaExport, Feature_Table_Widget,
+# IO_Widget, Collapsible_Widget, Entity,
+# GroupManagementWidget, nlohmann_json
 add_subdirectory(DataManager_Widget)
+
+# Qt, DataManager, glm, Boost,
+# DataViewer, Feature_Tree_Widget, PlottingOpenGL,
+# ColorPicker_Widget, TimeScrollbar, CorePlotting
 add_subdirectory(DataViewer_Widget)
+
+# Qt, DataManager, Feature_Table_Widget, EditorState,
+# Geometry, Collapsible_Widget, ColorPicker_Widget,
+# GroupManagementWidget, GroupContextMenu, opencv,
+# TimeScrollBar
 add_subdirectory(Media_Widget)
-add_subdirectory(TableViewerWidget)
+
+# Qt, DataManager, TableViewerWidget, Collapsible_Widget
 add_subdirectory(TableDesignerWidget)
+
+# Qt, DataManager, TensorData,
+# OpenBLAS, armadillo, LAPACK, nlohmann_json, MLPACK
+# Feature_Table_Widget
 add_subdirectory(ML_Widget)
-add_subdirectory(Terminal_Widget)
+
+ # Qt, DataManager, EditorState, Geometry
 add_subdirectory(DataTransform_Widget)
-add_subdirectory(ZoneManager)
 
 set(PROJECT_SOURCES
         main.cpp
