@@ -22,6 +22,8 @@ set(DATAVIEWER_WIDGET_SOURCES
         DataViewerStateData.hpp
         DataViewerTooltipController.cpp
         DataViewerTooltipController.hpp
+        SeriesOptionsRegistry.cpp
+        SeriesOptionsRegistry.hpp
         OpenGLWidget.cpp
         OpenGLWidget.hpp
         SceneBuildingHelpers.cpp

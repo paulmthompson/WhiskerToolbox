@@ -8,7 +8,7 @@ if (WIN32)
     return()
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Test)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -17,6 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_data_viewer_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewerStateData.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/AnalogVertexCache.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/whiskertoolbox.qrc
@@ -30,6 +31,7 @@ target_link_libraries(test_data_viewer_widget PRIVATE
     PlottingOpenGL  # Contains ShaderManager
     Qt6::Widgets
     Qt6::Core
+    Qt6::Test
 )
 
 target_include_directories(test_data_viewer_widget PRIVATE

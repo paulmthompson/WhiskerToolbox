@@ -496,11 +496,35 @@ template<> QString SeriesOptionsRegistry::typeName<DigitalIntervalSeriesOptionsD
 
 - `src/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.hpp`
 - `src/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.cpp`
-- `src/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp`
+- `tests/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp`
 
 ### Files to Modify
 
 - `src/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt`
+- `tests/WhiskerToolbox/DataViewer_Widget/CMakeLists.txt`
+
+### Success Criteria
+
+- [x] Type-safe template API works for all 3 series types ✅
+- [x] Signals emitted correctly (optionsChanged, optionsRemoved, visibilityChanged) ✅
+- [x] Non-template visibility methods work for runtime type dispatch ✅
+- [x] Unit tests pass (93 assertions in 9 test cases) ✅
+
+### Implementation Notes
+
+**Phase 2 COMPLETED**
+
+Files created:
+- [SeriesOptionsRegistry.hpp](../../../src/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.hpp) - Type-safe registry class
+- [SeriesOptionsRegistry.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.cpp) - Template specializations
+- [SeriesOptionsRegistry.test.cpp](../../../tests/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp) - Comprehensive unit tests
+
+Key implementation details:
+1. Follows same pattern as `DisplayOptionsRegistry` in Media_Widget
+2. 3 series types: Analog, DigitalEvent, DigitalInterval (vs 6 in MediaWidget)
+3. Non-owning pointer to `DataViewerStateData` for direct map access
+4. QSignalSpy-based signal verification in tests
+5. Complete type isolation between series types (same key can exist for different types)
 
 ---
 
