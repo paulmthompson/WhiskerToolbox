@@ -16,6 +16,7 @@
 
 class DataManager;
 class Janelia_Config;
+class WhiskerWidgetState;
 
 namespace Ui {
 class Whisker_Widget;
@@ -39,6 +40,25 @@ This is our interface to using the Janelia whisker tracker.
 class Whisker_Widget : public QMainWindow {
     Q_OBJECT
 public:
+    /**
+     * @brief Construct Whisker_Widget with EditorState support
+     * 
+     * This is the preferred constructor when using EditorRegistry.
+     * The state manages serializable configuration and enables
+     * workspace save/restore.
+     * 
+     * @param data_manager Shared DataManager for data access
+     * @param state Shared WhiskerWidgetState for configuration persistence
+     * @param parent Parent widget
+     */
+    Whisker_Widget(std::shared_ptr<DataManager> data_manager,
+                   std::shared_ptr<WhiskerWidgetState> state,
+                   QWidget * parent = nullptr);
+
+    /**
+     * @brief Legacy constructor without state (backward compatible)
+     * @deprecated Use the constructor with WhiskerWidgetState instead
+     */
     Whisker_Widget(std::shared_ptr<DataManager> data_manager,
                    QWidget * parent = nullptr);
 
@@ -55,6 +75,7 @@ protected:
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
     std::shared_ptr<DataManager> _data_manager;
+    std::shared_ptr<WhiskerWidgetState> _state;  // EditorState for serialization
 
     int _selected_whisker{0};
 
@@ -108,6 +129,10 @@ private:
 
     // Mask helpers
     void _populateMaskCombo();
+    
+    // State management helpers
+    void _setupConnections();
+    void _initializeFromState();
 
 private slots:
     void _traceButton();

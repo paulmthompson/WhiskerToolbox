@@ -9,6 +9,7 @@
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/transforms/Media/whisker_tracing.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "WhiskerWidgetState.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "whiskertracker.hpp"
@@ -45,27 +46,9 @@ std::vector<whisker::Line2D> & convert_to_whisker_Line2D(std::vector<Line2D> & l
 }
 
 /**
- * @brief Whisker_Widget::Whisker_Widget
- *
- *
- *
- * @param data_manager
- * @param parent
+ * @brief Helper function to setup common UI connections
  */
-Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
-                               QWidget * parent)
-    : QMainWindow(parent),
-      _wt{std::make_shared<whisker::WhiskerTracker>()},
-      _data_manager{std::move(data_manager)},
-      ui(new Ui::Whisker_Widget) {
-    ui->setupUi(this);
-
-    _data_manager->setData<LineData>("unlabeled_whiskers", TimeKey("time"));
-
-    _janelia_config_widget = new Janelia_Config(_wt);
-
-    dl_model = std::make_unique<dl::SCM>();
-
+void Whisker_Widget::_setupConnections() {
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
     connect(ui->dl_add_memory_button, &QPushButton::clicked, this, &Whisker_Widget::_dlAddMemoryButton);
@@ -84,15 +67,17 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->whisker_clip, &QSpinBox::valueChanged, this, &Whisker_Widget::_changeWhiskerClip);
 
     connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this]() {
-        if (ui->auto_dl_checkbox->isChecked()) {
-            _auto_dl = true;
-        } else {
-            _auto_dl = false;
+        _auto_dl = ui->auto_dl_checkbox->isChecked();
+        if (_state) {
+            _state->setAutoDL(_auto_dl);
         }
     });
 
     connect(ui->linking_tol_spinbox, &QSpinBox::valueChanged, this, [this](int val) {
         _linking_tolerance = static_cast<float>(val);
+        if (_state) {
+            _state->setLinkingTolerance(_linking_tolerance);
+        }
     });
 
     // Mask UI wiring
@@ -103,10 +88,139 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
         // Disable Trace button if mask mode is enabled but no masks exist
         bool const has_masks = !_data_manager->getKeys<MaskData>().empty();
         ui->trace_button->setEnabled(!checked || has_masks);
+        if (_state) {
+            _state->setUseMaskMode(checked);
+        }
     });
     connect(ui->mask_key_combo, &QComboBox::currentTextChanged, this, [this](QString const & txt) {
         _selected_mask_key = txt.toStdString();
+        if (_state) {
+            _state->setSelectedMaskKey(_selected_mask_key);
+        }
     });
+}
+
+/**
+ * @brief Initialize UI from state values
+ */
+void Whisker_Widget::_initializeFromState() {
+    if (!_state) return;
+
+    // Block signals during initialization to avoid feedback loops
+    ui->face_orientation->blockSignals(true);
+    ui->whisker_number->blockSignals(true);
+    ui->length_threshold_spinbox->blockSignals(true);
+    ui->whisker_clip->blockSignals(true);
+    ui->linking_tol_spinbox->blockSignals(true);
+    ui->use_mask_checkbox->blockSignals(true);
+    ui->auto_dl_checkbox->blockSignals(true);
+    ui->manual_whisker_select_spinbox->blockSignals(true);
+
+    // Set UI values from state
+    ui->face_orientation->setCurrentIndex(static_cast<int>(_state->faceOrientation()));
+    ui->whisker_number->setValue(_state->numWhiskersToTrack());
+    ui->length_threshold_spinbox->setValue(_state->lengthThreshold());
+    ui->whisker_clip->setValue(_state->clipLength());
+    ui->linking_tol_spinbox->setValue(static_cast<int>(_state->linkingTolerance()));
+    ui->use_mask_checkbox->setChecked(_state->useMaskMode());
+    ui->auto_dl_checkbox->setChecked(_state->autoDL());
+    ui->manual_whisker_select_spinbox->setValue(_state->currentWhisker());
+
+    // Update internal state variables
+    _face_orientation = static_cast<Face_Orientation>(static_cast<int>(_state->faceOrientation()));
+    _num_whisker_to_track = _state->numWhiskersToTrack();
+    _clip_length = _state->clipLength();
+    _linking_tolerance = _state->linkingTolerance();
+    _use_mask_mode = _state->useMaskMode();
+    _auto_dl = _state->autoDL();
+    _current_whisker = _state->currentWhisker();
+    _current_whisker_pad_key = _state->whiskerPadKey();
+    _current_whisker_pad_point = Point2D<float>(_state->whiskerPadX(), _state->whiskerPadY());
+    _selected_mask_key = _state->selectedMaskKey();
+
+    // Set whisker tracker parameters
+    _wt->setWhiskerLengthThreshold(static_cast<float>(_state->lengthThreshold()));
+    
+    // Set head direction based on face orientation
+    switch (_state->faceOrientation()) {
+        case FaceOrientation::Top:
+            _wt->setHeadDirection(0.0f, 1.0f);
+            break;
+        case FaceOrientation::Bottom:
+            _wt->setHeadDirection(0.0f, -1.0f);
+            break;
+        case FaceOrientation::Left:
+            _wt->setHeadDirection(1.0f, 0.0f);
+            break;
+        case FaceOrientation::Right:
+            _wt->setHeadDirection(-1.0f, 0.0f);
+            break;
+    }
+
+    // Unblock signals
+    ui->face_orientation->blockSignals(false);
+    ui->whisker_number->blockSignals(false);
+    ui->length_threshold_spinbox->blockSignals(false);
+    ui->whisker_clip->blockSignals(false);
+    ui->linking_tol_spinbox->blockSignals(false);
+    ui->use_mask_checkbox->blockSignals(false);
+    ui->auto_dl_checkbox->blockSignals(false);
+    ui->manual_whisker_select_spinbox->blockSignals(false);
+}
+
+/**
+ * @brief Whisker_Widget::Whisker_Widget - Constructor with EditorState support
+ *
+ * @param data_manager DataManager for data access
+ * @param state WhiskerWidgetState for configuration persistence
+ * @param parent Parent widget
+ */
+Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
+                               std::shared_ptr<WhiskerWidgetState> state,
+                               QWidget * parent)
+    : QMainWindow(parent),
+      _wt{std::make_shared<whisker::WhiskerTracker>()},
+      _data_manager{std::move(data_manager)},
+      _state{std::move(state)},
+      ui(new Ui::Whisker_Widget) {
+    ui->setupUi(this);
+
+    _data_manager->setData<LineData>("unlabeled_whiskers", TimeKey("time"));
+
+    _janelia_config_widget = new Janelia_Config(_wt);
+
+    dl_model = std::make_unique<dl::SCM>();
+
+    _setupConnections();
+
+    // Initialize UI from state if provided
+    if (_state) {
+        _initializeFromState();
+    }
+}
+
+/**
+ * @brief Whisker_Widget::Whisker_Widget - Legacy constructor (backward compatible)
+ *
+ * @param data_manager DataManager for data access
+ * @param parent Parent widget
+ */
+Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
+                               QWidget * parent)
+    : QMainWindow(parent),
+      _wt{std::make_shared<whisker::WhiskerTracker>()},
+      _data_manager{std::move(data_manager)},
+      _state{nullptr},
+      ui(new Ui::Whisker_Widget) {
+    ui->setupUi(this);
+
+    _data_manager->setData<LineData>("unlabeled_whiskers", TimeKey("time"));
+
+    _janelia_config_widget = new Janelia_Config(_wt);
+
+    dl_model = std::make_unique<dl::SCM>();
+
+    _setupConnections();
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -354,6 +468,9 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const 
 
 void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold) {
     _wt->setWhiskerLengthThreshold(static_cast<float>(new_threshold));
+    if (_state) {
+        _state->setLengthThreshold(new_threshold);
+    }
 }
 
 void Whisker_Widget::_selectFaceOrientation(int index) {
@@ -370,10 +487,17 @@ void Whisker_Widget::_selectFaceOrientation(int index) {
         _face_orientation = Face_Orientation::Facing_Right;
         _wt->setHeadDirection(-1.0f, 0.0f);
     }
+    if (_state) {
+        _state->setFaceOrientation(static_cast<FaceOrientation>(index));
+    }
 }
 
 void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
     _num_whisker_to_track = n_whiskers;
+
+    if (_state) {
+        _state->setNumWhiskersToTrack(n_whiskers);
+    }
 
     if (n_whiskers == 0) {
         return;
@@ -388,6 +512,9 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
 void Whisker_Widget::_selectWhisker(int whisker_num) {
     _current_whisker = whisker_num;
+    if (_state) {
+        _state->setCurrentWhisker(whisker_num);
+    }
 }
 
 
@@ -446,6 +573,9 @@ void Whisker_Widget::LoadFrame(int frame_id) {
 
 void Whisker_Widget::_changeWhiskerClip(int clip_dist) {
     _clip_length = clip_dist;
+    if (_state) {
+        _state->setClipLength(clip_dist);
+    }
 
     _traceButton();
 }
@@ -600,6 +730,9 @@ void Whisker_Widget::_updateWhiskerPadFromSelection() {
     }
 
     _current_whisker_pad_key = selected_text.toStdString();
+    if (_state) {
+        _state->setWhiskerPadKey(_current_whisker_pad_key);
+    }
 
     // Update the frame spinbox range based on available data
     auto point_data = _data_manager->getData<PointData>(_current_whisker_pad_key);
@@ -666,6 +799,11 @@ void Whisker_Widget::_updateWhiskerPadLabel() {
         // Update the whisker tracker and DL model with the new position
         _wt->setWhiskerPad(whisker_pad_point.x, whisker_pad_point.y);
         dl_model->add_origin(whisker_pad_point.x, whisker_pad_point.y);
+
+        // Update state with whisker pad position
+        if (_state) {
+            _state->setWhiskerPadPosition(whisker_pad_point.x, whisker_pad_point.y);
+        }
 
         std::cout << "Whisker pad set to: (" << whisker_pad_point.x << ", " << whisker_pad_point.y << ")" << std::endl;
     }

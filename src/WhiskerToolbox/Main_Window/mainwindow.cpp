@@ -33,9 +33,7 @@
 #include "TableDesignerWidget/TableDesignerWidget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "Whisker_Widget.hpp"
 #include "ZoneManager.hpp"
-#include "ZoneManagerWidgetRegistration.hpp"
 
 
 // Module registration headers - each module defines its own factory functions
@@ -46,6 +44,8 @@
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
+#include "Whisker_Widget/WhiskerWidgetRegistration.hpp"
+#include "ZoneManagerWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -727,22 +727,6 @@ void MainWindow::openTensorLoaderWidget() {
 // Old Interface Widgets (No EditorRegistry)
 //=================================
 
-void MainWindow::openWhiskerTracking() {
-    std::string const key = "whisker_widget";
-
-    if (!_widgets.contains(key)) {
-        auto whiskerWidget = std::make_unique<Whisker_Widget>(
-                _data_manager);
-        connect(_time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
-
-        _widgets[key] = std::move(whiskerWidget);
-        registerDockWidget(key, _widgets[key].get(), ads::RightDockWidgetArea);
-    }
-
-    dynamic_cast<Whisker_Widget *>(_widgets[key].get())->openWidget();
-    showDockWidget(key);
-}
-
 void MainWindow::openMLWidget() {
     std::string const key = "ML_widget";
 
@@ -888,6 +872,12 @@ void MainWindow::openTableDesignerWidget() {
 // New Editor Instances
 //=================================
 
+
+void MainWindow::openWhiskerTracking() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("WhiskerWidget"));
+}
+
 void MainWindow::openDataManager() {
     // Use the standard editor opening mechanism
     // DataManagerWidget is registered as a single-instance widget,
@@ -964,6 +954,8 @@ void MainWindow::_registerEditorTypes() {
     ExportVideoWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
 
     TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
 
     DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar, _group_manager.get());
 

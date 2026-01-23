@@ -60,6 +60,10 @@ set(PROJECT_SOURCES
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
         Whisker_Widget/Whisker_Widget.cpp
+        Whisker_Widget/WhiskerWidgetState.hpp
+        Whisker_Widget/WhiskerWidgetState.cpp
+        Whisker_Widget/WhiskerWidgetRegistration.hpp
+        Whisker_Widget/WhiskerWidgetRegistration.cpp
         Whisker_Widget/janelia_config.ui
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
