@@ -9,59 +9,59 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
-#include "EditorState/EditorRegistry.hpp"
-#include "EditorState/SelectionContext.hpp"
-#include "EditorCreationController.hpp"
-#include "ZoneManager.hpp"
-#include "ZoneManagerWidgetRegistration.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
-#include "GroupManagementWidget/GroupManagementWidget.hpp"
-#include "TableDesignerWidget/TableDesignerWidget.hpp"
 #include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
-#include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
+#include "EditorCreationController.hpp"
+#include "EditorState/EditorRegistry.hpp"
+#include "EditorState/SelectionContext.hpp"
+#include "GroupManagementWidget/GroupManagementWidget.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp"
+#include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
 #include "IO_Widgets/Lines/Line_Loader_Widget.hpp"
 #include "IO_Widgets/Masks/Mask_Loader_Widget.hpp"
 #include "IO_Widgets/Points/Point_Loader_Widget.hpp"
 #include "IO_Widgets/Tensors/Tensor_Loader_Widget.hpp"
 #include "ML_Widget/ML_Widget.hpp"
-#include "Media_Widget/Media_Widget.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
+#include "Media_Widget/MediaWidgetState.hpp"
+#include "Media_Widget/Media_Widget.hpp"
+#include "TableDesignerWidget/TableDesignerWidget.hpp"
+#include "Terminal_Widget/TerminalWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Whisker_Widget.hpp"
-#include "Terminal_Widget/TerminalWidget.hpp"
+#include "ZoneManager.hpp"
+#include "ZoneManagerWidgetRegistration.hpp"
 
 
 // Module registration headers - each module defines its own factory functions
-#include "Media_Widget/MediaWidgetRegistration.hpp"
-#include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
-#include "Test_Widget/TestWidgetRegistration.hpp"
-#include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
-#include "Tongue_Widget/TongueWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
+#include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
+#include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
+#include "Media_Widget/MediaWidgetRegistration.hpp"
+#include "Test_Widget/TestWidgetRegistration.hpp"
+#include "Tongue_Widget/TongueWidgetRegistration.hpp"
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
+#include <QComboBox>
 #include <QFileDialog>
 #include <QImage>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QPlainTextEdit>
 #include <QProgressDialog>
-#include <QTextEdit>
-#include <QComboBox>
-#include <QListWidget>
-#include <QTableWidget>
-#include <QTreeWidget>
 #include <QShortcut>
 #include <QSplitter>
+#include <QTableWidget>
+#include <QTextEdit>
+#include <QTreeWidget>
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -82,14 +82,21 @@ MainWindow::MainWindow(QWidget * parent)
 {
     ui->setupUi(this);
 
+    // === FIX START ===
+    // If the UI file created a central widget, delete it so ADS can take over the full window.
+    // ADS manages its own central container.
+    if (centralWidget()) {
+        auto * central = takeCentralWidget();
+        delete central;
+    }
+    // === FIX END ===
+
     // Configure dock manager BEFORE creating it
     // Using native title bars for floating widgets (works smoothly on all platforms)
     // On Linux, native title bars allow proper window dragging
     // Re-docking is handled in showDockWidget() - closed floating widgets
     // are automatically re-docked when reopened via the modules menu
-    ads::CDockManager::setConfigFlags(ads::CDockManager::DefaultOpaqueConfig 
-                                     | ads::CDockManager::OpaqueSplitterResize
-                                     | ads::CDockManager::DragPreviewIsDynamic);
+    ads::CDockManager::setConfigFlags(ads::CDockManager::DefaultOpaqueConfig | ads::CDockManager::OpaqueSplitterResize | ads::CDockManager::DragPreviewIsDynamic);
 
     _m_DockManager = new ads::CDockManager(this);
 
@@ -98,14 +105,14 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Create EditorCreationController to handle unified editor creation and zone placement
     _editor_creation_controller = std::make_unique<EditorCreationController>(
-        _editor_registry.get(), _zone_manager.get(), _m_DockManager, this);
+            _editor_registry.get(), _zone_manager.get(), _m_DockManager, this);
 
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
     // Create the GroupManager with the DataManager's EntityGroupManager
     // Note: GroupManagementWidget is created via EditorCreationController in _buildInitialLayout
-    auto* entity_group_manager = _data_manager->getEntityGroupManager();
+    auto * entity_group_manager = _data_manager->getEntityGroupManager();
     if (entity_group_manager) {
         _group_manager = std::make_unique<GroupManager>(entity_group_manager, _data_manager, this);
     }
@@ -142,24 +149,24 @@ void MainWindow::_buildInitialLayout() {
     _zone_manager->initializeZones();
 
     // Configure zone proportions
-    _zone_manager->setZoneWidthRatios(0.20f, 0.58f, 0.22f);  // Left, Center, Right
-    _zone_manager->setBottomHeightRatio(0.14f);              // Bottom
+    _zone_manager->setZoneWidthRatios(0.20f, 0.58f, 0.22f);// Left, Center, Right
+    _zone_manager->setBottomHeightRatio(0.14f);            // Bottom
 
     // === LEFT ZONE: Data selection and navigation ===
     // Layout: GroupManagementWidget (30% height) on top, DataManager_Widget (70% height) below
-    
+
     // Create GroupManagementWidget first (goes to top of left zone)
     auto placed_group = _editor_creation_controller->createAndPlaceWithTitle(
-        EditorLib::EditorTypeId(QStringLiteral("GroupManagementWidget")), 
-        QStringLiteral("Group Manager"),
-        true);  // raise_view
-    
+            EditorLib::EditorTypeId(QStringLiteral("GroupManagementWidget")),
+            QStringLiteral("Group Manager"),
+            true);// raise_view
+
     if (placed_group.view_dock) {
         // Mark as non-closable since it's a core navigation widget
         placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
     }
-    
+
     // Create DataManager_Widget - we need manual placement with split
     // Create via EditorRegistry but don't use controller's automatic placement
     auto dm_instance = _editor_registry->createEditor(EditorLib::EditorTypeId(QStringLiteral("DataManagerWidget")));
@@ -168,20 +175,20 @@ void MainWindow::_buildInitialLayout() {
         dm_dock->setWidget(dm_instance.view);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
-        
+
         // Add below GroupManagement with 30/70 split (0.3 = top widget gets 30%)
         _zone_manager->addBelowInZone(dm_dock, Zone::Left, 0.30f);
     }
 
     // === CENTER ZONE: Primary visualization ===
-    
+
     // Create and add media widget to center zone using EditorCreationController
     // This respects EditorTypeInfo zone preferences and handles dock widget creation
     auto placed_media = _editor_creation_controller->createAndPlaceWithTitle(
-        EditorLib::EditorTypeId(QStringLiteral("MediaWidget")), 
-        QStringLiteral("Media Viewer"),
-        true);  // raise_view
-    
+            EditorLib::EditorTypeId(QStringLiteral("MediaWidget")),
+            QStringLiteral("Media Viewer"),
+            true);// raise_view
+
     if (placed_media.view_dock) {
         // Mark the initial media widget as non-closable
         placed_media.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
@@ -189,7 +196,7 @@ void MainWindow::_buildInitialLayout() {
     }
 
     // === BOTTOM ZONE: Timeline ===
-    
+
     // Add time scrollbar to bottom zone
     auto * scrollbar_dock = new ads::CDockWidget(QStringLiteral("scrollbar"));
     scrollbar_dock->setWidget(_time_scrollbar);
@@ -204,7 +211,7 @@ void MainWindow::_buildInitialLayout() {
     // === Apply Zone Ratios ===
     // Defer the splitter size application to after the window is shown and laid out
     // This ensures the splitters have valid dimensions when sizes are applied
-    _zone_manager->reapplySplitterSizes(200);  // 200ms delay for layout to stabilize
+    _zone_manager->reapplySplitterSizes(200);// 200ms delay for layout to stabilize
 }
 
 void MainWindow::_createActions() {
@@ -215,7 +222,7 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
     // Connect TimeScrollBar to EditorRegistry for global time propagation
-    connect(_time_scrollbar, &TimeScrollBar::timeChanged, 
+    connect(_time_scrollbar, &TimeScrollBar::timeChanged,
             _editor_registry.get(), &EditorRegistry::setCurrentTime);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
@@ -243,16 +250,16 @@ void MainWindow::_createActions() {
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
-    auto getActiveMediaWidget = [this]() -> Media_Widget* {
+    auto getActiveMediaWidget = [this]() -> Media_Widget * {
         auto * ctx = _editor_registry->selectionContext();
         if (!ctx) return nullptr;
-        
+
         auto active_id = ctx->activeEditorId();
         if (!active_id.isValid()) return nullptr;
-        
+
         // Find the Media_Widget with matching state instance_id
-        for (auto * dock : _m_DockManager->dockWidgetsMap()) {
-            if (auto * mw = dynamic_cast<Media_Widget*>(dock->widget())) {
+        for (auto * dock: _m_DockManager->dockWidgetsMap()) {
+            if (auto * mw = dynamic_cast<Media_Widget *>(dock->widget())) {
                 if (mw->getState() && mw->getState()->getInstanceId() == active_id.toString()) {
                     return mw;
                 }
@@ -260,37 +267,37 @@ void MainWindow::_createActions() {
         }
         return nullptr;
     };
-    
+
     if (ui->actionZoom_In) {
-        ui->actionZoom_In->setShortcuts({}); // clear
+        ui->actionZoom_In->setShortcuts({});// clear
         ui->actionZoom_In->setShortcut(QKeySequence());
         // Explicit shortcuts below; set text AFTER clearing to force display
         ui->actionZoom_In->setText("Zoom In\tCtrl+");
-        connect(ui->actionZoom_In, &QAction::triggered, this, [getActiveMediaWidget]() { 
-            if (auto * mw = getActiveMediaWidget()) mw->zoomIn(); 
+        connect(ui->actionZoom_In, &QAction::triggered, this, [getActiveMediaWidget]() {
+            if (auto * mw = getActiveMediaWidget()) mw->zoomIn();
         });
-        auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this); // Ctrl++ (numpad or main with shift)
+        auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this);// Ctrl++ (numpad or main with shift)
         s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() { 
-            if (auto * mw = getActiveMediaWidget()) mw->zoomIn(); 
+        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() {
+            if (auto * mw = getActiveMediaWidget()) mw->zoomIn();
         });
-        auto * s2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this); // Ctrl+= (produces '+')
+        auto * s2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this);// Ctrl+= (produces '+')
         s2->setContext(Qt::ApplicationShortcut);
-        connect(s2, &QShortcut::activated, this, [getActiveMediaWidget]() { 
-            if (auto * mw = getActiveMediaWidget()) mw->zoomIn(); 
+        connect(s2, &QShortcut::activated, this, [getActiveMediaWidget]() {
+            if (auto * mw = getActiveMediaWidget()) mw->zoomIn();
         });
     }
     if (ui->actionZoom_Out) {
         ui->actionZoom_Out->setShortcuts({});
         ui->actionZoom_Out->setShortcut(QKeySequence());
         ui->actionZoom_Out->setText("Zoom Out\tCtrl-");
-        connect(ui->actionZoom_Out, &QAction::triggered, this, [getActiveMediaWidget]() { 
-            if (auto * mw = getActiveMediaWidget()) mw->zoomOut(); 
+        connect(ui->actionZoom_Out, &QAction::triggered, this, [getActiveMediaWidget]() {
+            if (auto * mw = getActiveMediaWidget()) mw->zoomOut();
         });
         auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus), this);
         s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() { 
-            if (auto * mw = getActiveMediaWidget()) mw->zoomOut(); 
+        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() {
+            if (auto * mw = getActiveMediaWidget()) mw->zoomOut();
         });
     }
 }
@@ -349,11 +356,11 @@ void MainWindow::_loadJSONConfig() {
     // Create progress dialog without cancel button
     QProgressDialog progress("Preparing to load data...", nullptr, 0, 100, this);
     progress.setWindowModality(Qt::WindowModal);
-    progress.setMinimumDuration(0);  // Show immediately
-    progress.setCancelButton(nullptr);  // Remove cancel button
+    progress.setMinimumDuration(0);   // Show immediately
+    progress.setCancelButton(nullptr);// Remove cancel button
     progress.setValue(0);
     progress.show();
-    
+
     // Force the dialog to appear before loading starts
     QCoreApplication::processEvents();
 
@@ -364,29 +371,29 @@ void MainWindow::_loadJSONConfig() {
             int percent = (current * 100) / total;
             progress.setValue(percent);
         }
-        
+
         // Update label text
         progress.setLabelText(QString::fromStdString(message));
-        
+
         // Process events to keep UI responsive
         QCoreApplication::processEvents();
-        
+
         // Always return true since we removed cancel functionality
         return true;
     };
 
     // Load data with progress tracking
     auto data_info = load_data_from_json_config(_data_manager.get(), filename.toStdString(), progress_callback);
-    
+
     // Set to 100% when complete
     progress.setValue(100);
-    
+
     processLoadedData(data_info);
 }
 
 void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
     bool hasMediaData = false;
-    
+
     for (auto const & data: data_info) {
         if (data.data_class == "VideoData") {
             hasMediaData = true;
@@ -400,7 +407,7 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
             if (!data.color.empty()) {
                 // Set feature color on all MediaWidget instances via EditorRegistry
                 auto states = _editor_registry->statesByType(EditorTypeId(QStringLiteral("MediaWidget")));
-                for (auto const & state : states) {
+                for (auto const & state: states) {
                     auto media_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
                     if (media_state) {
                         // Use displayOptions registry to set the color
@@ -416,7 +423,7 @@ void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
             }
         }
     }
-    
+
     // Only update media-related components if we loaded media data
     if (hasMediaData) {
         loadData();
@@ -434,8 +441,8 @@ void MainWindow::loadData() {
     // Update media for all MediaWidget instances via dock manager
     // Each widget will refresh its view when time changes (via EditorRegistry::timeChanged)
     // but we also need to call updateMedia() to initialize the graphics view
-    for (auto * dock : _m_DockManager->dockWidgetsMap()) {
-        if (auto * media_widget = dynamic_cast<Media_Widget*>(dock->widget())) {
+    for (auto * dock: _m_DockManager->dockWidgetsMap()) {
+        if (auto * media_widget = dynamic_cast<Media_Widget *>(dock->widget())) {
             media_widget->updateMedia();
         }
     }
@@ -460,10 +467,8 @@ void MainWindow::_updateFrameCount() {
 
             _data_manager->removeTime(TimeKey("time"));
             _data_manager->setTime(TimeKey("time"), new_timeframe, true);
-        } else {    
+        } else {
             std::cout << "The time vector is not empty, so we will not create a new time vector" << std::endl;
-        
-        
         }
     }
 
@@ -480,30 +485,30 @@ void MainWindow::registerDockWidget(std::string const & key, QWidget * widget, a
 }
 
 void MainWindow::showDockWidget(std::string const & key) {
-    auto* dockWidget = _m_DockManager->findDockWidget(QString::fromStdString(key));
+    auto * dockWidget = _m_DockManager->findDockWidget(QString::fromStdString(key));
     if (!dockWidget) {
         return;
     }
-    
+
     // If the widget is not visible and is in a floating container, dock it back
     // This provides better UX on Linux where native title bars are used
     if (!dockWidget->isVisible()) {
-        auto* dockContainer = dockWidget->dockContainer();
+        auto * dockContainer = dockWidget->dockContainer();
         // Check if it's in a floating container (not the main dock manager)
         if (dockContainer && dockContainer->isFloating()) {
             // Determine the appropriate dock area based on widget type
-            ads::DockWidgetArea dockArea = ads::RightDockWidgetArea; // default
-            
+            ads::DockWidgetArea dockArea = ads::RightDockWidgetArea;// default
+
             // Time scrollbar should go to the bottom
             if (key == "scrollbar") {
                 dockArea = ads::BottomDockWidgetArea;
             }
-            
+
             // Move the widget back to the main dock area before showing
             _m_DockManager->addDockWidget(dockArea, dockWidget);
         }
     }
-    
+
     dockWidget->toggleView();
 }
 
@@ -514,55 +519,55 @@ ads::CDockWidget * MainWindow::findDockWidget(std::string const & key) const {
 bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
     if (event->type() == QEvent::KeyPress) {
         QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
-        
+
         // Handle spacebar for play/pause (unless in text input widget)
         if (keyEvent->key() == Qt::Key_Space && keyEvent->modifiers() == Qt::NoModifier) {
             QWidget * focusedWidget = QApplication::focusWidget();
-            
+
             // Don't intercept spacebar if we're in a text input widget
             if (focusedWidget) {
-                if (qobject_cast<QLineEdit *>(focusedWidget) || 
-                    qobject_cast<QTextEdit *>(focusedWidget) || 
+                if (qobject_cast<QLineEdit *>(focusedWidget) ||
+                    qobject_cast<QTextEdit *>(focusedWidget) ||
                     qobject_cast<QPlainTextEdit *>(focusedWidget)) {
                     // Let the text widget handle the space normally
                     return false;
                 }
             }
-            
+
             // Toggle play/pause
             _time_scrollbar->PlayButton();
-            return true; // Event handled
+            return true;// Event handled
         }
-        
+
         // Always handle Ctrl+Left/Right for frame navigation regardless of focus
         if (keyEvent->modifiers() & Qt::ControlModifier) {
             if (keyEvent->key() == Qt::Key_Right) {
                 _time_scrollbar->changeScrollBarValue(_time_scrollbar->getFrameJumpValue(), true);
-                return true; // Event handled, don't pass it on
+                return true;// Event handled, don't pass it on
             } else if (keyEvent->key() == Qt::Key_Left) {
                 _time_scrollbar->changeScrollBarValue(-_time_scrollbar->getFrameJumpValue(), true);
-                return true; // Event handled, don't pass it on
+                return true;// Event handled, don't pass it on
             }
         }
-        
+
         // For plain arrow keys, be very selective
-        if (keyEvent->modifiers() == Qt::NoModifier && 
+        if (keyEvent->modifiers() == Qt::NoModifier &&
             (keyEvent->key() == Qt::Key_Right || keyEvent->key() == Qt::Key_Left)) {
-            
+
             QWidget * focusedWidget = QApplication::focusWidget();
-            
+
             // If we're in a text input widget, let it handle the arrow keys for cursor movement
             if (focusedWidget) {
                 // Check for text input widgets
-                if (qobject_cast<QLineEdit *>(focusedWidget) || 
-                    qobject_cast<QTextEdit *>(focusedWidget) || 
+                if (qobject_cast<QLineEdit *>(focusedWidget) ||
+                    qobject_cast<QTextEdit *>(focusedWidget) ||
                     qobject_cast<QPlainTextEdit *>(focusedWidget)) {
                     // Let the text widget handle the event normally
                     return false;
                 }
-                
+
                 // Check if we're in a widget that should handle arrow keys (like combo boxes, lists, etc.)
-                if (qobject_cast<QComboBox *>(focusedWidget) || 
+                if (qobject_cast<QComboBox *>(focusedWidget) ||
                     qobject_cast<QListWidget *>(focusedWidget) ||
                     qobject_cast<QTableWidget *>(focusedWidget) ||
                     qobject_cast<QTreeWidget *>(focusedWidget)) {
@@ -570,22 +575,32 @@ bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
                     return false;
                 }
             }
-            
+
             // Otherwise, use arrow keys for frame navigation
             if (keyEvent->key() == Qt::Key_Right) {
                 _time_scrollbar->changeScrollBarValue(_time_scrollbar->getFrameJumpValue(), true);
-                return true; // Event handled
+                return true;// Event handled
             } else if (keyEvent->key() == Qt::Key_Left) {
                 _time_scrollbar->changeScrollBarValue(-_time_scrollbar->getFrameJumpValue(), true);
-                return true; // Event handled
+                return true;// Event handled
             }
         }
-        
+
+        // === FIX HERE ===
+        // DO NOT call QMainWindow::eventFilter(obj, event) for objects that are not 'this'.
+        // Since this is a global filter (qApp), 'obj' could be anything (ADS widgets, buttons, etc).
+        // Forwarding random objects to QMainWindow's logic is dangerous.
+
+        if (obj == this) {
+            // Only run QMainWindow logic if the event is actually for the Main Window
+            return QMainWindow::eventFilter(obj, event);
+        }
+
         // For all other keys, let them pass through to the focused widget
         qDebug() << "MainWindow::eventFilter - Passing key through to focused widget";
         return false;
     }
-    
+
     // For all other events, let them be handled normally
     return QMainWindow::eventFilter(obj, event);
 }
@@ -755,7 +770,7 @@ void MainWindow::openDataViewer() {
                 _time_scrollbar);
 
         DataViewerWidget->setObjectName(key);
-        
+
         // Insert DataViewer between media and scrollbar
         // First, find the scrollbar dock widget
         auto scrollbar_dock = findDockWidget("scrollbar");
@@ -765,10 +780,10 @@ void MainWindow::openDataViewer() {
             dataviewer_dock->setWidget(DataViewerWidget.get());
             dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetClosable, true);
             dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-            
+
             // Add DataViewer above the scrollbar (in the same dock area)
             _m_DockManager->addDockWidget(ads::TopDockWidgetArea, dataviewer_dock, scrollbar_dock->dockAreaWidget());
-            
+
             // Adjust splitter: give DataViewer most space, scrollbar minimal space
             // The splitter now contains: media, dataviewer, scrollbar
             auto media_dock = findDockWidget("media");
@@ -784,7 +799,7 @@ void MainWindow::openDataViewer() {
             // Fallback to old behavior if scrollbar dock not found
             registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
         }
-        
+
         _widgets[key] = std::move(DataViewerWidget);
     }
 
@@ -898,7 +913,7 @@ void MainWindow::openZoneLayoutManager() {
 }
 
 void MainWindow::openDataTransforms() {
-     openEditor(QStringLiteral("DataTransformWidget"));
+    openEditor(QStringLiteral("DataTransformWidget"));
 }
 
 void MainWindow::openNewMediaWidget() {
@@ -909,15 +924,15 @@ void MainWindow::openNewMediaWidget() {
     // - Placing in appropriate zones (view -> Center, properties -> Right)
     // - Connecting cleanup signals for state unregistration
     auto placed = _editor_creation_controller->createAndPlace(
-        EditorLib::EditorTypeId(QStringLiteral("MediaWidget")), 
-        true);  // raise_view
-    
+            EditorLib::EditorTypeId(QStringLiteral("MediaWidget")),
+            true);// raise_view
+
     if (!placed.isValid()) {
         std::cerr << "Failed to create new media widget" << std::endl;
         return;
     }
-    
-    std::cout << "Created new media widget: " 
+
+    std::cout << "Created new media widget: "
               << placed.state->getInstanceId().toStdString() << std::endl;
 }
 
@@ -939,9 +954,9 @@ void MainWindow::_registerEditorTypes() {
     // === Module-based registration ===
     // Each module defines its own factory functions - MainWindow doesn't need
     // to know implementation details like MediaWidgetState, MediaViewWidget, etc.
-    
+
     MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
-    
+
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TestWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
@@ -976,18 +991,18 @@ void MainWindow::openEditor(QString const & type_id) {
         if (!existing.empty()) {
             // Find the existing dock widget and show it
             // The dock widget title should contain the display name
-            for (auto const & state : existing) {
+            for (auto const & state: existing) {
                 EditorLib::EditorInstanceId instance_id(state->getInstanceId());
-                
+
                 // Search all dock widgets for one containing this state's widget
-                for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+                for (auto * dock: _m_DockManager->dockWidgetsMap()) {
                     // Check if this dock's widget matches
                     if (dock && dock->widget()) {
                         // Show and raise the existing dock
                         dock->show();
                         dock->raise();
                         dock->setAsCurrentTab();
-                        
+
                         // Set as active editor for PropertiesHost
                         _editor_registry->selectionContext()->setActiveEditor(instance_id);
                         return;
@@ -1008,8 +1023,8 @@ void MainWindow::openEditor(QString const & type_id) {
     // - Placing in appropriate zones from EditorTypeInfo
     // - Connecting cleanup signals
     auto placed = _editor_creation_controller->createAndPlace(
-        EditorLib::EditorTypeId(type_id), 
-        true);  // raise_view
+            EditorLib::EditorTypeId(type_id),
+            true);// raise_view
 
     if (!placed.isValid()) {
         std::cerr << "MainWindow::openEditor: Failed to create editor: "
@@ -1023,9 +1038,7 @@ void MainWindow::openEditor(QString const & type_id) {
     _editor_registry->selectionContext()->setActiveEditor(instance_id);
 
     std::cout << "Created " << info.display_name.toStdString()
-              << " via EditorCreationController (instance: " 
+              << " via EditorCreationController (instance: "
               << instance_id.toStdString() << ", zone: "
               << zoneToString(info.preferred_zone).toStdString() << ")" << std::endl;
 }
-
-

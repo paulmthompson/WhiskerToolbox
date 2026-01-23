@@ -87,6 +87,7 @@ void ZoneManager::addToZone(ads::CDockWidget * dock_widget, Zone zone, bool rais
         return;
     }
 
+    /*
     // Close and hide the placeholder if it's still there
     auto placeholder_it = _placeholder_docks.find(zone);
     if (placeholder_it != _placeholder_docks.end() && placeholder_it->second) {
@@ -99,6 +100,23 @@ void ZoneManager::addToZone(ads::CDockWidget * dock_widget, Zone zone, bool rais
 
     // Add the dock widget to the zone area (as a tab)
     _dock_manager->addDockWidget(ads::CenterDockWidgetArea, dock_widget, zone_area);
+    */
+    // === FIX START ===
+    // 1. Add the new widget FIRST. 
+    // This ensures the DockAreaWidget always has at least one tab and is not deleted by ADS.
+    _dock_manager->addDockWidget(ads::CenterDockWidgetArea, dock_widget, zone_area);
+
+    // 2. Remove the placeholder SECOND.
+    // Now it's safe to close the placeholder because the area contains the new widget.
+    auto placeholder_it = _placeholder_docks.find(zone);
+    if (placeholder_it != _placeholder_docks.end() && placeholder_it->second) {
+        auto * placeholder = placeholder_it->second;
+        // Only close if it is currently open
+        if (!placeholder->isClosed()) {
+            placeholder->closeDockWidget();
+        }
+    }
+    // === FIX END ===
 
     if (raise) {
         dock_widget->raise();

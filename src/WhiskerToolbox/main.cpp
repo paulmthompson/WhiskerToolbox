@@ -39,6 +39,21 @@ protected:
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_LINUX
+    // Force X11 backend on Linux for proper Qt Advanced Docking System support.
+    // Wayland has issues with translucent overlay widgets and frameless window repositioning
+    // used for dock drop indicators. This must be set BEFORE creating QApplication.
+    //
+    // See these issues for Wayland fix progress:
+    //   https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/issues/714
+    //   https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/pull/789
+    //
+    // Users can override by setting WHISKER_USE_WAYLAND=1 environment variable.
+    if (qEnvironmentVariableIsEmpty("WHISKER_USE_WAYLAND")) {
+        qputenv("QT_QPA_PLATFORM", "xcb");
+    }
+#endif
+
     // Set global OpenGL format for the application
     QSurfaceFormat format;
     format.setOption(QSurfaceFormat::DebugContext);
