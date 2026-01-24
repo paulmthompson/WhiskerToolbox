@@ -54,57 +54,35 @@ This separation provides:
 
 ## Current Architecture Analysis
 
-### State Locations
+### State Locations (After Phase 5)
 
 ```
 DataViewer_Widget/
 ├── DataViewer_Widget.hpp
-│   ├── _zoom_scaling_mode                    # ZoomScalingMode enum
-│   ├── _properties_panel_collapsed           # bool
-│   ├── _saved_splitter_sizes                 # QList<int>
-│   ├── _highlighted_available_feature        # QString
+│   ├── _state (shared_ptr<DataViewerState>)  # ✅ OWNS STATE, shares with OpenGLWidget
+│   ├── _saved_splitter_sizes                 # QList<int> - Qt-specific, not serialized
+│   ├── _highlighted_available_feature        # QString - transient
 │   └── _is_batch_add                         # Transient flag
 │
 ├── OpenGLWidget.hpp
-│   ├── _view_state (TimeSeriesViewState)     # Time window, Y bounds, global scale
-│   │   ├── time_start, time_end              # X-axis visible range
-│   │   ├── y_min, y_max                      # Y-axis viewport bounds
-│   │   ├── vertical_pan_offset               # Y-axis pan offset
-│   │   ├── global_zoom                       # Global amplitude scale
-│   │   └── global_vertical_scale             # Global vertical scale
-│   │
-│   ├── _theme_state (ThemeState)             # Theme and colors
-│   │   ├── theme                             # PlotTheme enum (Dark/Light)
-│   │   ├── background_color                  # std::string hex
-│   │   └── axis_color                        # std::string hex
-│   │
-│   ├── _grid_state (GridState)               # Grid overlay settings
-│   │   ├── enabled                           # bool
-│   │   └── spacing                           # int
-│   │
-│   ├── _ySpacing                             # float - vertical spacing factor
+│   ├── _state (shared_ptr<DataViewerState>)  # ✅ SHARED STATE from DataViewer_Widget
+│   │   └── All view state, theme, grid, UI prefs now in state
 │   ├── _time (TimeFrameIndex)                # Current time position
 │   └── _spike_sorter_configs                 # SpikeSorterConfigMap
 │
 ├── TimeSeriesDataStore.hpp (in DataViewer namespace)
 │   ├── _analog_series                        # map<key, AnalogSeriesEntry>
-│   │   └── display_options: NewAnalogTimeSeriesDisplayOptions
+│   │   └── display_options: NewAnalogTimeSeriesDisplayOptions  # ⏳ TODO: Move to state (Phase 6)
 │   │       ├── style (SeriesStyle)           # hex_color, alpha, line_thickness, is_visible
 │   │       ├── layout_transform              # offset, gain (computed by layout engine)
 │   │       ├── data_cache                    # cached statistics
 │   │       └── scaling, gap_handling, etc.   # analog-specific settings
 │   │
 │   ├── _digital_event_series                 # map<key, DigitalEventSeriesEntry>
-│   │   └── display_options: NewDigitalEventSeriesDisplayOptions
-│   │       ├── style (SeriesStyle)
-│   │       ├── layout_transform
-│   │       └── plotting_mode, event_height, etc.
+│   │   └── display_options: NewDigitalEventSeriesDisplayOptions  # ⏳ TODO: Move to state (Phase 6)
 │   │
 │   └── _digital_interval_series              # map<key, DigitalIntervalSeriesEntry>
-│       └── display_options: NewDigitalIntervalSeriesDisplayOptions
-│           ├── style (SeriesStyle)
-│           ├── layout_transform
-│           └── extend_full_canvas, margin_factor, etc.
+│       └── display_options: NewDigitalIntervalSeriesDisplayOptions  # ⏳ TODO: Move to state (Phase 6)
 │
 └── DataViewerInteractionManager.hpp
     └── _mode (InteractionMode)               # Normal, CreateInterval, ModifyInterval, CreateLine
@@ -789,8 +767,17 @@ connect(_state.get(), &DataViewerState::gridChanged, this, [this]() {
 - [x] Global zoom goes through state (setGlobalZoom) ✅
 - [x] State signals trigger OpenGLWidget updates ✅
 - [x] All DataViewer widget tests pass ✅
-- [ ] Vertical spacing goes through state (TODO: setYSpacing) 🔲
-- [ ] Remaining view state setters wired (TODO: setYBounds, setVerticalPanOffset) 🔲
+- [x] Vertical spacing removed (layout engine handles spacing automatically) ✅
+- [x] setYBounds and setVerticalPanOffset already in state and used correctly ✅
+
+### Implementation Notes
+
+**Phase 4 COMPLETED (2026-01-23)**
+
+- All view state, theme, grid settings now flow through DataViewerState
+- OpenGLWidget reacts to state signals and triggers updates
+- No more pass-through methods in OpenGLWidget
+- y_spacing removed from codebase (layout engine handles this automatically)
 
 ---
 
@@ -800,7 +787,7 @@ connect(_state.get(), &DataViewerState::gridChanged, this, [this]() {
 
 **Estimated Duration**: 2-3 days
 
-### Step 5.1: Add state to DataViewer_Widget
+### Step 5.1: Add state to DataViewer_Widget ✅
 
 ```cpp
 // DataViewer_Widget.hpp
@@ -814,12 +801,12 @@ private:
 };
 ```
 
-### Step 5.2: Wire UI preferences
+### Step 5.2: Wire UI preferences ✅
 
-- `_zoom_scaling_mode` → state
-- `_properties_panel_collapsed` → state
+- `_zoom_scaling_mode` → `_state->zoomScalingMode()`
+- `_properties_panel_collapsed` → `_state->propertiesPanelCollapsed()`
 
-### Step 5.3: Pass state to OpenGLWidget
+### Step 5.3: Pass state to OpenGLWidget ✅
 
 ```cpp
 DataViewer_Widget::DataViewer_Widget(...) {
@@ -828,10 +815,33 @@ DataViewer_Widget::DataViewer_Widget(...) {
 }
 ```
 
-### Files to Modify
+### Files Modified
 
-- `src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.hpp`
-- `src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.cpp`
+- [src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.hpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.hpp) - Added state, removed local members
+- [src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.cpp) - Create state, share with OpenGLWidget, use state for all settings
+
+### Success Criteria
+
+- [x] State pointer in DataViewer_Widget with setState()/state() accessors ✅
+- [x] DataViewer_Widget creates state and shares with OpenGLWidget ✅
+- [x] `_zoom_scaling_mode` replaced with `_state->zoomScalingMode()` ✅
+- [x] `_properties_panel_collapsed` replaced with `_state->propertiesPanelCollapsed()` ✅
+- [x] All state modifications go through `_state` (not `ui->openGLWidget->state()`) ✅
+- [x] setState() restores UI from state for workspace loading ✅
+- [x] All tests pass (879 assertions in 59 test cases) ✅
+
+### Implementation Notes
+
+**Phase 5 COMPLETED (2026-01-23)**
+
+Key changes:
+1. DataViewer_Widget now owns the state and creates it in constructor
+2. State is shared with OpenGLWidget via `setState()` call
+3. Removed `_zoom_scaling_mode` local member (now uses `_state->zoomScalingMode()`)
+4. Removed `_properties_panel_collapsed` local member (now uses `_state->propertiesPanelCollapsed()`)
+5. Removed duplicate `ZoomScalingMode` enum from header (uses `DataViewerZoomScalingMode` from state)
+6. All UI-to-state modifications use `_state->` directly, not `ui->openGLWidget->state()`
+7. `setState()` method restores UI elements from state (for workspace restore)
 
 ---
 
@@ -976,23 +986,41 @@ Review all members in OpenGLWidget and DataViewer_Widget that are now in state.
 | 1: State Data Structures | 2-3 days | ✅ **COMPLETED** | DataViewerStateData.hpp, unit tests |
 | 2: SeriesOptionsRegistry | 3-4 days | ✅ **COMPLETED** | Generic registry, template specializations |
 | 3: DataViewerState Class | 3-4 days | ✅ **COMPLETED** | EditorState subclass, accessors, signals |
-| 4: Wire OpenGLWidget | 3-4 days | 🔄 **IN PROGRESS** | View/theme/grid from state (time window, theme, grid, zoom done) |
-| 5: Wire DataViewer_Widget | 2-3 days | ⏳ **PENDING** | UI preferences from state |
+| 4: Wire OpenGLWidget | 3-4 days | ✅ **COMPLETED** | View/theme/grid from state, y_spacing removed |
+| 5: Wire DataViewer_Widget | 2-3 days | ✅ **COMPLETED** | UI preferences from state, shared state |
 | 6: Refactor TimeSeriesDataStore | 4-5 days | ⏳ **PENDING** | Remove options, state as source of truth |
 | 7: Cleanup & Testing | 2-3 days | ⏳ **PENDING** | Integration tests, documentation |
-| **Total** | **~3-4 weeks** | **~40% Complete** | **Full state extraction** |
+| **Total** | **~3-4 weeks** | **~70% Complete** | **Full state extraction** |
 
 ### Recent Progress (2026-01-23)
 
-**Phase 4 Partial Completion**: Time window control moved to state layer
-- Added `adjustTimeWidth()` and `setTimeWidth()` to TimeSeriesViewState
-- Added corresponding methods to DataViewerState with signal emission
-- Removed `changeRangeWidth()` and `setRangeWidth()` from OpenGLWidget
-- DataViewer_Widget now calls state methods directly for zoom and time window
-- Theme, grid, and global zoom also wired through state
-- All tests passing (274 tests, 99% pass rate)
+**Phase 4 & 5 Completed**: Full state wiring for both widgets
 
-**Key Architectural Win**: Established pattern that UI widgets modify state directly, OpenGLWidget only reads and reacts to signals. No more pass-through methods in rendering widgets.
+**Phase 4 Summary:**
+- All view state, theme, grid settings flow through DataViewerState
+- OpenGLWidget reacts to state signals and triggers updates
+- Removed pass-through methods in OpenGLWidget
+- y_spacing removed (layout engine handles spacing automatically)
+- setYBounds/setVerticalPanOffset already in state and used correctly
+
+**Phase 5 Summary:**
+- DataViewer_Widget now owns state and shares with OpenGLWidget
+- Removed `_zoom_scaling_mode` local member → `_state->zoomScalingMode()`
+- Removed `_properties_panel_collapsed` local member → `_state->propertiesPanelCollapsed()`
+- All UI modifications use `_state->` directly
+- setState() method enables workspace restore
+- All tests passing (879 assertions in 59 test cases)
+
+**Key Architectural Wins:**
+1. Single source of truth: DataViewer_Widget owns state, OpenGLWidget shares it
+2. UI widgets modify state directly, rendering widget reacts via signals
+3. No duplicate state variables between widgets
+4. Ready for workspace save/restore via state serialization
+
+**Next Steps (Phase 6):**
+- Move per-series display options from TimeSeriesDataStore to state
+- TimeSeriesDataStore keeps: data, layout_transform, data_cache, vertex_cache
+- State keeps: style (color, visibility), user_scale_factor, gap_handling, etc.
 
 ---
 

@@ -13,6 +13,7 @@
 #include <vector>
 
 class DataManager;
+class DataViewerState;
 class MainWindow;
 class QTableWidget;
 class TimeScrollBar;
@@ -27,11 +28,6 @@ class EventViewer_Widget;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;
-
-enum class ZoomScalingMode {
-    Fixed,  // Original fixed zoom factor
-    Adaptive// Zoom factor scales with current zoom level
-};
 
 namespace Ui {
 class DataViewer_Widget;
@@ -51,8 +47,22 @@ public:
 
     void updateXAxisSamples(int value);
 
-    void setZoomScalingMode(ZoomScalingMode mode) { _zoom_scaling_mode = mode; }
-    [[nodiscard]] ZoomScalingMode getZoomScalingMode() const { return _zoom_scaling_mode; }
+    /**
+     * @brief Set the DataViewerState for this widget
+     * 
+     * The state manages all serializable settings including view state,
+     * theme, grid settings, UI preferences, and per-series display options.
+     * This widget owns the state and shares it with OpenGLWidget.
+     * 
+     * @param state Shared pointer to the state object
+     */
+    void setState(std::shared_ptr<DataViewerState> state);
+
+    /**
+     * @brief Get the current DataViewerState
+     * @return Shared pointer to the state object
+     */
+    [[nodiscard]] std::shared_ptr<DataViewerState> state() const { return _state; }
 
     [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const;
 
@@ -100,13 +110,15 @@ private:
     TimeScrollBar * _time_scrollbar;
     Ui::DataViewer_Widget * ui;
 
+    /// Serializable state shared with OpenGLWidget
+    /// Source of truth for view state, theme, grid, UI preferences
+    std::shared_ptr<DataViewerState> _state;
+
     std::shared_ptr<TimeFrame> _time_frame;
 
     QString _highlighted_available_feature;
-    ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive};// Use adaptive scaling by default
     
-    // Properties panel state
-    bool _properties_panel_collapsed{false};
+    // Saved splitter sizes for panel collapse/restore (Qt-specific, not serialized)
     QList<int> _saved_splitter_sizes;
 
     // Model for Feature_Tree_Widget

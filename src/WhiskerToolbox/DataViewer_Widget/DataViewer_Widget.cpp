@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 #include "DataManager.hpp"
+#include "DataViewerState.hpp"
 #include "DataViewerStateData.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -46,9 +47,13 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     : QWidget(parent),
       _data_manager{std::move(data_manager)},
       _time_scrollbar{time_scrollbar},
-      ui(new Ui::DataViewer_Widget) {
+      ui(new Ui::DataViewer_Widget),
+      _state(std::make_shared<DataViewerState>()) {
 
     ui->setupUi(this);
+
+    // Share state with OpenGLWidget
+    ui->openGLWidget->setState(_state);
 
     // Note: Layout computation is now handled by OpenGLWidget's internal LayoutEngine
     // (Phase 4.9 migration - unified layout system)
@@ -222,8 +227,8 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->auto_arrange_button, &QPushButton::clicked, this, &DataViewer_Widget::autoArrangeVerticalSpacing);
 
     // Initialize grid line UI to match state defaults
-    ui->grid_lines_enabled->setChecked(ui->openGLWidget->state()->gridEnabled());
-    ui->grid_spacing->setValue(ui->openGLWidget->state()->gridSpacing());
+    ui->grid_lines_enabled->setChecked(_state->gridEnabled());
+    ui->grid_spacing->setValue(_state->gridSpacing());
 
     // Configure splitter behavior
     ui->main_splitter->setStretchFactor(0, 0);// Properties panel doesn't stretch
@@ -261,6 +266,42 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
 DataViewer_Widget::~DataViewer_Widget() {
     delete ui;
+}
+
+void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
+    if (!state) {
+        return;  // Don't accept null state
+    }
+    
+    _state = std::move(state);
+    
+    // Share with OpenGLWidget
+    ui->openGLWidget->setState(_state);
+    
+    // Update UI from state (for workspace restore)
+    // Grid settings
+    ui->grid_lines_enabled->setChecked(_state->gridEnabled());
+    ui->grid_spacing->setValue(_state->gridSpacing());
+    
+    // Theme
+    int const theme_index = (_state->theme() == DataViewerTheme::Dark) ? 0 : 1;
+    ui->theme_combo->setCurrentIndex(theme_index);
+    
+    // Properties panel collapsed state
+    if (_state->propertiesPanelCollapsed()) {
+        _hidePropertiesPanel();
+    } else {
+        _showPropertiesPanel();
+    }
+    
+    // Global zoom
+    ui->global_zoom->setValue(static_cast<double>(_state->globalZoom()));
+    
+    // Time range (update spinbox)
+    auto const & view = _state->viewState();
+    ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
+    
+    _updateLabels();
 }
 
 void DataViewer_Widget::openWidget() {
@@ -529,7 +570,7 @@ void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
 
 void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {
     // Set time width directly on state
-    int64_t const actual_range = ui->openGLWidget->state()->setTimeWidth(static_cast<int64_t>(value));
+    int64_t const actual_range = _state->setTimeWidth(static_cast<int64_t>(value));
 
     // Trigger canvas update to apply the new width (matches old behavior)
     ui->openGLWidget->updateCanvas();
@@ -549,7 +590,7 @@ void DataViewer_Widget::updateXAxisSamples(int value) {
 void DataViewer_Widget::_updateGlobalScale(double scale) {
     // Update global zoom directly in state
     // LayoutEngine will pick up the new value when computing layout
-    ui->openGLWidget->state()->setGlobalZoom(static_cast<float>(scale));
+    _state->setGlobalZoom(static_cast<float>(scale));
 
     // Trigger canvas update (layout recomputed automatically when dirty)
     ui->openGLWidget->updateCanvas();
@@ -575,7 +616,7 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     bool const coarse_mode = event->modifiers() & Qt::ControlModifier;
 
     float rangeFactor;
-    if (_zoom_scaling_mode == ZoomScalingMode::Adaptive) {
+    if (_state->zoomScalingMode() == DataViewerZoomScalingMode::Adaptive) {
         // Adaptive scaling: range factor is proportional to current range width
         // Base percentages and clamps vary by mode
         float base_percentage;
@@ -624,10 +665,10 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     auto const range_delta = static_cast<int64_t>(-numSteps * rangeFactor);
 
     // Apply range delta directly to state
-    ui->openGLWidget->state()->adjustTimeWidth(range_delta);
+    _state->adjustTimeWidth(range_delta);
 
     // Get the actual range that was achieved
-    auto const & view_state = ui->openGLWidget->state()->viewState();
+    auto const & view_state = _state->viewState();
     auto const actual_range = static_cast<int>(view_state.getTimeWidth());
 
     // Update spinbox with the actual achieved range (not the requested range)
@@ -636,7 +677,7 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
 }
 
 void DataViewer_Widget::_updateLabels() {
-    auto const & view_state = ui->openGLWidget->state()->viewState();
+    auto const & view_state = _state->viewState();
     ui->neg_x_label->setText(QString::number(view_state.time_start));
     ui->pos_x_label->setText(QString::number(view_state.time_end));
 }
@@ -716,7 +757,7 @@ std::optional<NewDigitalIntervalSeriesDisplayOptions *> DataViewer_Widget::getDi
 
 void DataViewer_Widget::_handleThemeChanged(int theme_index) {
     DataViewerTheme theme = (theme_index == 0) ? DataViewerTheme::Dark : DataViewerTheme::Light;
-    ui->openGLWidget->state()->setTheme(theme);
+    _state->setTheme(theme);
 
     // Update coordinate label styling based on theme
     if (theme == DataViewerTheme::Dark) {
@@ -729,11 +770,11 @@ void DataViewer_Widget::_handleThemeChanged(int theme_index) {
 }
 
 void DataViewer_Widget::_handleGridLinesToggled(bool enabled) {
-    ui->openGLWidget->state()->setGridEnabled(enabled);
+    _state->setGridEnabled(enabled);
 }
 
 void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
-    ui->openGLWidget->state()->setGridSpacing(spacing);
+    _state->setGridSpacing(spacing);
 }
 
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {
@@ -1347,7 +1388,7 @@ void DataViewer_Widget::_hidePropertiesPanel() {
     ui->properties_container->hide();
     ui->show_properties_button->show();
 
-    _properties_panel_collapsed = true;
+    _state->setPropertiesPanelCollapsed(true);
 
     std::cout << "Properties panel hidden" << std::endl;
 
@@ -1370,7 +1411,7 @@ void DataViewer_Widget::_showPropertiesPanel() {
     // Hide the reveal button
     ui->show_properties_button->hide();
 
-    _properties_panel_collapsed = false;
+    _state->setPropertiesPanelCollapsed(false);
 
     std::cout << "Properties panel shown" << std::endl;
 
