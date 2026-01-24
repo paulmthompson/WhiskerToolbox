@@ -241,13 +241,13 @@ public:
      * @brief Set the complete view state
      * @param view New view state
      */
-    void setViewState(DataViewerViewState const & view);
+    void setViewState(CorePlotting::TimeSeriesViewState const & view);
 
     /**
      * @brief Get the complete view state
-     * @return Const reference to DataViewerViewState
+     * @return Const reference to CorePlotting::TimeSeriesViewState
      */
-    [[nodiscard]] DataViewerViewState const & viewState() const { return _data.view; }
+    [[nodiscard]] CorePlotting::TimeSeriesViewState const & viewState() const { return _data.view; }
 
     // ==================== Theme ====================
 

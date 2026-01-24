@@ -11,10 +11,10 @@ using Catch::Approx;
 
 TEST_CASE("SeriesStyleData serialization", "[DataViewerStateData]") {
     SECTION("Default values serialize correctly") {
-        SeriesStyleData style;
+        CorePlotting::SeriesStyle style;
         
         auto json = rfl::json::write(style);
-        auto result = rfl::json::read<SeriesStyleData>(json);
+        auto result = rfl::json::read<CorePlotting::SeriesStyle>(json);
         
         REQUIRE(result);
         auto const& data = result.value();
@@ -25,14 +25,14 @@ TEST_CASE("SeriesStyleData serialization", "[DataViewerStateData]") {
     }
     
     SECTION("Custom values round-trip") {
-        SeriesStyleData style;
+        CorePlotting::SeriesStyle style;
         style.hex_color = "#ff0000";
         style.alpha = 0.5f;
         style.line_thickness = 3;
         style.is_visible = false;
         
         auto json = rfl::json::write(style);
-        auto result = rfl::json::read<SeriesStyleData>(json);
+        auto result = rfl::json::read<CorePlotting::SeriesStyle>(json);
         
         REQUIRE(result);
         auto const& data = result.value();
@@ -216,10 +216,10 @@ TEST_CASE("DigitalIntervalSeriesOptionsData serialization", "[DataViewerStateDat
 
 TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
     SECTION("Default values") {
-        DataViewerViewState view;
+        CorePlotting::TimeSeriesViewState view;
         
         auto json = rfl::json::write(view);
-        auto result = rfl::json::read<DataViewerViewState>(json);
+        auto result = rfl::json::read<CorePlotting::TimeSeriesViewState>(json);
         
         REQUIRE(result);
         auto const& data = result.value();
@@ -233,7 +233,7 @@ TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
     }
     
     SECTION("Custom values round-trip") {
-        DataViewerViewState view;
+        CorePlotting::TimeSeriesViewState view;
         view.time_start = 1000;
         view.time_end = 50000;
         view.y_min = -2.0f;
@@ -243,7 +243,7 @@ TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
         view.global_vertical_scale = 0.8f;
         
         auto json = rfl::json::write(view);
-        auto result = rfl::json::read<DataViewerViewState>(json);
+        auto result = rfl::json::read<CorePlotting::TimeSeriesViewState>(json);
         
         REQUIRE(result);
         auto const& data = result.value();
@@ -257,12 +257,12 @@ TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
     }
     
     SECTION("Large time values (int64_t)") {
-        DataViewerViewState view;
+        CorePlotting::TimeSeriesViewState view;
         view.time_start = 1000000000LL;
         view.time_end = 9000000000LL;
         
         auto json = rfl::json::write(view);
-        auto result = rfl::json::read<DataViewerViewState>(json);
+        auto result = rfl::json::read<CorePlotting::TimeSeriesViewState>(json);
         
         REQUIRE(result);
         auto const& data = result.value();

@@ -149,7 +149,7 @@ void DataViewerState::setGlobalVerticalScale(float scale)
     }
 }
 
-void DataViewerState::setViewState(DataViewerViewState const & view)
+void DataViewerState::setViewState(CorePlotting::TimeSeriesViewState const & view)
 {
     constexpr float epsilon = 1e-6f;
     bool const time_changed = _data.view.time_start != view.time_start ||

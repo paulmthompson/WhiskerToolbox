@@ -73,27 +73,6 @@ struct TimeSeriesViewState {
     float global_vertical_scale{1.0f};
     
     // =========================================================================
-    // Constructors
-    // =========================================================================
-    
-    /**
-     * @brief Default constructor
-     * 
-     * Creates a view state with default time window [0, 1000] and
-     * standard Y bounds [-1, 1].
-     */
-    TimeSeriesViewState() = default;
-    
-    /**
-     * @brief Construct with explicit time window
-     * 
-     * @param start Start of visible time window
-     * @param end End of visible time window (inclusive)
-     */
-    TimeSeriesViewState(int64_t start, int64_t end)
-        : time_start(start), time_end(end) {}
-    
-    // =========================================================================
     // Time Window Methods
     // =========================================================================
     

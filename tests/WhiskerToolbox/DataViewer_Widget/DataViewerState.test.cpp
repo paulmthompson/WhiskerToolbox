@@ -120,7 +120,7 @@ TEST_CASE("DataViewerState view state", "[DataViewerState]")
     }
     
     SECTION("setViewState changes all values") {
-        DataViewerViewState view;
+        CorePlotting::TimeSeriesViewState view;
         view.time_start = 500;
         view.time_end = 1500;
         view.y_min = -3.0f;

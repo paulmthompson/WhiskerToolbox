@@ -20,19 +20,6 @@ struct SeriesStyle {
     float alpha{1.0f};                ///< Alpha transparency [0.0, 1.0]
     int line_thickness{1};            ///< Line thickness in pixels
     bool is_visible{true};            ///< Visibility flag
-
-    /**
-     * @brief Construct with default style
-     */
-    SeriesStyle() = default;
-
-    /**
-     * @brief Construct with custom color
-     * @param color Hex color string
-     * @param alpha_value Alpha transparency (default: 1.0)
-     */
-    SeriesStyle(std::string color, float alpha_value = 1.0f)
-        : hex_color(std::move(color)), alpha(alpha_value) {}
 };
 
 } // namespace CorePlotting

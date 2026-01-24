@@ -51,27 +51,15 @@
  * @see TimeSeriesDataStore for runtime data storage
  */
 
+#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
+#include "CorePlotting/DataTypes/SeriesStyle.hpp"
+
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
 #include <cstdint>
 #include <map>
 #include <string>
-
-// ==================== Series Style Data (Shared Base) ====================
-
-/**
- * @brief Common visual style fields for all series types
- * 
- * Contains the user-configurable visual properties shared by all series types.
- * Uses rfl::Flatten in derived types for flat JSON structure.
- */
-struct SeriesStyleData {
-    std::string hex_color = "#007bff";  ///< Color in hex format (e.g., "#007bff")
-    float alpha = 1.0f;                  ///< Alpha transparency [0.0, 1.0]
-    int line_thickness = 1;              ///< Line thickness in pixels
-    bool is_visible = true;              ///< Visibility flag
-};
 
 // ==================== Per-Series Display Options ====================
 
@@ -93,7 +81,7 @@ enum class AnalogGapHandlingMode {
  * are computed at runtime and stored in TimeSeriesDataStore.
  */
 struct AnalogSeriesOptionsData {
-    rfl::Flatten<SeriesStyleData> style;  ///< Visual style (flattened in JSON)
+    rfl::Flatten<CorePlotting::SeriesStyle> style;  ///< Visual style (flattened in JSON)
     
     // Analog-specific user settings
     float user_scale_factor = 1.0f;   ///< User-controlled amplitude scaling
@@ -130,7 +118,7 @@ enum class EventPlottingModeData {
  * @brief Serializable display options for digital event series
  */
 struct DigitalEventSeriesOptionsData {
-    rfl::Flatten<SeriesStyleData> style;  ///< Visual style (flattened in JSON)
+    rfl::Flatten<CorePlotting::SeriesStyle> style;  ///< Visual style (flattened in JSON)
     
     // Event-specific settings
     EventPlottingModeData plotting_mode = EventPlottingModeData::FullCanvas;
@@ -154,7 +142,7 @@ struct DigitalEventSeriesOptionsData {
  * @brief Serializable display options for digital interval series
  */
 struct DigitalIntervalSeriesOptionsData {
-    rfl::Flatten<SeriesStyleData> style;  ///< Visual style (flattened in JSON)
+    rfl::Flatten<CorePlotting::SeriesStyle> style;  ///< Visual style (flattened in JSON)
     
     // Interval-specific settings
     bool extend_full_canvas = true;   ///< Whether intervals extend full canvas
@@ -171,29 +159,6 @@ struct DigitalIntervalSeriesOptionsData {
     float & alpha() { return style.get().alpha; }
     int & line_thickness() { return style.get().line_thickness; }
     bool & is_visible() { return style.get().is_visible; }
-};
-
-// ==================== View State ====================
-
-/**
- * @brief View/camera state for the time series display
- * 
- * Captures the current viewport settings including time window,
- * Y-axis bounds, and global scaling factors.
- */
-struct DataViewerViewState {
-    // Time window (X-axis)
-    int64_t time_start = 0;       ///< Start of visible time window (TimeFrameIndex units)
-    int64_t time_end = 1000;      ///< End of visible time window (inclusive)
-    
-    // Y-axis bounds
-    float y_min = -1.0f;          ///< Minimum Y in normalized device coordinates
-    float y_max = 1.0f;           ///< Maximum Y in normalized device coordinates
-    float vertical_pan_offset = 0.0f;  ///< Vertical pan offset in NDC units
-    
-    // Global scaling
-    float global_zoom = 1.0f;           ///< Global zoom/amplitude scale
-    float global_vertical_scale = 1.0f; ///< Global vertical scale factor
 };
 
 // ==================== Theme State ====================
@@ -316,7 +281,7 @@ struct DataViewerStateData {
     std::string display_name = "Data Viewer";        ///< User-visible name for this widget
     
     // === View State ===
-    DataViewerViewState view;                        ///< Time window, Y bounds, zoom
+    CorePlotting::TimeSeriesViewState view;          ///< Time window, Y bounds, zoom
     
     // === Theme and Grid ===
     DataViewerThemeState theme;                      ///< Visual theme settings
