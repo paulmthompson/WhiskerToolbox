@@ -12,7 +12,6 @@
 #include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
-#include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
 #include "EditorCreationController.hpp"
@@ -37,6 +36,7 @@
 // Module registration headers - each module defines its own factory functions
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
+#include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
@@ -738,54 +738,6 @@ void MainWindow::openTensorLoaderWidget() {
 // Old Interface Widgets (No EditorRegistry)
 //=================================
 
-void MainWindow::openDataViewer() {
-    std::string const key = "DataViewer_widget";
-
-    if (!_widgets.contains(key)) {
-        auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
-                _data_manager,
-                _time_scrollbar);
-
-        DataViewerWidget->setObjectName(key);
-
-        // Insert DataViewer between media and scrollbar
-        // First, find the scrollbar dock widget
-        auto scrollbar_dock = findDockWidget("scrollbar");
-        if (scrollbar_dock && scrollbar_dock->dockAreaWidget()) {
-            // Create dock widget for DataViewer
-            auto dataviewer_dock = new ads::CDockWidget(QString::fromStdString(key));
-            dataviewer_dock->setWidget(DataViewerWidget.get());
-            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetClosable, true);
-            dataviewer_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-
-            // Add DataViewer above the scrollbar (in the same dock area)
-            _m_DockManager->addDockWidget(ads::TopDockWidgetArea, dataviewer_dock, scrollbar_dock->dockAreaWidget());
-
-            // Adjust splitter: give DataViewer most space, scrollbar minimal space
-            // The splitter now contains: media, dataviewer, scrollbar
-            auto media_dock = findDockWidget("media");
-            if (media_dock) {
-                auto * main_splitter = ads::internal::findParent<ads::CDockSplitter *>(media_dock->widget());
-                if (main_splitter) {
-                    int const height = main_splitter->height();
-                    // Split: 45% media, 50% dataviewer, 5% scrollbar
-                    main_splitter->setSizes({height * 45 / 100, height * 50 / 100, height * 5 / 100});
-                }
-            }
-        } else {
-            // Fallback to old behavior if scrollbar dock not found
-            registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
-        }
-
-        _widgets[key] = std::move(DataViewerWidget);
-    }
-
-    auto ptr = dynamic_cast<DataViewer_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
 void MainWindow::openBatchProcessingWidget() {
     std::string const key = "BatchProcessing_widget";
 
@@ -847,6 +799,11 @@ void MainWindow::openTableDesignerWidget() {
 //=================================
 // New Editor Instances
 //=================================
+
+void MainWindow::openDataViewer() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("DataViewerWidget"));
+}
 
 void MainWindow::openMLWidget() {
     // Use EditorCreationController for ML_Widget
@@ -955,8 +912,9 @@ void MainWindow::_registerEditorTypes() {
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
+    DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+
     // Future: Add more module registrations here
-    // DataViewerModule::registerTypes(_editor_registry.get(), _data_manager);
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
 }
 

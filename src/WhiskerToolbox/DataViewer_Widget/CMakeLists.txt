@@ -17,11 +17,16 @@ set(DATAVIEWER_WIDGET_SOURCES
         DataViewerInputHandler.hpp
         DataViewerInteractionManager.cpp
         DataViewerInteractionManager.hpp
+        DataViewerPropertiesWidget.cpp
+        DataViewerPropertiesWidget.hpp
+        DataViewerPropertiesWidget.ui
         DataViewerSelectionManager.cpp
         DataViewerSelectionManager.hpp
         DataViewerStateData.hpp
         DataViewerState.cpp
         DataViewerState.hpp
+        DataViewerWidgetRegistration.cpp
+        DataViewerWidgetRegistration.hpp
         DataViewerTooltipController.cpp
         DataViewerTooltipController.hpp
         SeriesOptionsRegistry.cpp
