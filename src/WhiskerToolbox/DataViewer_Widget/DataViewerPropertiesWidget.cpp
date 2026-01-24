@@ -4,23 +4,45 @@
 #include "DataManager/DataManager.hpp"
 #include "DataViewerState.hpp"
 #include "DataViewerStateData.hpp"
+#include "Feature_Tree_Model.hpp"
+#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+#include "OpenGLWidget.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
+#include "AnalogTimeSeries/AnalogViewer_Widget.hpp"
+#include "DigitalEvent/EventViewer_Widget.hpp"
+#include "DigitalInterval/IntervalViewer_Widget.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QMenu>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QTreeWidget>
 
 #include <iostream>
 
 DataViewerPropertiesWidget::DataViewerPropertiesWidget(std::shared_ptr<DataViewerState> state,
                                                          std::shared_ptr<DataManager> data_manager,
+                                                         OpenGLWidget * opengl_widget,
                                                          QWidget * parent)
     : QWidget(parent),
       ui(new Ui::DataViewerPropertiesWidget),
       _state(std::move(state)),
-      _data_manager(std::move(data_manager)) {
+      _data_manager(std::move(data_manager)),
+      _opengl_widget(opengl_widget) {
     ui->setupUi(this);
+
+    // Initialize feature tree model
+    _feature_tree_model = std::make_unique<Feature_Tree_Model>(this);
+    _feature_tree_model->setDataManager(_data_manager);
+
+    _setupFeatureTree();
+    
+    if (_opengl_widget) {
+        _setupStackedWidget();
+    }
 
     _initializeFromState();
     _connectUIControls();
@@ -29,6 +51,25 @@ DataViewerPropertiesWidget::DataViewerPropertiesWidget(std::shared_ptr<DataViewe
 
 DataViewerPropertiesWidget::~DataViewerPropertiesWidget() {
     delete ui;
+}
+
+void DataViewerPropertiesWidget::setOpenGLWidget(OpenGLWidget * opengl_widget) {
+    if (_opengl_widget == opengl_widget) {
+        return;
+    }
+    _opengl_widget = opengl_widget;
+    
+    if (_opengl_widget) {
+        _setupStackedWidget();
+    }
+}
+
+void DataViewerPropertiesWidget::setTimeFrame(std::shared_ptr<TimeFrame> time_frame) {
+    _time_frame = std::move(time_frame);
+}
+
+void DataViewerPropertiesWidget::refreshFeatureTree() {
+    ui->feature_tree_widget->refreshTree();
 }
 
 void DataViewerPropertiesWidget::setXAxisSamplesMaximum(int max) {
@@ -204,4 +245,151 @@ void DataViewerPropertiesWidget::_onGridSpacingChanged(int value) {
     if (_updating_from_state || !_state) return;
     
     _state->setGridSpacing(value);
+}
+
+void DataViewerPropertiesWidget::_handleFeatureSelected(QString const & feature) {
+    if (!_data_manager || feature.isEmpty()) {
+        return;
+    }
+
+    std::string const key = feature.toStdString();
+    auto const type = _data_manager->getType(key);
+
+    // Stacked widget indices: 0=Analog, 1=Interval, 2=Event
+    int constexpr stacked_widget_analog_index = 0;
+    int constexpr stacked_widget_interval_index = 1;
+    int constexpr stacked_widget_event_index = 2;
+
+    if (type == DM_DataType::Analog) {
+        ui->stackedWidget->setCurrentIndex(stacked_widget_analog_index);
+        auto * analog_widget = dynamic_cast<AnalogViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_analog_index));
+        if (analog_widget) {
+            analog_widget->setActiveKey(key);
+        }
+    } else if (type == DM_DataType::DigitalInterval) {
+        ui->stackedWidget->setCurrentIndex(stacked_widget_interval_index);
+        auto * interval_widget = dynamic_cast<IntervalViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_interval_index));
+        if (interval_widget) {
+            interval_widget->setActiveKey(key);
+        }
+    } else if (type == DM_DataType::DigitalEvent) {
+        ui->stackedWidget->setCurrentIndex(stacked_widget_event_index);
+        auto * event_widget = dynamic_cast<EventViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_event_index));
+        if (event_widget) {
+            event_widget->setActiveKey(key);
+        }
+    }
+}
+
+void DataViewerPropertiesWidget::_handleColorChanged(std::string const & feature_key, std::string const & hex_color) {
+    emit featureColorChanged(feature_key, hex_color);
+}
+
+void DataViewerPropertiesWidget::_setupFeatureTree() {
+    // Configure Feature_Tree_Widget
+    ui->feature_tree_widget->setTypeFilters({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
+    ui->feature_tree_widget->setDataManager(_data_manager);
+
+    // Connect Feature_Tree_Widget signals
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::featureSelected, this, [this](std::string const & feature) {
+        _handleFeatureSelected(QString::fromStdString(feature));
+    });
+
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
+        std::cout << "Properties: Adding single feature: " << feature << std::endl;
+        std::string color = _feature_tree_model->getFeatureColor(feature);
+        emit featureAddRequested(feature, color);
+    });
+
+    // Install context menu handling on the embedded tree widget
+    ui->feature_tree_widget->treeWidget()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->feature_tree_widget->treeWidget(), &QTreeWidget::customContextMenuRequested, this, [this](QPoint const & pos) {
+        auto * tw = ui->feature_tree_widget->treeWidget();
+        QTreeWidgetItem * item = tw->itemAt(pos);
+        if (!item) return;
+        std::string const key = item->text(0).toStdString();
+        // Group items have children and are under Analog data type parent
+        bool const hasChildren = item->childCount() > 0;
+        if (hasChildren) {
+            // Determine if parent is Analog data type or children are analog keys
+            bool isAnalogGroup = false;
+            if (auto * parent = item->parent()) {
+                if (parent->text(0) == QString::fromStdString(convert_data_type_to_string(DM_DataType::Analog))) {
+                    isAnalogGroup = true;
+                }
+            }
+            if (isAnalogGroup) {
+                QPoint const global_pos = tw->viewport()->mapToGlobal(pos);
+                emit groupContextMenuRequested(key, global_pos);
+            }
+        }
+    });
+
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeature, this, [this](std::string const & feature) {
+        std::cout << "Properties: Removing single feature: " << feature << std::endl;
+        emit featureRemoveRequested(feature);
+    });
+
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeatures, this, [this](std::vector<std::string> const & features) {
+        std::cout << "Properties: Adding " << features.size() << " features as group" << std::endl;
+        // Get colors for each feature from the model
+        std::vector<std::string> colors;
+        colors.reserve(features.size());
+        for (auto const & key : features) {
+            colors.push_back(_feature_tree_model->getFeatureColor(key));
+        }
+        emit featuresAddRequested(features, colors);
+    });
+
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeatures, this, [this](std::vector<std::string> const & features) {
+        std::cout << "Properties: Removing " << features.size() << " features as group" << std::endl;
+        emit featuresRemoveRequested(features);
+    });
+
+    // Connect color change signals from the model
+    connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged, 
+            this, &DataViewerPropertiesWidget::_handleColorChanged);
+
+    // Connect color change signals from the tree widget to the model
+    connect(ui->feature_tree_widget, &Feature_Tree_Widget::colorChangeFeatures, this, [this](std::vector<std::string> const & features, std::string const & hex_color) {
+        for (auto const & feature: features) {
+            _feature_tree_model->setFeatureColor(feature, hex_color);
+        }
+    });
+}
+
+void DataViewerPropertiesWidget::_setupStackedWidget() {
+    if (!_opengl_widget) {
+        return;
+    }
+
+    // Remove all existing widgets from the stacked widget (except the placeholder page)
+    while (ui->stackedWidget->count() > 1) {
+        QWidget * widget = ui->stackedWidget->widget(ui->stackedWidget->count() - 1);
+        ui->stackedWidget->removeWidget(widget);
+        delete widget;
+    }
+    // Remove the placeholder page
+    if (ui->stackedWidget->count() > 0) {
+        QWidget * placeholder = ui->stackedWidget->widget(0);
+        ui->stackedWidget->removeWidget(placeholder);
+        delete placeholder;
+    }
+
+    // Setup stacked widget with data-type specific viewers
+    auto * analog_widget = new AnalogViewer_Widget(_data_manager, _opengl_widget);
+    auto * interval_widget = new IntervalViewer_Widget(_data_manager, _opengl_widget);
+    auto * event_widget = new EventViewer_Widget(_data_manager, _opengl_widget);
+
+    ui->stackedWidget->addWidget(analog_widget);   // Index 0
+    ui->stackedWidget->addWidget(interval_widget); // Index 1
+    ui->stackedWidget->addWidget(event_widget);    // Index 2
+
+    // Connect color change signals from sub-widgets
+    connect(analog_widget, &AnalogViewer_Widget::colorChanged,
+            this, &DataViewerPropertiesWidget::_handleColorChanged);
+    connect(interval_widget, &IntervalViewer_Widget::colorChanged,
+            this, &DataViewerPropertiesWidget::_handleColorChanged);
+    connect(event_widget, &EventViewer_Widget::colorChanged,
+            this, &DataViewerPropertiesWidget::_handleColorChanged);
 }

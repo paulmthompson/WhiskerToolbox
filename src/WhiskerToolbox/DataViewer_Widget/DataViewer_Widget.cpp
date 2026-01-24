@@ -58,10 +58,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Note: Layout computation is now handled by OpenGLWidget's internal LayoutEngine
     // (Phase 4.9 migration - unified layout system)
 
-    // Initialize feature tree model
-    _feature_tree_model = std::make_unique<Feature_Tree_Model>(this);
-    _feature_tree_model->setDataManager(_data_manager);
-
     // Set up observer to automatically clean up data when it's deleted from DataManager
     // Queue the cleanup to the Qt event loop to avoid running during mid-update mutations
     _data_manager->addObserver([this]() {
@@ -71,109 +67,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             self->cleanupDeletedData(); }, Qt::QueuedConnection);
     });
 
-    // Configure Feature_Tree_Widget
-    ui->feature_tree_widget->setTypeFilters({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
-    ui->feature_tree_widget->setDataManager(_data_manager);
-
-    // Connect Feature_Tree_Widget signals using the new interface
-    connect(ui->feature_tree_widget, &Feature_Tree_Widget::featureSelected, this, [this](std::string const & feature) {
-        _handleFeatureSelected(QString::fromStdString(feature));
-    });
-
-    connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeature, this, [this](std::string const & feature) {
-        std::cout << "Adding single feature: " << feature << std::endl;
-        _addFeatureToModel(QString::fromStdString(feature), true);
-    });
-
-    // Install context menu handling on the embedded tree widget
-    ui->feature_tree_widget->treeWidget()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->feature_tree_widget->treeWidget(), &QTreeWidget::customContextMenuRequested, this, [this](QPoint const & pos) {
-        auto * tw = ui->feature_tree_widget->treeWidget();
-        QTreeWidgetItem * item = tw->itemAt(pos);
-        if (!item) return;
-        std::string const key = item->text(0).toStdString();
-        // Group items have children and are under Analog data type parent
-        bool const hasChildren = item->childCount() > 0;
-        if (hasChildren) {
-            // Determine if parent is Analog data type or children are analog keys
-            bool isAnalogGroup = false;
-            if (auto * parent = item->parent()) {
-                if (parent->text(0) == QString::fromStdString(convert_data_type_to_string(DM_DataType::Analog))) {
-                    isAnalogGroup = true;
-                }
-            }
-            if (isAnalogGroup) {
-                QPoint const global_pos = tw->viewport()->mapToGlobal(pos);
-                _showGroupContextMenu(key, global_pos);
-            }
-        }
-    });
-
-    connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeature, this, [this](std::string const & feature) {
-        std::cout << "Removing single feature: " << feature << std::endl;
-        _addFeatureToModel(QString::fromStdString(feature), false);
-    });
-
-    connect(ui->feature_tree_widget, &Feature_Tree_Widget::addFeatures, this, [this](std::vector<std::string> const & features) {
-        std::cout << "Adding " << features.size() << " features as group" << std::endl;
-
-        // Mark batch add to suppress per-series auto-arrange
-        _is_batch_add = true;
-        // Process all features in the group without triggering individual canvas updates
-        for (auto const & key: features) {
-            _plotSelectedFeatureWithoutUpdate(key);
-        }
-        _is_batch_add = false;
-
-        // Auto-arrange and auto-fill once after batch
-        if (!features.empty()) {
-            std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
-            autoArrangeVerticalSpacing();// includes auto-fill functionality
-        }
-
-        // Trigger a single canvas update at the end
-        if (!features.empty()) {
-            std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas();
-        }
-    });
-
-    connect(ui->feature_tree_widget, &Feature_Tree_Widget::removeFeatures, this, [this](std::vector<std::string> const & features) {
-        std::cout << "Removing " << features.size() << " features as group" << std::endl;
-
-        _is_batch_add = true;
-        // Process all features in the group without triggering individual canvas updates
-        for (auto const & key: features) {
-            _removeSelectedFeatureWithoutUpdate(key);
-        }
-        _is_batch_add = false;
-
-        // Auto-arrange and auto-fill once after batch
-        if (!features.empty()) {
-            std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
-            autoArrangeVerticalSpacing();// includes auto-fill functionality
-        }
-
-        // Trigger a single canvas update at the end
-        if (!features.empty()) {
-            std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas();
-        }
-    });
-
-    // Connect color change signals from the model
-    connect(_feature_tree_model.get(), &Feature_Tree_Model::featureColorChanged, this, &DataViewer_Widget::_handleColorChanged);
-
-    // Connect color change signals from the tree widget to the model
-    connect(ui->feature_tree_widget, &Feature_Tree_Widget::colorChangeFeatures, this, [this](std::vector<std::string> const & features, std::string const & hex_color) {
-        for (auto const & feature: features) {
-            _feature_tree_model->setFeatureColor(feature, hex_color);
-        }
-    });
-
     connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
 
-    //We should alwasy get the master clock because we plot
+    // We should always get the master clock because we plot
     // Check for master clock
     auto time_keys = _data_manager->getTimeFrameKeys();
     // if timekeys doesn't have master, we should throw an error
@@ -187,50 +83,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Set the master time frame for proper coordinate conversion
     ui->openGLWidget->setMasterTimeFrame(_time_frame);
 
-    // Setup stacked widget with data-type specific viewers
-    auto analog_widget = new AnalogViewer_Widget(_data_manager, ui->openGLWidget);
-    auto interval_widget = new IntervalViewer_Widget(_data_manager, ui->openGLWidget);
-    auto event_widget = new EventViewer_Widget(_data_manager, ui->openGLWidget);
-
-    ui->stackedWidget->addWidget(analog_widget);
-    ui->stackedWidget->addWidget(interval_widget);
-    ui->stackedWidget->addWidget(event_widget);
-
-    // Connect color change signals from sub-widgets
-    connect(analog_widget, &AnalogViewer_Widget::colorChanged,
-            this, &DataViewer_Widget::_handleColorChanged);
-    connect(interval_widget, &IntervalViewer_Widget::colorChanged,
-            this, &DataViewer_Widget::_handleColorChanged);
-    connect(event_widget, &EventViewer_Widget::colorChanged,
-            this, &DataViewer_Widget::_handleColorChanged);
-
     // Connect mouse hover signal from OpenGL widget
     connect(ui->openGLWidget, &OpenGLWidget::mouseHover,
             this, &DataViewer_Widget::_updateCoordinateDisplay);
-
-    // Configure splitter behavior
-    ui->main_splitter->setStretchFactor(0, 0);// Properties panel doesn't stretch
-    ui->main_splitter->setStretchFactor(1, 1);// Plot area stretches
-
-    // Set initial sizes: properties panel gets enough space for controls, plot area gets the rest
-    ui->main_splitter->setSizes({320, 1000});
-
-    // Prevent plot area from collapsing, but allow properties panel to collapse
-    ui->main_splitter->setCollapsible(0, true); // Properties panel can collapse
-    ui->main_splitter->setCollapsible(1, false);// Plot area cannot collapse
-
-    // Connect hide button (on properties panel)
-    connect(ui->hide_properties_button, &QPushButton::clicked, this, [this]() {
-        _hidePropertiesPanel();
-    });
-
-    // Connect show button (on plot side) - initially hidden
-    connect(ui->show_properties_button, &QPushButton::clicked, this, [this]() {
-        _showPropertiesPanel();
-    });
-
-    // Initially hide the show button since properties are visible
-    ui->show_properties_button->hide();
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -247,13 +102,6 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
     // Share with OpenGLWidget
     ui->openGLWidget->setState(_state);
     
-    // Properties panel collapsed state
-    if (_state->propertiesPanelCollapsed()) {
-        _hidePropertiesPanel();
-    } else {
-        _showPropertiesPanel();
-    }
-    
     // Connect viewStateChanged to update labels when time range changes
     connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
         _updateLabels();
@@ -264,10 +112,6 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
 
 void DataViewer_Widget::openWidget() {
     std::cout << "DataViewer Widget Opened" << std::endl;
-
-    // Tree is already populated by observer pattern in setDataManager()
-    // Trigger refresh in case of manual opening
-    ui->feature_tree_widget->refreshTree();
 
     this->show();
     _updateLabels();
@@ -304,17 +148,94 @@ void DataViewer_Widget::_updatePlot(int time) {
 }
 
 
-void DataViewer_Widget::_addFeatureToModel(QString const & feature, bool enabled) {
-    std::cout << "Feature toggle signal received: " << feature.toStdString() << " enabled: " << enabled << std::endl;
+void DataViewer_Widget::addFeature(std::string const & key, std::string const & color) {
+    std::cout << "Adding feature: " << key << " with color: " << color << std::endl;
+    _plotSelectedFeature(key, color);
+}
 
-    if (enabled) {
-        _plotSelectedFeature(feature.toStdString());
-    } else {
-        _removeSelectedFeature(feature.toStdString());
+void DataViewer_Widget::removeFeature(std::string const & key) {
+    std::cout << "Removing feature: " << key << std::endl;
+    _removeSelectedFeature(key);
+}
+
+void DataViewer_Widget::addFeatures(std::vector<std::string> const & keys, std::vector<std::string> const & colors) {
+    std::cout << "Adding " << keys.size() << " features as group" << std::endl;
+
+    // Mark batch add to suppress per-series auto-arrange
+    _is_batch_add = true;
+    // Process all features in the group without triggering individual canvas updates
+    for (size_t i = 0; i < keys.size(); ++i) {
+        std::string const & key = keys[i];
+        std::string color = (i < colors.size()) ? colors[i] : "#FF6B6B";  // Default color if not provided
+        _plotSelectedFeatureWithoutUpdate(key, color);
+    }
+    _is_batch_add = false;
+
+    // Auto-arrange and auto-fill once after batch
+    if (!keys.empty()) {
+        std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
+        autoArrangeVerticalSpacing();// includes auto-fill functionality
+    }
+
+    // Trigger a single canvas update at the end
+    if (!keys.empty()) {
+        std::cout << "Triggering single canvas update for group toggle" << std::endl;
+        ui->openGLWidget->updateCanvas();
     }
 }
 
-void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
+void DataViewer_Widget::removeFeatures(std::vector<std::string> const & keys) {
+    std::cout << "Removing " << keys.size() << " features as group" << std::endl;
+
+    _is_batch_add = true;
+    // Process all features in the group without triggering individual canvas updates
+    for (auto const & key: keys) {
+        _removeSelectedFeatureWithoutUpdate(key);
+    }
+    _is_batch_add = false;
+
+    // Auto-arrange and auto-fill once after batch
+    if (!keys.empty()) {
+        std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
+        autoArrangeVerticalSpacing();// includes auto-fill functionality
+    }
+
+    // Trigger a single canvas update at the end
+    if (!keys.empty()) {
+        std::cout << "Triggering single canvas update for group toggle" << std::endl;
+        ui->openGLWidget->updateCanvas();
+    }
+}
+
+void DataViewer_Widget::handleColorChanged(std::string const & feature_key, std::string const & hex_color) {
+    // Update the color in state (not directly in OpenGL widget display options)
+    auto const type = _data_manager->getType(feature_key);
+    QString const qkey = QString::fromStdString(feature_key);
+
+    if (type == DM_DataType::Analog) {
+        auto * opts = _state->seriesOptions().getMutable<AnalogSeriesOptionsData>(qkey);
+        if (opts) {
+            opts->hex_color() = hex_color;
+        }
+    } else if (type == DM_DataType::DigitalEvent) {
+        auto * opts = _state->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(qkey);
+        if (opts) {
+            opts->hex_color() = hex_color;
+        }
+    } else if (type == DM_DataType::DigitalInterval) {
+        auto * opts = _state->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(qkey);
+        if (opts) {
+            opts->hex_color() = hex_color;
+        }
+    }
+
+    // Trigger a redraw
+    ui->openGLWidget->updateCanvas();
+
+    std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
+}
+
+void DataViewer_Widget::_plotSelectedFeature(std::string const & key, std::string const & color) {
     std::cout << "Attempting to plot feature: " << key << std::endl;
 
     if (key.empty()) {
@@ -327,8 +248,6 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         return;
     }
 
-    // Get color from model
-    std::string color = _feature_tree_model->getFeatureColor(key);
     std::cout << "Using color: " << color << " for series: " << key << std::endl;
 
     auto data_type = _data_manager->getType(key);
@@ -466,66 +385,6 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     ui->openGLWidget->updateCanvas();
 }
 
-void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
-    std::cout << "Feature selected signal received: " << feature.toStdString() << std::endl;
-
-    if (feature.isEmpty()) {
-        std::cerr << "Error: empty feature name in _handleFeatureSelected" << std::endl;
-        return;
-    }
-
-    if (!_data_manager) {
-        std::cerr << "Error: null data manager in _handleFeatureSelected" << std::endl;
-        return;
-    }
-
-    _highlighted_available_feature = feature;
-
-    // Switch stacked widget based on data type
-    auto const type = _data_manager->getType(feature.toStdString());
-    auto key = feature.toStdString();
-
-    std::cout << "Feature type for selection: " << convert_data_type_to_string(type) << std::endl;
-
-    if (type == DM_DataType::Analog) {
-        int const stacked_widget_index = 1;// Analog widget is at index 1 (after empty page)
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto analog_widget = dynamic_cast<AnalogViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        if (analog_widget) {
-            analog_widget->setActiveKey(key);
-            std::cout << "Selected Analog Time Series: " << key << std::endl;
-        } else {
-            std::cerr << "Error: failed to cast to AnalogViewer_Widget" << std::endl;
-        }
-
-    } else if (type == DM_DataType::DigitalInterval) {
-        int const stacked_widget_index = 2;// Interval widget is at index 2
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto interval_widget = dynamic_cast<IntervalViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        if (interval_widget) {
-            interval_widget->setActiveKey(key);
-            std::cout << "Selected Digital Interval Series: " << key << std::endl;
-        } else {
-            std::cerr << "Error: failed to cast to IntervalViewer_Widget" << std::endl;
-        }
-
-    } else if (type == DM_DataType::DigitalEvent) {
-        int const stacked_widget_index = 3;// Event widget is at index 3
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto event_widget = dynamic_cast<EventViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        if (event_widget) {
-            event_widget->setActiveKey(key);
-            std::cout << "Selected Digital Event Series: " << key << std::endl;
-        } else {
-            std::cerr << "Error: failed to cast to EventViewer_Widget" << std::endl;
-        }
-
-    } else {
-        // No specific widget for this type, don't change the current index
-        std::cout << "Unsupported feature type for detailed view: " << convert_data_type_to_string(type) << std::endl;
-    }
-}
-
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // Disable zooming while any interaction is active
     if (ui->openGLWidget->isInteractionActive()) {
@@ -607,37 +466,6 @@ void DataViewer_Widget::_updateLabels() {
     ui->pos_x_label->setText(QString::number(view_state.time_end));
 }
 
-void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std::string const & hex_color) {
-    // Update the color in state (not directly in OpenGL widget display options)
-
-    auto const type = _data_manager->getType(feature_key);
-    QString const qkey = QString::fromStdString(feature_key);
-
-    if (type == DM_DataType::Analog) {
-        auto * opts = _state->seriesOptions().getMutable<AnalogSeriesOptionsData>(qkey);
-        if (opts) {
-            opts->hex_color() = hex_color;
-        }
-
-    } else if (type == DM_DataType::DigitalEvent) {
-        auto * opts = _state->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(qkey);
-        if (opts) {
-            opts->hex_color() = hex_color;
-        }
-
-    } else if (type == DM_DataType::DigitalInterval) {
-        auto * opts = _state->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(qkey);
-        if (opts) {
-            opts->hex_color() = hex_color;
-        }
-    }
-
-    // Trigger a redraw
-    ui->openGLWidget->updateCanvas();
-
-    std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
-}
-
 void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info) {
     // Convert time coordinate to actual time using the time frame
     int const time_index = static_cast<int>(std::round(time_coordinate));
@@ -678,7 +506,7 @@ OpenGLWidget * DataViewer_Widget::getOpenGLWidget() const {
     return ui->openGLWidget;
 }
 
-void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {
+void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key, std::string const & color) {
     std::cout << "Attempting to plot feature (batch): " << key << std::endl;
 
     if (key.empty()) {
@@ -691,8 +519,6 @@ void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & ke
         return;
     }
 
-    // Get color from model
-    std::string color = _feature_tree_model->getFeatureColor(key);
     std::cout << "Using color: " << color << " for series: " << key << std::endl;
 
     auto data_type = _data_manager->getType(key);
@@ -1005,7 +831,7 @@ std::string DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
 }
 
 // ===== Context menu and configuration handling =====
-void DataViewer_Widget::_showGroupContextMenu(std::string const & group_name, QPoint const & global_pos) {
+void DataViewer_Widget::showGroupContextMenu(std::string const & group_name, QPoint const & global_pos) {
     QMenu menu;
     QMenu * loadMenu = menu.addMenu("Load configuration");
     QAction * loadSpikeSorter = loadMenu->addAction("spikesorter configuration");
@@ -1274,48 +1100,6 @@ void DataViewer_Widget::cleanupDeletedData() {
 
     // Re-arrange remaining data - layout will be recomputed via computeAndApplyLayout()
     autoArrangeVerticalSpacing();
-}
-
-void DataViewer_Widget::_hidePropertiesPanel() {
-    // Save current splitter sizes before hiding
-    _saved_splitter_sizes = ui->main_splitter->sizes();
-
-    // Collapse the properties panel to 0 width
-    ui->main_splitter->setSizes({0, ui->main_splitter->sizes()[1]});
-
-    // Hide the properties panel and show the reveal button
-    ui->properties_container->hide();
-    ui->show_properties_button->show();
-
-    _state->setPropertiesPanelCollapsed(true);
-
-    std::cout << "Properties panel hidden" << std::endl;
-
-    // Trigger a canvas update to adjust to new size
-    ui->openGLWidget->update();
-}
-
-void DataViewer_Widget::_showPropertiesPanel() {
-    // Show the properties panel
-    ui->properties_container->show();
-
-    // Restore saved splitter sizes
-    if (!_saved_splitter_sizes.isEmpty()) {
-        ui->main_splitter->setSizes(_saved_splitter_sizes);
-    } else {
-        // Default sizes if no saved sizes (320px for properties, rest for plot)
-        ui->main_splitter->setSizes({320, 1000});
-    }
-
-    // Hide the reveal button
-    ui->show_properties_button->hide();
-
-    _state->setPropertiesPanelCollapsed(false);
-
-    std::cout << "Properties panel shown" << std::endl;
-
-    // Trigger a canvas update to adjust to new size
-    ui->openGLWidget->update();
 }
 
 void DataViewer_Widget::exportToSVG(bool includeScalebar, int scalebarLength) {

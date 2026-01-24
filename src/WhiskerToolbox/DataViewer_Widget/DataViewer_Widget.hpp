@@ -90,26 +90,74 @@ public:
      */
     void exportToSVG(bool includeScalebar, int scalebarLength);
 
+    /**
+     * @brief Add a feature to the plot
+     * 
+     * Called by the properties widget when a feature is toggled on.
+     * 
+     * @param key The data key to add
+     * @param color The color (hex string) for the feature
+     */
+    void addFeature(std::string const & key, std::string const & color);
+
+    /**
+     * @brief Remove a feature from the plot
+     * 
+     * Called by the properties widget when a feature is toggled off.
+     * 
+     * @param key The data key to remove
+     */
+    void removeFeature(std::string const & key);
+
+    /**
+     * @brief Add multiple features (batch operation)
+     * 
+     * Called by the properties widget when a group is toggled on.
+     * 
+     * @param keys The data keys to add
+     * @param colors The colors (hex strings) for each key (parallel array)
+     */
+    void addFeatures(std::vector<std::string> const & keys, std::vector<std::string> const & colors);
+
+    /**
+     * @brief Remove multiple features (batch operation)
+     * 
+     * Called by the properties widget when a group is toggled off.
+     * 
+     * @param keys The data keys to remove
+     */
+    void removeFeatures(std::vector<std::string> const & keys);
+
+    /**
+     * @brief Handle color change from properties widget
+     * 
+     * @param key The data key
+     * @param hex_color New color in hex format
+     */
+    void handleColorChanged(std::string const & key, std::string const & hex_color);
+
+    /**
+     * @brief Show context menu for a group
+     * 
+     * @param group_name The group name
+     * @param global_pos Global position for the menu
+     */
+    void showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
+
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void resizeEvent(QResizeEvent * event) override;
 private slots:
-    void _addFeatureToModel(QString const & feature, bool enabled);
-    void _plotSelectedFeature(std::string const & key);
+    void _plotSelectedFeature(std::string const & key, std::string const & color);
     void _removeSelectedFeature(std::string const & key);
-    void _plotSelectedFeatureWithoutUpdate(std::string const & key);
+    void _plotSelectedFeatureWithoutUpdate(std::string const & key, std::string const & color);
     void _removeSelectedFeatureWithoutUpdate(std::string const & key);
     void _updatePlot(int time);
-    void _handleFeatureSelected(QString const & feature);
-    void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);
     void _updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info);
-    void _showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
     void _loadSpikeSorterConfigurationForGroup(QString const & group_name);
     void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);
     void _clearConfigurationForGroup(QString const & group_name);
-    void _hidePropertiesPanel();
-    void _showPropertiesPanel();
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -122,13 +170,8 @@ private:
 
     std::shared_ptr<TimeFrame> _time_frame;
 
-    QString _highlighted_available_feature;
-    
-    // Saved splitter sizes for panel collapse/restore (Qt-specific, not serialized)
-    QList<int> _saved_splitter_sizes;
-
-    // Model for Feature_Tree_Widget
-    std::unique_ptr<Feature_Tree_Model> _feature_tree_model;
+    // Flag to prevent auto-arrange during batch operations
+    bool _is_batch_add = false;
 
     void _updateLabels();
 
@@ -174,9 +217,6 @@ private:
 
     // Parsing helper
     static std::vector<ChannelPosition> _parseSpikeSorterConfig(std::string const & text);
-
-    // Batch operations guard to suppress per-series auto-arrange/update thrash
-    bool _is_batch_add{false};
 };
 
 

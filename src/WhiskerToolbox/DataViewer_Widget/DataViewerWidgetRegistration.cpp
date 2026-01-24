@@ -85,8 +85,9 @@ void registerTypes(EditorRegistry * registry,
             // Trigger initial setup
             view->openWidget();
 
-            // Create the properties widget with the shared state
-            auto * props = new DataViewerPropertiesWidget(state, dm);
+            // Create the properties widget with the shared state and OpenGLWidget
+            auto * opengl_widget = view->getOpenGLWidget();
+            auto * props = new DataViewerPropertiesWidget(state, dm, opengl_widget);
             
             // Connect properties auto-arrange signal to view
             QObject::connect(props, &DataViewerPropertiesWidget::autoArrangeRequested,
@@ -95,6 +96,40 @@ void registerTypes(EditorRegistry * registry,
             // Connect properties export SVG signal to view
             QObject::connect(props, &DataViewerPropertiesWidget::exportSVGRequested,
                              view, &DataViewer_Widget::exportToSVG);
+            
+            // Connect feature add/remove signals from properties to view
+            // Use lambdas because std::string parameters don't work directly with Qt signals/slots
+            QObject::connect(props, &DataViewerPropertiesWidget::featureAddRequested,
+                             view, [view](std::string const & key, std::string const & color) {
+                                 view->addFeature(key, color);
+                             });
+            
+            QObject::connect(props, &DataViewerPropertiesWidget::featureRemoveRequested,
+                             view, [view](std::string const & key) {
+                                 view->removeFeature(key);
+                             });
+            
+            QObject::connect(props, &DataViewerPropertiesWidget::featuresAddRequested,
+                             view, [view](std::vector<std::string> const & keys, std::vector<std::string> const & colors) {
+                                 view->addFeatures(keys, colors);
+                             });
+            
+            QObject::connect(props, &DataViewerPropertiesWidget::featuresRemoveRequested,
+                             view, [view](std::vector<std::string> const & keys) {
+                                 view->removeFeatures(keys);
+                             });
+            
+            // Connect color change signal
+            QObject::connect(props, &DataViewerPropertiesWidget::featureColorChanged,
+                             view, [view](std::string const & key, std::string const & hex_color) {
+                                 view->handleColorChanged(key, hex_color);
+                             });
+            
+            // Connect group context menu signal
+            QObject::connect(props, &DataViewerPropertiesWidget::groupContextMenuRequested,
+                             view, [view](std::string const & group_name, QPoint const & global_pos) {
+                                 view->showGroupContextMenu(group_name, global_pos);
+                             });
 
             // Register the state
             reg->registerState(state);

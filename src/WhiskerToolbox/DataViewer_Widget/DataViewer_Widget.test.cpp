@@ -1,7 +1,5 @@
 #include "DataViewer_Widget.hpp"
 
-#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
-
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
 #include "DataViewerState.hpp"
@@ -18,7 +16,6 @@
 #include <QApplication>
 #include <QMetaObject>
 #include <QTimer>
-#include <QTreeWidget>
 #include <QWidget>
 #include <QDoubleSpinBox>
 
@@ -26,6 +23,7 @@
 #include "TimeSeriesDataStore.hpp"
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -587,17 +585,13 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
     widget.openWidget();
     QApplication::processEvents();
 
-    // One-by-one enable each analog series using the widget's private slot via meta-object
+    // One-by-one enable each analog series using the widget's public API
+    // The public addFeature method is the new way to add features (color is provided by properties widget)
     for (size_t i = 0; i < keys.size(); ++i) {
         auto const & key = keys[i];
-
-        bool invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(key)),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        
+        // Use the public addFeature method with a default color
+        widget.addFeature(key, "#FF6B6B");  // Default red color
 
         // Process events to allow the UI/OpenGLWidget to add and layout the series
         QApplication::processEvents();
@@ -662,45 +656,14 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - En
     widget.openWidget();
     QApplication::processEvents();
 
-    // Locate the Feature_Tree_Widget inside the DataViewer widget
-    auto ftw = widget.findChild<Feature_Tree_Widget *>("feature_tree_widget");
-    REQUIRE(ftw != nullptr);
-
-    // Ensure the tree is populated
-    ftw->refreshTree();
+    // Instead of using Feature_Tree_Widget (which is now in properties widget),
+    // use the public addFeatures API to add all keys as a batch
+    std::vector<std::string> colors(keys.size(), "#FF6B6B");  // Default color for all
+    widget.addFeatures(keys, colors);
     QApplication::processEvents();
 
-    QTreeWidget * tree = ftw->treeWidget();
-    REQUIRE(tree != nullptr);
-
-    // Find the top-level "Analog" node
-    QTreeWidgetItem * analogRoot = nullptr;
-    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
-        QTreeWidgetItem * item = tree->topLevelItem(i);
-        if (item && item->text(0) == QString("analog")) {
-            analogRoot = item;
-            break;
-        }
-    }
-    REQUIRE(analogRoot != nullptr);
-
-    // Find the group node for prefix "analog" (derived from keys like analog_1..analog_5)
-    QTreeWidgetItem * analogGroup = nullptr;
-    for (int i = 0; i < analogRoot->childCount(); ++i) {
-        QTreeWidgetItem * child = analogRoot->child(i);
-        if (child && child->text(0) == QString("analog")) {
-            analogGroup = child;
-            break;
-        }
-    }
-    REQUIRE(analogGroup != nullptr);
-
-    // Toggle the group checkbox (column 1 is the checkbox column)
-    analogGroup->setCheckState(1, Qt::Checked);
-    QApplication::processEvents();
-
-    // Verify that all five analog series became visible
-    for (auto const & key: keys) {
+    // Validate all series are now visible
+    for (auto const & key : keys) {
         auto cfg = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
             QString::fromStdString(key));
         REQUIRE(cfg != nullptr);
@@ -716,41 +679,9 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
     widget.openWidget();
     QApplication::processEvents();
 
-    // Locate the Feature_Tree_Widget inside the DataViewer widget
-    auto ftw = widget.findChild<Feature_Tree_Widget *>("feature_tree_widget");
-    REQUIRE(ftw != nullptr);
-
-    // Ensure the tree is populated
-    ftw->refreshTree();
-    QApplication::processEvents();
-
-    QTreeWidget * tree = ftw->treeWidget();
-    REQUIRE(tree != nullptr);
-
-    // Find the top-level "Analog" node
-    QTreeWidgetItem * analogRoot = nullptr;
-    for (int i = 0; i < tree->topLevelItemCount(); ++i) {
-        QTreeWidgetItem * item = tree->topLevelItem(i);
-        if (item && item->text(0) == QString("analog")) {
-            analogRoot = item;
-            break;
-        }
-    }
-    REQUIRE(analogRoot != nullptr);
-
-    // Find the group node for prefix "analog" (derived from keys like analog_1..analog_5)
-    QTreeWidgetItem * analogGroup = nullptr;
-    for (int i = 0; i < analogRoot->childCount(); ++i) {
-        QTreeWidgetItem * child = analogRoot->child(i);
-        if (child && child->text(0) == QString("analog")) {
-            analogGroup = child;
-            break;
-        }
-    }
-    REQUIRE(analogGroup != nullptr);
-
-    // 1) Enable the whole group
-    analogGroup->setCheckState(1, Qt::Checked);
+    // 1) Enable all keys as a group using public addFeatures API
+    std::vector<std::string> colors(keys.size(), "#FF6B6B");
+    widget.addFeatures(keys, colors);
     QApplication::processEvents();
 
     // Verify that all five analog series became visible
@@ -761,12 +692,12 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
         REQUIRE(cfg->get_is_visible());
     }
 
-    // 2) Disable the whole group
-    analogGroup->setCheckState(1, Qt::Unchecked);
+    // 2) Remove all features using removeFeatures API
+    widget.removeFeatures(keys);
     QApplication::processEvents();
 
     // Verify that all five analog series are no longer visible
-    // After disabling, options may be removed from registry or have is_visible = false
+    // After removal, options may be removed from registry or have is_visible = false
     for (auto const & key: keys) {
         auto cfg = widget.state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(
             QString::fromStdString(key));
@@ -778,13 +709,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Gr
 
     // 3) Re-enable a single key (simulate selecting one channel from the group)
     std::string const single_key = keys.front();
-    bool invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_addFeatureToModel",
-            Qt::DirectConnection,
-            Q_ARG(QString, QString::fromStdString(single_key)),
-            Q_ARG(bool, true));
-    REQUIRE(invoked);
+    widget.addFeature(single_key, "#FF6B6B");
     QApplication::processEvents();
 
     // 4) Assert this single key is treated as a single-lane stack:
@@ -825,13 +750,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
 
     // Enable four channels from the same group (analog prefix)
     for (size_t i = 0; i < 4; ++i) {
-        bool invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(keys[i])),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(keys[i], "#FF6B6B");
         QApplication::processEvents();
     }
 
@@ -913,13 +832,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     QApplication::processEvents();
 
     // Enable a single analog series
-    bool invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_addFeatureToModel",
-            Qt::DirectConnection,
-            Q_ARG(QString, QString::fromStdString(keys[0])),
-            Q_ARG(bool, true));
-    REQUIRE(invoked);
+    widget.addFeature(keys[0], "#FF6B6B");
     QApplication::processEvents();
 
     // Locate the OpenGLWidget to query XAxis
@@ -932,7 +845,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
 
     // Set an initial center (time) and range width via state
     int const initial_time_index = 1000;
-    invoked = QMetaObject::invokeMethod(
+    bool invoked = QMetaObject::invokeMethod(
             &widget,
             "_updatePlot",
             Qt::DirectConnection,
@@ -973,13 +886,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Pr
     // Enable 3 out of 5 analog series (sparse selection)
     std::vector<std::string> enabled = {keys[0], keys[2], keys[4]};
     for (auto const & k: enabled) {
-        bool invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(k)),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(k, "#FF6B6B");
         QApplication::processEvents();
     }
 
@@ -1029,13 +936,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
 
     // Enable two analog series
     for (size_t i = 0; i < 2; ++i) {
-        bool const invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(keys[i])),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(keys[i], "#FF6B6B");
         QApplication::processEvents();
     }
 
@@ -1059,13 +960,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     QApplication::processEvents();
 
     // Enable the digital interval in the view
-    bool const invoked_interval = QMetaObject::invokeMethod(
-            &widget,
-            "_addFeatureToModel",
-            Qt::DirectConnection,
-            Q_ARG(QString, QString::fromStdString(interval_key)),
-            Q_ARG(bool, true));
-    REQUIRE(invoked_interval);
+    widget.addFeature(interval_key, "#4ECDC4");
     QApplication::processEvents();
 
     // Verify the interval is visible and near full canvas height
@@ -1109,13 +1004,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
 
     // Enable two analog series
     for (size_t i = 0; i < 2; ++i) {
-        bool const ok = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(keys[i])),
-                Q_ARG(bool, true));
-        REQUIRE(ok);
+        widget.addFeature(keys[i], "#FF6B6B");
         QApplication::processEvents();
     }
 
@@ -1145,13 +1034,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     std::string const int_key = "interval_fc";
     dm.setData<DigitalIntervalSeries>(int_key, interval_series, TimeKey("time"));
     QApplication::processEvents();
-    bool const ok2 = QMetaObject::invokeMethod(
-            &widget,
-            "_addFeatureToModel",
-            Qt::DirectConnection,
-            Q_ARG(QString, QString::fromStdString(int_key)),
-            Q_ARG(bool, true));
-    REQUIRE(ok2);
+    widget.addFeature(int_key, "#4ECDC4");
     QApplication::processEvents();
 
     // Global zoom should not change when adding a full-canvas interval
@@ -1241,13 +1124,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Ena
     for (size_t i = 0; i < keys.size(); ++i) {
         auto const & key = keys[i];
 
-        bool invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(key)),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(key, "#FF6B6B");
 
         QApplication::processEvents();
 
@@ -1373,25 +1250,13 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
 
     // Enable analog first
     for (auto const & k: analog) {
-        bool const invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(k)),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(k, "#FF6B6B");
         QApplication::processEvents();
     }
 
     // Then enable events
     for (auto const & k: ev) {
-        bool const invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(k)),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(k, "#4ECDC4");
         QApplication::processEvents();
     }
 
@@ -1476,25 +1341,13 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture, "DataViewer_Widget - 
 
     // Enable one analog to ensure mixed context
     {
-        bool const invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(analog[0])),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(analog[0], "#FF6B6B");
         QApplication::processEvents();
     }
 
     // Enable two events
     for (auto const & k: ev) {
-        bool const invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(k)),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(k, "#4ECDC4");
         QApplication::processEvents();
     }
 
@@ -1544,13 +1397,7 @@ TEST_CASE_METHOD(DataViewerWidgetMultiEventTestFixture, "DataViewer_Widget - Two
 
     // Enable two events in stacked mode (default)
     for (size_t i = 0; i < 2; ++i) {
-        bool const invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_addFeatureToModel",
-                Qt::DirectConnection,
-                Q_ARG(QString, QString::fromStdString(keys[i])),
-                Q_ARG(bool, true));
-        REQUIRE(invoked);
+        widget.addFeature(keys[i], "#FF6B6B");
         QApplication::processEvents();
     }
 
@@ -1651,22 +1498,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     auto const keys = getTestDataKeys();
     REQUIRE(keys.size() == 1);
     
-    bool invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_addFeatureToModel",
-            Qt::DirectConnection,
-            Q_ARG(QString, QString::fromStdString(keys[0])),
-            Q_ARG(bool, true));
-    REQUIRE(invoked);
-    QApplication::processEvents();
-    
-    // Plot the feature
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_plotSelectedFeature",
-            Qt::DirectConnection,
-            Q_ARG(std::string, keys[0]));
-    REQUIRE(invoked);
+    widget.addFeature(keys[0], "#FF6B6B");
     QApplication::processEvents();
     
     // Locate the OpenGLWidget to query XAxis
@@ -1679,7 +1511,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Set initial time to middle of video
     int const initial_time = 352;
-    invoked = QMetaObject::invokeMethod(
+    bool invoked = QMetaObject::invokeMethod(
             &widget,
             "_updatePlot",
             Qt::DirectConnection,

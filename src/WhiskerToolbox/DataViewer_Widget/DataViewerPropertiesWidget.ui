@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>280</width>
-    <height>500</height>
+    <height>700</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -49,13 +49,61 @@
         <x>0</x>
         <y>0</y>
         <width>268</width>
-        <height>488</height>
+        <height>688</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="contentLayout">
        <property name="spacing">
         <number>8</number>
        </property>
+       <item>
+        <widget class="Feature_Tree_Widget" name="feature_tree_widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>150</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="feature_groupbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>200</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Feature Controls</string>
+         </property>
+         <layout class="QVBoxLayout" name="feature_controls_layout">
+          <item>
+           <widget class="QStackedWidget" name="stackedWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <widget class="QWidget" name="page"/>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item>
         <widget class="QGroupBox" name="display_settings_group">
          <property name="title">
@@ -269,6 +317,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Feature_Tree_Widget</class>
+   <extends>QWidget</extends>
+   <header>Feature_Tree_Widget/Feature_Tree_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

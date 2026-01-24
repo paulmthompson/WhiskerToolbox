@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>886</width>
-    <height>954</height>
+    <width>600</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Data Viewer</string>
   </property>
   <layout class="QVBoxLayout" name="main_vertical_layout">
    <property name="spacing">
@@ -36,367 +36,105 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QSplitter" name="main_splitter">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
+    <layout class="QVBoxLayout" name="plot_layout">
+     <property name="spacing">
+      <number>2</number>
      </property>
-     <property name="childrenCollapsible">
-      <bool>false</bool>
-     </property>
-     <widget class="QWidget" name="properties_container" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>250</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>400</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <layout class="QVBoxLayout" name="properties_layout">
+     <item>
+      <widget class="OpenGLWidget" name="openGLWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>4</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="cursor">
+        <cursorShape>ArrowCursor</cursorShape>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="coordinate_label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgba(0, 0, 0, 50); color: white; padding: 2px;</string>
+       </property>
+       <property name="text">
+        <string>Coordinates: Time: --, Value: --</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="axis_labels_layout">
        <property name="spacing">
         <number>0</number>
        </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
        <item>
-        <layout class="QHBoxLayout" name="collapse_button_layout">
-         <property name="leftMargin">
-          <number>9</number>
+        <widget class="QLabel" name="neg_x_label">
+         <property name="text">
+          <string/>
          </property>
-         <property name="topMargin">
-          <number>9</number>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignLeading</set>
          </property>
-         <property name="rightMargin">
-          <number>9</number>
-         </property>
-         <item>
-          <widget class="QPushButton" name="hide_properties_button">
-           <property name="maximumSize">
-            <size>
-             <width>30</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Hide Properties Panel</string>
-           </property>
-           <property name="text">
-            <string>◀</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
+        </widget>
        </item>
        <item>
-        <widget class="QScrollArea" name="properties_scroll_area">
-         <property name="frameShape">
-          <enum>QFrame::Shape::NoFrame</enum>
+        <widget class="QLabel" name="neg_x_mid_label">
+         <property name="text">
+          <string/>
          </property>
-         <property name="horizontalScrollBarPolicy">
-          <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
-         <property name="widgetResizable">
-          <bool>true</bool>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="pos_x_mid_label">
+         <property name="text">
+          <string/>
          </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>292</width>
-            <height>922</height>
-           </rect>
-          </property>
-          <layout class="QVBoxLayout" name="scroll_content_layout">
-           <property name="spacing">
-            <number>6</number>
-           </property>
-           <property name="leftMargin">
-            <number>9</number>
-           </property>
-           <property name="topMargin">
-            <number>9</number>
-           </property>
-           <property name="rightMargin">
-            <number>9</number>
-           </property>
-           <property name="bottomMargin">
-            <number>9</number>
-           </property>
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <property name="spacing">
-              <number>12</number>
-             </property>
-             <item>
-              <widget class="Feature_Tree_Widget" name="feature_tree_widget" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>100</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="feature_groupbox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>300</height>
-                </size>
-               </property>
-               <property name="title">
-                <string>Feature Controls</string>
-               </property>
-               <layout class="QVBoxLayout" name="feature_controls_layout">
-                <item>
-                 <widget class="QStackedWidget" name="stackedWidget">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <widget class="QWidget" name="page"/>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="right_controls_layout">
-               <property name="spacing">
-                <number>6</number>
-               </property>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="pos_x_label">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignRight</set>
+         </property>
         </widget>
        </item>
       </layout>
-     </widget>
-     <widget class="QWidget" name="plot_container" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>1</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <layout class="QVBoxLayout" name="plot_outer_layout">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <layout class="QHBoxLayout" name="plot_header_layout">
-         <item>
-          <widget class="QPushButton" name="show_properties_button">
-           <property name="maximumSize">
-            <size>
-             <width>30</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Show Properties Panel</string>
-           </property>
-           <property name="text">
-            <string>▶</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="plot_header_spacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="plot_layout">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <item>
-          <widget class="OpenGLWidget" name="openGLWidget">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>4</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>200</width>
-             <height>100</height>
-            </size>
-           </property>
-           <property name="cursor">
-            <cursorShape>ArrowCursor</cursorShape>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="coordinate_label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">background-color: rgba(0, 0, 0, 50); color: white; padding: 2px;</string>
-           </property>
-           <property name="text">
-            <string>Coordinates: Time: --, Value: --</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignCenter</set>
-           </property>
-           <property name="wordWrap">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="axis_labels_layout">
-           <property name="spacing">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="neg_x_label">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignLeading</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="neg_x_mid_label">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="pos_x_mid_label">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="pos_x_label">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignRight</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -405,12 +143,6 @@
    <class>OpenGLWidget</class>
    <extends>QOpenGLWidget</extends>
    <header>DataViewer_Widget/OpenGLWidget.hpp</header>
-  </customwidget>
-  <customwidget>
-   <class>Feature_Tree_Widget</class>
-   <extends>QWidget</extends>
-   <header>Feature_Tree_Widget/Feature_Tree_Widget.hpp</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
