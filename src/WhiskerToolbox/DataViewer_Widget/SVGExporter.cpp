@@ -163,7 +163,7 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
             display_options.data_cache.cached_mean,
             display_options.data_cache.cached_std_dev,
             display_options.scaling.intrinsic_scale,
-            display_options.user_scale_factor,
+            display_options.scaling.user_scale_factor,
             display_options.scaling.user_vertical_offset,
             view_state.global_zoom,
             view_state.global_vertical_scale);

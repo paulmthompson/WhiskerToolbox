@@ -580,16 +580,8 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
 
     // Step 2: Get layout from cached response (or fallback to display_options)
     auto const * series_layout = _cache_state.layout_response.findLayout(series_key);
-    CorePlotting::SeriesLayout layout;
-    if (series_layout) {
-        layout = *series_layout;
-    } else {
-        // Fallback to display_options layout_transform
-        layout = CorePlotting::SeriesLayout{
-                series_key,
-                display_options->layout_transform,
-                0};
-    }
+    CorePlotting::SeriesLayout layout = *series_layout;
+    layout = *series_layout;
 
     // Step 3: Compose the same Y transform used for rendering
     CorePlotting::LayoutTransform y_transform = DataViewer::composeAnalogYTransform(
@@ -597,7 +589,7 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
             display_options->data_cache.cached_mean,
             display_options->data_cache.cached_std_dev,
             display_options->scaling.intrinsic_scale,
-            display_options->user_scale_factor,
+            display_options->scaling.user_scale_factor,
             display_options->scaling.user_vertical_offset,
             _view_state.global_zoom,
             _view_state.global_vertical_scale);
@@ -959,7 +951,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
                 display_options->data_cache.cached_mean,
                 display_options->data_cache.cached_std_dev,
                 display_options->scaling.intrinsic_scale,
-                display_options->user_scale_factor,
+                display_options->scaling.user_scale_factor,
                 display_options->scaling.user_vertical_offset,
                 _view_state.global_zoom,
                 _view_state.global_vertical_scale);

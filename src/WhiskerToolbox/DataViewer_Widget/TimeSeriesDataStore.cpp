@@ -38,14 +38,12 @@ void TimeSeriesDataStore::addAnalogSeries(std::string const & key,
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
 
-    display_options->user_scale_factor = 1.0f;// Default user scale
+    display_options->scaling.user_scale_factor = 1.0f;// Default user scale
 
     // Configure gap detection based on data density
     if (series->getTimeFrame()->getTotalFrameCount() / 5 > series->getNumSamples()) {
         display_options->gap_handling = AnalogGapHandling::AlwaysConnect;
-        display_options->enable_gap_detection = false;
     } else {
-        display_options->enable_gap_detection = true;
         display_options->gap_handling = AnalogGapHandling::DetectGaps;
         // Set gap threshold to 0.1% of total frames, with a minimum floor of 2
         float const calculated_threshold = static_cast<float>(series->getTimeFrame()->getTotalFrameCount()) / 1000.0f;

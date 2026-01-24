@@ -131,8 +131,6 @@ void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
         if (config.has_value()) {
             // Update the scaling config (the actual one used in rendering)
             config.value()->scaling.user_scale_factor = static_cast<float>(scale_factor);
-            // Also update legacy field for compatibility
-            config.value()->user_scale_factor = static_cast<float>(scale_factor);
             // Trigger immediate repaint
             _opengl_widget->update();
         }
