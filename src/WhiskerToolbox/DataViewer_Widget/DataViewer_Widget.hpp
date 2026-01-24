@@ -43,8 +43,6 @@ public:
 
     void openWidget();
 
-    void updateXAxisSamples(int value);
-
     /**
      * @brief Set the DataViewerState for this widget
      * 
@@ -94,13 +92,8 @@ private slots:
     void _removeSelectedFeatureWithoutUpdate(std::string const & key);
     void _updatePlot(int time);
     void _handleFeatureSelected(QString const & feature);
-    void _handleXAxisSamplesChanged(int value);
-    void _updateGlobalScale(double scale);
     void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);
     void _updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info);
-    void _handleThemeChanged(int theme_index);
-    void _handleGridLinesToggled(bool enabled);
-    void _handleGridSpacingChanged(int spacing);
     void _showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
     void _loadSpikeSorterConfigurationForGroup(QString const & group_name);
     void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);

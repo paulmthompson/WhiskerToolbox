@@ -925,8 +925,12 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     // Locate the OpenGLWidget to query XAxis
     auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
     REQUIRE(glw != nullptr);
+    
+    // Get state to set time range directly
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
 
-    // Set an initial center (time) and range width via widget slots
+    // Set an initial center (time) and range width via state
     int const initial_time_index = 1000;
     invoked = QMetaObject::invokeMethod(
             &widget,
@@ -936,26 +940,16 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - X 
     REQUIRE(invoked);
 
     int const initial_range_width = 2000;
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, initial_range_width));
-    REQUIRE(invoked);
+    state->setTimeWidth(initial_range_width);
     QApplication::processEvents();
 
     auto const & view_state_before = glw->getViewState();
     auto const start_before = view_state_before.time_start;
     auto const end_before = view_state_before.time_end;
 
-    // Change global gain via the private slot and re-draw
+    // Change global gain via state and re-draw
     double const new_gain = 2.0;
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_updateGlobalScale",
-            Qt::DirectConnection,
-            Q_ARG(double, new_gain));
-    REQUIRE(invoked);
+    state->setGlobalZoom(static_cast<float>(new_gain));
     QApplication::processEvents();
 
     auto const & view_state_after = glw->getViewState();
@@ -1125,10 +1119,10 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
         QApplication::processEvents();
     }
 
-    // Access the global zoom spinbox and record its value
-    auto zoomSpin = widget.findChild<QDoubleSpinBox *>("global_zoom");
-    REQUIRE(zoomSpin != nullptr);
-    double const zoom_before = zoomSpin->value();
+    // Get state and record the global zoom value
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+    float const zoom_before = state->globalZoom();
 
     // Also capture an analog canvasY->value slope proxy for one series
     auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
@@ -1161,9 +1155,9 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ad
     QApplication::processEvents();
 
     // Global zoom should not change when adding a full-canvas interval
-    double const zoom_after = zoomSpin->value();
+    float const zoom_after = state->globalZoom();
     INFO("zoom_before=" << zoom_before << ", zoom_after=" << zoom_after);
-    REQUIRE(Catch::Approx(zoom_after).margin(zoom_before * 0.05 + 1e-6) == zoom_before);
+    REQUIRE(Catch::Approx(zoom_after).margin(zoom_before * 0.05f + 1e-6f) == zoom_before);
 
     // Analog mapping slope should remain approximately the same
     float const slope_after = map_delta(keys[0]);
@@ -1679,6 +1673,10 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     auto glw = widget.findChild<OpenGLWidget *>("openGLWidget");
     REQUIRE(glw != nullptr);
     
+    // Get the state for setting time range
+    auto * state = widget.state();
+    REQUIRE(state != nullptr);
+    
     // Set initial time to middle of video
     int const initial_time = 352;
     invoked = QMetaObject::invokeMethod(
@@ -1693,12 +1691,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Cycle 1: Start with a reasonable range (100 samples)
     INFO("Cycle 1: Set range to 100 samples");
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, 100));
-    REQUIRE(invoked);
+    state->setTimeWidth(100);
     QApplication::processEvents();
     
     auto const & view_state_1 = glw->getViewState();
@@ -1708,12 +1701,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Cycle 2: Zoom out to full range
     INFO("Cycle 2: Zoom to full range (704 samples)");
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, 704));
-    REQUIRE(invoked);
+    state->setTimeWidth(704);
     QApplication::processEvents();
     
     auto const & view_state_2 = glw->getViewState();
@@ -1723,12 +1711,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Cycle 3: Zoom way in (10 samples)
     INFO("Cycle 3: Zoom to 10 samples");
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, 10));
-    REQUIRE(invoked);
+    state->setTimeWidth(10);
     QApplication::processEvents();
     
     auto const & view_state_3 = glw->getViewState();
@@ -1738,12 +1721,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Cycle 4: Zoom to 2 samples (the reported stuck state)
     INFO("Cycle 4: Zoom to 2 samples (bug trigger)");
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, 2));
-    REQUIRE(invoked);
+    state->setTimeWidth(2);
     QApplication::processEvents();
     
     auto const & view_state_4 = glw->getViewState();
@@ -1753,12 +1731,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Cycle 5: THE KEY TEST - try to zoom back out from 2 samples
     INFO("Cycle 5: Attempt to zoom out from 2 samples to 200 samples");
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, 200));
-    REQUIRE(invoked);
+    state->setTimeWidth(200);
     QApplication::processEvents();
     
     auto const & view_state_5 = glw->getViewState();
@@ -1776,12 +1749,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     for (size_t i = 0; i < test_ranges.size(); ++i) {
         int requested_range = test_ranges[i];
         
-        invoked = QMetaObject::invokeMethod(
-                &widget,
-                "_handleXAxisSamplesChanged",
-                Qt::DirectConnection,
-                Q_ARG(int, requested_range));
-        REQUIRE(invoked);
+        state->setTimeWidth(requested_range);
         QApplication::processEvents();
         
         auto const & view_state = glw->getViewState();
@@ -1805,12 +1773,7 @@ TEST_CASE_METHOD(DataViewerWidgetShortVideoTestFixture, "DataViewer_Widget - Sho
     
     // Cycle 7: Final verification - zoom to full range after all the abuse
     INFO("Cycle 7: Final verification - full range after stress test");
-    invoked = QMetaObject::invokeMethod(
-            &widget,
-            "_handleXAxisSamplesChanged",
-            Qt::DirectConnection,
-            Q_ARG(int, 704));
-    REQUIRE(invoked);
+    state->setTimeWidth(704);
     QApplication::processEvents();
     
     auto const & view_state_final = glw->getViewState();

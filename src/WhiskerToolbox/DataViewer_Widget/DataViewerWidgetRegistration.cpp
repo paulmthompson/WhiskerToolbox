@@ -87,6 +87,10 @@ void registerTypes(EditorRegistry * registry,
 
             // Create the properties widget with the shared state
             auto * props = new DataViewerPropertiesWidget(state, dm);
+            
+            // Connect properties auto-arrange signal to view
+            QObject::connect(props, &DataViewerPropertiesWidget::autoArrangeRequested,
+                             view, &DataViewer_Widget::autoArrangeVerticalSpacing);
 
             // Register the state
             reg->registerState(state);

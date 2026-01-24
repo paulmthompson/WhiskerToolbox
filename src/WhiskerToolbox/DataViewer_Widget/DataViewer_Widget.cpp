@@ -171,12 +171,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         }
     });
 
-    connect(ui->x_axis_samples, QOverload<int>::of(&QSpinBox::valueChanged), this, &DataViewer_Widget::_handleXAxisSamplesChanged);
-
-    connect(ui->global_zoom, &QDoubleSpinBox::valueChanged, this, &DataViewer_Widget::_updateGlobalScale);
-
-    connect(ui->theme_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DataViewer_Widget::_handleThemeChanged);
-
     connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
 
     //We should alwasy get the master clock because we plot
@@ -192,11 +186,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     // Set the master time frame for proper coordinate conversion
     ui->openGLWidget->setMasterTimeFrame(_time_frame);
-
-    // Set spinbox maximum to the actual data range (not the hardcoded UI limit)
-    int const data_range = static_cast<int>(_time_frame->getTotalFrameCount());
-    std::cout << "Setting x_axis_samples maximum to " << data_range << std::endl;
-    ui->x_axis_samples->setMaximum(data_range);
 
     // Setup stacked widget with data-type specific viewers
     auto analog_widget = new AnalogViewer_Widget(_data_manager, ui->openGLWidget);
@@ -218,17 +207,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Connect mouse hover signal from OpenGL widget
     connect(ui->openGLWidget, &OpenGLWidget::mouseHover,
             this, &DataViewer_Widget::_updateCoordinateDisplay);
-
-    // Grid line connections
-    connect(ui->grid_lines_enabled, &QCheckBox::toggled, this, &DataViewer_Widget::_handleGridLinesToggled);
-    connect(ui->grid_spacing, QOverload<int>::of(&QSpinBox::valueChanged), this, &DataViewer_Widget::_handleGridSpacingChanged);
-
-    // Auto-arrange button connection
-    connect(ui->auto_arrange_button, &QPushButton::clicked, this, &DataViewer_Widget::autoArrangeVerticalSpacing);
-
-    // Initialize grid line UI to match state defaults
-    ui->grid_lines_enabled->setChecked(_state->gridEnabled());
-    ui->grid_spacing->setValue(_state->gridSpacing());
 
     // Configure splitter behavior
     ui->main_splitter->setStretchFactor(0, 0);// Properties panel doesn't stretch
@@ -278,15 +256,6 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
     // Share with OpenGLWidget
     ui->openGLWidget->setState(_state);
     
-    // Update UI from state (for workspace restore)
-    // Grid settings
-    ui->grid_lines_enabled->setChecked(_state->gridEnabled());
-    ui->grid_spacing->setValue(_state->gridSpacing());
-    
-    // Theme
-    int const theme_index = (_state->theme() == DataViewerTheme::Dark) ? 0 : 1;
-    ui->theme_combo->setCurrentIndex(theme_index);
-    
     // Properties panel collapsed state
     if (_state->propertiesPanelCollapsed()) {
         _hidePropertiesPanel();
@@ -294,12 +263,10 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
         _showPropertiesPanel();
     }
     
-    // Global zoom
-    ui->global_zoom->setValue(static_cast<double>(_state->globalZoom()));
-    
-    // Time range (update spinbox)
-    auto const & view = _state->viewState();
-    ui->x_axis_samples->setValue(static_cast<int>(view.getTimeWidth()));
+    // Connect viewStateChanged to update labels when time range changes
+    connect(_state.get(), &DataViewerState::viewStateChanged, this, [this]() {
+        _updateLabels();
+    });
     
     _updateLabels();
 }
@@ -568,34 +535,6 @@ void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
     }
 }
 
-void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {
-    // Set time width directly on state
-    int64_t const actual_range = _state->setTimeWidth(static_cast<int64_t>(value));
-
-    // Trigger canvas update to apply the new width (matches old behavior)
-    ui->openGLWidget->updateCanvas();
-
-    // Update the spinbox with the actual range width achieved (in case it was clamped)
-    if (actual_range != value) {
-        updateXAxisSamples(static_cast<int>(actual_range));
-    }
-}
-
-void DataViewer_Widget::updateXAxisSamples(int value) {
-    ui->x_axis_samples->blockSignals(true);
-    ui->x_axis_samples->setValue(value);
-    ui->x_axis_samples->blockSignals(false);
-}
-
-void DataViewer_Widget::_updateGlobalScale(double scale) {
-    // Update global zoom directly in state
-    // LayoutEngine will pick up the new value when computing layout
-    _state->setGlobalZoom(static_cast<float>(scale));
-
-    // Trigger canvas update (layout recomputed automatically when dirty)
-    ui->openGLWidget->updateCanvas();
-}
-
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // Disable zooming while any interaction is active
     if (ui->openGLWidget->isInteractionActive()) {
@@ -605,7 +544,8 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     auto const numDegrees = static_cast<float>(event->angleDelta().y()) / 8.0f;
     auto const numSteps = numDegrees / 15.0f;
 
-    auto const current_range = ui->x_axis_samples->value();
+    auto const & view_state = _state->viewState();
+    auto const current_range = static_cast<int>(view_state.getTimeWidth());
     auto const total_frames = static_cast<float>(_time_frame->getTotalFrameCount());
 
     // Determine zoom sensitivity based on modifier keys:
@@ -667,12 +607,6 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // Apply range delta directly to state
     _state->adjustTimeWidth(range_delta);
 
-    // Get the actual range that was achieved
-    auto const & view_state = _state->viewState();
-    auto const actual_range = static_cast<int>(view_state.getTimeWidth());
-
-    // Update spinbox with the actual achieved range (not the requested range)
-    updateXAxisSamples(actual_range);
     _updateLabels();
 }
 
@@ -751,28 +685,6 @@ DataViewerState * DataViewer_Widget::state() {
 
 OpenGLWidget * DataViewer_Widget::getOpenGLWidget() const {
     return ui->openGLWidget;
-}
-
-void DataViewer_Widget::_handleThemeChanged(int theme_index) {
-    DataViewerTheme theme = (theme_index == 0) ? DataViewerTheme::Dark : DataViewerTheme::Light;
-    _state->setTheme(theme);
-
-    // Update coordinate label styling based on theme
-    if (theme == DataViewerTheme::Dark) {
-        ui->coordinate_label->setStyleSheet("background-color: rgba(0, 0, 0, 50); color: white; padding: 2px;");
-    } else {
-        ui->coordinate_label->setStyleSheet("background-color: rgba(255, 255, 255, 50); color: black; padding: 2px;");
-    }
-
-    std::cout << "Theme changed to: " << (theme_index == 0 ? "Dark" : "Light") << std::endl;
-}
-
-void DataViewer_Widget::_handleGridLinesToggled(bool enabled) {
-    _state->setGridEnabled(enabled);
-}
-
-void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
-    _state->setGridSpacing(spacing);
 }
 
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {
@@ -981,7 +893,7 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
 
         // Apply the calculated settings
         ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
-        ui->global_zoom->setValue(static_cast<double>(final_scale));
+        _state->setGlobalZoom(final_scale);
 
         std::cout << "Applied auto-scaling: vertical spacing = " << final_spacing
                   << ", global scale = " << final_scale << std::endl;
@@ -1318,7 +1230,7 @@ void DataViewer_Widget::_autoFillCanvas() {
                       << ", final_scale=" << final_scale << std::endl;
 
             // Apply the calculated global scale
-            ui->global_zoom->setValue(static_cast<double>(final_scale));
+            _state->setGlobalZoom(final_scale);
         }
     }
 

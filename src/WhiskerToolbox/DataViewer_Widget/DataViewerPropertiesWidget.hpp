@@ -17,14 +17,15 @@
  * 
  * Both widgets share the same DataViewerState for coordination.
  * 
- * ## Incremental Migration
+ * ## Migrated Controls
  * 
- * The properties panel will be incrementally populated with controls currently
- * in the left panel of DataViewer_Widget. Initially it starts empty, with plans to add:
- * - Feature tree/selection controls
- * - Theme and grid settings
- * - Series-specific options (color, scale, visibility)
- * - Export controls
+ * The following controls have been migrated from DataViewer_Widget:
+ * - Theme selection (Dark/Purple/Light)
+ * - Global Y Scale
+ * - X Axis Samples
+ * - Grid Lines enabled
+ * - Grid Spacing
+ * - Auto-Arrange button
  * 
  * @see DataViewer_Widget for the view component
  * @see DataViewerState for shared state
@@ -47,9 +48,6 @@ class DataViewerPropertiesWidget;
  * 
  * Displays controls for configuring the data visualization.
  * Shares state with DataViewer_Widget (view) via DataViewerState.
- * 
- * Initially empty - will be incrementally populated with controls
- * migrated from the DataViewer_Widget left panel.
  */
 class DataViewerPropertiesWidget : public QWidget {
     Q_OBJECT
@@ -80,21 +78,53 @@ public:
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
+    /**
+     * @brief Set the maximum value for the X axis samples spinbox
+     * 
+     * Called by the view widget to set the maximum based on data range.
+     * 
+     * @param max Maximum number of samples
+     */
+    void setXAxisSamplesMaximum(int max);
+
 signals:
-    // Future: Add signals for property changes that need to be communicated to the view
-    // void themeChanged();
-    // void gridSettingsChanged();
-    // void seriesOptionsChanged(QString const & series_key);
+    /**
+     * @brief Emitted when the auto-arrange button is clicked
+     * 
+     * The view widget should connect to this signal to trigger
+     * auto-arrangement of all visible series.
+     */
+    void autoArrangeRequested();
+
+private slots:
+    void _onThemeChanged(int index);
+    void _onGlobalZoomChanged(double value);
+    void _onXAxisSamplesChanged(int value);
+    void _onGridLinesToggled(bool enabled);
+    void _onGridSpacingChanged(int value);
 
 private:
     Ui::DataViewerPropertiesWidget * ui;
     std::shared_ptr<DataViewerState> _state;
     std::shared_ptr<DataManager> _data_manager;
+    
+    /// Guard to prevent signal loops during programmatic UI updates
+    bool _updating_from_state = false;
 
+    /**
+     * @brief Connect UI controls to state
+     */
+    void _connectUIControls();
+    
     /**
      * @brief Connect to state signals for UI updates
      */
     void _connectStateSignals();
+    
+    /**
+     * @brief Initialize UI values from current state
+     */
+    void _initializeFromState();
 };
 
 #endif  // DATA_VIEWER_PROPERTIES_WIDGET_HPP
