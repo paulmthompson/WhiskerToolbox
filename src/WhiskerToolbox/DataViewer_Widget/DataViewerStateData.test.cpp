@@ -230,7 +230,6 @@ TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
         REQUIRE(data.vertical_pan_offset == Approx(0.0f));
         REQUIRE(data.global_zoom == Approx(1.0f));
         REQUIRE(data.global_vertical_scale == Approx(1.0f));
-        REQUIRE(data.y_spacing == Approx(0.1f));
     }
     
     SECTION("Custom values round-trip") {
@@ -242,7 +241,6 @@ TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
         view.vertical_pan_offset = 0.5f;
         view.global_zoom = 1.5f;
         view.global_vertical_scale = 0.8f;
-        view.y_spacing = 0.2f;
         
         auto json = rfl::json::write(view);
         auto result = rfl::json::read<DataViewerViewState>(json);
@@ -256,7 +254,6 @@ TEST_CASE("DataViewerViewState serialization", "[DataViewerStateData]") {
         REQUIRE(data.vertical_pan_offset == Approx(0.5f));
         REQUIRE(data.global_zoom == Approx(1.5f));
         REQUIRE(data.global_vertical_scale == Approx(0.8f));
-        REQUIRE(data.y_spacing == Approx(0.2f));
     }
     
     SECTION("Large time values (int64_t)") {
@@ -469,7 +466,6 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         state.view.time_start = 5000;
         state.view.time_end = 50000;
         state.view.global_zoom = 2.0f;
-        state.view.y_spacing = 0.15f;
         
         // Configure theme
         state.theme.theme = DataViewerTheme::Light;
@@ -525,7 +521,6 @@ TEST_CASE("DataViewerStateData full serialization", "[DataViewerStateData]") {
         REQUIRE(data.view.time_start == 5000);
         REQUIRE(data.view.time_end == 50000);
         REQUIRE(data.view.global_zoom == Approx(2.0f));
-        REQUIRE(data.view.y_spacing == Approx(0.15f));
         
         // Verify theme
         REQUIRE(data.theme.theme == DataViewerTheme::Light);

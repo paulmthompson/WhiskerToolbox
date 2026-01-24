@@ -238,18 +238,6 @@ public:
     [[nodiscard]] float globalVerticalScale() const { return _data.view.global_vertical_scale; }
 
     /**
-     * @brief Set the Y-spacing between series
-     * @param spacing Spacing factor (0.0 to 1.0 typical)
-     */
-    void setYSpacing(float spacing);
-
-    /**
-     * @brief Get the Y-spacing between series
-     * @return Current Y-spacing factor
-     */
-    [[nodiscard]] float ySpacing() const { return _data.view.y_spacing; }
-
-    /**
      * @brief Set the complete view state
      * @param view New view state
      */

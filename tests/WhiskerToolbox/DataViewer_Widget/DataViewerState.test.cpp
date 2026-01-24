@@ -119,11 +119,6 @@ TEST_CASE("DataViewerState view state", "[DataViewerState]")
         REQUIRE_THAT(state.globalVerticalScale(), Catch::Matchers::WithinAbs(1.5f, 1e-6f));
     }
     
-    SECTION("setYSpacing changes value") {
-        state.setYSpacing(0.2f);
-        REQUIRE_THAT(state.ySpacing(), Catch::Matchers::WithinAbs(0.2f, 1e-6f));
-    }
-    
     SECTION("setViewState changes all values") {
         DataViewerViewState view;
         view.time_start = 500;

@@ -149,16 +149,6 @@ void DataViewerState::setGlobalVerticalScale(float scale)
     }
 }
 
-void DataViewerState::setYSpacing(float spacing)
-{
-    constexpr float epsilon = 1e-6f;
-    if (std::abs(_data.view.y_spacing - spacing) > epsilon) {
-        _data.view.y_spacing = spacing;
-        markDirty();
-        emit viewStateChanged();
-    }
-}
-
 void DataViewerState::setViewState(DataViewerViewState const & view)
 {
     constexpr float epsilon = 1e-6f;
@@ -169,9 +159,8 @@ void DataViewerState::setViewState(DataViewerViewState const & view)
     bool const pan_changed = std::abs(_data.view.vertical_pan_offset - view.vertical_pan_offset) > epsilon;
     bool const zoom_changed = std::abs(_data.view.global_zoom - view.global_zoom) > epsilon;
     bool const scale_changed = std::abs(_data.view.global_vertical_scale - view.global_vertical_scale) > epsilon;
-    bool const spacing_changed = std::abs(_data.view.y_spacing - view.y_spacing) > epsilon;
 
-    if (time_changed || y_changed || pan_changed || zoom_changed || scale_changed || spacing_changed) {
+    if (time_changed || y_changed || pan_changed || zoom_changed || scale_changed) {
         _data.view = view;
         markDirty();
         emit viewStateChanged();

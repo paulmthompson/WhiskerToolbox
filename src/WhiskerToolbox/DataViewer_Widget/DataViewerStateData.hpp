@@ -194,9 +194,6 @@ struct DataViewerViewState {
     // Global scaling
     float global_zoom = 1.0f;           ///< Global zoom/amplitude scale
     float global_vertical_scale = 1.0f; ///< Global vertical scale factor
-    
-    // Series spacing
-    float y_spacing = 0.1f;       ///< Vertical spacing factor between series
 };
 
 // ==================== Theme State ====================
