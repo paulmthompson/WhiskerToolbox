@@ -8,9 +8,6 @@
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewerCoordinates.hpp"
 #include "DataViewerSelectionManager.hpp"
 #include "DataViewerTooltipController.hpp"
@@ -61,8 +58,9 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         update();
     });
 
-    // Initialize data store
+    // Initialize data store and connect to state's series options registry
     _data_store = std::make_unique<DataViewer::TimeSeriesDataStore>(this);
+    _data_store->setSeriesOptionsRegistry(&_state->seriesOptions());
     connect(_data_store.get(), &DataViewer::TimeSeriesDataStore::layoutDirty, this, [this]() {
         _cache_state.layout_response_dirty = true;
         updateCanvas(_time);
@@ -115,24 +113,23 @@ OpenGLWidget::OpenGLWidget(QWidget * parent)
         _selection_manager->handleEntityClick(id, ctrl_pressed);
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalEdgeDragRequested, this, [this](CorePlotting::HitTestResult const & hit_result) {
-        // Get series color for preview (access via data store)
-        auto const & interval_series = _data_store->intervalSeries();
-        auto it = interval_series.find(hit_result.series_key);
-        if (it != interval_series.end()) {
-            auto const & display_options = it->second.display_options;
+        // Get series color for preview from state
+        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(hit_result.series_key));
+        if (opts) {
             int r, g, b;
-            hexToRGB(display_options->style.hex_color, r, g, b);
+            hexToRGB(opts->hex_color(), r, g, b);
             glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
             glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
             _interaction_manager->startEdgeDrag(hit_result, fill_color, stroke_color);
         }
     });
     connect(_input_handler.get(), &DataViewer::DataViewerInputHandler::intervalCreationRequested, this, [this](QString const &, QPoint const & start_pos) {
-        // Find first visible digital interval series (access via data store)
+        // Find first visible digital interval series from state
         for (auto const & [series_key, data]: _data_store->intervalSeries()) {
-            if (data.display_options->style.is_visible) {
+            auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(series_key));
+            if (opts && opts->get_is_visible()) {
                 int r, g, b;
-                hexToRGB(data.display_options->style.hex_color, r, g, b);
+                hexToRGB(opts->hex_color(), r, g, b);
                 glm::vec4 fill_color(r / 255.0f, g / 255.0f, b / 255.0f, 0.5f);
                 glm::vec4 stroke_color(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
                 _interaction_manager->startIntervalCreation(
@@ -295,6 +292,11 @@ void OpenGLWidget::setState(std::shared_ptr<DataViewerState> state) {
         connect(_state.get(), &DataViewerState::gridChanged, this, [this]() {
             update();
         });
+        
+        // Update data store's reference to series options registry
+        if (_data_store) {
+            _data_store->setSeriesOptionsRegistry(&_state->seriesOptions());
+        }
     }
     
     updateCanvas(_time);
@@ -487,37 +489,120 @@ void OpenGLWidget::addAnalogTimeSeries(
         std::string const & key,
         std::shared_ptr<AnalogTimeSeries> series,
         std::string const & color) {
+    // Add series data to data store (computes data_cache and layout_transform)
     _data_store->addAnalogSeries(key, std::move(series), color);
+    
+    // Create default display options in state if not already present
+    QString const qkey = QString::fromStdString(key);
+    if (!_state->seriesOptions().has<AnalogSeriesOptionsData>(qkey)) {
+        AnalogSeriesOptionsData opts;
+        opts.hex_color() = color.empty() 
+            ? DataViewer::DefaultColors::getColorForIndex(_data_store->analogSeries().size() - 1)
+            : color;
+        opts.is_visible() = true;
+        
+        // Configure gap detection based on data density (from the added series)
+        auto const & analog_entry = _data_store->analogSeries().at(key);
+        auto const & added_series = analog_entry.series;
+        if (added_series->getTimeFrame()->getTotalFrameCount() / 5 > added_series->getNumSamples()) {
+            opts.gap_handling = AnalogGapHandlingMode::AlwaysConnect;
+        } else {
+            opts.gap_handling = AnalogGapHandlingMode::DetectGaps;
+            opts.enable_gap_detection = true;
+            // Set gap threshold to 0.1% of total frames, with a minimum floor of 2
+            float const calculated_threshold = static_cast<float>(added_series->getTimeFrame()->getTotalFrameCount()) / 1000.0f;
+            opts.gap_threshold = std::max(2.0f, calculated_threshold);
+        }
+        
+        _state->seriesOptions().set(qkey, opts);
+    }
 }
 
 void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
     _data_store->removeAnalogSeries(key);
+    // Also remove options from state
+    _state->seriesOptions().remove<AnalogSeriesOptionsData>(QString::fromStdString(key));
 }
 
 void OpenGLWidget::addDigitalEventSeries(
         std::string const & key,
         std::shared_ptr<DigitalEventSeries> series,
         std::string const & color) {
+    // Add series data to data store
     _data_store->addEventSeries(key, std::move(series), color);
+    
+    // Create default display options in state if not already present
+    QString const qkey = QString::fromStdString(key);
+    if (!_state->seriesOptions().has<DigitalEventSeriesOptionsData>(qkey)) {
+        DigitalEventSeriesOptionsData opts;
+        opts.hex_color() = color.empty()
+            ? DataViewer::DefaultColors::getColorForIndex(_data_store->eventSeries().size() - 1)
+            : color;
+        opts.is_visible() = true;
+        _state->seriesOptions().set(qkey, opts);
+    }
 }
 
 void OpenGLWidget::removeDigitalEventSeries(std::string const & key) {
     _data_store->removeEventSeries(key);
+    // Also remove options from state
+    _state->seriesOptions().remove<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
 }
 
 void OpenGLWidget::addDigitalIntervalSeries(
         std::string const & key,
         std::shared_ptr<DigitalIntervalSeries> series,
         std::string const & color) {
+    // Add series data to data store
     _data_store->addIntervalSeries(key, std::move(series), color);
+    
+    // Create default display options in state if not already present
+    QString const qkey = QString::fromStdString(key);
+    if (!_state->seriesOptions().has<DigitalIntervalSeriesOptionsData>(qkey)) {
+        DigitalIntervalSeriesOptionsData opts;
+        opts.hex_color() = color.empty()
+            ? DataViewer::DefaultColors::getColorForIndex(_data_store->intervalSeries().size() - 1)
+            : color;
+        opts.is_visible() = true;
+        _state->seriesOptions().set(qkey, opts);
+    }
 }
 
 void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
     _data_store->removeIntervalSeries(key);
+    // Also remove options from state
+    _state->seriesOptions().remove<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
 }
 
 void OpenGLWidget::clearSeries() {
+    // Collect keys before clearing
+    std::vector<std::string> analog_keys;
+    std::vector<std::string> event_keys;
+    std::vector<std::string> interval_keys;
+    
+    for (auto const& [key, _] : _data_store->analogSeries()) {
+        analog_keys.push_back(key);
+    }
+    for (auto const& [key, _] : _data_store->eventSeries()) {
+        event_keys.push_back(key);
+    }
+    for (auto const& [key, _] : _data_store->intervalSeries()) {
+        interval_keys.push_back(key);
+    }
+    
+    // Clear data store
     _data_store->clearAll();
+    
+    // Remove all options from state
+    for (auto const& key : analog_keys) {
+        _state->seriesOptions().remove<AnalogSeriesOptionsData>(QString::fromStdString(key));
+    }
+    for (auto const& key : event_keys) {
+        _state->seriesOptions().remove<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+    }
+    for (auto const& key : interval_keys) {
+        _state->seriesOptions().remove<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+    }
 }
 
 void OpenGLWidget::drawGridLines() {
@@ -594,25 +679,32 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
         return 0.0f;// Series not found
     }
 
-    auto const & display_options = analog_it->second.display_options;
+    // Get display options from state
+    auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(series_key));
+    if (!opts) {
+        return 0.0f;
+    }
+
+    auto const & entry = analog_it->second;
     auto const & view = _state->viewState();
 
     // Step 1: Create DataViewerCoordinates for coordinate conversion
     DataViewer::DataViewerCoordinates const coords(view, width(), height());
 
-    // Step 2: Get layout from cached response (or fallback to display_options)
+    // Step 2: Get layout from cached response
     auto const * series_layout = _cache_state.layout_response.findLayout(series_key);
     CorePlotting::SeriesLayout layout = *series_layout;
     layout = *series_layout;
 
     // Step 3: Compose the same Y transform used for rendering
+    // Data cache is stored in the entry, user scaling options in state
     CorePlotting::LayoutTransform y_transform = DataViewer::composeAnalogYTransform(
             layout,
-            display_options->data_cache.cached_mean,
-            display_options->data_cache.cached_std_dev,
-            display_options->scaling.intrinsic_scale,
-            display_options->scaling.user_scale_factor,
-            display_options->scaling.user_vertical_offset,
+            entry.data_cache.cached_mean,
+            entry.data_cache.cached_std_dev,
+            entry.data_cache.intrinsic_scale,
+            opts->user_scale_factor,
+            opts->y_offset,
             view.global_zoom,
             view.global_vertical_scale);
 
@@ -889,8 +981,8 @@ void OpenGLWidget::renderWithSceneRenderer() {
         return;
     }
 
-    // Compute layout if dirty - this updates _cached_layout_response
-    // and all display_options->layout fields
+    // Compute layout if dirty - this updates _cache_state.layout_response
+    // and all entry.layout_transform fields in TimeSeriesDataStore
     computeAndApplyLayout();
 
     auto const & view_state = _state->viewState();
@@ -954,54 +1046,55 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     // Access series through data store
     for (auto const & [key, analog_data]: _data_store->analogSeries()) {
         auto const & series = analog_data.series;
-        auto const & display_options = analog_data.display_options;
-
-        if (!display_options->style.is_visible) continue;
+        
+        // Get display options from state (serializable)
+        auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
 
         // Look up layout from cached response
         auto const * series_layout = _cache_state.layout_response.findLayout(key);
         if (!series_layout) {
-            // Fallback to display_options layout_transform if not found (shouldn't happen)
+            // Fallback to entry's layout_transform if not found (shouldn't happen)
             CorePlotting::SeriesLayout fallback_layout{
                     key,
-                    display_options->layout_transform,
+                    analog_data.layout_transform,
                     0};
             series_layout = &fallback_layout;
         }
 
-        // Compose the full Y transform using the new simplified API
+        // Compose the full Y transform using data cache from entry and user settings from state
         CorePlotting::LayoutTransform y_transform = DataViewer::composeAnalogYTransform(
                 *series_layout,
-                display_options->data_cache.cached_mean,
-                display_options->data_cache.cached_std_dev,
-                display_options->scaling.intrinsic_scale,
-                display_options->scaling.user_scale_factor,
-                display_options->scaling.user_vertical_offset,
+                analog_data.data_cache.cached_mean,
+                analog_data.data_cache.cached_std_dev,
+                analog_data.data_cache.intrinsic_scale,
+                opts->user_scale_factor,
+                opts->y_offset,
                 view_state.global_zoom,
                 view_state.global_vertical_scale);
 
         // Create model matrix directly from the composed transform
         glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
-        // Parse color
+        // Parse color from state options
         int r, g, b;
-        hexToRGB(display_options->style.hex_color, r, g, b);
+        hexToRGB(opts->hex_color(), r, g, b);
 
-        // Build batch parameters
+        // Build batch parameters from state options
         DataViewerHelpers::AnalogBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
-        batch_params.gap_threshold = display_options->gap_threshold;
-        batch_params.detect_gaps = (display_options->gap_handling == AnalogGapHandling::DetectGaps);
+        batch_params.gap_threshold = opts->gap_threshold;
+        batch_params.detect_gaps = (opts->gap_handling == AnalogGapHandlingMode::DetectGaps);
         batch_params.color = glm::vec4(
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,
                 static_cast<float>(b) / 255.0f,
-                1.0f);
-        batch_params.thickness = static_cast<float>(display_options->style.line_thickness);
+                opts->get_alpha());
+        batch_params.thickness = static_cast<float>(opts->get_line_thickness());
 
-        // Choose render mode based on gap handling setting
-        if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
+        // Choose render mode based on gap handling setting from state
+        if (opts->gap_handling == AnalogGapHandlingMode::ShowMarkers) {
             batch_params.render_mode = DataViewerHelpers::AnalogRenderMode::Markers;
         } else {
             batch_params.render_mode = DataViewerHelpers::AnalogRenderMode::Line;
@@ -1042,46 +1135,45 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     // Access series through data store
     for (auto const & [key, event_data]: _data_store->eventSeries()) {
         auto const & series = event_data.series;
-        auto const & display_options = event_data.display_options;
+        
+        // Get display options from state (serializable)
+        auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
 
-        if (!display_options->style.is_visible) continue;
-
-        // Determine plotting mode based on display mode
-        display_options->plotting_mode = (display_options->display_mode == EventDisplayMode::Stacked)
-                                                 ? EventPlottingMode::Stacked
-                                                 : EventPlottingMode::FullCanvas;
+        // Determine plotting mode from state options
+        bool const is_stacked = (opts->plotting_mode == EventPlottingModeData::Stacked);
 
         // Compose the Y transform based on plotting mode
         CorePlotting::LayoutTransform y_transform;
-        if (display_options->plotting_mode == EventPlottingMode::FullCanvas) {
+        if (!is_stacked) {
             // Full canvas mode - events extend full viewport height
             y_transform = DataViewer::composeEventFullCanvasYTransform(
-                    view_state.y_min, view_state.y_max, display_options->margin_factor);
+                    view_state.y_min, view_state.y_max, opts->margin_factor);
         } else {
             // Stacked mode - look up layout from cached response
             auto const * series_layout = _cache_state.layout_response.findLayout(key);
             if (series_layout) {
                 y_transform = DataViewer::composeEventYTransform(
-                        *series_layout, display_options->margin_factor, view_state.global_vertical_scale);
+                        *series_layout, opts->margin_factor, view_state.global_vertical_scale);
             } else {
                 // Fallback if layout not found
                 CorePlotting::SeriesLayout fallback{
                         key,
-                        display_options->layout_transform,
+                        event_data.layout_transform,
                         0};
                 y_transform = DataViewer::composeEventYTransform(
-                        fallback, display_options->margin_factor, view_state.global_vertical_scale);
+                        fallback, opts->margin_factor, view_state.global_vertical_scale);
             }
         }
 
         // Create model matrix from composed transform
         glm::mat4 model_matrix = CorePlotting::createModelMatrix(y_transform);
 
-        // Parse color
+        // Parse color from state options
         int r, g, b;
-        hexToRGB(display_options->style.hex_color, r, g, b);
+        hexToRGB(opts->hex_color(), r, g, b);
 
-        // Build batch parameters
+        // Build batch parameters from state options
         DataViewerHelpers::EventBatchParams batch_params;
         batch_params.start_time = start_time;
         batch_params.end_time = end_time;
@@ -1089,8 +1181,8 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,
                 static_cast<float>(b) / 255.0f,
-                display_options->style.alpha);
-        batch_params.glyph_size = static_cast<float>(display_options->style.line_thickness);
+                opts->get_alpha());
+        batch_params.glyph_size = static_cast<float>(opts->get_line_thickness());
         batch_params.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Tick;
 
         // Build and add batch using simplified API
@@ -1118,25 +1210,28 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     // Access series through data store
     for (auto const & [key, interval_data]: _data_store->intervalSeries()) {
         auto const & series = interval_data.series;
-        auto const & display_options = interval_data.display_options;
 
-        if (!display_options->style.is_visible) continue;
+        // Get display options from state
+        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts) continue;
+
+        if (!opts->get_is_visible()) continue;
 
         // Look up layout from cached response
         auto const * series_layout = _cache_state.layout_response.findLayout(key);
         CorePlotting::LayoutTransform y_transform;
         if (series_layout) {
             y_transform = DataViewer::composeIntervalYTransform(
-                    *series_layout, display_options->margin_factor,
+                    *series_layout, opts->margin_factor,
                     view_state.global_zoom, view_state.global_vertical_scale);
         } else {
-            // Fallback if layout not found
+            // Fallback if layout not found - use entry's layout_transform
             CorePlotting::SeriesLayout fallback{
                     key,
-                    display_options->layout_transform,
+                    interval_data.layout_transform,
                     0};
             y_transform = DataViewer::composeIntervalYTransform(
-                    fallback, display_options->margin_factor,
+                    fallback, opts->margin_factor,
                     view_state.global_zoom, view_state.global_vertical_scale);
         }
 
@@ -1145,7 +1240,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
 
         // Parse color
         int r, g, b;
-        hexToRGB(display_options->style.hex_color, r, g, b);
+        hexToRGB(opts->hex_color(), r, g, b);
 
         // Build batch parameters
         DataViewerHelpers::IntervalBatchParams batch_params;
@@ -1155,7 +1250,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
                 static_cast<float>(r) / 255.0f,
                 static_cast<float>(g) / 255.0f,
                 static_cast<float>(b) / 255.0f,
-                display_options->style.alpha);
+                opts->get_alpha());
 
         // Build and add batch using simplified API
         auto batch = DataViewerHelpers::buildIntervalSeriesBatchSimplified(
@@ -1178,10 +1273,11 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
     request.viewport_y_max = view_state.y_max;
 
     // Collect visible analog series keys and order by spike sorter config
-    // Access series through data store
+    // Access series through data store, visibility through state
     std::vector<std::string> visible_analog_keys;
     for (auto const & [key, data]: _data_store->analogSeries()) {
-        if (data.display_options->style.is_visible) {
+        auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        if (opts && opts->get_is_visible()) {
             visible_analog_keys.push_back(key);
         }
     }
@@ -1198,15 +1294,17 @@ CorePlotting::LayoutRequest OpenGLWidget::buildLayoutRequest() const {
 
     // Add digital event series (stacked events after analog series, full-canvas events as non-stackable)
     for (auto const & [key, data]: _data_store->eventSeries()) {
-        if (!data.display_options->style.is_visible) continue;
+        auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
 
-        bool is_stacked = (data.display_options->display_mode == EventDisplayMode::Stacked);
+        bool is_stacked = (opts->plotting_mode == EventPlottingModeData::Stacked);
         request.series.emplace_back(key, CorePlotting::SeriesType::DigitalEvent, is_stacked);
     }
 
     // Add digital interval series (always full-canvas, non-stackable)
     for (auto const & [key, data]: _data_store->intervalSeries()) {
-        if (!data.display_options->style.is_visible) continue;
+        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        if (!opts || !opts->get_is_visible()) continue;
 
         request.series.emplace_back(key, CorePlotting::SeriesType::DigitalInterval, false);
     }

@@ -169,10 +169,10 @@ public:
     void setState(std::shared_ptr<DataViewerState> state);
 
     /**
-     * @brief Get the current DataViewerState
+     * @brief Get the current DataViewerState as shared_ptr
      * @return Shared pointer to the state object
      */
-    [[nodiscard]] std::shared_ptr<DataViewerState> state() const { return _state; }
+    [[nodiscard]] std::shared_ptr<DataViewerState> stateShared() const { return _state; }
 
     // ========================================================================
     // EntityId-based Selection API (preferred for new code)
@@ -304,18 +304,9 @@ public:
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
     [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;
 
-    // Display options getters (delegates to TimeSeriesDataStore)
-    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) {
-        return _data_store->getAnalogConfig(key);
-    }
-
-    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) {
-        return _data_store->getEventConfig(key);
-    }
-
-    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) {
-        return _data_store->getIntervalConfig(key);
-    }
+    // State access for display options (use these instead of deprecated getXxxConfig methods)
+    [[nodiscard]] DataViewerState * state() { return _state.get(); }
+    [[nodiscard]] DataViewerState const * state() const { return _state.get(); }
 
 public slots:
     void updateCanvas() { updateCanvas(_time); }

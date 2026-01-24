@@ -2,7 +2,7 @@
 #include "ui_AnalogViewer_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
+#include "DataViewer_Widget/DataViewerState.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
 #include <QColorDialog>
@@ -42,21 +42,21 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
     _active_key = key;
     ui->name_label->setText(QString::fromStdString(key));
     
-    // Set the color and scale factor to current values from display options if available
+    // Set the color and scale factor to current values from state if available
     if (!key.empty()) {
-        auto config = _opengl_widget->getAnalogConfig(key);
-        if (config.has_value()) {
-            _updateColorDisplay(QString::fromStdString(config.value()->style.hex_color));
+        auto const * opts = _opengl_widget->state()->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        if (opts) {
+            _updateColorDisplay(QString::fromStdString(opts->hex_color()));
             
-            // Set scale factor from the scaling config (not legacy user_scale_factor)
-            ui->scale_spinbox->setValue(static_cast<double>(config.value()->scaling.user_scale_factor));
+            // Set scale factor from state
+            ui->scale_spinbox->setValue(static_cast<double>(opts->user_scale_factor));
             
             // Set line thickness
-            ui->line_thickness_spinbox->setValue(config.value()->style.line_thickness);
+            ui->line_thickness_spinbox->setValue(opts->get_line_thickness());
             
             // Set gap handling controls
-            ui->gap_mode_combo->setCurrentIndex(static_cast<int>(config.value()->gap_handling));
-            ui->gap_threshold_spinbox->setValue(static_cast<int>(config.value()->gap_threshold));
+            ui->gap_mode_combo->setCurrentIndex(static_cast<int>(opts->gap_handling));
+            ui->gap_threshold_spinbox->setValue(static_cast<int>(opts->gap_threshold));
         } else {
             _updateColorDisplay("#0000FF"); // Default blue
             ui->scale_spinbox->setValue(1.0); // Default scale
@@ -76,9 +76,9 @@ void AnalogViewer_Widget::_openColorDialog() {
     
     // Get current color
     QColor currentColor;
-    auto config = _opengl_widget->getAnalogConfig(_active_key);
-    if (config.has_value()) {
-        currentColor = QColor(QString::fromStdString(config.value()->style.hex_color));
+    auto const * opts = _opengl_widget->state()->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+    if (opts) {
+        currentColor = QColor(QString::fromStdString(opts->hex_color()));
     } else {
         currentColor = QColor("#0000FF");
     }
@@ -102,9 +102,9 @@ void AnalogViewer_Widget::_updateColorDisplay(QString const & hex_color) {
 
 void AnalogViewer_Widget::_setAnalogColor(const QString& hex_color) {
     if (!_active_key.empty()) {
-        auto config = _opengl_widget->getAnalogConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->style.hex_color = hex_color.toStdString();
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->hex_color() = hex_color.toStdString();
             emit colorChanged(_active_key, hex_color.toStdString());
             // Trigger immediate repaint
             _opengl_widget->update();
@@ -115,9 +115,9 @@ void AnalogViewer_Widget::_setAnalogColor(const QString& hex_color) {
 void AnalogViewer_Widget::_setAnalogAlpha(int alpha) {
     if (!_active_key.empty()) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
-        auto config = _opengl_widget->getAnalogConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->style.alpha = alpha_float;
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->alpha() = alpha_float;
             emit alphaChanged(_active_key, alpha_float);
             // Trigger immediate repaint
             _opengl_widget->update();
@@ -127,10 +127,9 @@ void AnalogViewer_Widget::_setAnalogAlpha(int alpha) {
 
 void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
     if (!_active_key.empty()) {
-        auto config = _opengl_widget->getAnalogConfig(_active_key);
-        if (config.has_value()) {
-            // Update the scaling config (the actual one used in rendering)
-            config.value()->scaling.user_scale_factor = static_cast<float>(scale_factor);
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->user_scale_factor = static_cast<float>(scale_factor);
             // Trigger immediate repaint
             _opengl_widget->update();
         }
@@ -139,9 +138,9 @@ void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
 
 void AnalogViewer_Widget::_setLineThickness(int thickness) {
     if (!_active_key.empty()) {
-        auto config = _opengl_widget->getAnalogConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->style.line_thickness = thickness;
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->line_thickness() = thickness;
             // Trigger immediate repaint
             _opengl_widget->update();
         }
@@ -150,9 +149,9 @@ void AnalogViewer_Widget::_setLineThickness(int thickness) {
 
 void AnalogViewer_Widget::_setGapHandlingMode(int mode_index) {
     if (!_active_key.empty()) {
-        auto config = _opengl_widget->getAnalogConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->gap_handling = static_cast<AnalogGapHandling>(mode_index);
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->gap_handling = static_cast<AnalogGapHandlingMode>(mode_index);
             // Trigger immediate repaint
             _opengl_widget->update();
         }
@@ -161,9 +160,9 @@ void AnalogViewer_Widget::_setGapHandlingMode(int mode_index) {
 
 void AnalogViewer_Widget::_setGapThreshold(int threshold) {
     if (!_active_key.empty()) {
-        auto config = _opengl_widget->getAnalogConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->gap_threshold = static_cast<float>(threshold);
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<AnalogSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->gap_threshold = static_cast<float>(threshold);
             // Trigger immediate repaint
             _opengl_widget->update();
         }

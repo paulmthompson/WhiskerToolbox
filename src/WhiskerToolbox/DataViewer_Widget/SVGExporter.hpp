@@ -2,6 +2,7 @@
 #define SVGEXPORTER_HPP
 
 #include "CorePlotting/Export/SVGPrimitives.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 
 #include <QString>
@@ -12,13 +13,17 @@
 #include <string>
 
 class OpenGLWidget;
-struct NewAnalogTimeSeriesDisplayOptions;
-struct NewDigitalEventSeriesDisplayOptions;
-struct NewDigitalIntervalSeriesDisplayOptions;
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 class TimeFrame;
+struct AnalogSeriesOptionsData;
+struct DigitalEventSeriesOptionsData;
+struct DigitalIntervalSeriesOptionsData;
+
+namespace CorePlotting {
+struct SeriesDataCache;
+}
 
 /**
  * @brief SVG export utility for DataViewer plots
@@ -110,7 +115,9 @@ private:
      */
     CorePlotting::RenderablePolyLineBatch buildAnalogBatch(
             std::shared_ptr<AnalogTimeSeries> const & series,
-            NewAnalogTimeSeriesDisplayOptions const & display_options,
+            CorePlotting::LayoutTransform const & layout_transform,
+            CorePlotting::SeriesDataCache const & data_cache,
+            AnalogSeriesOptionsData const & options,
             int start_time,
             int end_time) const;
 
@@ -119,7 +126,8 @@ private:
      */
     CorePlotting::RenderableGlyphBatch buildEventBatch(
             std::shared_ptr<DigitalEventSeries> const & series,
-            NewDigitalEventSeriesDisplayOptions const & display_options,
+            CorePlotting::LayoutTransform const & layout_transform,
+            DigitalEventSeriesOptionsData const & options,
             int start_time,
             int end_time) const;
 
@@ -128,7 +136,8 @@ private:
      */
     CorePlotting::RenderableRectangleBatch buildIntervalBatch(
             std::shared_ptr<DigitalIntervalSeries> const & series,
-            NewDigitalIntervalSeriesDisplayOptions const & display_options,
+            CorePlotting::LayoutTransform const & layout_transform,
+            DigitalIntervalSeriesOptionsData const & options,
             float start_time,
             float end_time) const;
 

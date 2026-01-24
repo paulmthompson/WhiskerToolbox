@@ -15,6 +15,7 @@
 class DataManager;
 class DataViewerState;
 class MainWindow;
+class OpenGLWidget;
 class QTableWidget;
 class TimeScrollBar;
 class TimeFrame;
@@ -25,9 +26,6 @@ class QResizeEvent;
 class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
-struct NewAnalogTimeSeriesDisplayOptions;
-struct NewDigitalEventSeriesDisplayOptions;
-struct NewDigitalIntervalSeriesDisplayOptions;
 
 namespace Ui {
 class DataViewer_Widget;
@@ -59,16 +57,22 @@ public:
     void setState(std::shared_ptr<DataViewerState> state);
 
     /**
-     * @brief Get the current DataViewerState
+     * @brief Get the current DataViewerState (const)
      * @return Shared pointer to the state object
      */
     [[nodiscard]] std::shared_ptr<DataViewerState> state() const { return _state; }
 
-    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const;
+    /**
+     * @brief Get mutable state access
+     * @return Raw pointer to state for modification
+     */
+    [[nodiscard]] DataViewerState * state();
 
-    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const;
-
-    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const;
+    /**
+     * @brief Get the OpenGLWidget (for testing)
+     * @return Pointer to the internal OpenGLWidget
+     */
+    [[nodiscard]] OpenGLWidget * getOpenGLWidget() const;
 
     /**
      * @brief Automatically arrange all visible series for optimal spacing

@@ -20,10 +20,9 @@
  */
 
 #include "AnalogVertexCache.hpp"
+#include "CorePlotting/DataTypes/SeriesDataCache.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
-#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
-#include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
+#include "CorePlotting/Layout/LayoutTransform.hpp"
 #include "SpikeSorterConfigLoader.hpp"
 
 #include <QObject>
@@ -38,34 +37,55 @@
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
+class SeriesOptionsRegistry;
 
 namespace DataViewer {
 
 /**
- * @brief Data structure holding analog series and its display options
+ * @brief Data structure holding analog series and its computed/cached state
+ * 
+ * NOTE: Display options (style, visibility, user_scale_factor, etc.) are stored in
+ * DataViewerState via SeriesOptionsRegistry. This struct holds only:
+ * - The data series itself
+ * - Computed layout transform from LayoutEngine
+ * - Cached statistics for efficient rendering
+ * - Vertex cache for efficient scrolling
  */
 struct AnalogSeriesEntry {
     std::shared_ptr<AnalogTimeSeries> series;
-    std::unique_ptr<NewAnalogTimeSeriesDisplayOptions> display_options;
+    
+    /// Layout transform computed by LayoutEngine (offset, gain)
+    CorePlotting::LayoutTransform layout_transform;
+    
+    /// Cached statistics (mean, std_dev, intrinsic_scale)
+    CorePlotting::SeriesDataCache data_cache;
 
     /// Vertex cache for efficient scrolling (initialized lazily)
     mutable AnalogVertexCache vertex_cache;
 };
 
 /**
- * @brief Data structure holding digital event series and its display options
+ * @brief Data structure holding digital event series and its computed state
+ * 
+ * NOTE: Display options are stored in DataViewerState via SeriesOptionsRegistry.
  */
 struct DigitalEventSeriesEntry {
     std::shared_ptr<DigitalEventSeries> series;
-    std::unique_ptr<NewDigitalEventSeriesDisplayOptions> display_options;
+    
+    /// Layout transform computed by LayoutEngine
+    CorePlotting::LayoutTransform layout_transform;
 };
 
 /**
- * @brief Data structure holding digital interval series and its display options
+ * @brief Data structure holding digital interval series and its computed state
+ * 
+ * NOTE: Display options are stored in DataViewerState via SeriesOptionsRegistry.
  */
 struct DigitalIntervalSeriesEntry {
     std::shared_ptr<DigitalIntervalSeries> series;
-    std::unique_ptr<NewDigitalIntervalSeriesDisplayOptions> display_options;
+    
+    /// Layout transform computed by LayoutEngine
+    CorePlotting::LayoutTransform layout_transform;
 };
 
 /**
@@ -239,33 +259,36 @@ public:
     [[nodiscard]] std::unordered_map<std::string, DigitalIntervalSeriesEntry> & intervalSeriesMutable();
 
     // ========================================================================
-    // Display Options Accessors
+    // Series Data Cache Accessors
     // ========================================================================
 
     /**
-     * @brief Get analog display options for a series
+     * @brief Get analog data cache for a series
      * @param key Series key
-     * @return Pointer to display options, or nullopt if series not found
+     * @return Pointer to data cache, or nullptr if series not found
      */
-    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key);
+    [[nodiscard]] CorePlotting::SeriesDataCache * getAnalogDataCache(std::string const & key);
 
     /**
-     * @brief Get digital event display options for a series
+     * @brief Get analog data cache for a series (const)
      * @param key Series key
-     * @return Pointer to display options, or nullopt if series not found
+     * @return Pointer to data cache, or nullptr if series not found
      */
-    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getEventConfig(std::string const & key);
-
-    /**
-     * @brief Get digital interval display options for a series
-     * @param key Series key
-     * @return Pointer to display options, or nullopt if series not found
-     */
-    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getIntervalConfig(std::string const & key);
+    [[nodiscard]] CorePlotting::SeriesDataCache const * getAnalogDataCache(std::string const & key) const;
 
     // ========================================================================
     // Layout System Integration
     // ========================================================================
+
+    /**
+     * @brief Set the series options registry for visibility lookups
+     * 
+     * The data store needs access to the state's series options to determine
+     * visibility when building layout requests.
+     * 
+     * @param registry Pointer to the SeriesOptionsRegistry (non-owning)
+     */
+    void setSeriesOptionsRegistry(SeriesOptionsRegistry * registry);
 
     /**
      * @brief Build a layout request from current series state
@@ -351,6 +374,9 @@ private:
     std::unordered_map<std::string, AnalogSeriesEntry> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesEntry> _digital_event_series;
     std::unordered_map<std::string, DigitalIntervalSeriesEntry> _digital_interval_series;
+    
+    /// Non-owning pointer to SeriesOptionsRegistry for visibility lookups
+    SeriesOptionsRegistry * _series_options_registry{nullptr};
 };
 
 }// namespace DataViewer

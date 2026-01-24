@@ -2,7 +2,7 @@
 #include "ui_IntervalViewer_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
+#include "DataViewer_Widget/DataViewerState.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
 #include <QColorDialog>
@@ -56,11 +56,11 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
     _selection_enabled = !key.empty();
     
-    // Set the color to the current color from display options if available
+    // Set the color to the current color from state if available
     if (!key.empty()) {
-        auto config = _opengl_widget->getDigitalIntervalConfig(key);
-        if (config.has_value()) {
-            _updateColorDisplay(QString::fromStdString(config.value()->style.hex_color));
+        auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        if (opts) {
+            _updateColorDisplay(QString::fromStdString(opts->hex_color()));
         } else {
             _updateColorDisplay("#00FF00"); // Default green
         }
@@ -80,9 +80,9 @@ void IntervalViewer_Widget::_openColorDialog() {
     
     // Get current color
     QColor currentColor;
-    auto config = _opengl_widget->getDigitalIntervalConfig(_active_key);
-    if (config.has_value()) {
-        currentColor = QColor(QString::fromStdString(config.value()->style.hex_color));
+    auto const * opts = _opengl_widget->state()->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(_active_key));
+    if (opts) {
+        currentColor = QColor(QString::fromStdString(opts->hex_color()));
     } else {
         currentColor = QColor("#00FF00");
     }
@@ -106,9 +106,9 @@ void IntervalViewer_Widget::_updateColorDisplay(QString const & hex_color) {
 
 void IntervalViewer_Widget::_setIntervalColor(const QString& hex_color) {
     if (!_active_key.empty()) {
-        auto config = _opengl_widget->getDigitalIntervalConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->style.hex_color = hex_color.toStdString();
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->hex_color() = hex_color.toStdString();
             emit colorChanged(_active_key, hex_color.toStdString());
             // Trigger immediate repaint
             _opengl_widget->update();
@@ -119,9 +119,9 @@ void IntervalViewer_Widget::_setIntervalColor(const QString& hex_color) {
 void IntervalViewer_Widget::_setIntervalAlpha(int alpha) {
     if (!_active_key.empty()) {
         float const alpha_float = static_cast<float>(alpha) / 100.0f;
-        auto config = _opengl_widget->getDigitalIntervalConfig(_active_key);
-        if (config.has_value()) {
-            config.value()->style.alpha = alpha_float;
+        auto * opts = _opengl_widget->state()->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(QString::fromStdString(_active_key));
+        if (opts) {
+            opts->alpha() = alpha_float;
             emit alphaChanged(_active_key, alpha_float);
             // Trigger immediate repaint
             _opengl_widget->update();

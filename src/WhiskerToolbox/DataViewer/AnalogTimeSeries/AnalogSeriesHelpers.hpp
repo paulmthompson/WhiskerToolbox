@@ -1,6 +1,10 @@
 #ifndef DATAVIEWER_ANALOGSERIESHELPERS_HPP
 #define DATAVIEWER_ANALOGSERIESHELPERS_HPP
 
+namespace CorePlotting {
+struct SeriesDataCache;
+}
+
 class AnalogTimeSeries;
 struct NewAnalogTimeSeriesDisplayOptions;
 
@@ -15,6 +19,19 @@ struct NewAnalogTimeSeriesDisplayOptions;
  */
 void setAnalogIntrinsicProperties(AnalogTimeSeries const * analog,
                                   NewAnalogTimeSeriesDisplayOptions & display_options);
+
+/**
+ * @brief Calculate and cache intrinsic properties directly to a SeriesDataCache
+ * 
+ * Computes statistical properties of the analog series and stores them in the
+ * provided data cache. This is the preferred function for the new state-based
+ * architecture where display options are stored separately from data caches.
+ * 
+ * @param analog Pointer to analog time series (nullptr safe)
+ * @param data_cache Data cache to populate with mean, std_dev, intrinsic_scale
+ */
+void setAnalogIntrinsicPropertiesForCache(AnalogTimeSeries const * analog,
+                                          CorePlotting::SeriesDataCache & data_cache);
 
 /**
  * @brief Get cached standard deviation, computing if necessary

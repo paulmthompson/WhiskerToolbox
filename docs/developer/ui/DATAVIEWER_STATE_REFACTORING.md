@@ -244,140 +244,16 @@ struct AnalogSeriesOptionsData {
 
 ### Step 1.1: Create SeriesStyleData (shared base)
 
-```cpp
-// DataViewerStateData.hpp
-struct SeriesStyleData {
-    std::string hex_color = "#007bff";
-    float alpha = 1.0f;
-    int line_thickness = 1;
-    bool is_visible = true;
-};
-```
-
 ### Step 1.2: Create per-series-type options structs
-
-```cpp
-struct AnalogSeriesOptionsData {
-    rfl::Flatten<SeriesStyleData> style;
-    
-    // Analog-specific user settings (exclude layout_transform, data_cache)
-    float user_scale_factor = 1.0f;
-    float y_offset = 0.0f;
-    std::string gap_handling = "AlwaysConnect";  // Enum as string
-    bool enable_gap_detection = false;
-    float gap_threshold = 5.0f;
-};
-
-struct DigitalEventSeriesOptionsData {
-    rfl::Flatten<SeriesStyleData> style;
-    
-    std::string plotting_mode = "FullCanvas";  // Enum as string
-    float vertical_spacing = 0.1f;
-    float event_height = 0.05f;
-    float margin_factor = 0.95f;
-};
-
-struct DigitalIntervalSeriesOptionsData {
-    rfl::Flatten<SeriesStyleData> style;
-    
-    bool extend_full_canvas = true;
-    float margin_factor = 0.95f;
-    float interval_height = 1.0f;
-};
-```
 
 ### Step 1.3: Create ViewState struct
 
-```cpp
-struct DataViewerViewState {
-    // Time window (X-axis)
-    int64_t time_start = 0;
-    int64_t time_end = 1000;
-    
-    // Y-axis
-    float y_min = -1.0f;
-    float y_max = 1.0f;
-    float vertical_pan_offset = 0.0f;
-    
-    // Global scaling
-    float global_zoom = 1.0f;
-    float global_vertical_scale = 1.0f;
-    
-    // Vertical spacing
-    float y_spacing = 0.1f;
-};
-```
-
 ### Step 1.4: Create ThemeState and GridState structs
-
-```cpp
-enum class DataViewerTheme {
-    Dark,
-    Light
-};
-
-struct DataViewerThemeState {
-    std::string theme = "Dark";  // Enum as string for serialization
-    std::string background_color = "#000000";
-    std::string axis_color = "#FFFFFF";
-};
-
-struct DataViewerGridState {
-    bool enabled = false;
-    int spacing = 100;
-};
-```
 
 ### Step 1.5: Create UIPreferences struct
 
-```cpp
-enum class DataViewerZoomScalingMode {
-    Fixed,
-    Adaptive
-};
-
-struct DataViewerUIPreferences {
-    std::string zoom_scaling_mode = "Adaptive";  // Enum as string
-    bool properties_panel_collapsed = false;
-    // Note: splitter sizes not serialized (Qt-specific, layout-dependent)
-};
-```
-
-### Step 1.6: Create InteractionState struct
-
-```cpp
-struct DataViewerInteractionState {
-    std::string interaction_mode = "Normal";  // InteractionMode as string
-};
-```
 
 ### Step 1.7: Create main DataViewerStateData struct
-
-```cpp
-struct DataViewerStateData {
-    // Identity
-    std::string instance_id;
-    std::string display_name = "Data Viewer";
-    
-    // View state
-    DataViewerViewState view;
-    
-    // Theme and grid
-    DataViewerThemeState theme;
-    DataViewerGridState grid;
-    
-    // UI preferences
-    DataViewerUIPreferences ui;
-    
-    // Interaction
-    DataViewerInteractionState interaction;
-    
-    // Per-series display options (key -> options)
-    std::map<std::string, AnalogSeriesOptionsData> analog_options;
-    std::map<std::string, DigitalEventSeriesOptionsData> event_options;
-    std::map<std::string, DigitalIntervalSeriesOptionsData> interval_options;
-};
-```
 
 ### Files to Create
 
@@ -415,52 +291,10 @@ Key design decisions:
 
 ### Step 2.1: Create SeriesOptionsRegistry class
 
-```cpp
-// SeriesOptionsRegistry.hpp
-class SeriesOptionsRegistry : public QObject {
-    Q_OBJECT
-public:
-    explicit SeriesOptionsRegistry(DataViewerStateData* data, QObject* parent = nullptr);
-    
-    // Template API
-    template<typename T> void set(QString const& key, T const& options);
-    template<typename T> T const* get(QString const& key) const;
-    template<typename T> T* getMutable(QString const& key);
-    template<typename T> bool remove(QString const& key);
-    template<typename T> bool has(QString const& key) const;
-    template<typename T> QStringList keys() const;
-    template<typename T> QStringList visibleKeys() const;
-    template<typename T> int count() const;
-    template<typename T> static QString typeName();
-    template<typename T> void notifyChanged(QString const& key);
-    
-    // Visibility by type name (for non-template access)
-    bool setVisible(QString const& key, QString const& type_name, bool visible);
-    bool isVisible(QString const& key, QString const& type_name) const;
-
-signals:
-    void optionsChanged(QString const& key, QString const& type_name);
-    void optionsRemoved(QString const& key, QString const& type_name);
-    void visibilityChanged(QString const& key, QString const& type_name, bool visible);
-    
-private:
-    DataViewerStateData* _data;
-};
-```
-
 ### Step 2.2: Implement template specializations
 
 Each series type gets explicit template specializations:
 
-```cpp
-// Type names
-template<> QString SeriesOptionsRegistry::typeName<AnalogSeriesOptionsData>() { return "analog"; }
-template<> QString SeriesOptionsRegistry::typeName<DigitalEventSeriesOptionsData>() { return "event"; }
-template<> QString SeriesOptionsRegistry::typeName<DigitalIntervalSeriesOptionsData>() { return "interval"; }
-
-// set(), get(), getMutable(), remove(), has(), keys(), visibleKeys(), count(), notifyChanged()
-// ... for each type
-```
 
 ### Step 2.3: Unit tests
 
@@ -513,84 +347,6 @@ Key implementation details:
 **Estimated Duration**: 3-4 days
 
 ### Step 3.1: Create DataViewerState class declaration
-
-```cpp
-// DataViewerState.hpp
-class DataViewerState : public EditorState {
-    Q_OBJECT
-public:
-    explicit DataViewerState(QObject* parent = nullptr);
-    ~DataViewerState() override = default;
-    
-    // EditorState interface
-    [[nodiscard]] QString getTypeName() const override { return "DataViewer"; }
-    [[nodiscard]] QString getDisplayName() const override;
-    void setDisplayName(QString const& name) override;
-    [[nodiscard]] std::string toJson() const override;
-    bool fromJson(std::string const& json) override;
-    
-    // Direct data access
-    [[nodiscard]] DataViewerStateData const& data() const { return _data; }
-    
-    // Series options registry
-    [[nodiscard]] SeriesOptionsRegistry& seriesOptions() { return _series_options; }
-    [[nodiscard]] SeriesOptionsRegistry const& seriesOptions() const { return _series_options; }
-    
-    // === View State ===
-    void setTimeWindow(int64_t start, int64_t end);
-    [[nodiscard]] std::pair<int64_t, int64_t> timeWindow() const;
-    void setYBounds(float y_min, float y_max);
-    [[nodiscard]] std::pair<float, float> yBounds() const;
-    void setVerticalPanOffset(float offset);
-    [[nodiscard]] float verticalPanOffset() const;
-    void setGlobalZoom(float zoom);
-    [[nodiscard]] float globalZoom() const;
-    void setGlobalVerticalScale(float scale);
-    [[nodiscard]] float globalVerticalScale() const;
-    void setYSpacing(float spacing);
-    [[nodiscard]] float ySpacing() const;
-    void setViewState(DataViewerViewState const& view);
-    [[nodiscard]] DataViewerViewState const& viewState() const;
-    
-    // === Theme ===
-    void setTheme(QString const& theme);  // "Dark" or "Light"
-    [[nodiscard]] QString theme() const;
-    void setBackgroundColor(QString const& hex);
-    [[nodiscard]] QString backgroundColor() const;
-    void setAxisColor(QString const& hex);
-    [[nodiscard]] QString axisColor() const;
-    
-    // === Grid ===
-    void setGridEnabled(bool enabled);
-    [[nodiscard]] bool gridEnabled() const;
-    void setGridSpacing(int spacing);
-    [[nodiscard]] int gridSpacing() const;
-    
-    // === UI Preferences ===
-    void setZoomScalingMode(QString const& mode);  // "Fixed" or "Adaptive"
-    [[nodiscard]] QString zoomScalingMode() const;
-    void setPropertiesPanelCollapsed(bool collapsed);
-    [[nodiscard]] bool propertiesPanelCollapsed() const;
-    
-    // === Interaction ===
-    void setInteractionMode(QString const& mode);
-    [[nodiscard]] QString interactionMode() const;
-
-signals:
-    // Consolidated signals (following MediaWidgetState pattern)
-    void viewStateChanged();
-    void themeChanged();
-    void gridChanged();
-    void uiPreferencesChanged();
-    void interactionModeChanged(QString const& mode);
-    // Display options signals come from SeriesOptionsRegistry
-    
-private:
-    DataViewerStateData _data;
-    SeriesOptionsRegistry _series_options{&_data, this};
-    void _connectRegistrySignals();
-};
-```
 
 ### Step 3.2: Implement DataViewerState
 
@@ -851,9 +607,11 @@ Key changes:
 
 **Estimated Duration**: 4-5 days
 
+**Status**: ✅ **COMPLETED (2026-01-24)**
+
 This phase separates concerns between runtime data and serializable options.
 
-### Step 6.1: Refactor TimeSeriesDataStore entry structs
+### Step 6.1: Refactor TimeSeriesDataStore entry structs ✅
 
 Remove style/options fields, keep only data and computed state:
 
@@ -875,7 +633,7 @@ struct AnalogSeriesEntry {
 };
 ```
 
-### Step 6.2: Update add/remove methods
+### Step 6.2: Update add/remove methods ✅
 
 When adding a series:
 1. TimeSeriesDataStore stores data + initializes computed fields
@@ -898,7 +656,7 @@ void OpenGLWidget::addAnalogTimeSeries(std::string const& key,
 }
 ```
 
-### Step 6.3: Update rendering to combine data + options
+### Step 6.3: Update rendering to combine data + options ✅
 
 ```cpp
 void OpenGLWidget::renderAnalogSeries() {
@@ -920,7 +678,7 @@ void OpenGLWidget::renderAnalogSeries() {
 }
 ```
 
-### Step 6.4: Update layout application
+### Step 6.4: Update layout application ✅
 
 Layout engine results go to TimeSeriesDataStore entries, not to state:
 
@@ -935,7 +693,7 @@ void TimeSeriesDataStore::applyLayoutResponse(CorePlotting::LayoutResponse const
 }
 ```
 
-### Step 6.5: Handle key synchronization
+### Step 6.5: Handle key synchronization ✅
 
 When a series is removed from DataStore, also remove from state:
 
@@ -946,13 +704,52 @@ void OpenGLWidget::removeAnalogTimeSeries(std::string const& key) {
 }
 ```
 
-### Files to Modify
+### Files Modified
 
-- `src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.hpp` - Remove display_options
-- `src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.cpp` - Update add/remove
-- `src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.hpp` - Add state integration
-- `src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.cpp` - Update rendering
-- `src/WhiskerToolbox/DataViewer_Widget/SceneBuildingHelpers.cpp` - Use state for style
+- [src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.hpp](../../../src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.hpp) - Removed display_options from entries
+- [src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/TimeSeriesDataStore.cpp) - Updated add/remove methods, buildLayoutRequest
+- [src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.cpp) - Updated rendering to use state for style
+- [src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.cpp) - Updated color/visibility handling
+- [src/WhiskerToolbox/DataViewer_Widget/SVGExporter.hpp](../../../src/WhiskerToolbox/DataViewer_Widget/SVGExporter.hpp) - Rewritten to take separate parameters
+- [src/WhiskerToolbox/DataViewer_Widget/SVGExporter.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/SVGExporter.cpp) - Updated to use state for visibility
+- [src/WhiskerToolbox/DataViewer_Widget/AnalogViewer_Widget.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/AnalogViewer_Widget.cpp) - Fixed accessor patterns
+- [src/WhiskerToolbox/DataViewer_Widget/EventViewer_Widget.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/EventViewer_Widget.cpp) - Fixed accessor patterns
+- [src/WhiskerToolbox/DataViewer_Widget/IntervalViewer_Widget.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/IntervalViewer_Widget.cpp) - Fixed accessor patterns
+- [src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.test.cpp](../../../src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.test.cpp) - Updated all tests
+
+### Success Criteria
+
+- [x] TimeSeriesDataStore entries contain only data + computed state (layout_transform, data_cache, vertex_cache) ✅
+- [x] User-configurable options moved to DataViewerState ✅
+- [x] Rendering combines data from store with options from state ✅
+- [x] Layout engine results applied to store entries, not state ✅
+- [x] Key synchronization between store and state ✅
+- [x] All tests passing (840 assertions in 59 test cases) ✅
+
+### Implementation Notes
+
+**Phase 6 COMPLETED (2026-01-24)**
+
+Key changes:
+1. **TimeSeriesDataStore refactored**: Removed `display_options` from all entry structs (AnalogSeriesEntry, DigitalEventSeriesEntry, DigitalIntervalSeriesEntry)
+2. **Entry structs now contain**: 
+   - Data: `shared_ptr<Series>` to actual time series
+   - Computed: `layout_transform` (from LayoutEngine), `data_cache` (intrinsic_scale, etc.), `vertex_cache`
+   - **NO user options**: color, visibility, user_scale_factor, etc. now in state
+3. **Two-lookup pattern at render time**:
+   - Data from `TimeSeriesDataStore.getAnalogSeriesMap()[key]`
+   - Options from `DataViewerState.seriesOptions().get<AnalogSeriesOptionsData>(key)`
+4. **Accessor patterns**:
+   - Use `getMutable<T>()` for modification, `get<T>()` for const access
+   - Style fields use accessor methods: `hex_color()`, `alpha()`, `get_is_visible()`
+   - Non-style fields: direct member access (`user_scale_factor`, `y_offset`, etc.)
+5. **Test infrastructure**: Created `TestHelpers` namespace with helper functions for accessing options and layout transforms
+6. **SVGExporter rewritten**: Now takes separate layout_transform, data_cache, and options parameters
+7. **All viewer widgets updated**: AnalogViewer_Widget, EventViewer_Widget, IntervalViewer_Widget now use `getMutable<>()` pattern
+
+**Architectural Win**: Complete separation of concerns:
+- **Runtime/Computed** (TimeSeriesDataStore): data, layout, cache — NOT serialized
+- **User Preferences** (DataViewerState): style, visibility, user settings — serialized to JSON
 
 ---
 
@@ -988,39 +785,38 @@ Review all members in OpenGLWidget and DataViewer_Widget that are now in state.
 | 3: DataViewerState Class | 3-4 days | ✅ **COMPLETED** | EditorState subclass, accessors, signals |
 | 4: Wire OpenGLWidget | 3-4 days | ✅ **COMPLETED** | View/theme/grid from state, y_spacing removed |
 | 5: Wire DataViewer_Widget | 2-3 days | ✅ **COMPLETED** | UI preferences from state, shared state |
-| 6: Refactor TimeSeriesDataStore | 4-5 days | ⏳ **PENDING** | Remove options, state as source of truth |
+| 6: Refactor TimeSeriesDataStore | 4-5 days | ✅ **COMPLETED** | Remove options, state as source of truth |
 | 7: Cleanup & Testing | 2-3 days | ⏳ **PENDING** | Integration tests, documentation |
-| **Total** | **~3-4 weeks** | **~70% Complete** | **Full state extraction** |
+| **Total** | **~3-4 weeks** | **~85% Complete** | **Full state extraction** |
 
-### Recent Progress (2026-01-23)
+### Recent Progress (2026-01-24)
 
-**Phase 4 & 5 Completed**: Full state wiring for both widgets
+**Phase 6 Completed**: TimeSeriesDataStore refactored, state is now single source of truth
 
-**Phase 4 Summary:**
-- All view state, theme, grid settings flow through DataViewerState
-- OpenGLWidget reacts to state signals and triggers updates
-- Removed pass-through methods in OpenGLWidget
-- y_spacing removed (layout engine handles spacing automatically)
-- setYBounds/setVerticalPanOffset already in state and used correctly
+**Phase 6 Summary:**
+- Removed display_options from all TimeSeriesDataStore entry structs
+- TimeSeriesDataStore now contains only: data, layout_transform, data_cache, vertex_cache
+- User-configurable options (color, visibility, scaling) moved to DataViewerState
+- Two-lookup pattern at render time: data from store, options from state
+- Created TestHelpers namespace for test infrastructure
+- Fixed accessor patterns: `getMutable<>()` for modification, `get<>()` for const access
+- SVGExporter rewritten to take separate parameters
+- All viewer widgets updated (AnalogViewer_Widget, EventViewer_Widget, IntervalViewer_Widget)
+- All tests passing (840 assertions in 59 test cases)
 
-**Phase 5 Summary:**
-- DataViewer_Widget now owns state and shares with OpenGLWidget
-- Removed `_zoom_scaling_mode` local member → `_state->zoomScalingMode()`
-- Removed `_properties_panel_collapsed` local member → `_state->propertiesPanelCollapsed()`
-- All UI modifications use `_state->` directly
-- setState() method enables workspace restore
-- All tests passing (879 assertions in 59 test cases)
+**Cumulative Architectural Wins (Phases 4-6):**
+1. **Complete state extraction**: All user preferences in serializable DataViewerState
+2. **Clean separation**: Runtime data (store) vs user options (state)
+3. **Single source of truth**: DataViewer_Widget owns state, OpenGLWidget shares it
+4. **UI → State → Render**: UI modifies state, rendering reads from state
+5. **No duplicate state**: Eliminated all duplicate members between widgets
+6. **Workspace ready**: Full state serialization enables save/restore
 
-**Key Architectural Wins:**
-1. Single source of truth: DataViewer_Widget owns state, OpenGLWidget shares it
-2. UI widgets modify state directly, rendering widget reacts via signals
-3. No duplicate state variables between widgets
-4. Ready for workspace save/restore via state serialization
-
-**Next Steps (Phase 6):**
-- Move per-series display options from TimeSeriesDataStore to state
-- TimeSeriesDataStore keeps: data, layout_transform, data_cache, vertex_cache
-- State keeps: style (color, visibility), user_scale_factor, gap_handling, etc.
+**Next Steps (Phase 7):**
+- Integration testing for workspace save/restore
+- Performance testing to confirm <0.1% overhead from two-lookup pattern
+- Documentation updates
+- Audit for any remaining duplicate state
 
 ---
 

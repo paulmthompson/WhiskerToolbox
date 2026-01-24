@@ -683,26 +683,27 @@ void DataViewer_Widget::_updateLabels() {
 }
 
 void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std::string const & hex_color) {
-    // Update the color in the OpenGL widget display options (tree widget color management will be added later)
+    // Update the color in state (not directly in OpenGL widget display options)
 
     auto const type = _data_manager->getType(feature_key);
+    QString const qkey = QString::fromStdString(feature_key);
 
     if (type == DM_DataType::Analog) {
-        auto config = ui->openGLWidget->getAnalogConfig(feature_key);
-        if (config.has_value()) {
-            config.value()->style.hex_color = hex_color;
+        auto * opts = _state->seriesOptions().getMutable<AnalogSeriesOptionsData>(qkey);
+        if (opts) {
+            opts->hex_color() = hex_color;
         }
 
     } else if (type == DM_DataType::DigitalEvent) {
-        auto config = ui->openGLWidget->getDigitalEventConfig(feature_key);
-        if (config.has_value()) {
-            config.value()->style.hex_color = hex_color;
+        auto * opts = _state->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(qkey);
+        if (opts) {
+            opts->hex_color() = hex_color;
         }
 
     } else if (type == DM_DataType::DigitalInterval) {
-        auto config = ui->openGLWidget->getDigitalIntervalConfig(feature_key);
-        if (config.has_value()) {
-            config.value()->style.hex_color = hex_color;
+        auto * opts = _state->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(qkey);
+        if (opts) {
+            opts->hex_color() = hex_color;
         }
     }
 
@@ -743,16 +744,13 @@ void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float ca
     ui->coordinate_label->setText(coordinate_text);
 }
 
-std::optional<NewAnalogTimeSeriesDisplayOptions *> DataViewer_Widget::getAnalogConfig(std::string const & key) const {
-    return ui->openGLWidget->getAnalogConfig(key);
+// State access - mutable version (const version returns shared_ptr, defined in header)
+DataViewerState * DataViewer_Widget::state() {
+    return _state.get();
 }
 
-std::optional<NewDigitalEventSeriesDisplayOptions *> DataViewer_Widget::getDigitalEventConfig(std::string const & key) const {
-    return ui->openGLWidget->getDigitalEventConfig(key);
-}
-
-std::optional<NewDigitalIntervalSeriesDisplayOptions *> DataViewer_Widget::getDigitalIntervalConfig(std::string const & key) const {
-    return ui->openGLWidget->getDigitalIntervalConfig(key);
+OpenGLWidget * DataViewer_Widget::getOpenGLWidget() const {
+    return ui->openGLWidget;
 }
 
 void DataViewer_Widget::_handleThemeChanged(int theme_index) {
@@ -910,9 +908,9 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
             // Check if this key is already in our group (avoid double counting)
             bool in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
             if (!in_group) {
-                // Check if this series is currently visible
-                auto config = ui->openGLWidget->getAnalogConfig(key);
-                if (config.has_value() && config.value()->style.is_visible) {
+                // Check if this series is currently visible via state
+                auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+                if (opts && opts->get_is_visible()) {
                     total_visible_analog_series++;
                 }
             }
@@ -1017,8 +1015,8 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
             bool const in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
             if (!in_group) {
                 // Check if this series is currently visible
-                auto config = ui->openGLWidget->getDigitalEventConfig(key);
-                if (config.has_value() && config.value()->style.is_visible) {
+                auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+                if (opts && opts->get_is_visible()) {
                     total_visible_event_series++;
                 }
             }
@@ -1058,11 +1056,11 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
 
     // Apply the calculated settings to all event series in the group
     for (auto const & key: group_keys) {
-        auto config = ui->openGLWidget->getDigitalEventConfig(key);
-        if (config.has_value()) {
-            config.value()->vertical_spacing = final_spacing;
-            config.value()->event_height = final_height;
-            config.value()->display_mode = EventDisplayMode::Stacked;// Ensure stacked mode
+        auto * opts = _state->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+        if (opts) {
+            opts->vertical_spacing = final_spacing;
+            opts->event_height = final_height;
+            opts->plotting_mode = EventPlottingModeData::Stacked;// Ensure stacked mode
         }
     }
 
@@ -1183,17 +1181,20 @@ void DataViewer_Widget::_autoFillCanvas() {
     std::vector<std::string> interval_keys;
 
     for (auto const & [key, data]: analog_map) {
-        if (data.display_options->style.is_visible) {
+        auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+        if (opts && opts->get_is_visible()) {
             analog_keys.push_back(key);
         }
     }
     for (auto const & [key, data]: event_map) {
-        if (data.display_options->style.is_visible) {
+        auto const * opts = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+        if (opts && opts->get_is_visible()) {
             event_keys.push_back(key);
         }
     }
     for (auto const & [key, data]: interval_map) {
-        if (data.display_options->style.is_visible) {
+        auto const * opts = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+        if (opts && opts->get_is_visible()) {
             interval_keys.push_back(key);
         }
     }
@@ -1241,10 +1242,10 @@ void DataViewer_Widget::_autoFillCanvas() {
 
         // Apply optimal height to all visible digital event series
         for (auto const & key: event_keys) {
-            auto config = ui->openGLWidget->getDigitalEventConfig(key);
-            if (config.has_value() && config.value()->style.is_visible) {
-                config.value()->event_height = optimal_event_height;
-                config.value()->display_mode = EventDisplayMode::Stacked;// Ensure stacked mode
+            auto * opts = _state->seriesOptions().getMutable<DigitalEventSeriesOptionsData>(QString::fromStdString(key));
+            if (opts && opts->get_is_visible()) {
+                opts->event_height = optimal_event_height;
+                opts->plotting_mode = EventPlottingModeData::Stacked;// Ensure stacked mode
                 std::cout << "  Applied event height " << optimal_event_height
                           << " to series '" << key << "'" << std::endl;
             }
@@ -1261,9 +1262,9 @@ void DataViewer_Widget::_autoFillCanvas() {
 
         // Apply optimal height to all visible digital interval series
         for (auto const & key: interval_keys) {
-            auto config = ui->openGLWidget->getDigitalIntervalConfig(key);
-            if (config.has_value() && config.value()->style.is_visible) {
-                config.value()->interval_height = optimal_interval_height;
+            auto * opts = _state->seriesOptions().getMutable<DigitalIntervalSeriesOptionsData>(QString::fromStdString(key));
+            if (opts && opts->get_is_visible()) {
+                opts->margin_factor = optimal_interval_height;
                 std::cout << "  Applied interval height " << optimal_interval_height
                           << " to series '" << key << "'" << std::endl;
             }
@@ -1280,8 +1281,8 @@ void DataViewer_Widget::_autoFillCanvas() {
         for (auto const & key: analog_keys) {
             if (sampled >= 5) break;
 
-            auto config = ui->openGLWidget->getAnalogConfig(key);
-            if (config.has_value() && config.value()->style.is_visible) {
+            auto const * opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(QString::fromStdString(key));
+            if (opts && opts->get_is_visible()) {
                 auto series = _data_manager->getData<AnalogTimeSeries>(key);
                 if (series) {
                     float std_dev = calculate_std_dev_approximate(*series);
