@@ -96,6 +96,16 @@ signals:
      */
     void autoArrangeRequested();
 
+    /**
+     * @brief Emitted when the export SVG button is clicked
+     * 
+     * The view widget should connect to this signal to trigger SVG export.
+     * 
+     * @param includeScalebar Whether to include a scalebar in the export
+     * @param scalebarLength Length of the scalebar in time units
+     */
+    void exportSVGRequested(bool includeScalebar, int scalebarLength);
+
 private slots:
     void _onThemeChanged(int index);
     void _onGlobalZoomChanged(double value);

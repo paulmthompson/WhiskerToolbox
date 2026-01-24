@@ -80,6 +80,16 @@ public:
      */
     void autoArrangeVerticalSpacing();
 
+    /**
+     * @brief Export the current plot to SVG
+     * 
+     * Opens a file dialog and exports the plot to an SVG file.
+     * 
+     * @param includeScalebar Whether to include a scalebar in the export
+     * @param scalebarLength Length of the scalebar in time units
+     */
+    void exportToSVG(bool includeScalebar, int scalebarLength);
+
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
@@ -100,7 +110,6 @@ private slots:
     void _clearConfigurationForGroup(QString const & group_name);
     void _hidePropertiesPanel();
     void _showPropertiesPanel();
-    void _exportToSVG();
 
 private:
     std::shared_ptr<DataManager> _data_manager;

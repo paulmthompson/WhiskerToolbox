@@ -91,6 +91,10 @@ void registerTypes(EditorRegistry * registry,
             // Connect properties auto-arrange signal to view
             QObject::connect(props, &DataViewerPropertiesWidget::autoArrangeRequested,
                              view, &DataViewer_Widget::autoArrangeVerticalSpacing);
+            
+            // Connect properties export SVG signal to view
+            QObject::connect(props, &DataViewerPropertiesWidget::exportSVGRequested,
+                             view, &DataViewer_Widget::exportToSVG);
 
             // Register the state
             reg->registerState(state);

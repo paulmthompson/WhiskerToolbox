@@ -93,6 +93,19 @@ void DataViewerPropertiesWidget::_connectUIControls() {
     // Auto-arrange button
     connect(ui->auto_arrange_button, &QPushButton::clicked,
             this, &DataViewerPropertiesWidget::autoArrangeRequested);
+    
+    // Export SVG button
+    connect(ui->export_svg_button, &QPushButton::clicked, this, [this]() {
+        bool const includeScalebar = ui->svg_scalebar_checkbox->isChecked();
+        int const scalebarLength = ui->scalebar_length_spinbox->value();
+        emit exportSVGRequested(includeScalebar, scalebarLength);
+    });
+    
+    // Scalebar checkbox enables/disables the length spinbox
+    connect(ui->svg_scalebar_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
+        ui->scalebar_length_spinbox->setEnabled(checked);
+        ui->scalebar_length_label->setEnabled(checked);
+    });
 }
 
 void DataViewerPropertiesWidget::_connectStateSignals() {

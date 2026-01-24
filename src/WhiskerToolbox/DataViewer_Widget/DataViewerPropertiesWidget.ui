@@ -190,6 +190,67 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="export_group">
+         <property name="title">
+          <string>Export</string>
+         </property>
+         <layout class="QGridLayout" name="export_layout">
+          <item row="0" column="0" colspan="2">
+           <widget class="QPushButton" name="export_svg_button">
+            <property name="toolTip">
+             <string>Export current plot to SVG vector graphics format (1920x1080)</string>
+            </property>
+            <property name="text">
+             <string>Export to SVG</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="svg_scalebar_checkbox">
+            <property name="toolTip">
+             <string>Include a horizontal scalebar in the SVG export (bottom-right corner)</string>
+            </property>
+            <property name="text">
+             <string>Include Scalebar in SVG</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="scalebar_length_label">
+            <property name="text">
+             <string>Scalebar Length:</string>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="scalebar_length_spinbox">
+            <property name="toolTip">
+             <string>Length of the scalebar in time units</string>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>10000</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

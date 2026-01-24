@@ -231,15 +231,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     // Initially hide the show button since properties are visible
     ui->show_properties_button->hide();
-
-    // Connect SVG export button
-    connect(ui->export_svg_button, &QPushButton::clicked, this, &DataViewer_Widget::_exportToSVG);
-
-    // Connect scalebar checkbox to enable/disable the length spinbox
-    connect(ui->svg_scalebar_checkbox, &QCheckBox::toggled, this, [this](bool checked) {
-        ui->scalebar_length_spinbox->setEnabled(checked);
-        ui->scalebar_length_label->setEnabled(checked);
-    });
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -892,7 +883,6 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
                   << ", optimal global scale: " << final_scale << std::endl;
 
         // Apply the calculated settings
-        ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
         _state->setGlobalZoom(final_scale);
 
         std::cout << "Applied auto-scaling: vertical spacing = " << final_spacing
@@ -900,7 +890,6 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
 
     } else {
         // If we can't calculate standard deviations, just apply spacing
-        ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
         std::cout << "Applied auto-spacing only: vertical spacing = " << final_spacing << std::endl;
     }
 }
@@ -1141,9 +1130,6 @@ void DataViewer_Widget::_autoFillCanvas() {
     std::cout << "Calculated optimal spacing: " << optimal_spacing_pixels << " pixels -> "
               << final_spacing << " normalized units" << std::endl;
 
-    // Apply the calculated vertical spacing
-    ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
-
     // Calculate and apply optimal event heights for digital event series
     if (visible_event_count > 0) {
         // Calculate event height conservatively to avoid near full-lane rendering
@@ -1332,7 +1318,7 @@ void DataViewer_Widget::_showPropertiesPanel() {
     ui->openGLWidget->update();
 }
 
-void DataViewer_Widget::_exportToSVG() {
+void DataViewer_Widget::exportToSVG(bool includeScalebar, int scalebarLength) {
     std::cout << "SVG Export initiated" << std::endl;
 
     // Get save file path from user
@@ -1352,9 +1338,8 @@ void DataViewer_Widget::_exportToSVG() {
         SVGExporter exporter(ui->openGLWidget);
 
         // Configure scalebar if requested
-        if (ui->svg_scalebar_checkbox->isChecked()) {
-            int const scalebar_length = ui->scalebar_length_spinbox->value();
-            exporter.enableScalebar(true, scalebar_length);
+        if (includeScalebar) {
+            exporter.enableScalebar(true, scalebarLength);
         }
 
         // Generate SVG document
