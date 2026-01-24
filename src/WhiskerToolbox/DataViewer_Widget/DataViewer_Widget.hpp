@@ -88,7 +88,6 @@ private slots:
     void _handleThemeChanged(int theme_index);
     void _handleGridLinesToggled(bool enabled);
     void _handleGridSpacingChanged(int spacing);
-    void _handleVerticalSpacingChanged(double spacing);
     void _showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
     void _loadSpikeSorterConfigurationForGroup(QString const & group_name);
     void _loadSpikeSorterConfigurationFromText(QString const & group_name, QString const & text);

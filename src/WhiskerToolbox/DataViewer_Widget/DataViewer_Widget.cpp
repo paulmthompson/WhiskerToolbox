@@ -217,18 +217,12 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->grid_lines_enabled, &QCheckBox::toggled, this, &DataViewer_Widget::_handleGridLinesToggled);
     connect(ui->grid_spacing, QOverload<int>::of(&QSpinBox::valueChanged), this, &DataViewer_Widget::_handleGridSpacingChanged);
 
-    // Vertical spacing connection
-    connect(ui->vertical_spacing, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DataViewer_Widget::_handleVerticalSpacingChanged);
-
     // Auto-arrange button connection
     connect(ui->auto_arrange_button, &QPushButton::clicked, this, &DataViewer_Widget::autoArrangeVerticalSpacing);
 
     // Initialize grid line UI to match OpenGLWidget defaults
     ui->grid_lines_enabled->setChecked(ui->openGLWidget->getGridLinesEnabled());
     ui->grid_spacing->setValue(ui->openGLWidget->getGridSpacing());
-
-    // Initialize vertical spacing UI to match OpenGLWidget defaults
-    ui->vertical_spacing->setValue(static_cast<double>(ui->openGLWidget->getVerticalSpacing()));
 
     // Configure splitter behavior
     ui->main_splitter->setStretchFactor(0, 0);// Properties panel doesn't stretch
@@ -736,18 +730,6 @@ void DataViewer_Widget::_handleGridLinesToggled(bool enabled) {
 
 void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
     ui->openGLWidget->setGridSpacing(spacing);
-}
-
-void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
-    ui->openGLWidget->setVerticalSpacing(static_cast<float>(spacing));
-
-    // Update ViewState vertical scale (which is then used by computeAndApplyLayout)
-    // Convert spacing to a scale factor relative to default (0.1f)
-    float const scale_factor = static_cast<float>(spacing) / 0.1f;
-    ui->openGLWidget->setGlobalVerticalScale(scale_factor);
-
-    // Trigger canvas update - layout will be recomputed automatically
-    ui->openGLWidget->updateCanvas();
 }
 
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {

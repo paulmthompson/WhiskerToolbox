@@ -198,13 +198,6 @@ public:
     }
     [[nodiscard]] int getGridSpacing() const { return _grid_state.spacing; }
 
-    // Vertical spacing controls for analog series
-    void setVerticalSpacing(float spacing) {
-        _ySpacing = spacing;
-        updateCanvas(_time);
-    }
-    [[nodiscard]] float getVerticalSpacing() const { return _ySpacing; }
-
     // ========================================================================
     // EntityId-based Selection API (preferred for new code)
     // ========================================================================
@@ -505,8 +498,6 @@ private:
 
     /// Cached scene and layout for rendering/hit testing
     SceneCacheState _cache_state;
-
-    float _ySpacing{0.1f};///< Vertical spacing factor for series
 
     // ========================================================================
     // Input, Interaction, Selection, and Tooltip Handlers
