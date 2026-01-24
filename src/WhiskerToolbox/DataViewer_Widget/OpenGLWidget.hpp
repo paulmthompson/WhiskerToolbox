@@ -60,6 +60,7 @@
 #include "DataViewerInputHandler.hpp"
 #include "DataViewerInteractionManager.hpp"
 #include "DataViewerSelectionManager.hpp"
+#include "DataViewerState.hpp"
 #include "DataViewerTooltipController.hpp"
 #include "PlottingOpenGL/Renderers/AxisRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
@@ -99,32 +100,6 @@ class QTimer;
 namespace CorePlotting {
 class SceneBuilder;
 }
-
-enum class PlotTheme {
-    Dark,// Black background, white axes (default)
-    Light// White background, dark axes
-};
-
-/**
- * @brief Theme-related state for the OpenGLWidget
- * 
- * Groups visual theme settings including background and axis colors.
- */
-struct ThemeState {
-    PlotTheme theme{PlotTheme::Dark};
-    std::string background_color{"#000000"}; // black for dark theme
-    std::string axis_color{"#FFFFFF"};       // white for dark theme
-};
-
-/**
- * @brief Grid overlay settings
- * 
- * Groups grid line configuration for time-axis aligned vertical lines.
- */
-struct GridState {
-    bool enabled{false};   // Default to disabled
-    int spacing{100};      // Default spacing of 100 time units
-};
 
 /**
  * @brief Cached rendering and hit-testing state
@@ -181,22 +156,23 @@ public:
             std::string const & color = "");
     void removeDigitalIntervalSeries(std::string const & key);
     void clearSeries();
-    void setBackgroundColor(std::string const & hexColor);
 
-    void setPlotTheme(PlotTheme theme);
-    [[nodiscard]] PlotTheme getPlotTheme() const { return _theme_state.theme; }
+    /**
+     * @brief Set the DataViewerState for this widget
+     * 
+     * The state manages all serializable settings including view state,
+     * theme, grid settings, and per-series display options. The UI modifies
+     * the state directly; OpenGLWidget reacts to state changes via signals.
+     * 
+     * @param state Shared pointer to the state object
+     */
+    void setState(std::shared_ptr<DataViewerState> state);
 
-    // Grid line controls
-    void setGridLinesEnabled(bool enabled) {
-        _grid_state.enabled = enabled;
-        updateCanvas(_time);
-    }
-    [[nodiscard]] bool getGridLinesEnabled() const { return _grid_state.enabled; }
-    void setGridSpacing(int spacing) {
-        _grid_state.spacing = spacing;
-        updateCanvas(_time);
-    }
-    [[nodiscard]] int getGridSpacing() const { return _grid_state.spacing; }
+    /**
+     * @brief Get the current DataViewerState
+     * @return Shared pointer to the state object
+     */
+    [[nodiscard]] std::shared_ptr<DataViewerState> state() const { return _state; }
 
     // ========================================================================
     // EntityId-based Selection API (preferred for new code)
@@ -280,9 +256,9 @@ public:
      * @brief Get the current view state (time window and Y-axis state)
      * @return Reference to CorePlotting::TimeSeriesViewState with current state
      */
-    [[nodiscard]] CorePlotting::TimeSeriesViewState const & getViewState() const { return _view_state; }
+    [[nodiscard]] CorePlotting::TimeSeriesViewState const & getViewState() const;
 
-    [[nodiscard]] std::string const & getBackgroundColor() const { return _theme_state.background_color; }
+    [[nodiscard]] std::string getBackgroundColor() const;
     [[nodiscard]] std::shared_ptr<TimeFrame> getMasterTimeFrame() const { return _master_time_frame; }
     [[nodiscard]] auto const & getAnalogSeriesMap() const { return _data_store->analogSeries(); }
     [[nodiscard]] auto const & getDigitalEventSeriesMap() const { return _data_store->eventSeries(); }
@@ -319,35 +295,6 @@ public:
      * @param group_name Group identifier to clear
      */
     void clearSpikeSorterConfiguration(std::string const & group_name);
-
-    /**
-     * @brief Change the visible range width by a delta amount
-     * @param range_delta Amount to add to current range (negative = zoom in)
-     */
-    void changeRangeWidth(int64_t range_delta);
-
-    /**
-     * @brief Set the visible range width to a specific value
-     * @param range_width Desired range width
-     * @return Actual range width achieved (may differ due to bounds clamping)
-     */
-    int64_t setRangeWidth(int64_t range_width);
-
-    void setGlobalScale(float scale) {
-
-        std::cout << "Global zoom set to " << scale << std::endl;
-        _view_state.global_zoom = scale;
-        updateCanvas(_time);
-    }
-
-    /**
-     * @brief Set global vertical scale factor
-     * @param scale Vertical scale factor (1.0 = normal)
-     */
-    void setGlobalVerticalScale(float scale) {
-        _view_state.global_vertical_scale = scale;
-        updateCanvas(_time);
-    }
 
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
         return std::make_pair(width(), height());
@@ -483,18 +430,14 @@ private:
     /// Centralized storage for all time series data
     std::unique_ptr<DataViewer::TimeSeriesDataStore> _data_store;
 
-    CorePlotting::TimeSeriesViewState _view_state;
+    /// Serializable state (view, theme, grid, per-series options)
+    /// Source of truth for all user-configurable settings
+    std::shared_ptr<DataViewerState> _state;
+
     TimeFrameIndex _time{0};
 
-    
     /// OpenGL resources: shader, buffers, matrices
     OpenGLResourceState _gl_state;
-
-    /// Theme settings: colors and visual style
-    ThemeState _theme_state;
-
-    /// Grid overlay configuration
-    GridState _grid_state;
 
     /// Cached scene and layout for rendering/hit testing
     SceneCacheState _cache_state;

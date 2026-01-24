@@ -189,6 +189,27 @@ public:
     [[nodiscard]] std::pair<int64_t, int64_t> timeWindow() const;
 
     /**
+     * @brief Adjust time window width by a delta while keeping center fixed
+     * 
+     * Positive delta increases the range width (zoom out).
+     * Negative delta decreases the range width (zoom in).
+     * Emits viewStateChanged signal.
+     * 
+     * @param delta Amount to add to current width (negative = zoom in)
+     */
+    void adjustTimeWidth(int64_t delta);
+
+    /**
+     * @brief Set time window width to a specific value while keeping center fixed
+     * 
+     * Emits viewStateChanged signal.
+     * 
+     * @param width Desired width of visible range (minimum 1)
+     * @return Actual width achieved (will be at least 1)
+     */
+    int64_t setTimeWidth(int64_t width);
+
+    /**
      * @brief Set the Y-axis bounds
      * @param y_min Minimum Y value in normalized device coordinates
      * @param y_max Maximum Y value in normalized device coordinates

@@ -130,6 +130,32 @@ struct TimeSeriesViewState {
         }
     }
     
+    /**
+     * @brief Adjust time window width by a delta while keeping center fixed
+     * 
+     * Positive delta increases the range width (zoom out).
+     * Negative delta decreases the range width (zoom in).
+     * 
+     * @param delta Amount to add to current width (negative = zoom in)
+     */
+    void adjustTimeWidth(int64_t delta) {
+        int64_t const center = getTimeCenter();
+        int64_t const new_width = getTimeWidth() + delta;
+        setTimeWindow(center, new_width);
+    }
+    
+    /**
+     * @brief Set time window width to a specific value while keeping center fixed
+     * 
+     * @param width Desired width of visible range (minimum 1)
+     * @return Actual width achieved (will be at least 1)
+     */
+    int64_t setTimeWidth(int64_t width) {
+        int64_t const center = getTimeCenter();
+        setTimeWindow(center, width);
+        return getTimeWidth();  // Return actual achieved width
+    }
+    
     // =========================================================================
     // Y-axis Methods
     // =========================================================================

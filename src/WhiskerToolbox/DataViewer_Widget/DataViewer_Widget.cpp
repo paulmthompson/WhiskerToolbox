@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 #include "DataManager.hpp"
+#include "DataViewerStateData.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
@@ -220,9 +221,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Auto-arrange button connection
     connect(ui->auto_arrange_button, &QPushButton::clicked, this, &DataViewer_Widget::autoArrangeVerticalSpacing);
 
-    // Initialize grid line UI to match OpenGLWidget defaults
-    ui->grid_lines_enabled->setChecked(ui->openGLWidget->getGridLinesEnabled());
-    ui->grid_spacing->setValue(ui->openGLWidget->getGridSpacing());
+    // Initialize grid line UI to match state defaults
+    ui->grid_lines_enabled->setChecked(ui->openGLWidget->state()->gridEnabled());
+    ui->grid_spacing->setValue(ui->openGLWidget->state()->gridSpacing());
 
     // Configure splitter behavior
     ui->main_splitter->setStretchFactor(0, 0);// Properties panel doesn't stretch
@@ -527,8 +528,11 @@ void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
 }
 
 void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {
-    // Use setRangeWidth for spinbox changes (absolute value)
-    int64_t const actual_range = ui->openGLWidget->setRangeWidth(static_cast<int64_t>(value));
+    // Set time width directly on state
+    int64_t const actual_range = ui->openGLWidget->state()->setTimeWidth(static_cast<int64_t>(value));
+
+    // Trigger canvas update to apply the new width (matches old behavior)
+    ui->openGLWidget->updateCanvas();
 
     // Update the spinbox with the actual range width achieved (in case it was clamped)
     if (actual_range != value) {
@@ -543,9 +547,9 @@ void DataViewer_Widget::updateXAxisSamples(int value) {
 }
 
 void DataViewer_Widget::_updateGlobalScale(double scale) {
-    // Update global zoom in OpenGLWidget's ViewState
+    // Update global zoom directly in state
     // LayoutEngine will pick up the new value when computing layout
-    ui->openGLWidget->setGlobalScale(static_cast<float>(scale));
+    ui->openGLWidget->state()->setGlobalZoom(static_cast<float>(scale));
 
     // Trigger canvas update (layout recomputed automatically when dirty)
     ui->openGLWidget->updateCanvas();
@@ -619,11 +623,11 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // Wheel down (negative numSteps) should zoom OUT (increase range width)
     auto const range_delta = static_cast<int64_t>(-numSteps * rangeFactor);
 
-    // Apply range delta and get the actual achieved range
-    ui->openGLWidget->changeRangeWidth(range_delta);
+    // Apply range delta directly to state
+    ui->openGLWidget->state()->adjustTimeWidth(range_delta);
 
     // Get the actual range that was achieved
-    auto const & view_state = ui->openGLWidget->getViewState();
+    auto const & view_state = ui->openGLWidget->state()->viewState();
     auto const actual_range = static_cast<int>(view_state.getTimeWidth());
 
     // Update spinbox with the actual achieved range (not the requested range)
@@ -632,7 +636,7 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
 }
 
 void DataViewer_Widget::_updateLabels() {
-    auto const & view_state = ui->openGLWidget->getViewState();
+    auto const & view_state = ui->openGLWidget->state()->viewState();
     ui->neg_x_label->setText(QString::number(view_state.time_start));
     ui->pos_x_label->setText(QString::number(view_state.time_end));
 }
@@ -711,11 +715,11 @@ std::optional<NewDigitalIntervalSeriesDisplayOptions *> DataViewer_Widget::getDi
 }
 
 void DataViewer_Widget::_handleThemeChanged(int theme_index) {
-    PlotTheme theme = (theme_index == 0) ? PlotTheme::Dark : PlotTheme::Light;
-    ui->openGLWidget->setPlotTheme(theme);
+    DataViewerTheme theme = (theme_index == 0) ? DataViewerTheme::Dark : DataViewerTheme::Light;
+    ui->openGLWidget->state()->setTheme(theme);
 
     // Update coordinate label styling based on theme
-    if (theme == PlotTheme::Dark) {
+    if (theme == DataViewerTheme::Dark) {
         ui->coordinate_label->setStyleSheet("background-color: rgba(0, 0, 0, 50); color: white; padding: 2px;");
     } else {
         ui->coordinate_label->setStyleSheet("background-color: rgba(255, 255, 255, 50); color: black; padding: 2px;");
@@ -725,11 +729,11 @@ void DataViewer_Widget::_handleThemeChanged(int theme_index) {
 }
 
 void DataViewer_Widget::_handleGridLinesToggled(bool enabled) {
-    ui->openGLWidget->setGridLinesEnabled(enabled);
+    ui->openGLWidget->state()->setGridEnabled(enabled);
 }
 
 void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
-    ui->openGLWidget->setGridSpacing(spacing);
+    ui->openGLWidget->state()->setGridSpacing(spacing);
 }
 
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {

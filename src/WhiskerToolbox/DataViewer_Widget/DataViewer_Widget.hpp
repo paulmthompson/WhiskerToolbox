@@ -24,7 +24,6 @@ class QResizeEvent;
 class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
-enum class PlotTheme;
 struct NewAnalogTimeSeriesDisplayOptions;
 struct NewDigitalEventSeriesDisplayOptions;
 struct NewDigitalIntervalSeriesDisplayOptions;

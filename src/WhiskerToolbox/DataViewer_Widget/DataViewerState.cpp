@@ -102,6 +102,21 @@ std::pair<int64_t, int64_t> DataViewerState::timeWindow() const
     return {_data.view.time_start, _data.view.time_end};
 }
 
+void DataViewerState::adjustTimeWidth(int64_t delta)
+{
+    _data.view.adjustTimeWidth(delta);
+    markDirty();
+    emit viewStateChanged();
+}
+
+int64_t DataViewerState::setTimeWidth(int64_t width)
+{
+    int64_t const actual_width = _data.view.setTimeWidth(width);
+    markDirty();
+    emit viewStateChanged();
+    return actual_width;
+}
+
 void DataViewerState::setYBounds(float y_min, float y_max)
 {
     constexpr float epsilon = 1e-6f;
