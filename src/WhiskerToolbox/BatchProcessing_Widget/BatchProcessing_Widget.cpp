@@ -1,39 +1,33 @@
 #include "BatchProcessing_Widget.hpp"
+#include "BatchProcessingState.hpp"
 #include "ui_BatchProcessing_Widget.h"
-
-#include "DataManager/DataManager.hpp"
-#include "Main_Window/mainwindow.hpp"
 
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QFileSystemModel>
 #include <QFont>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
-#include <QJsonArray>
 #include <QJsonDocument>
-#include <QJsonObject>
 #include <QJsonParseError>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QRegularExpression>
 #include <QSplitter>
 #include <QStandardPaths>
-#include <QTemporaryFile>
-#include <QTextCharFormat>
-#include <QTextCursor>
 #include <QTextEdit>
 #include <QTreeView>
 #include <QVBoxLayout>
 
-BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<DataManager> dataManager, MainWindow * mainWindow, QWidget * parent)
+BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<BatchProcessingState> state, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::BatchProcessing_Widget),
+      m_state(std::move(state)),
       m_mainLayout(nullptr),
       m_splitter(nullptr),
       m_folderGroup(nullptr),
@@ -46,12 +40,22 @@ BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<DataManager> data
       m_loadJsonButton(nullptr),
       m_loadFolderButton(nullptr),
       m_jsonTextEdit(nullptr),
-      m_jsonStatusLabel(nullptr),
-      m_dataManager(dataManager),
-      m_mainWindow(mainWindow) {
+      m_jsonStatusLabel(nullptr) {
     ui->setupUi(this);
     setupUI();
     setupFileSystemModel();
+    connectStateSignals();
+    
+    // Initialize UI from state
+    if (!m_state->topLevelFolder().isEmpty()) {
+        m_folderPathDisplay->setText(m_state->topLevelFolder());
+        QModelIndex const rootIndex = m_fileSystemModel->setRootPath(m_state->topLevelFolder());
+        m_treeView->setRootIndex(rootIndex);
+    }
+    
+    if (!m_state->jsonContent().isEmpty()) {
+        m_jsonTextEdit->setPlainText(m_state->jsonContent());
+    }
 }
 
 BatchProcessing_Widget::~BatchProcessing_Widget() {
@@ -62,6 +66,17 @@ void BatchProcessing_Widget::openWidget() {
     show();
     raise();
     activateWindow();
+}
+
+void BatchProcessing_Widget::connectStateSignals() {
+    // Connect state signals to update UI
+    connect(m_state.get(), &BatchProcessingState::topLevelFolderChanged,
+            this, [this](QString const & folderPath) {
+                m_folderPathDisplay->setText(folderPath);
+            });
+    
+    connect(m_state.get(), &BatchProcessingState::loadCompleted,
+            this, &BatchProcessing_Widget::onLoadCompleted);
 }
 
 void BatchProcessing_Widget::setupUI() {
@@ -158,14 +173,19 @@ void BatchProcessing_Widget::setupFileSystemModel() {
 }
 
 void BatchProcessing_Widget::selectTopLevelFolder() {
+    QString currentFolder = m_state->topLevelFolder();
+    
     QString const folderPath = QFileDialog::getExistingDirectory(
             this,
             "Select Top Level Folder",
-            m_currentTopLevelFolder.isEmpty() ? QDir::homePath() : m_currentTopLevelFolder,
+            currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
     if (!folderPath.isEmpty()) {
-        m_currentTopLevelFolder = folderPath;
+        // Update state
+        m_state->setTopLevelFolder(folderPath);
+        
+        // Update UI
         m_folderPathDisplay->setText(folderPath);
 
         // Set the root path for the tree view
@@ -183,10 +203,12 @@ void BatchProcessing_Widget::selectTopLevelFolder() {
 }
 
 void BatchProcessing_Widget::loadJsonConfiguration() {
+    QString currentJsonFile = m_state->jsonFilePath();
+    
     QString const jsonFilePath = QFileDialog::getOpenFileName(
             this,
             "Load JSON Configuration",
-            m_currentJsonFile.isEmpty() ? QDir::homePath() : QFileInfo(m_currentJsonFile).absolutePath(),
+            currentJsonFile.isEmpty() ? QDir::homePath() : QFileInfo(currentJsonFile).absolutePath(),
             "JSON Files (*.json);;All Files (*)");
 
     if (!jsonFilePath.isEmpty()) {
@@ -206,6 +228,9 @@ void BatchProcessing_Widget::onFolderDoubleClicked(QModelIndex const & index) {
 }
 
 void BatchProcessing_Widget::onJsonTextChanged() {
+    // Update state with current JSON content
+    m_state->setJsonContent(m_jsonTextEdit->toPlainText());
+    
     validateJsonSyntax();
     updateLoadFolderButtonState();
 }
@@ -256,10 +281,10 @@ void BatchProcessing_Widget::updateJsonDisplay(QString const & jsonFilePath) {
         return;
     }
 
-    m_currentJsonFile = jsonFilePath;
-    m_jsonDocument = jsonDoc;
+    // Update state
+    m_state->setJsonFilePath(jsonFilePath);
 
-    // Display formatted JSON
+    // Display formatted JSON (this will trigger onJsonTextChanged which updates state)
     QString formattedJson = jsonDoc.toJson(QJsonDocument::Indented);
     m_jsonTextEdit->setPlainText(formattedJson);
 
@@ -281,9 +306,11 @@ void BatchProcessing_Widget::validateJsonSyntax() {
     QJsonParseError parseError;
     QJsonDocument::fromJson(jsonText.toUtf8(), &parseError);
 
+    QString currentJsonFile = m_state->jsonFilePath();
+    
     if (parseError.error == QJsonParseError::NoError) {
-        if (!m_currentJsonFile.isEmpty()) {
-            m_jsonStatusLabel->setText(QString("Loaded: %1 (Valid JSON)").arg(QFileInfo(m_currentJsonFile).fileName()));
+        if (!currentJsonFile.isEmpty()) {
+            m_jsonStatusLabel->setText(QString("Loaded: %1 (Valid JSON)").arg(QFileInfo(currentJsonFile).fileName()));
         } else {
             m_jsonStatusLabel->setText("Valid JSON");
         }
@@ -335,129 +362,36 @@ void BatchProcessing_Widget::loadFolderWithJson() {
     // Debug information
     qDebug() << "Selected folder:" << selectedFolder;
     qDebug() << "JSON text length:" << jsonText.length();
-    qDebug() << "JSON text preview:" << jsonText.left(100);
 
     // Validate JSON syntax one more time
     QJsonParseError parseError;
-    QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonText.toUtf8(), &parseError);
+    QJsonDocument::fromJson(jsonText.toUtf8(), &parseError);
     if (parseError.error != QJsonParseError::NoError) {
         QMessageBox::critical(this, "Invalid JSON",
                               QString("JSON syntax error: %1").arg(parseError.errorString()));
         return;
     }
 
-    if (!m_dataManager) {
-        QMessageBox::critical(this, "Error", "DataManager not available.");
-        return;
-    }
-
-    try {
-        // Reset DataManager to clear any previously loaded data
-        qDebug() << "Resetting DataManager before loading new data...";
-        m_dataManager->reset();
-
-        // Load data using the current JSON content and selected folder
-        auto dataInfoList = loadDataFromJsonContent(jsonText, selectedFolder);
-
-        if (dataInfoList.empty()) {
-            QMessageBox::information(this, "No Data Loaded",
-                                     "No data was loaded. Check your JSON configuration and folder contents.");
-        } else {
-            // Process the loaded data through MainWindow to update GUI components
-            if (m_mainWindow) {
-                m_mainWindow->processLoadedData(dataInfoList);
-            }
-
-            QString message = QString("Successfully loaded %1 data items from folder:\n%2")
-                                      .arg(dataInfoList.size())
-                                      .arg(selectedFolder);
-            QMessageBox::information(this, "Data Loaded", message);
-
-            emit dataLoaded(selectedFolder);
-        }
-
-    } catch (std::exception const & e) {
-        QMessageBox::critical(this, "Loading Error",
-                              QString("Error loading data: %1").arg(e.what()));
-    }
+    // Delegate the actual loading to the state
+    // The state will:
+    // 1. Reset DataManager
+    // 2. Load data via utility function
+    // 3. Emit applyDataDisplayConfig signal
+    // 4. Emit loadCompleted signal (which we handle in onLoadCompleted)
+    m_state->loadFolder(selectedFolder);
 }
 
-std::vector<DataInfo> BatchProcessing_Widget::loadDataFromJsonContent(QString const & jsonContent, QString const & baseFolderPath) {
-    // Validate input parameters
-    if (jsonContent.trimmed().isEmpty()) {
-        throw std::runtime_error("JSON content is empty");
+void BatchProcessing_Widget::onLoadCompleted(BatchProcessingState::LoadResult const & result) {
+    if (result.success) {
+        QString selectedFolder = getCurrentSelectedFolder();
+        QString message = QString("Successfully loaded %1 data items from folder:\n%2")
+                                  .arg(result.itemCount)
+                                  .arg(selectedFolder);
+        QMessageBox::information(this, "Data Loaded", message);
+        
+        emit dataLoaded(selectedFolder);
+    } else {
+        QMessageBox::critical(this, "Loading Error",
+                              QString("Error loading data: %1").arg(result.errorMessage));
     }
-
-    if (baseFolderPath.isEmpty()) {
-        throw std::runtime_error("Base folder path is empty");
-    }
-
-    // First, validate that we can parse the JSON
-    QJsonParseError parseError;
-    QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonContent.toUtf8(), &parseError);
-
-    if (parseError.error != QJsonParseError::NoError) {
-        throw std::runtime_error(QString("JSON parse error: %1").arg(parseError.errorString()).toStdString());
-    }
-
-    // Check if it's an array (as expected by the DataManager function)
-    if (!jsonDoc.isArray()) {
-        throw std::runtime_error("JSON must be an array of data configurations");
-    }
-
-    // Create a temporary JSON file with the current text content
-    QTemporaryFile tempFile;
-    tempFile.setFileTemplate(QDir::temp().filePath("batch_config_XXXXXX.json"));
-    tempFile.setAutoRemove(false);// Keep file for debugging if needed
-
-    if (!tempFile.open()) {
-        throw std::runtime_error("Could not create temporary JSON file");
-    }
-
-    // Create a modified JSON with paths relative to the selected folder
-    QJsonArray jsonArray = jsonDoc.array();
-    QJsonArray modifiedArray;
-
-    for (QJsonValue const & value: jsonArray) {
-        QJsonObject item = value.toObject();
-
-        // If the filepath is relative, make it relative to the selected folder
-        if (item.contains("filepath")) {
-            QString filepath = item["filepath"].toString();
-            QFileInfo fileInfo(filepath);
-
-            if (fileInfo.isRelative()) {
-                // Make the path relative to the selected folder instead of the JSON file location
-                QString absolutePath = QDir(baseFolderPath).absoluteFilePath(filepath);
-                item["filepath"] = absolutePath;
-            }
-        }
-
-        modifiedArray.append(item);
-    }
-
-    // Write the modified JSON to the temporary file
-    QJsonDocument modifiedDoc(modifiedArray);
-    QByteArray jsonData = modifiedDoc.toJson(QJsonDocument::Indented);
-
-    if (tempFile.write(jsonData) == -1) {
-        throw std::runtime_error("Failed to write JSON data to temporary file");
-    }
-
-    tempFile.flush();
-    tempFile.close();
-
-    // Debug: Print the temporary file path and its contents
-    qDebug() << "Temporary JSON file created at:" << tempFile.fileName();
-    qDebug() << "JSON content length:" << jsonData.length();
-
-    // Use the DataManager's load function with the temporary file
-    std::vector<DataInfo> result = load_data_from_json_config(m_dataManager.get(), tempFile.fileName().toStdString());
-
-    // Clean up the temporary file
-    if (tempFile.exists()) {
-        tempFile.remove();
-    }
-
-    return result;
 }

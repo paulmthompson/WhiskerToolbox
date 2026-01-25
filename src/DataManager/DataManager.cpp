@@ -227,6 +227,9 @@ bool DataManager::setTime(TimeKey const & key, std::shared_ptr<TimeFrame> timefr
         }
     }
 
+    // Notify observers that time frame configuration has changed
+    _notifyObservers();
+
     return true;
 }
 

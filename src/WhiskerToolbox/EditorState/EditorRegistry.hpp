@@ -69,6 +69,19 @@ class OperationContext;
 }
 
 /**
+ * @brief UI display configuration for a data item
+ * 
+ * This is a lightweight struct used by EditorRegistry signals to communicate
+ * display hints (colors, styles) from data loading to UI widgets.
+ * It mirrors DataInfo but is defined here to avoid circular dependencies.
+ */
+struct DataDisplayConfig {
+    std::string key;        ///< Data key in DataManager
+    std::string data_class; ///< Type of data (e.g., "PointData", "LineData")
+    std::string color;      ///< Hex color for display (e.g., "#00FF00")
+};
+
+/**
  * @brief Central registry for editor types, instances, and selection
  *
  * Single source of truth for:
@@ -362,6 +375,21 @@ signals:
      * @param time The new frame index to display
      */
     void timeChanged(int64_t time);
+
+    /**
+     * @brief Emitted after data is loaded from external sources (JSON config, batch processing)
+     * 
+     * This signal carries UI configuration hints (colors, display styles) that widgets
+     * should apply to their visualizations. This is separate from DataManager's observer
+     * notifications which handle data existence changes.
+     * 
+     * Typical flow:
+     * 1. DataManager::load() adds data → DataManager notifies observers (data exists)
+     * 2. This signal is emitted → widgets apply UI configuration (colors, styles)
+     * 
+     * @param config Vector of DataDisplayConfig containing keys and display configuration
+     */
+    void applyDataDisplayConfig(std::vector<DataDisplayConfig> const & config);
 
 private slots:
     void onStateChanged();

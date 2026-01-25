@@ -9,7 +9,6 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
-#include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DockAreaWidget.h"
@@ -34,6 +33,7 @@
 
 
 // Module registration headers - each module defines its own factory functions
+#include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
@@ -50,6 +50,8 @@
 
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "TimeScrollBar/TimeScrollBarState.hpp"
+
+#include "utils/DataLoadUtils.hpp"
 
 #include <QComboBox>
 #include <QFileDialog>
@@ -393,12 +395,21 @@ void MainWindow::_loadJSONConfig() {
         return true;
     };
 
-    // Load data with progress tracking
-    auto data_info = load_data_from_json_config(_data_manager.get(), filename.toStdString(), progress_callback);
+    // Load data with progress tracking using the utility function
+    // This will:
+    // 1. Load data into DataManager (triggers DataManager observers)
+    // 2. Emit EditorRegistry::applyDataDisplayConfig (for UI configuration)
+    auto data_info = loadDataAndBroadcastConfig(
+        _data_manager.get(), 
+        _editor_registry.get(), 
+        filename.toStdString(), 
+        progress_callback);
 
     // Set to 100% when complete
     progress.setValue(100);
 
+    // Handle media-related updates (TimeScrollBar, Media_Widget refresh)
+    // TODO: These should eventually be moved to widgets listening to DataManager observers
     processLoadedData(data_info);
 }
 
@@ -738,23 +749,6 @@ void MainWindow::openTensorLoaderWidget() {
 // Old Interface Widgets (No EditorRegistry)
 //=================================
 
-void MainWindow::openBatchProcessingWidget() {
-    std::string const key = "BatchProcessing_widget";
-
-    if (!_widgets.contains(key)) {
-        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(_data_manager, this, this);
-
-        batchProcessingWidget->setObjectName(key);
-        registerDockWidget(key, batchProcessingWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(batchProcessingWidget);
-    }
-
-    auto ptr = dynamic_cast<BatchProcessing_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
 void MainWindow::openAnalysisDashboard() {
     std::string const key = "Analysis_Dashboard_widget";
 
@@ -799,6 +793,11 @@ void MainWindow::openTableDesignerWidget() {
 //=================================
 // New Editor Instances
 //=================================
+
+void MainWindow::openBatchProcessingWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("BatchProcessingWidget"));
+}
 
 void MainWindow::openDataViewer() {
     // Use EditorCreationController pattern - delegate to openEditor
@@ -909,6 +908,8 @@ void MainWindow::_registerEditorTypes() {
     ZoneManagerWidgetRegistration::registerType(_editor_registry.get(), _zone_manager.get());
 
     TerminalWidgetModule::registerTypes(_editor_registry.get());
+
+    BatchProcessingWidgetModule::registerTypes(_editor_registry.get());
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

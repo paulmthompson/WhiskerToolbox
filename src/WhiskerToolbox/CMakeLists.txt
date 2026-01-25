@@ -85,6 +85,10 @@ set(PROJECT_SOURCES
         BatchProcessing_Widget/BatchProcessing_Widget.hpp
         BatchProcessing_Widget/BatchProcessing_Widget.cpp
         BatchProcessing_Widget/BatchProcessing_Widget.ui
+        BatchProcessing_Widget/BatchProcessingState.hpp
+        BatchProcessing_Widget/BatchProcessingState.cpp
+        BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp
+        BatchProcessing_Widget/BatchProcessingWidgetRegistration.cpp
 
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
@@ -130,6 +134,9 @@ set(PROJECT_SOURCES
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
+
+        utils/DataLoadUtils.hpp
+        utils/DataLoadUtils.cpp
 
         utils/Deep_Learning/Backbones/efficientvit.hpp
         utils/Deep_Learning/Backbones/efficientvit.cpp

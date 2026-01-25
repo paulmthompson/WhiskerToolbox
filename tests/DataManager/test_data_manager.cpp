@@ -411,16 +411,18 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
         dm.setData<PointData>("points", TimeKey("time"));
         REQUIRE(notification_count == 1);
 
-        // Adding with custom TimeFrame
+        // Adding with custom TimeFrame - setTime now also notifies observers
         auto custom_time = std::make_shared<TimeFrame>();
         dm.setTime(TimeKey("custom_time"), custom_time);
+        REQUIRE(notification_count == 2);  // setTime triggers notification
+
         dm.setData<PointData>("points2", std::make_shared<PointData>(), TimeKey("custom_time"));
-        REQUIRE(notification_count == 2);
+        REQUIRE(notification_count == 3);  // setData triggers notification
 
         // Using variant form
         DataTypeVariant variant = std::make_shared<PointData>();
         dm.setData("variant_points", variant, TimeKey("custom_time"));
-        REQUIRE(notification_count == 3);
+        REQUIRE(notification_count == 4);
     }
 
     SECTION("Observer captures state correctly") {
