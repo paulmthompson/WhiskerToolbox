@@ -1,11 +1,17 @@
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent)
+find_package(reflectcpp CONFIG REQUIRED)
 
 # Create the library
 add_library(TableDesignerWidget STATIC
     TableDesignerWidget.hpp
     TableDesignerWidget.cpp
     TableDesignerWidget.ui
+    TableDesignerState.hpp
+    TableDesignerState.cpp
+    TableDesignerStateData.hpp
+    TableDesignerWidgetRegistration.hpp
+    TableDesignerWidgetRegistration.cpp
     PreviewTableModel.hpp
     PreviewTableModel.cpp
     TableInfoWidget.hpp
@@ -31,6 +37,8 @@ target_link_libraries(TableDesignerWidget
         DataManager
         TableViewerWidget
         Collapsible_Widget
+        EditorState
+        reflectcpp::reflectcpp
 )
 
 # Include directories

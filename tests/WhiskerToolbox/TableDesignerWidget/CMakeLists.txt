@@ -8,7 +8,7 @@ if (WIN32)
     return()
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Test)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -16,6 +16,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_table_designer_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/TableDesignerWidget/TableDesignerWidget.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/TableDesignerWidget/TableDesignerState.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/TableDesignerWidget/TableDesignerWidgetStateIntegration.test.cpp
 )
 
 target_link_libraries(test_table_designer_widget PRIVATE
@@ -25,6 +27,7 @@ target_link_libraries(test_table_designer_widget PRIVATE
     DataManager
     Qt6::Widgets
     Qt6::Core
+    Qt6::Test
 )
 
 target_include_directories(test_table_designer_widget PRIVATE

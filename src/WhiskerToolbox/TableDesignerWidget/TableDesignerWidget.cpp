@@ -19,6 +19,8 @@
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/transforms/PCATransform.hpp"
 #include "Entity/EntityGroupManager.hpp"
+#include "TableDesignerState.hpp"
+#include "TableDesignerStateData.hpp"
 #include "TableExportWidget.hpp"
 #include "TableInfoWidget.hpp"
 #include "TableJSONWidget.hpp"
@@ -157,6 +159,188 @@ TableDesignerWidget::~TableDesignerWidget() {
     delete ui;
 }
 
+void TableDesignerWidget::setState(std::shared_ptr<TableDesignerState> state) {
+    if (!state) {
+        return;  // Don't accept null state
+    }
+
+    _state = std::move(state);
+
+    // Connect state signals to UI update methods
+    connectStateSignals();
+
+    // Synchronize UI from state (for when state is loaded from JSON)
+    syncUIFromState();
+}
+
+void TableDesignerWidget::connectStateSignals() {
+    if (!_state) {
+        return;
+    }
+
+    // State → UI: When state changes externally (e.g., from JSON load), update UI
+    
+    // Table selection
+    connect(_state.get(), &TableDesignerState::currentTableIdChanged, this, [this](QString const & table_id) {
+        if (_updating_from_state) return;
+        _updating_from_state = true;
+        
+        // Find and select the table in the combo
+        for (int i = 0; i < ui->table_combo->count(); ++i) {
+            if (ui->table_combo->itemData(i).toString() == table_id) {
+                ui->table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+        
+        _updating_from_state = false;
+    });
+
+    // Row settings
+    connect(_state.get(), &TableDesignerState::rowSettingsChanged, this, [this]() {
+        if (_updating_from_state) return;
+        _updating_from_state = true;
+        
+        // Update row source combo
+        QString source_name = _state->rowSourceName();
+        int index = ui->row_data_source_combo->findText(source_name);
+        if (index >= 0) {
+            ui->row_data_source_combo->setCurrentIndex(index);
+        }
+        
+        // Update capture range
+        ui->capture_range_spinbox->setValue(_state->captureRange());
+        
+        // Update interval mode radio buttons
+        switch (_state->intervalMode()) {
+            case IntervalRowMode::Beginning:
+                ui->interval_beginning_radio->setChecked(true);
+                break;
+            case IntervalRowMode::End:
+                ui->interval_end_radio->setChecked(true);
+                break;
+            case IntervalRowMode::Itself:
+                ui->interval_itself_radio->setChecked(true);
+                break;
+        }
+        
+        _updating_from_state = false;
+    });
+
+    // Group settings
+    connect(_state.get(), &TableDesignerState::groupSettingsChanged, this, [this]() {
+        if (_updating_from_state) return;
+        _updating_from_state = true;
+        
+        ui->group_mode_toggle_btn->setChecked(_state->groupModeEnabled());
+        // Note: grouping pattern is stored in state but UI currently doesn't expose editing it
+        _group_mode = _state->groupModeEnabled();
+        _grouping_pattern = _state->groupingPattern().toStdString();
+        
+        // Refresh tree to reflect group mode change
+        refreshComputersTree();
+        
+        _updating_from_state = false;
+    });
+
+    // Computer states - refresh tree when computer states change
+    connect(_state.get(), &TableDesignerState::computerStateChanged, this, [this](QString const & key) {
+        Q_UNUSED(key)
+        if (_updating_from_state) return;
+        // Individual computer state changed - could do targeted update
+        // For simplicity, trigger preview rebuild
+        triggerPreviewDebounced();
+    });
+
+    connect(_state.get(), &TableDesignerState::computerStatesCleared, this, [this]() {
+        if (_updating_from_state) return;
+        _updating_from_state = true;
+        
+        // Clear all checkboxes in tree
+        _persisted_computer_states.clear();
+        refreshComputersTree();
+        
+        _updating_from_state = false;
+    });
+}
+
+void TableDesignerWidget::syncUIFromState() {
+    if (!_state) {
+        return;
+    }
+
+    _updating_from_state = true;
+
+    // === Table Selection ===
+    QString table_id = _state->currentTableId();
+    if (!table_id.isEmpty()) {
+        for (int i = 0; i < ui->table_combo->count(); ++i) {
+            if (ui->table_combo->itemData(i).toString() == table_id) {
+                ui->table_combo->setCurrentIndex(i);
+                break;
+            }
+        }
+    }
+
+    // === Row Settings ===
+    QString source_name = _state->rowSourceName();
+    if (!source_name.isEmpty()) {
+        int index = ui->row_data_source_combo->findText(source_name);
+        if (index >= 0) {
+            ui->row_data_source_combo->setCurrentIndex(index);
+        }
+    }
+
+    ui->capture_range_spinbox->setValue(_state->captureRange());
+
+    switch (_state->intervalMode()) {
+        case IntervalRowMode::Beginning:
+            ui->interval_beginning_radio->setChecked(true);
+            break;
+        case IntervalRowMode::End:
+            ui->interval_end_radio->setChecked(true);
+            break;
+        case IntervalRowMode::Itself:
+            ui->interval_itself_radio->setChecked(true);
+            break;
+    }
+
+    // === Group Settings ===
+    _group_mode = _state->groupModeEnabled();
+    _grouping_pattern = _state->groupingPattern().toStdString();
+    ui->group_mode_toggle_btn->setChecked(_group_mode);
+
+    // === Computer States ===
+    // Copy computer states from state to widget's persisted states
+    _persisted_computer_states.clear();
+    for (auto const & [key, entry] : _state->computerStates()) {
+        QString qkey = QString::fromStdString(key);
+        Qt::CheckState check_state = entry.enabled ? Qt::Checked : Qt::Unchecked;
+        QString column_name = QString::fromStdString(entry.column_name);
+        _persisted_computer_states[qkey] = qMakePair(check_state, column_name);
+    }
+
+    // === Column Orders ===
+    // Copy column orders from state to widget
+    _table_column_order.clear();
+    for (auto const & [table_id_str, columns] : _state->data().column_orders) {
+        QString qtable_id = QString::fromStdString(table_id_str);
+        QStringList qcolumns;
+        for (auto const & col : columns) {
+            qcolumns.append(QString::fromStdString(col));
+        }
+        _table_column_order[qtable_id] = qcolumns;
+    }
+
+    // Refresh tree to apply computer states
+    refreshComputersTree();
+
+    _updating_from_state = false;
+
+    // Trigger preview rebuild
+    triggerPreviewDebounced();
+}
+
 void TableDesignerWidget::refreshAllDataSources() {
     qDebug() << "Manually refreshing all data sources...";
     refreshRowDataSourceCombo();
@@ -242,6 +426,12 @@ void TableDesignerWidget::onTableSelectionChanged() {
     }
 
     _current_table_id = table_id;
+    
+    // UI → State: Propagate table selection to state
+    if (_state && !_updating_from_state) {
+        _state->setCurrentTableId(table_id);
+    }
+    
     loadTableInfo(table_id);
 
     // Enable/disable controls
@@ -311,6 +501,11 @@ void TableDesignerWidget::onRowDataSourceChanged() {
         return;
     }
 
+    // UI → State: Propagate row source to state
+    if (_state && !_updating_from_state) {
+        _state->setRowSourceName(selected);
+    }
+
     // Save the row source selection to the current table
     // Only save if we have a current table and we're not loading table info
     if (!_current_table_id.isEmpty() && _data_manager) {
@@ -333,6 +528,11 @@ void TableDesignerWidget::onRowDataSourceChanged() {
 }
 
 void TableDesignerWidget::onCaptureRangeChanged() {
+    // UI → State: Propagate capture range to state
+    if (_state && !_updating_from_state) {
+        _state->setCaptureRange(ui->capture_range_spinbox->value());
+    }
+
     // Update the info label to reflect the new capture range
     QString selected = ui->row_data_source_combo->currentText();
     if (!selected.isEmpty()) {
@@ -342,6 +542,17 @@ void TableDesignerWidget::onCaptureRangeChanged() {
 }
 
 void TableDesignerWidget::onIntervalSettingChanged() {
+    // UI → State: Propagate interval mode to state
+    if (_state && !_updating_from_state) {
+        IntervalRowMode mode = IntervalRowMode::Beginning;
+        if (ui->interval_end_radio->isChecked()) {
+            mode = IntervalRowMode::End;
+        } else if (ui->interval_itself_radio->isChecked()) {
+            mode = IntervalRowMode::Itself;
+        }
+        _state->setIntervalMode(mode);
+    }
+
     // Update the info label to reflect the new interval setting
     QString selected = ui->row_data_source_combo->currentText();
     if (!selected.isEmpty()) {
@@ -2262,6 +2473,14 @@ void TableDesignerWidget::persistComputerItemState(QTreeWidgetItem * item, int c
     Qt::CheckState cs = item->checkState(1);
     QString custom = item->text(2);
     _persisted_computer_states[key] = qMakePair(cs, custom);
+
+    // UI → State: Propagate computer state to state object
+    if (_state && !_updating_from_state) {
+        ComputerStateEntry entry;
+        entry.enabled = (cs == Qt::Checked);
+        entry.column_name = custom.toStdString();
+        _state->setComputerState(key, entry);
+    }
 }
 
 std::vector<ColumnInfo> TableDesignerWidget::getEnabledColumnInfos() const {
@@ -2443,6 +2662,11 @@ std::string TableDesignerWidget::extractGroupName(QString const & data_source) c
 
 void TableDesignerWidget::onGroupModeToggled(bool enabled) {
     _group_mode = enabled;
+
+    // UI → State: Propagate group mode to state
+    if (_state && !_updating_from_state) {
+        _state->setGroupModeEnabled(enabled);
+    }
 
     // Update button text to reflect current mode
     if (enabled) {

@@ -13,6 +13,7 @@
 #include <memory>
 
 class DataManager;
+class TableDesignerState;
 class DataManagerExtension;
 class ComputerRegistry;
 class IRowSelector;
@@ -48,6 +49,27 @@ class TableDesignerWidget : public QWidget {
 public:
     explicit TableDesignerWidget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     ~TableDesignerWidget() override;
+
+    /**
+     * @brief Set the TableDesignerState for this widget
+     * 
+     * The state manages all serializable settings including table selection,
+     * row source settings, group mode, and computer states.
+     * 
+     * When state is set:
+     * - UI will be updated to reflect state values
+     * - UI changes will propagate to state
+     * - State changes will update UI (bidirectional binding)
+     * 
+     * @param state Shared pointer to the state object
+     */
+    void setState(std::shared_ptr<TableDesignerState> state);
+
+    /**
+     * @brief Get the current TableDesignerState
+     * @return Shared pointer to the state object, or nullptr if not set
+     */
+    [[nodiscard]] std::shared_ptr<TableDesignerState> getState() const { return _state; }
 
     /**
      * @brief Refresh all data sources (useful if data is loaded after widget creation)
@@ -146,10 +168,12 @@ private slots:
 private:
     Ui::TableDesignerWidget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::shared_ptr<TableDesignerState> _state;    // Shared state for serialization and inter-widget communication
 
     QString _current_table_id;
     bool _loading_column_configuration = false;    // Flag to prevent infinite loops
     bool _updating_computers_tree = false;         // Flag to prevent recursive updates during tree refresh
+    bool _updating_from_state = false;             // Flag to prevent state→UI→state loops
     QMap<QString, QStringList> _table_column_order;// Persist preview column order per table id
 
     // Grouping functionality
@@ -183,6 +207,20 @@ private:
      * @brief Connect all signals and slots
      */
     void connectSignals();
+
+    /**
+     * @brief Connect state signals to UI update slots
+     * 
+     * Called from setState() to establish bidirectional binding.
+     */
+    void connectStateSignals();
+
+    /**
+     * @brief Synchronize UI from current state values
+     * 
+     * Called after setState() or state->fromJson() to update all UI elements.
+     */
+    void syncUIFromState();
 
     /**
      * @brief Refresh the table combo box

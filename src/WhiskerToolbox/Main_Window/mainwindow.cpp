@@ -27,7 +27,6 @@
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/MediaWidgetState.hpp"
 #include "Media_Widget/Media_Widget.hpp"
-#include "TableDesignerWidget/TableDesignerWidget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
 
@@ -42,6 +41,7 @@
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
+#include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
@@ -776,23 +776,14 @@ void MainWindow::openTimeScrollBar() {
     showDockWidget("scrollbar");
 }
 
-void MainWindow::openTableDesignerWidget() {
-    std::string const key = "TableDesigner_widget";
-
-    if (!_widgets.contains(key)) {
-        auto td_widget = std::make_unique<TableDesignerWidget>(_data_manager, this);
-        td_widget->setObjectName(QString::fromStdString(key));
-        registerDockWidget(key, td_widget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(td_widget);
-    }
-
-    showDockWidget(key);
-}
-
-
 //=================================
 // New Editor Instances
 //=================================
+
+void MainWindow::openTableDesignerWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("TableDesignerWidget"));
+}
 
 void MainWindow::openBatchProcessingWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
@@ -914,6 +905,8 @@ void MainWindow::_registerEditorTypes() {
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+
+    TableDesignerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
