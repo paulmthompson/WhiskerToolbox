@@ -499,3 +499,33 @@ sudo apt install libbenchmark-dev  # Ubuntu/Debian
 -   [Heaptrack Documentation](https://github.com/KDE/heaptrack)
 -   [Valgrind Manual](https://valgrind.org/docs/manual/manual.html)
 -   [Optimization Guide](https://github.com/dendibakh/perf-book)
+
+## AnalogTimeSeries Loading Performance
+
+We benchmarked the loading of binary data into `AnalogTimeSeries` to identify performance bottlenecks.
+The benchmark compares:
+1.  **Best Case**: Reading raw bytes into `std::vector<uint8>` (simulating disk I/O limit).
+2.  **Single Channel**: Loading `int16` data into one `AnalogTimeSeries` (single channel).
+3.  **Multi Channel**: Loading `int16` data into 32 `AnalogTimeSeries` (multi-channel interleaved).
+
+### Results (10MB Data)
+
+| Scenario | Time | Speed | Slowdown vs Best Case |
+| :--- | :--- | :--- | :--- |
+| **Best Case (Raw Read)** | ~2 ms | ~5.0 GB/s | 1.0x |
+| **Multi Channel (32 ch)** | ~14.5 ms | ~690 MB/s | ~7.25x |
+| **Single Channel (1 ch)** | ~70 ms | ~140 MB/s | ~35x |
+
+### Analysis
+
+*   **Significant Slowdown**: Loading into `AnalogTimeSeries` is 7x to 35x slower than raw disk I/O. This is expected to some degree due to data conversion (`int16` -> `float`) and object creation, but the magnitude is large.
+*   **Multi-Channel vs Single-Channel**: Surprisingly, multi-channel loading is **5x faster** than single-channel loading for the same amount of data.
+    *   This suggests that the implementation of `Loader::readBinaryFile` (used for single channel) is significantly less efficient than `Loader::readBinaryFileMultiChannel`.
+    *   `readBinaryFileMultiChannel` uses chunked reading which likely preserves cache locality better than reading one massive vector and then converting it.
+    *   Single-channel loading performs a single huge allocation (e.g. 10MB for int16, then 20MB for float), which might incur higher memory management overhead compared to many smaller allocations in the multi-channel case.
+
+### Improvement Opportunities
+
+1.  **Optimize Single Channel Loading**: Adopt the chunked reading strategy from `readBinaryFileMultiChannel` for the single-channel case as well.
+2.  **Direct Conversion**: Avoid the intermediate `std::vector<int16>` storage. Read chunks of raw bytes, cast/convert to `float` immediately, and write to the destination `std::vector<float>`. This would reduce memory usage by 33% (no need to store the full `int16` copy) and likely improve performance by avoiding a pass over memory.
+3.  **Parallelization**: The conversion from `int16` to `float` is an embarrassingly parallel operation. Using `std::transform` with `std::execution::par_unseq` or OpenMP could significantly speed up this step.
