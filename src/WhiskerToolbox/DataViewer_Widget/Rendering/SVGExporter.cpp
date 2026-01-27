@@ -1,17 +1,18 @@
 #include "SVGExporter.hpp"
 
+#include "Core/DataViewerState.hpp"
+#include "Core/DataViewerStateData.hpp"
+#include "OpenGLWidget.hpp"
+#include "SceneBuildingHelpers.hpp"
+#include "TransformComposers.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
 #include "CorePlotting/Export/SVGPrimitives.hpp"
-#include "TransformComposers.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
-#include "DataViewerState.hpp"
-#include "DataViewerStateData.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "OpenGLWidget.hpp"
-#include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <glm/glm.hpp>

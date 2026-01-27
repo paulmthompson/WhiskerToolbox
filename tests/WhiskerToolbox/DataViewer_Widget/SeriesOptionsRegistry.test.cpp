@@ -6,8 +6,8 @@
  * including set/get/remove operations, signal emission, and visibility handling.
  */
 
-#include "DataViewer_Widget/SeriesOptionsRegistry.hpp"
-#include "DataViewer_Widget/DataViewerStateData.hpp"
+#include "DataViewer_Widget/Core/SeriesOptionsRegistry.hpp"
+#include "DataViewer_Widget/Core/DataViewerStateData.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <QSignalSpy>

@@ -1,9 +1,12 @@
 #include "DataViewer_Widget.hpp"
 
+#include "Core/DataViewerState.hpp"
+#include "Core/DataViewerStateData.hpp"
+#include "Core/TimeSeriesDataStore.hpp"
+#include "Rendering/OpenGLWidget.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager.hpp"
-#include "DataViewerState.hpp"
-#include "DataViewerStateData.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -12,15 +15,12 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
-
 #include <QApplication>
 #include <QMetaObject>
 #include <QTimer>
 #include <QWidget>
 #include <QDoubleSpinBox>
 
-#include "OpenGLWidget.hpp"
-#include "TimeSeriesDataStore.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>

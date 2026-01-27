@@ -1,9 +1,10 @@
 #include "EventViewer_Widget.hpp"
 #include "ui_EventViewer_Widget.h"
 
+#include "DataViewer_Widget/Core/DataViewerState.hpp"
+#include "DataViewer_Widget/Rendering/OpenGLWidget.hpp"
+
 #include "DataManager/DataManager.hpp"
-#include "DataViewer_Widget/DataViewerState.hpp"
-#include "DataViewer_Widget/OpenGLWidget.hpp"
 
 #include <QColorDialog>
 #include <iostream>

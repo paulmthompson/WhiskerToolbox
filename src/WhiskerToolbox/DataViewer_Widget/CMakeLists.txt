@@ -6,52 +6,58 @@ find_package(glm CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 
 set(DATAVIEWER_WIDGET_SOURCES
-    AnalogVertexCache.cpp
-    AnalogVertexCache.hpp
-    DataViewer_Widget.cpp
-        DataViewer_Widget.hpp
-        DataViewer_Widget.ui
-        DataViewerCoordinates.cpp
-        DataViewerCoordinates.hpp
-        DataViewerInputHandler.cpp
-        DataViewerInputHandler.hpp
-        DataViewerInteractionManager.cpp
-        DataViewerInteractionManager.hpp
-        DataViewerPropertiesWidget.cpp
-        DataViewerPropertiesWidget.hpp
-        DataViewerPropertiesWidget.ui
-        DataViewerSelectionManager.cpp
-        DataViewerSelectionManager.hpp
-        DataViewerStateData.hpp
-        DataViewerState.cpp
-        DataViewerState.hpp
+
+        Core/DataViewerStateData.hpp
+        Core/DataViewerState.cpp
+        Core/DataViewerState.hpp
+        Core/SeriesOptionsRegistry.cpp
+        Core/SeriesOptionsRegistry.hpp
+        Core/SpikeSorterConfigLoader.cpp
+        Core/SpikeSorterConfigLoader.hpp
+        Core/TimeSeriesDataStore.cpp
+        Core/TimeSeriesDataStore.hpp
+
         DataViewerWidgetRegistration.cpp
         DataViewerWidgetRegistration.hpp
-        DataViewerTooltipController.cpp
-        DataViewerTooltipController.hpp
-        SeriesOptionsRegistry.cpp
-        SeriesOptionsRegistry.hpp
-        OpenGLWidget.cpp
-        OpenGLWidget.hpp
-        SceneBuildingHelpers.cpp
-        SceneBuildingHelpers.hpp
-        SpikeSorterConfigLoader.cpp
-        SpikeSorterConfigLoader.hpp
-        SVGExporter.cpp
-        SVGExporter.hpp
-        TimeSeriesDataStore.cpp
-        TimeSeriesDataStore.hpp
-        AnalogTimeSeries/AnalogViewer_Widget.cpp
-        AnalogTimeSeries/AnalogViewer_Widget.hpp
-        AnalogTimeSeries/AnalogViewer_Widget.ui
-        DigitalEvent/EventViewer_Widget.cpp
-        DigitalEvent/EventViewer_Widget.hpp
-        DigitalEvent/EventViewer_Widget.ui
-        DigitalInterval/IntervalViewer_Widget.cpp
-        DigitalInterval/IntervalViewer_Widget.hpp
-        DigitalInterval/IntervalViewer_Widget.ui
-        Feature_Tree_Model.hpp
-        Feature_Tree_Model.cpp
+
+        Interaction/DataViewerCoordinates.cpp
+        Interaction/DataViewerCoordinates.hpp
+        Interaction/DataViewerInputHandler.cpp
+        Interaction/DataViewerInputHandler.hpp
+        Interaction/DataViewerInteractionManager.cpp
+        Interaction/DataViewerInteractionManager.hpp
+        Interaction/DataViewerSelectionManager.cpp
+        Interaction/DataViewerSelectionManager.hpp
+        Interaction/DataViewerTooltipController.cpp
+        Interaction/DataViewerTooltipController.hpp
+
+        Rendering/AnalogVertexCache.cpp
+        Rendering/AnalogVertexCache.hpp
+        Rendering/OpenGLWidget.cpp
+        Rendering/OpenGLWidget.hpp
+        Rendering/SceneBuildingHelpers.cpp
+        Rendering/SceneBuildingHelpers.hpp
+        Rendering/SVGExporter.cpp
+        Rendering/SVGExporter.hpp
+
+        UI/DataViewer_Widget.cpp
+        UI/DataViewer_Widget.hpp
+        UI/DataViewer_Widget.ui
+        UI/DataViewerPropertiesWidget.cpp
+        UI/DataViewerPropertiesWidget.hpp
+        UI/DataViewerPropertiesWidget.ui
+        UI/Feature_Tree_Model.hpp
+        UI/Feature_Tree_Model.cpp
+        UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.cpp
+        UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp
+        UI/SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.ui
+        UI/SubWidgets/DigitalEvent/EventViewer_Widget.cpp
+        UI/SubWidgets/DigitalEvent/EventViewer_Widget.hpp
+        UI/SubWidgets/DigitalEvent/EventViewer_Widget.ui
+        UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.cpp
+        UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp
+        UI/SubWidgets/DigitalInterval/IntervalViewer_Widget.ui
+
 )
 
 add_library(DataViewer_Widget STATIC ${DATAVIEWER_WIDGET_SOURCES})

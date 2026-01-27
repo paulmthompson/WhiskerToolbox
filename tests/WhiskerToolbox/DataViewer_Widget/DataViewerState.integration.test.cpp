@@ -9,10 +9,10 @@
  * - Key synchronization between DataStore and State
  */
 
-#include "DataViewer_Widget/DataViewerState.hpp"
-#include "DataViewer_Widget/DataViewerStateData.hpp"
-#include "DataViewer_Widget/SeriesOptionsRegistry.hpp"
-#include "DataViewer_Widget/TimeSeriesDataStore.hpp"  // For DefaultColors
+#include "DataViewer_Widget/Core/DataViewerState.hpp"
+#include "DataViewer_Widget/Core/DataViewerStateData.hpp"
+#include "DataViewer_Widget/Core/SeriesOptionsRegistry.hpp"
+#include "DataViewer_Widget/Core/TimeSeriesDataStore.hpp"  // For DefaultColors
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>

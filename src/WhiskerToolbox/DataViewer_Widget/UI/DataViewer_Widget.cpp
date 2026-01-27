@@ -1,29 +1,28 @@
 #include "DataViewer_Widget.hpp"
 #include "ui_DataViewer_Widget.h"
 
+#include "Core/DataViewerState.hpp"
+#include "Core/DataViewerStateData.hpp"
+#include "Core/SpikeSorterConfigLoader.hpp"
+#include "Feature_Tree_Model.hpp"
+#include "Rendering/OpenGLWidget.hpp"
+#include "Rendering/SVGExporter.hpp"
+#include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
+#include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
+#include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/utils/statistics.hpp"
 #include "DataManager.hpp"
-#include "DataViewerState.hpp"
-#include "DataViewerStateData.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
-#include "Feature_Tree_Model.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
-#include "OpenGLWidget.hpp"
-#include "SVGExporter.hpp"
-#include "SpikeSorterConfigLoader.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
-
-#include "AnalogTimeSeries/AnalogViewer_Widget.hpp"
-#include "DigitalEvent/EventViewer_Widget.hpp"
-#include "DigitalInterval/IntervalViewer_Widget.hpp"
 
 #include <QFile>
 #include <QFileDialog>

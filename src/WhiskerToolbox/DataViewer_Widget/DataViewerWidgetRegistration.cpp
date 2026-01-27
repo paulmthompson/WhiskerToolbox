@@ -1,10 +1,11 @@
 #include "DataViewerWidgetRegistration.hpp"
 
-#include "DataViewer_Widget.hpp"
-#include "DataViewerState.hpp"
-#include "DataViewerPropertiesWidget.hpp"
-#include "EditorState/EditorRegistry.hpp"
+#include "Core/DataViewerState.hpp"
+#include "UI/DataViewer_Widget.hpp"
+#include "UI/DataViewerPropertiesWidget.hpp"
+
 #include "DataManager/DataManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <iostream>

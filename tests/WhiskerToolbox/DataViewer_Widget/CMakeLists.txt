@@ -15,13 +15,15 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_data_viewer_widget
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewer_Widget.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/DataViewerStateData.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/UI/DataViewer_Widget.test.cpp
+
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/SeriesOptionsRegistry.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataViewer_Widget/DataViewerState.integration.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/OpenGLWidget.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/AnalogVertexCache.test.cpp
+
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/whiskertoolbox.qrc
 )
 

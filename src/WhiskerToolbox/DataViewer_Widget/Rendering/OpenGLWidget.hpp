@@ -50,24 +50,26 @@
  * @see CorePlotting/ROADMAP.md for migration history
  */
 
+
+#include "Core/DataViewerState.hpp"
+#include "Core/SpikeSorterConfigLoader.hpp"
+#include "Core/TimeSeriesDataStore.hpp"
+#include "Interaction/DataViewerCoordinates.hpp"
+#include "Interaction/DataViewerInputHandler.hpp"
+#include "Interaction/DataViewerInteractionManager.hpp"
+#include "Interaction/DataViewerSelectionManager.hpp"
+#include "Interaction/DataViewerTooltipController.hpp"
+
 #include "CorePlotting/CoordinateTransform/TimeRange.hpp" // TimeSeriesViewState
 #include "CorePlotting/Interaction/IGlyphInteractionController.hpp"
 #include "CorePlotting/Interaction/DataCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/StackedLayoutStrategy.hpp"
-#include "DataViewerCoordinates.hpp"
-#include "DataViewerInputHandler.hpp"
-#include "DataViewerInteractionManager.hpp"
-#include "DataViewerSelectionManager.hpp"
-#include "DataViewerState.hpp"
-#include "DataViewerTooltipController.hpp"
 #include "PlottingOpenGL/Renderers/AxisRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-#include "SpikeSorterConfigLoader.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TimeSeriesDataStore.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
@@ -85,7 +87,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 
 class AnalogTimeSeries;
 struct NewAnalogTimeSeriesDisplayOptions;

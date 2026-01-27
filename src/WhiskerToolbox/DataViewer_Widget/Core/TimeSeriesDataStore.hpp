@@ -19,11 +19,12 @@
  * 
  */
 
-#include "AnalogVertexCache.hpp"
+#include "Rendering/AnalogVertexCache.hpp"
+#include "SpikeSorterConfigLoader.hpp"
+
 #include "CorePlotting/DataTypes/SeriesDataCache.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/LayoutTransform.hpp"
-#include "SpikeSorterConfigLoader.hpp"
 
 #include <QObject>
 

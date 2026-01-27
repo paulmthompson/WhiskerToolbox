@@ -1,5 +1,12 @@
 #include "OpenGLWidget.hpp"
 
+#include "Core/TimeSeriesDataStore.hpp"
+#include "Interaction/DataViewerCoordinates.hpp"
+#include "Interaction/DataViewerSelectionManager.hpp"
+#include "Interaction/DataViewerTooltipController.hpp"
+#include "SceneBuildingHelpers.hpp"
+#include "TransformComposers.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesCoordinateQuery.hpp"
 #include "CorePlotting/CoordinateTransform/SeriesMatrices.hpp"
@@ -8,17 +15,11 @@
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/utils/color.hpp"
 #include "DataViewer/AnalogTimeSeries/AnalogSeriesHelpers.hpp"
-#include "DataViewerCoordinates.hpp"
-#include "DataViewerSelectionManager.hpp"
-#include "DataViewerTooltipController.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
-#include "SceneBuildingHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TimeSeriesDataStore.hpp"
-#include "TransformComposers.hpp"
 
 #include <QEvent>
 #include <QMouseEvent>

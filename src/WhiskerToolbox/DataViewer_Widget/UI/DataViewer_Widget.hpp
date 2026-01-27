@@ -1,11 +1,12 @@
 #ifndef DATAVIEWER_WIDGET_HPP
 #define DATAVIEWER_WIDGET_HPP
 
-#include <QWidget>
-#include <QPoint>
+#include "Core/SpikeSorterConfigLoader.hpp"
 
 #include "DataManager/DataManagerFwd.hpp"
-#include "SpikeSorterConfigLoader.hpp"
+
+#include <QWidget>
+#include <QPoint>
 
 #include <memory>
 #include <string>

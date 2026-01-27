@@ -1,17 +1,17 @@
 #include "DataViewerPropertiesWidget.hpp"
 #include "ui_DataViewerPropertiesWidget.h"
 
-#include "DataManager/DataManager.hpp"
-#include "DataViewerState.hpp"
-#include "DataViewerStateData.hpp"
+#include "Core/DataViewerState.hpp"
+#include "Core/DataViewerStateData.hpp"
 #include "Feature_Tree_Model.hpp"
-#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
-#include "OpenGLWidget.hpp"
-#include "TimeFrame/TimeFrame.hpp"
+#include "Rendering/OpenGLWidget.hpp"
+#include "SubWidgets/AnalogTimeSeries/AnalogViewer_Widget.hpp"
+#include "SubWidgets/DigitalEvent/EventViewer_Widget.hpp"
+#include "SubWidgets/DigitalInterval/IntervalViewer_Widget.hpp"
 
-#include "AnalogTimeSeries/AnalogViewer_Widget.hpp"
-#include "DigitalEvent/EventViewer_Widget.hpp"
-#include "DigitalInterval/IntervalViewer_Widget.hpp"
+#include "DataManager/DataManager.hpp"
+#include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>

@@ -142,7 +142,7 @@
   <customwidget>
    <class>OpenGLWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header>DataViewer_Widget/OpenGLWidget.hpp</header>
+   <header>DataViewer_Widget/Rendering/OpenGLWidget.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>
