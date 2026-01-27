@@ -11,7 +11,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "ffmpeg_wrapper/videoencoder.h"

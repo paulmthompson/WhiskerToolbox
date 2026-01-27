@@ -1,6 +1,14 @@
 #include "MediaLine_Widget.hpp"
 #include "ui_MediaLine_Widget.h"
 
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "SelectionWidgets/LineAddSelectionWidget.hpp"
+#include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
+#include "SelectionWidgets/LineEraseSelectionWidget.hpp"
+#include "SelectionWidgets/LineNoneSelectionWidget.hpp"
+#include "SelectionWidgets/LineSelectSelectionWidget.hpp"
+
 #include "CoreGeometry/point_geometry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
@@ -9,13 +17,6 @@
 #include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
 #include "DataManager/utils/polynomial/polynomial_fit.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
-#include "SelectionWidgets/LineAddSelectionWidget.hpp"
-#include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
-#include "SelectionWidgets/LineEraseSelectionWidget.hpp"
-#include "SelectionWidgets/LineNoneSelectionWidget.hpp"
-#include "SelectionWidgets/LineSelectSelectionWidget.hpp"
 
 #include <QButtonGroup>
 #include <QCheckBox>

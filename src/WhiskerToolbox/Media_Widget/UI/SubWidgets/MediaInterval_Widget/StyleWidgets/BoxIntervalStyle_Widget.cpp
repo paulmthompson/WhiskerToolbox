@@ -1,9 +1,10 @@
 #include "BoxIntervalStyle_Widget.hpp"
 #include "ui_BoxIntervalStyle_Widget.h"
 
-#include "DataManager/DataManager.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+
+#include "DataManager/DataManager.hpp"
 
 #include <string>
 

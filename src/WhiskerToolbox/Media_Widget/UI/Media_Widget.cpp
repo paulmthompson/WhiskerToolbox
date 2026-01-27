@@ -1,6 +1,9 @@
 #include "Media_Widget.hpp"
 #include "ui_Media_Widget.h"
 
+#include "Core/MediaWidgetState.hpp"
+#include "Rendering/Media_Window/Media_Window.hpp"
+
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -9,8 +12,6 @@
 #include "DataManager/Points/Point_Data.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "EditorState/EditorRegistry.hpp"
-#include "Media_Window/Media_Window.hpp"
-#include "MediaWidgetState.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots

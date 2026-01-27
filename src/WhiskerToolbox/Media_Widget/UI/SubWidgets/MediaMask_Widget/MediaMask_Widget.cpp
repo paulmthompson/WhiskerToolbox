@@ -1,16 +1,17 @@
 #include "MediaMask_Widget.hpp"
 #include "ui_MediaMask_Widget.h"
 
+#include "MaskDilationWidget/MaskDilationWidget.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
+#include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
+
 #include "Collapsible_Widget/Section.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
-#include "MaskDilationWidget/MaskDilationWidget.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
-#include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
-#include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
 #include <QLabel>
 #include <QVBoxLayout>

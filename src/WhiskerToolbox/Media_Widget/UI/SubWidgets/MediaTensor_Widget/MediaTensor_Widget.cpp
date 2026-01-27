@@ -1,10 +1,10 @@
 #include "MediaTensor_Widget.hpp"
 #include "ui_MediaTensor_Widget.h"
 
-#include "DataManager/DataManager.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 
+#include "DataManager/DataManager.hpp"
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
 #include "DataManager/Tensors/Tensor_Data.hpp"

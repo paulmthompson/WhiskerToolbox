@@ -1,11 +1,12 @@
 #include "MediaPoint_Widget.hpp"
 #include "ui_MediaPoint_Widget.h"
 
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
 
 #include <iostream>
 #include <cmath>

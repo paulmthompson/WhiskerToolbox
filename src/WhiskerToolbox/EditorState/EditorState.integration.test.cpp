@@ -17,7 +17,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager_Widget/DataManagerWidgetState.hpp"
 #include "DataTransform_Widget/DataTransformWidgetState.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

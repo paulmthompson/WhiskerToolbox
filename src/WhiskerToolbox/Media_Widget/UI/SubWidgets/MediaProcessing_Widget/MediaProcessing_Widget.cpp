@@ -1,6 +1,9 @@
 #include "MediaProcessing_Widget.hpp"
 #include "ui_MediaProcessing_Widget.h"
 
+#include "Media_Widget/UI/Media_Widget.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "ProcessingOptions/BilateralWidget.hpp"
 #include "ProcessingOptions/ClaheWidget.hpp"
 #include "ProcessingOptions/ColormapWidget.hpp"
@@ -14,9 +17,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
-#include "Media_Widget/Media_Widget.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
+
 
 #include <QHideEvent>
 #include <QScrollArea>

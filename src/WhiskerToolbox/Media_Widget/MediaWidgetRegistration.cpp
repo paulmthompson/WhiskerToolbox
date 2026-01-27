@@ -1,9 +1,10 @@
 #include "MediaWidgetRegistration.hpp"
 
-#include "Media_Widget.hpp"
-#include "MediaWidgetState.hpp"
-#include "MediaPropertiesWidget/MediaPropertiesWidget.hpp"
-#include "Media_Window/Media_Window.hpp"
+#include "Core/MediaWidgetState.hpp"
+#include "Rendering/Media_Window/Media_Window.hpp"
+#include "UI/Media_Widget.hpp"
+#include "UI/MediaPropertiesWidget.hpp"
+
 #include "EditorState/EditorRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"

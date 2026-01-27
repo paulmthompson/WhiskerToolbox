@@ -25,8 +25,8 @@
 #include "IO_Widgets/Points/Point_Loader_Widget.hpp"
 #include "IO_Widgets/Tensors/Tensor_Loader_Widget.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
-#include "Media_Widget/Media_Widget.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/UI/Media_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
 

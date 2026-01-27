@@ -1,12 +1,13 @@
 #include "MediaInterval_Widget.hpp"
 #include "ui_MediaInterval_Widget.h"
 
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "StyleWidgets/BorderIntervalStyle_Widget.hpp"
+
 #include "ColorPicker_Widget/ColorPicker_Widget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Media_Widget/Media_Window/Media_Window.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
-#include "StyleWidgets/BorderIntervalStyle_Widget.hpp"
 
 #include <iostream>
 

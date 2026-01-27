@@ -1,5 +1,11 @@
 #include "Media_Window.hpp"
 
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/UI/Media_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaText_Widget/MediaText_Widget.hpp"
+
 #include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
@@ -12,11 +18,6 @@
 #include "GroupContextMenu/GroupContextMenuHandler.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
-#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
-#include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
-#include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
-#include "Media_Widget/Media_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library

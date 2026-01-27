@@ -133,13 +133,13 @@
   <customwidget>
    <class>BoxIntervalStyle_Widget</class>
    <extends>QWidget</extends>
-   <header>Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.hpp</header>
+   <header>Media_Widget/UI/SubWidgets/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BorderIntervalStyle_Widget</class>
    <extends>QWidget</extends>
-   <header>Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.hpp</header>
+   <header>Media_Widget/UI/SubWidgets/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -1,17 +1,18 @@
 #include "MediaPropertiesWidget.hpp"
 #include "ui_MediaPropertiesWidget.h"
 
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaInterval_Widget/MediaInterval_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaLine_Widget/MediaLine_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaMask_Widget/MediaMask_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaPoint_Widget/MediaPoint_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaTensor_Widget/MediaTensor_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaText_Widget/MediaText_Widget.hpp"
+#include "Rendering/Media_Window/Media_Window.hpp"
+
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Media_Widget/MediaWidgetState.hpp"
-#include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
-#include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
-#include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
-#include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
-#include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
-#include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
-#include "Media_Widget/MediaText_Widget/MediaText_Widget.hpp"
-#include "Media_Window/Media_Window.hpp"
 
 #include <QTimer>
 #include <QVBoxLayout>

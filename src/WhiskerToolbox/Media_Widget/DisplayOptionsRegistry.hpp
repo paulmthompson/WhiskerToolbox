@@ -45,8 +45,8 @@
  * @see DisplayOptions.hpp
  */
 
+#include "Core/MediaWidgetStateData.hpp"
 #include "DisplayOptions/DisplayOptions.hpp"
-#include "MediaWidgetStateData.hpp"
 
 #include <QObject>
 #include <QString>
