@@ -293,239 +293,31 @@ ClangBuildAnalyzer --all build_trace build_results.bin
 ClangBuildAnalyzer --analyze build_results.bin
 ```
 
-## Example Workflows
-
-### Workflow 1: Optimize a Hot Function
-
-``` bash
-# 1. Identify hot spots
-perf record -g ./benchmark_MaskArea
-perf report  # Identify slowest function
-
-# 2. View assembly
-objdump -d -C -S ./benchmark_MaskArea | grep -A 100 "mySlowFunction"
-
-# 3. Check cache behavior
-valgrind --tool=cachegrind ./benchmark_MaskArea --benchmark_filter=MyFunction
-
-# 4. Make changes and compare
-./benchmark_MaskArea --benchmark_filter=MyFunction > before.txt
-# ... make changes ...
-./benchmark_MaskArea --benchmark_filter=MyFunction > after.txt
-compare.py compare before.txt after.txt  # From Google Benchmark tools
-```
-
-### Workflow 2: Fix Memory Issues
-
-``` bash
-# 1. Identify allocation hot spots
-heaptrack ./benchmark_MaskArea
-
-# 2. View in GUI
-heaptrack_gui heaptrack.benchmark_MaskArea.*.gz
-# Look for:
-# - Temporary allocations in loops
-# - Large peak allocations
-# - Memory leaks
-
-# 3. Check for leaks with valgrind
-valgrind --leak-check=full ./benchmark_MaskArea --benchmark_filter=MyTest
-
-# 4. Verify fix
-heaptrack ./benchmark_MaskArea
-# Compare before/after total allocations and peak memory
-```
-
-### Workflow 3: Compare Algorithms
-
-``` bash
-# Benchmark different implementations
-./benchmark_MaskArea --benchmark_filter="Algorithm_v1|Algorithm_v2" \
-    --benchmark_format=json > comparison.json
-
-# Use benchmark tools to compare
-tools/compare.py benchmarks comparison.json baseline.json
-
-# Or export to CSV for plotting
-./benchmark_MaskArea --benchmark_format=csv > data.csv
-# Import into spreadsheet/plotting tool
-```
-
-## Best Practices
-
-### Do's
-
-1.  **Use Fixtures** - Set up expensive test data once
-2.  **DoNotOptimize** - Prevent compiler from optimizing away benchmarks
-3.  **Test Multiple Sizes** - Use parameter ranges to test scaling
-4.  **Add Counters** - Track domain-specific metrics (items/sec, throughput)
-5.  **Disable Benchmarks** - Turn off unused benchmarks to speed up builds
-6.  **Run Multiple Times** - Benchmarks automatically run multiple iterations
-7.  **Profile Before Optimizing** - Use profiling tools to find actual bottlenecks
-
-### Don'ts
-
-1.  **Don't Measure Setup** - Put expensive setup in `SetUp()`, not in loop
-2.  **Don't Ignore Variability** - Check standard deviation in results
-3.  **Don't Benchmark Debug Builds** - Always use Release or RelWithDebInfo
-4.  **Don't Optimize Without Data** - Profile first, optimize second
-5.  **Don't Test Only One Size** - Real data varies, test across ranges
-
-### Code Patterns
-
-``` cpp
-// ✅ Good: Setup outside loop
-void SetUp(benchmark::State const& state) override {
-    test_data_ = generateExpensiveData();
-}
-
-BENCHMARK_F(MyBench, Test)(benchmark::State& state) {
-    for (auto _ : state) {
-        auto result = process(test_data_);
-        benchmark::DoNotOptimize(result);
-    }
-}
-
-// ❌ Bad: Setup in loop
-BENCHMARK(MyBench)(benchmark::State& state) {
-    for (auto _ : state) {
-        auto data = generateExpensiveData();  // Measured every time!
-        auto result = process(data);
-    }
-}
-
-// ✅ Good: Prevent optimization
-auto result = expensiveComputation();
-benchmark::DoNotOptimize(result);
-
-// ❌ Bad: Result might be optimized away
-auto result = expensiveComputation();
-// Compiler might remove entire computation if result unused
-```
-
-## Interpreting Results
-
-### Benchmark Output
-
-```         
--------------------------------------------------------------------
-Benchmark                         Time             CPU   Iterations
--------------------------------------------------------------------
-BM_Pipeline/0                  1.23 ms         1.23 ms          569
-BM_Pipeline/1                 12.45 ms        12.43 ms           56
-BM_Pipeline/2                124.56 ms       124.12 ms            6
-```
-
--   **Time**: Wall-clock time (includes I/O, system time)
--   **CPU**: CPU time (excludes I/O wait)
--   **Iterations**: How many times the benchmark ran
-
-### What's Fast Enough?
-
--   **\< 1 microsecond**: Excellent for element operations
--   **\< 1 millisecond**: Good for frame-level processing
--   **\< 100 milliseconds**: Acceptable for batch operations
--   **\> 1 second**: Consider optimization or progress reporting
-
-### Profiling Result Interpretation
-
-**Perf Report:** - Focus on functions with \>5% of total time - Check for unexpected function calls - Look for optimization opportunities in hot paths
-
-**Heaptrack:** - Peak memory \< 2x working set is good - Allocation count should be O(1) for inner loops - Look for unnecessary temporary allocations
-
-**Cachegrind:** - L1 miss rate \< 5% is excellent - L2 miss rate \< 1% is good - Look for cache-unfriendly access patterns
-
-## Continuous Performance Monitoring
-
-### Save Baseline Results
-
-``` bash
-# Save current performance as baseline
-./benchmark_MaskArea --benchmark_out=baseline.json \
-    --benchmark_out_format=json
-
-# After changes, compare
-./benchmark_MaskArea --benchmark_out=current.json \
-    --benchmark_out_format=json
-
-# Compare results
-tools/compare.py benchmarks baseline.json current.json
-```
-
-## Troubleshooting
-
-### Benchmarks Too Fast
-
-If benchmarks complete in \< 1 microsecond:
-
-``` cpp
-// Increase work per iteration
-for (auto _ : state) {
-    for (int i = 0; i < 100; ++i) {  // Amortize overhead
-        auto result = fastFunction();
-        benchmark::DoNotOptimize(result);
-    }
-}
-state.SetItemsProcessed(state.iterations() * 100);
-```
-
-### High Variability
-
-If standard deviation \> 10% of mean:
-
-1.  Close other applications
-2.  Disable CPU frequency scaling: `sudo cpupower frequency-set --governor performance`
-3.  Pin to specific CPU: `taskset -c 0 ./benchmark_MaskArea`
-4.  Increase minimum iteration time: `--benchmark_min_time=5`
-
-### Build Issues
-
-``` bash
-# Benchmarks not building
-cmake -DENABLE_BENCHMARK=ON ..
-
-# Specific benchmark disabled
-cmake -DBENCHMARK_MASK_AREA=ON ..
-
-# Google Benchmark not found
-# (Should auto-fetch with FetchContent, but can install manually)
-sudo apt install libbenchmark-dev  # Ubuntu/Debian
-```
-
-## Additional Resources
-
--   [Google Benchmark Documentation](https://github.com/google/benchmark)
--   [Perf Tutorial](https://perf.wiki.kernel.org/index.php/Tutorial)
--   [Heaptrack Documentation](https://github.com/KDE/heaptrack)
--   [Valgrind Manual](https://valgrind.org/docs/manual/manual.html)
--   [Optimization Guide](https://github.com/dendibakh/perf-book)
-
 ## AnalogTimeSeries Loading Performance
 
 We benchmarked the loading of binary data into `AnalogTimeSeries` to identify performance bottlenecks.
 The benchmark compares:
 1.  **Best Case**: Reading raw bytes into `std::vector<uint8>` (simulating disk I/O limit).
-2.  **Single Channel**: Loading `int16` data into one `AnalogTimeSeries` (single channel).
+2.  **Single Channel**: Loading `int16` data into one `AnalogTimeSeries` (single channel), using an optimized chunked reader with direct conversion.
 3.  **Multi Channel**: Loading `int16` data into 32 `AnalogTimeSeries` (multi-channel interleaved).
 
 ### Results (10MB Data)
 
 | Scenario | Time | Speed | Slowdown vs Best Case |
 | :--- | :--- | :--- | :--- |
-| **Best Case (Raw Read)** | ~2 ms | ~5.0 GB/s | 1.0x |
-| **Multi Channel (32 ch)** | ~14.5 ms | ~690 MB/s | ~7.25x |
-| **Single Channel (1 ch)** | ~70 ms | ~140 MB/s | ~35x |
+| **Best Case (Raw Read)** | ~2.5 ms | ~4.0 GB/s | 1.0x |
+| **Multi Channel (32 ch)** | ~18 ms | ~550 MB/s | ~7.2x |
+| **Single Channel (Optimized)** | ~62.5 ms | ~160 MB/s | ~25x |
 
 ### Analysis
 
-*   **Significant Slowdown**: Loading into `AnalogTimeSeries` is 7x to 35x slower than raw disk I/O. This is expected to some degree due to data conversion (`int16` -> `float`) and object creation, but the magnitude is large.
-*   **Multi-Channel vs Single-Channel**: Surprisingly, multi-channel loading is **5x faster** than single-channel loading for the same amount of data.
-    *   This suggests that the implementation of `Loader::readBinaryFile` (used for single channel) is significantly less efficient than `Loader::readBinaryFileMultiChannel`.
-    *   `readBinaryFileMultiChannel` uses chunked reading which likely preserves cache locality better than reading one massive vector and then converting it.
-    *   Single-channel loading performs a single huge allocation (e.g. 10MB for int16, then 20MB for float), which might incur higher memory management overhead compared to many smaller allocations in the multi-channel case.
+*   **Optimization Impact**: The optimized single-channel loader (using chunked reads and direct `int16`->`float` conversion) improved performance by approximately **12%** compared to the baseline implementation (~70ms).
+*   **Direct Conversion**: The optimized loader avoids creating an intermediate `std::vector<int16>`, reducing peak memory usage and memory bandwidth requirements.
+*   **Multi-Channel Efficiency**: Multi-channel loading remains significantly faster (~3.5x faster than single-channel). This is likely due to:
+    *   **Cache Locality**: Processing 32 smaller vectors (per channel) may fit better in CPU caches than processing one very large vector.
+    *   **Vector Initialization**: Initializing one massive 20MB float vector (single channel) vs 32 smaller ones might have different performance characteristics depending on the allocator and OS page fault handling.
 
-### Improvement Opportunities
+### Future Improvements
 
-1.  **Optimize Single Channel Loading**: Adopt the chunked reading strategy from `readBinaryFileMultiChannel` for the single-channel case as well.
-2.  **Direct Conversion**: Avoid the intermediate `std::vector<int16>` storage. Read chunks of raw bytes, cast/convert to `float` immediately, and write to the destination `std::vector<float>`. This would reduce memory usage by 33% (no need to store the full `int16` copy) and likely improve performance by avoiding a pass over memory.
-3.  **Parallelization**: The conversion from `int16` to `float` is an embarrassingly parallel operation. Using `std::transform` with `std::execution::par_unseq` or OpenMP could significantly speed up this step.
+*   **Parallelization**: The `int16` to `float` conversion is a prime candidate for parallelization using OpenMP or `std::execution::par`, which could bridge the gap between single-channel loading and raw I/O.
+*   **Vector Initialization**: Using `std::make_unique_for_overwrite` (or equivalent techniques) to avoid zero-initialization of the target `std::vector<float>` could save significant time, as writing 0s to 20MB of memory is not negligible.

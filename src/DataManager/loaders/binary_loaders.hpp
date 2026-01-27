@@ -65,6 +65,70 @@ inline std::vector<T> readBinaryFile(BinaryAnalogOptions const & options) {
     return data;
 }
 
+/**
+ * @brief readBinaryFileToFloat
+ *
+ * Reads a binary file of type T and directly converts to a vector of floats.
+ * Uses chunked reading for better cache locality and memory efficiency.
+ *
+ * @param file_path Path to the binary file
+ * @param header_size_bytes (optional) Number of bytes to skip at the beginning of the file
+ * @return std::vector<float> Vector of float data read from the file
+ */
+template<typename T>
+inline std::vector<float> readBinaryFileToFloat(BinaryAnalogOptions const & options) {
+
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
+    auto t1 = std::chrono::steady_clock::now();
+#endif
+
+    std::ifstream file(options.file_path, std::ios::binary | std::ios::ate);
+
+    if (!file) {
+        std::cout << "Cannot open file: " << options.file_path << std::endl;
+        return std::vector<float>();
+    }
+
+    std::streampos const file_size = file.tellg();
+
+    size_t const data_size_bytes = static_cast<size_t>(file_size) - options.header_size_bytes;
+    size_t num_samples = data_size_bytes / sizeof(T);
+
+    std::vector<float> data(num_samples);
+
+    file.seekg(static_cast<std::ios::off_type>(options.header_size_bytes), std::ios::beg);
+
+    // Chunk size: 1MB to balance cache locality with I/O overhead
+    constexpr size_t CHUNK_SIZE_BYTES = 1024 * 1024;
+    constexpr size_t SAMPLES_PER_CHUNK = CHUNK_SIZE_BYTES / sizeof(T);
+
+    std::vector<T> chunk_buffer(SAMPLES_PER_CHUNK);
+
+    size_t total_read = 0;
+    while (total_read < num_samples) {
+        size_t remaining = num_samples - total_read;
+        size_t current_chunk_samples = std::min(remaining, SAMPLES_PER_CHUNK);
+        size_t current_chunk_bytes = current_chunk_samples * sizeof(T);
+
+        file.read(reinterpret_cast<char*>(chunk_buffer.data()), static_cast<std::streamsize>(current_chunk_bytes));
+
+        // Direct conversion in cache-friendly chunks
+        for (size_t i = 0; i < current_chunk_samples; ++i) {
+            data[total_read + i] = static_cast<float>(chunk_buffer[i]);
+        }
+
+        total_read += current_chunk_samples;
+    }
+
+#ifdef BINARY_LOADERS_ENABLE_PROFILING
+    auto t2 = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+    std::cout << "Total time to load and convert " << options.file_path << ": " << elapsed.count() << std::endl;
+#endif
+
+    return data;
+}
+
 template<typename T>
 inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOptions const & options) {
 
