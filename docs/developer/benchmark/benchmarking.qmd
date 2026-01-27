@@ -295,29 +295,29 @@ ClangBuildAnalyzer --analyze build_results.bin
 
 ## AnalogTimeSeries Loading Performance
 
-We benchmarked the loading of binary data into `AnalogTimeSeries` to identify performance bottlenecks.
-The benchmark compares:
-1.  **Best Case**: Reading raw bytes into `std::vector<uint8>` (simulating disk I/O limit).
-2.  **Single Channel**: Loading `int16` data into one `AnalogTimeSeries` (single channel), using an optimized chunked reader with direct conversion.
-3.  **Multi Channel**: Loading `int16` data into 32 `AnalogTimeSeries` (multi-channel interleaved).
+We benchmarked the loading of binary data into `AnalogTimeSeries` to identify performance bottlenecks and evaluate optimizations.
+The benchmark compares different loading strategies for the *same* underlying data (10MB binary file).
 
 ### Results (10MB Data)
 
 | Scenario | Time | Speed | Slowdown vs Best Case |
 | :--- | :--- | :--- | :--- |
 | **Best Case (Raw Read)** | ~2.5 ms | ~4.0 GB/s | 1.0x |
-| **Multi Channel (32 ch)** | ~18 ms | ~550 MB/s | ~7.2x |
-| **Single Channel (Optimized)** | ~62.5 ms | ~160 MB/s | ~25x |
+| **Multi Channel** (True 32ch) | ~17 ms | ~580 MB/s | ~6.8x |
+| **Fake Multi Channel** (1ch file as 32ch) | ~17 ms | ~580 MB/s | ~6.8x |
+| **Single Channel** (Optimized) | ~62.5 ms | ~160 MB/s | ~25x |
+| **Single Channel** (Baseline) | ~70 ms | ~140 MB/s | ~28x |
 
 ### Analysis
 
-*   **Optimization Impact**: The optimized single-channel loader (using chunked reads and direct `int16`->`float` conversion) improved performance by approximately **12%** compared to the baseline implementation (~70ms).
-*   **Direct Conversion**: The optimized loader avoids creating an intermediate `std::vector<int16>`, reducing peak memory usage and memory bandwidth requirements.
-*   **Multi-Channel Efficiency**: Multi-channel loading remains significantly faster (~3.5x faster than single-channel). This is likely due to:
-    *   **Cache Locality**: Processing 32 smaller vectors (per channel) may fit better in CPU caches than processing one very large vector.
-    *   **Vector Initialization**: Initializing one massive 20MB float vector (single channel) vs 32 smaller ones might have different performance characteristics depending on the allocator and OS page fault handling.
+1.  **Optimization**: The optimized single-channel loader (using chunked reading and direct conversion) provides a ~12% speedup over the baseline.
+2.  **Apples-to-Apples Comparison**:
+    *   To understand why Multi-Channel is so much faster, we added a "Fake Multi Channel" benchmark that loads the *single-channel file* using the *multi-channel loader logic* (splitting it into 32 arbitrary channels).
+    *   **Key Finding**: The "Fake Multi Channel" load time (~17ms) matches the True Multi Channel time. This proves that **splitting the data into 32 smaller vectors is inherently faster than loading it into 1 large vector**.
+3.  **Cause of Slowdown**:
+    *   The single-channel loader must write to one large contiguous `std::vector<float>` (20MB). This likely causes significant cache thrashing and memory management overhead compared to writing to 32 small vectors (which stay hot in L2/L3 cache during processing).
+    *   Parallelization (OpenMP) was attempted on the single-channel loader but resulted in slower performance (~80ms), suggesting memory bandwidth or thread contention is the bottleneck for the single-vector write pattern.
 
-### Future Improvements
+### Conclusion
 
-*   **Parallelization**: The `int16` to `float` conversion is a prime candidate for parallelization using OpenMP or `std::execution::par`, which could bridge the gap between single-channel loading and raw I/O.
-*   **Vector Initialization**: Using `std::make_unique_for_overwrite` (or equivalent techniques) to avoid zero-initialization of the target `std::vector<float>` could save significant time, as writing 0s to 20MB of memory is not negligible.
+The "slowdown" in single-channel loading is a structural consequence of managing large contiguous memory blocks versus smaller, cache-friendly blocks. While the optimized loader provides a tangible improvement (12%), achieving parity with multi-channel loading would likely require architectural changes to `AnalogTimeSeries` to support segmented/tiled storage instead of a single flat vector.

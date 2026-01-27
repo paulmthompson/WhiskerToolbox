@@ -107,4 +107,28 @@ BENCHMARK_DEFINE_F(AnalogLoadingBenchmark, AnalogTimeSeries_MultiChannel)(benchm
 }
 BENCHMARK_REGISTER_F(AnalogLoadingBenchmark, AnalogTimeSeries_MultiChannel)->Arg(1024 * 1024 * 10);
 
+BENCHMARK_DEFINE_F(AnalogLoadingBenchmark, AnalogTimeSeries_FakeMultiChannel)(benchmark::State& state) {
+    size_t num_bytes = static_cast<size_t>(state.range(0));
+    GenerateBinaryFile(filename, num_bytes);
+
+    // Load the SINGLE CHANNEL file (10MB) as if it were 32 channels.
+    // This splits the 5M samples into 32 vectors of ~156k samples.
+    // The data content will be garbage (interleaved interpretation), but performance is what matters.
+    int num_channels = 32;
+
+    nlohmann::json config;
+    config["format"] = "binary";
+    config["binary_data_type"] = "int16";
+    config["num_samples"] = (num_bytes / 2) / num_channels;
+    config["num_channels"] = num_channels;
+    config["filepath"] = filename;
+
+    for (auto _ : state) {
+        auto result = load_into_AnalogTimeSeries(filename, config);
+        benchmark::DoNotOptimize(result);
+    }
+    state.SetBytesProcessed(state.iterations() * num_bytes);
+}
+BENCHMARK_REGISTER_F(AnalogLoadingBenchmark, AnalogTimeSeries_FakeMultiChannel)->Arg(1024 * 1024 * 10);
+
 BENCHMARK_MAIN();
