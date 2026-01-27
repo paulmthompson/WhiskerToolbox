@@ -38,6 +38,24 @@ if(TARGET benchmark_MaskArea)
     )
 endif()
 
+# AnalogTimeSeries Loading Benchmark
+# Tests: Binary loading performance (raw vs single channel vs multi channel)
+add_selective_benchmark(
+    NAME AnalogTimeSeriesLoading
+    SOURCES
+        AnalogTimeSeriesLoading.benchmark.cpp
+    LINK_LIBRARIES
+        DataManager
+    DEFAULT ON
+)
+
+if(TARGET benchmark_AnalogTimeSeriesLoading)
+    configure_benchmark_for_profiling(
+        TARGET benchmark_AnalogTimeSeriesLoading
+        ENABLE_PERF ON
+        ENABLE_HEAPTRACK ON
+    )
+endif()
+
 # Print summary of configured benchmarks
 print_benchmark_summary()
-

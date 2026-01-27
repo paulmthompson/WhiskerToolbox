@@ -104,15 +104,9 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions co
 
     } else {
 
-        auto data = Loader::readBinaryFile<int16_t>(binary_loader_opts);
-
-        // Pre-size and convert (faster than back_inserter)
-        size_t const num_samples = data.size();
-        std::vector<float> data_float(num_samples);
-
-        for (size_t i = 0; i < num_samples; ++i) {
-            data_float[i] = static_cast<float>(data[i]);
-        }
+        // Use optimized loader that performs direct conversion and chunked reading
+        auto data_float = Loader::readBinaryFileToFloat<int16_t>(binary_loader_opts);
+        size_t const num_samples = data_float.size();
 
         analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(std::move(data_float), num_samples));
     }
