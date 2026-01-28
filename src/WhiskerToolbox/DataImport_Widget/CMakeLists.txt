@@ -26,6 +26,8 @@ set(DATA_IMPORT_WIDGET_SOURCES
     DataImport_Widget.ui
     DataImportTypeRegistry.cpp
     DataImportTypeRegistry.hpp
+    DataImportWidgetRegistration.cpp
+    DataImportWidgetRegistration.hpp
     
     # Points import widgets
     Points/PointImport_Widget.cpp
