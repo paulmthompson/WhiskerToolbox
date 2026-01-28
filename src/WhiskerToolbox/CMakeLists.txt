@@ -58,6 +58,10 @@ add_subdirectory(DataImport_Widget)
 # GroupManagementWidget, nlohmann_json
 add_subdirectory(DataManager_Widget)
 
+# Qt, DataManager, EditorState, GroupManagementWidget, nlohmann_json
+# Data inspection widget with View/Properties split
+add_subdirectory(DataInspector_Widget)
+
 # Qt, DataManager, glm, Boost,
 # DataViewer, Feature_Tree_Widget, PlottingOpenGL,
 # ColorPicker_Widget, TimeScrollbar, CorePlotting
@@ -208,6 +212,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE TableViewerWidget)
 target_link_libraries(WhiskerToolbox PRIVATE TableDesignerWidget)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
 

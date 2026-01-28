@@ -28,6 +28,7 @@
 // Module registration headers - each module defines its own factory functions
 #include "BatchProcessing_Widget/BatchProcessingWidgetRegistration.hpp"
 #include "DataImport_Widget/DataImportWidgetRegistration.hpp"
+#include "DataInspector_Widget/DataInspectorWidgetRegistration.hpp"
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
@@ -762,6 +763,8 @@ void MainWindow::_registerEditorTypes() {
     // to know implementation details like MediaWidgetState, MediaViewWidget, etc.
 
     MediaWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
+
+    DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
