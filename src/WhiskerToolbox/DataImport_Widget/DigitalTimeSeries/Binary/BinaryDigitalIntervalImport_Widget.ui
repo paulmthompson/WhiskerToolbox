@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BinaryDigitalIntervalImport_Widget</class>
+ <widget class="QWidget" name="BinaryDigitalIntervalImport_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>450</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Binary Digital Interval Import</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_description">
+     <property name="text">
+      <string>Load digital interval data from binary files. Each bit in the data represents a digital channel, and transitions define interval boundaries.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_file_path">
+       <property name="text">
+        <string>Binary File:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="file_path_edit">
+       <property name="placeholderText">
+        <string>Select binary file...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="browse_button">
+       <property name="text">
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_header_size">
+       <property name="text">
+        <string>Header Size (bytes):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QSpinBox" name="header_size_spinbox">
+       <property name="toolTip">
+        <string>Number of bytes to skip at the beginning of the file.</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>1000000</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_data_type">
+       <property name="text">
+        <string>Data Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" colspan="2">
+      <widget class="QComboBox" name="data_type_combo">
+       <property name="toolTip">
+        <string>Size of each data sample in bytes. Determines the number of available channels.</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>1 byte (8 channels)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2 bytes (16 channels)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>4 bytes (32 channels)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>8 bytes (64 channels)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_channel">
+       <property name="text">
+        <string>Channel:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" colspan="2">
+      <widget class="QSpinBox" name="channel_spinbox">
+       <property name="toolTip">
+        <string>The channel (bit position) to extract intervals from (0-based).</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>63</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_transition_type">
+       <property name="text">
+        <string>Transition Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" colspan="2">
+      <widget class="QComboBox" name="transition_type_combo">
+       <property name="toolTip">
+        <string>Type of transition that defines interval boundaries.</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Rising (Low→High starts, High→Low ends)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Falling (High→Low starts, Low→High ends)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_info">
+     <property name="text">
+      <string>Channel range will be updated based on selected data type.</string>
+     </property>
+     <property name="styleSheet">
+      <string>color: gray; font-style: italic;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="load_button">
+     <property name="text">
+      <string>Load Binary Interval Data</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

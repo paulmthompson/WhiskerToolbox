@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BinaryAnalogImport_Widget</class>
+ <widget class="QWidget" name="BinaryAnalogImport_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>450</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Binary Analog Import</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_description">
+     <property name="text">
+      <string>Load analog time series data from binary files. Configure the data format, scaling, and channel extraction options.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_file_path">
+       <property name="text">
+        <string>Binary File:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="file_path_edit">
+       <property name="placeholderText">
+        <string>Select binary file...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="browse_button">
+       <property name="text">
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_header_size">
+       <property name="text">
+        <string>Header Size (bytes):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QSpinBox" name="header_size_spinbox">
+       <property name="toolTip">
+        <string>Number of bytes to skip at the beginning of the file.</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>1000000</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_num_channels">
+       <property name="text">
+        <string>Number of Channels:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" colspan="2">
+      <widget class="QSpinBox" name="num_channels_spinbox">
+       <property name="toolTip">
+        <string>Number of interleaved channels in the binary file.</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1024</number>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_data_type">
+       <property name="text">
+        <string>Data Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" colspan="2">
+      <widget class="QComboBox" name="data_type_combo">
+       <property name="toolTip">
+        <string>Data type of each sample in the binary file.</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>int8 (1 byte)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>int16 (2 bytes)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>uint16 (2 bytes)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>float32 (4 bytes)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>float64 (8 bytes)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_scale_factor">
+       <property name="text">
+        <string>Scale Factor:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" colspan="2">
+      <widget class="QDoubleSpinBox" name="scale_factor_spinbox">
+       <property name="toolTip">
+        <string>Multiplier applied to each sample value: output = (input * scale) + offset</string>
+       </property>
+       <property name="decimals">
+        <number>6</number>
+       </property>
+       <property name="minimum">
+        <double>-1000000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1000000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.001000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_offset">
+       <property name="text">
+        <string>Offset Value:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1" colspan="2">
+      <widget class="QDoubleSpinBox" name="offset_spinbox">
+       <property name="toolTip">
+        <string>Value added after scaling: output = (input * scale) + offset</string>
+       </property>
+       <property name="decimals">
+        <number>6</number>
+       </property>
+       <property name="minimum">
+        <double>-1000000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1000000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_sample_offset">
+       <property name="text">
+        <string>Sample Offset:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" colspan="2">
+      <widget class="QSpinBox" name="sample_offset_spinbox">
+       <property name="toolTip">
+        <string>Starting sample offset (for extracting specific channel from interleaved data).</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>1023</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_stride">
+       <property name="text">
+        <string>Stride:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1" colspan="2">
+      <widget class="QSpinBox" name="stride_spinbox">
+       <property name="toolTip">
+        <string>Number of samples to skip between reads (for extracting from interleaved data). Usually equals number of channels.</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1024</number>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_num_samples">
+       <property name="text">
+        <string>Number of Samples:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1" colspan="2">
+      <widget class="QSpinBox" name="num_samples_spinbox">
+       <property name="toolTip">
+        <string>Number of samples to read. Set to 0 to read all available samples.</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>2147483647</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0" colspan="3">
+      <widget class="QCheckBox" name="memory_mapped_checkbox">
+       <property name="text">
+        <string>Use memory-mapped I/O</string>
+       </property>
+       <property name="toolTip">
+        <string>Use memory-mapped file I/O for large files. May improve performance for very large files.</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_info">
+     <property name="text">
+      <string>Data type information will appear here.</string>
+     </property>
+     <property name="styleSheet">
+      <string>color: gray; font-style: italic;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="load_button">
+     <property name="text">
+      <string>Load Binary Analog Data</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

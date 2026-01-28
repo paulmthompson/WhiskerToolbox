@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ImageMaskImport_Widget</class>
+ <widget class="QWidget" name="ImageMaskImport_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>450</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Image Mask Import</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_description">
+     <property name="text">
+      <string>Load mask data from binary image files. Each image file represents a mask for a specific frame.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_directory">
+       <property name="text">
+        <string>Directory:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="directory_path_edit">
+       <property name="placeholderText">
+        <string>Select directory containing mask images...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="browse_directory_button">
+       <property name="text">
+        <string>Browse</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_file_pattern">
+       <property name="text">
+        <string>File Pattern:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="2">
+      <widget class="QComboBox" name="file_pattern_combo">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <item>
+        <property name="text">
+         <string>*.png</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>*.jpg</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>*.bmp</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>*.tiff</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>*.*</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_filename_prefix">
+       <property name="text">
+        <string>Filename Prefix:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" colspan="2">
+      <widget class="QLineEdit" name="filename_prefix_edit">
+       <property name="placeholderText">
+        <string>Optional prefix (e.g., mask_)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_threshold">
+       <property name="text">
+        <string>Threshold Value:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="threshold_spinbox">
+       <property name="toolTip">
+        <string>Pixel intensity threshold (0-255). Pixels >= threshold are considered mask pixels.</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>255</number>
+       </property>
+       <property name="value">
+        <number>128</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QCheckBox" name="invert_mask_checkbox">
+       <property name="text">
+        <string>Invert Mask</string>
+       </property>
+       <property name="toolTip">
+        <string>If checked, pixels below threshold become mask pixels (black = mask).</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_padding">
+       <property name="text">
+        <string>Frame Padding:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" colspan="2">
+      <widget class="QSpinBox" name="frame_padding_spinbox">
+       <property name="toolTip">
+        <string>Expected number of digits for frame numbers (0 = no padding requirement).</string>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>10</number>
+       </property>
+       <property name="value">
+        <number>4</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="load_button">
+     <property name="text">
+      <string>Load Mask Images</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

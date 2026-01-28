@@ -120,6 +120,7 @@ target_link_libraries(IO_Widget PRIVATE Scaling_Widget)  # Shared library for im
 
 target_include_directories(IO_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>" #This directory
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../..>" #For data manager 
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )

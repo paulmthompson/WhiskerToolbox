@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineImport_Widget</class>
+ <widget class="QWidget" name="LineImport_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Line Import</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainVerticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="dataNameLayout">
+     <item>
+      <widget class="QLineEdit" name="data_name_text">
+       <property name="text">
+        <string>line_1</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_data_name">
+       <property name="text">
+        <string>Line Name</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="loaderTypeLayout">
+     <item>
+      <widget class="QLabel" name="label_loader_type">
+       <property name="text">
+        <string>Format:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="loader_type_combo">
+       <item>
+        <property name="text">
+         <string>HDF5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>CSV</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Binary</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>LMDB</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="loaderTypeSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stacked_loader_options">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="HDF5LineImport_Widget" name="hdf5_line_import_widget"/>
+     <widget class="CSVLineImport_Widget" name="csv_line_import_widget"/>
+     <widget class="BinaryLineImport_Widget" name="binary_line_import_widget"/>
+     <widget class="LMDBLineImport_Widget" name="lmdb_line_import_widget"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="Scaling_Widget" name="scaling_widget" native="true"/>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Scaling_Widget</class>
+   <extends>QWidget</extends>
+   <header>Scaling_Widget/Scaling_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HDF5LineImport_Widget</class>
+   <extends>QWidget</extends>
+   <header>Lines/HDF5/HDF5LineImport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CSVLineImport_Widget</class>
+   <extends>QWidget</extends>
+   <header>Lines/CSV/CSVLineImport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BinaryLineImport_Widget</class>
+   <extends>QWidget</extends>
+   <header>Lines/Binary/BinaryLineImport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LMDBLineImport_Widget</class>
+   <extends>QWidget</extends>
+   <header>Lines/LMDB/LMDBLineImport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
