@@ -18,10 +18,13 @@
  * @see OperationContext for inter-widget operations
  */
 
-#include <QString>
 #include <QHash>
-#include <QUuid>
 #include <QMetaType>
+#include <QString>
+#include <QUuid>
+
+#include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
+#include "TimeFrame/TimeFrame.hpp"      // For TimeFrameIndex
 
 #include <compare>
 #include <functional>
@@ -40,9 +43,12 @@ struct StrongStringId {
     QString value;
 
     StrongStringId() = default;
-    explicit StrongStringId(QString v) : value(std::move(v)) {}
-    explicit StrongStringId(char const * v) : value(QString::fromUtf8(v)) {}
-    explicit StrongStringId(std::string const & v) : value(QString::fromStdString(v)) {}
+    explicit StrongStringId(QString v)
+        : value(std::move(v)) {}
+    explicit StrongStringId(char const * v)
+        : value(QString::fromUtf8(v)) {}
+    explicit StrongStringId(std::string const & v)
+        : value(QString::fromStdString(v)) {}
 
     [[nodiscard]] bool isEmpty() const { return value.isEmpty(); }
     [[nodiscard]] bool isValid() const { return !value.isEmpty(); }
@@ -138,7 +144,7 @@ namespace DataChannels {
 inline DataChannel const TransformPipeline{"transform.pipeline"};
 inline DataChannel const Selection{"selection"};
 inline DataChannel const DataReference{"data.reference"};
-}  // namespace DataChannels
+}// namespace DataChannels
 
 /// Well-known editor types
 namespace EditorTypes {
@@ -146,9 +152,9 @@ inline EditorTypeId const DataTransformWidget{"DataTransformWidget"};
 inline EditorTypeId const MediaWidget{"MediaWidget"};
 inline EditorTypeId const DataManagerWidget{"DataManagerWidget"};
 inline EditorTypeId const DataViewerWidget{"DataViewerWidget"};
-}  // namespace EditorTypes
+}// namespace EditorTypes
 
-}  // namespace EditorLib
+}// namespace EditorLib
 
 // std::hash specializations for use with std::unordered_map/set
 namespace std {
@@ -188,7 +194,7 @@ struct hash<EditorLib::DataChannel> {
     }
 };
 
-}  // namespace std
+}// namespace std
 
 // Qt metatype registration for signal/slot use
 // These must be at global scope, after the types are fully defined
@@ -198,4 +204,17 @@ Q_DECLARE_METATYPE(EditorLib::SelectedDataKey)
 Q_DECLARE_METATYPE(EditorLib::OperationId)
 Q_DECLARE_METATYPE(EditorLib::DataChannel)
 
-#endif  // EDITOR_STATE_STRONG_TYPES_HPP
+// Enable Qt signal/slot with TimeFrame types
+Q_DECLARE_METATYPE(TimeKey)
+Q_DECLARE_METATYPE(TimeFrameIndex)
+
+// Qt hash functions for TimeFrame types (enables use in QHash, QSet)
+inline size_t qHash(TimeKey const & key, size_t seed = 0) {
+    return qHash(QString::fromStdString(key.str()), seed);
+}
+
+inline size_t qHash(TimeFrameIndex const & idx, size_t seed = 0) {
+    return qHash(idx.getValue(), seed);
+}
+
+#endif// EDITOR_STATE_STRONG_TYPES_HPP

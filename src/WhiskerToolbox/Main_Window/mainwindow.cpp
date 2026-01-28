@@ -18,8 +18,8 @@
 #include "EditorState/SelectionContext.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
-#include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
@@ -34,10 +34,10 @@
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
-#include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "ML_Widget/MLWidgetRegistration.hpp"
-#include "Terminal_Widget/TerminalWidgetRegistration.hpp"
+#include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
+#include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
@@ -81,6 +81,10 @@ MainWindow::MainWindow(QWidget * parent)
 
 {
     ui->setupUi(this);
+
+    // Register Qt metatypes for TimeFrame types (required for signal/slot)
+    qRegisterMetaType<TimeKey>("TimeKey");
+    qRegisterMetaType<TimeFrameIndex>("TimeFrameIndex");
 
     // === FIX START ===
     // If the UI file created a central widget, delete it so ADS can take over the full window.
@@ -392,10 +396,10 @@ void MainWindow::_loadJSONConfig() {
     // 1. Load data into DataManager (triggers DataManager observers)
     // 2. Emit EditorRegistry::applyDataDisplayConfig (for UI configuration)
     auto data_info = loadDataAndBroadcastConfig(
-        _data_manager.get(), 
-        _editor_registry.get(), 
-        filename.toStdString(), 
-        progress_callback);
+            _data_manager.get(),
+            _editor_registry.get(),
+            filename.toStdString(),
+            progress_callback);
 
     // Set to 100% when complete
     progress.setValue(100);

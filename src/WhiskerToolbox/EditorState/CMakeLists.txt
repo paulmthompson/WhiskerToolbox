@@ -27,11 +27,13 @@ target_link_libraries(EditorState
         Qt6::Core
         Qt6::Widgets
         reflectcpp::reflectcpp
+        TimeFrame
 )
 
 target_include_directories(EditorState
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/../..
 )
 
 # Add alias for consistent naming
