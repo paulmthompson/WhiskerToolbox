@@ -36,12 +36,6 @@
      </property>
      <addaction name="actionLoad_Video"/>
      <addaction name="actionLoad_Images"/>
-     <addaction name="actionLoad_Intervals"/>
-     <addaction name="actionLoad_Events"/>
-     <addaction name="actionLoad_Points"/>
-     <addaction name="actionLoad_Lines"/>
-     <addaction name="actionLoad_Masks"/>
-     <addaction name="actionLoad_Tensor"/>
      <addaction name="actionLoad_JSON_Config"/>
     </widget>
     <widget class="QMenu" name="menuExport">
@@ -71,7 +65,8 @@
     <property name="title">
      <string>Modules</string>
     </property>
-     <addaction name="actionTable_Designer"/>
+    <addaction name="actionData_Import"/>
+    <addaction name="actionTable_Designer"/>
     <addaction name="actionData_Manager"/>
     <addaction name="actionGroup_Management"/>
     <addaction name="actionBatch_Processing"/>
@@ -188,24 +183,9 @@
     <string>Load JSON Config</string>
    </property>
   </action>
-  <action name="actionLoad_Points">
+  <action name="actionData_Import">
    <property name="text">
-    <string>Load Points</string>
-   </property>
-  </action>
-  <action name="actionLoad_Masks">
-   <property name="text">
-    <string>Load Masks</string>
-   </property>
-  </action>
-  <action name="actionLoad_Lines">
-   <property name="text">
-    <string>Load Lines</string>
-   </property>
-  </action>
-  <action name="actionLoad_Intervals">
-   <property name="text">
-    <string>Load Intervals</string>
+    <string>Data Import</string>
    </property>
   </action>
   <action name="actionData_Manager">
@@ -218,11 +198,6 @@
     <string>Group Management</string>
    </property>
   </action>
-  <action name="actionLoad_Tensor">
-   <property name="text">
-    <string>Load Tensor</string>
-   </property>
-  </action>
   <action name="actionExport_Video">
    <property name="text">
     <string>Export Video</string>
@@ -231,11 +206,6 @@
   <action name="actionData_Transforms">
    <property name="text">
     <string>Data Transforms</string>
-   </property>
-  </action>
-  <action name="actionLoad_Events">
-   <property name="text">
-    <string>Load Events</string>
    </property>
   </action>
   <action name="actionTerminal_Output">

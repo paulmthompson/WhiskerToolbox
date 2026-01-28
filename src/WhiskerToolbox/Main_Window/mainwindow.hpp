@@ -134,6 +134,7 @@ private slots:
 
     void _loadJSONConfig();
 
+    void openDataImport();
     void openWhiskerTracking();
     void openTongueTracking();
     void openMLWidget();

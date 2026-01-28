@@ -249,6 +249,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
+    connect(ui->actionData_Import, &QAction::triggered, this, &MainWindow::openDataImport);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
@@ -714,6 +715,11 @@ void MainWindow::openZoneLayoutManager() {
 
 void MainWindow::openDataTransforms() {
     openEditor(QStringLiteral("DataTransformWidget"));
+}
+
+void MainWindow::openDataImport() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("DataImportWidget"));
 }
 
 void MainWindow::openNewMediaWidget() {
