@@ -91,8 +91,9 @@ void DigitalIntervalSeriesDataView::_connectSignals() {
 void DigitalIntervalSeriesDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
         auto interval = _table_model->getInterval(index.row());
-        // Navigate to start of interval
-        emit frameSelected(static_cast<int>(interval.start));
+        // Navigate to start (column 0) or end (column 1) based on which cell was clicked
+        int64_t target_frame = (index.column() == 0) ? interval.start : interval.end;
+        emit frameSelected(static_cast<int>(target_frame));
     }
 }
 

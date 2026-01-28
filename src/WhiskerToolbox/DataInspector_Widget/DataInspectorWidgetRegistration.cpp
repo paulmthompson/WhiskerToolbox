@@ -93,6 +93,18 @@ void registerTypes(EditorRegistry * registry,
             QObject::connect(props, &DataInspectorPropertiesWidget::frameSelected,
                              view, &DataInspectorViewWidget::frameSelected);
 
+            // Connect view widget frame selection to update time in both DataManager and EditorRegistry
+            // This allows double-clicking on table cells to navigate to the corresponding frame
+            if (reg && dm) {
+                QObject::connect(view, &DataInspectorViewWidget::frameSelected,
+                                 [dm, reg](int frame_id) {
+                                     // Update DataManager current time (like TimeScrollBar does)
+                                     dm->setCurrentTime(frame_id);
+                                     // Update EditorRegistry time (triggers timeChanged signal for other widgets)
+                                     reg->setCurrentTime(frame_id);
+                                 });
+            }
+
             // Connect properties widget to view widget for inspector-view communication
             props->setViewWidget(view);
 
