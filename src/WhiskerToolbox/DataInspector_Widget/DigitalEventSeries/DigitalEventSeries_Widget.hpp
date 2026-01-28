@@ -14,7 +14,6 @@ class DigitalEventSeries_Widget;
 }
 
 class DataManager;
-class EventTableModel;
 class CSVEventSaver_Widget;
 
 using EventSaverOptionsVariant = std::variant<CSVEventSaverOptions>;
@@ -38,7 +37,6 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     std::string _active_key;
     int _callback_id{0};
-    EventTableModel * _event_table_model;
 
     enum SaverType { CSV };
 
@@ -63,8 +61,6 @@ private:
 private slots:
     void _addEventButton();
     void _removeEventButton();
-    void _handleCellClicked(QModelIndex const & index);
-    void _changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles);
 
     void _onExportTypeChanged(int index);
     void _handleSaveEventCSVRequested(CSVEventSaverOptions options);

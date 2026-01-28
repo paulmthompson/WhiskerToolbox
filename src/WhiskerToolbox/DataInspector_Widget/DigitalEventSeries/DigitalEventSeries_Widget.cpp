@@ -1,8 +1,6 @@
 #include "DigitalEventSeries_Widget.hpp"
 #include "ui_DigitalEventSeries_Widget.h"
 
-#include "EventTableModel.hpp"
-
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
@@ -27,14 +25,8 @@ DigitalEventSeries_Widget::DigitalEventSeries_Widget(std::shared_ptr<DataManager
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
-    _event_table_model = new EventTableModel(this);
-    ui->tableView->setModel(_event_table_model);
-
-    ui->tableView->setEditTriggers(QAbstractItemView::SelectedClicked);
-
     connect(ui->add_event_button, &QPushButton::clicked, this, &DigitalEventSeries_Widget::_addEventButton);
     connect(ui->remove_event_button, &QPushButton::clicked, this, &DigitalEventSeries_Widget::_removeEventButton);
-    connect(ui->tableView, &QTableView::doubleClicked, this, &DigitalEventSeries_Widget::_handleCellClicked);
 
     // Export section connections
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -70,22 +62,6 @@ void DigitalEventSeries_Widget::setActiveKey(std::string key) {
     _updateFilename();
 }
 
-void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft,
-                                                 QModelIndex const & bottomRight,
-                                                 QVector<int> const & roles) {
-    static_cast<void>(roles);
-
-    auto events = _data_manager->getData<DigitalEventSeries>(_active_key);
-    auto event_series = events->view();
-
-    for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
-        auto newTime = _event_table_model->getEvent(row);
-        if (static_cast<size_t>(row) < events->size()) {
-            events->removeEvent(event_series[row].time());
-            events->addEvent(newTime);
-        }
-    }
-}
 
 void DigitalEventSeries_Widget::_assignCallbacks() {
     _callback_id = _data_manager->addCallbackToData(_active_key, [this]() {
@@ -102,13 +78,6 @@ void DigitalEventSeries_Widget::_calculateEvents() {
     if (!events) return;
 
     ui->total_events_label->setText(QString::number(events->size()));
-
-    auto event_view = events->view();
-    std::vector<TimeFrameIndex> event_vector;
-    for (auto const & event : event_view) {
-        event_vector.push_back(event.time());
-    }
-    _event_table_model->setEvents(event_vector);
 }
 
 
@@ -139,15 +108,6 @@ void DigitalEventSeries_Widget::_removeEventButton() {
     _calculateEvents();
 }
 
-void DigitalEventSeries_Widget::_handleCellClicked(QModelIndex const & index) {
-    if (!index.isValid()) {
-        return;
-    }
-
-    auto const frameNumber = _event_table_model->getEvent(index.row());
-
-    emit frameSelected(static_cast<int>(frameNumber.getValue()));
-}
 
 void DigitalEventSeries_Widget::_onExportTypeChanged(int index) {
     // Update the stacked widget to show the correct saver options widget

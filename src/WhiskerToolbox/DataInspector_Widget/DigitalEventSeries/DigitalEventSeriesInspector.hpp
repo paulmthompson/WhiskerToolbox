@@ -10,10 +10,10 @@
  * conforming to the IDataInspector interface.
  * 
  * ## Features
- * - Event table with timestamps
  * - Add/remove events
  * - Export to CSV
- * - Frame navigation via click
+ * 
+ * Note: Event table view is provided by DigitalEventSeriesDataView in the view panel.
  * 
  * @see DigitalEventSeries_Widget for the underlying implementation
  * @see BaseInspector for the base class
