@@ -58,3 +58,12 @@ The UI for this project is located in src/WhiskerToolbox (legacy name). Most wid
 - DataViewer_Widget/DataViewer - generic data viewer for time series data (analog, digital)
 - Analysis_Dashboard - Collection of widgets for plotting. These include spatial overlay widget (collapsing all point data, mask data, and line data onto a single view), scatter plot widget, event plot widget etc. The user can open as many plots as they want.
 - DataTransform_Widget - UI for executing data transforms
+- DataImport_Widget - unified data import widget supporting all data types (Lines, Masks, Points, AnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries, TensorData). Opens via Modules → Data Import menu. Uses EditorState pattern for state management and responds to SelectionContext for passive data type awareness.
+- DataExport_Widget (formerly IO_Widgets) - data export/saving functionality for supported data types
+
+The UI follows the EditorState architecture pattern where each widget type has:
+- A State class (EditorState subclass) for serializable state management
+- A Registration module that registers the widget type with EditorRegistry
+- Integration with SelectionContext for inter-widget communication
+- Zone-based placement using ZoneManager (Left, Center, Right, Bottom zones)
+

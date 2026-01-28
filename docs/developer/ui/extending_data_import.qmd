@@ -1,0 +1,374 @@
+---
+title: "Extending DataImport_Widget"
+format: html
+---
+
+# Extending DataImport_Widget
+
+This guide explains how to add support for new data types or file formats in the DataImport_Widget system.
+
+## Overview
+
+The DataImport_Widget provides a unified interface for importing all supported data types. It uses a registry pattern (`DataImportTypeRegistry`) that maps data type strings to widget factories, enabling:
+
+- **Self-registration**: Each import widget registers itself at static initialization time
+- **Lazy loading**: Widgets are created on-demand when their data type is selected
+- **Passive awareness**: The widget responds to `SelectionContext::dataFocusChanged` to show the appropriate loader
+
+## Architecture
+
+```
+DataImport_Widget (main container)
+    └── QStackedWidget
+            ├── LineImport_Widget
+            │       └── HDF5LineImport_Widget
+            │       └── CSVLineImport_Widget
+            │       └── BinaryLineImport_Widget
+            │       └── LMDBLineImport_Widget
+            ├── MaskImport_Widget
+            │       └── HDF5MaskImport_Widget
+            │       └── ImageMaskImport_Widget
+            ├── PointImport_Widget
+            │       └── CSVPointImport_Widget
+            ├── AnalogImport_Widget
+            │       └── CSVAnalogImport_Widget
+            │       └── BinaryAnalogImport_Widget
+            ├── DigitalEventImport_Widget
+            │       └── CSVDigitalEventImport_Widget
+            ├── DigitalIntervalImport_Widget
+            │       └── CSVDigitalIntervalImport_Widget
+            │       └── BinaryDigitalIntervalImport_Widget
+            └── TensorImport_Widget (NumPy format)
+```
+
+## Adding a New File Format to an Existing Data Type
+
+### Step 1: Create the Format-Specific Widget
+
+Create the widget in the appropriate subdirectory:
+
+```
+src/WhiskerToolbox/DataImport_Widget/
+└── YourDataType/
+    └── NewFormat/
+        ├── NewFormatYourDataImport_Widget.hpp
+        ├── NewFormatYourDataImport_Widget.cpp
+        └── NewFormatYourDataImport_Widget.ui
+```
+
+### Step 2: Implement the Widget
+
+```cpp
+// NewFormatYourDataImport_Widget.hpp
+#ifndef NEW_FORMAT_YOUR_DATA_IMPORT_WIDGET_HPP
+#define NEW_FORMAT_YOUR_DATA_IMPORT_WIDGET_HPP
+
+#include <QWidget>
+#include <memory>
+
+class DataManager;
+
+namespace Ui {
+class NewFormatYourDataImport_Widget;
+}
+
+class NewFormatYourDataImport_Widget : public QWidget {
+    Q_OBJECT
+
+public:
+    explicit NewFormatYourDataImport_Widget(
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent = nullptr);
+    ~NewFormatYourDataImport_Widget() override;
+
+signals:
+    // Emitted when import completes successfully
+    void importCompleted(QString const & data_key, QString const & data_type);
+    
+    // Emitted when import fails
+    void importFailed(QString const & error_message);
+
+private slots:
+    void _onSelectFileClicked();
+    void _onImportClicked();
+
+private:
+    std::unique_ptr<Ui::NewFormatYourDataImport_Widget> _ui;
+    std::shared_ptr<DataManager> _data_manager;
+};
+
+#endif // NEW_FORMAT_YOUR_DATA_IMPORT_WIDGET_HPP
+```
+
+### Step 3: Add to Parent Import Widget
+
+In the parent widget (e.g., `YourDataImport_Widget`), add the new format:
+
+```cpp
+// In YourDataImport_Widget constructor
+auto* new_format_widget = new NewFormatYourDataImport_Widget(_data_manager, this);
+_ui->format_stacked_widget->addWidget(new_format_widget);
+
+// Connect signals
+connect(new_format_widget, &NewFormatYourDataImport_Widget::importCompleted,
+        this, &YourDataImport_Widget::importCompleted);
+```
+
+### Step 4: Update CMakeLists.txt
+
+```cmake
+# In DataImport_Widget/CMakeLists.txt
+set(DATA_IMPORT_WIDGET_SOURCES
+    # ... existing files ...
+    
+    YourDataType/NewFormat/NewFormatYourDataImport_Widget.cpp
+    YourDataType/NewFormat/NewFormatYourDataImport_Widget.hpp
+    YourDataType/NewFormat/NewFormatYourDataImport_Widget.ui
+)
+```
+
+## Adding Support for a New Data Type
+
+### Step 1: Create the Directory Structure
+
+```
+src/WhiskerToolbox/DataImport_Widget/
+└── NewDataType/
+    ├── NewDataTypeImport_Widget.hpp
+    ├── NewDataTypeImport_Widget.cpp
+    ├── NewDataTypeImport_Widget.ui
+    └── SomeFormat/
+        ├── SomeFormatNewDataImport_Widget.hpp
+        ├── SomeFormatNewDataImport_Widget.cpp
+        └── SomeFormatNewDataImport_Widget.ui
+```
+
+### Step 2: Create the Parent Import Widget
+
+```cpp
+// NewDataTypeImport_Widget.hpp
+#ifndef NEW_DATA_TYPE_IMPORT_WIDGET_HPP
+#define NEW_DATA_TYPE_IMPORT_WIDGET_HPP
+
+#include <QWidget>
+#include <memory>
+
+class DataManager;
+
+namespace Ui {
+class NewDataTypeImport_Widget;
+}
+
+class NewDataTypeImport_Widget : public QWidget {
+    Q_OBJECT
+
+public:
+    explicit NewDataTypeImport_Widget(
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent = nullptr);
+    ~NewDataTypeImport_Widget() override;
+
+signals:
+    void importCompleted(QString const & data_key, QString const & data_type);
+
+private:
+    std::unique_ptr<Ui::NewDataTypeImport_Widget> _ui;
+    std::shared_ptr<DataManager> _data_manager;
+};
+
+#endif
+```
+
+### Step 3: Register with DataImportTypeRegistry
+
+Add self-registration using a static initializer:
+
+```cpp
+// NewDataTypeImport_Widget.cpp
+#include "NewDataTypeImport_Widget.hpp"
+#include "DataImportTypeRegistry.hpp"
+
+// Static registration - executes before main()
+namespace {
+struct NewDataTypeImportRegistrar {
+    NewDataTypeImportRegistrar() {
+        DataImportTypeRegistry::instance().registerType(
+            QStringLiteral("NewDataType"),  // Must match DataManager type name
+            ImportWidgetFactory{
+                .display_name = QStringLiteral("New Data Type"),
+                .create_widget = [](std::shared_ptr<DataManager> dm, QWidget* parent) 
+                    -> QWidget* {
+                    return new NewDataTypeImport_Widget(dm, parent);
+                }
+            });
+    }
+} new_data_type_import_registrar;
+}
+
+NewDataTypeImport_Widget::NewDataTypeImport_Widget(
+    std::shared_ptr<DataManager> data_manager,
+    QWidget * parent)
+    : QWidget(parent)
+    , _ui(std::make_unique<Ui::NewDataTypeImport_Widget>())
+    , _data_manager(std::move(data_manager))
+{
+    _ui->setupUi(this);
+    // ... setup format-specific widgets
+}
+```
+
+### Step 4: Update CMakeLists.txt
+
+```cmake
+set(DATA_IMPORT_WIDGET_SOURCES
+    # ... existing files ...
+    
+    NewDataType/NewDataTypeImport_Widget.cpp
+    NewDataType/NewDataTypeImport_Widget.hpp
+    NewDataType/NewDataTypeImport_Widget.ui
+    NewDataType/SomeFormat/SomeFormatNewDataImport_Widget.cpp
+    NewDataType/SomeFormat/SomeFormatNewDataImport_Widget.hpp
+    NewDataType/SomeFormat/SomeFormatNewDataImport_Widget.ui
+)
+```
+
+## Best Practices
+
+### Signal Conventions
+
+All import widgets should emit:
+
+```cpp
+signals:
+    // On successful import - key is the DataManager key, type is the data type
+    void importCompleted(QString const & data_key, QString const & data_type);
+    
+    // On failure - provide meaningful error message
+    void importFailed(QString const & error_message);
+```
+
+### Using LoaderRegistry
+
+For file format handling, use the centralized `LoaderRegistry`:
+
+```cpp
+#include "DataManager/Loaders/LoaderRegistry.hpp"
+
+void MyImportWidget::_loadFile(QString const & filepath) {
+    auto loader_result = LoaderRegistry::tryLoad(
+        filepath.toStdString(),
+        IODataType::LineData,      // Target data type
+        "my_data_key",             // Key in DataManager
+        _loader_config,            // nlohmann::json config
+        _data_manager.get()
+    );
+    
+    if (loader_result.success) {
+        emit importCompleted(
+            QString::fromStdString(loader_result.key),
+            "LineData"
+        );
+    } else {
+        emit importFailed(QString::fromStdString(loader_result.error_message));
+    }
+}
+```
+
+### Coordinate Scaling
+
+For spatial data types (Points, Lines, Masks), use `Scaling_Widget`:
+
+```cpp
+#include "Scaling_Widget/Scaling_Widget.hpp"
+
+// In your widget
+_scaling_widget = new Scaling_Widget(this);
+_ui->scaling_layout->addWidget(_scaling_widget);
+
+// When loading
+auto image_size = _scaling_widget->getImageSize();
+// Apply scaling to coordinates before storing in DataManager
+```
+
+### State Persistence
+
+The `DataImportWidgetState` tracks:
+- Last used directory (for file dialogs)
+- Per-type format preferences
+- Currently selected data type
+
+Access via `DataImport_Widget::state()` if needed.
+
+## Testing
+
+Create tests in `tests/WhiskerToolbox/DataImport_Widget/`:
+
+```cpp
+// NewDataTypeImport.test.cpp
+#include "DataImport_Widget/NewDataType/NewDataTypeImport_Widget.hpp"
+#include <catch2/catch_test_macros.hpp>
+
+TEST_CASE("NewDataTypeImport_Widget registration", "[NewDataTypeImport]") {
+    auto& registry = DataImportTypeRegistry::instance();
+    
+    // Note: Static registration may not work in test binaries
+    // Register manually for testing
+    registry.registerType("NewDataType", ImportWidgetFactory{
+        .display_name = "New Data Type",
+        .create_widget = [](auto dm, auto parent) {
+            return new NewDataTypeImport_Widget(dm, parent);
+        }
+    });
+    
+    REQUIRE(registry.hasType("NewDataType"));
+    REQUIRE(registry.displayName("NewDataType") == "New Data Type");
+}
+```
+
+## File Structure Summary
+
+```
+src/WhiskerToolbox/DataImport_Widget/
+├── CMakeLists.txt                    # Build configuration
+├── DataImport_Widget.hpp/cpp/ui      # Main container
+├── DataImportWidgetState.hpp/cpp     # EditorState subclass
+├── DataImportTypeRegistry.hpp/cpp    # Registry singleton
+├── DataImportWidgetRegistration.hpp/cpp  # EditorRegistry integration
+│
+├── Points/
+│   ├── PointImport_Widget.hpp/cpp/ui
+│   └── CSV/
+│       └── CSVPointImport_Widget.hpp/cpp/ui
+│
+├── Lines/
+│   ├── LineImport_Widget.hpp/cpp/ui
+│   ├── HDF5/
+│   ├── CSV/
+│   ├── Binary/
+│   └── LMDB/
+│
+├── Masks/
+│   ├── MaskImport_Widget.hpp/cpp/ui
+│   ├── HDF5/
+│   └── Image/
+│
+├── AnalogTimeSeries/
+│   ├── AnalogImport_Widget.hpp/cpp/ui
+│   ├── CSV/
+│   └── Binary/
+│
+├── DigitalTimeSeries/
+│   ├── DigitalEventImport_Widget.hpp/cpp/ui
+│   ├── DigitalIntervalImport_Widget.hpp/cpp/ui
+│   ├── CSV/
+│   └── Binary/
+│
+└── Tensors/
+    └── TensorImport_Widget.hpp/cpp/ui
+```
+
+## See Also
+
+- [DataImport_Widget_Roadmap.md](DataImport_Widget_Roadmap.md) - Full refactoring history
+- [EditorState Architecture](editor_state_refactoring_roadmap.md) - State management patterns
+- [DataManager Loaders](DataManager/loaders.qmd) - Backend loading infrastructure

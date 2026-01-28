@@ -9,8 +9,33 @@ Neuralyzer supports loading diverse data types commonly used in systems neurosci
 
 Data can be loaded through:
 
-1. **GUI menus** - Interactive file selection for quick loading
+1. **Data Import Widget** - Unified interface for importing all data types via **Modules → Data Import**
 2. **JSON configuration files** - Reproducible, scriptable data loading for batch workflows
+
+## Using the Data Import Widget
+
+The **Data Import Widget** provides a unified interface for loading all supported data types. Access it via **Modules → Data Import** from the main menu.
+
+### Features
+
+- **Type Selection**: Choose the data type you want to import (Lines, Masks, Points, Analog, Events, Intervals, Tensors)
+- **Format Selection**: Each data type supports multiple file formats (CSV, HDF5, Binary, LMDB, etc.)
+- **Preview**: Many loaders show a preview of the data before importing
+- **Scaling Options**: Apply coordinate scaling for spatial data types
+- **State Persistence**: The widget remembers your last used directory and format preferences
+
+### Workflow
+
+1. Open the widget via **Modules → Data Import**
+2. Select your data type from the dropdown
+3. Choose the appropriate file format
+4. Configure format-specific options (columns, datasets, scaling)
+5. Click "Import" to load the data into the DataManager
+
+::: {.callout-tip}
+## Passive Type Awareness
+When you select a data object in the DataManager, the Data Import Widget automatically switches to show the appropriate import options for that data type.
+:::
 
 ## Media Data
 
