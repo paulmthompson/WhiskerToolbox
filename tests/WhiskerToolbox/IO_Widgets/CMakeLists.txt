@@ -15,7 +15,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_io_widgets
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/IO_Widgets/Lines/Line_Loader_Widget.test.cpp
+  #  ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/IO_Widgets/Lines/Line_Loader_Widget.test.cpp
 )
 
 set_source_files_properties(${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/IO_Widgets/Lines/Line_Loader_Widget.test.cpp PROPERTIES AUTOMOC TRUE)

@@ -91,13 +91,19 @@ set(DATA_IMPORT_WIDGET_SOURCES
     Lines/CSV/CSVLineImport_Widget.cpp
     Lines/CSV/CSVLineImport_Widget.hpp
     Lines/CSV/CSVLineImport_Widget.ui
-    Lines/Binary/BinaryLineImport_Widget.cpp
-    Lines/Binary/BinaryLineImport_Widget.hpp
-    Lines/Binary/BinaryLineImport_Widget.ui
     Lines/LMDB/LMDBLineImport_Widget.cpp
     Lines/LMDB/LMDBLineImport_Widget.hpp
     Lines/LMDB/LMDBLineImport_Widget.ui
 )
+
+if(ENABLE_CAPNPROTO)
+    list(APPEND DATA_IMPORT_WIDGET_SOURCES
+        # CapnProto-dependent Binary import widgets
+    Lines/Binary/BinaryLineImport_Widget.cpp
+    Lines/Binary/BinaryLineImport_Widget.hpp
+    Lines/Binary/BinaryLineImport_Widget.ui
+    )
+endif()
 
 add_library(DataImport_Widget STATIC ${DATA_IMPORT_WIDGET_SOURCES})
 

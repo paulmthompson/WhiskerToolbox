@@ -47,7 +47,7 @@ add_subdirectory(Analysis_Dashboard)
 
 add_subdirectory(Scaling_Widget) # Qt, CoreGeometry - shared widget for image scaling
 
-add_subdirectory(IO_Widgets) # Qt, DataManager, Scaling_Widget
+add_subdirectory(DataExport_Widget) # Qt, DataManager, Scaling_Widget
 
 # Qt, DataManager, EditorState, Scaling_Widget - data import UI
 add_subdirectory(DataImport_Widget)
@@ -201,7 +201,7 @@ target_link_libraries(WhiskerToolbox PRIVATE MediaExport)
 target_link_libraries(WhiskerToolbox PRIVATE EditorState)
 target_link_libraries(WhiskerToolbox PRIVATE Collapsible_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ColorPicker_Widget)
-target_link_libraries(WhiskerToolbox PRIVATE IO_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE DataExport_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataImport_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataViewer_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Widget)

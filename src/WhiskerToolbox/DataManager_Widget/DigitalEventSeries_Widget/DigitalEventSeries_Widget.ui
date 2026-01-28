@@ -176,7 +176,7 @@
   <customwidget>
    <class>CSVEventSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp</header>
+   <header>DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

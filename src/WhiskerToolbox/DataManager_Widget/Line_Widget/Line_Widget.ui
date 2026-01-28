@@ -275,13 +275,13 @@
   <customwidget>
    <class>CSVLineSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp</header>
+   <header>DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BinaryLineSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp</header>
+   <header>DataExport_Widget/Lines/Binary/BinaryLineSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

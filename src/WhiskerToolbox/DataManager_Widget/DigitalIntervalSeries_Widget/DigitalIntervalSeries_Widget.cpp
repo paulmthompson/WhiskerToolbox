@@ -5,7 +5,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
+#include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
 #include "IntervalTableModel.hpp"
 
 #include <QAction>

@@ -16,8 +16,8 @@
 
 //#include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
-#include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
-#include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
+#include "DataExport_Widget/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
+#include "DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
 

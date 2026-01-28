@@ -288,13 +288,13 @@
   <customwidget>
    <class>HDF5MaskSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp</header>
+   <header>DataExport_Widget/Masks/HDF5/HDF5MaskSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ImageMaskSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp</header>
+   <header>DataExport_Widget/Masks/Image/ImageMaskSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

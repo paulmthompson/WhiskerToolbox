@@ -18,12 +18,6 @@
 #include "EditorState/SelectionContext.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
-#include "IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp"
-#include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
-#include "IO_Widgets/Lines/Line_Loader_Widget.hpp"
-#include "IO_Widgets/Masks/Mask_Loader_Widget.hpp"
-#include "IO_Widgets/Points/Point_Loader_Widget.hpp"
-#include "IO_Widgets/Tensors/Tensor_Loader_Widget.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
@@ -245,12 +239,6 @@ void MainWindow::_createActions() {
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
     connect(ui->actionNew_Media_Widget, &QAction::triggered, this, &MainWindow::openNewMediaWidget);
     connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
-    connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
-    connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
-    connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
-    connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
-    connect(ui->actionLoad_Events, &QAction::triggered, this, &MainWindow::openEventLoaderWidget);
-    connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
     connect(ui->actionGroup_Management, &QAction::triggered, this, &MainWindow::openGroupManagement);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
@@ -632,118 +620,6 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
     // The event filter handles most key events now
     // This is mainly for direct main window key events
     QMainWindow::keyPressEvent(event);
-}
-
-//=================================
-// Loader Widgets
-//=================================
-
-void MainWindow::openPointLoaderWidget() {
-    std::string const key = "PointLoader_widget";
-
-    if (!_widgets.contains(key)) {
-        auto PointLoaderWidget = std::make_unique<Point_Loader_Widget>(
-                _data_manager,
-                this);
-
-        PointLoaderWidget->setObjectName(key);
-        registerDockWidget(key, PointLoaderWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(PointLoaderWidget);
-    }
-
-    auto ptr = dynamic_cast<Point_Loader_Widget *>(_widgets[key].get());
-
-    showDockWidget(key);
-}
-
-void MainWindow::openMaskLoaderWidget() {
-    std::string const key = "MaskLoader_widget";
-
-    if (!_widgets.contains(key)) {
-        auto MaskLoaderWidget = std::make_unique<Mask_Loader_Widget>(
-                _data_manager,
-                this);
-
-        MaskLoaderWidget->setObjectName(key);
-        registerDockWidget(key, MaskLoaderWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(MaskLoaderWidget);
-    }
-
-    auto ptr = dynamic_cast<Mask_Loader_Widget *>(_widgets[key].get());
-
-    showDockWidget(key);
-}
-
-void MainWindow::openLineLoaderWidget() {
-    std::string const key = "LineLoader_widget";
-
-    if (!_widgets.contains(key)) {
-        auto LineLoaderWidget = std::make_unique<Line_Loader_Widget>(
-                _data_manager,
-                this);
-
-        LineLoaderWidget->setObjectName(key);
-        registerDockWidget(key, LineLoaderWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(LineLoaderWidget);
-    }
-
-    auto ptr = dynamic_cast<Line_Loader_Widget *>(_widgets[key].get());
-
-    showDockWidget(key);
-}
-
-void MainWindow::openIntervalLoaderWidget() {
-    std::string const key = "IntervalLoader_widget";
-
-    if (!_widgets.contains(key)) {
-        auto DigitalIntervalLoaderWidget = std::make_unique<Digital_Interval_Loader_Widget>(
-                _data_manager,
-                this);
-
-        DigitalIntervalLoaderWidget->setObjectName(key);
-        registerDockWidget(key, DigitalIntervalLoaderWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(DigitalIntervalLoaderWidget);
-    }
-
-    auto ptr = dynamic_cast<Digital_Interval_Loader_Widget *>(_widgets[key].get());
-
-    showDockWidget(key);
-}
-
-void MainWindow::openEventLoaderWidget() {
-    std::string const key = "EventLoader_widget";
-
-    if (!_widgets.contains(key)) {
-        auto DigitalEventLoaderWidget = std::make_unique<Digital_Event_Loader_Widget>(
-                _data_manager,
-                this);
-
-        DigitalEventLoaderWidget->setObjectName(key);
-        registerDockWidget(key, DigitalEventLoaderWidget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(DigitalEventLoaderWidget);
-    }
-
-    auto ptr = dynamic_cast<Digital_Event_Loader_Widget *>(_widgets[key].get());
-
-    showDockWidget(key);
-}
-
-void MainWindow::openTensorLoaderWidget() {
-    std::string const key = "TensorLoader_widget";
-
-    if (!_widgets.contains(key)) {
-        auto tensor_loader_widget = std::make_unique<Tensor_Loader_Widget>(
-                _data_manager,
-                this);
-
-        tensor_loader_widget->setObjectName(key);
-        registerDockWidget(key, tensor_loader_widget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(tensor_loader_widget);
-    }
-
-    auto ptr = dynamic_cast<Tensor_Loader_Widget *>(_widgets[key].get());
-
-    showDockWidget(key);
 }
 
 //=================================

@@ -262,7 +262,7 @@
   <customwidget>
    <class>CSVPointSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp</header>
+   <header>DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

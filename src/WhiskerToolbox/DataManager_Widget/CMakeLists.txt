@@ -80,7 +80,7 @@ target_link_libraries(DataManager_Widget PRIVATE DataManager DataManagerIO Tenso
 target_link_libraries(DataManager_Widget PRIVATE EditorState)
 target_link_libraries(DataManager_Widget PRIVATE MediaExport)
 target_link_libraries(DataManager_Widget PRIVATE Feature_Table_Widget)
-target_link_libraries(DataManager_Widget PRIVATE IO_Widget)
+target_link_libraries(DataManager_Widget PRIVATE DataExport_Widget)
 target_link_libraries(DataManager_Widget PRIVATE Collapsible_Widget)
 target_link_libraries(DataManager_Widget PRIVATE Entity)
 target_link_libraries(DataManager_Widget PRIVATE GroupManagementWidget)

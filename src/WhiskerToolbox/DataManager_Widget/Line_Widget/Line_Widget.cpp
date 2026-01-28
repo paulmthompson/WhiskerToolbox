@@ -10,8 +10,8 @@
 #include "LineTableModel.hpp"
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp"
-#include "IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp"
+#include "DataExport_Widget/Lines/Binary/BinaryLineSaver_Widget.hpp"
+#include "DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 // Media export functions

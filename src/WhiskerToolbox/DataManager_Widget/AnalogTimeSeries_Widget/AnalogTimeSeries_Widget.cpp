@@ -4,7 +4,7 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 #include "DataManager/DataManager.hpp"
-#include "IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
+#include "DataExport_Widget/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
 
 #include <QComboBox>
 #include <QLineEdit>
