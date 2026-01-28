@@ -2,6 +2,8 @@
 #include "ui_DataInspectorPropertiesWidget.h"
 
 #include "DataInspectorState.hpp"
+#include "Inspectors/BaseInspector.hpp"
+#include "Inspectors/InspectorFactory.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -121,7 +123,7 @@ void DataInspectorPropertiesWidget::_onStateChanged() {
 void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) {
     std::string const key_std = key.toStdString();
     
-    if (key_std == _current_key) {
+    if (key_std == _current_key && _current_inspector) {
         return;  // Already showing this data
     }
 
@@ -149,18 +151,49 @@ void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) 
     QString type_name = QString::fromStdString(convert_data_type_to_string(data_type));
     ui->dataTypeLabel->setText(type_name);
 
-    // TODO: Phase 2 - Create type-specific inspector widgets
-    // For now, show a placeholder message
-    auto * placeholder = new QLabel(
-        tr("Inspector for %1\n\nType: %2\n\n(Type-specific controls coming in Phase 2)")
-            .arg(key)
-            .arg(type_name),
+    // Create type-specific inspector using the factory
+    _createInspectorForType(data_type);
+
+    // Set the active key on the inspector
+    if (_current_inspector) {
+        _current_inspector->setActiveKey(key_std);
+    }
+}
+
+void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
+    // Check if we already have the right inspector type
+    if (_current_inspector && _current_type == type) {
+        return;
+    }
+
+    // Clear any existing inspector
+    _clearInspector();
+
+    // Create the appropriate inspector using the factory
+    _current_inspector = InspectorFactory::createInspector(
+        type,
+        _data_manager,
+        _group_manager,
         this);
-    placeholder->setAlignment(Qt::AlignCenter);
-    placeholder->setWordWrap(true);
-    
-    ui->contentLayout->addWidget(placeholder);
-    _current_inspector = placeholder;
+
+    if (_current_inspector) {
+        _current_type = type;
+        ui->contentLayout->addWidget(_current_inspector.get());
+
+        // Connect the inspector's frameSelected signal
+        connect(_current_inspector.get(), &BaseInspector::frameSelected,
+                this, &DataInspectorPropertiesWidget::frameSelected);
+    } else {
+        // No inspector available for this type - show placeholder
+        _current_type = DM_DataType::Unknown;
+        auto * placeholder = new QLabel(
+            tr("No inspector available for type: %1")
+                .arg(QString::fromStdString(convert_data_type_to_string(type))),
+            this);
+        placeholder->setAlignment(Qt::AlignCenter);
+        placeholder->setWordWrap(true);
+        ui->contentLayout->addWidget(placeholder);
+    }
 }
 
 void DataInspectorPropertiesWidget::_updateHeaderDisplay() {
@@ -174,8 +207,15 @@ void DataInspectorPropertiesWidget::_updateHeaderDisplay() {
 
 void DataInspectorPropertiesWidget::_clearInspector() {
     if (_current_inspector) {
-        ui->contentLayout->removeWidget(_current_inspector);
-        _current_inspector->deleteLater();
-        _current_inspector = nullptr;
+        // Disconnect signals
+        disconnect(_current_inspector.get(), nullptr, this, nullptr);
+        
+        // Remove callbacks from data
+        _current_inspector->removeCallbacks();
+        
+        // Remove from layout and delete
+        ui->contentLayout->removeWidget(_current_inspector.get());
+        _current_inspector.reset();
+        _current_type = DM_DataType::Unknown;
     }
 }

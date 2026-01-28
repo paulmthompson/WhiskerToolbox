@@ -9,49 +9,6 @@ set(DATA_MANAGER_WIDGET_SOURCES
         DataManagerWidgetRegistration.hpp
         DataManagerWidgetRegistration.cpp
 
-        Mask_Widget/Mask_Widget.hpp
-        Mask_Widget/Mask_Widget.cpp
-        Mask_Widget/Mask_Widget.ui
-        Mask_Widget/MaskTableModel.cpp
-        Mask_Widget/MaskTableModel.hpp
-
-        Point_Widget/Point_Widget.hpp
-        Point_Widget/Point_Widget.cpp
-        Point_Widget/Point_Widget.ui
-        Point_Widget/PointTableModel.cpp
-        Point_Widget/PointTableModel.hpp
-
-        Line_Widget/Line_Widget.hpp
-        Line_Widget/Line_Widget.cpp
-        Line_Widget/Line_Widget.ui
-        Line_Widget/LineTableModel.cpp
-        Line_Widget/LineTableModel.hpp
-
-        Image_Widget/Image_Widget.hpp
-        Image_Widget/Image_Widget.cpp
-        Image_Widget/Image_Widget.ui
-        Image_Widget/ImageTableModel.hpp
-        Image_Widget/ImageTableModel.cpp
-
-        AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp
-        AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.cpp
-        AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.ui
-
-        DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp
-        DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.cpp
-        DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.ui
-        DigitalIntervalSeries_Widget/IntervalTableModel.hpp
-
-        DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp
-        DigitalEventSeries_Widget/DigitalEventSeries_Widget.cpp
-        DigitalEventSeries_Widget/DigitalEventSeries_Widget.ui
-        DigitalEventSeries_Widget/EventTableModel.hpp
-
-        Tensor_Widget/Tensor_Widget.hpp
-        Tensor_Widget/Tensor_Widget.cpp
-        Tensor_Widget/Tensor_Widget.ui
-        Tensor_Widget/TensorTableModel.hpp
-
         OutputDirectoryWidget/OutputDirectoryWidget.hpp
         OutputDirectoryWidget/OutputDirectoryWidget.ui
         OutputDirectoryWidget/OutputDirectoryWidget.cpp

@@ -22,6 +22,8 @@
  * @see DataInspectorViewWidget for the view component
  */
 
+#include "DataManager/DataManagerFwd.hpp"  // For DM_DataType
+
 #include <QWidget>
 
 #include <memory>
@@ -104,6 +106,7 @@ private:
     void _updateInspectorForKey(QString const & key);
     void _updateHeaderDisplay();
     void _clearInspector();
+    void _createInspectorForType(DM_DataType type);
 
     std::unique_ptr<Ui::DataInspectorPropertiesWidget> ui;
     std::shared_ptr<DataManager> _data_manager;
@@ -111,8 +114,10 @@ private:
     SelectionContext * _selection_context{nullptr};
     GroupManager * _group_manager{nullptr};
     
-    QWidget * _current_inspector{nullptr};
+    // Current inspector (type-specific, created by InspectorFactory)
+    std::unique_ptr<class BaseInspector> _current_inspector;
     std::string _current_key;
+    DM_DataType _current_type{DM_DataType::Unknown};
 };
 
 #endif // DATA_INSPECTOR_PROPERTIES_WIDGET_HPP

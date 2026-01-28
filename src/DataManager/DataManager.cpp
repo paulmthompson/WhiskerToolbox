@@ -344,14 +344,16 @@ bool DataManager::removeCallbackFromData(std::string const & key, int callback_i
     return false;
 }
 
-void DataManager::addObserver(ObserverCallback callback) {
-    _observers.push_back(std::move(callback));
+int DataManager::addObserver(ObserverCallback callback) {
+    return _manager_observers.addObserver(std::move(callback));
+}
+
+void DataManager::removeObserver(int callback_id) {
+    _manager_observers.removeObserver(callback_id);
 }
 
 void DataManager::_notifyObservers() {
-    for (auto & observer: _observers) {
-        observer();
-    }
+    _manager_observers.notifyObservers();
 }
 
 // ===== Table Registry accessors =====

@@ -9,13 +9,10 @@
  * currently inspected data item. This widget shares state with
  * DataInspectorPropertiesWidget.
  * 
- * ## Phase 1 Implementation
+ * ## Phase 3 Implementation
  * 
- * Initially, this widget shows a placeholder message. In Phase 3, it will
- * be populated with:
- * - Data tables (migrated from type-specific widgets)
- * - Visual representations
- * - Interactive data editing
+ * This widget uses ViewFactory to create type-specific data views (tables)
+ * based on the data type being inspected.
  * 
  * ## Zone Placement
  * This widget is placed in the Center zone.
@@ -23,7 +20,10 @@
  * 
  * @see DataInspectorState for state management
  * @see DataInspectorPropertiesWidget for the properties component
+ * @see ViewFactory for creating type-specific views
  */
+
+#include "DataManager/DataManagerFwd.hpp"  // For DM_DataType
 
 #include <QWidget>
 
@@ -32,6 +32,7 @@
 
 class DataManager;
 class DataInspectorState;
+class BaseDataView;
 
 namespace Ui {
 class DataInspectorViewWidget;
@@ -43,14 +44,15 @@ class DataInspectorViewWidget;
  * This widget displays data tables and visualizations for the inspected item.
  * It shares state with DataInspectorPropertiesWidget.
  * 
- * ## Phase 1 (Current)
- * Shows a placeholder message indicating that custom views will be added later.
- * 
- * ## Phase 3 (Future)
- * Will contain:
- * - Type-specific data tables
- * - Visual representations
- * - Frame navigation
+ * Uses ViewFactory to create type-specific views:
+ * - PointDataView for Points
+ * - LineDataView for Lines
+ * - MaskDataView for Masks
+ * - ImageDataView for Images/Video
+ * - AnalogTimeSeriesDataView for AnalogTimeSeries
+ * - DigitalEventSeriesDataView for DigitalEventSeries
+ * - DigitalIntervalSeriesDataView for DigitalIntervalSeries
+ * - TensorDataView for Tensor
  */
 class DataInspectorViewWidget : public QWidget {
     Q_OBJECT
@@ -79,6 +81,12 @@ public:
      */
     [[nodiscard]] std::shared_ptr<DataInspectorState> state() const { return _state; }
 
+    /**
+     * @brief Get the current data view widget
+     * @return Pointer to current view, or nullptr if none
+     */
+    [[nodiscard]] BaseDataView * currentView() const { return _current_data_view.get(); }
+
 signals:
     /**
      * @brief Emitted when a frame is selected in the view
@@ -92,14 +100,18 @@ private slots:
 private:
     void _setupUi();
     void _updateViewForKey(QString const & key);
+    void _createViewForType(DM_DataType type);
     void _clearView();
 
     std::unique_ptr<Ui::DataInspectorViewWidget> ui;
     std::shared_ptr<DataManager> _data_manager;
     std::shared_ptr<DataInspectorState> _state;
     
-    QWidget * _current_view{nullptr};
+    // Current data view (type-specific, created by ViewFactory)
+    std::unique_ptr<BaseDataView> _current_data_view;
+    QWidget * _placeholder_widget{nullptr};
     std::string _current_key;
+    DM_DataType _current_type{DM_DataType::Unknown};
 };
 
 #endif // DATA_INSPECTOR_VIEW_WIDGET_HPP

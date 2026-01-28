@@ -4,6 +4,7 @@
 #include "DataManagerTypes.hpp"
 #include "datamanager_export.h"
 
+#include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -190,7 +191,9 @@ public:
     * @note Unlike addCallbackToData, this function doesn't return an ID,
     *       so callbacks cannot be selectively removed later
     */
-    void addObserver(ObserverCallback callback);
+    int addObserver(ObserverCallback callback);
+
+    void removeObserver(int callback_id);
 
     /**
     * @brief Get all registered data keys
@@ -370,7 +373,7 @@ public:
 private:
     std::unordered_map<TimeKey, std::shared_ptr<TimeFrame>> _times;
 
-    std::vector<ObserverCallback> _observers;
+    ObserverData _manager_observers; 
 
     std::unordered_map<std::string, DataTypeVariant>
             _data;

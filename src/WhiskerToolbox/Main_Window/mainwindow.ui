@@ -68,6 +68,7 @@
     <addaction name="actionData_Import"/>
     <addaction name="actionTable_Designer"/>
     <addaction name="actionData_Manager"/>
+    <addaction name="actionData_Inspector"/>
     <addaction name="actionGroup_Management"/>
     <addaction name="actionBatch_Processing"/>
     <addaction name="actionWhisker_Tracking"/>
@@ -236,6 +237,11 @@
   <action name="actionZone_Layout_Manager">
    <property name="text">
     <string>Zone Layout Manager</string>
+   </property>
+  </action>
+  <action name="actionData_Inspector">
+   <property name="text">
+    <string>Data Inspector</string>
    </property>
   </action>
  </widget>

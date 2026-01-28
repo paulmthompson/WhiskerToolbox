@@ -2,6 +2,8 @@
 #include "ui_DataInspectorViewWidget.h"
 
 #include "DataInspectorState.hpp"
+#include "Inspectors/BaseDataView.hpp"
+#include "Inspectors/ViewFactory.hpp"
 
 #include "DataManager/DataManager.hpp"
 
@@ -18,7 +20,9 @@ DataInspectorViewWidget::DataInspectorViewWidget(
     _setupUi();
 }
 
-DataInspectorViewWidget::~DataInspectorViewWidget() = default;
+DataInspectorViewWidget::~DataInspectorViewWidget() {
+    _clearView();
+}
 
 void DataInspectorViewWidget::setState(std::shared_ptr<DataInspectorState> state) {
     // Disconnect from old state
@@ -48,7 +52,7 @@ void DataInspectorViewWidget::_onInspectedKeyChanged(QString const & key) {
 void DataInspectorViewWidget::_updateViewForKey(QString const & key) {
     std::string const key_std = key.toStdString();
     
-    if (key_std == _current_key) {
+    if (key_std == _current_key && _current_data_view) {
         return;  // Already showing this data
     }
 
@@ -70,35 +74,76 @@ void DataInspectorViewWidget::_updateViewForKey(QString const & key) {
         auto * label = new QLabel(tr("Data not found: %1").arg(key), this);
         label->setAlignment(Qt::AlignCenter);
         ui->contentLayout->addWidget(label);
-        _current_view = label;
+        _placeholder_widget = label;
         return;
     }
 
     // Get the data type
     auto const data_type = _data_manager->getType(key_std);
-    QString type_name = QString::fromStdString(convert_data_type_to_string(data_type));
-
-    // Phase 1: Show placeholder for data view
-    // Phase 3 will add type-specific views (tables, visualizations)
-    auto * placeholder = new QLabel(
-        tr("Data View: %1\n\nType: %2\n\n"
-           "Data tables and visualizations will be added in Phase 3.\n\n"
-           "For now, use the Properties panel on the right for data inspection.")
-            .arg(key)
-            .arg(type_name),
-        this);
-    placeholder->setAlignment(Qt::AlignCenter);
-    placeholder->setWordWrap(true);
-    placeholder->setStyleSheet("color: gray; padding: 20px;");
     
-    ui->contentLayout->addWidget(placeholder);
-    _current_view = placeholder;
+    // Try to create a type-specific view using the factory
+    _createViewForType(data_type);
+
+    // Set the active key on the view
+    if (_current_data_view) {
+        _current_data_view->setActiveKey(key_std);
+    }
+}
+
+void DataInspectorViewWidget::_createViewForType(DM_DataType type) {
+    // Check if we already have the right view type
+    if (_current_data_view && _current_type == type) {
+        return;
+    }
+
+    // Clear any existing view
+    _clearView();
+
+    // Create the appropriate view using the factory
+    _current_data_view = ViewFactory::createView(type, _data_manager, this);
+
+    if (_current_data_view) {
+        _current_type = type;
+        ui->contentLayout->addWidget(_current_data_view.get());
+
+        // Connect the view's frameSelected signal
+        connect(_current_data_view.get(), &BaseDataView::frameSelected,
+                this, &DataInspectorViewWidget::frameSelected);
+    } else {
+        // No view available for this type - show placeholder
+        _current_type = DM_DataType::Unknown;
+        QString type_name = QString::fromStdString(convert_data_type_to_string(type));
+        
+        auto * placeholder = new QLabel(
+            tr("No table view available for type: %1\n\n"
+               "Use the Properties panel on the right for data inspection.")
+                .arg(type_name),
+            this);
+        placeholder->setAlignment(Qt::AlignCenter);
+        placeholder->setWordWrap(true);
+        placeholder->setStyleSheet("color: gray; padding: 20px;");
+        ui->contentLayout->addWidget(placeholder);
+        _placeholder_widget = placeholder;
+    }
 }
 
 void DataInspectorViewWidget::_clearView() {
-    if (_current_view) {
-        ui->contentLayout->removeWidget(_current_view);
-        _current_view->deleteLater();
-        _current_view = nullptr;
+    if (_current_data_view) {
+        // Disconnect signals
+        disconnect(_current_data_view.get(), nullptr, this, nullptr);
+        
+        // Remove callbacks from data
+        _current_data_view->removeCallbacks();
+        
+        // Remove from layout and delete
+        ui->contentLayout->removeWidget(_current_data_view.get());
+        _current_data_view.reset();
+        _current_type = DM_DataType::Unknown;
+    }
+
+    if (_placeholder_widget) {
+        ui->contentLayout->removeWidget(_placeholder_widget);
+        _placeholder_widget->deleteLater();
+        _placeholder_widget = nullptr;
     }
 }

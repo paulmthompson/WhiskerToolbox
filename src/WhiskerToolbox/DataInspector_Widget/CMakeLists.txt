@@ -11,6 +11,96 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         DataInspectorViewWidget.hpp
         DataInspectorViewWidget.cpp
         DataInspectorViewWidget.ui
+        
+        # Inspector interface, base, and factory
+        Inspectors/IDataInspector.hpp
+        Inspectors/BaseInspector.hpp
+        Inspectors/BaseInspector.cpp
+        Inspectors/InspectorFactory.hpp
+        Inspectors/InspectorFactory.cpp
+        
+        # View interface, base, and factory (Phase 3)
+        Inspectors/IDataView.hpp
+        Inspectors/BaseDataView.hpp
+        Inspectors/BaseDataView.cpp
+        Inspectors/ViewFactory.hpp
+        Inspectors/ViewFactory.cpp
+        
+        # Type-specific inspectors and views
+        AnalogTimeSeries/AnalogTimeSeriesInspector.hpp
+        AnalogTimeSeries/AnalogTimeSeriesInspector.cpp
+        AnalogTimeSeries/AnalogTimeSeries_Widget.hpp
+        AnalogTimeSeries/AnalogTimeSeries_Widget.cpp
+        AnalogTimeSeries/AnalogTimeSeries_Widget.ui
+        AnalogTimeSeries/AnalogTimeSeriesDataView.hpp
+        AnalogTimeSeries/AnalogTimeSeriesDataView.cpp
+
+        DigitalEventSeries/DigitalEventSeriesInspector.hpp
+        DigitalEventSeries/DigitalEventSeriesInspector.cpp
+        DigitalEventSeries/DigitalEventSeries_Widget.hpp
+        DigitalEventSeries/DigitalEventSeries_Widget.cpp
+        DigitalEventSeries/DigitalEventSeries_Widget.ui
+        DigitalEventSeries/EventTableModel.hpp
+        DigitalEventSeries/DigitalEventSeriesDataView.hpp
+        DigitalEventSeries/DigitalEventSeriesDataView.cpp
+
+        DigitalIntervalSeries/DigitalIntervalSeriesInspector.hpp
+        DigitalIntervalSeries/DigitalIntervalSeriesInspector.cpp
+        DigitalIntervalSeries/DigitalIntervalSeries_Widget.hpp
+        DigitalIntervalSeries/DigitalIntervalSeries_Widget.cpp
+        DigitalIntervalSeries/DigitalIntervalSeries_Widget.ui
+        DigitalIntervalSeries/IntervalTableModel.hpp
+        DigitalIntervalSeries/DigitalIntervalSeriesDataView.hpp
+        DigitalIntervalSeries/DigitalIntervalSeriesDataView.cpp
+
+        ImageData/ImageInspector.hpp
+        ImageData/ImageInspector.cpp
+        ImageData/Image_Widget.hpp
+        ImageData/Image_Widget.cpp
+        ImageData/Image_Widget.ui
+        ImageData/ImageTableModel.cpp
+        ImageData/ImageTableModel.hpp
+        ImageData/ImageDataView.hpp
+        ImageData/ImageDataView.cpp
+
+        LineData/LineInspector.hpp
+        LineData/LineInspector.cpp
+        LineData/Line_Widget.hpp
+        LineData/Line_Widget.cpp
+        LineData/Line_Widget.ui
+        LineData/LineTableModel.cpp
+        LineData/LineTableModel.hpp
+        LineData/LineTableView.hpp
+        LineData/LineTableView.cpp
+
+        MaskData/MaskInspector.hpp
+        MaskData/MaskInspector.cpp
+        MaskData/Mask_Widget.hpp
+        MaskData/Mask_Widget.cpp
+        MaskData/Mask_Widget.ui
+        MaskData/MaskTableModel.cpp
+        MaskData/MaskTableModel.hpp
+        MaskData/MaskTableView.hpp
+        MaskData/MaskTableView.cpp
+
+        PointData/PointInspector.hpp
+        PointData/PointInspector.cpp
+        PointData/Point_Widget.hpp
+        PointData/Point_Widget.cpp
+        PointData/Point_Widget.ui
+        PointData/PointTableModel.cpp
+        PointData/PointTableModel.hpp
+        PointData/PointTableView.hpp
+        PointData/PointTableView.cpp
+
+        TensorData/TensorInspector.hpp
+        TensorData/TensorInspector.cpp
+        TensorData/Tensor_Widget.hpp
+        TensorData/Tensor_Widget.cpp
+        TensorData/Tensor_Widget.ui
+        TensorData/TensorTableModel.hpp
+        TensorData/TensorDataView.hpp
+        TensorData/TensorDataView.cpp
         )
 
 add_library(DataInspector_Widget STATIC ${DATA_INSPECTOR_WIDGET_SOURCES})
@@ -31,6 +121,9 @@ target_link_libraries(DataInspector_Widget PRIVATE
 target_link_libraries(DataInspector_Widget PRIVATE DataManager)
 target_link_libraries(DataInspector_Widget PRIVATE EditorState)
 target_link_libraries(DataInspector_Widget PRIVATE GroupManagementWidget)
+
+# Dependencies for type-specific inspectors (they wrap existing widgets)
+target_link_libraries(DataInspector_Widget PRIVATE DataManager_Widget)
 
 # JSON libraries for serialization
 target_link_libraries(DataInspector_Widget PRIVATE nlohmann_json::nlohmann_json)

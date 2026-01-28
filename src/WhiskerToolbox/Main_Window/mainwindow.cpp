@@ -241,6 +241,7 @@ void MainWindow::_createActions() {
     connect(ui->actionNew_Media_Widget, &QAction::triggered, this, &MainWindow::openNewMediaWidget);
     connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
+    connect(ui->actionData_Inspector, &QAction::triggered, this, &MainWindow::openDataInspector);
     connect(ui->actionGroup_Management, &QAction::triggered, this, &MainWindow::openGroupManagement);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
@@ -721,6 +722,27 @@ void MainWindow::openDataTransforms() {
 void MainWindow::openDataImport() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("DataImportWidget"));
+}
+
+void MainWindow::openDataInspector() {
+    // Create a new Data Inspector using EditorCreationController
+    // The controller handles:
+    // - Creating the editor via EditorRegistry
+    // - Wrapping in dock widgets
+    // - Placing in appropriate zones (view -> Center, properties -> Right)
+    // - Connecting cleanup signals for state unregistration
+    // DataInspector supports multiple instances (allow_multiple = true)
+    auto placed = _editor_creation_controller->createAndPlace(
+            EditorLib::EditorTypeId(QStringLiteral("DataInspector")),
+            true);// raise_view
+
+    if (!placed.isValid()) {
+        std::cerr << "Failed to create new data inspector" << std::endl;
+        return;
+    }
+
+    std::cout << "Created new data inspector: "
+              << placed.state->getInstanceId().toStdString() << std::endl;
 }
 
 void MainWindow::openNewMediaWidget() {
