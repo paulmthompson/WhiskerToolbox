@@ -2,10 +2,6 @@
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 
 set(IO_WIDGET_SOURCES
-        Scaling_Widget/Scaling_Widget.cpp
-        Scaling_Widget/Scaling_Widget.hpp
-        Scaling_Widget/Scaling_Widget.ui
-
         AnalogTimeSeries/Analog_Loader_Widget.hpp
         AnalogTimeSeries/Analog_Loader_Widget.cpp
         AnalogTimeSeries/Analog_Loader_Widget.ui
@@ -120,6 +116,7 @@ target_link_libraries(IO_Widget PRIVATE
 )
 
 target_link_libraries(IO_Widget PRIVATE DataManager)
+target_link_libraries(IO_Widget PRIVATE Scaling_Widget)  # Shared library for image scaling
 
 target_include_directories(IO_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

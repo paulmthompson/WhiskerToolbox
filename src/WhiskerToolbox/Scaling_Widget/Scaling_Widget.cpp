@@ -48,4 +48,4 @@ ImageSize Scaling_Widget::getScaledImageSize() const {
 
 bool Scaling_Widget::isScalingEnabled() const {
     return ui->enable_image_scaling->isChecked();
-} 
+}

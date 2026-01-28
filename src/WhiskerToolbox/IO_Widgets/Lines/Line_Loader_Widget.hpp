@@ -1,7 +1,7 @@
 #ifndef LINE_LOADER_WIDGET_HPP
 #define LINE_LOADER_WIDGET_HPP
 
-#include "../Scaling_Widget/Scaling_Widget.hpp"
+#include "Scaling_Widget/Scaling_Widget.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 

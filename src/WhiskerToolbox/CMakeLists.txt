@@ -45,8 +45,12 @@ add_subdirectory(ZoneManager) #Qt, EditorState, reflectcpp, qt6advanceddocking
 # coreplotting
 add_subdirectory(Analysis_Dashboard)
 
+add_subdirectory(Scaling_Widget) # Qt, CoreGeometry - shared widget for image scaling
 
-add_subdirectory(IO_Widgets) # Qt, DataManager
+add_subdirectory(IO_Widgets) # Qt, DataManager, Scaling_Widget
+
+# Qt, DataManager, EditorState, Scaling_Widget - data import UI
+add_subdirectory(DataImport_Widget)
 
 # Qt, DataManager, DataManagerIO, TensorData,
 # EditorState, MediaExport, Feature_Table_Widget,
