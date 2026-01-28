@@ -31,6 +31,7 @@
 
 class DataManager;
 class DataInspectorState;
+class DataInspectorViewWidget;
 class GroupManager;
 class SelectionContext;
 struct SelectionSource;
@@ -87,6 +88,14 @@ public:
      */
     void inspectData(QString const & key);
 
+    /**
+     * @brief Set the view widget to connect inspectors to views
+     * @param view_widget The view widget (can be nullptr)
+     * 
+     * This allows inspectors that need selection from views to connect to them.
+     */
+    void setViewWidget(DataInspectorViewWidget * view_widget);
+
 signals:
     /**
      * @brief Emitted when a frame is selected in the inspector
@@ -118,6 +127,9 @@ private:
     std::unique_ptr<class BaseInspector> _current_inspector;
     std::string _current_key;
     DM_DataType _current_type{DM_DataType::Unknown};
+    DataInspectorViewWidget * _view_widget{nullptr};
+    
+    void _connectInspectorToView();
 };
 
 #endif // DATA_INSPECTOR_PROPERTIES_WIDGET_HPP

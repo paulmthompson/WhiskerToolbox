@@ -24,6 +24,7 @@
 #include <memory>
 
 class DigitalIntervalSeries_Widget;
+class DigitalIntervalSeriesDataView;
 
 /**
  * @brief Inspector widget for DigitalIntervalSeries
@@ -61,6 +62,15 @@ public:
 
     [[nodiscard]] bool supportsExport() const override { return true; }
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
+
+    /**
+     * @brief Set the data view to use for selection
+     * @param view Pointer to the DigitalIntervalSeriesDataView (can be nullptr)
+     * 
+     * This connects the widget's selection operations to the view panel's table.
+     * Should be called when both the inspector and view are created.
+     */
+    void setDataView(DigitalIntervalSeriesDataView * view);
 
 private:
     void _setupUi();

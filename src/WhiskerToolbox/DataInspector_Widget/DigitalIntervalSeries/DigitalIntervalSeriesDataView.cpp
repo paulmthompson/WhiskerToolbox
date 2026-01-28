@@ -7,6 +7,7 @@
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
 #include <QHeaderView>
+#include <QItemSelectionModel>
 #include <QTableView>
 #include <QVBoxLayout>
 
@@ -73,6 +74,7 @@ void DigitalIntervalSeriesDataView::_setupUi() {
     _table_view = new QTableView(this);
     _table_view->setModel(_table_model);
     _table_view->setSelectionBehavior(QAbstractItemView::SelectRows);
+    _table_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     _table_view->setAlternatingRowColors(true);
     _table_view->setSortingEnabled(true);
@@ -96,4 +98,21 @@ void DigitalIntervalSeriesDataView::_handleTableViewDoubleClicked(QModelIndex co
 
 void DigitalIntervalSeriesDataView::_onDataChanged() {
     updateView();
+}
+
+std::vector<Interval> DigitalIntervalSeriesDataView::getSelectedIntervals() const {
+    std::vector<Interval> selected_intervals;
+    if (!_table_view || !_table_model) {
+        return selected_intervals;
+    }
+
+    QModelIndexList selected_indexes = _table_view->selectionModel()->selectedRows();
+    for (QModelIndex const & index : selected_indexes) {
+        if (index.isValid()) {
+            Interval interval = _table_model->getInterval(index.row());
+            selected_intervals.push_back(interval);
+        }
+    }
+
+    return selected_intervals;
 }

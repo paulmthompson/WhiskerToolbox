@@ -1,6 +1,7 @@
 #include "DigitalIntervalSeriesInspector.hpp"
 
 #include "DigitalIntervalSeries_Widget.hpp"
+#include "DigitalIntervalSeriesDataView.hpp"
 
 #include <QVBoxLayout>
 
@@ -50,5 +51,14 @@ void DigitalIntervalSeriesInspector::_connectSignals() {
         // Forward frame selection signal
         connect(_interval_widget.get(), &DigitalIntervalSeries_Widget::frameSelected,
                 this, &DigitalIntervalSeriesInspector::frameSelected);
+    }
+}
+
+void DigitalIntervalSeriesInspector::setDataView(DigitalIntervalSeriesDataView * view) {
+    if (_interval_widget && view) {
+        // Set up selection provider to get selected intervals from the view
+        _interval_widget->setSelectionProvider([view]() {
+            return view->getSelectedIntervals();
+        });
     }
 }

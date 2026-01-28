@@ -15,7 +15,10 @@
 
 #include "DataInspector_Widget/Inspectors/BaseDataView.hpp"
 
+#include "TimeFrame/interval_data.hpp"
+
 #include <memory>
+#include <vector>
 
 class IntervalTableModel;
 
@@ -44,6 +47,12 @@ public:
     [[nodiscard]] QString getTypeName() const override { return QStringLiteral("Interval Table"); }
 
     [[nodiscard]] QTableView * tableView() const { return _table_view; }
+
+    /**
+     * @brief Get the currently selected intervals from the table view
+     * @return Vector of selected intervals
+     */
+    [[nodiscard]] std::vector<Interval> getSelectedIntervals() const;
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);

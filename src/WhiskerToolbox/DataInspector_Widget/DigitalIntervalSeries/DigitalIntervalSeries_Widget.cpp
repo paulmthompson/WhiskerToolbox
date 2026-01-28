@@ -6,7 +6,6 @@
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
-#include "IntervalTableModel.hpp"
 
 #include <QAction>
 #include <QComboBox>
@@ -30,25 +29,16 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
-    _interval_table_model = new IntervalTableModel(this);
-    ui->tableView->setModel(_interval_table_model);
-
     // Initialize start frame label as hidden
     ui->start_frame_label->setVisible(false);
-
-    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
     connect(ui->remove_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_removeIntervalButton);
     connect(ui->flip_single_frame, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_flipIntervalButton);
-    connect(ui->tableView, &QTableView::doubleClicked, this, &DigitalIntervalSeries_Widget::_handleCellClicked);
     connect(ui->extend_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_extendInterval);
 
     // Interval operation connections
     connect(ui->merge_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
-    connect(ui->tableView, &QTableView::customContextMenuRequested, this, &DigitalIntervalSeries_Widget::_showContextMenu);
 
     // New interval creation enhancements
     connect(ui->cancel_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_cancelIntervalButton);
@@ -115,15 +105,13 @@ void DigitalIntervalSeries_Widget::_calculateIntervals() {
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (intervals) {
         ui->total_interval_label->setText(QString::number(intervals->size()));
-        std::vector<Interval> interval_vector;
-        for (auto const & interval_with_id: intervals->view()) {
-            interval_vector.push_back(interval_with_id.value());
-        }
-        _interval_table_model->setIntervals(interval_vector);
     } else {
         ui->total_interval_label->setText("0");
-        _interval_table_model->setIntervals({});
     }
+}
+
+void DigitalIntervalSeries_Widget::setSelectionProvider(std::function<std::vector<Interval>()> provider) {
+    _selection_provider = std::move(provider);
 }
 
 
@@ -194,18 +182,10 @@ void DigitalIntervalSeries_Widget::_flipIntervalButton() {
     }
 }
 
-void DigitalIntervalSeries_Widget::_handleCellClicked(QModelIndex const & index) {
-    if (!index.isValid()) {
-        return;
-    }
-    int const frameNumber = index.data().toInt();
-    emit frameSelected(frameNumber);
-}
-
 void DigitalIntervalSeries_Widget::_extendInterval() {
-    auto selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
-    if (selectedIndexes.isEmpty()) {
-        std::cout << "Error: No frame selected in the table view." << std::endl;
+    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    if (selected_intervals.empty()) {
+        std::cout << "Error: No intervals selected in the view panel." << std::endl;
         return;
     }
 
@@ -213,16 +193,13 @@ void DigitalIntervalSeries_Widget::_extendInterval() {
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    for (auto const & index: selectedIndexes) {
-        if (index.column() == 0) {
-            Interval const interval = _interval_table_model->getInterval(index.row());
-            if (current_time < interval.start) {
-                intervals->addEvent(Interval{current_time, interval.end});
-            } else if (current_time > interval.end) {
-                intervals->addEvent(Interval{interval.start, current_time});
-            } else {
-                std::cout << "Error: Current frame is within the selected interval." << std::endl;
-            }
+    for (Interval const & interval : selected_intervals) {
+        if (current_time < interval.start) {
+            intervals->addEvent(Interval{current_time, interval.end});
+        } else if (current_time > interval.end) {
+            intervals->addEvent(Interval{interval.start, current_time});
+        } else {
+            std::cout << "Error: Current frame is within the selected interval." << std::endl;
         }
     }
 }
@@ -301,47 +278,10 @@ bool DigitalIntervalSeries_Widget::_performActualCSVSave(CSVIntervalSaverOptions
 }
 
 std::vector<Interval> DigitalIntervalSeries_Widget::_getSelectedIntervals() {
-    std::vector<Interval> selected_intervals;
-    QModelIndexList selected_indexes = ui->tableView->selectionModel()->selectedRows();
-
-    for (QModelIndex const & index: selected_indexes) {
-        if (index.isValid()) {
-            Interval interval = _interval_table_model->getInterval(index.row());
-            selected_intervals.push_back(interval);
-        }
+    if (_selection_provider) {
+        return _selection_provider();
     }
-
-    return selected_intervals;
-}
-
-void DigitalIntervalSeries_Widget::_showContextMenu(QPoint const & position) {
-    QModelIndex index = ui->tableView->indexAt(position);
-    if (!index.isValid()) {
-        return;
-    }
-
-    QMenu context_menu(this);
-
-    // Add move and copy submenus using the utility function
-    auto move_callback = [this](std::string const & target_key) {
-        _moveIntervalsToTarget(target_key);
-    };
-
-    auto copy_callback = [this](std::string const & target_key) {
-        _copyIntervalsToTarget(target_key);
-    };
-
-    add_move_copy_submenus<DigitalIntervalSeries>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
-
-    // Add separator and existing operations
-    context_menu.addSeparator();
-    QAction * merge_action = context_menu.addAction("Merge Selected Intervals");
-    QAction * delete_action = context_menu.addAction("Delete Selected Intervals");
-
-    connect(merge_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
-    connect(delete_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_deleteSelectedIntervals);
-
-    context_menu.exec(ui->tableView->mapToGlobal(position));
+    return {};
 }
 
 void DigitalIntervalSeries_Widget::_moveIntervalsToTarget(std::string const & target_key) {

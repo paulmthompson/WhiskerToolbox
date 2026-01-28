@@ -3,19 +3,21 @@
 
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"// For CSVIntervalSaverOptions
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"               // For context menu utilities
+#include "TimeFrame/interval_data.hpp"                                         // For Interval
 
 #include <QWidget>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <variant>// std::variant
+#include <vector>
 
 
 namespace Ui {
 class DigitalIntervalSeries_Widget;
 }
 class DataManager;
-class IntervalTableModel;
 class CSVIntervalSaver_Widget;
 
 
@@ -32,6 +34,12 @@ public:
     void setActiveKey(std::string key);
     void removeCallbacks();
 
+    /**
+     * @brief Set a callback function to get selected intervals from the view panel
+     * @param provider Function that returns currently selected intervals
+     */
+    void setSelectionProvider(std::function<std::vector<Interval>()> provider);
+
 signals:
     void frameSelected(int frame_id);
 
@@ -43,7 +51,7 @@ private:
     bool _interval_epoch{false};
     int64_t _interval_start{0};
     int64_t _interval_end{0};// Track both start and end for bidirectional support
-    IntervalTableModel * _interval_table_model;
+    std::function<std::vector<Interval>()> _selection_provider;
 
     enum SaverType { CSV };// Enum for different saver types
 
@@ -54,7 +62,6 @@ private:
     bool _performActualCSVSave(CSVIntervalSaverOptions & options);
 
     std::vector<Interval> _getSelectedIntervals();
-    void _showContextMenu(QPoint const & position);
 
     /**
      * @brief Update the start frame label display
@@ -112,7 +119,6 @@ private slots:
     void _createIntervalButton();
     void _removeIntervalButton();
     void _flipIntervalButton();
-    void _handleCellClicked(QModelIndex const & index);
     void _extendInterval();
 
     void _onExportTypeChanged(int index);

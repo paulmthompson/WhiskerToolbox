@@ -2,6 +2,9 @@
 #include "ui_DataInspectorPropertiesWidget.h"
 
 #include "DataInspectorState.hpp"
+#include "DataInspectorViewWidget.hpp"
+#include "DigitalIntervalSeries/DigitalIntervalSeriesDataView.hpp"
+#include "DigitalIntervalSeries/DigitalIntervalSeriesInspector.hpp"
 #include "Inspectors/BaseInspector.hpp"
 #include "Inspectors/InspectorFactory.hpp"
 
@@ -157,6 +160,8 @@ void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) 
     // Set the active key on the inspector
     if (_current_inspector) {
         _current_inspector->setActiveKey(key_std);
+        // Reconnect to view after setting key (view might have changed)
+        _connectInspectorToView();
     }
 }
 
@@ -183,6 +188,9 @@ void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
         // Connect the inspector's frameSelected signal
         connect(_current_inspector.get(), &BaseInspector::frameSelected,
                 this, &DataInspectorPropertiesWidget::frameSelected);
+        
+        // Connect inspector to view if needed
+        _connectInspectorToView();
     } else {
         // No inspector available for this type - show placeholder
         _current_type = DM_DataType::Unknown;
@@ -217,5 +225,25 @@ void DataInspectorPropertiesWidget::_clearInspector() {
         ui->contentLayout->removeWidget(_current_inspector.get());
         _current_inspector.reset();
         _current_type = DM_DataType::Unknown;
+    }
+}
+
+void DataInspectorPropertiesWidget::setViewWidget(DataInspectorViewWidget * view_widget) {
+    _view_widget = view_widget;
+    _connectInspectorToView();
+}
+
+void DataInspectorPropertiesWidget::_connectInspectorToView() {
+    if (!_current_inspector || !_view_widget) {
+        return;
+    }
+    
+    // Check if this is a DigitalIntervalSeriesInspector and connect it to the view
+    auto * interval_inspector = dynamic_cast<DigitalIntervalSeriesInspector *>(_current_inspector.get());
+    if (interval_inspector) {
+        auto * interval_view = dynamic_cast<DigitalIntervalSeriesDataView *>(_view_widget->currentView());
+        if (interval_view) {
+            interval_inspector->setDataView(interval_view);
+        }
     }
 }

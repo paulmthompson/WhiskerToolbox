@@ -92,8 +92,9 @@ void registerTypes(EditorRegistry * registry,
             // Connect frame selection signals
             QObject::connect(props, &DataInspectorPropertiesWidget::frameSelected,
                              view, &DataInspectorViewWidget::frameSelected);
-            QObject::connect(view, &DataInspectorViewWidget::frameSelected,
-                             props, &DataInspectorPropertiesWidget::frameSelected);
+
+            // Connect properties widget to view widget for inspector-view communication
+            props->setViewWidget(view);
 
             // Register the state
             reg->registerState(state);
