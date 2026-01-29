@@ -16,7 +16,6 @@ class DataManager_Widget;
 class DataManager;
 class DataManagerWidgetState;
 class SelectionContext;
-class TimeScrollBar;
 class GroupManager;
 class QResizeEvent;
 class EditorRegistry;
@@ -25,7 +24,6 @@ class DataManager_Widget : public QScrollArea {
     Q_OBJECT
 public:
     DataManager_Widget(std::shared_ptr<DataManager> data_manager,
-                       TimeScrollBar * time_scrollbar,
                        EditorRegistry * editor_registry = nullptr,
                        QWidget * parent = nullptr);
     ~DataManager_Widget() override;
@@ -56,7 +54,6 @@ protected:
 
 private:
     Ui::DataManager_Widget * ui;
-    TimeScrollBar * _time_scrollbar;
     std::shared_ptr<DataManager> _data_manager;
     EditorRegistry * _editor_registry{nullptr};
     QString _highlighted_available_feature;
@@ -107,13 +104,6 @@ private slots:
      * @param timeframe_key The timeframe to assign to the new data
      */
     void _createNewData(std::string key, std::string type, std::string timeframe_key);
-
-    /**
-     * @brief Handle frame selection from child widgets
-     * 
-     * @param frame_id The ID of the selected frame
-     */
-    //void _changeScrollbar(int frame_id);
 
     /**
      * @brief Handle deletion of data from the feature table

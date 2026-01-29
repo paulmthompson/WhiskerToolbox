@@ -48,7 +48,6 @@
 
 class EditorRegistry;
 class DataManager;
-class TimeScrollBar;
 class GroupManager;
 
 namespace DataManagerWidgetModule {
@@ -61,7 +60,6 @@ namespace DataManagerWidgetModule {
  * - View factory: Creates the DataManager_Widget (no separate properties)
  * 
  * The widget requires additional dependencies beyond just DataManager:
- * - TimeScrollBar: For time navigation
  * - GroupManager: For entity group management
  * 
  * @param registry The EditorRegistry to register types with
@@ -71,7 +69,6 @@ namespace DataManagerWidgetModule {
  */
 void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar,
                    GroupManager * group_manager);
 
 }  // namespace DataManagerWidgetModule

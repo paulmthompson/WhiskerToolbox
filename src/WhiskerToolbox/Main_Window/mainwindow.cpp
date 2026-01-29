@@ -810,7 +810,7 @@ void MainWindow::_registerEditorTypes() {
 
     TimeScrollBarModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar, _group_manager.get());
+    DataManagerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     GroupManagementWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 

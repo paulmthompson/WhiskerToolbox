@@ -23,8 +23,6 @@
 #include "NewDataWidget/NewDataWidget.hpp"
 #include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
 
-#include "TimeScrollBar/TimeScrollBar.hpp"
-
 #include <QFileDialog>
 #include <QMenu>
 #include <QAction>
@@ -34,12 +32,10 @@
 
 DataManager_Widget::DataManager_Widget(
         std::shared_ptr<DataManager> data_manager,
-        TimeScrollBar * time_scrollbar,
         EditorRegistry * editor_registry,
         QWidget * parent)
     : QScrollArea(parent),
       ui(new Ui::DataManager_Widget),
-      _time_scrollbar{time_scrollbar},
       _data_manager{std::move(data_manager)},
       _editor_registry{editor_registry} {
     ui->setupUi(this);
@@ -307,28 +303,6 @@ void DataManager_Widget::_createNewData(std::string key, std::string type, std::
         return;
     }
 }
-
-/*
-void DataManager_Widget::_changeScrollbar(int frame_id) {
-
-    auto active_feature = _highlighted_available_feature.toStdString();
-
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-
-    auto active_feature_timeframe_key = _data_manager->getTimeKey(active_feature);
-
-    if (!active_feature_timeframe_key.empty()) {
-        auto feature_timeframe = _data_manager->getTime(active_feature_timeframe_key);
-
-        if (video_timeframe.get() != feature_timeframe.get()) {
-            frame_id = feature_timeframe->getTimeAtIndex(TimeFrameIndex(frame_id));
-            frame_id = video_timeframe->getIndexAtTime(frame_id).getValue();
-        }
-    }
-
-    _time_scrollbar->changeScrollBarValue(frame_id);
-}
-    */
 
 void DataManager_Widget::_deleteData(QString const & feature) {
     if (feature.isEmpty()) {

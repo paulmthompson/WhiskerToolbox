@@ -4,7 +4,6 @@
 #include "DataManagerWidgetState.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "DataManager/DataManager.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>
@@ -13,7 +12,6 @@ namespace DataManagerWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar,
                    GroupManager * group_manager) {
     
     if (!registry) {
@@ -23,7 +21,6 @@ void registerTypes(EditorRegistry * registry,
 
     // Capture dependencies for lambdas
     auto dm = data_manager;
-    auto ts = time_scrollbar;
     auto gm = group_manager;
 
     registry->registerType({
@@ -55,14 +52,14 @@ void registerTypes(EditorRegistry * registry,
 
         // Custom editor creation for complex dependencies
         // DataManager_Widget needs EditorRegistry, TimeScrollBar, and GroupManager
-        .create_editor_custom = [dm, ts, gm](EditorRegistry * reg) 
+        .create_editor_custom = [dm, gm](EditorRegistry * reg) 
             -> EditorRegistry::EditorInstance 
         {
             // Create the shared state
             auto state = std::make_shared<DataManagerWidgetState>();
 
             // Create the widget with all dependencies
-            auto * widget = new DataManager_Widget(dm, ts, reg, nullptr);
+            auto * widget = new DataManager_Widget(dm, reg, nullptr);
 
             // Set the group manager if available
             if (gm) {
