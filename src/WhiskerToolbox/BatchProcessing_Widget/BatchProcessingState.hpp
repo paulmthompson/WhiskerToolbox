@@ -27,20 +27,21 @@
 #include <string>
 #include <vector>
 
+class DataManager;
 class EditorRegistry;
 
 /**
  * @brief Serializable data structure for BatchProcessingState
  */
 struct BatchProcessingStateData {
-    std::string instance_id;                              ///< Unique instance ID
-    std::string display_name = "Batch Processing";        ///< User-visible name
-    
-    std::string current_top_level_folder;                 ///< Last selected top-level folder
-    std::string current_json_file_path;                   ///< Path to last loaded JSON file
-    std::string json_content;                             ///< Current JSON configuration text
-    
-    std::vector<std::string> recent_folders;              ///< Recently used folders (optional)
+    std::string instance_id;                      ///< Unique instance ID
+    std::string display_name = "Batch Processing";///< User-visible name
+
+    std::string current_top_level_folder;///< Last selected top-level folder
+    std::string current_json_file_path;  ///< Path to last loaded JSON file
+    std::string json_content;            ///< Current JSON configuration text
+
+    std::vector<std::string> recent_folders;///< Recently used folders (optional)
 };
 
 /**
@@ -83,7 +84,9 @@ public:
      * @param registry EditorRegistry for accessing DataManager and emitting signals
      * @param parent Parent QObject
      */
-    explicit BatchProcessingState(EditorRegistry * registry, QObject * parent = nullptr);
+    explicit BatchProcessingState(EditorRegistry * registry,
+                                  std::shared_ptr<DataManager> data_manager,
+                                  QObject * parent = nullptr);
 
     ~BatchProcessingState() override = default;
 
@@ -179,7 +182,8 @@ signals:
 
 private:
     EditorRegistry * _registry;
+    std::shared_ptr<DataManager> _data_manager;
     BatchProcessingStateData _data;
 };
 
-#endif // BATCHPROCESSING_STATE_HPP
+#endif// BATCHPROCESSING_STATE_HPP

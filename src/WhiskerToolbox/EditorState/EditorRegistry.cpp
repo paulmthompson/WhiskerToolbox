@@ -29,16 +29,15 @@ struct SerializedWorkspace {
     std::vector<std::string> all_selections;
 };
 
-}  // namespace
+}// namespace
 
 // === EditorRegistry Implementation ===
 
-EditorRegistry::EditorRegistry(std::shared_ptr<DataManager> data_manager, QObject * parent)
-    : QObject(parent)
-    , _data_manager(std::move(data_manager))
-    , _selection_context(std::make_unique<SelectionContext>(this))
-    , _operation_context(std::make_unique<EditorLib::OperationContext>(this, this)) {
-    
+EditorRegistry::EditorRegistry(QObject * parent)
+    : QObject(parent),
+      _selection_context(std::make_unique<SelectionContext>(this)),
+      _operation_context(std::make_unique<EditorLib::OperationContext>(this, this)) {
+
     // Wire SelectionContext changes to OperationContext
     // (operations may auto-close when selection changes)
     connect(_selection_context.get(), &SelectionContext::selectionChanged,
@@ -103,7 +102,7 @@ EditorRegistry::EditorTypeInfo EditorRegistry::typeInfo(EditorTypeId const & typ
 std::vector<EditorRegistry::EditorTypeInfo> EditorRegistry::allTypes() const {
     std::vector<EditorTypeInfo> result;
     result.reserve(_types.size());
-    for (auto const & [id, info] : _types) {
+    for (auto const & [id, info]: _types) {
         result.push_back(info);
     }
     return result;
@@ -112,7 +111,7 @@ std::vector<EditorRegistry::EditorTypeInfo> EditorRegistry::allTypes() const {
 std::vector<EditorRegistry::EditorTypeInfo>
 EditorRegistry::typesByMenuPath(QString const & path) const {
     std::vector<EditorTypeInfo> result;
-    for (auto const & [id, info] : _types) {
+    for (auto const & [id, info]: _types) {
         if (info.menu_path == path) {
             result.push_back(info);
         }
@@ -178,9 +177,9 @@ EditorRegistry::EditorInstance EditorRegistry::createEditor(EditorTypeId const &
     emit editorCreated(EditorInstanceId(state->getInstanceId()), type_id);
 
     return EditorInstance{
-        .state = std::move(state),
-        .view = view,
-        .properties = properties};
+            .state = std::move(state),
+            .view = view,
+            .properties = properties};
 }
 
 std::shared_ptr<EditorState> EditorRegistry::createState(EditorTypeId const & type_id) {
@@ -224,7 +223,7 @@ QWidget * EditorRegistry::createProperties(std::shared_ptr<EditorState> state) {
     }
 
     if (!it->second.create_properties) {
-        return nullptr;  // No properties factory - valid
+        return nullptr;// No properties factory - valid
     }
 
     return it->second.create_properties(state);
@@ -240,7 +239,7 @@ void EditorRegistry::registerState(std::shared_ptr<EditorState> state) {
     EditorInstanceId instance_id(state->getInstanceId());
 
     if (_states.contains(instance_id)) {
-        return;  // Already registered
+        return;// Already registered
     }
 
     _states[instance_id] = state;
@@ -280,7 +279,7 @@ std::shared_ptr<EditorState> EditorRegistry::state(EditorInstanceId const & inst
 std::vector<std::shared_ptr<EditorState>>
 EditorRegistry::statesByType(EditorTypeId const & type_id) const {
     std::vector<std::shared_ptr<EditorState>> result;
-    for (auto const & [id, s] : _states) {
+    for (auto const & [id, s]: _states) {
         if (s->getTypeName() == type_id.toString()) {
             result.push_back(s);
         }
@@ -291,7 +290,7 @@ EditorRegistry::statesByType(EditorTypeId const & type_id) const {
 std::vector<std::shared_ptr<EditorState>> EditorRegistry::allStates() const {
     std::vector<std::shared_ptr<EditorState>> result;
     result.reserve(_states.size());
-    for (auto const & [id, s] : _states) {
+    for (auto const & [id, s]: _states) {
         result.push_back(s);
     }
     return result;
@@ -311,16 +310,12 @@ EditorLib::OperationContext * EditorRegistry::operationContext() const {
     return _operation_context.get();
 }
 
-std::shared_ptr<DataManager> EditorRegistry::dataManager() const {
-    return _data_manager;
-}
-
 // === Serialization ===
 
 std::string EditorRegistry::toJson() const {
     SerializedWorkspace workspace;
 
-    for (auto const & [id, s] : _states) {
+    for (auto const & [id, s]: _states) {
         SerializedState serialized;
         serialized.type_id = s->getTypeName().toStdString();
         serialized.instance_id = s->getInstanceId().toStdString();
@@ -330,7 +325,7 @@ std::string EditorRegistry::toJson() const {
     }
 
     workspace.primary_selection = _selection_context->primarySelectedData().toStdString();
-    for (auto const & key : _selection_context->allSelectedData()) {
+    for (auto const & key: _selection_context->allSelectedData()) {
         workspace.all_selections.push_back(key.toStdString());
     }
 
@@ -348,12 +343,12 @@ bool EditorRegistry::fromJson(std::string const & json) {
 
     // Clear existing states
     auto old_states = allStates();
-    for (auto const & s : old_states) {
+    for (auto const & s: old_states) {
         unregisterState(EditorInstanceId(s->getInstanceId()));
     }
 
     // Restore states
-    for (auto const & serialized : workspace.states) {
+    for (auto const & serialized: workspace.states) {
         EditorTypeId type_id(QString::fromStdString(serialized.type_id));
 
         auto it = _types.find(type_id);
@@ -381,12 +376,12 @@ bool EditorRegistry::fromJson(std::string const & json) {
     // Restore selection
     SelectionSource source{EditorInstanceId("EditorRegistry"), "fromJson"};
     _selection_context->clearSelection(source);
-    for (auto const & key : workspace.all_selections) {
+    for (auto const & key: workspace.all_selections) {
         _selection_context->addToSelection(SelectedDataKey(QString::fromStdString(key)), source);
     }
     if (!workspace.primary_selection.empty()) {
         _selection_context->setSelectedData(
-            SelectedDataKey(QString::fromStdString(workspace.primary_selection)), source);
+                SelectedDataKey(QString::fromStdString(workspace.primary_selection)), source);
     }
 
     return true;
@@ -398,18 +393,72 @@ bool EditorRegistry::hasUnsavedChanges() const {
 }
 
 void EditorRegistry::markAllClean() {
-    for (auto & [id, s] : _states) {
+    for (auto & [id, s]: _states) {
         s->markClean();
     }
 }
 
 // === Global Time ===
 
-void EditorRegistry::setCurrentTime(int64_t time) {
-    if (_current_time != time) {
-        _current_time = time;
-        emit timeChanged(time);
+void EditorRegistry::setCurrentTime(TimeKey key, TimeFrameIndex index) {
+    // Guard against re-entrant calls to prevent infinite loops
+    if (_time_update_in_progress) {
+        return;// Silently ignore recursive calls
     }
+
+    // Check if state actually changed
+    bool key_changed = (_active_time_key != key);
+    bool index_changed = (_current_time_index != index);
+
+    if (!key_changed && !index_changed) {
+        return;// No change, no signal
+    }
+
+    // Set guard flag (prevents re-entrant calls during signal emission)
+    _time_update_in_progress = true;
+
+    // Update state
+    TimeKey old_key = _active_time_key;
+    _active_time_key = key;
+    _current_time_index = index;
+
+    // Also update legacy _current_time for backward compatibility
+    _current_time = index.getValue();
+
+    // Emit signals (guard flag prevents handlers from recursively calling setCurrentTime)
+    if (key_changed) {
+        emit activeTimeKeyChanged(key, old_key);
+    }
+    emit timeChanged(key, index);
+
+    // Clear guard flag after all signals are emitted
+    _time_update_in_progress = false;
+}
+
+void EditorRegistry::setActiveTimeKey(TimeKey key) {
+    if (_active_time_key != key) {
+        TimeKey old_key = _active_time_key;
+        _active_time_key = key;
+        // Reset to frame 0 when switching TimeKeys
+        _current_time_index = TimeFrameIndex(0);
+        _current_time = 0;
+
+        emit activeTimeKeyChanged(key, old_key);
+        emit timeChanged(key, _current_time_index);
+    }
+}
+
+TimeKey EditorRegistry::activeTimeKey() const {
+    return _active_time_key;
+}
+
+TimeFrameIndex EditorRegistry::currentTimeIndex() const {
+    return _current_time_index;
+}
+
+// Deprecated compatibility shim
+void EditorRegistry::setCurrentTime(int64_t time) {
+    setCurrentTime(_active_time_key, TimeFrameIndex(time));
 }
 
 // === Private ===

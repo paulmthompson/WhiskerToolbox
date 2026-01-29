@@ -37,7 +37,10 @@
  * @see BatchProcessing_Widget for the view implementation
  */
 
+#include <memory>
+
 class EditorRegistry;
+class DataManager;
 
 namespace BatchProcessingWidgetModule {
 
@@ -52,8 +55,10 @@ namespace BatchProcessingWidgetModule {
  * BatchProcessing_Widget is a single-instance utility widget.
  * 
  * @param registry The EditorRegistry to register types with
+ * @param data_manager Shared DataManager for data access
  */
-void registerTypes(EditorRegistry * registry);
+void registerTypes(EditorRegistry * registry,
+                   std::shared_ptr<DataManager> data_manager);
 
 }  // namespace BatchProcessingWidgetModule
 

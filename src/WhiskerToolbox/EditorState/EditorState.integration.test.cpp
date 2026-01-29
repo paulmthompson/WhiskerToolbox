@@ -33,8 +33,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
     QCoreApplication app(argc, nullptr);
 
     SECTION("MediaWidgetState can be registered with EditorRegistry") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto state = std::make_shared<MediaWidgetState>();
         workspace.registerState(state);
@@ -47,8 +46,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
     }
 
     SECTION("DataManagerWidgetState can be registered with EditorRegistry") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto state = std::make_shared<DataManagerWidgetState>();
         workspace.registerState(state);
@@ -63,8 +61,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
     SECTION("MediaWidgetState responds to external selection via signal chain") {
         // Simulate the pattern used in Media_Widget:
         // External widget selects data -> SelectionContext -> MediaWidgetState
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto media_state = std::make_shared<MediaWidgetState>();
         workspace.registerState(media_state);
@@ -91,8 +88,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
     }
 
     SECTION("Widget state ignores own selections (no circular updates)") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto media_state = std::make_shared<MediaWidgetState>();
         workspace.registerState(media_state);
@@ -119,8 +115,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
     }
 
     SECTION("Multiple Media_Widget states coordinate via SelectionContext") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto media_state1 = std::make_shared<MediaWidgetState>();
         media_state1->setDisplayName("Media 1");
@@ -154,8 +149,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
     }
 
     SECTION("SelectionSource correctly identifies originating widget") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto media_state = std::make_shared<MediaWidgetState>();
         auto dm_state = std::make_shared<DataManagerWidgetState>();
@@ -180,8 +174,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         // This tests the full signal chain:
         // DataManager_Widget feature table -> DataManagerWidgetState -> SelectionContext -> Media_Widget handler
 
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto dm_state = std::make_shared<DataManagerWidgetState>();
         auto media_state = std::make_shared<MediaWidgetState>();
@@ -225,8 +218,7 @@ TEST_CASE("Workspace serialization with multiple widget states", "[EditorState][
     QCoreApplication app(argc, nullptr);
 
     SECTION("Workspace with mixed state types serializes correctly") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto media_state = std::make_shared<MediaWidgetState>();
         media_state->setDisplayName("Media Viewer 1");
@@ -259,8 +251,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
     QCoreApplication app(argc, nullptr);
 
     SECTION("DataTransformWidgetState can be registered with EditorRegistry") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto state = std::make_shared<DataTransformWidgetState>();
         workspace.registerState(state);
@@ -323,8 +314,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         // This is the key Phase 2.7 test: DataTransform_Widget receives input
         // selection entirely from SelectionContext, not from an embedded feature table
         
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto dm_state = std::make_shared<DataManagerWidgetState>();
         auto transform_state = std::make_shared<DataTransformWidgetState>();
@@ -363,8 +353,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         // Phase 4.2 test: DataTransform_Widget uses dataFocusChanged signal
         // via the DataFocusAware interface pattern
         
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto dm_state = std::make_shared<DataManagerWidgetState>();
         auto transform_state = std::make_shared<DataTransformWidgetState>();
@@ -407,8 +396,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
     SECTION("setDataFocus emits dataFocusChanged with type information") {
         // Test the explicit setDataFocus API which includes type information
         
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto transform_state = std::make_shared<DataTransformWidgetState>();
         workspace.registerState(transform_state);
@@ -441,8 +429,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
     }
 
     SECTION("DataTransform ignores own selections (no circular updates)") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto transform_state = std::make_shared<DataTransformWidgetState>();
         workspace.registerState(transform_state);
@@ -466,8 +453,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
     }
 
     SECTION("Multiple widget types coexist with DataTransformWidgetState") {
-        auto dm = std::make_shared<DataManager>();
-        EditorRegistry workspace(dm);
+        EditorRegistry workspace;
 
         auto dm_state = std::make_shared<DataManagerWidgetState>();
         auto media_state = std::make_shared<MediaWidgetState>();

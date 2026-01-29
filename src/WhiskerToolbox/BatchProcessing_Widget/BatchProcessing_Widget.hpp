@@ -2,7 +2,7 @@
 #define BATCHPROCESSING_WIDGET_HPP
 
 #include "BatchProcessingState.hpp"
-#include "DataManager/DataManagerTypes.hpp" // DataInfo
+#include "DataManager/DataManagerTypes.hpp"// DataInfo
 
 #include <QFileSystemModel>
 #include <QJsonDocument>
@@ -48,7 +48,8 @@ public:
      * @param state The BatchProcessingState backing this widget
      * @param parent Parent widget
      */
-    explicit BatchProcessing_Widget(std::shared_ptr<BatchProcessingState> state, QWidget * parent = nullptr);
+    explicit BatchProcessing_Widget(std::shared_ptr<BatchProcessingState> state,
+                                    QWidget * parent = nullptr);
     ~BatchProcessing_Widget();
 
     void openWidget();
@@ -73,7 +74,7 @@ private:
     void validateJsonSyntax();
     void updateLoadFolderButtonState();
     QString getCurrentSelectedFolder() const;
-
+    
     Ui::BatchProcessing_Widget * ui;
 
     // State

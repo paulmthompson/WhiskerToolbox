@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow),
       _data_manager{std::make_shared<DataManager>()},
-      _editor_registry{std::make_unique<EditorRegistry>(_data_manager, this)},
+      _editor_registry{std::make_unique<EditorRegistry>(this)},
       _zone_manager(nullptr),
       _group_manager(nullptr)
 
@@ -236,7 +236,9 @@ void MainWindow::_createActions() {
 
     // Connect TimeScrollBar to EditorRegistry for global time propagation
     connect(_time_scrollbar, &TimeScrollBar::timeChanged,
-            _editor_registry.get(), &EditorRegistry::setCurrentTime);
+            _editor_registry.get(), [this](int index) {
+                _editor_registry->setCurrentTime(TimeKey("time"), TimeFrameIndex(index));
+            });
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
@@ -814,7 +816,7 @@ void MainWindow::_registerEditorTypes() {
 
     TerminalWidgetModule::registerTypes(_editor_registry.get());
 
-    BatchProcessingWidgetModule::registerTypes(_editor_registry.get());
+    BatchProcessingWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

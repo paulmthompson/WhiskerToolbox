@@ -1,7 +1,9 @@
 #ifndef MEDIA_WIDGET_HPP
 #define MEDIA_WIDGET_HPP
 
-#include "EditorState/SelectionContext.hpp"  // For SelectionSource
+#include "EditorState/SelectionContext.hpp"// For SelectionSource
+#include "TimeFrame/StrongTimeTypes.hpp"   // For TimeKey
+#include "TimeFrame/TimeFrame.hpp"         // For TimeFrameIndex
 
 #include <QWidget>
 
@@ -44,7 +46,7 @@ public:
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
 
     // Method to handle time changes and propagate them
-    void LoadFrame(int frame_id);
+    void LoadFrame(TimeKey key, TimeFrameIndex index);
 
     // Zoom API used by MainWindow actions
     void zoomIn();
@@ -95,7 +97,7 @@ private:
     SelectionContext * _selection_context{nullptr};
 
     void _applyZoom(double factor, bool anchor_under_mouse);
-    
+
     // Helper to check if user has applied a non-default zoom
     [[nodiscard]] bool _isUserZoomActive() const;
 

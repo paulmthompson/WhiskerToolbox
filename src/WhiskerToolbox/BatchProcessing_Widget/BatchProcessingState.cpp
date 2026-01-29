@@ -9,9 +9,12 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 
-BatchProcessingState::BatchProcessingState(EditorRegistry * registry, QObject * parent)
-    : EditorState(parent)
-    , _registry(registry) {
+BatchProcessingState::BatchProcessingState(EditorRegistry * registry,
+                                           std::shared_ptr<DataManager> data_manager,
+                                           QObject * parent)
+    : EditorState(parent),
+      _registry(registry),
+      _data_manager(std::move(data_manager)) {
     _data.instance_id = getInstanceId().toStdString();
 }
 
@@ -49,10 +52,10 @@ QString BatchProcessingState::topLevelFolder() const {
 void BatchProcessingState::setTopLevelFolder(QString const & folderPath) {
     if (_data.current_top_level_folder != folderPath.toStdString()) {
         _data.current_top_level_folder = folderPath.toStdString();
-        
+
         // Add to recent folders if not already present
-        auto it = std::find(_data.recent_folders.begin(), _data.recent_folders.end(), 
-                           folderPath.toStdString());
+        auto it = std::find(_data.recent_folders.begin(), _data.recent_folders.end(),
+                            folderPath.toStdString());
         if (it == _data.recent_folders.end()) {
             _data.recent_folders.insert(_data.recent_folders.begin(), folderPath.toStdString());
             // Keep only last 10 recent folders
@@ -60,7 +63,7 @@ void BatchProcessingState::setTopLevelFolder(QString const & folderPath) {
                 _data.recent_folders.resize(10);
             }
         }
-        
+
         markDirty();
         emit topLevelFolderChanged(folderPath);
     }
@@ -94,13 +97,13 @@ bool BatchProcessingState::canLoad() const {
     if (_data.current_top_level_folder.empty()) {
         return false;
     }
-    
+
     // Check that JSON content is not empty and is valid JSON
     QString content = QString::fromStdString(_data.json_content).trimmed();
     if (content.isEmpty()) {
         return false;
     }
-    
+
     QJsonParseError parseError;
     QJsonDocument::fromJson(content.toUtf8(), &parseError);
     return parseError.error == QJsonParseError::NoError;
@@ -108,18 +111,17 @@ bool BatchProcessingState::canLoad() const {
 
 BatchProcessingState::LoadResult BatchProcessingState::loadFolder(QString const & selectedSubfolder) {
     LoadResult result;
-    
+
     if (!_registry) {
         result.errorMessage = "EditorRegistry not available";
         return result;
     }
-    
-    auto dataManager = _registry->dataManager();
-    if (!dataManager) {
+
+    if (!_data_manager) {
         result.errorMessage = "DataManager not available";
         return result;
     }
-    
+
     // Determine the base folder path
     QString baseFolderPath;
     if (selectedSubfolder.isEmpty()) {
@@ -127,45 +129,45 @@ BatchProcessingState::LoadResult BatchProcessingState::loadFolder(QString const 
     } else {
         baseFolderPath = selectedSubfolder;
     }
-    
+
     if (baseFolderPath.isEmpty()) {
         result.errorMessage = "No folder selected";
         return result;
     }
-    
+
     QString jsonContent = QString::fromStdString(_data.json_content).trimmed();
     if (jsonContent.isEmpty()) {
         result.errorMessage = "No JSON configuration provided";
         return result;
     }
-    
+
     try {
         qDebug() << "BatchProcessingState: Loading folder:" << baseFolderPath;
         qDebug() << "BatchProcessingState: JSON content length:" << jsonContent.length();
-        
+
         // Reset DataManager before loading new data
-        resetDataManagerAndBroadcast(dataManager.get(), _registry);
-        
+        resetDataManagerAndBroadcast(_data_manager.get(), _registry);
+
         // Load data using the utility function
         // This handles both phases:
         // 1. Load data into DataManager (triggers observers)
         // 2. Emit applyDataDisplayConfig signal
         auto dataInfo = loadDataFromJsonContentAndBroadcast(
-            dataManager.get(),
-            _registry,
-            jsonContent,
-            baseFolderPath);
-        
+                _data_manager.get(),
+                _registry,
+                jsonContent,
+                baseFolderPath);
+
         result.success = true;
         result.itemCount = static_cast<int>(dataInfo.size());
-        
+
         qDebug() << "BatchProcessingState: Successfully loaded" << result.itemCount << "items";
-        
+
     } catch (std::exception const & e) {
         result.errorMessage = QString::fromUtf8(e.what());
         qWarning() << "BatchProcessingState: Load error:" << result.errorMessage;
     }
-    
+
     emit loadCompleted(result);
     return result;
 }

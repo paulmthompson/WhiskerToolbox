@@ -24,7 +24,8 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
-BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<BatchProcessingState> state, QWidget * parent)
+BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<BatchProcessingState> state,
+                                               QWidget * parent)
     : QWidget(parent),
       ui(new Ui::BatchProcessing_Widget),
       m_state(std::move(state)),
@@ -45,14 +46,14 @@ BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<BatchProcessingSt
     setupUI();
     setupFileSystemModel();
     connectStateSignals();
-    
+
     // Initialize UI from state
     if (!m_state->topLevelFolder().isEmpty()) {
         m_folderPathDisplay->setText(m_state->topLevelFolder());
         QModelIndex const rootIndex = m_fileSystemModel->setRootPath(m_state->topLevelFolder());
         m_treeView->setRootIndex(rootIndex);
     }
-    
+
     if (!m_state->jsonContent().isEmpty()) {
         m_jsonTextEdit->setPlainText(m_state->jsonContent());
     }
@@ -74,7 +75,7 @@ void BatchProcessing_Widget::connectStateSignals() {
             this, [this](QString const & folderPath) {
                 m_folderPathDisplay->setText(folderPath);
             });
-    
+
     connect(m_state.get(), &BatchProcessingState::loadCompleted,
             this, &BatchProcessing_Widget::onLoadCompleted);
 }
@@ -174,7 +175,7 @@ void BatchProcessing_Widget::setupFileSystemModel() {
 
 void BatchProcessing_Widget::selectTopLevelFolder() {
     QString currentFolder = m_state->topLevelFolder();
-    
+
     QString const folderPath = QFileDialog::getExistingDirectory(
             this,
             "Select Top Level Folder",
@@ -184,7 +185,7 @@ void BatchProcessing_Widget::selectTopLevelFolder() {
     if (!folderPath.isEmpty()) {
         // Update state
         m_state->setTopLevelFolder(folderPath);
-        
+
         // Update UI
         m_folderPathDisplay->setText(folderPath);
 
@@ -204,7 +205,7 @@ void BatchProcessing_Widget::selectTopLevelFolder() {
 
 void BatchProcessing_Widget::loadJsonConfiguration() {
     QString currentJsonFile = m_state->jsonFilePath();
-    
+
     QString const jsonFilePath = QFileDialog::getOpenFileName(
             this,
             "Load JSON Configuration",
@@ -230,7 +231,7 @@ void BatchProcessing_Widget::onFolderDoubleClicked(QModelIndex const & index) {
 void BatchProcessing_Widget::onJsonTextChanged() {
     // Update state with current JSON content
     m_state->setJsonContent(m_jsonTextEdit->toPlainText());
-    
+
     validateJsonSyntax();
     updateLoadFolderButtonState();
 }
@@ -307,7 +308,7 @@ void BatchProcessing_Widget::validateJsonSyntax() {
     QJsonDocument::fromJson(jsonText.toUtf8(), &parseError);
 
     QString currentJsonFile = m_state->jsonFilePath();
-    
+
     if (parseError.error == QJsonParseError::NoError) {
         if (!currentJsonFile.isEmpty()) {
             m_jsonStatusLabel->setText(QString("Loaded: %1 (Valid JSON)").arg(QFileInfo(currentJsonFile).fileName()));
@@ -388,7 +389,7 @@ void BatchProcessing_Widget::onLoadCompleted(BatchProcessingState::LoadResult co
                                   .arg(result.itemCount)
                                   .arg(selectedFolder);
         QMessageBox::information(this, "Data Loaded", message);
-        
+
         emit dataLoaded(selectedFolder);
     } else {
         QMessageBox::critical(this, "Loading Error",

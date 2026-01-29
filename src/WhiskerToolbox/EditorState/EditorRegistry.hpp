@@ -22,7 +22,7 @@
  * ## Usage Example
  *
  * ```cpp
- * EditorRegistry registry(data_manager);
+ * EditorRegistry registry();
  *
  * registry.registerType({
  *     .type_id = "MediaWidget",
@@ -76,9 +76,9 @@ class OperationContext;
  * It mirrors DataInfo but is defined here to avoid circular dependencies.
  */
 struct DataDisplayConfig {
-    std::string key;        ///< Data key in DataManager
-    std::string data_class; ///< Type of data (e.g., "PointData", "LineData")
-    std::string color;      ///< Hex color for display (e.g., "#00FF00")
+    std::string key;       ///< Data key in DataManager
+    std::string data_class;///< Type of data (e.g., "PointData", "LineData")
+    std::string color;     ///< Hex color for display (e.g., "#00FF00")
 };
 
 /**
@@ -103,20 +103,20 @@ public:
     struct EditorInstance;
 
     struct EditorTypeInfo {
-        QString type_id;       ///< Unique identifier (e.g., "MediaWidget")
-        QString display_name;  ///< User-visible name (e.g., "Media Viewer")
-        QString icon_path;     ///< Path to icon resource (optional)
-        QString menu_path;     ///< Menu location (e.g., "View/Widgets")
-        
+        QString type_id;     ///< Unique identifier (e.g., "MediaWidget")
+        QString display_name;///< User-visible name (e.g., "Media Viewer")
+        QString icon_path;   ///< Path to icon resource (optional)
+        QString menu_path;   ///< Menu location (e.g., "View/Widgets")
+
         // === Zone Placement (Phase 1 Refactoring) ===
-        
-        Zone preferred_zone = Zone::Center;     ///< Where View widget goes
-        Zone properties_zone = Zone::Right;     ///< Where Properties widget goes
-        bool prefers_split = false;             ///< Hint for transient operations (split zone if needed)
-        bool properties_as_tab = true;          ///< Add properties as tab vs replace content
-        bool auto_raise_properties = false;     ///< Bring properties to front on editor activation
-        
-        bool allow_multiple = true;  ///< Can user open multiple instances?
+
+        Zone preferred_zone = Zone::Center;///< Where View widget goes
+        Zone properties_zone = Zone::Right;///< Where Properties widget goes
+        bool prefers_split = false;        ///< Hint for transient operations (split zone if needed)
+        bool properties_as_tab = true;     ///< Add properties as tab vs replace content
+        bool auto_raise_properties = false;///< Bring properties to front on editor activation
+
+        bool allow_multiple = true;///< Can user open multiple instances?
 
         /// Creates the EditorState subclass
         std::function<std::shared_ptr<EditorState>()> create_state;
@@ -153,18 +153,16 @@ public:
      * @brief Result of creating an editor instance
      */
     struct EditorInstance {
-        std::shared_ptr<EditorState> state;  ///< The state (auto-registered)
-        QWidget * view = nullptr;            ///< Main view widget
-        QWidget * properties = nullptr;      ///< Properties widget (may be null)
+        std::shared_ptr<EditorState> state;///< The state (auto-registered)
+        QWidget * view = nullptr;          ///< Main view widget
+        QWidget * properties = nullptr;    ///< Properties widget (may be null)
     };
 
     /**
      * @brief Construct EditorRegistry
-     * @param data_manager Shared DataManager instance (may be nullptr for tests)
      * @param parent Parent QObject
      */
-    explicit EditorRegistry(std::shared_ptr<DataManager> data_manager,
-                            QObject * parent = nullptr);
+    explicit EditorRegistry(QObject * parent = nullptr);
 
     ~EditorRegistry() override;
 
@@ -326,7 +324,7 @@ public:
     // ========== Global Time ==========
 
     /**
-     * @brief Set the current visualization time
+     * @brief Set the current visualization time with TimeKey and TimeFrameIndex
      * 
      * This represents which point in time the UI is currently displaying.
      * All time-aware widgets should connect to timeChanged() to update their views.
@@ -334,15 +332,58 @@ public:
      * Note: This is a UI/visualization concept, not data storage. The actual
      * time data lives in DataManager's TimeFrame objects.
      * 
+     * This method includes cycle prevention to avoid infinite loops when widgets
+     * respond to time changes by calling setCurrentTime() again.
+     * 
+     * @param key The TimeKey identifying which TimeFrame is active
+     * @param index The TimeFrameIndex within that TimeFrame
+     */
+    void setCurrentTime(TimeKey key, TimeFrameIndex index);
+
+
+    /**
+     * @brief Set the active TimeKey
+     * 
+     * Changes which TimeFrame is considered active. This will emit
+     * activeTimeKeyChanged() if the key actually changes.
+     * 
+     * @param key The TimeKey to make active
+     */
+    void setActiveTimeKey(TimeKey key);
+
+    /**
+     * @brief Get the active TimeKey
+     * @return The currently active TimeKey (defaults to "time")
+     */
+    [[nodiscard]] TimeKey activeTimeKey() const;
+
+    /**
+     * @brief Get the current time index
+     * @return Current TimeFrameIndex being displayed
+     */
+    [[nodiscard]] TimeFrameIndex currentTimeIndex() const;
+
+    /**
+     * @brief Set the current visualization time (deprecated)
+     * 
+     * @deprecated Use setCurrentTime(TimeKey, TimeFrameIndex) instead
+     * 
+     * This method is kept for backward compatibility during migration.
+     * It uses the active TimeKey and converts the int64_t to TimeFrameIndex.
+     * 
      * @param time The frame index to display
      */
+    [[deprecated("Use setCurrentTime(TimeKey, TimeFrameIndex) instead")]]
     void setCurrentTime(int64_t time);
 
     /**
-     * @brief Get the current visualization time
+     * @brief Get the current visualization time (deprecated)
+     * 
+     * @deprecated Use currentTimeIndex() instead
+     * 
      * @return Current frame index being displayed
      */
-    [[nodiscard]] int64_t currentTime() const { return _current_time; }
+    [[deprecated("Use currentTimeIndex() instead")]] [[nodiscard]] int64_t currentTime() const { return _current_time; }
 
 signals:
     /// Emitted when a new type is registered
@@ -372,9 +413,24 @@ signals:
      * Connect to this signal to update views when the user scrubs
      * through time (e.g., via TimeScrollBar).
      * 
-     * @param time The new frame index to display
+     * This is the preferred signal that includes both TimeKey and TimeFrameIndex.
+     * 
+     * @param key The TimeKey identifying which TimeFrame changed
+     * @param index The new TimeFrameIndex being displayed
      */
-    void timeChanged(int64_t time);
+    void timeChanged(TimeKey key, TimeFrameIndex index);
+
+    /**
+     * @brief Emitted when the active TimeKey changes
+     * 
+     * This signal is emitted when setActiveTimeKey() is called and the
+     * TimeKey actually changes.
+     * 
+     * @param new_key The new active TimeKey
+     * @param old_key The previous active TimeKey
+     */
+    void activeTimeKeyChanged(TimeKey new_key, TimeKey old_key);
+
 
     /**
      * @brief Emitted after data is loaded from external sources (JSON config, batch processing)
@@ -396,7 +452,6 @@ private slots:
     void onStateDirtyChanged(bool is_dirty);
 
 private:
-    std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<SelectionContext> _selection_context;
     std::unique_ptr<EditorLib::OperationContext> _operation_context;
 
@@ -406,10 +461,15 @@ private:
     /// Active states (instance_id -> state)
     std::map<EditorInstanceId, std::shared_ptr<EditorState>> _states;
 
-    /// Current visualization time (frame index)
+    /// Current visualization time state
+    TimeKey _active_time_key{TimeKey("time")};///< Currently selected TimeFrame key (defaults to "time")
+    TimeFrameIndex _current_time_index{0};    ///< Current index in the active TimeFrame
+    bool _time_update_in_progress{false};     ///< Guard flag to prevent re-entrant time updates
+
+    /// Legacy time state (kept for backward compatibility)
     int64_t _current_time{0};
 
     void connectStateSignals(EditorState * state);
 };
 
-#endif  // EDITOR_REGISTRY_HPP
+#endif// EDITOR_REGISTRY_HPP
