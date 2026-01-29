@@ -44,7 +44,6 @@
 
 class EditorRegistry;
 class DataManager;
-class TimeScrollBar;
 
 namespace WhiskerWidgetModule {
 
@@ -58,11 +57,9 @@ namespace WhiskerWidgetModule {
  * 
  * @param registry The EditorRegistry to register with
  * @param data_manager Shared DataManager for data access
- * @param time_scrollbar TimeScrollBar for frame change notifications
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar);
+                   std::shared_ptr<DataManager> data_manager);
 
 }  // namespace WhiskerWidgetModule
 

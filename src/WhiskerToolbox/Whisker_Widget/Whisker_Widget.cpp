@@ -562,9 +562,27 @@ void Whisker_Widget::_openJaneliaConfig() {
     _janelia_config_widget->openWidget();
 }
 
-void Whisker_Widget::LoadFrame(int frame_id) {
+void Whisker_Widget::LoadFrame(TimePosition position) {
+    if (!position.isValid()) {
+        std::cout << "Whisker_Widget::LoadFrame: Invalid TimePosition" << std::endl;
+        return;
+    }
 
-    static_cast<void>(frame_id);
+    // Store current position in state
+    if (_state) {
+        _state->current_position = position;
+    }
+
+    // Get the TimeFrame for media data (typically "time" key)
+    // If the position is on the same clock as media, use index directly
+    // Otherwise, convert the index
+    auto media_tf = _data_manager->getTime();
+    TimeFrameIndex frame_id = position.index;
+
+    if (media_tf && !position.sameClock(media_tf)) {
+        // Different clock - convert the index
+        frame_id = position.convertTo(media_tf);
+    }
 
     if (_auto_dl) {
         _dlTraceButton();

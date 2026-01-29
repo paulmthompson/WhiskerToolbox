@@ -22,6 +22,9 @@
  */
 
 #include "EditorState/EditorState.hpp"
+#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
+
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -167,6 +170,10 @@ public:
     void setSelectedMaskKey(std::string const & key);
     void setCurrentWhisker(int whisker);
     void setAutoDL(bool auto_dl);
+
+    // === Transient Runtime State ===
+    // (NOT serialized - just runtime)
+    TimePosition current_position;
 
 signals:
     /**

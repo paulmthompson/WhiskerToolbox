@@ -806,7 +806,7 @@ void MainWindow::_registerEditorTypes() {
 
     TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+    WhiskerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TimeScrollBarModule::registerTypes(_editor_registry.get(), _data_manager);
 

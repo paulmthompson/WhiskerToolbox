@@ -4,15 +4,14 @@
 #include "WhiskerWidgetState.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "DataManager/DataManager.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
 
 namespace WhiskerWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar) {
+                   std::shared_ptr<DataManager> data_manager) {
     
     if (!registry) {
         std::cerr << "WhiskerWidgetModule::registerTypes: registry is null" << std::endl;
@@ -21,7 +20,6 @@ void registerTypes(EditorRegistry * registry,
 
     // Capture dependencies for lambdas
     auto dm = data_manager;
-    auto ts = time_scrollbar;
 
     registry->registerType({
         .type_id = QStringLiteral("WhiskerWidget"),
@@ -51,7 +49,7 @@ void registerTypes(EditorRegistry * registry,
         .create_properties = nullptr,
 
         // Custom editor creation for DataManager and TimeScrollBar access
-        .create_editor_custom = [dm, ts](EditorRegistry * reg) 
+        .create_editor_custom = [dm](EditorRegistry * reg) 
             -> EditorRegistry::EditorInstance 
         {
             // Create the shared state
@@ -60,11 +58,11 @@ void registerTypes(EditorRegistry * registry,
             // Create the widget with DataManager
             auto * widget = new Whisker_Widget(dm, state, nullptr);
 
-            // Connect TimeScrollBar frame changes to widget
-            if (ts) {
-                QObject::connect(ts, qOverload<int>(&TimeScrollBar::timeChanged), 
-                                 widget, &Whisker_Widget::LoadFrame);
-            }
+            // Connect EditorRegistry time changes to widget
+            // Use the new timeChanged(TimePosition) signal (preferred)
+            QObject::connect(reg,
+                             QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                             widget, QOverload<TimePosition>::of(&Whisker_Widget::LoadFrame));
 
             // Set explicit minimum size constraints for proper docking
             widget->setMinimumSize(400, 500);
