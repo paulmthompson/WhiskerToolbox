@@ -85,6 +85,7 @@ MainWindow::MainWindow(QWidget * parent)
     // Register Qt metatypes for TimeFrame types (required for signal/slot)
     qRegisterMetaType<TimeKey>("TimeKey");
     qRegisterMetaType<TimeFrameIndex>("TimeFrameIndex");
+    qRegisterMetaType<TimePosition>("TimePosition");
 
     // === FIX START ===
     // If the UI file created a central widget, delete it so ADS can take over the full window.

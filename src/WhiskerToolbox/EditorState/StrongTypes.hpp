@@ -207,6 +207,7 @@ Q_DECLARE_METATYPE(EditorLib::DataChannel)
 // Enable Qt signal/slot with TimeFrame types
 Q_DECLARE_METATYPE(TimeKey)
 Q_DECLARE_METATYPE(TimeFrameIndex)
+Q_DECLARE_METATYPE(TimePosition)
 
 // Qt hash functions for TimeFrame types (enables use in QHash, QSet)
 inline size_t qHash(TimeKey const & key, size_t seed = 0) {
@@ -215,6 +216,12 @@ inline size_t qHash(TimeKey const & key, size_t seed = 0) {
 
 inline size_t qHash(TimeFrameIndex const & idx, size_t seed = 0) {
     return qHash(idx.getValue(), seed);
+}
+
+// Qt hash function for TimePosition (uses pointer address + index)
+inline size_t qHash(TimePosition const & pos, size_t seed = 0) {
+    return qHash(reinterpret_cast<quintptr>(pos.time_frame.get()), seed) ^
+           qHash(pos.index.getValue(), seed);
 }
 
 #endif// EDITOR_STATE_STRONG_TYPES_HPP

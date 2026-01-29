@@ -73,7 +73,7 @@ public:
 
     [[nodiscard]] int getTimeAtIndex(TimeFrameIndex index) const;
 
-    [[nodiscard]] TimeFrameIndex getIndexAtTime(float time, bool preceding=true) const;
+    [[nodiscard]] TimeFrameIndex getIndexAtTime(float time, bool preceding = true) const;
 
     [[nodiscard]] int checkFrameInbounds(int frame_id) const;
 
@@ -89,10 +89,12 @@ struct TimeIndexAndFrame {
     TimeFrame const * const time_frame;
 
     TimeIndexAndFrame(int64_t index_value, TimeFrame const * time_frame_ptr)
-        : index(TimeFrameIndex(index_value)), time_frame(time_frame_ptr) {}
+        : index(TimeFrameIndex(index_value)),
+          time_frame(time_frame_ptr) {}
 
     TimeIndexAndFrame(TimeFrameIndex time_frame_index, TimeFrame const * time_frame_ptr)
-        : index(time_frame_index), time_frame(time_frame_ptr) {}
+        : index(time_frame_index),
+          time_frame(time_frame_ptr) {}
 };
 
 /**
@@ -125,8 +127,77 @@ struct TimeIndexAndFrame {
  * @return The converted time index.
  */
 TimeFrameIndex convert_time_index(TimeFrameIndex const time,
-    TimeFrame const * source_timeframe,
-    TimeFrame const * target_timeframe);
+                                  TimeFrame const * source_timeframe,
+                                  TimeFrame const * target_timeframe);
+
+/**
+ * @brief Position in time with clock identity
+ * 
+ * Combines a TimeFrameIndex with the TimeFrame it belongs to.
+ * This is the primary type for time change signals because it allows:
+ * - Pointer comparison to check if two positions are on the same clock
+ * - Direct index conversion between different TimeFrames
+ * - Safe passage through Qt signals (shared_ptr keeps TimeFrame alive)
+ * 
+ * @note Uses shared_ptr for signal safety (TimeFrame outlives async signals)
+ */
+struct TimePosition {
+    TimeFrameIndex index{0};
+    std::shared_ptr<TimeFrame> time_frame;
+
+    TimePosition() = default;
+
+    TimePosition(TimeFrameIndex idx, std::shared_ptr<TimeFrame> tf)
+        : index(idx),
+          time_frame(std::move(tf)) {}
+
+    explicit TimePosition(int64_t idx, std::shared_ptr<TimeFrame> tf = nullptr)
+        : index(TimeFrameIndex(idx)),
+          time_frame(std::move(tf)) {}
+
+    /// Check if two positions are on the same clock (pointer comparison)
+    [[nodiscard]] bool sameClock(TimePosition const & other) const {
+        return time_frame.get() == other.time_frame.get();
+    }
+
+    /// Check against a raw TimeFrame pointer (e.g., from data->getTimeFrame().get())
+    [[nodiscard]] bool sameClock(TimeFrame const * other) const {
+        return time_frame.get() == other;
+    }
+
+    /// Check against a shared_ptr (e.g., from data->getTimeFrame())
+    [[nodiscard]] bool sameClock(std::shared_ptr<TimeFrame> const & other) const {
+        return time_frame.get() == other.get();
+    }
+
+    /// Convert this position to a different timeframe
+    [[nodiscard]] TimeFrameIndex convertTo(TimeFrame const * target) const {
+        if (!time_frame || !target || time_frame.get() == target) {
+            return index;
+        }
+        return convert_time_index(index, time_frame.get(), target);
+    }
+
+    /// Convert to a shared_ptr timeframe
+    [[nodiscard]] TimeFrameIndex convertTo(std::shared_ptr<TimeFrame> const & target) const {
+        return convertTo(target.get());
+    }
+
+    /// Check if this position has a valid TimeFrame
+    [[nodiscard]] bool isValid() const {
+        return time_frame != nullptr;
+    }
+
+    /// Equality (same clock AND same index)
+    bool operator==(TimePosition const & other) const {
+        return sameClock(other) && index == other.index;
+    }
+
+    bool operator!=(TimePosition const & other) const {
+        return !(*this == other);
+    }
+};
+
 
 // ========== Filename-based TimeFrame Creation ==========
 
@@ -176,5 +247,5 @@ struct FilenameTimeFrameOptions {
  */
 std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions const & options);
 
-    
+
 #endif// TIMEFRAME_HPP

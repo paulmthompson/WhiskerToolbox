@@ -364,19 +364,6 @@ public:
     [[nodiscard]] TimeFrameIndex currentTimeIndex() const;
 
     /**
-     * @brief Set the current visualization time (deprecated)
-     * 
-     * @deprecated Use setCurrentTime(TimeKey, TimeFrameIndex) instead
-     * 
-     * This method is kept for backward compatibility during migration.
-     * It uses the active TimeKey and converts the int64_t to TimeFrameIndex.
-     * 
-     * @param time The frame index to display
-     */
-    [[deprecated("Use setCurrentTime(TimeKey, TimeFrameIndex) instead")]]
-    void setCurrentTime(int64_t time);
-
-    /**
      * @brief Get the current visualization time (deprecated)
      * 
      * @deprecated Use currentTimeIndex() instead
@@ -470,6 +457,19 @@ private:
     int64_t _current_time{0};
 
     void connectStateSignals(EditorState * state);
+    public:
+    /**
+     * @brief Set the current visualization time (deprecated)
+     * 
+     * @deprecated Use setCurrentTime(TimeKey, TimeFrameIndex) instead
+     * 
+     * This method is kept for backward compatibility during migration.
+     * It uses the active TimeKey and converts the int64_t to TimeFrameIndex.
+     * 
+     * @param time The frame index to display
+     */
+    [[deprecated("Use setCurrentTime(TimeKey, TimeFrameIndex) instead")]]
+    void setCurrentTime(int64_t time);
 };
 
 #endif// EDITOR_REGISTRY_HPP
