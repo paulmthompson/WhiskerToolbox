@@ -12,10 +12,10 @@
 #include <QVBoxLayout>
 
 DigitalIntervalSeriesDataView::DigitalIntervalSeriesDataView(
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : BaseDataView(std::move(data_manager), parent)
-    , _table_model(new IntervalTableModel(this)) {
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : BaseDataView(std::move(data_manager), parent),
+      _table_model(new IntervalTableModel(this)) {
     _setupUi();
     _connectSignals();
 }
@@ -36,7 +36,7 @@ void DigitalIntervalSeriesDataView::setActiveKey(std::string const & key) {
     if (interval_data) {
         // Convert view to vector for table model
         std::vector<Interval> interval_vector;
-        for (auto const & interval_with_id : interval_data->view()) {
+        for (auto const & interval_with_id: interval_data->view()) {
             interval_vector.push_back(interval_with_id.value());
         }
         _table_model->setIntervals(interval_vector);
@@ -56,7 +56,7 @@ void DigitalIntervalSeriesDataView::updateView() {
         if (interval_data) {
             // Convert view to vector for table model
             std::vector<Interval> interval_vector;
-            for (auto const & interval_with_id : interval_data->view()) {
+            for (auto const & interval_with_id: interval_data->view()) {
                 interval_vector.push_back(interval_with_id.value());
             }
             _table_model->setIntervals(interval_vector);
@@ -91,7 +91,12 @@ void DigitalIntervalSeriesDataView::_connectSignals() {
 void DigitalIntervalSeriesDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
 
-        auto tf = dataManager()->getTime(TimeKey(_active_key));
+        auto tf = dataManager()->getData<DigitalIntervalSeries>(_active_key)->getTimeFrame();
+        if (!tf) {
+            std::cout << "DigitalIntervalSeriesDataView::_handleTableViewDoubleClicked: TimeFrame not found"
+                      << _active_key << std::endl;
+            return;
+        }
         auto interval = _table_model->getInterval(index.row());
         // Navigate to start (column 0) or end (column 1) based on which cell was clicked
         int64_t target_frame = (index.column() == 0) ? interval.start : interval.end;
@@ -110,7 +115,7 @@ std::vector<Interval> DigitalIntervalSeriesDataView::getSelectedIntervals() cons
     }
 
     QModelIndexList selected_indexes = _table_view->selectionModel()->selectedRows();
-    for (QModelIndex const & index : selected_indexes) {
+    for (QModelIndex const & index: selected_indexes) {
         if (index.isValid()) {
             Interval interval = _table_model->getInterval(index.row());
             selected_intervals.push_back(interval);

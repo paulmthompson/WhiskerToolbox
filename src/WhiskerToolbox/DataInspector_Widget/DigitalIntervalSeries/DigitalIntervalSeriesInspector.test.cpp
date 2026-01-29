@@ -829,6 +829,9 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
           "[DataInspectorWidget][DigitalIntervalSeries][double_click]") {
     ensureQApplication();
 
+    // Register metatypes for signal spy to work with custom types
+    qRegisterMetaType<TimePosition>("TimePosition");
+
     auto * app = QApplication::instance();
     REQUIRE(app != nullptr);
 
@@ -894,13 +897,15 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     REQUIRE(data_view_spy.count() == 1);
     auto const data_view_args_start = data_view_spy.takeFirst();
     REQUIRE(data_view_args_start.size() == 1);
-    REQUIRE(data_view_args_start[0].toInt() == 10);
+    auto const data_view_pos_start = data_view_args_start[0].value<TimePosition>();
+    REQUIRE(data_view_pos_start.index.getValue() == 10);
 
     // Verify the view widget re-emitted the signal
     REQUIRE(view_widget_spy.count() == 1);
     auto const view_widget_args_start = view_widget_spy.takeFirst();
     REQUIRE(view_widget_args_start.size() == 1);
-    REQUIRE(view_widget_args_start[0].toInt() == 10);
+    auto const view_widget_pos_start = view_widget_args_start[0].value<TimePosition>();
+    REQUIRE(view_widget_pos_start.index.getValue() == 10);
 
     // Test 2: Double click row 0, column 1 (end) -> should emit frameSelected(end)
     QModelIndex idx0_end = table_view->model()->index(0, 1);
@@ -917,11 +922,13 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     REQUIRE(data_view_spy.count() == 1);
     auto const data_view_args_end = data_view_spy.takeFirst();
     REQUIRE(data_view_args_end.size() == 1);
-    REQUIRE(data_view_args_end[0].toInt() == 20);
+    auto const data_view_pos_end = data_view_args_end[0].value<TimePosition>();
+    REQUIRE(data_view_pos_end.index.getValue() == 20);
 
     // Verify the view widget re-emitted the signal (should be 1 since we took the first one already)
     REQUIRE(view_widget_spy.count() == 1);
     auto const view_widget_args_end = view_widget_spy.takeFirst();
     REQUIRE(view_widget_args_end.size() == 1);
-    REQUIRE(view_widget_args_end[0].toInt() == 20);
+    auto const view_widget_pos_end = view_widget_args_end[0].value<TimePosition>();
+    REQUIRE(view_widget_pos_end.index.getValue() == 20);
 }
