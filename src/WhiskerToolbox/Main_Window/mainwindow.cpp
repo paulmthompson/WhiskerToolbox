@@ -127,6 +127,7 @@ MainWindow::MainWindow(QWidget * parent)
     // need a reference to it during their registration (e.g., ExportVideoWidget, WhiskerWidget)
     _time_scrollbar_state = std::make_shared<TimeScrollBarState>();
     _time_scrollbar = new TimeScrollBar(_data_manager, _time_scrollbar_state, this);
+    _time_scrollbar->setEditorRegistry(_editor_registry.get());
 
     // Register editor types with the factory
     // Must be called AFTER creating dependencies (TimeScrollBar, GroupManager)
@@ -236,11 +237,11 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
     // Connect TimeScrollBar to EditorRegistry for global time propagation
-    connect(_time_scrollbar, &TimeScrollBar::timeChanged,
-            _editor_registry.get(), [this](int index) {
-                _editor_registry->setCurrentTime(TimePosition(TimeFrameIndex(index), _data_manager->getTime(TimeKey("time"))));
-            });
-
+    connect(_time_scrollbar, 
+        qOverload<TimePosition>(&TimeScrollBar::timeChanged),
+        _editor_registry.get(),
+        qOverload<TimePosition>(&EditorRegistry::setCurrentTime));
+    
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);

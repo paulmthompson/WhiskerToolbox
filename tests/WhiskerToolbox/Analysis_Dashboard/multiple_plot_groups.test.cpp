@@ -31,6 +31,7 @@
 #include "PlottingOpenGL/ShaderManager/ShaderManager.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
+#include "TimeScrollBar/TimeScrollBarState.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 
 #include "../fixtures/qt_test_fixtures.hpp"
@@ -83,7 +84,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - Multiple SpatialOver
     REQUIRE(entity_group_manager != nullptr);
     auto group_manager = std::make_unique<GroupManager>(entity_group_manager, data_manager);
     
-    auto time_scrollbar = new TimeScrollBar();
+    auto time_scrollbar = new TimeScrollBar(data_manager, std::make_shared<TimeScrollBarState>());
     REQUIRE(time_scrollbar != nullptr);
 
     // Seed PointData with two distinct frames for unique EntityIds
@@ -205,7 +206,7 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "Analysis Dashboard - SpatialOverlay - onG
     REQUIRE(entity_group_manager != nullptr);
     auto group_manager = std::make_unique<GroupManager>(entity_group_manager, data_manager);
     
-    auto time_scrollbar = new TimeScrollBar();
+    auto time_scrollbar = new TimeScrollBar(data_manager, std::make_shared<TimeScrollBarState>());
     REQUIRE(time_scrollbar != nullptr);
 
     // Data setup with entity ids

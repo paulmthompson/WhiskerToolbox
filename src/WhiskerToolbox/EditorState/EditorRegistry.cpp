@@ -401,6 +401,7 @@ void EditorRegistry::markAllClean() {
 // === Global Time ===
 
 void EditorRegistry::setCurrentTime(TimePosition position) {
+
     // Guard against re-entrant calls to prevent infinite loops
     if (_time_update_in_progress) {
         return;// Silently ignore recursive calls

@@ -6,6 +6,7 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
@@ -344,7 +345,7 @@ private:
     float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);
 
 public slots:
-    void LoadFrame(int frame_id);
+    void LoadFrame(TimePosition const & time_position);
 
 private slots:
     /**

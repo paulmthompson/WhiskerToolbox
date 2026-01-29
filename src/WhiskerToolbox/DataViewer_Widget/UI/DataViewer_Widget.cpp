@@ -66,7 +66,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             self->cleanupDeletedData(); }, Qt::QueuedConnection);
     });
 
-    connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
+    connect(time_scrollbar, qOverload<int>(&TimeScrollBar::timeChanged), this, &DataViewer_Widget::_updatePlot);
 
     // We should always get the master clock because we plot
     // Check for master clock

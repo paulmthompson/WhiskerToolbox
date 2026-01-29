@@ -62,7 +62,7 @@ void registerTypes(EditorRegistry * registry,
 
             // Connect TimeScrollBar frame changes to widget
             if (ts) {
-                QObject::connect(ts, &TimeScrollBar::timeChanged, 
+                QObject::connect(ts, qOverload<int>(&TimeScrollBar::timeChanged), 
                                  widget, &Whisker_Widget::LoadFrame);
             }
 

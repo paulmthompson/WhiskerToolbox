@@ -2,6 +2,7 @@
 #include "Media_Widget.hpp"
 
 #include "DataManager.hpp"
+#include "EditorState/EditorRegistry.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -36,8 +37,11 @@ TEST_CASE("Media_Widget construction and basic setup", "[Media_Widget]") {
     auto * app = QApplication::instance();
     REQUIRE(app != nullptr);
 
+    // Create EditorRegistry instance required by Media_Widget constructor
+    EditorRegistry editor_registry(nullptr);
+
     SECTION("Constructs with nullptr parent") {
-        Media_Widget widget(nullptr);
+        Media_Widget widget(&editor_registry, nullptr);
         
         // Should have a graphics view
         auto * graphics_view = widget.findChild<QGraphicsView *>("graphicsView");
@@ -47,7 +51,7 @@ TEST_CASE("Media_Widget construction and basic setup", "[Media_Widget]") {
     SECTION("Sets data manager correctly") {
         auto data_manager = std::make_shared<DataManager>();
 
-        Media_Widget widget(nullptr);
+        Media_Widget widget(&editor_registry, nullptr);
         widget.setDataManager(data_manager);
 
         // Widget should accept the data manager without crashing
@@ -69,7 +73,7 @@ TEST_CASE("Media_Widget construction and basic setup", "[Media_Widget]") {
         mask->setImageSize(ImageSize{.width = 640, .height = 480});
         data_manager->setData<MaskData>("test_mask", mask, TimeKey("time"));
 
-        Media_Widget widget(nullptr);
+        Media_Widget widget(&editor_registry, nullptr);
         widget.setDataManager(data_manager);
         
         app->processEvents();

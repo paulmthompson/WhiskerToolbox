@@ -7,6 +7,7 @@
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
+#include "TimeScrollBar/TimeScrollBarState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
@@ -53,7 +54,7 @@ protected:
         m_group_manager = std::make_unique<GroupManager>(entity_group_manager, m_data_manager);
         
         // Create a TimeScrollBar for the dashboard
-        m_time_scrollbar = std::make_unique<TimeScrollBar>();
+        m_time_scrollbar = std::make_unique<TimeScrollBar>(m_data_manager, std::make_shared<TimeScrollBarState>(), nullptr);
         m_time_scrollbar->setDataManager(m_data_manager);
         
         // Create a dock manager for tests and the Analysis_Dashboard

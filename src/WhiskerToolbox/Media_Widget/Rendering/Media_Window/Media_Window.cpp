@@ -1,7 +1,7 @@
 #include "Media_Window.hpp"
 
-#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaText_Widget/MediaText_Widget.hpp"
@@ -132,7 +132,7 @@ void Media_Window::addLineDataToScene(std::string const & line_key) {
         // Create default options with auto-assigned color
         LineDisplayOptions line_config;
         line_config.hex_color() = DefaultDisplayValues::getColorForIndex(
-            _media_widget_state->displayOptions().count<LineDisplayOptions>());
+                _media_widget_state->displayOptions().count<LineDisplayOptions>());
         _media_widget_state->displayOptions().set(key_q, line_config);
     }
 
@@ -170,7 +170,7 @@ void Media_Window::addMaskDataToScene(std::string const & mask_key) {
         // Create default options with auto-assigned color
         MaskDisplayOptions mask_config;
         mask_config.hex_color() = DefaultDisplayValues::getColorForIndex(
-            _media_widget_state->displayOptions().count<MaskDisplayOptions>());
+                _media_widget_state->displayOptions().count<MaskDisplayOptions>());
         _media_widget_state->displayOptions().set(key_q, mask_config);
     }
 
@@ -231,7 +231,7 @@ void Media_Window::addPointDataToScene(std::string const & point_key) {
         // Create default options with auto-assigned color
         PointDisplayOptions point_config;
         point_config.hex_color() = DefaultDisplayValues::getColorForIndex(
-            _media_widget_state->displayOptions().count<PointDisplayOptions>());
+                _media_widget_state->displayOptions().count<PointDisplayOptions>());
         _media_widget_state->displayOptions().set(key_q, point_config);
     }
 
@@ -278,7 +278,7 @@ void Media_Window::addDigitalIntervalSeries(std::string const & key) {
         // Create default options with auto-assigned color
         DigitalIntervalDisplayOptions interval_config;
         interval_config.hex_color() = DefaultDisplayValues::getColorForIndex(
-            _media_widget_state->displayOptions().count<DigitalIntervalDisplayOptions>());
+                _media_widget_state->displayOptions().count<DigitalIntervalDisplayOptions>());
         _media_widget_state->displayOptions().set(key_q, interval_config);
     }
 
@@ -317,7 +317,7 @@ void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
         // Create default options with auto-assigned color
         TensorDisplayOptions tensor_config;
         tensor_config.hex_color() = DefaultDisplayValues::getColorForIndex(
-            _media_widget_state->displayOptions().count<TensorDisplayOptions>());
+                _media_widget_state->displayOptions().count<TensorDisplayOptions>());
         _media_widget_state->displayOptions().set(key_q, tensor_config);
     }
 
@@ -399,7 +399,7 @@ std::optional<LineDisplayOptions *> Media_Window::getLineConfig(std::string cons
         return std::nullopt;
     }
     auto * opts = _media_widget_state->displayOptions().getMutable<LineDisplayOptions>(
-        QString::fromStdString(line_key));
+            QString::fromStdString(line_key));
     if (!opts) {
         return std::nullopt;
     }
@@ -411,7 +411,7 @@ std::optional<MaskDisplayOptions *> Media_Window::getMaskConfig(std::string cons
         return std::nullopt;
     }
     auto * opts = _media_widget_state->displayOptions().getMutable<MaskDisplayOptions>(
-        QString::fromStdString(mask_key));
+            QString::fromStdString(mask_key));
     if (!opts) {
         return std::nullopt;
     }
@@ -423,7 +423,7 @@ std::optional<PointDisplayOptions *> Media_Window::getPointConfig(std::string co
         return std::nullopt;
     }
     auto * opts = _media_widget_state->displayOptions().getMutable<PointDisplayOptions>(
-        QString::fromStdString(point_key));
+            QString::fromStdString(point_key));
     if (!opts) {
         return std::nullopt;
     }
@@ -435,7 +435,7 @@ std::optional<DigitalIntervalDisplayOptions *> Media_Window::getIntervalConfig(s
         return std::nullopt;
     }
     auto * opts = _media_widget_state->displayOptions().getMutable<DigitalIntervalDisplayOptions>(
-        QString::fromStdString(interval_key));
+            QString::fromStdString(interval_key));
     if (!opts) {
         return std::nullopt;
     }
@@ -447,7 +447,7 @@ std::optional<TensorDisplayOptions *> Media_Window::getTensorConfig(std::string 
         return std::nullopt;
     }
     auto * opts = _media_widget_state->displayOptions().getMutable<TensorDisplayOptions>(
-        QString::fromStdString(tensor_key));
+            QString::fromStdString(tensor_key));
     if (!opts) {
         return std::nullopt;
     }
@@ -506,13 +506,16 @@ void Media_Window::_clearTextOverlays() {
     _text_items.clear();
 }
 
-void Media_Window::LoadFrame(int frame_id) {
-    if (!_media_widget_state) return;
+void Media_Window::LoadFrame(TimePosition const & position) {
+    if (!_media_widget_state) {
+        std::cout << "Media_Window::LoadFrame: no media widget state" << std::endl;
+        return;
+    }
 
     // Get MediaData using the media keys from state
     for (auto const & media_key: _media_widget_state->displayOptions().keys<MediaDisplayOptions>()) {
         auto const * media_config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(
-            media_key);
+                media_key);
         if (!media_config || !media_config->is_visible()) {
             continue;
         }
@@ -522,7 +525,17 @@ void Media_Window::LoadFrame(int frame_id) {
             std::cerr << "Warning: No media data found for key '" << media_key.toStdString() << "'" << std::endl;
             return;
         }
-        media->LoadFrame(frame_id);
+        // Get the TimeFrame for media data (typically "time" key)
+        // If the position is on the same clock as media, use index directly
+        // Otherwise, convert the index
+        TimeFrameIndex frame_id = position.index;
+
+        auto media_tf = _data_manager->getTime();
+        if (media_tf && !position.sameClock(media_tf)) {
+            // Different clock - convert the index
+            frame_id = position.convertTo(media_tf);
+        }
+        media->LoadFrame(frame_id.getValue());
     }
 
     // Clear any accumulated drawing points when changing frames
@@ -606,10 +619,14 @@ void Media_Window::UpdateCanvas() {
     this->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight),
                  QRect(0, 0, _canvasWidth, _canvasHeight));
 
-    // Update canvas image on state (for Export_Video_Widget and other observers)
-    if (_media_widget_state) {
-        _media_widget_state->setCanvasImage(scene_image);
+
+    if (!_media_widget_state) {
+        std::cout << "Media_Window::UpdateCanvas: no media widget state" << std::endl;
+        return;
     }
+
+    _media_widget_state->setCanvasImage(scene_image);
+
 
     emit canvasUpdated(scene_image);
 }
@@ -639,15 +656,20 @@ QImage::Format Media_Window::_getQImageFormat(std::string const & media_key) {
 void Media_Window::_plotMediaData() {
     if (!_media_widget_state) return;
 
-    auto const current_time = _data_manager->getCurrentTime();
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
+    }
 
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    // Convert to int for MediaData methods (which use int frame indices)
+    int const current_time = current_position.index.getValue();
 
     int total_visible_media = 0;
     std::string active_media_key;
     for (auto const & media_key: _media_widget_state->displayOptions().keys<MediaDisplayOptions>()) {
         auto const * media_config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(
-            media_key);
+                media_key);
         if (!media_config || !media_config->is_visible()) continue;
         total_visible_media++;
         active_media_key = media_key.toStdString();
@@ -667,7 +689,7 @@ void Media_Window::_plotMediaData() {
         }
 
         auto const * active_media_config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(
-            QString::fromStdString(active_media_key));
+                QString::fromStdString(active_media_key));
         if (!active_media_config) return;
 
         if (media->getFormat() == MediaData::DisplayFormat::Gray) {
@@ -796,13 +818,20 @@ void Media_Window::_plotMediaData() {
 QImage Media_Window::_combineMultipleMedia() {
     if (!_media_widget_state) return QImage();
 
-    auto current_time = _data_manager->getCurrentTime();
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return QImage(); // No valid time position
+    }
+
+    // Convert to int for MediaData methods (which use int frame indices)
+    int const current_time = current_position.index.getValue();
 
     // Loop through configs and get the largest image size
     std::vector<ImageSize> media_sizes;
     for (auto const & media_key: _media_widget_state->displayOptions().keys<MediaDisplayOptions>()) {
         auto const * media_config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(
-            media_key);
+                media_key);
         if (!media_config || !media_config->is_visible()) continue;
 
         auto media = _data_manager->getData<MediaData>(media_key.toStdString());
@@ -1126,7 +1155,7 @@ float Media_Window::getXAspect() const {
     std::string active_media_key;
     for (auto const & config_key: _media_widget_state->displayOptions().keys<MediaDisplayOptions>()) {
         auto const * config = _media_widget_state->displayOptions().get<MediaDisplayOptions>(
-            config_key);
+                config_key);
         if (config && config->is_visible()) {
             active_media_key = config_key.toStdString();
             break;
@@ -1178,9 +1207,14 @@ float Media_Window::getYAspect() const {
 void Media_Window::_plotLineData() {
     if (!_media_widget_state) return;
 
-    auto const current_time = _data_manager->getCurrentTime();
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
+    }
 
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
 
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
@@ -1196,8 +1230,9 @@ void Media_Window::_plotLineData() {
         auto line_data = _data_manager->getData<LineData>(line_key);
         if (!line_data) continue;
 
-        auto lineData = line_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
-        auto entityIds = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), *video_timeframe);
+        // Use TimeIndexAndFrame - conversion handled internally
+        auto lineData = line_data->getAtTime(time_index_and_frame);
+        auto entityIds = line_data->getEntityIdsAtTime(current_position.index, *current_position.time_frame);
 
         // Check for line-specific image size scaling
         auto image_size = line_data->getImageSize();
@@ -1336,9 +1371,15 @@ void Media_Window::_plotMaskData() {
 
     // Note: MaskData does not currently support EntityIds for group-aware coloring
     // This would need to be implemented similar to PointData and LineData
-    auto const current_time = _data_manager->getCurrentTime();
+    
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
+    }
 
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
 
     // Iterate over mask options from state registry
     for (auto const & mask_key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
@@ -1362,8 +1403,8 @@ void Media_Window::_plotMaskData() {
             maskData = _preview_mask_data[mask_key];
             maskData2.clear();// No time -1 data for preview
         } else {
-            // Use original data
-            auto mask_data_view = mask->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
+            // Use original data - TimeIndexAndFrame handles conversion internally
+            auto mask_data_view = mask->getAtTime(time_index_and_frame);
             maskData = std::vector<Mask2D>(mask_data_view.begin(), mask_data_view.end());
             auto mask_data_view2 = mask->getAtTime(TimeFrameIndex(-1));
             maskData2 = std::vector<Mask2D>(mask_data_view2.begin(), mask_data_view2.end());
@@ -1492,7 +1533,14 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
 
     if (!_media_widget_state) return media_image;
 
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return media_image; // No valid time position
+    }
+
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
 
     QImage final_image = media_image;
 
@@ -1517,8 +1565,8 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
 
         std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
 
-        auto const current_time = _data_manager->getCurrentTime();
-        auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
+        // Use TimeIndexAndFrame - conversion handled internally
+        auto maskData = mask_data->getAtTime(time_index_and_frame);
 
         std::cout << "Mask data size: " << maskData.size() << std::endl;
 
@@ -1559,13 +1607,14 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
 void Media_Window::_plotPointData() {
     if (!_media_widget_state) return;
 
-    auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-
-    if (!video_timeframe) {
-        std::cerr << "Error: Could not get video timeframe 'time' for point conversion" << std::endl;
-        return;
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
     }
+
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
 
     // Iterate over point options from state registry
     for (auto const & point_key_q: _media_widget_state->displayOptions().keys<PointDisplayOptions>()) {
@@ -1593,8 +1642,9 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getAtTime(current_time, *video_timeframe);
-        auto entityIds = point->getEntityIdsAtTime(current_time);
+        // Use TimeIndexAndFrame - conversion handled internally
+        auto pointData = point->getAtTime(time_index_and_frame);
+        auto entityIds = point->getEntityIdsAtTime(current_position.index, *current_position.time_frame);
 
         // Get configurable point size
         float const point_size = static_cast<float>(point_config->point_size);
@@ -1722,8 +1772,14 @@ void Media_Window::_plotPointData() {
 void Media_Window::_plotDigitalIntervalSeries() {
     if (!_media_widget_state) return;
 
-    auto const current_time = _data_manager->getCurrentTime();
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
+    }
+
+    // Get video timeframe for relative time calculations
+    auto video_timeframe = current_position.time_frame;
 
     // Iterate over interval options from state registry
     for (auto const & key_q: _media_widget_state->displayOptions().keys<DigitalIntervalDisplayOptions>()) {
@@ -1740,21 +1796,9 @@ void Media_Window::_plotDigitalIntervalSeries() {
         if (!interval_series) continue;
 
         // Get the timeframes for conversion
-        auto interval_timeframe_key = _data_manager->getTimeKey(key);
-        if (interval_timeframe_key.empty()) {
-            std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
-            continue;
-        }
-
-        auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
-
-        if (!video_timeframe) {
-            std::cerr << "Error: Could not get video timeframe 'time' for interval conversion" << std::endl;
-            continue;
-        }
+        auto interval_timeframe = interval_series->getTimeFrame();
         if (!interval_timeframe) {
-            std::cerr << "Error: Could not get interval timeframe '" << interval_timeframe_key
-                      << "' for series: " << key << std::endl;
+            std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
             continue;
         }
 
@@ -1791,20 +1835,24 @@ void Media_Window::_plotDigitalIntervalSeries() {
         }
 
         for (size_t i = 0; i < relative_times.size(); ++i) {
-            int const video_time = current_time + relative_times[i];
-            int query_time = video_time;// Default: no conversion needed
+            // Calculate relative time position
+            int const current_time_value = current_position.index.getValue();
+            int const video_time = current_time_value + relative_times[i];
+            
+            // Create TimePosition for the relative time
+            TimePosition relative_position(TimeFrameIndex(video_time), video_timeframe);
+            
+            TimeFrameIndex query_time_index = TimeFrameIndex(video_time);// Default: no conversion needed
 
             if (needs_conversion) {
-                // Convert from video timeframe ("time") to interval series timeframe
-                // 1. Convert video time index to actual time value
-                int const video_time_value = video_timeframe->getTimeAtIndex(TimeFrameIndex(video_time));
-
-                // 2. Convert time value to index in interval series timeframe
-                query_time = interval_timeframe->getIndexAtTime(static_cast<float>(video_time_value)).getValue();
+                // Convert from video timeframe to interval series timeframe
+                // Use TimePosition conversion
+                query_time_index = relative_position.convertTo(interval_timeframe.get());
             }
 
-            bool const event_present = interval_series->hasIntervalAtTime(TimeFrameIndex(query_time),
-                                                                          *video_timeframe);
+            // Query using the interval's timeframe (query_time_index is already in that coordinate system)
+            bool const event_present = interval_series->hasIntervalAtTime(query_time_index,
+                                                                          *interval_timeframe);
 
             auto color = event_present ? plot_color : QColor(255, 255, 255, 10);// Transparent if no event
 
@@ -1825,7 +1873,11 @@ void Media_Window::_plotDigitalIntervalSeries() {
 void Media_Window::_plotDigitalIntervalBorders() {
     if (!_media_widget_state) return;
 
-    auto const current_time = _data_manager->getCurrentTime();
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
+    }
 
     // Iterate over interval options from state registry
     for (auto const & key_q: _media_widget_state->displayOptions().keys<DigitalIntervalDisplayOptions>()) {
@@ -1839,29 +1891,10 @@ void Media_Window::_plotDigitalIntervalBorders() {
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
         if (!interval_series) continue;
 
-        // Get the timeframes for conversion
-        auto interval_timeframe_key = _data_manager->getTimeKey(key);
-        if (interval_timeframe_key.empty()) {
-            std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
-            continue;
-        }
-
-        auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-        auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
-
-        if (!video_timeframe) {
-            std::cerr << "Error: Could not get video timeframe 'time' for interval conversion" << std::endl;
-            continue;
-        }
-        if (!interval_timeframe) {
-            std::cerr << "Error: Could not get interval timeframe '" << interval_timeframe_key
-                      << "' for series: " << key << std::endl;
-            continue;
-        }
-
         // Check if an interval is present at the current frame
-        bool interval_present = interval_series->hasIntervalAtTime(TimeFrameIndex(current_time),
-                                                                   *video_timeframe);
+        // Use current_position - conversion handled internally
+        bool interval_present = interval_series->hasIntervalAtTime(current_position.index,
+                                                                   *current_position.time_frame);
 
         // If an interval is present, draw a border around the entire image
         if (interval_present) {
@@ -1896,7 +1929,11 @@ void Media_Window::_plotDigitalIntervalBorders() {
 void Media_Window::_plotTensorData() {
     if (!_media_widget_state) return;
 
-    auto const current_time = _data_manager->getCurrentTime();
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return; // No valid time position
+    }
 
     // Iterate over tensor options from state registry
     for (auto const & key_q: _media_widget_state->displayOptions().keys<TensorDisplayOptions>()) {
@@ -1907,9 +1944,16 @@ void Media_Window::_plotTensorData() {
         auto tensor_data = _data_manager->getData<TensorData>(key);
         if (!tensor_data) continue;
 
+        // Convert current_position to tensor's timeframe if needed
+        TimeFrameIndex tensor_time = current_position.index;
+        auto tensor_timeframe = tensor_data->getTimeFrame();
+        if (tensor_timeframe && !current_position.sameClock(tensor_timeframe)) {
+            tensor_time = current_position.convertTo(tensor_timeframe.get());
+        }
+
         auto tensor_shape = tensor_data->getFeatureShape();
 
-        auto tensor_slice = tensor_data->getChannelSlice(TimeFrameIndex(current_time), tensor_config->display_channel);
+        auto tensor_slice = tensor_data->getChannelSlice(tensor_time, tensor_config->display_channel);
 
         // Create a QImage from the tensor data
         QImage tensor_image(static_cast<int>(tensor_shape[1]), static_cast<int>(tensor_shape[0]), QImage::Format::Format_ARGB32);
@@ -2320,10 +2364,16 @@ EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::strin
     }
 
     // Use the same timeframe conversion as rendering to ensure indices match
-    auto const current_time = _data_manager->getCurrentTime();
-    auto video_timeframe = _data_manager->getTime(TimeKey("time"));
-    auto const & lines = line_data->getAtTime(TimeFrameIndex(current_time), *video_timeframe);
-    auto const & entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex(current_time), *video_timeframe);
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return EntityId(0); // No valid time position
+    }
+
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
+    auto const & lines = line_data->getAtTime(time_index_and_frame);
+    auto const & entity_ids = line_data->getEntityIdsAtTime(current_position.index, *current_position.time_frame);
 
     if (lines.size() != entity_ids.size()) {
         return EntityId(0);
@@ -2388,9 +2438,16 @@ EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::stri
         return EntityId(0);
     }
 
-    auto current_time = _data_manager->getCurrentTime();
-    auto const & points = point_data->getAtTime(TimeFrameIndex(current_time));
-    auto const & entity_ids = point_data->getEntityIdsAtTime(TimeFrameIndex(current_time));
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return EntityId(0); // No valid time position
+    }
+
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
+    auto const & points = point_data->getAtTime(time_index_and_frame);
+    auto const & entity_ids = point_data->getEntityIdsAtTime(current_position.index, *current_position.time_frame);
 
     if (points.size() != entity_ids.size()) {
         return EntityId(0);
@@ -2424,8 +2481,15 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
         return EntityId(0);
     }
 
-    auto current_time = _data_manager->getCurrentTime();
-    auto const & masks = mask_data->getAtTime(TimeFrameIndex(current_time));
+    // Get current time position from state
+    TimePosition const & current_position = _media_widget_state->current_position;
+    if (!current_position.time_frame) {
+        return EntityId(0); // No valid time position
+    }
+
+    // Create TimeIndexAndFrame from current_position for data access
+    TimeIndexAndFrame const time_index_and_frame(current_position.index, current_position.time_frame.get());
+    auto const & masks = mask_data->getAtTime(time_index_and_frame);
 
     // MaskData doesn't currently support EntityIds, so we'll use position-based indices for now
     // This is a simplified implementation that can be improved when MaskData gets EntityId support
@@ -2443,7 +2507,7 @@ EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::strin
                 std::abs(static_cast<float>(point.y) - y_media) < 5.0f) {
                 // Return a synthetic EntityId based on position and mask index
                 // This is temporary until MaskData supports proper EntityIds
-                return EntityId(1000000 + current_time * 1000 + i);
+                return EntityId(1000000 + current_position.index.getValue() * 1000 + i);
             }
         }
     }

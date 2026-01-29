@@ -22,7 +22,7 @@ class Media_Widget;
 class Media_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit Media_Widget(EditorRegistry * editor_registry = nullptr,
+    explicit Media_Widget(EditorRegistry * editor_registry,
                           QWidget * parent = nullptr);
 
     ~Media_Widget() override;

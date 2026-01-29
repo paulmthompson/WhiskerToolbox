@@ -27,12 +27,15 @@
 #include <QWheelEvent>
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
+#include <iostream>
 
 Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Media_Widget),
       _editor_registry{editor_registry} {
+    assert(editor_registry != nullptr && "EditorRegistry must not be null");
     ui->setupUi(this);
 
     // Install event filter on graphics view viewport for wheel zoom
@@ -48,23 +51,22 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
     _state = std::make_shared<MediaWidgetState>();
     _connectStateSignals();
 
-    if (_editor_registry) {
-        _editor_registry->registerState(_state);
-        _selection_context = _editor_registry->selectionContext();
 
-        // Connect to global time changes for frame loading
-        // Use the new timeChanged(TimePosition) signal (preferred)
-        connect(_editor_registry,
-                QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
-                this, &Media_Widget::LoadFrame);
+    _editor_registry->registerState(_state);
+    _selection_context = _editor_registry->selectionContext();
+
+    // Connect to global time changes for frame loading
+    // Use the new timeChanged(TimePosition) signal (preferred)
+    connect(_editor_registry,
+            QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+            this, &Media_Widget::LoadFrame);
 
 
-        // Connect to SelectionContext to respond to    external selection changes
-        // When another widget (e.g., DataManager_Widget) selects data, update our state
-        if (_selection_context) {
-            connect(_selection_context, &SelectionContext::selectionChanged,
-                    this, &Media_Widget::_onExternalSelectionChanged);
-        }
+    // Connect to SelectionContext to respond to    external selection changes
+    // When another widget (e.g., DataManager_Widget) selects data, update our state
+    if (_selection_context) {
+        connect(_selection_context, &SelectionContext::selectionChanged,
+                this, &Media_Widget::_onExternalSelectionChanged);
     }
 }
 
@@ -352,22 +354,26 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
 }
 
 void Media_Widget::LoadFrame(TimePosition position) {
-    if (_scene && position.isValid()) {
-        // Get the TimeFrame for media data (typically "time" key)
-        // If the position is on the same clock as media, use index directly
-        // Otherwise, convert the index
-        TimeFrameIndex frame_id = position.index;
 
-        if (_data_manager) {
-            auto media_tf = _data_manager->getTime();
-            if (media_tf && !position.sameClock(media_tf)) {
-                // Different clock - convert the index
-                frame_id = position.convertTo(media_tf);
-            }
-        }
-
-        _scene->LoadFrame(static_cast<int>(frame_id.getValue()));
+    if (_scene == nullptr) {
+        std::cout << "Scene is null during LoadFrame" << std::endl;
+        return;
     }
+
+    if (!position.isValid()) {
+        std::cout << "Position is invalid during LoadFrame" << std::endl;
+        std::cout << "Position: " << position.index.getValue() << std::endl;
+        return;
+    }
+
+    if (_data_manager == nullptr) {
+        std::cout << "Data manager is null during LoadFrame" << std::endl;
+        return;
+    }
+
+    _state->current_position = position;
+
+    _scene->LoadFrame(position);
 }
 
 // Zoom API implementations

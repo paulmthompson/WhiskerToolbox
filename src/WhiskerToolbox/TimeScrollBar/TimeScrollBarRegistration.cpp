@@ -57,6 +57,27 @@ void registerTypes(EditorRegistry * registry,
             // Create the widget with DataManager and state
             auto * widget = new TimeScrollBar(dm, state, nullptr);
 
+            // Set EditorRegistry for time synchronization
+            widget->setEditorRegistry(reg);
+
+            // Initialize TimeFrame from DataManager (default to "time" TimeKey)
+            if (dm) {
+                TimeKey default_key("time");
+                auto tf = dm->getTime(default_key);
+                if (tf) {
+                    widget->setTimeFrame(tf, default_key);
+                } else {
+                    // Fallback: try to get any available TimeFrame
+                    auto keys = dm->getTimeFrameKeys();
+                    if (!keys.empty()) {
+                        auto fallback_tf = dm->getTime(keys[0]);
+                        if (fallback_tf) {
+                            widget->setTimeFrame(fallback_tf, keys[0]);
+                        }
+                    }
+                }
+            }
+
             // Register the state
             reg->registerState(state);
 

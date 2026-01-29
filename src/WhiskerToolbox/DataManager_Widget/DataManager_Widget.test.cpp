@@ -1,6 +1,7 @@
 #include "DataManager_Widget.hpp"
 #include "DataManager.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
+#include "TimeScrollBar/TimeScrollBarState.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -20,7 +21,7 @@ public:
         }
 
         data_manager = std::make_shared<DataManager>();
-        time_scrollbar = new TimeScrollBar(nullptr);
+        time_scrollbar = new TimeScrollBar(data_manager, std::make_shared<TimeScrollBarState>(), nullptr);
         widget = std::make_unique<DataManager_Widget>(data_manager, time_scrollbar);
     }
 
