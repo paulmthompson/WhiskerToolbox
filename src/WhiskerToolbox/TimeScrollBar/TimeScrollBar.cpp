@@ -4,7 +4,7 @@
 
 #include "DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
-#include "TimeFrame/StrongTimeTypes.hpp"  // For TimeKey
+#include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeScrollBarState.hpp"
 
@@ -30,7 +30,7 @@ void TimeScrollBar::_setupConnections() {
     // Set up spin box with keyboard tracking disabled (only update on Enter key or arrow clicks)
     ui->frame_spinbox->setKeyboardTracking(false);
     connect(ui->frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &TimeScrollBar::FrameSpinBoxChanged);
-    
+
     // Connect frame jump spinbox to state if available
     connect(ui->frame_jump_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         if (_state) {
@@ -57,9 +57,9 @@ void TimeScrollBar::_initializeFromState() {
     // Set UI values from state
     _play_speed = _state->playSpeed();
     ui->frame_jump_spinbox->setValue(_state->frameJump());
-    
+
     // Update the FPS label based on play speed
-    const int play_speed_base_fps = 25;
+    int const play_speed_base_fps = 25;
     ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
 
     // Unblock signals
@@ -76,8 +76,7 @@ TimeScrollBar::TimeScrollBar(std::shared_ptr<DataManager> data_manager,
       ui(new Ui::TimeScrollBar),
       _data_manager{std::move(data_manager)},
       _state{std::move(state)},
-      _data_manager_observer_id{-1}
-{
+      _data_manager_observer_id{-1} {
     ui->setupUi(this);
 
     _timer = new QTimer(this);
@@ -101,12 +100,11 @@ TimeScrollBar::TimeScrollBar(std::shared_ptr<DataManager> data_manager,
 /**
  * @brief Legacy TimeScrollBar constructor (backward compatible)
  */
-TimeScrollBar::TimeScrollBar(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::TimeScrollBar),
-    _state{nullptr},
-    _data_manager_observer_id{-1}
-{
+TimeScrollBar::TimeScrollBar(QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::TimeScrollBar),
+      _state{nullptr},
+      _data_manager_observer_id{-1} {
     ui->setupUi(this);
 
     _timer = new QTimer(this);
@@ -120,7 +118,7 @@ TimeScrollBar::~TimeScrollBar() {
         _data_manager->removeObserver(_data_manager_observer_id);
         _data_manager_observer_id = -1;
     }
-    
+
     delete ui;
     _timer->stop();
 }
@@ -131,8 +129,7 @@ In the case that we are dragging the slider, to make this optimally smooth, we s
 until we have finished the most recent one.
  */
 
-void TimeScrollBar::Slider_Drag(int newPos)
-{
+void TimeScrollBar::Slider_Drag(int newPos) {
     static_cast<void>(newPos);
 
     auto current_frame = ui->horizontalScrollBar->sliderPosition();
@@ -141,8 +138,7 @@ void TimeScrollBar::Slider_Drag(int newPos)
 }
 
 
-void TimeScrollBar::Slider_Scroll(int newPos)
-{
+void TimeScrollBar::Slider_Scroll(int newPos) {
     if (_verbose) {
         std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
     }
@@ -159,7 +155,7 @@ void TimeScrollBar::Slider_Scroll(int newPos)
 
     auto frame_id = tf->checkFrameInbounds(newPos);
     ui->horizontalScrollBar->setSliderPosition(newPos);
-    
+
     // Create TimePosition with the actual TimeFrame pointer
     TimePosition position(TimeFrameIndex(frame_id), tf);
 
@@ -210,14 +206,12 @@ void TimeScrollBar::updateScrollBarNewMax(int new_max) {
     ui->frame_count_label->setText(QString::number(new_max));
     ui->horizontalScrollBar->setMaximum(new_max);
     ui->frame_spinbox->setMaximum(new_max);
-
 }
 
 
-void TimeScrollBar::PlayButton()
-{
+void TimeScrollBar::PlayButton() {
 
-    const int timer_period_ms = 40;
+    int const timer_period_ms = 40;
 
     if (_play_mode) {
 
@@ -245,7 +239,7 @@ void TimeScrollBar::PlayButton()
         _timer->start(timer_period_ms);
         _play_mode = true;
     }
-    
+
     if (_state) {
         _state->setIsPlaying(_play_mode);
     }
@@ -254,14 +248,12 @@ void TimeScrollBar::PlayButton()
 /*
 Increases the speed of a playing video in increments of the base_fps (default = 25)
 */
-void TimeScrollBar::RewindButton()
-{
-    const int play_speed_base_fps = 25;
-    if (_play_speed > 1)
-    {
+void TimeScrollBar::RewindButton() {
+    int const play_speed_base_fps = 25;
+    if (_play_speed > 1) {
         _play_speed--;
         ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
-        
+
         if (_state) {
             _state->setPlaySpeed(_play_speed);
         }
@@ -271,20 +263,18 @@ void TimeScrollBar::RewindButton()
 /*
 Decreases the speed of a playing video in increments of the base_fps (default = 25)
 */
-void TimeScrollBar::FastForwardButton()
-{
-    const int play_speed_base_fps = 25;
+void TimeScrollBar::FastForwardButton() {
+    int const play_speed_base_fps = 25;
 
     _play_speed++;
     ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
-    
+
     if (_state) {
         _state->setPlaySpeed(_play_speed);
     }
 }
 
-void TimeScrollBar::_vidLoop()
-{
+void TimeScrollBar::_vidLoop() {
     // Get current time from EditorRegistry if available, otherwise from DataManager
     int current_time = 0;
     if (_editor_registry) {
@@ -295,17 +285,15 @@ void TimeScrollBar::_vidLoop()
     } else if (_data_manager) {
         current_time = _data_manager->getCurrentTime() + _play_speed;
     }
-    
+
     ui->horizontalScrollBar->setSliderPosition(current_time);
 }
 
-void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
-{
+void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
     auto min_value = ui->horizontalScrollBar->minimum();
     auto max_value = ui->horizontalScrollBar->maximum();
 
-    if (relative)
-    {
+    if (relative) {
         // Get current time from EditorRegistry if available, otherwise from DataManager
         int current_time = 0;
         if (_editor_registry) {
@@ -330,11 +318,9 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
     }
 
     Slider_Scroll(new_value);
-
 }
 
-void TimeScrollBar::FrameSpinBoxChanged(int new_frame)
-{
+void TimeScrollBar::FrameSpinBoxChanged(int new_frame) {
     // Use current TimeFrame if available, otherwise fall back to DataManager's default
     std::shared_ptr<TimeFrame> tf = _current_time_frame;
     if (!tf && _data_manager) {
@@ -347,7 +333,7 @@ void TimeScrollBar::FrameSpinBoxChanged(int new_frame)
     }
 
     auto frame_id = tf->checkFrameInbounds(new_frame);
-    
+
     // Create TimePosition with the actual TimeFrame pointer
     TimePosition position(TimeFrameIndex(frame_id), tf);
 
@@ -366,13 +352,11 @@ void TimeScrollBar::FrameSpinBoxChanged(int new_frame)
     emit timeChanged(frame_id);
 }
 
-int TimeScrollBar::getFrameJumpValue() const
-{
+int TimeScrollBar::getFrameJumpValue() const {
     return ui->frame_jump_spinbox->value();
 }
 
-void TimeScrollBar::setEditorRegistry(EditorRegistry * registry)
-{
+void TimeScrollBar::setEditorRegistry(EditorRegistry * registry) {
     // Disconnect old registry if it exists
     if (_editor_registry) {
         disconnect(_editor_registry, &EditorRegistry::timeChanged,
@@ -388,8 +372,7 @@ void TimeScrollBar::setEditorRegistry(EditorRegistry * registry)
     }
 }
 
-void TimeScrollBar::setTimeFrame(std::shared_ptr<TimeFrame> tf, TimeKey display_key)
-{
+void TimeScrollBar::setTimeFrame(std::shared_ptr<TimeFrame> tf, TimeKey display_key) {
     _current_time_frame = tf;
     _current_display_key = display_key;
 
@@ -401,8 +384,7 @@ void TimeScrollBar::setTimeFrame(std::shared_ptr<TimeFrame> tf, TimeKey display_
     changeScrollBarValue(0);
 }
 
-void TimeScrollBar::_populateTimeKeySelector()
-{
+void TimeScrollBar::_populateTimeKeySelector() {
     if (!_data_manager || !ui->timekey_combobox) {
         return;
     }
@@ -410,7 +392,7 @@ void TimeScrollBar::_populateTimeKeySelector()
     ui->timekey_combobox->blockSignals(true);
     ui->timekey_combobox->clear();
 
-    for (auto const & key : _data_manager->getTimeFrameKeys()) {
+    for (auto const & key: _data_manager->getTimeFrameKeys()) {
         ui->timekey_combobox->addItem(QString::fromStdString(key.str()));
     }
 
@@ -424,8 +406,7 @@ void TimeScrollBar::_populateTimeKeySelector()
     ui->timekey_combobox->blockSignals(false);
 }
 
-void TimeScrollBar::_onTimeKeyChanged(QString const & key_str)
-{
+void TimeScrollBar::_onTimeKeyChanged(QString const & key_str) {
     if (!_data_manager) {
         return;
     }
@@ -437,29 +418,27 @@ void TimeScrollBar::_onTimeKeyChanged(QString const & key_str)
     }
 }
 
-void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition position)
-{
+void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition position) {
     // Only update if the time change is for the same clock we're controlling
-    if (!position.isValid() || !_current_time_frame) {
+    if (!position.isValid()) {
+        std::cout << "TimeScrollBar::_onEditorRegistryTimeChanged: Invalid time position" << std::endl;
+        return;
+    }
+    if (!_current_time_frame) {
+        std::cout << "TimeScrollBar::_onEditorRegistryTimeChanged: No current time frame" << std::endl;
         return;
     }
 
-    if (position.sameClock(_current_time_frame)) {
-        // Same clock - update scrollbar position
-        int frame_value = static_cast<int>(position.index.getValue());
-        
-        // Block signals to avoid feedback loop
-        ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setSliderPosition(frame_value);
-        ui->horizontalScrollBar->blockSignals(false);
+    int frame_value = position.convertTo(_current_time_frame.get()).getValue();
+    ui->horizontalScrollBar->blockSignals(true);
+    ui->horizontalScrollBar->setSliderPosition(frame_value);
+    ui->horizontalScrollBar->blockSignals(false);
 
-        // Update labels
-        _updateFrameLabels(frame_value);
-    }
+    // Update labels
+    _updateFrameLabels(frame_value);
 }
 
-void TimeScrollBar::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
+void TimeScrollBar::setDataManager(std::shared_ptr<DataManager> data_manager) {
     // Remove observer from old DataManager if it exists
     if (_data_manager && _data_manager_observer_id >= 0) {
         _data_manager->removeObserver(_data_manager_observer_id);
@@ -477,8 +456,7 @@ void TimeScrollBar::setDataManager(std::shared_ptr<DataManager> data_manager)
     }
 }
 
-void TimeScrollBar::_onDataManagerChanged()
-{
+void TimeScrollBar::_onDataManagerChanged() {
     if (!_data_manager) {
         std::cout << "No DataManager available during TimeScrollBar::_onDataManagerChanged" << std::endl;
         return;
@@ -501,10 +479,10 @@ void TimeScrollBar::_onDataManagerChanged()
     // Update the current timeframe if we found one
     if (tf) {
         _current_time_frame = tf;
-        
+
         // Update scrollbar max if timeframe changed
         updateScrollBarNewMax(static_cast<int>(tf->getTotalFrameCount() - 1));
-        
+
         // Repopulate TimeKey selector to reflect current state
         _populateTimeKeySelector();
     } else {

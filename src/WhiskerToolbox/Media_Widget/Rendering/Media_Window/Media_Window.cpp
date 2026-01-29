@@ -525,17 +525,10 @@ void Media_Window::LoadFrame(TimePosition const & position) {
             std::cerr << "Warning: No media data found for key '" << media_key.toStdString() << "'" << std::endl;
             return;
         }
-        // Get the TimeFrame for media data (typically "time" key)
-        // If the position is on the same clock as media, use index directly
-        // Otherwise, convert the index
-        TimeFrameIndex frame_id = position.index;
 
         auto media_tf = _data_manager->getTime();
-        if (media_tf && !position.sameClock(media_tf)) {
-            // Different clock - convert the index
-            frame_id = position.convertTo(media_tf);
-        }
-        media->LoadFrame(frame_id.getValue());
+        int frame_value = position.convertTo(media_tf.get()).getValue();
+        media->LoadFrame(frame_value);
     }
 
     // Clear any accumulated drawing points when changing frames
@@ -662,8 +655,8 @@ void Media_Window::_plotMediaData() {
         return; // No valid time position
     }
 
-    // Convert to int for MediaData methods (which use int frame indices)
-    int const current_time = current_position.index.getValue();
+    auto media_tf = _data_manager->getTime();
+    const auto frame_value = current_position.convertTo(media_tf.get()).getValue();
 
     int total_visible_media = 0;
     std::string active_media_key;
@@ -699,7 +692,7 @@ void Media_Window::_plotMediaData() {
 
             if (media->is8Bit()) {
                 // 8-bit grayscale processing
-                auto unscaled_image_data_8bit = media->getProcessedData8(current_time);
+                auto unscaled_image_data_8bit = media->getProcessedData8(frame_value);
 
                 if (apply_colormap) {
                     auto colormap_data = ImageProcessing::apply_colormap_for_display(
@@ -723,7 +716,7 @@ void Media_Window::_plotMediaData() {
                 }
             } else if (media->is32Bit()) {
                 // 32-bit float processing
-                auto unscaled_image_data_32bit = media->getProcessedData32(current_time);
+                auto unscaled_image_data_32bit = media->getProcessedData32(frame_value);
 
                 if (apply_colormap) {
                     // TODO: Need to implement apply_colormap_for_display for float data
@@ -770,7 +763,7 @@ void Media_Window::_plotMediaData() {
             }
         } else {
             // Color image processing (always 8-bit for now)
-            auto unscaled_image_data = media->getProcessedData8(current_time);
+            auto unscaled_image_data = media->getProcessedData8(frame_value);
             unscaled_image = QImage(unscaled_image_data.data(),
                                     media->getWidth(),
                                     media->getHeight(),
@@ -824,8 +817,8 @@ QImage Media_Window::_combineMultipleMedia() {
         return QImage(); // No valid time position
     }
 
-    // Convert to int for MediaData methods (which use int frame indices)
-    int const current_time = current_position.index.getValue();
+    auto media_tf = _data_manager->getTime();
+    const auto frame_value = current_position.convertTo(media_tf.get()).getValue();
 
     // Loop through configs and get the largest image size
     std::vector<ImageSize> media_sizes;
@@ -868,7 +861,7 @@ QImage Media_Window::_combineMultipleMedia() {
 
         if (media->is8Bit()) {
             // Handle 8-bit media data
-            auto media_data_8bit = media->getProcessedData8(current_time);
+            auto media_data_8bit = media->getProcessedData8(frame_value);
 
             if (apply_colormap) {
                 auto colormap_data = ImageProcessing::apply_colormap_for_display(
@@ -918,7 +911,7 @@ QImage Media_Window::_combineMultipleMedia() {
             }
         } else if (media->is32Bit()) {
             // Handle 32-bit float media data
-            auto media_data_32bit = media->getProcessedData32(current_time);
+            auto media_data_32bit = media->getProcessedData32(frame_value);
 
             if (apply_colormap) {
                 // Convert to 8-bit for colormap application (temporary until float colormap is implemented)
