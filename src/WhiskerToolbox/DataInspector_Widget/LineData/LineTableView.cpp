@@ -126,7 +126,12 @@ void LineTableView::_connectSignals() {
 void LineTableView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
 
-        auto tf = dataManager()->getTime(TimeKey(_active_key));
+        auto tf = dataManager()->getData<LineData>(_active_key)->getTimeFrame();
+        if (!tf) {
+            std::cout << "LineTableView::_handleTableViewDoubleClicked: TimeFrame not found"
+                      << _active_key << std::endl;
+            return;
+        }
         auto const row_data = _table_model->getRowData(index.row());
         if (row_data.frame != -1) {
             emit frameSelected(TimePosition(row_data.frame, tf));

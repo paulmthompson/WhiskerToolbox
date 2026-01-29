@@ -68,7 +68,12 @@ void TensorDataView::_connectSignals() {
 void TensorDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid()) {
 
-        auto tf = dataManager()->getTime(TimeKey(_active_key));
+        auto tf = dataManager()->getData<TensorData>(_active_key)->getTimeFrame();
+        if (!tf) {
+            std::cout << "TensorDataView::_handleTableViewDoubleClicked: TimeFrame not found"
+                      << _active_key << std::endl;
+            return;
+        }
         // Get the frame from the first column
         QVariant frame_data = _table_model->data(_table_model->index(index.row(), 0), Qt::DisplayRole);
         if (frame_data.isValid()) {

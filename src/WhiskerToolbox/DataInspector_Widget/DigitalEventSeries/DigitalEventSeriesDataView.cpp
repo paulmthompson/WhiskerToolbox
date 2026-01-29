@@ -89,7 +89,12 @@ void DigitalEventSeriesDataView::_connectSignals() {
 void DigitalEventSeriesDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
 
-        auto tf = dataManager()->getTime(TimeKey(_active_key));
+        auto tf = dataManager()->getData<DigitalEventSeries>(_active_key)->getTimeFrame();
+        if (!tf) {
+            std::cout << "DigitalEventSeriesDataView::_handleTableViewDoubleClicked: TimeFrame not found"
+                      << _active_key << std::endl;
+            return;
+        }
         
         auto event = _table_model->getEvent(index.row());
         emit frameSelected(TimePosition(event, tf));

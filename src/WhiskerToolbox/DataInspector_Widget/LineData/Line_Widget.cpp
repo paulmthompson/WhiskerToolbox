@@ -143,7 +143,12 @@ void Line_Widget::_handleCellDoubleClicked(QModelIndex const & index) {
     if (!index.isValid()) {
         return;
     }
-    auto tf = _data_manager->getTime(TimeKey(_active_key));
+    auto tf = _data_manager->getData<LineData>(_active_key)->getTimeFrame();
+    if (!tf) {
+        std::cout << "Line_Widget::_handleCellDoubleClicked: TimeFrame not found"
+                  << _active_key << std::endl;
+        return;
+    }
     LineTableRow const rowData = _line_table_model->getRowData(index.row());
     if (rowData.frame != -1) {
         emit frameSelected(TimePosition(TimeFrameIndex(rowData.frame), tf));

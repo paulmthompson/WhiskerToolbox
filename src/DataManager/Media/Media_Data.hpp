@@ -240,6 +240,8 @@ public:
      */
     void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
 
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const { return _time_frame; }
+
 protected:
     virtual void doLoadMedia(std::string const & name) {
         static_cast<void>(name);

@@ -98,8 +98,12 @@ void ImageDataView::_connectSignals() {
 void ImageDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
 
-        // Using data key, we can get the TimeFrame from the data manager
-        auto tf = dataManager()->getTime(TimeKey(_active_key));
+        auto tf = dataManager()->getData<MediaData>(_active_key)->getTimeFrame();
+        if (!tf) {
+            std::cout << "ImageDataView::_handleTableViewDoubleClicked: TimeFrame not found"
+                      << _active_key << std::endl;
+            return;
+        }
 
         int frame = _table_model->getFrameForRow(index.row());
         if (frame >= 0) {

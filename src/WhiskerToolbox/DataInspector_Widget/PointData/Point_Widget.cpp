@@ -131,7 +131,13 @@ void Point_Widget::removeCallbacks() {
 
 void Point_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid()) {
-        auto tf = _data_manager->getTime(TimeKey(_active_key));
+
+        auto tf = _data_manager->getData<PointData>(_active_key)->getTimeFrame();
+        if (!tf) {
+            std::cout << "Point_Widget::_handleTableViewDoubleClicked: TimeFrame not found"
+                      << _active_key << std::endl;
+            return;
+        }
         PointTableRow const row_data = _point_table_model->getRowData(index.row());
         if (row_data.frame != -1) {
             emit frameSelected(TimePosition(TimeFrameIndex(row_data.frame), tf));

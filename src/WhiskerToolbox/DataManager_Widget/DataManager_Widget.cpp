@@ -308,6 +308,7 @@ void DataManager_Widget::_createNewData(std::string key, std::string type, std::
     }
 }
 
+/*
 void DataManager_Widget::_changeScrollbar(int frame_id) {
 
     auto active_feature = _highlighted_available_feature.toStdString();
@@ -327,6 +328,7 @@ void DataManager_Widget::_changeScrollbar(int frame_id) {
 
     _time_scrollbar->changeScrollBarValue(frame_id);
 }
+    */
 
 void DataManager_Widget::_deleteData(QString const & feature) {
     if (feature.isEmpty()) {

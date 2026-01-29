@@ -113,7 +113,7 @@ private slots:
      * 
      * @param frame_id The ID of the selected frame
      */
-    void _changeScrollbar(int frame_id);
+    //void _changeScrollbar(int frame_id);
 
     /**
      * @brief Handle deletion of data from the feature table
