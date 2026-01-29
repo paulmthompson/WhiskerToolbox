@@ -5,6 +5,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
 
 #include "nlohmann/json.hpp"
 #include <QString>
@@ -42,7 +43,7 @@ public:
     void setGroupManager(GroupManager * group_manager);
 
 signals:
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private:
     Ui::Line_Widget * ui;

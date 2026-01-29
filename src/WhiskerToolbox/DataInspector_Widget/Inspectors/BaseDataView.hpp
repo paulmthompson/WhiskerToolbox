@@ -24,6 +24,8 @@
 
 #include "IDataView.hpp"
 
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+
 #include <QWidget>
 
 #include <memory>
@@ -65,12 +67,12 @@ public:
 signals:
     /**
      * @brief Emitted when user selects a frame to navigate to
-     * @param frame_id Frame index to navigate to
+     * @param position Time position to navigate to
      * 
      * Connect this to the main application's frame navigation to allow
      * users to jump to specific frames from the view.
      */
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 protected:
     /**

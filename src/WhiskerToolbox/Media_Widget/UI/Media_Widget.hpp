@@ -46,7 +46,7 @@ public:
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
 
     // Method to handle time changes and propagate them
-    void LoadFrame(TimeKey key, TimeFrameIndex index);
+    void LoadFrame(TimePosition position);
 
     // Zoom API used by MainWindow actions
     void zoomIn();

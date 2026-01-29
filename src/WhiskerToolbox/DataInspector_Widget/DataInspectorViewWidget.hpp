@@ -24,6 +24,7 @@
  */
 
 #include "DataManager/DataManagerFwd.hpp"  // For DM_DataType
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
 
 #include <QWidget>
 
@@ -92,7 +93,7 @@ signals:
      * @brief Emitted when a frame is selected in the view
      * @param frame_id Frame index to navigate to
      */
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private slots:
     void _onInspectedKeyChanged(QString const & key);

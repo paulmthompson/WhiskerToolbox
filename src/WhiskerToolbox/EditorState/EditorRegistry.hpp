@@ -45,6 +45,7 @@
  */
 
 #include "StrongTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"// For TimePosition
 #include "ZoneTypes.hpp"
 
 #include <QObject>
@@ -324,10 +325,14 @@ public:
     // ========== Global Time ==========
 
     /**
-     * @brief Set the current visualization time with TimeKey and TimeFrameIndex
+     * @brief Set the current visualization time with TimePosition
+     * 
+     * This is the preferred method for setting the current visualization time.
+     * It includes the TimeFrame pointer for clock identity, allowing widgets
+     * to efficiently check if they're on the same clock.
      * 
      * This represents which point in time the UI is currently displaying.
-     * All time-aware widgets should connect to timeChanged() to update their views.
+     * All time-aware widgets should connect to timeChanged(TimePosition) to update their views.
      * 
      * Note: This is a UI/visualization concept, not data storage. The actual
      * time data lives in DataManager's TimeFrame objects.
@@ -335,10 +340,19 @@ public:
      * This method includes cycle prevention to avoid infinite loops when widgets
      * respond to time changes by calling setCurrentTime() again.
      * 
-     * @param key The TimeKey identifying which TimeFrame is active
-     * @param index The TimeFrameIndex within that TimeFrame
+     * @param position The TimePosition (index + TimeFrame pointer) to set
      */
-    void setCurrentTime(TimeKey key, TimeFrameIndex index);
+    void setCurrentTime(TimePosition position);
+
+    /**
+     * @brief Set the current visualization time with TimeFrameIndex and TimeFrame
+     * 
+     * Convenience overload for widgets that already have a TimeFrame pointer.
+     * 
+     * @param index The TimeFrameIndex within the TimeFrame
+     * @param time_frame The TimeFrame this index belongs to
+     */
+    void setCurrentTime(TimeFrameIndex index, std::shared_ptr<TimeFrame> time_frame);
 
 
     /**
@@ -358,19 +372,26 @@ public:
     [[nodiscard]] TimeKey activeTimeKey() const;
 
     /**
+     * @brief Get the current time position (includes TimeFrame context)
+     * @return Current TimePosition being displayed
+     */
+    [[nodiscard]] TimePosition currentPosition() const;
+
+    /**
      * @brief Get the current time index
      * @return Current TimeFrameIndex being displayed
      */
-    [[nodiscard]] TimeFrameIndex currentTimeIndex() const;
+    [[nodiscard]] TimeFrameIndex currentTimeIndex() const {
+        return _current_position.index;
+    }
 
     /**
-     * @brief Get the current visualization time (deprecated)
-     * 
-     * @deprecated Use currentTimeIndex() instead
-     * 
-     * @return Current frame index being displayed
+     * @brief Get the current TimeFrame (may be nullptr)
+     * @return The TimeFrame for the current position
      */
-    [[deprecated("Use currentTimeIndex() instead")]] [[nodiscard]] int64_t currentTime() const { return _current_time; }
+    [[nodiscard]] std::shared_ptr<TimeFrame> currentTimeFrame() const {
+        return _current_position.time_frame;
+    }
 
 signals:
     /// Emitted when a new type is registered
@@ -400,12 +421,14 @@ signals:
      * Connect to this signal to update views when the user scrubs
      * through time (e.g., via TimeScrollBar).
      * 
-     * This is the preferred signal that includes both TimeKey and TimeFrameIndex.
+     * This is the preferred signal that includes TimePosition (index + TimeFrame pointer).
+     * Widgets can use TimePosition::sameClock() to check if they're on the same clock
+     * and TimePosition::convertTo() to convert indices between different TimeFrames.
      * 
-     * @param key The TimeKey identifying which TimeFrame changed
-     * @param index The new TimeFrameIndex being displayed
+     * @param position The new TimePosition being displayed
      */
-    void timeChanged(TimeKey key, TimeFrameIndex index);
+    void timeChanged(TimePosition position);
+
 
     /**
      * @brief Emitted when the active TimeKey changes
@@ -449,15 +472,13 @@ private:
     std::map<EditorInstanceId, std::shared_ptr<EditorState>> _states;
 
     /// Current visualization time state
+    TimePosition _current_position;           ///< Current time position (index + TimeFrame pointer)
     TimeKey _active_time_key{TimeKey("time")};///< Currently selected TimeFrame key (defaults to "time")
-    TimeFrameIndex _current_time_index{0};    ///< Current index in the active TimeFrame
     bool _time_update_in_progress{false};     ///< Guard flag to prevent re-entrant time updates
 
-    /// Legacy time state (kept for backward compatibility)
-    int64_t _current_time{0};
-
     void connectStateSignals(EditorState * state);
-    public:
+
+public:
     /**
      * @brief Set the current visualization time (deprecated)
      * 

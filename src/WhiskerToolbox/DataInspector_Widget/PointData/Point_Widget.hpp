@@ -51,7 +51,7 @@ public:
     void setGroupManager(GroupManager * group_manager);
 
 signals:
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private:
     Ui::Point_Widget * ui;

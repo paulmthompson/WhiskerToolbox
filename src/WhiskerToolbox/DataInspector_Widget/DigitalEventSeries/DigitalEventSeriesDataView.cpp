@@ -88,8 +88,11 @@ void DigitalEventSeriesDataView::_connectSignals() {
 
 void DigitalEventSeriesDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
+
+        auto tf = dataManager()->getTime(TimeKey(_active_key));
+        
         auto event = _table_model->getEvent(index.row());
-        emit frameSelected(static_cast<int>(event.getValue()));
+        emit frameSelected(TimePosition(event, tf));
     }
 }
 

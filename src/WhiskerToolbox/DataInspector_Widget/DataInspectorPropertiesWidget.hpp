@@ -23,6 +23,7 @@
  */
 
 #include "DataManager/DataManagerFwd.hpp"  // For DM_DataType
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
 
 #include <QWidget>
 
@@ -99,9 +100,9 @@ public:
 signals:
     /**
      * @brief Emitted when a frame is selected in the inspector
-     * @param frame_id Frame index to navigate to
+     * @param position Time position to navigate to
      */
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private slots:
     void _onSelectionChanged(SelectionSource const & source);

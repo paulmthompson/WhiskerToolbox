@@ -143,9 +143,10 @@ void Line_Widget::_handleCellDoubleClicked(QModelIndex const & index) {
     if (!index.isValid()) {
         return;
     }
+    auto tf = _data_manager->getTime(TimeKey(_active_key));
     LineTableRow const rowData = _line_table_model->getRowData(index.row());
     if (rowData.frame != -1) {
-        emit frameSelected(static_cast<int>(rowData.frame));
+        emit frameSelected(TimePosition(TimeFrameIndex(rowData.frame), tf));
     }
 }
 

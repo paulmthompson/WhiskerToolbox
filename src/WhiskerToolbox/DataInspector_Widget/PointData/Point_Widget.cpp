@@ -131,9 +131,10 @@ void Point_Widget::removeCallbacks() {
 
 void Point_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid()) {
+        auto tf = _data_manager->getTime(TimeKey(_active_key));
         PointTableRow const row_data = _point_table_model->getRowData(index.row());
         if (row_data.frame != -1) {
-            emit frameSelected(static_cast<int>(row_data.frame));
+            emit frameSelected(TimePosition(TimeFrameIndex(row_data.frame), tf));
         }
     }
 }

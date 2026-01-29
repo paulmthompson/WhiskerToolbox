@@ -400,17 +400,14 @@ void EditorRegistry::markAllClean() {
 
 // === Global Time ===
 
-void EditorRegistry::setCurrentTime(TimeKey key, TimeFrameIndex index) {
+void EditorRegistry::setCurrentTime(TimePosition position) {
     // Guard against re-entrant calls to prevent infinite loops
     if (_time_update_in_progress) {
         return;// Silently ignore recursive calls
     }
 
-    // Check if state actually changed
-    bool key_changed = (_active_time_key != key);
-    bool index_changed = (_current_time_index != index);
-
-    if (!key_changed && !index_changed) {
+    // Check if state actually changed (pointer comparison + index comparison)
+    if (_current_position == position) {
         return;// No change, no signal
     }
 
@@ -418,47 +415,21 @@ void EditorRegistry::setCurrentTime(TimeKey key, TimeFrameIndex index) {
     _time_update_in_progress = true;
 
     // Update state
-    TimeKey old_key = _active_time_key;
-    _active_time_key = key;
-    _current_time_index = index;
+    _current_position = position;
 
-    // Also update legacy _current_time for backward compatibility
-    _current_time = index.getValue();
-
-    // Emit signals (guard flag prevents handlers from recursively calling setCurrentTime)
-    if (key_changed) {
-        emit activeTimeKeyChanged(key, old_key);
-    }
-    emit timeChanged(key, index);
+    // Emit new signal (preferred)
+    emit timeChanged(position);
 
     // Clear guard flag after all signals are emitted
     _time_update_in_progress = false;
 }
 
-void EditorRegistry::setActiveTimeKey(TimeKey key) {
-    if (_active_time_key != key) {
-        TimeKey old_key = _active_time_key;
-        _active_time_key = key;
-        // Reset to frame 0 when switching TimeKeys
-        _current_time_index = TimeFrameIndex(0);
-        _current_time = 0;
-
-        emit activeTimeKeyChanged(key, old_key);
-        emit timeChanged(key, _current_time_index);
-    }
+void EditorRegistry::setCurrentTime(TimeFrameIndex index, std::shared_ptr<TimeFrame> time_frame) {
+    setCurrentTime(TimePosition(index, time_frame));
 }
 
-TimeKey EditorRegistry::activeTimeKey() const {
-    return _active_time_key;
-}
-
-TimeFrameIndex EditorRegistry::currentTimeIndex() const {
-    return _current_time_index;
-}
-
-// Deprecated compatibility shim
-void EditorRegistry::setCurrentTime(int64_t time) {
-    setCurrentTime(_active_time_key, TimeFrameIndex(time));
+TimePosition EditorRegistry::currentPosition() const {
+    return _current_position;
 }
 
 // === Private ===

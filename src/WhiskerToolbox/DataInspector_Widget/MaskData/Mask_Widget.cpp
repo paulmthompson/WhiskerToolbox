@@ -145,9 +145,10 @@ void Mask_Widget::_onDataChanged() {
 
 void Mask_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (!index.isValid()) return;
+    auto tf = _data_manager->getTime(TimeKey(_active_key));
     int const frame = _mask_table_model->getFrameForRow(index.row());
     if (frame != -1) {
-        emit frameSelected(frame);
+        emit frameSelected(TimePosition(TimeFrameIndex(frame), tf));
     }
 }
 

@@ -113,9 +113,11 @@ void MaskTableView::_connectSignals() {
 
 void MaskTableView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid() && _table_model) {
+
+        auto tf = dataManager()->getTime(TimeKey(_active_key));
         auto const row_data = _table_model->getRowData(index.row());
         if (row_data.frame != -1) {
-            emit frameSelected(static_cast<int>(row_data.frame));
+            emit frameSelected(TimePosition(row_data.frame, tf));
         }
     }
 }

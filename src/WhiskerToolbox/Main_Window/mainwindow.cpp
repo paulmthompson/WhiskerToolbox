@@ -238,7 +238,7 @@ void MainWindow::_createActions() {
     // Connect TimeScrollBar to EditorRegistry for global time propagation
     connect(_time_scrollbar, &TimeScrollBar::timeChanged,
             _editor_registry.get(), [this](int index) {
-                _editor_registry->setCurrentTime(TimeKey("time"), TimeFrameIndex(index));
+                _editor_registry->setCurrentTime(TimePosition(TimeFrameIndex(index), _data_manager->getTime(TimeKey("time"))));
             });
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);

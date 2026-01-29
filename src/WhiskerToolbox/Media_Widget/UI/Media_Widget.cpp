@@ -53,9 +53,11 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
         _selection_context = _editor_registry->selectionContext();
 
         // Connect to global time changes for frame loading
-        // Use the new timeChanged(TimeKey, TimeFrameIndex) signal
-        connect(_editor_registry, &EditorRegistry::timeChanged,
+        // Use the new timeChanged(TimePosition) signal (preferred)
+        connect(_editor_registry,
+                QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
                 this, &Media_Widget::LoadFrame);
+
 
         // Connect to SelectionContext to respond to    external selection changes
         // When another widget (e.g., DataManager_Widget) selects data, update our state
@@ -280,7 +282,8 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             // This ensures new media is loaded from disk
             // Before the update
             auto current_time = _data_manager->getCurrentTime();
-            LoadFrame(TimeKey("time"), TimeFrameIndex(current_time));
+            auto time_frame = _data_manager->getTime();
+            LoadFrame(TimePosition(TimeFrameIndex(current_time), time_frame));
 
         } else {
             std::cout << "Disabling media data from scene" << std::endl;
@@ -348,9 +351,22 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     _scene->UpdateCanvas();
 }
 
-void Media_Widget::LoadFrame(TimeKey key, TimeFrameIndex frame_id) {
-    if (_scene) {
-        _scene->LoadFrame(frame_id.getValue());
+void Media_Widget::LoadFrame(TimePosition position) {
+    if (_scene && position.isValid()) {
+        // Get the TimeFrame for media data (typically "time" key)
+        // If the position is on the same clock as media, use index directly
+        // Otherwise, convert the index
+        TimeFrameIndex frame_id = position.index;
+
+        if (_data_manager) {
+            auto media_tf = _data_manager->getTime();
+            if (media_tf && !position.sameClock(media_tf)) {
+                // Different clock - convert the index
+                frame_id = position.convertTo(media_tf);
+            }
+        }
+
+        _scene->LoadFrame(static_cast<int>(frame_id.getValue()));
     }
 }
 

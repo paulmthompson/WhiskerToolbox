@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+
 #include <memory>
 #include <string>
 
@@ -26,7 +28,7 @@ public:
     void updateTable();
 
 signals:
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private:
     Ui::Image_Widget * ui;

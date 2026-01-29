@@ -67,10 +67,12 @@ void TensorDataView::_connectSignals() {
 
 void TensorDataView::_handleTableViewDoubleClicked(QModelIndex const & index) {
     if (index.isValid()) {
+
+        auto tf = dataManager()->getTime(TimeKey(_active_key));
         // Get the frame from the first column
         QVariant frame_data = _table_model->data(_table_model->index(index.row(), 0), Qt::DisplayRole);
         if (frame_data.isValid()) {
-            emit frameSelected(frame_data.toInt());
+            emit frameSelected(TimePosition(frame_data.toInt(), tf));
         }
     }
 }

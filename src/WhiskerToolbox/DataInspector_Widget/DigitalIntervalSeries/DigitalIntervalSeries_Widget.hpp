@@ -3,7 +3,9 @@
 
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"// For CSVIntervalSaverOptions
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"               // For context menu utilities
-#include "TimeFrame/interval_data.hpp"                                         // For Interval
+#include "TimeFrame/interval_data.hpp"    
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+// For Interval
 
 #include <QWidget>
 
@@ -41,7 +43,7 @@ public:
     void setSelectionProvider(std::function<std::vector<Interval>()> provider);
 
 signals:
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private:
     Ui::DigitalIntervalSeries_Widget * ui;

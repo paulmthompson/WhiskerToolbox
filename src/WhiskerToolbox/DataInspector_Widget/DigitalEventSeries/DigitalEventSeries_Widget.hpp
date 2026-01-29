@@ -3,6 +3,8 @@
 
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
 
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+
 #include <QWidget>
 
 #include <memory>
@@ -30,7 +32,7 @@ public:
     void removeCallbacks();
 
 signals:
-    void frameSelected(int frame_id);
+    void frameSelected(TimePosition position);
 
 private:
     Ui::DigitalEventSeries_Widget * ui;
