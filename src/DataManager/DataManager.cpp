@@ -178,10 +178,6 @@ void DataManager::reset() {
     _time_frames.clear();
     setTimeKey("media", TimeKey("time"));
 
-
-    // Reset current time
-    _current_time = 0;
-
     // Notify observers that the state has changed
     _notifyObservers();
 

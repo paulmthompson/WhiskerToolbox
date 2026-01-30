@@ -145,10 +145,6 @@ public:
     */
     void reset();
 
-
-    int64_t getCurrentTime() { return _current_time; };
-    void setCurrentTime(int64_t time) { _current_time = time; }
-
     using ObserverCallback = std::function<void()>;
 
     /**
@@ -381,8 +377,6 @@ private:
     std::string _output_path;
 
     void _notifyObservers();
-
-    int64_t _current_time{0};
 
     // ======= Table Registry and observer internals =======
     std::unique_ptr<TableRegistry> _table_registry;

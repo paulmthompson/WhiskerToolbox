@@ -182,12 +182,12 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "Hide Event" << std::endl;
-    
+
     // Guard against _scene being destroyed before hideEvent is called
     if (!_scene) {
         return;
     }
-    
+
     disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
     disconnect(_scene, &Media_Window::mouseMove, this, nullptr);
@@ -678,8 +678,9 @@ void MediaLine_Widget::_detectEdges() {
         return;
     }
 
-    auto const current_time = _data_manager->getCurrentTime();
-    auto frame_data = media->getProcessedData(current_time);
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(media->getTimeFrame().get());
+    auto frame_data = media->getProcessedData(current_time.getValue());
 
     // Convert raw frame data to cv::Mat
     /*
@@ -709,7 +710,7 @@ void MediaLine_Widget::_detectEdges() {
 
     cv::Canny(gray_image, _current_edges, _edge_threshold / 2, _edge_threshold);
 
-    std::cout << "Edge detection completed for frame " << current_time << std::endl;
+    std::cout << "Edge detection completed for frame " << current_time.getValue() << std::endl;
     std::cout << "Edges detected: " << _current_edges.size() << std::endl;
 }
 
@@ -1025,8 +1026,8 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
     if (!line_data) {
         return std::nullopt;
     }
-
-    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(line_data->getTimeFrame().get());
     auto entity_ids = line_data->getEntityIdsAtTime(current_time);
     auto lines = line_data->getAtTime(current_time);
 
@@ -1175,7 +1176,8 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
 
     Line2D selected_line = selected_line_opt.value().get();
 
-    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(target_line_data->getTimeFrame().get());
 
     // Add to target
     target_line_data->addAtTime(current_time, selected_line, NotifyObservers::No);
@@ -1191,7 +1193,8 @@ void MediaLine_Widget::_moveLineToTarget(std::string const & target_key) {
     source_line_data->notifyObservers();
     target_line_data->notifyObservers();
 
-    std::cout << "Moved line with EntityID " << selected_entity_id.id << " from " << _active_key << " to " << target_key << std::endl;
+    std::cout << "Moved line with EntityID " << selected_entity_id.id
+              << " from " << _active_key << " to " << target_key << std::endl;
 }
 
 void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
@@ -1224,7 +1227,8 @@ void MediaLine_Widget::_copyLineToTarget(std::string const & target_key) {
 
     Line2D selected_line = selected_line_opt.value().get();
 
-    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(target_line_data->getTimeFrame().get());
 
     // Copy to target
     target_line_data->addAtTime(current_time, selected_line, NotifyObservers::No);

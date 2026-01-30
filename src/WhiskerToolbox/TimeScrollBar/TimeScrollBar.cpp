@@ -219,20 +219,13 @@ void TimeScrollBar::PlayButton() {
         ui->play_button->setText(QString("Play"));
         _play_mode = false;
 
-        // Update scrollbar position from EditorRegistry if available
-        if (_editor_registry) {
-            auto current_pos = _editor_registry->currentPosition();
-            if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-                ui->horizontalScrollBar->blockSignals(true);
-                ui->horizontalScrollBar->setValue(static_cast<int>(current_pos.index.getValue()));
-                ui->horizontalScrollBar->blockSignals(false);
-            }
-        } else if (_data_manager) {
-            // Fallback to DataManager
+        auto current_pos = _editor_registry->currentPosition();
+        if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
             ui->horizontalScrollBar->blockSignals(true);
-            ui->horizontalScrollBar->setValue(_data_manager->getCurrentTime());
+            ui->horizontalScrollBar->setValue(static_cast<int>(current_pos.index.getValue()));
             ui->horizontalScrollBar->blockSignals(false);
         }
+
 
     } else {
         ui->play_button->setText(QString("Pause"));
@@ -277,13 +270,9 @@ void TimeScrollBar::FastForwardButton() {
 void TimeScrollBar::_vidLoop() {
     // Get current time from EditorRegistry if available, otherwise from DataManager
     int current_time = 0;
-    if (_editor_registry) {
-        auto current_pos = _editor_registry->currentPosition();
-        if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-            current_time = static_cast<int>(current_pos.index.getValue()) + _play_speed;
-        }
-    } else if (_data_manager) {
-        current_time = _data_manager->getCurrentTime() + _play_speed;
+    auto current_pos = _editor_registry->currentPosition();
+    if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
+        current_time = static_cast<int>(current_pos.index.getValue()) + _play_speed;
     }
 
     ui->horizontalScrollBar->setSliderPosition(current_time);
@@ -296,13 +285,10 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
     if (relative) {
         // Get current time from EditorRegistry if available, otherwise from DataManager
         int current_time = 0;
-        if (_editor_registry) {
-            auto current_pos = _editor_registry->currentPosition();
-            if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-                current_time = static_cast<int>(current_pos.index.getValue());
-            }
-        } else if (_data_manager) {
-            current_time = _data_manager->getCurrentTime();
+
+        auto current_pos = _editor_registry->currentPosition();
+        if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
+            current_time = static_cast<int>(current_pos.index.getValue());
         }
         new_value = current_time + new_value;
     }

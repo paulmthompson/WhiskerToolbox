@@ -3,6 +3,7 @@
 
 #include "LineTableView.hpp"
 #include "DataInspector_Widget/Inspectors/GroupFilterHelper.hpp"
+#include "DataInspector_Widget/DataInspectorState.hpp"
 
 #include "DataManager.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
@@ -563,8 +564,14 @@ void LineInspector::_onAutoScrollToCurrentFrame() {
         return;
     }
 
-    int64_t current_time = dataManager()->getCurrentTime();
-    _data_view->scrollToFrame(current_time);
+    auto const current_position = state()->current_position;
+    auto line_data = dataManager()->getData<LineData>(_active_key);
+    if (!line_data) {
+        return;
+    }
+    auto current_time = current_position.convertTo(line_data->getTimeFrame().get());
+
+    _data_view->scrollToFrame(current_time.getValue());
 }
 
 void LineInspector::setDataView(LineTableView * view) {
