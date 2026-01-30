@@ -49,9 +49,6 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
 
         ImageData/ImageInspector.hpp
         ImageData/ImageInspector.cpp
-        ImageData/Image_Widget.hpp
-        ImageData/Image_Widget.cpp
-        ImageData/Image_Widget.ui
         ImageData/ImageTableModel.cpp
         ImageData/ImageTableModel.hpp
         ImageData/ImageDataView.hpp

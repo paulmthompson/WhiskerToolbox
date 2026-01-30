@@ -6,28 +6,23 @@
  * @brief Inspector widget for MediaData (images/video)
  * 
  * ImageInspector provides inspection capabilities for MediaData objects.
- * It wraps the existing Image_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
  * 
  * ## Features
- * - Image data table with frame information
- * - Frame navigation via double-click
+ * - Data change callbacks for image/media data
  * 
- * @see Image_Widget for the underlying implementation
+ * Note: Image table view is provided by ImageDataView in the view panel.
+ * 
  * @see BaseInspector for the base class
+ * @see ImageDataView for the table view
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
-#include <memory>
-
-class Image_Widget;
-
 /**
  * @brief Inspector widget for MediaData (images/video)
  * 
- * Wraps Image_Widget to provide IDataInspector interface while reusing
- * existing functionality for image/media data inspection.
+ * Provides callback management for image/media data inspection.
+ * The actual table view is handled by ImageDataView.
  */
 class ImageInspector : public BaseInspector {
     Q_OBJECT
@@ -63,11 +58,14 @@ public:
     // Images don't support group filtering
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
-private:
-    void _setupUi();
-    void _connectSignals();
+private slots:
+    /**
+     * @brief Handle data change notifications
+     */
+    void _onDataChanged();
 
-    std::unique_ptr<Image_Widget> _image_widget;
+private:
+    void _assignCallbacks();
 };
 
 #endif // IMAGE_INSPECTOR_HPP

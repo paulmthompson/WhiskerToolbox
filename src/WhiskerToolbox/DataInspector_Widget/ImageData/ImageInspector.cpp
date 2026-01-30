@@ -1,16 +1,16 @@
 #include "ImageInspector.hpp"
 
-#include "Image_Widget.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Media/Media_Data.hpp"
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
-#include <QVBoxLayout>
+#include <iostream>
 
 ImageInspector::ImageInspector(
     std::shared_ptr<DataManager> data_manager,
     GroupManager * group_manager,
     QWidget * parent)
     : BaseInspector(std::move(data_manager), group_manager, parent) {
-    _setupUi();
-    _connectSignals();
 }
 
 ImageInspector::~ImageInspector() {
@@ -18,38 +18,39 @@ ImageInspector::~ImageInspector() {
 }
 
 void ImageInspector::setActiveKey(std::string const & key) {
-    _active_key = key;
-    if (_image_widget) {
-        _image_widget->setActiveKey(key);
+    if (_active_key == key && _callback_id != -1) {
+        return;
     }
+    
+    removeCallbacks();
+    _active_key = key;
+    _assignCallbacks();
 }
 
 void ImageInspector::removeCallbacks() {
-    if (_image_widget) {
-        _image_widget->removeCallbacks();
-    }
+    remove_callback(dataManager().get(), _active_key, _callback_id);
 }
 
 void ImageInspector::updateView() {
-    if (_image_widget) {
-        _image_widget->updateTable();
+    // ImageInspector doesn't maintain its own UI - ImageDataView handles the table
+    // This method is called when data changes, but the actual view update
+    // is handled by ImageDataView through its own callbacks
+}
+
+void ImageInspector::_assignCallbacks() {
+    if (!_active_key.empty()) {
+        auto media_data = dataManager()->getData<MediaData>(_active_key);
+        if (media_data) {
+            _callback_id = dataManager()->addCallbackToData(_active_key, [this]() { _onDataChanged(); });
+        } else {
+            std::cerr << "ImageInspector: No MediaData found for key '" << _active_key 
+                      << "' to attach callback." << std::endl;
+        }
     }
 }
 
-void ImageInspector::_setupUi() {
-    auto * layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-
-    // Create the wrapped Image_Widget
-    _image_widget = std::make_unique<Image_Widget>(dataManager(), this);
-
-    layout->addWidget(_image_widget.get());
-}
-
-void ImageInspector::_connectSignals() {
-    if (_image_widget) {
-        // Forward frame selection signal
-        connect(_image_widget.get(), &Image_Widget::frameSelected,
-                this, &ImageInspector::frameSelected);
-    }
+void ImageInspector::_onDataChanged() {
+    // Notify that data has changed - ImageDataView will handle the actual view update
+    // through its own callback mechanism
+    updateView();
 }
