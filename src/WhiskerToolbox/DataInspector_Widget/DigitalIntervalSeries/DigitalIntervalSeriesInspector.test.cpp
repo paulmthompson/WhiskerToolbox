@@ -169,16 +169,18 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
-
-        // Set current time to frame 50
-        data_manager->setCurrentTime(50);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create empty interval series
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
         data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
 
+        // Set up state with current position
+        auto state = std::make_shared<DataInspectorState>();
+        state->current_position = TimePosition(TimeFrameIndex(50), tf);
+
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setState(state);
         inspector.setActiveKey("test_intervals");
 
         app->processEvents();
@@ -199,7 +201,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         REQUIRE(create_button->text() == QStringLiteral("Mark Interval End"));
 
         // Move to later frame and click again to complete interval
-        data_manager->setCurrentTime(60);
+        state->current_position = TimePosition(TimeFrameIndex(60), tf);
         create_button->click();
 
         app->processEvents();
@@ -224,10 +226,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
-
-        // Set current time to frame 15 (within first interval)
-        data_manager->setCurrentTime(15);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with intervals [10,20] and [30,40]
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -235,7 +234,12 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         interval_series->addEvent(TimeFrameIndex(30), TimeFrameIndex(40));
         data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
 
+        // Set up state with current position at frame 15 (within first interval)
+        auto state = std::make_shared<DataInspectorState>();
+        state->current_position = TimePosition(TimeFrameIndex(15), tf);
+
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setState(state);
         inspector.setActiveKey("test_intervals");
 
         app->processEvents();
@@ -256,7 +260,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         REQUIRE(remove_button->text() == QStringLiteral("Mark Remove Interval End"));
 
         // Move to frame 18 and click again to complete removal
-        data_manager->setCurrentTime(18);
+        state->current_position = TimePosition(TimeFrameIndex(18), tf);
         remove_button->click();
 
         app->processEvents();
@@ -778,21 +782,23 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
-
-        // Set current time to frame 70
-        data_manager->setCurrentTime(70);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with an interval
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
         interval_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
         data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
 
+        // Set up state with current position at frame 70
+        auto state = std::make_shared<DataInspectorState>();
+        state->current_position = TimePosition(TimeFrameIndex(70), tf);
+
         // Create view and inspector
         DigitalIntervalSeriesDataView view(data_manager, nullptr);
         view.setActiveKey("test_intervals");
 
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setState(state);
         inspector.setActiveKey("test_intervals");
         inspector.setDataView(&view);
 
@@ -879,8 +885,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     REQUIRE(table_view->model()->rowCount() >= 1);
 
     // Set initial time to something different
-    data_manager->setCurrentTime(50);
-    REQUIRE(data_manager->getCurrentTime() == 50);
+    state->current_position = TimePosition(TimeFrameIndex(50), tf);
 
     // Test 1: Double click row 0, column 0 (start) -> should emit frameSelected(start)
     QModelIndex idx0_start = table_view->model()->index(0, 0);
@@ -957,7 +962,12 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     interval_series->setTimeFrame(tf);
     data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
 
+    // Set up state with initial current position
+    auto state = std::make_shared<DataInspectorState>();
+    state->current_position = TimePosition(TimeFrameIndex(0), tf);
+
     DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+    inspector.setState(state);
     inspector.setActiveKey("test_intervals");
     app->processEvents();
 
@@ -972,7 +982,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         // Reset state by setting active key (which cancels any ongoing interval creation)
         inspector.setActiveKey("test_intervals");
         
-        data_manager->setCurrentTime(100);
+        state->current_position = TimePosition(TimeFrameIndex(100), tf);
         app->processEvents();
 
         // Verify initial state before clicking
@@ -997,7 +1007,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->text() == "Start: 100");
 
         // Move to later frame and click again
-        data_manager->setCurrentTime(200);
+        state->current_position = TimePosition(TimeFrameIndex(200), tf);
         app->processEvents();
         create_button->click();
         app->processEvents();
@@ -1028,7 +1038,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
             intervals->removeInterval(interval_with_id.value());
         }
         
-        data_manager->setCurrentTime(300);
+        state->current_position = TimePosition(TimeFrameIndex(300), tf);
         app->processEvents();
 
         // Verify initial state before clicking
@@ -1046,7 +1056,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         QTest::qWait(10); // Small delay to ensure UI updates
 
         // Move to earlier frame and complete interval
-        data_manager->setCurrentTime(150);
+        state->current_position = TimePosition(TimeFrameIndex(150), tf);
         app->processEvents();
         create_button->click();
         app->processEvents();
@@ -1072,7 +1082,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
             intervals->removeInterval(interval_with_id.value());
         }
         
-        data_manager->setCurrentTime(50);
+        state->current_position = TimePosition(TimeFrameIndex(50), tf);
         app->processEvents();
 
         // Verify initial state before clicking
@@ -1124,7 +1134,7 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
     std::vector<int> t(kNumTimes);
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
-    data_manager->setTime(TimeKey("time"), tf);
+    data_manager->setTime(TimeKey("time"), tf, true);
     
     // Create interval series
     auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
@@ -1133,11 +1143,16 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
     auto interval_series_2 = std::make_shared<DigitalIntervalSeries>();
     data_manager->setData<DigitalIntervalSeries>("intervals2", interval_series_2, TimeKey("time"));
 
+    // Set up state with initial current position
+    auto state = std::make_shared<DataInspectorState>();
+    state->current_position = TimePosition(TimeFrameIndex(0), tf);
+
     DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+    inspector.setState(state);
 
     SECTION("State reset when switching active keys") {
         inspector.setActiveKey("intervals1");
-        data_manager->setCurrentTime(100);
+        state->current_position = TimePosition(TimeFrameIndex(100), tf);
         app->processEvents();
 
         // Start interval creation
@@ -1157,7 +1172,7 @@ TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSe
 
     SECTION("State reset when removing callbacks") {
         inspector.setActiveKey("intervals1");
-        data_manager->setCurrentTime(100);
+        state->current_position = TimePosition(TimeFrameIndex(100), tf);
         app->processEvents();
 
         // Start interval creation
@@ -1190,7 +1205,7 @@ TEST_CASE("DigitalIntervalSeriesInspector filename generation", "[DigitalInterva
     std::vector<int> t(kNumTimes);
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
-    data_manager->setTime(TimeKey("time"), tf);
+    data_manager->setTime(TimeKey("time"), tf, true);
     
     // Create interval series
     auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
@@ -1238,11 +1253,24 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
     REQUIRE(app != nullptr);
 
     auto data_manager = std::make_shared<DataManager>();
+    
+    // Create timeframe for state
+    data_manager->removeTime(TimeKey("time"));
+    constexpr int kNumTimes = 1000;
+    std::vector<int> t(kNumTimes);
+    std::iota(t.begin(), t.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(t);
+    data_manager->setTime(TimeKey("time"), tf, true);
+    
+    // Set up state with initial current position
+    auto state = std::make_shared<DataInspectorState>();
+    state->current_position = TimePosition(TimeFrameIndex(100), tf);
+
     DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+    inspector.setState(state);
 
     SECTION("Handle null data gracefully") {
         inspector.setActiveKey("nonexistent_key");
-        data_manager->setCurrentTime(100);
 
         // Should not crash when trying to create interval with null data
         QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
@@ -1252,14 +1280,7 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
     }
 
     SECTION("Context menu only appears during interval creation") {
-        // Create timeframe and interval series for this test
-        data_manager->removeTime(TimeKey("time"));
-        constexpr int kNumTimes = 1000;
-        std::vector<int> t(kNumTimes);
-        std::iota(t.begin(), t.end(), 0);
-        auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
-        
+        // Create interval series for this test
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
         data_manager->setData<DigitalIntervalSeries>("test_key", interval_series, TimeKey("time"));
         
@@ -1269,7 +1290,7 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
         // Right-click when not in interval creation mode - context menu should not appear
         // (This is tested implicitly by the _showCreateIntervalContextMenu implementation)
 
-        data_manager->setCurrentTime(100);
+        state->current_position = TimePosition(TimeFrameIndex(100), tf);
         app->processEvents();
         QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
         app->processEvents();

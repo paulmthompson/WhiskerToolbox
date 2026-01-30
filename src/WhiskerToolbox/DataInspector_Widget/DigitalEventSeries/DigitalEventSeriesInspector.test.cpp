@@ -3,6 +3,7 @@
 #include "DigitalEventSeriesDataView.hpp"
 #include "EventTableModel.hpp"
 
+#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -17,6 +18,8 @@
 #include <QComboBox>
 #include <QTableView>
 #include <QAbstractItemModel>
+#include <QModelIndex>
+#include <QVariant>
 
 #include <array>
 #include <memory>
@@ -163,16 +166,19 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);// Overwrite existing time frame
 
-        // Set current time to frame 50
-        data_manager->setCurrentTime(50);
 
         // Create empty event series
         auto event_series = std::make_shared<DigitalEventSeries>();
         data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
 
+        // Set up state with current position
+        auto state = std::make_shared<DataInspectorState>();
+        state->current_position = TimePosition(TimeFrameIndex(50), tf);
+
         DigitalEventSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setState(state);
         inspector.setActiveKey("test_events");
 
         app->processEvents();
@@ -208,10 +214,8 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
-        // Set current time to frame 20
-        data_manager->setCurrentTime(20);
 
         // Create event series with events at 10, 20, 30
         std::vector<TimeFrameIndex> event_times = {
@@ -219,7 +223,12 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         auto event_series = std::make_shared<DigitalEventSeries>(event_times);
         data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
 
+        // Set up state with current position
+        auto state = std::make_shared<DataInspectorState>();
+        state->current_position = TimePosition(TimeFrameIndex(20), tf);
+
         DigitalEventSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setState(state);
         inspector.setActiveKey("test_events");
 
         app->processEvents();
@@ -256,10 +265,8 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
-        // Set current time to frame 50 (no event here)
-        data_manager->setCurrentTime(50);
 
         // Create event series with events at 10, 20, 30
         std::vector<TimeFrameIndex> event_times = {
@@ -267,7 +274,12 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         auto event_series = std::make_shared<DigitalEventSeries>(event_times);
         data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
 
+        // Set up state with current position
+        auto state = std::make_shared<DataInspectorState>();
+        state->current_position = TimePosition(TimeFrameIndex(50), tf);
+
         DigitalEventSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setState(state);
         inspector.setActiveKey("test_events");
 
         app->processEvents();
@@ -647,5 +659,63 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         REQUIRE(model->getEvent(0) == TimeFrameIndex(30));
         REQUIRE(model->getEvent(1) == TimeFrameIndex(40));
         REQUIRE(model->getEvent(2) == TimeFrameIndex(50));
+    }
+
+    SECTION("Table displays timeframe index values correctly") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create event series with events at specific indices
+        std::vector<TimeFrameIndex> event_times = {
+            TimeFrameIndex(10), TimeFrameIndex(25), TimeFrameIndex(42)};
+        auto event_series = std::make_shared<DigitalEventSeries>(event_times);
+        data_manager->setData<DigitalEventSeries>("test_events", event_series, TimeKey("time"));
+
+        DigitalEventSeriesDataView view(data_manager, nullptr);
+        view.setActiveKey("test_events");
+
+        app->processEvents();
+
+        // Verify table view exists and has model
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = dynamic_cast<EventTableModel *>(table_view->model());
+        REQUIRE(model != nullptr);
+        REQUIRE(model->rowCount(QModelIndex()) == 3);
+
+        // Verify that the data() method returns displayable values
+        // This checks that the timeframe index is actually displayed in the table
+        QModelIndex index0 = model->index(0, 0);
+        QModelIndex index1 = model->index(1, 0);
+        QModelIndex index2 = model->index(2, 0);
+
+        REQUIRE(index0.isValid());
+        REQUIRE(index1.isValid());
+        REQUIRE(index2.isValid());
+
+        // Check that the display role returns the correct string representation
+        QVariant data0 = model->data(index0, Qt::DisplayRole);
+        QVariant data1 = model->data(index1, Qt::DisplayRole);
+        QVariant data2 = model->data(index2, Qt::DisplayRole);
+
+        REQUIRE(data0.isValid());
+        REQUIRE(data1.isValid());
+        REQUIRE(data2.isValid());
+
+        // Verify the displayed values match the expected timeframe indices
+        REQUIRE(data0.toString() == QStringLiteral("10"));
+        REQUIRE(data1.toString() == QStringLiteral("25"));
+        REQUIRE(data2.toString() == QStringLiteral("42"));
+
+        // Verify the underlying event data matches
+        REQUIRE(model->getEvent(0) == TimeFrameIndex(10));
+        REQUIRE(model->getEvent(1) == TimeFrameIndex(25));
+        REQUIRE(model->getEvent(2) == TimeFrameIndex(42));
     }
 }

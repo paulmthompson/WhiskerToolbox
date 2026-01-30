@@ -41,7 +41,7 @@ public:
         }
 
         if (index.column() == 0) {
-            return QVariant::fromValue(_events.at(index.row()));
+            return QString::number(_events.at(index.row()).getValue());
         }
 
         return QVariant{};
