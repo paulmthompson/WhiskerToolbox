@@ -6,25 +6,46 @@
  * @brief Inspector widget for LineData
  * 
  * LineInspector provides inspection capabilities for LineData objects.
- * It wraps the existing Line_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
+ * It integrates LineTableView for data display and provides additional
+ * functionality for image size management, export, and group operations.
  * 
  * ## Features
- * - Line data table with frame and polyline information
+ * - Line data table with frame and polyline information (via LineTableView)
  * - Group filtering
- * - Context menu for move/copy operations
+ * - Context menu for move/copy/delete operations
  * - Export to CSV and binary formats
+ * - Image size management
  * - Frame navigation via double-click
  * 
- * @see Line_Widget for the underlying implementation
+ * @see LineTableView for the table view implementation
  * @see BaseInspector for the base class
+ * 
+ * @note This inspector replaces the legacy Line_Widget, consolidating
+ * functionality into the modern inspector architecture.
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
-#include <memory>
+#include "nlohmann/json.hpp"
 
-class Line_Widget;
+#include <memory>
+#include <string>
+
+namespace Ui {
+class LineInspector;
+}
+
+class CSVLineSaver_Widget;
+class BinaryLineSaver_Widget;
+class QComboBox;
+class QCheckBox;
+class QLineEdit;
+class QPushButton;
+class QStackedWidget;
+class QLabel;
+
+// JSON-based saver configuration
+using LineSaverConfig = nlohmann::json;
 
 /**
  * @brief Inspector widget for LineData
@@ -62,11 +83,29 @@ public:
 
     [[nodiscard]] bool supportsExport() const override { return true; }
 
+private slots:
+    void _onExportTypeChanged(int index);
+    void _handleSaveCSVRequested(QString const & format, nlohmann::json const & config);
+    void _handleSaveMultiFileCSVRequested(QString const & format, nlohmann::json const & config);
+    void _handleSaveBinaryRequested(QString const & format, nlohmann::json const & config);
+    void _onExportMediaFramesCheckboxToggled(bool checked);
+    void _onApplyImageSizeClicked();
+    void _onCopyImageSizeClicked();
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
+    void _onAutoScrollToCurrentFrame();
+
 private:
     void _setupUi();
     void _connectSignals();
+    void _initiateSaveProcess(QString const & format, LineSaverConfig const & config);
+    bool _performRegistrySave(QString const & format, LineSaverConfig const & config);
+    void _updateImageSizeDisplay();
+    void _populateMediaComboBox();
+    void _populateGroupFilterCombo();
 
-    std::unique_ptr<Line_Widget> _line_widget;
+    Ui::LineInspector * _ui{nullptr};
+    int _dm_observer_id{-1};  ///< Callback ID for DataManager-level observer
 };
 
 #endif // LINE_INSPECTOR_HPP

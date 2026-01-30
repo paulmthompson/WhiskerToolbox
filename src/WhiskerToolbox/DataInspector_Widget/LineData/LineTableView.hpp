@@ -15,7 +15,11 @@
 
 #include "DataInspector_Widget/Inspectors/BaseDataView.hpp"
 
+#include "Entity/EntityTypes.hpp"
+
 #include <memory>
+#include <string>
+#include <vector>
 
 class LineTableModel;
 class GroupManager;
@@ -49,6 +53,7 @@ public:
     void clearGroupFilter();
 
     [[nodiscard]] std::vector<int64_t> getSelectedFrames() const;
+    [[nodiscard]] std::vector<EntityId> getSelectedEntityIds() const;
     [[nodiscard]] QTableView * tableView() const { return _table_view; }
 
     /**
@@ -60,10 +65,41 @@ public:
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
     void _onDataChanged();
+    void _showContextMenu(QPoint const & position);
+
+signals:
+    /**
+     * @brief Emitted when user requests to move selected lines to a target key
+     * @param target_key The key to move lines to
+     */
+    void moveLinesRequested(std::string const & target_key);
+
+    /**
+     * @brief Emitted when user requests to copy selected lines to a target key
+     * @param target_key The key to copy lines to
+     */
+    void copyLinesRequested(std::string const & target_key);
+
+    /**
+     * @brief Emitted when user requests to delete selected lines
+     */
+    void deleteLinesRequested();
+
+    /**
+     * @brief Emitted when user requests to move selected lines to a group
+     * @param group_id The group ID to move lines to
+     */
+    void moveLinesToGroupRequested(int group_id);
+
+    /**
+     * @brief Emitted when user requests to remove selected lines from their groups
+     */
+    void removeLinesFromGroupRequested();
 
 private:
     void _setupUi();
     void _connectSignals();
+    void _populateGroupSubmenu(QMenu * menu, bool for_moving);
 
     QVBoxLayout * _layout{nullptr};
     QTableView * _table_view{nullptr};

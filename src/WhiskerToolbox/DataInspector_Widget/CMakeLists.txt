@@ -56,9 +56,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
 
         LineData/LineInspector.hpp
         LineData/LineInspector.cpp
-        LineData/Line_Widget.hpp
-        LineData/Line_Widget.cpp
-        LineData/Line_Widget.ui
+        LineData/LineInspector.ui
         LineData/LineTableModel.cpp
         LineData/LineTableModel.hpp
         LineData/LineTableView.hpp
