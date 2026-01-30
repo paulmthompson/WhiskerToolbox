@@ -6,28 +6,23 @@
  * @brief Inspector widget for TensorData
  * 
  * TensorInspector provides inspection capabilities for TensorData objects.
- * It wraps the existing Tensor_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
  * 
  * ## Features
- * - Tensor shape and dimension display
- * - Export to CSV
+ * - Data change callbacks for tensor data
  * 
- * @see Tensor_Widget for the underlying implementation
+ * Note: Tensor table view is provided by TensorDataView in the view panel.
+ * 
  * @see BaseInspector for the base class
+ * @see TensorDataView for the table view
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
-#include <memory>
-
-class Tensor_Widget;
-
 /**
  * @brief Inspector widget for TensorData
  * 
- * Wraps Tensor_Widget to provide IDataInspector interface while reusing
- * existing functionality for tensor data inspection and export.
+ * Provides callback management for tensor data inspection.
+ * The actual table view is handled by TensorDataView.
  */
 class TensorInspector : public BaseInspector {
     Q_OBJECT
@@ -36,7 +31,7 @@ public:
     /**
      * @brief Construct the tensor inspector
      * @param data_manager Shared DataManager for data access
-     * @param group_manager Optional GroupManager for group features (not used)
+     * @param group_manager Optional GroupManager for group features (not used for tensors)
      * @param parent Parent widget
      */
     explicit TensorInspector(
@@ -60,11 +55,14 @@ public:
     [[nodiscard]] bool supportsExport() const override { return true; }
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
-private:
-    void _setupUi();
-    void _connectSignals();
+private slots:
+    /**
+     * @brief Handle data change notifications
+     */
+    void _onDataChanged();
 
-    std::unique_ptr<Tensor_Widget> _tensor_widget;
+private:
+    void _assignCallbacks();
 };
 
 #endif // TENSOR_INSPECTOR_HPP
