@@ -29,9 +29,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         # Type-specific inspectors and views
         AnalogTimeSeries/AnalogTimeSeriesInspector.hpp
         AnalogTimeSeries/AnalogTimeSeriesInspector.cpp
-        AnalogTimeSeries/AnalogTimeSeries_Widget.hpp
-        AnalogTimeSeries/AnalogTimeSeries_Widget.cpp
-        AnalogTimeSeries/AnalogTimeSeries_Widget.ui
+        AnalogTimeSeries/AnalogTimeSeriesInspector.ui
         AnalogTimeSeries/AnalogTimeSeriesDataView.hpp
         AnalogTimeSeries/AnalogTimeSeriesDataView.cpp
 

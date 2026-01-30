@@ -6,28 +6,37 @@
  * @brief Inspector widget for AnalogTimeSeries
  * 
  * AnalogTimeSeriesInspector provides inspection capabilities for AnalogTimeSeries objects.
- * It wraps the existing AnalogTimeSeries_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
  * 
  * ## Features
  * - Analog time series information display
  * - Export to CSV
  * 
- * @see AnalogTimeSeries_Widget for the underlying implementation
  * @see BaseInspector for the base class
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
+#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 
 #include <memory>
+#include <string>
+#include <variant>
 
-class AnalogTimeSeries_Widget;
+class QComboBox;
+class QLineEdit;
+class QStackedWidget;
+class CSVAnalogSaver_Widget;
+
+namespace Ui {
+class AnalogTimeSeriesInspector;
+}
+
+// Define the variant type for saver options
+using AnalogSaverOptionsVariant = std::variant<CSVAnalogSaverOptions>;// Will expand if more types are added
 
 /**
  * @brief Inspector widget for AnalogTimeSeries
  * 
- * Wraps AnalogTimeSeries_Widget to provide IDataInspector interface while reusing
- * existing functionality for analog time series data inspection and export.
+ * Provides functionality for analog time series data inspection and export.
  */
 class AnalogTimeSeriesInspector : public BaseInspector {
     Q_OBJECT
@@ -40,9 +49,9 @@ public:
      * @param parent Parent widget
      */
     explicit AnalogTimeSeriesInspector(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~AnalogTimeSeriesInspector() override;
 
@@ -61,10 +70,17 @@ public:
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
 private:
-    void _setupUi();
-    void _connectSignals();
+    enum SaverType { CSV };// Enum for different saver types
 
-    std::unique_ptr<AnalogTimeSeries_Widget> _analog_widget;
+    void _connectSignals();
+    void _initiateSaveProcess(SaverType saver_type, AnalogSaverOptionsVariant & options_variant);
+    bool _performActualCSVSave(CSVAnalogSaverOptions & options);
+
+    Ui::AnalogTimeSeriesInspector * ui;
+
+private slots:
+    void _onExportTypeChanged(int index);
+    void _handleSaveAnalogCSVRequested(CSVAnalogSaverOptions options);
 };
 
-#endif // ANALOG_TIME_SERIES_INSPECTOR_HPP
+#endif// ANALOG_TIME_SERIES_INSPECTOR_HPP
