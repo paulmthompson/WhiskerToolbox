@@ -9,6 +9,7 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 #include "Entity/EntityGroupManager.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -729,5 +730,664 @@ TEST_CASE("PointInspector and PointTableView integration with groups", "[PointIn
         REQUIRE(filtered_entities.count(entity0) == 1);
         REQUIRE(filtered_entities.count(entity1) == 1);
         REQUIRE(filtered_entities.count(entity2) == 1);
+    }
+}
+
+// === Move and Copy Tests ===
+
+TEST_CASE("PointInspector and PointTableView move and copy operations", "[PointInspector][PointTableView][MoveCopy]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Move points to target PointData") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create source PointData with points
+        auto source_point_data = std::make_shared<PointData>();
+        source_point_data->setIdentityContext("source_points", data_manager->getEntityRegistry());
+
+        // Add points to source
+        source_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        source_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+        source_point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 60.0f}, NotifyObservers::No);
+        source_point_data->addAtTime(TimeFrameIndex(20), Point2D<float>{70.0f, 80.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        source_point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("source_points", source_point_data, TimeKey("time"));
+
+        // Create target PointData (empty)
+        auto target_point_data = std::make_shared<PointData>();
+        target_point_data->setIdentityContext("target_points", data_manager->getEntityRegistry());
+        data_manager->setData<PointData>("target_points", target_point_data, TimeKey("time"));
+
+        // Get entity IDs from source
+        auto entity_ids_frame0 = source_point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = source_point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, nullptr, nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("source_points");
+        view.setActiveKey("source_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially source should have 4 points, target should have 0
+        REQUIRE(model->rowCount() == 4);
+        REQUIRE(target_point_data->getTimesWithData().size() == 0);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity0) != selected_entity_ids.end());
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity1) != selected_entity_ids.end());
+
+        // Emit move signal (simulating context menu selection)
+        emit view.movePointsRequested("target_points");
+        app->processEvents();
+
+        // Source should now have 2 points (entity2 and the one at frame 20)
+        view.updateView();
+        app->processEvents();
+        REQUIRE(model->rowCount() == 2);
+
+        // Target should have 2 points (entity0 and entity1)
+        target_point_data->rebuildAllEntityIds();
+        auto target_times = target_point_data->getTimesWithData();
+        REQUIRE(target_times.size() == 1);  // Should have data at frame 0
+        REQUIRE(target_point_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+
+        // Verify source still has entity2
+        auto remaining_entities = view.getSelectedEntityIds();
+        // Clear selection first
+        selection_model->clearSelection();
+        app->processEvents();
+        
+        // Check that entity2 is still in source
+        auto source_entity_ids_frame10 = source_point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(source_entity_ids_frame10.size() == 1);
+        REQUIRE(source_entity_ids_frame10[0] == entity2);
+    }
+
+    SECTION("Copy points to target PointData") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create source PointData with points
+        auto source_point_data = std::make_shared<PointData>();
+        source_point_data->setIdentityContext("source_points", data_manager->getEntityRegistry());
+
+        // Add points to source
+        source_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        source_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+        source_point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 60.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        source_point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("source_points", source_point_data, TimeKey("time"));
+
+        // Create target PointData (empty)
+        auto target_point_data = std::make_shared<PointData>();
+        target_point_data->setIdentityContext("target_points", data_manager->getEntityRegistry());
+        data_manager->setData<PointData>("target_points", target_point_data, TimeKey("time"));
+
+        // Get entity IDs from source
+        auto entity_ids_frame0 = source_point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = source_point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, nullptr, nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("source_points");
+        view.setActiveKey("source_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially source should have 3 points, target should have 0
+        REQUIRE(model->rowCount() == 3);
+        REQUIRE(target_point_data->getTimesWithData().size() == 0);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit copy signal (simulating context menu selection)
+        emit view.copyPointsRequested("target_points");
+        app->processEvents();
+
+        // Source should still have 3 points (unchanged)
+        view.updateView();
+        app->processEvents();
+        REQUIRE(model->rowCount() == 3);
+
+        // Target should have 2 points (copies of entity0 and entity1)
+        target_point_data->rebuildAllEntityIds();
+        auto target_times = target_point_data->getTimesWithData();
+        REQUIRE(target_times.size() == 1);  // Should have data at frame 0
+        REQUIRE(target_point_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+
+        // Verify source still has all original points
+        REQUIRE(source_point_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+        REQUIRE(source_point_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+    }
+}
+
+// === Group Management Context Menu Tests ===
+
+TEST_CASE("PointInspector and PointTableView group management context menu", "[PointInspector][PointTableView][GroupManagement]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Move points to group via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create PointData with points
+        auto point_data = std::make_shared<PointData>();
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+
+        // Add points
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 60.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create groups
+        int group_a_id = group_manager->createGroup("Group A");
+        int group_b_id = group_manager->createGroup("Group B");
+        app->processEvents();
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, group_manager.get(), nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("test_points");
+        view.setActiveKey("test_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially, no entities should be in groups
+        REQUIRE(group_manager->getEntityGroup(entity0) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit move to group signal (simulating context menu selection)
+        emit view.movePointsToGroupRequested(group_a_id);
+        app->processEvents();
+
+        // Verify entities are now in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);  // Not selected, should remain ungrouped
+
+        // Verify table updates to show group names
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group names are updated in the model
+        for (int row = 0; row < model->rowCount(); ++row) {
+            auto row_data = static_cast<PointTableModel *>(model)->getRowData(row);
+            if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
+                REQUIRE(row_data.group_name == QStringLiteral("Group A"));
+            } else if (row_data.entity_id == entity2) {
+                REQUIRE(row_data.group_name == QStringLiteral("No Group"));
+            }
+        }
+
+        // Now select entity2 and move it to Group B
+        selection_model->clearSelection();
+        selection_model->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        emit view.movePointsToGroupRequested(group_b_id);
+        app->processEvents();
+
+        // Verify entity2 is now in Group B
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_b_id);
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);  // Should still be in Group A
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);  // Should still be in Group A
+    }
+
+    SECTION("Remove points from group via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create PointData with points
+        auto point_data = std::make_shared<PointData>();
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+
+        // Add points
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 60.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create group and assign entities
+        int group_a_id = group_manager->createGroup("Group A");
+        group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity1, entity2});
+        app->processEvents();
+
+        // Verify all entities are in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, group_manager.get(), nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("test_points");
+        view.setActiveKey("test_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit remove from group signal (simulating context menu selection)
+        emit view.removePointsFromGroupRequested();
+        app->processEvents();
+
+        // Verify selected entities are removed from group
+        REQUIRE(group_manager->getEntityGroup(entity0) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);  // Not selected, should remain in group
+
+        // Verify table updates to show group names
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group names are updated in the model
+        for (int row = 0; row < model->rowCount(); ++row) {
+            auto row_data = static_cast<PointTableModel *>(model)->getRowData(row);
+            if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
+                REQUIRE(row_data.group_name == QStringLiteral("No Group"));
+            } else if (row_data.entity_id == entity2) {
+                REQUIRE(row_data.group_name == QStringLiteral("Group A"));
+            }
+        }
+    }
+
+    SECTION("Move points from one group to another via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create PointData with points
+        auto point_data = std::make_shared<PointData>();
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+
+        // Add points
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        REQUIRE(entity_ids_frame0.size() == 2);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+
+        // Create groups and assign entity0 to Group A
+        int group_a_id = group_manager->createGroup("Group A");
+        int group_b_id = group_manager->createGroup("Group B");
+        group_manager->assignEntitiesToGroup(group_a_id, {entity0});
+        app->processEvents();
+
+        // Verify initial group assignment
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, group_manager.get(), nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("test_points");
+        view.setActiveKey("test_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Select first row (entity0)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Move entity0 from Group A to Group B
+        emit view.movePointsToGroupRequested(group_b_id);
+        app->processEvents();
+
+        // Verify entity0 is now in Group B (moved from Group A)
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_b_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);  // Should remain ungrouped
+
+        // Verify table updates
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group name is updated in the model
+        auto row_data = static_cast<PointTableModel *>(model)->getRowData(0);
+        REQUIRE(row_data.entity_id == entity0);
+        REQUIRE(row_data.group_name == QStringLiteral("Group B"));
+    }
+}
+
+// === Delete Points Tests ===
+
+TEST_CASE("PointInspector and PointTableView delete points", "[PointInspector][PointTableView][Delete]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Delete selected points via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create PointData with points
+        auto point_data = std::make_shared<PointData>();
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+
+        // Add points
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{50.0f, 60.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(20), Point2D<float>{70.0f, 80.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_frame20 = point_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+        REQUIRE(entity_ids_frame20.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+        EntityId entity3 = entity_ids_frame20[0];
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, nullptr, nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("test_points");
+        view.setActiveKey("test_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially should have 4 points
+        REQUIRE(model->rowCount() == 4);
+        REQUIRE(point_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+        REQUIRE(point_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(point_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity0) != selected_entity_ids.end());
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity1) != selected_entity_ids.end());
+
+        // Emit delete signal (simulating context menu selection)
+        emit view.deletePointsRequested();
+        app->processEvents();
+
+        // Verify points were deleted
+        view.updateView();
+        app->processEvents();
+        
+        // Should now have 2 points (entity2 and entity3)
+        REQUIRE(model->rowCount() == 2);
+        REQUIRE(point_data->getAtTime(TimeFrameIndex(0)).size() == 0);  // Both points at frame 0 deleted
+        REQUIRE(point_data->getAtTime(TimeFrameIndex(10)).size() == 1);  // entity2 still exists
+        REQUIRE(point_data->getAtTime(TimeFrameIndex(20)).size() == 1);  // entity3 still exists
+
+        // Verify entity0 and entity1 are gone
+        auto remaining_entity_ids_frame0 = point_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        REQUIRE(remaining_entity_ids_frame0.size() == 0);
+        
+        // Verify entity2 and entity3 still exist
+        auto remaining_entity_ids_frame10 = point_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto remaining_entity_ids_frame20 = point_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        REQUIRE(remaining_entity_ids_frame10.size() == 1);
+        REQUIRE(remaining_entity_ids_frame20.size() == 1);
+        REQUIRE(remaining_entity_ids_frame10[0] == entity2);
+        REQUIRE(remaining_entity_ids_frame20[0] == entity3);
+    }
+
+    SECTION("Delete all points leaves empty PointData") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create PointData with points
+        auto point_data = std::make_shared<PointData>();
+        point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
+
+        // Add points
+        point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{10.0f, 20.0f}, NotifyObservers::No);
+        point_data->addAtTime(TimeFrameIndex(10), Point2D<float>{30.0f, 40.0f}, NotifyObservers::No);
+
+        // Rebuild entity IDs
+        point_data->rebuildAllEntityIds();
+
+        data_manager->setData<PointData>("test_points", point_data, TimeKey("time"));
+
+        // Create inspector and view, and connect them
+        PointInspector inspector(data_manager, nullptr, nullptr);
+        PointTableView view(data_manager, nullptr);
+        inspector.setTableView(&view);
+
+        inspector.setActiveKey("test_points");
+        view.setActiveKey("test_points");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially should have 2 points
+        REQUIRE(model->rowCount() == 2);
+
+        // Select all rows
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Emit delete signal
+        emit view.deletePointsRequested();
+        app->processEvents();
+
+        // Verify all points were deleted
+        view.updateView();
+        app->processEvents();
+        
+        REQUIRE(model->rowCount() == 0);
+        REQUIRE(point_data->getTimesWithData().size() == 0);
     }
 }

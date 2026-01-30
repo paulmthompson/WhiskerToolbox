@@ -24,8 +24,11 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseDataView.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 class PointTableModel;
 class GroupManager;
@@ -92,10 +95,45 @@ public:
     [[nodiscard]] std::vector<int64_t> getSelectedFrames() const;
 
     /**
+     * @brief Get the selected EntityIds from the table
+     * @return Vector of EntityIds for selected rows
+     */
+    [[nodiscard]] std::vector<EntityId> getSelectedEntityIds() const;
+
+    /**
      * @brief Get the underlying table view
      * @return Pointer to the QTableView
      */
     [[nodiscard]] QTableView * tableView() const { return _table_view; }
+
+signals:
+    /**
+     * @brief Emitted when user requests to move selected points to a target key
+     * @param target_key The key to move points to
+     */
+    void movePointsRequested(std::string const & target_key);
+
+    /**
+     * @brief Emitted when user requests to copy selected points to a target key
+     * @param target_key The key to copy points to
+     */
+    void copyPointsRequested(std::string const & target_key);
+
+    /**
+     * @brief Emitted when user requests to move selected points to a group
+     * @param group_id The group ID to move points to
+     */
+    void movePointsToGroupRequested(int group_id);
+
+    /**
+     * @brief Emitted when user requests to remove selected points from their groups
+     */
+    void removePointsFromGroupRequested();
+
+    /**
+     * @brief Emitted when user requests to delete selected points
+     */
+    void deletePointsRequested();
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
@@ -105,6 +143,8 @@ private slots:
 private:
     void _setupUi();
     void _connectSignals();
+    void _showContextMenu(QPoint const & position);
+    void _populateGroupSubmenu(QMenu * menu, bool for_moving);
 
     QVBoxLayout * _layout{nullptr};
     QTableView * _table_view{nullptr};

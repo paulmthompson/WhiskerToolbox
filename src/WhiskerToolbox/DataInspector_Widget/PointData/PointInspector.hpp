@@ -112,6 +112,11 @@ private slots:
     void _onCopyImageSizeClicked();
     void _onGroupFilterChanged(int index);
     void _onGroupChanged();
+    void _onMovePointsRequested(std::string const & target_key);
+    void _onCopyPointsRequested(std::string const & target_key);
+    void _onMovePointsToGroupRequested(int group_id);
+    void _onRemovePointsFromGroupRequested();
+    void _onDeletePointsRequested();
 };
 
 #endif // POINT_INSPECTOR_HPP

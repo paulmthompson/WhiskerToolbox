@@ -10,6 +10,7 @@
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
 #include "Inspectors/GroupFilterHelper.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 
@@ -22,6 +23,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <unordered_set>
 
 PointInspector::PointInspector(
     std::shared_ptr<DataManager> data_manager,
@@ -106,9 +108,36 @@ void PointInspector::updateView() {
 }
 
 void PointInspector::setTableView(PointTableView * table_view) {
+    // Disconnect from old view if any
+    if (_table_view) {
+        disconnect(_table_view, &PointTableView::movePointsRequested, this, nullptr);
+        disconnect(_table_view, &PointTableView::copyPointsRequested, this, nullptr);
+        disconnect(_table_view, &PointTableView::movePointsToGroupRequested, this, nullptr);
+        disconnect(_table_view, &PointTableView::removePointsFromGroupRequested, this, nullptr);
+        disconnect(_table_view, &PointTableView::deletePointsRequested, this, nullptr);
+    }
+
     _table_view = table_view;
-    if (_table_view && groupManager()) {
-        _table_view->setGroupManager(groupManager());
+    if (_table_view) {
+        if (groupManager()) {
+            _table_view->setGroupManager(groupManager());
+        }
+        
+        // Connect to view signals for move/copy operations
+        connect(_table_view, &PointTableView::movePointsRequested,
+                this, &PointInspector::_onMovePointsRequested);
+        connect(_table_view, &PointTableView::copyPointsRequested,
+                this, &PointInspector::_onCopyPointsRequested);
+        
+        // Connect to view signals for group management operations
+        connect(_table_view, &PointTableView::movePointsToGroupRequested,
+                this, &PointInspector::_onMovePointsToGroupRequested);
+        connect(_table_view, &PointTableView::removePointsFromGroupRequested,
+                this, &PointInspector::_onRemovePointsFromGroupRequested);
+        
+        // Connect to view signal for delete operation
+        connect(_table_view, &PointTableView::deletePointsRequested,
+                this, &PointInspector::_onDeletePointsRequested);
     }
 }
 
@@ -507,4 +536,161 @@ void PointInspector::_onGroupChanged() {
 
 void PointInspector::_populateGroupFilterCombo() {
     populateGroupFilterCombo(ui->groupFilterCombo, groupManager());
+}
+
+void PointInspector::_onMovePointsRequested(std::string const & target_key) {
+    if (!_table_view || _active_key.empty()) {
+        return;
+    }
+
+    auto selected_entity_ids = _table_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "PointInspector: No points selected to move." << std::endl;
+        return;
+    }
+
+    std::cout << "PointInspector: Moving " << selected_entity_ids.size()
+              << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    std::size_t const total_moved = moveEntitiesByIds<PointData>(
+        dataManager().get(), _active_key, target_key, selected_entity_ids);
+
+    if (total_moved > 0) {
+        // Update the view to reflect changes
+        _table_view->updateView();
+        std::cout << "PointInspector: Successfully moved " << total_moved
+                  << " selected points." << std::endl;
+    } else {
+        std::cout << "PointInspector: No points found with the selected EntityIds to move." << std::endl;
+    }
+}
+
+void PointInspector::_onCopyPointsRequested(std::string const & target_key) {
+    if (!_table_view || _active_key.empty()) {
+        return;
+    }
+
+    auto selected_entity_ids = _table_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "PointInspector: No points selected to copy." << std::endl;
+        return;
+    }
+
+    std::cout << "PointInspector: Copying " << selected_entity_ids.size()
+              << " selected points from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    std::size_t const total_copied = copyEntitiesByIds<PointData>(
+        dataManager().get(), _active_key, target_key, selected_entity_ids);
+
+    if (total_copied > 0) {
+        std::cout << "PointInspector: Successfully copied " << total_copied
+                  << " selected points." << std::endl;
+    } else {
+        std::cout << "PointInspector: No points found with the selected EntityIds to copy." << std::endl;
+    }
+}
+
+void PointInspector::_onMovePointsToGroupRequested(int group_id) {
+    if (!_table_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _table_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "PointInspector: No points selected to move to group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // First, remove entities from their current groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Then, assign entities to the specified group
+    groupManager()->assignEntitiesToGroup(group_id, entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_table_view) {
+        _table_view->updateView();
+    }
+
+    std::cout << "PointInspector: Moved " << selected_entity_ids.size()
+              << " selected points to group " << group_id << std::endl;
+}
+
+void PointInspector::_onRemovePointsFromGroupRequested() {
+    if (!_table_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _table_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "PointInspector: No points selected to remove from group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // Remove entities from all groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_table_view) {
+        _table_view->updateView();
+    }
+
+    std::cout << "PointInspector: Removed " << selected_entity_ids.size()
+              << " selected points from their groups." << std::endl;
+}
+
+void PointInspector::_onDeletePointsRequested() {
+    if (!_table_view || _active_key.empty()) {
+        return;
+    }
+
+    auto selected_entity_ids = _table_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "PointInspector: No points selected to delete." << std::endl;
+        return;
+    }
+
+    auto point_data = dataManager()->getData<PointData>(_active_key);
+    if (!point_data) {
+        std::cerr << "PointInspector: PointData object ('" << _active_key << "') not found for deletion." << std::endl;
+        return;
+    }
+
+    std::cout << "PointInspector: Deleting " << selected_entity_ids.size()
+              << " selected points from '" << _active_key << "'..." << std::endl;
+
+    // Remove entities from groups first
+    if (groupManager()) {
+        std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+        groupManager()->ungroupEntities(entity_ids_set);
+    }
+
+    int total_points_deleted = 0;
+
+    // Delete each selected point individually
+    for (EntityId const entity_id : selected_entity_ids) {
+        if (entity_id != EntityId(0)) {
+            bool const success = point_data->clearByEntityId(entity_id, NotifyObservers::No);
+            if (success) {
+                total_points_deleted++;
+            }
+        }
+    }
+
+    // Notify observers only once at the end
+    if (total_points_deleted > 0) {
+        point_data->notifyObservers();
+
+        // Update the view to reflect changes
+        _table_view->updateView();
+
+        std::cout << "PointInspector: Successfully deleted " << total_points_deleted
+                  << " selected points." << std::endl;
+    } else {
+        std::cout << "PointInspector: No points found to delete from the selected rows." << std::endl;
+    }
 }

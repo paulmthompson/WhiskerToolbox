@@ -5,11 +5,15 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 
 #include <QHeaderView>
+#include <QMenu>
 #include <QTableView>
 #include <QVBoxLayout>
+
+#include <set>
 
 PointTableView::PointTableView(
     std::shared_ptr<DataManager> data_manager,
@@ -106,6 +110,28 @@ std::vector<int64_t> PointTableView::getSelectedFrames() const {
     return frames;
 }
 
+std::vector<EntityId> PointTableView::getSelectedEntityIds() const {
+    std::vector<EntityId> entity_ids;
+    
+    if (!_table_view || !_table_model) {
+        return entity_ids;
+    }
+
+    auto const selection = _table_view->selectionModel()->selectedRows();
+    entity_ids.reserve(static_cast<size_t>(selection.size()));
+    
+    for (auto const & index : selection) {
+        if (index.isValid()) {
+            auto const row_data = _table_model->getRowData(index.row());
+            if (row_data.entity_id != EntityId(0)) {
+                entity_ids.push_back(row_data.entity_id);
+            }
+        }
+    }
+
+    return entity_ids;
+}
+
 void PointTableView::_setupUi() {
     _layout = new QVBoxLayout(this);
     _layout->setContentsMargins(0, 0, 0, 0);
@@ -117,6 +143,7 @@ void PointTableView::_setupUi() {
     _table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     _table_view->setAlternatingRowColors(true);
     _table_view->setSortingEnabled(true);
+    _table_view->setContextMenuPolicy(Qt::CustomContextMenu);
     _table_view->horizontalHeader()->setStretchLastSection(true);
 
     _layout->addWidget(_table_view);
@@ -125,6 +152,8 @@ void PointTableView::_setupUi() {
 void PointTableView::_connectSignals() {
     connect(_table_view, &QTableView::doubleClicked,
             this, &PointTableView::_handleTableViewDoubleClicked);
+    connect(_table_view, &QTableView::customContextMenuRequested,
+            this, &PointTableView::_showContextMenu);
 }
 
 void PointTableView::_handleTableViewDoubleClicked(QModelIndex const & index) {
@@ -150,4 +179,86 @@ void PointTableView::_onDataChanged() {
 void PointTableView::_onGroupChanged() {
     // Refresh the view to update group information and reapply filters
     updateView();
+}
+
+void PointTableView::_showContextMenu(QPoint const & position) {
+    QModelIndex const index = _table_view->indexAt(position);
+    if (!index.isValid()) {
+        return;
+    }
+
+    QMenu context_menu(this);
+
+    // Add move and copy submenus using the utility function
+    auto move_callback = [this](std::string const & target_key) {
+        emit movePointsRequested(target_key);
+    };
+
+    auto copy_callback = [this](std::string const & target_key) {
+        emit copyPointsRequested(target_key);
+    };
+
+    add_move_copy_submenus<PointData>(&context_menu, dataManager().get(), _active_key, move_callback, copy_callback);
+
+    // Add group management options
+    if (_group_manager) {
+        context_menu.addSeparator();
+        QMenu * group_menu = context_menu.addMenu("Group Management");
+
+        // Add "Move to Group" submenu
+        QMenu * move_to_group_menu = group_menu->addMenu("Move to Group");
+        _populateGroupSubmenu(move_to_group_menu, true);
+
+        // Add "Remove from Group" action
+        QAction * remove_from_group_action = group_menu->addAction("Remove from Group");
+        connect(remove_from_group_action, &QAction::triggered,
+                this, &PointTableView::removePointsFromGroupRequested);
+    }
+
+    // Add separator and delete operation
+    context_menu.addSeparator();
+    QAction * delete_action = context_menu.addAction("Delete Selected Point");
+    connect(delete_action, &QAction::triggered,
+            this, &PointTableView::deletePointsRequested);
+
+    context_menu.exec(_table_view->mapToGlobal(position));
+}
+
+void PointTableView::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
+    if (!_group_manager) {
+        return;
+    }
+
+    // Get current groups of selected entities to exclude them from the move list
+    std::set<int> current_groups;
+    if (for_moving) {
+        auto const selection = _table_view->selectionModel()->selectedRows();
+        for (auto const & index : selection) {
+            if (index.isValid()) {
+                auto const row_data = _table_model->getRowData(index.row());
+                if (row_data.entity_id != EntityId(0)) {
+                    int current_group = _group_manager->getEntityGroup(row_data.entity_id);
+                    if (current_group != -1) {
+                        current_groups.insert(current_group);
+                    }
+                }
+            }
+        }
+    }
+
+    auto groups = _group_manager->getGroups();
+    for (auto it = groups.begin(); it != groups.end(); ++it) {
+        int group_id = it.key();
+        QString group_name = it.value().name;
+
+        // Skip current groups when moving
+        if (for_moving && current_groups.find(group_id) != current_groups.end()) {
+            continue;
+        }
+
+        QAction * group_action = menu->addAction(group_name);
+        connect(group_action, &QAction::triggered, [this, group_id]() {
+            emit movePointsToGroupRequested(group_id);
+        });
+    }
 }
