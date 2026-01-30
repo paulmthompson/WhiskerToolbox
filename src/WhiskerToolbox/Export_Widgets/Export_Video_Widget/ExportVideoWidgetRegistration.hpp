@@ -46,7 +46,6 @@
 
 class EditorRegistry;
 class DataManager;
-class TimeScrollBar;
 
 namespace ExportVideoWidgetModule {
 
@@ -60,14 +59,15 @@ namespace ExportVideoWidgetModule {
  * Export_Video_Widget is a single-widget editor (no view/properties split)
  * that lives in Zone::Right as a tool widget.
  * 
+ * The widget emits requestTimeChange(TimePosition) signals during export,
+ * which are connected to EditorRegistry::setCurrentTime() at registration time.
+ * 
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
- * @param time_scrollbar TimeScrollBar for frame navigation
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar);
+                   std::shared_ptr<DataManager> data_manager);
 
-}  // namespace ExportVideoWidgetModule
+}// namespace ExportVideoWidgetModule
 
-#endif  // EXPORT_VIDEO_WIDGET_REGISTRATION_HPP
+#endif// EXPORT_VIDEO_WIDGET_REGISTRATION_HPP

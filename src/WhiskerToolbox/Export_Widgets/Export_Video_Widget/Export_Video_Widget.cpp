@@ -8,14 +8,15 @@
 #include "DataManager/DigitalTimeSeries/EventWithId.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"// For TimeKey
 #include "TimeFrame/TimeFrame.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "ffmpeg_wrapper/videoencoder.h"
 #include "opencv2/opencv.hpp"
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QFont>
 #include <QFontMetrics>
@@ -32,14 +33,12 @@
 Export_Video_Widget::Export_Video_Widget(
         std::shared_ptr<DataManager> data_manager,
         EditorRegistry * editor_registry,
-        TimeScrollBar * time_scrollbar,
         std::shared_ptr<ExportVideoWidgetState> state,
         QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Export_Video_Widget),
       _data_manager{std::move(data_manager)},
       _editor_registry{editor_registry},
-      _time_scrollbar{time_scrollbar},
       _state{std::move(state)} {
     ui->setupUi(this);
 
@@ -132,7 +131,7 @@ void Export_Video_Widget::_exportVideo() {
 
     int const fps = ui->frame_rate_spinbox->value();// Get frame rate from user control
     std::cout << "Using frame rate: " << fps << " fps" << std::endl;
-    
+
     // Use MJPG codec - widely available without FFmpeg backend
     // Alternative codecs: 'XVID', 'DIVX', 'mp4v' (MPEG-4)
     // X264 requires FFmpeg backend which may not be available
@@ -175,8 +174,15 @@ void Export_Video_Widget::_exportVideo() {
             }
 
             // Export content frames for this sequence
-            for (int i = sequence.start_frame; i < sequence.end_frame; i++) {
-                _time_scrollbar->changeScrollBarValue(i);
+            // Get the TimeFrame for the export (video/media timeframe)
+            auto export_time_frame = _data_manager->getTime(TimeKey("time"));
+            if (export_time_frame) {
+                for (int i = sequence.start_frame; i < sequence.end_frame; i++) {
+                    TimePosition position(TimeFrameIndex(i), export_time_frame);
+                    emit requestTimeChange(position);
+                    // Process events to ensure signal is handled and canvas is updated
+                    QCoreApplication::processEvents();
+                }
             }
         }
     } else {
@@ -212,8 +218,15 @@ void Export_Video_Widget::_exportVideo() {
         }
 
         // Export content frames
-        for (int i = start_num; i < end_num; i++) {
-            _time_scrollbar->changeScrollBarValue(i);
+        // Get the TimeFrame for the export (video/media timeframe)
+        auto export_time_frame = _data_manager->getTime(TimeKey("time"));
+        if (export_time_frame) {
+            for (int i = start_num; i < end_num; i++) {
+                TimePosition position(TimeFrameIndex(i), export_time_frame);
+                emit requestTimeChange(position);
+                // Process events to ensure signal is handled and canvas is updated
+                QCoreApplication::processEvents();
+            }
         }
     }
 
@@ -315,7 +328,8 @@ void Export_Video_Widget::_exportVideo() {
 }
 
 void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
-    auto current_time = _data_manager->getCurrentTime();
+    auto current_time = _editor_registry->currentPosition().index.getValue();
+
 
     // Prevent duplicate frames - only write if this is a new frame
     if (current_time == _last_written_frame) {

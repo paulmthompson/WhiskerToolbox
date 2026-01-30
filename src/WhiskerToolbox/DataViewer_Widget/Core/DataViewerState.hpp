@@ -58,8 +58,10 @@
  */
 
 #include "EditorState/EditorState.hpp"
+#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
 #include "DataViewerStateData.hpp"
 #include "SeriesOptionsRegistry.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -120,6 +122,10 @@ public:
      * @param name New display name
      */
     void setDisplayName(QString const & name) override;
+
+    // === Transient Runtime State ===
+    // (NOT serialized - just runtime)
+    TimePosition current_position;
 
     // === Serialization ===
 

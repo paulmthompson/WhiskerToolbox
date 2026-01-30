@@ -4,6 +4,8 @@
 #include "Core/SpikeSorterConfigLoader.hpp"
 
 #include "DataManager/DataManagerFwd.hpp"
+#include "EditorState/StrongTypes.hpp"  // For TimePosition
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
 #include <QPoint>
@@ -15,10 +17,10 @@
 
 class DataManager;
 class DataViewerState;
+class EditorRegistry;
 class MainWindow;
 class OpenGLWidget;
 class QTableWidget;
-class TimeScrollBar;
 class TimeFrame;
 class Feature_Table_Widget;
 class Feature_Tree_Model;
@@ -37,7 +39,6 @@ class DataViewer_Widget : public QWidget {
 
 public:
     DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
-                      TimeScrollBar * time_scrollbar,
                       QWidget * parent = nullptr);
 
     ~DataViewer_Widget() override;
@@ -145,6 +146,8 @@ public:
      */
     void showGroupContextMenu(std::string const & group_name, QPoint const & global_pos);
 
+    void _onTimeChanged(TimePosition position);
+
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
@@ -162,7 +165,6 @@ private slots:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
-    TimeScrollBar * _time_scrollbar;
     Ui::DataViewer_Widget * ui;
 
     /// Serializable state shared with OpenGLWidget

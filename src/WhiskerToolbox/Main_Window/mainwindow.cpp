@@ -802,7 +802,7 @@ void MainWindow::_registerEditorTypes() {
 
     TestWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    ExportVideoWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+    ExportVideoWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TongueWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
@@ -822,7 +822,7 @@ void MainWindow::_registerEditorTypes() {
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+    DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TableDesignerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

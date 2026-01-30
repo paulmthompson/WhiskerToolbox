@@ -11,7 +11,6 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
@@ -126,15 +125,11 @@ protected:
         // Initialize DataManager
         m_data_manager = std::make_shared<DataManager>();
 
-        // Create a mock TimeScrollBar and wire DataManager (matches Analysis_Dashboard fixture)
-        m_time_scrollbar = std::make_unique<TimeScrollBar>();
-        m_time_scrollbar->setDataManager(m_data_manager);
-
         // Create test data
         populateWithTestData();
 
-        // Create the DataViewer_Widget
-        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+        // Create the DataViewer_Widget (no longer needs TimeScrollBar)
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
     }
 
     ~DataViewerWidgetCleanupTestFixture() = default;
@@ -195,7 +190,6 @@ private:
 
     std::unique_ptr<QApplication> m_app;
     std::shared_ptr<DataManager> m_data_manager;
-    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
     std::unique_ptr<DataViewer_Widget> m_widget;
     std::vector<std::string> m_test_data_keys;
 };
@@ -239,12 +233,9 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecy
     // Provide a minimal timeframe so XAxis setup has bounds
     data_manager->setTime(TimeKey("time"), std::make_shared<TimeFrame>());
 
-    TimeScrollBar tsb;
-    tsb.setDataManager(data_manager);
-
     // Create, show, process, then destroy
     {
-        DataViewer_Widget dvw(data_manager, &tsb, nullptr);
+        DataViewer_Widget dvw(data_manager, nullptr);
         dvw.openWidget();
         app->processEvents();
         dvw.hide();
@@ -512,10 +503,8 @@ protected:
             m_app = std::make_unique<QApplication>(argc, argv);
         }
 
-        // DataManager and TimeScrollBar
+        // DataManager
         m_data_manager = std::make_shared<DataManager>();
-        m_time_scrollbar = std::make_unique<TimeScrollBar>();
-        m_time_scrollbar->setDataManager(m_data_manager);
 
         // Create a default time frame and register under key "time"
         std::vector<int> t(4000);
@@ -532,7 +521,7 @@ protected:
         populateAnalogSeries(5);
 
         // Create the widget
-        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
     }
 
     ~DataViewerWidgetMultiAnalogTestFixture() = default;
@@ -568,7 +557,6 @@ private:
 
     std::unique_ptr<QApplication> m_app;
     std::shared_ptr<DataManager> m_data_manager;
-    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
     std::unique_ptr<DataViewer_Widget> m_widget;
     TimeKey m_time_key{"time"};
     std::vector<std::string> m_analog_keys;
@@ -1064,8 +1052,6 @@ protected:
         }
 
         m_data_manager = std::make_shared<DataManager>();
-        m_time_scrollbar = std::make_unique<TimeScrollBar>();
-        m_time_scrollbar->setDataManager(m_data_manager);
 
         // Create a default time frame and register under key "time"
         std::vector<int> t(4000);
@@ -1078,7 +1064,7 @@ protected:
         // Populate with 5 digital event series
         populateEventSeries(5);
 
-        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
     }
 
     ~DataViewerWidgetMultiEventTestFixture() = default;
@@ -1107,7 +1093,6 @@ private:
 
     std::unique_ptr<QApplication> m_app;
     std::shared_ptr<DataManager> m_data_manager;
-    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
     std::unique_ptr<DataViewer_Widget> m_widget;
     TimeKey m_time_key{"time"};
     std::vector<std::string> m_event_keys;
@@ -1184,8 +1169,6 @@ protected:
         }
 
         m_data_manager = std::make_shared<DataManager>();
-        m_time_scrollbar = std::make_unique<TimeScrollBar>();
-        m_time_scrollbar->setDataManager(m_data_manager);
 
         // Master time frame
         std::vector<int> t(4000);
@@ -1219,7 +1202,7 @@ protected:
             m_data_manager->setData<DigitalEventSeries>(key, series, m_time_key);
         }
 
-        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
     }
 
     ~DataViewerWidgetMixedStackingTestFixture() = default;
@@ -1231,7 +1214,6 @@ protected:
 private:
     std::unique_ptr<QApplication> m_app;
     std::shared_ptr<DataManager> m_data_manager;
-    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
     std::unique_ptr<DataViewer_Widget> m_widget;
     TimeKey m_time_key{"time"};
     std::vector<std::string> m_analog_keys;
@@ -1436,15 +1418,11 @@ protected:
         // Initialize DataManager
         m_data_manager = std::make_shared<DataManager>();
 
-        // Create a mock TimeScrollBar
-        m_time_scrollbar = std::make_unique<TimeScrollBar>();
-        m_time_scrollbar->setDataManager(m_data_manager);
-
         // Create short video data (704 frames like the bug report)
         populateWithShortVideoData();
 
         // Create the DataViewer_Widget
-        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, m_time_scrollbar.get(), nullptr);
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
     }
 
     ~DataViewerWidgetShortVideoTestFixture() = default;
@@ -1478,7 +1456,6 @@ private:
 
     std::unique_ptr<QApplication> m_app;
     std::shared_ptr<DataManager> m_data_manager;
-    std::unique_ptr<TimeScrollBar> m_time_scrollbar;
     std::unique_ptr<DataViewer_Widget> m_widget;
     std::vector<std::string> m_test_data_keys;
 };

@@ -6,15 +6,14 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
 
 namespace DataViewerWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar) {
+                   std::shared_ptr<DataManager> data_manager) {
     
     if (!registry) {
         std::cerr << "DataViewerWidgetModule::registerTypes: registry is null" << std::endl;
@@ -23,7 +22,7 @@ void registerTypes(EditorRegistry * registry,
 
     // Capture dependencies for lambdas
     auto dm = data_manager;
-    auto ts = time_scrollbar;
+    auto reg = registry;
 
     registry->registerType({
         .type_id = QStringLiteral("DataViewerWidget"),
@@ -43,15 +42,20 @@ void registerTypes(EditorRegistry * registry,
         },
 
         // View factory - creates DataViewer_Widget (the view component)
-        .create_view = [dm, ts](std::shared_ptr<EditorState> state) -> QWidget * {
+        .create_view = [dm, reg](std::shared_ptr<EditorState> state) -> QWidget * {
             auto viewer_state = std::dynamic_pointer_cast<DataViewerState>(state);
             if (!viewer_state) {
                 std::cerr << "DataViewerWidgetModule: Failed to cast state to DataViewerState" << std::endl;
                 return nullptr;
             }
 
-            auto * widget = new DataViewer_Widget(dm, ts);
+            auto * widget = new DataViewer_Widget(dm);
             widget->setState(viewer_state);
+            
+            // Connect to global time changes for plot updates
+            QObject::connect(reg,
+                             QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                             widget, &DataViewer_Widget::_onTimeChanged);
             
             // Trigger initial setup that was previously done in openWidget()
             widget->openWidget();
@@ -73,15 +77,20 @@ void registerTypes(EditorRegistry * registry,
         },
 
         // Custom editor creation for potential future view/properties coupling
-        .create_editor_custom = [dm, ts](EditorRegistry * reg) 
+        .create_editor_custom = [dm](EditorRegistry * reg) 
             -> EditorRegistry::EditorInstance 
         {
             // Create the shared state
             auto state = std::make_shared<DataViewerState>();
 
             // Create the view widget
-            auto * view = new DataViewer_Widget(dm, ts);
+            auto * view = new DataViewer_Widget(dm);
             view->setState(state);
+            
+            // Connect to global time changes for plot updates
+            QObject::connect(reg,
+                             QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                             view, &DataViewer_Widget::_onTimeChanged);
             
             // Trigger initial setup
             view->openWidget();

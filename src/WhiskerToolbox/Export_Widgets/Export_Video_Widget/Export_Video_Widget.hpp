@@ -1,6 +1,9 @@
 #ifndef EXPORT_VIDEO_WIDGET_HPP
 #define EXPORT_VIDEO_WIDGET_HPP
 
+#include "EditorState/StrongTypes.hpp" // Qt metatype registration for TimePosition
+#include "TimeFrame/TimeFrame.hpp"  // For TimePosition
+
 #include <QImage>
 #include <QWidget>
 
@@ -8,11 +11,12 @@
 #include <string>
 #include <vector>
 
+
+
 class DataManager;
 class EditorRegistry;
 class ExportVideoWidgetState;
 class MediaWidgetState;
-class TimeScrollBar;
 class DigitalEventSeries;
 class TimeFrame;
 class QTableWidgetItem;
@@ -63,7 +67,6 @@ public:
     Export_Video_Widget(
             std::shared_ptr<DataManager> data_manager,
             EditorRegistry * editor_registry,
-            TimeScrollBar * time_scrollbar,
             std::shared_ptr<ExportVideoWidgetState> state,
             QWidget * parent = nullptr);
     ~Export_Video_Widget() override;
@@ -76,11 +79,22 @@ public:
      */
     [[nodiscard]] std::shared_ptr<ExportVideoWidgetState> state() const { return _state; }
 
+signals:
+    /**
+     * @brief Emitted when widget requests a time change (e.g., during video export)
+     * 
+     * This signal is connected to EditorRegistry::setCurrentTime() at registration time.
+     * The widget emits this signal to request time changes during video export,
+     * allowing other widgets to update synchronously.
+     * 
+     * @param position The TimePosition to navigate to
+     */
+    void requestTimeChange(TimePosition position);
+
 private:
     Ui::Export_Video_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     EditorRegistry * _editor_registry;
-    TimeScrollBar * _time_scrollbar;
     std::shared_ptr<ExportVideoWidgetState> _state;
     std::unique_ptr<cv::VideoWriter> _video_writer;
 

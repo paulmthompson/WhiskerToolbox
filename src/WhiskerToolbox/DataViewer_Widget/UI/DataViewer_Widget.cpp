@@ -22,7 +22,7 @@
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "EditorState/EditorRegistry.hpp"
 
 #include <QFile>
 #include <QFileDialog>
@@ -41,11 +41,9 @@
 #include <sstream>
 
 DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
-                                     TimeScrollBar * time_scrollbar,
                                      QWidget * parent)
     : QWidget(parent),
       _data_manager{std::move(data_manager)},
-      _time_scrollbar{time_scrollbar},
       ui(new Ui::DataViewer_Widget),
       _state(std::make_shared<DataViewerState>()) {
 
@@ -65,8 +63,6 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             if (!self) return;
             self->cleanupDeletedData(); }, Qt::QueuedConnection);
     });
-
-    connect(time_scrollbar, qOverload<int>(&TimeScrollBar::timeChanged), this, &DataViewer_Widget::_updatePlot);
 
     // We should always get the master clock because we plot
     // Check for master clock
@@ -132,8 +128,28 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
     }
 }
 
+void DataViewer_Widget::_onTimeChanged(TimePosition position) {
+    // Get the TimeFrame for the data this widget is displaying (master clock)
+    auto my_tf = _time_frame;
+    
+    if (position.sameClock(my_tf)) {
+        // Same clock - use index directly
+        _state->current_position = position;
+        ui->openGLWidget->updateCanvas(position.index);
+    } else if (my_tf && position.isValid()) {
+        // Different clock - convert
+        auto converted = position.convertTo(my_tf);
+        _state->current_position = TimePosition(converted, my_tf);
+        ui->openGLWidget->updateCanvas(converted);
+    }
+    
+    _updateLabels();
+}
+
 void DataViewer_Widget::_updatePlot(int time) {
     // Note: 'time' is a frame index from the scrollbar, for the "time" time frame
+    // This method is kept for backward compatibility but should not be used
+    // with the new TimePosition-based system
 
     if (_time_frame.get() != _data_manager->getTime(TimeKey("time")).get()) {
         auto time_in_ticks = _data_manager->getTime(TimeKey("time"))->getTimeAtIndex(TimeFrameIndex(time));

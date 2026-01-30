@@ -15,7 +15,7 @@
  * #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
  * 
  * void MainWindow::_registerEditorTypes() {
- *     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _time_scrollbar);
+ *     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
  * }
  * ```
  * 
@@ -36,7 +36,6 @@
 
 class DataManager;
 class EditorRegistry;
-class TimeScrollBar;
 
 namespace DataViewerWidgetModule {
 
@@ -50,11 +49,9 @@ namespace DataViewerWidgetModule {
  * 
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
- * @param time_scrollbar TimeScrollBar reference for time synchronization
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar);
+                   std::shared_ptr<DataManager> data_manager);
 
 }  // namespace DataViewerWidgetModule
 
