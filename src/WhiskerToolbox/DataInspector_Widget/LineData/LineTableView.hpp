@@ -66,6 +66,7 @@ private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
     void _onDataChanged();
     void _showContextMenu(QPoint const & position);
+    void _onGroupChanged();
 
 signals:
     /**

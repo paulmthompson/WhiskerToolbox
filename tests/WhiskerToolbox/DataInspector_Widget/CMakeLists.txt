@@ -17,12 +17,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_data_inspector_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalEventSeries/DigitalEventSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalIntervalSeries/DigitalIntervalSeriesInspector.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/LineData/LineInspector.test.cpp
 )
 
 target_link_libraries(test_data_inspector_widget PRIVATE 
     Catch2::Catch2WithMain 
     DataInspector_Widget 
     DataManager 
+    GroupManagementWidget
+    Entity
     Qt6::Widgets
     Qt6::Core
     Qt6::Test

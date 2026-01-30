@@ -27,6 +27,10 @@ LineTableView::LineTableView(
 
 LineTableView::~LineTableView() {
     removeCallbacks();
+    // Disconnect from group manager signals
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
 }
 
 void LineTableView::setActiveKey(std::string const & key) {
@@ -58,9 +62,24 @@ void LineTableView::updateView() {
 }
 
 void LineTableView::setGroupManager(GroupManager * group_manager) {
+    // Disconnect from old group manager
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+
     _group_manager = group_manager;
     if (_table_model) {
         _table_model->setGroupManager(group_manager);
+    }
+
+    // Connect to new group manager signals
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated,
+                this, &LineTableView::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved,
+                this, &LineTableView::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified,
+                this, &LineTableView::_onGroupChanged);
     }
 }
 
@@ -171,6 +190,11 @@ void LineTableView::_handleTableViewDoubleClicked(QModelIndex const & index) {
 }
 
 void LineTableView::_onDataChanged() {
+    updateView();
+}
+
+void LineTableView::_onGroupChanged() {
+    // Refresh the view to update group information and reapply filters
     updateView();
 }
 

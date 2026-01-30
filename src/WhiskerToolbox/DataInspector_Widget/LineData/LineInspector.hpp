@@ -37,6 +37,7 @@ class LineInspector;
 
 class CSVLineSaver_Widget;
 class BinaryLineSaver_Widget;
+class LineTableView;
 class QComboBox;
 class QCheckBox;
 class QLineEdit;
@@ -83,6 +84,15 @@ public:
 
     [[nodiscard]] bool supportsExport() const override { return true; }
 
+    /**
+     * @brief Set the data view to use for filtering
+     * @param view Pointer to the LineTableView (can be nullptr)
+     * 
+     * This connects the inspector's group filter to the view panel's table.
+     * Should be called when both the inspector and view are created.
+     */
+    void setDataView(LineTableView * view);
+
 private slots:
     void _onExportTypeChanged(int index);
     void _handleSaveCSVRequested(QString const & format, nlohmann::json const & config);
@@ -106,6 +116,7 @@ private:
 
     Ui::LineInspector * _ui{nullptr};
     int _dm_observer_id{-1};  ///< Callback ID for DataManager-level observer
+    LineTableView * _data_view{nullptr};  ///< Pointer to the associated table view
 };
 
 #endif // LINE_INSPECTOR_HPP

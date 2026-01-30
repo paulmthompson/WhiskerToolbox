@@ -1,6 +1,8 @@
 #include "LineInspector.hpp"
 #include "ui_LineInspector.h"
 
+#include "LineTableView.hpp"
+
 #include "DataManager.hpp"
 #include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
@@ -59,6 +61,9 @@ LineInspector::LineInspector(
             _populateMediaComboBox();
         });
     }
+
+    // Initialize group filter combo box
+    _populateGroupFilterCombo();
 }
 
 LineInspector::~LineInspector() {
@@ -521,30 +526,63 @@ void LineInspector::_populateMediaComboBox() {
 }
 
 void LineInspector::_onGroupFilterChanged(int index) {
-    // TODO: Communicate group filter change to LineTableView in the view widget
-    // This requires a mechanism to connect LineInspector to LineTableView
-    // For now, this is a placeholder
-    (void)index;  // Unused
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    if (index == 0) {
+        // "All Groups" selected
+        _data_view->clearGroupFilter();
+    } else {
+        // Specific group selected (index - 1 because index 0 is "All Groups")
+        auto groups = groupManager()->getGroups();
+        auto group_ids = groups.keys();
+        if (index - 1 < group_ids.size()) {
+            int group_id = group_ids[index - 1];
+            _data_view->setGroupFilter(group_id);
+        }
+    }
 }
 
 void LineInspector::_onGroupChanged() {
-    // Store current selection
+    // Store current selection and current text (in case index changes)
     int current_index = _ui->groupFilterCombo->currentIndex();
+    QString current_text;
+    if (current_index >= 0 && current_index < _ui->groupFilterCombo->count()) {
+        current_text = _ui->groupFilterCombo->itemText(current_index);
+    }
 
     // Update the group filter combo box when groups change
     _populateGroupFilterCombo();
 
-    // If the previously selected group no longer exists, reset to "All Groups"
-    if (current_index > 0 && current_index >= _ui->groupFilterCombo->count()) {
-        _ui->groupFilterCombo->setCurrentIndex(0);  // "All Groups"
+    // Restore selection if it's still valid
+    if (current_index >= 0 && current_index < _ui->groupFilterCombo->count()) {
+        // Try to restore by index first
+        _ui->groupFilterCombo->setCurrentIndex(current_index);
+    } else if (!current_text.isEmpty()) {
+        // If index doesn't work, try to find by text
+        int found_index = _ui->groupFilterCombo->findText(current_text);
+        if (found_index >= 0) {
+            _ui->groupFilterCombo->setCurrentIndex(found_index);
+        } else {
+            // Text not found, reset to "All Groups"
+            _ui->groupFilterCombo->setCurrentIndex(0);
+        }
+    } else {
+        // No previous selection, ensure "All Groups" is selected
+        _ui->groupFilterCombo->setCurrentIndex(0);
     }
 }
 
 void LineInspector::_populateGroupFilterCombo() {
+    // Block signals temporarily to avoid triggering filter changes during population
+    _ui->groupFilterCombo->blockSignals(true);
     _ui->groupFilterCombo->clear();
     _ui->groupFilterCombo->addItem("All Groups");
 
     if (!groupManager()) {
+        _ui->groupFilterCombo->setCurrentIndex(0);  // Ensure "All Groups" is selected
+        _ui->groupFilterCombo->blockSignals(false);
         return;
     }
 
@@ -552,11 +590,27 @@ void LineInspector::_populateGroupFilterCombo() {
     for (auto it = groups.begin(); it != groups.end(); ++it) {
         _ui->groupFilterCombo->addItem(it.value().name);
     }
+    
+    // Ensure "All Groups" is selected by default if no valid selection
+    if (_ui->groupFilterCombo->currentIndex() < 0) {
+        _ui->groupFilterCombo->setCurrentIndex(0);
+    }
+    _ui->groupFilterCombo->blockSignals(false);
 }
 
 void LineInspector::_onAutoScrollToCurrentFrame() {
-    // TODO: Communicate scroll request to LineTableView in the view widget
-    // This requires a mechanism to connect LineInspector to LineTableView
-    // For now, this is a placeholder
-    (void)dataManager();  // Unused for now
+    if (!_data_view || !dataManager()) {
+        return;
+    }
+
+    auto current_time = dataManager()->getCurrentTime();
+    _data_view->scrollToFrame(current_time);
+
+}
+
+void LineInspector::setDataView(LineTableView * view) {
+    _data_view = view;
+    if (_data_view && groupManager()) {
+        _data_view->setGroupManager(groupManager());
+    }
 }
