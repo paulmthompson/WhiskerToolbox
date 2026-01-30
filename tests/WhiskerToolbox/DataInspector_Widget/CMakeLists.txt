@@ -19,6 +19,7 @@ add_executable(test_data_inspector_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DigitalIntervalSeries/DigitalIntervalSeriesInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/LineData/LineInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/MaskData/MaskInspector.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/PointData/PointInspector.test.cpp
 )
 
 target_link_libraries(test_data_inspector_widget PRIVATE 

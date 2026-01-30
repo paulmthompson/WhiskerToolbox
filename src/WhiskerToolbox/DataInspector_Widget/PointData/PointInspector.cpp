@@ -9,7 +9,7 @@
 #include "DataExport_Widget/Points/CSV/CSVPointSaver_Widget.hpp"
 #include "MediaExport/MediaExport_Widget.hpp"
 #include "MediaExport/media_export.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
+#include "Inspectors/GroupFilterHelper.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 
@@ -64,9 +64,12 @@ PointInspector::PointInspector(
         });
     }
 
-    // Set up group manager (will connect signals and populate combo)
+    // Initialize group filter combo box (always populate, even without group manager)
+    _populateGroupFilterCombo();
+
+    // Set up group manager signals if group manager exists
     if (groupManager()) {
-        setGroupManager(groupManager());
+        connectGroupManagerSignals(groupManager(), this, &PointInspector::_onGroupChanged);
     }
 }
 
@@ -119,12 +122,7 @@ void PointInspector::setGroupManager(GroupManager * group_manager) {
         disconnect(groupManager(), nullptr, this, nullptr);
     }
     if (group_manager) {
-        connect(group_manager, &GroupManager::groupCreated,
-                this, &PointInspector::_onGroupChanged);
-        connect(group_manager, &GroupManager::groupRemoved,
-                this, &PointInspector::_onGroupChanged);
-        connect(group_manager, &GroupManager::groupModified,
-                this, &PointInspector::_onGroupChanged);
+        connectGroupManagerSignals(group_manager, this, &PointInspector::_onGroupChanged);
         _populateGroupFilterCombo();
     }
 }
@@ -486,15 +484,21 @@ void PointInspector::_onGroupFilterChanged(int index) {
 }
 
 void PointInspector::_onGroupChanged() {
-    // Store current selection
+    // Store current selection and current text (in case index changes)
     int current_index = ui->groupFilterCombo->currentIndex();
+    QString current_text;
+    if (current_index >= 0 && current_index < ui->groupFilterCombo->count()) {
+        current_text = ui->groupFilterCombo->itemText(current_index);
+    }
 
     // Update the group filter combo box when groups change
     _populateGroupFilterCombo();
 
-    // If the previously selected group no longer exists, reset to "All Groups"
-    if (current_index > 0 && current_index >= ui->groupFilterCombo->count()) {
-        ui->groupFilterCombo->setCurrentIndex(0);// "All Groups"
+    // Restore selection
+    restoreGroupFilterSelection(ui->groupFilterCombo, current_index, current_text);
+    
+    // If selection was restored to "All Groups" or invalid, clear filter
+    if (ui->groupFilterCombo->currentIndex() == 0 || ui->groupFilterCombo->currentIndex() < 0) {
         if (_table_view) {
             _table_view->clearGroupFilter();
         }
@@ -502,15 +506,5 @@ void PointInspector::_onGroupChanged() {
 }
 
 void PointInspector::_populateGroupFilterCombo() {
-    ui->groupFilterCombo->clear();
-    ui->groupFilterCombo->addItem("All Groups");
-
-    if (!groupManager()) {
-        return;
-    }
-
-    auto groups = groupManager()->getGroups();
-    for (auto it = groups.begin(); it != groups.end(); ++it) {
-        ui->groupFilterCombo->addItem(it.value().name);
-    }
+    populateGroupFilterCombo(ui->groupFilterCombo, groupManager());
 }

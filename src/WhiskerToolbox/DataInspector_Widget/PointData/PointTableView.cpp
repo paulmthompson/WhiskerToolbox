@@ -5,6 +5,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 
 #include <QHeaderView>
 #include <QTableView>
@@ -52,9 +53,24 @@ void PointTableView::updateView() {
 }
 
 void PointTableView::setGroupManager(GroupManager * group_manager) {
+    // Disconnect from old group manager if any
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+
     _group_manager = group_manager;
     if (_table_model) {
         _table_model->setGroupManager(group_manager);
+    }
+
+    // Connect to new group manager signals
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated,
+                this, &PointTableView::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupRemoved,
+                this, &PointTableView::_onGroupChanged);
+        connect(_group_manager, &GroupManager::groupModified,
+                this, &PointTableView::_onGroupChanged);
     }
 }
 
@@ -128,5 +144,10 @@ void PointTableView::_handleTableViewDoubleClicked(QModelIndex const & index) {
 }
 
 void PointTableView::_onDataChanged() {
+    updateView();
+}
+
+void PointTableView::_onGroupChanged() {
+    // Refresh the view to update group information and reapply filters
     updateView();
 }
