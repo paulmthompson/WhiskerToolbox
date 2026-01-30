@@ -74,9 +74,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
 
         PointData/PointInspector.hpp
         PointData/PointInspector.cpp
-        PointData/Point_Widget.hpp
-        PointData/Point_Widget.cpp
-        PointData/Point_Widget.ui
+        PointData/PointInspector.ui
         PointData/PointTableModel.cpp
         PointData/PointTableModel.hpp
         PointData/PointTableView.hpp

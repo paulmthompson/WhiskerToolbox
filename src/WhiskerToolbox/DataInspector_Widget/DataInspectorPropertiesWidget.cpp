@@ -7,6 +7,8 @@
 #include "DigitalIntervalSeries/DigitalIntervalSeriesInspector.hpp"
 #include "LineData/LineInspector.hpp"
 #include "LineData/LineTableView.hpp"
+#include "PointData/PointInspector.hpp"
+#include "PointData/PointTableView.hpp"
 #include "Inspectors/BaseInspector.hpp"
 #include "Inspectors/InspectorFactory.hpp"
 
@@ -255,6 +257,15 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         auto * line_view = dynamic_cast<LineTableView *>(_view_widget->currentView());
         if (line_view) {
             line_inspector->setDataView(line_view);
+        }
+    }
+
+    // Check if this is a PointInspector and connect it to the view
+    auto * point_inspector = dynamic_cast<PointInspector *>(_current_inspector.get());
+    if (point_inspector) {
+        auto * point_view = dynamic_cast<PointTableView *>(_view_widget->currentView());
+        if (point_view) {
+            point_inspector->setTableView(point_view);
         }
     }
 }

@@ -6,31 +6,44 @@
  * @brief Inspector widget for PointData
  * 
  * PointInspector provides inspection capabilities for PointData objects.
- * It wraps the existing Point_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
+ * It provides functionality for managing point data properties, exporting,
+ * and image size configuration.
  * 
  * ## Features
- * - Point data table with frame, coordinates, and group information
- * - Group filtering
- * - Context menu for move/copy operations
+ * - Image size configuration
+ * - Group filtering (connects to PointTableView)
  * - Export to CSV
- * - Frame navigation via double-click
+ * - Media frame export
  * 
- * @see Point_Widget for the underlying implementation
  * @see BaseInspector for the base class
+ * @see PointTableView for the table view component
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
+#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
+#include <string>
+#include <variant>
 
-class Point_Widget;
+namespace Ui {
+class PointInspector;
+}
+
+class CSVPointSaver_Widget;
+class MediaData;
+class PointTableView;
+
+// Define the variant type for saver options
+using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
 
 /**
  * @brief Inspector widget for PointData
  * 
- * Wraps Point_Widget to provide IDataInspector interface while reusing
- * existing functionality for point data inspection and management.
+ * Provides properties and controls for PointData inspection, including
+ * image size configuration, group filtering, and data export.
  */
 class PointInspector : public BaseInspector {
     Q_OBJECT
@@ -62,11 +75,43 @@ public:
 
     [[nodiscard]] bool supportsExport() const override { return true; }
 
+    /**
+     * @brief Set the PointTableView for group filter coordination
+     * @param table_view Pointer to the PointTableView (can be nullptr)
+     * 
+     * When set, the group filter combo box will control the table view's filtering.
+     */
+    void setTableView(PointTableView * table_view);
+
+    void setGroupManager(GroupManager * group_manager);
+
 private:
     void _setupUi();
     void _connectSignals();
 
-    std::unique_ptr<Point_Widget> _point_widget;
+    enum SaverType { CSV };
+
+    void _saveToCSVFile(CSVPointSaverOptions & options);
+    bool _performActualCSVSave(CSVPointSaverOptions & options);
+    void _initiateSaveProcess(SaverType saver_type, PointSaverOptionsVariant & options_variant);
+
+    void _updateImageSizeDisplay();
+    void _populateMediaComboBox();
+    void _populateGroupFilterCombo();
+
+    Ui::PointInspector * ui;
+    PointTableView * _table_view{nullptr};
+    int _previous_frame{0};
+    int _dm_observer_id{-1};  ///< Callback ID for DataManager-level observer
+
+private slots:
+    void _onExportTypeChanged(int index);
+    void _handleSaveCSVRequested(CSVPointSaverOptions options);
+    void _onExportMediaFramesCheckboxToggled(bool checked);
+    void _onApplyImageSizeClicked();
+    void _onCopyImageSizeClicked();
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
 };
 
 #endif // POINT_INSPECTOR_HPP
