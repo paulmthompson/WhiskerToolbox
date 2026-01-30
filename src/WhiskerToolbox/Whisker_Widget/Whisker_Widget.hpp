@@ -65,16 +65,6 @@ public:
     ~Whisker_Widget() override;
 
     void openWidget();// Call
-public slots:
-    /**
-     * @brief Load frame at the given time position (preferred method)
-     * 
-     * This method uses TimePosition which includes TimeFrame context,
-     * enabling proper clock conversion if needed.
-     * 
-     * @param position TimePosition with index and TimeFrame pointer
-     */
-    void LoadFrame(TimePosition position);
 
 protected:
     void closeEvent(QCloseEvent * event) override;

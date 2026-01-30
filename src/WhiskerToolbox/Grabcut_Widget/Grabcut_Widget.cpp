@@ -44,11 +44,11 @@ Grabcut_Widget::Grabcut_Widget(std::shared_ptr<DataManager> data_manager, QWidge
  * @param img Image data as cv::Mat, must be of pixel type CV_8UC3
  * @param frame_index Frame index number which the mask will be saved to when requested
  */
-void Grabcut_Widget::setup(cv::Mat img, int frame_index) {
+void Grabcut_Widget::setup(cv::Mat img, TimePosition time_position) {
     _img = std::move(img);
     _height = _img.rows;
     _width = _img.cols;
-    _frame_index = frame_index;
+    _time_position = time_position;
     _tool = GrabCutTool(_img);
     _updateDisplays();
     ui->editor_label->setPixmap(_img_disp_pixmap);
@@ -227,11 +227,10 @@ void Grabcut_Widget::_saveMask(){
     auto mask_data = _data_manager->getData<MaskData>(mask_name);
     mask_data->setImageSize({_width,_height});
 
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
-
+    auto current_index_and_frame = TimeIndexAndFrame(_time_position.index, _time_position.time_frame.get());
     mask_data->clearAtTime(current_index_and_frame,
                            NotifyObservers::No);
-    mask_data->addAtTime(TimeFrameIndex(_frame_index), pts, NotifyObservers::No);
+    mask_data->addAtTime(current_index_and_frame, pts, NotifyObservers::No);
     mask_data->notifyObservers();
     this->close();
 }

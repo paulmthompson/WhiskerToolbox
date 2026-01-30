@@ -140,7 +140,7 @@ void Whisker_Widget::_initializeFromState() {
 
     // Set whisker tracker parameters
     _wt->setWhiskerLengthThreshold(static_cast<float>(_state->lengthThreshold()));
-    
+
     // Set head direction based on face orientation
     switch (_state->faceOrientation()) {
         case FaceOrientation::Top:
@@ -287,15 +287,17 @@ void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
 void Whisker_Widget::_traceButton() {
 
     auto media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getCurrentTime();
+    auto const current_position = _state->current_position;
 
     if (ui->num_frames_to_trace->value() <= 1) {
-        auto image = media->getProcessedData8(current_time);
+        auto image = media->getProcessedData8(current_position.convertTo(media->getTimeFrame().get()).getValue());
         if (_use_mask_mode) {
             auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
             std::vector<uint8_t> binary_mask;
             if (mask_ptr) {
-                binary_mask = convert_mask_to_binary(mask_ptr.get(), current_time, media->getImageSize());
+                binary_mask = convert_mask_to_binary(mask_ptr.get(),
+                                                     current_position.convertTo(mask_ptr->getTimeFrame().get()).getValue(),
+                                                     media->getImageSize());
             }
             auto whiskers = _wt->trace_with_mask(image, binary_mask, media->getHeight(), media->getWidth());
 
@@ -309,7 +311,7 @@ void Whisker_Widget::_traceButton() {
                     whisker_lines,
                     whisker_group_name,
                     _num_whisker_to_track,
-                    TimeFrameIndex(current_time),
+                    TimeFrameIndex(current_position.convertTo(media->getTimeFrame().get())),
                     _linking_tolerance);
         } else {
             _traceWhiskers(image, media->getImageSize());
@@ -319,18 +321,20 @@ void Whisker_Widget::_traceButton() {
         auto height = media->getHeight();
         auto width = media->getWidth();
         int num_to_trace = 0;
-        int const start_time = current_time;
+        int const start_time = current_position.convertTo(media->getTimeFrame().get()).getValue();
 
         while (num_to_trace < ui->num_frames_to_trace->value()) {
 
-            auto image = media->getProcessedData8(num_to_trace + current_time);
+            auto image = media->getProcessedData8(num_to_trace + current_position.convertTo(media->getTimeFrame().get()).getValue());
 
             std::vector<whisker::Line2D> whiskers;
             if (_use_mask_mode) {
                 auto mask_ptr = _data_manager->getData<MaskData>(_selected_mask_key);
                 std::vector<uint8_t> binary_mask;
                 if (mask_ptr) {
-                    binary_mask = convert_mask_to_binary(mask_ptr.get(), static_cast<int>(num_to_trace + current_time), media->getImageSize());
+                    binary_mask = convert_mask_to_binary(mask_ptr.get(), 
+                    static_cast<int>(num_to_trace + current_position.convertTo(mask_ptr->getTimeFrame().get()).getValue()), 
+                    media->getImageSize());
                 }
                 whiskers = _wt->trace_with_mask(image, binary_mask, height, width);
             } else {
@@ -363,7 +367,8 @@ void Whisker_Widget::_traceButton() {
 void Whisker_Widget::_dlTraceButton() {
 
     auto media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getCurrentTime();
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(media->getTimeFrame().get()).getValue();
 
     _traceWhiskersDL(media->getProcessedData8(current_time), media->getImageSize());
 }
@@ -376,7 +381,8 @@ void Whisker_Widget::_dlAddMemoryButton() {
     }
 
     auto media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getCurrentTime();
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(media->getTimeFrame().get()).getValue();
 
     auto image = media->getProcessedData8(current_time);
 
@@ -414,10 +420,13 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
 
     auto mask_output = dl_model->process_frame(image, image_size);
 
-    auto const current_time = _data_manager->getCurrentTime();
+    auto mask_data = _data_manager->getData<MaskData>("SAM_output");
 
-    _data_manager->getData<MaskData>("SAM_output")->addAtTime(TimeFrameIndex(current_time), mask_output, NotifyObservers::No);
-    _data_manager->getData<MaskData>("SAM_output")->notifyObservers();
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(mask_data->getTimeFrame().get()).getValue();
+
+    mask_data->addAtTime(TimeFrameIndex(current_time), mask_output, NotifyObservers::No);
+    mask_data->notifyObservers();
 
 
     /*
@@ -439,6 +448,10 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const image_size) {
+
+
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(_data_manager->getTime(TimeKey("time")).get());
     QElapsedTimer timer2;
     timer2.start();
 
@@ -458,7 +471,7 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const 
             whisker_lines,
             whisker_group_name,
             _num_whisker_to_track,
-            TimeFrameIndex(_data_manager->getCurrentTime()),
+            current_time,
             _linking_tolerance);
 
     auto t1 = timer2.elapsed();
@@ -562,33 +575,6 @@ void Whisker_Widget::_openJaneliaConfig() {
     _janelia_config_widget->openWidget();
 }
 
-void Whisker_Widget::LoadFrame(TimePosition position) {
-    if (!position.isValid()) {
-        std::cout << "Whisker_Widget::LoadFrame: Invalid TimePosition" << std::endl;
-        return;
-    }
-
-    // Store current position in state
-    if (_state) {
-        _state->current_position = position;
-    }
-
-    // Get the TimeFrame for media data (typically "time" key)
-    // If the position is on the same clock as media, use index directly
-    // Otherwise, convert the index
-    auto media_tf = _data_manager->getTime();
-    TimeFrameIndex frame_id = position.index;
-
-    if (media_tf && !position.sameClock(media_tf)) {
-        // Different clock - convert the index
-        frame_id = position.convertTo(media_tf);
-    }
-
-    if (_auto_dl) {
-        _dlTraceButton();
-    }
-}
-
 void Whisker_Widget::_changeWhiskerClip(int clip_dist) {
     _clip_length = clip_dist;
     if (_state) {
@@ -674,7 +660,6 @@ void order_whiskers_by_position(
             dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, whiskers[i], NotifyObservers::Yes);
         }
     }
-
 }
 
 /**
@@ -766,7 +751,8 @@ void Whisker_Widget::_updateWhiskerPadFromSelection() {
             ui->whisker_pad_frame_spinbox->setMaximum(max_time.getValue());
 
             // Set to current time if available, otherwise first available time
-            auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+            auto const current_position = _state->current_position;
+            auto const current_time = current_position.convertTo(point_data->getTimeFrame().get());
             if (std::find(times_with_data.begin(), times_with_data.end(), current_time) != times_with_data.end()) {
                 ui->whisker_pad_frame_spinbox->setValue(current_time.getValue());
             } else {

@@ -270,7 +270,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
         data_manager->removeTime(TimeKey("time"));
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
     }
 
     // Pre-create target MaskData and register with DataManager
@@ -360,7 +360,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
     app->processEvents();
 
     // Verify that mask now contains pixels at current time/frame
-    auto current_index_and_frame = data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+    auto current_index_and_frame = TimeIndexAndFrame(state->current_position.index, state->current_position.time_frame.get());
     auto const & masks_at_time = mask->getAtTime(current_index_and_frame);
     REQUIRE(!masks_at_time.empty());
     // Check total pixels in primary mask > 0
@@ -465,7 +465,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels (non-default mas
     REQUIRE(invoked);
     app->processEvents();
 
-    auto const current_index_and_frame = data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+    auto const current_index_and_frame = TimeIndexAndFrame(state->current_position.index, state->current_position.time_frame.get());
     auto const & masks_at_time = mask->getAtTime(current_index_and_frame);
     // Expected to be non-empty if scaling from canvas->mask coordinates is correct
     REQUIRE(!masks_at_time.empty());

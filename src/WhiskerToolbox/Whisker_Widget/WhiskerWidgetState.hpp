@@ -127,6 +127,10 @@ public:
      */
     void setDisplayName(QString const & name) override;
 
+    // === Transient Runtime State ===
+    // (NOT serialized - just runtime)
+    TimePosition current_position;
+
     // === Serialization ===
 
     /**
@@ -170,10 +174,6 @@ public:
     void setSelectedMaskKey(std::string const & key);
     void setCurrentWhisker(int whisker);
     void setAutoDL(bool auto_dl);
-
-    // === Transient Runtime State ===
-    // (NOT serialized - just runtime)
-    TimePosition current_position;
 
 signals:
     /**

@@ -63,8 +63,9 @@ void Tongue_Widget::keyPressEvent(QKeyEvent *event) {
 
 void Tongue_Widget::_startGrabCut(){
     auto media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getCurrentTime();
-    auto media_data = media->getProcessedData8(current_time);
+
+    auto const current_time = _state->current_position.index;
+    auto media_data = media->getProcessedData8(current_time.getValue());
 
 
     bool const is_gray = media->getFormat() == MediaData::DisplayFormat::Gray;
@@ -80,9 +81,9 @@ void Tongue_Widget::_startGrabCut(){
         _grabcut_widget = new Grabcut_Widget(_data_manager);
     }
 
-    _grabcut_widget->setup(img, current_time);
+    _grabcut_widget->setup(img, _state->current_position);
     if (_state) {
-        _state->addProcessedFrame(current_time);
+        _state->addProcessedFrame(current_time.getValue());
     }
     _grabcut_widget->openWidget();
 }

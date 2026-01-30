@@ -58,18 +58,25 @@ void registerTypes(EditorRegistry * registry,
             // Create the widget with DataManager
             auto * widget = new Whisker_Widget(dm, state, nullptr);
 
-            // Connect EditorRegistry time changes to widget
-            // Use the new timeChanged(TimePosition) signal (preferred)
-            QObject::connect(reg,
-                             QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
-                             widget, QOverload<TimePosition>::of(&Whisker_Widget::LoadFrame));
-
             // Set explicit minimum size constraints for proper docking
             widget->setMinimumSize(400, 500);
             widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
             // Register the state
             reg->registerState(state);
+
+            // Initialize current_position from EditorRegistry's current position
+            if (reg) {
+                state->current_position = reg->currentPosition();
+                
+                // Connect EditorRegistry time changes to update state's current_position
+                // This allows sub-widgets to access the current time position from the state
+                QObject::connect(reg,
+                                 QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                 [state](TimePosition position) {
+                                     state->current_position = position;
+                                 });
+            }
 
             // Initialize the widget (calls openWidget internally handled setup)
             widget->openWidget();

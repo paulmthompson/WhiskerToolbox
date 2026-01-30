@@ -2,6 +2,7 @@
 #define GRABCUT_WIDGET_HPP
 
 #include "GrabCutTool.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QMainWindow>
 #include <QWidget>
@@ -18,7 +19,7 @@ class Grabcut_Widget : public QMainWindow {
     Q_OBJECT
 public:
     Grabcut_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
-    void setup(cv::Mat img, int _frame_index);
+    void setup(cv::Mat img, TimePosition time_position);
 
     ~Grabcut_Widget() override;
 
@@ -36,7 +37,7 @@ private:
 
     Ui::Grabcut_Widget * ui;
 
-    int _frame_index = 0;
+    TimePosition _time_position;
 
     cv::Mat _img;
     GrabCutTool _tool;

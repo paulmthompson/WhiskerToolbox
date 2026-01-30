@@ -244,14 +244,6 @@ std::shared_ptr<TimeFrame> DataManager::getTime(TimeKey const & key) {
     return nullptr;
 };
 
-
-TimeIndexAndFrame DataManager::getCurrentIndexAndFrame(TimeKey const & key) {
-    if (_times.find(key) != _times.end()) {
-        return {TimeFrameIndex(_current_time), _times[key].get()};
-    }
-    return {TimeFrameIndex(_current_time), nullptr};
-}
-
 bool DataManager::removeTime(TimeKey const & key) {
     if (_times.find(key) == _times.end()) {
         std::cerr << "Error: could not find time key in DataManager: " << key << std::endl;

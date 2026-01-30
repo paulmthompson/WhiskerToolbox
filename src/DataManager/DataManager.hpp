@@ -87,8 +87,6 @@ public:
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTime(TimeKey const & key);
 
-    [[nodiscard]] TimeIndexAndFrame getCurrentIndexAndFrame(TimeKey const & key);
-
     bool removeTime(TimeKey const & key);
 
     /**

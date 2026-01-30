@@ -300,7 +300,8 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
 
     auto const x_media = static_cast<float>(x_canvas);
     auto const y_media = static_cast<float>(y_canvas);
-    auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
+    auto const current_position = _state->current_position;
+    auto const current_time = current_position.convertTo(line_data->getTimeFrame().get());
 
     switch (_selection_mode) {
         case Selection_Mode::None: {

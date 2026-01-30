@@ -2,8 +2,8 @@
 #include "ui_MediaMask_Widget.h"
 
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
-#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
@@ -84,12 +84,12 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "MediaMask_Widget Hide Event" << std::endl;
-    
+
     // Guard against _scene being destroyed before hideEvent is called
     if (!_scene) {
         return;
     }
-    
+
     disconnect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
     disconnect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
     disconnect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
@@ -378,7 +378,9 @@ void MediaMask_Widget::_applyDilationPermanently() {
 
     auto preview_masks = _scene->getPreviewMaskData(_active_key);
 
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+    auto time_position = _state->current_position;
+    auto current_index_and_frame = TimeIndexAndFrame(time_position.index,
+                                                     time_position.time_frame.get());
 
     // Clear existing masks at this time
     mask_data->clearAtTime(current_index_and_frame,
@@ -417,8 +419,10 @@ void MediaMask_Widget::_storeOriginalMaskData() {
     }
 
     // Get current time and store the original mask data
-    auto current_time = _data_manager->getCurrentTime();
-    auto const & masks_at_time = mask_data->getAtTime(TimeFrameIndex(current_time));
+    auto const current_position = _state->current_position;
+
+    auto current_mask_index = current_position.convertTo(mask_data->getTimeFrame().get());
+    auto const & masks_at_time = mask_data->getAtTime(current_mask_index);
 
     _original_mask_data[_active_key] = std::vector<Mask2D>(masks_at_time.begin(), masks_at_time.end());
 }
@@ -484,8 +488,9 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Generate ellipse pixels using the new general-purpose function
     auto brush_pixels = generate_ellipse_pixels(x_mask, y_mask, brush_radius_x, brush_radius_y);
 
-
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+    auto time_position = _state->current_position;
+    auto current_index_and_frame = TimeIndexAndFrame(time_position.index,
+                                                     time_position.time_frame.get());
     auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
 
     // Get or create the primary mask (index 0)
@@ -578,7 +583,9 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     float y_mask = y_mask_raw;
 
     // Get current time and existing masks
-    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame(TimeKey("time"));
+    auto time_position = _state->current_position;
+    auto current_index_and_frame = TimeIndexAndFrame(time_position.index,
+                                                     time_position.time_frame.get());
     auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
 
     // Check if there's a primary mask (index 0) to remove from
