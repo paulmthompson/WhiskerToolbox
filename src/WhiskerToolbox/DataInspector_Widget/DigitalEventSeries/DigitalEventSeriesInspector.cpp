@@ -1,6 +1,7 @@
 #include "DigitalEventSeriesInspector.hpp"
 #include "ui_DigitalEventSeriesInspector.h"
 
+#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -91,8 +92,38 @@ void DigitalEventSeriesInspector::_calculateEvents() {
     ui->total_events_label->setText(QString::number(events->size()));
 }
 
+int64_t DigitalEventSeriesInspector::_getCurrentTimeInSeriesFrame() const {
+    if (!state()) {
+        return -1;
+    }
+
+    auto const & time_position = state()->current_position;
+    if (!time_position.isValid() || !time_position.time_frame) {
+        return -1;
+    }
+
+    auto events = dataManager()->getData<DigitalEventSeries>(_active_key);
+    if (!events) {
+        return -1;
+    }
+
+    auto series_timeframe = events->getTimeFrame();
+    if (!series_timeframe) {
+        return -1;
+    }
+
+    // Convert the state's time_position to the series' timeframe
+    TimeFrameIndex converted_index = time_position.convertTo(series_timeframe);
+    return converted_index.getValue();
+}
+
 void DigitalEventSeriesInspector::_addEventButton() {
-    auto current_time = dataManager()->getCurrentTime();
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalEventSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
     auto events = dataManager()->getData<DigitalEventSeries>(_active_key);
 
     if (!events) return;
@@ -105,7 +136,12 @@ void DigitalEventSeriesInspector::_addEventButton() {
 }
 
 void DigitalEventSeriesInspector::_removeEventButton() {
-    auto current_time = dataManager()->getCurrentTime();
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalEventSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
     auto events = dataManager()->getData<DigitalEventSeries>(_active_key);
 
     if (!events) return;
