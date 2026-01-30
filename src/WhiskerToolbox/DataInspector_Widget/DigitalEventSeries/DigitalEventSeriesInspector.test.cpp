@@ -81,7 +81,7 @@ TEST_CASE("DigitalEventSeriesInspector has expected UI", "[DigitalEventSeriesIns
         auto data_manager = std::make_shared<DataManager>();
         DigitalEventSeriesInspector inspector(data_manager, nullptr, nullptr);
 
-        // The inspector wraps DigitalEventSeries_Widget which should have the label
+        // The inspector should have the label
         // We can't directly access it, but we can verify the inspector exists
         app->processEvents();
         REQUIRE(inspector.getTypeName() == QStringLiteral("Digital Event Series"));

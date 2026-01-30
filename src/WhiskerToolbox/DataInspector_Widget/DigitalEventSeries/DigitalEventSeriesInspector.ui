@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DigitalEventSeries_Widget</class>
- <widget class="QWidget" name="DigitalEventSeries_Widget">
+ <class>DigitalEventSeriesInspector</class>
+ <widget class="QWidget" name="DigitalEventSeriesInspector">
   <property name="geometry">
    <rect>
     <x>0</x>

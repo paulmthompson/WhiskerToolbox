@@ -6,8 +6,6 @@
  * @brief Inspector widget for DigitalEventSeries
  * 
  * DigitalEventSeriesInspector provides inspection capabilities for DigitalEventSeries objects.
- * It wraps the existing DigitalEventSeries_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
  * 
  * ## Features
  * - Add/remove events
@@ -15,21 +13,28 @@
  * 
  * Note: Event table view is provided by DigitalEventSeriesDataView in the view panel.
  * 
- * @see DigitalEventSeries_Widget for the underlying implementation
  * @see BaseInspector for the base class
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
+#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
 
 #include <memory>
+#include <string>
+#include <variant>
 
-class DigitalEventSeries_Widget;
+namespace Ui {
+class DigitalEventSeriesInspector;
+}
+
+class CSVEventSaver_Widget;
+
+using EventSaverOptionsVariant = std::variant<CSVEventSaverOptions>;
 
 /**
  * @brief Inspector widget for DigitalEventSeries
  * 
- * Wraps DigitalEventSeries_Widget to provide IDataInspector interface while reusing
- * existing functionality for digital event series inspection and management.
+ * Provides functionality for digital event series inspection and management.
  */
 class DigitalEventSeriesInspector : public BaseInspector {
     Q_OBJECT
@@ -42,9 +47,9 @@ public:
      * @param parent Parent widget
      */
     explicit DigitalEventSeriesInspector(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~DigitalEventSeriesInspector() override;
 
@@ -63,10 +68,35 @@ public:
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
 private:
-    void _setupUi();
-    void _connectSignals();
+    enum SaverType { CSV };
 
-    std::unique_ptr<DigitalEventSeries_Widget> _event_widget;
+    void _connectSignals();
+    void _calculateEvents();
+    void _assignCallbacks();
+
+    void _initiateSaveProcess(SaverType saver_type, EventSaverOptionsVariant & options_variant);
+    bool _performActualCSVSave(CSVEventSaverOptions const & options);
+
+    /**
+     * @brief Generate appropriate filename based on active key and export type
+     * 
+     * @return String containing the filename with appropriate extension
+     */
+    std::string _generateFilename() const;
+
+    /**
+     * @brief Update the filename field based on current active key and export type
+     */
+    void _updateFilename();
+
+    Ui::DigitalEventSeriesInspector * ui;
+
+private slots:
+    void _addEventButton();
+    void _removeEventButton();
+
+    void _onExportTypeChanged(int index);
+    void _handleSaveEventCSVRequested(CSVEventSaverOptions options);
 };
 
-#endif // DIGITAL_EVENT_SERIES_INSPECTOR_HPP
+#endif// DIGITAL_EVENT_SERIES_INSPECTOR_HPP
