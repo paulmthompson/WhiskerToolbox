@@ -156,6 +156,15 @@ private:
      */
     void _deleteSelectedIntervals();
 
+    /**
+     * @brief Get the current time converted to the DigitalIntervalSeries timeframe
+     * @return The current time index in the series' timeframe, or -1 if conversion fails
+     * 
+     * Gets the time_position from the state variable, converts it to the
+     * DigitalIntervalSeries timeframe, and returns the TimeFrameIndex value.
+     */
+    [[nodiscard]] int64_t _getCurrentTimeInSeriesFrame() const;
+
 private slots:
 
     void _createIntervalButton();

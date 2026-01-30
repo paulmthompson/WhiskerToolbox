@@ -111,6 +111,19 @@ void registerTypes(EditorRegistry * registry,
             // Register the state
             reg->registerState(state);
 
+            // Initialize current_position from EditorRegistry's current position
+            if (reg) {
+                state->current_position = reg->currentPosition();
+                
+                // Connect EditorRegistry time changes to update state's current_position
+                // This allows sub-widgets to access the current time position from the state
+                QObject::connect(reg,
+                                 QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                 [state](TimePosition position) {
+                                     state->current_position = position;
+                                 });
+            }
+
             return EditorRegistry::EditorInstance{
                 .state = state,
                 .view = view,

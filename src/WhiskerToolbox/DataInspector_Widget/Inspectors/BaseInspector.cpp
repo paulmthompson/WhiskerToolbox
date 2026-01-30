@@ -1,5 +1,6 @@
 #include "BaseInspector.hpp"
 
+#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
 
 BaseInspector::BaseInspector(
@@ -18,6 +19,10 @@ BaseInspector::~BaseInspector() {
 
 void BaseInspector::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
+}
+
+void BaseInspector::setState(std::shared_ptr<DataInspectorState> state) {
+    _state = state;
 }
 
 void BaseInspector::removeCallbackFromData(std::string const & key, int & callback_id) {

@@ -104,6 +104,12 @@ void DataInspectorViewWidget::_createViewForType(DM_DataType type) {
 
     if (_current_data_view) {
         _current_type = type;
+        
+        // Set the state pointer so the view can access time position
+        if (_state) {
+            _current_data_view->setState(_state);
+        }
+        
         ui->contentLayout->addWidget(_current_data_view.get());
 
         // Connect the view's frameSelected signal

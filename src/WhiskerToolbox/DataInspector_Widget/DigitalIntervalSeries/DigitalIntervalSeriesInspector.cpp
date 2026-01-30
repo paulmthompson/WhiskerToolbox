@@ -1,6 +1,7 @@
 #include "DigitalIntervalSeriesInspector.hpp"
 #include "ui_DigitalIntervalSeriesInspector.h"
 
+#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
@@ -135,9 +136,39 @@ void DigitalIntervalSeriesInspector::_calculateIntervals() {
     }
 }
 
+int64_t DigitalIntervalSeriesInspector::_getCurrentTimeInSeriesFrame() const {
+    if (!state()) {
+        return -1;
+    }
+
+    auto const & time_position = state()->current_position;
+    if (!time_position.isValid() || !time_position.time_frame) {
+        return -1;
+    }
+
+    auto intervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
+    if (!intervals) {
+        return -1;
+    }
+
+    auto series_timeframe = intervals->getTimeFrame();
+    if (!series_timeframe) {
+        return -1;
+    }
+
+    // Convert the state's time_position to the series' timeframe
+    TimeFrameIndex converted_index = time_position.convertTo(series_timeframe);
+    return converted_index.getValue();
+}
+
 void DigitalIntervalSeriesInspector::_createIntervalButton() {
 
-    auto current_time = dataManager()->getCurrentTime();
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalIntervalSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
     auto contactIntervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!contactIntervals) return;
 
@@ -171,7 +202,12 @@ void DigitalIntervalSeriesInspector::_createIntervalButton() {
 
 void DigitalIntervalSeriesInspector::_removeIntervalButton() {
 
-    auto current_time = dataManager()->getCurrentTime();
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalIntervalSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
     auto intervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
@@ -190,15 +226,26 @@ void DigitalIntervalSeriesInspector::_removeIntervalButton() {
 
 void DigitalIntervalSeriesInspector::_flipIntervalButton() {
 
-    auto current_time_and_frame = dataManager()->getCurrentIndexAndFrame(TimeKey("time"));
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalIntervalSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
     auto intervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    if (intervals->hasIntervalAtTime(current_time_and_frame.index,
-                                    *current_time_and_frame.time_frame)) {
-        intervals->setEventAtTime(current_time_and_frame.index, false);
+    auto series_timeframe = intervals->getTimeFrame();
+    if (!series_timeframe) {
+        std::cerr << "DigitalIntervalSeriesInspector: Series has no TimeFrame" << std::endl;
+        return;
+    }
+
+    TimeFrameIndex series_index(current_time);
+    if (intervals->hasIntervalAtTime(series_index, *series_timeframe)) {
+        intervals->setEventAtTime(series_index, false);
     } else {
-        intervals->setEventAtTime(current_time_and_frame.index, true);
+        intervals->setEventAtTime(series_index, true);
     }
 }
 
@@ -209,7 +256,12 @@ void DigitalIntervalSeriesInspector::_extendInterval() {
         return;
     }
 
-    auto current_time = dataManager()->getCurrentTime();
+    auto current_time = _getCurrentTimeInSeriesFrame();
+    if (current_time < 0) {
+        std::cerr << "DigitalIntervalSeriesInspector: Failed to get current time in series frame" << std::endl;
+        return;
+    }
+
     auto intervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 

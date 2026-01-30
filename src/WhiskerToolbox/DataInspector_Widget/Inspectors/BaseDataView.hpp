@@ -32,6 +32,7 @@
 #include <string>
 
 class DataManager;
+class DataInspectorState;
 
 /**
  * @brief Base implementation for type-specific data view widgets
@@ -64,6 +65,22 @@ public:
      */
     [[nodiscard]] std::string getActiveKey() const override { return _active_key; }
 
+    // =========================================================================
+    // State Access
+    // =========================================================================
+
+    /**
+     * @brief Set the DataInspectorState for time position access
+     * @param state Shared state pointer (can be nullptr)
+     */
+    void setState(std::shared_ptr<DataInspectorState> state);
+
+    /**
+     * @brief Get the DataInspectorState
+     * @return Shared state pointer, or nullptr if not set
+     */
+    [[nodiscard]] std::shared_ptr<DataInspectorState> state() const { return _state; }
+
 signals:
     /**
      * @brief Emitted when user selects a frame to navigate to
@@ -85,6 +102,7 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    std::shared_ptr<DataInspectorState> _state;
 };
 
 #endif // BASE_DATA_VIEW_HPP

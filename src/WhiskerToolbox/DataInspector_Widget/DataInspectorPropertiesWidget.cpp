@@ -187,6 +187,12 @@ void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
 
     if (_current_inspector) {
         _current_type = type;
+        
+        // Set the state pointer so the inspector can access time position
+        if (_state) {
+            _current_inspector->setState(_state);
+        }
+        
         ui->contentLayout->addWidget(_current_inspector.get());
 
         // Connect the inspector's frameSelected signal
