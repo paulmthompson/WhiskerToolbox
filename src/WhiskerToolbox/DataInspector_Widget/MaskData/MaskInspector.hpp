@@ -6,31 +6,39 @@
  * @brief Inspector widget for MaskData
  * 
  * MaskInspector provides inspection capabilities for MaskData objects.
- * It wraps the existing Mask_Widget to reuse its functionality while
- * conforming to the IDataInspector interface.
+ * It contains image size management and export functionality.
  * 
  * ## Features
- * - Mask data table with frame and mask information
- * - Group filtering
- * - Context menu for move/copy operations
+ * - Image size management (set, copy from media)
  * - Export to image and HDF5 formats
- * - Frame navigation via double-click
+ * - Media frame export
  * 
- * @see Mask_Widget for the underlying implementation
  * @see BaseInspector for the base class
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
+#include "nlohmann/json.hpp"
+
 #include <memory>
 
-class Mask_Widget;
+namespace Ui {
+class MaskInspector;
+}
+
+class ImageMaskSaver_Widget;
+class HDF5MaskSaver_Widget;
+class MediaExport_Widget;
+class MaskTableView;
+
+// JSON-based saver options - no need for variant types
+using MaskSaverConfig = nlohmann::json;
 
 /**
  * @brief Inspector widget for MaskData
  * 
- * Wraps Mask_Widget to provide IDataInspector interface while reusing
- * existing functionality for mask data inspection and management.
+ * Provides mask data inspection and management functionality including
+ * image size management and export capabilities.
  */
 class MaskInspector : public BaseInspector {
     Q_OBJECT
@@ -62,11 +70,48 @@ public:
 
     [[nodiscard]] bool supportsExport() const override { return true; }
 
-private:
-    void _setupUi();
-    void _connectSignals();
+    /**
+     * @brief Set the data view to use for filtering
+     * @param view Pointer to the MaskTableView (can be nullptr)
+     * 
+     * This connects the inspector's group filter to the view panel's table.
+     * Should be called when both the inspector and view are created.
+     */
+    void setDataView(MaskTableView * view);
 
-    std::unique_ptr<Mask_Widget> _mask_widget;
+private slots:
+    void _loadSamModel();
+    void _onDataChanged();
+
+    // Export slots
+    void _onExportTypeChanged(int index);
+    void _handleSaveImageMaskRequested(QString format, nlohmann::json config);
+    void _onExportMediaFramesCheckboxToggled(bool checked);
+    void _onApplyImageSizeClicked();
+    void _onCopyImageSizeClicked();
+    void _populateMediaComboBox();
+    
+    // Group filter slots
+    void _onGroupFilterChanged(int index);
+    void _onGroupChanged();
+    
+    // Move/copy/delete slots
+    void _onMoveMasksRequested(std::string const & target_key);
+    void _onCopyMasksRequested(std::string const & target_key);
+    void _onMoveMasksToGroupRequested(int group_id);
+    void _onRemoveMasksFromGroupRequested();
+    void _onDeleteMasksRequested();
+
+private:
+    void _connectSignals();
+    void _updateImageSizeDisplay();
+    void _initiateSaveProcess(QString const & format, MaskSaverConfig const & config);
+    bool _performRegistrySave(QString const & format, MaskSaverConfig const & config);
+    void _populateGroupFilterCombo();
+
+    Ui::MaskInspector * ui;
+    int _dm_observer_id{-1};  ///< Callback ID for DataManager-level observer
+    MaskTableView * _data_view{nullptr};  ///< Pointer to the associated table view (optional)
 };
 
 #endif // MASK_INSPECTOR_HPP

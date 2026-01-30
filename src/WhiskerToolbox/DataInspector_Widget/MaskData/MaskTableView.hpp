@@ -14,8 +14,11 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseDataView.hpp"
+#include "Entity/EntityTypes.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 class MaskTableModel;
 class GroupManager;
@@ -49,15 +52,48 @@ public:
     void clearGroupFilter();
 
     [[nodiscard]] std::vector<int64_t> getSelectedFrames() const;
+    [[nodiscard]] std::vector<EntityId> getSelectedEntityIds() const;
     [[nodiscard]] QTableView * tableView() const { return _table_view; }
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
     void _onDataChanged();
+    void _showContextMenu(QPoint const & position);
+    void _onGroupChanged();
+
+signals:
+    /**
+     * @brief Emitted when user requests to move selected masks to a target key
+     * @param target_key The key to move masks to
+     */
+    void moveMasksRequested(std::string const & target_key);
+
+    /**
+     * @brief Emitted when user requests to copy selected masks to a target key
+     * @param target_key The key to copy masks to
+     */
+    void copyMasksRequested(std::string const & target_key);
+
+    /**
+     * @brief Emitted when user requests to delete selected masks
+     */
+    void deleteMasksRequested();
+
+    /**
+     * @brief Emitted when user requests to move selected masks to a group
+     * @param group_id The group ID to move masks to
+     */
+    void moveMasksToGroupRequested(int group_id);
+
+    /**
+     * @brief Emitted when user requests to remove selected masks from their groups
+     */
+    void removeMasksFromGroupRequested();
 
 private:
     void _setupUi();
     void _connectSignals();
+    void _populateGroupSubmenu(QMenu * menu, bool for_moving);
 
     QVBoxLayout * _layout{nullptr};
     QTableView * _table_view{nullptr};

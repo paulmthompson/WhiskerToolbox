@@ -18,6 +18,8 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         Inspectors/BaseInspector.cpp
         Inspectors/InspectorFactory.hpp
         Inspectors/InspectorFactory.cpp
+        Inspectors/GroupFilterHelper.hpp
+        Inspectors/GroupFilterHelper.cpp
         
         # View interface, base, and factory (Phase 3)
         Inspectors/IDataView.hpp
@@ -64,9 +66,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
 
         MaskData/MaskInspector.hpp
         MaskData/MaskInspector.cpp
-        MaskData/Mask_Widget.hpp
-        MaskData/Mask_Widget.cpp
-        MaskData/Mask_Widget.ui
+        MaskData/MaskInspector.ui
         MaskData/MaskTableModel.cpp
         MaskData/MaskTableModel.hpp
         MaskData/MaskTableView.hpp
