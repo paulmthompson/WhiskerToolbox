@@ -132,3 +132,9 @@ endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(DataInspector_Widget PRIVATE ${MSVC_OPTIONS})
 endif()
+
+set_target_properties(DataInspector_Widget PROPERTIES
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
+) 

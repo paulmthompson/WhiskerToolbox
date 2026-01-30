@@ -36,8 +36,8 @@
  */
 
 #include "EditorState/EditorState.hpp"
-//#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
-//#include "TimeFrame/TimeFrame.hpp"
+#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -119,7 +119,7 @@ public:
 
     // === Transient Runtime State ===
     // (NOT serialized - just runtime)
-    //TimePosition current_position;
+    TimePosition current_position;
 
     // === Serialization ===
 
