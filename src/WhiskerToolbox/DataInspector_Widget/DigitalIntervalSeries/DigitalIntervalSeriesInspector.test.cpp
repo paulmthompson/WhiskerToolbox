@@ -88,7 +88,7 @@ TEST_CASE("DigitalIntervalSeriesInspector has expected UI", "[DigitalIntervalSer
         auto data_manager = std::make_shared<DataManager>();
         DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
 
-        // The inspector wraps DigitalIntervalSeries_Widget which should have the label
+        // The inspector should have the label
         app->processEvents();
         REQUIRE(inspector.getTypeName() == QStringLiteral("Digital Interval Series"));
     }
@@ -931,4 +931,351 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     REQUIRE(view_widget_args_end.size() == 1);
     auto const view_widget_pos_end = view_widget_args_end[0].value<TimePosition>();
     REQUIRE(view_widget_pos_end.index.getValue() == 20);
+}
+
+// === Tests migrated from DigitalIntervalSeries_Widget ===
+
+TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[DigitalIntervalSeriesInspector][interval_creation]") {
+
+    // Setup QApplication for widget testing
+    ensureQApplication();
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    auto data_manager = std::make_shared<DataManager>();
+    
+    // Create timeframe (remove existing if present to avoid conflicts)
+    data_manager->removeTime(TimeKey("time"));
+    constexpr int kNumTimes = 1000;
+    std::vector<int> t(kNumTimes);
+    std::iota(t.begin(), t.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(t);
+    data_manager->setTime(TimeKey("time"), tf);
+    
+    // Create empty interval series and set TimeFrame before adding to DataManager
+    auto interval_series = std::make_shared<DigitalIntervalSeries>();
+    interval_series->setTimeFrame(tf);
+    data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
+
+    DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+    inspector.setActiveKey("test_intervals");
+    app->processEvents();
+
+    SECTION("Initial state") {
+        // Inspector should start in normal mode (not in interval creation)
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
+        REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->isVisible() == false);
+    }
+
+    SECTION("Bidirectional interval creation - forward order") {
+        // Reset state by setting active key (which cancels any ongoing interval creation)
+        inspector.setActiveKey("test_intervals");
+        
+        data_manager->setCurrentTime(100);
+        app->processEvents();
+
+        // Verify initial state before clicking
+        auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
+        REQUIRE(create_button != nullptr);
+        REQUIRE(create_button->text() == "Create Interval");
+        
+        // Ensure widget is shown for button clicks to work properly
+        inspector.show();
+        app->processEvents();
+        
+        // Simulate first button click - should enter interval creation mode
+        create_button->click();
+        app->processEvents();
+        QTest::qWait(10); // Small delay to ensure UI updates
+
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
+        auto * cancel_button = inspector.findChild<QPushButton *>("cancel_interval_button");
+        REQUIRE(cancel_button != nullptr);
+        REQUIRE(cancel_button->isVisible() == true);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->isVisible() == true);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->text() == "Start: 100");
+
+        // Move to later frame and click again
+        data_manager->setCurrentTime(200);
+        app->processEvents();
+        create_button->click();
+        app->processEvents();
+
+        // Should create interval [100, 200] and reset state
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
+        REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->isVisible() == false);
+
+        // Verify interval was created correctly
+        auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
+        REQUIRE(intervals != nullptr);
+        REQUIRE(intervals->size() == 1);
+        auto interval_view = intervals->view();
+        REQUIRE(interval_view[0].value().start == 100);
+        REQUIRE(interval_view[0].value().end == 200);
+    }
+
+    SECTION("Bidirectional interval creation - reverse order") {
+        // Reset state by setting active key (which cancels any ongoing interval creation)
+        inspector.setActiveKey("test_intervals");
+        
+        // Clear any existing intervals from previous sections
+        auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
+        REQUIRE(intervals != nullptr);
+        auto view = intervals->view();
+        for (auto const & interval_with_id : view) {
+            intervals->removeInterval(interval_with_id.value());
+        }
+        
+        data_manager->setCurrentTime(300);
+        app->processEvents();
+
+        // Verify initial state before clicking
+        auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
+        REQUIRE(create_button != nullptr);
+        REQUIRE(create_button->text() == "Create Interval");
+        
+        // Ensure widget is shown for button clicks to work properly
+        inspector.show();
+        app->processEvents();
+        
+        // Start interval creation at frame 300
+        create_button->click();
+        app->processEvents();
+        QTest::qWait(10); // Small delay to ensure UI updates
+
+        // Move to earlier frame and complete interval
+        data_manager->setCurrentTime(150);
+        app->processEvents();
+        create_button->click();
+        app->processEvents();
+
+        // Should create interval [150, 300] (automatically swapped)
+        intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
+        REQUIRE(intervals != nullptr);
+        REQUIRE(intervals->size() == 1);
+        auto interval_view = intervals->view();
+        REQUIRE(interval_view[0].value().start == 150);
+        REQUIRE(interval_view[0].value().end == 300);
+    }
+
+    SECTION("Cancel interval creation via button") {
+        // Reset state by setting active key (which cancels any ongoing interval creation)
+        inspector.setActiveKey("test_intervals");
+        
+        // Clear any existing intervals from previous sections
+        auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
+        REQUIRE(intervals != nullptr);
+        auto view = intervals->view();
+        for (auto const & interval_with_id : view) {
+            intervals->removeInterval(interval_with_id.value());
+        }
+        
+        data_manager->setCurrentTime(50);
+        app->processEvents();
+
+        // Verify initial state before clicking
+        auto * create_button = inspector.findChild<QPushButton *>("create_interval_button");
+        REQUIRE(create_button != nullptr);
+        REQUIRE(create_button->text() == "Create Interval");
+        
+        // Ensure widget is shown for button clicks to work properly
+        inspector.show();
+        app->processEvents();
+        
+        // Start interval creation
+        create_button->click();
+        app->processEvents();
+        QTest::qWait(10); // Small delay to ensure UI updates
+
+        REQUIRE(create_button->text() == "Mark Interval End");
+        auto * cancel_button = inspector.findChild<QPushButton *>("cancel_interval_button");
+        REQUIRE(cancel_button != nullptr);
+        REQUIRE(cancel_button->isVisible() == true);
+
+        // Cancel via button
+        cancel_button->click();
+        app->processEvents();
+
+        // Should return to normal state
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
+        REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->isVisible() == false);
+
+        // No interval should be created
+        intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
+        REQUIRE(intervals != nullptr);
+        REQUIRE(intervals->size() == 0);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeriesInspector state management", "[DigitalIntervalSeriesInspector][state_management]") {
+
+    ensureQApplication();
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    auto data_manager = std::make_shared<DataManager>();
+    
+    // Create timeframe (remove existing if present to avoid conflicts)
+    data_manager->removeTime(TimeKey("time"));
+    constexpr int kNumTimes = 1000;
+    std::vector<int> t(kNumTimes);
+    std::iota(t.begin(), t.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(t);
+    data_manager->setTime(TimeKey("time"), tf);
+    
+    // Create interval series
+    auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
+    data_manager->setData<DigitalIntervalSeries>("intervals1", interval_series_1, TimeKey("time"));
+    
+    auto interval_series_2 = std::make_shared<DigitalIntervalSeries>();
+    data_manager->setData<DigitalIntervalSeries>("intervals2", interval_series_2, TimeKey("time"));
+
+    DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+
+    SECTION("State reset when switching active keys") {
+        inspector.setActiveKey("intervals1");
+        data_manager->setCurrentTime(100);
+        app->processEvents();
+
+        // Start interval creation
+        QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
+        app->processEvents();
+
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
+
+        // Switch to different key - should reset state
+        inspector.setActiveKey("intervals2");
+        app->processEvents();
+
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
+        REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->isVisible() == false);
+    }
+
+    SECTION("State reset when removing callbacks") {
+        inspector.setActiveKey("intervals1");
+        data_manager->setCurrentTime(100);
+        app->processEvents();
+
+        // Start interval creation
+        QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
+        app->processEvents();
+
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
+
+        // Remove callbacks - should reset state
+        inspector.removeCallbacks();
+        app->processEvents();
+
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
+        REQUIRE(inspector.findChild<QPushButton *>("cancel_interval_button")->isVisible() == false);
+        REQUIRE(inspector.findChild<QLabel *>("start_frame_label")->isVisible() == false);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeriesInspector filename generation", "[DigitalIntervalSeriesInspector][filename]") {
+
+    ensureQApplication();
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    auto data_manager = std::make_shared<DataManager>();
+    
+    // Create timeframe (remove existing if present to avoid conflicts)
+    data_manager->removeTime(TimeKey("time"));
+    constexpr int kNumTimes = 1000;
+    std::vector<int> t(kNumTimes);
+    std::iota(t.begin(), t.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(t);
+    data_manager->setTime(TimeKey("time"), tf);
+    
+    // Create interval series
+    auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
+    data_manager->setData<DigitalIntervalSeries>("whisker_contacts", interval_series_1, TimeKey("time"));
+    
+    auto interval_series_2 = std::make_shared<DigitalIntervalSeries>();
+    data_manager->setData<DigitalIntervalSeries>("object_interactions", interval_series_2, TimeKey("time"));
+
+    DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+
+    SECTION("Filename updates when active key changes") {
+        // Set active key and verify filename updates
+        inspector.setActiveKey("whisker_contacts");
+        REQUIRE(inspector.findChild<QLineEdit *>("filename_edit")->text() == "whisker_contacts.csv");
+
+        // Change to different key
+        inspector.setActiveKey("object_interactions");
+        REQUIRE(inspector.findChild<QLineEdit *>("filename_edit")->text() == "object_interactions.csv");
+    }
+
+    SECTION("Filename updates when export type changes") {
+        inspector.setActiveKey("whisker_contacts");
+
+        // Initially should be CSV
+        REQUIRE(inspector.findChild<QLineEdit *>("filename_edit")->text() == "whisker_contacts.csv");
+
+        // If future export types are added, they should update filename accordingly
+        // For now, only CSV is available, so this test validates the existing behavior
+        auto export_combo = inspector.findChild<QComboBox *>("export_type_combo");
+        export_combo->setCurrentIndex(0);// CSV
+        REQUIRE(inspector.findChild<QLineEdit *>("filename_edit")->text() == "whisker_contacts.csv");
+    }
+
+    SECTION("Empty active key uses fallback filename") {
+        // Inspector without active key should use fallback
+        DigitalIntervalSeriesInspector inspector_no_key(data_manager, nullptr, nullptr);
+        REQUIRE(inspector_no_key.findChild<QLineEdit *>("filename_edit")->text() == "intervals_output.csv");
+    }
+}
+
+TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeriesInspector][error_handling]") {
+
+    ensureQApplication();
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    auto data_manager = std::make_shared<DataManager>();
+    DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+
+    SECTION("Handle null data gracefully") {
+        inspector.setActiveKey("nonexistent_key");
+        data_manager->setCurrentTime(100);
+
+        // Should not crash when trying to create interval with null data
+        QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
+
+        // State should remain unchanged
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Create Interval");
+    }
+
+    SECTION("Context menu only appears during interval creation") {
+        // Create timeframe and interval series for this test
+        data_manager->removeTime(TimeKey("time"));
+        constexpr int kNumTimes = 1000;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+        
+        auto interval_series = std::make_shared<DigitalIntervalSeries>();
+        data_manager->setData<DigitalIntervalSeries>("test_key", interval_series, TimeKey("time"));
+        
+        inspector.setActiveKey("test_key");
+        app->processEvents();
+
+        // Right-click when not in interval creation mode - context menu should not appear
+        // (This is tested implicitly by the _showCreateIntervalContextMenu implementation)
+
+        data_manager->setCurrentTime(100);
+        app->processEvents();
+        QTest::mouseClick(inspector.findChild<QPushButton *>("create_interval_button"), Qt::LeftButton);
+        app->processEvents();
+
+        // Now in interval creation mode - context menu should be available
+        // (Implementation allows context menu to appear)
+        REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
+    }
 }

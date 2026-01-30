@@ -244,6 +244,7 @@ std::shared_ptr<TimeFrame> DataManager::getTime(TimeKey const & key) {
     return nullptr;
 };
 
+
 TimeIndexAndFrame DataManager::getCurrentIndexAndFrame(TimeKey const & key) {
     if (_times.find(key) != _times.end()) {
         return {TimeFrameIndex(_current_time), _times[key].get()};
