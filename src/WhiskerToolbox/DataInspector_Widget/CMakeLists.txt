@@ -101,16 +101,17 @@ target_link_libraries(DataInspector_Widget PRIVATE
     Qt6::Gui
 )
 
-# Core dependencies
 target_link_libraries(DataInspector_Widget PRIVATE DataManager)
+target_link_libraries(DataInspector_Widget PRIVATE TimeFrame)
+target_link_libraries(DataInspector_Widget PRIVATE Entity)
+target_link_libraries(DataInspector_Widget PRIVATE TensorData)
 target_link_libraries(DataInspector_Widget PRIVATE EditorState)
 target_link_libraries(DataInspector_Widget PRIVATE GroupManagementWidget)
-
-# Dependencies for type-specific inspectors (they wrap existing widgets)
-target_link_libraries(DataInspector_Widget PRIVATE DataManager_Widget)
-
-# JSON libraries for serialization
 target_link_libraries(DataInspector_Widget PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(DataInspector_Widget PRIVATE DataExport_Widget)
+target_link_libraries(DataInspector_Widget PRIVATE DataManagerIO)
+target_link_libraries(DataInspector_Widget PRIVATE MediaExport)
+target_link_libraries(DataInspector_Widget PRIVATE Collapsible_Widget)
 
 target_include_directories(DataInspector_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" # This directory
