@@ -18,9 +18,11 @@
 #include <QComboBox>
 #include <QTableView>
 #include <QAbstractItemModel>
+#include <QItemSelectionModel>
 #include <QSignalSpy>
 #include <QTest>
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <numeric>
@@ -776,5 +778,720 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         REQUIRE(filtered_entities.count(entity0) == 1);
         REQUIRE(filtered_entities.count(entity1) == 1);
         REQUIRE(filtered_entities.count(entity2) == 1);
+    }
+}
+
+// === Move and Copy Tests ===
+
+TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInspector][LineTableView][MoveCopy]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Move lines to target LineData") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create source LineData with lines
+        auto source_line_data = std::make_shared<LineData>();
+        source_line_data->setIdentityContext("source_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines to source
+        source_line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        source_line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);
+        source_line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);
+        source_line_data->addAtTime(TimeFrameIndex(20), create_line(40.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        source_line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("source_lines", source_line_data, TimeKey("time"));
+
+        // Create target LineData (empty)
+        auto target_line_data = std::make_shared<LineData>();
+        target_line_data->setIdentityContext("target_lines", data_manager->getEntityRegistry());
+        data_manager->setData<LineData>("target_lines", target_line_data, TimeKey("time"));
+
+        // Get entity IDs from source
+        auto entity_ids_frame0 = source_line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = source_line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("source_lines");
+        view.setActiveKey("source_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially source should have 4 lines, target should have 0
+        REQUIRE(model->rowCount() == 4);
+        REQUIRE(target_line_data->getTimesWithData().size() == 0);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity0) != selected_entity_ids.end());
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity1) != selected_entity_ids.end());
+
+        // Emit move signal (simulating context menu selection)
+        emit view.moveLinesRequested("target_lines");
+        app->processEvents();
+
+        // Source should now have 2 lines (entity2 and the one at frame 20)
+        view.updateView();
+        app->processEvents();
+        REQUIRE(model->rowCount() == 2);
+
+        // Target should have 2 lines (entity0 and entity1)
+        target_line_data->rebuildAllEntityIds();
+        auto target_times = target_line_data->getTimesWithData();
+        REQUIRE(target_times.size() == 1);  // Should have data at frame 0
+        REQUIRE(target_line_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+
+        // Verify source still has entity2
+        auto remaining_entities = view.getSelectedEntityIds();
+        // Clear selection first
+        selection_model->clearSelection();
+        app->processEvents();
+        
+        // Check that entity2 is still in source
+        auto source_entity_ids_frame10 = source_line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(source_entity_ids_frame10.size() == 1);
+        REQUIRE(source_entity_ids_frame10[0] == entity2);
+    }
+
+    SECTION("Copy lines to target LineData") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create source LineData with lines
+        auto source_line_data = std::make_shared<LineData>();
+        source_line_data->setIdentityContext("source_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines to source
+        source_line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        source_line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);
+        source_line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        source_line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("source_lines", source_line_data, TimeKey("time"));
+
+        // Create target LineData (empty)
+        auto target_line_data = std::make_shared<LineData>();
+        target_line_data->setIdentityContext("target_lines", data_manager->getEntityRegistry());
+        data_manager->setData<LineData>("target_lines", target_line_data, TimeKey("time"));
+
+        // Get entity IDs from source
+        auto entity_ids_frame0 = source_line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = source_line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("source_lines");
+        view.setActiveKey("source_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially source should have 3 lines, target should have 0
+        REQUIRE(model->rowCount() == 3);
+        REQUIRE(target_line_data->getTimesWithData().size() == 0);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit copy signal (simulating context menu selection)
+        emit view.copyLinesRequested("target_lines");
+        app->processEvents();
+
+        // Source should still have 3 lines (unchanged)
+        view.updateView();
+        app->processEvents();
+        REQUIRE(model->rowCount() == 3);
+
+        // Target should have 2 lines (copies of entity0 and entity1)
+        target_line_data->rebuildAllEntityIds();
+        auto target_times = target_line_data->getTimesWithData();
+        REQUIRE(target_times.size() == 1);  // Should have data at frame 0
+        REQUIRE(target_line_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+
+        // Verify source still has all original lines
+        REQUIRE(source_line_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+        REQUIRE(source_line_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+    }
+}
+
+// === Group Management Context Menu Tests ===
+
+TEST_CASE("LineInspector and LineTableView group management context menu", "[LineInspector][LineTableView][GroupManagement]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Move lines to group via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create LineData with lines
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create groups
+        int group_a_id = group_manager->createGroup("Group A");
+        int group_b_id = group_manager->createGroup("Group B");
+        app->processEvents();
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, group_manager.get(), nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_lines");
+        view.setActiveKey("test_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially, no entities should be in groups
+        REQUIRE(group_manager->getEntityGroup(entity0) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit move to group signal (simulating context menu selection)
+        emit view.moveLinesToGroupRequested(group_a_id);
+        app->processEvents();
+
+        // Verify entities are now in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);  // Not selected, should remain ungrouped
+
+        // Verify table updates to show group names
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group names are updated in the model
+        for (int row = 0; row < model->rowCount(); ++row) {
+            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
+                REQUIRE(row_data.group_name == QStringLiteral("Group A"));
+            } else if (row_data.entity_id == entity2) {
+                REQUIRE(row_data.group_name == QStringLiteral("No Group"));
+            }
+        }
+
+        // Now select entity2 and move it to Group B
+        selection_model->clearSelection();
+        selection_model->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        emit view.moveLinesToGroupRequested(group_b_id);
+        app->processEvents();
+
+        // Verify entity2 is now in Group B
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_b_id);
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);  // Should still be in Group A
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);  // Should still be in Group A
+    }
+
+    SECTION("Remove lines from group via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create LineData with lines
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create group and assign entities
+        int group_a_id = group_manager->createGroup("Group A");
+        group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity1, entity2});
+        app->processEvents();
+
+        // Verify all entities are in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, group_manager.get(), nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_lines");
+        view.setActiveKey("test_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit remove from group signal (simulating context menu selection)
+        emit view.removeLinesFromGroupRequested();
+        app->processEvents();
+
+        // Verify selected entities are removed from group
+        REQUIRE(group_manager->getEntityGroup(entity0) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);  // Not selected, should remain in group
+
+        // Verify table updates to show group names
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group names are updated in the model
+        for (int row = 0; row < model->rowCount(); ++row) {
+            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
+                REQUIRE(row_data.group_name == QStringLiteral("No Group"));
+            } else if (row_data.entity_id == entity2) {
+                REQUIRE(row_data.group_name == QStringLiteral("Group A"));
+            }
+        }
+    }
+
+    SECTION("Move lines from one group to another via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create LineData with lines
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        REQUIRE(entity_ids_frame0.size() == 2);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+
+        // Create groups and assign entity0 to Group A
+        int group_a_id = group_manager->createGroup("Group A");
+        int group_b_id = group_manager->createGroup("Group B");
+        group_manager->assignEntitiesToGroup(group_a_id, {entity0});
+        app->processEvents();
+
+        // Verify initial group assignment
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, group_manager.get(), nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_lines");
+        view.setActiveKey("test_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Select first row (entity0)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Move entity0 from Group A to Group B
+        emit view.moveLinesToGroupRequested(group_b_id);
+        app->processEvents();
+
+        // Verify entity0 is now in Group B (moved from Group A)
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_b_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);  // Should remain ungrouped
+
+        // Verify table updates
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group name is updated in the model
+        auto row_data = static_cast<LineTableModel *>(model)->getRowData(0);
+        REQUIRE(row_data.entity_id == entity0);
+        REQUIRE(row_data.group_name == QStringLiteral("Group B"));
+    }
+}
+
+// === Delete Lines Tests ===
+
+TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineTableView][Delete]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Delete selected lines via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create LineData with lines
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(20), create_line(40.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0 = line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto entity_ids_frame20 = line_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+        REQUIRE(entity_ids_frame20.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+        EntityId entity3 = entity_ids_frame20[0];
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_lines");
+        view.setActiveKey("test_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially should have 4 lines
+        REQUIRE(model->rowCount() == 4);
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(0)).size() == 2);
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(20)).size() == 1);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity0) != selected_entity_ids.end());
+        REQUIRE(std::find(selected_entity_ids.begin(), selected_entity_ids.end(), entity1) != selected_entity_ids.end());
+
+        // Emit delete signal (simulating context menu selection)
+        emit view.deleteLinesRequested();
+        app->processEvents();
+
+        // Verify lines were deleted
+        view.updateView();
+        app->processEvents();
+        
+        // Should now have 2 lines (entity2 and entity3)
+        REQUIRE(model->rowCount() == 2);
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(0)).size() == 0);  // Both lines at frame 0 deleted
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(10)).size() == 1);  // entity2 still exists
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(20)).size() == 1);  // entity3 still exists
+
+        // Verify entity0 and entity1 are gone
+        auto remaining_entity_ids_frame0 = line_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        REQUIRE(remaining_entity_ids_frame0.size() == 0);
+        
+        // Verify entity2 and entity3 still exist
+        auto remaining_entity_ids_frame10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        auto remaining_entity_ids_frame20 = line_data->getEntityIdsAtTime(TimeFrameIndex(20));
+        REQUIRE(remaining_entity_ids_frame10.size() == 1);
+        REQUIRE(remaining_entity_ids_frame20.size() == 1);
+        REQUIRE(remaining_entity_ids_frame10[0] == entity2);
+        REQUIRE(remaining_entity_ids_frame20[0] == entity3);
+    }
+
+    SECTION("Delete all lines leaves empty LineData") {
+        auto data_manager = std::make_shared<DataManager>();
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create LineData with lines
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        // Helper to create a simple line
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            return line;
+        };
+
+        // Add lines
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), create_line(20.0f), NotifyObservers::No);
+
+        // Rebuild entity IDs
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        // Create inspector and view, and connect them
+        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_lines");
+        view.setActiveKey("test_lines");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially should have 2 lines
+        REQUIRE(model->rowCount() == 2);
+
+        // Select all rows
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Emit delete signal
+        emit view.deleteLinesRequested();
+        app->processEvents();
+
+        // Verify all lines were deleted
+        view.updateView();
+        app->processEvents();
+        
+        REQUIRE(model->rowCount() == 0);
+        REQUIRE(line_data->getTimesWithData().size() == 0);
     }
 }

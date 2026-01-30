@@ -33,6 +33,7 @@
 #include <iostream>
 #include <set>
 #include <unordered_set>
+#include <vector>
 
 LineInspector::LineInspector(
     std::shared_ptr<DataManager> data_manager,
@@ -603,14 +604,218 @@ void LineInspector::_onAutoScrollToCurrentFrame() {
         return;
     }
 
-    auto current_time = dataManager()->getCurrentTime();
+    int64_t current_time = dataManager()->getCurrentTime();
     _data_view->scrollToFrame(current_time);
-
 }
 
 void LineInspector::setDataView(LineTableView * view) {
+    // Disconnect from old view if any
+    if (_data_view) {
+        disconnect(_data_view, &LineTableView::moveLinesRequested, this, nullptr);
+        disconnect(_data_view, &LineTableView::copyLinesRequested, this, nullptr);
+        disconnect(_data_view, &LineTableView::moveLinesToGroupRequested, this, nullptr);
+        disconnect(_data_view, &LineTableView::removeLinesFromGroupRequested, this, nullptr);
+        disconnect(_data_view, &LineTableView::deleteLinesRequested, this, nullptr);
+    }
+
     _data_view = view;
-    if (_data_view && groupManager()) {
-        _data_view->setGroupManager(groupManager());
+    if (_data_view) {
+        if (groupManager()) {
+            _data_view->setGroupManager(groupManager());
+        }
+        
+        // Connect to view signals for move/copy operations
+        connect(_data_view, &LineTableView::moveLinesRequested,
+                this, &LineInspector::_onMoveLinesRequested);
+        connect(_data_view, &LineTableView::copyLinesRequested,
+                this, &LineInspector::_onCopyLinesRequested);
+        
+        // Connect to view signals for group management operations
+        connect(_data_view, &LineTableView::moveLinesToGroupRequested,
+                this, &LineInspector::_onMoveLinesToGroupRequested);
+        connect(_data_view, &LineTableView::removeLinesFromGroupRequested,
+                this, &LineInspector::_onRemoveLinesFromGroupRequested);
+        
+        // Connect to view signal for delete operation
+        connect(_data_view, &LineTableView::deleteLinesRequested,
+                this, &LineInspector::_onDeleteLinesRequested);
+    }
+}
+
+void LineInspector::_onMoveLinesRequested(std::string const & target_key) {
+    if (!_data_view || _active_key.empty()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "LineInspector: No lines selected to move." << std::endl;
+        return;
+    }
+
+    auto source_line_data = dataManager()->getData<LineData>(_active_key);
+    auto target_line_data = dataManager()->getData<LineData>(target_key);
+
+    if (!source_line_data) {
+        std::cerr << "LineInspector: Source LineData object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+    if (!target_line_data) {
+        std::cerr << "LineInspector: Target LineData object ('" << target_key << "') not found." << std::endl;
+        return;
+    }
+
+    std::cout << "LineInspector: Moving " << selected_entity_ids.size()
+              << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    // Use the moveByEntityIds method to move only the selected lines
+    std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_lines_moved = source_line_data->moveByEntityIds(*target_line_data, selected_entity_ids_set, NotifyObservers::Yes);
+
+    if (total_lines_moved > 0) {
+        // Update the view to reflect changes
+        _data_view->updateView();
+
+        std::cout << "LineInspector: Successfully moved " << total_lines_moved
+                  << " selected lines." << std::endl;
+    } else {
+        std::cout << "LineInspector: No lines found with the selected EntityIds to move." << std::endl;
+    }
+}
+
+void LineInspector::_onCopyLinesRequested(std::string const & target_key) {
+    if (!_data_view || _active_key.empty()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "LineInspector: No lines selected to copy." << std::endl;
+        return;
+    }
+
+    auto source_line_data = dataManager()->getData<LineData>(_active_key);
+    auto target_line_data = dataManager()->getData<LineData>(target_key);
+
+    if (!source_line_data) {
+        std::cerr << "LineInspector: Source LineData object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+    if (!target_line_data) {
+        std::cerr << "LineInspector: Target LineData object ('" << target_key << "') not found." << std::endl;
+        return;
+    }
+
+    std::cout << "LineInspector: Copying " << selected_entity_ids.size()
+              << " selected lines from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    // Use the copyByEntityIds method to copy only the selected lines
+    std::unordered_set<EntityId> const selected_entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+    std::size_t const total_lines_copied = source_line_data->copyByEntityIds(*target_line_data, selected_entity_ids_set, NotifyObservers::Yes);
+
+    if (total_lines_copied > 0) {
+        std::cout << "LineInspector: Successfully copied " << total_lines_copied
+                  << " selected lines." << std::endl;
+    } else {
+        std::cout << "LineInspector: No lines found with the selected EntityIds to copy." << std::endl;
+    }
+}
+
+void LineInspector::_onMoveLinesToGroupRequested(int group_id) {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "LineInspector: No lines selected to move to group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // First, remove entities from their current groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Then, assign entities to the specified group
+    groupManager()->assignEntitiesToGroup(group_id, entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_data_view) {
+        _data_view->updateView();
+    }
+
+    std::cout << "LineInspector: Moved " << selected_entity_ids.size()
+              << " selected lines to group " << group_id << std::endl;
+}
+
+void LineInspector::_onRemoveLinesFromGroupRequested() {
+    if (!_data_view || !groupManager()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "LineInspector: No lines selected to remove from group." << std::endl;
+        return;
+    }
+
+    std::unordered_set<EntityId> entity_ids_set(selected_entity_ids.begin(), selected_entity_ids.end());
+
+    // Remove entities from all groups
+    groupManager()->ungroupEntities(entity_ids_set);
+
+    // Refresh the view to show updated group information
+    if (_data_view) {
+        _data_view->updateView();
+    }
+
+    std::cout << "LineInspector: Removed " << selected_entity_ids.size()
+              << " selected lines from their groups." << std::endl;
+}
+
+void LineInspector::_onDeleteLinesRequested() {
+    if (!_data_view || _active_key.empty()) {
+        return;
+    }
+
+    auto selected_entity_ids = _data_view->getSelectedEntityIds();
+    if (selected_entity_ids.empty()) {
+        std::cout << "LineInspector: No lines selected to delete." << std::endl;
+        return;
+    }
+
+    auto line_data = dataManager()->getData<LineData>(_active_key);
+    if (!line_data) {
+        std::cerr << "LineInspector: LineData object ('" << _active_key << "') not found for deletion." << std::endl;
+        return;
+    }
+
+    std::cout << "LineInspector: Deleting " << selected_entity_ids.size()
+              << " selected lines from '" << _active_key << "'..." << std::endl;
+
+    int total_lines_deleted = 0;
+
+    // Delete each selected line individually
+    for (EntityId const entity_id : selected_entity_ids) {
+        if (entity_id != EntityId(0)) {
+            bool const success = line_data->clearByEntityId(entity_id, NotifyObservers::No);
+            if (success) {
+                total_lines_deleted++;
+            }
+        }
+    }
+
+    // Notify observers only once at the end
+    if (total_lines_deleted > 0) {
+        line_data->notifyObservers();
+
+        // Update the view to reflect changes
+        _data_view->updateView();
+
+        std::cout << "LineInspector: Successfully deleted " << total_lines_deleted
+                  << " selected lines." << std::endl;
+    } else {
+        std::cout << "LineInspector: No lines found to delete from the selected rows." << std::endl;
     }
 }

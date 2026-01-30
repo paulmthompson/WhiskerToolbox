@@ -104,6 +104,11 @@ private slots:
     void _onGroupFilterChanged(int index);
     void _onGroupChanged();
     void _onAutoScrollToCurrentFrame();
+    void _onMoveLinesRequested(std::string const & target_key);
+    void _onCopyLinesRequested(std::string const & target_key);
+    void _onMoveLinesToGroupRequested(int group_id);
+    void _onRemoveLinesFromGroupRequested();
+    void _onDeleteLinesRequested();
 
 private:
     void _setupUi();
