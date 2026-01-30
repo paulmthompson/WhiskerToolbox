@@ -1,6 +1,7 @@
 
 #include "MaskInspector.hpp"
 #include "MaskTableView.hpp"
+#include "MaskTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
@@ -916,5 +917,326 @@ TEST_CASE("MaskInspector and MaskTableView move and copy operations", "[MaskInsp
         // Verify source still has all original masks
         REQUIRE(source_mask_data->getAtTime(TimeFrameIndex(0)).size() == 2);
         REQUIRE(source_mask_data->getAtTime(TimeFrameIndex(10)).size() == 1);
+    }
+}
+
+// === Group Management Context Menu Tests ===
+
+TEST_CASE("MaskInspector and MaskTableView group management context menu", "[MaskInspector][MaskTableView][GroupManagement]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    SECTION("Move masks to group via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create MaskData with masks
+        auto mask_data = std::make_shared<MaskData>();
+        mask_data->setTimeFrame(tf);
+
+        // Helper to create a simple mask
+        auto create_mask = [](uint32_t base_x, uint32_t base_y) -> Mask2D {
+            Mask2D mask;
+            mask.push_back(Point2D<uint32_t>{base_x, base_y});
+            mask.push_back(Point2D<uint32_t>{base_x + 1, base_y});
+            mask.push_back(Point2D<uint32_t>{base_x, base_y + 1});
+            mask.push_back(Point2D<uint32_t>{base_x + 1, base_y + 1});
+            return mask;
+        };
+
+        // Add masks
+        mask_data->addAtTime(TimeFrameIndex(0), create_mask(10, 10), NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), create_mask(20, 20), NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), create_mask(30, 30), NotifyObservers::No);
+
+        data_manager->setData<MaskData>("test_masks", mask_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0_view = mask_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10_view = mask_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        std::vector<EntityId> entity_ids_frame0(entity_ids_frame0_view.begin(), entity_ids_frame0_view.end());
+        std::vector<EntityId> entity_ids_frame10(entity_ids_frame10_view.begin(), entity_ids_frame10_view.end());
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create groups
+        int group_a_id = group_manager->createGroup("Group A");
+        int group_b_id = group_manager->createGroup("Group B");
+        app->processEvents();
+
+        // Create inspector and view, and connect them
+        MaskInspector inspector(data_manager, group_manager.get(), nullptr);
+        MaskTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_masks");
+        view.setActiveKey("test_masks");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Initially, no entities should be in groups
+        REQUIRE(group_manager->getEntityGroup(entity0) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit move to group signal (simulating context menu selection)
+        emit view.moveMasksToGroupRequested(group_a_id);
+        app->processEvents();
+
+        // Verify entities are now in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);  // Not selected, should remain ungrouped
+
+        // Verify table updates to show group names
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group names are updated in the model
+        for (int row = 0; row < model->rowCount(); ++row) {
+            auto row_data = static_cast<MaskTableModel *>(model)->getRowData(row);
+            if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
+                REQUIRE(row_data.group_name == QStringLiteral("Group A"));
+            } else if (row_data.entity_id == entity2) {
+                REQUIRE(row_data.group_name == QStringLiteral("No Group"));
+            }
+        }
+
+        // Now select entity2 and move it to Group B
+        selection_model->clearSelection();
+        selection_model->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        emit view.moveMasksToGroupRequested(group_b_id);
+        app->processEvents();
+
+        // Verify entity2 is now in Group B
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_b_id);
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);  // Should still be in Group A
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);  // Should still be in Group A
+    }
+
+    SECTION("Remove masks from group via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create MaskData with masks
+        auto mask_data = std::make_shared<MaskData>();
+        mask_data->setTimeFrame(tf);
+
+        // Helper to create a simple mask
+        auto create_mask = [](uint32_t base_x, uint32_t base_y) -> Mask2D {
+            Mask2D mask;
+            mask.push_back(Point2D<uint32_t>{base_x, base_y});
+            mask.push_back(Point2D<uint32_t>{base_x + 1, base_y});
+            mask.push_back(Point2D<uint32_t>{base_x, base_y + 1});
+            mask.push_back(Point2D<uint32_t>{base_x + 1, base_y + 1});
+            return mask;
+        };
+
+        // Add masks
+        mask_data->addAtTime(TimeFrameIndex(0), create_mask(10, 10), NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), create_mask(20, 20), NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(10), create_mask(30, 30), NotifyObservers::No);
+
+        data_manager->setData<MaskData>("test_masks", mask_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0_view = mask_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        auto entity_ids_frame10_view = mask_data->getEntityIdsAtTime(TimeFrameIndex(10));
+        std::vector<EntityId> entity_ids_frame0(entity_ids_frame0_view.begin(), entity_ids_frame0_view.end());
+        std::vector<EntityId> entity_ids_frame10(entity_ids_frame10_view.begin(), entity_ids_frame10_view.end());
+        REQUIRE(entity_ids_frame0.size() == 2);
+        REQUIRE(entity_ids_frame10.size() == 1);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+        EntityId entity2 = entity_ids_frame10[0];
+
+        // Create group and assign entities
+        int group_a_id = group_manager->createGroup("Group A");
+        group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity1, entity2});
+        app->processEvents();
+
+        // Verify all entities are in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);
+
+        // Create inspector and view, and connect them
+        MaskInspector inspector(data_manager, group_manager.get(), nullptr);
+        MaskTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_masks");
+        view.setActiveKey("test_masks");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Select first two rows (entity0 and entity1)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Verify selection
+        auto selected_entity_ids = view.getSelectedEntityIds();
+        REQUIRE(selected_entity_ids.size() == 2);
+
+        // Emit remove from group signal (simulating context menu selection)
+        emit view.removeMasksFromGroupRequested();
+        app->processEvents();
+
+        // Verify selected entities are removed from group
+        REQUIRE(group_manager->getEntityGroup(entity0) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);  // Not selected, should remain in group
+
+        // Verify table updates to show group names
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group names are updated in the model
+        for (int row = 0; row < model->rowCount(); ++row) {
+            auto row_data = static_cast<MaskTableModel *>(model)->getRowData(row);
+            if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
+                REQUIRE(row_data.group_name == QStringLiteral("No Group"));
+            } else if (row_data.entity_id == entity2) {
+                REQUIRE(row_data.group_name == QStringLiteral("Group A"));
+            }
+        }
+    }
+
+    SECTION("Move masks from one group to another via context menu") {
+        auto data_manager = std::make_shared<DataManager>();
+        auto entity_group_manager = std::make_unique<EntityGroupManager>();
+        auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
+
+        // Create timeframe
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        // Create MaskData with masks
+        auto mask_data = std::make_shared<MaskData>();
+        mask_data->setTimeFrame(tf);
+
+        // Helper to create a simple mask
+        auto create_mask = [](uint32_t base_x, uint32_t base_y) -> Mask2D {
+            Mask2D mask;
+            mask.push_back(Point2D<uint32_t>{base_x, base_y});
+            mask.push_back(Point2D<uint32_t>{base_x + 1, base_y});
+            mask.push_back(Point2D<uint32_t>{base_x, base_y + 1});
+            mask.push_back(Point2D<uint32_t>{base_x + 1, base_y + 1});
+            return mask;
+        };
+
+        // Add masks
+        mask_data->addAtTime(TimeFrameIndex(0), create_mask(10, 10), NotifyObservers::No);
+        mask_data->addAtTime(TimeFrameIndex(0), create_mask(20, 20), NotifyObservers::No);
+
+        data_manager->setData<MaskData>("test_masks", mask_data, TimeKey("time"));
+
+        // Get entity IDs
+        auto entity_ids_frame0_view = mask_data->getEntityIdsAtTime(TimeFrameIndex(0));
+        std::vector<EntityId> entity_ids_frame0(entity_ids_frame0_view.begin(), entity_ids_frame0_view.end());
+        REQUIRE(entity_ids_frame0.size() == 2);
+
+        EntityId entity0 = entity_ids_frame0[0];
+        EntityId entity1 = entity_ids_frame0[1];
+
+        // Create groups and assign entity0 to Group A
+        int group_a_id = group_manager->createGroup("Group A");
+        int group_b_id = group_manager->createGroup("Group B");
+        group_manager->assignEntitiesToGroup(group_a_id, {entity0});
+        app->processEvents();
+
+        // Verify initial group assignment
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);
+
+        // Create inspector and view, and connect them
+        MaskInspector inspector(data_manager, group_manager.get(), nullptr);
+        MaskTableView view(data_manager, nullptr);
+        inspector.setDataView(&view);
+
+        inspector.setActiveKey("test_masks");
+        view.setActiveKey("test_masks");
+
+        app->processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        auto * model = table_view->model();
+        REQUIRE(model != nullptr);
+
+        // Select first row (entity0)
+        auto * selection_model = table_view->selectionModel();
+        REQUIRE(selection_model != nullptr);
+        selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
+        app->processEvents();
+
+        // Move entity0 from Group A to Group B
+        emit view.moveMasksToGroupRequested(group_b_id);
+        app->processEvents();
+
+        // Verify entity0 is now in Group B (moved from Group A)
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_b_id);
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);  // Should remain ungrouped
+
+        // Verify table updates
+        view.updateView();
+        app->processEvents();
+        
+        // Check that the group name is updated in the model
+        auto row_data = static_cast<MaskTableModel *>(model)->getRowData(0);
+        REQUIRE(row_data.entity_id == entity0);
+        REQUIRE(row_data.group_name == QStringLiteral("Group B"));
     }
 }
