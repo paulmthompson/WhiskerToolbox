@@ -52,6 +52,11 @@ add_subdirectory(DataExport_Widget) # Qt, DataManager, Scaling_Widget
 # Qt, DataManager, EditorState, Scaling_Widget - data import UI
 add_subdirectory(DataImport_Widget)
 
+# Qt, DataManager, HDF5 - HDF5 file browser widget (conditional)
+if(ENABLE_HDF5)
+    add_subdirectory(HDF5Explorer_Widget)
+endif()
+
 # Qt, DataManager, DataManagerIO, TensorData,
 # EditorState, MediaExport, Feature_Table_Widget,
 # IO_Widget, Collapsible_Widget, Entity,
@@ -224,6 +229,8 @@ endif()
 # Conditionally link HDF5 plugin
 if(ENABLE_HDF5)
     target_link_libraries(WhiskerToolbox PRIVATE DataManagerHDF5)
+    target_link_libraries(WhiskerToolbox PRIVATE HDF5Explorer_Widget)
+    target_compile_definitions(WhiskerToolbox PRIVATE ENABLE_HDF5)
 endif()
 
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)

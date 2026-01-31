@@ -11,6 +11,11 @@
 #include <QEvent>
 #include <QObject>
 
+// Ensure HDF5Explorer registration is linked when HDF5 is enabled
+#ifdef ENABLE_HDF5
+#include "HDF5Explorer_Widget/HDF5ExplorerRegistration.hpp"
+#endif
+
 // Event filter to disable mouse wheel scrolling on combo boxes
 class ComboBoxWheelFilter : public QObject
 {
@@ -39,6 +44,11 @@ protected:
 
 int main(int argc, char *argv[])
 {
+    // Explicitly trigger HDF5Explorer registration (static lib needs explicit reference)
+#ifdef ENABLE_HDF5
+    HDF5ExplorerRegistration::registerHDF5Explorer();
+#endif
+
 #ifdef Q_OS_LINUX
     // Force X11 backend on Linux for proper Qt Advanced Docking System support.
     // Wayland has issues with translucent overlay widgets and frameless window repositioning
