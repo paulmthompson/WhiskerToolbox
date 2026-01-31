@@ -59,7 +59,6 @@
  * @see EntityRegistry for entity ID management
  */
 
-#include "datamanager_export.h"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
@@ -136,7 +135,7 @@ inline constexpr bool always_false_v = false;
  * @see IntervalWithId for element accessors (time(), id(), value())
  * @see DigitalEventSeries for discrete event data
  */
-class DATAMANAGER_EXPORT DigitalIntervalSeries : public ObserverData {
+class DigitalIntervalSeries : public ObserverData {
 public:
     // ========== Constructors ==========
     /**

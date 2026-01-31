@@ -1,7 +1,6 @@
 #ifndef ANALOG_TIME_SERIES_LOADER_HPP
 #define ANALOG_TIME_SERIES_LOADER_HPP
 
-#include "datamanager_export.h"
 #include "utils/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
@@ -40,7 +39,7 @@ struct ValidBinaryDataType {
  *       - Uses `filepath` (not `filename`) for consistency with DataManager JSON
  *       - Uses `binary_data_type` (not `data_type`) to avoid conflict with DataManager's data_type field
  */
-struct DATAMANAGER_EXPORT BinaryAnalogLoaderOptions {
+struct BinaryAnalogLoaderOptions {
     std::string filepath;  // Path to the binary file (consistent with DataManager JSON)
     std::optional<std::string> parent_dir;
     
@@ -82,6 +81,6 @@ struct DATAMANAGER_EXPORT BinaryAnalogLoaderOptions {
 static_assert(WhiskerToolbox::ValidLoaderOptions<BinaryAnalogLoaderOptions>,
     "BinaryAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
-std::vector<std::shared_ptr<AnalogTimeSeries>> DATAMANAGER_EXPORT load(BinaryAnalogLoaderOptions const & opts);
+std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);
 
 #endif// ANALOG_TIME_SERIES_LOADER_HPP

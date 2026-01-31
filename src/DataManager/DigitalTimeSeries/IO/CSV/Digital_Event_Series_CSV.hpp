@@ -1,8 +1,6 @@
 #ifndef DIGITAL_EVENT_SERIES_CSV_HPP
 #define DIGITAL_EVENT_SERIES_CSV_HPP
 
-#include "datamanager_export.h"
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -35,7 +33,7 @@ class DigitalEventSeries;
  * The base name for the data. If identifier_column is specified, series will be named base_name + "_" + identifier.
  * If no identifier column, the single series will be named base_name. Defaults to "events".
  */
-struct DATAMANAGER_EXPORT CSVEventLoaderOptions {
+struct CSVEventLoaderOptions {
     std::string filepath;
     std::string delimiter = ",";
     bool has_header = false;
@@ -71,7 +69,7 @@ struct DATAMANAGER_EXPORT CSVEventLoaderOptions {
  * @var CSVEventSaverOptions::precision
  * The number of decimal places for floating point numbers. Defaults to 3.
  */
-struct DATAMANAGER_EXPORT CSVEventSaverOptions {
+struct CSVEventSaverOptions {
     std::string filename = "events_output.csv";
     std::string parent_dir = ".";
     std::string delimiter = ",";
@@ -93,7 +91,7 @@ struct DATAMANAGER_EXPORT CSVEventSaverOptions {
  * @return Vector of shared pointers to DigitalEventSeries objects, one per unique identifier
  *         (or one total if no identifier column)
  */
-std::vector<std::shared_ptr<DigitalEventSeries>> DATAMANAGER_EXPORT load(CSVEventLoaderOptions const & options);
+std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options);
 
 /**
  * @brief Saves a DigitalEventSeries object to a CSV file using specified options.
@@ -101,7 +99,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> DATAMANAGER_EXPORT load(CSVEven
  * @param event_data Pointer to the DigitalEventSeries object to save.
  * @param opts Configuration options for saving.
  */
-void DATAMANAGER_EXPORT save(DigitalEventSeries const * event_data,
+void save(DigitalEventSeries const * event_data,
           CSVEventSaverOptions const & opts);
 
 #endif// DIGITAL_EVENT_SERIES_CSV_HPP 

@@ -33,28 +33,10 @@ set(DATAMANAGER_SOURCES
         ConcreteDataFactory.hpp
         ConcreteDataFactory.cpp
 
-        DigitalTimeSeries/Digital_Interval_Series.hpp
-        DigitalTimeSeries/Digital_Interval_Series.cpp
-        DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp
-        DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp
-        DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp
-        DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.cpp
-        DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.hpp
-        DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.cpp
-        DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp
-        DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp
-        DigitalTimeSeries/Digital_Event_Series.hpp
-        DigitalTimeSeries/Digital_Event_Series.cpp
-        DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp
-        DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp
-        DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp
-        DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp
-
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
         loaders/binary_loaders.hpp
         loaders/loading_utils.hpp
-        loaders/loading_utils.cpp
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
@@ -280,6 +262,7 @@ set(DATAMANAGER_SOURCES
 set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(AnalogTimeSeries)
+add_subdirectory(DigitalTimeSeries)
 add_subdirectory(Masks)
 add_subdirectory(Points)
 
@@ -330,6 +313,8 @@ target_link_libraries(DataManager PRIVATE WhiskerToolbox::TensorData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::LineData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
 
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PUBLIC ImageProcessing)

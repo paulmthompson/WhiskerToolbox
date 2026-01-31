@@ -1,7 +1,6 @@
 #ifndef ANALOG_TIME_SERIES_CSV_HPP
 #define ANALOG_TIME_SERIES_CSV_HPP
 
-#include "datamanager_export.h"
 #include "utils/LoaderOptionsConcepts.hpp"
 
 #include <rfl.hpp>
@@ -22,7 +21,7 @@ class AnalogTimeSeries;
  * 
  * @note This struct conforms to ValidLoaderOptions concept.
  */
-struct DATAMANAGER_EXPORT CSVAnalogLoaderOptions {
+struct CSVAnalogLoaderOptions {
     std::string filepath;
     
     // Common delimiters: comma, tab, semicolon, pipe, space
@@ -64,7 +63,7 @@ std::vector<float> load_analog_series_from_csv(std::string const & filename);
  * @param options Configuration options for loading
  * @return Shared pointer to AnalogTimeSeries object
  */
-std::shared_ptr<AnalogTimeSeries> DATAMANAGER_EXPORT load(CSVAnalogLoaderOptions const & options);
+std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options);
 
 
 /**
@@ -94,7 +93,7 @@ std::shared_ptr<AnalogTimeSeries> DATAMANAGER_EXPORT load(CSVAnalogLoaderOptions
  * @var CSVAnalogSaverOptions::precision
  * The number of decimal places for floating point data values. Defaults to 6.
  */
-struct DATAMANAGER_EXPORT CSVAnalogSaverOptions {
+struct CSVAnalogSaverOptions {
     std::string filename = "analog_output.csv";
     std::string parent_dir = ".";
     std::string delimiter = ",";
@@ -110,7 +109,7 @@ struct DATAMANAGER_EXPORT CSVAnalogSaverOptions {
  * @param analog_data Pointer to the AnalogTimeSeries object to save.
  * @param opts Configuration options for saving.
  */
-void DATAMANAGER_EXPORT save(AnalogTimeSeries * analog_data,
+void save(AnalogTimeSeries * analog_data,
           CSVAnalogSaverOptions & opts);
 
 

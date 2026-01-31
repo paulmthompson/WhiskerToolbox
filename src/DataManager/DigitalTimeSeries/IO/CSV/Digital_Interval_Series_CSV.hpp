@@ -1,7 +1,6 @@
 #ifndef DIGITAL_INTERVAL_SERIES_CSV_HPP
 #define DIGITAL_INTERVAL_SERIES_CSV_HPP
 
-#include "datamanager_export.h"
 #include "TimeFrame/interval_data.hpp"
 
 #include <string>
@@ -9,7 +8,7 @@
 
 class DigitalIntervalSeries;
 
-std::vector<Interval> DATAMANAGER_EXPORT load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
+std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
 
 /**
  * @struct CSVIntervalLoaderOptions
@@ -32,7 +31,7 @@ std::vector<Interval> DATAMANAGER_EXPORT load_digital_series_from_csv(std::strin
  * @var CSVIntervalLoaderOptions::end_column
  * The column index (0-based) for the end time values. Defaults to 1.
  */
-struct DATAMANAGER_EXPORT CSVIntervalLoaderOptions {
+struct CSVIntervalLoaderOptions {
     std::string filepath;
     std::string delimiter = ",";
     bool has_header = false;
@@ -46,7 +45,7 @@ struct DATAMANAGER_EXPORT CSVIntervalLoaderOptions {
  * @param options Configuration options for loading
  * @return Vector of Interval objects loaded from the CSV file
  */
-std::vector<Interval> DATAMANAGER_EXPORT load(CSVIntervalLoaderOptions const & options);
+std::vector<Interval> load(CSVIntervalLoaderOptions const & options);
 
 
 /**
@@ -73,7 +72,7 @@ std::vector<Interval> DATAMANAGER_EXPORT load(CSVIntervalLoaderOptions const & o
  * @var CSVIntervalSaverOptions::header
  * The header string to use if save_header is true. Defaults to "Start,End".
  */
-struct DATAMANAGER_EXPORT CSVIntervalSaverOptions {
+struct CSVIntervalSaverOptions {
     std::string filename = "intervals_output.csv";
     std::string parent_dir = ".";
     std::string delimiter = ",";
@@ -89,7 +88,7 @@ struct DATAMANAGER_EXPORT CSVIntervalSaverOptions {
  * @param interval_data Pointer to the DigitalIntervalSeries object to save.
  * @param opts Configuration options for saving.
  */
-void DATAMANAGER_EXPORT save(DigitalIntervalSeries const * interval_data,
+void save(DigitalIntervalSeries const * interval_data,
           CSVIntervalSaverOptions const & opts);
 
 #endif// DIGITAL_INTERVAL_SERIES_CSV_HPP
