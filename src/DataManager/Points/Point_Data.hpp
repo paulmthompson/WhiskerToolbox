@@ -3,7 +3,6 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
-#include "datamanager_export.h"
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
@@ -30,7 +29,7 @@ using PointEntry = DataEntry<Point2D<float>>;
  *
  * For example, keypoints for multiple body points could be a PointData object
  */
-class DATAMANAGER_EXPORT PointData : public RaggedTimeSeries<Point2D<float>> {
+class PointData : public RaggedTimeSeries<Point2D<float>> {
 public:
     // ========== Type Traits ==========
     /**

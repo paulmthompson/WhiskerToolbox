@@ -1,8 +1,6 @@
 #ifndef POINT_DATA_UTILS_HPP
 #define POINT_DATA_UTILS_HPP
 
-#include "datamanager_export.h"
-
 #include "CoreGeometry/boundingbox.hpp"
 
 class PointData;
@@ -12,6 +10,6 @@ class PointData;
 * @param point_data The PointData to calculate bounds for
 * @return BoundingBox for the PointData
 */
-BoundingBox DATAMANAGER_EXPORT calculateBoundsForPointData(PointData const * point_data);
+BoundingBox calculateBoundsForPointData(PointData const * point_data);
 
 #endif//POINT_DATA_UTILS_HPP

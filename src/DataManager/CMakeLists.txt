@@ -315,6 +315,7 @@ target_link_libraries(DataManager PUBLIC WhiskerToolbox::MaskData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::MediaData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::PointData)
 
 if(ENABLE_OPENCV)
     target_link_libraries(DataManager PUBLIC ImageProcessing)
