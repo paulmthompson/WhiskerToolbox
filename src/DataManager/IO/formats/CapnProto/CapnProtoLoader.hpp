@@ -1,8 +1,8 @@
 #ifndef DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 #define DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 
-#include "IO/interface/DataLoader.hpp"
-#include "IO/interface/IOTypes.hpp"
+#include "IO/core/DataLoader.hpp"
+#include "IO/core/IOTypes.hpp"
 #include <capnp/common.h>
 #include <kj/array.h>
 #include <set>

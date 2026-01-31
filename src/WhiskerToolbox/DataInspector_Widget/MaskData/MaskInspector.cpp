@@ -6,7 +6,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/IO/core/LoaderRegistry.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "Entity/EntityTypes.hpp"

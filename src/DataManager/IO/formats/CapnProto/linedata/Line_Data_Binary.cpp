@@ -1,6 +1,6 @@
 #include "Line_Data_Binary.hpp"
 
-#include "Serialization.hpp"
+#include "common/Serialization.hpp"
 #include "Lines/Line_Data.hpp"
 
 #include <capnp/message.h>

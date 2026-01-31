@@ -622,7 +622,7 @@ TEST_CASE("Data Transform: Line Alignment - FWHM profile extents calculation - D
 #endif
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
 #include "transforms/TransformPipeline.hpp"

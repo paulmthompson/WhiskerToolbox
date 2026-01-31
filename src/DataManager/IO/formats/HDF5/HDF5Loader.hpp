@@ -1,8 +1,8 @@
 #ifndef DATAMANAGER_IO_HDF5LOADER_HPP
 #define DATAMANAGER_IO_HDF5LOADER_HPP
 
-#include "IO/interface/DataLoader.hpp"
-#include "IO/interface/IOTypes.hpp"
+#include "IO/core/DataLoader.hpp"
+#include "IO/core/IOTypes.hpp"
 
 /**
  * @brief HDF5 data loader implementation

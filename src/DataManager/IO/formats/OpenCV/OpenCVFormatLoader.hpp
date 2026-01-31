@@ -1,7 +1,7 @@
 #ifndef OPENCV_FORMAT_LOADER_HPP
 #define OPENCV_FORMAT_LOADER_HPP
 
-#include "../LoaderRegistry.hpp"
+#include "../../core/LoaderRegistry.hpp"
 
 /**
  * @brief OpenCV format loader

@@ -282,7 +282,7 @@ TEST_CASE("Data Transform: Extract Point from Line - Error and Edge Cases", "[tr
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 

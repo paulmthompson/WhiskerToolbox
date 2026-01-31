@@ -8,8 +8,8 @@ set(DATAMANAGER_OPENCV_SOURCES
     OpenCVFormatLoader.cpp
     OpenCVInit.hpp
     OpenCVInit.cpp
-    Mask_Data_Image.hpp
-    Mask_Data_Image.cpp
+    maskdata/Mask_Data_Image.hpp
+    maskdata/Mask_Data_Image.cpp
 )
 
 # Create the DataManagerOpenCV shared library

@@ -3,7 +3,7 @@
 
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "DataManagerTypes.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"

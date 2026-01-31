@@ -255,7 +255,7 @@ TEST_CASE("Data Transform: Mask To Line - Error and Edge Cases", "[transforms][m
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 

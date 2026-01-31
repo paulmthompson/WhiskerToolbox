@@ -532,7 +532,7 @@ TEST_CASE("Data Transform: Hilbert Phase - Irregularly Sampled Data", "[transfor
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "transforms/ParameterFactory.hpp"

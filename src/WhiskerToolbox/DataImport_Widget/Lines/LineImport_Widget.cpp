@@ -3,7 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/IO/LoaderRegistry.hpp"
+#include "DataManager/IO/core/LoaderRegistry.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "Scaling_Widget/Scaling_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"

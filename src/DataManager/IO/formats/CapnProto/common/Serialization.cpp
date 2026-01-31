@@ -1,5 +1,5 @@
 #include "Serialization.hpp"
-#include "line_data.capnp.h"
+#include "linedata/line_data.capnp.h"
 
 // Include the actual LineData implementation
 #include "Lines/Line_Data.hpp"

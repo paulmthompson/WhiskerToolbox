@@ -235,7 +235,7 @@ TEST_CASE("Data Transform: Calculate Line Curvature - Error and Edge Cases", "[t
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 

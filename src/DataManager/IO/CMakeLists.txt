@@ -2,13 +2,15 @@
 
 # Core plugin interface
 set(IO_CORE_SOURCES
-    interface/DataLoader.hpp
-    LoaderRegistry.hpp
-    LoaderRegistry.cpp
-    LoaderRegistration.hpp
-    LoaderRegistration.cpp
-    loaders/CSVLoader.hpp
-    loaders/CSVLoader.cpp
+    core/DataLoader.hpp
+
+    core/LoaderRegistry.hpp
+    core/LoaderRegistry.cpp
+    core/LoaderRegistration.hpp
+    core/LoaderRegistration.cpp
+
+    formats/CSV/CSVLoader.hpp
+    formats/CSV/CSVLoader.cpp
 )
 
 # Create the core IO library
@@ -26,19 +28,19 @@ target_link_libraries(DataManagerIO PUBLIC
 
 # Add subdirectories for specific format plugins
 if(ENABLE_HDF5)
-    add_subdirectory(HDF5)
+    add_subdirectory(formats/HDF5)
     target_compile_definitions(DataManagerIO PUBLIC ENABLE_HDF5)
     target_link_libraries(DataManagerIO PRIVATE DataManagerHDF5)
 endif()
 
 if(ENABLE_CAPNPROTO)
-    add_subdirectory(CapnProto)
+    add_subdirectory(formats/CapnProto)
     target_compile_definitions(DataManagerIO PUBLIC ENABLE_CAPNPROTO)
     target_link_libraries(DataManagerIO PRIVATE DataManagerIO_CapnProto)
 endif()
 
 if(ENABLE_OPENCV)
-    add_subdirectory(OpenCV)
+    add_subdirectory(formats/OpenCV)
     target_compile_definitions(DataManagerIO PUBLIC ENABLE_OPENCV)
     target_link_libraries(DataManagerIO PRIVATE DataManagerOpenCV)
 endif()

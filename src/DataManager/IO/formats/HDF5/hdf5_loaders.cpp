@@ -1,6 +1,6 @@
 #include "hdf5_loaders.hpp"
 
-#include "hdf5_utilities.hpp"
+#include "common/hdf5_utilities.hpp"
 #include <vector>
 
 namespace Loader {

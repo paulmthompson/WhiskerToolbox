@@ -3,7 +3,7 @@
 
 
 #include "DataManager/DataManagerFwd.hpp"
-#include "IO/interface/IOTypes.hpp"
+#include "IO/core/IOTypes.hpp"
 #include "datamanager_export.h"
 
 #include <memory>

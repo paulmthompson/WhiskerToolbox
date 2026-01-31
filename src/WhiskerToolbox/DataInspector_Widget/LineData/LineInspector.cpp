@@ -6,8 +6,8 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 
 #include "DataManager.hpp"
-#include "DataManager/IO/LoaderRegistry.hpp"
-#include "DataManager/IO/interface/IOTypes.hpp"
+#include "DataManager/IO/core/LoaderRegistry.hpp"
+#include "DataManager/IO/core/IOTypes.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 

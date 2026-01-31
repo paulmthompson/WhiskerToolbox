@@ -10,17 +10,17 @@ else()
 endif()
 
 # Generate CapnProto files
-capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS line_data.capnp)
+capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS linedata/line_data.capnp)
 
 set(CAPNPROTO_PLUGIN_SOURCES
     CapnProtoLoader.hpp
     CapnProtoLoader.cpp
     CapnProtoFormatLoader.hpp
     CapnProtoFormatLoader.cpp
-    Serialization.hpp
-    Serialization.cpp
-    Line_Data_Binary.hpp
-    Line_Data_Binary.cpp
+    common/Serialization.hpp
+    common/Serialization.cpp
+    linedata/Line_Data_Binary.hpp
+    linedata/Line_Data_Binary.cpp
     ${CAPNP_SRCS}
     ${CAPNP_HDRS}
 )
@@ -29,6 +29,7 @@ set(CAPNPROTO_PLUGIN_SOURCES
 add_library(DataManagerIO_CapnProto SHARED ${CAPNPROTO_PLUGIN_SOURCES})
 
 target_include_directories(DataManagerIO_CapnProto PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     ${CMAKE_CURRENT_BINARY_DIR}  # For generated CapnProto headers
 )
 

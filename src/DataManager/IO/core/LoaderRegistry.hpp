@@ -1,8 +1,8 @@
 #ifndef LOADER_REGISTRY_HPP
 #define LOADER_REGISTRY_HPP
 
-#include "interface/DataLoader.hpp"
-#include "interface/IOTypes.hpp"
+#include "DataLoader.hpp"
+#include "IOTypes.hpp"
 
 #include "nlohmann/json.hpp"
 

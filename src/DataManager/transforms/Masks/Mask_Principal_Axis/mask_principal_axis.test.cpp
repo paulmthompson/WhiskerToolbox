@@ -294,7 +294,7 @@ TEST_CASE("MaskPrincipalAxisOperation - Execute with minor axis",
 // ============================================================================
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"

@@ -1,7 +1,7 @@
 #ifndef HDF5_FORMAT_LOADER_HPP
 #define HDF5_FORMAT_LOADER_HPP
 
-#include "../LoaderRegistry.hpp"
+#include "../../core/LoaderRegistry.hpp"
 
 /**
  * @brief HDF5 format loader

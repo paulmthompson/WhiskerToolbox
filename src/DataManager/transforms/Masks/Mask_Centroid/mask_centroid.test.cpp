@@ -235,7 +235,7 @@ TEST_CASE("MaskCentroidOperation - Execute operation",
 // ============================================================================
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "TimeFrame/TimeFrame.hpp"

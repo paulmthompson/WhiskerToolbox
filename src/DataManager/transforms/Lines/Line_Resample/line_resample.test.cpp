@@ -140,7 +140,7 @@ TEST_CASE("Data Transform: Line Resample - Error and Edge Cases", "[transforms][
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 

@@ -1,19 +1,19 @@
 #include "LoaderRegistration.hpp"
 
 #include "LoaderRegistry.hpp"
-#include "loaders/CSVLoader.hpp"
+#include "formats/CSV/CSVLoader.hpp"
 
 // Conditional includes based on compile-time options
 #ifdef ENABLE_CAPNPROTO
-#include "CapnProto/CapnProtoFormatLoader.hpp"
+#include "formats/CapnProto/CapnProtoFormatLoader.hpp"
 #endif
 
 #ifdef ENABLE_HDF5
-#include "HDF5/HDF5FormatLoader.hpp"
+#include "formats/HDF5/HDF5FormatLoader.hpp"
 #endif
 
 #ifdef ENABLE_OPENCV
-#include "OpenCV/OpenCVFormatLoader.hpp"
+#include "formats/OpenCV/OpenCVFormatLoader.hpp"
 #endif
 
 #include <iostream>

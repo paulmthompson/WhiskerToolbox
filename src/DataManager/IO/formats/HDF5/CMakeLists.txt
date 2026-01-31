@@ -2,8 +2,8 @@ find_package(HDF5 COMPONENTS CXX REQUIRED)
 
 # Create DataManagerHDF5 as a separate shared library for HDF5 utilities
 set(DATAMANAGER_HDF5_SOURCES
-    hdf5_utilities.hpp
-    hdf5_utilities.cpp
+    common/hdf5_utilities.hpp
+    common/hdf5_utilities.cpp
     hdf5_loaders.hpp
     hdf5_loaders.cpp
     HDF5Loader.hpp
@@ -12,8 +12,8 @@ set(DATAMANAGER_HDF5_SOURCES
     HDF5FormatLoader.cpp
     HDF5Init.hpp
     HDF5Init.cpp
-    Mask_Data_HDF5.hpp
-    Mask_Data_HDF5.cpp
+    maskdata/Mask_Data_HDF5.hpp
+    maskdata/Mask_Data_HDF5.cpp
 )
 
 # Create the DataManagerHDF5 shared library

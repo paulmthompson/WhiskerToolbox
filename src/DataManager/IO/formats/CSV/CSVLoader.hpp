@@ -1,7 +1,7 @@
 #ifndef CSV_LOADER_HPP
 #define CSV_LOADER_HPP
 
-#include "../LoaderRegistry.hpp"
+#include "../../core/LoaderRegistry.hpp"
 
 /**
  * @brief CSV format loader for LineData

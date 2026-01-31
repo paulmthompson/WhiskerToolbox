@@ -3,7 +3,7 @@
 
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
-#include "IO/CapnProto/Line_Data_Binary.hpp"
+#include "IO/formats/CapnProto/linedata/Line_Data_Binary.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"

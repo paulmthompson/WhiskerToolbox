@@ -275,7 +275,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 

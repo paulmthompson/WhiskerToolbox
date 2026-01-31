@@ -172,7 +172,7 @@ TEST_CASE_METHOD(AnalogScalingTestFixture, "Data Transform: Scale and Normalize 
 }
 
 #include "DataManager.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 

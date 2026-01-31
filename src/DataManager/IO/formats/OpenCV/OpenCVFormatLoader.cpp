@@ -1,6 +1,6 @@
 #include "OpenCVFormatLoader.hpp"
 
-#include "Mask_Data_Image.hpp"
+#include "maskdata/Mask_Data_Image.hpp"
 #include "Masks/Mask_Data.hpp"
 
 #include <iostream>

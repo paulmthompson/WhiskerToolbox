@@ -3,11 +3,11 @@
 
 #include "DataManager.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "IO/OpenCV/Mask_Data_Image.hpp"
+#include "IO/formats/OpenCV/maskdata/Mask_Data_Image.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "IO/LoaderRegistry.hpp"
+#include "IO/core/LoaderRegistry.hpp"
 
 #include <filesystem>
 #include <fstream>

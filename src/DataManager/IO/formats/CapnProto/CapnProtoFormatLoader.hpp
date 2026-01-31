@@ -1,7 +1,7 @@
 #ifndef CAPNPROTO_FORMAT_LOADER_HPP
 #define CAPNPROTO_FORMAT_LOADER_HPP
 
-#include "../LoaderRegistry.hpp"
+#include "../../core/LoaderRegistry.hpp"
 
 /**
  * @brief CapnProto format loader
