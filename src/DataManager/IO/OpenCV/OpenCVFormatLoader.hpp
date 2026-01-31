@@ -19,8 +19,7 @@ public:
      */
     LoadResult load(std::string const& filepath, 
                    IODataType dataType, 
-                   nlohmann::json const& config, 
-                   DataFactory* factory) const override;
+                   nlohmann::json const& config) const override;
     
     /**
      * @brief Save data to image files using OpenCV
@@ -45,8 +44,7 @@ private:
      * @brief Load MaskData from image files using existing functionality
      */
     LoadResult loadMaskDataImage(std::string const& filepath, 
-                                nlohmann::json const& config, 
-                                DataFactory* factory) const;
+                                nlohmann::json const& config) const;
 };
 
 #endif // OPENCV_FORMAT_LOADER_HPP

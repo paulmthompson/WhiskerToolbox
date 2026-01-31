@@ -1,7 +1,6 @@
 #ifndef DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 #define DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP
 
-#include "IO/interface/DataFactory.hpp"
 #include "IO/interface/DataLoader.hpp"
 #include "IO/interface/IOTypes.hpp"
 #include <capnp/common.h>
@@ -28,19 +27,14 @@ public:
     LoadResult loadData(
         std::string const& file_path,
         IODataType data_type,
-        nlohmann::json const& config,
-        DataFactory* factory
+        nlohmann::json const& config
     ) const override;
 
 private:
     std::set<IODataType> _supported_types;
 
     // Type-specific loading methods
-    LoadResult loadLineData(std::string const& file_path, nlohmann::json const& config, DataFactory* factory) const;
-    // Future: LoadResult loadPointData(std::string const& file_path, nlohmann::json const& config, DataFactory* factory) const;
-    
-    // Raw data extraction (no dependency on concrete data types)
-    LineDataRaw extractLineDataRaw(kj::ArrayPtr<capnp::word const> messageData, capnp::ReaderOptions const& options) const;
+    LoadResult loadLineData(std::string const& file_path, nlohmann::json const& config) const;
 };
 
 #endif // DATAMANAGER_IO_CAPNPROTO_CAPNPROTOLOADER_HPP

@@ -29,8 +29,7 @@ public:
     LoadResult loadData(
         std::string const& file_path,
         IODataType data_type,
-        nlohmann::json const& config,
-        DataFactory* factory
+        nlohmann::json const& config
     ) const override;
 
 private:
@@ -39,8 +38,7 @@ private:
      */
     LoadResult loadMaskData(
         std::string const& file_path,
-        nlohmann::json const& config,
-        DataFactory* factory
+        nlohmann::json const& config
     ) const;
 };
 

@@ -1,9 +1,11 @@
 #include "HDF5Loader.hpp"
 #include "../LoaderRegistry.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "IO/interface/DataFactory.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "hdf5_loaders.hpp"
 
 #include <iostream>
@@ -26,20 +28,15 @@ bool HDF5Loader::supportsDataType(IODataType data_type) const {
 LoadResult HDF5Loader::loadData(
     std::string const& file_path,
     IODataType data_type,
-    nlohmann::json const& config,
-    DataFactory* factory
+    nlohmann::json const& config
 ) const {
-    if (!factory) {
-        return LoadResult("Factory is null");
-    }
-    
     try {
         using enum IODataType;
         if (data_type == Mask) {
-            return loadMaskData(file_path, config, factory);
+            return loadMaskData(file_path, config);
         }
         if (data_type == Line) {
-            return loadLineData(file_path, config, factory);
+            return loadLineData(file_path, config);
         }
         return LoadResult("Unsupported data type for HDF5 loader");
     } catch (std::exception const& e) {
@@ -49,8 +46,7 @@ LoadResult HDF5Loader::loadData(
 
 LoadResult HDF5Loader::loadMaskData(
     std::string const& file_path,
-    nlohmann::json const& config,
-    DataFactory* factory
+    nlohmann::json const& config
 ) const {
     try {
         // Extract configuration with defaults
@@ -77,12 +73,11 @@ LoadResult HDF5Loader::loadMaskData(
             return LoadResult("No data found in HDF5 file: " + file_path);
         }
         
-        // Convert to raw data format
-        MaskDataRaw raw_data;
+        // Create MaskData directly
+        auto mask_data = std::make_shared<MaskData>();
         
         for (std::size_t i = 0; i < frames.size(); i++) {
-            int32_t frame = frames[i];
-            std::vector<Mask2D> frame_masks;
+            TimeFrameIndex frame_idx{frames[i]};
             
             if (i < x_coords.size() && i < y_coords.size()) {
                 Mask2D mask_points;
@@ -99,25 +94,17 @@ LoadResult HDF5Loader::loadMaskData(
                 }
                 
                 if (!mask_points.empty()) {
-                    frame_masks.push_back(std::move(mask_points));
+                    mask_data->addAtTime(frame_idx, std::move(mask_points), NotifyObservers::No);
                 }
-            }
-            
-            if (!frame_masks.empty()) {
-                raw_data.time_masks[frame] = std::move(frame_masks);
             }
         }
         
         // Extract image size from config if available
-        if (config.contains("width")) {
-            raw_data.image_width = config["width"].get<uint32_t>();
+        if (config.contains("width") && config.contains("height")) {
+            auto width = config["width"].get<int>();
+            auto height = config["height"].get<int>();
+            mask_data->setImageSize(ImageSize{width, height});
         }
-        if (config.contains("height")) {
-            raw_data.image_height = config["height"].get<uint32_t>();
-        }
-        
-        // Create MaskData using factory
-        auto mask_data = factory->createMaskDataFromRaw(raw_data);
         
         std::cout << "HDF5 mask loading complete: " << frames.size() << " frames loaded" << std::endl;
         
@@ -130,8 +117,7 @@ LoadResult HDF5Loader::loadMaskData(
 
 LoadResult HDF5Loader::loadLineData(
     std::string const& file_path,
-    nlohmann::json const& config,
-    DataFactory* factory
+    nlohmann::json const& config
 ) const {
     try {
         // Extract configuration with defaults
@@ -158,12 +144,11 @@ LoadResult HDF5Loader::loadLineData(
             return LoadResult("No data found in HDF5 file: " + file_path);
         }
         
-        // Convert to raw data format
-        LineDataRaw raw_data;
+        // Create LineData directly
+        auto line_data = std::make_shared<LineData>();
         
         for (std::size_t i = 0; i < frames.size(); i++) {
-            int32_t frame = frames[i];
-            std::vector<Line2D> frame_lines;
+            TimeFrameIndex frame_idx{frames[i]};
             
             if (i < x_coords.size() && i < y_coords.size()) {
                 Line2D line;
@@ -177,25 +162,17 @@ LoadResult HDF5Loader::loadLineData(
                 }
 
                 if (!line.empty()) {
-                    frame_lines.push_back(std::move(line));
+                    line_data->addAtTime(frame_idx, std::move(line), NotifyObservers::No);
                 }
-            }
-            
-            if (!frame_lines.empty()) {
-                raw_data.time_lines[frame] = std::move(frame_lines);
             }
         }
         
         // Extract image size from config if available
-        if (config.contains("image_width")) {
-            raw_data.image_width = config["image_width"].get<uint32_t>();
+        if (config.contains("image_width") && config.contains("image_height")) {
+            auto width = config["image_width"].get<int>();
+            auto height = config["image_height"].get<int>();
+            line_data->setImageSize(ImageSize{width, height});
         }
-        if (config.contains("image_height")) {
-            raw_data.image_height = config["image_height"].get<uint32_t>();
-        }
-        
-        // Create LineData using factory
-        auto line_data = factory->createLineDataFromRaw(raw_data);
         
         std::cout << "HDF5 line loading complete: " << frames.size() << " frames loaded" << std::endl;
         

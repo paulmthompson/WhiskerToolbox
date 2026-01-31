@@ -4,7 +4,6 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
-#include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "Scaling_Widget/Scaling_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"
@@ -144,9 +143,6 @@ void LineImport_Widget::_loadSingleHDF5LineFile(std::string const & filename, st
             return;
         }
 
-        // Create factory for data creation
-        ConcreteDataFactory factory;
-
         // Configure HDF5 loading parameters
         nlohmann::json config;
         config["format"] = "hdf5";
@@ -162,7 +158,7 @@ void LineImport_Widget::_loadSingleHDF5LineFile(std::string const & filename, st
         }
 
         // Load the data using registry system
-        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Line), filename, config, &factory);
+        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Line), filename, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error", 
@@ -226,8 +222,7 @@ void LineImport_Widget::_handleSingleCSVLoadRequested(QString format, nlohmann::
             return;
         }
 
-        ConcreteDataFactory factory;
-        LoadResult result = registry.tryLoad("csv", IODataType::Line, filepath, config, &factory);
+        LoadResult result = registry.tryLoad("csv", IODataType::Line, filepath, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error", 
@@ -305,8 +300,7 @@ void LineImport_Widget::_handleMultiCSVLoadRequested(QString format, nlohmann::j
             return;
         }
 
-        ConcreteDataFactory factory;
-        LoadResult result = registry.tryLoad("csv", IODataType::Line, parent_dir, config, &factory);
+        LoadResult result = registry.tryLoad("csv", IODataType::Line, parent_dir, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error", 
@@ -398,8 +392,7 @@ void LineImport_Widget::_loadSingleBinaryFile(QString const & filepath) {
         nlohmann::json config;
         config["file_path"] = file_path_std;
 
-        ConcreteDataFactory factory;
-        LoadResult result = registry.tryLoad("binary", IODataType::Line, file_path_std, config, &factory);
+        LoadResult result = registry.tryLoad("binary", IODataType::Line, file_path_std, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error", 

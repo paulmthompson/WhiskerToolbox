@@ -17,12 +17,7 @@ void LoaderRegistry::registerLoader(std::unique_ptr<IFormatLoader> loader) {
 LoadResult LoaderRegistry::tryLoad(std::string const& format, 
                                   IODataType dataType,
                                   std::string const& filepath, 
-                                  nlohmann::json const& config, 
-                                  DataFactory* factory) {
-    if (!factory) {
-        return LoadResult("DataFactory is null");
-    }
-    
+                                  nlohmann::json const& config) {
     // Try each registered loader
     for (auto const& loader : m_loaders) {
         if (loader->supportsFormat(format, dataType)) {
@@ -30,7 +25,7 @@ LoadResult LoaderRegistry::tryLoad(std::string const& format,
                      << "' for format '" << format << "'" << std::endl;
             
             try {
-                LoadResult result = loader->load(filepath, dataType, config, factory);
+                LoadResult result = loader->load(filepath, dataType, config);
                 if (result.success) {
                     std::cout << "LoaderRegistry: Successfully loaded with '" 
                              << loader->getLoaderName() << "'" << std::endl;

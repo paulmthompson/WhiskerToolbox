@@ -7,7 +7,6 @@ set(IO_CORE_SOURCES
     LoaderRegistry.cpp
     LoaderRegistration.hpp
     LoaderRegistration.cpp
-    interface/DataFactory.hpp
     loaders/CSVLoader.hpp
     loaders/CSVLoader.cpp
 )
@@ -22,7 +21,7 @@ target_include_directories(DataManagerIO PUBLIC
 target_link_libraries(DataManagerIO PUBLIC
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
-        LineData # Needed to populate CSV line data
+    LineData # Needed to populate CSV line data
 )
 
 # Add subdirectories for specific format plugins

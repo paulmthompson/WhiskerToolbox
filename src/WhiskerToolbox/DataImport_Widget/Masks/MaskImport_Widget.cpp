@@ -4,7 +4,6 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/IO/LoaderRegistry.hpp"
-#include "DataManager/ConcreteDataFactory.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "Scaling_Widget/Scaling_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"
@@ -135,9 +134,6 @@ void MaskImport_Widget::_loadSingleHDF5MaskFile(std::string const & filename, st
             return;
         }
 
-        // Create factory for data creation
-        ConcreteDataFactory factory;
-
         // Configure HDF5 loading parameters
         nlohmann::json config;
         config["format"] = "hdf5";
@@ -153,7 +149,7 @@ void MaskImport_Widget::_loadSingleHDF5MaskFile(std::string const & filename, st
         }
 
         // Load the data using registry system
-        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Mask), filename, config, &factory);
+        auto result = registry.tryLoad("hdf5", toIODataType(DM_DataType::Mask), filename, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error", 
@@ -209,9 +205,6 @@ void MaskImport_Widget::_handleImageMaskLoadRequested(QString format, nlohmann::
             return;
         }
 
-        // Create factory for data creation
-        ConcreteDataFactory factory;
-
         // Add image size from scaling widget if available
         ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
         if (original_size.width > 0 && original_size.height > 0) {
@@ -227,7 +220,7 @@ void MaskImport_Widget::_handleImageMaskLoadRequested(QString format, nlohmann::
         }
 
         // Load the data using registry system
-        auto result = registry.tryLoad(format_str, toIODataType(DM_DataType::Mask), directory_path, config, &factory);
+        auto result = registry.tryLoad(format_str, toIODataType(DM_DataType::Mask), directory_path, config);
 
         if (!result.success) {
             QMessageBox::critical(this, "Import Error",

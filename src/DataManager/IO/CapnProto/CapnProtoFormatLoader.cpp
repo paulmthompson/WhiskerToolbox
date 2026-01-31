@@ -7,15 +7,10 @@
 
 LoadResult CapnProtoFormatLoader::load(std::string const& filepath, 
                                       IODataType dataType, 
-                                      nlohmann::json const& config, 
-                                      DataFactory* factory) const {
-    if (!factory) {
-        return LoadResult("DataFactory is null");
-    }
-
+                                      nlohmann::json const& config) const {
     switch (dataType) {
         case IODataType::Line:
-            return loadLineDataCapnProto(filepath, config, factory);
+            return loadLineDataCapnProto(filepath, config);
             
         default:
             return LoadResult("CapnProto loader does not support data type: " + std::to_string(static_cast<int>(dataType)));
@@ -72,8 +67,7 @@ std::string CapnProtoFormatLoader::getLoaderName() const {
 }
 
 LoadResult CapnProtoFormatLoader::loadLineDataCapnProto(std::string const& filepath, 
-                                                       nlohmann::json const& config, 
-                                                       DataFactory* factory) const {
+                                                       nlohmann::json const& config) const {
     try {
         // Use existing CapnProto loading functionality
         BinaryLineLoaderOptions opts;
@@ -84,8 +78,7 @@ LoadResult CapnProtoFormatLoader::loadLineDataCapnProto(std::string const& filep
             return LoadResult("Failed to load CapnProto LineData from: " + filepath);
         }
         
-        // Convert to factory-created object
-        // First extract the data map from the loaded LineData
+        // Extract the data map from the loaded LineData
         std::map<TimeFrameIndex, std::vector<Line2D>> line_map;
         for (auto const& time : loaded_line_data->getTimesWithData()) {
             auto line_view = loaded_line_data->getAtTime(time);
@@ -93,25 +86,23 @@ LoadResult CapnProtoFormatLoader::loadLineDataCapnProto(std::string const& filep
             line_map[time] = line_copy;
         }
         
-        // Create new LineData using factory
-        auto line_data_variant = factory->createLineData(line_map);
+        // Create LineData directly
+        auto line_data = std::make_shared<LineData>(line_map);
         
         // Apply image size from the loaded data
         ImageSize image_size = loaded_line_data->getImageSize();
         if (image_size.width > 0 && image_size.height > 0) {
-            factory->setLineDataImageSize(line_data_variant, 
-                                         static_cast<int>(image_size.width), 
-                                         static_cast<int>(image_size.height));
+            line_data->setImageSize(image_size);
         }
         
         // Apply image size override from config if specified
         if (config.contains("image_width") && config.contains("image_height")) {
             int width = config["image_width"];
             int height = config["image_height"];
-            factory->setLineDataImageSize(line_data_variant, width, height);
+            line_data->setImageSize(ImageSize{width, height});
         }
         
-        return LoadResult(std::move(line_data_variant));
+        return LoadResult(std::move(line_data));
         
     } catch (std::exception const& e) {
         return LoadResult("CapnProto loading failed: " + std::string(e.what()));

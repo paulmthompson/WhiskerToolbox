@@ -19,8 +19,7 @@ public:
      */
     LoadResult load(std::string const& filepath, 
                    IODataType dataType, 
-                   nlohmann::json const& config, 
-                   DataFactory* factory) const override;
+                   nlohmann::json const& config) const override;
 
     /**
      * @brief Check if this loader supports the format/dataType combination
@@ -37,15 +36,13 @@ private:
      * @brief Load MaskData from HDF5 file using existing functionality
      */
     LoadResult loadMaskDataHDF5(std::string const& filepath, 
-                               nlohmann::json const& config, 
-                               DataFactory* factory) const;
+                               nlohmann::json const& config) const;
 
     /**
      * @brief Load LineData from HDF5 file using existing functionality
      */
     LoadResult loadLineDataHDF5(std::string const& filepath, 
-                               nlohmann::json const& config, 
-                               DataFactory* factory) const;
+                               nlohmann::json const& config) const;
 };
 
 #endif // HDF5_FORMAT_LOADER_HPP

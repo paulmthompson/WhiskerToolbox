@@ -1,22 +1,17 @@
 #include "CSVLoader.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
-#include "utils/json_helpers.hpp"
 
 #include <iostream>
 
 LoadResult CSVLoader::load(std::string const& filepath, 
                           IODataType dataType, 
-                          nlohmann::json const& config, 
-                          DataFactory* factory) const {
-    if (!factory) {
-        return LoadResult("DataFactory is null");
-    }
-
+                          nlohmann::json const& config) const {
     switch (dataType) {
         case IODataType::Line:
-            return loadLineDataCSV(filepath, config, factory);
+            return loadLineDataCSV(filepath, config);
             
         default:
             return LoadResult("CSV loader does not support data type: " + std::to_string(static_cast<int>(dataType)));
@@ -101,8 +96,7 @@ std::string CSVLoader::getLoaderName() const {
 }
 
 LoadResult CSVLoader::loadLineDataCSV(std::string const& filepath, 
-                                     nlohmann::json const& config, 
-                                     DataFactory* factory) const {
+                                     nlohmann::json const& config) const {
     try {
         std::map<TimeFrameIndex, std::vector<Line2D>> line_map;
         
@@ -146,17 +140,17 @@ LoadResult CSVLoader::loadLineDataCSV(std::string const& filepath,
             line_map = ::load(opts);
         }
         
-        // Create LineData using factory
-        auto line_data_variant = factory->createLineData(line_map);
+        // Create LineData directly
+        auto line_data = std::make_shared<LineData>(line_map);
         
         // Apply image size if specified in config
         if (config.contains("image_width") && config.contains("image_height")) {
             int width = config["image_width"];
             int height = config["image_height"];
-            factory->setLineDataImageSize(line_data_variant, width, height);
+            line_data->setImageSize(ImageSize{width, height});
         }
         
-        return LoadResult(std::move(line_data_variant));
+        return LoadResult(std::move(line_data));
         
     } catch (std::exception const& e) {
         return LoadResult("CSV loading failed: " + std::string(e.what()));

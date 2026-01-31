@@ -6,15 +6,6 @@
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "IO/LoaderRegistry.hpp"
 #include "IO/interface/IOTypes.hpp"
-#include "ConcreteDataFactory.hpp"
-#include "CoreGeometry/lines.hpp"
-
-
-#include "DataManager.hpp"
-#include "Lines/Line_Data.hpp"
-#include "Lines/IO/CSV/Line_Data_CSV.hpp"
-#include "IO/LoaderRegistry.hpp"
-#include "IO/interface/IOTypes.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -346,12 +337,10 @@ TEST_CASE_METHOD(LineDataCSVTestFixture, "DM - IO - LineData - CSV save/load thr
         config["image_height"] = 600;
         config["image_width"] = 800;
 
-        ConcreteDataFactory factory;
         auto load_result = registry.tryLoad("csv", 
                                           IODataType::Line, 
                                           csv_filepath.string(), 
-                                          config, 
-                                          &factory);
+                                          config);
         REQUIRE(load_result.success);
         REQUIRE(std::holds_alternative<std::shared_ptr<LineData>>(load_result.data));
         

@@ -1,7 +1,6 @@
 #ifndef LOADER_REGISTRY_HPP
 #define LOADER_REGISTRY_HPP
 
-#include "interface/DataFactory.hpp"
 #include "interface/DataLoader.hpp"
 #include "interface/IOTypes.hpp"
 
@@ -13,6 +12,9 @@
 
 /**
  * @brief Interface for format-specific loaders
+ * 
+ * Loaders now directly create data objects by linking to the data type libraries.
+ * This removes the need for the DataFactory abstraction.
  */
 class IFormatLoader {
 public:
@@ -24,13 +26,11 @@ public:
      * @param filepath Path to the file to load
      * @param dataType Type of data being loaded
      * @param config JSON configuration for loading
-     * @param factory Factory for creating data objects
      * @return LoadResult containing loaded data or error
      */
     virtual LoadResult load(std::string const& filepath, 
                            IODataType dataType, 
-                           nlohmann::json const& config, 
-                           DataFactory* factory) const = 0;
+                           nlohmann::json const& config) const = 0;
     
     /**
      * @brief Save data to file (optional - not all loaders support saving)
@@ -94,14 +94,12 @@ public:
      * @param dataType Type of data being loaded
      * @param filepath Path to the file to load
      * @param config Full JSON configuration object
-     * @param factory Factory for creating data objects
      * @return LoadResult with loaded data or error message
      */
     LoadResult tryLoad(std::string const& format, 
                       IODataType dataType,
                       std::string const& filepath, 
-                      nlohmann::json const& config, 
-                      DataFactory* factory);
+                      nlohmann::json const& config);
     
     /**
      * @brief Try to save data using registered loaders

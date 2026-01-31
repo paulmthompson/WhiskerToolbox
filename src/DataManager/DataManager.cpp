@@ -2,7 +2,6 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
-#include "ConcreteDataFactory.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IO/LoaderRegistration.hpp"
@@ -66,8 +65,7 @@ bool tryRegistryThenLegacyLoad(
         DM_DataType data_type,
         nlohmann::json const & item,
         std::string const & name,
-        std::vector<DataInfo> & data_info_list,
-        DataFactory * factory) {
+        std::vector<DataInfo> & data_info_list) {
     // Extract format if available
     if (item.contains("format")) {
         std::string const format = item["format"];
@@ -77,7 +75,7 @@ bool tryRegistryThenLegacyLoad(
         if (registry.isFormatSupported(format, toIODataType(data_type))) {
             std::cout << "Using registry loader for " << name << " (format: " << format << ")" << std::endl;
 
-            LoadResult result = registry.tryLoad(format, toIODataType(data_type), file_path, item, factory);
+            LoadResult result = registry.tryLoad(format, toIODataType(data_type), file_path, item);
             if (result.success) {
                 // Handle data setting and post-loading setup based on data type
                 switch (data_type) {
@@ -530,8 +528,6 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
 
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback) {
     std::vector<DataInfo> data_info_list;
-    // Create factory for plugin system
-    ConcreteDataFactory factory;
 
     // Count total items to load (excluding transformations which are processed separately)
     int total_items = 0;
@@ -748,7 +744,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Mask: {
 
                 // Try registry system first, then fallback to legacy
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -765,7 +761,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Line: {
 
                 // Try registry system first, then fallback to legacy
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list, &factory)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 

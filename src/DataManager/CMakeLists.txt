@@ -30,8 +30,6 @@ set(DATAMANAGER_SOURCES
         DataManager.cpp
         DataManagerTypes.hpp
         DataManagerTypes.cpp
-        ConcreteDataFactory.hpp
-        ConcreteDataFactory.cpp
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp

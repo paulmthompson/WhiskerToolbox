@@ -6,9 +6,8 @@
 /**
  * @brief CSV format loader for LineData
  * 
- * This is an "internal plugin" that provides CSV loading capability
- * without external dependencies. It wraps the existing CSV loading
- * functionality from Lines/IO/CSV.
+ * This loader provides CSV loading capability and directly creates
+ * data objects by linking to the data type libraries.
  */
 class CSVLoader : public IFormatLoader {
 public:
@@ -20,8 +19,7 @@ public:
      */
     LoadResult load(std::string const& filepath, 
                    IODataType dataType, 
-                   nlohmann::json const& config, 
-                   DataFactory* factory) const override;
+                   nlohmann::json const& config) const override;
     
     /**
      * @brief Save data to CSV file
@@ -46,8 +44,7 @@ private:
      * @brief Load LineData from CSV using existing functionality
      */
     LoadResult loadLineDataCSV(std::string const& filepath, 
-                              nlohmann::json const& config, 
-                              DataFactory* factory) const;
+                              nlohmann::json const& config) const;
 };
 
 #endif // CSV_LOADER_HPP

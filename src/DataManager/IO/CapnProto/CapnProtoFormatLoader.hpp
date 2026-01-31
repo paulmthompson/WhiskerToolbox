@@ -19,8 +19,7 @@ public:
      */
     LoadResult load(std::string const& filepath, 
                    IODataType dataType, 
-                   nlohmann::json const& config, 
-                   DataFactory* factory) const override;
+                   nlohmann::json const& config) const override;
     
     /**
      * @brief Save data to CapnProto file
@@ -45,8 +44,7 @@ private:
      * @brief Load LineData from CapnProto file using existing functionality
      */
     LoadResult loadLineDataCapnProto(std::string const& filepath, 
-                                    nlohmann::json const& config, 
-                                    DataFactory* factory) const;
+                                    nlohmann::json const& config) const;
 };
 
 #endif // CAPNPROTO_FORMAT_LOADER_HPP

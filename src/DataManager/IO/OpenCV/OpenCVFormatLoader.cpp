@@ -7,15 +7,10 @@
 
 LoadResult OpenCVFormatLoader::load(std::string const& filepath, 
                                    IODataType dataType, 
-                                   nlohmann::json const& config, 
-                                   DataFactory* factory) const {
-    if (!factory) {
-        return LoadResult("DataFactory is null");
-    }
-
+                                   nlohmann::json const& config) const {
     switch (dataType) {
         case IODataType::Mask:
-            return loadMaskDataImage(filepath, config, factory);
+            return loadMaskDataImage(filepath, config);
             
         default:
             return LoadResult("OpenCV loader does not support data type: " + std::to_string(static_cast<int>(dataType)));
@@ -77,8 +72,7 @@ std::string OpenCVFormatLoader::getLoaderName() const {
 }
 
 LoadResult OpenCVFormatLoader::loadMaskDataImage(std::string const& filepath, 
-                                                nlohmann::json const& config, 
-                                                DataFactory* factory) const {
+                                                nlohmann::json const& config) const {
     try {
         // Configure image loading parameters
         ImageMaskLoaderOptions load_opts;
@@ -107,48 +101,14 @@ LoadResult OpenCVFormatLoader::loadMaskDataImage(std::string const& filepath,
             return LoadResult("Failed to load image MaskData from: " + filepath);
         }
         
-        // Convert to factory-created object
-        // First extract the data from the loaded MaskData
-        std::map<TimeFrameIndex, std::vector<Mask2D>> mask_map;
-        for (auto const& time : loaded_mask_data->getTimesWithData()) {
-            auto mask_view = loaded_mask_data->getAtTime(time);
-            mask_map[time] = std::vector<Mask2D>(mask_view.begin(), mask_view.end());
+        // Apply image size override from config if specified
+        if (config.contains("image_width") && config.contains("image_height")) {
+            int width = config["image_width"];
+            int height = config["image_height"];
+            loaded_mask_data->setImageSize(ImageSize(width, height));
         }
         
-        // Create new MaskData using factory
-        auto mask_data_variant = factory->createMaskData();
-        
-        // Apply the loaded data to the factory-created object
-        if (std::holds_alternative<std::shared_ptr<MaskData>>(mask_data_variant)) {
-            auto new_mask_data = std::get<std::shared_ptr<MaskData>>(mask_data_variant);
-            
-            // Copy masks to the new object
-            for (auto const& [time, masks] : mask_map) {
-                for (auto const& mask : masks) {
-                    new_mask_data->addAtTime(time, mask, NotifyObservers::No);
-                }
-            }
-            
-            // Apply image size from the loaded data
-            ImageSize image_size = loaded_mask_data->getImageSize();
-            if (image_size.width > 0 && image_size.height > 0) {
-                new_mask_data->setImageSize(image_size);
-            }
-            
-            // Apply image size override from config if specified
-            if (config.contains("image_width") && config.contains("image_height")) {
-                int width = config["image_width"];
-                int height = config["image_height"];
-                new_mask_data->setImageSize(ImageSize(width, height));
-            }
-            
-            // Notify observers once at the end
-            new_mask_data->notifyObservers();
-            
-            return LoadResult(std::move(mask_data_variant));
-        } else {
-            return LoadResult("Factory did not create MaskData object");
-        }
+        return LoadResult(std::move(loaded_mask_data));
         
     } catch (std::exception const& e) {
         return LoadResult("OpenCV image loading failed: " + std::string(e.what()));

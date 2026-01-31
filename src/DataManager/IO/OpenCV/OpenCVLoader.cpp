@@ -1,8 +1,9 @@
 #include "OpenCVLoader.hpp"
 #include "../LoaderRegistry.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
-#include "IO/interface/DataFactory.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "utils/string_manip.hpp"
 
 #include <opencv2/imgcodecs.hpp>
@@ -31,17 +32,12 @@ bool OpenCVLoader::supportsDataType(IODataType data_type) const {
 LoadResult OpenCVLoader::loadData(
     std::string const& file_path,
     IODataType data_type,
-    nlohmann::json const& config,
-    DataFactory* factory
+    nlohmann::json const& config
 ) const {
-    if (!factory) {
-        return LoadResult("Factory is null");
-    }
-    
     try {
         using enum IODataType;
         if (data_type == Mask) {
-            return loadMaskData(file_path, config, factory);
+            return loadMaskData(file_path, config);
         }
         return LoadResult("Unsupported data type for OpenCV loader");
     } catch (std::exception const& e) {
@@ -51,8 +47,7 @@ LoadResult OpenCVLoader::loadData(
 
 LoadResult OpenCVLoader::loadMaskData(
     std::string const& file_path,
-    nlohmann::json const& config,
-    DataFactory* factory
+    nlohmann::json const& config
 ) const {
     try {
         // Extract configuration with defaults
@@ -111,8 +106,10 @@ LoadResult OpenCVLoader::loadMaskData(
         std::cout << "Loading mask images from directory: " << directory_path << std::endl;
         std::cout << "Found " << image_files.size() << " image files matching pattern: " << file_pattern << std::endl;
 
-        // Convert to raw data format
-        MaskDataRaw raw_data;
+        // Create MaskData directly
+        auto mask_data = std::make_shared<MaskData>();
+        uint32_t detected_width = 0;
+        uint32_t detected_height = 0;
 
         for (auto const & file_path_entry: image_files) {
             std::string filename = file_path_entry.filename().string();
@@ -171,14 +168,15 @@ LoadResult OpenCVLoader::loadMaskData(
                 }
             }
 
-            // Add mask to raw data if we have points
+            // Add mask to MaskData if we have points
             if (!mask_points.empty()) {
-                raw_data.time_masks[frame_number] = {std::move(mask_points)};
+                TimeFrameIndex frame_idx{frame_number};
+                mask_data->addAtTime(frame_idx, std::move(mask_points), NotifyObservers::No);
                 files_loaded++;
                 
                 // Store image dimensions (use the last loaded image dimensions)
-                raw_data.image_width = static_cast<uint32_t>(width);
-                raw_data.image_height = static_cast<uint32_t>(height);
+                detected_width = static_cast<uint32_t>(width);
+                detected_height = static_cast<uint32_t>(height);
             } else {
                 std::cout << "Warning: No mask pixels found in image: " << filename << std::endl;
                 files_skipped++;
@@ -189,16 +187,18 @@ LoadResult OpenCVLoader::loadMaskData(
             return LoadResult("No valid mask data found in any image files");
         }
 
-        // Extract image size from config if available (overrides detected size)
+        // Set image size from config if available, otherwise use detected size
+        int final_width = static_cast<int>(detected_width);
+        int final_height = static_cast<int>(detected_height);
         if (config.contains("image_width")) {
-            raw_data.image_width = config["image_width"].get<uint32_t>();
+            final_width = config["image_width"].get<int>();
         }
         if (config.contains("image_height")) {
-            raw_data.image_height = config["image_height"].get<uint32_t>();
+            final_height = config["image_height"].get<int>();
         }
-
-        // Create MaskData using factory
-        auto mask_data = factory->createMaskDataFromRaw(raw_data);
+        if (final_width > 0 && final_height > 0) {
+            mask_data->setImageSize(ImageSize{final_width, final_height});
+        }
 
         std::cout << "OpenCV image mask loading complete: " << files_loaded << " files loaded";
         if (files_skipped > 0) {

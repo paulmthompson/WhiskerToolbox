@@ -73,14 +73,12 @@ public:
      * @param file_path Path to the data file
      * @param data_type The type of data to load
      * @param config JSON configuration from the loading config
-     * @param factory Factory for creating data objects (injected by DataManager)
      * @return LoadResult containing the loaded data or error information
      */
     virtual LoadResult loadData(
         std::string const& file_path,
         IODataType data_type,
-        nlohmann::json const& config,
-        class DataFactory* factory
+        nlohmann::json const& config
     ) const = 0;
 };
 
