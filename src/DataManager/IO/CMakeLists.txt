@@ -11,6 +11,16 @@ set(IO_CORE_SOURCES
 
     formats/CSV/CSVLoader.hpp
     formats/CSV/CSVLoader.cpp
+
+    # Analog format loaders (binary and CSV)
+    formats/Analog/AnalogLoader.hpp
+    formats/Analog/AnalogLoader.cpp
+
+    # Digital format loaders (binary and CSV)
+    formats/Digital/DigitalEventLoader.hpp
+    formats/Digital/DigitalEventLoader.cpp
+    formats/Digital/DigitalIntervalLoader.hpp
+    formats/Digital/DigitalIntervalLoader.cpp
 )
 
 # Create the core IO library
@@ -24,6 +34,8 @@ target_link_libraries(DataManagerIO PUBLIC
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
     LineData # Needed to populate CSV line data
+    AnalogTimeSeries # Needed for Analog loaders
+    DigitalTimeSeries # Needed for Digital loaders
 )
 
 # Add subdirectories for specific format plugins

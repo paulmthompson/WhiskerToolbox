@@ -103,7 +103,53 @@ bool tryRegistryThenLegacyLoad(
                         }
                         break;
                     }
-                    // Add other data types as they get plugin support...
+                    case DM_DataType::Analog: {
+                        // Set the AnalogTimeSeries in DataManager
+                        // Note: Plugin returns single channel. For multi-channel binary files,
+                        // the legacy loader handles all channels. Plugin is useful for single-channel
+                        // CSV files or when only the first channel is needed.
+                        if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
+                            auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
+
+                            // For single channel, use the base name
+                            std::string const channel_name = name + "_0";
+                            dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
+
+                            if (item.contains("clock")) {
+                                std::string const clock_str = item["clock"];
+                                auto const clock = TimeKey(clock_str);
+                                dm->setTimeKey(channel_name, clock);
+                            }
+                        }
+                        break;
+                    }
+                    case DM_DataType::DigitalEvent: {
+                        // Set the DigitalEventSeries in DataManager
+                        // Note: Plugin returns single series. For multi-series CSV files,
+                        // the legacy loader handles all series.
+                        if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(result.data)) {
+                            auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
+
+                            std::string const channel_name = name + "_0";
+                            dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
+
+                            if (item.contains("clock")) {
+                                std::string const clock_str = item["clock"];
+                                auto const clock = TimeKey(clock_str);
+                                dm->setTimeKey(channel_name, clock);
+                            }
+                        }
+                        break;
+                    }
+                    case DM_DataType::DigitalInterval: {
+                        // Set the DigitalIntervalSeries in DataManager
+                        if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result.data)) {
+                            auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
+
+                            dm->setData<DigitalIntervalSeries>(name, interval_data, TimeKey("time"));
+                        }
+                        break;
+                    }
                     default:
                         std::cerr << "Registry loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
                         return false;
@@ -778,6 +824,14 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::Analog: {
 
+                // Try registry system first, then fallback to legacy
+                // Note: For multi-channel binary files, plugin returns only first channel,
+                // so legacy loader is used as fallback to get all channels
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                    break;// Successfully loaded with plugin
+                }
+
+                // Legacy loading fallback (handles multi-channel)
                 auto analog_time_series = load_into_AnalogTimeSeries(file_path, item);
 
                 for (size_t channel = 0; channel < analog_time_series.size(); channel++) {
@@ -795,6 +849,14 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::DigitalEvent: {
 
+                // Try registry system first, then fallback to legacy
+                // Note: For multi-series CSV files, plugin returns only first series,
+                // so legacy loader is used as fallback to get all series
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                    break;// Successfully loaded with plugin
+                }
+
+                // Legacy loading fallback (handles multi-series)
                 auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
 
                 for (size_t channel = 0; channel < digital_event_series.size(); channel++) {
@@ -812,6 +874,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::DigitalInterval: {
 
+                // Try registry system first, then fallback to legacy
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                    break;// Successfully loaded with plugin
+                }
+
+                // Legacy loading fallback
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
 
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series, TimeKey("time"));
