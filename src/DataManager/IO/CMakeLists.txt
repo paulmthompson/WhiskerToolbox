@@ -3,6 +3,8 @@
 # Core plugin interface
 set(IO_CORE_SOURCES
     core/DataLoader.hpp
+    core/IOTypes.hpp
+    core/IOFormats.hpp
 
     core/LoaderRegistry.hpp
     core/LoaderRegistry.cpp
