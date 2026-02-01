@@ -4,7 +4,9 @@
 #include "Lines/Line_Data.hpp"
 #include "loaders/loading_utils.hpp"
 #include "utils/json_helpers.hpp"
+#include "utils/json_reflection.hpp"
 
+#include <iostream>
 
 std::shared_ptr<LineData> load_into_LineData(std::string const & file_path, nlohmann::basic_json<> const & item) {
 
@@ -21,58 +23,39 @@ std::shared_ptr<LineData> load_into_LineData(std::string const & file_path, nloh
 
     if (format == "csv") {
 
+        // Inject filepath into JSON for reflection-based parsing
+        auto json_with_path = item;
+        json_with_path["filepath"] = file_path;
+
         if (item.contains("multi_file") && item["multi_file"] == true) {
-            // Multi-file CSV loading
-            CSVMultiFileLineLoaderOptions opts;
-            opts.parent_dir = file_path;
+            // Multi-file CSV loading - use reflection-based parsing
+            // For multi-file, parent_dir is the directory path, so inject that
+            json_with_path["filepath"] = file_path;  // parent_dir for multi-file
+            auto result = WhiskerToolbox::Reflection::parseJson<CSVMultiFileLineLoaderOptions>(json_with_path);
+            if (!result) {
+                std::cerr << "Error parsing CSVMultiFileLineLoaderOptions: " << result.error()->what() << std::endl;
+                return std::make_shared<LineData>();
+            }
             
-            if (item.contains("delimiter")) {
-                opts.delimiter = item["delimiter"];
-            }
-            if (item.contains("x_column")) {
-                opts.x_column = item["x_column"];
-            }
-            if (item.contains("y_column")) {
-                opts.y_column = item["y_column"];
-            }
-            if (item.contains("has_header")) {
-                opts.has_header = item["has_header"];
-            }
+            auto opts = result.value();
+            // Override parent_dir with file_path since that's the directory path
+            opts.parent_dir = file_path;
             
             auto line_map = load(opts);
             line_data = std::make_shared<LineData>(line_map);
         } else {
-            // Single-file CSV loading (existing functionality)
-            CSVSingleFileLineLoaderOptions opts;
-            opts.filepath = file_path;
+            // Single-file CSV loading - use reflection-based parsing
+            auto result = WhiskerToolbox::Reflection::parseJson<CSVSingleFileLineLoaderOptions>(json_with_path);
+            if (!result) {
+                std::cerr << "Error parsing CSVSingleFileLineLoaderOptions: " << result.error()->what() << std::endl;
+                return std::make_shared<LineData>();
+            }
             
-            if (item.contains("delimiter")) {
-                opts.delimiter = item["delimiter"];
-            }
-            if (item.contains("coordinate_delimiter")) {
-                opts.coordinate_delimiter = item["coordinate_delimiter"];
-            }
-            if (item.contains("has_header")) {
-                opts.has_header = item["has_header"];
-            }
-            if (item.contains("header_identifier")) {
-                opts.header_identifier = item["header_identifier"];
-            }
+            auto const opts = result.value();
             
             auto line_map = load(opts);
             line_data = std::make_shared<LineData>(line_map);
         }
-
-        /*
-
-        if (!requiredFieldsExist(item,
-                                 {"format"},
-                                 "Error: Missing required csv fields for LineData"))
-        {
-            return std::make_shared<LineData>();
-        }
-
-        */
 
     } else if (format == "binary" || format == "capnp") {
         // Binary format is now handled by CapnProto plugin

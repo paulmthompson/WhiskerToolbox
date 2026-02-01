@@ -4,8 +4,13 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "utils/LoaderOptionsConcepts.hpp"
+
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -93,32 +98,26 @@ struct CSVMultiFileLineSaverOptions {
  * The filename (without extension) is parsed as the timestamp/frame number.
  * Files are expected to be in the format: NNNNNN.csv (zero-padded frame numbers).
  *
- * @var CSVMultiFileLineLoaderOptions::parent_dir
- * The directory containing the CSV files to load.
+ * Uses reflect-cpp for automatic JSON serialization/deserialization.
+ * Optional fields can be omitted from JSON and will use default values.
  *
- * @var CSVMultiFileLineLoaderOptions::delimiter
- * The delimiter used between columns in the CSV files.
- *
- * @var CSVMultiFileLineLoaderOptions::x_column
- * The column index (0-based) containing X coordinates.
- *
- * @var CSVMultiFileLineLoaderOptions::y_column
- * The column index (0-based) containing Y coordinates.
- *
- * @var CSVMultiFileLineLoaderOptions::has_header
- * Whether the CSV files contain a header row that should be skipped.
- *
- * @var CSVMultiFileLineLoaderOptions::file_pattern
- * File pattern to match (e.g., "*.csv" for all CSV files).
- *
+ * @note This struct uses parent_dir instead of filepath since it loads from a directory.
  */
 struct CSVMultiFileLineLoaderOptions {
-    std::string parent_dir = ".";
-    std::string delimiter = ",";
-    int x_column = 0;
-    int y_column = 1;
-    bool has_header = true;
-    std::string file_pattern = "*.csv";
+    std::string parent_dir;  // Directory containing CSV files (required)
+    
+    std::optional<std::string> delimiter;
+    std::optional<rfl::Validator<int, rfl::Minimum<0>>> x_column;
+    std::optional<rfl::Validator<int, rfl::Minimum<0>>> y_column;
+    std::optional<bool> has_header;
+    std::optional<std::string> file_pattern;
+    
+    // Helper methods to get values with defaults
+    std::string getDelimiter() const { return delimiter.value_or(","); }
+    int getXColumn() const { return x_column.has_value() ? x_column.value().value() : 0; }
+    int getYColumn() const { return y_column.has_value() ? y_column.value().value() : 1; }
+    bool getHasHeader() const { return has_header.value_or(true); }
+    std::string getFilePattern() const { return file_pattern.value_or("*.csv"); }
 };
 
 /**
@@ -130,29 +129,29 @@ struct CSVMultiFileLineLoaderOptions {
  * followed by comma-separated X coordinates and comma-separated Y coordinates.
  * X and Y coordinate lists are typically enclosed in quotes.
  *
- * @var CSVSingleFileLineLoaderOptions::filepath
- * The path to the CSV file to load.
+ * Uses reflect-cpp for automatic JSON serialization/deserialization.
+ * Optional fields can be omitted from JSON and will use default values.
  *
- * @var CSVSingleFileLineLoaderOptions::delimiter
- * The delimiter used between main columns (frame, X values, Y values).
- *
- * @var CSVSingleFileLineLoaderOptions::coordinate_delimiter
- * The delimiter used within X and Y coordinate lists.
- *
- * @var CSVSingleFileLineLoaderOptions::has_header
- * Whether the CSV file contains a header row that should be skipped.
- *
- * @var CSVSingleFileLineLoaderOptions::header_identifier
- * The text in the first column that identifies the header row.
- * 
+ * @note This struct conforms to ValidLoaderOptions concept.
  */
 struct CSVSingleFileLineLoaderOptions {
-    std::string filepath;
-    std::string delimiter = ",";
-    std::string coordinate_delimiter = ",";
-    bool has_header = true;
-    std::string header_identifier = "Frame";
+    std::string filepath;  // Path to the CSV file (required, consistent with DataManager JSON)
+    
+    std::optional<std::string> delimiter;
+    std::optional<std::string> coordinate_delimiter;
+    std::optional<bool> has_header;
+    std::optional<std::string> header_identifier;
+    
+    // Helper methods to get values with defaults
+    std::string getDelimiter() const { return delimiter.value_or(","); }
+    std::string getCoordinateDelimiter() const { return coordinate_delimiter.value_or(","); }
+    bool getHasHeader() const { return has_header.value_or(true); }
+    std::string getHeaderIdentifier() const { return header_identifier.value_or("Frame"); }
 };
+
+// Compile-time validation that CSVSingleFileLineLoaderOptions conforms to loader requirements
+static_assert(WhiskerToolbox::ValidLoaderOptions<CSVSingleFileLineLoaderOptions>,
+    "CSVSingleFileLineLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 void save_line_as_csv(Line2D const & line, std::string const & filename, int point_precision = 2);
 

@@ -55,7 +55,7 @@ void PointImport_Widget::_handleSingleCSVLoadRequested(CSVPointLoaderOptions opt
     if (keypoint_filename.isNull() || keypoint_filename.isEmpty()) {
         return;
     }
-    options.filename = keypoint_filename.toStdString();
+    options.filepath = keypoint_filename.toStdString();
     _loadSingleCSVFile(options);
 }
 
@@ -72,10 +72,10 @@ void PointImport_Widget::_loadSingleCSVFile(CSVPointLoaderOptions const & option
         if (keypoints.empty()) {
             QMessageBox::warning(this, tr("Import Warning"), 
                 tr("No keypoints loaded from %1. The file might be empty or in an incorrect format.")
-                    .arg(QString::fromStdString(options.filename)));
+                    .arg(QString::fromStdString(options.filepath)));
             return;
         }
-        std::cout << "Loaded " << keypoints.size() << " time points from " << options.filename << std::endl;
+        std::cout << "Loaded " << keypoints.size() << " time points from " << options.filepath << std::endl;
 
         auto point_data = std::make_shared<PointData>(keypoints);
         _data_manager->setData<PointData>(keypoint_key, point_data, TimeKey("time"));
@@ -98,7 +98,7 @@ void PointImport_Widget::_loadSingleCSVFile(CSVPointLoaderOptions const & option
         emit importCompleted(QString::fromStdString(keypoint_key), "PointData");
 
     } catch (std::exception const & e) {
-        std::cerr << "Error loading CSV file " << options.filename << ": " << e.what() << std::endl;
+        std::cerr << "Error loading CSV file " << options.filepath << ": " << e.what() << std::endl;
         QMessageBox::critical(this, tr("Import Error"),
             tr("Error loading CSV file: %1").arg(QString::fromStdString(e.what())));
     }

@@ -5,24 +5,26 @@
 #include "Points/IO/CSV/Point_Data_CSV.hpp"
 
 #include "loaders/loading_utils.hpp"
+#include "utils/json_reflection.hpp"
 
 #include <iostream>
 
 std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item) {
 
+    // Inject filepath into JSON for reflection-based parsing
+    auto json_with_path = item;
+    json_with_path["filepath"] = file_path;
+
     // Check if this is a DLC CSV format
     if (item.contains("format") && item["format"] == "dlc_csv") {
-        // For DLC CSV, we need to return the first bodypart as the main PointData
-        // The caller (DataManager) will need to handle multiple bodyparts differently
-        
-        int const frame_column = item.value("frame_column", 0);
-        float const likelihood_threshold = item.value("likelihood_threshold", 0.0f);
+        // For DLC CSV, use reflection-based parsing
+        auto result = WhiskerToolbox::Reflection::parseJson<DLCPointLoaderOptions>(json_with_path);
+        if (!result) {
+            std::cerr << "Error parsing DLCPointLoaderOptions: " << result.error()->what() << std::endl;
+            return std::make_shared<PointData>();
+        }
 
-        auto opts = DLCPointLoaderOptions{
-            .filename = file_path,
-            .frame_column = frame_column,
-            .likelihood_threshold = likelihood_threshold
-        };
+        auto const opts = result.value();
 
         auto dlc_data = load_dlc_csv(opts);
 
@@ -40,18 +42,20 @@ std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nl
         return point_data;
     }
 
-    // Original CSV loading logic
-    int const frame_column = item["frame_column"];
-    int const x_column = item["x_column"];
-    int const y_column = item["y_column"];
+    // Original CSV loading logic - use reflection-based parsing
+    auto result = WhiskerToolbox::Reflection::parseJson<CSVPointLoaderOptions>(json_with_path);
+    if (!result) {
+        std::cerr << "Error parsing CSVPointLoaderOptions: " << result.error()->what() << std::endl;
+        return std::make_shared<PointData>();
+    }
 
-    std::string const delim = item.value("delim", " ");
-
-    auto opts = CSVPointLoaderOptions{.filename = file_path,
-                                      .frame_column = frame_column,
-                                      .x_column = x_column,
-                                      .y_column = y_column,
-                                      .column_delim = delim.c_str()[0]};
+    auto opts = result.value();
+    
+    // Support legacy 'delim' field by mapping to 'column_delim'
+    if (item.contains("delim") && !item.contains("column_delim")) {
+        std::string const delim = item["delim"];
+        opts.column_delim = delim;
+    }
 
     auto keypoints = load(opts);
 
@@ -66,26 +70,30 @@ std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nl
 
 std::map<std::string, std::shared_ptr<PointData>> load_multiple_PointData_from_dlc(std::string const & file_path, nlohmann::basic_json<> const & item) {
     
-    int const frame_column = item.value("frame_column", 0);
-    float const likelihood_threshold = item.value("likelihood_threshold", 0.0f);
+    // Inject filepath into JSON for reflection-based parsing
+    auto json_with_path = item;
+    json_with_path["filepath"] = file_path;
 
-    auto opts = DLCPointLoaderOptions{
-        .filename = file_path,
-        .frame_column = frame_column,
-        .likelihood_threshold = likelihood_threshold
-    };
+    // Use reflection-based parsing
+    auto result = WhiskerToolbox::Reflection::parseJson<DLCPointLoaderOptions>(json_with_path);
+    if (!result) {
+        std::cerr << "Error parsing DLCPointLoaderOptions: " << result.error()->what() << std::endl;
+        return {};
+    }
+
+    auto const opts = result.value();
 
     auto dlc_data = load_dlc_csv(opts);
 
-    std::map<std::string, std::shared_ptr<PointData>> result;
+    std::map<std::string, std::shared_ptr<PointData>> output;
     
     for (auto const& [bodypart, points] : dlc_data) {
         auto point_data = std::make_shared<PointData>(points);
         change_image_size_json(point_data, item);
-        result[bodypart] = point_data;
+        output[bodypart] = point_data;
     }
     
-    std::cout << "Created " << result.size() << " PointData objects from DLC CSV" << std::endl;
+    std::cout << "Created " << output.size() << " PointData objects from DLC CSV" << std::endl;
     
-    return result;
+    return output;
 }

@@ -18,13 +18,13 @@ CSVPointImport_Widget::CSVPointImport_Widget(QWidget * parent)
 
         QString delimiterText = ui->delimiter_combo->currentText();
         if (delimiterText == "Space") {
-            options.column_delim = ' ';
+            options.column_delim = " ";
         } else if (delimiterText == "Comma") {
-            options.column_delim = ',';
+            options.column_delim = ",";
         } else {
-            options.column_delim = ','; // Default to comma
+            options.column_delim = ","; // Default to comma
         }
-        // filename will be set by the parent PointImport_Widget
+        // filepath will be set by the parent PointImport_Widget
 
         emit loadSingleCSVFileRequested(options);
     });

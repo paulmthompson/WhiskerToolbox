@@ -75,9 +75,7 @@ TEST_CASE_METHOD(DLCPointCSVTestFixture, "DLC CSV - Direct loader function test"
     
     SECTION("Load DLC CSV with default threshold") {
         DLCPointLoaderOptions opts;
-        opts.filename = test_csv_path.string();
-        opts.frame_column = 0;
-        opts.likelihood_threshold = 0.0f;
+        opts.filepath = test_csv_path.string();
         
         auto result = load_dlc_csv(opts);
         
@@ -102,15 +100,12 @@ TEST_CASE_METHOD(DLCPointCSVTestFixture, "DLC CSV - Direct loader function test"
     
     SECTION("Load DLC CSV with likelihood threshold") {
         DLCPointLoaderOptions opts;
-        opts.filename = test_csv_path.string();
-        opts.frame_column = 0;
-
-        // High threshold this eliminates all points from cuetip and wp_post_right
-        opts.likelihood_threshold = 0.8f;
+        opts.filepath = test_csv_path.string();
+        opts.likelihood_threshold = 0.9f;  // High threshold eliminates all points from cuetip and wp_post_right
         
         auto result = load_dlc_csv(opts);
         
-        // Should still have all bodyparts
+        // Should have all bodyparts minus those filtered by threshold
         auto expected_bodyparts = getExpectedBodyparts();
         REQUIRE(result.size() == expected_bodyparts.size() - 2);
         
@@ -231,9 +226,7 @@ TEST_CASE_METHOD(DLCPointCSVTestFixture, "DLC CSV - Error handling", "[DLC][CSV]
     
     SECTION("Handle missing file gracefully") {
         DLCPointLoaderOptions opts;
-        opts.filename = "non_existent_file.csv";
-        opts.frame_column = 0;
-        opts.likelihood_threshold = 0.0f;
+        opts.filepath = "non_existent_file.csv";
         
         auto result = load_dlc_csv(opts);
         REQUIRE(result.empty());

@@ -179,11 +179,17 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
     int loaded_lines = 0;
     bool is_first_line = true;
     
+    // Get options with defaults via helper methods
+    std::string const delimiter = opts.getDelimiter();
+    std::string const coordinate_delimiter = opts.getCoordinateDelimiter();
+    bool const has_header = opts.getHasHeader();
+    std::string const header_identifier = opts.getHeaderIdentifier();
+    
     while (std::getline(file, line)) {
         // Skip header if present
-        if (is_first_line && opts.has_header) {
+        if (is_first_line && has_header) {
             is_first_line = false;
-            if (line.find(opts.header_identifier) != std::string::npos) {
+            if (line.find(header_identifier) != std::string::npos) {
                 continue;
             }
         }
@@ -191,7 +197,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
 
         // Parse line manually to avoid multiple string copies
         size_t pos = 0;
-        size_t comma_pos = line.find(opts.delimiter[0], pos);
+        size_t comma_pos = line.find(delimiter[0], pos);
         if (comma_pos == std::string::npos) {
             continue;
         }
@@ -231,8 +237,8 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
         std::string x_str = line.substr(x_start, x_len);
         std::string y_str = line.substr(y_start, y_len);
 
-        std::vector<float> const x_values = parse_string_to_float_vector(x_str, opts.coordinate_delimiter);
-        std::vector<float> const y_values = parse_string_to_float_vector(y_str, opts.coordinate_delimiter);
+        std::vector<float> const x_values = parse_string_to_float_vector(x_str, coordinate_delimiter);
+        std::vector<float> const y_values = parse_string_to_float_vector(y_str, coordinate_delimiter);
 
         if (x_values.size() != y_values.size()) {
             std::cerr << "Mismatched x and y values at frame: " << frame_num << std::endl;
@@ -299,6 +305,12 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
     int files_loaded = 0;
     int files_skipped = 0;
 
+    // Get options with defaults via helper methods
+    std::string const delimiter = opts.getDelimiter();
+    int const x_column = opts.getXColumn();
+    int const y_column = opts.getYColumn();
+    bool const has_header = opts.getHasHeader();
+
     // Iterate through all files in the directory
     for (auto const & entry : std::filesystem::directory_iterator(opts.parent_dir)) {
         if (!entry.is_regular_file()) {
@@ -341,7 +353,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
 
         while (std::getline(file, line)) {
             // Skip header if present
-            if (first_line && opts.has_header) {
+            if (first_line && has_header) {
                 first_line = false;
                 continue;
             }
@@ -353,7 +365,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
             float x = 0.0f, y = 0.0f;
             bool x_found = false, y_found = false;
             
-            char const delim = opts.delimiter[0];
+            char const delim = delimiter[0];
             while (pos < line.length()) {
                 size_t next_pos = line.find(delim, pos);
                 if (next_pos == std::string::npos) {
@@ -361,10 +373,10 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
                 }
                 
                 // Parse the column value if it's one we need
-                if (col_idx == opts.x_column || col_idx == opts.y_column) {
+                if (col_idx == x_column || col_idx == y_column) {
                     try {
                         float value = std::stof(line.substr(pos, next_pos - pos));
-                        if (col_idx == opts.x_column) {
+                        if (col_idx == x_column) {
                             x = value;
                             x_found = true;
                         } else {

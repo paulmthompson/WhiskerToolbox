@@ -3,20 +3,46 @@
 
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "utils/LoaderOptionsConcepts.hpp"
+
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 class PointData;
 
+/**
+ * @struct CSVPointLoaderOptions
+ *
+ * @brief Options for loading point data from CSV files.
+ *
+ * Uses reflect-cpp for automatic JSON serialization/deserialization.
+ * Optional fields can be omitted from JSON and will use default values.
+ *
+ * @note This struct conforms to ValidLoaderOptions concept.
+ */
 struct CSVPointLoaderOptions {
-    std::string filename;
-    int frame_column = 0;
-    int x_column = 1;
-    int y_column = 2;
-    char column_delim = ' ';
+    std::string filepath;  // Path to the CSV file (consistent with DataManager JSON)
+    
+    std::optional<rfl::Validator<int, rfl::Minimum<0>>> frame_column;
+    std::optional<rfl::Validator<int, rfl::Minimum<0>>> x_column;
+    std::optional<rfl::Validator<int, rfl::Minimum<0>>> y_column;
+    std::optional<std::string> column_delim;
+    
+    // Helper methods to get values with defaults
+    int getFrameColumn() const { return frame_column.has_value() ? frame_column.value().value() : 0; }
+    int getXColumn() const { return x_column.has_value() ? x_column.value().value() : 1; }
+    int getYColumn() const { return y_column.has_value() ? y_column.value().value() : 2; }
+    char getColumnDelim() const { return column_delim.has_value() && !column_delim.value().empty() ? column_delim.value()[0] : ' '; }
 };
+
+// Compile-time validation that CSVPointLoaderOptions conforms to loader requirements
+static_assert(WhiskerToolbox::ValidLoaderOptions<CSVPointLoaderOptions>,
+    "CSVPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
 
@@ -51,21 +77,26 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_po
  * @struct DLCPointLoaderOptions
  * 
  * @brief Options for loading DLC (DeepLabCut) format CSV files.
- *          
- * @var DLCPointLoaderOptions::filename
- * The full filepath to the DLC CSV file.
- * 
- * @var DLCPointLoaderOptions::frame_column
- * The column index for frame numbers (usually 0).
- * 
- * @var DLCPointLoaderOptions::likelihood_threshold
- * Minimum likelihood score for points to be included (default 0.0).
+ *
+ * Uses reflect-cpp for automatic JSON serialization/deserialization.
+ * Optional fields can be omitted from JSON and will use default values.
+ *
+ * @note This struct conforms to ValidLoaderOptions concept.
  */
 struct DLCPointLoaderOptions {
-    std::string filename;
-    int frame_column = 0;
-    float likelihood_threshold = 0.0f;
+    std::string filepath;  // Path to the DLC CSV file (consistent with DataManager JSON)
+    
+    std::optional<rfl::Validator<int, rfl::Minimum<0>>> frame_column;
+    std::optional<rfl::Validator<float, rfl::Minimum<0.0f>>> likelihood_threshold;
+    
+    // Helper methods to get values with defaults
+    int getFrameColumn() const { return frame_column.has_value() ? frame_column.value().value() : 0; }
+    float getLikelihoodThreshold() const { return likelihood_threshold.has_value() ? likelihood_threshold.value().value() : 0.0f; }
 };
+
+// Compile-time validation that DLCPointLoaderOptions conforms to loader requirements
+static_assert(WhiskerToolbox::ValidLoaderOptions<DLCPointLoaderOptions>,
+    "DLCPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
 

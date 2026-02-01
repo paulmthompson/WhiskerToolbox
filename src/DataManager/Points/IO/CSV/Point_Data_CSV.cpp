@@ -22,7 +22,7 @@ std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts
     auto line_output = std::map<TimeFrameIndex, Point2D<float>>{};
 
     std::fstream myfile;
-    myfile.open(opts.filename, std::fstream::in);
+    myfile.open(opts.filepath, std::fstream::in);
 
     std::string x_str;
     std::string y_str;
@@ -30,18 +30,24 @@ std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts
     std::string col_value;
 
     std::vector<std::pair<TimeFrameIndex, Point2D<float>>> csv_vector = {};
+    
+    // Get options with defaults via helper methods
+    int const frame_column = opts.getFrameColumn();
+    int const x_column = opts.getXColumn();
+    int const y_column = opts.getYColumn();
+    char const column_delim = opts.getColumnDelim();
 
     while (getline(myfile, csv_line)) {
 
         std::stringstream ss(csv_line);
 
         int cols_read = 0;
-        while (getline(ss, col_value, opts.column_delim)) {
-            if (cols_read == opts.frame_column) {
+        while (getline(ss, col_value, column_delim)) {
+            if (cols_read == frame_column) {
                 frame_str = col_value;
-            } else if (cols_read == opts.x_column) {
+            } else if (cols_read == x_column) {
                 x_str = col_value;
-            } else if (cols_read == opts.y_column) {
+            } else if (cols_read == y_column) {
                 y_str = col_value;
             }
             cols_read++;
@@ -54,7 +60,7 @@ std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts
     }
     std::cout.flush();
 
-    std::cout << "Read " << csv_vector.size() << " lines from " << opts.filename << std::endl;
+    std::cout << "Read " << csv_vector.size() << " lines from " << opts.filepath << std::endl;
 
     line_output.insert(csv_vector.begin(), csv_vector.end());
 
@@ -143,14 +149,18 @@ void save(PointData const * point_data, CSVPointSaverOptions const & opts)
 
 std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts) {
     std::fstream file;
-    file.open(opts.filename, std::fstream::in);
+    file.open(opts.filepath, std::fstream::in);
     
     if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << opts.filename << std::endl;
+        std::cerr << "Error: Could not open file " << opts.filepath << std::endl;
         return {};
     }
 
     std::string ln, ele;
+    
+    // Get options with defaults via helper methods
+    int const frame_column = opts.getFrameColumn();
+    float const likelihood_threshold = opts.getLikelihoodThreshold();
 
     // Skip the "scorer" row (first row)
     getline(file, ln);
@@ -188,7 +198,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
         std::map<std::string, float> temp_likelihoods;
         
         while (getline(ss, ele, ',')) {
-            if (static_cast<int>(col_no) == opts.frame_column) {
+            if (static_cast<int>(col_no) == frame_column) {
                 // For DLC CSV, frame column should already be a pure number, no extraction needed
                 frame_no = TimeFrameIndex(std::stoi(ele));
             } else if (col_no < dims.size() && col_no < bodyparts.size()) {
@@ -210,7 +220,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
         for (auto const& [bodypart, point] : temp_points) {
             auto likelihood_it = temp_likelihoods.find(bodypart);
             if (likelihood_it != temp_likelihoods.end()) {
-                if (likelihood_it->second >= opts.likelihood_threshold) {
+                if (likelihood_it->second >= likelihood_threshold) {
                     data[bodypart][frame_no] = point;
                 }
             } else {
