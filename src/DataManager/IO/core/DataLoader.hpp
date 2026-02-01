@@ -39,10 +39,13 @@ struct LoadResult {
     bool success = false;
     std::string error_message;
     LoadedDataVariant data;
+    std::string name;  ///< Optional name for batch loading (e.g., channel name, bodypart name)
     
     LoadResult() = default;
     LoadResult(LoadedDataVariant&& loaded_data) 
         : success(true), data(std::move(loaded_data)) {}
+    LoadResult(LoadedDataVariant&& loaded_data, std::string const& result_name) 
+        : success(true), data(std::move(loaded_data)), name(result_name) {}
     LoadResult(std::string const& error) 
         : success(false), error_message(error) {}
 };

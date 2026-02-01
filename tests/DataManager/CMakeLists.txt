@@ -111,6 +111,7 @@ add_executable(test_data_manager
         IO/digital_interval_series_csv.test.cpp
         IO/point_dlc_csv.test.cpp
         IO/test_analog_binary_json_loading.cpp
+        IO/batch_loading.test.cpp
         
         # Loader tests
         loaders/test_analog_reflection.cpp

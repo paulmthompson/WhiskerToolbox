@@ -100,6 +100,67 @@ bool LoaderRegistry::isFormatSupported(std::string const& format, IODataType dat
                       });
 }
 
+BatchLoadResult LoaderRegistry::tryLoadBatch(std::string const& format, 
+                                             IODataType dataType,
+                                             std::string const& filepath, 
+                                             nlohmann::json const& config) {
+    // Try each registered loader
+    for (auto const& loader : m_loaders) {
+        if (loader->supportsFormat(format, dataType)) {
+            std::cout << "LoaderRegistry: Trying batch loader '" << loader->getLoaderName() 
+                     << "' for format '" << format << "'" << std::endl;
+            
+            try {
+                BatchLoadResult result;
+                
+                // Check if loader supports batch loading for this format/type
+                if (loader->supportsBatchLoading(format, dataType)) {
+                    std::cout << "LoaderRegistry: Using native batch loading" << std::endl;
+                    result = loader->loadBatch(filepath, dataType, config);
+                } else {
+                    // Fall back to single load wrapped in batch
+                    std::cout << "LoaderRegistry: Falling back to single load" << std::endl;
+                    LoadResult single_result = loader->load(filepath, dataType, config);
+                    if (single_result.success) {
+                        result = BatchLoadResult::fromVector({std::move(single_result)});
+                    } else {
+                        result = BatchLoadResult::error(single_result.error_message);
+                    }
+                }
+                
+                if (result.success) {
+                    std::cout << "LoaderRegistry: Successfully batch loaded " << result.results.size() 
+                             << " object(s) with '" << loader->getLoaderName() << "'" << std::endl;
+                    return result;
+                } else {
+                    std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName() 
+                             << "' failed: " << result.error_message << std::endl;
+                }
+            } catch (std::exception const& e) {
+                std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName() 
+                         << "' threw exception: " << e.what() << std::endl;
+            } catch (...) {
+                std::cout << "LoaderRegistry: Batch loader '" << loader->getLoaderName() 
+                         << "' threw unknown exception" << std::endl;
+            }
+        }
+    }
+    
+    // No loader could handle this format
+    std::ostringstream error_msg;
+    error_msg << "No registered loader supports batch loading format '" << format 
+              << "' for data type " << static_cast<int>(dataType);
+    return BatchLoadResult::error(error_msg.str());
+}
+
+bool LoaderRegistry::isBatchLoadingSupported(std::string const& format, IODataType dataType) const {
+    return std::any_of(m_loaders.begin(), m_loaders.end(),
+                      [&](auto const& loader) {
+                          return loader->supportsFormat(format, dataType) && 
+                                 loader->supportsBatchLoading(format, dataType);
+                      });
+}
+
 std::vector<std::string> LoaderRegistry::getSupportedFormats(IODataType dataType) const {
     std::vector<std::string> formats;
     

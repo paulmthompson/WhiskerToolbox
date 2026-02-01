@@ -1,10 +1,17 @@
 #include "LoaderRegistration.hpp"
 
 #include "LoaderRegistry.hpp"
+
+// Format-centric loaders (preferred architecture)
 #include "formats/CSV/CSVLoader.hpp"
+#include "formats/Binary/BinaryFormatLoader.hpp"
+
+// DEPRECATED: Data-centric loaders (kept temporarily for backward compatibility)
+// These will be removed once all DataManager.cpp code uses format-centric loaders
 #include "formats/Analog/AnalogLoader.hpp"
 #include "formats/Digital/DigitalEventLoader.hpp"
 #include "formats/Digital/DigitalIntervalLoader.hpp"
+#include "formats/Points/PointLoader.hpp"
 
 // Conditional includes based on compile-time options
 #ifdef ENABLE_CAPNPROTO
@@ -34,21 +41,32 @@ void registerAllLoaders() {
 void registerInternalLoaders() {
     LoaderRegistry& registry = LoaderRegistry::getInstance();
     
-    // Register CSV loader for LineData (always available)
-   // std::cout << "LoaderRegistration: Registering CSV loader..." << std::endl;
+    // =========================================================================
+    // Format-centric loaders (preferred - these handle multiple data types)
+    // =========================================================================
+    
+    // CSVFormatLoader: Line, Points, Analog, DigitalEvent, DigitalInterval
+    // Supports batch loading for DigitalEvent (multi-series) and Points (DLC multi-bodypart)
     registry.registerLoader(std::make_unique<CSVLoader>());
     
-    // Register Analog loader for AnalogTimeSeries (binary and CSV formats)
-   // std::cout << "LoaderRegistration: Registering Analog loader..." << std::endl;
+    // BinaryFormatLoader: Analog, DigitalEvent, DigitalInterval
+    // Supports batch loading for multi-channel binary files
+    registry.registerLoader(std::make_unique<BinaryFormatLoader>());
+    
+    // =========================================================================
+    // DEPRECATED: Data-centric loaders (kept for backward compatibility)
+    // These are registered AFTER format-centric loaders so format-centric
+    // loaders are tried first. They will be removed in a future cleanup.
+    // =========================================================================
+    
+    // Note: These are now redundant with the format-centric loaders above,
+    // but kept temporarily to ensure nothing breaks during migration.
+    // They can be removed once DataManager.cpp fully uses tryLoadBatch().
+    
     registry.registerLoader(std::make_unique<AnalogLoader>());
-    
-    // Register Digital Event loader for DigitalEventSeries (uint16 and CSV formats)
-   // std::cout << "LoaderRegistration: Registering DigitalEvent loader..." << std::endl;
     registry.registerLoader(std::make_unique<DigitalEventLoader>());
-    
-    // Register Digital Interval loader for DigitalIntervalSeries (uint16, CSV, multi_column_binary formats)
-   // std::cout << "LoaderRegistration: Registering DigitalInterval loader..." << std::endl;
     registry.registerLoader(std::make_unique<DigitalIntervalLoader>());
+    registry.registerLoader(std::make_unique<PointLoader>());
 }
 
 void registerExternalLoaders() {

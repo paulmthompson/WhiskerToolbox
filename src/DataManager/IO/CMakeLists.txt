@@ -11,18 +11,22 @@ set(IO_CORE_SOURCES
     core/LoaderRegistration.hpp
     core/LoaderRegistration.cpp
 
+    # Format-centric loaders (preferred architecture)
     formats/CSV/CSVLoader.hpp
     formats/CSV/CSVLoader.cpp
+    formats/Binary/BinaryFormatLoader.hpp
+    formats/Binary/BinaryFormatLoader.cpp
 
-    # Analog format loaders (binary and CSV)
+    # DEPRECATED: Data-centric loaders (to be removed after migration)
+    # These are kept temporarily for backward compatibility
     formats/Analog/AnalogLoader.hpp
     formats/Analog/AnalogLoader.cpp
-
-    # Digital format loaders (binary and CSV)
     formats/Digital/DigitalEventLoader.hpp
     formats/Digital/DigitalEventLoader.cpp
     formats/Digital/DigitalIntervalLoader.hpp
     formats/Digital/DigitalIntervalLoader.cpp
+    formats/Points/PointLoader.hpp
+    formats/Points/PointLoader.cpp
 )
 
 # Create the core IO library
@@ -36,6 +40,7 @@ target_link_libraries(DataManagerIO PUBLIC
     nlohmann_json::nlohmann_json
     NEURALYZER_GEOMETRY
     LineData # Needed to populate CSV line data
+    PointData # Needed for Point loaders
     AnalogTimeSeries # Needed for Analog loaders
     DigitalTimeSeries # Needed for Digital loaders
 )

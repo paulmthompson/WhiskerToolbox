@@ -13,25 +13,17 @@
 #include "Tensors/Tensor_Data.hpp"
 
 // Media includes - now from separate MediaData library
-//#include "Media/Image_Data.hpp"
 #include "Media/Media_Data.hpp"
-//#include "Media/Video_Data.hpp"
 
+// JSON loaders for legacy multi-channel/multi-series support
 #include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
-#include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
-#include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
-#include "Lines/IO/JSON/Line_Data_JSON.hpp"
-#include "Masks/IO/JSON/Mask_Data_JSON.hpp"
-#ifdef ENABLE_OPENCV
-#include "Media/IO/JSON/Image_Data_JSON.hpp"
-#endif
-#include "Points/IO/JSON/Point_Data_JSON.hpp"
+#include "Points/IO/JSON/Point_Data_JSON.hpp"  // For load_multiple_PointData_from_dlc
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 
-#include "loaders/binary_loaders.hpp"
+#include "loaders/binary_loaders.hpp"  // For Time data type loading
 
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -150,6 +142,20 @@ bool tryRegistryThenLegacyLoad(
                         }
                         break;
                     }
+                    case DM_DataType::Points: {
+                        // Set the PointData in DataManager
+                        // Note: Plugin returns single PointData. For DLC files with multiple bodyparts,
+                        // use the dedicated load_multiple_PointData_from_dlc() function.
+                        if (std::holds_alternative<std::shared_ptr<PointData>>(result.data)) {
+                            auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
+
+                            dm->setData<PointData>(name, point_data, TimeKey("time"));
+
+                            std::string const color = item.value("color", "#0000FF");
+                            data_info_list.push_back({name, "PointData", color});
+                        }
+                        break;
+                    }
                     default:
                         std::cerr << "Registry loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
                         return false;
@@ -164,6 +170,113 @@ bool tryRegistryThenLegacyLoad(
     }
 
     return false;// Indicates we should use legacy loading
+}
+
+/**
+ * @brief Try batch loading using the registry system (for multi-channel/multi-series files)
+ * 
+ * This function handles file formats that can contain multiple data objects, such as:
+ * - Multi-channel binary files (Analog, DigitalEvent)
+ * - Multi-series CSV files (DigitalEvent)
+ * - DLC files with multiple bodyparts (Points)
+ * 
+ * @param dm Pointer to the DataManager
+ * @param file_path Path to the file to load
+ * @param data_type Type of data being loaded
+ * @param item JSON configuration for loading
+ * @param name Base name for the loaded data objects
+ * @return true if batch loading succeeded, false to fall back to legacy loading
+ */
+bool tryBatchLoadFromRegistry(
+        DataManager * dm,
+        std::string const & file_path,
+        DM_DataType data_type,
+        nlohmann::json const & item,
+        std::string const & name) {
+    
+    if (!item.contains("format")) {
+        return false;
+    }
+    
+    std::string const format = item["format"];
+    LoaderRegistry & registry = LoaderRegistry::getInstance();
+    auto io_data_type = toIODataType(data_type);
+    
+    // Check if any loader supports batch loading for this format
+    if (!registry.isBatchLoadingSupported(format, io_data_type)) {
+        return false;
+    }
+    
+    std::cout << "Using batch loading for " << name << " (format: " << format << ")" << std::endl;
+    
+    BatchLoadResult batch_result = registry.tryLoadBatch(format, io_data_type, file_path, item);
+    
+    if (!batch_result.success) {
+        std::cout << "Batch loading failed for " << name << ": " << batch_result.error_message 
+                  << ", falling back to legacy loader" << std::endl;
+        return false;
+    }
+    
+    // Process each result in the batch
+    for (size_t i = 0; i < batch_result.results.size(); ++i) {
+        auto const & result = batch_result.results[i];
+        if (!result.success) {
+            std::cerr << "Batch item " << i << " failed: " << result.error_message << std::endl;
+            continue;
+        }
+        
+        // Generate channel name - use result.name if provided, otherwise index
+        std::string channel_name;
+        if (!result.name.empty()) {
+            channel_name = name + "_" + result.name;
+        } else {
+            channel_name = name + "_" + std::to_string(i);
+        }
+        
+        // Handle based on data type
+        switch (data_type) {
+            case DM_DataType::Analog: {
+                if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
+                    auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
+                    dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
+                    
+                    if (item.contains("clock")) {
+                        std::string const clock_str = item["clock"];
+                        auto const clock = TimeKey(clock_str);
+                        dm->setTimeKey(channel_name, clock);
+                    }
+                }
+                break;
+            }
+            case DM_DataType::DigitalEvent: {
+                if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(result.data)) {
+                    auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
+                    dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
+                    
+                    if (item.contains("clock")) {
+                        std::string const clock_str = item["clock"];
+                        auto const clock = TimeKey(clock_str);
+                        dm->setTimeKey(channel_name, clock);
+                    }
+                }
+                break;
+            }
+            case DM_DataType::Points: {
+                if (std::holds_alternative<std::shared_ptr<PointData>>(result.data)) {
+                    auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
+                    dm->setData<PointData>(channel_name, point_data, TimeKey("time"));
+                }
+                break;
+            }
+            default:
+                std::cerr << "Batch loading not supported for data type: " 
+                          << static_cast<int>(data_type) << std::endl;
+                break;
+        }
+    }
+    
+    std::cout << "Batch loaded " << batch_result.results.size() << " objects for " << name << std::endl;
+    return true;
 }
 
 DataManager::DataManager() {
@@ -762,7 +875,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 #endif
             case DM_DataType::Points: {
 
-                // Check if this is a DLC CSV format that needs special handling
+                // Check if this is a DLC CSV format that needs special handling for multiple bodyparts
                 if (item.contains("format") && item["format"] == "dlc_csv") {
                     auto multi_point_data = load_multiple_PointData_from_dlc(file_path, item);
 
@@ -776,57 +889,51 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                         // Use empty color string to let Media_Window auto-assign colors
                         data_info_list.push_back({bodypart_name, "PointData", ""});
                     }
-                } else {
-                    // Regular point data loading
-                    auto point_data = load_into_PointData(file_path, item);
-
-                    dm->setData<PointData>(name, point_data, TimeKey("time"));
-
-                    std::string const color = item.value("color", "#0000FF");
-                    data_info_list.push_back({name, "PointData", color});
+                    break;
                 }
+
+                // Use registry system for regular CSV point data
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                    break;// Successfully loaded with plugin
+                }
+
+                // If plugin loading failed, report the error
+                std::cerr << "Error: Failed to load PointData from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::Mask: {
 
-                // Try registry system first, then fallback to legacy
+                // Use registry system for all mask formats (hdf5, image)
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
-                // Legacy loading fallback
-                auto mask_data = load_into_MaskData(file_path, item);
-
-                std::string const color = item.value("color", "0000FF");
-                dm->setData<MaskData>(name, mask_data, TimeKey("time"));
-
-                data_info_list.push_back({name, "MaskData", color});
-
+                // If plugin loading failed, report the error
+                std::cerr << "Error: Failed to load MaskData from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::Line: {
 
-                // Try registry system first, then fallback to legacy
+                // Use registry system for all line formats (csv, capnp, hdf5)
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
-                // Legacy loading fallback
-                auto line_data = load_into_LineData(file_path, item);
-
-                dm->setData<LineData>(name, line_data, TimeKey("time"));
-
-                std::string const color = item.value("color", "0000FF");
-
-                data_info_list.push_back({name, "LineData", color});
-
+                // If plugin loading failed, report the error
+                std::cerr << "Error: Failed to load LineData from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::Analog: {
 
-                // Try registry system first, then fallback to legacy
-                // Note: For multi-channel binary files, plugin returns only first channel,
-                // so legacy loader is used as fallback to get all channels
+                // Try batch loading first for multi-channel binary files
+                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
+                    break;// Successfully loaded all channels with batch loader
+                }
+
+                // Try single-item registry loading for simple cases
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
@@ -849,9 +956,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::DigitalEvent: {
 
-                // Try registry system first, then fallback to legacy
-                // Note: For multi-series CSV files, plugin returns only first series,
-                // so legacy loader is used as fallback to get all series
+                // Try batch loading first for multi-series CSV files
+                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
+                    break;// Successfully loaded all series with batch loader
+                }
+
+                // Try single-item registry loading for simple cases
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
@@ -874,16 +984,14 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::DigitalInterval: {
 
-                // Try registry system first, then fallback to legacy
+                // Use registry system for all digital interval formats (uint16, csv, multi_column_binary)
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
-                // Legacy loading fallback
-                auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
-
-                dm->setData<DigitalIntervalSeries>(name, digital_interval_series, TimeKey("time"));
-
+                // If plugin loading failed, report the error
+                std::cerr << "Error: Failed to load DigitalIntervalSeries from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::Tensor: {
