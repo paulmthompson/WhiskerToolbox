@@ -43,6 +43,18 @@ private:
      */
     LoadResult loadLineDataHDF5(std::string const& filepath, 
                                nlohmann::json const& config) const;
+
+    /**
+     * @brief Load DigitalEventSeries from HDF5 file
+     */
+    LoadResult loadDigitalEventDataHDF5(std::string const& filepath, 
+                                        nlohmann::json const& config) const;
+
+    /**
+     * @brief Load AnalogTimeSeries from HDF5 file
+     */
+    LoadResult loadAnalogDataHDF5(std::string const& filepath, 
+                                  nlohmann::json const& config) const;
 };
 
 #endif // HDF5_FORMAT_LOADER_HPP

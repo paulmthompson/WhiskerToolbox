@@ -35,6 +35,8 @@ target_link_libraries(DataManagerHDF5 PRIVATE
     nlohmann_json::nlohmann_json  # For JSON config parsing
     WhiskerToolbox::LineData
     WhiskerToolbox::MaskData
+    WhiskerToolbox::DigitalTimeSeries   # For DigitalEventSeries
+    WhiskerToolbox::AnalogTimeSeries    # For AnalogTimeSeries
 )
 
 # Platform-specific HDF5 linking

@@ -14,14 +14,24 @@ LoadResult HDF5FormatLoader::load(std::string const& filepath,
         case IODataType::Line:
             return loadLineDataHDF5(filepath, config);
             
+        case IODataType::DigitalEvent:
+            return loadDigitalEventDataHDF5(filepath, config);
+            
+        case IODataType::Analog:
+            return loadAnalogDataHDF5(filepath, config);
+            
         default:
             return LoadResult("HDF5 loader does not support data type: " + std::to_string(static_cast<int>(dataType)));
     }
 }
 
 bool HDF5FormatLoader::supportsFormat(std::string const& format, IODataType dataType) const {
-    // Support hdf5 format for MaskData and LineData
-    if (format == "hdf5" && (dataType == IODataType::Mask || dataType == IODataType::Line)) {
+    // Support hdf5 format for MaskData, LineData, DigitalEventSeries, and AnalogTimeSeries
+    if (format == "hdf5" && 
+        (dataType == IODataType::Mask || 
+         dataType == IODataType::Line ||
+         dataType == IODataType::DigitalEvent ||
+         dataType == IODataType::Analog)) {
         return true;
     }
     
@@ -53,5 +63,29 @@ LoadResult HDF5FormatLoader::loadLineDataHDF5(std::string const& filepath,
         
     } catch (std::exception const& e) {
         return LoadResult("HDF5 LineData loading failed: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5FormatLoader::loadDigitalEventDataHDF5(std::string const& filepath, 
+                                                      nlohmann::json const& config) const {
+    try {
+        // Use the HDF5Loader functionality
+        HDF5Loader hdf5_loader;
+        return hdf5_loader.loadData(filepath, IODataType::DigitalEvent, config);
+        
+    } catch (std::exception const& e) {
+        return LoadResult("HDF5 DigitalEventSeries loading failed: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5FormatLoader::loadAnalogDataHDF5(std::string const& filepath, 
+                                                nlohmann::json const& config) const {
+    try {
+        // Use the HDF5Loader functionality
+        HDF5Loader hdf5_loader;
+        return hdf5_loader.loadData(filepath, IODataType::Analog, config);
+        
+    } catch (std::exception const& e) {
+        return LoadResult("HDF5 AnalogTimeSeries loading failed: " + std::string(e.what()));
     }
 }

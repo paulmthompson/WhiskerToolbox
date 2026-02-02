@@ -1,13 +1,17 @@
 #include "HDF5Loader.hpp"
 #include "../../core/LoaderRegistry.hpp"
+#include "common/hdf5_utilities.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "hdf5_loaders.hpp"
 
+#include <cmath>
 #include <iostream>
 
 std::string HDF5Loader::getFormatId() const {
@@ -19,6 +23,8 @@ bool HDF5Loader::supportsDataType(IODataType data_type) const {
     switch (data_type) {
         case Mask:
         case Line:
+        case DigitalEvent:
+        case Analog:
             return true;
         default:
             return false;
@@ -37,6 +43,12 @@ LoadResult HDF5Loader::loadData(
         }
         if (data_type == Line) {
             return loadLineData(file_path, config);
+        }
+        if (data_type == DigitalEvent) {
+            return loadDigitalEventData(file_path, config);
+        }
+        if (data_type == Analog) {
+            return loadAnalogData(file_path, config);
         }
         return LoadResult("Unsupported data type for HDF5 loader");
     } catch (std::exception const& e) {
@@ -180,6 +192,172 @@ LoadResult HDF5Loader::loadLineData(
         
     } catch (std::exception const& e) {
         return LoadResult("Error loading HDF5 line data: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5Loader::loadDigitalEventData(
+    std::string const& file_path,
+    nlohmann::json const& config
+) const {
+    try {
+        // Extract required configuration
+        if (!config.contains("time_key")) {
+            return LoadResult("HDF5 DigitalEvent loader requires 'time_key' in config");
+        }
+        if (!config.contains("event_key")) {
+            return LoadResult("HDF5 DigitalEvent loader requires 'event_key' in config");
+        }
+        
+        std::string time_key = config["time_key"].get<std::string>();
+        std::string event_key = config["event_key"].get<std::string>();
+        
+        // Scale factor: multiply timestamps by this to convert to frame indices
+        // e.g., timestamps in seconds * 30000 Hz = sample indices
+        double scale = 1.0;
+        if (config.contains("scale")) {
+            scale = config["scale"].get<double>();
+        }
+        
+        // If true, divide by scale instead of multiply
+        bool scale_divide = false;
+        if (config.contains("scale_divide")) {
+            scale_divide = config["scale_divide"].get<bool>();
+        }
+        
+        // Load time values (float64/double)
+        auto time_values = hdf5::load_array<double>({file_path, time_key});
+        
+        // Load event indicators (also as double since they're stored as float64)
+        auto event_indicators = hdf5::load_array<double>({file_path, event_key});
+        
+        if (time_values.empty()) {
+            return LoadResult("No time data found in HDF5 file at key: " + time_key);
+        }
+        
+        if (time_values.size() != event_indicators.size()) {
+            return LoadResult("HDF5 DigitalEvent: time_key and event_key arrays must have same length. "
+                            "time_key has " + std::to_string(time_values.size()) + " elements, "
+                            "event_key has " + std::to_string(event_indicators.size()) + " elements.");
+        }
+        
+        // Extract events where indicator is 1 (non-zero)
+        std::vector<TimeFrameIndex> event_times;
+        event_times.reserve(time_values.size());  // Upper bound
+        
+        for (size_t i = 0; i < time_values.size(); ++i) {
+            // Check if this is an event (indicator > 0.5 to handle floating point)
+            if (event_indicators[i] > 0.5) {
+                double scaled_time = time_values[i];
+                
+                // Apply scaling
+                if (scale_divide) {
+                    scaled_time /= scale;
+                } else {
+                    scaled_time *= scale;
+                }
+                
+                // Convert to integer frame index (round to nearest)
+                auto frame_idx = static_cast<int64_t>(std::round(scaled_time));
+                event_times.push_back(TimeFrameIndex{frame_idx});
+            }
+        }
+        
+        // Create DigitalEventSeries from the event times
+        auto event_series = std::make_shared<DigitalEventSeries>(std::move(event_times));
+        
+        std::cout << "HDF5 DigitalEvent loading complete: " << event_series->size() 
+                  << " events loaded from " << time_values.size() << " time points" << std::endl;
+        
+        return LoadResult(std::move(event_series));
+        
+    } catch (std::exception const& e) {
+        return LoadResult("Error loading HDF5 DigitalEvent data: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5Loader::loadAnalogData(
+    std::string const& file_path,
+    nlohmann::json const& config
+) const {
+    try {
+        // Extract required configuration
+        if (!config.contains("time_key")) {
+            return LoadResult("HDF5 Analog loader requires 'time_key' in config");
+        }
+        if (!config.contains("value_key")) {
+            return LoadResult("HDF5 Analog loader requires 'value_key' in config");
+        }
+        
+        std::string time_key = config["time_key"].get<std::string>();
+        std::string value_key = config["value_key"].get<std::string>();
+        
+        // Scale factor: multiply timestamps by this to convert to frame indices
+        // e.g., timestamps in seconds * 30000 Hz = sample indices
+        double scale = 1.0;
+        if (config.contains("scale")) {
+            scale = config["scale"].get<double>();
+        }
+        
+        // If true, divide by scale instead of multiply
+        bool scale_divide = false;
+        if (config.contains("scale_divide")) {
+            scale_divide = config["scale_divide"].get<bool>();
+        }
+        
+        // Load time values (float64/double)
+        auto time_values = hdf5::load_array<double>({file_path, time_key});
+        
+        // Load analog values (float64/double, will be converted to float)
+        auto analog_values = hdf5::load_array<double>({file_path, value_key});
+        
+        if (time_values.empty()) {
+            return LoadResult("No time data found in HDF5 file at key: " + time_key);
+        }
+        
+        if (analog_values.empty()) {
+            return LoadResult("No analog data found in HDF5 file at key: " + value_key);
+        }
+        
+        if (time_values.size() != analog_values.size()) {
+            return LoadResult("HDF5 Analog: time_key and value_key arrays must have same length. "
+                            "time_key has " + std::to_string(time_values.size()) + " elements, "
+                            "value_key has " + std::to_string(analog_values.size()) + " elements.");
+        }
+        
+        // Build vectors for AnalogTimeSeries construction
+        std::vector<TimeFrameIndex> time_indices;
+        std::vector<float> values;
+        time_indices.reserve(time_values.size());
+        values.reserve(analog_values.size());
+        
+        for (size_t i = 0; i < time_values.size(); ++i) {
+            double scaled_time = time_values[i];
+            
+            // Apply scaling
+            if (scale_divide) {
+                scaled_time /= scale;
+            } else {
+                scaled_time *= scale;
+            }
+            
+            // Convert to integer frame index (round to nearest)
+            auto frame_idx = static_cast<int64_t>(std::round(scaled_time));
+            time_indices.push_back(TimeFrameIndex{frame_idx});
+            
+            // Convert double to float for analog value
+            values.push_back(static_cast<float>(analog_values[i]));
+        }
+        
+        // Create AnalogTimeSeries from time indices and values
+        auto analog_series = std::make_shared<AnalogTimeSeries>(std::move(values), std::move(time_indices));
+        
+        std::cout << "HDF5 Analog loading complete: " << analog_series->getAnalogTimeSeries().size() 
+                  << " samples loaded" << std::endl;
+        
+        return LoadResult(std::move(analog_series));
+        
+    } catch (std::exception const& e) {
+        return LoadResult("Error loading HDF5 Analog data: " + std::string(e.what()));
     }
 }
 
