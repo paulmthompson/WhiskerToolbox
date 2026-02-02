@@ -1,3 +1,17 @@
+/**
+ * @file analog_csv_unit.test.cpp
+ * @brief Unit tests for AnalogTimeSeries CSV direct function calls and legacy APIs
+ * 
+ * These tests exercise the CSV loading functions directly without going through
+ * the DataManager JSON config interface. They complement the integration tests
+ * in analog_csv_integration.test.cpp.
+ * 
+ * Tests include:
+ * 1. Direct save/load via CSVAnalogSaverOptions/CSVAnalogLoaderOptions
+ * 2. Single column format loading via direct function
+ * 3. Legacy load_analog_series_from_csv function
+ */
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -14,11 +28,11 @@
 
 using Catch::Matchers::WithinAbs;
 
-class AnalogTimeSeriesCSVTestFixture {
+class AnalogTimeSeriesCSVUnitTestFixture {
 public:
-    AnalogTimeSeriesCSVTestFixture() {
+    AnalogTimeSeriesCSVUnitTestFixture() {
         // Set up test directory
-        test_dir = std::filesystem::current_path() / "test_analog_csv_output";
+        test_dir = std::filesystem::current_path() / "test_analog_csv_unit_output";
         std::filesystem::create_directories(test_dir);
         
         csv_filename = "test_analog_data.csv";
@@ -28,7 +42,7 @@ public:
         createTestAnalogData();
     }
     
-    ~AnalogTimeSeriesCSVTestFixture() {
+    ~AnalogTimeSeriesCSVUnitTestFixture() {
         // Clean up - remove test files and directory
         cleanup();
     }
@@ -61,23 +75,6 @@ protected:
         
         save(original_analog_data.get(), save_opts);
         return std::filesystem::exists(csv_filepath);
-    }
-    
-    std::string createJSONConfig() {
-        return R"([
-{
-    "data_type": "analog",
-    "name": "test_csv_analog",
-    "filepath": ")" + csv_filepath.string() + R"(",
-    "format": "csv",
-    "color": "#0000FF",
-    "delimiter": ",",
-    "has_header": true,
-    "single_column_format": false,
-    "time_column": 0,
-    "data_column": 1
-}
-])";
     }
     
     void cleanup() {
@@ -127,7 +124,9 @@ protected:
     std::shared_ptr<AnalogTimeSeries> original_analog_data;
 };
 
-TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - CSV save and load through direct functions", "[AnalogTimeSeries][CSV][IO]") {
+TEST_CASE_METHOD(AnalogTimeSeriesCSVUnitTestFixture, 
+    "DM - IO - AnalogTimeSeries - CSV save and load through direct functions", 
+    "[AnalogTimeSeries][CSV][IO][unit]") {
     
     SECTION("Save AnalogTimeSeries to CSV format") {
         bool save_success = saveCSVAnalogData();
@@ -202,68 +201,11 @@ TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - C
     }
 }
 
-TEST_CASE_METHOD(AnalogTimeSeriesCSVTestFixture, "DM - IO - AnalogTimeSeries - CSV load through DataManager JSON config", "[AnalogTimeSeries][CSV][IO][DataManager]") {
+TEST_CASE_METHOD(AnalogTimeSeriesCSVUnitTestFixture, 
+    "DM - IO - AnalogTimeSeries - Legacy CSV loader function", 
+    "[AnalogTimeSeries][CSV][IO][unit][legacy]") {
     
-    SECTION("Load CSV AnalogTimeSeries through DataManager") {
-        // First save the data
-        REQUIRE(saveCSVAnalogData());
-        
-        // Create JSON config file for loading
-        std::string json_config = createJSONConfig();
-        std::filesystem::path json_filepath = test_dir / "config.json";
-        
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-        }
-        
-        // Create DataManager and load data using JSON config
-        auto data_manager = std::make_unique<DataManager>();
-        load_data_from_json_config(data_manager.get(), json_filepath.string());
-        
-        // Get the loaded AnalogTimeSeries and verify its contents
-        auto loaded_analog_data = data_manager->getData<AnalogTimeSeries>("test_csv_analog_0");
-        REQUIRE(loaded_analog_data != nullptr);
-        
-        verifyAnalogDataEquality(*loaded_analog_data);
-        
-        // Clean up JSON config file
-        std::filesystem::remove(json_filepath);
-    }
-    
-    SECTION("DataManager handles missing CSV file gracefully") {
-        // Create JSON config pointing to non-existent file
-        std::filesystem::path fake_filepath = test_dir / "nonexistent.csv";
-        std::string json_config = R"([
-{
-    "data_type": "analog",
-    "name": "missing_csv_analog", 
-    "filepath": ")" + fake_filepath.string() + R"(",
-    "format": "csv"
-}
-])";
-        
-        std::filesystem::path json_filepath = test_dir / "config_missing.json";
-        
-        {
-            std::ofstream json_file(json_filepath);
-            REQUIRE(json_file.is_open());
-            json_file << json_config;
-        }
-        
-        // Create DataManager and attempt to load - should handle gracefully
-        auto data_manager = std::make_unique<DataManager>();
-        auto data_info_list = load_data_from_json_config(data_manager.get(), json_filepath.string());
-        
-        // Should return empty list due to missing file
-        REQUIRE(data_info_list.empty());
-        
-        // Clean up JSON config file
-        std::filesystem::remove(json_filepath);
-    }
-    
-    SECTION("Test legacy CSV loader function") {
+    SECTION("Test legacy load_analog_series_from_csv function") {
         // Create a simple single column CSV file
         std::filesystem::path legacy_filepath = test_dir / "legacy.csv";
         std::ofstream legacy_file(legacy_filepath);

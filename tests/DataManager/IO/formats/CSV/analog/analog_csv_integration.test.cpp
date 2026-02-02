@@ -526,7 +526,49 @@ TEST_CASE("Analog CSV Integration - Edge Cases", "[analog][csv][integration][dat
 }
 
 //=============================================================================
-// Test Case 8: Loading multiple analog series from same config
+// Test Case 8: Error handling
+//=============================================================================
+
+TEST_CASE("Analog CSV Integration - Error Handling", "[analog][csv][integration][datamanager]") {
+    TempCSVTestDirectory temp_dir;
+    
+    SECTION("DataManager handles missing CSV file gracefully") {
+        // Create JSON config pointing to non-existent file
+        std::filesystem::path fake_filepath = temp_dir.getPath() / "nonexistent.csv";
+        
+        json config = json::array({
+            {
+                {"data_type", "analog"},
+                {"name", "missing_csv_analog"},
+                {"filepath", fake_filepath.string()},
+                {"format", "csv"}
+            }
+        });
+        
+        // Create DataManager and attempt to load - should handle gracefully
+        DataManager dm;
+        auto data_info_list = load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        // Should return empty list due to missing file
+        REQUIRE(data_info_list.empty());
+        
+        // Verify data was not loaded
+        auto loaded = dm.getData<AnalogTimeSeries>("missing_csv_analog_0");
+        REQUIRE(loaded == nullptr);
+    }
+    
+    SECTION("Empty config array handles gracefully") {
+        json config = json::array();
+        
+        DataManager dm;
+        auto result = load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        REQUIRE(result.empty());
+    }
+}
+
+//=============================================================================
+// Test Case 9: Loading multiple analog series from same config
 //=============================================================================
 
 TEST_CASE("Analog CSV Integration - Multiple Files", "[analog][csv][integration][datamanager]") {

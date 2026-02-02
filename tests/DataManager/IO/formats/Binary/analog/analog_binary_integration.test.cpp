@@ -568,3 +568,167 @@ TEST_CASE("Analog Binary Integration - Time Index Assignment", "[analog][binary]
         }
     }
 }
+
+//=============================================================================
+// Test Case 8: Scale factor and offset value (memory-mapped)
+//=============================================================================
+
+TEST_CASE("Analog Binary Integration - Scale and Offset", "[analog][binary][integration][datamanager][mmap]") {
+    TempBinaryAnalogTestDirectory temp_dir;
+    
+    SECTION("Scale factor doubles values") {
+        auto original = analog_scenarios::constant_value_100();
+        
+        auto binary_path = temp_dir.getFilePath("scale_test.bin");
+        REQUIRE(analog_scenarios::writeBinaryInt16(original.get(), binary_path.string()));
+        
+        json config = json::array({
+            {
+                {"data_type", "analog"},
+                {"name", "scaled_signal"},
+                {"filepath", binary_path.string()},
+                {"format", "binary"},
+                {"num_channels", 1},
+                {"use_memory_mapped", true},
+                {"binary_data_type", "int16"},
+                {"scale_factor", 2.0f}
+            }
+        });
+        
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        auto loaded = dm.getData<AnalogTimeSeries>("scaled_signal_0");
+        REQUIRE(loaded != nullptr);
+        
+        // Original constant value was 42, scaled by 2 should be 84
+        auto samples = loaded->getAllSamples();
+        REQUIRE_THAT(samples[0].value(), WithinAbs(84.0f, 1.0f));
+    }
+    
+    SECTION("Offset value adds to values") {
+        auto original = analog_scenarios::constant_value_100();
+        
+        auto binary_path = temp_dir.getFilePath("offset_test.bin");
+        REQUIRE(analog_scenarios::writeBinaryInt16(original.get(), binary_path.string()));
+        
+        json config = json::array({
+            {
+                {"data_type", "analog"},
+                {"name", "offset_signal"},
+                {"filepath", binary_path.string()},
+                {"format", "binary"},
+                {"num_channels", 1},
+                {"use_memory_mapped", true},
+                {"binary_data_type", "int16"},
+                {"offset_value", 100.0f}
+            }
+        });
+        
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        auto loaded = dm.getData<AnalogTimeSeries>("offset_signal_0");
+        REQUIRE(loaded != nullptr);
+        
+        // Original constant value was 42, with offset 100 should be 142
+        auto samples = loaded->getAllSamples();
+        REQUIRE_THAT(samples[0].value(), WithinAbs(142.0f, 1.0f));
+    }
+    
+    SECTION("Scale factor of 0.5 halves values") {
+        auto original = analog_scenarios::simple_ramp_100();
+        
+        auto binary_path = temp_dir.getFilePath("half_scale.bin");
+        REQUIRE(analog_scenarios::writeBinaryInt16(original.get(), binary_path.string()));
+        
+        json config = json::array({
+            {
+                {"data_type", "analog"},
+                {"name", "half_scaled"},
+                {"filepath", binary_path.string()},
+                {"format", "binary"},
+                {"num_channels", 1},
+                {"use_memory_mapped", true},
+                {"binary_data_type", "int16"},
+                {"scale_factor", 0.5f}
+            }
+        });
+        
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        auto loaded = dm.getData<AnalogTimeSeries>("half_scaled_0");
+        REQUIRE(loaded != nullptr);
+        
+        // Ramp value at index 50 was 50, scaled by 0.5 should be 25
+        auto samples = loaded->getAllSamples();
+        REQUIRE_THAT(samples[50].value(), WithinAbs(25.0f, 1.0f));
+    }
+    
+    SECTION("Negative offset subtracts from values") {
+        auto original = analog_scenarios::constant_value_100();
+        
+        auto binary_path = temp_dir.getFilePath("negative_offset.bin");
+        REQUIRE(analog_scenarios::writeBinaryInt16(original.get(), binary_path.string()));
+        
+        json config = json::array({
+            {
+                {"data_type", "analog"},
+                {"name", "neg_offset"},
+                {"filepath", binary_path.string()},
+                {"format", "binary"},
+                {"num_channels", 1},
+                {"use_memory_mapped", true},
+                {"binary_data_type", "int16"},
+                {"offset_value", -40.0f}
+            }
+        });
+        
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        auto loaded = dm.getData<AnalogTimeSeries>("neg_offset_0");
+        REQUIRE(loaded != nullptr);
+        
+        // Original value was 42, with offset -40 should be 2
+        auto samples = loaded->getAllSamples();
+        REQUIRE_THAT(samples[0].value(), WithinAbs(2.0f, 1.0f));
+    }
+}
+
+//=============================================================================
+// Test Case 9: Error handling
+//=============================================================================
+
+TEST_CASE("Analog Binary Integration - Error Handling", "[analog][binary][integration][datamanager]") {
+    TempBinaryAnalogTestDirectory temp_dir;
+    
+    SECTION("Empty config array handles gracefully") {
+        json config = json::array();
+        
+        DataManager dm;
+        auto result = load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        REQUIRE(result.empty());
+    }
+    
+    SECTION("Non-existent file produces error but doesn't crash") {
+        json config = json::array({
+            {
+                {"data_type", "analog"},
+                {"name", "nonexistent"},
+                {"filepath", "/nonexistent/path/to/file.bin"},
+                {"format", "binary"},
+                {"num_channels", 1}
+            }
+        });
+        
+        DataManager dm;
+        auto result = load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        // Should not have loaded anything
+        auto loaded = dm.getData<AnalogTimeSeries>("nonexistent_0");
+        REQUIRE(loaded == nullptr);
+    }
+}
