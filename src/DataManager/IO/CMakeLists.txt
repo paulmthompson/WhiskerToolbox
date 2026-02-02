@@ -20,6 +20,8 @@ set(IO_CORE_SOURCES
     formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.cpp
     formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp
     formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.cpp
+    formats/CSV/digitaltimeseries/MultiColumnBinaryCSV.hpp
+    formats/CSV/digitaltimeseries/MultiColumnBinaryCSV.cpp
     formats/Binary/BinaryFormatLoader.hpp
     formats/Binary/BinaryFormatLoader.cpp
     formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp

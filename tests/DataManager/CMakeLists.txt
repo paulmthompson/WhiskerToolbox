@@ -116,6 +116,7 @@ add_executable(test_data_manager
         IO/formats/CSV/digitalintervals/digital_interval_csv_integration.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_csv_unit.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_binary_state_integration.test.cpp
+        IO/formats/CSV/digitalintervals/MultiColumnBinaryCSV.test.cpp
         IO/formats/CSV/points/point_csv_integration.test.cpp
         IO/formats/CSV/points/point_csv_unit.test.cpp
         IO/formats/Binary/analog/analog_binary_integration.test.cpp
@@ -124,9 +125,6 @@ add_executable(test_data_manager
         
         # Loader tests
         loaders/test_analog_reflection.cpp
-        
-        # Multi-column binary CSV tests
-        MultiColumnBinaryCSV.test.cpp
 
         TransformsV2/test_view_pipeline.test.cpp
         TransformsV2/test_line_min_point_dist_v2.test.cpp

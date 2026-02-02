@@ -16,12 +16,12 @@
 #include "Media/Media_Data.hpp"
 
 // Data type IO includes
-#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"  // For multi-column binary loading
 #include "Points/IO/JSON/Point_Data_JSON.hpp"  // For load_multiple_PointData_from_dlc
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 
 #include "IO/formats/Binary/common/binary_loaders.hpp"  // For Time data type loading
+#include "IO/formats/CSV/digitaltimeseries/MultiColumnBinaryCSV.hpp"  // For multi-column binary loading
 
 #include "TimeFrame/TimeFrame.hpp"
 

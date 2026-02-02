@@ -2,8 +2,6 @@
 set(digital_subdirectory_sources
         Digital_Interval_Series.hpp
         Digital_Interval_Series.cpp
-        IO/CSV/MultiColumnBinaryCSV.hpp
-        IO/CSV/MultiColumnBinaryCSV.cpp
         Digital_Event_Series.hpp
         Digital_Event_Series.cpp
 )

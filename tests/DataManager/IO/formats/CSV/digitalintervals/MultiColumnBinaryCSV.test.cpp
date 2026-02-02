@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"
+#include "IO/formats/CSV/digitaltimeseries/MultiColumnBinaryCSV.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
