@@ -14,6 +14,7 @@
  * - File selection via dialog or drag-and-drop
  * - Tree view showing HDF5 hierarchy (groups and datasets)
  * - Dataset information panel showing type, dimensions, and attributes
+ * - Data preview table with lazy loading for efficient memory usage
  * - Selection signals for downstream import widgets to use
  * 
  * ## Integration
@@ -35,6 +36,8 @@
 class DataManager;
 class QTreeWidget;
 class QTreeWidgetItem;
+class QTableView;
+class HDF5DatasetPreviewModel;
 
 namespace Ui {
 class HDF5Explorer_Widget;
@@ -154,6 +157,9 @@ private:
     Ui::HDF5Explorer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     QString _current_file_path;
+    
+    // Preview model for lazy-loading dataset contents
+    HDF5DatasetPreviewModel * _preview_model;
 
     /**
      * @brief Clear the tree and info panel
@@ -165,6 +171,17 @@ private:
      * @param info Object information to display
      */
     void _updateInfoPanel(HDF5ObjectInfo const & info);
+
+    /**
+     * @brief Update the preview table with dataset contents
+     * @param info Object information for the dataset to preview
+     */
+    void _updatePreviewTable(HDF5ObjectInfo const & info);
+
+    /**
+     * @brief Clear the preview table
+     */
+    void _clearPreviewTable();
 
     /**
      * @brief Recursively populate the tree with HDF5 file structure

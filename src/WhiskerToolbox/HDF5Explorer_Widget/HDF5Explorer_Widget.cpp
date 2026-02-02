@@ -1,10 +1,13 @@
 #include "HDF5Explorer_Widget.hpp"
+#include "HDF5DatasetPreviewModel.hpp"
 #include "ui_HDF5Explorer_Widget.h"
 
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+#include <QTableView>
+#include <QHeaderView>
 #include <QMessageBox>
 #include <QStyle>
 #include <QApplication>
@@ -200,7 +203,8 @@ HDF5Explorer_Widget::HDF5Explorer_Widget(
     QWidget * parent)
     : QWidget(parent),
       ui(new Ui::HDF5Explorer_Widget),
-      _data_manager(std::move(data_manager)) {
+      _data_manager(std::move(data_manager)),
+      _preview_model(new HDF5DatasetPreviewModel(this)) {
     ui->setupUi(this);
 
     // Set up tree widget columns
@@ -209,6 +213,12 @@ HDF5Explorer_Widget::HDF5Explorer_Widget(
     ui->treeWidget->setColumnWidth(1, 80);
     ui->treeWidget->setColumnWidth(2, 100);
     ui->treeWidget->setColumnWidth(3, 150);
+
+    // Set up preview table
+    ui->previewTableView->setModel(_preview_model);
+    ui->previewTableView->horizontalHeader()->setStretchLastSection(true);
+    ui->previewTableView->verticalHeader()->setDefaultSectionSize(24);
+    ui->previewTableView->setVisible(false);  // Hidden until a dataset is selected
 
     // Connect signals
     connect(ui->browseButton, &QPushButton::clicked,
@@ -219,6 +229,20 @@ HDF5Explorer_Widget::HDF5Explorer_Widget(
             this, &HDF5Explorer_Widget::_onTreeSelectionChanged);
     connect(ui->treeWidget, &QTreeWidget::itemDoubleClicked,
             this, &HDF5Explorer_Widget::_onTreeItemDoubleClicked);
+    
+    // Connect preview model signals
+    connect(_preview_model, &HDF5DatasetPreviewModel::datasetLoaded,
+            this, [this](qint64 num_rows, int num_cols) {
+                ui->previewStatusLabel->setText(
+                    tr("Showing %1 rows × %2 columns (lazy-loaded)")
+                    .arg(num_rows).arg(num_cols));
+                ui->previewTableView->setVisible(true);
+            });
+    connect(_preview_model, &HDF5DatasetPreviewModel::loadError,
+            this, [this](QString const & msg) {
+                ui->previewStatusLabel->setText(tr("Error: %1").arg(msg));
+                ui->previewTableView->setVisible(false);
+            });
 
     // Initial state
     _clearDisplay();
@@ -285,6 +309,7 @@ void HDF5Explorer_Widget::_onTreeSelectionChanged() {
     auto * item = ui->treeWidget->currentItem();
     if (!item) {
         ui->infoLabel->setText(tr("No selection"));
+        _clearPreviewTable();
         return;
     }
 
@@ -292,7 +317,10 @@ void HDF5Explorer_Widget::_onTreeSelectionChanged() {
     _updateInfoPanel(info);
 
     if (!info.is_group) {
+        _updatePreviewTable(info);
         emit datasetSelected(info.full_path);
+    } else {
+        _clearPreviewTable();
     }
 }
 
@@ -318,6 +346,7 @@ void HDF5Explorer_Widget::_onRefreshClicked() {
 void HDF5Explorer_Widget::_clearDisplay() {
     ui->treeWidget->clear();
     ui->infoLabel->setText(tr("Select a file to browse its structure"));
+    _clearPreviewTable();
 }
 
 void HDF5Explorer_Widget::_updateInfoPanel(HDF5ObjectInfo const & info) {
@@ -346,6 +375,22 @@ void HDF5Explorer_Widget::_updateInfoPanel(HDF5ObjectInfo const & info) {
     }
     
     ui->infoLabel->setText(text);
+}
+
+void HDF5Explorer_Widget::_updatePreviewTable(HDF5ObjectInfo const & info) {
+    if (_current_file_path.isEmpty() || info.full_path.isEmpty()) {
+        _clearPreviewTable();
+        return;
+    }
+    
+    ui->previewStatusLabel->setText(tr("Loading preview..."));
+    _preview_model->loadDataset(_current_file_path, info.full_path);
+}
+
+void HDF5Explorer_Widget::_clearPreviewTable() {
+    _preview_model->clear();
+    ui->previewStatusLabel->setText(tr("Select a dataset to preview its contents"));
+    ui->previewTableView->setVisible(false);
 }
 
 bool HDF5Explorer_Widget::_populateTree(QString const & file_path) {

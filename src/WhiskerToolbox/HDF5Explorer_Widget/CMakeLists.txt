@@ -23,6 +23,8 @@ set(HDF5_EXPLORER_WIDGET_SOURCES
     HDF5Explorer_Widget.ui
     HDF5ExplorerRegistration.cpp
     HDF5ExplorerRegistration.hpp
+    HDF5DatasetPreviewModel.cpp
+    HDF5DatasetPreviewModel.hpp
 )
 
 add_library(HDF5Explorer_Widget STATIC ${HDF5_EXPLORER_WIDGET_SOURCES})
