@@ -8,8 +8,6 @@ set(digital_subdirectory_sources
         IO/CSV/MultiColumnBinaryCSV.cpp
         IO/Binary/Digital_Interval_Series_Binary.hpp
         IO/Binary/Digital_Interval_Series_Binary.cpp
-        IO/JSON/Digital_Interval_Series_JSON.hpp
-        IO/JSON/Digital_Interval_Series_JSON.cpp
         Digital_Event_Series.hpp
         Digital_Event_Series.cpp
         IO/CSV/Digital_Event_Series_CSV.cpp
