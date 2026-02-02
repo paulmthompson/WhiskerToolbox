@@ -107,7 +107,6 @@ add_executable(test_data_manager
 
         # IO tests (legacy location - to be migrated)
         IO/line_data_csv.test.cpp
-        IO/point_dlc_csv.test.cpp
         IO/batch_loading.test.cpp
         
         # IO Integration tests (format-centric organization)
@@ -117,6 +116,7 @@ add_executable(test_data_manager
         IO/formats/CSV/digitalintervals/digital_interval_csv_integration.test.cpp
         IO/formats/CSV/digitalintervals/digital_interval_csv_unit.test.cpp
         IO/formats/CSV/points/point_csv_integration.test.cpp
+        IO/formats/CSV/points/point_csv_unit.test.cpp
         IO/formats/Binary/analog/analog_binary_integration.test.cpp
         IO/formats/Binary/analog/analog_binary_unit.test.cpp
         IO/formats/Binary/digitalintervals/digital_interval_binary_integration.test.cpp

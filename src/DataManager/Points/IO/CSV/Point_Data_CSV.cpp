@@ -16,6 +16,13 @@ bool is_number(std::string const & s) {
                                       s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
+// Strip trailing carriage return from a string (handles Windows CRLF line endings)
+inline void strip_cr(std::string& s) {
+    if (!s.empty() && s.back() == '\r') {
+        s.pop_back();
+    }
+}
+
 std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
     std::string csv_line;
 
@@ -167,6 +174,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
 
     // Read bodyparts row (second row)
     getline(file, ln);
+    strip_cr(ln);  // Handle Windows CRLF line endings
     std::vector<std::string> bodyparts;
     {
         std::stringstream ss(ln);
@@ -177,6 +185,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
 
     // Read coords row (third row)
     getline(file, ln);
+    strip_cr(ln);  // Handle Windows CRLF line endings
     std::vector<std::string> dims;
     {
         std::stringstream ss(ln);
@@ -189,6 +198,7 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
     std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> data;
     
     while (getline(file, ln)) {
+        strip_cr(ln);  // Handle Windows CRLF line endings
         std::stringstream ss(ln);
         size_t col_no = 0;
         TimeFrameIndex frame_no(0);
