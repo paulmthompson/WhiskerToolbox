@@ -105,13 +105,17 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_Skeletonize/mask_skeletonize.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/Masks/Mask_To_Line/mask_to_line.test.cpp
 
-        # IO tests
+        # IO tests (legacy location - to be migrated)
         IO/line_data_csv.test.cpp
         IO/analog_time_series_csv.test.cpp
         IO/digital_interval_series_csv.test.cpp
         IO/point_dlc_csv.test.cpp
         IO/test_analog_binary_json_loading.cpp
         IO/batch_loading.test.cpp
+        
+        # IO Integration tests (format-centric organization)
+        IO/formats/CSV/analog/analog_csv_integration.test.cpp
+        IO/formats/Binary/analog/analog_binary_integration.test.cpp
         
         # Loader tests
         loaders/test_analog_reflection.cpp

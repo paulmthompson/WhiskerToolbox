@@ -1,8 +1,9 @@
 /**
  * @file fuzz_digital_event_series_json.cpp
- * @brief Fuzz tests for Digital Event Series JSON loading
+ * @brief Fuzz tests for Digital Event Series JSON/CSV loading
  * 
- * Tests the robustness of JSON parsing for digital event series data.
+ * Tests the robustness of JSON parsing for digital event series data
+ * using the format-centric CSVLoader with batch loading support.
  * Focuses on:
  * - Corrupted JSON structures
  * - Invalid parameter values
@@ -13,7 +14,8 @@
 #include "fuzztest/fuzztest.h"
 #include "gtest/gtest.h"
 
-#include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
+#include "IO/formats/CSV/CSVLoader.hpp"
+#include "IO/core/IOTypes.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "nlohmann/json.hpp"
 
@@ -37,8 +39,9 @@ void FuzzJsonStructure(const std::string& json_str) {
         // Create a temporary file (we don't actually need valid data for this test)
         std::string temp_file = std::tmpnam(nullptr);
         
-        // Attempt to load - should not crash
-        auto result = load_into_DigitalEventSeries(temp_file, json_obj);
+        // Attempt to load using CSVLoader - should not crash
+        CSVLoader loader;
+        auto result = loader.load(temp_file, IODataType::DigitalEvent, json_obj);
         
         // Clean up
         std::filesystem::remove(temp_file);
@@ -82,8 +85,9 @@ void FuzzValidJsonStructure(
         // Create a temporary file
         std::string temp_file = std::tmpnam(nullptr);
         
-        // Attempt to load
-        auto result = load_into_DigitalEventSeries(temp_file, json_obj);
+        // Attempt to load using CSVLoader
+        CSVLoader loader;
+        auto result = loader.load(temp_file, IODataType::DigitalEvent, json_obj);
         
         // Clean up
         std::filesystem::remove(temp_file);
@@ -107,7 +111,9 @@ FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzValidJsonStructure)
     );
 
 /**
- * @brief Test CSV format configuration
+ * @brief Test CSV format configuration with batch loading
+ * 
+ * Tests the CSVLoader's batch loading for multi-series CSV files.
  */
 void FuzzCsvJsonStructure(
     const std::string& delimiter,
@@ -135,8 +141,9 @@ void FuzzCsvJsonStructure(
         file << "200" << delimiter << "event2\n";
         file.close();
         
-        // Attempt to load
-        auto result = load_into_DigitalEventSeries(temp_file, json_obj);
+        // Attempt to load using CSVLoader with batch loading
+        CSVLoader loader;
+        auto batch_result = loader.loadBatch(temp_file, IODataType::DigitalEvent, json_obj);
         
         // Clean up
         std::filesystem::remove(temp_file);
@@ -158,39 +165,39 @@ FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzCsvJsonStructure)
     );
 
 /**
- * @brief Test the EventDataType string parsing
- */
-void FuzzEventDataTypeString(const std::string& type_str) {
-    // Should never crash regardless of input
-    EventDataType result = stringToEventDataType(type_str);
-    
-    // Result should be one of the valid enum values
-    EXPECT_TRUE(result == EventDataType::uint16 || 
-                result == EventDataType::csv || 
-                result == EventDataType::Unknown);
-}
-FUZZ_TEST(DigitalEventSeriesJsonFuzz, FuzzEventDataTypeString);
-
-/**
  * @brief Test event scaling with various scale factors
+ * 
+ * Note: scale_events function is in DigitalTimeSeries IO, test it via the loader.
  */
 void FuzzEventScaling(
     const std::vector<int64_t>& event_values,
     float scale,
     bool scale_divide) {
     
-    // Convert to TimeFrameIndex
-    std::vector<TimeFrameIndex> events;
-    for (auto val : event_values) {
-        events.push_back(TimeFrameIndex(val));
-    }
-    
     try {
-        // Should not crash with any scale value
-        scale_events(events, scale, scale_divide);
+        // Create a temporary CSV file with event data
+        std::string temp_file = std::tmpnam(nullptr);
+        std::ofstream file(temp_file);
+        file << "time\n";
+        for (auto val : event_values) {
+            file << val << "\n";
+        }
+        file.close();
         
-        // Verify events container is still valid (no corruption)
-        EXPECT_GE(events.size(), 0);
+        // Configure with scaling options
+        nlohmann::json json_obj;
+        json_obj["format"] = "csv";
+        json_obj["has_header"] = true;
+        json_obj["event_column"] = 0;
+        json_obj["scale"] = scale;
+        json_obj["scale_divide"] = scale_divide;
+        
+        // Attempt to load - should handle scaling gracefully
+        CSVLoader loader;
+        auto result = loader.load(temp_file, IODataType::DigitalEvent, json_obj);
+        
+        // Clean up
+        std::filesystem::remove(temp_file);
         
     } catch (const std::exception&) {
         // Division by zero or overflow are acceptable exceptions

@@ -9,6 +9,7 @@ add_fuzz_test_with_instantiations(fuzz_digital_event_series_json)
 target_link_libraries(fuzz_digital_event_series_json
     PRIVATE
         DataManager
+        DataManagerIO
         gtest
         gmock
         fuzztest::fuzztest

@@ -11,22 +11,11 @@ set(IO_CORE_SOURCES
     core/LoaderRegistration.hpp
     core/LoaderRegistration.cpp
 
-    # Format-centric loaders (preferred architecture)
+    # Format-centric loaders (unified architecture)
     formats/CSV/CSVLoader.hpp
     formats/CSV/CSVLoader.cpp
     formats/Binary/BinaryFormatLoader.hpp
     formats/Binary/BinaryFormatLoader.cpp
-
-    # DEPRECATED: Data-centric loaders (to be removed after migration)
-    # These are kept temporarily for backward compatibility
-    formats/Analog/AnalogLoader.hpp
-    formats/Analog/AnalogLoader.cpp
-    formats/Digital/DigitalEventLoader.hpp
-    formats/Digital/DigitalEventLoader.cpp
-    formats/Digital/DigitalIntervalLoader.hpp
-    formats/Digital/DigitalIntervalLoader.cpp
-    formats/Points/PointLoader.hpp
-    formats/Points/PointLoader.cpp
 )
 
 # Create the core IO library

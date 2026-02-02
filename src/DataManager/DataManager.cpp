@@ -15,10 +15,8 @@
 // Media includes - now from separate MediaData library
 #include "Media/Media_Data.hpp"
 
-// JSON loaders for legacy multi-channel/multi-series support
-#include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
-#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"
-#include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
+// Data type IO includes
+#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"  // For multi-column binary loading
 #include "Points/IO/JSON/Point_Data_JSON.hpp"  // For load_multiple_PointData_from_dlc
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
@@ -928,7 +926,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::Analog: {
 
-                // Try batch loading first for multi-channel binary files
+                // Use batch loading for multi-channel binary files
+                // Format-centric loaders (BinaryFormatLoader, CSVLoader) handle all formats
                 if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
                     break;// Successfully loaded all channels with batch loader
                 }
@@ -938,25 +937,15 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     break;// Successfully loaded with plugin
                 }
 
-                // Legacy loading fallback (handles multi-channel)
-                auto analog_time_series = load_into_AnalogTimeSeries(file_path, item);
-
-                for (size_t channel = 0; channel < analog_time_series.size(); channel++) {
-                    std::string const channel_name = name + "_" + std::to_string(channel);
-
-                    dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel], TimeKey("time"));
-
-                    if (item.contains("clock")) {
-                        std::string const clock_str = item["clock"];
-                        auto const clock = TimeKey(clock_str);
-                        dm->setTimeKey(channel_name, clock);
-                    }
-                }
+                // If all loading methods failed, report the error
+                std::cerr << "Error: Failed to load AnalogTimeSeries from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::DigitalEvent: {
 
-                // Try batch loading first for multi-series CSV files
+                // Use batch loading for multi-series CSV files
+                // Format-centric loaders (BinaryFormatLoader, CSVLoader) handle all formats
                 if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
                     break;// Successfully loaded all series with batch loader
                 }
@@ -966,20 +955,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     break;// Successfully loaded with plugin
                 }
 
-                // Legacy loading fallback (handles multi-series)
-                auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
-
-                for (size_t channel = 0; channel < digital_event_series.size(); channel++) {
-                    std::string const channel_name = name + "_" + std::to_string(channel);
-
-                    dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel], TimeKey("time"));
-
-                    if (item.contains("clock")) {
-                        std::string const clock_str = item["clock"];
-                        auto const clock = TimeKey(clock_str);
-                        dm->setTimeKey(channel_name, clock);
-                    }
-                }
+                // If all loading methods failed, report the error
+                std::cerr << "Error: Failed to load DigitalEventSeries from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::DigitalInterval: {

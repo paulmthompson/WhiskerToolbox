@@ -2,16 +2,11 @@
 
 #include "LoaderRegistry.hpp"
 
-// Format-centric loaders (preferred architecture)
+// Format-centric loaders - the unified approach
+// CSVLoader handles: Line, Points, Analog, DigitalEvent, DigitalInterval
+// BinaryFormatLoader handles: Analog, DigitalEvent, DigitalInterval
 #include "formats/CSV/CSVLoader.hpp"
 #include "formats/Binary/BinaryFormatLoader.hpp"
-
-// DEPRECATED: Data-centric loaders (kept temporarily for backward compatibility)
-// These will be removed once all DataManager.cpp code uses format-centric loaders
-#include "formats/Analog/AnalogLoader.hpp"
-#include "formats/Digital/DigitalEventLoader.hpp"
-#include "formats/Digital/DigitalIntervalLoader.hpp"
-#include "formats/Points/PointLoader.hpp"
 
 // Conditional includes based on compile-time options
 #ifdef ENABLE_CAPNPROTO
@@ -42,31 +37,23 @@ void registerInternalLoaders() {
     LoaderRegistry& registry = LoaderRegistry::getInstance();
     
     // =========================================================================
-    // Format-centric loaders (preferred - these handle multiple data types)
+    // Format-centric loaders - the unified architecture
+    // Each loader handles one file format for all applicable data types
     // =========================================================================
     
-    // CSVFormatLoader: Line, Points, Analog, DigitalEvent, DigitalInterval
-    // Supports batch loading for DigitalEvent (multi-series) and Points (DLC multi-bodypart)
+    // CSVLoader handles all CSV-based data types:
+    // - IODataType::Line: Single/multi-file CSV whisker data
+    // - IODataType::Points: Simple CSV or DLC format (with batch loading for multi-bodypart)
+    // - IODataType::Analog: Single/two column CSV time series
+    // - IODataType::DigitalEvent: Event timestamps (with batch loading for multi-series)
+    // - IODataType::DigitalInterval: Start/end column pairs
     registry.registerLoader(std::make_unique<CSVLoader>());
     
-    // BinaryFormatLoader: Analog, DigitalEvent, DigitalInterval
-    // Supports batch loading for multi-channel binary files
+    // BinaryFormatLoader handles all binary-based data types:
+    // - IODataType::Analog: Multi-channel binary (int16, float32, etc.) with batch loading
+    // - IODataType::DigitalEvent: TTL extraction from binary
+    // - IODataType::DigitalInterval: TTL extraction from binary
     registry.registerLoader(std::make_unique<BinaryFormatLoader>());
-    
-    // =========================================================================
-    // DEPRECATED: Data-centric loaders (kept for backward compatibility)
-    // These are registered AFTER format-centric loaders so format-centric
-    // loaders are tried first. They will be removed in a future cleanup.
-    // =========================================================================
-    
-    // Note: These are now redundant with the format-centric loaders above,
-    // but kept temporarily to ensure nothing breaks during migration.
-    // They can be removed once DataManager.cpp fully uses tryLoadBatch().
-    
-    registry.registerLoader(std::make_unique<AnalogLoader>());
-    registry.registerLoader(std::make_unique<DigitalEventLoader>());
-    registry.registerLoader(std::make_unique<DigitalIntervalLoader>());
-    registry.registerLoader(std::make_unique<PointLoader>());
 }
 
 void registerExternalLoaders() {
