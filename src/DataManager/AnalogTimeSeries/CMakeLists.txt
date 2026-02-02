@@ -11,8 +11,6 @@ set(analog_subdirectory_sources
     IO/Binary/Analog_Time_Series_Binary.cpp
     IO/CSV/Analog_Time_Series_CSV.hpp
     IO/CSV/Analog_Time_Series_CSV.cpp
-    IO/JSON/Analog_Time_Series_JSON.hpp
-    IO/JSON/Analog_Time_Series_JSON.cpp
     utils/statistics.hpp
     utils/statistics.cpp
 )
