@@ -8,8 +8,6 @@ set(digital_subdirectory_sources
         Digital_Event_Series.cpp
         IO/CSV/Digital_Event_Series_CSV.cpp
         IO/CSV/Digital_Event_Series_CSV.hpp
-        IO/JSON/Digital_Event_Series_JSON.hpp
-        IO/JSON/Digital_Event_Series_JSON.cpp
 )
 
 add_library(DigitalTimeSeries STATIC ${digital_subdirectory_sources})

@@ -5,7 +5,6 @@
  * Tests the underlying loader functions directly:
  * - load_dlc_csv() with DLCPointLoaderOptions
  * - load_multiple_PointData_from_dlc() JSON interface
- * - load_into_PointData() backward compatibility
  * - Error handling for edge cases
  * 
  * These tests use the actual dlc_test.csv fixture file to verify
@@ -190,31 +189,6 @@ TEST_CASE_METHOD(DLCPointCSVUnitTestFixture,
             REQUIRE(point_data != nullptr);
             REQUIRE(point_data->getTimeCount() == 5);
         }
-    }
-}
-
-//=============================================================================
-// Unit Tests: load_into_PointData() backward compatibility
-//=============================================================================
-
-TEST_CASE_METHOD(DLCPointCSVUnitTestFixture, 
-                 "load_into_PointData - Backward compatibility", 
-                 "[DLC][CSV][Points][unit]") {
-    
-    REQUIRE(std::filesystem::exists(test_csv_path));
-    
-    SECTION("Returns first bodypart data") {
-        nlohmann::json config = nlohmann::json::parse(R"({
-            "format": "dlc_csv",
-            "frame_column": 0,
-            "likelihood_threshold": 0.1
-        })");
-        
-        auto result = load_into_PointData(test_csv_path.string(), config);
-        
-        REQUIRE(result != nullptr);
-        // Should have data from the first bodypart (alphabetically)
-        REQUIRE(result->getTimeCount() > 0);
     }
 }
 
