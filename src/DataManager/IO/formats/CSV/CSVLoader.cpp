@@ -489,36 +489,19 @@ LoadResult CSVLoader::loadDigitalEventCSV(std::string const& filepath,
         // For single load, don't use identifier column
         opts.identifier_column = -1;
         
+        // Pass scale options to the loader - scaling is applied during parsing
+        // before float-to-int conversion, which is critical for sub-1.0 timestamps
+        if (config.contains("scale")) opts.scale = config["scale"];
+        if (config.contains("scale_divide")) opts.scale_divide = config["scale_divide"];
+        
         auto loaded_series = ::load(opts);
         
         if (loaded_series.empty()) {
             return LoadResult("No data loaded from CSV file: " + filepath);
         }
         
-        // Apply scaling if specified
-        float const scale = config.value("scale", 1.0f);
-        bool const scale_divide = config.value("scale_divide", false);
-        
-        if (scale != 1.0f) {
-            auto& series = loaded_series[0];
-            auto events_view = series->view();
-            std::vector<TimeFrameIndex> events;
-            for (auto e : events_view) {
-                events.push_back(e.time());
-            }
-            
-            if (scale_divide) {
-                for (auto& e : events) {
-                    e = TimeFrameIndex(static_cast<int64_t>(e.getValue() / scale));
-                }
-            } else {
-                for (auto& e : events) {
-                    e = TimeFrameIndex(static_cast<int64_t>(e.getValue() * scale));
-                }
-            }
-            
-            loaded_series[0] = std::make_shared<DigitalEventSeries>(events);
-        }
+        // Scaling is now applied during parsing in the underlying load() function
+        // No post-processing needed here
         
         std::cout << "CSVLoader: Loaded digital event series from " << filepath << std::endl;
         
@@ -542,40 +525,23 @@ BatchLoadResult CSVLoader::loadDigitalEventCSVBatch(std::string const& filepath,
         if (config.contains("identifier_column")) opts.identifier_column = config["identifier_column"];
         if (config.contains("label_column")) opts.identifier_column = config["label_column"]; // alias
         
+        // Pass scale options to the loader - scaling is applied during parsing
+        // before float-to-int conversion, which is critical for sub-1.0 timestamps
+        if (config.contains("scale")) opts.scale = config["scale"];
+        if (config.contains("scale_divide")) opts.scale_divide = config["scale_divide"];
+        
         auto loaded_series = ::load(opts);
         
         if (loaded_series.empty()) {
             return BatchLoadResult::error("No data loaded from CSV file: " + filepath);
         }
         
-        // Apply scaling if specified
-        float const scale = config.value("scale", 1.0f);
-        bool const scale_divide = config.value("scale_divide", false);
-        
         std::vector<LoadResult> results;
         results.reserve(loaded_series.size());
         
         for (auto& series : loaded_series) {
-            if (scale != 1.0f) {
-                auto events_view = series->view();
-                std::vector<TimeFrameIndex> events;
-                for (auto e : events_view) {
-                    events.push_back(e.time());
-                }
-                
-                if (scale_divide) {
-                    for (auto& e : events) {
-                        e = TimeFrameIndex(static_cast<int64_t>(e.getValue() / scale));
-                    }
-                } else {
-                    for (auto& e : events) {
-                        e = TimeFrameIndex(static_cast<int64_t>(e.getValue() * scale));
-                    }
-                }
-                
-                series = std::make_shared<DigitalEventSeries>(events);
-            }
-            
+            // Scaling is now applied during parsing in the underlying load() function
+            // No post-processing needed here
             results.push_back(LoadResult(std::move(series)));
         }
         

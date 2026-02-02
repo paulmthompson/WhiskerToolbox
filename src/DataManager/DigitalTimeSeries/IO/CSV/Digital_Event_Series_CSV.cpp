@@ -80,6 +80,18 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
         try {
             // Parse event timestamp
             float event_time_float = std::stof(tokens[static_cast<size_t>(options.event_column)]);
+            
+            // Apply scaling BEFORE conversion to integer
+            // This is critical for timestamps like 0.01493 seconds that need to be
+            // converted to sample indices (e.g., 0.01493 * 30000 = 447.9 → 448)
+            if (options.scale != 1.0f) {
+                if (options.scale_divide) {
+                    event_time_float /= options.scale;
+                } else {
+                    event_time_float *= options.scale;
+                }
+            }
+            
             TimeFrameIndex event_time(static_cast<int64_t>(event_time_float));
             
             if (has_identifier_column) {

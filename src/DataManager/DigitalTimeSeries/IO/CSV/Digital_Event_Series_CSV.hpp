@@ -40,6 +40,14 @@ struct CSVEventLoaderOptions {
     int event_column = 0;
     int identifier_column = -1; // -1 means no identifier column
     std::string base_name = "events";
+    
+    /// Scale factor to apply to timestamps. Applied BEFORE conversion to integer.
+    /// For example, if timestamps are in seconds and you want sample indices at 30kHz,
+    /// set scale=30000. The timestamp 0.01493 becomes 0.01493 * 30000 = 447.9 → 448.
+    float scale = 1.0f;
+    
+    /// If true, divide by scale instead of multiplying.
+    bool scale_divide = false;
 };
 
 /**

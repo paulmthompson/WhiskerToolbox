@@ -654,6 +654,56 @@ TEST_CASE("DigitalEvent CSV Integration - Scaling Options",
             REQUIRE(loaded_view[i].time().getValue() == expected);
         }
     }
+    
+    SECTION("Scale sub-1.0 float timestamps to sample indices") {
+        // This tests the exact use case of timestamps in seconds scaled to sample indices
+        // For example: 0.01493 seconds * 30000 Hz = 447.9 samples → 447
+        
+        // Write a CSV with sub-1.0 float timestamps (simulating timestamps in seconds)
+        auto csv_path = temp_dir.getFilePath("float_timestamps.csv");
+        {
+            std::ofstream file(csv_path);
+            REQUIRE(file.is_open());
+            file << "Event\n";
+            file << "0.01493\n";  // → 447.9 → 447
+            file << "0.01670\n";  // → 501.0 → 501
+            file << "0.10957\n";  // → 3287.1 → 3287
+            file << "0.37670\n";  // → 11301.0 → 11301
+        }
+        
+        json config = json::array({
+            {
+                {"data_type", "digital_event"},
+                {"name", "float_scaled"},
+                {"filepath", csv_path.string()},
+                {"format", "csv"},
+                {"has_header", true},
+                {"scale", 30000.0}  // Convert seconds to sample indices at 30kHz
+            }
+        });
+        
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+        
+        auto loaded = dm.getData<DigitalEventSeries>("float_scaled_0");
+        REQUIRE(loaded != nullptr);
+        REQUIRE(loaded->size() == 4);
+        
+        auto loaded_view = loaded->view();
+        
+        // Verify the scaled values are correct (not truncated to 0 before scaling)
+        // 0.01493 * 30000 = 447.9 → 447
+        REQUIRE(loaded_view[0].time().getValue() == 447);
+        
+        // 0.01670 * 30000 = 501.0 → 501
+        REQUIRE(loaded_view[1].time().getValue() == 501);
+        
+        // 0.10957 * 30000 = 3287.1 → 3287
+        REQUIRE(loaded_view[2].time().getValue() == 3287);
+        
+        // 0.37670 * 30000 = 11301.0 → 11301
+        REQUIRE(loaded_view[3].time().getValue() == 11301);
+    }
 }
 
 //=============================================================================
