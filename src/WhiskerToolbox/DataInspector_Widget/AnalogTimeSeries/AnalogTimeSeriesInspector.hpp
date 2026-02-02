@@ -15,7 +15,7 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
-#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 
 #include <memory>
 #include <string>

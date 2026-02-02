@@ -1,7 +1,7 @@
 #include "CSVAnalogSaver_Widget.hpp"
 #include "ui_CSVAnalogSaver_Widget.h"
 
-#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"// For CSVAnalogSaverOptions
+#include "DataManager/IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"// For CSVAnalogSaverOptions
 
 #include <QCheckBox>
 #include <QComboBox>

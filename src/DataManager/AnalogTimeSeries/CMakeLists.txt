@@ -9,8 +9,6 @@ set(analog_subdirectory_sources
     RaggedAnalogTimeSeries.cpp
     IO/Binary/Analog_Time_Series_Binary.hpp
     IO/Binary/Analog_Time_Series_Binary.cpp
-    IO/CSV/Analog_Time_Series_CSV.hpp
-    IO/CSV/Analog_Time_Series_CSV.cpp
     utils/statistics.hpp
     utils/statistics.cpp
 )
@@ -35,7 +33,6 @@ add_library(WhiskerToolbox::AnalogTimeSeries ALIAS AnalogTimeSeries)
 
 set(analog_test_sources
     Analog_Time_Series.test.cpp
-    IO/CSV/Analog_Time_Series_CSV.test.cpp
     utils/statistics.test.cpp)
 
 add_tests_to_global(analog_test_sources

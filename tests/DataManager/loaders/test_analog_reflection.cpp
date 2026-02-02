@@ -2,7 +2,7 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include "AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
-#include "AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 #include "utils/json_reflection.hpp"
 
 #include <nlohmann/json.hpp>

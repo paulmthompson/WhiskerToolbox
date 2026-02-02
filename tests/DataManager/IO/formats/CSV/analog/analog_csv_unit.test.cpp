@@ -17,7 +17,7 @@
 
 #include "DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+#include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <filesystem>

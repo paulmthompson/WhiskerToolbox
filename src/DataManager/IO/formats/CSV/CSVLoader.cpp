@@ -5,7 +5,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Points/IO/CSV/Point_Data_CSV.hpp"
 #include "Points/Point_Data.hpp"
-#include "AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+#include "analogtimeseries/Analog_Time_Series_CSV.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"

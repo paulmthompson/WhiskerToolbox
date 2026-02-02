@@ -14,6 +14,8 @@ set(IO_CORE_SOURCES
     # Format-centric loaders (unified architecture)
     formats/CSV/CSVLoader.hpp
     formats/CSV/CSVLoader.cpp
+    formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp
+    formats/CSV/analogtimeseries/Analog_Time_Series_CSV.cpp
     formats/Binary/BinaryFormatLoader.hpp
     formats/Binary/BinaryFormatLoader.cpp
 )
