@@ -14,11 +14,17 @@
  * - IODataType::Points: Point tracking data (simple CSV or DLC format)
  * - IODataType::Analog: Analog time series (single/two column CSV)
  * - IODataType::DigitalEvent: Digital event timestamps (with optional multi-series)
- * - IODataType::DigitalInterval: Digital intervals (start/end column pairs)
+ * - IODataType::DigitalInterval: Digital intervals (start/end column pairs or binary state columns)
  * 
  * This loader supports batch loading for:
  * - DigitalEvent CSV with identifier column (returns one series per identifier)
  * - Points DLC format with all_bodyparts=true (returns one PointData per bodypart)
+ * - DigitalInterval with csv_layout="binary_state" and all_columns=true (returns one series per column)
+ * 
+ * CSV Layouts for DigitalInterval:
+ * - "intervals" (default): Two columns with start/end times for each interval
+ * - "binary_state": Rows represent time points, columns contain 0/1 state values.
+ *   Intervals are extracted from contiguous regions where value >= threshold.
  * 
  * Configuration options vary by data type - see individual load methods
  * for required and optional JSON configuration fields.
@@ -44,6 +50,7 @@ public:
      * Returns true for:
      * - DigitalEvent with identifier column
      * - Points with DLC format and all_bodyparts=true
+     * - DigitalInterval with csv_layout="binary_state" (multiple columns)
      */
     bool supportsBatchLoading(std::string const& format, 
                               IODataType dataType) const override;
@@ -53,6 +60,7 @@ public:
      * 
      * For DigitalEvent, returns one DigitalEventSeries per unique identifier.
      * For Points with DLC format, returns one PointData per bodypart.
+     * For DigitalInterval with binary_state layout, returns one series per data column.
      */
     BatchLoadResult loadBatch(std::string const& filepath,
                               IODataType dataType,
@@ -126,9 +134,41 @@ private:
     
     /**
      * @brief Load DigitalIntervalSeries from CSV
+     * 
+     * Supports two layouts via csv_layout config:
+     * - "intervals" (default): Two-column CSV with start/end times
+     * - "binary_state": Multi-column CSV where rows are time points and 
+     *   cell values represent on/off state (0/1). Intervals extracted from
+     *   contiguous "on" regions.
      */
     LoadResult loadDigitalIntervalCSV(std::string const& filepath, 
                                      nlohmann::json const& config) const;
+    
+    /**
+     * @brief Load DigitalIntervalSeries from binary state CSV layout
+     * 
+     * Parses a single data column where rows represent time points and
+     * cell values represent binary state (0 or 1). Intervals are extracted
+     * from contiguous regions where value >= threshold.
+     * 
+     * Config options:
+     * - header_lines_to_skip: Lines before column headers (default: 5)
+     * - time_column: Column index for time values (default: 0)
+     * - data_column: Column index for binary state values (default: 1)
+     * - delimiter: Column separator (default: "\t")
+     * - binary_threshold: Values >= this are "on" (default: 0.5)
+     */
+    LoadResult loadDigitalIntervalBinaryState(std::string const& filepath, 
+                                              nlohmann::json const& config) const;
+    
+    /**
+     * @brief Load all columns from binary state CSV as DigitalIntervalSeries
+     * 
+     * Returns one DigitalIntervalSeries per data column (excluding time column).
+     * Each series is named using the column header from the file.
+     */
+    BatchLoadResult loadDigitalIntervalBinaryStateBatch(std::string const& filepath,
+                                                        nlohmann::json const& config) const;
     
     /**
      * @brief Save LineData to CSV

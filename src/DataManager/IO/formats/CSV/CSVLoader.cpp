@@ -4,6 +4,7 @@
 #include "digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
+#include "DigitalTimeSeries/IO/CSV/MultiColumnBinaryCSV.hpp"
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/IO/CSV/Point_Data_CSV.hpp"
@@ -39,8 +40,14 @@ LoadResult CSVLoader::load(std::string const& filepath,
             return loadAnalogCSV(filepath, config);
         case IODataType::DigitalEvent:
             return loadDigitalEventCSV(filepath, config);
-        case IODataType::DigitalInterval:
+        case IODataType::DigitalInterval: {
+            // Check for binary_state layout
+            std::string csv_layout = config.value("csv_layout", "intervals");
+            if (csv_layout == "binary_state") {
+                return loadDigitalIntervalBinaryState(filepath, config);
+            }
             return loadDigitalIntervalCSV(filepath, config);
+        }
         default:
             return LoadResult("CSVLoader does not support data type: " + 
                             std::to_string(static_cast<int>(dataType)));
@@ -73,8 +80,10 @@ bool CSVLoader::supportsBatchLoading(std::string const& format,
     
     // Batch loading supported for:
     // - DigitalEvent (multiple series per identifier)
+    // - DigitalInterval (multiple columns with binary_state layout)
     // - Points with DLC format (multiple bodyparts)
     return dataType == IODataType::DigitalEvent ||
+           dataType == IODataType::DigitalInterval ||
            dataType == IODataType::Points;
 }
 
@@ -84,6 +93,21 @@ BatchLoadResult CSVLoader::loadBatch(std::string const& filepath,
     switch (dataType) {
         case IODataType::DigitalEvent:
             return loadDigitalEventCSVBatch(filepath, config);
+        case IODataType::DigitalInterval: {
+            // Check for binary_state layout with all_columns
+            std::string csv_layout = config.value("csv_layout", "intervals");
+            bool all_columns = config.value("all_columns", false);
+            
+            if (csv_layout == "binary_state" && all_columns) {
+                return loadDigitalIntervalBinaryStateBatch(filepath, config);
+            }
+            // Fall through to single load
+            auto result = load(filepath, dataType, config);
+            if (result.success) {
+                return BatchLoadResult::fromVector({std::move(result)});
+            }
+            return BatchLoadResult::error(result.error_message);
+        }
         case IODataType::Points: {
             // Check if DLC format with all_bodyparts
             std::string csv_layout = config.value("csv_layout", "");
@@ -649,5 +673,114 @@ LoadResult CSVLoader::saveDigitalIntervalCSV(std::string const& filepath,
 
     } catch (std::exception const& e) {
         return LoadResult("CSV digital interval save failed: " + std::string(e.what()));
+    }
+}
+
+// ============================================================================
+// DigitalIntervalSeries Binary State Layout Loading
+// ============================================================================
+
+LoadResult CSVLoader::loadDigitalIntervalBinaryState(std::string const& filepath, 
+                                                     nlohmann::json const& config) const {
+    try {
+        MultiColumnBinaryCSVLoaderOptions opts;
+        opts.filepath = filepath;
+        
+        // Parse optional configuration
+        if (config.contains("header_lines_to_skip")) {
+            opts.header_lines_to_skip = rfl::Validator<int, rfl::Minimum<0>>(
+                config["header_lines_to_skip"].get<int>());
+        }
+        if (config.contains("time_column")) {
+            opts.time_column = rfl::Validator<int, rfl::Minimum<0>>(
+                config["time_column"].get<int>());
+        }
+        if (config.contains("data_column")) {
+            opts.data_column = rfl::Validator<int, rfl::Minimum<0>>(
+                config["data_column"].get<int>());
+        }
+        if (config.contains("delimiter")) {
+            opts.delimiter = config["delimiter"].get<std::string>();
+        }
+        if (config.contains("binary_threshold")) {
+            opts.binary_threshold = config["binary_threshold"].get<double>();
+        }
+        if (config.contains("sampling_rate")) {
+            opts.sampling_rate = rfl::Validator<double, rfl::Minimum<0.0>>(
+                config["sampling_rate"].get<double>());
+        }
+        
+        auto interval_series = ::load(opts);
+        
+        if (!interval_series) {
+            return LoadResult("Failed to load binary state intervals from " + filepath);
+        }
+        
+        std::cout << "CSVLoader: Loaded " << interval_series->size() 
+                  << " intervals from binary state column " << opts.getDataColumn()
+                  << " in " << filepath << std::endl;
+        
+        return LoadResult(interval_series);
+        
+    } catch (std::exception const& e) {
+        return LoadResult("CSV binary state interval loading failed: " + std::string(e.what()));
+    }
+}
+
+BatchLoadResult CSVLoader::loadDigitalIntervalBinaryStateBatch(std::string const& filepath,
+                                                               nlohmann::json const& config) const {
+    try {
+        // Get column names to determine how many data columns exist
+        int header_lines = config.value("header_lines_to_skip", 5);
+        std::string delimiter = config.value("delimiter", "\t");
+        int time_column = config.value("time_column", 0);
+        
+        auto column_names = getColumnNames(filepath, header_lines, delimiter);
+        
+        if (column_names.empty()) {
+            return BatchLoadResult::error("Failed to read column names from " + filepath);
+        }
+        
+        std::cout << "CSVLoader: Found " << column_names.size() 
+                  << " columns in binary state file" << std::endl;
+        
+        std::vector<LoadResult> results;
+        
+        // Load each data column (skip time column)
+        for (size_t col = 0; col < column_names.size(); ++col) {
+            if (static_cast<int>(col) == time_column) {
+                continue;  // Skip the time column
+            }
+            
+            // Create config for this column
+            nlohmann::json col_config = config;
+            col_config["data_column"] = static_cast<int>(col);
+            
+            auto result = loadDigitalIntervalBinaryState(filepath, col_config);
+            
+            if (result.success) {
+                // Set the name from column header
+                result.name = column_names[col];
+                results.push_back(std::move(result));
+                
+                std::cout << "CSVLoader: Loaded column '" << column_names[col] 
+                          << "' (index " << col << ")" << std::endl;
+            } else {
+                std::cerr << "CSVLoader: Failed to load column '" << column_names[col] 
+                          << "': " << result.error_message << std::endl;
+            }
+        }
+        
+        if (results.empty()) {
+            return BatchLoadResult::error("No data columns could be loaded from " + filepath);
+        }
+        
+        std::cout << "CSVLoader: Batch loaded " << results.size() 
+                  << " interval series from " << filepath << std::endl;
+        
+        return BatchLoadResult::fromVector(std::move(results));
+        
+    } catch (std::exception const& e) {
+        return BatchLoadResult::error("CSV binary state batch loading failed: " + std::string(e.what()));
     }
 }

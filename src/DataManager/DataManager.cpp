@@ -205,6 +205,15 @@ bool tryBatchLoadFromRegistry(
         return false;
     }
     
+    // For DigitalInterval with binary_state layout, only use batch loading when all_columns is true
+    // Otherwise, single-column loading should use the regular single-object path
+    if (data_type == DM_DataType::DigitalInterval) {
+        bool const all_columns = item.value("all_columns", false);
+        if (!all_columns) {
+            return false;  // Fall back to single-object loading
+        }
+    }
+    
     std::cout << "Using batch loading for " << name << " (format: " << format << ")" << std::endl;
     
     BatchLoadResult batch_result = registry.tryLoadBatch(format, io_data_type, file_path, item);
@@ -263,6 +272,19 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<PointData>>(result.data)) {
                     auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
                     dm->setData<PointData>(channel_name, point_data, TimeKey("time"));
+                }
+                break;
+            }
+            case DM_DataType::DigitalInterval: {
+                if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result.data)) {
+                    auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
+                    dm->setData<DigitalIntervalSeries>(channel_name, interval_data, TimeKey("time"));
+                    
+                    if (item.contains("clock")) {
+                        std::string const clock_str = item["clock"];
+                        auto const clock = TimeKey(clock_str);
+                        dm->setTimeKey(channel_name, clock);
+                    }
                 }
                 break;
             }
@@ -962,7 +984,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::DigitalInterval: {
 
-                // Use registry system for all digital interval formats (uint16, csv, multi_column_binary)
+                // Try batch loading first for multi-column binary_state CSV files
+                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
+                    break;// Successfully loaded all series with batch loader
+                }
+
+                // Use registry system for all digital interval formats (uint16, csv, binary_state)
                 if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
