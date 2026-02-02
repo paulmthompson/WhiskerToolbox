@@ -1,8 +1,9 @@
 #ifndef CSV_EVENT_SAVER_WIDGET_HPP
 #define CSV_EVENT_SAVER_WIDGET_HPP
 
+#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
+
 #include <QWidget>
-#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
 
 // Forward declaration of the UI class
 namespace Ui {

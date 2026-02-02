@@ -4,7 +4,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
+#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 #include "DigitalTimeSeries/CSV/CSVDigitalEventImport_Widget.hpp"
 #include "DataImportTypeRegistry.hpp"
 

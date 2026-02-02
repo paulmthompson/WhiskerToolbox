@@ -6,8 +6,6 @@ set(digital_subdirectory_sources
         IO/CSV/MultiColumnBinaryCSV.cpp
         Digital_Event_Series.hpp
         Digital_Event_Series.cpp
-        IO/CSV/Digital_Event_Series_CSV.cpp
-        IO/CSV/Digital_Event_Series_CSV.hpp
 )
 
 add_library(DigitalTimeSeries STATIC ${digital_subdirectory_sources})

@@ -5,7 +5,7 @@
 #include "DataExport_Widget/DigitalTimeSeries/CSV/CSVEventSaver_Widget.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
+#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 
 #include <QComboBox>
 #include <QFileDialog>

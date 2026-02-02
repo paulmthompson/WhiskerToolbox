@@ -1,5 +1,8 @@
 #include "CSVLoader.hpp"
 
+#include "digitaltimeseries/Digital_Event_Series_CSV.hpp"
+#include "digitaltimeseries/Digital_Interval_Series_CSV.hpp"
+
 #include "CoreGeometry/ImageSize.hpp"
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "Lines/Line_Data.hpp"
@@ -7,8 +10,6 @@
 #include "Points/Point_Data.hpp"
 #include "analogtimeseries/Analog_Time_Series_CSV.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
-#include "digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "loaders/CSV_Loaders.hpp"

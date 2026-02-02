@@ -16,6 +16,8 @@ set(IO_CORE_SOURCES
     formats/CSV/CSVLoader.cpp
     formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp
     formats/CSV/analogtimeseries/Analog_Time_Series_CSV.cpp
+    formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp
+    formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.cpp
     formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp
     formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.cpp
     formats/Binary/BinaryFormatLoader.hpp

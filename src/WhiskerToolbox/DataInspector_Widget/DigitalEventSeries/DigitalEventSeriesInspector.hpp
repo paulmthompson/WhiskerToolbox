@@ -17,7 +17,7 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
-#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
+#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Event_Series_CSV.hpp"
 
 #include <memory>
 #include <string>
