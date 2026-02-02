@@ -102,7 +102,8 @@ bool tryRegistryThenLegacyLoad(
                             auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
 
                             // For single channel, use the base name
-                            std::string const channel_name = name + "_0";
+                            //std::string const channel_name = name + "_0";
+                            std::string const channel_name = name;
                             dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
 
                             if (item.contains("clock")) {
@@ -120,7 +121,8 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(result.data)) {
                             auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
 
-                            std::string const channel_name = name + "_0";
+                            //std::string const channel_name = name + "_0";
+                            std::string const channel_name = name;
                             dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
 
                             if (item.contains("clock")) {
@@ -232,12 +234,18 @@ bool tryBatchLoadFromRegistry(
             continue;
         }
         
-        // Generate channel name - use result.name if provided, otherwise index
         std::string channel_name;
-        if (!result.name.empty()) {
-            channel_name = name + "_" + result.name;
+
+        if (batch_result.results.size() == 1) {
+            // Single result without a name - use base name
+            channel_name = name;
         } else {
-            channel_name = name + "_" + std::to_string(i);
+            // Generate channel name - use result.name if provided, otherwise index
+            if (!result.name.empty()) {
+                channel_name = name + "_" + result.name;
+            } else {
+                channel_name = name + "_" + std::to_string(i);
+            }
         }
         
         // Handle based on data type
@@ -708,6 +716,8 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, JsonLoadProgressCallback progress_callback) {
     std::vector<DataInfo> data_info_list;
 
+    std::map<std::string, std::string> clock_mappings;
+
     // Count total items to load (excluding transformations which are processed separately)
     int total_items = 0;
     for (auto const & item: j) {
@@ -838,6 +848,100 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             current_item++;
             if (progress_callback) {
                 std::string message = "Created derived TimeFrame: " + name;
+                bool should_continue = progress_callback(current_item, total_items, message);
+                if (!should_continue) {
+                    std::cout << "Loading cancelled by user" << std::endl;
+                    return data_info_list;
+                }
+            }
+            continue;
+        }
+
+        // Check for "max_value" format which doesn't require a filepath
+        if (item.contains("format") && item["format"] == "max_value") {
+            if (!checkRequiredFields(item, {"data_type", "name"})) {
+                continue;
+            }
+            
+            std::string const data_type_str = item["data_type"];
+            if (data_type_str != "time") {
+                std::cerr << "Error: 'max_value' format is only supported for 'time' data type" << std::endl;
+                continue;
+            }
+            
+            std::string const name = item["name"];
+            
+            // Get required source_data parameter
+            if (!item.contains("source_data")) {
+                std::cerr << "Error: 'max_value' format requires 'source_data' parameter" << std::endl;
+                continue;
+            }
+            
+            std::string const source_data_name = item["source_data"];
+            
+            // Determine start value (default: 0, but can be 1 if specified)
+            int start_value = item.value("start_value", 0);
+            
+            int64_t max_index = -1;
+            
+            // Try to get max index from DigitalEventSeries
+            auto digital_event = dm->getData<DigitalEventSeries>(source_data_name);
+            if (digital_event) {
+                if (digital_event->size() > 0) {
+                    // Get the last (maximum) TimeFrameIndex
+                    auto last_event = *(digital_event->view().end() - 1);
+                    max_index = last_event.time().getValue();
+                    std::cout << "Found max TimeFrameIndex " << max_index 
+                             << " in DigitalEventSeries '" << source_data_name << "'" << std::endl;
+                } else {
+                    std::cerr << "Error: DigitalEventSeries '" << source_data_name 
+                             << "' is empty, cannot determine max value" << std::endl;
+                    continue;
+                }
+            }
+            
+            // Try to get max index from AnalogTimeSeries if not found yet
+            if (max_index < 0) {
+                auto analog_series = dm->getData<AnalogTimeSeries>(source_data_name);
+                if (analog_series) {
+                    auto const& time_indices = analog_series->getTimeSeries();
+                    if (!time_indices.empty()) {
+                        max_index = time_indices.back().getValue();
+                        std::cout << "Found max TimeFrameIndex " << max_index 
+                                 << " in AnalogTimeSeries '" << source_data_name << "'" << std::endl;
+                    } else {
+                        std::cerr << "Error: AnalogTimeSeries '" << source_data_name 
+                                 << "' is empty, cannot determine max value" << std::endl;
+                        continue;
+                    }
+                }
+            }
+            
+            // If still not found, report error
+            if (max_index < 0) {
+                std::cerr << "Error: Source data '" << source_data_name 
+                         << "' not found or is not a DigitalEventSeries or AnalogTimeSeries" << std::endl;
+                std::cerr << "Make sure the source data is loaded before creating the TimeFrame" << std::endl;
+                continue;
+            }
+            
+            // Create TimeFrame with values from start_value to max_index
+            std::vector<int> time_values;
+            int num_values = static_cast<int>(max_index) - start_value + 1;
+            time_values.reserve(num_values);
+            for (int i = start_value; i <= static_cast<int>(max_index); ++i) {
+                time_values.push_back(i);
+            }
+            
+            auto timeframe = std::make_shared<TimeFrame>(time_values);
+            dm->setTime(TimeKey(name), timeframe, true);
+            std::cout << "Created TimeFrame '" << name << "' with " << time_values.size() 
+                     << " values [" << start_value << " to " << max_index << "]" << std::endl;
+            
+            // Increment progress counter
+            current_item++;
+            if (progress_callback) {
+                std::string message = "Created max_value TimeFrame: " + name;
                 bool should_continue = progress_callback(current_item, total_items, message);
                 if (!should_continue) {
                     std::cout << "Loading cancelled by user" << std::endl;
@@ -1140,6 +1244,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             auto clock = TimeKey(clock_str);
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeKey(name, clock);
+            clock_mappings[name] = clock_str;
         }
 
         // Increment progress counter
@@ -1154,6 +1259,11 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 return data_info_list;
             }
         }
+    }
+
+    for (auto const & [data_name, clock_name]: clock_mappings) {
+        std::cout << "Data item '" << data_name << "' is mapped to clock '" << clock_name << "'" << std::endl;
+        dm->setTimeKey(data_name, TimeKey(clock_name));
     }
 
     // Process all transformation objects found in the JSON array

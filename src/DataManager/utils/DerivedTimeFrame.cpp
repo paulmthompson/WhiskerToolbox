@@ -65,7 +65,8 @@ std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromEventsOpti
     
     for (auto const & event : events) {
         // Get the actual time value from the source timeframe at this index
-        int const time_value = options.source_timeframe->getTimeAtIndex(event.time());
+        //int const time_value = options.source_timeframe->getTimeAtIndex(event.time());
+        int const time_value = event.time().getValue();
         derived_times.push_back(time_value);
     }
 
