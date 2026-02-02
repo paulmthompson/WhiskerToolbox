@@ -1,8 +1,9 @@
 #include "Analog_Time_Series_Binary.hpp"
 
+#include "formats/Binary/common/binary_loaders.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/storage/AnalogDataStorage.hpp"
-#include "loaders/binary_loaders.hpp"
 
 #include <algorithm>
 #include <filesystem>

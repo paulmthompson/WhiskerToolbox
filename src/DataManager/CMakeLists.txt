@@ -33,7 +33,6 @@ set(DATAMANAGER_SOURCES
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
-        loaders/binary_loaders.hpp
         loaders/loading_utils.hpp
 
         utils/armadillo_wrap/analog_armadillo.hpp

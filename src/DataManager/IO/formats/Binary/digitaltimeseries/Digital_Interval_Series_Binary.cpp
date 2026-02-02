@@ -1,7 +1,8 @@
 #include "Digital_Interval_Series_Binary.hpp"
 
+#include "formats/Binary/common/binary_loaders.hpp"
+
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "loaders/binary_loaders.hpp"
 
 #include <iostream>
 #include <stdexcept>

@@ -21,7 +21,7 @@
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 
-#include "loaders/binary_loaders.hpp"  // For Time data type loading
+#include "IO/formats/Binary/common/binary_loaders.hpp"  // For Time data type loading
 
 #include "TimeFrame/TimeFrame.hpp"
 
