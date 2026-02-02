@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
-#include "AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
+#include "IO/formats/Binary/analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "IO/formats/CSV/analogtimeseries/Analog_Time_Series_CSV.hpp"
 #include "utils/json_reflection.hpp"
 

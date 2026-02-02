@@ -1,4 +1,3 @@
-
 #include "Analog_Time_Series_Binary.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"

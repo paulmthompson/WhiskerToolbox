@@ -123,4 +123,4 @@ std::shared_ptr<DigitalIntervalSeries> loadIntoDigitalIntervalSeries(BinaryInter
     }
     
     return std::make_shared<DigitalIntervalSeries>();
-} 
+}

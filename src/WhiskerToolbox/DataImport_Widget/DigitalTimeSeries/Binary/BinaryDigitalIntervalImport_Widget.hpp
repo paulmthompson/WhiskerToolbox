@@ -8,7 +8,7 @@
 
 #include <QWidget>
 #include <QString>
-#include "DataManager/DigitalTimeSeries/IO/Binary/Digital_Interval_Series_Binary.hpp"
+#include "DataManager/IO/formats/Binary/digitaltimeseries/Digital_Interval_Series_Binary.hpp"
 
 namespace Ui {
 class BinaryDigitalIntervalImport_Widget;

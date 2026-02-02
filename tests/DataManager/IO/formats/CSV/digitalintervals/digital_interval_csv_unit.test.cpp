@@ -17,7 +17,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
+#include "IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <filesystem>

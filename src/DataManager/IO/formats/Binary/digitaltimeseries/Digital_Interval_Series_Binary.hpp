@@ -57,4 +57,4 @@ std::vector<Interval> load(BinaryIntervalLoaderOptions const & options);
  */
 std::shared_ptr<DigitalIntervalSeries> loadIntoDigitalIntervalSeries(BinaryIntervalLoaderOptions const & options);
 
-#endif// DIGITAL_INTERVAL_SERIES_BINARY_HPP 
+#endif// DIGITAL_INTERVAL_SERIES_BINARY_HPP

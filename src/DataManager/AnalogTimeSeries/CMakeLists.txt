@@ -7,8 +7,6 @@ set(analog_subdirectory_sources
     storage/AnalogDataStorage.cpp
     RaggedAnalogTimeSeries.hpp
     RaggedAnalogTimeSeries.cpp
-    IO/Binary/Analog_Time_Series_Binary.hpp
-    IO/Binary/Analog_Time_Series_Binary.cpp
     utils/statistics.hpp
     utils/statistics.cpp
 )

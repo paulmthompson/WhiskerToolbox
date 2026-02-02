@@ -2,7 +2,7 @@
 #define CSV_INTERVAL_SAVER_WIDGET_HPP
 
 #include <QWidget>
-#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
+#include "DataManager/IO/formats/CSV/digitaltimeseries/Digital_Interval_Series_CSV.hpp"
 
 // Forward declaration of the UI class
 namespace Ui {

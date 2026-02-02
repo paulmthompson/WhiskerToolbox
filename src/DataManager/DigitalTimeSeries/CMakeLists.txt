@@ -2,12 +2,8 @@
 set(digital_subdirectory_sources
         Digital_Interval_Series.hpp
         Digital_Interval_Series.cpp
-        IO/CSV/Digital_Interval_Series_CSV.hpp
-        IO/CSV/Digital_Interval_Series_CSV.cpp
         IO/CSV/MultiColumnBinaryCSV.hpp
         IO/CSV/MultiColumnBinaryCSV.cpp
-        IO/Binary/Digital_Interval_Series_Binary.hpp
-        IO/Binary/Digital_Interval_Series_Binary.cpp
         Digital_Event_Series.hpp
         Digital_Event_Series.cpp
         IO/CSV/Digital_Event_Series_CSV.cpp

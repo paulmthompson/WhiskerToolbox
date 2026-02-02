@@ -1,7 +1,7 @@
 #include "BinaryFormatLoader.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
+#include "analogtimeseries/Analog_Time_Series_Binary.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "loaders/binary_loaders.hpp"

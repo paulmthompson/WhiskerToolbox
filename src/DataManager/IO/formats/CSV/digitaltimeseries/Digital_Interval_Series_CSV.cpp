@@ -180,4 +180,3 @@ void save(
         std::cout << "Successfully saved digital interval series to " << full_path << std::endl;
     }
 }
-
