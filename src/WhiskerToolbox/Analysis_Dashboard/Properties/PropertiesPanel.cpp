@@ -159,9 +159,9 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
     qDebug() << "PropertiesPanel: Registered properties widget for 'Spatial Overlay Plot'";
 
     // Event Plot
-    EventPlotPropertiesWidget * event_properties = new EventPlotPropertiesWidget(this);
-    registerPlotPropertiesWidget("Event Plot", event_properties);
-    qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
+   // EventPlotPropertiesWidget * event_properties = new EventPlotPropertiesWidget(this);
+   // registerPlotPropertiesWidget("Event Plot", event_properties);
+   // qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
 
     // Scatter Plot
     ScatterPlotPropertiesWidget * scatter_properties = new ScatterPlotPropertiesWidget(this);

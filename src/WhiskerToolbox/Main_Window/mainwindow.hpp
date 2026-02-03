@@ -154,5 +154,6 @@ private slots:
     void openTableDesignerWidget();
     void openZoneLayoutManager();
     void openDataInspector();
+    void openEventPlotWidget();
 };
 #endif// MAINWINDOW_HPP

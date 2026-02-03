@@ -73,17 +73,17 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
     Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
 
-    Widgets/EventPlotWidget/EventPlotWidget.hpp
-    Widgets/EventPlotWidget/EventPlotWidget.cpp
-    Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp
-    Widgets/EventPlotWidget/EventPlotPropertiesWidget.cpp
-    Widgets/EventPlotWidget/EventPlotPropertiesWidget.ui
-    Widgets/EventPlotWidget/EventPlotOpenGLWidget.hpp
-    Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
-    Widgets/EventPlotWidget/EventPointVisualization.hpp
-    Widgets/EventPlotWidget/EventPointVisualization.cpp
-    Widgets/EventPlotWidget/EventPlotViewAdapter.hpp
-    Widgets/EventPlotWidget/EventPlotViewAdapter.cpp
+    #Widgets/EventPlotWidget/EventPlotWidget.hpp
+   # Widgets/EventPlotWidget/EventPlotWidget.cpp
+   # Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp
+   # Widgets/EventPlotWidget/EventPlotPropertiesWidget.cpp
+   # Widgets/EventPlotWidget/EventPlotPropertiesWidget.ui
+   # Widgets/EventPlotWidget/EventPlotOpenGLWidget.hpp
+   # Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
+   # Widgets/EventPlotWidget/EventPointVisualization.hpp
+   # Widgets/EventPlotWidget/EventPointVisualization.cpp
+   # Widgets/EventPlotWidget/EventPlotViewAdapter.hpp
+   # Widgets/EventPlotWidget/EventPlotViewAdapter.cpp
 
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp

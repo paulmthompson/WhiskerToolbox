@@ -61,6 +61,12 @@
     <addaction name="actionZoom_In"/>
     <addaction name="actionZoom_Out"/>
    </widget>
+   <widget class="QMenu" name="menuPlots">
+    <property name="title">
+     <string>Plots</string>
+    </property>
+    <addaction name="actionEvent_Plot"/>
+   </widget>
    <widget class="QMenu" name="menuModules">
     <property name="title">
      <string>Modules</string>
@@ -86,6 +92,7 @@
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuImage"/>
+   <addaction name="menuPlots"/>
    <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -242,6 +249,11 @@
   <action name="actionData_Inspector">
    <property name="text">
     <string>Data Inspector</string>
+   </property>
+  </action>
+  <action name="actionEvent_Plot">
+   <property name="text">
+    <string>Event Plot</string>
    </property>
   </action>
  </widget>

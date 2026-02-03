@@ -2,8 +2,8 @@
 #include "PlotContainer.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
-#include "Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
-#include "Widgets/EventPlotWidget/EventPlotWidget.hpp"
+//#include "Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
+//#include "Widgets/EventPlotWidget/EventPlotWidget.hpp"
 #include "Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp"
 #include "Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
@@ -29,9 +29,9 @@ std::unique_ptr<AbstractPlotWidget> PlotFactory::createPlotWidget(QString const 
     } else if (plot_type == "spatial_overlay_plot") {
         qDebug() << "Creating spatial overlay plot widget";
         return std::make_unique<SpatialOverlayPlotWidget>();
-    } else if (plot_type == "event_plot") {
-        qDebug() << "Creating event plot widget";
-        return std::make_unique<EventPlotWidget>();
+    //} else if (plot_type == "event_plot") {
+    //    qDebug() << "Creating event plot widget";
+    //    return std::make_unique<EventPlotWidget>();
     }
 
     // Add more plot types here as they are implemented
@@ -49,9 +49,9 @@ std::unique_ptr<AbstractPlotPropertiesWidget> PlotFactory::createPropertiesWidge
     } else if (plot_type == "spatial_overlay_plot") {
         qDebug() << "Creating spatial overlay plot properties widget";
         return std::make_unique<SpatialOverlayPlotPropertiesWidget>();
-    } else if (plot_type == "event_plot") {
-        qDebug() << "Creating event plot properties widget";
-        return std::make_unique<EventPlotPropertiesWidget>();
+    //} else if (plot_type == "event_plot") {
+        //qDebug() << "Creating event plot properties widget";
+        //return std::make_unique<EventPlotPropertiesWidget>();
     }
 
     // Add more plot types here as they are implemented
