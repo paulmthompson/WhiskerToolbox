@@ -13,6 +13,7 @@
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
+#include "DockWidget.h"
 #include "EditorCreationController.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -21,6 +22,7 @@
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
+#include "SplitButtonHandler.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
 
@@ -107,6 +109,22 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Create ZoneManager to manage standard UI zones
     _zone_manager = std::make_unique<ZoneManager>(_m_DockManager, this);
+
+    // Create SplitButtonHandler to add split buttons to dock area title bars
+    // This enables VS Code-like editor splitting functionality
+    _split_button_handler = std::make_unique<SplitButtonHandler>(_m_DockManager, this);
+    
+    // Connect split button signals (split implementation will be added later)
+    connect(_split_button_handler.get(), &SplitButtonHandler::splitDockWidgetRequested,
+            this, [this](ads::CDockWidget * dock_widget, SplitButtonHandler::SplitDirection direction) {
+                // TODO: Implement split functionality
+                // For now, just log the request
+                std::cout << "Split requested for dock widget: " 
+                          << dock_widget->objectName().toStdString()
+                          << " direction: " 
+                          << (direction == SplitButtonHandler::SplitDirection::Horizontal ? "horizontal" : "vertical")
+                          << std::endl;
+            });
 
     // Create EditorCreationController to handle unified editor creation and zone placement
     _editor_creation_controller = std::make_unique<EditorCreationController>(
