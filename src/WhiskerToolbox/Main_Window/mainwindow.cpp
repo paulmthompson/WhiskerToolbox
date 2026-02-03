@@ -152,6 +152,19 @@ MainWindow::MainWindow(QWidget * parent)
 }
 
 MainWindow::~MainWindow() {
+    // IMPORTANT: Destruction order matters here!
+    // Widgets (owned by Qt's widget tree via CDockManager) may reference _editor_registry.
+    // We must delete the dock manager (and thus all docked widgets) BEFORE
+    // _editor_registry is destroyed by unique_ptr cleanup.
+    
+    // Delete the dock manager first - this destroys all docked widgets
+    // which may try to unregister from EditorRegistry in their destructors
+    delete _m_DockManager;
+    _m_DockManager = nullptr;
+    
+    // Now it's safe for unique_ptr members to be destroyed in reverse order
+    // (_editor_registry, _zone_manager, etc.)
+    
     delete ui;
 }
 

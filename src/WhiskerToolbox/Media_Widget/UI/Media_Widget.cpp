@@ -72,6 +72,9 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
 
 Media_Widget::~Media_Widget() {
     // Unregister state from EditorRegistry when widget is destroyed
+    // Note: During application shutdown, _editor_registry may already be destroyed
+    // before Qt's widget tree cleanup runs. We guard with a null check, but the
+    // caller (MainWindow) should ensure proper destruction order.
     if (_editor_registry && _state) {
         _editor_registry->unregisterState(EditorInstanceId(_state->getInstanceId()));
     }

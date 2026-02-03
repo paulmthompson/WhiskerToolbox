@@ -10,21 +10,15 @@ endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Test)
 
-# Include subdirectories for integration tests
-add_subdirectory(UI)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
-add_executable(test_media_widget
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/Core/MediaWidgetState.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/Core/MediaWidgetStateData.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/UI/Media_Widget.test.cpp
-    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/UI/MediaPropertiesWidget.test.cpp
+add_executable(test_mediamask_widget_integration
+    MediaMask_Widget.integration.test.cpp
 )
 
-target_link_libraries(test_media_widget PRIVATE 
+target_link_libraries(test_mediamask_widget_integration PRIVATE 
     Catch2::Catch2WithMain 
     Media_Widget 
     DataManager 
@@ -34,7 +28,7 @@ target_link_libraries(test_media_widget PRIVATE
     TensorData
 )
 
-target_include_directories(test_media_widget PRIVATE
+target_include_directories(test_mediamask_widget_integration PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry>"
@@ -42,19 +36,19 @@ target_include_directories(test_media_widget PRIVATE
 )
 
 # Enable Qt MOC for the test
-set_target_properties(test_media_widget PROPERTIES
+set_target_properties(test_mediamask_widget_integration PROPERTIES
     AUTOMOC ON
     AUTOUIC ON
     AUTORCC ON
 )
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)
-    catch_discover_tests(test_media_widget PROPERTIES 
+    catch_discover_tests(test_mediamask_widget_integration PROPERTIES 
         ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
     )
 else()
-    add_test(NAME test_media_widget_all
-        COMMAND test_media_widget
+    add_test(NAME test_mediamask_widget_integration_all
+        COMMAND test_mediamask_widget_integration
         )
-    set_property(TEST test_media_widget_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+    set_property(TEST test_mediamask_widget_integration_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()

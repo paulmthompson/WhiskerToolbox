@@ -84,12 +84,13 @@ void registerTypes(EditorRegistry * registry,
         .create_editor_custom = [dm, gm, registry](EditorRegistry * reg) 
             -> EditorRegistry::EditorInstance 
         {
-            // Create the shared state
-            auto state = std::make_shared<MediaWidgetState>();
-
-            // Create the view widget
+            // Create the view widget first - it creates its own internal state
             auto * view = new Media_Widget(registry);
             view->setDataManager(dm);
+
+            // Get the state from the view widget - this ensures all components
+            // share the same state instance that receives LoadFrame updates
+            auto state = view->getState();
 
             // Set the group manager if available
             if (gm) {
@@ -99,7 +100,7 @@ void registerTypes(EditorRegistry * registry,
                 }
             }
 
-            // Create the properties widget with the shared state
+            // Create the properties widget with the shared state from the view
             // Pass Media_Window from the view for coordination
             auto * props = new MediaPropertiesWidget(state, dm, view->getMediaWindow());
 
@@ -107,8 +108,8 @@ void registerTypes(EditorRegistry * registry,
             QObject::connect(props, &MediaPropertiesWidget::featureEnabledChanged,
                              view, &Media_Widget::setFeatureEnabled);
 
-            // Register the state
-            reg->registerState(state);
+            // Note: State is already registered by Media_Widget constructor,
+            // no need to register it again
 
             return EditorRegistry::EditorInstance{
                 .state = state,
