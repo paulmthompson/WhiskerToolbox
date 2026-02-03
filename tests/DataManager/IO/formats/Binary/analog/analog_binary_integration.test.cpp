@@ -95,7 +95,7 @@ TEST_CASE("Analog Binary Integration - Single Channel Int16", "[analog][binary][
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
         // Get loaded data (note: channel suffix is appended for multi-channel support)
-        auto loaded = dm.getData<AnalogTimeSeries>("test_ramp_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("test_ramp");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -128,7 +128,7 @@ TEST_CASE("Analog Binary Integration - Single Channel Int16", "[analog][binary][
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("constant_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("constant_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -159,7 +159,7 @@ TEST_CASE("Analog Binary Integration - Single Channel Int16", "[analog][binary][
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("sine_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("sine_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == 1000);
         
@@ -193,7 +193,7 @@ TEST_CASE("Analog Binary Integration - Single Channel Int16", "[analog][binary][
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("square_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("square_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == 500);
     }
@@ -227,7 +227,7 @@ TEST_CASE("Analog Binary Integration - Files with Headers", "[analog][binary][in
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("header_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("header_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -259,7 +259,7 @@ TEST_CASE("Analog Binary Integration - Files with Headers", "[analog][binary][in
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("header_512_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("header_512_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
     }
@@ -380,7 +380,7 @@ TEST_CASE("Analog Binary Integration - Float32 Format", "[analog][binary][integr
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("float32_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("float32_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -415,7 +415,7 @@ TEST_CASE("Analog Binary Integration - Float32 Format", "[analog][binary][integr
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("float32_sine_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("float32_sine");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == 1000);
         
@@ -457,7 +457,7 @@ TEST_CASE("Analog Binary Integration - Memory Mapped Loading", "[analog][binary]
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("mmap_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("mmap_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -511,8 +511,8 @@ TEST_CASE("Analog Binary Integration - Multiple Files", "[analog][binary][integr
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded1 = dm.getData<AnalogTimeSeries>("ramp_signal_0");
-        auto loaded2 = dm.getData<AnalogTimeSeries>("constant_signal_0");
+        auto loaded1 = dm.getData<AnalogTimeSeries>("ramp_signal");
+        auto loaded2 = dm.getData<AnalogTimeSeries>("constant_signal");
         
         REQUIRE(loaded1 != nullptr);
         REQUIRE(loaded2 != nullptr);
@@ -558,7 +558,7 @@ TEST_CASE("Analog Binary Integration - Time Index Assignment", "[analog][binary]
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("time_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("time_test");
         REQUIRE(loaded != nullptr);
         
         // Time indices should be 0, 1, 2, ... n-1
@@ -598,7 +598,7 @@ TEST_CASE("Analog Binary Integration - Scale and Offset", "[analog][binary][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("scaled_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("scaled_signal");
         REQUIRE(loaded != nullptr);
         
         // Original constant value was 42, scaled by 2 should be 84
@@ -628,7 +628,7 @@ TEST_CASE("Analog Binary Integration - Scale and Offset", "[analog][binary][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("offset_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("offset_signal");
         REQUIRE(loaded != nullptr);
         
         // Original constant value was 42, with offset 100 should be 142
@@ -658,7 +658,7 @@ TEST_CASE("Analog Binary Integration - Scale and Offset", "[analog][binary][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("half_scaled_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("half_scaled");
         REQUIRE(loaded != nullptr);
         
         // Ramp value at index 50 was 50, scaled by 0.5 should be 25
@@ -688,7 +688,7 @@ TEST_CASE("Analog Binary Integration - Scale and Offset", "[analog][binary][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("neg_offset_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("neg_offset");
         REQUIRE(loaded != nullptr);
         
         // Original value was 42, with offset -40 should be 2

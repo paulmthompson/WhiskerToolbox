@@ -110,7 +110,7 @@ TEST_CASE("DigitalEvent CSV Integration - Single Column with Header",
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
         // Get loaded data (single channel gets _0 suffix)
-        auto loaded = dm.getData<DigitalEventSeries>("test_csv_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("test_csv_events");
         REQUIRE(loaded != nullptr);
         
         // Verify values match
@@ -136,7 +136,7 @@ TEST_CASE("DigitalEvent CSV Integration - Single Column with Header",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("single_event_0");
+        auto loaded = dm.getData<DigitalEventSeries>("single_event");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->size() == 1);
         
@@ -162,7 +162,7 @@ TEST_CASE("DigitalEvent CSV Integration - Single Column with Header",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("large_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("large_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -187,7 +187,7 @@ TEST_CASE("DigitalEvent CSV Integration - Single Column with Header",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("pattern_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("pattern_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -221,7 +221,7 @@ TEST_CASE("DigitalEvent CSV Integration - Single Column without Header",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("no_header_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("no_header_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -246,7 +246,7 @@ TEST_CASE("DigitalEvent CSV Integration - Single Column without Header",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("dense_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("dense_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -281,7 +281,7 @@ TEST_CASE("DigitalEvent CSV Integration - Custom Delimiters",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("tab_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("tab_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -307,7 +307,7 @@ TEST_CASE("DigitalEvent CSV Integration - Custom Delimiters",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("semicolon_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("semicolon_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -333,7 +333,7 @@ TEST_CASE("DigitalEvent CSV Integration - Custom Delimiters",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("space_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("space_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -368,7 +368,7 @@ TEST_CASE("DigitalEvent CSV Integration - Event Column Index",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("event_col1_0");
+        auto loaded = dm.getData<DigitalEventSeries>("event_col1");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -394,7 +394,7 @@ TEST_CASE("DigitalEvent CSV Integration - Event Column Index",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("event_col2_0");
+        auto loaded = dm.getData<DigitalEventSeries>("event_col2");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -428,7 +428,7 @@ TEST_CASE("DigitalEvent CSV Integration - Edge Cases",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("zero_start_0");
+        auto loaded = dm.getData<DigitalEventSeries>("zero_start");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -453,7 +453,7 @@ TEST_CASE("DigitalEvent CSV Integration - Edge Cases",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("sparse_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("sparse_events");
         REQUIRE(loaded != nullptr);
         
         verifyEventsEqual(*original, *loaded);
@@ -478,7 +478,7 @@ TEST_CASE("DigitalEvent CSV Integration - Edge Cases",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("many_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("many_events");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->size() == 100);
         
@@ -603,7 +603,7 @@ TEST_CASE("DigitalEvent CSV Integration - Scaling Options",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("scaled_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("scaled_events");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->size() == original->size());
         
@@ -641,7 +641,7 @@ TEST_CASE("DigitalEvent CSV Integration - Scaling Options",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("divided_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("divided_events");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->size() == original->size());
         
@@ -685,7 +685,7 @@ TEST_CASE("DigitalEvent CSV Integration - Scaling Options",
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("float_scaled_0");
+        auto loaded = dm.getData<DigitalEventSeries>("float_scaled");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->size() == 4);
         
@@ -740,11 +740,11 @@ TEST_CASE("DigitalEvent CSV Integration - Clock Configuration",
         
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<DigitalEventSeries>("clock_events_0");
+        auto loaded = dm.getData<DigitalEventSeries>("clock_events");
         REQUIRE(loaded != nullptr);
         
         // Verify the time key was set correctly
-        auto time_key = dm.getTimeKey("clock_events_0");
+        auto time_key = dm.getTimeKey("clock_events");
         REQUIRE(time_key.str() == "custom_clock");
     }
 }

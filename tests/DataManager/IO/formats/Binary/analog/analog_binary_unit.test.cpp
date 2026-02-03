@@ -91,7 +91,7 @@ TEST_CASE("Analog Binary Unit - Scale Factor", "[analog][binary][unit][datamanag
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("scaled_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("scaled_signal");
         REQUIRE(loaded != nullptr);
         
         // Original value was 42, scaled by 2 should be 84
@@ -121,7 +121,7 @@ TEST_CASE("Analog Binary Unit - Scale Factor", "[analog][binary][unit][datamanag
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("half_scaled_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("half_scaled");
         REQUIRE(loaded != nullptr);
         
         // Ramp value at index 50 was 50, scaled by 0.5 should be 25
@@ -160,7 +160,7 @@ TEST_CASE("Analog Binary Unit - Offset Value", "[analog][binary][unit][datamanag
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("offset_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("offset_signal");
         REQUIRE(loaded != nullptr);
         
         // Original value was 42, with offset 100 should be 142
@@ -190,7 +190,7 @@ TEST_CASE("Analog Binary Unit - Offset Value", "[analog][binary][unit][datamanag
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("neg_offset_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("neg_offset_signal");
         REQUIRE(loaded != nullptr);
         
         // Original value was 42, with offset -40 should be 2
@@ -230,7 +230,7 @@ TEST_CASE("Analog Binary Unit - Scale and Offset Combined", "[analog][binary][un
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("scale_offset_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("scale_offset_signal");
         REQUIRE(loaded != nullptr);
         
         // Original value was 42, scaled by 2 = 84, then + 10 = 94
@@ -272,7 +272,7 @@ TEST_CASE("Analog Binary Unit - Error Handling", "[analog][binary][unit][dataman
         auto result = load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
         // Should not have loaded anything
-        auto loaded = dm.getData<AnalogTimeSeries>("nonexistent_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("nonexistent");
         REQUIRE(loaded == nullptr);
     }
     
@@ -298,7 +298,7 @@ TEST_CASE("Analog Binary Unit - Error Handling", "[analog][binary][unit][dataman
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
         // Should still load despite unknown field
-        auto loaded = dm.getData<AnalogTimeSeries>("test_signal_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("test_signal");
         REQUIRE(loaded != nullptr);
     }
 }
@@ -329,7 +329,7 @@ TEST_CASE("Analog Binary Unit - Square Wave Preservation", "[analog][binary][uni
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("square_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("square");
         REQUIRE(loaded != nullptr);
         
         // Verify square wave has both 0 and 100 values

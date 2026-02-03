@@ -3,7 +3,6 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "loaders/CSV_Loaders.hpp"
 
 #include <fstream>
 #include <vector>
@@ -92,47 +91,6 @@ TEST_CASE("Digital Event Series - Clear", "[DataManager]") {
 
     des.clear();
     REQUIRE(des.size() == 0);
-}
-
-TEST_CASE("Digital Event Series - Load From CSV", "[DataManager]") {
-    // This test assumes a CSV file exists at the specified path
-    // You may need to adjust the path or create a test file
-
-    std::string filename = "data/DigitalEvents/events.csv";
-
-    // Assuming the loadFromCSV function works as expected
-    // and the CSV file contains values 3.0, 1.0, 5.0, 2.0, 4.0
-    // This test will be skipped if the file is not found
-
-    SECTION("Loading from CSV (skip if file not found)") {
-        std::ifstream file(filename);
-        if (file.good()) {
-            file.close();
-
-            auto opts = Loader::CSVSingleColumnOptions{.filename = filename};
-
-            auto events_float = Loader::loadSingleColumnCSV(opts);
-            
-            // Convert float to TimeFrameIndex
-            std::vector<TimeFrameIndex> events;
-            events.reserve(events_float.size());
-            for (auto e : events_float) {
-                events.push_back(TimeFrameIndex(static_cast<int64_t>(e)));
-            }
-
-            auto des = DigitalEventSeries(events);
-
-            // Check that the data is loaded and sorted
-            REQUIRE(des.size() > 0);
-
-            // Verify data is sorted via view()
-            TimeFrameIndex prev{std::numeric_limits<int64_t>::min()};
-            for (auto event : des.view()) {
-                REQUIRE(prev <= event.time());
-                prev = event.time();
-            }
-        }
-    }
 }
 
 TEST_CASE("Digital Event Series - Duplicate Events", "[DataManager]") {

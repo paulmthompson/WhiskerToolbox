@@ -97,8 +97,7 @@ TEST_CASE("Analog CSV Integration - Two Column with Header", "[analog][csv][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        // Get loaded data (registry system appends "_0" suffix for analog single-channel loads)
-        auto loaded = dm.getData<AnalogTimeSeries>("test_csv_analog_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("test_csv_analog");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -136,7 +135,7 @@ TEST_CASE("Analog CSV Integration - Two Column with Header", "[analog][csv][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("precision_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("precision_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -172,7 +171,7 @@ TEST_CASE("Analog CSV Integration - Two Column with Header", "[analog][csv][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("non_seq_times_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("non_seq_times");
         REQUIRE(loaded != nullptr);
         
         // Verify time indices are preserved correctly
@@ -208,7 +207,7 @@ TEST_CASE("Analog CSV Integration - Two Column with Header", "[analog][csv][inte
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("negative_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("negative_test");
         REQUIRE(loaded != nullptr);
         
         auto loaded_samples = loaded->getAllSamples();
@@ -250,7 +249,7 @@ TEST_CASE("Analog CSV Integration - Two Column without Header", "[analog][csv][i
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("no_header_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("no_header_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -290,7 +289,7 @@ TEST_CASE("Analog CSV Integration - Single Column Format", "[analog][csv][integr
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("single_col_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("single_col_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -328,7 +327,7 @@ TEST_CASE("Analog CSV Integration - Single Column Format", "[analog][csv][integr
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("single_col_header_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("single_col_header_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
     }
@@ -364,7 +363,7 @@ TEST_CASE("Analog CSV Integration - Custom Delimiters", "[analog][csv][integrati
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("tab_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("tab_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
     }
@@ -392,7 +391,7 @@ TEST_CASE("Analog CSV Integration - Custom Delimiters", "[analog][csv][integrati
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("semicolon_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("semicolon_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
     }
@@ -428,7 +427,7 @@ TEST_CASE("Analog CSV Integration - Custom Column Order", "[analog][csv][integra
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("reversed_col_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("reversed_col_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == original->getNumSamples());
         
@@ -473,7 +472,7 @@ TEST_CASE("Analog CSV Integration - Large Data Files", "[analog][csv][integratio
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("large_ramp_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("large_ramp");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == 500);
         
@@ -515,7 +514,7 @@ TEST_CASE("Analog CSV Integration - Edge Cases", "[analog][csv][integration][dat
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded = dm.getData<AnalogTimeSeries>("single_sample_test_0");
+        auto loaded = dm.getData<AnalogTimeSeries>("single_sample_test");
         REQUIRE(loaded != nullptr);
         REQUIRE(loaded->getNumSamples() == 1);
         
@@ -612,8 +611,8 @@ TEST_CASE("Analog CSV Integration - Multiple Files", "[analog][csv][integration]
         DataManager dm;
         load_data_from_json_config(&dm, config, temp_dir.getPathString());
         
-        auto loaded1 = dm.getData<AnalogTimeSeries>("analog_series_1_0");
-        auto loaded2 = dm.getData<AnalogTimeSeries>("analog_series_2_0");
+        auto loaded1 = dm.getData<AnalogTimeSeries>("analog_series_1");
+        auto loaded2 = dm.getData<AnalogTimeSeries>("analog_series_2");
         
         REQUIRE(loaded1 != nullptr);
         REQUIRE(loaded2 != nullptr);
