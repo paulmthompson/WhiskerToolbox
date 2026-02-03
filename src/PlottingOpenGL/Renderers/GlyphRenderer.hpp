@@ -82,15 +82,21 @@ private:
     bool loadShadersFromManager();
     bool compileEmbeddedShaders();
     void setupVertexAttributes();
+    void setupPointVertexAttributes();  // For GL_POINTS mode
+    void setupInstancedVertexAttributes();  // For instanced mode
     void createGlyphGeometry();
 
     std::string m_shader_base_path;
     bool m_use_shader_manager{false};
     
-    // Only used when not using ShaderManager
-    GLShaderProgram m_embedded_shader;
+    // Embedded shaders: point shader for circles, instanced for other glyphs
+    GLShaderProgram m_point_shader;      // For GL_POINTS (circles)
+    GLShaderProgram m_instanced_shader;  // For instanced rendering (tick, square, cross)
     
-    GLVertexArray m_vao;
+    // Separate VAOs for different rendering modes
+    GLVertexArray m_point_vao;       // For GL_POINTS mode
+    GLVertexArray m_instanced_vao;   // For instanced rendering mode
+    
     GLBuffer m_geometry_vbo{GLBuffer::Type::Vertex};// Glyph shape vertices
     GLBuffer m_instance_vbo{GLBuffer::Type::Vertex};// Per-instance positions
     GLBuffer m_color_vbo{GLBuffer::Type::Vertex};   // Per-instance colors
@@ -129,11 +135,63 @@ private:
 /**
  * @brief Embedded fallback shader source code for the glyph renderer.
  * 
- * These match the interface of WhiskerToolbox/shaders/point.vert and point.frag
- * but are simplified for basic use cases.
+ * These shaders support both GL_POINTS mode (for circles) and instanced
+ * rendering mode (for ticks, squares, crosses).
+ * 
+ * Attribute layout for instanced rendering:
+ *   - location 0: geometry vertex (per-vertex)
+ *   - location 1: instance position (per-instance)
+ *   - location 2: instance color (per-instance)
+ * 
+ * For GL_POINTS mode, position data is uploaded to location 0 directly.
  */
 namespace GlyphShaders {
 
+/**
+ * @brief Vertex shader for instanced glyph rendering (ticks, squares, crosses)
+ * 
+ * This shader combines per-vertex geometry with per-instance position offsets.
+ */
+constexpr char const * INSTANCED_VERTEX_SHADER = R"(
+#version 410 core
+
+layout (location = 0) in vec2 a_geometry;       // Per-vertex glyph shape
+layout (location = 1) in vec2 a_instance_pos;   // Per-instance position
+layout (location = 2) in vec4 a_instance_color; // Per-instance color
+
+uniform mat4 u_mvp_matrix;
+uniform float u_glyph_size;
+
+out vec4 v_color;
+
+void main() {
+    // Scale geometry by glyph size and add instance position
+    vec2 world_pos = a_geometry * u_glyph_size + a_instance_pos;
+    gl_Position = u_mvp_matrix * vec4(world_pos, 0.0, 1.0);
+    v_color = a_instance_color;
+}
+)";
+
+/**
+ * @brief Fragment shader for instanced glyphs
+ */
+constexpr char const * INSTANCED_FRAGMENT_SHADER = R"(
+#version 410 core
+
+in vec4 v_color;
+
+out vec4 FragColor;
+
+void main() {
+    FragColor = v_color;
+}
+)";
+
+/**
+ * @brief Vertex shader for GL_POINTS mode (circles)
+ * 
+ * This shader is used when rendering circle glyphs as point sprites.
+ */
 constexpr char const * POINT_VERTEX_SHADER = R"(
 #version 410 core
 
