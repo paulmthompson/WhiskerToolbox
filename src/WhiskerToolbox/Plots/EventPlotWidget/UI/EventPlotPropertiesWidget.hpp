@@ -60,9 +60,17 @@ public:
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
 private:
+    /**
+     * @brief Populate the event series combo box with available DigitalEventSeries and DigitalIntervalSeries keys
+     */
+    void _populateEventSeriesComboBox();
+
     Ui::EventPlotPropertiesWidget * ui;
     std::shared_ptr<EventPlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
+    
+    /// DataManager observer callback ID (stored for cleanup)
+    int _dm_observer_id = -1;
 };
 
 #endif  // EVENT_PLOT_PROPERTIES_WIDGET_HPP
