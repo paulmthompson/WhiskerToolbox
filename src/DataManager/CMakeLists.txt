@@ -31,8 +31,6 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         DataManagerTypes.cpp
 
-        loaders/CSV_Loaders.cpp
-        loaders/CSV_Loaders.hpp
         loaders/loading_utils.hpp
 
         utils/armadillo_wrap/analog_armadillo.hpp

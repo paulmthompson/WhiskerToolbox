@@ -32,6 +32,7 @@ target_link_libraries(LineData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
+    reflectcpp::reflectcpp
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
