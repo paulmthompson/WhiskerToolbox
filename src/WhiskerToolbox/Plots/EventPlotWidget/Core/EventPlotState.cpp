@@ -23,6 +23,68 @@ void EventPlotState::setDisplayName(QString const & name)
     }
 }
 
+QString EventPlotState::getPlotEventKey() const
+{
+    return QString::fromStdString(_data.plot_event_key);
+}
+
+void EventPlotState::setPlotEventKey(QString const & key)
+{
+    std::string key_str = key.toStdString();
+    if (_data.plot_event_key != key_str) {
+        _data.plot_event_key = key_str;
+        markDirty();
+        emit plotEventKeyChanged(key);
+        emit stateChanged();
+    }
+}
+
+QString EventPlotState::getAlignmentEventKey() const
+{
+    return QString::fromStdString(_data.alignment_event_key);
+}
+
+void EventPlotState::setAlignmentEventKey(QString const & key)
+{
+    std::string key_str = key.toStdString();
+    if (_data.alignment_event_key != key_str) {
+        _data.alignment_event_key = key_str;
+        markDirty();
+        emit alignmentEventKeyChanged(key);
+        emit stateChanged();
+    }
+}
+
+IntervalAlignmentType EventPlotState::getIntervalAlignmentType() const
+{
+    return _data.interval_alignment_type;
+}
+
+void EventPlotState::setIntervalAlignmentType(IntervalAlignmentType type)
+{
+    if (_data.interval_alignment_type != type) {
+        _data.interval_alignment_type = type;
+        markDirty();
+        emit intervalAlignmentTypeChanged(type);
+        emit stateChanged();
+    }
+}
+
+double EventPlotState::getOffset() const
+{
+    return _data.offset;
+}
+
+void EventPlotState::setOffset(double offset)
+{
+    if (_data.offset != offset) {
+        _data.offset = offset;
+        markDirty();
+        emit offsetChanged(offset);
+        emit stateChanged();
+    }
+}
+
 std::string EventPlotState::toJson() const
 {
     // Include instance_id in serialization for restoration
