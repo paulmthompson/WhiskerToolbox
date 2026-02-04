@@ -155,6 +155,7 @@ private slots:
     void openZoneLayoutManager();
     void openDataInspector();
     void openEventPlotWidget();
+    void openPSTHPlotWidget();
     void openLinePlotWidget();
 };
 #endif// MAINWINDOW_HPP

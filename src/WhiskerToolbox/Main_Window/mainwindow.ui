@@ -66,6 +66,7 @@
      <string>Plots</string>
     </property>
     <addaction name="actionEvent_Plot"/>
+    <addaction name="actionPSTH_Plot"/>
     <addaction name="actionLine_Plot"/>
    </widget>
    <widget class="QMenu" name="menuModules">
@@ -260,6 +261,11 @@
   <action name="actionLine_Plot">
    <property name="text">
     <string>Line Plot</string>
+   </property>
+  </action>
+  <action name="actionPSTH_Plot">
+   <property name="text">
+    <string>PSTH Plot</string>
    </property>
   </action>
  </widget>

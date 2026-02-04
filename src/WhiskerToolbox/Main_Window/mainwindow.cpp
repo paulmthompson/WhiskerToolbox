@@ -39,6 +39,7 @@
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
+#include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
 #include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
@@ -294,6 +295,7 @@ void MainWindow::_createActions() {
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
     connect(ui->actionData_Import, &QAction::triggered, this, &MainWindow::openDataImport);
     connect(ui->actionEvent_Plot, &QAction::triggered, this, &MainWindow::openEventPlotWidget);
+    connect(ui->actionPSTH_Plot, &QAction::triggered, this, &MainWindow::openPSTHPlotWidget);
     connect(ui->actionLine_Plot, &QAction::triggered, this, &MainWindow::openLinePlotWidget);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
@@ -772,6 +774,11 @@ void MainWindow::openEventPlotWidget() {
     openEditor(QStringLiteral("EventPlotWidget"));
 }
 
+void MainWindow::openPSTHPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("PSTHWidget"));
+}
+
 void MainWindow::openLinePlotWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("LinePlotWidget"));
@@ -872,6 +879,8 @@ void MainWindow::_registerEditorTypes() {
     TableDesignerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     EventPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    PSTHWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

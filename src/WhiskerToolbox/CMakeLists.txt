@@ -95,6 +95,9 @@ add_subdirectory(Plots/PlotAlignmentWidget)
 # Qt, DataManager, EditorState - Event raster plot widget
 add_subdirectory(Plots/EventPlotWidget)
 
+# Qt, DataManager, EditorState - PSTH plot widget
+add_subdirectory(Plots/PSTHWidget)
+
 # Qt, DataManager, EditorState - Line plot widget
 add_subdirectory(Plots/LinePlotWidget)
 
@@ -253,6 +256,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE PlotAlignmentWidget)
 target_link_libraries(WhiskerToolbox PRIVATE EventPlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE PSTHWidget)
 target_link_libraries(WhiskerToolbox PRIVATE LinePlotWidget)
 
 
