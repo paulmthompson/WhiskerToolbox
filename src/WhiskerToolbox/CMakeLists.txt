@@ -101,6 +101,9 @@ add_subdirectory(Plots/PSTHWidget)
 # Qt, DataManager, EditorState - Line plot widget
 add_subdirectory(Plots/LinePlotWidget)
 
+# Qt, DataManager, EditorState - Heatmap plot widget
+add_subdirectory(Plots/HeatmapWidget)
+
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
@@ -258,6 +261,7 @@ target_link_libraries(WhiskerToolbox PRIVATE PlotAlignmentWidget)
 target_link_libraries(WhiskerToolbox PRIVATE EventPlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE PSTHWidget)
 target_link_libraries(WhiskerToolbox PRIVATE LinePlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE HeatmapWidget)
 
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)

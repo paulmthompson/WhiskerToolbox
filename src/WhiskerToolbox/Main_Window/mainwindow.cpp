@@ -41,6 +41,7 @@
 #include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
 #include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
 #include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
+#include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -297,6 +298,7 @@ void MainWindow::_createActions() {
     connect(ui->actionEvent_Plot, &QAction::triggered, this, &MainWindow::openEventPlotWidget);
     connect(ui->actionPSTH_Plot, &QAction::triggered, this, &MainWindow::openPSTHPlotWidget);
     connect(ui->actionLine_Plot, &QAction::triggered, this, &MainWindow::openLinePlotWidget);
+    connect(ui->actionHeatmap_Plot, &QAction::triggered, this, &MainWindow::openHeatmapPlotWidget);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
@@ -784,6 +786,11 @@ void MainWindow::openLinePlotWidget() {
     openEditor(QStringLiteral("LinePlotWidget"));
 }
 
+void MainWindow::openHeatmapPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("HeatmapWidget"));
+}
+
 void MainWindow::openDataInspector() {
     // Create a new Data Inspector using EditorCreationController
     // The controller handles:
@@ -883,6 +890,8 @@ void MainWindow::_registerEditorTypes() {
     PSTHWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    HeatmapWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

@@ -157,5 +157,6 @@ private slots:
     void openEventPlotWidget();
     void openPSTHPlotWidget();
     void openLinePlotWidget();
+    void openHeatmapPlotWidget();
 };
 #endif// MAINWINDOW_HPP
