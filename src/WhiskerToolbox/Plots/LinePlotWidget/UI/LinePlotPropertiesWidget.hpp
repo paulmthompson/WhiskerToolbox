@@ -61,11 +61,92 @@ public:
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
+private slots:
+    /**
+     * @brief Handle add series button click
+     */
+    void _onAddSeriesClicked();
+
+    /**
+     * @brief Handle remove series button click
+     */
+    void _onRemoveSeriesClicked();
+
+    /**
+     * @brief Handle plot series table selection change
+     */
+    void _onPlotSeriesSelectionChanged();
+
+    /**
+     * @brief Handle state plot series added
+     * @param series_name Name of the added series
+     */
+    void _onStatePlotSeriesAdded(QString const & series_name);
+
+    /**
+     * @brief Handle state plot series removed
+     * @param series_name Name of the removed series
+     */
+    void _onStatePlotSeriesRemoved(QString const & series_name);
+
+    /**
+     * @brief Handle state plot series options changed
+     * @param series_name Name of the updated series
+     */
+    void _onStatePlotSeriesOptionsChanged(QString const & series_name);
+
+    /**
+     * @brief Handle line thickness spinbox value change
+     * @param value New thickness value
+     */
+    void _onLineThicknessChanged(double value);
+
+    /**
+     * @brief Handle color button click
+     */
+    void _onColorButtonClicked();
+
 private:
+    /**
+     * @brief Populate the add series combo box with available AnalogTimeSeries keys
+     */
+    void _populateAddSeriesComboBox();
+
+    /**
+     * @brief Update the plot series table from state
+     */
+    void _updatePlotSeriesTable();
+
+    /**
+     * @brief Update the series options display for the selected series
+     * @param series_name Name of the series to display options for
+     */
+    void _updateSeriesOptions(QString const & series_name);
+
+    /**
+     * @brief Update UI elements from current state
+     */
+    void _updateUIFromState();
+
+    /**
+     * @brief Get the currently selected series name from the table
+     * @return Series name if selection exists, empty string otherwise
+     */
+    [[nodiscard]] QString _getSelectedSeriesName() const;
+
+    /**
+     * @brief Update the color display button with a hex color
+     * @param hex_color Hex color string (e.g., "#000000")
+     */
+    void _updateColorDisplay(QString const & hex_color);
+
     Ui::LinePlotPropertiesWidget * ui;
     std::shared_ptr<LinePlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
+
+    /// DataManager observer callback ID (stored for cleanup)
+    int _dm_observer_id = -1;
 };
 
 #endif// LINE_PLOT_PROPERTIES_WIDGET_HPP

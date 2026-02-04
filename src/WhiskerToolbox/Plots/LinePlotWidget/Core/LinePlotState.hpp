@@ -18,8 +18,20 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <map>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
+
+/**
+ * @brief Options for plotting an analog time series in the line plot
+ */
+struct LinePlotOptions {
+    std::string series_key;                           ///< Key of the AnalogTimeSeries to plot
+    double line_thickness = 1.0;                      ///< Thickness of the line (default: 1.0)
+    std::string hex_color = "#000000";                ///< Color as hex string (default: black)
+};
 
 /**
  * @brief Serializable state data for LinePlotWidget
@@ -28,6 +40,7 @@ struct LinePlotStateData {
     std::string instance_id;
     std::string display_name = "Line Plot";
     PlotAlignmentData alignment;                                                      ///< Alignment settings (event key, interval type, offset, window size)
+    std::map<std::string, LinePlotOptions> plot_series;                              ///< Map of series names to their plot options
 };
 
 /**
@@ -133,6 +146,41 @@ public:
      */
     [[nodiscard]] PlotAlignmentState * alignmentState() { return _alignment_state.get(); }
 
+    // === Plot Series Management ===
+
+    /**
+     * @brief Add a series to the plot
+     * @param series_name Name/key for the series (used as identifier)
+     * @param series_key DataManager key of the AnalogTimeSeries
+     */
+    void addPlotSeries(QString const & series_name, QString const & series_key);
+
+    /**
+     * @brief Remove a series from the plot
+     * @param series_name Name/key of the series to remove
+     */
+    void removePlotSeries(QString const & series_name);
+
+    /**
+     * @brief Get all plot series names
+     * @return List of series names currently in the plot
+     */
+    [[nodiscard]] std::vector<QString> getPlotSeriesNames() const;
+
+    /**
+     * @brief Get options for a specific plot series
+     * @param series_name Name/key of the series
+     * @return Options struct, or std::nullopt if series not found
+     */
+    [[nodiscard]] std::optional<LinePlotOptions> getPlotSeriesOptions(QString const & series_name) const;
+
+    /**
+     * @brief Update options for a specific plot series
+     * @param series_name Name/key of the series
+     * @param options New options
+     */
+    void updatePlotSeriesOptions(QString const & series_name, LinePlotOptions const & options);
+
     // === Serialization ===
 
     /**
@@ -172,6 +220,24 @@ signals:
      * @param window_size New window size value
      */
     void windowSizeChanged(double window_size);
+
+    /**
+     * @brief Emitted when a plot series is added
+     * @param series_name Name of the added series
+     */
+    void plotSeriesAdded(QString const & series_name);
+
+    /**
+     * @brief Emitted when a plot series is removed
+     * @param series_name Name of the removed series
+     */
+    void plotSeriesRemoved(QString const & series_name);
+
+    /**
+     * @brief Emitted when plot series options are updated
+     * @param series_name Name of the updated series
+     */
+    void plotSeriesOptionsChanged(QString const & series_name);
 
 private:
     LinePlotStateData _data;

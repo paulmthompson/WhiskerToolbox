@@ -95,6 +95,64 @@ void LinePlotState::setWindowSize(double window_size)
     emit stateChanged();
 }
 
+void LinePlotState::addPlotSeries(QString const & series_name, QString const & series_key)
+{
+    std::string name_str = series_name.toStdString();
+    std::string key_str = series_key.toStdString();
+
+    LinePlotOptions options;
+    options.series_key = key_str;
+
+    _data.plot_series[name_str] = options;
+    markDirty();
+    emit plotSeriesAdded(series_name);
+    emit stateChanged();
+}
+
+void LinePlotState::removePlotSeries(QString const & series_name)
+{
+    std::string name_str = series_name.toStdString();
+    auto it = _data.plot_series.find(name_str);
+    if (it != _data.plot_series.end()) {
+        _data.plot_series.erase(it);
+        markDirty();
+        emit plotSeriesRemoved(series_name);
+        emit stateChanged();
+    }
+}
+
+std::vector<QString> LinePlotState::getPlotSeriesNames() const
+{
+    std::vector<QString> names;
+    names.reserve(_data.plot_series.size());
+    for (auto const & [name, _] : _data.plot_series) {
+        names.push_back(QString::fromStdString(name));
+    }
+    return names;
+}
+
+std::optional<LinePlotOptions> LinePlotState::getPlotSeriesOptions(QString const & series_name) const
+{
+    std::string name_str = series_name.toStdString();
+    auto it = _data.plot_series.find(name_str);
+    if (it != _data.plot_series.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+void LinePlotState::updatePlotSeriesOptions(QString const & series_name, LinePlotOptions const & options)
+{
+    std::string name_str = series_name.toStdString();
+    auto it = _data.plot_series.find(name_str);
+    if (it != _data.plot_series.end()) {
+        it->second = options;
+        markDirty();
+        emit plotSeriesOptionsChanged(series_name);
+        emit stateChanged();
+    }
+}
+
 std::string LinePlotState::toJson() const
 {
     // Include instance_id in serialization for restoration
