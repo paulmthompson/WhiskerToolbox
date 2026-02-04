@@ -7,9 +7,10 @@
 
 #include "ui_EventPlotPropertiesWidget.h"
 
+#include <QColorDialog>
+#include <QHeaderView>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QHeaderView>
 
 #include <algorithm>
 
@@ -20,12 +21,15 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
       ui(new Ui::EventPlotPropertiesWidget),
       _state(state),
       _data_manager(data_manager),
-      _dm_observer_id(-1)
-{
+      _dm_observer_id(-1) {
     ui->setupUi(this);
 
     // Set up interval alignment combo box
-    ui->interval_alignment_combo->setCurrentIndex(0);  // Default to Beginning
+    ui->interval_alignment_combo->setCurrentIndex(0);// Default to Beginning
+
+    // Set up color display button
+    ui->color_display_button->setFlat(false);
+    ui->color_display_button->setEnabled(false);// Make it non-clickable, just for display
 
     // Set up plot events table
     ui->plot_events_table->setColumnCount(2);
@@ -33,7 +37,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     ui->plot_events_table->horizontalHeader()->setStretchLastSection(true);
     ui->plot_events_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->plot_events_table->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->plot_events_table->verticalHeader()->setVisible(false);  // Hide row numbers
+    ui->plot_events_table->verticalHeader()->setVisible(false);// Hide row numbers
     ui->plot_events_table->setShowGrid(true);
 
     // Connect UI signals to slots
@@ -51,6 +55,12 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
             this, &EventPlotPropertiesWidget::_onRemoveEventClicked);
     connect(ui->plot_events_table, &QTableWidget::itemSelectionChanged,
             this, &EventPlotPropertiesWidget::_onPlotEventSelectionChanged);
+    connect(ui->tick_thickness_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &EventPlotPropertiesWidget::_onTickThicknessChanged);
+    connect(ui->glyph_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &EventPlotPropertiesWidget::_onGlyphTypeChanged);
+    connect(ui->color_button, &QPushButton::clicked,
+            this, &EventPlotPropertiesWidget::_onColorButtonClicked);
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -87,8 +97,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     }
 }
 
-EventPlotPropertiesWidget::~EventPlotPropertiesWidget()
-{
+EventPlotPropertiesWidget::~EventPlotPropertiesWidget() {
     // Remove DataManager observer callback
     if (_data_manager && _dm_observer_id != -1) {
         _data_manager->removeObserver(_dm_observer_id);
@@ -96,8 +105,7 @@ EventPlotPropertiesWidget::~EventPlotPropertiesWidget()
     delete ui;
 }
 
-void EventPlotPropertiesWidget::_populateAddEventComboBox()
-{
+void EventPlotPropertiesWidget::_populateAddEventComboBox() {
     ui->add_event_combo->clear();
 
     if (!_data_manager) {
@@ -115,13 +123,12 @@ void EventPlotPropertiesWidget::_populateAddEventComboBox()
     std::sort(event_keys.begin(), event_keys.end());
 
     // Add DigitalEventSeries keys
-    for (auto const & key : event_keys) {
+    for (auto const & key: event_keys) {
         ui->add_event_combo->addItem(QString::fromStdString(key), QString::fromStdString(key));
     }
 }
 
-void EventPlotPropertiesWidget::_populateAlignmentEventComboBox()
-{
+void EventPlotPropertiesWidget::_populateAlignmentEventComboBox() {
     ui->alignment_event_combo->clear();
     ui->alignment_event_combo->addItem("(None)", QString());
 
@@ -144,18 +151,17 @@ void EventPlotPropertiesWidget::_populateAlignmentEventComboBox()
     std::sort(interval_keys.begin(), interval_keys.end());
 
     // Add DigitalEventSeries keys
-    for (auto const & key : event_keys) {
+    for (auto const & key: event_keys) {
         ui->alignment_event_combo->addItem(QString::fromStdString(key), QString::fromStdString(key));
     }
 
     // Add DigitalIntervalSeries keys
-    for (auto const & key : interval_keys) {
+    for (auto const & key: interval_keys) {
         ui->alignment_event_combo->addItem(QString::fromStdString(key), QString::fromStdString(key));
     }
 }
 
-void EventPlotPropertiesWidget::_updateEventCount()
-{
+void EventPlotPropertiesWidget::_updateEventCount() {
     if (!_data_manager) {
         ui->total_count_label->setText("Total: 0");
         ui->interval_alignment_widget->setVisible(false);
@@ -195,8 +201,7 @@ void EventPlotPropertiesWidget::_updateEventCount()
     }
 }
 
-void EventPlotPropertiesWidget::_onAddEventClicked()
-{
+void EventPlotPropertiesWidget::_onAddEventClicked() {
     if (!_state || !_data_manager) {
         return;
     }
@@ -211,47 +216,50 @@ void EventPlotPropertiesWidget::_onAddEventClicked()
     _state->addPlotEvent(event_name, event_key);
 }
 
-void EventPlotPropertiesWidget::_onRemoveEventClicked()
-{
+void EventPlotPropertiesWidget::_onRemoveEventClicked() {
     if (!_state) {
         return;
     }
 
-    QList<QTableWidgetItem*> selected = ui->plot_events_table->selectedItems();
+    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
     if (selected.isEmpty()) {
         return;
     }
 
     int row = selected.first()->row();
-    QTableWidgetItem* name_item = ui->plot_events_table->item(row, 0);
+    QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
     if (name_item) {
         QString event_name = name_item->text();
         _state->removePlotEvent(event_name);
     }
 }
 
-void EventPlotPropertiesWidget::_onPlotEventSelectionChanged()
-{
-    QList<QTableWidgetItem*> selected = ui->plot_events_table->selectedItems();
+void EventPlotPropertiesWidget::_onPlotEventSelectionChanged() {
+    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
     bool has_selection = !selected.isEmpty();
     ui->remove_event_button->setEnabled(has_selection);
     ui->event_options_widget->setEnabled(has_selection);
 
     if (has_selection && _state) {
         int row = selected.first()->row();
-        QTableWidgetItem* name_item = ui->plot_events_table->item(row, 0);
+        QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
         if (name_item) {
             QString event_name = name_item->text();
             _updateEventOptions(event_name);
         }
     } else {
-        // Clear options display
-        ui->event_options_placeholder->setText("(No options available yet)");
+        // Clear options display - disable controls
+        ui->tick_thickness_spinbox->blockSignals(true);
+        ui->tick_thickness_spinbox->setValue(2.0);
+        ui->tick_thickness_spinbox->blockSignals(false);
+        ui->glyph_type_combo->blockSignals(true);
+        ui->glyph_type_combo->setCurrentIndex(0);
+        ui->glyph_type_combo->blockSignals(false);
+        _updateColorDisplay("#000000");
     }
 }
 
-void EventPlotPropertiesWidget::_updatePlotEventsTable()
-{
+void EventPlotPropertiesWidget::_updatePlotEventsTable() {
     if (!_state) {
         return;
     }
@@ -259,7 +267,7 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable()
     ui->plot_events_table->setRowCount(0);
 
     auto event_names = _state->getPlotEventNames();
-    for (QString const & event_name : event_names) {
+    for (QString const & event_name: event_names) {
         auto options = _state->getPlotEventOptions(event_name);
         if (!options) {
             continue;
@@ -268,18 +276,18 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable()
         int row = ui->plot_events_table->rowCount();
         ui->plot_events_table->insertRow(row);
 
-        QTableWidgetItem* name_item = new QTableWidgetItem(event_name);
+        QTableWidgetItem * name_item = new QTableWidgetItem(event_name);
         name_item->setFlags(name_item->flags() & ~Qt::ItemIsEditable);
         ui->plot_events_table->setItem(row, 0, name_item);
 
-        QTableWidgetItem* key_item = new QTableWidgetItem(QString::fromStdString(options->event_key));
+        QTableWidgetItem * key_item = new QTableWidgetItem(QString::fromStdString(options->event_key));
         key_item->setFlags(key_item->flags() & ~Qt::ItemIsEditable);
         ui->plot_events_table->setItem(row, 1, key_item);
     }
 
     // Resize table to fit content dynamically
     ui->plot_events_table->resizeRowsToContents();
-    
+
     int row_count = ui->plot_events_table->rowCount();
     if (row_count == 0) {
         // If no rows, set minimum height to just show header
@@ -290,30 +298,47 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable()
         int header_height = ui->plot_events_table->horizontalHeader()->height();
         int row_height = ui->plot_events_table->rowHeight(0);
         int total_height = header_height + (row_height * row_count);
-        
+
         ui->plot_events_table->setMinimumHeight(total_height);
         ui->plot_events_table->setMaximumHeight(total_height);
     }
 }
 
-void EventPlotPropertiesWidget::_updateEventOptions(QString const & event_name)
-{
+void EventPlotPropertiesWidget::_updateEventOptions(QString const & event_name) {
     if (!_state) {
         return;
     }
 
     auto options = _state->getPlotEventOptions(event_name);
     if (options) {
-        // For now, just show a placeholder. Options can be added here later.
-        ui->event_options_placeholder->setText(
-            QString("Options for: %1\nData Key: %2")
-                .arg(event_name)
-                .arg(QString::fromStdString(options->event_key)));
+        // Update tick thickness
+        ui->tick_thickness_spinbox->blockSignals(true);
+        ui->tick_thickness_spinbox->setValue(options->tick_thickness);
+        ui->tick_thickness_spinbox->blockSignals(false);
+
+        // Update glyph type combo box
+        int glyph_index = 0;// Default to Tick
+        switch (options->glyph_type) {
+            case EventGlyphType::Tick:
+                glyph_index = 0;
+                break;
+            case EventGlyphType::Circle:
+                glyph_index = 1;
+                break;
+            case EventGlyphType::Square:
+                glyph_index = 2;
+                break;
+        }
+        ui->glyph_type_combo->blockSignals(true);
+        ui->glyph_type_combo->setCurrentIndex(glyph_index);
+        ui->glyph_type_combo->blockSignals(false);
+
+        // Update color display
+        _updateColorDisplay(QString::fromStdString(options->hex_color));
     }
 }
 
-void EventPlotPropertiesWidget::_onAlignmentEventChanged(int index)
-{
+void EventPlotPropertiesWidget::_onAlignmentEventChanged(int index) {
     Q_UNUSED(index)
     QString key = ui->alignment_event_combo->currentData().toString();
     if (_state) {
@@ -322,8 +347,7 @@ void EventPlotPropertiesWidget::_onAlignmentEventChanged(int index)
     _updateEventCount();
 }
 
-void EventPlotPropertiesWidget::_onIntervalAlignmentChanged(int index)
-{
+void EventPlotPropertiesWidget::_onIntervalAlignmentChanged(int index) {
     if (!_state) {
         return;
     }
@@ -332,28 +356,24 @@ void EventPlotPropertiesWidget::_onIntervalAlignmentChanged(int index)
     _state->setIntervalAlignmentType(type);
 }
 
-void EventPlotPropertiesWidget::_onOffsetChanged(double value)
-{
+void EventPlotPropertiesWidget::_onOffsetChanged(double value) {
     if (_state) {
         _state->setOffset(value);
     }
 }
 
-void EventPlotPropertiesWidget::_onWindowSizeChanged(double value)
-{
+void EventPlotPropertiesWidget::_onWindowSizeChanged(double value) {
     if (_state) {
         _state->setWindowSize(value);
     }
 }
 
-void EventPlotPropertiesWidget::_onStatePlotEventAdded(QString const & event_name)
-{
+void EventPlotPropertiesWidget::_onStatePlotEventAdded(QString const & event_name) {
     Q_UNUSED(event_name)
     _updatePlotEventsTable();
 }
 
-void EventPlotPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name)
-{
+void EventPlotPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name) {
     Q_UNUSED(event_name)
     _updatePlotEventsTable();
     // Clear selection if the removed event was selected
@@ -362,22 +382,20 @@ void EventPlotPropertiesWidget::_onStatePlotEventRemoved(QString const & event_n
     ui->event_options_widget->setEnabled(false);
 }
 
-void EventPlotPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event_name)
-{
+void EventPlotPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event_name) {
     // Update the table and options if this event is selected
     _updatePlotEventsTable();
-    QList<QTableWidgetItem*> selected = ui->plot_events_table->selectedItems();
+    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
     if (!selected.isEmpty()) {
         int row = selected.first()->row();
-        QTableWidgetItem* name_item = ui->plot_events_table->item(row, 0);
+        QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
         if (name_item && name_item->text() == event_name) {
             _updateEventOptions(event_name);
         }
     }
 }
 
-void EventPlotPropertiesWidget::_onStateAlignmentEventKeyChanged(QString const & key)
-{
+void EventPlotPropertiesWidget::_onStateAlignmentEventKeyChanged(QString const & key) {
     // Update combo box without triggering signal
     int index = ui->alignment_event_combo->findData(key);
     if (index >= 0) {
@@ -386,36 +404,32 @@ void EventPlotPropertiesWidget::_onStateAlignmentEventKeyChanged(QString const &
         ui->alignment_event_combo->blockSignals(false);
     } else {
         ui->alignment_event_combo->blockSignals(true);
-        ui->alignment_event_combo->setCurrentIndex(0);  // None
+        ui->alignment_event_combo->setCurrentIndex(0);// None
         ui->alignment_event_combo->blockSignals(false);
     }
     _updateEventCount();
 }
 
-void EventPlotPropertiesWidget::_onStateIntervalAlignmentTypeChanged(IntervalAlignmentType type)
-{
+void EventPlotPropertiesWidget::_onStateIntervalAlignmentTypeChanged(IntervalAlignmentType type) {
     int index = (type == IntervalAlignmentType::Beginning) ? 0 : 1;
     ui->interval_alignment_combo->blockSignals(true);
     ui->interval_alignment_combo->setCurrentIndex(index);
     ui->interval_alignment_combo->blockSignals(false);
 }
 
-void EventPlotPropertiesWidget::_onStateOffsetChanged(double offset)
-{
+void EventPlotPropertiesWidget::_onStateOffsetChanged(double offset) {
     ui->offset_spinbox->blockSignals(true);
     ui->offset_spinbox->setValue(offset);
     ui->offset_spinbox->blockSignals(false);
 }
 
-void EventPlotPropertiesWidget::_onStateWindowSizeChanged(double window_size)
-{
+void EventPlotPropertiesWidget::_onStateWindowSizeChanged(double window_size) {
     ui->window_size_spinbox->blockSignals(true);
     ui->window_size_spinbox->setValue(window_size);
     ui->window_size_spinbox->blockSignals(false);
 }
 
-void EventPlotPropertiesWidget::_updateUIFromState()
-{
+void EventPlotPropertiesWidget::_updateUIFromState() {
     if (!_state) {
         return;
     }
@@ -426,7 +440,7 @@ void EventPlotPropertiesWidget::_updateUIFromState()
     if (index >= 0) {
         ui->alignment_event_combo->setCurrentIndex(index);
     } else {
-        ui->alignment_event_combo->setCurrentIndex(0);  // None
+        ui->alignment_event_combo->setCurrentIndex(0);// None
     }
 
     // Update interval alignment combo box
@@ -445,4 +459,88 @@ void EventPlotPropertiesWidget::_updateUIFromState()
 
     // Update event count
     _updateEventCount();
+}
+
+QString EventPlotPropertiesWidget::_getSelectedEventName() const {
+    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
+    if (selected.isEmpty()) {
+        return QString();
+    }
+
+    int row = selected.first()->row();
+    QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
+    if (name_item) {
+        return name_item->text();
+    }
+    return QString();
+}
+
+void EventPlotPropertiesWidget::_updateColorDisplay(QString const & hex_color) {
+    // Update the color display button with the new color
+    ui->color_display_button->setStyleSheet(
+            QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
+}
+
+void EventPlotPropertiesWidget::_onTickThicknessChanged(double value) {
+    QString event_name = _getSelectedEventName();
+    if (event_name.isEmpty() || !_state) {
+        return;
+    }
+
+    auto options = _state->getPlotEventOptions(event_name);
+    if (options) {
+        options->tick_thickness = value;
+        _state->updatePlotEventOptions(event_name, *options);
+    }
+}
+
+void EventPlotPropertiesWidget::_onGlyphTypeChanged(int index) {
+    QString event_name = _getSelectedEventName();
+    if (event_name.isEmpty() || !_state) {
+        return;
+    }
+
+    auto options = _state->getPlotEventOptions(event_name);
+    if (options) {
+        EventGlyphType glyph_type = EventGlyphType::Tick;// Default
+        switch (index) {
+            case 0:
+                glyph_type = EventGlyphType::Tick;
+                break;
+            case 1:
+                glyph_type = EventGlyphType::Circle;
+                break;
+            case 2:
+                glyph_type = EventGlyphType::Square;
+                break;
+        }
+        options->glyph_type = glyph_type;
+        _state->updatePlotEventOptions(event_name, *options);
+    }
+}
+
+void EventPlotPropertiesWidget::_onColorButtonClicked() {
+    QString event_name = _getSelectedEventName();
+    if (event_name.isEmpty() || !_state) {
+        return;
+    }
+
+    // Get current color
+    QColor current_color;
+    auto options = _state->getPlotEventOptions(event_name);
+    if (options) {
+        current_color = QColor(QString::fromStdString(options->hex_color));
+    } else {
+        current_color = QColor("#000000");// Default black
+    }
+
+    // Open color dialog
+    QColor color = QColorDialog::getColor(current_color, this, "Choose Color");
+
+    if (color.isValid() && options) {
+        QString hex_color = color.name();
+        _updateColorDisplay(hex_color);
+        options->hex_color = hex_color.toStdString();
+        _state->updatePlotEventOptions(event_name, *options);
+    }
 }

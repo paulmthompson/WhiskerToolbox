@@ -43,8 +43,8 @@ public:
      * @param parent Parent widget
      */
     explicit EventPlotPropertiesWidget(std::shared_ptr<EventPlotState> state,
-                                        std::shared_ptr<DataManager> data_manager,
-                                        QWidget * parent = nullptr);
+                                       std::shared_ptr<DataManager> data_manager,
+                                       QWidget * parent = nullptr);
 
     ~EventPlotPropertiesWidget() override;
 
@@ -142,6 +142,23 @@ private slots:
      */
     void _onStateWindowSizeChanged(double window_size);
 
+    /**
+     * @brief Handle tick thickness spinbox value change
+     * @param value New thickness value
+     */
+    void _onTickThicknessChanged(double value);
+
+    /**
+     * @brief Handle glyph type combo box selection change
+     * @param index Selected index (0 = Tick, 1 = Circle, 2 = Square)
+     */
+    void _onGlyphTypeChanged(int index);
+
+    /**
+     * @brief Handle color button click
+     */
+    void _onColorButtonClicked();
+
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys
@@ -174,12 +191,24 @@ private:
      */
     void _updateUIFromState();
 
+    /**
+     * @brief Get the currently selected event name from the table
+     * @return Event name if selection exists, empty string otherwise
+     */
+    [[nodiscard]] QString _getSelectedEventName() const;
+
+    /**
+     * @brief Update the color display button with a hex color
+     * @param hex_color Hex color string (e.g., "#000000")
+     */
+    void _updateColorDisplay(QString const & hex_color);
+
     Ui::EventPlotPropertiesWidget * ui;
     std::shared_ptr<EventPlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
-    
+
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;
 };
 
-#endif  // EVENT_PLOT_PROPERTIES_WIDGET_HPP
+#endif// EVENT_PLOT_PROPERTIES_WIDGET_HPP

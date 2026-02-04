@@ -30,11 +30,22 @@ enum class IntervalAlignmentType {
 };
 
 /**
+ * @brief Enumeration for event glyph/marker type
+ */
+enum class EventGlyphType {
+    Tick,  ///< Vertical line (default)
+    Circle,///< Circle marker
+    Square ///< Square marker
+};
+
+/**
  * @brief Options for plotting an event series in the raster plot
  */
 struct EventPlotOptions {
-    std::string event_key;  ///< Key of the DigitalEventSeries to plot
-    // Additional options can be added here in the future (e.g., color, style, etc.)
+    std::string event_key;                           ///< Key of the DigitalEventSeries to plot
+    double tick_thickness = 2.0;                     ///< Thickness of the tick/glyph (default: 2.0)
+    EventGlyphType glyph_type = EventGlyphType::Tick;///< Type of glyph to display (default: Tick/vertical line)
+    std::string hex_color = "#000000";               ///< Color as hex string (default: black)
 };
 
 /**
@@ -43,11 +54,11 @@ struct EventPlotOptions {
 struct EventPlotStateData {
     std::string instance_id;
     std::string display_name = "Event Plot";
-    std::string alignment_event_key;  ///< Key of the selected event/interval series for alignment
-    IntervalAlignmentType interval_alignment_type = IntervalAlignmentType::Beginning;  ///< For intervals: use beginning or end
-    double offset = 0.0;  ///< Offset in time units to apply to alignment events
-    double window_size = 1000.0;  ///< Window size in time units to gather around alignment event
-    std::map<std::string, EventPlotOptions> plot_events;  ///< Map of event names to their plot options
+    std::string alignment_event_key;                                                 ///< Key of the selected event/interval series for alignment
+    IntervalAlignmentType interval_alignment_type = IntervalAlignmentType::Beginning;///< For intervals: use beginning or end
+    double offset = 0.0;                                                             ///< Offset in time units to apply to alignment events
+    double window_size = 1000.0;                                                     ///< Window size in time units to gather around alignment event
+    std::map<std::string, EventPlotOptions> plot_events;                             ///< Map of event names to their plot options
 };
 
 /**
@@ -241,4 +252,4 @@ private:
     EventPlotStateData _data;
 };
 
-#endif  // EVENT_PLOT_STATE_HPP
+#endif// EVENT_PLOT_STATE_HPP
