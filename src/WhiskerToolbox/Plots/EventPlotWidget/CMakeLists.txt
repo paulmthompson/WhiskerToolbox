@@ -33,6 +33,7 @@ target_link_libraries(EventPlotWidget PRIVATE
 
 target_link_libraries(EventPlotWidget PRIVATE DataManager)
 target_link_libraries(EventPlotWidget PRIVATE EditorState)
+target_link_libraries(EventPlotWidget PRIVATE PlotAlignmentWidget)
 
 target_include_directories(EventPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

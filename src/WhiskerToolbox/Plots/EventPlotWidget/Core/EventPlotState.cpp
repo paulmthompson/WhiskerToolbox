@@ -1,12 +1,28 @@
 #include "EventPlotState.hpp"
 
+#include "Plots/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+
 #include <rfl/json.hpp>
 
 EventPlotState::EventPlotState(QObject * parent)
-    : EditorState(parent)
+    : EditorState(parent),
+      _alignment_state(std::make_unique<PlotAlignmentState>(this))
 {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
+
+    // Sync initial alignment data from member state
+    _data.alignment = _alignment_state->data();
+
+    // Forward alignment state signals to this object's signals
+    connect(_alignment_state.get(), &PlotAlignmentState::alignmentEventKeyChanged,
+            this, &EventPlotState::alignmentEventKeyChanged);
+    connect(_alignment_state.get(), &PlotAlignmentState::intervalAlignmentTypeChanged,
+            this, &EventPlotState::intervalAlignmentTypeChanged);
+    connect(_alignment_state.get(), &PlotAlignmentState::offsetChanged,
+            this, &EventPlotState::offsetChanged);
+    connect(_alignment_state.get(), &PlotAlignmentState::windowSizeChanged,
+            this, &EventPlotState::windowSizeChanged);
 }
 
 QString EventPlotState::getDisplayName() const
@@ -25,63 +41,58 @@ void EventPlotState::setDisplayName(QString const & name)
 
 QString EventPlotState::getAlignmentEventKey() const
 {
-    return QString::fromStdString(_data.alignment_event_key);
+    return _alignment_state->getAlignmentEventKey();
 }
 
 void EventPlotState::setAlignmentEventKey(QString const & key)
 {
-    std::string key_str = key.toStdString();
-    if (_data.alignment_event_key != key_str) {
-        _data.alignment_event_key = key_str;
-        markDirty();
-        emit alignmentEventKeyChanged(key);
-        emit stateChanged();
-    }
+    _alignment_state->setAlignmentEventKey(key);
+    // Sync to data for serialization
+    _data.alignment = _alignment_state->data();
+    markDirty();
+    emit stateChanged();
 }
 
 IntervalAlignmentType EventPlotState::getIntervalAlignmentType() const
 {
-    return _data.interval_alignment_type;
+    return _alignment_state->getIntervalAlignmentType();
 }
 
 void EventPlotState::setIntervalAlignmentType(IntervalAlignmentType type)
 {
-    if (_data.interval_alignment_type != type) {
-        _data.interval_alignment_type = type;
-        markDirty();
-        emit intervalAlignmentTypeChanged(type);
-        emit stateChanged();
-    }
+    _alignment_state->setIntervalAlignmentType(type);
+    // Sync to data for serialization
+    _data.alignment = _alignment_state->data();
+    markDirty();
+    emit stateChanged();
 }
 
 double EventPlotState::getOffset() const
 {
-    return _data.offset;
+    return _alignment_state->getOffset();
 }
 
 void EventPlotState::setOffset(double offset)
 {
-    if (_data.offset != offset) {
-        _data.offset = offset;
-        markDirty();
-        emit offsetChanged(offset);
-        emit stateChanged();
-    }
+    _alignment_state->setOffset(offset);
+    // Sync to data for serialization
+    _data.alignment = _alignment_state->data();
+    markDirty();
+    emit stateChanged();
 }
 
 double EventPlotState::getWindowSize() const
 {
-    return _data.window_size;
+    return _alignment_state->getWindowSize();
 }
 
 void EventPlotState::setWindowSize(double window_size)
 {
-    if (_data.window_size != window_size) {
-        _data.window_size = window_size;
-        markDirty();
-        emit windowSizeChanged(window_size);
-        emit stateChanged();
-    }
+    _alignment_state->setWindowSize(window_size);
+    // Sync to data for serialization
+    _data.alignment = _alignment_state->data();
+    markDirty();
+    emit stateChanged();
 }
 
 void EventPlotState::addPlotEvent(QString const & event_name, QString const & event_key)
@@ -160,6 +171,9 @@ bool EventPlotState::fromJson(std::string const & json)
         if (!_data.instance_id.empty()) {
             setInstanceId(QString::fromStdString(_data.instance_id));
         }
+
+        // Restore alignment state from serialized data
+        _alignment_state->data() = _data.alignment;
 
         emit stateChanged();
         return true;

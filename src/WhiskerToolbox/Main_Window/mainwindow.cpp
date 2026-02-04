@@ -39,6 +39,7 @@
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
+#include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -293,6 +294,7 @@ void MainWindow::_createActions() {
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
     connect(ui->actionData_Import, &QAction::triggered, this, &MainWindow::openDataImport);
     connect(ui->actionEvent_Plot, &QAction::triggered, this, &MainWindow::openEventPlotWidget);
+    connect(ui->actionLine_Plot, &QAction::triggered, this, &MainWindow::openLinePlotWidget);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
@@ -770,6 +772,11 @@ void MainWindow::openEventPlotWidget() {
     openEditor(QStringLiteral("EventPlotWidget"));
 }
 
+void MainWindow::openLinePlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("LinePlotWidget"));
+}
+
 void MainWindow::openDataInspector() {
     // Create a new Data Inspector using EditorCreationController
     // The controller handles:
@@ -865,6 +872,8 @@ void MainWindow::_registerEditorTypes() {
     TableDesignerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     EventPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

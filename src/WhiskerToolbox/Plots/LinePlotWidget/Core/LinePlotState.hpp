@@ -1,11 +1,11 @@
-#ifndef EVENT_PLOT_STATE_HPP
-#define EVENT_PLOT_STATE_HPP
+#ifndef LINE_PLOT_STATE_HPP
+#define LINE_PLOT_STATE_HPP
 
 /**
- * @file EventPlotState.hpp
- * @brief State class for EventPlotWidget
+ * @file LinePlotState.hpp
+ * @brief State class for LinePlotWidget
  * 
- * EventPlotState manages the serializable state for the EventPlotWidget,
+ * LinePlotState manages the serializable state for the LinePlotWidget,
  * enabling workspace save/restore and inter-widget communication via SelectionContext.
  * 
  * @see EditorState for base class documentation
@@ -18,73 +18,50 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
-#include <map>
 #include <memory>
-#include <optional>
 #include <string>
-#include <vector>
 
 /**
- * @brief Enumeration for event glyph/marker type
+ * @brief Serializable state data for LinePlotWidget
  */
-enum class EventGlyphType {
-    Tick,  ///< Vertical line (default)
-    Circle,///< Circle marker
-    Square ///< Square marker
-};
-
-/**
- * @brief Options for plotting an event series in the raster plot
- */
-struct EventPlotOptions {
-    std::string event_key;                           ///< Key of the DigitalEventSeries to plot
-    double tick_thickness = 2.0;                     ///< Thickness of the tick/glyph (default: 2.0)
-    EventGlyphType glyph_type = EventGlyphType::Tick;///< Type of glyph to display (default: Tick/vertical line)
-    std::string hex_color = "#000000";               ///< Color as hex string (default: black)
-};
-
-/**
- * @brief Serializable state data for EventPlotWidget
- */
-struct EventPlotStateData {
+struct LinePlotStateData {
     std::string instance_id;
-    std::string display_name = "Event Plot";
+    std::string display_name = "Line Plot";
     PlotAlignmentData alignment;                                                      ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, EventPlotOptions> plot_events;                             ///< Map of event names to their plot options
 };
 
 /**
- * @brief State class for EventPlotWidget
+ * @brief State class for LinePlotWidget
  * 
- * EventPlotState is the Qt wrapper around EventPlotStateData that provides
+ * LinePlotState is the Qt wrapper around LinePlotStateData that provides
  * typed accessors and Qt signals for all state properties.
  * 
- * EventPlotState uses composition with PlotAlignmentState to provide alignment
+ * LinePlotState uses composition with PlotAlignmentState to provide alignment
  * functionality via the shared PlotAlignmentWidget component.
  */
-class EventPlotState : public EditorState {
+class LinePlotState : public EditorState {
     Q_OBJECT
 
 public:
     /**
-     * @brief Construct a new EventPlotState
+     * @brief Construct a new LinePlotState
      * @param parent Parent QObject (typically nullptr, managed by WorkspaceManager)
      */
-    explicit EventPlotState(QObject * parent = nullptr);
+    explicit LinePlotState(QObject * parent = nullptr);
 
-    ~EventPlotState() override = default;
+    ~LinePlotState() override = default;
 
     // === Type Identification ===
 
     /**
      * @brief Get the type name for this state
-     * @return "EventPlot"
+     * @return "LinePlot"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("EventPlot"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("LinePlot"); }
 
     /**
      * @brief Get the display name for UI
-     * @return User-visible name (default: "Event Plot")
+     * @return User-visible name (default: "Line Plot")
      */
     [[nodiscard]] QString getDisplayName() const override;
 
@@ -93,8 +70,6 @@ public:
      * @param name New display name
      */
     void setDisplayName(QString const & name) override;
-
-    // === Alignment Event ===
 
     // === Alignment Event ===
 
@@ -158,41 +133,6 @@ public:
      */
     [[nodiscard]] PlotAlignmentState * alignmentState() { return _alignment_state.get(); }
 
-    // === Plot Events Management ===
-
-    /**
-     * @brief Add an event to the plot
-     * @param event_name Name/key for the event (used as identifier)
-     * @param event_key DataManager key of the DigitalEventSeries
-     */
-    void addPlotEvent(QString const & event_name, QString const & event_key);
-
-    /**
-     * @brief Remove an event from the plot
-     * @param event_name Name/key of the event to remove
-     */
-    void removePlotEvent(QString const & event_name);
-
-    /**
-     * @brief Get all plot event names
-     * @return List of event names currently in the plot
-     */
-    [[nodiscard]] std::vector<QString> getPlotEventNames() const;
-
-    /**
-     * @brief Get options for a specific plot event
-     * @param event_name Name/key of the event
-     * @return Options struct, or std::nullopt if event not found
-     */
-    [[nodiscard]] std::optional<EventPlotOptions> getPlotEventOptions(QString const & event_name) const;
-
-    /**
-     * @brief Update options for a specific plot event
-     * @param event_name Name/key of the event
-     * @param options New options
-     */
-    void updatePlotEventOptions(QString const & event_name, EventPlotOptions const & options);
-
     // === Serialization ===
 
     /**
@@ -233,27 +173,9 @@ signals:
      */
     void windowSizeChanged(double window_size);
 
-    /**
-     * @brief Emitted when a plot event is added
-     * @param event_name Name of the added event
-     */
-    void plotEventAdded(QString const & event_name);
-
-    /**
-     * @brief Emitted when a plot event is removed
-     * @param event_name Name of the removed event
-     */
-    void plotEventRemoved(QString const & event_name);
-
-    /**
-     * @brief Emitted when plot event options are updated
-     * @param event_name Name of the updated event
-     */
-    void plotEventOptionsChanged(QString const & event_name);
-
 private:
-    EventPlotStateData _data;
+    LinePlotStateData _data;
     std::unique_ptr<PlotAlignmentState> _alignment_state;
 };
 
-#endif// EVENT_PLOT_STATE_HPP
+#endif// LINE_PLOT_STATE_HPP
