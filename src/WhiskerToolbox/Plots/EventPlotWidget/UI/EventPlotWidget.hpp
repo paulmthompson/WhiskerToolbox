@@ -10,6 +10,7 @@
  */
 
 #include "DataManager/DataManagerFwd.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
 
@@ -61,6 +62,13 @@ public:
      */
     [[nodiscard]] EventPlotState * state();
 
+signals:
+    /**
+     * @brief Emitted when a time position is selected in the view
+     * @param position TimePosition to navigate to
+     */
+    void timePositionSelected(TimePosition position);
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::EventPlotWidget * ui;
@@ -69,4 +77,4 @@ private:
     std::shared_ptr<EventPlotState> _state;
 };
 
-#endif  // EVENT_PLOT_WIDGET_HPP
+#endif// EVENT_PLOT_WIDGET_HPP

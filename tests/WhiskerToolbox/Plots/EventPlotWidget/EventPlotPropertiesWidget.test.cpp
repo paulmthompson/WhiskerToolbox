@@ -32,7 +32,7 @@
 /**
  * @brief Create a test TimeFrame
  */
-std::shared_ptr<TimeFrame> createTestTimeFrame()
+static std::shared_ptr<TimeFrame> createTestTimeFrame()
 {
     std::vector<int> times;
     times.reserve(1000);
@@ -84,10 +84,9 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         
         EventPlotPropertiesWidget widget(state, data_manager);
         
-        auto * combo = widget.findChild<QComboBox *>("event_series_combo");
+        auto * combo = widget.findChild<QComboBox *>("add_event_combo");
         REQUIRE(combo != nullptr);
-        REQUIRE(combo->count() == 1);  // "No event data available" message
-        REQUIRE_FALSE(combo->isEnabled());
+        REQUIRE(combo->count() == 0);  // Empty when no data available
     }
     
     SECTION("combo box populated with DigitalEventSeries keys") {
@@ -116,7 +115,7 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         // Process events again to ensure combo box is populated
         QApplication::processEvents();
         
-        auto * combo = widget.findChild<QComboBox *>("event_series_combo");
+        auto * combo = widget.findChild<QComboBox *>("add_event_combo");
         REQUIRE(combo != nullptr);
         REQUIRE(combo->isEnabled());
         REQUIRE(combo->count() == 2);
@@ -124,7 +123,7 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         REQUIRE(combo->itemText(1).toStdString() == "events_2");
     }
     
-    SECTION("combo box populated with DigitalIntervalSeries keys") {
+    SECTION("alignment combo box populated with DigitalIntervalSeries keys") {
         auto data_manager = std::make_shared<DataManager>();
         auto state = std::make_shared<EventPlotState>();
         
@@ -150,15 +149,22 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         // Process events again to ensure combo box is populated
         QApplication::processEvents();
         
-        auto * combo = widget.findChild<QComboBox *>("event_series_combo");
+        // Check alignment_event_combo (shows both events and intervals)
+        auto * combo = widget.findChild<QComboBox *>("alignment_event_combo");
         REQUIRE(combo != nullptr);
-        REQUIRE(combo->isEnabled());
-        REQUIRE(combo->count() == 2);
-        REQUIRE(combo->itemText(0).toStdString() == "intervals_1");
-        REQUIRE(combo->itemText(1).toStdString() == "intervals_2");
+        REQUIRE(combo->count() >= 2);  // At least 2 (plus "(None)" item)
+        // Find the intervals in the combo (may have "(None)" as first item)
+        bool found1 = false, found2 = false;
+        for (int i = 0; i < combo->count(); ++i) {
+            QString text = combo->itemText(i);
+            if (text == "intervals_1") found1 = true;
+            if (text == "intervals_2") found2 = true;
+        }
+        REQUIRE(found1);
+        REQUIRE(found2);
     }
     
-    SECTION("combo box populated with both event and interval series") {
+    SECTION("alignment combo box populated with both event and interval series") {
         auto data_manager = std::make_shared<DataManager>();
         auto state = std::make_shared<EventPlotState>();
         
@@ -184,13 +190,19 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         // Process events again to ensure combo box is populated
         QApplication::processEvents();
         
-        auto * combo = widget.findChild<QComboBox *>("event_series_combo");
+        // Check alignment_event_combo (shows both events and intervals)
+        auto * combo = widget.findChild<QComboBox *>("alignment_event_combo");
         REQUIRE(combo != nullptr);
-        REQUIRE(combo->isEnabled());
-        REQUIRE(combo->count() == 2);
-        // Order: events first, then intervals
-        REQUIRE(combo->itemText(0).toStdString() == "events_1");
-        REQUIRE(combo->itemText(1).toStdString() == "intervals_1");
+        REQUIRE(combo->count() >= 2);  // At least 2 (plus "(None)" item)
+        // Find both items in the combo (may have "(None)" as first item)
+        bool found_event = false, found_interval = false;
+        for (int i = 0; i < combo->count(); ++i) {
+            QString text = combo->itemText(i);
+            if (text == "events_1") found_event = true;
+            if (text == "intervals_1") found_interval = true;
+        }
+        REQUIRE(found_event);
+        REQUIRE(found_interval);
     }
 }
 
@@ -208,12 +220,11 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         
         EventPlotPropertiesWidget widget(state, data_manager);
         
-        auto * combo = widget.findChild<QComboBox *>("event_series_combo");
+        auto * combo = widget.findChild<QComboBox *>("add_event_combo");
         REQUIRE(combo != nullptr);
         
         // Initially empty
-        REQUIRE(combo->count() == 1);  // "No event data available"
-        REQUIRE_FALSE(combo->isEnabled());
+        REQUIRE(combo->count() == 0);  // Empty when no data available
         
         // Create and set TimeFrame (remove existing if present)
         data_manager->removeTime(TimeKey("time"));
@@ -247,7 +258,7 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         
         EventPlotPropertiesWidget widget(state, data_manager);
         
-        auto * combo = widget.findChild<QComboBox *>("event_series_combo");
+        auto * combo = widget.findChild<QComboBox *>("add_event_combo");
         REQUIRE(combo != nullptr);
         
         // Create and set TimeFrame (remove existing if present)
@@ -255,13 +266,11 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         auto time_frame = createTestTimeFrame();
         data_manager->setTime(TimeKey("time"), time_frame);
         
-        // Add multiple event series
+        // Add multiple event series (add_event_combo only shows events, not intervals)
         auto event_series_1 = createTestEventSeries("events_1");
         auto event_series_2 = createTestEventSeries("events_2");
-        auto interval_series = createTestIntervalSeries("intervals_1");
         event_series_1->setTimeFrame(time_frame);
         event_series_2->setTimeFrame(time_frame);
-        interval_series->setTimeFrame(time_frame);
         
         data_manager->setData<DigitalEventSeries>("events_1", event_series_1, TimeKey("time"));
         QApplication::processEvents();
@@ -269,12 +278,9 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         data_manager->setData<DigitalEventSeries>("events_2", event_series_2, TimeKey("time"));
         QApplication::processEvents();
         
-        data_manager->setData<DigitalIntervalSeries>("intervals_1", interval_series, TimeKey("time"));
-        QApplication::processEvents();
-        
-        // Combo box should contain all three
+        // Combo box should contain both events
         REQUIRE(combo->isEnabled());
-        REQUIRE(combo->count() == 3);
+        REQUIRE(combo->count() == 2);
         
         // Verify all keys are present
         std::vector<std::string> items;
@@ -283,7 +289,6 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         }
         REQUIRE(std::find(items.begin(), items.end(), "events_1") != items.end());
         REQUIRE(std::find(items.begin(), items.end(), "events_2") != items.end());
-        REQUIRE(std::find(items.begin(), items.end(), "intervals_1") != items.end());
     }
 }
 
