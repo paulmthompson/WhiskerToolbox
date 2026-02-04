@@ -95,6 +95,94 @@ void PSTHState::setWindowSize(double window_size)
     emit stateChanged();
 }
 
+void PSTHState::addPlotEvent(QString const & event_name, QString const & event_key)
+{
+    std::string name_str = event_name.toStdString();
+    std::string key_str = event_key.toStdString();
+
+    PSTHEventOptions options;
+    options.event_key = key_str;
+
+    _data.plot_events[name_str] = options;
+    markDirty();
+    emit plotEventAdded(event_name);
+    emit stateChanged();
+}
+
+void PSTHState::removePlotEvent(QString const & event_name)
+{
+    std::string name_str = event_name.toStdString();
+    auto it = _data.plot_events.find(name_str);
+    if (it != _data.plot_events.end()) {
+        _data.plot_events.erase(it);
+        markDirty();
+        emit plotEventRemoved(event_name);
+        emit stateChanged();
+    }
+}
+
+std::vector<QString> PSTHState::getPlotEventNames() const
+{
+    std::vector<QString> names;
+    names.reserve(_data.plot_events.size());
+    for (auto const & [name, _] : _data.plot_events) {
+        names.push_back(QString::fromStdString(name));
+    }
+    return names;
+}
+
+std::optional<PSTHEventOptions> PSTHState::getPlotEventOptions(QString const & event_name) const
+{
+    std::string name_str = event_name.toStdString();
+    auto it = _data.plot_events.find(name_str);
+    if (it != _data.plot_events.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+void PSTHState::updatePlotEventOptions(QString const & event_name, PSTHEventOptions const & options)
+{
+    std::string name_str = event_name.toStdString();
+    auto it = _data.plot_events.find(name_str);
+    if (it != _data.plot_events.end()) {
+        it->second = options;
+        markDirty();
+        emit plotEventOptionsChanged(event_name);
+        emit stateChanged();
+    }
+}
+
+PSTHStyle PSTHState::getStyle() const
+{
+    return _data.style;
+}
+
+void PSTHState::setStyle(PSTHStyle style)
+{
+    if (_data.style != style) {
+        _data.style = style;
+        markDirty();
+        emit styleChanged(style);
+        emit stateChanged();
+    }
+}
+
+double PSTHState::getBinSize() const
+{
+    return _data.bin_size;
+}
+
+void PSTHState::setBinSize(double bin_size)
+{
+    if (_data.bin_size != bin_size) {
+        _data.bin_size = bin_size;
+        markDirty();
+        emit binSizeChanged(bin_size);
+        emit stateChanged();
+    }
+}
+
 std::string PSTHState::toJson() const
 {
     // Include instance_id in serialization for restoration

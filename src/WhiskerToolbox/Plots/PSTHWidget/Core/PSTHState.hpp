@@ -25,12 +25,31 @@
 #include <vector>
 
 /**
+ * @brief Enumeration for PSTH plot style
+ */
+enum class PSTHStyle {
+    Bar,  ///< Bar chart style (default)
+    Line  ///< Line plot style
+};
+
+/**
+ * @brief Options for plotting an event series in the PSTH plot
+ */
+struct PSTHEventOptions {
+    std::string event_key;              ///< Key of the DigitalEventSeries to plot
+    std::string hex_color = "#000000";  ///< Color as hex string (default: black)
+};
+
+/**
  * @brief Serializable state data for PSTHWidget
  */
 struct PSTHStateData {
     std::string instance_id;
     std::string display_name = "PSTH Plot";
-    PlotAlignmentData alignment;  ///< Alignment settings (event key, interval type, offset, window size)
+    PlotAlignmentData alignment;                                    ///< Alignment settings (event key, interval type, offset, window size)
+    std::map<std::string, PSTHEventOptions> plot_events;           ///< Map of event names to their plot options
+    PSTHStyle style = PSTHStyle::Bar;                              ///< Plot style (bar or line)
+    double bin_size = 10.0;                                         ///< Bin size in time units (default: 10.0)
 };
 
 /**
@@ -136,6 +155,67 @@ public:
      */
     [[nodiscard]] PlotAlignmentState * alignmentState() { return _alignment_state.get(); }
 
+    // === Plot Events Management ===
+
+    /**
+     * @brief Add an event to the plot
+     * @param event_name Name/key for the event (used as identifier)
+     * @param event_key DataManager key of the DigitalEventSeries
+     */
+    void addPlotEvent(QString const & event_name, QString const & event_key);
+
+    /**
+     * @brief Remove an event from the plot
+     * @param event_name Name/key of the event to remove
+     */
+    void removePlotEvent(QString const & event_name);
+
+    /**
+     * @brief Get all plot event names
+     * @return List of event names currently in the plot
+     */
+    [[nodiscard]] std::vector<QString> getPlotEventNames() const;
+
+    /**
+     * @brief Get options for a specific plot event
+     * @param event_name Name/key of the event
+     * @return Options struct, or std::nullopt if event not found
+     */
+    [[nodiscard]] std::optional<PSTHEventOptions> getPlotEventOptions(QString const & event_name) const;
+
+    /**
+     * @brief Update options for a specific plot event
+     * @param event_name Name/key of the event
+     * @param options New options
+     */
+    void updatePlotEventOptions(QString const & event_name, PSTHEventOptions const & options);
+
+    // === Global Plot Options ===
+
+    /**
+     * @brief Get the plot style
+     * @return Current plot style (Bar or Line)
+     */
+    [[nodiscard]] PSTHStyle getStyle() const;
+
+    /**
+     * @brief Set the plot style
+     * @param style New plot style
+     */
+    void setStyle(PSTHStyle style);
+
+    /**
+     * @brief Get the bin size
+     * @return Bin size in time units
+     */
+    [[nodiscard]] double getBinSize() const;
+
+    /**
+     * @brief Set the bin size
+     * @param bin_size Bin size in time units
+     */
+    void setBinSize(double bin_size);
+
     // === Serialization ===
 
     /**
@@ -175,6 +255,36 @@ signals:
      * @param window_size New window size value
      */
     void windowSizeChanged(double window_size);
+
+    /**
+     * @brief Emitted when a plot event is added
+     * @param event_name Name of the added event
+     */
+    void plotEventAdded(QString const & event_name);
+
+    /**
+     * @brief Emitted when a plot event is removed
+     * @param event_name Name of the removed event
+     */
+    void plotEventRemoved(QString const & event_name);
+
+    /**
+     * @brief Emitted when plot event options are updated
+     * @param event_name Name of the updated event
+     */
+    void plotEventOptionsChanged(QString const & event_name);
+
+    /**
+     * @brief Emitted when plot style changes
+     * @param style New plot style
+     */
+    void styleChanged(PSTHStyle style);
+
+    /**
+     * @brief Emitted when bin size changes
+     * @param bin_size New bin size value
+     */
+    void binSizeChanged(double bin_size);
 
 private:
     PSTHStateData _data;
