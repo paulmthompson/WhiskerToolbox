@@ -23,22 +23,6 @@ void EventPlotState::setDisplayName(QString const & name)
     }
 }
 
-QString EventPlotState::getPlotEventKey() const
-{
-    return QString::fromStdString(_data.plot_event_key);
-}
-
-void EventPlotState::setPlotEventKey(QString const & key)
-{
-    std::string key_str = key.toStdString();
-    if (_data.plot_event_key != key_str) {
-        _data.plot_event_key = key_str;
-        markDirty();
-        emit plotEventKeyChanged(key);
-        emit stateChanged();
-    }
-}
-
 QString EventPlotState::getAlignmentEventKey() const
 {
     return QString::fromStdString(_data.alignment_event_key);
@@ -81,6 +65,79 @@ void EventPlotState::setOffset(double offset)
         _data.offset = offset;
         markDirty();
         emit offsetChanged(offset);
+        emit stateChanged();
+    }
+}
+
+double EventPlotState::getWindowSize() const
+{
+    return _data.window_size;
+}
+
+void EventPlotState::setWindowSize(double window_size)
+{
+    if (_data.window_size != window_size) {
+        _data.window_size = window_size;
+        markDirty();
+        emit windowSizeChanged(window_size);
+        emit stateChanged();
+    }
+}
+
+void EventPlotState::addPlotEvent(QString const & event_name, QString const & event_key)
+{
+    std::string name_str = event_name.toStdString();
+    std::string key_str = event_key.toStdString();
+
+    EventPlotOptions options;
+    options.event_key = key_str;
+
+    _data.plot_events[name_str] = options;
+    markDirty();
+    emit plotEventAdded(event_name);
+    emit stateChanged();
+}
+
+void EventPlotState::removePlotEvent(QString const & event_name)
+{
+    std::string name_str = event_name.toStdString();
+    auto it = _data.plot_events.find(name_str);
+    if (it != _data.plot_events.end()) {
+        _data.plot_events.erase(it);
+        markDirty();
+        emit plotEventRemoved(event_name);
+        emit stateChanged();
+    }
+}
+
+std::vector<QString> EventPlotState::getPlotEventNames() const
+{
+    std::vector<QString> names;
+    names.reserve(_data.plot_events.size());
+    for (auto const & [name, _] : _data.plot_events) {
+        names.push_back(QString::fromStdString(name));
+    }
+    return names;
+}
+
+std::optional<EventPlotOptions> EventPlotState::getPlotEventOptions(QString const & event_name) const
+{
+    std::string name_str = event_name.toStdString();
+    auto it = _data.plot_events.find(name_str);
+    if (it != _data.plot_events.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+void EventPlotState::updatePlotEventOptions(QString const & event_name, EventPlotOptions const & options)
+{
+    std::string name_str = event_name.toStdString();
+    auto it = _data.plot_events.find(name_str);
+    if (it != _data.plot_events.end()) {
+        it->second = options;
+        markDirty();
+        emit plotEventOptionsChanged(event_name);
         emit stateChanged();
     }
 }

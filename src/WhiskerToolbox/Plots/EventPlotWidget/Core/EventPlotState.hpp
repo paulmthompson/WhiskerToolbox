@@ -16,7 +16,10 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <map>
+#include <optional>
 #include <string>
+#include <vector>
 
 /**
  * @brief Enumeration for interval alignment type
@@ -27,15 +30,24 @@ enum class IntervalAlignmentType {
 };
 
 /**
+ * @brief Options for plotting an event series in the raster plot
+ */
+struct EventPlotOptions {
+    std::string event_key;  ///< Key of the DigitalEventSeries to plot
+    // Additional options can be added here in the future (e.g., color, style, etc.)
+};
+
+/**
  * @brief Serializable state data for EventPlotWidget
  */
 struct EventPlotStateData {
     std::string instance_id;
     std::string display_name = "Event Plot";
-    std::string plot_event_key;  ///< Key of the DigitalEventSeries to plot in the raster
     std::string alignment_event_key;  ///< Key of the selected event/interval series for alignment
     IntervalAlignmentType interval_alignment_type = IntervalAlignmentType::Beginning;  ///< For intervals: use beginning or end
     double offset = 0.0;  ///< Offset in time units to apply to alignment events
+    double window_size = 1000.0;  ///< Window size in time units to gather around alignment event
+    std::map<std::string, EventPlotOptions> plot_events;  ///< Map of event names to their plot options
 };
 
 /**
@@ -75,20 +87,6 @@ public:
      * @param name New display name
      */
     void setDisplayName(QString const & name) override;
-
-    // === Plot Event ===
-
-    /**
-     * @brief Get the plot event key
-     * @return Key of the selected DigitalEventSeries to plot
-     */
-    [[nodiscard]] QString getPlotEventKey() const;
-
-    /**
-     * @brief Set the plot event key
-     * @param key Key of the DigitalEventSeries to plot in the raster
-     */
-    void setPlotEventKey(QString const & key);
 
     // === Alignment Event ===
 
@@ -132,6 +130,55 @@ public:
      */
     void setOffset(double offset);
 
+    // === Window Size ===
+
+    /**
+     * @brief Get the window size
+     * @return Window size in time units
+     */
+    [[nodiscard]] double getWindowSize() const;
+
+    /**
+     * @brief Set the window size
+     * @param window_size Window size in time units to gather around alignment event
+     */
+    void setWindowSize(double window_size);
+
+    // === Plot Events Management ===
+
+    /**
+     * @brief Add an event to the plot
+     * @param event_name Name/key for the event (used as identifier)
+     * @param event_key DataManager key of the DigitalEventSeries
+     */
+    void addPlotEvent(QString const & event_name, QString const & event_key);
+
+    /**
+     * @brief Remove an event from the plot
+     * @param event_name Name/key of the event to remove
+     */
+    void removePlotEvent(QString const & event_name);
+
+    /**
+     * @brief Get all plot event names
+     * @return List of event names currently in the plot
+     */
+    [[nodiscard]] std::vector<QString> getPlotEventNames() const;
+
+    /**
+     * @brief Get options for a specific plot event
+     * @param event_name Name/key of the event
+     * @return Options struct, or std::nullopt if event not found
+     */
+    [[nodiscard]] std::optional<EventPlotOptions> getPlotEventOptions(QString const & event_name) const;
+
+    /**
+     * @brief Update options for a specific plot event
+     * @param event_name Name/key of the event
+     * @param options New options
+     */
+    void updatePlotEventOptions(QString const & event_name, EventPlotOptions const & options);
+
     // === Serialization ===
 
     /**
@@ -149,12 +196,6 @@ public:
 
 signals:
     /**
-     * @brief Emitted when plot event key changes
-     * @param key New plot event key
-     */
-    void plotEventKeyChanged(QString const & key);
-
-    /**
      * @brief Emitted when alignment event key changes
      * @param key New alignment event key
      */
@@ -171,6 +212,30 @@ signals:
      * @param offset New offset value
      */
     void offsetChanged(double offset);
+
+    /**
+     * @brief Emitted when window size changes
+     * @param window_size New window size value
+     */
+    void windowSizeChanged(double window_size);
+
+    /**
+     * @brief Emitted when a plot event is added
+     * @param event_name Name of the added event
+     */
+    void plotEventAdded(QString const & event_name);
+
+    /**
+     * @brief Emitted when a plot event is removed
+     * @param event_name Name of the removed event
+     */
+    void plotEventRemoved(QString const & event_name);
+
+    /**
+     * @brief Emitted when plot event options are updated
+     * @param event_name Name of the updated event
+     */
+    void plotEventOptionsChanged(QString const & event_name);
 
 private:
     EventPlotStateData _data;

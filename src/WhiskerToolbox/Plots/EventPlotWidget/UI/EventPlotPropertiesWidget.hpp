@@ -62,10 +62,19 @@ public:
 
 private slots:
     /**
-     * @brief Handle plot event combo box selection change
-     * @param index Selected index
+     * @brief Handle add event button click
      */
-    void _onPlotEventChanged(int index);
+    void _onAddEventClicked();
+
+    /**
+     * @brief Handle remove event button click
+     */
+    void _onRemoveEventClicked();
+
+    /**
+     * @brief Handle plot event table selection change
+     */
+    void _onPlotEventSelectionChanged();
 
     /**
      * @brief Handle alignment event combo box selection change
@@ -86,10 +95,28 @@ private slots:
     void _onOffsetChanged(double value);
 
     /**
-     * @brief Handle state plot event key change
-     * @param key New plot event key
+     * @brief Handle window size spinbox value change
+     * @param value New window size value
      */
-    void _onStatePlotEventKeyChanged(QString const & key);
+    void _onWindowSizeChanged(double value);
+
+    /**
+     * @brief Handle state plot event added
+     * @param event_name Name of the added event
+     */
+    void _onStatePlotEventAdded(QString const & event_name);
+
+    /**
+     * @brief Handle state plot event removed
+     * @param event_name Name of the removed event
+     */
+    void _onStatePlotEventRemoved(QString const & event_name);
+
+    /**
+     * @brief Handle state plot event options changed
+     * @param event_name Name of the updated event
+     */
+    void _onStatePlotEventOptionsChanged(QString const & event_name);
 
     /**
      * @brief Handle state alignment event key change
@@ -109,11 +136,28 @@ private slots:
      */
     void _onStateOffsetChanged(double offset);
 
+    /**
+     * @brief Handle state window size change
+     * @param window_size New window size value
+     */
+    void _onStateWindowSizeChanged(double window_size);
+
 private:
     /**
-     * @brief Populate the plot event combo box with available DigitalEventSeries keys
+     * @brief Populate the add event combo box with available DigitalEventSeries keys
      */
-    void _populatePlotEventComboBox();
+    void _populateAddEventComboBox();
+
+    /**
+     * @brief Update the plot events table from state
+     */
+    void _updatePlotEventsTable();
+
+    /**
+     * @brief Update the event options display for the selected event
+     * @param event_name Name of the event to display options for
+     */
+    void _updateEventOptions(QString const & event_name);
 
     /**
      * @brief Populate the alignment event combo box with available event/interval series
