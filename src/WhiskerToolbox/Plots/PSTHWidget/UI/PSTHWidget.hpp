@@ -12,12 +12,15 @@
 #include "DataManager/DataManagerFwd.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <QResizeEvent>
 #include <QWidget>
 
 #include <memory>
 
 class DataManager;
 class PSTHState;
+class RelativeTimeAxisWidget;
+class PSTHPlotOpenGLWidget;
 
 namespace Ui {
 class PSTHWidget;
@@ -69,12 +72,21 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::PSTHWidget * ui;
 
     /// Serializable state shared with properties widget
     std::shared_ptr<PSTHState> _state;
+
+    /// OpenGL rendering widget
+    PSTHPlotOpenGLWidget * _opengl_widget;
+
+    /// Time axis widget below the plot
+    RelativeTimeAxisWidget * _axis_widget;
 };
 
 #endif// PSTH_WIDGET_HPP

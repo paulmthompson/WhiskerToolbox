@@ -1,9 +1,14 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(PSTH_WIDGET_SOURCES
 
         Core/PSTHState.cpp
         Core/PSTHState.hpp
+        Core/ViewStateAdapter.cpp
+        Core/ViewStateAdapter.hpp
+
+        Rendering/PSTHPlotOpenGLWidget.cpp
+        Rendering/PSTHPlotOpenGLWidget.hpp
 
         PSTHWidgetRegistration.cpp
         PSTHWidgetRegistration.hpp
@@ -29,11 +34,18 @@ target_link_libraries(PSTHWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(PSTHWidget PRIVATE DataManager)
 target_link_libraries(PSTHWidget PRIVATE EditorState)
 target_link_libraries(PSTHWidget PRIVATE PlotAlignmentWidget)
+target_link_libraries(PSTHWidget PRIVATE RelativeTimeAxisWidget)
+target_link_libraries(PSTHWidget PRIVATE CorePlotting)
+target_link_libraries(PSTHWidget PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(PSTHWidget PRIVATE PlottingOpenGL)
+target_link_libraries(PSTHWidget PRIVATE glm::glm)
 
 target_include_directories(PSTHWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
