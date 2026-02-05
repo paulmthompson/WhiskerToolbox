@@ -39,6 +39,7 @@
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
+#include "Plots/ACFWidget/ACFWidgetRegistration.hpp"
 #include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
 #include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
 #include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
@@ -296,6 +297,7 @@ void MainWindow::_createActions() {
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
     connect(ui->actionData_Import, &QAction::triggered, this, &MainWindow::openDataImport);
     connect(ui->actionEvent_Plot, &QAction::triggered, this, &MainWindow::openEventPlotWidget);
+    connect(ui->actionACF_Plot, &QAction::triggered, this, &MainWindow::openACFPlotWidget);
     connect(ui->actionPSTH_Plot, &QAction::triggered, this, &MainWindow::openPSTHPlotWidget);
     connect(ui->actionLine_Plot, &QAction::triggered, this, &MainWindow::openLinePlotWidget);
     connect(ui->actionHeatmap_Plot, &QAction::triggered, this, &MainWindow::openHeatmapPlotWidget);
@@ -776,6 +778,11 @@ void MainWindow::openEventPlotWidget() {
     openEditor(QStringLiteral("EventPlotWidget"));
 }
 
+void MainWindow::openACFPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("ACFWidget"));
+}
+
 void MainWindow::openPSTHPlotWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("PSTHWidget"));
@@ -886,6 +893,8 @@ void MainWindow::_registerEditorTypes() {
     TableDesignerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     EventPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    ACFWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     PSTHWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

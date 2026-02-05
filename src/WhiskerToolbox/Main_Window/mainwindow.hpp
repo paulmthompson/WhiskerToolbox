@@ -155,6 +155,7 @@ private slots:
     void openZoneLayoutManager();
     void openDataInspector();
     void openEventPlotWidget();
+    void openACFPlotWidget();
     void openPSTHPlotWidget();
     void openLinePlotWidget();
     void openHeatmapPlotWidget();

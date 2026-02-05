@@ -66,6 +66,7 @@
      <string>Plots</string>
     </property>
     <addaction name="actionEvent_Plot"/>
+    <addaction name="actionACF_Plot"/>
     <addaction name="actionPSTH_Plot"/>
     <addaction name="actionLine_Plot"/>
     <addaction name="actionHeatmap_Plot"/>
@@ -257,6 +258,11 @@
   <action name="actionEvent_Plot">
    <property name="text">
     <string>Event Plot</string>
+   </property>
+  </action>
+  <action name="actionACF_Plot">
+   <property name="text">
+    <string>Autocorrelation Function</string>
    </property>
   </action>
   <action name="actionLine_Plot">
