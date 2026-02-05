@@ -1,6 +1,6 @@
 #include "PSTHState.hpp"
 
-#include "Plots/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+#include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 
 #include <rfl/json.hpp>
 

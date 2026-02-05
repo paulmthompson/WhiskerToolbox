@@ -3,7 +3,7 @@
 #include "Core/LinePlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Plots/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 
 #include "ui_LinePlotPropertiesWidget.h"
 

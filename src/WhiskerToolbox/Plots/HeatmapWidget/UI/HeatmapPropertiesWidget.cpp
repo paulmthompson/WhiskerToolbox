@@ -1,8 +1,9 @@
 #include "HeatmapPropertiesWidget.hpp"
 
 #include "Core/HeatmapState.hpp"
+
+#include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Plots/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 
 #include "ui_HeatmapPropertiesWidget.h"
 

@@ -90,7 +90,7 @@ add_subdirectory(ML_Widget)
 add_subdirectory(DataTransform_Widget)
 
 # Qt, DataManager - Shared plot alignment widget
-add_subdirectory(Plots/PlotAlignmentWidget)
+add_subdirectory(Plots/Common/PlotAlignmentWidget)
 
 # Qt, DataManager, EditorState - Event raster plot widget
 add_subdirectory(Plots/EventPlotWidget)

@@ -12,8 +12,8 @@
  */
 
 #include "EditorState/EditorState.hpp"
-#include "Plots/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
-#include "Plots/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+#include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
+#include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>

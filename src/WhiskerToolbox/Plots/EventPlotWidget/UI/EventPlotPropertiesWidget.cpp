@@ -3,7 +3,7 @@
 #include "Core/EventPlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "Plots/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 
 #include "ui_EventPlotPropertiesWidget.h"
 
