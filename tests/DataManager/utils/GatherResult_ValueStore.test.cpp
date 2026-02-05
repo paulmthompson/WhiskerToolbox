@@ -272,7 +272,8 @@ TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore
         TransformPipeline pipeline;
         
         // Add step with param bindings set in the step
-        auto step = PipelineStep("NormalizeEventTimeValueV2", NormalizeTimeParamsV2{});
+        // Use NormalizeTimeValueV2 since bindValueProjectionV2 extracts .time() from EventWithId
+        auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
         step.param_bindings = {{"alignment_time", "alignment_time"}};
         pipeline.addStep(step);
 
@@ -293,7 +294,8 @@ TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore
 
     SECTION("Factory produces different projections for different stores") {
         TransformPipeline pipeline;
-        auto step = PipelineStep("NormalizeEventTimeValueV2", NormalizeTimeParamsV2{});
+        // Use NormalizeTimeValueV2 since bindValueProjectionV2 extracts .time() from EventWithId
+        auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
         step.param_bindings = {{"alignment_time", "alignment_time"}};
         pipeline.addStep(step);
 
@@ -317,16 +319,16 @@ TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore
     SECTION("Empty pipeline throws") {
         TransformPipeline pipeline;  // Empty
         CHECK_THROWS_AS(
-            (bindValueProjectionV2<EventWithId, float>(pipeline)),
+            (bindValueProjectionV2<TimeFrameIndex, float>(pipeline)),
             std::runtime_error);
     }
 }
 
 // =============================================================================
-// projectV2 Tests
+// project Tests
 // =============================================================================
 
-TEST_CASE("GatherResult - projectV2", "[GatherResult][ValueStore][Phase3]") {
+TEST_CASE("GatherResult - project", "[GatherResult][ValueStore][Phase3]") {
     V2TestFixture fixture;
 
     // Create events
@@ -339,15 +341,16 @@ TEST_CASE("GatherResult - projectV2", "[GatherResult][ValueStore][Phase3]") {
 
     auto result = gather(events, intervals);
 
-    SECTION("projectV2 creates per-trial projections") {
+    SECTION("project creates per-trial projections") {
         // Create pipeline with bindings
+        // Use NormalizeTimeValueV2 since bindValueProjectionV2 extracts .time() from EventWithId
         TransformPipeline pipeline;
-        auto step = PipelineStep("NormalizeEventTimeValueV2", NormalizeTimeParamsV2{});
+        auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
         step.param_bindings = {{"alignment_time", "alignment_time"}};
         pipeline.addStep(step);
 
         auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-        auto projections = result.projectV2(factory);
+        auto projections = result.project(factory);
 
         REQUIRE(projections.size() == 3);
 
@@ -405,13 +408,14 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
     REQUIRE(raster.size() == 3);
 
     // Build pipeline for time normalization using V2 pattern
+    // Use NormalizeTimeValueV2 since bindValueProjectionV2 extracts .time() from EventWithId
     TransformPipeline pipeline;
-    auto step = PipelineStep("NormalizeEventTimeValueV2", NormalizeTimeParamsV2{});
+    auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
     step.param_bindings = {{"alignment_time", "alignment_time"}};
     pipeline.addStep(step);
 
     auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-    auto projections = raster.projectV2(factory);
+    auto projections = raster.project(factory);
 
     SECTION("Verify normalized times for raster plot") {
         // Trial 0: alignment = 0
@@ -454,86 +458,6 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
                 // Both values should be valid
                 CHECK(norm_time >= 0.0f);
                 // EntityId is valid (even if uninitialized in test data)
-            }
-        }
-    }
-}
-
-// =============================================================================
-// Comparison: V1 vs V2 Pattern
-// =============================================================================
-
-TEST_CASE("GatherResult - V1 vs V2 pattern comparison", "[GatherResult][ValueStore][Phase3]") {
-    V2TestFixture fixture;
-
-    // Same test data for both approaches
-    auto events = createEventSeries({25, 75, 125});
-    auto intervals = createIntervalSeries({
-        {0, 50},     // Trial 0
-        {100, 150}   // Trial 1
-    });
-
-    auto result = gather(events, intervals);
-
-    SECTION("V1 pattern uses buildContext and ValueProjectionFactory") {
-        // V1: Use context-aware transforms
-        ValueProjectionFactory<EventWithId, float> factory_v1 = 
-            [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
-                NormalizeTimeParams params;
-                params.setContext(ctx);
-                return [params](EventWithId const& event) -> float {
-                    return normalizeTimeValue(event.time(), params);
-                };
-            };
-
-        auto projections_v1 = result.project(factory_v1);
-        
-        // Test trial 0
-        EventWithId test_event{TimeFrameIndex{25}, EntityId{1}};
-        CHECK_THAT(projections_v1[0](test_event), WithinAbs(25.0f, 0.001f));
-    }
-
-    SECTION("V2 pattern uses buildTrialStore and ValueProjectionFactoryV2") {
-        // V2: Use pipeline with param bindings
-        TransformPipeline pipeline;
-        auto step = PipelineStep("NormalizeEventTimeValueV2", NormalizeTimeParamsV2{});
-        step.param_bindings = {{"alignment_time", "alignment_time"}};
-        pipeline.addStep(step);
-
-        auto factory_v2 = bindValueProjectionV2<EventWithId, float>(pipeline);
-        auto projections_v2 = result.projectV2(factory_v2);
-        
-        // Test trial 0 - should produce same result as V1
-        EventWithId test_event{TimeFrameIndex{25}, EntityId{1}};
-        CHECK_THAT(projections_v2[0](test_event), WithinAbs(25.0f, 0.001f));
-    }
-
-    SECTION("Both patterns produce equivalent results") {
-        // V1 setup
-        ValueProjectionFactory<EventWithId, float> factory_v1 = 
-            [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
-                NormalizeTimeParams params;
-                params.setContext(ctx);
-                return [params](EventWithId const& event) -> float {
-                    return normalizeTimeValue(event.time(), params);
-                };
-            };
-        auto projections_v1 = result.project(factory_v1);
-
-        // V2 setup
-        TransformPipeline pipeline;
-        auto step = PipelineStep("NormalizeEventTimeValueV2", NormalizeTimeParamsV2{});
-        step.param_bindings = {{"alignment_time", "alignment_time"}};
-        pipeline.addStep(step);
-        auto factory_v2 = bindValueProjectionV2<EventWithId, float>(pipeline);
-        auto projections_v2 = result.projectV2(factory_v2);
-
-        // Compare all trials
-        for (size_t trial = 0; trial < result.size(); ++trial) {
-            for (auto const& event : result[trial]->view()) {
-                float v1_result = projections_v1[trial](event);
-                float v2_result = projections_v2[trial](event);
-                CHECK_THAT(v1_result, WithinAbs(v2_result, 0.001f));
             }
         }
     }

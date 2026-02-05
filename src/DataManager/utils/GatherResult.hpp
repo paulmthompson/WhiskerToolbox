@@ -500,49 +500,11 @@ public:
     // ========== Pipeline Integration Methods ==========
 
     /**
-     * @brief Build TrialContext for a specific trial index
-     *
-     * Creates a context object that can be used with context-aware pipeline
-     * transforms. The context includes alignment time (trial start), trial
-     * index, duration, and end time.
-     *
-     * @param trial_idx Index of the trial
-     * @return TrialContext with alignment_time, trial_index, etc.
-     * @throws std::out_of_range if trial_idx >= size()
-     *
-     * @example
-     * @code
-     * auto projection_factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
-     *
-     * for (size_t i = 0; i < result.size(); ++i) {
-     *     auto ctx = result.buildContext(i);
-     *     auto projection = projection_factory(ctx);
-     *     // Use projection on trial events...
-     * }
-     * @endcode
-     */
-    [[nodiscard]] WhiskerToolbox::Transforms::V2::TrialContext buildContext(size_type trial_idx) const {
-        if (trial_idx >= size()) {
-            throw std::out_of_range("GatherResult::buildContext: index out of range");
-        }
-        // Get the interval for the original trial at this position
-        // If reordered, we need the interval from the original trial, not the position
-        auto interval = intervalAtReordered(trial_idx);
-        size_type orig_idx = originalIndex(trial_idx);
-        return WhiskerToolbox::Transforms::V2::TrialContext{
-            .alignment_time = TimeFrameIndex(interval.start),
-            .trial_index = orig_idx,
-            .trial_duration = interval.end - interval.start,
-            .end_time = TimeFrameIndex(interval.end)
-        };
-    }
-
-    /**
      * @brief Build value store for a specific trial (V2 pattern)
      *
      * Creates a PipelineValueStore populated with standard trial values that can
-     * be bound to transform parameters. This is the V2 replacement for buildContext()
-     * that enables generic parameter binding without specialized context structs.
+     * be bound to transform parameters. This enables generic parameter binding
+     * without specialized context structs.
      *
      * ## Store Keys
      *
@@ -569,7 +531,6 @@ public:
      * @return PipelineValueStore populated with trial values
      * @throws std::out_of_range if trial_idx >= size()
      *
-     * @see buildContext() for legacy TrialContext-based approach
      * @see PipelineValueStore for store documentation
      * @see projectV2() for applying store-based projections to all trials
      */
@@ -591,20 +552,21 @@ public:
     }
 
     /**
-     * @brief Project values across all trials using a context-aware pipeline
+     * @brief Project values across all trials using value store bindings
      *
-     * This method enables lazy, per-trial value projection using a pipeline
-     * that normalizes or transforms element properties (e.g., time normalization).
-     * The projection factory is called once per trial with the trial's context,
-     * producing a projection function for that trial.
+     * Creates per-trial value projections using a pipeline that normalizes or
+     * transforms element properties (e.g., time normalization). The projection
+     * factory receives a value store populated with trial values and applies
+     * parameter bindings to produce per-trial projections.
      *
      * @tparam Value The projected value type (e.g., float for normalized time)
-     * @param factory Context-aware projection factory from bindValueProjectionWithContext()
+     * @param factory Store-based projection factory from bindValueProjectionV2()
      * @return Vector of projection functions, one per trial
      *
      * @example
      * @code
-     * auto factory = bindValueProjectionWithContext<EventWithId, float>(pipeline);
+     * // Pipeline with param bindings
+     * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
      * auto projections = result.project(factory);
      *
      * for (size_t i = 0; i < result.size(); ++i) {
@@ -616,61 +578,12 @@ public:
      *     }
      * }
      * @endcode
-     */
-    template<typename Value>
-    [[nodiscard]] auto project(
-            WhiskerToolbox::Transforms::V2::ValueProjectionFactory<element_type, Value> const& factory) const {
-        using ProjectionFn = WhiskerToolbox::Transforms::V2::ValueProjectionFn<element_type, Value>;
-        std::vector<ProjectionFn> projections;
-        projections.reserve(size());
-
-        for (size_type i = 0; i < size(); ++i) {
-            auto ctx = buildContext(i);
-            projections.push_back(factory(ctx));
-        }
-
-        return projections;
-    }
-
-    /**
-     * @brief Project values across all trials using value store bindings (V2 pattern)
      *
-     * This is the V2 replacement for project() that uses PipelineValueStore instead of
-     * TrialContext. The projection factory receives a value store populated with trial
-     * values and applies parameter bindings to produce per-trial projections.
-     *
-     * ## Differences from project()
-     *
-     * - Uses buildTrialStore() instead of buildContext()
-     * - Factory takes PipelineValueStore instead of TrialContext
-     * - Parameters are bound via JSON bindings, not context injection
-     *
-     * @tparam Value The projected value type (e.g., float for normalized time)
-     * @param factory Store-based projection factory from bindValueProjectionV2()
-     * @return Vector of projection functions, one per trial
-     *
-     * @example
-     * @code
-     * // Pipeline with param bindings
-     * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-     * auto projections = result.projectV2(factory);
-     *
-     * for (size_t i = 0; i < result.size(); ++i) {
-     *     auto const& projection = projections[i];
-     *     for (auto const& event : result[i]->view()) {
-     *         float norm_time = projection(event);
-     *         EntityId id = event.id();
-     *         draw_point(norm_time, i, id);
-     *     }
-     * }
-     * @endcode
-     *
-     * @see project() for legacy TrialContext-based approach
      * @see buildTrialStore() for store population
      * @see bindValueProjectionV2() for creating factories
      */
     template<typename Value>
-    [[nodiscard]] auto projectV2(
+    [[nodiscard]] auto project(
             WhiskerToolbox::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const& factory) const {
         using ProjectionFn = WhiskerToolbox::Transforms::V2::ValueProjectionFn<element_type, Value>;
         std::vector<ProjectionFn> projections;
@@ -685,35 +598,40 @@ public:
     }
 
     /**
-     * @brief Apply reduction across all trials
+     * @brief Apply reduction across all trials using value store bindings
      *
      * Executes a range reduction on each trial's view, producing a scalar per trial.
-     * The reducer factory is called once per trial with the trial's context, enabling
-     * context-aware reductions (e.g., counting events after alignment).
+     * The reducer factory is called once per trial with the trial's value store,
+     * enabling context-aware reductions (e.g., counting events after alignment).
      *
      * @tparam Scalar Result type of reduction (e.g., int for count, float for latency)
-     * @param reducer_factory Context-aware reducer factory from bindReducerWithContext()
+     * @param reducer_factory Store-based reducer factory
      * @return Vector of reduction results, one per trial
      *
      * @example
      * @code
-     * auto factory = bindReducerWithContext<EventWithId, float>(pipeline);
+     * auto factory = [](PipelineValueStore const& store) -> ReducerFn<EventWithId, float> {
+     *     int64_t alignment = store.getInt("alignment_time").value();
+     *     return [alignment](std::span<EventWithId const> events) -> float {
+     *         if (events.empty()) return NaN;
+     *         return static_cast<float>(events[0].time().getValue() - alignment);
+     *     };
+     * };
      * auto latencies = result.reduce(factory);
-     *
-     * // latencies[i] is the first-spike latency for trial i
      * @endcode
      *
      * @note This requires T to have a view() method that returns a range
+     * @see buildTrialStore() for store population
      */
     template<typename Scalar>
     [[nodiscard]] std::vector<Scalar> reduce(
-            WhiskerToolbox::Transforms::V2::ReducerFactory<element_type, Scalar> const& reducer_factory) const {
+            WhiskerToolbox::Transforms::V2::ReducerFactoryV2<element_type, Scalar> const& reducer_factory) const {
         std::vector<Scalar> results;
         results.reserve(size());
 
         for (size_type i = 0; i < size(); ++i) {
-            auto ctx = buildContext(i);
-            auto reducer = reducer_factory(ctx);
+            auto store = buildTrialStore(i);
+            auto reducer = reducer_factory(store);
 
             // Materialize view into vector for reducer (takes span)
             auto view = _views[i]->view();
@@ -733,14 +651,14 @@ public:
      * by first-spike latency, event count, or other metrics.
      *
      * @tparam Scalar Reduction result type (must be comparable)
-     * @param reducer_factory Context-aware reducer factory
+     * @param reducer_factory Store-based reducer factory
      * @param ascending Sort order (true = smallest first, false = largest first)
      * @return Vector of indices that would sort trials by reduction result
      *
      * @example
      * @code
      * // Sort trials by first-spike latency (ascending)
-     * auto factory = bindReducerWithContext<EventWithId, float>(pipeline);
+     * auto factory = [](PipelineValueStore const& store) { ... };
      * auto sort_order = result.sortIndicesBy(factory, true);
      *
      * // Draw trials in sorted order
@@ -749,10 +667,13 @@ public:
      *     // Draw trial trial_idx at row position...
      * }
      * @endcode
+     *
+     * @see reduce() for the underlying reduction
+     * @see reorder() for creating a reordered GatherResult
      */
     template<typename Scalar>
     [[nodiscard]] std::vector<size_type> sortIndicesBy(
-            WhiskerToolbox::Transforms::V2::ReducerFactory<element_type, Scalar> const& reducer_factory,
+            WhiskerToolbox::Transforms::V2::ReducerFactoryV2<element_type, Scalar> const& reducer_factory,
             bool ascending = true) const {
         
         auto values = reduce(reducer_factory);
