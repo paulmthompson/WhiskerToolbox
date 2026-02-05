@@ -65,13 +65,13 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Toolbox/ToolboxPanel.ui
 
     # Widgets
-    Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
-    Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
-    Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.hpp
-    Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.cpp
-    Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
-    Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
-    Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
+   # Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
+   # Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
+   # Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.hpp
+   # Widgets/ScatterPlotWidget/ScatterPlotOpenGLWidget_Refactored.cpp
+  #  Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
+  #  Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
+   # Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
 
     #Widgets/EventPlotWidget/EventPlotWidget.hpp
    # Widgets/EventPlotWidget/EventPlotWidget.cpp

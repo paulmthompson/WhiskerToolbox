@@ -17,12 +17,12 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 // Include specific widget headers for type checking
-#include "Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
+//#include "Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
 //#include "Widgets/EventPlotWidget/EventPlotWidget.hpp" 
 #include "Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 
 // Include properties widget headers for type checking
-#include "Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp"
+//#include "Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp"
 //#include "Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
 
@@ -135,7 +135,7 @@ private:
         m_data_manager->setData<DigitalEventSeries>("test_events", event_data, TimeKey("time"));
     }
 };
-
+/**
 TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - ScatterPlotWidget Creation", "[Analysis_Dashboard][ScatterPlot]") {
     // Get the dashboard
     auto& dashboard = getDashboard();
@@ -158,7 +158,7 @@ TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - ScatterPlot
     }
     
 }
-
+*/
 /*
 TEST_CASE_METHOD(AnalysisDashboardTestFixture, "Analysis_Dashboard - EventPlotWidget Creation", "[Analysis_Dashboard][EventPlot]") {
     // Get the dashboard
