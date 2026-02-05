@@ -72,7 +72,6 @@ TEST_CASE("GatherResult - Default construction", "[GatherResult]") {
     CHECK(result.empty());
     CHECK(result.size() == 0);
     CHECK(result.source() == nullptr);
-    CHECK(result.intervals() == nullptr);
 }
 
 TEST_CASE("GatherResult - Gather DigitalEventSeries by intervals", "[GatherResult]") {
@@ -87,7 +86,10 @@ TEST_CASE("GatherResult - Gather DigitalEventSeries by intervals", "[GatherResul
 
     REQUIRE(result.size() == 2);
     REQUIRE(result.source() == events);
-    REQUIRE(result.intervals() == intervals);
+
+    auto gather_intervals = result.intervals();
+
+    REQUIRE(gather_intervals == std::vector<Interval>{{0, 20}, {30, 50}});
 
     SECTION("First view contains events in [0, 20]") {
         auto const & view = result[0];

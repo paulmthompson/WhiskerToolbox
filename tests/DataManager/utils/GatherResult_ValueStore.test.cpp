@@ -19,6 +19,7 @@
 #include "transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.hpp"
 #include "transforms/v2/core/PipelineValueStore.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
+#include "transforms/v2/extension/IntervalAdapters.hpp"
 #include "transforms/v2/extension/ParameterBinding.hpp"
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 
@@ -460,5 +461,176 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
                 // EntityId is valid (even if uninitialized in test data)
             }
         }
+    }
+}
+
+// =============================================================================
+// Interval Adapter Tests
+// =============================================================================
+
+TEST_CASE("EventExpanderAdapter - basic functionality", "[GatherResult][IntervalAdapter][Phase4]") {
+    // Create alignment events (e.g., stimulus times)
+    auto alignment_events = createEventSeries({100, 200, 300});
+    
+    // Create source data (e.g., spikes)
+    auto spikes = createEventSeries({90, 110, 120, 195, 210, 290, 310, 320});
+    
+    SECTION("Expand events to symmetric windows") {
+        // Each alignment event becomes a ±50 window
+        auto adapter = expandEvents(alignment_events, 50, 50);
+        
+        // Use gather with the adapter
+        auto result = gather(spikes, adapter);
+        
+        REQUIRE(result.size() == 3);
+        
+        // Trial 0: alignment at 100, window [50, 150]
+        // Spikes in this window: 90, 110, 120
+        REQUIRE(result[0]->size() == 3);
+        
+        // Trial 1: alignment at 200, window [150, 250]
+        // Spikes in this window: 195, 210
+        REQUIRE(result[1]->size() == 2);
+        
+        // Trial 2: alignment at 300, window [250, 350]
+        // Spikes in this window: 290, 310, 320
+        REQUIRE(result[2]->size() == 3);
+    }
+    
+    SECTION("Alignment time is event time, not interval start") {
+        auto adapter = expandEvents(alignment_events, 50, 50);
+        auto result = gather(spikes, adapter);
+        
+        // Check that buildTrialStore uses the event time (alignment) not interval start
+        auto store0 = result.buildTrialStore(0);
+        auto store1 = result.buildTrialStore(1);
+        auto store2 = result.buildTrialStore(2);
+        
+        // Alignment time should be the event time, not the window start
+        CHECK(store0.getInt("alignment_time").value() == 100);  // Event time, not 50
+        CHECK(store1.getInt("alignment_time").value() == 200);  // Event time, not 150
+        CHECK(store2.getInt("alignment_time").value() == 300);  // Event time, not 250
+    }
+    
+    SECTION("Asymmetric windows") {
+        // 25 before, 75 after
+        auto adapter = expandEvents(alignment_events, 25, 75);
+        auto result = gather(spikes, adapter);
+        
+        REQUIRE(result.size() == 3);
+        
+        // Trial 0: window [75, 175]
+        // Spikes: 90, 110, 120
+        REQUIRE(result[0]->size() == 3);
+    }
+}
+
+TEST_CASE("IntervalWithAlignmentAdapter - alignment options", "[GatherResult][IntervalAdapter][Phase4]") {
+    auto intervals = createIntervalSeries({
+        {0, 100},     // Duration 100
+        {150, 250},   // Duration 100
+        {300, 500}    // Duration 200
+    });
+    
+    auto spikes = createEventSeries({10, 50, 90, 160, 200, 240, 350, 400, 450});
+    
+    SECTION("Default alignment is start") {
+        auto adapter = withAlignment(intervals);  // Default: Start
+        auto result = gather(spikes, adapter);
+        
+        auto store0 = result.buildTrialStore(0);
+        auto store1 = result.buildTrialStore(1);
+        auto store2 = result.buildTrialStore(2);
+        
+        CHECK(store0.getInt("alignment_time").value() == 0);
+        CHECK(store1.getInt("alignment_time").value() == 150);
+        CHECK(store2.getInt("alignment_time").value() == 300);
+    }
+    
+    SECTION("End alignment") {
+        auto adapter = withAlignment(intervals, AlignmentPoint::End);
+        auto result = gather(spikes, adapter);
+        
+        auto store0 = result.buildTrialStore(0);
+        auto store1 = result.buildTrialStore(1);
+        auto store2 = result.buildTrialStore(2);
+        
+        CHECK(store0.getInt("alignment_time").value() == 100);
+        CHECK(store1.getInt("alignment_time").value() == 250);
+        CHECK(store2.getInt("alignment_time").value() == 500);
+    }
+    
+    SECTION("Center alignment") {
+        auto adapter = withAlignment(intervals, AlignmentPoint::Center);
+        auto result = gather(spikes, adapter);
+        
+        auto store0 = result.buildTrialStore(0);
+        auto store1 = result.buildTrialStore(1);
+        auto store2 = result.buildTrialStore(2);
+        
+        CHECK(store0.getInt("alignment_time").value() == 50);   // (0 + 100) / 2
+        CHECK(store1.getInt("alignment_time").value() == 200);  // (150 + 250) / 2
+        CHECK(store2.getInt("alignment_time").value() == 400);  // (300 + 500) / 2
+    }
+}
+
+TEST_CASE("Interval adapters with time normalization", "[GatherResult][IntervalAdapter][ValueStore][Phase4]") {
+    V2TestFixture fixture;
+    
+    // Create alignment events at 100, 200, 300
+    auto alignment_events = createEventSeries({100, 200, 300});
+    
+    // Create spikes relative to each event
+    auto spikes = createEventSeries({
+        80, 100, 120,    // Around event at 100
+        180, 200, 220,   // Around event at 200
+        280, 300, 320    // Around event at 300
+    });
+    
+    // Create adapter with ±50 window
+    auto adapter = expandEvents(alignment_events, 50, 50);
+    auto raster = gather(spikes, adapter);
+    
+    REQUIRE(raster.size() == 3);
+    
+    // Build pipeline for normalization
+    TransformPipeline pipeline;
+    auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
+    step.param_bindings = {{"alignment_time", "alignment_time"}};
+    pipeline.addStep(step);
+    
+    auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+    auto projections = raster.project(factory);
+    
+    SECTION("Each trial uses correct alignment time") {
+        // Trial 0: alignment = 100
+        std::vector<float> trial0_times;
+        for (auto const& event : raster[0]->view()) {
+            trial0_times.push_back(projections[0](event));
+        }
+        REQUIRE(trial0_times.size() == 3);
+        CHECK_THAT(trial0_times[0], WithinAbs(-20.0f, 0.001f));  // 80 - 100
+        CHECK_THAT(trial0_times[1], WithinAbs(0.0f, 0.001f));    // 100 - 100
+        CHECK_THAT(trial0_times[2], WithinAbs(20.0f, 0.001f));   // 120 - 100
+        
+        // Trial 1: alignment = 200
+        std::vector<float> trial1_times;
+        for (auto const& event : raster[1]->view()) {
+            trial1_times.push_back(projections[1](event));
+        }
+        REQUIRE(trial1_times.size() == 3);
+        CHECK_THAT(trial1_times[0], WithinAbs(-20.0f, 0.001f));  // 180 - 200
+        CHECK_THAT(trial1_times[1], WithinAbs(0.0f, 0.001f));    // 200 - 200
+        CHECK_THAT(trial1_times[2], WithinAbs(20.0f, 0.001f));   // 220 - 200
+        
+        // Trial 2: alignment = 300
+        std::vector<float> trial2_times;
+        for (auto const& event : raster[2]->view()) {
+            trial2_times.push_back(projections[2](event));
+        }
+        REQUIRE(trial2_times.size() == 3);
+        CHECK_THAT(trial2_times[0], WithinAbs(-20.0f, 0.001f));  // 280 - 300
+        CHECK_THAT(trial2_times[1], WithinAbs(0.0f, 0.001f));    // 300 - 300
+        CHECK_THAT(trial2_times[2], WithinAbs(20.0f, 0.001f));   // 320 - 300
     }
 }

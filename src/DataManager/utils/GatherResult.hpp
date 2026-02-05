@@ -77,6 +77,7 @@
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "transforms/v2/core/PipelineValueStore.hpp"
+#include "transforms/v2/extension/IntervalAdapters.hpp"
 #include "transforms/v2/extension/ValueProjectionTypes.hpp"
 #include "transforms/v2/extension/ViewAdaptorTypes.hpp"
 
@@ -236,10 +237,11 @@ public:
             std::shared_ptr<DigitalIntervalSeries const> intervals) {
         GatherResult result;
         result._source = source;
-        result._intervals = intervals;
         result._views.reserve(intervals->size());
+        result._intervals.reserve(intervals->size());
 
         for (auto const & interval : intervals->view()) {
+            result._intervals.push_back(interval.interval);
             auto view = U::createView(
                     source,
                     TimeFrameIndex(interval.interval.start),
@@ -268,10 +270,11 @@ public:
             std::shared_ptr<DigitalIntervalSeries const> intervals) {
         GatherResult result;
         result._source = source;
-        result._intervals = intervals;
         result._views.reserve(intervals->size());
+        result._intervals.reserve(intervals->size());
 
         for (auto const & interval : intervals->view()) {
+            result._intervals.push_back(interval.interval);
             auto view = U::createView(
                     source,
                     interval.interval.start,
@@ -301,14 +304,130 @@ public:
             std::shared_ptr<DigitalIntervalSeries const> intervals) {
         GatherResult result;
         result._source = source;
-        result._intervals = intervals;
         result._views.reserve(intervals->size());
+        result._intervals.reserve(intervals->size());
 
         for (auto const & interval : intervals->view()) {
+            result._intervals.push_back(interval.interval);
             auto copy = std::make_shared<U>(source->createTimeRangeCopy(
                     TimeFrameIndex(interval.interval.start),
                     TimeFrameIndex(interval.interval.end)));
             // Inherit TimeFrame and ImageSize from source
+            copy->setTimeFrame(source->getTimeFrame());
+            copy->setImageSize(source->getImageSize());
+            result._views.push_back(std::move(copy));
+        }
+
+        return result;
+    }
+
+    // ========== Factory Methods for Interval Adapters ==========
+
+    /**
+     * @brief Create GatherResult from source and an IntervalSource adapter
+     *
+     * This overload accepts any type satisfying the IntervalSource concept,
+     * including EventExpanderAdapter and IntervalWithAlignmentAdapter.
+     *
+     * The adapter provides AlignedInterval elements which contain:
+     * - start/end: interval bounds for view creation
+     * - alignment_time: custom alignment point for projections
+     *
+     * @tparam IntervalSourceT Type satisfying IntervalSource concept
+     * @param source Source data to create views from
+     * @param interval_source Adapter providing intervals with alignment info
+     * @return GatherResult containing views for each interval
+     *
+     * @example
+     * @code
+     * // Expand events to intervals with ±50 window
+     * auto events = std::make_shared<DigitalEventSeries>(...);
+     * auto adapter = expandEvents(events, 50, 50);
+     * auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+     * @endcode
+     */
+    template<typename U = T, typename IntervalSourceT>
+        requires WhiskerToolbox::Gather::ViewableDataType<U> &&
+                 WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+    static GatherResult create(
+            std::shared_ptr<U const> source,
+            IntervalSourceT const& interval_source) {
+        GatherResult result;
+        result._source = source;
+        result._views.reserve(interval_source.size());
+        result._intervals.reserve(interval_source.size());
+        result._alignment_times.reserve(interval_source.size());
+        
+        for (auto const & aligned_interval : interval_source) {
+            // Store interval and alignment time
+            result._intervals.push_back(Interval{aligned_interval.start, aligned_interval.end});
+            result._alignment_times.push_back(aligned_interval.alignment_time);
+            
+            // Create view
+            auto view = U::createView(
+                    source,
+                    TimeFrameIndex(aligned_interval.start),
+                    TimeFrameIndex(aligned_interval.end));
+            result._views.push_back(std::move(view));
+        }
+        
+        return result;
+    }
+
+    /**
+     * @brief Create GatherResult from source and IntervalSource (int64_t version)
+     */
+    template<typename U = T, typename IntervalSourceT>
+        requires WhiskerToolbox::Gather::ViewableDataTypeInt64<U> &&
+                 (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
+                 WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+    static GatherResult create(
+            std::shared_ptr<U const> source,
+            IntervalSourceT const& interval_source) {
+        GatherResult result;
+        result._source = source;
+        result._views.reserve(interval_source.size());
+        result._intervals.reserve(interval_source.size());
+        result._alignment_times.reserve(interval_source.size());
+        
+        for (auto const & aligned_interval : interval_source) {
+            result._intervals.push_back(Interval{aligned_interval.start, aligned_interval.end});
+            result._alignment_times.push_back(aligned_interval.alignment_time);
+            
+            auto view = U::createView(
+                    source,
+                    aligned_interval.start,
+                    aligned_interval.end);
+            result._views.push_back(std::move(view));
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Create GatherResult from source and IntervalSource (copy version)
+     */
+    template<typename U = T, typename IntervalSourceT>
+        requires WhiskerToolbox::Gather::CopyableTimeRangeDataType<U> &&
+                 (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
+                 (!WhiskerToolbox::Gather::ViewableDataTypeInt64<U>) &&
+                 WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+    static GatherResult create(
+            std::shared_ptr<U const> source,
+            IntervalSourceT const& interval_source) {
+        GatherResult result;
+        result._source = source;
+        result._views.reserve(interval_source.size());
+        result._intervals.reserve(interval_source.size());
+        result._alignment_times.reserve(interval_source.size());
+        
+        for (auto const & aligned_interval : interval_source) {
+            result._intervals.push_back(Interval{aligned_interval.start, aligned_interval.end});
+            result._alignment_times.push_back(aligned_interval.alignment_time);
+            
+            auto copy = std::make_shared<U>(source->createTimeRangeCopy(
+                    TimeFrameIndex(aligned_interval.start),
+                    TimeFrameIndex(aligned_interval.end)));
             copy->setTimeFrame(source->getTimeFrame());
             copy->setImageSize(source->getImageSize());
             result._views.push_back(std::move(copy));
@@ -386,23 +505,20 @@ public:
     /**
      * @brief Get the alignment intervals used to create views
      */
-    [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> intervals() const { return _intervals; }
+    [[nodiscard]] std::vector<Interval> const& intervals() const { return _intervals; }
 
     /**
-     * @brief Get the interval at a specific index
+     * @brief Get the interval at a specific index (O(1) access)
      *
      * @param i Index of the interval
      * @return The Interval at index i
+     * @throws std::out_of_range if i >= size()
      */
     [[nodiscard]] Interval intervalAt(size_type i) const {
-        size_t idx = 0;
-        for (auto const & interval : _intervals->view()) {
-            if (idx == i) {
-                return interval.interval;
-            }
-            ++idx;
+        if (i >= _intervals.size()) {
+            throw std::out_of_range("GatherResult::intervalAt: index out of range");
         }
-        throw std::out_of_range("GatherResult::intervalAt: index out of range");
+        return _intervals[i];
     }
 
     // ========== Convenience Methods ==========
@@ -460,13 +576,11 @@ public:
         std::vector<ResultType> results;
         results.reserve(_views.size());
 
-        size_t idx = 0;
-        for (auto const & interval : _intervals->view()) {
+        for (size_t idx = 0; idx < _views.size(); ++idx) {
             results.push_back(std::invoke(
                     std::forward<F>(func),
                     _views[idx],
-                    interval.interval));
-            ++idx;
+                    _intervals[idx]));
         }
         return results;
     }
@@ -542,8 +656,13 @@ public:
         auto interval = intervalAtReordered(trial_idx);
         size_type orig_idx = originalIndex(trial_idx);
         
+        // Use stored alignment time if available, otherwise default to interval start
+        int64_t alignment_time = !_alignment_times.empty()
+            ? _alignment_times[orig_idx]
+            : static_cast<int64_t>(interval.start);
+        
         WhiskerToolbox::Transforms::V2::PipelineValueStore store;
-        store.set("alignment_time", static_cast<int64_t>(interval.start));
+        store.set("alignment_time", alignment_time);
         store.set("trial_index", static_cast<int64_t>(orig_idx));
         store.set("trial_duration", interval.end - interval.start);
         store.set("end_time", static_cast<int64_t>(interval.end));
@@ -791,9 +910,10 @@ public:
 
 private:
     std::shared_ptr<T const> _source;
-    std::shared_ptr<DigitalIntervalSeries const> _intervals;
+    std::vector<Interval> _intervals;         // Stored intervals (no merging)
     std::vector<value_type> _views;
     std::vector<size_type> _reorder_indices;  // Maps reordered position → original index
+    std::vector<int64_t> _alignment_times;    // Per-trial alignment times (optional)
 };
 
 // =============================================================================
@@ -869,6 +989,56 @@ template<typename T>
     return GatherResult<T>::create(
             std::const_pointer_cast<T const>(source),
             std::const_pointer_cast<DigitalIntervalSeries const>(intervals));
+}
+
+// =============================================================================
+// Free Functions: gather() with Interval Adapters
+// =============================================================================
+
+/**
+ * @brief Create a GatherResult using an IntervalSource adapter
+ *
+ * Accepts any type satisfying the IntervalSource concept, including:
+ * - EventExpanderAdapter: expands DigitalEventSeries to intervals
+ * - IntervalWithAlignmentAdapter: uses custom alignment from DigitalIntervalSeries
+ *
+ * @tparam T The source data type
+ * @tparam IntervalSourceT Type satisfying IntervalSource concept
+ * @param source Source data to create views from
+ * @param interval_source Adapter providing intervals with alignment info
+ * @return GatherResult containing one view/copy per interval
+ *
+ * @example
+ * @code
+ * // Expand events to intervals (each event ± 50 frames)
+ * auto stimulus_events = dm->getData<DigitalEventSeries>("stimuli");
+ * auto spikes = dm->getData<DigitalEventSeries>("spikes");
+ * auto raster = gather(spikes, expandEvents(stimulus_events, 50, 50));
+ *
+ * // Use interval ends as alignment points
+ * auto trials = dm->getData<DigitalIntervalSeries>("trials");
+ * auto raster = gather(spikes, withAlignment(trials, AlignmentPoint::End));
+ * @endcode
+ */
+template<typename T, typename IntervalSourceT>
+    requires WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+[[nodiscard]] GatherResult<T> gather(
+        std::shared_ptr<T const> source,
+        IntervalSourceT const& interval_source) {
+    return GatherResult<T>::create(source, interval_source);
+}
+
+/**
+ * @brief Create a GatherResult using an IntervalSource adapter (mutable source)
+ */
+template<typename T, typename IntervalSourceT>
+    requires WhiskerToolbox::Transforms::V2::IntervalSource<IntervalSourceT>
+[[nodiscard]] GatherResult<T> gather(
+        std::shared_ptr<T> source,
+        IntervalSourceT const& interval_source) {
+    return GatherResult<T>::create(
+            std::const_pointer_cast<T const>(source),
+            interval_source);
 }
 
 #endif// GATHER_RESULT_HPP
