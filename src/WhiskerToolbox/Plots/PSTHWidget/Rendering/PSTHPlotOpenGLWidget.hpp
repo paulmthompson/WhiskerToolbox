@@ -126,6 +126,9 @@ private:
     int _widget_width{1};
     int _widget_height{1};
 
+    // Flag to prevent rebuild loop when updating y_max from rebuildScene
+    bool _updating_y_max_from_rebuild{false};
+
     // =========================================================================
     // Private Methods
     // =========================================================================

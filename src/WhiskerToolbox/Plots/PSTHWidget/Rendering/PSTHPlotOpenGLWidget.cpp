@@ -182,6 +182,10 @@ void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 
 void PSTHPlotOpenGLWidget::onStateChanged()
 {
+    // Skip rebuild if we're updating y_max from rebuildScene to prevent loop
+    if (_updating_y_max_from_rebuild) {
+        return;
+    }
     _scene_dirty = true;
     emit viewBoundsChanged();
     update();
@@ -317,6 +321,19 @@ void PSTHPlotOpenGLWidget::rebuildScene()
     qDebug() << "  Total events:" << total_events;
     qDebug() << "  Max bin count:" << max_count;
     qDebug() << "  Number of trials:" << total_trials;
+
+    // Update y_max to match the maximum histogram value (with some padding)
+    // Use a flag to prevent rebuild loop
+    if (_state && max_count > 0.0) {
+        // Add 10% padding above the maximum
+        double new_y_max = max_count * 1.1;
+        // Only update if the value actually changed (to avoid unnecessary signals)
+        if (std::abs(_state->getYMax() - new_y_max) > 0.01) {
+            _updating_y_max_from_rebuild = true;
+            _state->setYMax(new_y_max);
+            _updating_y_max_from_rebuild = false;
+        }
+    }
 
     // TODO: Store histogram for rendering later
     // _histogram = histogram;
