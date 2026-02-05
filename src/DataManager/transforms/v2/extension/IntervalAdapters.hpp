@@ -205,6 +205,13 @@ public:
         return _events;
     }
 
+    /**
+     * @brief Get the TimeFrame of the underlying event series
+     */
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const {
+        return _events ? _events->getTimeFrame() : nullptr;
+    }
+
     [[nodiscard]] int64_t pre_window() const { return _pre_window; }
     [[nodiscard]] int64_t post_window() const { return _post_window; }
 
@@ -338,6 +345,13 @@ public:
      */
     [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> const& intervals() const {
         return _intervals;
+    }
+
+    /**
+     * @brief Get the TimeFrame of the underlying interval series
+     */
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const {
+        return _intervals ? _intervals->getTimeFrame() : nullptr;
     }
 
     [[nodiscard]] AlignmentPoint alignment() const { return _align; }

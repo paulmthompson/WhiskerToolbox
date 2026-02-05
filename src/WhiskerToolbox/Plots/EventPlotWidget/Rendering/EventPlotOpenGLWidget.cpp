@@ -2,6 +2,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/GatherResult.hpp"
+#include "Plots/Common/PlotAlignmentGather.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
@@ -336,14 +337,21 @@ void EventPlotOpenGLWidget::rebuildScene()
         return;
     }
 
-    // Get the time frame for the alignment series
-    auto alignment_series = _data_manager->getData<DigitalIntervalSeries>(align_data.alignment_event_key);
-    if (!alignment_series) {
+    // Get alignment source (handles both DigitalEventSeries and DigitalIntervalSeries)
+    auto alignment_source = WhiskerToolbox::Plots::getAlignmentSource(
+        _data_manager, align_data.alignment_event_key);
+    if (!alignment_source.isValid()) {
         _scene_renderer.clearScene();
         return;
     }
 
-    auto time_frame = alignment_series->getTimeFrame();
+    // Get time frame from the appropriate series type
+    std::shared_ptr<TimeFrame const> time_frame;
+    if (alignment_source.is_interval_series) {
+        time_frame = alignment_source.interval_series->getTimeFrame();
+    } else if (alignment_source.is_event_series) {
+        time_frame = alignment_source.event_series->getTimeFrame();
+    }
     if (!time_frame) {
         _scene_renderer.clearScene();
         return;
@@ -362,7 +370,11 @@ void EventPlotOpenGLWidget::rebuildScene()
         auto const * trial_layout = layout_response.findLayout(key);
         if (!trial_layout) continue;
 
-        auto reference_time = TimeFrameIndex(gathered.intervalAt(trial).start);
+        // Use alignmentTimeAt() which returns the proper alignment point:
+        // - For EventExpanderAdapter: the event time (center of window)
+        // - For IntervalWithAlignmentAdapter: start, end, or center based on setting
+        // - For basic gather: interval.start as fallback
+        auto reference_time = TimeFrameIndex(gathered.alignmentTimeAt(trial));
 
         // Use RasterMapper to generate mapped elements
         auto mapped = CorePlotting::RasterMapper::mapEventsInWindow(
@@ -506,28 +518,17 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData() const
         return GatherResult<DigitalEventSeries>{};
     }
 
-    // Get event series data
-    auto event_series = _data_manager->getData<DigitalEventSeries>(event_options->event_key);
-    if (!event_series) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-
-    // Get alignment intervals from state
+    // Get alignment state
     auto alignment_state = _state->alignmentState();
     if (!alignment_state) {
         return GatherResult<DigitalEventSeries>{};
     }
 
-    auto const & align_data = alignment_state->data();
-    if (align_data.alignment_event_key.empty()) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-
-    auto alignment_series = _data_manager->getData<DigitalIntervalSeries>(align_data.alignment_event_key);
-    if (!alignment_series) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-
-    // Gather the event series aligned to intervals (using shared_ptr overload)
-    return gather(event_series, alignment_series);
+    // Use the new PlotAlignmentGather API which handles:
+    // 1. DigitalEventSeries alignment with window expansion
+    // 2. DigitalIntervalSeries alignment with start/end selection
+    return WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
+        _data_manager,
+        event_options->event_key,
+        alignment_state->data());
 }
