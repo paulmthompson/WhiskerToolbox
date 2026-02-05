@@ -18,6 +18,8 @@
 
 class DataManager;
 class HeatmapState;
+class RelativeTimeAxisWidget;
+class HeatmapOpenGLWidget;
 
 namespace Ui {
 class HeatmapWidget;
@@ -69,12 +71,21 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::HeatmapWidget * ui;
 
     /// Serializable state shared with properties widget
     std::shared_ptr<HeatmapState> _state;
+
+    /// OpenGL rendering widget
+    HeatmapOpenGLWidget * _opengl_widget;
+
+    /// Time axis widget below the plot
+    RelativeTimeAxisWidget * _axis_widget;
 };
 
 #endif// HEATMAP_WIDGET_HPP

@@ -1,12 +1,17 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(HEATMAP_WIDGET_SOURCES
 
         Core/HeatmapState.cpp
         Core/HeatmapState.hpp
+        Core/ViewStateAdapter.cpp
+        Core/ViewStateAdapter.hpp
 
         HeatmapWidgetRegistration.cpp
         HeatmapWidgetRegistration.hpp
+
+        Rendering/HeatmapOpenGLWidget.cpp
+        Rendering/HeatmapOpenGLWidget.hpp
 
         UI/HeatmapWidget.cpp
         UI/HeatmapWidget.hpp
@@ -29,11 +34,18 @@ target_link_libraries(HeatmapWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(HeatmapWidget PRIVATE DataManager)
 target_link_libraries(HeatmapWidget PRIVATE EditorState)
 target_link_libraries(HeatmapWidget PRIVATE PlotAlignmentWidget)
+target_link_libraries(HeatmapWidget PRIVATE RelativeTimeAxisWidget)
+target_link_libraries(HeatmapWidget PRIVATE CorePlotting)
+target_link_libraries(HeatmapWidget PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(HeatmapWidget PRIVATE PlottingOpenGL)
+target_link_libraries(HeatmapWidget PRIVATE glm::glm)
 
 target_include_directories(HeatmapWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
