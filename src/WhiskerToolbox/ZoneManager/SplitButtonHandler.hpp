@@ -43,17 +43,17 @@
  * @see EditorCreationController for editor lifecycle management
  */
 
-#include <QObject>
-#include <QToolButton>
 #include <QList>
+#include <QObject>
 #include <QPointer>
+#include <QToolButton>
 
 // Forward declarations
 namespace ads {
 class CDockManager;
 class CDockAreaWidget;
 class CDockWidget;
-}
+}// namespace ads
 
 /**
  * @brief Handles adding split buttons to ADS dock area title bars
@@ -70,8 +70,8 @@ public:
      * @brief Split direction options
      */
     enum class SplitDirection {
-        Horizontal,  ///< Split side-by-side (left/right)
-        Vertical     ///< Split above/below
+        Horizontal,///< Split side-by-side (left/right)
+        Vertical   ///< Split above/below
     };
     Q_ENUM(SplitDirection)
 
@@ -82,7 +82,7 @@ public:
      * @param parent Parent QObject (typically MainWindow)
      */
     explicit SplitButtonHandler(ads::CDockManager * dock_manager,
-                                 QObject * parent = nullptr);
+                                QObject * parent = nullptr);
 
     ~SplitButtonHandler() override;
 
@@ -149,7 +149,7 @@ signals:
      * @param dock_area The dock area where split was requested
      * @param direction The split direction (horizontal or vertical)
      */
-    void splitRequested(ads::CDockAreaWidget * dock_area, 
+    void splitRequested(ads::CDockAreaWidget * dock_area,
                         SplitButtonHandler::SplitDirection direction);
 
     /**
@@ -162,7 +162,7 @@ signals:
      * @param direction The split direction
      */
     void splitDockWidgetRequested(ads::CDockWidget * dock_widget,
-                                   SplitButtonHandler::SplitDirection direction);
+                                  SplitButtonHandler::SplitDirection direction);
 
 private slots:
     /**
@@ -177,6 +177,11 @@ private slots:
      */
     void onSplitButtonClicked();
 
+    /**
+     * @brief Handle vertical split button click
+     */
+    void onVerticalSplitButtonClicked();
+
 private:
     ads::CDockManager * _dock_manager;
     bool _enabled = true;
@@ -187,15 +192,23 @@ private:
     /// Track buttons we've created for cleanup (using QList since QPointer doesn't have a hash)
     QList<QPointer<QToolButton>> _split_buttons;
 
+    /// Track vertical split buttons separately
+    QList<QPointer<QToolButton>> _vertical_split_buttons;
+
     /**
-     * @brief Create the default split icon
+     * @brief Create the default split icon (horizontal split - side by side)
      */
     static QIcon createDefaultSplitIcon();
 
     /**
-     * @brief Add a split button to a dock area's title bar
+     * @brief Create the default vertical split icon (top/bottom)
+     */
+    static QIcon createDefaultVerticalSplitIcon();
+
+    /**
+     * @brief Add split buttons to a dock area's title bar
      */
     void addSplitButtonToArea(ads::CDockAreaWidget * dock_area);
 };
 
-#endif  // SPLIT_BUTTON_HANDLER_HPP
+#endif// SPLIT_BUTTON_HANDLER_HPP
