@@ -92,6 +92,9 @@ add_subdirectory(DataTransform_Widget)
 # Qt, DataManager - Shared plot alignment widget
 add_subdirectory(Plots/Common/PlotAlignmentWidget)
 
+# Qt, CorePlotting - Shared relative time axis widget
+add_subdirectory(Plots/Common/RelativeTimeAxisWidget)
+
 # Qt, DataManager, EditorState - Event raster plot widget
 add_subdirectory(Plots/EventPlotWidget)
 

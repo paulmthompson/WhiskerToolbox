@@ -51,9 +51,6 @@ struct EventPlotViewState {
     // Pan offset (in world coordinates)
     double x_pan = 0.0;     ///< X-axis pan offset
     double y_pan = 0.0;     ///< Y-axis pan offset
-    
-    // Global glyph defaults (can be overridden per-series)
-    double default_glyph_size = 3.0;  ///< Default glyph size in pixels
 };
 
 /**

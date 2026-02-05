@@ -353,7 +353,8 @@ void EventPlotOpenGLWidget::rebuildScene()
 
     // Map each trial's events
     CorePlotting::GlyphStyle style;
-    style.size = static_cast<float>(_cached_view_state.default_glyph_size);
+    // Default glyph size - can be overridden per-series via EventPlotOptions
+    style.size = 3.0f;
     style.color = glm::vec4(0.2f, 0.6f, 1.0f, 1.0f); // Blue
 
     for (size_t trial = 0; trial < num_trials; ++trial) {

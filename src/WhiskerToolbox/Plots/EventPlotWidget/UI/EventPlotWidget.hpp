@@ -17,7 +17,7 @@
 #include <memory>
 
 class DataManager;
-class EventPlotAxisWidget;
+class RelativeTimeAxisWidget;
 class EventPlotOpenGLWidget;
 class EventPlotState;
 
@@ -71,6 +71,9 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::EventPlotWidget * ui;
@@ -82,7 +85,7 @@ private:
     EventPlotOpenGLWidget * _opengl_widget;
 
     /// Time axis widget below the plot
-    EventPlotAxisWidget * _axis_widget;
+    RelativeTimeAxisWidget * _axis_widget;
 };
 
 #endif// EVENT_PLOT_WIDGET_HPP

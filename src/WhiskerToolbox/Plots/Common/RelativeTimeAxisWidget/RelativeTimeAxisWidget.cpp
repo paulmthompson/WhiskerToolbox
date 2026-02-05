@@ -1,13 +1,13 @@
-#include "EventPlotAxisWidget.hpp"
+#include "RelativeTimeAxisWidget.hpp"
 
-#include "Core/EventPlotState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewState.hpp"
 
 #include <QPainter>
 #include <QPainterPath>
 
 #include <cmath>
 
-EventPlotAxisWidget::EventPlotAxisWidget(QWidget * parent)
+RelativeTimeAxisWidget::RelativeTimeAxisWidget(QWidget * parent)
     : QWidget(parent)
 {
     setMinimumHeight(kAxisHeight);
@@ -15,30 +15,18 @@ EventPlotAxisWidget::EventPlotAxisWidget(QWidget * parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 }
 
-void EventPlotAxisWidget::setState(std::shared_ptr<EventPlotState> state)
+void RelativeTimeAxisWidget::setViewStateGetter(ViewStateGetter getter)
 {
-    if (_state) {
-        _state->disconnect(this);
-    }
-
-    _state = state;
-
-    if (_state) {
-        connect(_state.get(), &EventPlotState::viewStateChanged,
-                this, QOverload<>::of(&QWidget::update));
-        connect(_state.get(), &EventPlotState::stateChanged,
-                this, QOverload<>::of(&QWidget::update));
-    }
-
+    _view_state_getter = std::move(getter);
     update();
 }
 
-QSize EventPlotAxisWidget::sizeHint() const
+QSize RelativeTimeAxisWidget::sizeHint() const
 {
     return QSize(200, kAxisHeight);
 }
 
-void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
+void RelativeTimeAxisWidget::paintEvent(QPaintEvent * /* event */)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -46,18 +34,21 @@ void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
     // Background
     painter.fillRect(rect(), QColor(30, 30, 30));
 
-    if (!_state) {
+    if (!_view_state_getter) {
         return;
     }
 
-    auto const & view = _state->viewState();
+    auto const view_state = _view_state_getter();
 
-    // Calculate visible range with zoom and pan
-    double x_range = view.x_max - view.x_min;
-    double zoomed_range = x_range / view.x_zoom;
-    double x_center = (view.x_min + view.x_max) / 2.0;
-    double visible_min = x_center - zoomed_range / 2.0 + view.x_pan;
-    double visible_max = x_center + zoomed_range / 2.0 + view.x_pan;
+    if (!view_state.data_bounds_valid || view_state.viewport_width <= 0) {
+        return;
+    }
+
+    // Get visible world bounds using CorePlotting function
+    auto const visible_bounds = CorePlotting::calculateVisibleWorldBounds(view_state);
+    double visible_min = visible_bounds.min_x;
+    double visible_max = visible_bounds.max_x;
+    double zoomed_range = visible_max - visible_min;
 
     // Draw axis line at top
     painter.setPen(QPen(QColor(150, 150, 150), 1));
@@ -65,7 +56,7 @@ void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
 
     // Compute nice tick interval
     double tick_interval = computeTickInterval(zoomed_range);
-    
+
     // Find first tick position
     double first_tick = std::ceil(visible_min / tick_interval) * tick_interval;
 
@@ -75,15 +66,15 @@ void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
     painter.setFont(font);
 
     for (double t = first_tick; t <= visible_max; t += tick_interval) {
-        int px = timeToPixelX(t);
-        
+        int px = timeToPixelX(t, view_state);
+
         // Check if this is a major tick (at wider intervals) or at zero
         bool is_zero = std::abs(t) < tick_interval * 0.01;
         bool is_major = std::fmod(std::abs(t), tick_interval * 5) < tick_interval * 0.01 || is_zero;
 
         // Draw tick
         int tick_h = is_major ? kMajorTickHeight : kTickHeight;
-        
+
         if (is_zero) {
             // Zero line - highlighted
             painter.setPen(QPen(QColor(255, 100, 100), 2));
@@ -92,7 +83,7 @@ void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
         } else {
             painter.setPen(QPen(QColor(100, 100, 100), 1));
         }
-        
+
         painter.drawLine(px, 0, px, tick_h);
 
         // Draw label for major ticks
@@ -107,7 +98,7 @@ void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
             }
 
             painter.setPen(is_zero ? QColor(255, 100, 100) : QColor(180, 180, 180));
-            
+
             QRect label_rect(px - 30, kLabelOffset, 60, 15);
             painter.drawText(label_rect, Qt::AlignCenter, label);
         }
@@ -118,17 +109,17 @@ void EventPlotAxisWidget::paintEvent(QPaintEvent * /* event */)
     font.setPointSize(7);
     painter.setFont(font);
 
-    QString min_label = QString("min: %1").arg(static_cast<int>(view.x_min));
-    QString max_label = QString("max: %1").arg(static_cast<int>(view.x_max));
-    
+    QString min_label = QString("min: %1").arg(static_cast<int>(view_state.data_bounds.min_x));
+    QString max_label = QString("max: %1").arg(static_cast<int>(view_state.data_bounds.max_x));
+
     QRect min_rect(2, kAxisHeight - 12, 60, 12);
     QRect max_rect(width() - 62, kAxisHeight - 12, 60, 12);
-    
+
     painter.drawText(min_rect, Qt::AlignLeft | Qt::AlignVCenter, min_label);
     painter.drawText(max_rect, Qt::AlignRight | Qt::AlignVCenter, max_label);
 }
 
-double EventPlotAxisWidget::computeTickInterval(double range) const
+double RelativeTimeAxisWidget::computeTickInterval(double range) const
 {
     // Aim for roughly 5-10 ticks
     double target_ticks = 7.0;
@@ -152,21 +143,13 @@ double EventPlotAxisWidget::computeTickInterval(double range) const
     return nice * magnitude;
 }
 
-int EventPlotAxisWidget::timeToPixelX(double time) const
+int RelativeTimeAxisWidget::timeToPixelX(double time, CorePlotting::ViewState const & view_state) const
 {
-    if (!_state) {
+    if (!view_state.data_bounds_valid || view_state.viewport_width <= 0) {
         return 0;
     }
 
-    auto const & view = _state->viewState();
-
-    // Calculate visible range with zoom and pan
-    double x_range = view.x_max - view.x_min;
-    double zoomed_range = x_range / view.x_zoom;
-    double x_center = (view.x_min + view.x_max) / 2.0;
-    double visible_min = x_center - zoomed_range / 2.0 + view.x_pan;
-
-    // Convert time to pixel
-    double normalized = (time - visible_min) / zoomed_range;
-    return static_cast<int>(normalized * width());
+    // Use CorePlotting's worldToScreen function
+    auto const screen_pos = CorePlotting::worldToScreen(view_state, static_cast<float>(time), 0.0f);
+    return static_cast<int>(screen_pos.x);
 }

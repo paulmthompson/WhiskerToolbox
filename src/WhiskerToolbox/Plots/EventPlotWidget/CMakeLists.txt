@@ -4,6 +4,8 @@ set(EVENT_PLOT_WIDGET_SOURCES
 
         Core/EventPlotState.cpp
         Core/EventPlotState.hpp
+        Core/ViewStateAdapter.cpp
+        Core/ViewStateAdapter.hpp
 
         Rendering/EventPlotOpenGLWidget.cpp
         Rendering/EventPlotOpenGLWidget.hpp
@@ -11,8 +13,6 @@ set(EVENT_PLOT_WIDGET_SOURCES
         EventPlotWidgetRegistration.cpp
         EventPlotWidgetRegistration.hpp
 
-        UI/EventPlotAxisWidget.cpp
-        UI/EventPlotAxisWidget.hpp
         UI/EventPlotWidget.cpp
         UI/EventPlotWidget.hpp
         UI/EventPlotWidget.ui
@@ -41,6 +41,7 @@ target_link_libraries(EventPlotWidget PRIVATE
 target_link_libraries(EventPlotWidget PRIVATE DataManager)
 target_link_libraries(EventPlotWidget PRIVATE EditorState)
 target_link_libraries(EventPlotWidget PRIVATE PlotAlignmentWidget)
+target_link_libraries(EventPlotWidget PRIVATE RelativeTimeAxisWidget)
 target_link_libraries(EventPlotWidget PRIVATE CorePlotting)
 target_link_libraries(EventPlotWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(EventPlotWidget PRIVATE PlottingOpenGL)
