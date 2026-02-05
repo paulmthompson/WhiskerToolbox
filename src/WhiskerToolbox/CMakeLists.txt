@@ -107,6 +107,9 @@ add_subdirectory(Plots/LinePlotWidget)
 # Qt, DataManager, EditorState - Heatmap plot widget
 add_subdirectory(Plots/HeatmapWidget)
 
+# Qt, DataManager, EditorState - Temporal projection view widget
+add_subdirectory(Plots/TemporalProjectionViewWidget)
+
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
@@ -266,6 +269,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ACFWidget)
 target_link_libraries(WhiskerToolbox PRIVATE PSTHWidget)
 target_link_libraries(WhiskerToolbox PRIVATE LinePlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE HeatmapWidget)
+target_link_libraries(WhiskerToolbox PRIVATE TemporalProjectionViewWidget)
 
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)

@@ -43,6 +43,7 @@
 #include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
 #include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
 #include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
+#include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -301,6 +302,7 @@ void MainWindow::_createActions() {
     connect(ui->actionPSTH_Plot, &QAction::triggered, this, &MainWindow::openPSTHPlotWidget);
     connect(ui->actionLine_Plot, &QAction::triggered, this, &MainWindow::openLinePlotWidget);
     connect(ui->actionHeatmap_Plot, &QAction::triggered, this, &MainWindow::openHeatmapPlotWidget);
+    connect(ui->actionTemporal_Projection_View, &QAction::triggered, this, &MainWindow::openTemporalProjectionViewWidget);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
@@ -798,6 +800,11 @@ void MainWindow::openHeatmapPlotWidget() {
     openEditor(QStringLiteral("HeatmapWidget"));
 }
 
+void MainWindow::openTemporalProjectionViewWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("TemporalProjectionViewWidget"));
+}
+
 void MainWindow::openDataInspector() {
     // Create a new Data Inspector using EditorCreationController
     // The controller handles:
@@ -901,6 +908,8 @@ void MainWindow::_registerEditorTypes() {
     LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     HeatmapWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
