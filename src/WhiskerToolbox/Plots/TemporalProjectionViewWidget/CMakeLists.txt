@@ -1,9 +1,12 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(TEMPORAL_PROJECTION_VIEW_WIDGET_SOURCES
 
         Core/TemporalProjectionViewState.cpp
         Core/TemporalProjectionViewState.hpp
+
+        Rendering/TemporalProjectionOpenGLWidget.cpp
+        Rendering/TemporalProjectionOpenGLWidget.hpp
 
         TemporalProjectionViewWidgetRegistration.cpp
         TemporalProjectionViewWidgetRegistration.hpp
@@ -29,10 +32,14 @@ target_link_libraries(TemporalProjectionViewWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(TemporalProjectionViewWidget PRIVATE DataManager)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE EditorState)
+target_link_libraries(TemporalProjectionViewWidget PRIVATE HorizontalAxisWidget)
+target_link_libraries(TemporalProjectionViewWidget PRIVATE VerticalAxisWidget)
 
 target_include_directories(TemporalProjectionViewWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

@@ -31,6 +31,66 @@ std::string TemporalProjectionViewState::toJson() const
     return rfl::json::write(data_to_serialize);
 }
 
+double TemporalProjectionViewState::getXMin() const
+{
+    return _data.x_min;
+}
+
+void TemporalProjectionViewState::setXMin(double x_min)
+{
+    if (_data.x_min != x_min) {
+        _data.x_min = x_min;
+        markDirty();
+        emit xMinChanged(x_min);
+        emit stateChanged();
+    }
+}
+
+double TemporalProjectionViewState::getXMax() const
+{
+    return _data.x_max;
+}
+
+void TemporalProjectionViewState::setXMax(double x_max)
+{
+    if (_data.x_max != x_max) {
+        _data.x_max = x_max;
+        markDirty();
+        emit xMaxChanged(x_max);
+        emit stateChanged();
+    }
+}
+
+double TemporalProjectionViewState::getYMin() const
+{
+    return _data.y_min;
+}
+
+void TemporalProjectionViewState::setYMin(double y_min)
+{
+    if (_data.y_min != y_min) {
+        _data.y_min = y_min;
+        markDirty();
+        emit yMinChanged(y_min);
+        emit stateChanged();
+    }
+}
+
+double TemporalProjectionViewState::getYMax() const
+{
+    return _data.y_max;
+}
+
+void TemporalProjectionViewState::setYMax(double y_max)
+{
+    if (_data.y_max != y_max) {
+        _data.y_max = y_max;
+        markDirty();
+        emit yMaxChanged(y_max);
+        emit stateChanged();
+    }
+}
+
 bool TemporalProjectionViewState::fromJson(std::string const & json)
 {
     auto result = rfl::json::read<TemporalProjectionViewStateData>(json);

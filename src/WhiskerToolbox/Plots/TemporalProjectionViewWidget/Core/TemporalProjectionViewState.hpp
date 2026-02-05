@@ -24,6 +24,10 @@
 struct TemporalProjectionViewStateData {
     std::string instance_id;
     std::string display_name = "Temporal Projection View";
+    double x_min = 0.0;   ///< X-axis minimum value (default: 0.0)
+    double x_max = 100.0; ///< X-axis maximum value (default: 100.0)
+    double y_min = 0.0;   ///< Y-axis minimum value (default: 0.0)
+    double y_max = 100.0; ///< Y-axis maximum value (default: 100.0)
 };
 
 /**
@@ -64,6 +68,58 @@ public:
      */
     void setDisplayName(QString const & name) override;
 
+    // === X-Axis Range ===
+
+    /**
+     * @brief Get the X-axis minimum value
+     * @return Minimum X value
+     */
+    [[nodiscard]] double getXMin() const;
+
+    /**
+     * @brief Set the X-axis minimum value
+     * @param x_min Minimum X value
+     */
+    void setXMin(double x_min);
+
+    /**
+     * @brief Get the X-axis maximum value
+     * @return Maximum X value
+     */
+    [[nodiscard]] double getXMax() const;
+
+    /**
+     * @brief Set the X-axis maximum value
+     * @param x_max Maximum X value
+     */
+    void setXMax(double x_max);
+
+    // === Y-Axis Range ===
+
+    /**
+     * @brief Get the Y-axis minimum value
+     * @return Minimum Y value
+     */
+    [[nodiscard]] double getYMin() const;
+
+    /**
+     * @brief Set the Y-axis minimum value
+     * @param y_min Minimum Y value
+     */
+    void setYMin(double y_min);
+
+    /**
+     * @brief Get the Y-axis maximum value
+     * @return Maximum Y value
+     */
+    [[nodiscard]] double getYMax() const;
+
+    /**
+     * @brief Set the Y-axis maximum value
+     * @param y_max Maximum Y value
+     */
+    void setYMax(double y_max);
+
     // === Serialization ===
 
     /**
@@ -78,6 +134,31 @@ public:
      * @return true if parsing succeeded
      */
     bool fromJson(std::string const & json) override;
+
+signals:
+    /**
+     * @brief Emitted when X-axis minimum changes
+     * @param x_min New X-axis minimum value
+     */
+    void xMinChanged(double x_min);
+
+    /**
+     * @brief Emitted when X-axis maximum changes
+     * @param x_max New X-axis maximum value
+     */
+    void xMaxChanged(double x_max);
+
+    /**
+     * @brief Emitted when Y-axis minimum changes
+     * @param y_min New Y-axis minimum value
+     */
+    void yMinChanged(double y_min);
+
+    /**
+     * @brief Emitted when Y-axis maximum changes
+     * @param y_max New Y-axis maximum value
+     */
+    void yMaxChanged(double y_max);
 
 private:
     TemporalProjectionViewStateData _data;

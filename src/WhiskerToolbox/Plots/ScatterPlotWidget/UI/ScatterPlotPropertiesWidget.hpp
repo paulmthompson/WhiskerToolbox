@@ -60,7 +60,37 @@ public:
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
+private slots:
+    /**
+     * @brief Handle X-axis minimum value changes
+     * @param value New X-axis minimum value
+     */
+    void _onXMinChanged(double value);
+
+    /**
+     * @brief Handle X-axis maximum value changes
+     * @param value New X-axis maximum value
+     */
+    void _onXMaxChanged(double value);
+
+    /**
+     * @brief Handle Y-axis minimum value changes
+     * @param value New Y-axis minimum value
+     */
+    void _onYMinChanged(double value);
+
+    /**
+     * @brief Handle Y-axis maximum value changes
+     * @param value New Y-axis maximum value
+     */
+    void _onYMaxChanged(double value);
+
 private:
+    /**
+     * @brief Update UI elements from current state
+     */
+    void _updateUIFromState();
+
     Ui::ScatterPlotPropertiesWidget * ui;
     std::shared_ptr<ScatterPlotState> _state;
     std::shared_ptr<DataManager> _data_manager;

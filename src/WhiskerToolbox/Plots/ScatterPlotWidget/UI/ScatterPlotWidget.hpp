@@ -12,12 +12,16 @@
 #include "DataManager/DataManagerFwd.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <QResizeEvent>
 #include <QWidget>
 
 #include <memory>
 
 class DataManager;
 class ScatterPlotState;
+class HorizontalAxisWidget;
+class VerticalAxisWidget;
+class ScatterPlotOpenGLWidget;
 
 namespace Ui {
 class ScatterPlotWidget;
@@ -69,12 +73,24 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::ScatterPlotWidget * ui;
 
     /// Serializable state shared with properties widget
     std::shared_ptr<ScatterPlotState> _state;
+
+    /// OpenGL rendering widget
+    ScatterPlotOpenGLWidget * _opengl_widget;
+
+    /// Horizontal axis widget below the plot
+    HorizontalAxisWidget * _horizontal_axis_widget;
+
+    /// Vertical axis widget on the left side
+    VerticalAxisWidget * _vertical_axis_widget;
 };
 
 #endif// SCATTER_PLOT_WIDGET_HPP

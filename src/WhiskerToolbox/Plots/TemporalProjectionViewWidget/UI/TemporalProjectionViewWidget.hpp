@@ -11,12 +11,16 @@
 #include "DataManager/DataManagerFwd.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <QResizeEvent>
 #include <QWidget>
 
 #include <memory>
 
 class DataManager;
 class TemporalProjectionViewState;
+class HorizontalAxisWidget;
+class VerticalAxisWidget;
+class TemporalProjectionOpenGLWidget;
 
 namespace Ui {
 class TemporalProjectionViewWidget;
@@ -68,12 +72,24 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::TemporalProjectionViewWidget * ui;
 
     /// Serializable state shared with properties widget
     std::shared_ptr<TemporalProjectionViewState> _state;
+
+    /// OpenGL rendering widget
+    TemporalProjectionOpenGLWidget * _opengl_widget;
+
+    /// Horizontal axis widget below the plot
+    HorizontalAxisWidget * _horizontal_axis_widget;
+
+    /// Vertical axis widget on the left side
+    VerticalAxisWidget * _vertical_axis_widget;
 };
 
 #endif// TEMPORAL_PROJECTION_VIEW_WIDGET_HPP

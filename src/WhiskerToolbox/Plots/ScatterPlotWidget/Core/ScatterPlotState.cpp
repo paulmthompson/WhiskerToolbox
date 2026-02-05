@@ -31,6 +31,66 @@ std::string ScatterPlotState::toJson() const
     return rfl::json::write(data_to_serialize);
 }
 
+double ScatterPlotState::getXMin() const
+{
+    return _data.x_min;
+}
+
+void ScatterPlotState::setXMin(double x_min)
+{
+    if (_data.x_min != x_min) {
+        _data.x_min = x_min;
+        markDirty();
+        emit xMinChanged(x_min);
+        emit stateChanged();
+    }
+}
+
+double ScatterPlotState::getXMax() const
+{
+    return _data.x_max;
+}
+
+void ScatterPlotState::setXMax(double x_max)
+{
+    if (_data.x_max != x_max) {
+        _data.x_max = x_max;
+        markDirty();
+        emit xMaxChanged(x_max);
+        emit stateChanged();
+    }
+}
+
+double ScatterPlotState::getYMin() const
+{
+    return _data.y_min;
+}
+
+void ScatterPlotState::setYMin(double y_min)
+{
+    if (_data.y_min != y_min) {
+        _data.y_min = y_min;
+        markDirty();
+        emit yMinChanged(y_min);
+        emit stateChanged();
+    }
+}
+
+double ScatterPlotState::getYMax() const
+{
+    return _data.y_max;
+}
+
+void ScatterPlotState::setYMax(double y_max)
+{
+    if (_data.y_max != y_max) {
+        _data.y_max = y_max;
+        markDirty();
+        emit yMaxChanged(y_max);
+        emit stateChanged();
+    }
+}
+
 bool ScatterPlotState::fromJson(std::string const & json)
 {
     auto result = rfl::json::read<ScatterPlotStateData>(json);

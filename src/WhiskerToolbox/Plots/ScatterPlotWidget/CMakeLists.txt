@@ -1,9 +1,12 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(SCATTER_PLOT_WIDGET_SOURCES
 
         Core/ScatterPlotState.cpp
         Core/ScatterPlotState.hpp
+
+        Rendering/ScatterPlotOpenGLWidget.cpp
+        Rendering/ScatterPlotOpenGLWidget.hpp
 
         ScatterPlotWidgetRegistration.cpp
         ScatterPlotWidgetRegistration.hpp
@@ -29,10 +32,14 @@ target_link_libraries(ScatterPlotWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(ScatterPlotWidget PRIVATE DataManager)
 target_link_libraries(ScatterPlotWidget PRIVATE EditorState)
+target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
+target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
 
 target_include_directories(ScatterPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
