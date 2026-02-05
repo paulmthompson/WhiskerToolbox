@@ -23,6 +23,7 @@
 
 #include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
@@ -108,6 +109,14 @@ public:
 
 signals:
     /**
+     * @brief Emitted when user single-clicks on an event to select it
+     * @param trial_index The trial (row) index of the selected event
+     * @param relative_time_ms The time relative to alignment in ms
+     * @param series_key The key of the event series containing the event
+     */
+    void eventSelected(int trial_index, float relative_time_ms, QString const & series_key);
+
+    /**
      * @brief Emitted when user double-clicks on an event
      * @param time_frame_index The time frame index of the event
      * @param series_key The key of the event series
@@ -171,6 +180,8 @@ private:
     PlottingOpenGL::SceneRenderer _scene_renderer;
     CorePlotting::RenderableScene _scene;
     CorePlotting::RowLayoutStrategy _layout_strategy;
+    CorePlotting::LayoutResponse _layout_response;  ///< Cached for hit testing
+    CorePlotting::SceneHitTester _hit_tester;       ///< For single-click event selection
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
 
@@ -182,6 +193,8 @@ private:
     // Interaction state
     bool _is_panning{false};
     QPoint _last_mouse_pos;
+    QPoint _click_start_pos;                   ///< For click-vs-drag detection
+    static constexpr int DRAG_THRESHOLD = 5;   ///< Pixels moved to count as drag
     bool _tooltips_enabled{true};
     QTimer * _tooltip_timer{nullptr};
     std::optional<QPoint> _pending_tooltip_pos;
@@ -223,8 +236,11 @@ private:
 
     /**
      * @brief Handle zoom via wheel
+     * @param delta Wheel delta (positive = zoom in, negative = zoom out)
+     * @param y_only If true, zoom Y-axis only (Shift+wheel)
+     * @param both_axes If true, zoom both axes (Ctrl+wheel). Otherwise X-only (default).
      */
-    void handleZoom(float delta, bool y_only);
+    void handleZoom(float delta, bool y_only, bool both_axes = false);
 
     /**
      * @brief Find event near screen position (for hit testing)
@@ -232,6 +248,14 @@ private:
      */
     [[nodiscard]] std::optional<std::pair<int, int>> findEventNear(
         QPoint const & screen_pos, float tolerance_pixels = 10.0f) const;
+
+    /**
+     * @brief Handle single-click selection at the given position
+     * 
+     * Uses SceneHitTester to find events at the click position.
+     * If an event is found, emits eventSelected() signal.
+     */
+    void handleClickSelection(QPoint const & screen_pos);
 
     /**
      * @brief Render the center line at t=0

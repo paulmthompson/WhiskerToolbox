@@ -5,6 +5,7 @@
 #include "DataManager/utils/color.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
+#include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CoreGeometry/boundingbox.hpp"
@@ -180,9 +181,9 @@ void EventPlotOpenGLWidget::resizeGL(int w, int h)
 void EventPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
-        _is_panning = true;
+        _is_panning = false;  // Don't start panning yet - wait for drag detection
+        _click_start_pos = event->pos();
         _last_mouse_pos = event->pos();
-        setCursor(Qt::ClosedHandCursor);
     }
     event->accept();
 }
@@ -195,10 +196,22 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
         _tooltip_timer->start();
     }
 
-    if (_is_panning) {
-        int delta_x = event->pos().x() - _last_mouse_pos.x();
-        int delta_y = event->pos().y() - _last_mouse_pos.y();
-        handlePanning(delta_x, delta_y);
+    // Check if we should start panning (drag detection)
+    if (event->buttons() & Qt::LeftButton) {
+        int dx = event->pos().x() - _click_start_pos.x();
+        int dy = event->pos().y() - _click_start_pos.y();
+        int distance_squared = dx * dx + dy * dy;
+        
+        if (!_is_panning && distance_squared > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+            _is_panning = true;
+            setCursor(Qt::ClosedHandCursor);
+        }
+        
+        if (_is_panning) {
+            int delta_x = event->pos().x() - _last_mouse_pos.x();
+            int delta_y = event->pos().y() - _last_mouse_pos.y();
+            handlePanning(delta_x, delta_y);
+        }
         _last_mouse_pos = event->pos();
     }
 
@@ -212,8 +225,13 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 void EventPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
-        _is_panning = false;
-        setCursor(Qt::ArrowCursor);
+        if (_is_panning) {
+            _is_panning = false;
+            setCursor(Qt::ArrowCursor);
+        } else {
+            // This was a click (not a drag) - try to select an event
+            handleClickSelection(event->pos());
+        }
     }
     event->accept();
 }
@@ -237,8 +255,15 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 {
     float delta = event->angleDelta().y() / 120.0f;
-    bool y_only = event->modifiers() & Qt::ShiftModifier;
-    handleZoom(delta, y_only);
+    
+    // Zoom mode based on modifiers:
+    // - Default: X-axis only (time-focused exploration)
+    // - Shift: Y-axis only (trial-focused exploration)
+    // - Ctrl: Both axes (uniform zoom)
+    bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
+    bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
+    
+    handleZoom(delta, shift_pressed, ctrl_pressed);
     event->accept();
 }
 
@@ -318,8 +343,8 @@ void EventPlotOpenGLWidget::rebuildScene()
         layout_request.series.emplace_back(key, CorePlotting::SeriesType::DigitalEvent, true);
     }
 
-    // Compute layout using RowLayoutStrategy
-    CorePlotting::LayoutResponse layout_response = _layout_strategy.compute(layout_request);
+    // Compute layout using RowLayoutStrategy and cache for hit testing
+    _layout_response = _layout_strategy.compute(layout_request);
 
     // Build scene with SceneBuilder
     BoundingBox bounds{
@@ -379,7 +404,7 @@ void EventPlotOpenGLWidget::rebuildScene()
         if (!trial_view) continue;
 
         std::string key = "trial_" + std::to_string(trial);
-        auto const * trial_layout = layout_response.findLayout(key);
+        auto const * trial_layout = _layout_response.findLayout(key);
         if (!trial_layout) continue;
 
         // Use alignmentTimeAt() which returns the proper alignment point:
@@ -480,26 +505,104 @@ void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
     _state->setPan(new_pan_x, new_pan_y);
 }
 
-void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only)
+void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
 {
     if (!_state) return;
 
     float factor = std::pow(1.1f, delta);
 
     if (y_only) {
+        // Shift+wheel: Y-axis only (trial zoom)
         _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else {
+    } else if (both_axes) {
+        // Ctrl+wheel: Both axes (uniform zoom)
         _state->setXZoom(_cached_view_state.x_zoom * factor);
         _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else {
+        // Default wheel: X-axis only (time zoom)
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
     }
 }
 
 std::optional<std::pair<int, int>> EventPlotOpenGLWidget::findEventNear(
     QPoint const & screen_pos, float tolerance_pixels) const
 {
-    // TODO: Implement using CorePlotting::SceneHitTester
-    // For now, return empty
+    // Convert screen position to world coordinates
+    QPointF world = screenToWorld(screen_pos);
+    
+    // Configure hit tester with pixel tolerance converted to world units
+    // X tolerance: convert pixels to time units
+    float world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
+                              (_widget_width * _cached_view_state.x_zoom);
+    float world_tolerance = tolerance_pixels * world_per_pixel_x;
+    
+    CorePlotting::HitTestConfig config;
+    config.point_tolerance = world_tolerance;
+    config.prioritize_discrete = true;
+    
+    CorePlotting::SceneHitTester tester(config);
+    
+    // Use queryQuadTree for discrete elements (events)
+    auto result = tester.queryQuadTree(
+        static_cast<float>(world.x()),
+        static_cast<float>(world.y()),
+        _scene);
+    
+    if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
+        // Extract trial index from series_key (format: "trial_N")
+        if (result.series_key.starts_with("trial_")) {
+            int trial_index = std::stoi(result.series_key.substr(6));
+            // The event index within the trial is not tracked by the hit tester
+            // Return trial and a placeholder event index (0)
+            return std::make_pair(trial_index, 0);
+        }
+    }
+    
     return std::nullopt;
+}
+
+void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos)
+{
+    // Convert screen position to world coordinates
+    QPointF world = screenToWorld(screen_pos);
+    
+    // Configure hit tester with reasonable tolerance
+    float world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
+                              (_widget_width * _cached_view_state.x_zoom);
+    float world_tolerance = 10.0f * world_per_pixel_x;  // 10 pixel tolerance
+    
+    CorePlotting::HitTestConfig config;
+    config.point_tolerance = world_tolerance;
+    config.prioritize_discrete = true;
+    
+    CorePlotting::SceneHitTester tester(config);
+    
+    // Perform full hit test (includes QuadTree and other strategies)
+    auto result = tester.hitTest(
+        static_cast<float>(world.x()),
+        static_cast<float>(world.y()),
+        _scene,
+        _layout_response);
+    
+    if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
+        // Extract trial index from series_key (format: "trial_N")
+        if (result.series_key.starts_with("trial_")) {
+            int trial_index = std::stoi(result.series_key.substr(6));
+            
+            // Get series key from state for the signal
+            QString series_key;
+            auto event_names = _state ? _state->getPlotEventNames() : std::vector<QString>{};
+            if (!event_names.empty()) {
+                auto options = _state->getPlotEventOptions(event_names.front());
+                if (options) {
+                    series_key = QString::fromStdString(options->event_key);
+                }
+            }
+            
+            // Emit selection signal with trial index and relative time
+            emit eventSelected(trial_index, result.world_x, series_key);
+        }
+    }
 }
 
 void EventPlotOpenGLWidget::renderCenterLine()

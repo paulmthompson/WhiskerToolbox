@@ -38,19 +38,47 @@ enum class EventGlyphType {
  * @brief View state for the raster plot (zoom, pan, bounds)
  * 
  * Supports independent X/Y zoom for time-focused or trial-focused exploration.
+ * 
+ * **Architecture: Data Bounds vs View Transform**
+ * 
+ * The view state has two conceptually separate concerns:
+ * 
+ * 1. **Data Bounds (x_min, x_max)**: Define the window of data to gather from
+ *    the DataManager. Changing these requires a scene rebuild because the
+ *    underlying data changes.
+ *    - Example: x_min=-1000, x_max=1000 gathers events from -1000ms to +1000ms
+ * 
+ * 2. **View Transform (x_zoom, y_zoom, x_pan, y_pan)**: Control how the gathered
+ *    data is displayed. Changing these only updates the projection matrix - no
+ *    data rebuild is needed.
+ *    - Example: x_zoom=2.0 shows half the time range at 2x magnification
+ *    - Example: x_pan=500 shifts the view 500ms to the right
+ * 
+ * This separation enables smooth zoom/pan interaction while limiting expensive
+ * data re-gathering to explicit window changes.
  */
 struct EventPlotViewState {
-    // X-axis (time) bounds relative to alignment
-    double x_min = -500.0;  ///< Time before alignment (e.g., -500ms)
-    double x_max = 500.0;   ///< Time after alignment (e.g., +500ms)
+    // === Data Bounds (changing these triggers scene rebuild) ===
     
-    // Zoom factors (independent X/Y zoom)
-    double x_zoom = 1.0;    ///< X-axis (time) zoom factor
-    double y_zoom = 1.0;    ///< Y-axis (trial) zoom factor
+    /// Time before alignment in ms (typically negative). Defines data window start.
+    double x_min = -500.0;
     
-    // Pan offset (in world coordinates)
-    double x_pan = 0.0;     ///< X-axis pan offset
-    double y_pan = 0.0;     ///< Y-axis pan offset
+    /// Time after alignment in ms (typically positive). Defines data window end.
+    double x_max = 500.0;
+    
+    // === View Transform (changing these only updates projection matrix) ===
+    
+    /// X-axis (time) zoom factor. 1.0 = full window, 2.0 = show half the window.
+    double x_zoom = 1.0;
+    
+    /// Y-axis (trial) zoom factor. 1.0 = all trials fit, 2.0 = half the trials fit.
+    double y_zoom = 1.0;
+    
+    /// X-axis pan offset in world units (ms). Positive = view shifts right.
+    double x_pan = 0.0;
+    
+    /// Y-axis pan offset in normalized units. Positive = view shifts up.
+    double y_pan = 0.0;
 };
 
 /**
@@ -208,28 +236,44 @@ public:
     void setViewState(EventPlotViewState const & view_state);
 
     /**
-     * @brief Set X-axis zoom factor
-     * @param zoom Zoom factor (1.0 = no zoom)
+     * @brief Set X-axis zoom factor (view transform only)
+     * 
+     * Adjusts magnification without changing the underlying data window.
+     * Only emits viewStateChanged(), not stateChanged() - no scene rebuild.
+     * 
+     * @param zoom Zoom factor (1.0 = full window visible, 2.0 = half visible)
      */
     void setXZoom(double zoom);
 
     /**
-     * @brief Set Y-axis zoom factor
-     * @param zoom Zoom factor (1.0 = no zoom)
+     * @brief Set Y-axis zoom factor (view transform only)
+     * 
+     * Adjusts trial density without changing the underlying data.
+     * Only emits viewStateChanged(), not stateChanged() - no scene rebuild.
+     * 
+     * @param zoom Zoom factor (1.0 = all trials fit, 2.0 = half the trials fit)
      */
     void setYZoom(double zoom);
 
     /**
-     * @brief Set pan offset
-     * @param x_pan X-axis pan offset
-     * @param y_pan Y-axis pan offset
+     * @brief Set pan offset (view transform only)
+     * 
+     * Shifts the view without changing the underlying data window.
+     * Only emits viewStateChanged(), not stateChanged() - no scene rebuild.
+     * 
+     * @param x_pan X-axis pan offset in world units (ms)
+     * @param y_pan Y-axis pan offset in normalized units
      */
     void setPan(double x_pan, double y_pan);
 
     /**
-     * @brief Set X-axis time bounds (relative to alignment)
-     * @param x_min Minimum time (before alignment, typically negative)
-     * @param x_max Maximum time (after alignment, typically positive)
+     * @brief Set X-axis data bounds (triggers scene rebuild)
+     * 
+     * Changes the window of data gathered from the DataManager.
+     * Emits both viewStateChanged() AND stateChanged() - triggers scene rebuild.
+     * 
+     * @param x_min Minimum time before alignment (typically negative)
+     * @param x_max Maximum time after alignment (typically positive)
      */
     void setXBounds(double x_min, double x_max);
 

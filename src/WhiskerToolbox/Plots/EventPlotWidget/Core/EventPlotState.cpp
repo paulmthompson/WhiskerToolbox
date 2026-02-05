@@ -186,7 +186,8 @@ void EventPlotState::setXZoom(double zoom)
         _data.view_state.x_zoom = zoom;
         markDirty();
         emit viewStateChanged();
-        emit stateChanged();
+        // Note: No stateChanged() here - zoom is a view-only change that
+        // doesn't require scene rebuild. The projection matrix handles it.
     }
 }
 
@@ -196,7 +197,8 @@ void EventPlotState::setYZoom(double zoom)
         _data.view_state.y_zoom = zoom;
         markDirty();
         emit viewStateChanged();
-        emit stateChanged();
+        // Note: No stateChanged() here - zoom is a view-only change that
+        // doesn't require scene rebuild. The projection matrix handles it.
     }
 }
 
@@ -207,7 +209,8 @@ void EventPlotState::setPan(double x_pan, double y_pan)
         _data.view_state.y_pan = y_pan;
         markDirty();
         emit viewStateChanged();
-        emit stateChanged();
+        // Note: No stateChanged() here - pan is a view-only change that
+        // doesn't require scene rebuild. The projection matrix handles it.
     }
 }
 

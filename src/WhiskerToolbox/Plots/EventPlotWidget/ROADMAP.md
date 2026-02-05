@@ -16,8 +16,9 @@ EventPlotWidget has:
 - ✅ **View state with X/Y zoom support**
 - ✅ **GatherResult integration for trial alignment**
 - ✅ **Consolidated signal architecture**
-- ❌ No hit testing / selection
-- ❌ No zoom/pan mouse interaction
+- ✅ **Zoom/pan mouse interaction with separated X/Y control (Phase 2)**
+- ✅ **Single-click hit testing using SceneHitTester (Phase 2)**
+- ✅ **Performance-optimized view transforms (Phase 2)**
 - ❌ No trial sorting
 - ❌ No cross-widget linking
 
@@ -116,84 +117,62 @@ SceneRenderer::render()
 
 ---
 
-## Phase 2: Interaction - Zoom, Pan, Selection
+## Phase 2: Interaction - Zoom, Pan, Selection ✅
+
+**Status**: Complete (with descoped items noted)
 
 **Goal**: Enable user interaction with the plot.
 
-### 2.1 Separated X/Y Zoom
+### 2.1 Separated X/Y Zoom ✅
 
-Implement independent zoom for time (X) and trial (Y) axes:
+**Implemented** independent zoom for time (X) and trial (Y) axes.
 
 **Zoom Modes**:
 - Mouse wheel: X-zoom only (time-focused exploration)
 - Shift+wheel: Y-zoom only (trial-focused exploration)  
 - Ctrl+wheel: Uniform zoom (both axes)
 
-**Implementation**:
-```cpp
-// In input handler
-void handleWheelEvent(QWheelEvent* event) {
-    if (event->modifiers() & Qt::ShiftModifier) {
-        adjustYZoom(zoomFactor);
-    } else if (event->modifiers() & Qt::ControlModifier) {
-        adjustXZoom(zoomFactor);
-        adjustYZoom(zoomFactor);
-    } else {
-        adjustXZoom(zoomFactor);  // Default: X only
-    }
-}
-```
+**Performance Optimization**: Zoom and pan operations now only update the projection 
+matrix via `viewStateChanged()` signal - they do NOT trigger `stateChanged()` which 
+would cause expensive scene rebuilds. This separation between "view transform" and 
+"data bounds" is documented in `EventPlotViewState`.
 
-### 2.2 Hit Testing & Entity Selection
+**Key Implementation Files**:
+- [EventPlotOpenGLWidget.cpp](Rendering/EventPlotOpenGLWidget.cpp) - `handleZoom()`, `wheelEvent()`
+- [EventPlotState.cpp](Core/EventPlotState.cpp) - `setXZoom()`, `setYZoom()`, `setPan()`
 
-Use CorePlotting's SceneHitTester for point queries:
+### 2.2 Hit Testing & Single-Click Selection ✅
 
-```cpp
-// On mouse click
-auto hit = _hit_tester.hitTest(world_x, world_y, _scene, _layout);
-if (hit.hasHit() && hit.hit_type == HitType::DigitalEvent) {
-    EntityId entity = hit.entity_id.value();
-    _selection_manager.handleEntityClick(entity, ctrl_pressed);
-}
-```
+**Implemented** using CorePlotting's SceneHitTester for point queries.
 
 **Selection Features**:
-- Single click: Select event
-- Ctrl+click: Multi-select
-- Double-click: Navigate to event time (emit `timePositionSelected`)
+- Single click: Select event (emits `eventSelected()` signal)
+- Click-vs-drag detection (5 pixel threshold)
+- Double-click: Navigate to event time (emits `eventDoubleClicked()`)
 
-### 2.3 Polygon Selection
+**Key Implementation Files**:
+- [EventPlotOpenGLWidget.hpp](Rendering/EventPlotOpenGLWidget.hpp) - `eventSelected()` signal
+- [EventPlotOpenGLWidget.cpp](Rendering/EventPlotOpenGLWidget.cpp) - `handleClickSelection()`, `findEventNear()`
 
-Integrate `PolygonInteractionController` for lasso selection:
+### 2.3 Polygon Selection 🔜 (Descoped)
+
+**Descoped** per project decision - not needed for current use cases. Single-click 
+selection is sufficient for the raster plot widget.
+
+If needed in the future, can integrate `PolygonInteractionController`:
 
 ```cpp
-// Interaction mode enum
+// Interaction mode enum (future)
 enum class EventPlotInteractionMode {
-    Normal,      // Pan, zoom, single-click select
+    Normal,        // Pan, zoom, single-click select
     PolygonSelect  // Lasso selection mode
 };
 ```
 
-**State additions**:
-```cpp
-// In EventPlotStateData
-std::string interaction_mode = "Normal";  // Serializable mode
-```
+### 2.4 Double-Click → Time Navigation ✅
 
-### 2.4 Double-Click → Time Navigation
-
-Emit signal to EditorRegistry for time synchronization:
-
-```cpp
-void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent* event) {
-    auto hit = hitTestAt(event->pos());
-    if (hit.hasHit()) {
-        // Get absolute time of the event
-        TimePosition position = computeAbsoluteTime(hit, trial_index);
-        emit timePositionSelected(position);
-    }
-}
-```
+**Implemented** via `eventDoubleClicked()` signal which is connected to time navigation 
+in the UI layer.
 
 ---
 
@@ -496,18 +475,18 @@ signals:
 
 ## Implementation Priority
 
-### MVP (Minimum Viable Product)
+### MVP (Minimum Viable Product) ✅
 
 1. ✅ **Signal Design**: Consolidated signals implemented in EventPlotState
 2. ✅ **Phase 1**: Basic rendering with OpenGL + GatherResult
-3. **Phase 2.1**: X/Y zoom mouse interaction
+3. ✅ **Phase 2.1**: X/Y zoom mouse interaction (wheel, Shift+wheel, Ctrl+wheel)
 4. **Phase 3.1-3.2**: Fixed color/glyph configuration in properties panel
-5. **Phase 2.2**: Hit testing (no selection persistence yet)
+5. ✅ **Phase 2.2**: Hit testing with single-click selection
 
 ### Iteration 2
 
-6. **Phase 2.2-2.3**: Full selection (single, multi, polygon)
-7. **Phase 2.4**: Double-click time navigation
+6. **Phase 2.2-2.3**: Full selection (~~single~~, ~~multi~~, polygon) - single done, multi/polygon descoped
+7. ✅ **Phase 2.4**: Double-click time navigation
 8. **Phase 3.3**: Axis labels
 
 ### Iteration 3
