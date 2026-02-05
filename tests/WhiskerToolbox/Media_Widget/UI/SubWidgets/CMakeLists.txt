@@ -1,1 +1,2 @@
 add_subdirectory(MediaMask_Widget)
+add_subdirectory(MediaPoint_Widget)
