@@ -91,7 +91,17 @@ void EventPlotState::setWindowSize(double window_size)
     _alignment_state->setWindowSize(window_size);
     // Sync to data for serialization
     _data.alignment = _alignment_state->data();
+    
+    // Auto-sync view bounds to match window size (centered on alignment point)
+    double half_window = window_size / 2.0;
+    _data.view_state.x_min = -half_window;
+    _data.view_state.x_max = half_window;
+    // Reset pan/zoom when window changes to avoid confusion
+    _data.view_state.x_pan = 0.0;
+    _data.view_state.x_zoom = 1.0;
+    
     markDirty();
+    emit viewStateChanged();
     emit stateChanged();
 }
 

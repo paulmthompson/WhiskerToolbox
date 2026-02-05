@@ -324,34 +324,28 @@ void EventPlotOpenGLWidget::rebuildScene()
     CorePlotting::SceneBuilder builder;
     builder.setBounds(bounds);
 
-    // Get time frame from alignment series
-    auto alignment_state = _state->alignmentState();
-    if (!alignment_state) {
+    // Get time frame from SOURCE series (the spikes/events being plotted)
+    // This is required for correct index→time conversion when source and alignment
+    // series may have different sampling rates (e.g., 30kHz spikes, 500Hz events)
+    auto event_names = _state->getPlotEventNames();
+    if (event_names.empty()) {
         _scene_renderer.clearScene();
         return;
     }
 
-    auto const & align_data = alignment_state->data();
-    if (align_data.alignment_event_key.empty()) {
+    auto const source_options = _state->getPlotEventOptions(event_names.front());
+    if (!source_options || source_options->event_key.empty()) {
         _scene_renderer.clearScene();
         return;
     }
 
-    // Get alignment source (handles both DigitalEventSeries and DigitalIntervalSeries)
-    auto alignment_source = WhiskerToolbox::Plots::getAlignmentSource(
-        _data_manager, align_data.alignment_event_key);
-    if (!alignment_source.isValid()) {
+    auto source_series = _data_manager->getData<DigitalEventSeries>(source_options->event_key);
+    if (!source_series) {
         _scene_renderer.clearScene();
         return;
     }
 
-    // Get time frame from the appropriate series type
-    std::shared_ptr<TimeFrame const> time_frame;
-    if (alignment_source.is_interval_series) {
-        time_frame = alignment_source.interval_series->getTimeFrame();
-    } else if (alignment_source.is_event_series) {
-        time_frame = alignment_source.event_series->getTimeFrame();
-    }
+    auto time_frame = source_series->getTimeFrame();
     if (!time_frame) {
         _scene_renderer.clearScene();
         return;

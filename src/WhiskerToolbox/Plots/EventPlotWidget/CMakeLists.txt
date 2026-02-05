@@ -11,6 +11,8 @@ set(EVENT_PLOT_WIDGET_SOURCES
         EventPlotWidgetRegistration.cpp
         EventPlotWidgetRegistration.hpp
 
+        UI/EventPlotAxisWidget.cpp
+        UI/EventPlotAxisWidget.hpp
         UI/EventPlotWidget.cpp
         UI/EventPlotWidget.hpp
         UI/EventPlotWidget.ui

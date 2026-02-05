@@ -17,6 +17,7 @@
 #include <memory>
 
 class DataManager;
+class EventPlotAxisWidget;
 class EventPlotOpenGLWidget;
 class EventPlotState;
 
@@ -79,6 +80,9 @@ private:
 
     /// OpenGL rendering widget
     EventPlotOpenGLWidget * _opengl_widget;
+
+    /// Time axis widget below the plot
+    EventPlotAxisWidget * _axis_widget;
 };
 
 #endif// EVENT_PLOT_WIDGET_HPP
