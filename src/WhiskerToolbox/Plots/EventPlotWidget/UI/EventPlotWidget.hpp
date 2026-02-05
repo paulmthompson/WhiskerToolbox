@@ -18,6 +18,7 @@
 
 class DataManager;
 class RelativeTimeAxisWidget;
+class VerticalAxisWidget;
 class EventPlotOpenGLWidget;
 class EventPlotState;
 
@@ -86,6 +87,9 @@ private:
 
     /// Time axis widget below the plot
     RelativeTimeAxisWidget * _axis_widget;
+
+    /// Vertical axis widget on the left side
+    VerticalAxisWidget * _vertical_axis_widget;
 };
 
 #endif// EVENT_PLOT_WIDGET_HPP

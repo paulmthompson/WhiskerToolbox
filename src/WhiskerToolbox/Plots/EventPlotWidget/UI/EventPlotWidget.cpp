@@ -5,7 +5,9 @@
 #include "DataManager/DataManager.hpp"
 #include "Rendering/EventPlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 
+#include <QHBoxLayout>
 #include <QResizeEvent>
 #include <QVBoxLayout>
 
@@ -17,23 +19,55 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
       _data_manager(data_manager),
       ui(new Ui::EventPlotWidget),
       _opengl_widget(nullptr),
-      _axis_widget(nullptr)
+      _axis_widget(nullptr),
+      _vertical_axis_widget(nullptr)
 {
     ui->setupUi(this);
+
+    // Create horizontal layout for vertical axis + OpenGL widget
+    auto * horizontal_layout = new QHBoxLayout();
+    horizontal_layout->setSpacing(0);
+    horizontal_layout->setContentsMargins(0, 0, 0, 0);
+
+    // Create and add the vertical axis widget on the left
+    _vertical_axis_widget = new VerticalAxisWidget(this);
+    _vertical_axis_widget->setRange(0.0, 0.0);  // Will be updated when trials are loaded
+    horizontal_layout->addWidget(_vertical_axis_widget);
 
     // Create and add the OpenGL widget
     _opengl_widget = new EventPlotOpenGLWidget(this);
     _opengl_widget->setDataManager(_data_manager);
-    ui->main_layout->addWidget(_opengl_widget);
+    horizontal_layout->addWidget(_opengl_widget, 1);  // Stretch factor 1
 
-    // Create and add the axis widget below the OpenGL canvas
+    // Create vertical layout for horizontal layout + time axis
+    auto * vertical_layout = new QVBoxLayout();
+    vertical_layout->setSpacing(0);
+    vertical_layout->setContentsMargins(0, 0, 0, 0);
+    vertical_layout->addLayout(horizontal_layout, 1);  // Stretch factor 1
+
+    // Create and add the time axis widget below
     _axis_widget = new RelativeTimeAxisWidget(this);
-    ui->main_layout->addWidget(_axis_widget);
+    vertical_layout->addWidget(_axis_widget);
+
+    // Replace the main layout
+    QLayout * old_layout = layout();
+    if (old_layout) {
+        delete old_layout;
+    }
+    setLayout(vertical_layout);
 
     // Forward signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::eventDoubleClicked,
             this, [this](int64_t time_frame_index, QString const & /* series_key */) {
                 emit timePositionSelected(TimePosition(time_frame_index));
+            });
+
+    // Connect trial count changes to update vertical axis
+    connect(_opengl_widget, &EventPlotOpenGLWidget::trialCountChanged,
+            this, [this](size_t count) {
+                if (_vertical_axis_widget) {
+                    _vertical_axis_widget->setRange(0.0, static_cast<double>(count));
+                }
             });
 }
 
@@ -78,6 +112,11 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                         _axis_widget->update();
                     }
                 });
+    }
+
+    // Update vertical axis when widget resizes
+    if (_vertical_axis_widget) {
+        _vertical_axis_widget->update();
     }
 }
 

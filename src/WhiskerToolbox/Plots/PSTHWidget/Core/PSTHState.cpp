@@ -183,6 +183,36 @@ void PSTHState::setBinSize(double bin_size)
     }
 }
 
+double PSTHState::getYMin() const
+{
+    return _data.y_min;
+}
+
+void PSTHState::setYMin(double y_min)
+{
+    if (_data.y_min != y_min) {
+        _data.y_min = y_min;
+        markDirty();
+        emit yMinChanged(y_min);
+        emit stateChanged();
+    }
+}
+
+double PSTHState::getYMax() const
+{
+    return _data.y_max;
+}
+
+void PSTHState::setYMax(double y_max)
+{
+    if (_data.y_max != y_max) {
+        _data.y_max = y_max;
+        markDirty();
+        emit yMaxChanged(y_max);
+        emit stateChanged();
+    }
+}
+
 std::string PSTHState::toJson() const
 {
     // Include instance_id in serialization for restoration

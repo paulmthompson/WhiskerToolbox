@@ -112,6 +112,18 @@ private slots:
      */
     void _onBinSizeChanged(double value);
 
+    /**
+     * @brief Handle Y-axis minimum spinbox value change
+     * @param value New Y-axis minimum value
+     */
+    void _onYMinChanged(double value);
+
+    /**
+     * @brief Handle Y-axis maximum spinbox value change
+     * @param value New Y-axis maximum value
+     */
+    void _onYMaxChanged(double value);
+
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys

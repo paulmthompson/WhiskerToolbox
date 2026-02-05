@@ -51,6 +51,8 @@ struct PSTHStateData {
     std::map<std::string, PSTHEventOptions> plot_events;           ///< Map of event names to their plot options
     PSTHStyle style = PSTHStyle::Bar;                              ///< Plot style (bar or line)
     double bin_size = 10.0;                                         ///< Bin size in time units (default: 10.0)
+    double y_min = 0.0;                                             ///< Y-axis minimum value (default: 0.0)
+    double y_max = 100.0;                                           ///< Y-axis maximum value (default: 100.0)
 };
 
 /**
@@ -217,6 +219,32 @@ public:
      */
     void setBinSize(double bin_size);
 
+    // === Y-Axis Range ===
+
+    /**
+     * @brief Get the Y-axis minimum value
+     * @return Minimum Y value
+     */
+    [[nodiscard]] double getYMin() const;
+
+    /**
+     * @brief Set the Y-axis minimum value
+     * @param y_min Minimum Y value
+     */
+    void setYMin(double y_min);
+
+    /**
+     * @brief Get the Y-axis maximum value
+     * @return Maximum Y value
+     */
+    [[nodiscard]] double getYMax() const;
+
+    /**
+     * @brief Set the Y-axis maximum value
+     * @param y_max Maximum Y value
+     */
+    void setYMax(double y_max);
+
     // === Serialization ===
 
     /**
@@ -286,6 +314,18 @@ signals:
      * @param bin_size New bin size value
      */
     void binSizeChanged(double bin_size);
+
+    /**
+     * @brief Emitted when Y-axis minimum changes
+     * @param y_min New Y-axis minimum value
+     */
+    void yMinChanged(double y_min);
+
+    /**
+     * @brief Emitted when Y-axis maximum changes
+     * @param y_max New Y-axis maximum value
+     */
+    void yMaxChanged(double y_max);
 
 private:
     PSTHStateData _data;

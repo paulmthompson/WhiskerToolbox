@@ -20,6 +20,7 @@
 class DataManager;
 class PSTHState;
 class RelativeTimeAxisWidget;
+class VerticalAxisWidget;
 class PSTHPlotOpenGLWidget;
 
 namespace Ui {
@@ -87,6 +88,9 @@ private:
 
     /// Time axis widget below the plot
     RelativeTimeAxisWidget * _axis_widget;
+
+    /// Vertical axis widget on the left side
+    VerticalAxisWidget * _vertical_axis_widget;
 };
 
 #endif// PSTH_WIDGET_HPP

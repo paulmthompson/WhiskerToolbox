@@ -410,6 +410,9 @@ void EventPlotOpenGLWidget::rebuildScene()
     // Build and upload scene
     _scene = builder.build();
     _scene_renderer.uploadScene(_scene);
+
+    // Emit trial count signal for vertical axis update
+    emit trialCountChanged(num_trials);
 }
 
 void EventPlotOpenGLWidget::updateMatrices()

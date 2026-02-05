@@ -126,6 +126,12 @@ signals:
      */
     void viewBoundsChanged();
 
+    /**
+     * @brief Emitted when trial count changes (after scene rebuild)
+     * @param count Number of trials
+     */
+    void trialCountChanged(size_t count);
+
 protected:
     // QOpenGLWidget overrides
     void initializeGL() override;

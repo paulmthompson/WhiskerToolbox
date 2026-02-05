@@ -59,6 +59,10 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
             this, &PSTHPropertiesWidget::_onStyleChanged);
     connect(ui->bin_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &PSTHPropertiesWidget::_onBinSizeChanged);
+    connect(ui->y_min_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &PSTHPropertiesWidget::_onYMinChanged);
+    connect(ui->y_max_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &PSTHPropertiesWidget::_onYMaxChanged);
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -89,6 +93,18 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
                     ui->bin_size_spinbox->blockSignals(true);
                     ui->bin_size_spinbox->setValue(bin_size);
                     ui->bin_size_spinbox->blockSignals(false);
+                });
+        connect(_state.get(), &PSTHState::yMinChanged,
+                this, [this](double y_min) {
+                    ui->y_min_spinbox->blockSignals(true);
+                    ui->y_min_spinbox->setValue(y_min);
+                    ui->y_min_spinbox->blockSignals(false);
+                });
+        connect(_state.get(), &PSTHState::yMaxChanged,
+                this, [this](double y_max) {
+                    ui->y_max_spinbox->blockSignals(true);
+                    ui->y_max_spinbox->setValue(y_max);
+                    ui->y_max_spinbox->blockSignals(false);
                 });
 
         // Initialize UI from state
@@ -293,6 +309,14 @@ void PSTHPropertiesWidget::_updateUIFromState()
     ui->bin_size_spinbox->setValue(_state->getBinSize());
     ui->bin_size_spinbox->blockSignals(false);
 
+    ui->y_min_spinbox->blockSignals(true);
+    ui->y_min_spinbox->setValue(_state->getYMin());
+    ui->y_min_spinbox->blockSignals(false);
+
+    ui->y_max_spinbox->blockSignals(true);
+    ui->y_max_spinbox->setValue(_state->getYMax());
+    ui->y_max_spinbox->blockSignals(false);
+
     // Update plot events table
     _updatePlotEventsTable();
 }
@@ -363,4 +387,22 @@ void PSTHPropertiesWidget::_onBinSizeChanged(double value)
     }
 
     _state->setBinSize(value);
+}
+
+void PSTHPropertiesWidget::_onYMinChanged(double value)
+{
+    if (!_state) {
+        return;
+    }
+
+    _state->setYMin(value);
+}
+
+void PSTHPropertiesWidget::_onYMaxChanged(double value)
+{
+    if (!_state) {
+        return;
+    }
+
+    _state->setYMax(value);
 }
