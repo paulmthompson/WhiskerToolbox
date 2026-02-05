@@ -35,6 +35,39 @@ enum class EventGlyphType {
 };
 
 /**
+ * @brief View state for the raster plot (zoom, pan, bounds)
+ * 
+ * Supports independent X/Y zoom for time-focused or trial-focused exploration.
+ */
+struct EventPlotViewState {
+    // X-axis (time) bounds relative to alignment
+    double x_min = -500.0;  ///< Time before alignment (e.g., -500ms)
+    double x_max = 500.0;   ///< Time after alignment (e.g., +500ms)
+    
+    // Zoom factors (independent X/Y zoom)
+    double x_zoom = 1.0;    ///< X-axis (time) zoom factor
+    double y_zoom = 1.0;    ///< Y-axis (trial) zoom factor
+    
+    // Pan offset (in world coordinates)
+    double x_pan = 0.0;     ///< X-axis pan offset
+    double y_pan = 0.0;     ///< Y-axis pan offset
+    
+    // Global glyph defaults (can be overridden per-series)
+    double default_glyph_size = 3.0;  ///< Default glyph size in pixels
+};
+
+/**
+ * @brief Axis labeling and grid options
+ */
+struct EventPlotAxisOptions {
+    std::string x_label = "Time (ms)";  ///< X-axis label
+    std::string y_label = "Trial";       ///< Y-axis label
+    bool show_x_axis = true;             ///< Whether to show X axis
+    bool show_y_axis = true;             ///< Whether to show Y axis
+    bool show_grid = false;              ///< Whether to show grid lines
+};;
+
+/**
  * @brief Options for plotting an event series in the raster plot
  */
 struct EventPlotOptions {
@@ -50,8 +83,11 @@ struct EventPlotOptions {
 struct EventPlotStateData {
     std::string instance_id;
     std::string display_name = "Event Plot";
-    PlotAlignmentData alignment;                                                      ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, EventPlotOptions> plot_events;                             ///< Map of event names to their plot options
+    PlotAlignmentData alignment;                                   ///< Alignment settings (event key, interval type, offset, window size)
+    std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
+    EventPlotViewState view_state;                                 ///< View state (zoom, pan, bounds)
+    EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
+    bool pinned = false;                                           ///< Whether to ignore SelectionContext changes
 };
 
 /**
@@ -159,6 +195,82 @@ public:
      */
     [[nodiscard]] PlotAlignmentState * alignmentState() { return _alignment_state.get(); }
 
+    // === View State ===
+
+    /**
+     * @brief Get the view state (zoom, pan, bounds)
+     * @return Const reference to the view state
+     */
+    [[nodiscard]] EventPlotViewState const & viewState() const { return _data.view_state; }
+
+    /**
+     * @brief Set the complete view state
+     * @param view_state New view state
+     */
+    void setViewState(EventPlotViewState const & view_state);
+
+    /**
+     * @brief Set X-axis zoom factor
+     * @param zoom Zoom factor (1.0 = no zoom)
+     */
+    void setXZoom(double zoom);
+
+    /**
+     * @brief Set Y-axis zoom factor
+     * @param zoom Zoom factor (1.0 = no zoom)
+     */
+    void setYZoom(double zoom);
+
+    /**
+     * @brief Set pan offset
+     * @param x_pan X-axis pan offset
+     * @param y_pan Y-axis pan offset
+     */
+    void setPan(double x_pan, double y_pan);
+
+    /**
+     * @brief Set X-axis time bounds (relative to alignment)
+     * @param x_min Minimum time (before alignment, typically negative)
+     * @param x_max Maximum time (after alignment, typically positive)
+     */
+    void setXBounds(double x_min, double x_max);
+
+    // === Axis Options ===
+
+    /**
+     * @brief Get axis label and grid options
+     * @return Const reference to axis options
+     */
+    [[nodiscard]] EventPlotAxisOptions const & axisOptions() const { return _data.axis_options; }
+
+    /**
+     * @brief Set axis options
+     * @param options New axis options
+     */
+    void setAxisOptions(EventPlotAxisOptions const & options);
+
+    // === Pinning (for cross-widget linking) ===
+
+    /**
+     * @brief Check if the widget is pinned
+     * @return true if pinned (ignores SelectionContext changes)
+     */
+    [[nodiscard]] bool isPinned() const { return _data.pinned; }
+
+    /**
+     * @brief Set the pinned state
+     * @param pinned Whether to ignore SelectionContext changes
+     */
+    void setPinned(bool pinned);
+
+    // === Direct Data Access ===
+
+    /**
+     * @brief Get const reference to underlying data
+     * @return Const reference to EventPlotStateData
+     */
+    [[nodiscard]] EventPlotStateData const & data() const { return _data; }
+
     // === Plot Events Management ===
 
     /**
@@ -251,6 +363,27 @@ signals:
      * @param event_name Name of the updated event
      */
     void plotEventOptionsChanged(QString const & event_name);
+
+    // === View State Signals (consolidated) ===
+
+    /**
+     * @brief Emitted when any view state property changes (zoom, pan, bounds)
+     * 
+     * This is a consolidated signal for all view state changes.
+     * Connect to this for re-rendering the OpenGL view.
+     */
+    void viewStateChanged();
+
+    /**
+     * @brief Emitted when axis options change
+     */
+    void axisOptionsChanged();
+
+    /**
+     * @brief Emitted when pinned state changes
+     * @param pinned New pinned state
+     */
+    void pinnedChanged(bool pinned);
 
 private:
     EventPlotStateData _data;

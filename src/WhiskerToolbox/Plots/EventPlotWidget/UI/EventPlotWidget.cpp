@@ -2,6 +2,7 @@
 
 #include "Core/EventPlotState.hpp"
 #include "DataManager/DataManager.hpp"
+#include "Rendering/EventPlotOpenGLWidget.hpp"
 
 #include <QVBoxLayout>
 
@@ -11,9 +12,21 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
                                  QWidget * parent)
     : QWidget(parent),
       _data_manager(data_manager),
-      ui(new Ui::EventPlotWidget)
+      ui(new Ui::EventPlotWidget),
+      _opengl_widget(nullptr)
 {
     ui->setupUi(this);
+
+    // Create and add the OpenGL widget
+    _opengl_widget = new EventPlotOpenGLWidget(this);
+    _opengl_widget->setDataManager(_data_manager);
+    ui->main_layout->addWidget(_opengl_widget);
+
+    // Forward signals from OpenGL widget
+    connect(_opengl_widget, &EventPlotOpenGLWidget::eventDoubleClicked,
+            this, [this](int64_t time_frame_index, QString const & /* series_key */) {
+                emit timePositionSelected(TimePosition(time_frame_index));
+            });
 }
 
 EventPlotWidget::~EventPlotWidget()
@@ -24,6 +37,11 @@ EventPlotWidget::~EventPlotWidget()
 void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
 {
     _state = state;
+    
+    // Pass state to OpenGL widget
+    if (_opengl_widget) {
+        _opengl_widget->setState(_state);
+    }
 }
 
 EventPlotState * EventPlotWidget::state()

@@ -17,6 +17,7 @@
 #include <memory>
 
 class DataManager;
+class EventPlotOpenGLWidget;
 class EventPlotState;
 
 namespace Ui {
@@ -75,6 +76,9 @@ private:
 
     /// Serializable state shared with properties widget
     std::shared_ptr<EventPlotState> _state;
+
+    /// OpenGL rendering widget
+    EventPlotOpenGLWidget * _opengl_widget;
 };
 
 #endif// EVENT_PLOT_WIDGET_HPP

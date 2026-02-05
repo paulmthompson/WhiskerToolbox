@@ -12,9 +12,12 @@ EventPlotWidget has:
 - ✅ Properties panel structure (`EventPlotPropertiesWidget`)
 - ✅ Glyph type enum (Tick, Circle, Square)
 - ✅ Basic event options (color, thickness, glyph type)
-- ❌ No OpenGL rendering implementation
+- ✅ **OpenGL rendering infrastructure (Phase 1 complete)**
+- ✅ **View state with X/Y zoom support**
+- ✅ **GatherResult integration for trial alignment**
+- ✅ **Consolidated signal architecture**
 - ❌ No hit testing / selection
-- ❌ No zoom/pan controls
+- ❌ No zoom/pan mouse interaction
 - ❌ No trial sorting
 - ❌ No cross-widget linking
 
@@ -40,7 +43,9 @@ EventPlotWidget has:
 
 ---
 
-## Signal/Slot Design: Consolidated Patterns
+## Signal/Slot Design: Consolidated Patterns ✅
+
+**Status**: Implemented in [EventPlotState.hpp](Core/EventPlotState.hpp)
 
 **Problem**: With multiple event series and many per-event options, individual signals 
 would create excessive complexity.
@@ -59,131 +64,36 @@ would create excessive complexity.
 
 **With 5 events**: 78 individual signals → **~12 consolidated signals**
 
-### Recommended Pattern: EventOptionsRegistry
+### Implementation
 
-Follow `SeriesOptionsRegistry` (DataViewer) and `DisplayOptionsRegistry` (MediaWidget):
+The consolidated signal pattern uses category-level signals:
+- `alignmentChanged()` - any alignment property
+- `viewStateChanged()` - zoom, pan, bounds
+- `plotEventAdded/Removed/OptionsChanged(key)` - per-event options
 
-```cpp
-// EventOptionsRegistry.hpp
-class EventOptionsRegistry {
-public:
-    explicit EventOptionsRegistry(EventPlotStateData* data, QObject* signal_parent);
-    
-    // Type-safe accessors
-    void set(QString const& key, EventPlotOptions const& options);
-    [[nodiscard]] EventPlotOptions const* get(QString const& key) const;
-    void remove(QString const& key);
-    
-    // Query
-    [[nodiscard]] QStringList keys() const;
-    [[nodiscard]] QStringList visibleKeys() const;
-    
-signals:
-    // Single signal for all option changes
-    void optionsChanged(QString const& key);
-    void optionsRemoved(QString const& key);
-};
-```
+See [EventPlotState.hpp](Core/EventPlotState.hpp) for the complete signal definitions.
 
-### Consolidated State Signals
-
-```cpp
-// EventPlotState.hpp signals section
-signals:
-    // === Category-consolidated signals ===
-    
-    /// Emitted when any alignment property changes
-    void alignmentChanged();
-    
-    /// Emitted when any view state property changes (zoom, pan, bounds)
-    void viewStateChanged();
-    
-    /// Emitted when event options change (forwarded from registry)
-    void eventOptionsChanged(QString const& event_key);
-    void eventOptionsRemoved(QString const& event_key);
-    
-    /// Emitted when global plot options change (axis labels, grid, etc.)
-    void globalOptionsChanged();
-    
-    /// Emitted when sort configuration changes
-    void sortConfigChanged();
-    
-    /// Emitted when color configuration changes
-    void colorConfigChanged();
-    
-    /// Emitted when pin state changes
-    void pinnedChanged(bool pinned);
-    
-    /// Generic catch-all (for serialization triggers)
-    void stateChanged();
-```
-
-### View/Properties Widget Connection
-
-```cpp
-// In EventPlotOpenGLWidget
-connect(_state.get(), &EventPlotState::alignmentChanged,
-        this, &EventPlotOpenGLWidget::_rebuildGatheredData);
-        
-connect(_state.get(), &EventPlotState::viewStateChanged,
-        this, &EventPlotOpenGLWidget::_updateViewTransform);
-        
-connect(_state.get(), &EventPlotState::eventOptionsChanged,
-        this, [this](QString const& key) {
-            _updateGlyphAppearance(key);
-            update();  // Request repaint
-        });
-
-// In EventPlotPropertiesWidget
-connect(_state.get(), &EventPlotState::eventOptionsChanged,
-        this, &EventPlotPropertiesWidget::_refreshEventOptionsUI);
-```
-
-### Variant Alternative (MediaWidget Style)
-
-If we need more flexibility, use a variant approach:
-
-```cpp
-using EventPlotOptionVariant = std::variant<
-    EventPlotOptions,      // Per-event glyph options
-    EventPlotViewState,    // Zoom, pan, bounds
-    EventPlotSortConfig,   // Sorting settings
-    EventPlotColorConfig   // Coloring settings
->;
-
-// Single signal with variant payload
-void optionChanged(QString const& key, EventPlotOptionVariant const& option);
-```
-
-**Recommendation**: Start with the registry pattern for per-event options (like DataViewer)
-and consolidated category signals for other state. This balances simplicity and flexibility.
+**Future**: Consider `EventOptionsRegistry` pattern (like `SeriesOptionsRegistry` in DataViewer) 
+if per-event option complexity grows.
 
 ---
 
-## Phase 1: Core Rendering Infrastructure
+## Phase 1: Core Rendering Infrastructure ✅
+
+**Status**: Complete
 
 **Goal**: Establish OpenGL rendering pipeline using CorePlotting patterns.
 
-### 1.1 Create EventPlotOpenGLWidget
+### Implementation
 
-Create an OpenGL widget following DataViewer's OpenGLWidget pattern:
+| Component | File |
+|-----------|------|
+| OpenGL Widget | [EventPlotOpenGLWidget.hpp](Rendering/EventPlotOpenGLWidget.hpp) |
+| View State | [EventPlotState.hpp](Core/EventPlotState.hpp) - `EventPlotViewState` struct |
+| Scene Building | Uses `CorePlotting::RasterMapper` and `PlottingOpenGL::SceneRenderer` |
 
-```
-EventPlotWidget/
-├── Rendering/
-│   ├── EventPlotOpenGLWidget.hpp
-│   ├── EventPlotOpenGLWidget.cpp
-│   ├── EventPlotSceneBuilder.hpp    # Wraps CorePlotting RasterMapper
-│   └── EventPlotSceneBuilder.cpp
-```
+### Data Flow
 
-**Key Components**:
-- `EventPlotOpenGLWidget`: QOpenGLWidget subclass
-- Uses `PlottingOpenGL::SceneRenderer` for rendering
-- Uses `CorePlotting::RasterMapper` for coordinate mapping
-- Uses `CorePlotting::RowLayoutStrategy` for Y positioning
-
-**Data Flow**:
 ```
 EventPlotState (alignment settings)
         ↓
@@ -196,47 +106,13 @@ SceneBuilder::addGlyphs() → RenderableScene
 SceneRenderer::render()
 ```
 
-### 1.2 Integrate GatherResult
+### Key Features Implemented
 
-Use `GatherResult<DigitalEventSeries>` from benchmark patterns:
-
-```cpp
-// In EventPlotOpenGLWidget
-auto gathered = gather(_event_series, _alignment_intervals);
-
-// Build scene with row layouts
-for (size_t trial = 0; trial < gathered.size(); ++trial) {
-    auto layout = RasterMapper::makeRowLayout(trial, gathered.size(), 
-                                               trial_key, y_min, y_max);
-    auto mapped = RasterMapper::mapEventsRelative(
-        *gathered[trial], layout, *time_frame, 
-        gathered.intervalAt(trial).start);
-    // Add to scene builder...
-}
-```
-
-### 1.3 State Extensions for View Settings
-
-Add to `EventPlotStateData`:
-
-```cpp
-struct EventPlotViewState {
-    // X-axis (time) bounds
-    double x_min = -500.0;  // ms before alignment
-    double x_max = 500.0;   // ms after alignment
-    
-    // Zoom factors (independent)
-    double x_zoom = 1.0;
-    double y_zoom = 1.0;
-    
-    // Global glyph settings
-    double glyph_size = 3.0;
-};
-```
-
-**Files to modify**:
-- [EventPlotState.hpp](Core/EventPlotState.hpp): Add view state struct
-- [EventPlotStateData (in EventPlotState.hpp)]: Add serializable view settings
+- **EventPlotOpenGLWidget**: QOpenGLWidget subclass with PlottingOpenGL integration
+- **EventPlotViewState**: Serializable view settings (x/y bounds, zoom factors, glyph size)
+- **GatherResult integration**: Trial alignment using `gather()` function
+- **State signals**: `viewStateChanged()`, `alignmentChanged()` for UI updates
+- **Coordinate transforms**: World ↔ screen coordinate conversion
 
 ---
 
@@ -622,10 +498,10 @@ signals:
 
 ### MVP (Minimum Viable Product)
 
-1. **Signal Design**: Define consolidated signals and EventOptionsRegistry pattern
-2. **Phase 1.1-1.3**: Basic rendering with OpenGL + GatherResult
-3. **Phase 2.1**: X/Y zoom
-4. **Phase 3.1-3.2**: Fixed color/glyph configuration
+1. ✅ **Signal Design**: Consolidated signals implemented in EventPlotState
+2. ✅ **Phase 1**: Basic rendering with OpenGL + GatherResult
+3. **Phase 2.1**: X/Y zoom mouse interaction
+4. **Phase 3.1-3.2**: Fixed color/glyph configuration in properties panel
 5. **Phase 2.2**: Hit testing (no selection persistence yet)
 
 ### Iteration 2

@@ -1,9 +1,12 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(EVENT_PLOT_WIDGET_SOURCES
 
         Core/EventPlotState.cpp
         Core/EventPlotState.hpp
+
+        Rendering/EventPlotOpenGLWidget.cpp
+        Rendering/EventPlotOpenGLWidget.hpp
 
         EventPlotWidgetRegistration.cpp
         EventPlotWidgetRegistration.hpp
@@ -29,11 +32,17 @@ target_link_libraries(EventPlotWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(EventPlotWidget PRIVATE DataManager)
 target_link_libraries(EventPlotWidget PRIVATE EditorState)
 target_link_libraries(EventPlotWidget PRIVATE PlotAlignmentWidget)
+target_link_libraries(EventPlotWidget PRIVATE CorePlotting)
+target_link_libraries(EventPlotWidget PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(EventPlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(EventPlotWidget PRIVATE glm::glm)
 
 target_include_directories(EventPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

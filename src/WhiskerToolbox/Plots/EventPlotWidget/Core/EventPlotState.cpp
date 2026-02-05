@@ -153,6 +153,76 @@ void EventPlotState::updatePlotEventOptions(QString const & event_name, EventPlo
     }
 }
 
+// === View State ===
+
+void EventPlotState::setViewState(EventPlotViewState const & view_state)
+{
+    _data.view_state = view_state;
+    markDirty();
+    emit viewStateChanged();
+    emit stateChanged();
+}
+
+void EventPlotState::setXZoom(double zoom)
+{
+    if (_data.view_state.x_zoom != zoom) {
+        _data.view_state.x_zoom = zoom;
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
+void EventPlotState::setYZoom(double zoom)
+{
+    if (_data.view_state.y_zoom != zoom) {
+        _data.view_state.y_zoom = zoom;
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
+void EventPlotState::setPan(double x_pan, double y_pan)
+{
+    if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
+        _data.view_state.x_pan = x_pan;
+        _data.view_state.y_pan = y_pan;
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
+void EventPlotState::setXBounds(double x_min, double x_max)
+{
+    if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
+        _data.view_state.x_min = x_min;
+        _data.view_state.x_max = x_max;
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
+void EventPlotState::setAxisOptions(EventPlotAxisOptions const & options)
+{
+    _data.axis_options = options;
+    markDirty();
+    emit axisOptionsChanged();
+    emit stateChanged();
+}
+
+void EventPlotState::setPinned(bool pinned)
+{
+    if (_data.pinned != pinned) {
+        _data.pinned = pinned;
+        markDirty();
+        emit pinnedChanged(pinned);
+        emit stateChanged();
+    }
+}
+
 std::string EventPlotState::toJson() const
 {
     // Include instance_id in serialization for restoration
@@ -175,6 +245,10 @@ bool EventPlotState::fromJson(std::string const & json)
         // Restore alignment state from serialized data
         _alignment_state->data() = _data.alignment;
 
+        // Emit all signals to ensure UI updates
+        emit viewStateChanged();
+        emit axisOptionsChanged();
+        emit pinnedChanged(_data.pinned);
         emit stateChanged();
         return true;
     }
