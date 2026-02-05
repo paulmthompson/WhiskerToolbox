@@ -17,6 +17,9 @@
 
 class DataManager;
 class LinePlotState;
+class LinePlotOpenGLWidget;
+class RelativeTimeAxisWidget;
+class QResizeEvent;
 
 namespace Ui {
 class LinePlotWidget;
@@ -69,11 +72,20 @@ signals:
     void timePositionSelected(TimePosition position);
 
 private:
+    void resizeEvent(QResizeEvent * event) override;
+
+private:
     std::shared_ptr<DataManager> _data_manager;
     Ui::LinePlotWidget * ui;
 
     /// Serializable state shared with properties widget
     std::shared_ptr<LinePlotState> _state;
+
+    /// OpenGL widget for rendering the line plot
+    LinePlotOpenGLWidget * _opengl_widget;
+
+    /// Axis widget for displaying relative time axis
+    RelativeTimeAxisWidget * _axis_widget;
 };
 
 #endif// LINE_PLOT_WIDGET_HPP

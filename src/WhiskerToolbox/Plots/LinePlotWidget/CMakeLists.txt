@@ -1,9 +1,14 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(LINE_PLOT_WIDGET_SOURCES
 
         Core/LinePlotState.cpp
         Core/LinePlotState.hpp
+        Core/ViewStateAdapter.cpp
+        Core/ViewStateAdapter.hpp
+
+        Rendering/LinePlotOpenGLWidget.cpp
+        Rendering/LinePlotOpenGLWidget.hpp
 
         LinePlotWidgetRegistration.cpp
         LinePlotWidgetRegistration.hpp
@@ -29,11 +34,18 @@ target_link_libraries(LinePlotWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(LinePlotWidget PRIVATE DataManager)
 target_link_libraries(LinePlotWidget PRIVATE EditorState)
 target_link_libraries(LinePlotWidget PRIVATE PlotAlignmentWidget)
+target_link_libraries(LinePlotWidget PRIVATE RelativeTimeAxisWidget)
+target_link_libraries(LinePlotWidget PRIVATE CorePlotting)
+target_link_libraries(LinePlotWidget PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(LinePlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(LinePlotWidget PRIVATE glm::glm)
 
 target_include_directories(LinePlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
