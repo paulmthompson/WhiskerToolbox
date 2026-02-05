@@ -230,6 +230,22 @@ void EventPlotState::setAxisOptions(EventPlotAxisOptions const & options)
     emit stateChanged();
 }
 
+QString EventPlotState::getBackgroundColor() const
+{
+    return QString::fromStdString(_data.background_color);
+}
+
+void EventPlotState::setBackgroundColor(QString const & hex_color)
+{
+    std::string hex_str = hex_color.toStdString();
+    if (_data.background_color != hex_str) {
+        _data.background_color = hex_str;
+        markDirty();
+        emit backgroundColorChanged(hex_color);
+        emit stateChanged();
+    }
+}
+
 void EventPlotState::setPinned(bool pinned)
 {
     if (_data.pinned != pinned) {

@@ -112,6 +112,17 @@ private slots:
      */
     void _onColorButtonClicked();
 
+    /**
+     * @brief Handle background color button click
+     */
+    void _onBackgroundColorButtonClicked();
+
+    /**
+     * @brief Handle state background color changed
+     * @param hex_color New background color as hex string
+     */
+    void _onStateBackgroundColorChanged(QString const & hex_color);
+
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys
@@ -145,6 +156,12 @@ private:
      * @param hex_color Hex color string (e.g., "#000000")
      */
     void _updateColorDisplay(QString const & hex_color);
+
+    /**
+     * @brief Update the background color display button with a hex color
+     * @param hex_color Hex color string (e.g., "#FFFFFF")
+     */
+    void _updateBackgroundColorDisplay(QString const & hex_color);
 
     Ui::EventPlotPropertiesWidget * ui;
     std::shared_ptr<EventPlotState> _state;

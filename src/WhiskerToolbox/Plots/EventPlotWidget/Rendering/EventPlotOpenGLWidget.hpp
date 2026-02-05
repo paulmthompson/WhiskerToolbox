@@ -241,6 +241,11 @@ private:
      * @brief Gather trial-aligned data for building scene
      */
     [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData() const;
+
+    /**
+     * @brief Update OpenGL clear color from state background color
+     */
+    void updateBackgroundColor();
 };
 
 #endif // EVENTPLOT_OPENGLWIDGET_HPP

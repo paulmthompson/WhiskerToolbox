@@ -36,6 +36,10 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     ui->color_display_button->setFlat(false);
     ui->color_display_button->setEnabled(false);// Make it non-clickable, just for display
 
+    // Set up background color display button
+    ui->background_color_display_button->setFlat(false);
+    ui->background_color_display_button->setEnabled(false);// Make it non-clickable, just for display
+
     // Set up plot events table
     ui->plot_events_table->setColumnCount(2);
     ui->plot_events_table->setHorizontalHeaderLabels(QStringList() << "Event Name" << "Data Key");
@@ -58,6 +62,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
             this, &EventPlotPropertiesWidget::_onGlyphTypeChanged);
     connect(ui->color_button, &QPushButton::clicked,
             this, &EventPlotPropertiesWidget::_onColorButtonClicked);
+    connect(ui->background_color_button, &QPushButton::clicked,
+            this, &EventPlotPropertiesWidget::_onBackgroundColorButtonClicked);
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -77,6 +83,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
                 this, &EventPlotPropertiesWidget::_onStatePlotEventRemoved);
         connect(_state.get(), &EventPlotState::plotEventOptionsChanged,
                 this, &EventPlotPropertiesWidget::_onStatePlotEventOptionsChanged);
+        connect(_state.get(), &EventPlotState::backgroundColorChanged,
+                this, &EventPlotPropertiesWidget::_onStateBackgroundColorChanged);
 
         // Initialize UI from state
         _updateUIFromState();
@@ -290,6 +298,9 @@ void EventPlotPropertiesWidget::_updateUIFromState() {
 
     // Update plot events table
     _updatePlotEventsTable();
+
+    // Update background color display
+    _updateBackgroundColorDisplay(_state->getBackgroundColor());
 }
 
 QString EventPlotPropertiesWidget::_getSelectedEventName() const {
@@ -309,6 +320,12 @@ QString EventPlotPropertiesWidget::_getSelectedEventName() const {
 void EventPlotPropertiesWidget::_updateColorDisplay(QString const & hex_color) {
     // Update the color display button with the new color
     ui->color_display_button->setStyleSheet(
+            QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
+}
+
+void EventPlotPropertiesWidget::_updateBackgroundColorDisplay(QString const & hex_color) {
+    // Update the background color display button with the new color
+    ui->background_color_display_button->setStyleSheet(
             QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
 }
 
@@ -374,4 +391,26 @@ void EventPlotPropertiesWidget::_onColorButtonClicked() {
         options->hex_color = hex_color.toStdString();
         _state->updatePlotEventOptions(event_name, *options);
     }
+}
+
+void EventPlotPropertiesWidget::_onBackgroundColorButtonClicked() {
+    if (!_state) {
+        return;
+    }
+
+    // Get current background color
+    QColor current_color = QColor(_state->getBackgroundColor());
+
+    // Open color dialog
+    QColor color = QColorDialog::getColor(current_color, this, "Choose Background Color");
+
+    if (color.isValid()) {
+        QString hex_color = color.name();
+        _updateBackgroundColorDisplay(hex_color);
+        _state->setBackgroundColor(hex_color);
+    }
+}
+
+void EventPlotPropertiesWidget::_onStateBackgroundColorChanged(QString const & hex_color) {
+    _updateBackgroundColorDisplay(hex_color);
 }

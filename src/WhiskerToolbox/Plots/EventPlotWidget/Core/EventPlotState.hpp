@@ -84,6 +84,7 @@ struct EventPlotStateData {
     std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
     EventPlotViewState view_state;                                 ///< View state (zoom, pan, bounds)
     EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
+    std::string background_color = "#FFFFFF";                     ///< Background color as hex string (default: white)
     bool pinned = false;                                           ///< Whether to ignore SelectionContext changes
 };
 
@@ -246,6 +247,20 @@ public:
      */
     void setAxisOptions(EventPlotAxisOptions const & options);
 
+    // === Background Color ===
+
+    /**
+     * @brief Get the background color
+     * @return Background color as hex string (e.g., "#FFFFFF")
+     */
+    [[nodiscard]] QString getBackgroundColor() const;
+
+    /**
+     * @brief Set the background color
+     * @param hex_color Background color as hex string (e.g., "#FFFFFF")
+     */
+    void setBackgroundColor(QString const & hex_color);
+
     // === Pinning (for cross-widget linking) ===
 
     /**
@@ -375,6 +390,12 @@ signals:
      * @brief Emitted when axis options change
      */
     void axisOptionsChanged();
+
+    /**
+     * @brief Emitted when background color changes
+     * @param hex_color New background color as hex string
+     */
+    void backgroundColorChanged(QString const & hex_color);
 
     /**
      * @brief Emitted when pinned state changes

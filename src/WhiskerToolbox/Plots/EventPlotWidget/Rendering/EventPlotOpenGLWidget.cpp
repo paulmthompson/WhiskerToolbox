@@ -2,6 +2,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/GatherResult.hpp"
+#include "DataManager/utils/color.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
@@ -66,6 +67,11 @@ void EventPlotOpenGLWidget::setState(std::shared_ptr<EventPlotState> state)
                     _scene_dirty = true;
                     update();
                 });
+        connect(_state.get(), &EventPlotState::backgroundColorChanged,
+                this, [this]() {
+                    updateBackgroundColor();
+                    update();
+                });
 
         // Initial sync
         _cached_view_state = _state->viewState();
@@ -105,8 +111,8 @@ void EventPlotOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    // Set clear color (dark theme)
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    // Set clear color from state (default white)
+    updateBackgroundColor();
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -136,6 +142,8 @@ void EventPlotOpenGLWidget::initializeGL()
 
 void EventPlotOpenGLWidget::paintGL()
 {
+    // Update background color before clearing (in case it changed)
+    updateBackgroundColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_opengl_initialized) {
@@ -352,10 +360,19 @@ void EventPlotOpenGLWidget::rebuildScene()
     }
 
     // Map each trial's events
+    // Get color from EventPlotOptions (default black)
     CorePlotting::GlyphStyle style;
     // Default glyph size - can be overridden per-series via EventPlotOptions
     style.size = 3.0f;
-    style.color = glm::vec4(0.2f, 0.6f, 1.0f, 1.0f); // Blue
+    
+    // Convert hex color to glm::vec4 (default black if not set)
+    int r, g, b;
+    hexToRGB(source_options->hex_color.empty() ? "#000000" : source_options->hex_color, r, g, b);
+    style.color = glm::vec4(
+        static_cast<float>(r) / 255.0f,
+        static_cast<float>(g) / 255.0f,
+        static_cast<float>(b) / 255.0f,
+        1.0f);
 
     for (size_t trial = 0; trial < num_trials; ++trial) {
         auto const & trial_view = gathered[trial];
@@ -492,6 +509,24 @@ void EventPlotOpenGLWidget::renderAxes()
 {
     // TODO: Render X and Y axis labels
     // This will be implemented in Phase 2
+}
+
+void EventPlotOpenGLWidget::updateBackgroundColor()
+{
+    if (!_state) {
+        // Default to white if no state
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        return;
+    }
+
+    QString hex_color = _state->getBackgroundColor();
+    int r, g, b;
+    hexToRGB(hex_color.toStdString(), r, g, b);
+    glClearColor(
+        static_cast<float>(r) / 255.0f,
+        static_cast<float>(g) / 255.0f,
+        static_cast<float>(b) / 255.0f,
+        1.0f);
 }
 
 GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData() const
