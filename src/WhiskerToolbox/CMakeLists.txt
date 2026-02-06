@@ -118,6 +118,9 @@ add_subdirectory(Plots/TemporalProjectionViewWidget)
 # Qt, DataManager, EditorState - Scatter plot widget
 add_subdirectory(Plots/ScatterPlotWidget)
 
+# Qt, DataManager, EditorState - Spectrogram widget
+add_subdirectory(Plots/SpectrogramWidget)
+
 # Qt, DataManager, EditorState - 3D plot widget
 add_subdirectory(Plots/3DPlot)
 
@@ -282,6 +285,7 @@ target_link_libraries(WhiskerToolbox PRIVATE LinePlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE HeatmapWidget)
 target_link_libraries(WhiskerToolbox PRIVATE TemporalProjectionViewWidget)
 target_link_libraries(WhiskerToolbox PRIVATE ScatterPlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE SpectrogramWidget)
 target_link_libraries(WhiskerToolbox PRIVATE 3DPlotWidget)
 
 

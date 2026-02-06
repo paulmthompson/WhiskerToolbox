@@ -45,6 +45,7 @@
 #include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
 #include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
 #include "Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp"
+#include "Plots/SpectrogramWidget/SpectrogramWidgetRegistration.hpp"
 #include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
@@ -926,6 +927,8 @@ void MainWindow::_registerEditorTypes() {
     TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    SpectrogramWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     ThreeDPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
