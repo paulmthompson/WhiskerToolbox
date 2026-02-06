@@ -5,6 +5,8 @@ out
 CMakeUserPresets.json
 build
 .idea
+.vscode/
+.vs/
 .Rproj.user
 
 style.rst
@@ -16,6 +18,7 @@ infer-out
 vcpkg_installed
 vcpkg
 vcpkg_cache
+vcpkg-overlays
 
 tools
 ninja-build/ninja
