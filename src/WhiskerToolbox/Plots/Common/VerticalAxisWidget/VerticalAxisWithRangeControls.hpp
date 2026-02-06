@@ -1,19 +1,19 @@
-#ifndef RELATIVE_TIME_AXIS_WITH_RANGE_CONTROLS_HPP
-#define RELATIVE_TIME_AXIS_WITH_RANGE_CONTROLS_HPP
+#ifndef VERTICAL_AXIS_WITH_RANGE_CONTROLS_HPP
+#define VERTICAL_AXIS_WITH_RANGE_CONTROLS_HPP
 
 /**
- * @file RelativeTimeAxisWithRangeControls.hpp
- * @brief Combined widget factory for RelativeTimeAxisWidget with editable range controls
+ * @file VerticalAxisWithRangeControls.hpp
+ * @brief Combined widget factory for VerticalAxisWidget with editable range controls
  * 
  * This provides a self-contained widget system that combines:
- * - RelativeTimeAxisWidget: displays the time axis with tick marks
+ * - VerticalAxisWidget: displays the vertical axis with tick marks
  * - Range control spinboxes: editable min/max range inputs
  * 
  * The factory properly links them together with shared state and handles
  * anti-recursion to prevent update loops.
  */
 
-#include "RelativeTimeAxisWidget.hpp"
+#include "VerticalAxisWidget.hpp"
 
 #include <QWidget>
 #include <QDoubleSpinBox>
@@ -28,7 +28,7 @@
  * This state object prevents recursive updates by tracking when updates
  * are being applied programmatically vs. user-initiated.
  */
-class RelativeTimeAxisRangeState : public QObject {
+class VerticalAxisRangeState : public QObject {
     Q_OBJECT
 
 public:
@@ -36,7 +36,7 @@ public:
      * @brief Construct a new state object
      * @param parent Parent QObject
      */
-    explicit RelativeTimeAxisRangeState(QObject * parent = nullptr);
+    explicit VerticalAxisRangeState(QObject * parent = nullptr);
 
     /**
      * @brief Get the current minimum range value
@@ -80,8 +80,8 @@ signals:
     void rangeUpdated(double min_range, double max_range);
 
 private:
-    double _min_range = -30000.0;
-    double _max_range = 30000.0;
+    double _min_range = 0.0;
+    double _max_range = 100.0;
     bool _updating = false;
 };
 
@@ -91,7 +91,7 @@ private:
  * This widget can be placed separately from the axis widget (e.g., in a properties panel).
  * It automatically stays synchronized with the shared state.
  */
-class RelativeTimeAxisRangeControls : public QWidget {
+class VerticalAxisRangeControls : public QWidget {
     Q_OBJECT
 
 public:
@@ -100,11 +100,11 @@ public:
      * @param state Shared state object
      * @param parent Parent widget
      */
-    explicit RelativeTimeAxisRangeControls(
-        std::shared_ptr<RelativeTimeAxisRangeState> state,
+    explicit VerticalAxisRangeControls(
+        std::shared_ptr<VerticalAxisRangeState> state,
         QWidget * parent = nullptr);
 
-    ~RelativeTimeAxisRangeControls() override = default;
+    ~VerticalAxisRangeControls() override = default;
 
     /**
      * @brief Get the minimum range spinbox
@@ -137,7 +137,7 @@ private slots:
     void onStateRangeUpdated(double min_range, double max_range);
 
 private:
-    std::shared_ptr<RelativeTimeAxisRangeState> _state;
+    std::shared_ptr<VerticalAxisRangeState> _state;
     QDoubleSpinBox * _min_spinbox;
     QDoubleSpinBox * _max_spinbox;
     bool _updating_ui = false;
@@ -151,33 +151,33 @@ private:
 /**
  * @brief Factory result containing all widgets and shared state
  */
-struct RelativeTimeAxisWithRangeControls {
+struct VerticalAxisWithRangeControls {
     /// Shared state object
-    std::shared_ptr<RelativeTimeAxisRangeState> state;
+    std::shared_ptr<VerticalAxisRangeState> state;
 
     /// Axis widget (for display in the plot view)
-    RelativeTimeAxisWidget * axis_widget;
+    VerticalAxisWidget * axis_widget;
 
     /// Range controls widget (can be placed in properties panel)
-    RelativeTimeAxisRangeControls * range_controls;
+    VerticalAxisRangeControls * range_controls;
 
     /**
-     * @brief Set the ViewState getter for the axis widget
-     * @param getter Function that returns the current ViewState
+     * @brief Set the RangeGetter for the axis widget
+     * @param getter Function that returns the current range
      */
-    void setViewStateGetter(RelativeTimeAxisWidget::ViewStateGetter getter);
+    void setRangeGetter(VerticalAxisWidget::RangeGetter getter);
 
     /**
-     * @brief Connect axis widget to view state changes
+     * @brief Connect axis widget to range changes
      * @tparam SenderType Type of the sender object
      * @param sender Object that emits the signal
      * @param signal Pointer to the signal member function
      */
     template <typename SenderType>
-    void connectToViewStateChanged(SenderType * sender, void (SenderType::*signal)())
+    void connectToRangeChanged(SenderType * sender, void (SenderType::*signal)())
     {
         if (axis_widget && sender) {
-            axis_widget->connectToViewStateChanged(sender, signal);
+            axis_widget->connectToRangeChanged(sender, signal);
         }
     }
 
@@ -197,12 +197,12 @@ struct RelativeTimeAxisWithRangeControls {
 };
 
 /**
- * @brief Factory function to create a complete relative time axis with range controls
+ * @brief Factory function to create a complete vertical axis with range controls
  * 
  * This factory creates:
  * - A shared state object
- * - A RelativeTimeAxisWidget for display
- * - A RelativeTimeAxisRangeControls widget for editing
+ * - A VerticalAxisWidget for display
+ * - A VerticalAxisRangeControls widget for editing
  * 
  * All components are properly linked together with anti-recursion handling.
  * 
@@ -210,8 +210,8 @@ struct RelativeTimeAxisWithRangeControls {
  * @param controls_parent Parent widget for the range controls (typically properties widget)
  * @return Factory result with all widgets and shared state
  */
-RelativeTimeAxisWithRangeControls createRelativeTimeAxisWithRangeControls(
+VerticalAxisWithRangeControls createVerticalAxisWithRangeControls(
     QWidget * axis_parent = nullptr,
     QWidget * controls_parent = nullptr);
 
-#endif  // RELATIVE_TIME_AXIS_WITH_RANGE_CONTROLS_HPP
+#endif  // VERTICAL_AXIS_WITH_RANGE_CONTROLS_HPP

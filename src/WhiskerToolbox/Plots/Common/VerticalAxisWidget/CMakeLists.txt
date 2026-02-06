@@ -4,6 +4,8 @@ set(VERTICAL_AXIS_WIDGET_SOURCES
 
         VerticalAxisWidget.cpp
         VerticalAxisWidget.hpp
+        VerticalAxisWithRangeControls.cpp
+        VerticalAxisWithRangeControls.hpp
 
 )
 

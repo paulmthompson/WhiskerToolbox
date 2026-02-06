@@ -23,6 +23,7 @@ class DataManager;
 class EventPlotWidget;
 class PlotAlignmentWidget;
 class RelativeTimeAxisRangeControls;
+class VerticalAxisRangeControls;
 class Section;
 
 namespace Ui {
@@ -191,6 +192,8 @@ private:
     EventPlotWidget * _plot_widget;
     RelativeTimeAxisRangeControls * _range_controls;
     Section * _range_controls_section;
+    VerticalAxisRangeControls * _vertical_range_controls;
+    Section * _vertical_range_controls_section;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

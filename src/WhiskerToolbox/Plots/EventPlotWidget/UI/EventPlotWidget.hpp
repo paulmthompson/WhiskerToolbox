@@ -21,6 +21,8 @@ class RelativeTimeAxisWidget;
 class RelativeTimeAxisRangeControls;
 class RelativeTimeAxisRangeState;
 class VerticalAxisWidget;
+class VerticalAxisRangeControls;
+class VerticalAxisRangeState;
 class EventPlotOpenGLWidget;
 class EventPlotState;
 
@@ -79,6 +81,18 @@ public:
      */
     [[nodiscard]] std::shared_ptr<RelativeTimeAxisRangeState> getRangeState() const;
 
+    /**
+     * @brief Get the vertical axis range controls widget (for placement in properties panel)
+     * @return Pointer to the vertical axis range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
+    /**
+     * @brief Get the vertical axis range state (for external updates)
+     * @return Shared pointer to the vertical axis range state
+     */
+    [[nodiscard]] std::shared_ptr<VerticalAxisRangeState> getVerticalRangeState() const;
+
 signals:
     /**
      * @brief Emitted when a time position is selected in the view
@@ -118,6 +132,12 @@ private:
 
     /// Vertical axis widget on the left side
     VerticalAxisWidget * _vertical_axis_widget;
+
+    /// Vertical axis range controls widget (can be placed in properties panel)
+    VerticalAxisRangeControls * _vertical_range_controls;
+
+    /// Shared vertical axis range state for coordinating axis and controls
+    std::shared_ptr<VerticalAxisRangeState> _vertical_range_state;
 
     /// Cached trial count for vertical axis range calculation
     size_t _trial_count = 0;

@@ -8,6 +8,7 @@
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 
 #include <QHBoxLayout>
 #include <QResizeEvent>
@@ -24,7 +25,9 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
       _axis_widget(nullptr),
       _range_controls(nullptr),
       _range_state(nullptr),
-      _vertical_axis_widget(nullptr)
+      _vertical_axis_widget(nullptr),
+      _vertical_range_controls(nullptr),
+      _vertical_range_state(nullptr)
 {
     ui->setupUi(this);
 
@@ -33,8 +36,12 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
     horizontal_layout->setSpacing(0);
     horizontal_layout->setContentsMargins(0, 0, 0, 0);
 
-    // Create and add the vertical axis widget on the left
-    _vertical_axis_widget = new VerticalAxisWidget(this);
+    // Create combined vertical axis widget with range controls using factory
+    // Range controls will be created in the properties widget
+    auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(this, nullptr);
+    _vertical_axis_widget = vertical_axis_with_controls.axis_widget;
+    _vertical_range_controls = vertical_axis_with_controls.range_controls;
+    _vertical_range_state = vertical_axis_with_controls.state;
     _vertical_axis_widget->setRange(0.0, 0.0);  // Will be updated when trials are loaded
     horizontal_layout->addWidget(_vertical_axis_widget);
 
@@ -221,6 +228,72 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                     }
                 });
     }
+
+    // Connect vertical range state to update view state when user changes range
+    if (_vertical_range_state && _state) {
+        connect(_vertical_range_state.get(), &VerticalAxisRangeState::rangeChanged,
+                this, [this](double min_range, double max_range) {
+                    // Update the view state y_zoom and y_pan when user changes range
+                    if (_state && _trial_count > 0) {
+                        // Convert trial indices to world Y coordinates
+                        auto trial_to_world_y = [this](double trial) {
+                            return (trial / static_cast<double>(_trial_count)) * 2.0 - 1.0;
+                        };
+
+                        double world_y_min = trial_to_world_y(min_range);
+                        double world_y_max = trial_to_world_y(max_range);
+
+                        // Compute y_zoom and y_pan to show the desired range
+                        // We want: visible_bottom = world_y_min, visible_top = world_y_max
+                        // Where: visible_bottom = -1.0 / y_zoom + y_pan
+                        //        visible_top = 1.0 / y_zoom + y_pan
+                        // Solving: y_zoom = 2.0 / (world_y_max - world_y_min)
+                        //          y_pan = (world_y_min + world_y_max) / 2.0
+                        double world_range = world_y_max - world_y_min;
+                        if (world_range > 0.001) {  // Avoid division by zero
+                            double new_y_zoom = 2.0 / world_range;
+                            double new_y_pan = (world_y_min + world_y_max) / 2.0;
+                            _state->setYZoom(new_y_zoom);
+                            _state->setPan(_state->viewState().x_pan, new_y_pan);
+                        }
+                    }
+                });
+
+        // Update vertical range state when view bounds change (from panning/zooming)
+        auto updateVerticalRangeFromViewState = [this]() {
+            if (_vertical_range_state && _state && _trial_count > 0) {
+                auto const & view_state = _state->viewState();
+
+                // Compute visible trial range from view state
+                double const zoomed_half_range = 1.0 / view_state.y_zoom;
+                double const visible_bottom = -zoomed_half_range + view_state.y_pan;
+                double const visible_top = zoomed_half_range + view_state.y_pan;
+
+                // Map world Y to trial index
+                auto world_y_to_trial = [this](double world_y) {
+                    return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
+                };
+
+                double const min_trial = world_y_to_trial(visible_bottom);
+                double const max_trial = world_y_to_trial(visible_top);
+
+                // Update range state (this will update combo boxes without triggering rangeChanged)
+                _vertical_range_state->setRange(
+                    std::min(min_trial, max_trial),
+                    std::max(min_trial, max_trial));
+            }
+        };
+
+        connect(_state.get(), &EventPlotState::viewStateChanged,
+                this, updateVerticalRangeFromViewState);
+
+        // Also connect to OpenGL widget's viewBoundsChanged signal
+        connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
+                this, updateVerticalRangeFromViewState);
+
+        // Initialize vertical range state from current view bounds
+        updateVerticalRangeFromViewState();
+    }
 }
 
 void EventPlotWidget::resizeEvent(QResizeEvent * event)
@@ -245,4 +318,14 @@ RelativeTimeAxisRangeControls * EventPlotWidget::getRangeControls() const
 std::shared_ptr<RelativeTimeAxisRangeState> EventPlotWidget::getRangeState() const
 {
     return _range_state;
+}
+
+VerticalAxisRangeControls * EventPlotWidget::getVerticalRangeControls() const
+{
+    return _vertical_range_controls;
+}
+
+std::shared_ptr<VerticalAxisRangeState> EventPlotWidget::getVerticalRangeState() const
+{
+    return _vertical_range_state;
 }

@@ -5,6 +5,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Collapsible_Widget/Section.hpp"
 #include "UI/EventPlotWidget.hpp"
 
@@ -28,6 +29,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
       _plot_widget(nullptr),
       _range_controls(nullptr),
       _range_controls_section(nullptr),
+      _vertical_range_controls(nullptr),
+      _vertical_range_controls_section(nullptr),
       _dm_observer_id(-1) {
     ui->setupUi(this);
 
@@ -126,6 +129,26 @@ void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget)
         // Add the section to the main layout (after alignment widget)
         int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _range_controls_section);
+    }
+
+    // Get the vertical axis range state from the plot widget
+    auto vertical_range_state = _plot_widget->getVerticalRangeState();
+
+    if (vertical_range_state) {
+        // Create a collapsible section for the vertical axis range controls
+        _vertical_range_controls_section = new Section(this, "Vertical Axis Range Controls");
+        
+        // Create new range controls that share the same state
+        _vertical_range_controls = new VerticalAxisRangeControls(vertical_range_state, _vertical_range_controls_section);
+        
+        // Set up the collapsible section (it starts collapsed by default)
+        _vertical_range_controls_section->autoSetContentLayout();
+        
+        // Add the section to the main layout (after time axis range controls)
+        int insert_index = _range_controls_section 
+            ? ui->main_layout->indexOf(_range_controls_section) + 1
+            : ui->main_layout->indexOf(_alignment_widget) + 1;
+        ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
 
