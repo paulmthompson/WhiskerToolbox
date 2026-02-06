@@ -161,5 +161,6 @@ private slots:
     void openHeatmapPlotWidget();
     void openTemporalProjectionViewWidget();
     void openScatterPlotWidget();
+    void open3DPlotWidget();
 };
 #endif// MAINWINDOW_HPP

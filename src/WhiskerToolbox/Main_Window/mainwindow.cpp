@@ -45,6 +45,7 @@
 #include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
 #include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
 #include "Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp"
+#include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -305,6 +306,7 @@ void MainWindow::_createActions() {
     connect(ui->actionHeatmap_Plot, &QAction::triggered, this, &MainWindow::openHeatmapPlotWidget);
     connect(ui->actionTemporal_Projection_View, &QAction::triggered, this, &MainWindow::openTemporalProjectionViewWidget);
     connect(ui->actionScatter_Plot, &QAction::triggered, this, &MainWindow::openScatterPlotWidget);
+    connect(ui->action3D_Plot, &QAction::triggered, this, &MainWindow::open3DPlotWidget);
 
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
@@ -812,6 +814,11 @@ void MainWindow::openScatterPlotWidget() {
     openEditor(QStringLiteral("ScatterPlotWidget"));
 }
 
+void MainWindow::open3DPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("3DPlotWidget"));
+}
+
 void MainWindow::openDataInspector() {
     // Create a new Data Inspector using EditorCreationController
     // The controller handles:
@@ -919,6 +926,8 @@ void MainWindow::_registerEditorTypes() {
     TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    ThreeDPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);
