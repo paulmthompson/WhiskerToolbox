@@ -6,6 +6,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisSynchronizer.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
@@ -275,40 +276,60 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
                     }
                 });
 
-        // Update vertical axis state when view bounds change (from panning/zooming)
-        auto updateVerticalRangeFromViewState = [this]() {
-            if (_vertical_axis_state && _state && _trial_count > 0) {
-                auto const & view_state = _state->viewState();
+        // Set up bidirectional synchronization: ViewState -> AxisState (Flow B)
+        // When ViewState changes (from panning/zooming), update AxisState silently
+        syncVerticalAxisToViewState(
+                _vertical_axis_state.get(),
+                _state.get(),
+                [this](EventPlotViewState const & view_state) -> std::pair<double, double> {
+                    if (_trial_count == 0) {
+                        return {0.0, 0.0};
+                    }
 
-                // Compute visible trial range from view state
-                double const zoomed_half_range = 1.0 / view_state.y_zoom;
-                double const visible_bottom = -zoomed_half_range + view_state.y_pan;
-                double const visible_top = zoomed_half_range + view_state.y_pan;
+                    // Compute visible trial range from view state
+                    double const zoomed_half_range = 1.0 / view_state.y_zoom;
+                    double const visible_bottom = -zoomed_half_range + view_state.y_pan;
+                    double const visible_top = zoomed_half_range + view_state.y_pan;
 
-                // Map world Y to trial index
-                auto world_y_to_trial = [this](double world_y) {
-                    return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
-                };
+                    // Map world Y to trial index
+                    // Row layout places trial 0 at bottom (Y = -1 + epsilon)
+                    // and trial N-1 at top (Y = 1 - epsilon)
+                    // Mapping: trial = (world_y + 1) / 2 * trial_count
+                    auto world_y_to_trial = [this](double world_y) {
+                        return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
+                    };
 
-                double const min_trial = world_y_to_trial(visible_bottom);
-                double const max_trial = world_y_to_trial(visible_top);
+                    double const min_trial = world_y_to_trial(visible_bottom);
+                    double const max_trial = world_y_to_trial(visible_top);
 
-                // Update axis state (this will update spinboxes without triggering rangeChanged)
-                _vertical_axis_state->setRangeSilent(
-                        std::min(min_trial, max_trial),
-                        std::max(min_trial, max_trial));
-            }
-        };
+                    return {
+                            std::min(min_trial, max_trial),
+                            std::max(min_trial, max_trial)};
+                });
 
-        connect(_state.get(), &EventPlotState::viewStateChanged,
-                this, updateVerticalRangeFromViewState);
-
-        // Also connect to OpenGL widget's viewBoundsChanged signal
+        // Also connect to OpenGL widget's viewBoundsChanged signal for immediate updates
         connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
-                this, updateVerticalRangeFromViewState);
+                _vertical_axis_widget, [this]() {
+                    if (_vertical_axis_widget) {
+                        _vertical_axis_widget->update();
+                    }
+                });
 
         // Initialize vertical range state from current view bounds
-        updateVerticalRangeFromViewState();
+        if (_state && _vertical_axis_state && _trial_count > 0) {
+            auto const & view_state = _state->viewState();
+            double const zoomed_half_range = 1.0 / view_state.y_zoom;
+            double const visible_bottom = -zoomed_half_range + view_state.y_pan;
+            double const visible_top = zoomed_half_range + view_state.y_pan;
+            auto world_y_to_trial = [this](double world_y) {
+                return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
+            };
+            double const min_trial = world_y_to_trial(visible_bottom);
+            double const max_trial = world_y_to_trial(visible_top);
+            _vertical_axis_state->setRangeSilent(
+                    std::min(min_trial, max_trial),
+                    std::max(min_trial, max_trial));
+        }
     }
 }
 
