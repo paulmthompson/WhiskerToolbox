@@ -1,9 +1,12 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(THREE_D_PLOT_WIDGET_SOURCES
 
         Core/3DPlotState.cpp
         Core/3DPlotState.hpp
+
+        Rendering/ThreeDPlotOpenGLWidget.cpp
+        Rendering/ThreeDPlotOpenGLWidget.hpp
 
         3DPlotWidgetRegistration.cpp
         3DPlotWidgetRegistration.hpp
@@ -29,6 +32,8 @@ target_link_libraries(3DPlotWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
 )
 
 target_link_libraries(3DPlotWidget PRIVATE DataManager)

@@ -48,3 +48,66 @@ bool ThreeDPlotState::fromJson(std::string const & json)
     }
     return false;
 }
+
+QString ThreeDPlotState::getActivePointDataKey() const
+{
+    return QString::fromStdString(_data.active_point_data_key);
+}
+
+void ThreeDPlotState::setActivePointDataKey(QString const & key)
+{
+    std::string key_str = key.toStdString();
+    if (_data.active_point_data_key != key_str) {
+        _data.active_point_data_key = key_str;
+        markDirty();
+        emit activePointDataKeyChanged(key);
+        emit stateChanged();
+    }
+}
+
+void ThreeDPlotState::addPlotDataKey(QString const & data_key)
+{
+    std::string key_str = data_key.toStdString();
+    if (_data.plot_data_keys.find(key_str) != _data.plot_data_keys.end()) {
+        return;  // Already exists
+    }
+
+    ThreeDPlotDataOptions options;
+    options.data_key = key_str;
+    _data.plot_data_keys[key_str] = options;
+    markDirty();
+    emit plotDataKeyAdded(data_key);
+    emit stateChanged();
+}
+
+void ThreeDPlotState::removePlotDataKey(QString const & data_key)
+{
+    std::string key_str = data_key.toStdString();
+    auto it = _data.plot_data_keys.find(key_str);
+    if (it != _data.plot_data_keys.end()) {
+        _data.plot_data_keys.erase(it);
+        markDirty();
+        emit plotDataKeyRemoved(data_key);
+        emit stateChanged();
+    }
+}
+
+std::vector<QString> ThreeDPlotState::getPlotDataKeys() const
+{
+    std::vector<QString> keys;
+    keys.reserve(_data.plot_data_keys.size());
+    for (auto const & [key, _] : _data.plot_data_keys) {
+        keys.push_back(QString::fromStdString(key));
+    }
+    return keys;
+}
+
+std::optional<ThreeDPlotDataOptions> ThreeDPlotState::getPlotDataKeyOptions(QString const & data_key) const
+{
+    std::string key_str = data_key.toStdString();
+    auto it = _data.plot_data_keys.find(key_str);
+    if (it != _data.plot_data_keys.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}

@@ -17,6 +17,7 @@
 
 class DataManager;
 class ThreeDPlotState;
+class ThreeDPlotOpenGLWidget;
 
 namespace Ui {
 class ThreeDPlotWidget;
@@ -61,6 +62,16 @@ public:
      */
     [[nodiscard]] ThreeDPlotState * state();
 
+    /**
+     * @brief Handle time changes from EditorRegistry
+     * 
+     * Updates the plot when time changes come from other sources
+     * (e.g., user scrubs through time via TimeScrollBar).
+     * 
+     * @param position The new TimePosition
+     */
+    void _onTimeChanged(TimePosition position);
+
 signals:
     /**
      * @brief Emitted when a time position is selected in the view
@@ -77,6 +88,9 @@ private:
 
     /// Serializable state shared with properties widget
     std::shared_ptr<ThreeDPlotState> _state;
+
+    /// OpenGL widget for 3D rendering
+    ThreeDPlotOpenGLWidget * _opengl_widget{nullptr};
 };
 
 #endif// THREE_D_PLOT_WIDGET_HPP

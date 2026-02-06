@@ -16,9 +16,18 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
+
+/**
+ * @brief Options for plotting a PointData key in the 3D plot
+ */
+struct ThreeDPlotDataOptions {
+    std::string data_key;  ///< Key of the PointData to plot
+};
 
 /**
  * @brief Serializable state data for 3DPlotWidget
@@ -26,7 +35,8 @@
 struct ThreeDPlotStateData {
     std::string instance_id;
     std::string display_name = "3D Plot";
-    // Add 3D plot specific state data here as needed
+    std::string active_point_data_key = "";  // Currently selected PointData key (deprecated, kept for compatibility)
+    std::map<std::string, ThreeDPlotDataOptions> plot_data_keys;  ///< Map of data key names to their options
 };
 
 /**
@@ -75,6 +85,47 @@ public:
      */
     [[nodiscard]] ThreeDPlotStateData const & data() const { return _data; }
 
+    // === Active Key Accessors ===
+
+    /**
+     * @brief Get the currently active PointData key
+     * @return The active key as QString
+     */
+    [[nodiscard]] QString getActivePointDataKey() const;
+
+    /**
+     * @brief Set the currently active PointData key
+     * @param key The key to set
+     */
+    void setActivePointDataKey(QString const & key);
+
+    // === Plot Data Keys Management ===
+
+    /**
+     * @brief Add a data key to the plot
+     * @param data_key The PointData key to add
+     */
+    void addPlotDataKey(QString const & data_key);
+
+    /**
+     * @brief Remove a data key from the plot
+     * @param data_key The PointData key to remove
+     */
+    void removePlotDataKey(QString const & data_key);
+
+    /**
+     * @brief Get all plot data keys
+     * @return List of data keys currently in the plot
+     */
+    [[nodiscard]] std::vector<QString> getPlotDataKeys() const;
+
+    /**
+     * @brief Get options for a specific plot data key
+     * @param data_key The data key
+     * @return Options struct, or std::nullopt if key not found
+     */
+    [[nodiscard]] std::optional<ThreeDPlotDataOptions> getPlotDataKeyOptions(QString const & data_key) const;
+
     // === Serialization ===
 
     /**
@@ -91,6 +142,24 @@ public:
     bool fromJson(std::string const & json) override;
 
 signals:
+    /**
+     * @brief Emitted when the active PointData key changes
+     * @param key The new active key
+     */
+    void activePointDataKeyChanged(QString const & key);
+
+    /**
+     * @brief Emitted when a plot data key is added
+     * @param data_key The added data key
+     */
+    void plotDataKeyAdded(QString const & data_key);
+
+    /**
+     * @brief Emitted when a plot data key is removed
+     * @param data_key The removed data key
+     */
+    void plotDataKeyRemoved(QString const & data_key);
+
     /**
      * @brief Emitted when state changes
      */

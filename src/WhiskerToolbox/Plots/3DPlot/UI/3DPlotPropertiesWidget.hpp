@@ -67,7 +67,45 @@ public:
      */
     void setPlotWidget(ThreeDPlotWidget * plot_widget);
 
+private slots:
+    /**
+     * @brief Handle add data button click
+     */
+    void _onAddDataClicked();
+
+    /**
+     * @brief Handle remove data button click
+     */
+    void _onRemoveDataClicked();
+
+    /**
+     * @brief Handle plot data table selection change
+     */
+    void _onPlotDataSelectionChanged();
+
+    /**
+     * @brief Handle state plot data key added
+     * @param data_key The added data key
+     */
+    void _onStatePlotDataKeyAdded(QString const & data_key);
+
+    /**
+     * @brief Handle state plot data key removed
+     * @param data_key The removed data key
+     */
+    void _onStatePlotDataKeyRemoved(QString const & data_key);
+
 private:
+    /**
+     * @brief Populate the add data combo box with available PointData keys
+     */
+    void _populateAddDataComboBox();
+
+    /**
+     * @brief Update the plot data table from state
+     */
+    void _updatePlotDataTable();
+
     /**
      * @brief Update UI elements from current state
      */
@@ -77,6 +115,9 @@ private:
     std::shared_ptr<ThreeDPlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
     ThreeDPlotWidget * _plot_widget;
+
+    /// DataManager observer callback ID (stored for cleanup)
+    int _dm_observer_id = -1;
 };
 
 #endif// THREE_D_PLOT_PROPERTIES_WIDGET_HPP

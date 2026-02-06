@@ -49,6 +49,13 @@ void registerTypes(EditorRegistry * registry,
                                auto * widget = new ThreeDPlotWidget(dm);
                                widget->setState(plot_state);
 
+                               // Connect to global time changes for plot updates
+                               if (reg) {
+                                   QObject::connect(reg,
+                                                    QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                    widget, &ThreeDPlotWidget::_onTimeChanged);
+                               }
+
                                return widget;
                            },
 
@@ -74,6 +81,13 @@ void registerTypes(EditorRegistry * registry,
                                // Create the view widget
                                auto * view = new ThreeDPlotWidget(dm);
                                view->setState(state);
+
+                               // Connect to global time changes for plot updates
+                               if (reg) {
+                                   QObject::connect(reg,
+                                                    QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                    view, &ThreeDPlotWidget::_onTimeChanged);
+                               }
 
                                // Create the properties widget with the shared state
                                auto * props = new ThreeDPlotPropertiesWidget(state, dm);
