@@ -19,10 +19,9 @@
 class DataManager;
 class RelativeTimeAxisWidget;
 class RelativeTimeAxisRangeControls;
-class RelativeTimeAxisRangeState;
 class VerticalAxisWidget;
 class VerticalAxisRangeControls;
-class VerticalAxisRangeState;
+class VerticalAxisState;
 class EventPlotOpenGLWidget;
 class EventPlotState;
 
@@ -75,11 +74,6 @@ public:
      */
     [[nodiscard]] RelativeTimeAxisRangeControls * getRangeControls() const;
 
-    /**
-     * @brief Get the range state (for external updates, e.g., from OpenGL scrolling)
-     * @return Shared pointer to the range state
-     */
-    [[nodiscard]] std::shared_ptr<RelativeTimeAxisRangeState> getRangeState() const;
 
     /**
      * @brief Get the vertical axis range controls widget (for placement in properties panel)
@@ -88,10 +82,10 @@ public:
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
 
     /**
-     * @brief Get the vertical axis range state (for external updates)
-     * @return Shared pointer to the vertical axis range state
+     * @brief Get the vertical axis state (for external updates)
+     * @return Pointer to the vertical axis state
      */
-    [[nodiscard]] std::shared_ptr<VerticalAxisRangeState> getVerticalRangeState() const;
+    [[nodiscard]] VerticalAxisState * getVerticalAxisState() const;
 
 signals:
     /**
@@ -127,17 +121,15 @@ private:
     /// Range controls widget (can be placed in properties panel)
     RelativeTimeAxisRangeControls * _range_controls;
 
-    /// Shared range state for coordinating axis and controls
-    std::shared_ptr<RelativeTimeAxisRangeState> _range_state;
-
     /// Vertical axis widget on the left side
     VerticalAxisWidget * _vertical_axis_widget;
 
     /// Vertical axis range controls widget (can be placed in properties panel)
     VerticalAxisRangeControls * _vertical_range_controls;
 
-    /// Shared vertical axis range state for coordinating axis and controls
-    std::shared_ptr<VerticalAxisRangeState> _vertical_range_state;
+    /// Vertical axis state for coordinating axis and controls
+    /// Note: This is not serialized in EventPlotState since Y-axis is trial-based
+    std::unique_ptr<VerticalAxisState> _vertical_axis_state;
 
     /// Cached trial count for vertical axis range calculation
     size_t _trial_count = 0;

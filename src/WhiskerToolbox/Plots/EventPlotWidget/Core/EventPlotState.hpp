@@ -14,6 +14,8 @@
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -125,6 +127,7 @@ struct EventPlotStateData {
     PlotAlignmentData alignment;                                   ///< Alignment settings (event key, interval type, offset, window size)
     std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
     EventPlotViewState view_state;                                 ///< View state (zoom, pan, bounds)
+    RelativeTimeAxisStateData time_axis;                           ///< Time axis settings (min_range, max_range)
     EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
     std::string background_color = "#FFFFFF";                     ///< Background color as hex string (default: white)
     bool pinned = false;                                           ///< Whether to ignore SelectionContext changes
@@ -235,6 +238,12 @@ public:
      * @return Pointer to the alignment state (for use with PlotAlignmentWidget)
      */
     [[nodiscard]] PlotAlignmentState * alignmentState() { return _alignment_state.get(); }
+
+    /**
+     * @brief Get the relative time axis state object
+     * @return Pointer to the relative time axis state
+     */
+    [[nodiscard]] RelativeTimeAxisState * relativeTimeAxisState() { return _relative_time_axis_state.get(); }
 
     // === View State ===
 
@@ -485,6 +494,7 @@ signals:
 private:
     EventPlotStateData _data;
     std::unique_ptr<PlotAlignmentState> _alignment_state;
+    std::unique_ptr<RelativeTimeAxisState> _relative_time_axis_state;
 };
 
 #endif// EVENT_PLOT_STATE_HPP

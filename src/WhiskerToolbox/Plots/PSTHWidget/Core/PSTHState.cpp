@@ -1,18 +1,31 @@
 #include "PSTHState.hpp"
 
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
 #include <rfl/json.hpp>
 
 PSTHState::PSTHState(QObject * parent)
     : EditorState(parent),
-      _alignment_state(std::make_unique<PlotAlignmentState>(this))
+      _alignment_state(std::make_unique<PlotAlignmentState>(this)),
+      _relative_time_axis_state(std::make_unique<RelativeTimeAxisState>(this)),
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
 {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
 
     // Sync initial alignment data from member state
     _data.alignment = _alignment_state->data();
+
+    // Initialize time axis range from window size (centered at 0)
+    double window_size = _data.alignment.window_size;
+    double half_window = window_size / 2.0;
+    _relative_time_axis_state->setRangeSilent(-half_window, half_window);
+    _data.time_axis = _relative_time_axis_state->data();
+
+    // Sync initial vertical axis data from member state
+    _data.vertical_axis = _vertical_axis_state->data();
 
     // Forward alignment state signals to this object's signals
     connect(_alignment_state.get(), &PlotAlignmentState::alignmentEventKeyChanged,
@@ -22,7 +35,49 @@ PSTHState::PSTHState(QObject * parent)
     connect(_alignment_state.get(), &PlotAlignmentState::offsetChanged,
             this, &PSTHState::offsetChanged);
     connect(_alignment_state.get(), &PlotAlignmentState::windowSizeChanged,
-            this, &PSTHState::windowSizeChanged);
+            this, [this](double window_size) {
+                // Update time axis range when window size changes
+                double half_window = window_size / 2.0;
+                _relative_time_axis_state->setRangeSilent(-half_window, half_window);
+                // Sync to data
+                _data.time_axis = _relative_time_axis_state->data();
+                markDirty();
+                emit windowSizeChanged(window_size);
+                emit stateChanged();
+            });
+
+    // Forward relative time axis state signals
+    // When range changes, update window size (for backward compatibility)
+    auto syncTimeAxisData = [this]() {
+        // Sync to data for serialization
+        _data.time_axis = _relative_time_axis_state->data();
+        // Update window size to match range (centered at 0)
+        double range = _data.time_axis.max_range - _data.time_axis.min_range;
+        if (std::abs(range - _data.alignment.window_size) > 0.01) {
+            _data.alignment.window_size = range;
+            _alignment_state->data().window_size = range;
+        }
+        markDirty();
+        emit stateChanged();
+    };
+    connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeChanged,
+            this, syncTimeAxisData);
+    connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
+            this, syncTimeAxisData);
+
+    // Forward vertical axis state signals to this object's signals
+    // Note: We don't emit yMinChanged/yMaxChanged from PSTHState anymore
+    // Components should connect directly to verticalAxisState() signals
+    auto syncVerticalAxisData = [this]() {
+        // Sync to data for serialization
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit stateChanged();
+    };
+    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
+            this, syncVerticalAxisData);
+    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
+            this, syncVerticalAxisData);
 }
 
 QString PSTHState::getDisplayName() const
@@ -183,35 +238,6 @@ void PSTHState::setBinSize(double bin_size)
     }
 }
 
-double PSTHState::getYMin() const
-{
-    return _data.y_min;
-}
-
-void PSTHState::setYMin(double y_min)
-{
-    if (_data.y_min != y_min) {
-        _data.y_min = y_min;
-        markDirty();
-        emit yMinChanged(y_min);
-        emit stateChanged();
-    }
-}
-
-double PSTHState::getYMax() const
-{
-    return _data.y_max;
-}
-
-void PSTHState::setYMax(double y_max)
-{
-    if (_data.y_max != y_max) {
-        _data.y_max = y_max;
-        markDirty();
-        emit yMaxChanged(y_max);
-        emit stateChanged();
-    }
-}
 
 std::string PSTHState::toJson() const
 {
@@ -234,6 +260,12 @@ bool PSTHState::fromJson(std::string const & json)
 
         // Restore alignment state from serialized data
         _alignment_state->data() = _data.alignment;
+
+        // Restore relative time axis state from serialized data
+        _relative_time_axis_state->data() = _data.time_axis;
+
+        // Restore vertical axis state from serialized data
+        _vertical_axis_state->data() = _data.vertical_axis;
 
         emit stateChanged();
         return true;

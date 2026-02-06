@@ -1,12 +1,12 @@
 #include "EventPlotPropertiesWidget.hpp"
 
+#include "Collapsible_Widget/Section.hpp"
 #include "Core/EventPlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
-#include "Collapsible_Widget/Section.hpp"
 #include "UI/EventPlotWidget.hpp"
 
 #include "ui_EventPlotPropertiesWidget.h"
@@ -105,49 +105,51 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     }
 }
 
-void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget)
-{
+void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget) {
     _plot_widget = plot_widget;
 
     if (!_plot_widget) {
         return;
     }
 
-    // Get the range state from the plot widget
-    auto range_state = _plot_widget->getRangeState();
+    // Get the relative time axis state from EventPlotState
+    if (_state) {
+        auto * time_axis_state = _state->relativeTimeAxisState();
+        if (time_axis_state) {
+            // Create a collapsible section for the range controls
+            _range_controls_section = new Section(this, "Time Axis Range Controls");
+            
+            // Create new range controls that use the RelativeTimeAxisState
+            _range_controls = new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
 
-    if (range_state) {
-        // Create a collapsible section for the range controls
-        _range_controls_section = new Section(this, "Time Axis Range Controls");
-        
-        // Create new range controls that share the same state
-        _range_controls = new RelativeTimeAxisRangeControls(range_state, _range_controls_section);
-        
-        // Set up the collapsible section (it starts collapsed by default)
-        _range_controls_section->autoSetContentLayout();
-        
-        // Add the section to the main layout (after alignment widget)
-        int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
-        ui->main_layout->insertWidget(insert_index, _range_controls_section);
+            // Set up the collapsible section (it starts collapsed by default)
+            _range_controls_section->autoSetContentLayout();
+            
+            // Add the section to the main layout (after alignment widget)
+            int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+            ui->main_layout->insertWidget(insert_index, _range_controls_section);
+        }
     }
 
-    // Get the vertical axis range state from the plot widget
-    auto vertical_range_state = _plot_widget->getVerticalRangeState();
+    // Get the vertical axis state from the plot widget
+    auto * vertical_axis_state = _plot_widget->getVerticalAxisState();
 
-    if (vertical_range_state) {
+    if (vertical_axis_state) {
         // Create a collapsible section for the vertical axis range controls
         _vertical_range_controls_section = new Section(this, "Vertical Axis Range Controls");
-        
-        // Create new range controls that share the same state
-        _vertical_range_controls = new VerticalAxisRangeControls(vertical_range_state, _vertical_range_controls_section);
-        
+
+        // Create new range controls that use the VerticalAxisState
+        auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(
+            vertical_axis_state, nullptr, _vertical_range_controls_section);
+        _vertical_range_controls = vertical_axis_with_controls.range_controls;
+
         // Set up the collapsible section (it starts collapsed by default)
         _vertical_range_controls_section->autoSetContentLayout();
-        
+
         // Add the section to the main layout (after time axis range controls)
-        int insert_index = _range_controls_section 
-            ? ui->main_layout->indexOf(_range_controls_section) + 1
-            : ui->main_layout->indexOf(_alignment_widget) + 1;
+        int insert_index = _range_controls_section
+                                   ? ui->main_layout->indexOf(_range_controls_section) + 1
+                                   : ui->main_layout->indexOf(_alignment_widget) + 1;
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
@@ -486,7 +488,7 @@ void EventPlotPropertiesWidget::_onSortingModeChanged(int index) {
         return;
     }
 
-    TrialSortMode mode = TrialSortMode::TrialIndex;  // Default
+    TrialSortMode mode = TrialSortMode::TrialIndex;// Default
     switch (index) {
         case 0:
             mode = TrialSortMode::TrialIndex;

@@ -65,7 +65,7 @@ void registerTypes(EditorRegistry * registry,
                                 return props;
                             },
 
-                            // Custom editor creation for potential future view/properties coupling
+                            // Custom editor creation for view/properties coupling
                             .create_editor_custom = [dm](EditorRegistry * reg)
                                     -> EditorRegistry::EditorInstance {
                                 // Create the shared state
@@ -77,6 +77,9 @@ void registerTypes(EditorRegistry * registry,
 
                                 // Create the properties widget with the shared state
                                 auto * props = new PSTHPropertiesWidget(state, dm);
+
+                                // Connect properties widget to view widget (for range controls)
+                                props->setPlotWidget(view);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the PSTH plot to navigate to a specific time position

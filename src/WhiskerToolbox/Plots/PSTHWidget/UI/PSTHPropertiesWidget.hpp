@@ -21,6 +21,10 @@
 
 class DataManager;
 class PlotAlignmentWidget;
+class PSTHWidget;
+class RelativeTimeAxisRangeControls;
+class VerticalAxisRangeControls;
+class Section;
 
 namespace Ui {
 class PSTHPropertiesWidget;
@@ -60,6 +64,12 @@ public:
      * @return Shared pointer to DataManager
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
+
+    /**
+     * @brief Set the PSTHWidget to connect range controls
+     * @param plot_widget The PSTHWidget instance
+     */
+    void setPlotWidget(PSTHWidget * plot_widget);
 
 private slots:
     /**
@@ -112,18 +122,6 @@ private slots:
      */
     void _onBinSizeChanged(double value);
 
-    /**
-     * @brief Handle Y-axis minimum spinbox value change
-     * @param value New Y-axis minimum value
-     */
-    void _onYMinChanged(double value);
-
-    /**
-     * @brief Handle Y-axis maximum spinbox value change
-     * @param value New Y-axis maximum value
-     */
-    void _onYMaxChanged(double value);
-
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys
@@ -162,6 +160,11 @@ private:
     std::shared_ptr<PSTHState> _state;
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
+    PSTHWidget * _plot_widget;
+    RelativeTimeAxisRangeControls * _range_controls;
+    Section * _range_controls_section;
+    VerticalAxisRangeControls * _vertical_range_controls;
+    Section * _vertical_range_controls_section;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

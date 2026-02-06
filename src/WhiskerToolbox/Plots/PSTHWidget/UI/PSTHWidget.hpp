@@ -20,7 +20,9 @@
 class DataManager;
 class PSTHState;
 class RelativeTimeAxisWidget;
+class RelativeTimeAxisRangeControls;
 class VerticalAxisWidget;
+class VerticalAxisRangeControls;
 class PSTHPlotOpenGLWidget;
 
 namespace Ui {
@@ -66,6 +68,19 @@ public:
      */
     [[nodiscard]] PSTHState * state();
 
+    /**
+     * @brief Get the range controls widget (for placement in properties panel)
+     * @return Pointer to the range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] RelativeTimeAxisRangeControls * getRangeControls() const;
+
+
+    /**
+     * @brief Get the vertical axis range controls widget (for placement in properties panel)
+     * @return Pointer to the vertical axis range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
 signals:
     /**
      * @brief Emitted when a time position is selected in the view
@@ -89,8 +104,14 @@ private:
     /// Time axis widget below the plot
     RelativeTimeAxisWidget * _axis_widget;
 
+    /// Range controls widget (can be placed in properties panel)
+    RelativeTimeAxisRangeControls * _range_controls;
+
     /// Vertical axis widget on the left side
     VerticalAxisWidget * _vertical_axis_widget;
+
+    /// Vertical axis range controls widget (can be placed in properties panel)
+    VerticalAxisRangeControls * _vertical_range_controls;
 };
 
 #endif// PSTH_WIDGET_HPP

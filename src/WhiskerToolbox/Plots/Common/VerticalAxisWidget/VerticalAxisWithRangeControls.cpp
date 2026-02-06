@@ -1,47 +1,19 @@
 #include "VerticalAxisWithRangeControls.hpp"
 
+#include "VerticalAxisWidget.hpp"
+#include "Core/VerticalAxisState.hpp"
+
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
 
 #include <cmath>
 
-VerticalAxisRangeState::VerticalAxisRangeState(QObject * parent)
-    : QObject(parent)
-{
-}
-
-void VerticalAxisRangeState::setRange(double min_range, double max_range)
-{
-    if (_min_range == min_range && _max_range == max_range) {
-        return;
-    }
-
-    _updating = true;
-    _min_range = min_range;
-    _max_range = max_range;
-    _updating = false;
-
-    emit rangeUpdated(_min_range, _max_range);
-}
-
-void VerticalAxisRangeState::setRangeFromUser(double min_range, double max_range)
-{
-    if (_min_range == min_range && _max_range == max_range) {
-        return;
-    }
-
-    _min_range = min_range;
-    _max_range = max_range;
-
-    emit rangeChanged(_min_range, _max_range);
-}
-
 VerticalAxisRangeControls::VerticalAxisRangeControls(
-    std::shared_ptr<VerticalAxisRangeState> state,
+    VerticalAxisState * state,
     QWidget * parent)
     : QWidget(parent),
-      _state(std::move(state)),
+      _state(state),
       _min_spinbox(nullptr),
       _max_spinbox(nullptr),
       _updating_ui(false)
@@ -82,9 +54,14 @@ VerticalAxisRangeControls::VerticalAxisRangeControls(
     connect(_max_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &VerticalAxisRangeControls::onMaxRangeChanged);
 
-    // Connect to state updates
-    connect(_state.get(), &VerticalAxisRangeState::rangeUpdated,
-            this, &VerticalAxisRangeControls::onStateRangeUpdated);
+    // Connect to state updates (programmatic changes)
+    if (_state) {
+        connect(_state, &VerticalAxisState::rangeUpdated,
+                this, &VerticalAxisRangeControls::onStateRangeUpdated);
+        // Also connect to rangeChanged to handle user changes from other sources
+        connect(_state, &VerticalAxisState::rangeChanged,
+                this, &VerticalAxisRangeControls::onStateRangeChanged);
+    }
 
     // Initialize spinboxes
     updateSpinBoxes();
@@ -96,7 +73,7 @@ void VerticalAxisRangeControls::onMinRangeChanged(double value)
         return;
     }
 
-    _state->setRangeFromUser(value, _state->maxRange());
+    _state->setYMin(value);
 }
 
 void VerticalAxisRangeControls::onMaxRangeChanged(double value)
@@ -105,11 +82,21 @@ void VerticalAxisRangeControls::onMaxRangeChanged(double value)
         return;
     }
 
-    _state->setRangeFromUser(_state->minRange(), value);
+    _state->setYMax(value);
 }
 
-void VerticalAxisRangeControls::onStateRangeUpdated(double min_range, double max_range)
+void VerticalAxisRangeControls::onStateRangeUpdated(double y_min, double y_max)
 {
+    Q_UNUSED(y_min)
+    Q_UNUSED(y_max)
+    updateSpinBoxes();
+}
+
+void VerticalAxisRangeControls::onStateRangeChanged(double y_min, double y_max)
+{
+    Q_UNUSED(y_min)
+    Q_UNUSED(y_max)
+    // Update spinboxes when range changes (could be from user input or programmatic)
     updateSpinBoxes();
 }
 
@@ -122,11 +109,11 @@ void VerticalAxisRangeControls::updateSpinBoxes()
     _updating_ui = true;
 
     // Update spinboxes if they don't already have the correct value
-    if (std::abs(_min_spinbox->value() - _state->minRange()) > 0.01) {
-        _min_spinbox->setValue(_state->minRange());
+    if (std::abs(_min_spinbox->value() - _state->getYMin()) > 0.01) {
+        _min_spinbox->setValue(_state->getYMin());
     }
-    if (std::abs(_max_spinbox->value() - _state->maxRange()) > 0.01) {
-        _max_spinbox->setValue(_state->maxRange());
+    if (std::abs(_max_spinbox->value() - _state->getYMax()) > 0.01) {
+        _max_spinbox->setValue(_state->getYMax());
     }
 
     _updating_ui = false;
@@ -149,8 +136,8 @@ void VerticalAxisWithRangeControls::setRange(double min_range, double max_range)
 void VerticalAxisWithRangeControls::getRange(double & min_range, double & max_range) const
 {
     if (state) {
-        min_range = state->minRange();
-        max_range = state->maxRange();
+        min_range = state->getYMin();
+        max_range = state->getYMax();
     } else {
         min_range = 0.0;
         max_range = 100.0;
@@ -158,19 +145,42 @@ void VerticalAxisWithRangeControls::getRange(double & min_range, double & max_ra
 }
 
 VerticalAxisWithRangeControls createVerticalAxisWithRangeControls(
+    VerticalAxisState * state,
     QWidget * axis_parent,
     QWidget * controls_parent)
 {
     VerticalAxisWithRangeControls result;
-
-    // Create shared state
-    result.state = std::make_shared<VerticalAxisRangeState>();
+    result.state = state;
 
     // Create axis widget
     result.axis_widget = new VerticalAxisWidget(axis_parent);
 
+    // Set up axis widget to read from state
+    if (state) {
+        result.axis_widget->setRangeGetter([state]() {
+            if (!state) {
+                return std::make_pair(0.0, 100.0);
+            }
+            return std::make_pair(state->getYMin(), state->getYMax());
+        });
+
+        // Connect axis widget to state changes for repainting
+        QObject::connect(state, &VerticalAxisState::rangeChanged,
+                        result.axis_widget, [widget = result.axis_widget](double /* y_min */, double /* y_max */) {
+                            if (widget) {
+                                widget->update();
+                            }
+                        });
+        QObject::connect(state, &VerticalAxisState::rangeUpdated,
+                        result.axis_widget, [widget = result.axis_widget](double /* y_min */, double /* y_max */) {
+                            if (widget) {
+                                widget->update();
+                            }
+                        });
+    }
+
     // Create range controls widget
-    result.range_controls = new VerticalAxisRangeControls(result.state, controls_parent);
+    result.range_controls = new VerticalAxisRangeControls(state, controls_parent);
 
     return result;
 }

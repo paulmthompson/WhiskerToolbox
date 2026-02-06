@@ -4,11 +4,12 @@
 #include "Core/ViewStateAdapter.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "Rendering/EventPlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Rendering/EventPlotOpenGLWidget.hpp"
 
 #include <QHBoxLayout>
 #include <QResizeEvent>
@@ -24,11 +25,9 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
       _range_controls(nullptr),
-      _range_state(nullptr),
       _vertical_axis_widget(nullptr),
       _vertical_range_controls(nullptr),
-      _vertical_range_state(nullptr)
-{
+      _vertical_axis_state(nullptr) {
     ui->setupUi(this);
 
     // Create horizontal layout for vertical axis + OpenGL widget
@@ -36,33 +35,33 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
     horizontal_layout->setSpacing(0);
     horizontal_layout->setContentsMargins(0, 0, 0, 0);
 
+    // Create vertical axis state (not serialized in EventPlotState since Y-axis is trial-based)
+    _vertical_axis_state = std::make_unique<VerticalAxisState>(this);
+
     // Create combined vertical axis widget with range controls using factory
     // Range controls will be created in the properties widget
-    auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(this, nullptr);
+    auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(
+            _vertical_axis_state.get(), this, nullptr);
     _vertical_axis_widget = vertical_axis_with_controls.axis_widget;
     _vertical_range_controls = vertical_axis_with_controls.range_controls;
-    _vertical_range_state = vertical_axis_with_controls.state;
-    _vertical_axis_widget->setRange(0.0, 0.0);  // Will be updated when trials are loaded
+    _vertical_axis_state->setRange(0.0, 0.0);// Will be updated when trials are loaded
     horizontal_layout->addWidget(_vertical_axis_widget);
 
     // Create and add the OpenGL widget
     _opengl_widget = new EventPlotOpenGLWidget(this);
     _opengl_widget->setDataManager(_data_manager);
-    horizontal_layout->addWidget(_opengl_widget, 1);  // Stretch factor 1
+    horizontal_layout->addWidget(_opengl_widget, 1);// Stretch factor 1
 
     // Create vertical layout for horizontal layout + time axis
     auto * vertical_layout = new QVBoxLayout();
     vertical_layout->setSpacing(0);
     vertical_layout->setContentsMargins(0, 0, 0, 0);
-    vertical_layout->addLayout(horizontal_layout, 1);  // Stretch factor 1
+    vertical_layout->addLayout(horizontal_layout, 1);// Stretch factor 1
 
-    // Create combined axis widget with range controls using factory
-    // Range controls will be created in the properties widget
-    auto axis_with_controls = createRelativeTimeAxisWithRangeControls(this, nullptr);
-    _axis_widget = axis_with_controls.axis_widget;
-    _range_controls = axis_with_controls.range_controls;
-    _range_state = axis_with_controls.state;
-    vertical_layout->addWidget(_axis_widget);
+    // Time axis widget and controls will be created in setState()
+    // when we have access to the EventPlotState's RelativeTimeAxisState
+    _axis_widget = nullptr;
+    _range_controls = nullptr;
 
     // Replace the main layout
     QLayout * old_layout = layout();
@@ -77,10 +76,10 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
                 // Get the TimeFrame from the series via DataManager
                 std::shared_ptr<TimeFrame> time_frame;
                 if (_data_manager && !series_key.isEmpty()) {
-                   auto time_key = _data_manager->getTimeKey(series_key.toStdString());
-                   if (!time_key.empty()) {
-                       time_frame = _data_manager->getTime(time_key);
-                   }
+                    auto time_key = _data_manager->getTimeKey(series_key.toStdString());
+                    if (!time_key.empty()) {
+                        time_frame = _data_manager->getTime(time_key);
+                    }
                 }
                 emit timePositionSelected(TimePosition(TimeFrameIndex(time_frame_index), time_frame));
             });
@@ -100,18 +99,39 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
             });
 }
 
-EventPlotWidget::~EventPlotWidget()
-{
+EventPlotWidget::~EventPlotWidget() {
     delete ui;
 }
 
-void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
-{
+void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
     _state = state;
-    
+
     // Pass state to OpenGL widget
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
+    }
+
+    // Create time axis widget and controls using factory
+    // This must be done after setState so we have access to RelativeTimeAxisState
+    if (_state && !_axis_widget) {
+        auto * time_axis_state = _state->relativeTimeAxisState();
+        if (time_axis_state) {
+            auto time_axis_with_controls = createRelativeTimeAxisWithRangeControls(
+                time_axis_state, this, nullptr);
+            _axis_widget = time_axis_with_controls.axis_widget;
+            _range_controls = time_axis_with_controls.range_controls;
+
+            // Add time axis widget to layout
+            if (_axis_widget) {
+                QLayout * main_layout = layout();
+                if (main_layout) {
+                    QVBoxLayout * vbox = qobject_cast<QVBoxLayout *>(main_layout);
+                    if (vbox) {
+                        vbox->addWidget(_axis_widget);
+                    }
+                }
+            }
+        }
     }
 
     // Set up axis widget with ViewState getter and connect to state changes
@@ -130,8 +150,8 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
 
         // Connect to view state changes (emitted when window size, zoom, pan, or bounds change)
         _axis_widget->connectToViewStateChanged(
-            _state.get(),
-            &EventPlotState::viewStateChanged);
+                _state.get(),
+                &EventPlotState::viewStateChanged);
 
         // Also connect to OpenGL widget's viewBoundsChanged signal
         // This ensures the axis widget updates when the OpenGL widget's view changes
@@ -143,39 +163,36 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                 });
     }
 
-    // Connect range state to update view bounds when user changes range
-    if (_range_state && _state) {
-        connect(_range_state.get(), &RelativeTimeAxisRangeState::rangeChanged,
-                this, [this](double min_range, double max_range) {
-                    // Update the view state bounds when user changes range
-                    if (_state) {
-                        _state->setXBounds(min_range, max_range);
-                    }
-                });
+    // Connect time axis state to update view bounds when user changes range
+    // This is handled in EventPlotState, but we also need to update visible range
+    // when view state changes (from panning/zooming)
+    if (_state) {
+        auto * time_axis_state = _state->relativeTimeAxisState();
+        if (time_axis_state) {
+            // Update time axis range when view bounds change (from panning/zooming)
+            auto updateRangeFromViewState = [this, time_axis_state]() {
+                if (_state && _opengl_widget) {
+                    // Compute visible bounds from view state
+                    auto const & view_state = _state->viewState();
+                    // Visible range = data bounds / zoom + pan
+                    double const zoomed_half_range = (view_state.x_max - view_state.x_min) / 2.0 / view_state.x_zoom;
+                    double const visible_min = (view_state.x_min + view_state.x_max) / 2.0 - zoomed_half_range + view_state.x_pan;
+                    double const visible_max = (view_state.x_min + view_state.x_max) / 2.0 + zoomed_half_range + view_state.x_pan;
+                    // Update time axis state (this will update spinboxes without triggering rangeChanged)
+                    time_axis_state->setRangeSilent(visible_min, visible_max);
+                }
+            };
 
-        // Update range state when view bounds change (from panning/zooming)
-        auto updateRangeFromViewState = [this]() {
-            if (_range_state && _state && _opengl_widget) {
-                // Compute visible bounds from view state
-                auto const & view_state = _state->viewState();
-                // Visible range = data bounds / zoom + pan
-                double const zoomed_half_range = (view_state.x_max - view_state.x_min) / 2.0 / view_state.x_zoom;
-                double const visible_min = (view_state.x_min + view_state.x_max) / 2.0 - zoomed_half_range + view_state.x_pan;
-                double const visible_max = (view_state.x_min + view_state.x_max) / 2.0 + zoomed_half_range + view_state.x_pan;
-                // Update range state (this will update combo boxes without triggering rangeChanged)
-                _range_state->setRange(visible_min, visible_max);
-            }
-        };
+            connect(_state.get(), &EventPlotState::viewStateChanged,
+                    this, updateRangeFromViewState);
 
-        connect(_state.get(), &EventPlotState::viewStateChanged,
-                this, updateRangeFromViewState);
+            // Also connect to OpenGL widget's viewBoundsChanged signal
+            connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
+                    this, updateRangeFromViewState);
 
-        // Also connect to OpenGL widget's viewBoundsChanged signal
-        connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
-                this, updateRangeFromViewState);
-
-        // Initialize range state from current view bounds
-        updateRangeFromViewState();
+            // Initialize time axis range from current view bounds
+            updateRangeFromViewState();
+        }
     }
 
     // Set up vertical axis with RangeGetter that computes visible trial range
@@ -210,15 +227,14 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
             // Return visible range without clamping - axis should show
             // coordinates even when panned/zoomed beyond data bounds
             return {
-                std::min(min_trial, max_trial),
-                std::max(min_trial, max_trial)
-            };
+                    std::min(min_trial, max_trial),
+                    std::max(min_trial, max_trial)};
         });
 
         // Connect to view state changes so vertical axis updates on zoom/pan
         _vertical_axis_widget->connectToRangeChanged(
-            _state.get(),
-            &EventPlotState::viewStateChanged);
+                _state.get(),
+                &EventPlotState::viewStateChanged);
 
         // Also connect to OpenGL widget's viewBoundsChanged signal
         connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
@@ -229,9 +245,9 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                 });
     }
 
-    // Connect vertical range state to update view state when user changes range
-    if (_vertical_range_state && _state) {
-        connect(_vertical_range_state.get(), &VerticalAxisRangeState::rangeChanged,
+    // Connect vertical axis state to update view state when user changes range
+    if (_vertical_axis_state && _state) {
+        connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
                 this, [this](double min_range, double max_range) {
                     // Update the view state y_zoom and y_pan when user changes range
                     if (_state && _trial_count > 0) {
@@ -250,7 +266,7 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                         // Solving: y_zoom = 2.0 / (world_y_max - world_y_min)
                         //          y_pan = (world_y_min + world_y_max) / 2.0
                         double world_range = world_y_max - world_y_min;
-                        if (world_range > 0.001) {  // Avoid division by zero
+                        if (world_range > 0.001) {// Avoid division by zero
                             double new_y_zoom = 2.0 / world_range;
                             double new_y_pan = (world_y_min + world_y_max) / 2.0;
                             _state->setYZoom(new_y_zoom);
@@ -259,9 +275,9 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                     }
                 });
 
-        // Update vertical range state when view bounds change (from panning/zooming)
+        // Update vertical axis state when view bounds change (from panning/zooming)
         auto updateVerticalRangeFromViewState = [this]() {
-            if (_vertical_range_state && _state && _trial_count > 0) {
+            if (_vertical_axis_state && _state && _trial_count > 0) {
                 auto const & view_state = _state->viewState();
 
                 // Compute visible trial range from view state
@@ -277,10 +293,10 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                 double const min_trial = world_y_to_trial(visible_bottom);
                 double const max_trial = world_y_to_trial(visible_top);
 
-                // Update range state (this will update combo boxes without triggering rangeChanged)
-                _vertical_range_state->setRange(
-                    std::min(min_trial, max_trial),
-                    std::max(min_trial, max_trial));
+                // Update axis state (this will update spinboxes without triggering rangeChanged)
+                _vertical_axis_state->setRangeSilent(
+                        std::min(min_trial, max_trial),
+                        std::max(min_trial, max_trial));
             }
         };
 
@@ -296,8 +312,7 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
     }
 }
 
-void EventPlotWidget::resizeEvent(QResizeEvent * event)
-{
+void EventPlotWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     // Update axis widget when widget resizes to ensure it gets fresh viewport dimensions
     if (_axis_widget) {
@@ -305,27 +320,19 @@ void EventPlotWidget::resizeEvent(QResizeEvent * event)
     }
 }
 
-EventPlotState * EventPlotWidget::state()
-{
+EventPlotState * EventPlotWidget::state() {
     return _state.get();
 }
 
-RelativeTimeAxisRangeControls * EventPlotWidget::getRangeControls() const
-{
+RelativeTimeAxisRangeControls * EventPlotWidget::getRangeControls() const {
     return _range_controls;
 }
 
-std::shared_ptr<RelativeTimeAxisRangeState> EventPlotWidget::getRangeState() const
-{
-    return _range_state;
-}
 
-VerticalAxisRangeControls * EventPlotWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * EventPlotWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-std::shared_ptr<VerticalAxisRangeState> EventPlotWidget::getVerticalRangeState() const
-{
-    return _vertical_range_state;
+VerticalAxisState * EventPlotWidget::getVerticalAxisState() const {
+    return _vertical_axis_state.get();
 }

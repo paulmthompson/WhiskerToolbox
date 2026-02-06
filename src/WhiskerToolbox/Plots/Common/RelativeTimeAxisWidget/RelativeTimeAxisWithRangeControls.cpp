@@ -1,47 +1,18 @@
 #include "RelativeTimeAxisWithRangeControls.hpp"
 
+#include "Core/RelativeTimeAxisState.hpp"
+
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
 
 #include <cmath>
 
-RelativeTimeAxisRangeState::RelativeTimeAxisRangeState(QObject * parent)
-    : QObject(parent)
-{
-}
-
-void RelativeTimeAxisRangeState::setRange(double min_range, double max_range)
-{
-    if (_min_range == min_range && _max_range == max_range) {
-        return;
-    }
-
-    _updating = true;
-    _min_range = min_range;
-    _max_range = max_range;
-    _updating = false;
-
-    emit rangeUpdated(_min_range, _max_range);
-}
-
-void RelativeTimeAxisRangeState::setRangeFromUser(double min_range, double max_range)
-{
-    if (_min_range == min_range && _max_range == max_range) {
-        return;
-    }
-
-    _min_range = min_range;
-    _max_range = max_range;
-
-    emit rangeChanged(_min_range, _max_range);
-}
-
 RelativeTimeAxisRangeControls::RelativeTimeAxisRangeControls(
-    std::shared_ptr<RelativeTimeAxisRangeState> state,
+    RelativeTimeAxisState * state,
     QWidget * parent)
     : QWidget(parent),
-      _state(std::move(state)),
+      _state(state),
       _min_spinbox(nullptr),
       _max_spinbox(nullptr),
       _updating_ui(false)
@@ -82,9 +53,14 @@ RelativeTimeAxisRangeControls::RelativeTimeAxisRangeControls(
     connect(_max_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &RelativeTimeAxisRangeControls::onMaxRangeChanged);
 
-    // Connect to state updates
-    connect(_state.get(), &RelativeTimeAxisRangeState::rangeUpdated,
-            this, &RelativeTimeAxisRangeControls::onStateRangeUpdated);
+    // Connect to state updates (programmatic changes)
+    if (_state) {
+        connect(_state, &RelativeTimeAxisState::rangeUpdated,
+                this, &RelativeTimeAxisRangeControls::onStateRangeUpdated);
+        // Also connect to rangeChanged to handle user changes from other sources
+        connect(_state, &RelativeTimeAxisState::rangeChanged,
+                this, &RelativeTimeAxisRangeControls::onStateRangeChanged);
+    }
 
     // Initialize spinboxes
     updateSpinBoxes();
@@ -96,7 +72,7 @@ void RelativeTimeAxisRangeControls::onMinRangeChanged(double value)
         return;
     }
 
-    _state->setRangeFromUser(value, _state->maxRange());
+    _state->setMinRange(value);
 }
 
 void RelativeTimeAxisRangeControls::onMaxRangeChanged(double value)
@@ -105,11 +81,21 @@ void RelativeTimeAxisRangeControls::onMaxRangeChanged(double value)
         return;
     }
 
-    _state->setRangeFromUser(_state->minRange(), value);
+    _state->setMaxRange(value);
 }
 
 void RelativeTimeAxisRangeControls::onStateRangeUpdated(double min_range, double max_range)
 {
+    Q_UNUSED(min_range)
+    Q_UNUSED(max_range)
+    updateSpinBoxes();
+}
+
+void RelativeTimeAxisRangeControls::onStateRangeChanged(double min_range, double max_range)
+{
+    Q_UNUSED(min_range)
+    Q_UNUSED(max_range)
+    // Update spinboxes when range changes (could be from user input or programmatic)
     updateSpinBoxes();
 }
 
@@ -122,11 +108,11 @@ void RelativeTimeAxisRangeControls::updateSpinBoxes()
     _updating_ui = true;
 
     // Update spinboxes if they don't already have the correct value
-    if (std::abs(_min_spinbox->value() - _state->minRange()) > 0.01) {
-        _min_spinbox->setValue(_state->minRange());
+    if (std::abs(_min_spinbox->value() - _state->getMinRange()) > 0.01) {
+        _min_spinbox->setValue(_state->getMinRange());
     }
-    if (std::abs(_max_spinbox->value() - _state->maxRange()) > 0.01) {
-        _max_spinbox->setValue(_state->maxRange());
+    if (std::abs(_max_spinbox->value() - _state->getMaxRange()) > 0.01) {
+        _max_spinbox->setValue(_state->getMaxRange());
     }
 
     _updating_ui = false;
@@ -149,28 +135,27 @@ void RelativeTimeAxisWithRangeControls::setRange(double min_range, double max_ra
 void RelativeTimeAxisWithRangeControls::getRange(double & min_range, double & max_range) const
 {
     if (state) {
-        min_range = state->minRange();
-        max_range = state->maxRange();
+        min_range = state->getMinRange();
+        max_range = state->getMaxRange();
     } else {
-        min_range = -30000.0;
-        max_range = 30000.0;
+        min_range = -500.0;
+        max_range = 500.0;
     }
 }
 
 RelativeTimeAxisWithRangeControls createRelativeTimeAxisWithRangeControls(
+    RelativeTimeAxisState * state,
     QWidget * axis_parent,
     QWidget * controls_parent)
 {
     RelativeTimeAxisWithRangeControls result;
-
-    // Create shared state
-    result.state = std::make_shared<RelativeTimeAxisRangeState>();
+    result.state = state;
 
     // Create axis widget
     result.axis_widget = new RelativeTimeAxisWidget(axis_parent);
 
     // Create range controls widget
-    result.range_controls = new RelativeTimeAxisRangeControls(result.state, controls_parent);
+    result.range_controls = new RelativeTimeAxisRangeControls(state, controls_parent);
 
     return result;
 }

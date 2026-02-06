@@ -14,82 +14,18 @@
  */
 
 #include "RelativeTimeAxisWidget.hpp"
+#include "Core/RelativeTimeAxisState.hpp"
 
 #include <QWidget>
 #include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
 
-#include <memory>
-
-/**
- * @brief Shared state for coordinating between axis widget and range controls
- * 
- * This state object prevents recursive updates by tracking when updates
- * are being applied programmatically vs. user-initiated.
- */
-class RelativeTimeAxisRangeState : public QObject {
-    Q_OBJECT
-
-public:
-    /**
-     * @brief Construct a new state object
-     * @param parent Parent QObject
-     */
-    explicit RelativeTimeAxisRangeState(QObject * parent = nullptr);
-
-    /**
-     * @brief Get the current minimum range value
-     * @return Minimum range value
-     */
-    [[nodiscard]] double minRange() const { return _min_range; }
-
-    /**
-     * @brief Get the current maximum range value
-     * @return Maximum range value
-     */
-    [[nodiscard]] double maxRange() const { return _max_range; }
-
-    /**
-     * @brief Set the range values programmatically (without triggering user signals)
-     * @param min_range Minimum range value
-     * @param max_range Maximum range value
-     */
-    void setRange(double min_range, double max_range);
-
-    /**
-     * @brief Set the range values from user input (triggers rangeChanged signal)
-     * @param min_range Minimum range value
-     * @param max_range Maximum range value
-     */
-    void setRangeFromUser(double min_range, double max_range);
-
-signals:
-    /**
-     * @brief Emitted when the range changes from user input
-     * @param min_range New minimum range value
-     * @param max_range New maximum range value
-     */
-    void rangeChanged(double min_range, double max_range);
-
-    /**
-     * @brief Emitted when the range is updated programmatically
-     * @param min_range New minimum range value
-     * @param max_range New maximum range value
-     */
-    void rangeUpdated(double min_range, double max_range);
-
-private:
-    double _min_range = -30000.0;
-    double _max_range = 30000.0;
-    bool _updating = false;
-};
-
 /**
  * @brief Widget containing spinboxes for editing min/max range
  * 
  * This widget can be placed separately from the axis widget (e.g., in a properties panel).
- * It automatically stays synchronized with the shared state.
+ * It automatically stays synchronized with the RelativeTimeAxisState.
  */
 class RelativeTimeAxisRangeControls : public QWidget {
     Q_OBJECT
@@ -97,11 +33,11 @@ class RelativeTimeAxisRangeControls : public QWidget {
 public:
     /**
      * @brief Construct range controls widget
-     * @param state Shared state object
+     * @param state RelativeTimeAxisState object (must outlive this widget)
      * @param parent Parent widget
      */
     explicit RelativeTimeAxisRangeControls(
-        std::shared_ptr<RelativeTimeAxisRangeState> state,
+        RelativeTimeAxisState * state,
         QWidget * parent = nullptr);
 
     ~RelativeTimeAxisRangeControls() override = default;
@@ -136,8 +72,15 @@ private slots:
      */
     void onStateRangeUpdated(double min_range, double max_range);
 
+    /**
+     * @brief Handle state range change (user or programmatic)
+     * @param min_range New minimum range
+     * @param max_range New maximum range
+     */
+    void onStateRangeChanged(double min_range, double max_range);
+
 private:
-    std::shared_ptr<RelativeTimeAxisRangeState> _state;
+    RelativeTimeAxisState * _state;
     QDoubleSpinBox * _min_spinbox;
     QDoubleSpinBox * _max_spinbox;
     bool _updating_ui = false;
@@ -149,11 +92,11 @@ private:
 };
 
 /**
- * @brief Factory result containing all widgets and shared state
+ * @brief Factory result containing all widgets linked to RelativeTimeAxisState
  */
 struct RelativeTimeAxisWithRangeControls {
-    /// Shared state object
-    std::shared_ptr<RelativeTimeAxisRangeState> state;
+    /// RelativeTimeAxisState object (owned by PSTHState or similar)
+    RelativeTimeAxisState * state;
 
     /// Axis widget (for display in the plot view)
     RelativeTimeAxisWidget * axis_widget;
@@ -200,17 +143,19 @@ struct RelativeTimeAxisWithRangeControls {
  * @brief Factory function to create a complete relative time axis with range controls
  * 
  * This factory creates:
- * - A shared state object
  * - A RelativeTimeAxisWidget for display
  * - A RelativeTimeAxisRangeControls widget for editing
  * 
- * All components are properly linked together with anti-recursion handling.
+ * All components are linked to the provided RelativeTimeAxisState and handle
+ * anti-recursion to prevent update loops.
  * 
+ * @param state RelativeTimeAxisState object (must outlive the returned widgets)
  * @param axis_parent Parent widget for the axis widget (typically the plot widget)
  * @param controls_parent Parent widget for the range controls (typically properties widget)
- * @return Factory result with all widgets and shared state
+ * @return Factory result with all widgets linked to the state
  */
 RelativeTimeAxisWithRangeControls createRelativeTimeAxisWithRangeControls(
+    RelativeTimeAxisState * state,
     QWidget * axis_parent = nullptr,
     QWidget * controls_parent = nullptr);
 

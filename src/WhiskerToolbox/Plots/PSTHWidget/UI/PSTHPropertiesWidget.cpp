@@ -4,6 +4,10 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Collapsible_Widget/Section.hpp"
+#include "UI/PSTHWidget.hpp"
 
 #include "ui_PSTHPropertiesWidget.h"
 
@@ -21,6 +25,12 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
       ui(new Ui::PSTHPropertiesWidget),
       _state(state),
       _data_manager(data_manager),
+      _alignment_widget(nullptr),
+      _plot_widget(nullptr),
+      _range_controls(nullptr),
+      _range_controls_section(nullptr),
+      _vertical_range_controls(nullptr),
+      _vertical_range_controls_section(nullptr),
       _dm_observer_id(-1)
 {
     ui->setupUi(this);
@@ -59,10 +69,6 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
             this, &PSTHPropertiesWidget::_onStyleChanged);
     connect(ui->bin_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &PSTHPropertiesWidget::_onBinSizeChanged);
-    connect(ui->y_min_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &PSTHPropertiesWidget::_onYMinChanged);
-    connect(ui->y_max_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &PSTHPropertiesWidget::_onYMaxChanged);
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -94,18 +100,8 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
                     ui->bin_size_spinbox->setValue(bin_size);
                     ui->bin_size_spinbox->blockSignals(false);
                 });
-        connect(_state.get(), &PSTHState::yMinChanged,
-                this, [this](double y_min) {
-                    ui->y_min_spinbox->blockSignals(true);
-                    ui->y_min_spinbox->setValue(y_min);
-                    ui->y_min_spinbox->blockSignals(false);
-                });
-        connect(_state.get(), &PSTHState::yMaxChanged,
-                this, [this](double y_max) {
-                    ui->y_max_spinbox->blockSignals(true);
-                    ui->y_max_spinbox->setValue(y_max);
-                    ui->y_max_spinbox->blockSignals(false);
-                });
+        // Note: yMin/yMax changes are handled by VerticalAxisRangeControls
+        // No need to connect to yMinChanged/yMaxChanged here
 
         // Initialize UI from state
         _updateUIFromState();
@@ -119,6 +115,55 @@ PSTHPropertiesWidget::~PSTHPropertiesWidget()
         _data_manager->removeObserver(_dm_observer_id);
     }
     delete ui;
+}
+
+void PSTHPropertiesWidget::setPlotWidget(PSTHWidget * plot_widget)
+{
+    _plot_widget = plot_widget;
+
+    if (!_plot_widget) {
+        return;
+    }
+
+    // Get the relative time axis state from PSTHState
+    if (_state) {
+        auto * time_axis_state = _state->relativeTimeAxisState();
+        if (time_axis_state) {
+            // Create a collapsible section for the range controls
+            _range_controls_section = new Section(this, "Time Axis Range Controls");
+            
+            // Create new range controls that use the RelativeTimeAxisState
+            _range_controls = new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
+        
+            // Set up the collapsible section (it starts collapsed by default)
+            _range_controls_section->autoSetContentLayout();
+            
+            // Add the section to the main layout (after alignment widget)
+            int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+            ui->main_layout->insertWidget(insert_index, _range_controls_section);
+        }
+    }
+
+    // Get the vertical axis state from PSTHState
+    if (_state) {
+        auto * vertical_axis_state = _state->verticalAxisState();
+        if (vertical_axis_state) {
+            // Create a collapsible section for the vertical axis range controls
+            _vertical_range_controls_section = new Section(this, "Vertical Axis Range Controls");
+            
+            // Create new range controls that use the VerticalAxisState
+            _vertical_range_controls = new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
+            
+            // Set up the collapsible section (it starts collapsed by default)
+            _vertical_range_controls_section->autoSetContentLayout();
+            
+            // Add the section to the main layout (after time axis range controls)
+            int insert_index = _range_controls_section 
+                ? ui->main_layout->indexOf(_range_controls_section) + 1
+                : ui->main_layout->indexOf(_alignment_widget) + 1;
+            ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
+        }
+    }
 }
 
 void PSTHPropertiesWidget::_populateAddEventComboBox()
@@ -309,13 +354,7 @@ void PSTHPropertiesWidget::_updateUIFromState()
     ui->bin_size_spinbox->setValue(_state->getBinSize());
     ui->bin_size_spinbox->blockSignals(false);
 
-    ui->y_min_spinbox->blockSignals(true);
-    ui->y_min_spinbox->setValue(_state->getYMin());
-    ui->y_min_spinbox->blockSignals(false);
-
-    ui->y_max_spinbox->blockSignals(true);
-    ui->y_max_spinbox->setValue(_state->getYMax());
-    ui->y_max_spinbox->blockSignals(false);
+    // Note: yMin/yMax are handled by VerticalAxisRangeControls, not legacy spinboxes
 
     // Update plot events table
     _updatePlotEventsTable();
@@ -387,22 +426,4 @@ void PSTHPropertiesWidget::_onBinSizeChanged(double value)
     }
 
     _state->setBinSize(value);
-}
-
-void PSTHPropertiesWidget::_onYMinChanged(double value)
-{
-    if (!_state) {
-        return;
-    }
-
-    _state->setYMin(value);
-}
-
-void PSTHPropertiesWidget::_onYMaxChanged(double value)
-{
-    if (!_state) {
-        return;
-    }
-
-    _state->setYMax(value);
 }

@@ -2,6 +2,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 
 set(RELATIVE_TIME_AXIS_WIDGET_SOURCES
 
+        Core/RelativeTimeAxisState.cpp
+        Core/RelativeTimeAxisState.hpp
+        Core/RelativeTimeAxisStateData.hpp
         RelativeTimeAxisWidget.cpp
         RelativeTimeAxisWidget.hpp
         RelativeTimeAxisWithRangeControls.cpp

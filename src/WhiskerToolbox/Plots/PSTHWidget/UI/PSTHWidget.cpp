@@ -5,7 +5,9 @@
 #include "DataManager/DataManager.hpp"
 #include "Rendering/PSTHPlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 
 #include <QHBoxLayout>
 #include <QResizeEvent>
@@ -20,7 +22,9 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
       ui(new Ui::PSTHWidget),
       _opengl_widget(nullptr),
       _axis_widget(nullptr),
-      _vertical_axis_widget(nullptr)
+      _range_controls(nullptr),
+      _vertical_axis_widget(nullptr),
+      _vertical_range_controls(nullptr)
 {
     ui->setupUi(this);
 
@@ -29,9 +33,11 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
     horizontal_layout->setSpacing(0);
     horizontal_layout->setContentsMargins(0, 0, 0, 0);
 
-    // Create and add the vertical axis widget on the left
-    _vertical_axis_widget = new VerticalAxisWidget(this);
-    horizontal_layout->addWidget(_vertical_axis_widget);
+    // Vertical axis widget and controls will be created in setState()
+    // when we have access to the PSTHState's VerticalAxisState
+    // For now, add a placeholder (will be replaced in setState)
+    _vertical_axis_widget = nullptr;
+    _vertical_range_controls = nullptr;
 
     // Create and add the OpenGL widget
     _opengl_widget = new PSTHPlotOpenGLWidget(this);
@@ -44,9 +50,10 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
     vertical_layout->setContentsMargins(0, 0, 0, 0);
     vertical_layout->addLayout(horizontal_layout, 1);  // Stretch factor 1
 
-    // Create and add the time axis widget below
-    _axis_widget = new RelativeTimeAxisWidget(this);
-    vertical_layout->addWidget(_axis_widget);
+    // Time axis widget and controls will be created in setState()
+    // when we have access to the PSTHState's RelativeTimeAxisState
+    _axis_widget = nullptr;
+    _range_controls = nullptr;
 
     // Replace the main layout
     QLayout * old_layout = layout();
@@ -74,6 +81,37 @@ void PSTHWidget::setState(std::shared_ptr<PSTHState> state)
     // Pass state to OpenGL widget
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
+    }
+
+    // Create vertical axis widget and controls using factory
+    // This must be done after setState so we have access to VerticalAxisState
+    if (_state && !_vertical_axis_widget) {
+        auto * vertical_axis_state = _state->verticalAxisState();
+        if (vertical_axis_state) {
+            auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(
+                vertical_axis_state, this, nullptr);
+            _vertical_axis_widget = vertical_axis_with_controls.axis_widget;
+            _vertical_range_controls = vertical_axis_with_controls.range_controls;
+
+            // Add vertical axis widget to layout
+            if (_vertical_axis_widget) {
+                // Find the horizontal layout (should be the first child layout)
+                QLayout * main_layout = layout();
+                if (main_layout) {
+                    QVBoxLayout * vbox = qobject_cast<QVBoxLayout *>(main_layout);
+                    if (vbox && vbox->count() > 0) {
+                        QLayoutItem * item = vbox->itemAt(0);
+                        if (item && item->layout()) {
+                            QHBoxLayout * hbox = qobject_cast<QHBoxLayout *>(item->layout());
+                            if (hbox) {
+                                // Insert at the beginning (before OpenGL widget)
+                                hbox->insertWidget(0, _vertical_axis_widget);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Set up axis widget with ViewState getter and connect to state changes
@@ -108,38 +146,27 @@ void PSTHWidget::setState(std::shared_ptr<PSTHState> state)
                 });
     }
 
-    // Set up vertical axis widget with range getter from state
-    if (_vertical_axis_widget && _state) {
-        _vertical_axis_widget->setRangeGetter([this]() {
-            if (!_state) {
-                return std::make_pair(0.0, 100.0);
-            }
-            return std::make_pair(_state->getYMin(), _state->getYMax());
-        });
+    // Time axis state syncing with window_size is handled in PSTHState
+    // No additional syncing needed here
 
-        // Connect to Y-axis range changes
-        connect(_state.get(), &PSTHState::yMinChanged,
-                _vertical_axis_widget, [this](double /* y_min */) {
-                    if (_vertical_axis_widget) {
-                        _vertical_axis_widget->update();
-                    }
-                });
-        connect(_state.get(), &PSTHState::yMaxChanged,
-                _vertical_axis_widget, [this](double /* y_max */) {
-                    if (_vertical_axis_widget) {
-                        _vertical_axis_widget->update();
-                    }
-                });
-
-        // Initial update to show current state values
-        _vertical_axis_widget->update();
-    }
 }
 
 PSTHState * PSTHWidget::state()
 {
     return _state.get();
 }
+
+RelativeTimeAxisRangeControls * PSTHWidget::getRangeControls() const
+{
+    return _range_controls;
+}
+
+
+VerticalAxisRangeControls * PSTHWidget::getVerticalRangeControls() const
+{
+    return _vertical_range_controls;
+}
+
 
 void PSTHWidget::resizeEvent(QResizeEvent * event)
 {

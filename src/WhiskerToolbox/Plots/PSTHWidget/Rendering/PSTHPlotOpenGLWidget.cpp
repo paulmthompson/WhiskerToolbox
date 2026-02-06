@@ -325,13 +325,16 @@ void PSTHPlotOpenGLWidget::rebuildScene()
     // Update y_max to match the maximum histogram value (with some padding)
     // Use a flag to prevent rebuild loop
     if (_state && max_count > 0.0) {
-        // Add 10% padding above the maximum
-        double new_y_max = max_count * 1.1;
-        // Only update if the value actually changed (to avoid unnecessary signals)
-        if (std::abs(_state->getYMax() - new_y_max) > 0.01) {
-            _updating_y_max_from_rebuild = true;
-            _state->setYMax(new_y_max);
-            _updating_y_max_from_rebuild = false;
+        auto * vertical_axis_state = _state->verticalAxisState();
+        if (vertical_axis_state) {
+            // Add 10% padding above the maximum
+            double new_y_max = max_count * 1.1;
+            // Only update if the value actually changed (to avoid unnecessary signals)
+            if (std::abs(vertical_axis_state->getYMax() - new_y_max) > 0.01) {
+                _updating_y_max_from_rebuild = true;
+                vertical_axis_state->setYMax(new_y_max);
+                _updating_y_max_from_rebuild = false;
+            }
         }
     }
 

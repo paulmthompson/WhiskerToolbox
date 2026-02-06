@@ -2,6 +2,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 
 set(VERTICAL_AXIS_WIDGET_SOURCES
 
+        Core/VerticalAxisState.cpp
+        Core/VerticalAxisState.hpp
+        Core/VerticalAxisStateData.hpp
         VerticalAxisWidget.cpp
         VerticalAxisWidget.hpp
         VerticalAxisWithRangeControls.cpp

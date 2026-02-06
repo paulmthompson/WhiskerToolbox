@@ -1,18 +1,24 @@
 #include "EventPlotState.hpp"
 
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 
 #include <rfl/json.hpp>
 
 EventPlotState::EventPlotState(QObject * parent)
     : EditorState(parent),
-      _alignment_state(std::make_unique<PlotAlignmentState>(this))
+      _alignment_state(std::make_unique<PlotAlignmentState>(this)),
+      _relative_time_axis_state(std::make_unique<RelativeTimeAxisState>(this))
 {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
 
     // Sync initial alignment data from member state
     _data.alignment = _alignment_state->data();
+
+    // Initialize time axis range from view state bounds
+    _relative_time_axis_state->setRangeSilent(_data.view_state.x_min, _data.view_state.x_max);
+    _data.time_axis = _relative_time_axis_state->data();
 
     // Forward alignment state signals to this object's signals
     connect(_alignment_state.get(), &PlotAlignmentState::alignmentEventKeyChanged,
@@ -37,9 +43,36 @@ EventPlotState::EventPlotState(QObject * parent)
                 _data.view_state.x_pan = 0.0;
                 _data.view_state.x_zoom = 1.0;
                 
+                // Update time axis range
+                _relative_time_axis_state->setRangeSilent(_data.view_state.x_min, _data.view_state.x_max);
+                _data.time_axis = _relative_time_axis_state->data();
+                
                 markDirty();
                 emit windowSizeChanged(window_size);
                 emit viewStateChanged();
+                emit stateChanged();
+            });
+
+    // Forward relative time axis state signals
+    // When range changes from user input (rangeChanged), update view state bounds
+    // When range is updated programmatically (rangeUpdated), only sync data for serialization
+    connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeChanged,
+            this, [this]() {
+                // Sync to data for serialization
+                _data.time_axis = _relative_time_axis_state->data();
+                // Update view state bounds to match time axis range (user changed it via spinboxes)
+                _data.view_state.x_min = _data.time_axis.min_range;
+                _data.view_state.x_max = _data.time_axis.max_range;
+                markDirty();
+                emit viewStateChanged();
+                emit stateChanged();
+            });
+    connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
+            this, [this]() {
+                // Only sync to data for serialization, don't update view bounds
+                // This is called when range is updated programmatically (e.g., from pan/zoom)
+                _data.time_axis = _relative_time_axis_state->data();
+                markDirty();
                 emit stateChanged();
             });
 }
@@ -175,6 +208,9 @@ void EventPlotState::updatePlotEventOptions(QString const & event_name, EventPlo
 void EventPlotState::setViewState(EventPlotViewState const & view_state)
 {
     _data.view_state = view_state;
+    // Update time axis state to match view bounds
+    _relative_time_axis_state->setRangeSilent(view_state.x_min, view_state.x_max);
+    _data.time_axis = _relative_time_axis_state->data();
     markDirty();
     emit viewStateChanged();
     emit stateChanged();
@@ -219,6 +255,9 @@ void EventPlotState::setXBounds(double x_min, double x_max)
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
+        // Update time axis state to match
+        _relative_time_axis_state->setRangeSilent(x_min, x_max);
+        _data.time_axis = _relative_time_axis_state->data();
         markDirty();
         emit viewStateChanged();
         emit stateChanged();
@@ -290,6 +329,9 @@ bool EventPlotState::fromJson(std::string const & json)
 
         // Restore alignment state from serialized data
         _alignment_state->data() = _data.alignment;
+
+        // Restore relative time axis state from serialized data
+        _relative_time_axis_state->data() = _data.time_axis;
 
         // Emit all signals to ensure UI updates
         emit viewStateChanged();

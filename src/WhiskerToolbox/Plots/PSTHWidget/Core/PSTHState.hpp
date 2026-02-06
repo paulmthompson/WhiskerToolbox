@@ -14,6 +14,10 @@
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -51,8 +55,8 @@ struct PSTHStateData {
     std::map<std::string, PSTHEventOptions> plot_events;           ///< Map of event names to their plot options
     PSTHStyle style = PSTHStyle::Bar;                              ///< Plot style (bar or line)
     double bin_size = 10.0;                                         ///< Bin size in time units (default: 10.0)
-    double y_min = 0.0;                                             ///< Y-axis minimum value (default: 0.0)
-    double y_max = 100.0;                                           ///< Y-axis maximum value (default: 100.0)
+    RelativeTimeAxisStateData time_axis;                            ///< Time axis settings (min_range, max_range)
+    VerticalAxisStateData vertical_axis;                           ///< Vertical axis settings (y_min, y_max)
 };
 
 /**
@@ -158,6 +162,18 @@ public:
      */
     [[nodiscard]] PlotAlignmentState * alignmentState() { return _alignment_state.get(); }
 
+    /**
+     * @brief Get the relative time axis state object
+     * @return Pointer to the relative time axis state
+     */
+    [[nodiscard]] RelativeTimeAxisState * relativeTimeAxisState() { return _relative_time_axis_state.get(); }
+
+    /**
+     * @brief Get the vertical axis state object
+     * @return Pointer to the vertical axis state
+     */
+    [[nodiscard]] VerticalAxisState * verticalAxisState() { return _vertical_axis_state.get(); }
+
     // === Plot Events Management ===
 
     /**
@@ -218,32 +234,6 @@ public:
      * @param bin_size Bin size in time units
      */
     void setBinSize(double bin_size);
-
-    // === Y-Axis Range ===
-
-    /**
-     * @brief Get the Y-axis minimum value
-     * @return Minimum Y value
-     */
-    [[nodiscard]] double getYMin() const;
-
-    /**
-     * @brief Set the Y-axis minimum value
-     * @param y_min Minimum Y value
-     */
-    void setYMin(double y_min);
-
-    /**
-     * @brief Get the Y-axis maximum value
-     * @return Maximum Y value
-     */
-    [[nodiscard]] double getYMax() const;
-
-    /**
-     * @brief Set the Y-axis maximum value
-     * @param y_max Maximum Y value
-     */
-    void setYMax(double y_max);
 
     // === Serialization ===
 
@@ -315,21 +305,11 @@ signals:
      */
     void binSizeChanged(double bin_size);
 
-    /**
-     * @brief Emitted when Y-axis minimum changes
-     * @param y_min New Y-axis minimum value
-     */
-    void yMinChanged(double y_min);
-
-    /**
-     * @brief Emitted when Y-axis maximum changes
-     * @param y_max New Y-axis maximum value
-     */
-    void yMaxChanged(double y_max);
-
 private:
     PSTHStateData _data;
     std::unique_ptr<PlotAlignmentState> _alignment_state;
+    std::unique_ptr<RelativeTimeAxisState> _relative_time_axis_state;
+    std::unique_ptr<VerticalAxisState> _vertical_axis_state;
 };
 
 #endif// PSTH_STATE_HPP
