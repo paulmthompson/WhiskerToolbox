@@ -66,11 +66,13 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
     connect(_opengl_widget, &EventPlotOpenGLWidget::eventSelected,
             this, &EventPlotWidget::eventSelected);
 
-    // Connect trial count changes to update vertical axis
+    // Connect trial count changes to cache the count
+    // The actual range is computed by the RangeGetter set up in setState()
     connect(_opengl_widget, &EventPlotOpenGLWidget::trialCountChanged,
             this, [this](size_t count) {
+                _trial_count = count;
                 if (_vertical_axis_widget) {
-                    _vertical_axis_widget->setRange(0.0, static_cast<double>(count));
+                    _vertical_axis_widget->update();
                 }
             });
 }
@@ -118,9 +120,55 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state)
                 });
     }
 
-    // Update vertical axis when widget resizes
-    if (_vertical_axis_widget) {
-        _vertical_axis_widget->update();
+    // Set up vertical axis with RangeGetter that computes visible trial range
+    // based on Y zoom and pan from the view state
+    if (_vertical_axis_widget && _state) {
+        _vertical_axis_widget->setRangeGetter([this]() -> std::pair<double, double> {
+            if (_trial_count == 0) {
+                return {0.0, 0.0};
+            }
+
+            auto const & view_state = _state->viewState();
+
+            // Y world coordinates span [-1, 1] (full range)
+            // With zoom/pan, the visible range becomes:
+            //   visible_bottom = -1.0 / y_zoom + y_pan
+            //   visible_top = 1.0 / y_zoom + y_pan
+            double const zoomed_half_range = 1.0 / view_state.y_zoom;
+            double const visible_bottom = -zoomed_half_range + view_state.y_pan;
+            double const visible_top = zoomed_half_range + view_state.y_pan;
+
+            // Map world Y [-1, 1] to trial index [0, N-1]
+            // Row layout places trial 0 at bottom (Y = -1 + epsilon)
+            // and trial N-1 at top (Y = 1 - epsilon)
+            // Mapping: trial = (world_y + 1) / 2 * trial_count
+            auto world_y_to_trial = [this](double world_y) {
+                return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
+            };
+
+            double const min_trial = world_y_to_trial(visible_bottom);
+            double const max_trial = world_y_to_trial(visible_top);
+
+            // Return visible range without clamping - axis should show
+            // coordinates even when panned/zoomed beyond data bounds
+            return {
+                std::min(min_trial, max_trial),
+                std::max(min_trial, max_trial)
+            };
+        });
+
+        // Connect to view state changes so vertical axis updates on zoom/pan
+        _vertical_axis_widget->connectToRangeChanged(
+            _state.get(),
+            &EventPlotState::viewStateChanged);
+
+        // Also connect to OpenGL widget's viewBoundsChanged signal
+        connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
+                _vertical_axis_widget, [this]() {
+                    if (_vertical_axis_widget) {
+                        _vertical_axis_widget->update();
+                    }
+                });
     }
 }
 

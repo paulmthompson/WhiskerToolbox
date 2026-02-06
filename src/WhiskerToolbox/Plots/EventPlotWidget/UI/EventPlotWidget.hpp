@@ -98,6 +98,9 @@ private:
 
     /// Vertical axis widget on the left side
     VerticalAxisWidget * _vertical_axis_widget;
+
+    /// Cached trial count for vertical axis range calculation
+    size_t _trial_count = 0;
 };
 
 #endif// EVENT_PLOT_WIDGET_HPP
