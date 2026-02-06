@@ -18,6 +18,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <numeric>
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -329,6 +331,12 @@ void EventPlotOpenGLWidget::rebuildScene()
     if (gathered.empty()) {
         _scene_renderer.clearScene();
         return;
+    }
+
+    // Apply trial sorting based on state
+    auto sorting_mode = _state->getSortingMode();
+    if (sorting_mode != TrialSortMode::TrialIndex) {
+        gathered = applySorting(gathered, sorting_mode);
     }
 
     // Build layout request
@@ -667,4 +675,80 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData() const
         _data_manager,
         event_options->event_key,
         alignment_state->data());
+}
+
+GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::applySorting(
+    GatherResult<DigitalEventSeries> const& gathered,
+    TrialSortMode mode) const
+{
+    if (gathered.empty() || mode == TrialSortMode::TrialIndex) {
+        return gathered;  // No sorting needed
+    }
+
+    size_t num_trials = gathered.size();
+    std::vector<size_t> sort_indices(num_trials);
+    std::iota(sort_indices.begin(), sort_indices.end(), 0);
+
+    switch (mode) {
+        case TrialSortMode::FirstEventLatency: {
+            // Sort by latency to first positive event (ascending)
+            // Events with time > alignment time (t=0) are "positive"
+            // Trials with no positive events go to the end
+            std::vector<double> latencies(num_trials);
+            
+            for (size_t i = 0; i < num_trials; ++i) {
+                auto const& trial_view = gathered[i];
+                int64_t alignment_time = gathered.alignmentTimeAt(i);
+                
+                double first_positive_latency = std::numeric_limits<double>::infinity();
+                
+                if (trial_view) {
+                    for (auto const& event : trial_view->view()) {
+                        int64_t event_time = event.time().getValue();
+                        // Relative time (positive = after alignment)
+                        double relative_time = static_cast<double>(event_time - alignment_time);
+                        if (relative_time >= 0.0 && relative_time < first_positive_latency) {
+                            first_positive_latency = relative_time;
+                            break;  // Events are time-ordered, so first positive is the answer
+                        }
+                    }
+                }
+                latencies[i] = first_positive_latency;
+            }
+            
+            // Sort by latency (ascending - smallest latency first, NaN/infinity last)
+            std::sort(sort_indices.begin(), sort_indices.end(),
+                [&latencies](size_t a, size_t b) {
+                    // Handle infinity: put at end
+                    if (std::isinf(latencies[a]) && !std::isinf(latencies[b])) return false;
+                    if (!std::isinf(latencies[a]) && std::isinf(latencies[b])) return true;
+                    return latencies[a] < latencies[b];
+                });
+            break;
+        }
+        
+        case TrialSortMode::EventCount: {
+            // Sort by total event count (descending - most events first)
+            std::vector<size_t> counts(num_trials);
+            
+            for (size_t i = 0; i < num_trials; ++i) {
+                auto const& trial_view = gathered[i];
+                counts[i] = trial_view ? trial_view->size() : 0;
+            }
+            
+            // Sort by count (descending - highest count first)
+            std::sort(sort_indices.begin(), sort_indices.end(),
+                [&counts](size_t a, size_t b) {
+                    return counts[a] > counts[b];
+                });
+            break;
+        }
+        
+        case TrialSortMode::TrialIndex:
+            // Should not reach here due to early return above
+            break;
+    }
+
+    // Apply reordering to the GatherResult
+    return gathered.reorder(sort_indices);
 }

@@ -19,7 +19,8 @@ EventPlotWidget has:
 - ✅ **Zoom/pan mouse interaction with separated X/Y control (Phase 2)**
 - ✅ **Single-click hit testing using SceneHitTester (Phase 2)**
 - ✅ **Performance-optimized view transforms (Phase 2)**
-- ❌ No trial sorting
+- ✅ **Built-in trial sorting (by first event latency, by event count) (Phase 4)**
+- ❌ No external feature sorting (future DataTransform v2 integration)
 - ❌ No cross-widget linking
 
 ## Architecture Reference
@@ -229,32 +230,50 @@ Use `PlottingOpenGL::AxisRenderer` for rendering.
 
 ---
 
-## Phase 4: Trial Sorting (Design Exploration)
+## Phase 4: Trial Sorting ✅ (Built-in Modes)
+
+**Status**: Built-in sorting modes implemented. External feature sorting remains for future DataTransform v2 integration.
 
 **Goal**: Allow trials to be reordered based on computed features.
 
-> **Note**: This is an exploratory phase. The exact integration with DataTransform v2 
-> needs further design work.
+### 4.1 Implemented: Built-in Sorting Modes ✅
 
-### 4.1 Sort Key Concept
+The following sorting modes are available via UI combo box:
 
 ```cpp
-// Conceptual - needs refinement
-struct TrialSortConfig {
-    std::string sort_mode;  // "none", "computed", "group"
-    
-    // For computed sorting
-    std::optional<std::string> sort_transform_key;  // DataManager key of transform output
-    bool ascending = true;
-    
-    // For group sorting
-    std::optional<std::string> group_key;  // EntityGroup in EntityRegistry
+/**
+ * @brief Enumeration for trial sorting modes
+ * 
+ * Built-in modes compute sort keys directly from the GatherResult data.
+ * External mode is reserved for future DataTransform v2 integration.
+ */
+enum class TrialSortMode {
+    TrialIndex,         ///< No sorting - display in original trial order (default)
+    FirstEventLatency,  ///< Sort by latency to first positive event (ascending)
+    EventCount          ///< Sort by total number of events (descending)
+    // Future: External - sort by external feature from DataManager
 };
 ```
 
-### 4.2 Integration with DataTransform v2
+**Key Implementation Files**:
+- [EventPlotState.hpp](Core/EventPlotState.hpp) - `TrialSortMode` enum, `sorting_mode` in state data
+- [EventPlotOpenGLWidget.cpp](Rendering/EventPlotOpenGLWidget.cpp) - `applySorting()` method
+- [EventPlotPropertiesWidget.ui](UI/EventPlotPropertiesWidget.ui) - Sorting combo box
 
-The sorting feature should leverage the DataTransform v2 architecture:
+### 4.2 Sorting Algorithm Details
+
+**First Event Latency (Ascending)**:
+- Finds the first event at or after alignment time (t=0) for each trial
+- Trials are ordered by this latency (smallest first)
+- Trials with no positive events are placed at the end
+
+**Event Count (Descending)**:
+- Counts total events in each trial's window
+- Trials are ordered by count (most events first)
+
+### 4.3 Future: External Feature Sorting (Design Only)
+
+For user-computed sort keys via DataTransform v2:
 
 **Option A: Pre-computed sort values**
 - User creates a transform that computes per-trial values
@@ -266,20 +285,20 @@ The sorting feature should leverage the DataTransform v2 architecture:
 - Widget executes pipeline at render time
 - More flexible but higher complexity
 
-### 4.3 GatherResult Sorting Support
+### 4.4 GatherResult Sorting Support
 
-`GatherResult` already has `reorder()` and `sortBy()` methods:
+`GatherResult` provides `reorder()` method used by `applySorting()`:
 
 ```cpp
-// Sort by spike count (descending)
-auto sorted = gathered.sortBy([](auto const& trial) {
-    return -static_cast<int>(trial->size());  // Negative for descending
-});
-```
+// In EventPlotOpenGLWidget::rebuildScene()
+auto sorting_mode = _state->getSortingMode();
+if (sorting_mode != TrialSortMode::TrialIndex) {
+    gathered = applySorting(gathered, sorting_mode);
+}
 
-**Phase 4 Deliverable**: Document the design pattern without full implementation.
-The sorting UI can have a placeholder that shows "Coming Soon" until the
-DataTransform integration is finalized.
+// applySorting computes sort indices and calls:
+return gathered.reorder(sort_indices);
+```
 
 ---
 
@@ -488,16 +507,17 @@ signals:
 6. **Phase 2.2-2.3**: Full selection (~~single~~, ~~multi~~, polygon) - single done, multi/polygon descoped
 7. ✅ **Phase 2.4**: Double-click time navigation
 8. **Phase 3.3**: Axis labels
+9. ✅ **Phase 4 (Built-in)**: Trial sorting by first event latency and event count
 
 ### Iteration 3
 
-9. **Phase 6**: Cross-widget linking (using existing SelectionContext)
-10. **Phase 7**: Factor shared components
+10. **Phase 6**: Cross-widget linking (using existing SelectionContext)
+11. **Phase 7**: Factor shared components
 
 ### Future (Design First)
 
-11. **Phase 4**: Trial sorting
-12. **Phase 5**: Feature-based coloring
+12. **Phase 4 (External)**: External feature sorting via DataTransform v2
+13. **Phase 5**: Feature-based coloring
 
 ---
 

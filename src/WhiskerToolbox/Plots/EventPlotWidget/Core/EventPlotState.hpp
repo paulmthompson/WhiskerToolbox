@@ -35,6 +35,20 @@ enum class EventGlyphType {
 };
 
 /**
+ * @brief Enumeration for trial sorting modes
+ * 
+ * Defines how trials are sorted in the raster plot. Built-in modes compute
+ * sort keys directly from the GatherResult data. External mode is reserved
+ * for future integration with DataTransform v2 for user-computed sort keys.
+ */
+enum class TrialSortMode {
+    TrialIndex,         ///< No sorting - display in original trial order (default)
+    FirstEventLatency,  ///< Sort by latency to first positive event (ascending)
+    EventCount          ///< Sort by total number of events (descending)
+    // Future: External - sort by external feature from DataManager
+};
+
+/**
  * @brief View state for the raster plot (zoom, pan, bounds)
  * 
  * Supports independent X/Y zoom for time-focused or trial-focused exploration.
@@ -114,6 +128,7 @@ struct EventPlotStateData {
     EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
     std::string background_color = "#FFFFFF";                     ///< Background color as hex string (default: white)
     bool pinned = false;                                           ///< Whether to ignore SelectionContext changes
+    TrialSortMode sorting_mode = TrialSortMode::TrialIndex;       ///< Trial sorting mode (default: trial index)
 };
 
 /**
@@ -319,6 +334,20 @@ public:
      */
     void setPinned(bool pinned);
 
+    // === Trial Sorting ===
+
+    /**
+     * @brief Get the trial sorting mode
+     * @return Current trial sorting mode
+     */
+    [[nodiscard]] TrialSortMode getSortingMode() const { return _data.sorting_mode; }
+
+    /**
+     * @brief Set the trial sorting mode
+     * @param mode New sorting mode
+     */
+    void setSortingMode(TrialSortMode mode);
+
     // === Direct Data Access ===
 
     /**
@@ -446,6 +475,12 @@ signals:
      * @param pinned New pinned state
      */
     void pinnedChanged(bool pinned);
+
+    /**
+     * @brief Emitted when trial sorting mode changes
+     * @param mode New sorting mode
+     */
+    void sortingModeChanged(TrialSortMode mode);
 
 private:
     EventPlotStateData _data;

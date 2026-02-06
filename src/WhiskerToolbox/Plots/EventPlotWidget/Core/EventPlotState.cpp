@@ -259,6 +259,16 @@ void EventPlotState::setPinned(bool pinned)
     }
 }
 
+void EventPlotState::setSortingMode(TrialSortMode mode)
+{
+    if (_data.sorting_mode != mode) {
+        _data.sorting_mode = mode;
+        markDirty();
+        emit sortingModeChanged(mode);
+        emit stateChanged();  // Triggers scene rebuild
+    }
+}
+
 std::string EventPlotState::toJson() const
 {
     // Include instance_id in serialization for restoration

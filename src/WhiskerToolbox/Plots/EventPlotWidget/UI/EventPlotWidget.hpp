@@ -72,6 +72,14 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
+    /**
+     * @brief Emitted when user single-clicks on an event to select it
+     * @param trial_index The trial (row) index of the selected event
+     * @param relative_time_ms The time relative to alignment in ms
+     * @param series_key The key of the event series containing the event
+     */
+    void eventSelected(int trial_index, float relative_time_ms, QString const & series_key);
+
 protected:
     void resizeEvent(QResizeEvent * event) override;
 

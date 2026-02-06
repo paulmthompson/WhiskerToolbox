@@ -106,6 +106,38 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="sorting_label">
+     <property name="text">
+      <string>Trial Sorting:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="sorting_combo">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <item>
+      <property name="text">
+       <string>Trial Index (Default)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>First Event Latency</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Event Count (Descending)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="plot_events_label">
      <property name="text">
       <string>Plot Events:</string>

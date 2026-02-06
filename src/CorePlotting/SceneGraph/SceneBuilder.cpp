@@ -176,6 +176,9 @@ RenderableScene SceneBuilder::build() {
     // Copy selection state to the scene (makes it queryable)
     _scene.selected_entities = _selected_entities;
 
+    // Copy entity → series_key mapping for hit test enrichment
+    _scene.entity_to_series_key = _entity_to_series_key;
+
     // Apply selection flags to all rectangle batches
     for (auto & batch : _scene.rectangle_batches) {
         batch.selection_flags.resize(batch.entity_ids.size(), 0);
@@ -199,6 +202,7 @@ void SceneBuilder::reset() {
     _pending_spatial_inserts.clear();
     _rectangle_batch_key_map.clear();
     _glyph_batch_key_map.clear();
+    _entity_to_series_key.clear();
     _selected_entities.clear();
 }
 

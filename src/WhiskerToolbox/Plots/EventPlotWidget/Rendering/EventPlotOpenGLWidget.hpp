@@ -273,6 +273,22 @@ private:
     [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData() const;
 
     /**
+     * @brief Apply sorting to gathered trial data
+     * 
+     * Computes sort indices based on the specified mode and returns a reordered
+     * GatherResult. Sorting modes:
+     * - FirstEventLatency: Sort by latency to first positive event (ascending)
+     * - EventCount: Sort by total number of events (descending)
+     * 
+     * @param gathered The gathered trial data
+     * @param mode The sorting mode to apply
+     * @return Reordered GatherResult (or original if mode is TrialIndex)
+     */
+    [[nodiscard]] GatherResult<DigitalEventSeries> applySorting(
+        GatherResult<DigitalEventSeries> const& gathered,
+        TrialSortMode mode) const;
+
+    /**
      * @brief Update OpenGL clear color from state background color
      */
     void updateBackgroundColor();

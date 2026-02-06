@@ -123,6 +123,18 @@ private slots:
      */
     void _onStateBackgroundColorChanged(QString const & hex_color);
 
+    /**
+     * @brief Handle sorting combo box selection change
+     * @param index Selected index (0 = Trial Index, 1 = First Event Latency, 2 = Event Count)
+     */
+    void _onSortingModeChanged(int index);
+
+    /**
+     * @brief Handle state sorting mode changed
+     * @param mode New sorting mode
+     */
+    void _onStateSortingModeChanged(TrialSortMode mode);
+
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys

@@ -64,6 +64,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
             this, &EventPlotPropertiesWidget::_onColorButtonClicked);
     connect(ui->background_color_button, &QPushButton::clicked,
             this, &EventPlotPropertiesWidget::_onBackgroundColorButtonClicked);
+    connect(ui->sorting_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &EventPlotPropertiesWidget::_onSortingModeChanged);
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -85,6 +87,8 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
                 this, &EventPlotPropertiesWidget::_onStatePlotEventOptionsChanged);
         connect(_state.get(), &EventPlotState::backgroundColorChanged,
                 this, &EventPlotPropertiesWidget::_onStateBackgroundColorChanged);
+        connect(_state.get(), &EventPlotState::sortingModeChanged,
+                this, &EventPlotPropertiesWidget::_onStateSortingModeChanged);
 
         // Initialize UI from state
         _updateUIFromState();
@@ -301,6 +305,11 @@ void EventPlotPropertiesWidget::_updateUIFromState() {
 
     // Update background color display
     _updateBackgroundColorDisplay(_state->getBackgroundColor());
+
+    // Update sorting combo box
+    ui->sorting_combo->blockSignals(true);
+    ui->sorting_combo->setCurrentIndex(static_cast<int>(_state->getSortingMode()));
+    ui->sorting_combo->blockSignals(false);
 }
 
 QString EventPlotPropertiesWidget::_getSelectedEventName() const {
@@ -413,4 +422,30 @@ void EventPlotPropertiesWidget::_onBackgroundColorButtonClicked() {
 
 void EventPlotPropertiesWidget::_onStateBackgroundColorChanged(QString const & hex_color) {
     _updateBackgroundColorDisplay(hex_color);
+}
+
+void EventPlotPropertiesWidget::_onSortingModeChanged(int index) {
+    if (!_state) {
+        return;
+    }
+
+    TrialSortMode mode = TrialSortMode::TrialIndex;  // Default
+    switch (index) {
+        case 0:
+            mode = TrialSortMode::TrialIndex;
+            break;
+        case 1:
+            mode = TrialSortMode::FirstEventLatency;
+            break;
+        case 2:
+            mode = TrialSortMode::EventCount;
+            break;
+    }
+    _state->setSortingMode(mode);
+}
+
+void EventPlotPropertiesWidget::_onStateSortingModeChanged(TrialSortMode mode) {
+    ui->sorting_combo->blockSignals(true);
+    ui->sorting_combo->setCurrentIndex(static_cast<int>(mode));
+    ui->sorting_combo->blockSignals(false);
 }

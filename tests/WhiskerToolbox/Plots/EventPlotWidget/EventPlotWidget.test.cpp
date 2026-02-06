@@ -5,6 +5,7 @@
  * Tests the EventPlotWidget view component, including:
  * - Time position signal connection to EditorRegistry
  * - Signal emission updates registry's current time
+ * - EventPlotOpenGLWidget signal emission (selection, double-click)
  */
 
 #include "Plots/EventPlotWidget/UI/EventPlotWidget.hpp"
@@ -156,5 +157,196 @@ TEST_CASE("EventPlotWidget time position signal", "[EventPlotWidget]") {
         // Verify connection worked
         REQUIRE(time_changed_spy.count() == 1);
         REQUIRE(registry->currentPosition().index == test_position.index);
+    }
+}
+
+// ==================== EventPlotWidget Signal Tests ====================
+// Note: Full OpenGL click-to-selection testing requires OpenGL context and scene setup.
+// The selection and double-click functionality is tested via:
+// 1. SceneHitTester tests (in CorePlotting) - verify hit testing logic
+// 2. SceneBuilder tests (in CorePlotting) - verify entity_to_series_key mapping
+// 3. EventPlotWidget signal forwarding tests (below) - verify signal propagation from OpenGL widget
+
+TEST_CASE("EventPlotWidget timePositionSelected signal", "[EventPlotWidget][Signals]") {
+    // Create QApplication if it doesn't exist
+    int argc = 0;
+    QApplication app(argc, nullptr);
+    
+    auto data_manager = std::make_shared<DataManager>();
+    
+    SECTION("timePositionSelected signal can be connected and emitted") {
+        // Create EventPlotWidget (which contains EventPlotOpenGLWidget internally)
+        EventPlotWidget event_plot_widget(data_manager, nullptr);
+        
+        // Set up signal spy for timePositionSelected on the parent widget
+        QSignalSpy time_position_spy(&event_plot_widget, &EventPlotWidget::timePositionSelected);
+        REQUIRE(time_position_spy.isValid());
+        
+        // Create a test TimePosition
+        auto time_frame = createTestTimeFrame();
+        TimePosition test_pos(TimeFrameIndex(500), time_frame);
+        
+        // Emit the signal directly (simulating what the internal OpenGL widget would do)
+        emit event_plot_widget.timePositionSelected(test_pos);
+        QApplication::processEvents();
+        
+        REQUIRE(time_position_spy.count() == 1);
+        
+        // Verify the position
+        TimePosition received_pos = time_position_spy.at(0).at(0).value<TimePosition>();
+        REQUIRE(received_pos.index == TimeFrameIndex(500));
+    }
+    
+    SECTION("multiple timePositionSelected emissions are tracked") {
+        EventPlotWidget event_plot_widget(data_manager, nullptr);
+        
+        QSignalSpy time_position_spy(&event_plot_widget, &EventPlotWidget::timePositionSelected);
+        
+        auto time_frame = createTestTimeFrame();
+        
+        // Emit multiple time positions
+        emit event_plot_widget.timePositionSelected(TimePosition(TimeFrameIndex(100), time_frame));
+        emit event_plot_widget.timePositionSelected(TimePosition(TimeFrameIndex(200), time_frame));
+        emit event_plot_widget.timePositionSelected(TimePosition(TimeFrameIndex(300), time_frame));
+        QApplication::processEvents();
+        
+        REQUIRE(time_position_spy.count() == 3);
+        
+        // Verify last emission
+        TimePosition last_pos = time_position_spy.at(2).at(0).value<TimePosition>();
+        REQUIRE(last_pos.index == TimeFrameIndex(300));
+    }
+}
+
+// ==================== Event Selection Signal Tests ====================
+
+TEST_CASE("EventPlotWidget eventSelected signal", "[EventPlotWidget][Signals][ClickSelection]") {
+    // Create QApplication if it doesn't exist
+    int argc = 0;
+    QApplication app(argc, nullptr);
+    
+    auto data_manager = std::make_shared<DataManager>();
+    
+    SECTION("eventSelected signal is forwarded from internal OpenGL widget") {
+        // Create EventPlotWidget
+        EventPlotWidget event_plot_widget(data_manager, nullptr);
+        
+        // Find the internal OpenGL widget via Qt's meta-object system
+        // The internal widget is named "EventPlotOpenGLWidget" by Qt's default naming
+        QObject * opengl_widget = nullptr;
+        auto children = event_plot_widget.findChildren<QWidget *>();
+        for (auto * child : children) {
+            if (QString(child->metaObject()->className()).contains("EventPlotOpenGLWidget")) {
+                opengl_widget = child;
+                break;
+            }
+        }
+        REQUIRE(opengl_widget != nullptr);
+        
+        // Set up signal spy on the parent widget's eventSelected signal
+        QSignalSpy event_selected_spy(&event_plot_widget, &EventPlotWidget::eventSelected);
+        REQUIRE(event_selected_spy.isValid());
+        
+        // Emit eventSelected from the internal OpenGL widget via Qt's signal system
+        int const test_trial_index = 5;
+        float const test_relative_time = 123.45f;
+        QString const test_series_key = "test_spikes";
+        
+        // Use QMetaObject::invokeMethod to emit the signal
+        bool invoke_result = QMetaObject::invokeMethod(
+            opengl_widget,
+            "eventSelected",
+            Qt::DirectConnection,
+            Q_ARG(int, test_trial_index),
+            Q_ARG(float, test_relative_time),
+            Q_ARG(QString const &, test_series_key)
+        );
+        REQUIRE(invoke_result);
+        QApplication::processEvents();
+        
+        // Verify the signal was forwarded
+        REQUIRE(event_selected_spy.count() == 1);
+        
+        // Verify the signal parameters were forwarded correctly
+        REQUIRE(event_selected_spy.at(0).at(0).toInt() == test_trial_index);
+        REQUIRE(event_selected_spy.at(0).at(1).toFloat() == test_relative_time);
+        REQUIRE(event_selected_spy.at(0).at(2).toString() == test_series_key);
+    }
+    
+    SECTION("multiple event selections are tracked") {
+        EventPlotWidget event_plot_widget(data_manager, nullptr);
+        
+        // Find the internal OpenGL widget
+        QObject * opengl_widget = nullptr;
+        auto children = event_plot_widget.findChildren<QWidget *>();
+        for (auto * child : children) {
+            if (QString(child->metaObject()->className()).contains("EventPlotOpenGLWidget")) {
+                opengl_widget = child;
+                break;
+            }
+        }
+        REQUIRE(opengl_widget != nullptr);
+        
+        QSignalSpy event_selected_spy(&event_plot_widget, &EventPlotWidget::eventSelected);
+        
+        // Emit multiple event selections via meta-object invoke
+        QString key1 = "spikes_1";
+        QString key2 = "spikes_2";
+        QMetaObject::invokeMethod(opengl_widget, "eventSelected", Qt::DirectConnection,
+                                  Q_ARG(int, 0), Q_ARG(float, -50.0f), Q_ARG(QString const &, key1));
+        QMetaObject::invokeMethod(opengl_widget, "eventSelected", Qt::DirectConnection,
+                                  Q_ARG(int, 3), Q_ARG(float, 0.0f), Q_ARG(QString const &, key1));
+        QMetaObject::invokeMethod(opengl_widget, "eventSelected", Qt::DirectConnection,
+                                  Q_ARG(int, 7), Q_ARG(float, 150.0f), Q_ARG(QString const &, key2));
+        QApplication::processEvents();
+        
+        // Verify all signals were forwarded
+        REQUIRE(event_selected_spy.count() == 3);
+        
+        // Verify last selection
+        REQUIRE(event_selected_spy.at(2).at(0).toInt() == 7);
+        REQUIRE(event_selected_spy.at(2).at(1).toFloat() == 150.0f);
+        REQUIRE(event_selected_spy.at(2).at(2).toString() == "spikes_2");
+    }
+    
+    SECTION("eventSelected and timePositionSelected signals are independent") {
+        EventPlotWidget event_plot_widget(data_manager, nullptr);
+        
+        // Find the internal OpenGL widget
+        QObject * opengl_widget = nullptr;
+        auto children = event_plot_widget.findChildren<QWidget *>();
+        for (auto * child : children) {
+            if (QString(child->metaObject()->className()).contains("EventPlotOpenGLWidget")) {
+                opengl_widget = child;
+                break;
+            }
+        }
+        REQUIRE(opengl_widget != nullptr);
+        
+        QSignalSpy event_selected_spy(&event_plot_widget, &EventPlotWidget::eventSelected);
+        QSignalSpy time_position_spy(&event_plot_widget, &EventPlotWidget::timePositionSelected);
+        
+        auto time_frame = createTestTimeFrame();
+        
+        // Emit eventSelected (single click)
+        QString events_key = "events";
+        QMetaObject::invokeMethod(opengl_widget, "eventSelected", Qt::DirectConnection,
+                                  Q_ARG(int, 2), Q_ARG(float, 100.0f), Q_ARG(QString const &, events_key));
+        
+        // Emit timePositionSelected (double click navigates to time)
+        emit event_plot_widget.timePositionSelected(TimePosition(TimeFrameIndex(500), time_frame));
+        
+        QApplication::processEvents();
+        
+        // Verify signals are independent
+        REQUIRE(event_selected_spy.count() == 1);
+        REQUIRE(time_position_spy.count() == 1);
+        
+        // eventSelected should have trial info
+        REQUIRE(event_selected_spy.at(0).at(0).toInt() == 2);
+        
+        // timePositionSelected should have TimePosition
+        TimePosition received_pos = time_position_spy.at(0).at(0).value<TimePosition>();
+        REQUIRE(received_pos.index == TimeFrameIndex(500));
     }
 }

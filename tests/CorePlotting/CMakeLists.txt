@@ -25,6 +25,7 @@ add_executable(test_coreplotting
     TimeFrameAdapters.test.cpp
     HitTestResult.test.cpp
     SceneHitTester.test.cpp
+    SceneBuilder.test.cpp
     Mappers.test.cpp
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp

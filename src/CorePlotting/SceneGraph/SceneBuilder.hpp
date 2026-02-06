@@ -312,6 +312,9 @@ private:
     std::map<size_t, std::string> _rectangle_batch_key_map;
     std::map<size_t, std::string> _glyph_batch_key_map;
 
+    // Mapping from EntityId to series_key (for QuadTree hit test lookup)
+    std::unordered_map<EntityId, std::string> _entity_to_series_key;
+
     // Internal helper to build spatial index from pending inserts
     void buildSpatialIndexFromPending();
 };
@@ -339,6 +342,9 @@ SceneBuilder & SceneBuilder::addGlyphs(
         
         // Queue for spatial index
         _pending_spatial_inserts.push_back({elem.x, elem.y, elem.entity_id});
+        
+        // Track entity → series_key mapping for hit test result enrichment
+        _entity_to_series_key[elem.entity_id] = series_key;
     }
 
     // Track batch key mapping
@@ -369,6 +375,9 @@ SceneBuilder & SceneBuilder::addRectangles(
         float const center_x = elem.x + elem.width / 2.0f;
         float const center_y = elem.y + elem.height / 2.0f;
         _pending_spatial_inserts.push_back({center_x, center_y, elem.entity_id});
+        
+        // Track entity → series_key mapping for hit test result enrichment
+        _entity_to_series_key[elem.entity_id] = series_key;
     }
 
     // Track batch key mapping

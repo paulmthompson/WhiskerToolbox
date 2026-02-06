@@ -47,9 +47,16 @@ HitTestResult SceneHitTester::queryQuadTree(
         float dy = nearest->y - world_y;
         float dist = std::sqrt(dx * dx + dy * dy);
 
-        // Create an event hit result (QuadTree stores data as EntityId)
+        // Lookup series_key from entity_to_series_key map
+        std::string series_key;
+        auto it = scene.entity_to_series_key.find(nearest->data);
+        if (it != scene.entity_to_series_key.end()) {
+            series_key = it->second;
+        }
+
+        // Create an event hit result
         return HitTestResult::eventHit(
-                "",           // Series key would need to be stored in QuadTree or looked up separately
+                series_key,
                 nearest->data,// QuadTree<EntityId> stores EntityId in .data
                 dist,
                 nearest->x,

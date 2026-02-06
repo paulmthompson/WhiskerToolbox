@@ -62,6 +62,10 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
                 emit timePositionSelected(TimePosition(time_frame_index));
             });
 
+    // Forward event selection signal
+    connect(_opengl_widget, &EventPlotOpenGLWidget::eventSelected,
+            this, &EventPlotWidget::eventSelected);
+
     // Connect trial count changes to update vertical axis
     connect(_opengl_widget, &EventPlotOpenGLWidget::trialCountChanged,
             this, [this](size_t count) {
