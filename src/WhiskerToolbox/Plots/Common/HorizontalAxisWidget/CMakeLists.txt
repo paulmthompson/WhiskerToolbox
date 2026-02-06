@@ -2,8 +2,13 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 
 set(HORIZONTAL_AXIS_WIDGET_SOURCES
 
+        Core/HorizontalAxisState.cpp
+        Core/HorizontalAxisState.hpp
+        Core/HorizontalAxisStateData.hpp
         HorizontalAxisWidget.cpp
         HorizontalAxisWidget.hpp
+        HorizontalAxisWithRangeControls.cpp
+        HorizontalAxisWithRangeControls.hpp
 
 )
 
