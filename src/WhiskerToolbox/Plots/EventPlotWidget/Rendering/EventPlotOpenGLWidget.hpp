@@ -199,6 +199,9 @@ private:
     QTimer * _tooltip_timer{nullptr};
     std::optional<QPoint> _pending_tooltip_pos;
 
+    // Cached alignment times for relative→absolute time conversion
+    std::vector<int64_t> _cached_alignment_times;  ///< Per-trial alignment times (absolute)
+
     // Widget dimensions
     int _widget_width{1};
     int _widget_height{1};

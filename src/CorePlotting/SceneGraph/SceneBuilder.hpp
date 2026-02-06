@@ -7,6 +7,7 @@
 #include "Mappers/MappedElement.hpp"
 #include "RenderablePrimitives.hpp"
 
+#include <cassert>
 #include <map>
 #include <optional>
 #include <ranges>
@@ -351,7 +352,14 @@ SceneBuilder & SceneBuilder::addGlyphs(
     size_t const batch_index = _scene.glyph_batches.size();
     _glyph_batch_key_map[batch_index] = series_key;
 
+    // Assertion: batch.positions and _pending_spatial_inserts should grow together
+    // If this fires, something is wrong with range iteration
+    size_t const batch_size = batch.positions.size();
     _scene.glyph_batches.push_back(std::move(batch));
+    
+    assert((!_bounds.has_value() || _pending_spatial_inserts.size() >= batch_size) &&
+           "SceneBuilder: _pending_spatial_inserts not populated - template instantiation issue?");
+    
     _has_discrete_elements = true;
 
     return *this;

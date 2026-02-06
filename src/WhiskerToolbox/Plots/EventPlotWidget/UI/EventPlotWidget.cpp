@@ -3,6 +3,7 @@
 #include "Core/EventPlotState.hpp"
 #include "Core/ViewStateAdapter.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Rendering/EventPlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
@@ -58,8 +59,16 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
 
     // Forward signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::eventDoubleClicked,
-            this, [this](int64_t time_frame_index, QString const & /* series_key */) {
-                emit timePositionSelected(TimePosition(time_frame_index));
+            this, [this](int64_t time_frame_index, QString const & series_key) {
+                // Get the TimeFrame from the series via DataManager
+                std::shared_ptr<TimeFrame> time_frame;
+                if (_data_manager && !series_key.isEmpty()) {
+                   auto time_key = _data_manager->getTimeKey(series_key.toStdString());
+                   if (!time_key.empty()) {
+                       time_frame = _data_manager->getTime(time_key);
+                   }
+                }
+                emit timePositionSelected(TimePosition(TimeFrameIndex(time_frame_index), time_frame));
             });
 
     // Forward event selection signal

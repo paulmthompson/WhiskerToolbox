@@ -16,11 +16,12 @@ RenderableScene makeTestSceneWithEvents() {
     RenderableScene scene;
     
     // Create QuadTree with some events using BoundingBox constructor
-    BoundingBox bounds(-100.0f, -1.0f, 200.0f, 1.0f);
+    // Bounds must contain all points to be inserted (precondition of insert)
+    BoundingBox bounds(-100.0f, -1.0f, 400.0f, 1.0f);
     auto tree = std::make_unique<QuadTree<EntityId>>(bounds);
     tree->insert(100.0f, 0.5f, EntityId{1});  // Event at time 100, y=0.5
     tree->insert(200.0f, 0.5f, EntityId{2});  // Event at time 200, y=0.5
-    tree->insert(300.0f, -0.3f, EntityId{3}); // Event at time 300, y=-0.3 (outside bounds but may still insert)
+    tree->insert(300.0f, -0.3f, EntityId{3}); // Event at time 300, y=-0.3
     
     scene.spatial_index = std::move(tree);
     scene.view_matrix = glm::mat4(1.0f);

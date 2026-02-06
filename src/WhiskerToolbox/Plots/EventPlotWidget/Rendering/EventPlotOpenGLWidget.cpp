@@ -246,9 +246,30 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
         // Find event near click position
         auto hit = findEventNear(event->pos());
         if (hit) {
-            // TODO: Get actual time frame index from gathered data
-            // For now, emit position
-            emit eventDoubleClicked(static_cast<int64_t>(world.x()), "");
+            int trial_index = hit->first;
+            float relative_time = static_cast<float>(world.x());
+            
+            // Convert relative time to absolute TimeFrameIndex
+            // The alignment time is the absolute time of t=0 for this trial
+            if (trial_index >= 0 && 
+                static_cast<size_t>(trial_index) < _cached_alignment_times.size()) {
+                int64_t alignment_time = _cached_alignment_times[trial_index];
+                int64_t absolute_time = alignment_time + static_cast<int64_t>(relative_time);
+                
+                // Get series key for the signal
+                QString series_key;
+                if (_state) {
+                    auto event_names = _state->getPlotEventNames();
+                    if (!event_names.empty()) {
+                        auto options = _state->getPlotEventOptions(event_names.front());
+                        if (options) {
+                            series_key = QString::fromStdString(options->event_key);
+                        }
+                    }
+                }
+                
+                emit eventDoubleClicked(absolute_time, series_key);
+            }
         }
     }
     event->accept();
@@ -321,6 +342,7 @@ void EventPlotOpenGLWidget::onTooltipTimer()
 void EventPlotOpenGLWidget::rebuildScene()
 {
     if (!_state || !_data_manager) {
+        _cached_alignment_times.clear();
         _scene_renderer.clearScene();
         return;
     }
@@ -329,6 +351,7 @@ void EventPlotOpenGLWidget::rebuildScene()
     GatherResult<DigitalEventSeries> gathered = gatherTrialData();
 
     if (gathered.empty()) {
+        _cached_alignment_times.clear();
         _scene_renderer.clearScene();
         return;
     }
@@ -339,8 +362,16 @@ void EventPlotOpenGLWidget::rebuildScene()
         gathered = applySorting(gathered, sorting_mode);
     }
 
-    // Build layout request
+    // Cache alignment times for relative→absolute time conversion during interaction
+    // Must happen AFTER sorting so indices match the displayed trial order
     size_t num_trials = gathered.size();
+    _cached_alignment_times.clear();
+    _cached_alignment_times.reserve(num_trials);
+    for (size_t i = 0; i < num_trials; ++i) {
+        _cached_alignment_times.push_back(gathered.alignmentTimeAt(i));
+    }
+
+    // Build layout request
     CorePlotting::LayoutRequest layout_request;
     layout_request.viewport_y_min = -1.0f;
     layout_request.viewport_y_max = 1.0f;
@@ -355,11 +386,12 @@ void EventPlotOpenGLWidget::rebuildScene()
     _layout_response = _layout_strategy.compute(layout_request);
 
     // Build scene with SceneBuilder
+    // BoundingBox constructor: (min_x, min_y, max_x, max_y)
     BoundingBox bounds{
-        static_cast<float>(_cached_view_state.x_min),
-        static_cast<float>(_cached_view_state.x_max),
-        -1.0f,
-        1.0f
+        static_cast<float>(_cached_view_state.x_min),  // min_x (time start)
+        -1.0f,                                          // min_y (viewport bottom)
+        static_cast<float>(_cached_view_state.x_max),  // max_x (time end)
+        1.0f                                            // max_y (viewport top)
     };
 
     CorePlotting::SceneBuilder builder;
