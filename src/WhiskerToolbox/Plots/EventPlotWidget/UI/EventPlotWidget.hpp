@@ -18,6 +18,8 @@
 
 class DataManager;
 class RelativeTimeAxisWidget;
+class RelativeTimeAxisRangeControls;
+class RelativeTimeAxisRangeState;
 class VerticalAxisWidget;
 class EventPlotOpenGLWidget;
 class EventPlotState;
@@ -65,6 +67,18 @@ public:
      */
     [[nodiscard]] EventPlotState * state();
 
+    /**
+     * @brief Get the range controls widget (for placement in properties panel)
+     * @return Pointer to the range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] RelativeTimeAxisRangeControls * getRangeControls() const;
+
+    /**
+     * @brief Get the range state (for external updates, e.g., from OpenGL scrolling)
+     * @return Shared pointer to the range state
+     */
+    [[nodiscard]] std::shared_ptr<RelativeTimeAxisRangeState> getRangeState() const;
+
 signals:
     /**
      * @brief Emitted when a time position is selected in the view
@@ -95,6 +109,12 @@ private:
 
     /// Time axis widget below the plot
     RelativeTimeAxisWidget * _axis_widget;
+
+    /// Range controls widget (can be placed in properties panel)
+    RelativeTimeAxisRangeControls * _range_controls;
+
+    /// Shared range state for coordinating axis and controls
+    std::shared_ptr<RelativeTimeAxisRangeState> _range_state;
 
     /// Vertical axis widget on the left side
     VerticalAxisWidget * _vertical_axis_widget;

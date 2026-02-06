@@ -4,6 +4,8 @@ set(RELATIVE_TIME_AXIS_WIDGET_SOURCES
 
         RelativeTimeAxisWidget.cpp
         RelativeTimeAxisWidget.hpp
+        RelativeTimeAxisWithRangeControls.cpp
+        RelativeTimeAxisWithRangeControls.hpp
 
 )
 

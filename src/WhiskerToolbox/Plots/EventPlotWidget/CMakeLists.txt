@@ -46,6 +46,7 @@ target_link_libraries(EventPlotWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(EventPlotWidget PRIVATE CorePlotting)
 target_link_libraries(EventPlotWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(EventPlotWidget PRIVATE PlottingOpenGL)
+target_link_libraries(EventPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(EventPlotWidget PRIVATE glm::glm)
 
 target_include_directories(EventPlotWidget PUBLIC

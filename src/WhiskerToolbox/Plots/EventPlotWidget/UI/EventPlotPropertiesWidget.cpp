@@ -4,6 +4,9 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Collapsible_Widget/Section.hpp"
+#include "UI/EventPlotWidget.hpp"
 
 #include "ui_EventPlotPropertiesWidget.h"
 
@@ -21,6 +24,10 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
       ui(new Ui::EventPlotPropertiesWidget),
       _state(state),
       _data_manager(data_manager),
+      _alignment_widget(nullptr),
+      _plot_widget(nullptr),
+      _range_controls(nullptr),
+      _range_controls_section(nullptr),
       _dm_observer_id(-1) {
     ui->setupUi(this);
 
@@ -92,6 +99,33 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
 
         // Initialize UI from state
         _updateUIFromState();
+    }
+}
+
+void EventPlotPropertiesWidget::setPlotWidget(EventPlotWidget * plot_widget)
+{
+    _plot_widget = plot_widget;
+
+    if (!_plot_widget) {
+        return;
+    }
+
+    // Get the range state from the plot widget
+    auto range_state = _plot_widget->getRangeState();
+
+    if (range_state) {
+        // Create a collapsible section for the range controls
+        _range_controls_section = new Section(this, "Time Axis Range Controls");
+        
+        // Create new range controls that share the same state
+        _range_controls = new RelativeTimeAxisRangeControls(range_state, _range_controls_section);
+        
+        // Set up the collapsible section (it starts collapsed by default)
+        _range_controls_section->autoSetContentLayout();
+        
+        // Add the section to the main layout (after alignment widget)
+        int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+        ui->main_layout->insertWidget(insert_index, _range_controls_section);
     }
 }
 

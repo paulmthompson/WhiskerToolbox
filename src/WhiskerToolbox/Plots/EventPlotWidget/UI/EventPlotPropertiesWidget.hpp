@@ -20,7 +20,10 @@
 #include <memory>
 
 class DataManager;
+class EventPlotWidget;
 class PlotAlignmentWidget;
+class RelativeTimeAxisRangeControls;
+class Section;
 
 namespace Ui {
 class EventPlotPropertiesWidget;
@@ -60,6 +63,12 @@ public:
      * @return Shared pointer to DataManager
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
+
+    /**
+     * @brief Set the EventPlotWidget to connect range controls
+     * @param plot_widget The EventPlotWidget instance
+     */
+    void setPlotWidget(EventPlotWidget * plot_widget);
 
 private slots:
     /**
@@ -179,6 +188,9 @@ private:
     std::shared_ptr<EventPlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
+    EventPlotWidget * _plot_widget;
+    RelativeTimeAxisRangeControls * _range_controls;
+    Section * _range_controls_section;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;
