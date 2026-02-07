@@ -7,6 +7,7 @@ set(digital_subdirectory_sources
 )
 
 add_library(DigitalTimeSeries STATIC ${digital_subdirectory_sources})
+set_target_properties(DigitalTimeSeries PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Set up include directories
 target_include_directories(DigitalTimeSeries PUBLIC

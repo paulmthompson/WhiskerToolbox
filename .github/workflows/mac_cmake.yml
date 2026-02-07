@@ -76,10 +76,10 @@ jobs:
       - name: Setup headless display
         uses: pyvista/setup-headless-display-action@v2
 
-      - name: Install nasm on Mac
+      - name: Install nasm (ffmpeg) and autotools (python) on Mac
         if: runner.os == 'macOS'
         run: |
-          brew install nasm libomp
+          brew install nasm libomp autoconf automake autoconf-archive
           echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
       - name: Configure CMake
