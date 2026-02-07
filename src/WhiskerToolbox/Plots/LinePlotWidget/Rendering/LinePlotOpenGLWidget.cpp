@@ -41,7 +41,6 @@ LinePlotOpenGLWidget::~LinePlotOpenGLWidget()
 
 void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
 {
-    // Disconnect old state signals
     if (_state) {
         _state->disconnect(this);
     }
@@ -49,11 +48,17 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
     _state = state;
 
     if (_state) {
-        // Connect to state signals
+        _cached_view_state = _state->viewState();
+
         connect(_state.get(), &LinePlotState::stateChanged,
                 this, &LinePlotOpenGLWidget::onStateChanged);
+        connect(_state.get(), &LinePlotState::viewStateChanged,
+                this, &LinePlotOpenGLWidget::onViewStateChanged);
         connect(_state.get(), &LinePlotState::windowSizeChanged,
-                this, &LinePlotOpenGLWidget::onWindowSizeChanged);
+                this, [this](double /* window_size */) {
+                    _scene_dirty = true;
+                    update();
+                });
         connect(_state.get(), &LinePlotState::plotSeriesAdded,
                 this, [this](QString const & /* series_name */) {
                     _scene_dirty = true;
@@ -70,8 +75,8 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
                     update();
                 });
 
-        // Initial sync
         _scene_dirty = true;
+        updateMatrices();
     }
 }
 
@@ -85,12 +90,10 @@ void LinePlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_mana
 std::pair<double, double> LinePlotOpenGLWidget::getViewBounds() const
 {
     if (!_state) {
-        return {-500.0, 500.0};  // Default bounds
+        return {-500.0, 500.0};
     }
-
-    double window_size = _state->getWindowSize();
-    double half_window = window_size / 2.0;
-    return {-half_window, half_window};
+    auto const & vs = _state->viewState();
+    return {vs.x_min, vs.x_max};
 }
 
 // =============================================================================
@@ -161,22 +164,32 @@ void LinePlotOpenGLWidget::resizeGL(int w, int h)
 void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
-        _is_panning = true;
+        _is_panning = false;
+        _click_start_pos = event->pos();
         _last_mouse_pos = event->pos();
-        setCursor(Qt::ClosedHandCursor);
     }
     event->accept();
 }
 
 void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
-    if (_is_panning) {
-        int delta_x = event->pos().x() - _last_mouse_pos.x();
-        int delta_y = event->pos().y() - _last_mouse_pos.y();
-        handlePanning(delta_x, delta_y);
+    if (event->buttons() & Qt::LeftButton) {
+        int const dx = event->pos().x() - _click_start_pos.x();
+        int const dy = event->pos().y() - _click_start_pos.y();
+        int const distance_sq = dx * dx + dy * dy;
+
+        if (!_is_panning && distance_sq > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+            _is_panning = true;
+            setCursor(Qt::ClosedHandCursor);
+        }
+
+        if (_is_panning) {
+            int const delta_x = event->pos().x() - _last_mouse_pos.x();
+            int const delta_y = event->pos().y() - _last_mouse_pos.y();
+            handlePanning(delta_x, delta_y);
+        }
         _last_mouse_pos = event->pos();
     }
-
     event->accept();
 }
 
@@ -201,9 +214,10 @@ void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 
 void LinePlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 {
-    float delta = event->angleDelta().y() / 120.0f;
-    bool y_only = event->modifiers() & Qt::ShiftModifier;
-    handleZoom(delta, y_only);
+    float const delta = event->angleDelta().y() / 120.0f;
+    bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
+    bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
+    handleZoom(delta, y_only, both_axes);
     event->accept();
 }
 
@@ -217,11 +231,19 @@ void LinePlotOpenGLWidget::onStateChanged()
     update();
 }
 
+void LinePlotOpenGLWidget::onViewStateChanged()
+{
+    if (_state) {
+        _cached_view_state = _state->viewState();
+    }
+    updateMatrices();
+    update();
+    emit viewBoundsChanged();
+}
+
 void LinePlotOpenGLWidget::onWindowSizeChanged(double /* window_size */)
 {
     _scene_dirty = true;
-    updateMatrices();
-    emit viewBoundsChanged();
     update();
 }
 
@@ -236,23 +258,32 @@ void LinePlotOpenGLWidget::rebuildScene()
 
 void LinePlotOpenGLWidget::updateMatrices()
 {
-    if (!_state) {
-        return;
+    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+
+    float const zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
+    float y_min = 0.0f;
+    float y_max = 100.0f;
+    if (_state) {
+        auto * vas = _state->verticalAxisState();
+        if (vas) {
+            y_min = static_cast<float>(vas->getYMin());
+            y_max = static_cast<float>(vas->getYMax());
+        }
     }
+    float const y_range = y_max - y_min;
+    float const y_center = (y_min + y_max) / 2.0f;
+    float const zoomed_y_range = y_range / static_cast<float>(_cached_view_state.y_zoom);
 
-    // Get window size for bounds
-    double window_size = _state->getWindowSize();
-    double half_window = window_size / 2.0;
+    float const pan_x = static_cast<float>(_cached_view_state.x_pan);
+    float const pan_y = static_cast<float>(_cached_view_state.y_pan);
 
-    // Build orthographic projection
-    _projection_matrix = glm::ortho(
-        static_cast<float>(-half_window),
-        static_cast<float>(half_window),
-        -1.0f,
-        1.0f,
-        -1.0f,
-        1.0f
-    );
+    float const left = x_center - zoomed_x_range / 2.0f + pan_x;
+    float const right = x_center + zoomed_x_range / 2.0f + pan_x;
+    float const bottom = y_center - zoomed_y_range / 2.0f + pan_y;
+    float const top = y_center + zoomed_y_range / 2.0f + pan_y;
+
+    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -270,16 +301,43 @@ QPointF LinePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
     return QPointF(world.x, world.y);
 }
 
-void LinePlotOpenGLWidget::handlePanning(int /* delta_x */, int /* delta_y */)
+void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
 {
-    // TODO: Implement panning
-    // For now, panning is not implemented
+    if (!_state) {
+        return;
+    }
+
+    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const world_per_pixel_x = x_range / (_widget_width * static_cast<float>(_cached_view_state.x_zoom));
+
+    float y_range = 100.0f;
+    if (auto * vas = _state->verticalAxisState()) {
+        y_range = static_cast<float>(vas->getYMax() - vas->getYMin());
+    }
+    float const world_per_pixel_y = y_range / (_widget_height * static_cast<float>(_cached_view_state.y_zoom));
+
+    float const new_pan_x = static_cast<float>(_cached_view_state.x_pan) - delta_x * world_per_pixel_x;
+    float const new_pan_y = static_cast<float>(_cached_view_state.y_pan) + delta_y * world_per_pixel_y;
+
+    _state->setPan(new_pan_x, new_pan_y);
 }
 
-void LinePlotOpenGLWidget::handleZoom(float /* delta */, bool /* y_only */)
+void LinePlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
 {
-    // TODO: Implement zooming
-    // For now, zooming is not implemented
+    if (!_state) {
+        return;
+    }
+
+    float const factor = std::pow(1.1f, delta);
+
+    if (y_only) {
+        _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else if (both_axes) {
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
+        _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else {
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
+    }
 }
 
 GatherResult<AnalogTimeSeries> LinePlotOpenGLWidget::gatherTrialData() const

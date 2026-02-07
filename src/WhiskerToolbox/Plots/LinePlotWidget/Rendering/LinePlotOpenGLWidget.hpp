@@ -121,6 +121,11 @@ private slots:
     void onStateChanged();
 
     /**
+     * @brief Update matrices and repaint when view state changes
+     */
+    void onViewStateChanged();
+
+    /**
      * @brief Handle window size changes
      */
     void onWindowSizeChanged(double window_size);
@@ -136,13 +141,16 @@ private:
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
 
-    // View matrices
+    // View state cache (single source of truth is LinePlotState)
+    LinePlotViewState _cached_view_state;
     glm::mat4 _view_matrix{1.0f};
     glm::mat4 _projection_matrix{1.0f};
 
     // Interaction state
     bool _is_panning{false};
+    QPoint _click_start_pos;
     QPoint _last_mouse_pos;
+    static constexpr int DRAG_THRESHOLD = 4;
 
     // Widget dimensions
     int _widget_width{1};
@@ -176,8 +184,11 @@ private:
 
     /**
      * @brief Handle zoom via wheel
+     * @param delta Zoom delta (e.g. from wheel angle)
+     * @param y_only If true, zoom Y axis only; if false, zoom X only
+     * @param both_axes If true (with Ctrl), zoom both axes
      */
-    void handleZoom(float delta, bool y_only);
+    void handleZoom(float delta, bool y_only, bool both_axes);
 
     /**
      * @brief Gather trial-aligned data for building scene

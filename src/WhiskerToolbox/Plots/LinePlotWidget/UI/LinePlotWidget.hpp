@@ -18,7 +18,11 @@
 class DataManager;
 class LinePlotState;
 class LinePlotOpenGLWidget;
+class RelativeTimeAxisRangeControls;
 class RelativeTimeAxisWidget;
+class VerticalAxisRangeControls;
+class VerticalAxisWidget;
+
 class QResizeEvent;
 
 namespace Ui {
@@ -64,6 +68,18 @@ public:
      */
     [[nodiscard]] LinePlotState * state();
 
+    /**
+     * @brief Get the range controls widget (for placement in properties panel)
+     * @return Pointer to the range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] RelativeTimeAxisRangeControls * getRangeControls() const;
+
+    /**
+     * @brief Get the vertical axis range controls widget (for placement in properties panel)
+     * @return Pointer to the vertical axis range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
 signals:
     /**
      * @brief Emitted when a time position is selected in the view
@@ -71,21 +87,31 @@ signals:
      */
     void timePositionSelected(TimePosition position);
 
-private:
+protected:
     void resizeEvent(QResizeEvent * event) override;
 
 private:
+    void createTimeAxisIfNeeded();
+    void wireTimeAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncTimeAxisRange();
+    void syncVerticalAxisRange();
+
+    [[nodiscard]] std::pair<double, double> computeVisibleTimeRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleVerticalRange() const;
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::LinePlotWidget * ui;
 
-    /// Serializable state shared with properties widget
     std::shared_ptr<LinePlotState> _state;
-
-    /// OpenGL widget for rendering the line plot
     LinePlotOpenGLWidget * _opengl_widget;
 
-    /// Axis widget for displaying relative time axis
     RelativeTimeAxisWidget * _axis_widget;
+    RelativeTimeAxisRangeControls * _range_controls;
+
+    VerticalAxisWidget * _vertical_axis_widget;
+    VerticalAxisRangeControls * _vertical_range_controls;
 };
 
 #endif// LINE_PLOT_WIDGET_HPP
