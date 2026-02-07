@@ -250,6 +250,11 @@ std::pair<double, double> TemporalProjectionViewWidget::computeVisibleYRange() c
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
+void TemporalProjectionViewWidget::_onTimeChanged(TimePosition /*position*/)
+{
+    // Empty for now; can update view when time changes from EditorRegistry.
+}
+
 TemporalProjectionViewState * TemporalProjectionViewWidget::state()
 {
     return _state.get();

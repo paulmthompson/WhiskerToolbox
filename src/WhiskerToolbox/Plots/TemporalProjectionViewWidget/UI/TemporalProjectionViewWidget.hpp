@@ -57,6 +57,16 @@ public:
     [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
 
+    /**
+     * @brief Handle time changes from EditorRegistry
+     *
+     * Slot for global time changes (e.g. TimeScrollBar). Can be used to update
+     * the view when time changes from other sources.
+     *
+     * @param position The new TimePosition
+     */
+    void _onTimeChanged(TimePosition position);
+
 signals:
     void timePositionSelected(TimePosition position);
 
