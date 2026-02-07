@@ -21,6 +21,8 @@ set(COREPLOTTING_SOURCES
     # CoordinateTransform
     CoordinateTransform/InverseTransform.cpp 
     CoordinateTransform/InverseTransform.hpp
+    CoordinateTransform/AxisMapping.hpp
+    CoordinateTransform/AxisMapping.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/TimeRange.hpp

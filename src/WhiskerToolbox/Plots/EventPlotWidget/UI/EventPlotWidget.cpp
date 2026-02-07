@@ -2,6 +2,7 @@
 
 #include "Core/EventPlotState.hpp"
 #include "Core/ViewStateAdapter.hpp"
+#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
@@ -199,12 +200,29 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
     // Set up vertical axis with RangeGetter that computes visible trial range
     // based on Y zoom and pan from the view state
     if (_vertical_axis_widget && _state) {
+
+        // When trial count changes, update the axis mapping so labels/conversions are correct
+        connect(_opengl_widget, &EventPlotOpenGLWidget::trialCountChanged,
+                this, [this](size_t count) {
+                    if (count > 0) {
+                        _vertical_axis_widget->setAxisMapping(
+                            CorePlotting::trialIndexAxis(count));
+                    }
+                });
+
+        // Set initial mapping if trial count is known
+        if (_trial_count > 0) {
+            _vertical_axis_widget->setAxisMapping(
+                CorePlotting::trialIndexAxis(_trial_count));
+        }
+
         _vertical_axis_widget->setRangeGetter([this]() -> std::pair<double, double> {
             if (_trial_count == 0) {
                 return {0.0, 0.0};
             }
 
             auto const & view_state = _state->viewState();
+            auto const mapping = CorePlotting::trialIndexAxis(_trial_count);
 
             // Y world coordinates span [-1, 1] (full range)
             // With zoom/pan, the visible range becomes:
@@ -214,16 +232,8 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
             double const visible_bottom = -zoomed_half_range + view_state.y_pan;
             double const visible_top = zoomed_half_range + view_state.y_pan;
 
-            // Map world Y [-1, 1] to trial index [0, N-1]
-            // Row layout places trial 0 at bottom (Y = -1 + epsilon)
-            // and trial N-1 at top (Y = 1 - epsilon)
-            // Mapping: trial = (world_y + 1) / 2 * trial_count
-            auto world_y_to_trial = [this](double world_y) {
-                return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
-            };
-
-            double const min_trial = world_y_to_trial(visible_bottom);
-            double const max_trial = world_y_to_trial(visible_top);
+            double const min_trial = mapping.worldToDomain(visible_bottom);
+            double const max_trial = mapping.worldToDomain(visible_top);
 
             // Return visible range without clamping - axis should show
             // coordinates even when panned/zoomed beyond data bounds
@@ -253,12 +263,10 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
                     // Update the view state y_zoom and y_pan when user changes range
                     if (_state && _trial_count > 0) {
                         // Convert trial indices to world Y coordinates
-                        auto trial_to_world_y = [this](double trial) {
-                            return (trial / static_cast<double>(_trial_count)) * 2.0 - 1.0;
-                        };
+                        auto const mapping = CorePlotting::trialIndexAxis(_trial_count);
 
-                        double world_y_min = trial_to_world_y(min_range);
-                        double world_y_max = trial_to_world_y(max_range);
+                        double world_y_min = mapping.domainToWorld(min_range);
+                        double world_y_max = mapping.domainToWorld(max_range);
 
                         // Compute y_zoom and y_pan to show the desired range
                         // We want: visible_bottom = world_y_min, visible_top = world_y_max
@@ -286,21 +294,15 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
                         return {0.0, 0.0};
                     }
 
+                    auto const mapping = CorePlotting::trialIndexAxis(_trial_count);
+
                     // Compute visible trial range from view state
                     double const zoomed_half_range = 1.0 / view_state.y_zoom;
                     double const visible_bottom = -zoomed_half_range + view_state.y_pan;
                     double const visible_top = zoomed_half_range + view_state.y_pan;
 
-                    // Map world Y to trial index
-                    // Row layout places trial 0 at bottom (Y = -1 + epsilon)
-                    // and trial N-1 at top (Y = 1 - epsilon)
-                    // Mapping: trial = (world_y + 1) / 2 * trial_count
-                    auto world_y_to_trial = [this](double world_y) {
-                        return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
-                    };
-
-                    double const min_trial = world_y_to_trial(visible_bottom);
-                    double const max_trial = world_y_to_trial(visible_top);
+                    double const min_trial = mapping.worldToDomain(visible_bottom);
+                    double const max_trial = mapping.worldToDomain(visible_top);
 
                     return {
                             std::min(min_trial, max_trial),
@@ -318,14 +320,12 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
         // Initialize vertical range state from current view bounds
         if (_state && _vertical_axis_state && _trial_count > 0) {
             auto const & view_state = _state->viewState();
+            auto const mapping = CorePlotting::trialIndexAxis(_trial_count);
             double const zoomed_half_range = 1.0 / view_state.y_zoom;
             double const visible_bottom = -zoomed_half_range + view_state.y_pan;
             double const visible_top = zoomed_half_range + view_state.y_pan;
-            auto world_y_to_trial = [this](double world_y) {
-                return (world_y + 1.0) / 2.0 * static_cast<double>(_trial_count);
-            };
-            double const min_trial = world_y_to_trial(visible_bottom);
-            double const max_trial = world_y_to_trial(visible_top);
+            double const min_trial = mapping.worldToDomain(visible_bottom);
+            double const max_trial = mapping.worldToDomain(visible_top);
             _vertical_axis_state->setRangeSilent(
                     std::min(min_trial, max_trial),
                     std::max(min_trial, max_trial));

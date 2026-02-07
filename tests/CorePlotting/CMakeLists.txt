@@ -16,6 +16,7 @@ find_package(glm CONFIG REQUIRED)
 
 # Create CorePlotting test executable
 add_executable(test_coreplotting
+    AxisMapping.test.cpp
     TimeSeriesViewState.test.cpp
     TimeAxisCoordinates.test.cpp
     SeriesCoordinateQuery.test.cpp
