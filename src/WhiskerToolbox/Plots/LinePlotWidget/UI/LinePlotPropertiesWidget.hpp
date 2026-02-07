@@ -20,7 +20,11 @@
 #include <memory>
 
 class DataManager;
+class LinePlotWidget;
 class PlotAlignmentWidget;
+class RelativeTimeAxisRangeControls;
+class Section;
+class VerticalAxisRangeControls;
 
 namespace Ui {
 class LinePlotPropertiesWidget;
@@ -60,6 +64,12 @@ public:
      * @return Shared pointer to DataManager
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
+
+    /**
+     * @brief Set the LinePlotWidget to connect range controls
+     * @param plot_widget The LinePlotWidget instance
+     */
+    void setPlotWidget(LinePlotWidget * plot_widget);
 
 private slots:
     /**
@@ -144,6 +154,11 @@ private:
     std::shared_ptr<LinePlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
+    LinePlotWidget * _plot_widget;
+    RelativeTimeAxisRangeControls * _range_controls;
+    Section * _range_controls_section;
+    VerticalAxisRangeControls * _vertical_range_controls;
+    Section * _vertical_range_controls_section;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

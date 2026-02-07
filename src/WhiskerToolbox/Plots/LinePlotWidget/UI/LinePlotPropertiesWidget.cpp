@@ -4,6 +4,10 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Collapsible_Widget/Section.hpp"
+#include "UI/LinePlotWidget.hpp"
 
 #include "ui_LinePlotPropertiesWidget.h"
 
@@ -15,12 +19,18 @@
 #include <algorithm>
 
 LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState> state,
-                                                    std::shared_ptr<DataManager> data_manager,
-                                                    QWidget * parent)
+                                                  std::shared_ptr<DataManager> data_manager,
+                                                  QWidget * parent)
     : QWidget(parent),
       ui(new Ui::LinePlotPropertiesWidget),
       _state(state),
       _data_manager(data_manager),
+      _alignment_widget(nullptr),
+      _plot_widget(nullptr),
+      _range_controls(nullptr),
+      _range_controls_section(nullptr),
+      _vertical_range_controls(nullptr),
+      _vertical_range_controls_section(nullptr),
       _dm_observer_id(-1)
 {
     ui->setupUi(this);
@@ -89,6 +99,39 @@ LinePlotPropertiesWidget::~LinePlotPropertiesWidget()
         _data_manager->removeObserver(_dm_observer_id);
     }
     delete ui;
+}
+
+void LinePlotPropertiesWidget::setPlotWidget(LinePlotWidget * plot_widget)
+{
+    _plot_widget = plot_widget;
+
+    if (!_plot_widget) {
+        return;
+    }
+
+    if (_state) {
+        auto * time_axis_state = _state->relativeTimeAxisState();
+        if (time_axis_state) {
+            _range_controls_section = new Section(this, "Time Axis Range Controls");
+            _range_controls = new RelativeTimeAxisRangeControls(time_axis_state, _range_controls_section);
+            _range_controls_section->autoSetContentLayout();
+            int insert_index = ui->main_layout->indexOf(_alignment_widget) + 1;
+            ui->main_layout->insertWidget(insert_index, _range_controls_section);
+        }
+    }
+
+    if (_state) {
+        auto * vertical_axis_state = _state->verticalAxisState();
+        if (vertical_axis_state) {
+            _vertical_range_controls_section = new Section(this, "Vertical Axis Range Controls");
+            _vertical_range_controls = new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
+            _vertical_range_controls_section->autoSetContentLayout();
+            int insert_index = _range_controls_section
+                    ? ui->main_layout->indexOf(_range_controls_section) + 1
+                    : ui->main_layout->indexOf(_alignment_widget) + 1;
+            ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
+        }
+    }
 }
 
 void LinePlotPropertiesWidget::_populateAddSeriesComboBox()

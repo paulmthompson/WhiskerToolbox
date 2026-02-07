@@ -77,6 +77,8 @@ void registerTypes(EditorRegistry * registry,
 
                                 // Create the properties widget with the shared state
                                 auto * props = new LinePlotPropertiesWidget(state, dm);
+                                // Connect properties widget to view widget (for range controls)
+                                props->setPlotWidget(view);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the line plot to navigate to a specific time position
