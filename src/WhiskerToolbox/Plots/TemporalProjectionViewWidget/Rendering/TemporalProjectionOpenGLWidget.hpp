@@ -4,13 +4,11 @@
 /**
  * @file TemporalProjectionOpenGLWidget.hpp
  * @brief OpenGL-based temporal projection view visualization widget
- * 
- * This widget renders 2D projections of data collapsed across temporal windows.
- * 
- * Architecture:
- * - Receives TemporalProjectionViewState for axis ranges and plot options
- * - Uses OpenGL for efficient rendering
- * 
+ *
+ * Single source of truth: TemporalProjectionViewState (view state + axis states).
+ * Supports pan and zoom; updates state on interaction and reads from state for
+ * projection.
+ *
  * @see TemporalProjectionViewState
  */
 
@@ -19,6 +17,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
+#include <glm/glm.hpp>
 #include <memory>
 
 class QMouseEvent;
@@ -26,8 +25,9 @@ class QWheelEvent;
 
 /**
  * @brief OpenGL widget for rendering temporal projection views
- * 
- * Displays 2D projections with configurable axis ranges.
+ *
+ * Displays 2D projections with pan/zoom; state holds view transform and axis
+ * ranges.
  */
 class TemporalProjectionOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -36,35 +36,20 @@ public:
     explicit TemporalProjectionOpenGLWidget(QWidget * parent = nullptr);
     ~TemporalProjectionOpenGLWidget() override;
 
-    // Non-copyable, non-movable (GL resources)
     TemporalProjectionOpenGLWidget(TemporalProjectionOpenGLWidget const &) = delete;
     TemporalProjectionOpenGLWidget & operator=(TemporalProjectionOpenGLWidget const &) = delete;
     TemporalProjectionOpenGLWidget(TemporalProjectionOpenGLWidget &&) = delete;
     TemporalProjectionOpenGLWidget & operator=(TemporalProjectionOpenGLWidget &&) = delete;
 
-    /**
-     * @brief Set the TemporalProjectionViewState for this widget
-     * 
-     * The state provides axis ranges and plot options.
-     * The widget connects to state signals to react to changes.
-     * 
-     * @param state Shared pointer to TemporalProjectionViewState
-     */
     void setState(std::shared_ptr<TemporalProjectionViewState> state);
 
 signals:
-    /**
-     * @brief Emitted when view bounds change (axis ranges change)
-     */
     void viewBoundsChanged();
 
 protected:
-    // QOpenGLWidget overrides
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
-
-    // Mouse interaction
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -72,18 +57,27 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
 
 private slots:
-    /**
-     * @brief Update rendering when state changes
-     */
     void onStateChanged();
+    void onViewStateChanged();
 
 private:
-    // State management
     std::shared_ptr<TemporalProjectionViewState> _state;
-
-    // Widget dimensions
     int _widget_width{1};
     int _widget_height{1};
+
+    TemporalProjectionViewViewState _cached_view_state;
+    glm::mat4 _projection_matrix{1.0f};
+    glm::mat4 _view_matrix{1.0f};
+
+    bool _is_panning{false};
+    QPoint _click_start_pos;
+    QPoint _last_mouse_pos;
+    static constexpr int DRAG_THRESHOLD = 4;
+
+    void updateMatrices();
+    void handlePanning(int delta_x, int delta_y);
+    void handleZoom(float delta, bool y_only, bool both_axes);
+    [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
 };
 
-#endif // TEMPORAL_PROJECTION_OPENGL_WIDGET_HPP
+#endif  // TEMPORAL_PROJECTION_OPENGL_WIDGET_HPP
