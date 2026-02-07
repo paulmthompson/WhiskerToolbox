@@ -1,21 +1,6 @@
 #ifndef HEATMAP_OPENGLWIDGET_HPP
 #define HEATMAP_OPENGLWIDGET_HPP
 
-/**
- * @file HeatmapOpenGLWidget.hpp
- * @brief OpenGL-based heatmap visualization using CorePlotting infrastructure
- * 
- * This widget renders AnalogTimeSeries data as a heatmap plot,
- * aligned to trial intervals specified via HeatmapState.
- * 
- * Architecture:
- * - Receives HeatmapState for alignment and view settings
- * - Uses GatherResult<AnalogTimeSeries> for trial-aligned data
- * - Uses PlottingOpenGL::SceneRenderer for OpenGL rendering
- * 
- * @see PlottingOpenGL/SceneRenderer.hpp
- */
-
 #include "Core/HeatmapState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
@@ -36,18 +21,6 @@ class DataManager;
 class QMouseEvent;
 class QWheelEvent;
 
-/**
- * @brief OpenGL widget for rendering heatmap plots
- * 
- * Displays AnalogTimeSeries data aligned to trial intervals. Each trial
- * is shown as a horizontal row with color-coded intensity values.
- * 
- * Features:
- * - Independent X (time) and Y (trial) zooming
- * - Panning with mouse drag
- * - Wheel zoom (Shift+wheel for Y-only)
- * - View bounds based on window size from alignment state
- */
 class HeatmapOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
@@ -55,53 +28,26 @@ public:
     explicit HeatmapOpenGLWidget(QWidget * parent = nullptr);
     ~HeatmapOpenGLWidget() override;
 
-    // Non-copyable, non-movable (GL resources)
     HeatmapOpenGLWidget(HeatmapOpenGLWidget const &) = delete;
     HeatmapOpenGLWidget & operator=(HeatmapOpenGLWidget const &) = delete;
     HeatmapOpenGLWidget(HeatmapOpenGLWidget &&) = delete;
     HeatmapOpenGLWidget & operator=(HeatmapOpenGLWidget &&) = delete;
 
-    /**
-     * @brief Set the HeatmapState for this widget
-     * 
-     * The state provides alignment settings and view configuration.
-     * The widget connects to state signals to react to changes.
-     * 
-     * @param state Shared pointer to HeatmapState
-     */
     void setState(std::shared_ptr<HeatmapState> state);
-
-    /**
-     * @brief Set the DataManager for data access
-     * @param data_manager Shared pointer to DataManager
-     */
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-
-    /**
-     * @brief Get the current view bounds (for RelativeTimeAxisWidget)
-     * @return View bounds based on alignment window size
-     */
-    [[nodiscard]] std::pair<double, double> getViewBounds() const;
+    [[nodiscard]] HeatmapViewState const & viewState() const;
+    void resetView();
 
 signals:
-    /**
-     * @brief Emitted when user double-clicks on the plot
-     * @param time_frame_index The time frame index at the click position
-     */
     void plotDoubleClicked(int64_t time_frame_index);
-
-    /**
-     * @brief Emitted when view bounds change (window size changes)
-     */
     void viewBoundsChanged();
+    void trialCountChanged(size_t count);
 
 protected:
-    // QOpenGLWidget overrides
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
 
-    // Mouse interaction
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -109,40 +55,38 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
 
 private slots:
-    /**
-     * @brief Rebuild scene when state changes
-     */
     void onStateChanged();
+    void onViewStateChanged();
 
 private:
-    // State management
     std::shared_ptr<HeatmapState> _state;
     std::shared_ptr<DataManager> _data_manager;
 
-    // Rendering infrastructure
     PlottingOpenGL::SceneRenderer _scene_renderer;
     bool _opengl_initialized{false};
     bool _scene_dirty{true};
 
-    // Widget dimensions
+    HeatmapViewState _cached_view_state;
+    glm::mat4 _view_matrix{1.0f};
+    glm::mat4 _projection_matrix{1.0f};
+
+    // Panning state
+    bool _is_panning{false};
+    QPoint _last_mouse_pos;
+    QPoint _click_start_pos;
+    static constexpr int DRAG_THRESHOLD = 5;
+
+    size_t _trial_count{0};
+
     int _widget_width{1};
     int _widget_height{1};
 
-    // =========================================================================
-    // Private Methods
-    // =========================================================================
-
-    /**
-     * @brief Rebuild the renderable scene from current state
-     * 
-     * Gathers data aligned to trial intervals and builds heatmap visualization.
-     */
     void rebuildScene();
-
-    /**
-     * @brief Convert screen coordinates to world coordinates
-     */
+    void updateMatrices();
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
+    void handlePanning(int delta_x, int delta_y);
+    void handleZoom(float delta, bool y_only, bool both_axes = false);
+    void updateBackgroundColor();
 };
 
 #endif // HEATMAP_OPENGLWIDGET_HPP

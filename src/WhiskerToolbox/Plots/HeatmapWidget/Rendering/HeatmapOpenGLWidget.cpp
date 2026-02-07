@@ -16,16 +16,14 @@
 HeatmapOpenGLWidget::HeatmapOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
 {
-    // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
 
-    // Request OpenGL 4.1 Core Profile
     QSurfaceFormat format;
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4); // Enable multisampling
+    format.setSamples(4);
     setFormat(format);
 }
 
@@ -38,7 +36,6 @@ HeatmapOpenGLWidget::~HeatmapOpenGLWidget()
 
 void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state)
 {
-    // Disconnect old state signals
     if (_state) {
         _state->disconnect(this);
     }
@@ -46,17 +43,17 @@ void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state)
     _state = state;
 
     if (_state) {
-        // Connect to state signals
         connect(_state.get(), &HeatmapState::stateChanged,
                 this, &HeatmapOpenGLWidget::onStateChanged);
-        connect(_state.get(), &HeatmapState::windowSizeChanged,
-                this, [this](double /* window_size */) {
-                    _scene_dirty = true;
-                    emit viewBoundsChanged();
+        connect(_state.get(), &HeatmapState::viewStateChanged,
+                this, &HeatmapOpenGLWidget::onViewStateChanged);
+        connect(_state.get(), &HeatmapState::backgroundColorChanged,
+                this, [this]() {
+                    updateBackgroundColor();
                     update();
                 });
 
-        // Initial sync
+        _cached_view_state = _state->viewState();
         _scene_dirty = true;
     }
 }
@@ -68,15 +65,16 @@ void HeatmapOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manag
     update();
 }
 
-std::pair<double, double> HeatmapOpenGLWidget::getViewBounds() const
+HeatmapViewState const & HeatmapOpenGLWidget::viewState() const
 {
-    if (!_state) {
-        return {-500.0, 500.0};  // Default bounds
-    }
+    return _cached_view_state;
+}
 
-    double window_size = _state->getWindowSize();
-    double half_window = window_size / 2.0;
-    return {-half_window, half_window};
+void HeatmapOpenGLWidget::resetView()
+{
+    if (_state) {
+        _state->setViewState(HeatmapViewState{});
+    }
 }
 
 // =============================================================================
@@ -86,58 +84,44 @@ std::pair<double, double> HeatmapOpenGLWidget::getViewBounds() const
 void HeatmapOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-
-    // Set clear color (dark theme)
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-    // Enable depth testing
+    updateBackgroundColor();
     glEnable(GL_DEPTH_TEST);
-
-    // Enable blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Enable multisampling if available
     auto fmt = format();
     if (fmt.samples() > 1) {
         glEnable(GL_MULTISAMPLE);
     }
 
-    // Initialize the scene renderer
     if (!_scene_renderer.initialize()) {
         qWarning() << "HeatmapOpenGLWidget: Failed to initialize SceneRenderer";
         return;
     }
-
     _opengl_initialized = true;
+    updateMatrices();
 }
 
 void HeatmapOpenGLWidget::paintGL()
 {
+    updateBackgroundColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     if (!_opengl_initialized) {
         return;
     }
-
-    // Rebuild scene if needed
     if (_scene_dirty) {
         rebuildScene();
         _scene_dirty = false;
     }
-
     // TODO: Render heatmap visualization here
-    // For now, just clear the screen
 }
 
 void HeatmapOpenGLWidget::resizeGL(int w, int h)
 {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
-
     glViewport(0, 0, _widget_width, _widget_height);
-    _scene_dirty = true;
-    update();
+    updateMatrices();
 }
 
 // =============================================================================
@@ -146,17 +130,45 @@ void HeatmapOpenGLWidget::resizeGL(int w, int h)
 
 void HeatmapOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mousePressEvent(event);
+    if (event->button() == Qt::LeftButton) {
+        _is_panning = false;
+        _click_start_pos = event->pos();
+        _last_mouse_pos = event->pos();
+    }
+    event->accept();
 }
 
 void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mouseMoveEvent(event);
+    if (event->buttons() & Qt::LeftButton) {
+        int dx = event->pos().x() - _click_start_pos.x();
+        int dy = event->pos().y() - _click_start_pos.y();
+        int distance_squared = dx * dx + dy * dy;
+
+        if (!_is_panning && distance_squared > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+            _is_panning = true;
+            setCursor(Qt::ClosedHandCursor);
+        }
+
+        if (_is_panning) {
+            int delta_x = event->pos().x() - _last_mouse_pos.x();
+            int delta_y = event->pos().y() - _last_mouse_pos.y();
+            handlePanning(delta_x, delta_y);
+        }
+        _last_mouse_pos = event->pos();
+    }
+    event->accept();
 }
 
 void HeatmapOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mouseReleaseEvent(event);
+    if (event->button() == Qt::LeftButton) {
+        if (_is_panning) {
+            _is_panning = false;
+            setCursor(Qt::ArrowCursor);
+        }
+    }
+    event->accept();
 }
 
 void HeatmapOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
@@ -170,7 +182,11 @@ void HeatmapOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 
 void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event)
 {
-    QOpenGLWidget::wheelEvent(event);
+    float delta = event->angleDelta().y() / 120.0f;
+    bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
+    bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
+    handleZoom(delta, shift_pressed, ctrl_pressed);
+    event->accept();
 }
 
 // =============================================================================
@@ -183,6 +199,16 @@ void HeatmapOpenGLWidget::onStateChanged()
     update();
 }
 
+void HeatmapOpenGLWidget::onViewStateChanged()
+{
+    if (_state) {
+        _cached_view_state = _state->viewState();
+    }
+    updateMatrices();
+    update();
+    emit viewBoundsChanged();
+}
+
 // =============================================================================
 // Private Methods
 // =============================================================================
@@ -193,16 +219,89 @@ void HeatmapOpenGLWidget::rebuildScene()
         _scene_renderer.clearScene();
         return;
     }
-
     // TODO: Gather trial-aligned AnalogTimeSeries data
     // TODO: Build heatmap visualization scene
-    // For now, just clear the scene
     _scene_renderer.clearScene();
+}
+
+void HeatmapOpenGLWidget::updateMatrices()
+{
+    float x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+
+    float zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
+    float zoomed_y_range = 2.0f / static_cast<float>(_cached_view_state.y_zoom);
+
+    float pan_x = static_cast<float>(_cached_view_state.x_pan);
+    float pan_y = static_cast<float>(_cached_view_state.y_pan);
+
+    float left = x_center - zoomed_x_range / 2.0f + pan_x;
+    float right = x_center + zoomed_x_range / 2.0f + pan_x;
+    float bottom = -zoomed_y_range / 2.0f + pan_y;
+    float top = zoomed_y_range / 2.0f + pan_y;
+
+    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _view_matrix = glm::mat4(1.0f);
 }
 
 QPointF HeatmapOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
 {
-    // TODO: Implement screen to world coordinate conversion
-    // For now, return a placeholder
-    return QPointF(0.0, 0.0);
+    float ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
+    float ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
+
+    glm::mat4 inv_proj = glm::inverse(_projection_matrix);
+    glm::vec4 ndc(ndc_x, ndc_y, 0.0f, 1.0f);
+    glm::vec4 world = inv_proj * ndc;
+
+    return QPointF(world.x, world.y);
+}
+
+void HeatmapOpenGLWidget::handlePanning(int delta_x, int delta_y)
+{
+    if (!_state) return;
+
+    float world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
+                              (_widget_width * _cached_view_state.x_zoom);
+    float world_per_pixel_y = 2.0f / (_widget_height * _cached_view_state.y_zoom);
+
+    float new_pan_x = _cached_view_state.x_pan - delta_x * world_per_pixel_x;
+    float new_pan_y = _cached_view_state.y_pan + delta_y * world_per_pixel_y;
+
+    _state->setPan(new_pan_x, new_pan_y);
+}
+
+void HeatmapOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
+{
+    if (!_state) return;
+
+    float factor = std::pow(1.1f, delta);
+
+    if (y_only) {
+        _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else if (both_axes) {
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
+        _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else {
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
+    }
+}
+
+void HeatmapOpenGLWidget::updateBackgroundColor()
+{
+    if (!_state) {
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        return;
+    }
+
+    QString hex_color = _state->getBackgroundColor();
+    QColor color(hex_color);
+    if (color.isValid()) {
+        glClearColor(
+            static_cast<float>(color.redF()),
+            static_cast<float>(color.greenF()),
+            static_cast<float>(color.blueF()),
+            1.0f);
+    } else {
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    }
 }
