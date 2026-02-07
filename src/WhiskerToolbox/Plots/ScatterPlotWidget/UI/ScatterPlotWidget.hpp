@@ -4,9 +4,9 @@
 /**
  * @file ScatterPlotWidget.hpp
  * @brief Main widget for displaying 2D scatter plots
- * 
- * ScatterPlotWidget displays 2D scatter plots showing relationships
- * between two variables.
+ *
+ * Single source of truth: ScatterPlotState. Horizontal and vertical axis
+ * widgets use state; pan/zoom in OpenGL widget update state.
  */
 
 #include "DataManager/DataManagerFwd.hpp"
@@ -19,9 +19,13 @@
 
 class DataManager;
 class ScatterPlotState;
-class HorizontalAxisWidget;
-class VerticalAxisWidget;
 class ScatterPlotOpenGLWidget;
+class HorizontalAxisRangeControls;
+class HorizontalAxisWidget;
+class VerticalAxisRangeControls;
+class VerticalAxisWidget;
+
+class QResizeEvent;
 
 namespace Ui {
 class ScatterPlotWidget;
@@ -34,63 +38,44 @@ class ScatterPlotWidget : public QWidget {
     Q_OBJECT
 
 public:
-    /**
-     * @brief Construct a ScatterPlotWidget
-     * @param data_manager Shared DataManager for data access
-     * @param parent Parent widget
-     */
     ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
                       QWidget * parent = nullptr);
-
     ~ScatterPlotWidget() override;
 
-    /**
-     * @brief Set the ScatterPlotState for this widget
-     * 
-     * The state manages all serializable settings. This widget shares
-     * the state with the properties widget.
-     * 
-     * @param state Shared pointer to the state object
-     */
     void setState(std::shared_ptr<ScatterPlotState> state);
-
-    /**
-     * @brief Get the current ScatterPlotState (const)
-     * @return Shared pointer to the state object
-     */
     [[nodiscard]] std::shared_ptr<ScatterPlotState> state() const { return _state; }
-
-    /**
-     * @brief Get mutable state access
-     * @return Raw pointer to state for modification
-     */
     [[nodiscard]] ScatterPlotState * state();
 
+    [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
 signals:
-    /**
-     * @brief Emitted when a time position is selected in the view
-     * @param position TimePosition to navigate to
-     */
     void timePositionSelected(TimePosition position);
 
 protected:
     void resizeEvent(QResizeEvent * event) override;
 
 private:
+    void createHorizontalAxisIfNeeded();
+    void createVerticalAxisIfNeeded();
+    void wireHorizontalAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncHorizontalAxisRange();
+    void syncVerticalAxisRange();
+
+    [[nodiscard]] std::pair<double, double> computeVisibleXRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleYRange() const;
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::ScatterPlotWidget * ui;
-
-    /// Serializable state shared with properties widget
     std::shared_ptr<ScatterPlotState> _state;
-
-    /// OpenGL rendering widget
     ScatterPlotOpenGLWidget * _opengl_widget;
 
-    /// Horizontal axis widget below the plot
     HorizontalAxisWidget * _horizontal_axis_widget;
-
-    /// Vertical axis widget on the left side
+    HorizontalAxisRangeControls * _horizontal_range_controls;
     VerticalAxisWidget * _vertical_axis_widget;
+    VerticalAxisRangeControls * _vertical_range_controls;
 };
 
-#endif// SCATTER_PLOT_WIDGET_HPP
+#endif  // SCATTER_PLOT_WIDGET_HPP

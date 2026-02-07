@@ -77,6 +77,7 @@ void registerTypes(EditorRegistry * registry,
 
                                 // Create the properties widget with the shared state
                                 auto * props = new ScatterPlotPropertiesWidget(state, dm);
+                                props->setPlotWidget(view);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the scatter plot to navigate to a specific time position
