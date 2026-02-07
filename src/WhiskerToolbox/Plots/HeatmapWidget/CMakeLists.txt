@@ -38,6 +38,7 @@ target_link_libraries(HeatmapWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(HeatmapWidget PRIVATE Collapsible_Widget)
 target_link_libraries(HeatmapWidget PRIVATE DataManager)
 target_link_libraries(HeatmapWidget PRIVATE EditorState)
 target_link_libraries(HeatmapWidget PRIVATE PlotAlignmentWidget)
