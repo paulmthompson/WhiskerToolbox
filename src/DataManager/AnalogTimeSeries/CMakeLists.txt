@@ -12,6 +12,7 @@ set(analog_subdirectory_sources
 )
 
 add_library(AnalogTimeSeries STATIC ${analog_subdirectory_sources})
+set_target_properties(AnalogTimeSeries PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Set up include directories
 target_include_directories(AnalogTimeSeries PUBLIC
