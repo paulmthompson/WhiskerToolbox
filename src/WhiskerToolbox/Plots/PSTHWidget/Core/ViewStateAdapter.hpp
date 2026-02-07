@@ -3,34 +3,25 @@
 
 /**
  * @file ViewStateAdapter.hpp
- * @brief Helper functions to convert PSTH alignment data to CorePlotting::ViewState
- * 
- * Provides adapters to convert PSTH alignment settings to CorePlotting::ViewState
- * for use with RelativeTimeAxisWidget and other CorePlotting components.
+ * @brief Helper functions to convert PSTHViewState to CorePlotting::ViewState
  */
 
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 
-#include <cstdint>
-
-// Forward declaration
-class PSTHState;
+struct PSTHViewState;
 
 /**
- * @brief Convert PSTH alignment data to CorePlotting::ViewState
- * 
- * Creates a CorePlotting::ViewState from PSTHState alignment settings for use with
- * RelativeTimeAxisWidget and other CorePlotting components.
- * 
- * The view bounds are centered at 0 (alignment point) and extend ±window_size/2.
- * 
- * @param psth_state The PSTHState to get alignment data from
- * @param viewport_width Width of the viewport in pixels
+ * @brief Convert PSTHViewState to CorePlotting::ViewState
+ *
+ * Handles zoom/pan conversion in the same way as the EventPlot adapter.
+ *
+ * @param view_state The PSTHViewState (data bounds + zoom/pan)
+ * @param viewport_width  Width of the viewport in pixels
  * @param viewport_height Height of the viewport in pixels
  * @return CorePlotting::ViewState representation
  */
 CorePlotting::ViewState toCoreViewState(
-    PSTHState const * psth_state,
+    PSTHViewState const & view_state,
     int viewport_width,
     int viewport_height);
 

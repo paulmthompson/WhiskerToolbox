@@ -40,11 +40,7 @@ class QWheelEvent;
  * @brief OpenGL widget for rendering PSTH plots
  * 
  * Displays histogram of event counts aligned to trial intervals.
- * 
- * Features:
- * - Time-aligned histogram visualization
- * - Configurable bin size
- * - Bar or line plot styles
+ * Supports pan/zoom interaction on both axes.
  */
 class PSTHPlotOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -59,47 +55,20 @@ public:
     PSTHPlotOpenGLWidget(PSTHPlotOpenGLWidget &&) = delete;
     PSTHPlotOpenGLWidget & operator=(PSTHPlotOpenGLWidget &&) = delete;
 
-    /**
-     * @brief Set the PSTHState for this widget
-     * 
-     * The state provides alignment settings, bin size, and plot options.
-     * The widget connects to state signals to react to changes.
-     * 
-     * @param state Shared pointer to PSTHState
-     */
     void setState(std::shared_ptr<PSTHState> state);
-
-    /**
-     * @brief Set the DataManager for data access
-     * @param data_manager Shared pointer to DataManager
-     */
     void setDataManager(std::shared_ptr<DataManager> data_manager);
 
-    /**
-     * @brief Get the current view bounds (for RelativeTimeAxisWidget)
-     * @return View bounds based on alignment window size
-     */
     [[nodiscard]] std::pair<double, double> getViewBounds() const;
 
 signals:
-    /**
-     * @brief Emitted when user double-clicks on the plot
-     * @param time_frame_index The time frame index at the click position
-     */
     void plotDoubleClicked(int64_t time_frame_index);
-
-    /**
-     * @brief Emitted when view bounds change (window size changes)
-     */
     void viewBoundsChanged();
 
 protected:
-    // QOpenGLWidget overrides
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
 
-    // Mouse interaction
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -107,42 +76,40 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
 
 private slots:
-    /**
-     * @brief Rebuild scene when state changes
-     */
     void onStateChanged();
+    void onViewStateChanged();
 
 private:
-    // State management
     std::shared_ptr<PSTHState> _state;
     std::shared_ptr<DataManager> _data_manager;
 
-    // Rendering infrastructure
+    // Rendering
     PlottingOpenGL::SceneRenderer _scene_renderer;
     bool _opengl_initialized{false};
     bool _scene_dirty{true};
 
-    // Widget dimensions
+    // Viewport
     int _widget_width{1};
     int _widget_height{1};
+
+    // Pan/zoom interaction
+    bool _is_panning{false};
+    QPoint _click_start_pos;
+    QPoint _last_mouse_pos;
+    static constexpr int DRAG_THRESHOLD = 4;
+
+    // Projection
+    PSTHViewState _cached_view_state;
+    glm::mat4 _projection_matrix{1.0f};
+    glm::mat4 _view_matrix{1.0f};
 
     // Flag to prevent rebuild loop when updating y_max from rebuildScene
     bool _updating_y_max_from_rebuild{false};
 
-    // =========================================================================
-    // Private Methods
-    // =========================================================================
-
-    /**
-     * @brief Rebuild the renderable scene from current state
-     * 
-     * Gathers data aligned to trial intervals and builds histogram.
-     */
     void rebuildScene();
-
-    /**
-     * @brief Convert screen coordinates to world coordinates
-     */
+    void updateMatrices();
+    void handlePanning(int delta_x, int delta_y);
+    void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
 };
 

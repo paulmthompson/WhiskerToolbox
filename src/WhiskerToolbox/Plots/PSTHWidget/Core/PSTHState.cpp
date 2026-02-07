@@ -24,6 +24,10 @@ PSTHState::PSTHState(QObject * parent)
     _relative_time_axis_state->setRangeSilent(-half_window, half_window);
     _data.time_axis = _relative_time_axis_state->data();
 
+    // Initialize view state bounds from window size
+    _data.view_state.x_min = -half_window;
+    _data.view_state.x_max = half_window;
+
     // Sync initial vertical axis data from member state
     _data.vertical_axis = _vertical_axis_state->data();
 
@@ -36,13 +40,20 @@ PSTHState::PSTHState(QObject * parent)
             this, &PSTHState::offsetChanged);
     connect(_alignment_state.get(), &PlotAlignmentState::windowSizeChanged,
             this, [this](double window_size) {
-                // Update time axis range when window size changes
+                // Update view state data bounds when window size changes
                 double half_window = window_size / 2.0;
+                _data.view_state.x_min = -half_window;
+                _data.view_state.x_max = half_window;
+                // Reset zoom/pan when the window changes
+                _data.view_state.x_zoom = 1.0;
+                _data.view_state.x_pan = 0.0;
+                // Update time axis range
                 _relative_time_axis_state->setRangeSilent(-half_window, half_window);
                 // Sync to data
                 _data.time_axis = _relative_time_axis_state->data();
                 markDirty();
                 emit windowSizeChanged(window_size);
+                emit viewStateChanged();
                 emit stateChanged();
             });
 
@@ -234,6 +245,49 @@ void PSTHState::setBinSize(double bin_size)
         _data.bin_size = bin_size;
         markDirty();
         emit binSizeChanged(bin_size);
+        emit stateChanged();
+    }
+}
+
+// === View State (Zoom / Pan / Bounds) ===
+
+void PSTHState::setXZoom(double zoom)
+{
+    if (_data.view_state.x_zoom != zoom) {
+        _data.view_state.x_zoom = zoom;
+        markDirty();
+        emit viewStateChanged();
+    }
+}
+
+void PSTHState::setYZoom(double zoom)
+{
+    if (_data.view_state.y_zoom != zoom) {
+        _data.view_state.y_zoom = zoom;
+        markDirty();
+        emit viewStateChanged();
+    }
+}
+
+void PSTHState::setPan(double x_pan, double y_pan)
+{
+    if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
+        _data.view_state.x_pan = x_pan;
+        _data.view_state.y_pan = y_pan;
+        markDirty();
+        emit viewStateChanged();
+    }
+}
+
+void PSTHState::setXBounds(double x_min, double x_max)
+{
+    if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
+        _data.view_state.x_min = x_min;
+        _data.view_state.x_max = x_max;
+        _relative_time_axis_state->setRangeSilent(x_min, x_max);
+        _data.time_axis = _relative_time_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
         emit stateChanged();
     }
 }

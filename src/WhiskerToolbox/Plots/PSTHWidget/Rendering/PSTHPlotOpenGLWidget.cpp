@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
 PSTHPlotOpenGLWidget::PSTHPlotOpenGLWidget(QWidget * parent)
@@ -48,18 +49,20 @@ void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state)
     _state = state;
 
     if (_state) {
-        // Connect to state signals
+        _cached_view_state = _state->viewState();
+
         connect(_state.get(), &PSTHState::stateChanged,
                 this, &PSTHPlotOpenGLWidget::onStateChanged);
+        connect(_state.get(), &PSTHState::viewStateChanged,
+                this, &PSTHPlotOpenGLWidget::onViewStateChanged);
         connect(_state.get(), &PSTHState::windowSizeChanged,
                 this, [this](double /* window_size */) {
                     _scene_dirty = true;
-                    emit viewBoundsChanged();
                     update();
                 });
 
-        // Initial sync
         _scene_dirty = true;
+        updateMatrices();
     }
 }
 
@@ -134,11 +137,10 @@ void PSTHPlotOpenGLWidget::paintGL()
 
 void PSTHPlotOpenGLWidget::resizeGL(int w, int h)
 {
-    _widget_width = w;
-    _widget_height = h;
-    glViewport(0, 0, w, h);
-    _scene_dirty = true;
-    update();
+    _widget_width = std::max(1, w);
+    _widget_height = std::max(1, h);
+    glViewport(0, 0, _widget_width, _widget_height);
+    updateMatrices();
 }
 
 // =============================================================================
@@ -147,17 +149,45 @@ void PSTHPlotOpenGLWidget::resizeGL(int w, int h)
 
 void PSTHPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mousePressEvent(event);
+    if (event->button() == Qt::LeftButton) {
+        _is_panning = false;
+        _click_start_pos = event->pos();
+        _last_mouse_pos = event->pos();
+    }
+    event->accept();
 }
 
 void PSTHPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mouseMoveEvent(event);
+    if (event->buttons() & Qt::LeftButton) {
+        int const dx = event->pos().x() - _click_start_pos.x();
+        int const dy = event->pos().y() - _click_start_pos.y();
+        int const distance_sq = dx * dx + dy * dy;
+
+        if (!_is_panning && distance_sq > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+            _is_panning = true;
+            setCursor(Qt::ClosedHandCursor);
+        }
+
+        if (_is_panning) {
+            int const delta_x = event->pos().x() - _last_mouse_pos.x();
+            int const delta_y = event->pos().y() - _last_mouse_pos.y();
+            handlePanning(delta_x, delta_y);
+        }
+        _last_mouse_pos = event->pos();
+    }
+    event->accept();
 }
 
 void PSTHPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mouseReleaseEvent(event);
+    if (event->button() == Qt::LeftButton) {
+        if (_is_panning) {
+            _is_panning = false;
+            setCursor(Qt::ArrowCursor);
+        }
+    }
+    event->accept();
 }
 
 void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
@@ -173,7 +203,11 @@ void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 
 void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 {
-    QOpenGLWidget::wheelEvent(event);
+    float const delta = event->angleDelta().y() / 120.0f;
+    bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
+    bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
+    handleZoom(delta, shift_pressed, ctrl_pressed);
+    event->accept();
 }
 
 // =============================================================================
@@ -182,13 +216,21 @@ void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 
 void PSTHPlotOpenGLWidget::onStateChanged()
 {
-    // Skip rebuild if we're updating y_max from rebuildScene to prevent loop
     if (_updating_y_max_from_rebuild) {
         return;
     }
     _scene_dirty = true;
-    emit viewBoundsChanged();
     update();
+}
+
+void PSTHPlotOpenGLWidget::onViewStateChanged()
+{
+    if (_state) {
+        _cached_view_state = _state->viewState();
+    }
+    updateMatrices();
+    update();
+    emit viewBoundsChanged();
 }
 
 void PSTHPlotOpenGLWidget::rebuildScene()
@@ -346,7 +388,81 @@ void PSTHPlotOpenGLWidget::rebuildScene()
 
 QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
 {
-    // TODO: Implement coordinate transformation
-    // For now, return a default value
-    return QPointF(0.0, 0.0);
+    float const ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
+    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
+
+    glm::mat4 const inv_proj = glm::inverse(_projection_matrix);
+    glm::vec4 const ndc(ndc_x, ndc_y, 0.0f, 1.0f);
+    glm::vec4 const world = inv_proj * ndc;
+
+    return QPointF(world.x, world.y);
+}
+
+void PSTHPlotOpenGLWidget::updateMatrices()
+{
+    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+
+    float const zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
+    // Y range comes from the vertical axis state: [y_min, y_max]
+    // Default is [0, 100]. Zoom/pan apply on top of that.
+    float y_min = 0.0f;
+    float y_max = 100.0f;
+    if (_state) {
+        auto * vas = _state->verticalAxisState();
+        if (vas) {
+            y_min = static_cast<float>(vas->getYMin());
+            y_max = static_cast<float>(vas->getYMax());
+        }
+    }
+    float const y_range = y_max - y_min;
+    float const y_center = (y_min + y_max) / 2.0f;
+    float const zoomed_y_range = y_range / static_cast<float>(_cached_view_state.y_zoom);
+
+    float const pan_x = static_cast<float>(_cached_view_state.x_pan);
+    float const pan_y = static_cast<float>(_cached_view_state.y_pan);
+
+    float const left  = x_center - zoomed_x_range / 2.0f + pan_x;
+    float const right = x_center + zoomed_x_range / 2.0f + pan_x;
+    float const bottom = y_center - zoomed_y_range / 2.0f + pan_y;
+    float const top    = y_center + zoomed_y_range / 2.0f + pan_y;
+
+    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _view_matrix = glm::mat4(1.0f);
+}
+
+void PSTHPlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
+{
+    if (!_state) return;
+
+    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const world_per_pixel_x = x_range / (_widget_width * static_cast<float>(_cached_view_state.x_zoom));
+
+    // Y range from vertical axis state
+    float y_range = 100.0f;
+    if (auto * vas = _state->verticalAxisState()) {
+        y_range = static_cast<float>(vas->getYMax() - vas->getYMin());
+    }
+    float const world_per_pixel_y = y_range / (_widget_height * static_cast<float>(_cached_view_state.y_zoom));
+
+    float const new_pan_x = static_cast<float>(_cached_view_state.x_pan) - delta_x * world_per_pixel_x;
+    float const new_pan_y = static_cast<float>(_cached_view_state.y_pan) + delta_y * world_per_pixel_y;
+
+    _state->setPan(new_pan_x, new_pan_y);
+}
+
+void PSTHPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
+{
+    if (!_state) return;
+
+    float const factor = std::pow(1.1f, delta);
+
+    if (y_only) {
+        _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else if (both_axes) {
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
+        _state->setYZoom(_cached_view_state.y_zoom * factor);
+    } else {
+        _state->setXZoom(_cached_view_state.x_zoom * factor);
+    }
 }

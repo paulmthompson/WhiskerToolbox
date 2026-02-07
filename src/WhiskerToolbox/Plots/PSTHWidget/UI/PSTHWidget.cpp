@@ -2,10 +2,12 @@
 
 #include "Core/PSTHState.hpp"
 #include "Core/ViewStateAdapter.hpp"
+#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Rendering/PSTHPlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 
@@ -78,33 +80,85 @@ void PSTHWidget::setState(std::shared_ptr<PSTHState> state)
 {
     _state = state;
     
-    // Pass state to OpenGL widget
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
     }
 
-    // Create vertical axis widget and controls using factory
-    // This must be done after setState so we have access to VerticalAxisState
-    if (_state && !_vertical_axis_widget) {
+    if (!_state) {
+        return;
+    }
+
+    createTimeAxisIfNeeded();
+    wireTimeAxis();
+    wireVerticalAxis();
+    connectViewChangeSignals();
+
+    syncTimeAxisRange();
+    syncVerticalAxisRange();
+}
+
+// ---------------------------------------------------------------------------
+// setState decomposition
+// ---------------------------------------------------------------------------
+
+void PSTHWidget::createTimeAxisIfNeeded()
+{
+    if (_axis_widget) {
+        return;
+    }
+
+    auto * time_axis_state = _state->relativeTimeAxisState();
+    if (!time_axis_state) {
+        return;
+    }
+
+    auto result = createRelativeTimeAxisWithRangeControls(
+            time_axis_state, this, nullptr);
+    _axis_widget = result.axis_widget;
+    _range_controls = result.range_controls;
+
+    if (auto * vbox = qobject_cast<QVBoxLayout *>(layout())) {
+        vbox->addWidget(_axis_widget);
+    }
+}
+
+void PSTHWidget::wireTimeAxis()
+{
+    if (!_axis_widget) {
+        return;
+    }
+
+    _axis_widget->setAxisMapping(CorePlotting::relativeTimeAxis());
+
+    _axis_widget->setViewStateGetter([this]() {
+        if (!_state || !_opengl_widget) {
+            return CorePlotting::ViewState{};
+        }
+        return toCoreViewState(
+                _state->viewState(),
+                _opengl_widget->width(),
+                _opengl_widget->height());
+    });
+}
+
+void PSTHWidget::wireVerticalAxis()
+{
+    // Create the vertical axis widget if it doesn't exist yet
+    if (!_vertical_axis_widget && _state) {
         auto * vertical_axis_state = _state->verticalAxisState();
         if (vertical_axis_state) {
-            auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(
-                vertical_axis_state, this, nullptr);
-            _vertical_axis_widget = vertical_axis_with_controls.axis_widget;
-            _vertical_range_controls = vertical_axis_with_controls.range_controls;
+            auto result = createVerticalAxisWithRangeControls(
+                    vertical_axis_state, this, nullptr);
+            _vertical_axis_widget = result.axis_widget;
+            _vertical_range_controls = result.range_controls;
 
-            // Add vertical axis widget to layout
+            // Insert into the horizontal layout (before the OpenGL widget)
             if (_vertical_axis_widget) {
-                // Find the horizontal layout (should be the first child layout)
-                QLayout * main_layout = layout();
-                if (main_layout) {
-                    QVBoxLayout * vbox = qobject_cast<QVBoxLayout *>(main_layout);
-                    if (vbox && vbox->count() > 0) {
-                        QLayoutItem * item = vbox->itemAt(0);
+                if (auto * vbox = qobject_cast<QVBoxLayout *>(layout())) {
+                    if (vbox->count() > 0) {
+                        auto * item = vbox->itemAt(0);
                         if (item && item->layout()) {
-                            QHBoxLayout * hbox = qobject_cast<QHBoxLayout *>(item->layout());
-                            if (hbox) {
-                                // Insert at the beginning (before OpenGL widget)
+                            if (auto * hbox = qobject_cast<QHBoxLayout *>(item->layout())) {
                                 hbox->insertWidget(0, _vertical_axis_widget);
                             }
                         }
@@ -114,41 +168,107 @@ void PSTHWidget::setState(std::shared_ptr<PSTHState> state)
         }
     }
 
-    // Set up axis widget with ViewState getter and connect to state changes
-    if (_axis_widget && _state) {
-        // Set up the ViewState getter function
-        _axis_widget->setViewStateGetter([this]() {
-            if (!_state || !_opengl_widget) {
-                return CorePlotting::ViewState{};
-            }
-            // Get viewport size from OpenGL widget
-            int width = _opengl_widget->width();
-            int height = _opengl_widget->height();
-            return toCoreViewState(_state.get(), width, height);
-        });
+    if (!_vertical_axis_widget || !_state) {
+        return;
+    }
 
-        // Connect to window size changes (emitted when window size spinbox is adjusted)
-        // Use regular connect since windowSizeChanged has a parameter
-        connect(_state.get(), &PSTHState::windowSizeChanged,
-                _axis_widget, [this](double /* window_size */) {
-                    if (_axis_widget) {
-                        _axis_widget->update();
-                    }
-                });
+    // The vertical axis is a simple linear scale (count axis).
+    // The RangeGetter is already set by createVerticalAxisWithRangeControls
+    // from the VerticalAxisState, which handles the y_min/y_max directly.
+    // We use identity axis mapping (domain == world) for labels.
+    _vertical_axis_widget->setAxisMapping(CorePlotting::identityAxis("Count", 0));
 
-        // Also connect to OpenGL widget's viewBoundsChanged signal
-        // This ensures the axis widget updates when the OpenGL widget's view changes
-        connect(_opengl_widget, &PSTHPlotOpenGLWidget::viewBoundsChanged,
-                _axis_widget, [this]() {
-                    if (_axis_widget) {
-                        _axis_widget->update();
+    // Bidirectional sync: VerticalAxisState → ViewState y_zoom/y_pan
+    auto * vas = _state->verticalAxisState();
+    if (vas) {
+        connect(vas, &VerticalAxisState::rangeChanged,
+                this, [this](double min_range, double max_range) {
+                    if (!_state) return;
+                    double const range = max_range - min_range;
+                    if (range > 0.001) {
+                        auto * vas_local = _state->verticalAxisState();
+                        double const full_range = vas_local->getYMax() - vas_local->getYMin();
+                        // Zoom = full_range / visible_range
+                        _state->setYZoom(full_range / range);
+                        _state->setPan(_state->viewState().x_pan,
+                                       ((min_range + max_range) / 2.0) -
+                                       ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
                     }
                 });
     }
+}
 
-    // Time axis state syncing with window_size is handled in PSTHState
-    // No additional syncing needed here
+void PSTHWidget::connectViewChangeSignals()
+{
+    auto onViewChanged = [this]() {
+        if (_axis_widget) {
+            _axis_widget->update();
+        }
+        if (_vertical_axis_widget) {
+            _vertical_axis_widget->update();
+        }
+        syncTimeAxisRange();
+        syncVerticalAxisRange();
+    };
 
+    connect(_state.get(), &PSTHState::viewStateChanged,
+            this, onViewChanged);
+
+    connect(_opengl_widget, &PSTHPlotOpenGLWidget::viewBoundsChanged,
+            this, onViewChanged);
+}
+
+void PSTHWidget::syncTimeAxisRange()
+{
+    auto * time_axis_state = _state ? _state->relativeTimeAxisState() : nullptr;
+    if (!time_axis_state) {
+        return;
+    }
+    auto [min, max] = computeVisibleTimeRange();
+    time_axis_state->setRangeSilent(min, max);
+}
+
+void PSTHWidget::syncVerticalAxisRange()
+{
+    if (!_state) {
+        return;
+    }
+    auto * vas = _state->verticalAxisState();
+    if (!vas) {
+        return;
+    }
+    auto [min, max] = computeVisibleVerticalRange();
+    vas->setRangeSilent(min, max);
+}
+
+// ---------------------------------------------------------------------------
+// Visible-range helpers
+// ---------------------------------------------------------------------------
+
+std::pair<double, double> PSTHWidget::computeVisibleTimeRange() const
+{
+    if (!_state) {
+        return {0.0, 0.0};
+    }
+    auto const & vs = _state->viewState();
+    double const half = (vs.x_max - vs.x_min) / 2.0 / vs.x_zoom;
+    double const center = (vs.x_min + vs.x_max) / 2.0;
+    return {center - half + vs.x_pan, center + half + vs.x_pan};
+}
+
+std::pair<double, double> PSTHWidget::computeVisibleVerticalRange() const
+{
+    if (!_state) {
+        return {0.0, 100.0};
+    }
+    auto const & vs = _state->viewState();
+    auto * vas = _state->verticalAxisState();
+    double y_min = vas ? vas->getYMin() : 0.0;
+    double y_max = vas ? vas->getYMax() : 100.0;
+    double const y_range = y_max - y_min;
+    double const y_center = (y_min + y_max) / 2.0;
+    double const half = y_range / 2.0 / vs.y_zoom;
+    return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
 PSTHState * PSTHWidget::state()
@@ -161,17 +281,14 @@ RelativeTimeAxisRangeControls * PSTHWidget::getRangeControls() const
     return _range_controls;
 }
 
-
 VerticalAxisRangeControls * PSTHWidget::getVerticalRangeControls() const
 {
     return _vertical_range_controls;
 }
 
-
 void PSTHWidget::resizeEvent(QResizeEvent * event)
 {
     QWidget::resizeEvent(event);
-    // Update axis widgets when widget resizes to ensure they get fresh viewport dimensions
     if (_axis_widget) {
         _axis_widget->update();
     }

@@ -12,10 +12,10 @@
 #include "DataManager/DataManagerFwd.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include <QResizeEvent>
 #include <QWidget>
 
 #include <memory>
+#include <utility>
 
 class DataManager;
 class PSTHState;
@@ -92,25 +92,28 @@ protected:
     void resizeEvent(QResizeEvent * event) override;
 
 private:
+    // -- setState decomposition --
+    void createTimeAxisIfNeeded();
+    void wireTimeAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncTimeAxisRange();
+    void syncVerticalAxisRange();
+
+    // -- Visible range helpers --
+    [[nodiscard]] std::pair<double, double> computeVisibleTimeRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleVerticalRange() const;
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::PSTHWidget * ui;
 
-    /// Serializable state shared with properties widget
     std::shared_ptr<PSTHState> _state;
-
-    /// OpenGL rendering widget
     PSTHPlotOpenGLWidget * _opengl_widget;
 
-    /// Time axis widget below the plot
     RelativeTimeAxisWidget * _axis_widget;
-
-    /// Range controls widget (can be placed in properties panel)
     RelativeTimeAxisRangeControls * _range_controls;
 
-    /// Vertical axis widget on the left side
     VerticalAxisWidget * _vertical_axis_widget;
-
-    /// Vertical axis range controls widget (can be placed in properties panel)
     VerticalAxisRangeControls * _vertical_range_controls;
 };
 

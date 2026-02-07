@@ -38,6 +38,27 @@ enum class PSTHStyle {
 };
 
 /**
+ * @brief View state for the PSTH plot (zoom, pan, data bounds)
+ *
+ * Follows the same architecture as EventPlotViewState:
+ * - Data bounds (x_min, x_max) define the window of data to gather.
+ *   Changing these triggers a scene rebuild.
+ * - View transform (x_zoom, y_zoom, x_pan, y_pan) controls how the data
+ *   is displayed. Changing these only updates the projection matrix.
+ */
+struct PSTHViewState {
+    // === Data Bounds ===
+    double x_min = -500.0;
+    double x_max = 500.0;
+
+    // === View Transform ===
+    double x_zoom = 1.0;
+    double y_zoom = 1.0;
+    double x_pan = 0.0;
+    double y_pan = 0.0;
+};
+
+/**
  * @brief Options for plotting an event series in the PSTH plot
  */
 struct PSTHEventOptions {
@@ -55,6 +76,7 @@ struct PSTHStateData {
     std::map<std::string, PSTHEventOptions> plot_events;           ///< Map of event names to their plot options
     PSTHStyle style = PSTHStyle::Bar;                              ///< Plot style (bar or line)
     double bin_size = 10.0;                                         ///< Bin size in time units (default: 10.0)
+    PSTHViewState view_state;                                       ///< Zoom, pan, data bounds
     RelativeTimeAxisStateData time_axis;                            ///< Time axis settings (min_range, max_range)
     VerticalAxisStateData vertical_axis;                           ///< Vertical axis settings (y_min, y_max)
 };
@@ -235,6 +257,23 @@ public:
      */
     void setBinSize(double bin_size);
 
+    // === View State (Zoom / Pan / Bounds) ===
+
+    /** @brief Get the current view state */
+    [[nodiscard]] PSTHViewState const & viewState() const { return _data.view_state; }
+
+    /** @brief Set X-axis zoom. Only emits viewStateChanged(). */
+    void setXZoom(double zoom);
+
+    /** @brief Set Y-axis zoom. Only emits viewStateChanged(). */
+    void setYZoom(double zoom);
+
+    /** @brief Set pan offsets. Only emits viewStateChanged(). */
+    void setPan(double x_pan, double y_pan);
+
+    /** @brief Set data bounds. Emits viewStateChanged() AND stateChanged(). */
+    void setXBounds(double x_min, double x_max);
+
     // === Serialization ===
 
     /**
@@ -304,6 +343,11 @@ signals:
      * @param bin_size New bin size value
      */
     void binSizeChanged(double bin_size);
+
+    /**
+     * @brief Emitted when view state changes (zoom, pan, or bounds)
+     */
+    void viewStateChanged();
 
 private:
     PSTHStateData _data;
