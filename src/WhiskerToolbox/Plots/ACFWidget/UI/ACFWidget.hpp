@@ -4,19 +4,28 @@
 /**
  * @file ACFWidget.hpp
  * @brief Main widget for displaying autocorrelation function plots
- * 
- * ACFWidget displays autocorrelation functions computed from DigitalEventSeries data.
+ *
+ * Single source of truth: ACFState. Horizontal and vertical axis widgets use
+ * state; pan/zoom in OpenGL widget update state. Axis labels: Lag (X), Value (Y).
  */
 
 #include "DataManager/DataManagerFwd.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
+#include <QResizeEvent>
 #include <QWidget>
 
 #include <memory>
 
-class DataManager;
+class ACFOpenGLWidget;
 class ACFState;
+class DataManager;
+class HorizontalAxisRangeControls;
+class HorizontalAxisWidget;
+class VerticalAxisRangeControls;
+class VerticalAxisWidget;
+
+class QResizeEvent;
 
 namespace Ui {
 class ACFWidget;
@@ -39,41 +48,40 @@ public:
 
     ~ACFWidget() override;
 
-    /**
-     * @brief Set the ACFState for this widget
-     * 
-     * The state manages all serializable settings. This widget shares
-     * the state with the properties widget.
-     * 
-     * @param state Shared pointer to the state object
-     */
     void setState(std::shared_ptr<ACFState> state);
-
-    /**
-     * @brief Get the current ACFState (const)
-     * @return Shared pointer to the state object
-     */
     [[nodiscard]] std::shared_ptr<ACFState> state() const { return _state; }
-
-    /**
-     * @brief Get mutable state access
-     * @return Raw pointer to state for modification
-     */
     [[nodiscard]] ACFState * state();
 
+    [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
 signals:
-    /**
-     * @brief Emitted when a time position is selected in the view
-     * @param position TimePosition to navigate to
-     */
     void timePositionSelected(TimePosition position);
 
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
+    void createHorizontalAxisIfNeeded();
+    void createVerticalAxisIfNeeded();
+    void wireHorizontalAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncHorizontalAxisRange();
+    void syncVerticalAxisRange();
+
+    [[nodiscard]] std::pair<double, double> computeVisibleXRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleYRange() const;
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::ACFWidget * ui;
-
-    /// Serializable state shared with properties widget
     std::shared_ptr<ACFState> _state;
+    ACFOpenGLWidget * _opengl_widget;
+
+    HorizontalAxisWidget * _horizontal_axis_widget;
+    HorizontalAxisRangeControls * _horizontal_range_controls;
+    VerticalAxisWidget * _vertical_axis_widget;
+    VerticalAxisRangeControls * _vertical_range_controls;
 };
 
-#endif// ACF_WIDGET_HPP
+#endif  // ACF_WIDGET_HPP

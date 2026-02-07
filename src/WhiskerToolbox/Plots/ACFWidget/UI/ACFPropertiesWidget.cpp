@@ -3,6 +3,10 @@
 #include "Core/ACFState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Collapsible_Widget/Section.hpp"
+#include "UI/ACFWidget.hpp"
 
 #include "ui_ACFPropertiesWidget.h"
 
@@ -15,6 +19,11 @@ ACFPropertiesWidget::ACFPropertiesWidget(std::shared_ptr<ACFState> state,
       ui(new Ui::ACFPropertiesWidget),
       _state(state),
       _data_manager(data_manager),
+      _plot_widget(nullptr),
+      _horizontal_range_controls(nullptr),
+      _horizontal_range_controls_section(nullptr),
+      _vertical_range_controls(nullptr),
+      _vertical_range_controls_section(nullptr),
       _dm_observer_id(-1)
 {
     ui->setupUi(this);
@@ -38,8 +47,34 @@ ACFPropertiesWidget::ACFPropertiesWidget(std::shared_ptr<ACFState> state,
         connect(_state.get(), &ACFState::eventKeyChanged,
                 this, &ACFPropertiesWidget::_updateUIFromState);
 
-        // Initialize UI from state
         _updateUIFromState();
+    }
+}
+
+void ACFPropertiesWidget::setPlotWidget(ACFWidget * plot_widget)
+{
+    _plot_widget = plot_widget;
+    if (!_plot_widget || !_state) {
+        return;
+    }
+
+    auto * horizontal_axis_state = _state->horizontalAxisState();
+    if (horizontal_axis_state) {
+        _horizontal_range_controls_section = new Section(this, "X-Axis (Lag) Range Controls");
+        _horizontal_range_controls = new HorizontalAxisRangeControls(horizontal_axis_state, _horizontal_range_controls_section);
+        _horizontal_range_controls_section->autoSetContentLayout();
+        ui->main_layout->insertWidget(0, _horizontal_range_controls_section);
+    }
+
+    auto * vertical_axis_state = _state->verticalAxisState();
+    if (vertical_axis_state) {
+        _vertical_range_controls_section = new Section(this, "Y-Axis (Value) Range Controls");
+        _vertical_range_controls = new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
+        _vertical_range_controls_section->autoSetContentLayout();
+        int insert_index = _horizontal_range_controls_section
+                ? ui->main_layout->indexOf(_horizontal_range_controls_section) + 1
+                : 0;
+        ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
 

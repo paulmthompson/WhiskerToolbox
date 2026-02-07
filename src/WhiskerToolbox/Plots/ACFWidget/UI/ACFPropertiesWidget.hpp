@@ -4,13 +4,12 @@
 /**
  * @file ACFPropertiesWidget.hpp
  * @brief Properties panel for the ACF Widget
- * 
- * ACFPropertiesWidget is the properties/inspector panel for ACFWidget.
- * It displays controls for managing plot settings and options.
- * 
- * @see ACFWidget for the view component
- * @see ACFState for shared state
- * @see ACFWidgetRegistration for factory registration
+ *
+ * Axis range controls are provided via HorizontalAxisRangeControls and
+ * VerticalAxisRangeControls in collapsible sections (set when setPlotWidget
+ * is called).
+ *
+ * @see ACFWidget, ACFState, ACFWidgetRegistration
  */
 
 #include "Core/ACFState.hpp"
@@ -19,7 +18,11 @@
 
 #include <memory>
 
+class ACFWidget;
 class DataManager;
+class HorizontalAxisRangeControls;
+class Section;
+class VerticalAxisRangeControls;
 
 namespace Ui {
 class ACFPropertiesWidget;
@@ -27,63 +30,43 @@ class ACFPropertiesWidget;
 
 /**
  * @brief Properties panel for ACF Widget
- * 
- * Displays plot settings and configuration options.
- * Shares state with ACFWidget (view) via ACFState.
  */
 class ACFPropertiesWidget : public QWidget {
     Q_OBJECT
 
 public:
-    /**
-     * @brief Construct an ACFPropertiesWidget
-     * 
-     * @param state Shared state with the view widget
-     * @param data_manager DataManager for data queries
-     * @param parent Parent widget
-     */
     explicit ACFPropertiesWidget(std::shared_ptr<ACFState> state,
                                   std::shared_ptr<DataManager> data_manager,
                                   QWidget * parent = nullptr);
 
     ~ACFPropertiesWidget() override;
 
-    /**
-     * @brief Get the shared state
-     * @return Shared pointer to ACFState
-     */
     [[nodiscard]] std::shared_ptr<ACFState> state() const { return _state; }
-
-    /**
-     * @brief Get the DataManager
-     * @return Shared pointer to DataManager
-     */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
-private slots:
     /**
-     * @brief Handle event key combo box selection change
-     * @param index Selected index
+     * @brief Set the ACFWidget to connect axis range controls
+     * @param plot_widget The ACFWidget instance
      */
+    void setPlotWidget(ACFWidget * plot_widget);
+
+private slots:
     void _onEventKeyComboChanged(int index);
 
 private:
-    /**
-     * @brief Populate the event key combo box with available DigitalEventSeries keys
-     */
     void _populateEventKeyComboBox();
-
-    /**
-     * @brief Update UI elements from current state
-     */
     void _updateUIFromState();
 
     Ui::ACFPropertiesWidget * ui;
     std::shared_ptr<ACFState> _state;
     std::shared_ptr<DataManager> _data_manager;
+    ACFWidget * _plot_widget;
+    HorizontalAxisRangeControls * _horizontal_range_controls;
+    Section * _horizontal_range_controls_section;
+    VerticalAxisRangeControls * _vertical_range_controls;
+    Section * _vertical_range_controls_section;
 
-    /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;
 };
 
-#endif// ACF_PROPERTIES_WIDGET_HPP
+#endif  // ACF_PROPERTIES_WIDGET_HPP
