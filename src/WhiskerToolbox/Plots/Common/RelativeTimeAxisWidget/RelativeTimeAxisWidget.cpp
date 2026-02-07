@@ -4,6 +4,7 @@
 
 #include <QPainter>
 #include <QPainterPath>
+#include <QString>
 
 #include <cmath>
 
@@ -19,6 +20,26 @@ void RelativeTimeAxisWidget::setViewStateGetter(ViewStateGetter getter)
 {
     _view_state_getter = std::move(getter);
     update();
+}
+
+void RelativeTimeAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping)
+{
+    _axis_mapping = std::move(mapping);
+    update();
+}
+
+void RelativeTimeAxisWidget::clearAxisMapping()
+{
+    _axis_mapping.reset();
+    update();
+}
+
+CorePlotting::AxisMapping const * RelativeTimeAxisWidget::axisMapping() const
+{
+    if (_axis_mapping.has_value()) {
+        return &_axis_mapping.value();
+    }
+    return nullptr;
 }
 
 QSize RelativeTimeAxisWidget::sizeHint() const
@@ -89,12 +110,18 @@ void RelativeTimeAxisWidget::paintEvent(QPaintEvent * /* event */)
         // Draw label for major ticks
         if (is_major || is_zero) {
             QString label;
-            if (is_zero) {
-                label = "0";
-            } else if (t > 0) {
-                label = QString("+%1").arg(static_cast<int>(t));
+            if (_axis_mapping.has_value() && _axis_mapping->isValid()) {
+                // Use AxisMapping: world → domain → label
+                label = QString::fromStdString(_axis_mapping->label(t));
             } else {
-                label = QString::number(static_cast<int>(t));
+                // Default: relative time formatting
+                if (is_zero) {
+                    label = "0";
+                } else if (t > 0) {
+                    label = QString("+%1").arg(static_cast<int>(t));
+                } else {
+                    label = QString::number(static_cast<int>(t));
+                }
             }
 
             painter.setPen(is_zero ? QColor(255, 100, 100) : QColor(180, 180, 180));
@@ -109,8 +136,19 @@ void RelativeTimeAxisWidget::paintEvent(QPaintEvent * /* event */)
     font.setPointSize(7);
     painter.setFont(font);
 
-    QString min_label = QString("min: %1").arg(static_cast<int>(view_state.data_bounds.min_x));
-    QString max_label = QString("max: %1").arg(static_cast<int>(view_state.data_bounds.max_x));
+    QString min_label;
+    QString max_label;
+    if (_axis_mapping.has_value() && _axis_mapping->isValid()) {
+        min_label = QString("min: %1").arg(
+            QString::fromStdString(_axis_mapping->formatLabel(
+                _axis_mapping->worldToDomain(view_state.data_bounds.min_x))));
+        max_label = QString("max: %1").arg(
+            QString::fromStdString(_axis_mapping->formatLabel(
+                _axis_mapping->worldToDomain(view_state.data_bounds.max_x))));
+    } else {
+        min_label = QString("min: %1").arg(static_cast<int>(view_state.data_bounds.min_x));
+        max_label = QString("max: %1").arg(static_cast<int>(view_state.data_bounds.max_x));
+    }
 
     QRect min_rect(2, kAxisHeight - 12, 60, 12);
     QRect max_rect(width() - 62, kAxisHeight - 12, 60, 12);

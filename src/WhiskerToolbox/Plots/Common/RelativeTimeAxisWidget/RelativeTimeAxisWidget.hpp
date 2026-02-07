@@ -10,12 +10,14 @@
  * It works with CorePlotting::ViewState for generic use across multiple plot types.
  */
 
+#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 
 #include <QWidget>
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace CorePlotting {
 struct ViewState;
@@ -58,6 +60,28 @@ public:
     void setViewStateGetter(ViewStateGetter getter);
 
     /**
+     * @brief Set an AxisMapping to control label formatting and domain interpretation
+     *
+     * When set, world-coordinate tick values are converted to domain values
+     * via the mapping before formatting. This replaces the default
+     * relative-time label formatting ("+N", "-N", "0").
+     *
+     * @param mapping The axis mapping describing world↔domain↔label relationships
+     */
+    void setAxisMapping(CorePlotting::AxisMapping mapping);
+
+    /**
+     * @brief Clear any previously set AxisMapping, reverting to default formatting
+     */
+    void clearAxisMapping();
+
+    /**
+     * @brief Get the current AxisMapping, if any
+     * @return Pointer to the mapping, or nullptr if none set
+     */
+    [[nodiscard]] CorePlotting::AxisMapping const * axisMapping() const;
+
+    /**
      * @brief Connect to a QObject signal that indicates view state changes
      * 
      * When the signal is emitted, the widget will call the ViewStateGetter
@@ -85,6 +109,9 @@ protected:
 
 private:
     ViewStateGetter _view_state_getter;
+
+    /// Optional axis mapping for domain↔world conversion and label formatting
+    std::optional<CorePlotting::AxisMapping> _axis_mapping;
 
     // Axis styling constants
     static constexpr int kAxisHeight = 30;

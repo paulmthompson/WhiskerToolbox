@@ -15,6 +15,7 @@
 #include <QWidget>
 
 #include <memory>
+#include <utility>
 
 class DataManager;
 class RelativeTimeAxisWidget;
@@ -106,6 +107,18 @@ protected:
     void resizeEvent(QResizeEvent * event) override;
 
 private:
+    // -- setState decomposition --
+    void createTimeAxisIfNeeded();
+    void wireTimeAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncTimeAxisRange();
+    void syncVerticalAxisRange();
+
+    // -- Visible range helpers (deduplicate zoom/pan → domain math) --
+    [[nodiscard]] std::pair<double, double> computeVisibleTrialRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleTimeRange() const;
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::EventPlotWidget * ui;
 

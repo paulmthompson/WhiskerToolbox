@@ -26,6 +26,8 @@ target_link_libraries(HorizontalAxisWidget PRIVATE
     Qt6::Gui
 )
 
+target_link_libraries(HorizontalAxisWidget PUBLIC CorePlotting)
+
 target_include_directories(HorizontalAxisWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../..>" #For data manager 

@@ -2,6 +2,7 @@
 
 #include <QPainter>
 #include <QPainterPath>
+#include <QString>
 
 #include <cmath>
 
@@ -26,6 +27,26 @@ void HorizontalAxisWidget::setRange(double min, double max)
     _max_value = max;
     _use_getter = false;
     update();
+}
+
+void HorizontalAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping)
+{
+    _axis_mapping = std::move(mapping);
+    update();
+}
+
+void HorizontalAxisWidget::clearAxisMapping()
+{
+    _axis_mapping.reset();
+    update();
+}
+
+CorePlotting::AxisMapping const * HorizontalAxisWidget::axisMapping() const
+{
+    if (_axis_mapping.has_value()) {
+        return &_axis_mapping.value();
+    }
+    return nullptr;
 }
 
 QSize HorizontalAxisWidget::sizeHint() const
@@ -97,14 +118,22 @@ void HorizontalAxisWidget::paintEvent(QPaintEvent * /* event */)
 
         // Draw label for major ticks
         if (is_major || is_zero) {
-            QString label = QString::number(v, 'f', 1);
-            // Remove trailing zeros
-            if (label.contains('.')) {
-                while (label.endsWith('0')) {
-                    label.chop(1);
-                }
-                if (label.endsWith('.')) {
-                    label.chop(1);
+            QString label;
+            if (_axis_mapping.has_value() && _axis_mapping->isValid()) {
+                // Use AxisMapping: the values are already in domain space,
+                // so formatLabel directly
+                label = QString::fromStdString(_axis_mapping->formatLabel(v));
+            } else {
+                // Default: decimal formatting
+                label = QString::number(v, 'f', 1);
+                // Remove trailing zeros
+                if (label.contains('.')) {
+                    while (label.endsWith('0')) {
+                        label.chop(1);
+                    }
+                    if (label.endsWith('.')) {
+                        label.chop(1);
+                    }
                 }
             }
 

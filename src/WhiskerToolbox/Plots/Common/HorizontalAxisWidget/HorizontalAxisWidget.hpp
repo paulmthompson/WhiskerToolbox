@@ -10,10 +10,13 @@
  * in various plot widgets.
  */
 
+#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
+
 #include <QWidget>
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 class QPaintEvent;
 
@@ -57,6 +60,28 @@ public:
     void setRange(double min, double max);
 
     /**
+     * @brief Set an AxisMapping to control label formatting and domain interpretation
+     *
+     * When set, the RangeGetter/setRange values are interpreted as domain values.
+     * The AxisMapping's formatLabel is used for tick labels instead of the default
+     * decimal formatting.
+     *
+     * @param mapping The axis mapping describing world↔domain↔label relationships
+     */
+    void setAxisMapping(CorePlotting::AxisMapping mapping);
+
+    /**
+     * @brief Clear any previously set AxisMapping, reverting to default formatting
+     */
+    void clearAxisMapping();
+
+    /**
+     * @brief Get the current AxisMapping, if any
+     * @return Pointer to the mapping, or nullptr if none set
+     */
+    [[nodiscard]] CorePlotting::AxisMapping const * axisMapping() const;
+
+    /**
      * @brief Connect to a QObject signal that indicates range changes
      * 
      * When the signal is emitted, the widget will call the RangeGetter
@@ -87,6 +112,9 @@ private:
     double _min_value = 0.0;
     double _max_value = 100.0;
     bool _use_getter = false;
+
+    /// Optional axis mapping for domain↔world conversion and label formatting
+    std::optional<CorePlotting::AxisMapping> _axis_mapping;
 
     // Axis styling constants
     static constexpr int kAxisHeight = 50;
