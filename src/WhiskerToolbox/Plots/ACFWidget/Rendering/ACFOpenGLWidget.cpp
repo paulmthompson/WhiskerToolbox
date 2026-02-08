@@ -1,7 +1,9 @@
 #include "ACFOpenGLWidget.hpp"
 
 #include "Core/ACFState.hpp"
+#include "CorePlotting/Mappers/HistogramMapper.hpp"
 
+#include <QDebug>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -24,6 +26,7 @@ ACFOpenGLWidget::ACFOpenGLWidget(QWidget * parent)
 ACFOpenGLWidget::~ACFOpenGLWidget()
 {
     makeCurrent();
+    _scene_renderer.cleanup();
     doneCurrent();
 }
 
@@ -44,6 +47,45 @@ void ACFOpenGLWidget::setState(std::shared_ptr<ACFState> state)
     }
 }
 
+void ACFOpenGLWidget::setHistogramData(
+    CorePlotting::HistogramData const & data,
+    CorePlotting::HistogramDisplayMode mode,
+    CorePlotting::HistogramStyle const & style)
+{
+    _histogram_data = data;
+    _histogram_mode = mode;
+    _histogram_style = style;
+    _scene_dirty = true;
+
+    // Auto-fit vertical axis to data if state is available
+    if (_state && !data.counts.empty()) {
+        double max_val = data.maxCount();
+        if (max_val > 0.0) {
+            auto * vas = _state->verticalAxisState();
+            if (vas) {
+                double new_y_max = max_val * 1.1; // 10% padding
+                if (std::abs(vas->getYMax() - new_y_max) > 0.01) {
+                    vas->setYMax(new_y_max);
+                }
+            }
+        }
+        auto * has = _state->horizontalAxisState();
+        if (has) {
+            has->setXMin(data.bin_start);
+            has->setXMax(data.binEnd());
+        }
+    }
+
+    update();
+}
+
+void ACFOpenGLWidget::clearHistogramData()
+{
+    _histogram_data = {};
+    _scene_dirty = true;
+    update();
+}
+
 void ACFOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
@@ -51,12 +93,34 @@ void ACFOpenGLWidget::initializeGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    auto fmt = format();
+    if (fmt.samples() > 1) {
+        glEnable(GL_MULTISAMPLE);
+    }
+
+    if (!_scene_renderer.initialize()) {
+        qWarning() << "ACFOpenGLWidget: Failed to initialize SceneRenderer";
+        return;
+    }
+
+    _opengl_initialized = true;
 }
 
 void ACFOpenGLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // TODO: Render ACF curve when data pipeline is available
+
+    if (!_opengl_initialized) {
+        return;
+    }
+
+    if (_scene_dirty) {
+        uploadHistogramScene();
+        _scene_dirty = false;
+    }
+
+    _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
 void ACFOpenGLWidget::resizeGL(int w, int h)
@@ -124,6 +188,7 @@ void ACFOpenGLWidget::wheelEvent(QWheelEvent * event)
 
 void ACFOpenGLWidget::onStateChanged()
 {
+    _scene_dirty = true;
     update();
 }
 
@@ -222,4 +287,17 @@ QPointF ACFOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
     glm::vec4 const ndc(ndc_x, ndc_y, 0.0f, 1.0f);
     glm::vec4 const world = inv_proj * ndc;
     return QPointF(world.x, world.y);
+}
+
+void ACFOpenGLWidget::uploadHistogramScene()
+{
+    if (_histogram_data.counts.empty()) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    auto scene = CorePlotting::HistogramMapper::buildScene(
+        _histogram_data, _histogram_mode, _histogram_style);
+
+    _scene_renderer.uploadScene(scene);
 }

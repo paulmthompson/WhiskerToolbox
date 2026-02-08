@@ -14,6 +14,10 @@
 
 #include "Core/ACFState.hpp"
 
+#include "CorePlotting/DataTypes/HistogramData.hpp"
+#include "CorePlotting/Mappers/HistogramMapper.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
+
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
@@ -42,6 +46,26 @@ public:
 
     void setState(std::shared_ptr<ACFState> state);
 
+    /**
+     * @brief Set histogram data for rendering
+     *
+     * Call this whenever the ACF computation produces new bin data.
+     * The widget will rebuild the scene and redraw.
+     *
+     * @param data  Histogram bin data (lag values and counts)
+     * @param mode  Bar or Line display mode
+     * @param style Visual style (colors, thickness)
+     */
+    void setHistogramData(
+        CorePlotting::HistogramData const & data,
+        CorePlotting::HistogramDisplayMode mode = CorePlotting::HistogramDisplayMode::Bar,
+        CorePlotting::HistogramStyle const & style = {});
+
+    /**
+     * @brief Clear any rendered histogram data
+     */
+    void clearHistogramData();
+
 signals:
     void viewBoundsChanged();
 
@@ -64,6 +88,11 @@ private:
     int _widget_width{1};
     int _widget_height{1};
 
+    // Rendering
+    PlottingOpenGL::SceneRenderer _scene_renderer;
+    bool _opengl_initialized{false};
+    bool _scene_dirty{false};
+
     ACFViewState _cached_view_state;
     glm::mat4 _projection_matrix{1.0f};
     glm::mat4 _view_matrix{1.0f};
@@ -73,6 +102,12 @@ private:
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
 
+    // Cached histogram data
+    CorePlotting::HistogramData _histogram_data;
+    CorePlotting::HistogramDisplayMode _histogram_mode{CorePlotting::HistogramDisplayMode::Bar};
+    CorePlotting::HistogramStyle _histogram_style;
+
+    void uploadHistogramScene();
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);

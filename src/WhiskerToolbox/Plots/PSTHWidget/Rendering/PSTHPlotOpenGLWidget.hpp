@@ -20,6 +20,8 @@
 
 #include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/DataTypes/HistogramData.hpp"
+#include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -107,10 +109,15 @@ private:
     bool _updating_y_max_from_rebuild{false};
 
     void rebuildScene();
+    void uploadHistogramScene();
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
+
+    // Cached histogram data from last rebuildScene()
+    CorePlotting::HistogramData _histogram_data;
+    CorePlotting::HistogramStyle _histogram_style;
 };
 
 #endif // PSTHPLOT_OPENGLWIDGET_HPP

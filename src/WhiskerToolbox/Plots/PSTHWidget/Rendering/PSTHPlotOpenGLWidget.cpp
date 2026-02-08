@@ -4,6 +4,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/utils/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
+#include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QDebug>
@@ -131,8 +132,8 @@ void PSTHPlotOpenGLWidget::paintGL()
         _scene_dirty = false;
     }
 
-    // TODO: Render histogram bars/lines here
-    // For now, just clear the screen
+    // Render the histogram scene using SceneRenderer
+    _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
 void PSTHPlotOpenGLWidget::resizeGL(int w, int h)
@@ -380,10 +381,30 @@ void PSTHPlotOpenGLWidget::rebuildScene()
         }
     }
 
-    // TODO: Store histogram for rendering later
-    // _histogram = histogram;
-    // _histogram_bin_size = bin_size;
-    // _histogram_window_size = window_size;
+    // Store histogram data and upload scene for rendering
+    _histogram_data.bin_start = -half_window;
+    _histogram_data.bin_width = bin_size;
+    _histogram_data.counts = histogram;
+    uploadHistogramScene();
+}
+
+void PSTHPlotOpenGLWidget::uploadHistogramScene()
+{
+    if (_histogram_data.counts.empty()) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    // Choose display mode from state
+    auto mode = CorePlotting::HistogramDisplayMode::Bar;
+    if (_state && _state->getStyle() == PSTHStyle::Line) {
+        mode = CorePlotting::HistogramDisplayMode::Line;
+    }
+
+    auto scene = CorePlotting::HistogramMapper::buildScene(
+        _histogram_data, mode, _histogram_style);
+
+    _scene_renderer.uploadScene(scene);
 }
 
 QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const

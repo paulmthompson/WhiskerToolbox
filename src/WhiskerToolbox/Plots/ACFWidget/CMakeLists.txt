@@ -42,6 +42,8 @@ target_link_libraries(ACFWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ACFWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ACFWidget PRIVATE Collapsible_Widget)
 target_link_libraries(ACFWidget PRIVATE CorePlotting)
+target_link_libraries(ACFWidget PRIVATE PlottingOpenGL)
+target_link_libraries(ACFWidget PRIVATE glm::glm)
 
 target_include_directories(ACFWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
