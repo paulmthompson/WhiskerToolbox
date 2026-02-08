@@ -39,3 +39,31 @@ if(ENABLE_DETAILED_TEST_DISCOVERY)
 else()
     add_test(NAME test_plot_alignment_gather COMMAND test_plot_alignment_gather)
 endif()
+
+# ── PlotInteractionHelpers tests ──────────────────────────────────────────────
+
+find_package(glm CONFIG REQUIRED)
+
+add_executable(test_plot_interaction_helpers
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Plots/Common/PlotInteractionHelpers.test.cpp
+)
+
+target_link_libraries(test_plot_interaction_helpers PRIVATE
+    Catch2::Catch2WithMain
+    Qt6::Core
+    glm::glm
+)
+
+target_include_directories(test_plot_interaction_helpers PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+)
+
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_plot_interaction_helpers PROPERTIES
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_plot_interaction_helpers COMMAND test_plot_interaction_helpers)
+endif()
