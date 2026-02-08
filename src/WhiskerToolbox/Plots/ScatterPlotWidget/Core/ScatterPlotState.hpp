@@ -14,6 +14,7 @@
  * @see PSTHState, LinePlotState for the same pattern
  */
 
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
@@ -27,25 +28,12 @@
 #include <string>
 
 /**
- * @brief View state for the scatter plot (zoom and pan only)
- *
- * Data bounds come from HorizontalAxisState and VerticalAxisState.
- * This struct only holds the view transform.
- */
-struct ScatterPlotViewState {
-    double x_zoom = 1.0;
-    double y_zoom = 1.0;
-    double x_pan = 0.0;
-    double y_pan = 0.0;
-};
-
-/**
  * @brief Serializable state data for ScatterPlotWidget
  */
 struct ScatterPlotStateData {
     std::string instance_id;
     std::string display_name = "Scatter Plot";
-    ScatterPlotViewState view_state;
+    CorePlotting::ViewStateData view_state;
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
 };
@@ -77,11 +65,16 @@ public:
     [[nodiscard]] double getYMin() const;
     [[nodiscard]] double getYMax() const;
 
-    // === View state (zoom / pan) ===
-    [[nodiscard]] ScatterPlotViewState const & viewState() const { return _data.view_state; }
+    // === View state (zoom / pan / bounds) ===
+    /** @brief Get the current view state (zoom, pan, data bounds). */
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const { return _data.view_state; }
     void setXZoom(double zoom);
     void setYZoom(double zoom);
     void setPan(double x_pan, double y_pan);
+    /** @brief Set X data bounds; updates view state and horizontal axis. */
+    void setXBounds(double x_min, double x_max);
+    /** @brief Set Y data bounds; updates view state and vertical axis. */
+    void setYBounds(double y_min, double y_max);
 
     // === Serialization ===
     [[nodiscard]] std::string toJson() const override;

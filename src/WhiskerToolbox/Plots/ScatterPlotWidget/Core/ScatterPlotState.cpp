@@ -14,6 +14,12 @@ ScatterPlotState::ScatterPlotState(QObject * parent)
     _data.horizontal_axis = _horizontal_axis_state->data();
     _data.vertical_axis = _vertical_axis_state->data();
 
+    // Sync view state bounds from axis states so view state and axes never drift
+    _data.view_state.x_min = _horizontal_axis_state->getXMin();
+    _data.view_state.x_max = _horizontal_axis_state->getXMax();
+    _data.view_state.y_min = _vertical_axis_state->getYMin();
+    _data.view_state.y_max = _vertical_axis_state->getYMax();
+
     auto syncHorizontalData = [this]() {
         _data.horizontal_axis = _horizontal_axis_state->data();
         markDirty();
@@ -97,6 +103,34 @@ void ScatterPlotState::setPan(double x_pan, double y_pan)
     }
 }
 
+void ScatterPlotState::setXBounds(double x_min, double x_max)
+{
+    if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
+        _data.view_state.x_min = x_min;
+        _data.view_state.x_max = x_max;
+        _horizontal_axis_state->data().x_min = x_min;
+        _horizontal_axis_state->data().x_max = x_max;
+        _data.horizontal_axis = _horizontal_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
+void ScatterPlotState::setYBounds(double y_min, double y_max)
+{
+    if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
+        _data.view_state.y_min = y_min;
+        _data.view_state.y_max = y_max;
+        _vertical_axis_state->data().y_min = y_min;
+        _vertical_axis_state->data().y_max = y_max;
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
 std::string ScatterPlotState::toJson() const
 {
     ScatterPlotStateData data_to_serialize = _data;
@@ -114,6 +148,13 @@ bool ScatterPlotState::fromJson(std::string const & json)
         }
         _horizontal_axis_state->data() = _data.horizontal_axis;
         _vertical_axis_state->data() = _data.vertical_axis;
+
+        // Sync view state bounds from axis states so they never drift
+        _data.view_state.x_min = _horizontal_axis_state->getXMin();
+        _data.view_state.x_max = _horizontal_axis_state->getXMax();
+        _data.view_state.y_min = _vertical_axis_state->getYMin();
+        _data.view_state.y_max = _vertical_axis_state->getYMax();
+
         emit stateChanged();
         return true;
     }

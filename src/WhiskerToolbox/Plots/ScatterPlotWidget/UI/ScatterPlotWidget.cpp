@@ -152,12 +152,12 @@ void ScatterPlotWidget::wireVerticalAxis()
                     }
                     double const range = max_range - min_range;
                     if (range > 0.001) {
-                        auto * vas_local = _state->verticalAxisState();
-                        double const full_range = vas_local->getYMax() - vas_local->getYMin();
+                        auto const & vs = _state->viewState();
+                        double const full_range = vs.y_max - vs.y_min;
                         _state->setYZoom(full_range / range);
                         _state->setPan(_state->viewState().x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                       ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
+                                           ((vs.y_min + vs.y_max) / 2.0));
                     }
                 });
     }
@@ -171,11 +171,11 @@ void ScatterPlotWidget::wireVerticalAxis()
                     }
                     double const range = max_range - min_range;
                     if (range > 0.001) {
-                        auto * has_local = _state->horizontalAxisState();
-                        double const full_range = has_local->getXMax() - has_local->getXMin();
+                        auto const & vs = _state->viewState();
+                        double const full_range = vs.x_max - vs.x_min;
                         _state->setXZoom(full_range / range);
                         _state->setPan(((min_range + max_range) / 2.0) -
-                                       ((has_local->getXMin() + has_local->getXMax()) / 2.0),
+                                           ((vs.x_min + vs.x_max) / 2.0),
                                        _state->viewState().y_pan);
                     }
                 });
@@ -214,6 +214,9 @@ void ScatterPlotWidget::syncVerticalAxisRange()
     if (!vas) {
         return;
     }
+    // Visible range from view state only; sync to axis for display.
+    // When the plot updates the vertical axis from data (e.g. after a rebuild),
+    // call state->setYBounds(vas->getYMin(), vas->getYMax()) so view state and axis stay in sync.
     auto [min, max] = computeVisibleYRange();
     vas->setRangeSilent(min, max);
 }
@@ -223,12 +226,9 @@ std::pair<double, double> ScatterPlotWidget::computeVisibleXRange() const
     if (!_state) {
         return {0.0, 100.0};
     }
-    auto * has = _state->horizontalAxisState();
-    double x_min = has ? has->getXMin() : 0.0;
-    double x_max = has ? has->getXMax() : 100.0;
     auto const & vs = _state->viewState();
-    double const x_range = x_max - x_min;
-    double const x_center = (x_min + x_max) / 2.0;
+    double const x_range = vs.x_max - vs.x_min;
+    double const x_center = (vs.x_min + vs.x_max) / 2.0;
     double const half = x_range / 2.0 / vs.x_zoom;
     return {x_center - half + vs.x_pan, x_center + half + vs.x_pan};
 }
@@ -238,12 +238,9 @@ std::pair<double, double> ScatterPlotWidget::computeVisibleYRange() const
     if (!_state) {
         return {0.0, 100.0};
     }
-    auto * vas = _state->verticalAxisState();
-    double y_min = vas ? vas->getYMin() : 0.0;
-    double y_max = vas ? vas->getYMax() : 100.0;
     auto const & vs = _state->viewState();
-    double const y_range = y_max - y_min;
-    double const y_center = (y_min + y_max) / 2.0;
+    double const y_range = vs.y_max - vs.y_min;
+    double const y_center = (vs.y_min + vs.y_max) / 2.0;
     double const half = y_range / 2.0 / vs.y_zoom;
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }

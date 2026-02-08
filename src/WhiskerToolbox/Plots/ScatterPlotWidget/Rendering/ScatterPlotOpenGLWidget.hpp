@@ -12,6 +12,7 @@
  */
 
 #include "Core/ScatterPlotState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -63,7 +64,7 @@ private:
     int _widget_width{1};
     int _widget_height{1};
 
-    ScatterPlotViewState _cached_view_state;
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _projection_matrix{1.0f};
     glm::mat4 _view_matrix{1.0f};
 
