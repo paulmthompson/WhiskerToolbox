@@ -28,8 +28,10 @@ add_executable(test_coreplotting
     SceneHitTester.test.cpp
     SceneBuilder.test.cpp
     Mappers.test.cpp
+    HistogramMapper.test.cpp
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp
+    ViewStateData.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

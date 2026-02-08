@@ -153,4 +153,49 @@ void resetView(ViewState & state) {
     state.pan_offset_y = 0.0f;
 }
 
+ViewState toRuntimeViewState(
+    ViewStateData const & data,
+    int viewport_width,
+    int viewport_height,
+    float padding_factor)
+{
+    ViewState state;
+
+    state.data_bounds = BoundingBox{
+        static_cast<float>(data.x_min),
+        static_cast<float>(data.y_min),
+        static_cast<float>(data.x_max),
+        static_cast<float>(data.y_max)};
+    state.data_bounds_valid = true;
+
+    state.viewport_width = viewport_width;
+    state.viewport_height = viewport_height;
+    state.padding_factor = padding_factor;
+
+    // Zoom: direct pass-through
+    state.zoom_level_x = static_cast<float>(data.x_zoom);
+    state.zoom_level_y = static_cast<float>(data.y_zoom);
+
+    // Pan: ViewStateData stores world-coordinate pan offsets, but ViewState
+    // uses pan normalized to (data_range / zoom).  Convert here.
+    double const x_range = data.x_max - data.x_min;
+    double const y_range = data.y_max - data.y_min;
+
+    if (x_range > 0.0 && data.x_zoom > 0.0) {
+        state.pan_offset_x = static_cast<float>(
+            data.x_pan / (x_range / data.x_zoom));
+    } else {
+        state.pan_offset_x = 0.0f;
+    }
+
+    if (y_range > 0.0 && data.y_zoom > 0.0) {
+        state.pan_offset_y = static_cast<float>(
+            data.y_pan / (y_range / data.y_zoom));
+    } else {
+        state.pan_offset_y = 0.0f;
+    }
+
+    return state;
+}
+
 }// namespace CorePlotting

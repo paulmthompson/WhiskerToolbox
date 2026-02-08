@@ -8,7 +8,6 @@
 
 #include "Plots/EventPlotWidget/UI/EventPlotWidget.hpp"
 #include "Plots/EventPlotWidget/Core/EventPlotState.hpp"
-#include "Plots/EventPlotWidget/Core/ViewStateAdapter.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -61,9 +60,10 @@ TEST_CASE("RelativeTimeAxisWidget updates when window size changes", "[EventPlot
         auto const & updated_view_state = state->viewState();
         REQUIRE(updated_view_state.x_min == -1000.0);
         REQUIRE(updated_view_state.x_max == 1000.0);
-        
-        // Verify the ViewStateAdapter produces correct CorePlotting::ViewState
-        auto core_view_state = toCoreViewState(updated_view_state, 800, 600);
+
+        // Verify toRuntimeViewState produces correct CorePlotting::ViewState
+        auto core_view_state =
+            CorePlotting::toRuntimeViewState(updated_view_state, 800, 600);
         REQUIRE(core_view_state.data_bounds_valid);
         REQUIRE(core_view_state.data_bounds.min_x == -1000.0f);
         REQUIRE(core_view_state.data_bounds.max_x == 1000.0f);
@@ -96,10 +96,13 @@ TEST_CASE("RelativeTimeAxisWidget updates when window size changes", "[EventPlot
             REQUIRE(view_state.x_min == Catch::Approx(test_case.expected_min));
             REQUIRE(view_state.x_max == Catch::Approx(test_case.expected_max));
 
-            // Verify ViewStateAdapter produces correct bounds
-            auto core_view_state = toCoreViewState(view_state, 800, 600);
-            REQUIRE(core_view_state.data_bounds.min_x == Catch::Approx(test_case.expected_min));
-            REQUIRE(core_view_state.data_bounds.max_x == Catch::Approx(test_case.expected_max));
+            // Verify toRuntimeViewState produces correct bounds
+            auto core_view_state =
+                CorePlotting::toRuntimeViewState(view_state, 800, 600);
+            REQUIRE(core_view_state.data_bounds.min_x ==
+                    Catch::Approx(test_case.expected_min));
+            REQUIRE(core_view_state.data_bounds.max_x ==
+                    Catch::Approx(test_case.expected_max));
         }
     }
 

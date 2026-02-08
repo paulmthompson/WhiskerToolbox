@@ -40,6 +40,8 @@ target_link_libraries(ScatterPlotWidget PRIVATE DataManager)
 target_link_libraries(ScatterPlotWidget PRIVATE EditorState)
 target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
+target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)
+target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 
 target_include_directories(ScatterPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

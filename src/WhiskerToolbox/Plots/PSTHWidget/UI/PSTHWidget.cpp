@@ -1,15 +1,15 @@
 #include "PSTHWidget.hpp"
 
 #include "Core/PSTHState.hpp"
-#include "Core/ViewStateAdapter.hpp"
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
+#include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Rendering/PSTHPlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
+#include "Rendering/PSTHPlotOpenGLWidget.hpp"
 
 #include <QHBoxLayout>
 #include <QResizeEvent>
@@ -26,8 +26,7 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
       _axis_widget(nullptr),
       _range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr)
-{
+      _vertical_range_controls(nullptr) {
     ui->setupUi(this);
 
     // Create horizontal layout for vertical axis + OpenGL widget
@@ -44,13 +43,13 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
     // Create and add the OpenGL widget
     _opengl_widget = new PSTHPlotOpenGLWidget(this);
     _opengl_widget->setDataManager(_data_manager);
-    horizontal_layout->addWidget(_opengl_widget, 1);  // Stretch factor 1
+    horizontal_layout->addWidget(_opengl_widget, 1);// Stretch factor 1
 
     // Create vertical layout for horizontal layout + time axis
     auto * vertical_layout = new QVBoxLayout();
     vertical_layout->setSpacing(0);
     vertical_layout->setContentsMargins(0, 0, 0, 0);
-    vertical_layout->addLayout(horizontal_layout, 1);  // Stretch factor 1
+    vertical_layout->addLayout(horizontal_layout, 1);// Stretch factor 1
 
     // Time axis widget and controls will be created in setState()
     // when we have access to the PSTHState's RelativeTimeAxisState
@@ -71,15 +70,13 @@ PSTHWidget::PSTHWidget(std::shared_ptr<DataManager> data_manager,
             });
 }
 
-PSTHWidget::~PSTHWidget()
-{
+PSTHWidget::~PSTHWidget() {
     delete ui;
 }
 
-void PSTHWidget::setState(std::shared_ptr<PSTHState> state)
-{
+void PSTHWidget::setState(std::shared_ptr<PSTHState> state) {
     _state = state;
-    
+
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
     }
@@ -101,8 +98,7 @@ void PSTHWidget::setState(std::shared_ptr<PSTHState> state)
 // setState decomposition
 // ---------------------------------------------------------------------------
 
-void PSTHWidget::createTimeAxisIfNeeded()
-{
+void PSTHWidget::createTimeAxisIfNeeded() {
     if (_axis_widget) {
         return;
     }
@@ -122,8 +118,7 @@ void PSTHWidget::createTimeAxisIfNeeded()
     }
 }
 
-void PSTHWidget::wireTimeAxis()
-{
+void PSTHWidget::wireTimeAxis() {
     if (!_axis_widget) {
         return;
     }
@@ -134,15 +129,14 @@ void PSTHWidget::wireTimeAxis()
         if (!_state || !_opengl_widget) {
             return CorePlotting::ViewState{};
         }
-        return toCoreViewState(
+        return CorePlotting::toRuntimeViewState(
                 _state->viewState(),
                 _opengl_widget->width(),
                 _opengl_widget->height());
     });
 }
 
-void PSTHWidget::wireVerticalAxis()
-{
+void PSTHWidget::wireVerticalAxis() {
     // Create the vertical axis widget if it doesn't exist yet
     if (!_vertical_axis_widget && _state) {
         auto * vertical_axis_state = _state->verticalAxisState();
@@ -192,14 +186,13 @@ void PSTHWidget::wireVerticalAxis()
                         _state->setYZoom(full_range / range);
                         _state->setPan(_state->viewState().x_pan,
                                        ((min_range + max_range) / 2.0) -
-                                       ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
+                                               ((vas_local->getYMin() + vas_local->getYMax()) / 2.0));
                     }
                 });
     }
 }
 
-void PSTHWidget::connectViewChangeSignals()
-{
+void PSTHWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
         if (_axis_widget) {
             _axis_widget->update();
@@ -218,8 +211,7 @@ void PSTHWidget::connectViewChangeSignals()
             this, onViewChanged);
 }
 
-void PSTHWidget::syncTimeAxisRange()
-{
+void PSTHWidget::syncTimeAxisRange() {
     auto * time_axis_state = _state ? _state->relativeTimeAxisState() : nullptr;
     if (!time_axis_state) {
         return;
@@ -228,8 +220,7 @@ void PSTHWidget::syncTimeAxisRange()
     time_axis_state->setRangeSilent(min, max);
 }
 
-void PSTHWidget::syncVerticalAxisRange()
-{
+void PSTHWidget::syncVerticalAxisRange() {
     if (!_state) {
         return;
     }
@@ -245,8 +236,7 @@ void PSTHWidget::syncVerticalAxisRange()
 // Visible-range helpers
 // ---------------------------------------------------------------------------
 
-std::pair<double, double> PSTHWidget::computeVisibleTimeRange() const
-{
+std::pair<double, double> PSTHWidget::computeVisibleTimeRange() const {
     if (!_state) {
         return {0.0, 0.0};
     }
@@ -256,38 +246,31 @@ std::pair<double, double> PSTHWidget::computeVisibleTimeRange() const
     return {center - half + vs.x_pan, center + half + vs.x_pan};
 }
 
-std::pair<double, double> PSTHWidget::computeVisibleVerticalRange() const
-{
+std::pair<double, double> PSTHWidget::computeVisibleVerticalRange() const {
     if (!_state) {
         return {0.0, 100.0};
     }
+    // Y data bounds are in ViewStateData (kept in sync with vertical axis via setYBounds)
     auto const & vs = _state->viewState();
-    auto * vas = _state->verticalAxisState();
-    double y_min = vas ? vas->getYMin() : 0.0;
-    double y_max = vas ? vas->getYMax() : 100.0;
-    double const y_range = y_max - y_min;
-    double const y_center = (y_min + y_max) / 2.0;
+    double const y_range = vs.y_max - vs.y_min;
+    double const y_center = (vs.y_min + vs.y_max) / 2.0;
     double const half = y_range / 2.0 / vs.y_zoom;
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-PSTHState * PSTHWidget::state()
-{
+PSTHState * PSTHWidget::state() {
     return _state.get();
 }
 
-RelativeTimeAxisRangeControls * PSTHWidget::getRangeControls() const
-{
+RelativeTimeAxisRangeControls * PSTHWidget::getRangeControls() const {
     return _range_controls;
 }
 
-VerticalAxisRangeControls * PSTHWidget::getVerticalRangeControls() const
-{
+VerticalAxisRangeControls * PSTHWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-void PSTHWidget::resizeEvent(QResizeEvent * event)
-{
+void PSTHWidget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
     if (_axis_widget) {
         _axis_widget->update();

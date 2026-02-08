@@ -4,8 +4,11 @@
 /**
  * @file TemporalProjectionViewWidget.hpp
  * @brief Main widget for displaying temporal projection views
- * 
- * TemporalProjectionViewWidget displays 2D projections of data collapsed across temporal windows.
+ *
+ * TemporalProjectionViewWidget displays 2D projections of data collapsed across
+ * temporal windows. Single source of truth: TemporalProjectionViewState.
+ * Horizontal and vertical axis widgets use state; pan/zoom in OpenGL widget
+ * update state.
  */
 
 #include "DataManager/DataManagerFwd.hpp"
@@ -18,9 +21,13 @@
 
 class DataManager;
 class TemporalProjectionViewState;
-class HorizontalAxisWidget;
-class VerticalAxisWidget;
 class TemporalProjectionOpenGLWidget;
+class HorizontalAxisRangeControls;
+class HorizontalAxisWidget;
+class VerticalAxisRangeControls;
+class VerticalAxisWidget;
+
+class QResizeEvent;
 
 namespace Ui {
 class TemporalProjectionViewWidget;
@@ -43,53 +50,50 @@ public:
 
     ~TemporalProjectionViewWidget() override;
 
-    /**
-     * @brief Set the TemporalProjectionViewState for this widget
-     * 
-     * The state manages all serializable settings. This widget shares
-     * the state with the properties widget.
-     * 
-     * @param state Shared pointer to the state object
-     */
     void setState(std::shared_ptr<TemporalProjectionViewState> state);
-
-    /**
-     * @brief Get the current TemporalProjectionViewState (const)
-     * @return Shared pointer to the state object
-     */
     [[nodiscard]] std::shared_ptr<TemporalProjectionViewState> state() const { return _state; }
-
-    /**
-     * @brief Get mutable state access
-     * @return Raw pointer to state for modification
-     */
     [[nodiscard]] TemporalProjectionViewState * state();
 
-signals:
+    [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
     /**
-     * @brief Emitted when a time position is selected in the view
-     * @param position TimePosition to navigate to
+     * @brief Handle time changes from EditorRegistry
+     *
+     * Slot for global time changes (e.g. TimeScrollBar). Can be used to update
+     * the view when time changes from other sources.
+     *
+     * @param position The new TimePosition
      */
+    void _onTimeChanged(TimePosition position);
+
+signals:
     void timePositionSelected(TimePosition position);
 
 protected:
     void resizeEvent(QResizeEvent * event) override;
 
 private:
+    void createHorizontalAxisIfNeeded();
+    void createVerticalAxisIfNeeded();
+    void wireHorizontalAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncHorizontalAxisRange();
+    void syncVerticalAxisRange();
+
+    [[nodiscard]] std::pair<double, double> computeVisibleXRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleYRange() const;
+
     std::shared_ptr<DataManager> _data_manager;
     Ui::TemporalProjectionViewWidget * ui;
-
-    /// Serializable state shared with properties widget
     std::shared_ptr<TemporalProjectionViewState> _state;
-
-    /// OpenGL rendering widget
     TemporalProjectionOpenGLWidget * _opengl_widget;
 
-    /// Horizontal axis widget below the plot
     HorizontalAxisWidget * _horizontal_axis_widget;
-
-    /// Vertical axis widget on the left side
+    HorizontalAxisRangeControls * _horizontal_range_controls;
     VerticalAxisWidget * _vertical_axis_widget;
+    VerticalAxisRangeControls * _vertical_range_controls;
 };
 
-#endif// TEMPORAL_PROJECTION_VIEW_WIDGET_HPP
+#endif  // TEMPORAL_PROJECTION_VIEW_WIDGET_HPP

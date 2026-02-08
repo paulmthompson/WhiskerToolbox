@@ -49,6 +49,12 @@ void registerTypes(EditorRegistry * registry,
                                 auto * widget = new TemporalProjectionViewWidget(dm);
                                 widget->setState(projection_state);
 
+                                if (reg) {
+                                    QObject::connect(reg,
+                                                     QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                     widget, &TemporalProjectionViewWidget::_onTimeChanged);
+                                }
+
                                 return widget;
                             },
 
@@ -75,8 +81,15 @@ void registerTypes(EditorRegistry * registry,
                                 auto * view = new TemporalProjectionViewWidget(dm);
                                 view->setState(state);
 
+                                if (reg) {
+                                    QObject::connect(reg,
+                                                     QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                     view, &TemporalProjectionViewWidget::_onTimeChanged);
+                                }
+
                                 // Create the properties widget with the shared state
                                 auto * props = new TemporalProjectionViewPropertiesWidget(state, dm);
+                                props->setPlotWidget(view);
 
                                 // Connect view widget time position selection to update time in EditorRegistry
                                 // This allows the temporal projection view to navigate to a specific time position

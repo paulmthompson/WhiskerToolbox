@@ -1,8 +1,8 @@
 #include "LinePlotWidget.hpp"
 
 #include "Core/LinePlotState.hpp"
-#include "Core/ViewStateAdapter.hpp"
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
+#include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Rendering/LinePlotOpenGLWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
@@ -119,7 +119,7 @@ void LinePlotWidget::wireTimeAxis()
         if (!_state || !_opengl_widget) {
             return CorePlotting::ViewState{};
         }
-        return toCoreViewState(
+        return CorePlotting::toRuntimeViewState(
                 _state->viewState(),
                 _opengl_widget->width(),
                 _opengl_widget->height());
@@ -216,6 +216,7 @@ void LinePlotWidget::syncVerticalAxisRange()
     if (!vas) {
         return;
     }
+
     auto [min, max] = computeVisibleVerticalRange();
     vas->setRangeSilent(min, max);
 }
@@ -237,11 +238,10 @@ std::pair<double, double> LinePlotWidget::computeVisibleVerticalRange() const
         return {0.0, 100.0};
     }
     auto const & vs = _state->viewState();
-    auto * vas = _state->verticalAxisState();
-    double y_min = vas ? vas->getYMin() : 0.0;
-    double y_max = vas ? vas->getYMax() : 100.0;
-    double const y_range = y_max - y_min;
-    double const y_center = (y_min + y_max) / 2.0;
+
+    // Y data bounds are now directly in ViewStateData
+    double const y_range = vs.y_max - vs.y_min;
+    double const y_center = (vs.y_min + vs.y_max) / 2.0;
     double const half = y_range / 2.0 / vs.y_zoom;
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }

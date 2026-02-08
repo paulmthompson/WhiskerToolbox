@@ -36,6 +36,8 @@ target_link_libraries(TemporalProjectionViewWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(TemporalProjectionViewWidget PRIVATE Collapsible_Widget)
+target_link_libraries(TemporalProjectionViewWidget PRIVATE CorePlotting)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE DataManager)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE EditorState)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE HorizontalAxisWidget)

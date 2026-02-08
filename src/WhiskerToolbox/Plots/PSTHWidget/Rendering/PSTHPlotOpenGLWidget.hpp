@@ -19,7 +19,9 @@
 #include "Core/PSTHState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/HistogramData.hpp"
+#include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -98,8 +100,8 @@ private:
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
 
-    // Projection
-    PSTHViewState _cached_view_state;
+    // View state cache (single source of truth is PSTHState)
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _projection_matrix{1.0f};
     glm::mat4 _view_matrix{1.0f};
 
@@ -107,10 +109,15 @@ private:
     bool _updating_y_max_from_rebuild{false};
 
     void rebuildScene();
+    void uploadHistogramScene();
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
+
+    // Cached histogram data from last rebuildScene()
+    CorePlotting::HistogramData _histogram_data;
+    CorePlotting::HistogramStyle _histogram_style;
 };
 
 #endif // PSTHPLOT_OPENGLWIDGET_HPP

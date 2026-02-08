@@ -12,6 +12,7 @@
  */
 
 #include "EditorState/EditorState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -27,27 +28,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-/**
- * @brief View state for the line plot (zoom, pan, data bounds)
- *
- * Follows the same architecture as PSTHViewState / EventPlotViewState:
- * - Data bounds (x_min, x_max) define the window of data to gather.
- *   Changing these triggers a scene rebuild.
- * - View transform (x_zoom, y_zoom, x_pan, y_pan) controls how the data
- *   is displayed. Changing these only updates the projection matrix.
- */
-struct LinePlotViewState {
-    // === Data Bounds ===
-    double x_min = -500.0;
-    double x_max = 500.0;
-
-    // === View Transform ===
-    double x_zoom = 1.0;
-    double y_zoom = 1.0;
-    double x_pan = 0.0;
-    double y_pan = 0.0;
-};
 
 /**
  * @brief Options for plotting an analog time series in the line plot
@@ -66,7 +46,7 @@ struct LinePlotStateData {
     std::string display_name = "Line Plot";
     PlotAlignmentData alignment;                                                      ///< Alignment settings (event key, interval type, offset, window size)
     std::map<std::string, LinePlotOptions> plot_series;                               ///< Map of series names to their plot options
-    LinePlotViewState view_state;                                                     ///< Zoom, pan, data bounds
+    CorePlotting::ViewStateData view_state;                                            ///< Zoom, pan, data bounds
     RelativeTimeAxisStateData time_axis;                                              ///< Time axis settings (min_range, max_range)
     VerticalAxisStateData vertical_axis;                                              ///< Vertical axis settings (y_min, y_max)
 };
@@ -224,7 +204,7 @@ public:
     // === View State (Zoom / Pan / Bounds) ===
 
     /** @brief Get the current view state */
-    [[nodiscard]] LinePlotViewState const & viewState() const { return _data.view_state; }
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const { return _data.view_state; }
 
     /** @brief Set X-axis zoom. Only emits viewStateChanged(). */
     void setXZoom(double zoom);
@@ -235,8 +215,11 @@ public:
     /** @brief Set pan offsets. Only emits viewStateChanged(). */
     void setPan(double x_pan, double y_pan);
 
-    /** @brief Set data bounds. Emits viewStateChanged() AND stateChanged(). */
+    /** @brief Set X data bounds. Emits viewStateChanged() AND stateChanged(). */
     void setXBounds(double x_min, double x_max);
+
+    /** @brief Set Y data bounds. Emits viewStateChanged() AND stateChanged(). */
+    void setYBounds(double y_min, double y_max);
 
     // === Serialization ===
 

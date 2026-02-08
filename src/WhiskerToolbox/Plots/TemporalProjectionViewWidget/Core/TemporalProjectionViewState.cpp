@@ -1,12 +1,43 @@
 #include "TemporalProjectionViewState.hpp"
 
+#include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
+
 #include <rfl/json.hpp>
 
 TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
-    : EditorState(parent)
+    : EditorState(parent),
+      _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
 {
-    // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
+    _data.horizontal_axis = _horizontal_axis_state->data();
+    _data.vertical_axis = _vertical_axis_state->data();
+    // Sync view state bounds from axes so they never drift
+    _data.view_state.x_min = _horizontal_axis_state->getXMin();
+    _data.view_state.x_max = _horizontal_axis_state->getXMax();
+    _data.view_state.y_min = _vertical_axis_state->getYMin();
+    _data.view_state.y_max = _vertical_axis_state->getYMax();
+
+    auto syncHorizontalData = [this]() {
+        _data.horizontal_axis = _horizontal_axis_state->data();
+        markDirty();
+        emit stateChanged();
+    };
+    connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeChanged,
+            this, syncHorizontalData);
+    connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeUpdated,
+            this, syncHorizontalData);
+
+    auto syncVerticalData = [this]() {
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit stateChanged();
+    };
+    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
+            this, syncVerticalData);
+    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
+            this, syncVerticalData);
 }
 
 QString TemporalProjectionViewState::getDisplayName() const
@@ -23,72 +54,86 @@ void TemporalProjectionViewState::setDisplayName(QString const & name)
     }
 }
 
-std::string TemporalProjectionViewState::toJson() const
-{
-    // Include instance_id in serialization for restoration
-    TemporalProjectionViewStateData data_to_serialize = _data;
-    data_to_serialize.instance_id = getInstanceId().toStdString();
-    return rfl::json::write(data_to_serialize);
-}
-
 double TemporalProjectionViewState::getXMin() const
 {
-    return _data.x_min;
-}
-
-void TemporalProjectionViewState::setXMin(double x_min)
-{
-    if (_data.x_min != x_min) {
-        _data.x_min = x_min;
-        markDirty();
-        emit xMinChanged(x_min);
-        emit stateChanged();
-    }
+    return _horizontal_axis_state->getXMin();
 }
 
 double TemporalProjectionViewState::getXMax() const
 {
-    return _data.x_max;
-}
-
-void TemporalProjectionViewState::setXMax(double x_max)
-{
-    if (_data.x_max != x_max) {
-        _data.x_max = x_max;
-        markDirty();
-        emit xMaxChanged(x_max);
-        emit stateChanged();
-    }
+    return _horizontal_axis_state->getXMax();
 }
 
 double TemporalProjectionViewState::getYMin() const
 {
-    return _data.y_min;
-}
-
-void TemporalProjectionViewState::setYMin(double y_min)
-{
-    if (_data.y_min != y_min) {
-        _data.y_min = y_min;
-        markDirty();
-        emit yMinChanged(y_min);
-        emit stateChanged();
-    }
+    return _vertical_axis_state->getYMin();
 }
 
 double TemporalProjectionViewState::getYMax() const
 {
-    return _data.y_max;
+    return _vertical_axis_state->getYMax();
 }
 
-void TemporalProjectionViewState::setYMax(double y_max)
+void TemporalProjectionViewState::setXZoom(double zoom)
 {
-    if (_data.y_max != y_max) {
-        _data.y_max = y_max;
+    if (_data.view_state.x_zoom != zoom) {
+        _data.view_state.x_zoom = zoom;
         markDirty();
-        emit yMaxChanged(y_max);
+        emit viewStateChanged();
+    }
+}
+
+void TemporalProjectionViewState::setYZoom(double zoom)
+{
+    if (_data.view_state.y_zoom != zoom) {
+        _data.view_state.y_zoom = zoom;
+        markDirty();
+        emit viewStateChanged();
+    }
+}
+
+void TemporalProjectionViewState::setPan(double x_pan, double y_pan)
+{
+    if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
+        _data.view_state.x_pan = x_pan;
+        _data.view_state.y_pan = y_pan;
+        markDirty();
+        emit viewStateChanged();
+    }
+}
+
+void TemporalProjectionViewState::setXBounds(double x_min, double x_max)
+{
+    if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
+        _data.view_state.x_min = x_min;
+        _data.view_state.x_max = x_max;
+        _horizontal_axis_state->setRangeSilent(x_min, x_max);
+        _data.horizontal_axis = _horizontal_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
         emit stateChanged();
     }
+}
+
+void TemporalProjectionViewState::setYBounds(double y_min, double y_max)
+{
+    if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
+        _data.view_state.y_min = y_min;
+        _data.view_state.y_max = y_max;
+        _vertical_axis_state->data().y_min = y_min;
+        _vertical_axis_state->data().y_max = y_max;
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
+std::string TemporalProjectionViewState::toJson() const
+{
+    TemporalProjectionViewStateData data_to_serialize = _data;
+    data_to_serialize.instance_id = getInstanceId().toStdString();
+    return rfl::json::write(data_to_serialize);
 }
 
 bool TemporalProjectionViewState::fromJson(std::string const & json)
@@ -96,12 +141,16 @@ bool TemporalProjectionViewState::fromJson(std::string const & json)
     auto result = rfl::json::read<TemporalProjectionViewStateData>(json);
     if (result) {
         _data = *result;
-
-        // Restore instance ID from serialized data
         if (!_data.instance_id.empty()) {
             setInstanceId(QString::fromStdString(_data.instance_id));
         }
-
+        _horizontal_axis_state->data() = _data.horizontal_axis;
+        _vertical_axis_state->data() = _data.vertical_axis;
+        // Sync view state bounds from axes so they never drift
+        _data.view_state.x_min = _horizontal_axis_state->getXMin();
+        _data.view_state.x_max = _horizontal_axis_state->getXMax();
+        _data.view_state.y_min = _vertical_axis_state->getYMin();
+        _data.view_state.y_max = _vertical_axis_state->getYMax();
         emit stateChanged();
         return true;
     }

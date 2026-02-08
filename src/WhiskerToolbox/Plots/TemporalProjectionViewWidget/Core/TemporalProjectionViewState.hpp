@@ -4,18 +4,27 @@
 /**
  * @file TemporalProjectionViewState.hpp
  * @brief State class for TemporalProjectionViewWidget
- * 
- * TemporalProjectionViewState manages the serializable state for the TemporalProjectionViewWidget,
- * enabling workspace save/restore and inter-widget communication via SelectionContext.
- * 
+ *
+ * TemporalProjectionViewState manages the serializable state for the
+ * TemporalProjectionViewWidget. View state (CorePlotting::ViewStateData) is
+ * the single source of truth for zoom, pan, and data bounds; horizontal and
+ * vertical axis states are kept in sync via setXBounds/setYBounds.
+ *
  * @see EditorState for base class documentation
+ * @see LinePlotState for the same pattern
  */
 
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
+#include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <memory>
 #include <string>
 
 /**
@@ -24,17 +33,16 @@
 struct TemporalProjectionViewStateData {
     std::string instance_id;
     std::string display_name = "Temporal Projection View";
-    double x_min = 0.0;   ///< X-axis minimum value (default: 0.0)
-    double x_max = 100.0; ///< X-axis maximum value (default: 100.0)
-    double y_min = 0.0;   ///< Y-axis minimum value (default: 0.0)
-    double y_max = 100.0; ///< Y-axis maximum value (default: 100.0)
+    CorePlotting::ViewStateData view_state;
+    HorizontalAxisStateData horizontal_axis;
+    VerticalAxisStateData vertical_axis;
 };
 
 /**
  * @brief State class for TemporalProjectionViewWidget
- * 
- * TemporalProjectionViewState is the Qt wrapper around TemporalProjectionViewStateData that provides
- * typed accessors and Qt signals for all state properties.
+ *
+ * Single source of truth: view_state (zoom/pan) plus horizontal and vertical
+ * axis states (full range). OpenGL widget and axis widgets read from state.
  */
 class TemporalProjectionViewState : public EditorState {
     Q_OBJECT
@@ -50,118 +58,66 @@ public:
 
     // === Type Identification ===
 
-    /**
-     * @brief Get the type name for this state
-     * @return "TemporalProjectionView"
-     */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("TemporalProjectionView"); }
-
-    /**
-     * @brief Get the display name for UI
-     * @return User-visible name (default: "Temporal Projection View")
-     */
+    [[nodiscard]] QString getTypeName() const override
+    {
+        return QStringLiteral("TemporalProjectionView");
+    }
     [[nodiscard]] QString getDisplayName() const override;
-
-    /**
-     * @brief Set the display name
-     * @param name New display name
-     */
     void setDisplayName(QString const & name) override;
 
-    // === X-Axis Range ===
+    // === Axis state access (for widgets and serialization) ===
+    [[nodiscard]] HorizontalAxisState * horizontalAxisState()
+    {
+        return _horizontal_axis_state.get();
+    }
+    [[nodiscard]] VerticalAxisState * verticalAxisState()
+    {
+        return _vertical_axis_state.get();
+    }
 
-    /**
-     * @brief Get the X-axis minimum value
-     * @return Minimum X value
-     */
+    // === Legacy accessors (delegate to axis states) ===
     [[nodiscard]] double getXMin() const;
-
-    /**
-     * @brief Set the X-axis minimum value
-     * @param x_min Minimum X value
-     */
-    void setXMin(double x_min);
-
-    /**
-     * @brief Get the X-axis maximum value
-     * @return Maximum X value
-     */
     [[nodiscard]] double getXMax() const;
-
-    /**
-     * @brief Set the X-axis maximum value
-     * @param x_max Maximum X value
-     */
-    void setXMax(double x_max);
-
-    // === Y-Axis Range ===
-
-    /**
-     * @brief Get the Y-axis minimum value
-     * @return Minimum Y value
-     */
     [[nodiscard]] double getYMin() const;
-
-    /**
-     * @brief Set the Y-axis minimum value
-     * @param y_min Minimum Y value
-     */
-    void setYMin(double y_min);
-
-    /**
-     * @brief Get the Y-axis maximum value
-     * @return Maximum Y value
-     */
     [[nodiscard]] double getYMax() const;
 
+    // === View state (zoom / pan / bounds) ===
+    /** @brief Get the current view state (bounds + zoom + pan). */
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const
+    {
+        return _data.view_state;
+    }
+    void setXZoom(double zoom);
+    void setYZoom(double zoom);
+    void setPan(double x_pan, double y_pan);
+
     /**
-     * @brief Set the Y-axis maximum value
+     * @brief Set X data bounds and keep horizontal axis in sync.
+     * Call when the plot updates the horizontal axis from data (e.g. after a rebuild).
+     * @param x_min Minimum X value
+     * @param x_max Maximum X value
+     */
+    void setXBounds(double x_min, double x_max);
+
+    /**
+     * @brief Set Y data bounds and keep vertical axis in sync.
+     * Call when the plot updates the vertical axis from data (e.g. after a rebuild).
+     * @param y_min Minimum Y value
      * @param y_max Maximum Y value
      */
-    void setYMax(double y_max);
+    void setYBounds(double y_min, double y_max);
 
     // === Serialization ===
-
-    /**
-     * @brief Serialize state to JSON
-     * @return JSON string representation
-     */
     [[nodiscard]] std::string toJson() const override;
-
-    /**
-     * @brief Restore state from JSON
-     * @param json JSON string to parse
-     * @return true if parsing succeeded
-     */
     bool fromJson(std::string const & json) override;
 
 signals:
-    /**
-     * @brief Emitted when X-axis minimum changes
-     * @param x_min New X-axis minimum value
-     */
-    void xMinChanged(double x_min);
-
-    /**
-     * @brief Emitted when X-axis maximum changes
-     * @param x_max New X-axis maximum value
-     */
-    void xMaxChanged(double x_max);
-
-    /**
-     * @brief Emitted when Y-axis minimum changes
-     * @param y_min New Y-axis minimum value
-     */
-    void yMinChanged(double y_min);
-
-    /**
-     * @brief Emitted when Y-axis maximum changes
-     * @param y_max New Y-axis maximum value
-     */
-    void yMaxChanged(double y_max);
+    void viewStateChanged();
 
 private:
     TemporalProjectionViewStateData _data;
+    std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
+    std::unique_ptr<VerticalAxisState> _vertical_axis_state;
 };
 
-#endif// TEMPORAL_PROJECTION_VIEW_STATE_HPP
+#endif  // TEMPORAL_PROJECTION_VIEW_STATE_HPP

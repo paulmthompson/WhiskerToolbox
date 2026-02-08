@@ -1,10 +1,17 @@
 #ifndef HEATMAP_OPENGLWIDGET_HPP
 #define HEATMAP_OPENGLWIDGET_HPP
 
+/**
+ * @file HeatmapOpenGLWidget.hpp
+ * @brief OpenGL-based heatmap visualization using CorePlotting infrastructure
+ *
+ * Uses CorePlotting::ViewStateData for view state and WhiskerToolbox::Plots
+ * helpers for projection and interaction.
+ */
+
 #include "Core/HeatmapState.hpp"
 
-#include "CoreGeometry/boundingbox.hpp"
-#include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -35,7 +42,8 @@ public:
 
     void setState(std::shared_ptr<HeatmapState> state);
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-    [[nodiscard]] HeatmapViewState const & viewState() const;
+    /** @brief Current view state (from state; for axis getters) */
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const;
     void resetView();
 
 signals:
@@ -66,11 +74,11 @@ private:
     bool _opengl_initialized{false};
     bool _scene_dirty{true};
 
-    HeatmapViewState _cached_view_state;
+    /** @brief Cached view state (single source of truth is HeatmapState) */
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _view_matrix{1.0f};
     glm::mat4 _projection_matrix{1.0f};
 
-    // Panning state
     bool _is_panning{false};
     QPoint _last_mouse_pos;
     QPoint _click_start_pos;
@@ -85,7 +93,7 @@ private:
     void updateMatrices();
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
     void handlePanning(int delta_x, int delta_y);
-    void handleZoom(float delta, bool y_only, bool both_axes = false);
+    void handleZoom(float delta, bool y_only, bool both_axes);
     void updateBackgroundColor();
 };
 

@@ -4,6 +4,7 @@
 #include "DataManager/utils/GatherResult.hpp"
 #include "DataManager/utils/color.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
@@ -89,7 +90,7 @@ void EventPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_man
     update();
 }
 
-EventPlotViewState const & EventPlotOpenGLWidget::viewState() const
+CorePlotting::ViewStateData const & EventPlotOpenGLWidget::viewState() const
 {
     return _cached_view_state;
 }
@@ -97,7 +98,9 @@ EventPlotViewState const & EventPlotOpenGLWidget::viewState() const
 void EventPlotOpenGLWidget::resetView()
 {
     if (_state) {
-        _state->setViewState(EventPlotViewState{}); // Reset to defaults
+        _state->setXZoom(1.0);
+        _state->setYZoom(1.0);
+        _state->setPan(0.0, 0.0);
     }
 }
 
@@ -482,41 +485,27 @@ void EventPlotOpenGLWidget::rebuildScene()
 
 void EventPlotOpenGLWidget::updateMatrices()
 {
-    // Calculate view bounds from view state
-    float x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+    // Use view state for X and Y bounds (Y is fixed -1..1 for trial viewport)
+    float const x_range =
+        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const x_center =
+        static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) /
+        2.0f;
+    float const y_range =
+        static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
+    float const y_center =
+        static_cast<float>(_cached_view_state.y_min + _cached_view_state.y_max) /
+        2.0f;
 
-    // Apply zoom
-    float zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
-    float zoomed_y_range = 2.0f / static_cast<float>(_cached_view_state.y_zoom);
-
-    // Apply pan
-    float pan_x = static_cast<float>(_cached_view_state.x_pan);
-    float pan_y = static_cast<float>(_cached_view_state.y_pan);
-
-    // Calculate final bounds
-    float left = x_center - zoomed_x_range / 2.0f + pan_x;
-    float right = x_center + zoomed_x_range / 2.0f + pan_x;
-    float bottom = -zoomed_y_range / 2.0f + pan_y;
-    float top = zoomed_y_range / 2.0f + pan_y;
-
-    // Build orthographic projection
-    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
+        _cached_view_state, x_range, x_center, y_range, y_center);
     _view_matrix = glm::mat4(1.0f);
 }
 
 QPointF EventPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
 {
-    // Normalize screen coordinates to [-1, 1]
-    float ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
-    float ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height); // Flip Y
-
-    // Invert projection to get world coordinates
-    glm::mat4 inv_proj = glm::inverse(_projection_matrix);
-    glm::vec4 ndc(ndc_x, ndc_y, 0.0f, 1.0f);
-    glm::vec4 world = inv_proj * ndc;
-
-    return QPointF(world.x, world.y);
+    return WhiskerToolbox::Plots::screenToWorld(
+        _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
 QPoint EventPlotOpenGLWidget::worldToScreen(float world_x, float world_y) const
@@ -532,36 +521,28 @@ QPoint EventPlotOpenGLWidget::worldToScreen(float world_x, float world_y) const
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
 {
-    if (!_state) return;
+    if (!_state) {
+        return;
+    }
 
-    // Convert pixel delta to world delta
-    float world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
-                              (_widget_width * _cached_view_state.x_zoom);
-    float world_per_pixel_y = 2.0f / (_widget_height * _cached_view_state.y_zoom);
+    float const x_range =
+        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const y_range =
+        static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
 
-    float new_pan_x = _cached_view_state.x_pan - delta_x * world_per_pixel_x;
-    float new_pan_y = _cached_view_state.y_pan + delta_y * world_per_pixel_y;
-
-    _state->setPan(new_pan_x, new_pan_y);
+    WhiskerToolbox::Plots::handlePanning(
+        *_state, _cached_view_state, delta_x, delta_y, x_range, y_range,
+        _widget_width, _widget_height);
 }
 
 void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
 {
-    if (!_state) return;
-
-    float factor = std::pow(1.1f, delta);
-
-    if (y_only) {
-        // Shift+wheel: Y-axis only (trial zoom)
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else if (both_axes) {
-        // Ctrl+wheel: Both axes (uniform zoom)
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else {
-        // Default wheel: X-axis only (time zoom)
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
+    if (!_state) {
+        return;
     }
+
+    WhiskerToolbox::Plots::handleZoom(
+        *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 std::optional<std::pair<int, int>> EventPlotOpenGLWidget::findEventNear(

@@ -62,6 +62,16 @@ public:
      */
     [[nodiscard]] SpectrogramState * state();
 
+    /**
+     * @brief Handle time changes from EditorRegistry
+     *
+     * Slot for global time changes (e.g. TimeScrollBar). Can be used to update
+     * the spectrogram when time changes from other sources.
+     *
+     * @param position The new TimePosition
+     */
+    void _onTimeChanged(TimePosition position);
+
 signals:
     /**
      * @brief Emitted when a time position is selected in the view

@@ -3,6 +3,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CoreGeometry/boundingbox.hpp"
@@ -258,47 +259,25 @@ void LinePlotOpenGLWidget::rebuildScene()
 
 void LinePlotOpenGLWidget::updateMatrices()
 {
+    // Compute data ranges from view state (both X and Y bounds are in ViewStateData)
     float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
     float const x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
 
-    float const zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
-    float y_min = 0.0f;
-    float y_max = 100.0f;
-    if (_state) {
-        auto * vas = _state->verticalAxisState();
-        if (vas) {
-            y_min = static_cast<float>(vas->getYMin());
-            y_max = static_cast<float>(vas->getYMax());
-        }
-    }
+    float const y_min = static_cast<float>(_cached_view_state.y_min);
+    float const y_max = static_cast<float>(_cached_view_state.y_max);
     float const y_range = y_max - y_min;
     float const y_center = (y_min + y_max) / 2.0f;
-    float const zoomed_y_range = y_range / static_cast<float>(_cached_view_state.y_zoom);
 
-    float const pan_x = static_cast<float>(_cached_view_state.x_pan);
-    float const pan_y = static_cast<float>(_cached_view_state.y_pan);
-
-    float const left = x_center - zoomed_x_range / 2.0f + pan_x;
-    float const right = x_center + zoomed_x_range / 2.0f + pan_x;
-    float const bottom = y_center - zoomed_y_range / 2.0f + pan_y;
-    float const top = y_center + zoomed_y_range / 2.0f + pan_y;
-
-    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    // Use shared helper to compute projection matrix
+    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
+        _cached_view_state, x_range, x_center, y_range, y_center);
     _view_matrix = glm::mat4(1.0f);
 }
 
 QPointF LinePlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
 {
-    // Normalize screen coordinates to [-1, 1]
-    float ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
-    float ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height); // Flip Y
-
-    // Invert projection to get world coordinates
-    glm::mat4 inv_proj = glm::inverse(_projection_matrix);
-    glm::vec4 ndc(ndc_x, ndc_y, 0.0f, 1.0f);
-    glm::vec4 world = inv_proj * ndc;
-
-    return QPointF(world.x, world.y);
+    return WhiskerToolbox::Plots::screenToWorld(
+        _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
 void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
@@ -307,19 +286,14 @@ void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
         return;
     }
 
+    // Compute data ranges from view state (both X and Y bounds are in ViewStateData)
     float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const world_per_pixel_x = x_range / (_widget_width * static_cast<float>(_cached_view_state.x_zoom));
+    float const y_range = static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
 
-    float y_range = 100.0f;
-    if (auto * vas = _state->verticalAxisState()) {
-        y_range = static_cast<float>(vas->getYMax() - vas->getYMin());
-    }
-    float const world_per_pixel_y = y_range / (_widget_height * static_cast<float>(_cached_view_state.y_zoom));
-
-    float const new_pan_x = static_cast<float>(_cached_view_state.x_pan) - delta_x * world_per_pixel_x;
-    float const new_pan_y = static_cast<float>(_cached_view_state.y_pan) + delta_y * world_per_pixel_y;
-
-    _state->setPan(new_pan_x, new_pan_y);
+    // Use shared helper for panning logic
+    WhiskerToolbox::Plots::handlePanning(
+        *_state, _cached_view_state, delta_x, delta_y,
+        x_range, y_range, _widget_width, _widget_height);
 }
 
 void LinePlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
@@ -328,16 +302,9 @@ void LinePlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
         return;
     }
 
-    float const factor = std::pow(1.1f, delta);
-
-    if (y_only) {
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else if (both_axes) {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-    }
+    // Use shared helper for zoom logic
+    WhiskerToolbox::Plots::handleZoom(
+        *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 GatherResult<AnalogTimeSeries> LinePlotOpenGLWidget::gatherTrialData() const

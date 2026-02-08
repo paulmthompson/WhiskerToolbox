@@ -49,6 +49,12 @@ void registerTypes(EditorRegistry * registry,
                                 auto * widget = new SpectrogramWidget(dm);
                                 widget->setState(plot_state);
 
+                                if (reg) {
+                                    QObject::connect(reg,
+                                                     QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                     widget, &SpectrogramWidget::_onTimeChanged);
+                                }
+
                                 return widget;
                             },
 
@@ -74,6 +80,12 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the view widget
                                 auto * view = new SpectrogramWidget(dm);
                                 view->setState(state);
+
+                                if (reg) {
+                                    QObject::connect(reg,
+                                                     QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                     view, &SpectrogramWidget::_onTimeChanged);
+                                }
 
                                 // Create the properties widget with the shared state
                                 auto * props = new SpectrogramPropertiesWidget(state, dm);

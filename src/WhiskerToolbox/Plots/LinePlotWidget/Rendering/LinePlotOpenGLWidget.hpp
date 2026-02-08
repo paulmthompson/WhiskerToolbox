@@ -21,6 +21,7 @@
 #include "Core/LinePlotState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
@@ -142,7 +143,7 @@ private:
     bool _opengl_initialized{false};
 
     // View state cache (single source of truth is LinePlotState)
-    LinePlotViewState _cached_view_state;
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _view_matrix{1.0f};
     glm::mat4 _projection_matrix{1.0f};
 

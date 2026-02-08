@@ -4,8 +4,6 @@ set(HEATMAP_WIDGET_SOURCES
 
         Core/HeatmapState.cpp
         Core/HeatmapState.hpp
-        Core/ViewStateAdapter.cpp
-        Core/ViewStateAdapter.hpp
 
         HeatmapWidgetRegistration.cpp
         HeatmapWidgetRegistration.hpp
@@ -38,6 +36,7 @@ target_link_libraries(HeatmapWidget PRIVATE
     Qt6::OpenGLWidgets
 )
 
+target_link_libraries(HeatmapWidget PRIVATE Collapsible_Widget)
 target_link_libraries(HeatmapWidget PRIVATE DataManager)
 target_link_libraries(HeatmapWidget PRIVATE EditorState)
 target_link_libraries(HeatmapWidget PRIVATE PlotAlignmentWidget)

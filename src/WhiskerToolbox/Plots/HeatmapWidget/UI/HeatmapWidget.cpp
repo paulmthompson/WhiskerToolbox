@@ -1,8 +1,8 @@
 #include "HeatmapWidget.hpp"
 
 #include "Core/HeatmapState.hpp"
-#include "Core/ViewStateAdapter.hpp"
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
+#include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
@@ -26,27 +26,14 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
       _axis_widget(nullptr),
       _range_controls(nullptr),
       _vertical_axis_widget(nullptr),
-      _vertical_range_controls(nullptr),
-      _vertical_axis_state(nullptr) {
+      _vertical_range_controls(nullptr)
+{
     ui->setupUi(this);
 
-    // Create horizontal layout for vertical axis + OpenGL widget
     auto * horizontal_layout = new QHBoxLayout();
     horizontal_layout->setSpacing(0);
     horizontal_layout->setContentsMargins(0, 0, 0, 0);
 
-    // Create vertical axis state (Y-axis is trial/row-based, not serialized)
-    _vertical_axis_state = std::make_unique<VerticalAxisState>(this);
-
-    // Create combined vertical axis widget with range controls using factory
-    auto vertical_axis_with_controls = createVerticalAxisWithRangeControls(
-            _vertical_axis_state.get(), this, nullptr);
-    _vertical_axis_widget = vertical_axis_with_controls.axis_widget;
-    _vertical_range_controls = vertical_axis_with_controls.range_controls;
-    _vertical_axis_state->setRange(0.0, 0.0);
-    horizontal_layout->addWidget(_vertical_axis_widget);
-
-    // Create and add the OpenGL widget
     _opengl_widget = new HeatmapOpenGLWidget(this);
     _opengl_widget->setDataManager(_data_manager);
     horizontal_layout->addWidget(_opengl_widget, 1);
@@ -77,6 +64,9 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
     connect(_opengl_widget, &HeatmapOpenGLWidget::trialCountChanged,
             this, [this](size_t count) {
                 _trial_count = count;
+                if (_state && count > 0) {
+                    _state->setYBounds(0.0, static_cast<double>(count));
+                }
                 if (_vertical_axis_widget) {
                     _vertical_axis_widget->update();
                 }
@@ -139,51 +129,66 @@ void HeatmapWidget::wireTimeAxis() {
         if (!_state || !_opengl_widget) {
             return CorePlotting::ViewState{};
         }
-        return toCoreViewState(
+        return CorePlotting::toRuntimeViewState(
                 _state->viewState(),
                 _opengl_widget->width(),
                 _opengl_widget->height());
     });
 }
 
-void HeatmapWidget::wireVerticalAxis() {
+void HeatmapWidget::wireVerticalAxis()
+{
+    if (!_vertical_axis_widget && _state) {
+        auto * vertical_axis_state = _state->verticalAxisState();
+        if (vertical_axis_state) {
+            auto result = createVerticalAxisWithRangeControls(
+                    vertical_axis_state, this, nullptr);
+            _vertical_axis_widget = result.axis_widget;
+            _vertical_range_controls = result.range_controls;
+
+            if (_vertical_axis_widget) {
+                if (auto * vbox = qobject_cast<QVBoxLayout *>(layout())) {
+                    if (vbox->count() > 0) {
+                        auto * item = vbox->itemAt(0);
+                        if (item && item->layout()) {
+                            if (auto * hbox =
+                                    qobject_cast<QHBoxLayout *>(item->layout())) {
+                                hbox->insertWidget(0, _vertical_axis_widget);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (!_vertical_axis_widget || !_state) {
         return;
     }
 
-    // Dynamic axis mapping - updates when trial count changes
-    connect(_opengl_widget, &HeatmapOpenGLWidget::trialCountChanged,
-            this, [this](size_t count) {
-                if (count > 0) {
-                    _vertical_axis_widget->setAxisMapping(
-                            CorePlotting::trialIndexAxis(count));
-                }
-            });
+    _vertical_axis_widget->setAxisMapping(CorePlotting::identityAxis("Trial", 0));
 
-    if (_trial_count > 0) {
-        _vertical_axis_widget->setAxisMapping(
-                CorePlotting::trialIndexAxis(_trial_count));
-    }
-
-    // RangeGetter for axis tick rendering
     _vertical_axis_widget->setRangeGetter(
             [this]() { return computeVisibleTrialRange(); });
 
-    // Bidirectional sync Flow A: AxisState (spinboxes) -> ViewState zoom/pan
-    if (_vertical_axis_state) {
-        connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
+    auto * vas = _state->verticalAxisState();
+    if (vas) {
+        connect(vas, &VerticalAxisState::rangeChanged,
                 this, [this](double min_range, double max_range) {
-                    if (!_state || _trial_count == 0) {
+                    if (!_state) {
                         return;
                     }
-                    auto const mapping = CorePlotting::trialIndexAxis(_trial_count);
-                    double const world_y_min = mapping.domainToWorld(min_range);
-                    double const world_y_max = mapping.domainToWorld(max_range);
-                    double const world_range = world_y_max - world_y_min;
-                    if (world_range > 0.001) {
-                        _state->setYZoom(2.0 / world_range);
+                    double const range = max_range - min_range;
+                    if (range > 0.001) {
+                        auto * vas_local = _state->verticalAxisState();
+                        double const full_range =
+                                vas_local->getYMax() - vas_local->getYMin();
+                        _state->setYZoom(full_range / range);
                         _state->setPan(_state->viewState().x_pan,
-                                       (world_y_min + world_y_max) / 2.0);
+                                       (min_range + max_range) / 2.0 -
+                                               (vas_local->getYMin() +
+                                                vas_local->getYMax()) /
+                                                       2.0);
                     }
                 });
     }
@@ -217,28 +222,30 @@ void HeatmapWidget::syncTimeAxisRange() {
     time_axis_state->setRangeSilent(min, max);
 }
 
-void HeatmapWidget::syncVerticalAxisRange() {
-    if (!_vertical_axis_state) {
+void HeatmapWidget::syncVerticalAxisRange()
+{
+    if (!_state) {
+        return;
+    }
+    auto * vas = _state->verticalAxisState();
+    if (!vas) {
         return;
     }
     auto [min, max] = computeVisibleTrialRange();
-    _vertical_axis_state->setRangeSilent(min, max);
+    vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> HeatmapWidget::computeVisibleTrialRange() const {
-    if (_trial_count == 0 || !_state) {
+std::pair<double, double> HeatmapWidget::computeVisibleTrialRange() const
+{
+    if (!_state) {
         return {0.0, 0.0};
     }
     auto const & vs = _state->viewState();
-    auto const mapping = CorePlotting::trialIndexAxis(_trial_count);
-
-    double const zoomed_half = 1.0 / vs.y_zoom;
-    double const visible_bottom = -zoomed_half + vs.y_pan;
-    double const visible_top = zoomed_half + vs.y_pan;
-
-    double const a = mapping.worldToDomain(visible_bottom);
-    double const b = mapping.worldToDomain(visible_top);
-    return {std::min(a, b), std::max(a, b)};
+    // Y data bounds and zoom/pan are in view state (trial-index space)
+    double const y_range = vs.y_max - vs.y_min;
+    double const y_center = (vs.y_min + vs.y_max) / 2.0;
+    double const half = y_range / 2.0 / vs.y_zoom;
+    return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
 std::pair<double, double> HeatmapWidget::computeVisibleTimeRange() const {
@@ -251,10 +258,14 @@ std::pair<double, double> HeatmapWidget::computeVisibleTimeRange() const {
     return {center - half + vs.x_pan, center + half + vs.x_pan};
 }
 
-void HeatmapWidget::resizeEvent(QResizeEvent * event) {
+void HeatmapWidget::resizeEvent(QResizeEvent * event)
+{
     QWidget::resizeEvent(event);
     if (_axis_widget) {
         _axis_widget->update();
+    }
+    if (_vertical_axis_widget) {
+        _vertical_axis_widget->update();
     }
 }
 
@@ -270,6 +281,7 @@ VerticalAxisRangeControls * HeatmapWidget::getVerticalRangeControls() const {
     return _vertical_range_controls;
 }
 
-VerticalAxisState * HeatmapWidget::getVerticalAxisState() const {
-    return _vertical_axis_state.get();
+VerticalAxisState * HeatmapWidget::getVerticalAxisState() const
+{
+    return _state ? _state->verticalAxisState() : nullptr;
 }

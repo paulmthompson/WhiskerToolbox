@@ -10,9 +10,12 @@ set(COREPLOTTING_SOURCES
     Mappers/TimeSeriesMapper.cpp
     Mappers/SpatialMapper.hpp
     Mappers/RasterMapper.hpp
+    Mappers/HistogramMapper.hpp
+    Mappers/HistogramMapper.cpp
     # DataTypes (style, cache - used by widgets)
     DataTypes/SeriesStyle.hpp
     DataTypes/SeriesDataCache.hpp
+    DataTypes/HistogramData.hpp
     # SceneGraph
     SceneGraph/RenderablePrimitives.hpp
     SceneGraph/RenderablePrimitives.cpp
@@ -25,6 +28,7 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/AxisMapping.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
+    CoordinateTransform/ViewStateData.hpp
     CoordinateTransform/TimeRange.hpp
     CoordinateTransform/TimeAxisCoordinates.hpp
     CoordinateTransform/TimeAxisCoordinates.cpp

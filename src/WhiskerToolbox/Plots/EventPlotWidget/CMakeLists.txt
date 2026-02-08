@@ -4,8 +4,6 @@ set(EVENT_PLOT_WIDGET_SOURCES
 
         Core/EventPlotState.cpp
         Core/EventPlotState.hpp
-        Core/ViewStateAdapter.cpp
-        Core/ViewStateAdapter.hpp
 
         Rendering/EventPlotOpenGLWidget.cpp
         Rendering/EventPlotOpenGLWidget.hpp
