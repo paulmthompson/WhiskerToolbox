@@ -3,7 +3,7 @@
 
 /**
  * @file LinePlotOpenGLWidget.hpp
- * @brief OpenGL-based line plot visualization using CorePlotting infrastructure
+ * @brief OpenGL-based line plot visualization with batch line rendering & selection
  * 
  * This widget renders AnalogTimeSeries data as line plots,
  * aligned to trial intervals specified via LinePlotState.
@@ -11,11 +11,19 @@
  * Architecture:
  * - Receives LinePlotState for alignment, view settings, and line options
  * - Uses GatherResult<AnalogTimeSeries> for trial-aligned data
- * - Uses CorePlotting::TimeSeriesMapper for coordinate mapping
- * - Uses PlottingOpenGL::SceneRenderer for OpenGL rendering
+ * - Uses CorePlotting::LineBatchBuilder to create LineBatchData from gathered trials
+ * - Uses PlottingOpenGL::BatchLineStore + BatchLineRenderer for GPU rendering
+ * - Uses ILineBatchIntersector (GPU compute or CPU fallback) for line selection
  * 
- * @see CorePlotting/Mappers/TimeSeriesMapper.hpp
- * @see PlottingOpenGL/SceneRenderer.hpp
+ * Selection:
+ * - Ctrl+Click to start drawing a selection line
+ * - Drag to extend the selection line
+ * - Release to complete — intersected trial lines are selected
+ * - Shift+Ctrl+Click for remove mode (deselect intersected trials)
+ * - Emits trialsSelected() with 0-based trial indices
+ * 
+ * @see CorePlotting/LineBatch/LineBatchBuilder.hpp
+ * @see PlottingOpenGL/LineBatch/BatchLineRenderer.hpp
  */
 
 #include "Core/LinePlotState.hpp"
@@ -23,8 +31,12 @@
 #include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/LineBatch/ILineBatchIntersector.hpp"
+#include "CorePlotting/LineBatch/LineBatchData.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "PlottingOpenGL/LineBatch/BatchLineStore.hpp"
+#include "PlottingOpenGL/LineBatch/BatchLineRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -35,6 +47,7 @@
 #include <QOpenGLWidget>
 
 #include <glm/glm.hpp>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -44,7 +57,7 @@ class QMouseEvent;
 class QWheelEvent;
 
 /**
- * @brief OpenGL widget for rendering line plots
+ * @brief OpenGL widget for rendering line plots with batch line selection
  * 
  * Displays AnalogTimeSeries data aligned to trial intervals. Each trial
  * is shown as a line plot with values rendered at their relative time positions.
@@ -53,7 +66,8 @@ class QWheelEvent;
  * - Independent X (time) and Y (value) zooming
  * - Panning with mouse drag
  * - Wheel zoom (Shift+wheel for Y-only)
- * - Hover detection with tooltips
+ * - Line selection via Ctrl+Click drag (intersects trials)
+ * - Selection result emitted as trial indices
  */
 class LinePlotOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -68,47 +82,27 @@ public:
     LinePlotOpenGLWidget(LinePlotOpenGLWidget &&) = delete;
     LinePlotOpenGLWidget & operator=(LinePlotOpenGLWidget &&) = delete;
 
-    /**
-     * @brief Set the LinePlotState for this widget
-     * 
-     * The state provides alignment settings, view configuration, and line options.
-     * The widget connects to state signals to react to changes.
-     * 
-     * @param state Shared pointer to LinePlotState
-     */
     void setState(std::shared_ptr<LinePlotState> state);
-
-    /**
-     * @brief Set the DataManager for data access
-     * @param data_manager Shared pointer to DataManager
-     */
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-
-    /**
-     * @brief Get the current view bounds (for RelativeTimeAxisWidget)
-     * @return View bounds based on alignment window size
-     */
     [[nodiscard]] std::pair<double, double> getViewBounds() const;
 
-signals:
-    /**
-     * @brief Emitted when user double-clicks on the plot
-     * @param time_frame_index The time frame index at the click position
-     */
-    void plotDoubleClicked(int64_t time_frame_index);
+    /// Currently selected trial indices (0-based into GatherResult)
+    [[nodiscard]] std::vector<std::uint32_t> const & selectedTrialIndices() const { return _selected_trial_indices; }
 
-    /**
-     * @brief Emitted when view bounds change (window size changes)
-     */
+    /// Clear all selected trials
+    void clearSelection();
+
+signals:
+    void plotDoubleClicked(int64_t time_frame_index);
     void viewBoundsChanged();
 
+    /// Emitted when line selection changes. Indices are 0-based into GatherResult.
+    void trialsSelected(std::vector<std::uint32_t> const & trial_indices);
+
 protected:
-    // QOpenGLWidget overrides
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
-
-    // Mouse interaction
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
@@ -116,85 +110,61 @@ protected:
     void wheelEvent(QWheelEvent * event) override;
 
 private slots:
-    /**
-     * @brief Rebuild scene when state changes
-     */
     void onStateChanged();
-
-    /**
-     * @brief Update matrices and repaint when view state changes
-     */
     void onViewStateChanged();
-
-    /**
-     * @brief Handle window size changes
-     */
     void onWindowSizeChanged(double window_size);
 
 private:
-    // State management
     std::shared_ptr<LinePlotState> _state;
     std::shared_ptr<DataManager> _data_manager;
 
-    // Rendering infrastructure
+    // --- Scene renderer (for future axes, grids, etc.) ---
     PlottingOpenGL::SceneRenderer _scene_renderer;
     CorePlotting::RenderableScene _scene;
+
+    // --- Batch line rendering (trials as lines) ---
+    PlottingOpenGL::BatchLineStore _line_store;
+    PlottingOpenGL::BatchLineRenderer _line_renderer{_line_store};
+    std::unique_ptr<CorePlotting::ILineBatchIntersector> _intersector;
+
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
 
-    // View state cache (single source of truth is LinePlotState)
     CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _view_matrix{1.0f};
     glm::mat4 _projection_matrix{1.0f};
 
-    // Interaction state
+    // --- Panning state ---
     bool _is_panning{false};
     QPoint _click_start_pos;
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
 
-    // Widget dimensions
+    // --- Line selection state ---
+    bool _is_selecting{false};
+    glm::vec2 _selection_start_ndc{0.0f};
+    glm::vec2 _selection_end_ndc{0.0f};
+    bool _selection_remove_mode{false};
+    std::vector<std::uint32_t> _selected_trial_indices;
+
     int _widget_width{1};
     int _widget_height{1};
 
-    // =========================================================================
-    // Private Methods
-    // =========================================================================
-
-    /**
-     * @brief Rebuild the renderable scene from current state
-     * 
-     * Gathers data aligned to trial intervals and builds line batches.
-     */
     void rebuildScene();
-
-    /**
-     * @brief Update view and projection matrices from window size
-     */
     void updateMatrices();
-
-    /**
-     * @brief Convert screen coordinates to world coordinates
-     */
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
-
-    /**
-     * @brief Handle panning motion
-     */
+    [[nodiscard]] glm::vec2 screenToNDC(QPoint const & screen_pos) const;
     void handlePanning(int delta_x, int delta_y);
-
-    /**
-     * @brief Handle zoom via wheel
-     * @param delta Zoom delta (e.g. from wheel angle)
-     * @param y_only If true, zoom Y axis only; if false, zoom X only
-     * @param both_axes If true (with Ctrl), zoom both axes
-     */
     void handleZoom(float delta, bool y_only, bool both_axes);
-
-    /**
-     * @brief Gather trial-aligned data for building scene
-     */
     [[nodiscard]] GatherResult<AnalogTimeSeries> gatherTrialData() const;
+
+    // --- Selection helpers ---
+    void startSelection(QPoint const & screen_pos, bool remove_mode);
+    void updateSelection(QPoint const & screen_pos);
+    void completeSelection();
+    void renderSelectionPreview();
+    void applyIntersectionResults(std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
+                                  bool remove);
 };
 
 #endif // LINEPLOT_OPENGLWIDGET_HPP

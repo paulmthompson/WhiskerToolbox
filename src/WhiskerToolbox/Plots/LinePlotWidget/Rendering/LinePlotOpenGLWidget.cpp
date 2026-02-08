@@ -4,18 +4,24 @@
 #include "DataManager/utils/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
+#include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CoreGeometry/boundingbox.hpp"
+#include "PlottingOpenGL/LineBatch/ComputeShaderIntersector.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
+#include <QOpenGLContext>
 #include <QString>
+#include <QSurfaceFormat>
 #include <QWheelEvent>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 LinePlotOpenGLWidget::LinePlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -36,6 +42,8 @@ LinePlotOpenGLWidget::LinePlotOpenGLWidget(QWidget * parent)
 LinePlotOpenGLWidget::~LinePlotOpenGLWidget()
 {
     makeCurrent();
+    _line_renderer.cleanup();
+    _line_store.cleanup();
     _scene_renderer.cleanup();
     doneCurrent();
 }
@@ -105,26 +113,48 @@ void LinePlotOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    // Set clear color (dark theme)
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-    // Enable depth testing
     glEnable(GL_DEPTH_TEST);
-
-    // Enable blending for smooth lines
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Enable multisampling if available
     auto fmt = format();
     if (fmt.samples() > 1) {
         glEnable(GL_MULTISAMPLE);
     }
 
-    // Initialize the scene renderer
+    // Initialize scene renderer (axes, grids — future use)
     if (!_scene_renderer.initialize()) {
         qWarning() << "LinePlotOpenGLWidget: Failed to initialize SceneRenderer";
-        return;
+    }
+
+    // Initialize batch line store and renderer
+    if (!_line_store.initialize()) {
+        qWarning() << "LinePlotOpenGLWidget: Failed to initialize BatchLineStore";
+    }
+    if (!_line_renderer.initialize()) {
+        qWarning() << "LinePlotOpenGLWidget: Failed to initialize BatchLineRenderer";
+    }
+
+    // Pick intersector: GPU compute if GL 4.3+, CPU fallback otherwise
+    bool const has_compute = [&] {
+        auto * ctx = QOpenGLContext::currentContext();
+        if (!ctx) return false;
+        auto sf = ctx->format();
+        return (sf.majorVersion() > 4) ||
+               (sf.majorVersion() == 4 && sf.minorVersion() >= 3);
+    }();
+
+    if (has_compute) {
+        auto gpu = std::make_unique<PlottingOpenGL::ComputeShaderIntersector>(_line_store);
+        if (gpu->initialize()) {
+            _intersector = std::move(gpu);
+            qDebug() << "LinePlotOpenGLWidget: Using GPU compute shader intersector";
+        }
+    }
+    if (!_intersector) {
+        _intersector = std::make_unique<CorePlotting::CpuLineBatchIntersector>();
+        qDebug() << "LinePlotOpenGLWidget: Using CPU intersector fallback";
     }
 
     _opengl_initialized = true;
@@ -139,14 +169,21 @@ void LinePlotOpenGLWidget::paintGL()
         return;
     }
 
-    // Rebuild scene if needed
     if (_scene_dirty) {
         rebuildScene();
         _scene_dirty = false;
     }
 
-    // Render the scene
+    // Render scene elements (axes, grids — future)
     _scene_renderer.render(_view_matrix, _projection_matrix);
+
+    // Render batch lines (trial data)
+    _line_renderer.render(_view_matrix, _projection_matrix);
+
+    // Render selection preview line if actively selecting
+    if (_is_selecting) {
+        renderSelectionPreview();
+    }
 }
 
 void LinePlotOpenGLWidget::resizeGL(int w, int h)
@@ -155,6 +192,8 @@ void LinePlotOpenGLWidget::resizeGL(int w, int h)
     _widget_height = std::max(1, h);
 
     glViewport(0, 0, _widget_width, _widget_height);
+    _line_renderer.setViewportSize(
+        glm::vec2{static_cast<float>(_widget_width), static_cast<float>(_widget_height)});
     updateMatrices();
 }
 
@@ -165,6 +204,15 @@ void LinePlotOpenGLWidget::resizeGL(int w, int h)
 void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
+        // Ctrl+Click starts line selection
+        if (event->modifiers().testFlag(Qt::ControlModifier)) {
+            bool const remove = event->modifiers().testFlag(Qt::ShiftModifier);
+            startSelection(event->pos(), remove);
+            event->accept();
+            return;
+        }
+
+        // Normal click starts pan tracking
         _is_panning = false;
         _click_start_pos = event->pos();
         _last_mouse_pos = event->pos();
@@ -175,6 +223,14 @@ void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton) {
+        // Selection drag
+        if (_is_selecting) {
+            updateSelection(event->pos());
+            event->accept();
+            return;
+        }
+
+        // Pan drag detection
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
         int const distance_sq = dx * dx + dy * dy;
@@ -197,6 +253,12 @@ void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 void LinePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
+        if (_is_selecting) {
+            completeSelection();
+            event->accept();
+            return;
+        }
+
         _is_panning = false;
         setCursor(Qt::ArrowCursor);
     }
@@ -256,14 +318,15 @@ void LinePlotOpenGLWidget::rebuildScene()
 {
     if (!_state || !_data_manager) {
         _scene_renderer.clearScene();
+        _line_renderer.clearData();
         return;
     }
 
-    // Gather trial-aligned analog time series data
     GatherResult<AnalogTimeSeries> gathered = gatherTrialData();
 
     if (gathered.empty()) {
         _scene_renderer.clearScene();
+        _line_renderer.clearData();
         return;
     }
 
@@ -294,9 +357,6 @@ void LinePlotOpenGLWidget::rebuildScene()
     // =========================================================================
     // Compute X bounds (relative time range across all trials)
     // =========================================================================
-    // Each trial's data is expressed in absolute TimeFrameIndex.
-    // We subtract the alignment time to get relative time, then find the
-    // overall min/max relative time across all trials.
     double x_min = std::numeric_limits<double>::max();
     double x_max = std::numeric_limits<double>::lowest();
 
@@ -308,9 +368,7 @@ void LinePlotOpenGLWidget::rebuildScene()
 
         int64_t alignment_time = gathered.alignmentTimeAt(trial);
 
-        // Get first and last time indices in this view
         auto all_samples = trial_view->view();
-        // Views are time-ordered, so first and last give the range
         bool first = true;
         TimeFrameIndex first_time{0};
         TimeFrameIndex last_time{0};
@@ -323,7 +381,6 @@ void LinePlotOpenGLWidget::rebuildScene()
         }
 
         if (first) {
-            // No samples
             continue;
         }
 
@@ -334,10 +391,9 @@ void LinePlotOpenGLWidget::rebuildScene()
     }
 
     // =========================================================================
-    // Apply bounds to state (updates view state and axes)
+    // Apply bounds to state
     // =========================================================================
     if (y_min < y_max) {
-        // Add a small margin (5%) so lines don't sit on the edge
         float const y_margin = (y_max - y_min) * 0.05f;
         _state->setYBounds(
             static_cast<double>(y_min - y_margin),
@@ -348,12 +404,34 @@ void LinePlotOpenGLWidget::rebuildScene()
         _state->setXBounds(x_min, x_max);
     }
 
-    // Cache updated view state
     _cached_view_state = _state->viewState();
     updateMatrices();
 
-    // NOTE: Line rendering not yet implemented — scene is cleared for now.
-    // Future: build line batches from gathered data using CorePlotting::SceneBuilder
+    // =========================================================================
+    // Build LineBatchData from gathered trial data and upload to GPU
+    // =========================================================================
+    std::vector<std::int64_t> alignment_times;
+    alignment_times.reserve(num_trials);
+    for (size_t trial = 0; trial < num_trials; ++trial) {
+        alignment_times.push_back(gathered.alignmentTimeAt(trial));
+    }
+
+    auto batch = CorePlotting::buildLineBatchFromGatherResult(gathered, alignment_times);
+
+    // Restore selection mask from previous selection (if trials still match)
+    if (!_selected_trial_indices.empty()) {
+        std::unordered_set<std::uint32_t> selected_set(
+            _selected_trial_indices.begin(), _selected_trial_indices.end());
+        for (std::uint32_t i = 0; i < batch.numLines(); ++i) {
+            if (selected_set.contains(batch.lines[i].trial_index)) {
+                batch.selection_mask[i] = 1;
+            }
+        }
+    }
+
+    _line_store.upload(batch);
+    _line_renderer.syncFromStore();
+
     _scene_renderer.clearScene();
 }
 
@@ -436,4 +514,138 @@ GatherResult<AnalogTimeSeries> LinePlotOpenGLWidget::gatherTrialData() const
         _data_manager,
         series_options->series_key,
         alignment_state->data());
+}
+
+// =============================================================================
+// Selection
+// =============================================================================
+
+void LinePlotOpenGLWidget::clearSelection()
+{
+    _selected_trial_indices.clear();
+
+    // Clear selection mask on the GPU store
+    auto const & cpu = _line_store.cpuData();
+    if (!cpu.empty()) {
+        std::vector<std::uint32_t> mask(cpu.numLines(), 0);
+        _line_store.updateSelectionMask(mask);
+        _line_renderer.syncFromStore();
+    }
+
+    emit trialsSelected(_selected_trial_indices);
+    update();
+}
+
+glm::vec2 LinePlotOpenGLWidget::screenToNDC(QPoint const & screen_pos) const
+{
+    float const ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
+    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
+    return glm::vec2{ndc_x, ndc_y};
+}
+
+void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove_mode)
+{
+    _is_selecting = true;
+    _selection_remove_mode = remove_mode;
+    _selection_start_ndc = screenToNDC(screen_pos);
+    _selection_end_ndc = _selection_start_ndc;
+    setCursor(Qt::CrossCursor);
+    update();
+}
+
+void LinePlotOpenGLWidget::updateSelection(QPoint const & screen_pos)
+{
+    _selection_end_ndc = screenToNDC(screen_pos);
+    update();
+}
+
+void LinePlotOpenGLWidget::completeSelection()
+{
+    _is_selecting = false;
+    setCursor(Qt::ArrowCursor);
+
+    if (!_intersector || _line_store.cpuData().empty()) {
+        return;
+    }
+
+    // Build intersection query in NDC space
+    CorePlotting::LineIntersectionQuery query;
+    query.start_ndc = _selection_start_ndc;
+    query.end_ndc = _selection_end_ndc;
+    query.tolerance = 0.02f;
+    query.mvp = _projection_matrix * _view_matrix;
+
+    auto result = _intersector->intersect(_line_store.cpuData(), query);
+
+    applyIntersectionResults(result.intersected_line_indices, _selection_remove_mode);
+    update();
+}
+
+void LinePlotOpenGLWidget::applyIntersectionResults(
+    std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
+    bool remove)
+{
+    auto const & cpu = _line_store.cpuData();
+
+    if (remove) {
+        // Remove mode: remove intersected trials from current selection
+        std::unordered_set<std::uint32_t> to_remove;
+        for (auto idx : hit_indices) {
+            if (idx < cpu.numLines()) {
+                to_remove.insert(cpu.lines[idx].trial_index);
+            }
+        }
+        std::vector<std::uint32_t> filtered;
+        filtered.reserve(_selected_trial_indices.size());
+        for (auto ti : _selected_trial_indices) {
+            if (!to_remove.contains(ti)) {
+                filtered.push_back(ti);
+            }
+        }
+        _selected_trial_indices = std::move(filtered);
+    } else {
+        // Replace mode: set selection to exactly the intersected trials
+        _selected_trial_indices.clear();
+        _selected_trial_indices.reserve(hit_indices.size());
+        for (auto idx : hit_indices) {
+            if (idx < cpu.numLines()) {
+                _selected_trial_indices.push_back(cpu.lines[idx].trial_index);
+            }
+        }
+    }
+
+    // Update selection mask on the store
+    std::vector<std::uint32_t> mask(cpu.numLines(), 0);
+    std::unordered_set<std::uint32_t> selected_set(
+        _selected_trial_indices.begin(), _selected_trial_indices.end());
+    for (std::uint32_t i = 0; i < cpu.numLines(); ++i) {
+        if (selected_set.contains(cpu.lines[i].trial_index)) {
+            mask[i] = 1;
+        }
+    }
+    _line_store.updateSelectionMask(mask);
+    _line_renderer.syncFromStore();
+
+    emit trialsSelected(_selected_trial_indices);
+}
+
+void LinePlotOpenGLWidget::renderSelectionPreview()
+{
+    // Draw a simple line in NDC from _selection_start_ndc to _selection_end_ndc
+    // using immediate-mode style (basic GL_LINES) for the preview overlay.
+    // This is intentionally simple — it's just a visual feedback line.
+
+    glDisable(GL_DEPTH_TEST);
+    glLineWidth(2.0f);
+
+    // We need a trivial shader or fixed-function for this.
+    // Since we're on Core Profile, use a minimal approach: re-use the
+    // fact that the embedded shader already handles MVP. We'll draw
+    // in NDC by passing an identity MVP. But that requires binding
+    // a shader. For simplicity, we skip the preview line if no GL state
+    // is available — the cursor change already gives feedback.
+
+    // TODO: Add a simple preview line shader or use QPainter overlay
+    // For now, the CrossCursor provides visual feedback during selection.
+    glEnable(GL_DEPTH_TEST);
 }
