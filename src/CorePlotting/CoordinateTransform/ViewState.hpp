@@ -2,18 +2,28 @@
 #define COREPLOTTING_COORDINATETRANSFORM_VIEWSTATE_HPP
 
 #include "CoreGeometry/boundingbox.hpp"
+#include "ViewStateData.hpp"
+
 #include <glm/glm.hpp>
 
 namespace CorePlotting {
 
 /**
- * @brief Encapsulates the state of the 2D Camera/Viewport.
- * 
- * This struct holds the logical state of the view (zoom, pan, data bounds).
- * It is used to generate the View and Projection matrices for the RenderableScene.
- * 
- * Moved from Analysis_Dashboard to CorePlotting to serve as the standard
- * camera model for all plotting widgets.
+ * @brief Full runtime 2D camera / viewport state.
+ *
+ * Combines the serializable ViewStateData (zoom, pan, data bounds) with
+ * runtime-only information (viewport pixel dimensions, validity flag,
+ * padding factor).
+ *
+ * This struct is used to generate View and Projection matrices for the
+ * RenderableScene.  It is the primary input to calculateVisibleWorldBounds(),
+ * computeMatricesFromViewState(), screenToWorld(), worldToScreen(), etc.
+ *
+ * Widget code should store ViewStateData for serialization and promote it
+ * to ViewState at render time via toRuntimeViewState().
+ *
+ * @see ViewStateData              — serializable subset
+ * @see toRuntimeViewState()       — ViewStateData → ViewState
  */
 struct ViewState {
     // Zoom levels (per-axis)
@@ -80,6 +90,38 @@ void applyBoxZoom(ViewState & state, BoundingBox const & bounds);
  * @brief Resets the view to fit the data bounds.
  */
 void resetView(ViewState & state);
+
+// =============================================================================
+// ViewStateData ↔ ViewState conversion
+// =============================================================================
+
+/**
+ * @brief Promote a serializable ViewStateData to a full runtime ViewState.
+ *
+ * This is the standard way to go from the persisted camera configuration
+ * to the runtime struct consumed by calculateVisibleWorldBounds(),
+ * computeMatricesFromViewState(), screenToWorld(), worldToScreen(), etc.
+ *
+ * The conversion maps the "relative zoom/pan" semantics used by the
+ * Plots/ widgets into the "normalized pan" semantics of ViewState:
+ *
+ * | ViewStateData  | ViewState         | Notes                              |
+ * |----------------|-------------------|------------------------------------|
+ * | x_zoom, y_zoom | zoom_level_x/y    | Direct pass-through                |
+ * | x_pan, y_pan   | pan_offset_x/y    | Normalized: pan / (range / zoom)   |
+ * | x_min … y_max  | data_bounds       | Packed into BoundingBox             |
+ *
+ * @param data              The serializable view state data.
+ * @param viewport_width    Current viewport width in pixels.
+ * @param viewport_height   Current viewport height in pixels.
+ * @param padding_factor    Optional padding around data bounds (default 1.0).
+ * @return The runtime ViewState ready for matrix computation.
+ */
+[[nodiscard]] ViewState toRuntimeViewState(
+    ViewStateData const & data,
+    int viewport_width,
+    int viewport_height,
+    float padding_factor = 1.0f);
 
 }// namespace CorePlotting
 

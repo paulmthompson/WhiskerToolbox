@@ -252,6 +252,20 @@ void LinePlotState::setXBounds(double x_min, double x_max)
     }
 }
 
+void LinePlotState::setYBounds(double y_min, double y_max)
+{
+    if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
+        _data.view_state.y_min = y_min;
+        _data.view_state.y_max = y_max;
+        _vertical_axis_state->data().y_min = y_min;
+        _vertical_axis_state->data().y_max = y_max;
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
 std::string LinePlotState::toJson() const
 {
     // Include instance_id in serialization for restoration

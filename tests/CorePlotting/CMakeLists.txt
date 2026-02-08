@@ -31,6 +31,7 @@ add_executable(test_coreplotting
     HistogramMapper.test.cpp
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp
+    ViewStateData.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

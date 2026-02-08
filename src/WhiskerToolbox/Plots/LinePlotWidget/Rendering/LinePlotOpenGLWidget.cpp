@@ -259,19 +259,12 @@ void LinePlotOpenGLWidget::rebuildScene()
 
 void LinePlotOpenGLWidget::updateMatrices()
 {
-    // Compute data ranges from view state and vertical axis state
+    // Compute data ranges from view state (both X and Y bounds are in ViewStateData)
     float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
     float const x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
 
-    float y_min = 0.0f;
-    float y_max = 100.0f;
-    if (_state) {
-        auto * vas = _state->verticalAxisState();
-        if (vas) {
-            y_min = static_cast<float>(vas->getYMin());
-            y_max = static_cast<float>(vas->getYMax());
-        }
-    }
+    float const y_min = static_cast<float>(_cached_view_state.y_min);
+    float const y_max = static_cast<float>(_cached_view_state.y_max);
     float const y_range = y_max - y_min;
     float const y_center = (y_min + y_max) / 2.0f;
 
@@ -293,13 +286,9 @@ void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
         return;
     }
 
-    // Compute data ranges from view state and vertical axis state
+    // Compute data ranges from view state (both X and Y bounds are in ViewStateData)
     float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-
-    float y_range = 100.0f;
-    if (auto * vas = _state->verticalAxisState()) {
-        y_range = static_cast<float>(vas->getYMax() - vas->getYMin());
-    }
+    float const y_range = static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
 
     // Use shared helper for panning logic
     WhiskerToolbox::Plots::handlePanning(

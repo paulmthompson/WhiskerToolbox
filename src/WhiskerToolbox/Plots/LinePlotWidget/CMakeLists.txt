@@ -4,8 +4,6 @@ set(LINE_PLOT_WIDGET_SOURCES
 
         Core/LinePlotState.cpp
         Core/LinePlotState.hpp
-        Core/ViewStateAdapter.cpp
-        Core/ViewStateAdapter.hpp
 
         Rendering/LinePlotOpenGLWidget.cpp
         Rendering/LinePlotOpenGLWidget.hpp

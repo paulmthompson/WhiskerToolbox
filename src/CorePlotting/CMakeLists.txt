@@ -28,6 +28,7 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/AxisMapping.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
+    CoordinateTransform/ViewStateData.hpp
     CoordinateTransform/TimeRange.hpp
     CoordinateTransform/TimeAxisCoordinates.hpp
     CoordinateTransform/TimeAxisCoordinates.cpp
