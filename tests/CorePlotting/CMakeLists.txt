@@ -32,6 +32,10 @@ add_executable(test_coreplotting
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp
     ViewStateData.test.cpp
+    # LineBatch
+    LineBatch/LineBatchData.test.cpp
+    LineBatch/CpuLineBatchIntersector.test.cpp
+    LineBatch/LineBatchBuilder.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

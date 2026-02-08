@@ -69,6 +69,14 @@ set(COREPLOTTING_SOURCES
     # Export
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp
+    # LineBatch (batch line rendering & selection)
+    LineBatch/LineBatchData.hpp
+    LineBatch/LineBatchData.cpp
+    LineBatch/ILineBatchIntersector.hpp
+    LineBatch/CpuLineBatchIntersector.hpp
+    LineBatch/CpuLineBatchIntersector.cpp
+    LineBatch/LineBatchBuilder.hpp
+    LineBatch/LineBatchBuilder.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}
