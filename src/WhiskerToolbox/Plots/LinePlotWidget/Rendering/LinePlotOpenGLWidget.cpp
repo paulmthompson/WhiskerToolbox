@@ -254,7 +254,107 @@ void LinePlotOpenGLWidget::onWindowSizeChanged(double /* window_size */)
 
 void LinePlotOpenGLWidget::rebuildScene()
 {
-    
+    if (!_state || !_data_manager) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    // Gather trial-aligned analog time series data
+    GatherResult<AnalogTimeSeries> gathered = gatherTrialData();
+
+    if (gathered.empty()) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    size_t const num_trials = gathered.size();
+
+    // =========================================================================
+    // Compute Y bounds (min/max signal values across all trials)
+    // =========================================================================
+    float y_min = std::numeric_limits<float>::max();
+    float y_max = std::numeric_limits<float>::lowest();
+
+    for (size_t trial = 0; trial < num_trials; ++trial) {
+        auto const & trial_view = gathered[trial];
+        if (!trial_view || trial_view->getNumSamples() == 0) {
+            continue;
+        }
+
+        auto span = trial_view->getAnalogTimeSeries();
+        if (span.empty()) {
+            continue;
+        }
+
+        auto [min_it, max_it] = std::minmax_element(span.begin(), span.end());
+        y_min = std::min(y_min, *min_it);
+        y_max = std::max(y_max, *max_it);
+    }
+
+    // =========================================================================
+    // Compute X bounds (relative time range across all trials)
+    // =========================================================================
+    // Each trial's data is expressed in absolute TimeFrameIndex.
+    // We subtract the alignment time to get relative time, then find the
+    // overall min/max relative time across all trials.
+    double x_min = std::numeric_limits<double>::max();
+    double x_max = std::numeric_limits<double>::lowest();
+
+    for (size_t trial = 0; trial < num_trials; ++trial) {
+        auto const & trial_view = gathered[trial];
+        if (!trial_view || trial_view->getNumSamples() == 0) {
+            continue;
+        }
+
+        int64_t alignment_time = gathered.alignmentTimeAt(trial);
+
+        // Get first and last time indices in this view
+        auto all_samples = trial_view->view();
+        // Views are time-ordered, so first and last give the range
+        bool first = true;
+        TimeFrameIndex first_time{0};
+        TimeFrameIndex last_time{0};
+        for (auto const & sample : all_samples) {
+            if (first) {
+                first_time = sample.time();
+                first = false;
+            }
+            last_time = sample.time();
+        }
+
+        if (first) {
+            // No samples
+            continue;
+        }
+
+        double rel_start = static_cast<double>(first_time.getValue() - alignment_time);
+        double rel_end = static_cast<double>(last_time.getValue() - alignment_time);
+        x_min = std::min(x_min, rel_start);
+        x_max = std::max(x_max, rel_end);
+    }
+
+    // =========================================================================
+    // Apply bounds to state (updates view state and axes)
+    // =========================================================================
+    if (y_min < y_max) {
+        // Add a small margin (5%) so lines don't sit on the edge
+        float const y_margin = (y_max - y_min) * 0.05f;
+        _state->setYBounds(
+            static_cast<double>(y_min - y_margin),
+            static_cast<double>(y_max + y_margin));
+    }
+
+    if (x_min < x_max) {
+        _state->setXBounds(x_min, x_max);
+    }
+
+    // Cache updated view state
+    _cached_view_state = _state->viewState();
+    updateMatrices();
+
+    // NOTE: Line rendering not yet implemented — scene is cleared for now.
+    // Future: build line batches from gathered data using CorePlotting::SceneBuilder
+    _scene_renderer.clearScene();
 }
 
 void LinePlotOpenGLWidget::updateMatrices()
