@@ -21,6 +21,7 @@ add_subdirectory(SpatialIndex)
 add_subdirectory(StateEstimation)
 add_subdirectory(DataManager)
 if (ENABLE_UI)
+        add_subdirectory(PlottingOpenGL)
         add_subdirectory(WhiskerToolbox)
 endif()
 
