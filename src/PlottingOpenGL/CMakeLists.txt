@@ -39,6 +39,14 @@ set(PLOTTINGOPENGL_SOURCES
     ShaderManager/ShaderProgram.cpp
     ShaderManager/ShaderProgram.hpp
     ShaderManager/ShaderSourceType.hpp
+    LineBatch/GLSSBOBuffer.hpp
+    LineBatch/GLSSBOBuffer.cpp
+    LineBatch/BatchLineStore.hpp
+    LineBatch/BatchLineStore.cpp
+    LineBatch/ComputeShaderIntersector.hpp
+    LineBatch/ComputeShaderIntersector.cpp
+    LineBatch/BatchLineRenderer.hpp
+    LineBatch/BatchLineRenderer.cpp
 )
 
 add_library(PlottingOpenGL STATIC ${PLOTTINGOPENGL_SOURCES})
