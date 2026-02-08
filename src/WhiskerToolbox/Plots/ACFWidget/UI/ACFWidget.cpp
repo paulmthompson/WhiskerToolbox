@@ -223,12 +223,9 @@ std::pair<double, double> ACFWidget::computeVisibleXRange() const
     if (!_state) {
         return {0.0, 100.0};
     }
-    auto * has = _state->horizontalAxisState();
-    double x_min = has ? has->getXMin() : 0.0;
-    double x_max = has ? has->getXMax() : 100.0;
     auto const & vs = _state->viewState();
-    double const x_range = x_max - x_min;
-    double const x_center = (x_min + x_max) / 2.0;
+    double const x_range = vs.x_max - vs.x_min;
+    double const x_center = (vs.x_min + vs.x_max) / 2.0;
     double const half = x_range / 2.0 / vs.x_zoom;
     return {x_center - half + vs.x_pan, x_center + half + vs.x_pan};
 }
@@ -238,12 +235,10 @@ std::pair<double, double> ACFWidget::computeVisibleYRange() const
     if (!_state) {
         return {0.0, 100.0};
     }
-    auto * vas = _state->verticalAxisState();
-    double y_min = vas ? vas->getYMin() : 0.0;
-    double y_max = vas ? vas->getYMax() : 100.0;
+    // Y data bounds are in view state (kept in sync with vertical axis via setYBounds)
     auto const & vs = _state->viewState();
-    double const y_range = y_max - y_min;
-    double const y_center = (y_min + y_max) / 2.0;
+    double const y_range = vs.y_max - vs.y_min;
+    double const y_center = (vs.y_min + vs.y_max) / 2.0;
     double const half = y_range / 2.0 / vs.y_zoom;
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }

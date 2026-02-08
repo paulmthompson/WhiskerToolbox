@@ -6,12 +6,14 @@
  * @brief State class for ACFWidget
  *
  * ACFState manages the serializable state for the ACFWidget, with a single
- * source of truth for view state (zoom/pan) and axis ranges. HorizontalAxisState
- * and VerticalAxisState hold full axis ranges; view state holds zoom/pan.
+ * source of truth for view state (zoom/pan/data bounds) and axis ranges.
+ * ViewStateData holds zoom, pan, and data bounds; axis states are kept in sync
+ * via setXBounds/setYBounds.
  *
  * @see EditorState for base class documentation
  */
 
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
@@ -26,26 +28,13 @@
 #include <string>
 
 /**
- * @brief View state for the ACF plot (zoom and pan only)
- *
- * Data bounds come from HorizontalAxisState and VerticalAxisState.
- * This struct only holds the view transform.
- */
-struct ACFViewState {
-    double x_zoom = 1.0;
-    double y_zoom = 1.0;
-    double x_pan = 0.0;
-    double y_pan = 0.0;
-};
-
-/**
  * @brief Serializable state data for ACFWidget
  */
 struct ACFStateData {
     std::string instance_id;
     std::string display_name = "Autocorrelation Function";
     std::string event_key;  ///< Key of the DigitalEventSeries to compute ACF for
-    ACFViewState view_state;
+    CorePlotting::ViewStateData view_state;
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
 };
@@ -106,11 +95,16 @@ public:
     [[nodiscard]] HorizontalAxisState * horizontalAxisState() { return _horizontal_axis_state.get(); }
     [[nodiscard]] VerticalAxisState * verticalAxisState() { return _vertical_axis_state.get(); }
 
-    // === View state (zoom / pan) ===
-    [[nodiscard]] ACFViewState const & viewState() const { return _data.view_state; }
+    // === View state (zoom / pan / bounds) ===
+    /** @brief Get the current view state (zoom, pan, data bounds). */
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const { return _data.view_state; }
     void setXZoom(double zoom);
     void setYZoom(double zoom);
     void setPan(double x_pan, double y_pan);
+    /** @brief Set X data bounds. Updates view state and horizontal axis. */
+    void setXBounds(double x_min, double x_max);
+    /** @brief Set Y data bounds. Updates view state and vertical axis. */
+    void setYBounds(double y_min, double y_max);
 
     // === Serialization ===
 
