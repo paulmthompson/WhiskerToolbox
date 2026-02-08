@@ -1,12 +1,12 @@
 #include "TemporalProjectionOpenGLWidget.hpp"
 
 #include "Core/TemporalProjectionViewState.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
 
 #include <QMouseEvent>
 #include <QWheelEvent>
 
 #include <cmath>
-#include <glm/gtc/matrix_transform.hpp>
 
 TemporalProjectionOpenGLWidget::TemporalProjectionOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -139,37 +139,16 @@ void TemporalProjectionOpenGLWidget::onViewStateChanged()
 
 void TemporalProjectionOpenGLWidget::updateMatrices()
 {
-    double x_min = 0.0;
-    double x_max = 100.0;
-    double y_min = 0.0;
-    double y_max = 100.0;
-    if (_state) {
-        auto * has = _state->horizontalAxisState();
-        auto * vas = _state->verticalAxisState();
-        if (has) {
-            x_min = has->getXMin();
-            x_max = has->getXMax();
-        }
-        if (vas) {
-            y_min = vas->getYMin();
-            y_max = vas->getYMax();
-        }
-    }
-    float const x_range = static_cast<float>(x_max - x_min);
-    float const x_center = static_cast<float>(x_min + x_max) / 2.0f;
-    float const zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
-    float const y_range = static_cast<float>(y_max - y_min);
-    float const y_center = static_cast<float>(y_min + y_max) / 2.0f;
-    float const zoomed_y_range = y_range / static_cast<float>(_cached_view_state.y_zoom);
-    float const pan_x = static_cast<float>(_cached_view_state.x_pan);
-    float const pan_y = static_cast<float>(_cached_view_state.y_pan);
+    // Use only cached view state for X and Y ranges (single source of truth)
+    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const x_center =
+        static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+    float const y_range = static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
+    float const y_center =
+        static_cast<float>(_cached_view_state.y_min + _cached_view_state.y_max) / 2.0f;
 
-    float const left = x_center - zoomed_x_range / 2.0f + pan_x;
-    float const right = x_center + zoomed_x_range / 2.0f + pan_x;
-    float const bottom = y_center - zoomed_y_range / 2.0f + pan_y;
-    float const top = y_center + zoomed_y_range / 2.0f + pan_y;
-
-    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
+        _cached_view_state, x_range, x_center, y_range, y_center);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -178,26 +157,13 @@ void TemporalProjectionOpenGLWidget::handlePanning(int delta_x, int delta_y)
     if (!_state) {
         return;
     }
-    double x_min = 0.0, x_max = 100.0;
-    double y_min = 0.0, y_max = 100.0;
-    if (auto * has = _state->horizontalAxisState()) {
-        x_min = has->getXMin();
-        x_max = has->getXMax();
-    }
-    if (auto * vas = _state->verticalAxisState()) {
-        y_min = vas->getYMin();
-        y_max = vas->getYMax();
-    }
-    float const x_range = static_cast<float>(x_max - x_min);
-    float const world_per_pixel_x =
-        x_range / (_widget_width * static_cast<float>(_cached_view_state.x_zoom));
-    float const y_range = static_cast<float>(y_max - y_min);
-    float const world_per_pixel_y =
-        y_range / (_widget_height * static_cast<float>(_cached_view_state.y_zoom));
+    float const x_range =
+        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const y_range =
+        static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
 
-    float const new_pan_x = static_cast<float>(_cached_view_state.x_pan) - delta_x * world_per_pixel_x;
-    float const new_pan_y = static_cast<float>(_cached_view_state.y_pan) + delta_y * world_per_pixel_y;
-    _state->setPan(new_pan_x, new_pan_y);
+    WhiskerToolbox::Plots::handlePanning(*_state, _cached_view_state, delta_x, delta_y,
+                                         x_range, y_range, _widget_width, _widget_height);
 }
 
 void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
@@ -205,23 +171,11 @@ void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool b
     if (!_state) {
         return;
     }
-    float const factor = std::pow(1.1f, delta);
-    if (y_only) {
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else if (both_axes) {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-    }
+    WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 QPointF TemporalProjectionOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
 {
-    float const ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
-    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
-    glm::mat4 const inv_proj = glm::inverse(_projection_matrix);
-    glm::vec4 const ndc(ndc_x, ndc_y, 0.0f, 1.0f);
-    glm::vec4 const world = inv_proj * ndc;
-    return QPointF(world.x, world.y);
+    return WhiskerToolbox::Plots::screenToWorld(_projection_matrix, _widget_width,
+                                               _widget_height, screen_pos);
 }

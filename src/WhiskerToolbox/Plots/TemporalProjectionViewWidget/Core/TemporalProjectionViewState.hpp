@@ -6,14 +6,15 @@
  * @brief State class for TemporalProjectionViewWidget
  *
  * TemporalProjectionViewState manages the serializable state for the
- * TemporalProjectionViewWidget, with a single source of truth for view state
- * (zoom/pan) and axis ranges. HorizontalAxisState and VerticalAxisState hold
- * full axis ranges; view state holds zoom/pan.
+ * TemporalProjectionViewWidget. View state (CorePlotting::ViewStateData) is
+ * the single source of truth for zoom, pan, and data bounds; horizontal and
+ * vertical axis states are kept in sync via setXBounds/setYBounds.
  *
  * @see EditorState for base class documentation
- * @see ScatterPlotState for the same pattern
+ * @see LinePlotState for the same pattern
  */
 
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
@@ -27,25 +28,12 @@
 #include <string>
 
 /**
- * @brief View state for the temporal projection view (zoom and pan only)
- *
- * Data bounds come from HorizontalAxisState and VerticalAxisState.
- * This struct only holds the view transform.
- */
-struct TemporalProjectionViewViewState {
-    double x_zoom = 1.0;
-    double y_zoom = 1.0;
-    double x_pan = 0.0;
-    double y_pan = 0.0;
-};
-
-/**
  * @brief Serializable state data for TemporalProjectionViewWidget
  */
 struct TemporalProjectionViewStateData {
     std::string instance_id;
     std::string display_name = "Temporal Projection View";
-    TemporalProjectionViewViewState view_state;
+    CorePlotting::ViewStateData view_state;
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
 };
@@ -93,14 +81,31 @@ public:
     [[nodiscard]] double getYMin() const;
     [[nodiscard]] double getYMax() const;
 
-    // === View state (zoom / pan) ===
-    [[nodiscard]] TemporalProjectionViewViewState const & viewState() const
+    // === View state (zoom / pan / bounds) ===
+    /** @brief Get the current view state (bounds + zoom + pan). */
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const
     {
         return _data.view_state;
     }
     void setXZoom(double zoom);
     void setYZoom(double zoom);
     void setPan(double x_pan, double y_pan);
+
+    /**
+     * @brief Set X data bounds and keep horizontal axis in sync.
+     * Call when the plot updates the horizontal axis from data (e.g. after a rebuild).
+     * @param x_min Minimum X value
+     * @param x_max Maximum X value
+     */
+    void setXBounds(double x_min, double x_max);
+
+    /**
+     * @brief Set Y data bounds and keep vertical axis in sync.
+     * Call when the plot updates the vertical axis from data (e.g. after a rebuild).
+     * @param y_min Minimum Y value
+     * @param y_max Maximum Y value
+     */
+    void setYBounds(double y_min, double y_max);
 
     // === Serialization ===
     [[nodiscard]] std::string toJson() const override;

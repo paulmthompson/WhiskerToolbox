@@ -5,14 +5,16 @@
  * @file TemporalProjectionOpenGLWidget.hpp
  * @brief OpenGL-based temporal projection view visualization widget
  *
- * Single source of truth: TemporalProjectionViewState (view state + axis states).
- * Supports pan and zoom; updates state on interaction and reads from state for
- * projection.
+ * Uses CorePlotting::ViewStateData cached from state for projection and
+ * interaction. Delegates to WhiskerToolbox::Plots helpers for ortho projection,
+ * screenToWorld, panning, and zoom.
  *
  * @see TemporalProjectionViewState
+ * @see PlotInteractionHelpers.hpp
  */
 
 #include "Core/TemporalProjectionViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -65,7 +67,7 @@ private:
     int _widget_width{1};
     int _widget_height{1};
 
-    TemporalProjectionViewViewState _cached_view_state;
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _projection_matrix{1.0f};
     glm::mat4 _view_matrix{1.0f};
 
