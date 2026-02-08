@@ -3,7 +3,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
-#include "CoreGeometry/boundingbox.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <glm/gtc/matrix_transform.hpp>
 
 HeatmapOpenGLWidget::HeatmapOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -43,6 +42,8 @@ void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state)
     _state = state;
 
     if (_state) {
+        _cached_view_state = _state->viewState();
+
         connect(_state.get(), &HeatmapState::stateChanged,
                 this, &HeatmapOpenGLWidget::onStateChanged);
         connect(_state.get(), &HeatmapState::viewStateChanged,
@@ -53,8 +54,8 @@ void HeatmapOpenGLWidget::setState(std::shared_ptr<HeatmapState> state)
                     update();
                 });
 
-        _cached_view_state = _state->viewState();
         _scene_dirty = true;
+        updateMatrices();
     }
 }
 
@@ -65,7 +66,7 @@ void HeatmapOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manag
     update();
 }
 
-HeatmapViewState const & HeatmapOpenGLWidget::viewState() const
+CorePlotting::ViewStateData const & HeatmapOpenGLWidget::viewState() const
 {
     return _cached_view_state;
 }
@@ -73,7 +74,9 @@ HeatmapViewState const & HeatmapOpenGLWidget::viewState() const
 void HeatmapOpenGLWidget::resetView()
 {
     if (_state) {
-        _state->setViewState(HeatmapViewState{});
+        _state->setXZoom(1.0);
+        _state->setYZoom(1.0);
+        _state->setPan(0.0, 0.0);
     }
 }
 
@@ -141,9 +144,9 @@ void HeatmapOpenGLWidget::mousePressEvent(QMouseEvent * event)
 void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton) {
-        int dx = event->pos().x() - _click_start_pos.x();
-        int dy = event->pos().y() - _click_start_pos.y();
-        int distance_squared = dx * dx + dy * dy;
+        int const dx = event->pos().x() - _click_start_pos.x();
+        int const dy = event->pos().y() - _click_start_pos.y();
+        int const distance_squared = dx * dx + dy * dy;
 
         if (!_is_panning && distance_squared > DRAG_THRESHOLD * DRAG_THRESHOLD) {
             _is_panning = true;
@@ -151,8 +154,8 @@ void HeatmapOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
         }
 
         if (_is_panning) {
-            int delta_x = event->pos().x() - _last_mouse_pos.x();
-            int delta_y = event->pos().y() - _last_mouse_pos.y();
+            int const delta_x = event->pos().x() - _last_mouse_pos.x();
+            int const delta_y = event->pos().y() - _last_mouse_pos.y();
             handlePanning(delta_x, delta_y);
         }
         _last_mouse_pos = event->pos();
@@ -182,10 +185,10 @@ void HeatmapOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 
 void HeatmapOpenGLWidget::wheelEvent(QWheelEvent * event)
 {
-    float delta = event->angleDelta().y() / 120.0f;
-    bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
-    bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
-    handleZoom(delta, shift_pressed, ctrl_pressed);
+    float const delta = event->angleDelta().y() / 120.0f;
+    bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
+    bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
+    handleZoom(delta, y_only, both_axes);
     event->accept();
 }
 
@@ -226,64 +229,52 @@ void HeatmapOpenGLWidget::rebuildScene()
 
 void HeatmapOpenGLWidget::updateMatrices()
 {
-    float x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+    // Use only cached view state for X and Y ranges (single source of truth)
+    float const x_range =
+        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const x_center =
+        static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
 
-    float zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
-    float zoomed_y_range = 2.0f / static_cast<float>(_cached_view_state.y_zoom);
+    float const y_min = static_cast<float>(_cached_view_state.y_min);
+    float const y_max = static_cast<float>(_cached_view_state.y_max);
+    float const y_range = y_max - y_min;
+    float const y_center = (y_min + y_max) / 2.0f;
 
-    float pan_x = static_cast<float>(_cached_view_state.x_pan);
-    float pan_y = static_cast<float>(_cached_view_state.y_pan);
-
-    float left = x_center - zoomed_x_range / 2.0f + pan_x;
-    float right = x_center + zoomed_x_range / 2.0f + pan_x;
-    float bottom = -zoomed_y_range / 2.0f + pan_y;
-    float top = zoomed_y_range / 2.0f + pan_y;
-
-    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
+        _cached_view_state, x_range, x_center, y_range, y_center);
     _view_matrix = glm::mat4(1.0f);
 }
 
 QPointF HeatmapOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
 {
-    float ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
-    float ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
-
-    glm::mat4 inv_proj = glm::inverse(_projection_matrix);
-    glm::vec4 ndc(ndc_x, ndc_y, 0.0f, 1.0f);
-    glm::vec4 world = inv_proj * ndc;
-
-    return QPointF(world.x, world.y);
+    return WhiskerToolbox::Plots::screenToWorld(
+        _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
 void HeatmapOpenGLWidget::handlePanning(int delta_x, int delta_y)
 {
-    if (!_state) return;
+    if (!_state) {
+        return;
+    }
 
-    float world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
-                              (_widget_width * _cached_view_state.x_zoom);
-    float world_per_pixel_y = 2.0f / (_widget_height * _cached_view_state.y_zoom);
+    float const x_range =
+        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const y_range =
+        static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
 
-    float new_pan_x = _cached_view_state.x_pan - delta_x * world_per_pixel_x;
-    float new_pan_y = _cached_view_state.y_pan + delta_y * world_per_pixel_y;
-
-    _state->setPan(new_pan_x, new_pan_y);
+    WhiskerToolbox::Plots::handlePanning(
+        *_state, _cached_view_state, delta_x, delta_y,
+        x_range, y_range, _widget_width, _widget_height);
 }
 
 void HeatmapOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
 {
-    if (!_state) return;
-
-    float factor = std::pow(1.1f, delta);
-
-    if (y_only) {
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else if (both_axes) {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
+    if (!_state) {
+        return;
     }
+
+    WhiskerToolbox::Plots::handleZoom(
+        *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 void HeatmapOpenGLWidget::updateBackgroundColor()

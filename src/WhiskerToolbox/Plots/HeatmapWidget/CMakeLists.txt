@@ -4,8 +4,6 @@ set(HEATMAP_WIDGET_SOURCES
 
         Core/HeatmapState.cpp
         Core/HeatmapState.hpp
-        Core/ViewStateAdapter.cpp
-        Core/ViewStateAdapter.hpp
 
         HeatmapWidgetRegistration.cpp
         HeatmapWidgetRegistration.hpp

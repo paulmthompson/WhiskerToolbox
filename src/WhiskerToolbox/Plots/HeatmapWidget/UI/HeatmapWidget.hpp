@@ -35,6 +35,7 @@ public:
     [[nodiscard]] HeatmapState * state();
     [[nodiscard]] RelativeTimeAxisRangeControls * getRangeControls() const;
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+    /** @brief Vertical axis state is owned by HeatmapState */
     [[nodiscard]] VerticalAxisState * getVerticalAxisState() const;
 
 signals:
@@ -64,7 +65,6 @@ private:
     RelativeTimeAxisRangeControls * _range_controls;
     VerticalAxisWidget * _vertical_axis_widget;
     VerticalAxisRangeControls * _vertical_range_controls;
-    std::unique_ptr<VerticalAxisState> _vertical_axis_state;
     size_t _trial_count = 0;
 };
 

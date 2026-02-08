@@ -2,19 +2,26 @@
 
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
 #include <rfl/json.hpp>
 
 HeatmapState::HeatmapState(QObject * parent)
     : EditorState(parent),
       _alignment_state(std::make_unique<PlotAlignmentState>(this)),
-      _relative_time_axis_state(std::make_unique<RelativeTimeAxisState>(this))
+      _relative_time_axis_state(std::make_unique<RelativeTimeAxisState>(this)),
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
 {
     _data.instance_id = getInstanceId().toStdString();
     _data.alignment = _alignment_state->data();
 
     _relative_time_axis_state->setRangeSilent(_data.view_state.x_min, _data.view_state.x_max);
     _data.time_axis = _relative_time_axis_state->data();
+
+    // Y bounds in trial-index space; kept in sync with vertical axis
+    _data.view_state.y_min = 0.0;
+    _data.view_state.y_max = 100.0;
+    _data.vertical_axis = _vertical_axis_state->data();
 
     // Forward alignment state signals
     connect(_alignment_state.get(), &PlotAlignmentState::alignmentEventKeyChanged,
@@ -28,12 +35,13 @@ HeatmapState::HeatmapState(QObject * parent)
     connect(_alignment_state.get(), &PlotAlignmentState::windowSizeChanged,
             this, [this](double window_size) {
                 _data.alignment = _alignment_state->data();
-                double half_window = window_size / 2.0;
+                double const half_window = window_size / 2.0;
                 _data.view_state.x_min = -half_window;
                 _data.view_state.x_max = half_window;
                 _data.view_state.x_pan = 0.0;
                 _data.view_state.x_zoom = 1.0;
-                _relative_time_axis_state->setRangeSilent(_data.view_state.x_min, _data.view_state.x_max);
+                _relative_time_axis_state->setRangeSilent(_data.view_state.x_min,
+                                                          _data.view_state.x_max);
                 _data.time_axis = _relative_time_axis_state->data();
                 markDirty();
                 emit windowSizeChanged(window_size);
@@ -51,18 +59,29 @@ HeatmapState::HeatmapState(QObject * parent)
                 emit viewStateChanged();
                 emit stateChanged();
             });
-    // Time axis range updated programmatically -> only sync data
     connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
             this, [this]() {
                 _data.time_axis = _relative_time_axis_state->data();
                 markDirty();
                 emit stateChanged();
             });
+
+    // Sync vertical axis state to data
+    auto syncVerticalAxisData = [this]() {
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit stateChanged();
+    };
+    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
+            this, syncVerticalAxisData);
+    connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
+            this, syncVerticalAxisData);
 }
 
 QString HeatmapState::getDisplayName() const { return QString::fromStdString(_data.display_name); }
 
-void HeatmapState::setDisplayName(QString const & name) {
+void HeatmapState::setDisplayName(QString const & name)
+{
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -70,16 +89,24 @@ void HeatmapState::setDisplayName(QString const & name) {
     }
 }
 
-QString HeatmapState::getAlignmentEventKey() const { return _alignment_state->getAlignmentEventKey(); }
-void HeatmapState::setAlignmentEventKey(QString const & key) {
+QString HeatmapState::getAlignmentEventKey() const
+{
+    return _alignment_state->getAlignmentEventKey();
+}
+void HeatmapState::setAlignmentEventKey(QString const & key)
+{
     _alignment_state->setAlignmentEventKey(key);
     _data.alignment = _alignment_state->data();
     markDirty();
     emit stateChanged();
 }
 
-IntervalAlignmentType HeatmapState::getIntervalAlignmentType() const { return _alignment_state->getIntervalAlignmentType(); }
-void HeatmapState::setIntervalAlignmentType(IntervalAlignmentType type) {
+IntervalAlignmentType HeatmapState::getIntervalAlignmentType() const
+{
+    return _alignment_state->getIntervalAlignmentType();
+}
+void HeatmapState::setIntervalAlignmentType(IntervalAlignmentType type)
+{
     _alignment_state->setIntervalAlignmentType(type);
     _data.alignment = _alignment_state->data();
     markDirty();
@@ -87,7 +114,8 @@ void HeatmapState::setIntervalAlignmentType(IntervalAlignmentType type) {
 }
 
 double HeatmapState::getOffset() const { return _alignment_state->getOffset(); }
-void HeatmapState::setOffset(double offset) {
+void HeatmapState::setOffset(double offset)
+{
     _alignment_state->setOffset(offset);
     _data.alignment = _alignment_state->data();
     markDirty();
@@ -95,22 +123,15 @@ void HeatmapState::setOffset(double offset) {
 }
 
 double HeatmapState::getWindowSize() const { return _alignment_state->getWindowSize(); }
-void HeatmapState::setWindowSize(double window_size) {
+void HeatmapState::setWindowSize(double window_size)
+{
     _alignment_state->setWindowSize(window_size);
 }
 
 // === View State ===
 
-void HeatmapState::setViewState(HeatmapViewState const & view_state) {
-    _data.view_state = view_state;
-    _relative_time_axis_state->setRangeSilent(view_state.x_min, view_state.x_max);
-    _data.time_axis = _relative_time_axis_state->data();
-    markDirty();
-    emit viewStateChanged();
-    emit stateChanged();
-}
-
-void HeatmapState::setXZoom(double zoom) {
+void HeatmapState::setXZoom(double zoom)
+{
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
         markDirty();
@@ -118,7 +139,8 @@ void HeatmapState::setXZoom(double zoom) {
     }
 }
 
-void HeatmapState::setYZoom(double zoom) {
+void HeatmapState::setYZoom(double zoom)
+{
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
         markDirty();
@@ -126,7 +148,8 @@ void HeatmapState::setYZoom(double zoom) {
     }
 }
 
-void HeatmapState::setPan(double x_pan, double y_pan) {
+void HeatmapState::setPan(double x_pan, double y_pan)
+{
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
@@ -135,7 +158,8 @@ void HeatmapState::setPan(double x_pan, double y_pan) {
     }
 }
 
-void HeatmapState::setXBounds(double x_min, double x_max) {
+void HeatmapState::setXBounds(double x_min, double x_max)
+{
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -147,10 +171,28 @@ void HeatmapState::setXBounds(double x_min, double x_max) {
     }
 }
 
+void HeatmapState::setYBounds(double y_min, double y_max)
+{
+    if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
+        _data.view_state.y_min = y_min;
+        _data.view_state.y_max = y_max;
+        _vertical_axis_state->data().y_min = y_min;
+        _vertical_axis_state->data().y_max = y_max;
+        _data.vertical_axis = _vertical_axis_state->data();
+        markDirty();
+        emit viewStateChanged();
+        emit stateChanged();
+    }
+}
+
 // === Background Color ===
 
-QString HeatmapState::getBackgroundColor() const { return QString::fromStdString(_data.background_color); }
-void HeatmapState::setBackgroundColor(QString const & hex_color) {
+QString HeatmapState::getBackgroundColor() const
+{
+    return QString::fromStdString(_data.background_color);
+}
+void HeatmapState::setBackgroundColor(QString const & hex_color)
+{
     std::string hex_str = hex_color.toStdString();
     if (_data.background_color != hex_str) {
         _data.background_color = hex_str;
@@ -162,13 +204,15 @@ void HeatmapState::setBackgroundColor(QString const & hex_color) {
 
 // === Serialization ===
 
-std::string HeatmapState::toJson() const {
+std::string HeatmapState::toJson() const
+{
     HeatmapStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     return rfl::json::write(data_to_serialize);
 }
 
-bool HeatmapState::fromJson(std::string const & json) {
+bool HeatmapState::fromJson(std::string const & json)
+{
     auto result = rfl::json::read<HeatmapStateData>(json);
     if (result) {
         _data = *result;
@@ -177,6 +221,10 @@ bool HeatmapState::fromJson(std::string const & json) {
         }
         _alignment_state->data() = _data.alignment;
         _relative_time_axis_state->data() = _data.time_axis;
+        _vertical_axis_state->data() = _data.vertical_axis;
+        // Sync view state Y from vertical axis so they never drift
+        _data.view_state.y_min = _data.vertical_axis.y_min;
+        _data.view_state.y_max = _data.vertical_axis.y_max;
         emit viewStateChanged();
         emit stateChanged();
         return true;
