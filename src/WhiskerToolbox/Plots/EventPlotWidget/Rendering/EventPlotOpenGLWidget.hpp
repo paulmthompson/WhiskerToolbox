@@ -22,7 +22,7 @@
 #include "Core/EventPlotState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/LayoutEngine.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
@@ -95,7 +95,7 @@ public:
     /**
      * @brief Get the current view state (zoom, pan, bounds)
      */
-    [[nodiscard]] EventPlotViewState const & viewState() const;
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const;
 
     /**
      * @brief Reset view to default bounds (fit data)
@@ -185,8 +185,8 @@ private:
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
 
-    // View state (cached from EventPlotState for rendering)
-    EventPlotViewState _cached_view_state;
+    // View state cache (single source of truth is EventPlotState)
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _view_matrix{1.0f};
     glm::mat4 _projection_matrix{1.0f};
 

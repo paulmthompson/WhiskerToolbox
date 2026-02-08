@@ -20,6 +20,10 @@ EventPlotState::EventPlotState(QObject * parent)
     _relative_time_axis_state->setRangeSilent(_data.view_state.x_min, _data.view_state.x_max);
     _data.time_axis = _relative_time_axis_state->data();
 
+    // EventPlot Y-axis is fixed trial viewport [-1, 1]; keep view_state in sync
+    _data.view_state.y_min = -1.0;
+    _data.view_state.y_max = 1.0;
+
     // Forward alignment state signals to this object's signals
     connect(_alignment_state.get(), &PlotAlignmentState::alignmentEventKeyChanged,
             this, &EventPlotState::alignmentEventKeyChanged);
@@ -205,17 +209,6 @@ void EventPlotState::updatePlotEventOptions(QString const & event_name, EventPlo
 
 // === View State ===
 
-void EventPlotState::setViewState(EventPlotViewState const & view_state)
-{
-    _data.view_state = view_state;
-    // Update time axis state to match view bounds
-    _relative_time_axis_state->setRangeSilent(view_state.x_min, view_state.x_max);
-    _data.time_axis = _relative_time_axis_state->data();
-    markDirty();
-    emit viewStateChanged();
-    emit stateChanged();
-}
-
 void EventPlotState::setXZoom(double zoom)
 {
     if (_data.view_state.x_zoom != zoom) {
@@ -332,6 +325,10 @@ bool EventPlotState::fromJson(std::string const & json)
 
         // Restore relative time axis state from serialized data
         _relative_time_axis_state->data() = _data.time_axis;
+
+        // EventPlot Y-axis is fixed [-1, 1]; ensure view_state matches
+        _data.view_state.y_min = -1.0;
+        _data.view_state.y_max = 1.0;
 
         // Emit all signals to ensure UI updates
         emit viewStateChanged();

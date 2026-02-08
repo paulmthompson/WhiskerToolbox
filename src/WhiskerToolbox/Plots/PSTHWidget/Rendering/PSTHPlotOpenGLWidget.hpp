@@ -19,7 +19,7 @@
 #include "Core/PSTHState.hpp"
 
 #include "CoreGeometry/boundingbox.hpp"
-#include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/HistogramData.hpp"
 #include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
@@ -100,8 +100,8 @@ private:
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
 
-    // Projection
-    PSTHViewState _cached_view_state;
+    // View state cache (single source of truth is PSTHState)
+    CorePlotting::ViewStateData _cached_view_state;
     glm::mat4 _projection_matrix{1.0f};
     glm::mat4 _view_matrix{1.0f};
 

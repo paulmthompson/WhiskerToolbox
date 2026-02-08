@@ -4,8 +4,6 @@ set(PSTH_WIDGET_SOURCES
 
         Core/PSTHState.cpp
         Core/PSTHState.hpp
-        Core/ViewStateAdapter.cpp
-        Core/ViewStateAdapter.hpp
 
         Rendering/PSTHPlotOpenGLWidget.cpp
         Rendering/PSTHPlotOpenGLWidget.hpp

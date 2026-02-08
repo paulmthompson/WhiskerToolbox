@@ -11,13 +11,14 @@
  * @see EditorState for base class documentation
  */
 
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
-#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
-#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
+#include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
+#include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -33,37 +34,16 @@
  * @brief Enumeration for PSTH plot style
  */
 enum class PSTHStyle {
-    Bar,  ///< Bar chart style (default)
-    Line  ///< Line plot style
-};
-
-/**
- * @brief View state for the PSTH plot (zoom, pan, data bounds)
- *
- * Follows the same architecture as EventPlotViewState:
- * - Data bounds (x_min, x_max) define the window of data to gather.
- *   Changing these triggers a scene rebuild.
- * - View transform (x_zoom, y_zoom, x_pan, y_pan) controls how the data
- *   is displayed. Changing these only updates the projection matrix.
- */
-struct PSTHViewState {
-    // === Data Bounds ===
-    double x_min = -500.0;
-    double x_max = 500.0;
-
-    // === View Transform ===
-    double x_zoom = 1.0;
-    double y_zoom = 1.0;
-    double x_pan = 0.0;
-    double y_pan = 0.0;
+    Bar,///< Bar chart style (default)
+    Line///< Line plot style
 };
 
 /**
  * @brief Options for plotting an event series in the PSTH plot
  */
 struct PSTHEventOptions {
-    std::string event_key;              ///< Key of the DigitalEventSeries to plot
-    std::string hex_color = "#000000";  ///< Color as hex string (default: black)
+    std::string event_key;            ///< Key of the DigitalEventSeries to plot
+    std::string hex_color = "#000000";///< Color as hex string (default: black)
 };
 
 /**
@@ -72,13 +52,13 @@ struct PSTHEventOptions {
 struct PSTHStateData {
     std::string instance_id;
     std::string display_name = "PSTH Plot";
-    PlotAlignmentData alignment;                                    ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, PSTHEventOptions> plot_events;           ///< Map of event names to their plot options
-    PSTHStyle style = PSTHStyle::Bar;                              ///< Plot style (bar or line)
-    double bin_size = 10.0;                                         ///< Bin size in time units (default: 10.0)
-    PSTHViewState view_state;                                       ///< Zoom, pan, data bounds
-    RelativeTimeAxisStateData time_axis;                            ///< Time axis settings (min_range, max_range)
-    VerticalAxisStateData vertical_axis;                           ///< Vertical axis settings (y_min, y_max)
+    PlotAlignmentData alignment;                        ///< Alignment settings (event key, interval type, offset, window size)
+    std::map<std::string, PSTHEventOptions> plot_events;///< Map of event names to their plot options
+    PSTHStyle style = PSTHStyle::Bar;                   ///< Plot style (bar or line)
+    double bin_size = 10.0;                             ///< Bin size in time units (default: 10.0)
+    CorePlotting::ViewStateData view_state;             ///< Zoom, pan, data bounds
+    RelativeTimeAxisStateData time_axis;                ///< Time axis settings (min_range, max_range)
+    VerticalAxisStateData vertical_axis;                ///< Vertical axis settings (y_min, y_max)
 };
 
 /**
@@ -260,7 +240,9 @@ public:
     // === View State (Zoom / Pan / Bounds) ===
 
     /** @brief Get the current view state */
-    [[nodiscard]] PSTHViewState const & viewState() const { return _data.view_state; }
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const {
+        return _data.view_state;
+    }
 
     /** @brief Set X-axis zoom. Only emits viewStateChanged(). */
     void setXZoom(double zoom);
@@ -273,6 +255,13 @@ public:
 
     /** @brief Set data bounds. Emits viewStateChanged() AND stateChanged(). */
     void setXBounds(double x_min, double x_max);
+
+    /**
+     * @brief Set Y-axis data bounds and keep in sync with vertical axis state
+     * @param y_min Lower Y bound
+     * @param y_max Upper Y bound
+     */
+    void setYBounds(double y_min, double y_max);
 
     // === Serialization ===
 

@@ -12,6 +12,7 @@
  */
 
 #include "EditorState/EditorState.hpp"
+#include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -51,53 +52,6 @@ enum class TrialSortMode {
 };
 
 /**
- * @brief View state for the raster plot (zoom, pan, bounds)
- * 
- * Supports independent X/Y zoom for time-focused or trial-focused exploration.
- * 
- * **Architecture: Data Bounds vs View Transform**
- * 
- * The view state has two conceptually separate concerns:
- * 
- * 1. **Data Bounds (x_min, x_max)**: Define the window of data to gather from
- *    the DataManager. Changing these requires a scene rebuild because the
- *    underlying data changes.
- *    - Example: x_min=-1000, x_max=1000 gathers events from -1000ms to +1000ms
- * 
- * 2. **View Transform (x_zoom, y_zoom, x_pan, y_pan)**: Control how the gathered
- *    data is displayed. Changing these only updates the projection matrix - no
- *    data rebuild is needed.
- *    - Example: x_zoom=2.0 shows half the time range at 2x magnification
- *    - Example: x_pan=500 shifts the view 500ms to the right
- * 
- * This separation enables smooth zoom/pan interaction while limiting expensive
- * data re-gathering to explicit window changes.
- */
-struct EventPlotViewState {
-    // === Data Bounds (changing these triggers scene rebuild) ===
-    
-    /// Time before alignment in ms (typically negative). Defines data window start.
-    double x_min = -500.0;
-    
-    /// Time after alignment in ms (typically positive). Defines data window end.
-    double x_max = 500.0;
-    
-    // === View Transform (changing these only updates projection matrix) ===
-    
-    /// X-axis (time) zoom factor. 1.0 = full window, 2.0 = show half the window.
-    double x_zoom = 1.0;
-    
-    /// Y-axis (trial) zoom factor. 1.0 = all trials fit, 2.0 = half the trials fit.
-    double y_zoom = 1.0;
-    
-    /// X-axis pan offset in world units (ms). Positive = view shifts right.
-    double x_pan = 0.0;
-    
-    /// Y-axis pan offset in normalized units. Positive = view shifts up.
-    double y_pan = 0.0;
-};
-
-/**
  * @brief Axis labeling and grid options
  */
 struct EventPlotAxisOptions {
@@ -126,7 +80,7 @@ struct EventPlotStateData {
     std::string display_name = "Event Plot";
     PlotAlignmentData alignment;                                   ///< Alignment settings (event key, interval type, offset, window size)
     std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
-    EventPlotViewState view_state;                                 ///< View state (zoom, pan, bounds)
+    CorePlotting::ViewStateData view_state;                        ///< View state (zoom, pan, bounds). Y bounds fixed at -1..1 for trial viewport
     RelativeTimeAxisStateData time_axis;                           ///< Time axis settings (min_range, max_range)
     EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
     std::string background_color = "#FFFFFF";                     ///< Background color as hex string (default: white)
@@ -251,13 +205,10 @@ public:
      * @brief Get the view state (zoom, pan, bounds)
      * @return Const reference to the view state
      */
-    [[nodiscard]] EventPlotViewState const & viewState() const { return _data.view_state; }
-
-    /**
-     * @brief Set the complete view state
-     * @param view_state New view state
-     */
-    void setViewState(EventPlotViewState const & view_state);
+    [[nodiscard]] CorePlotting::ViewStateData const & viewState() const
+    {
+        return _data.view_state;
+    }
 
     /**
      * @brief Set X-axis zoom factor (view transform only)

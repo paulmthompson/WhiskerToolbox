@@ -1,10 +1,11 @@
 #include "PSTHPlotOpenGLWidget.hpp"
 
+#include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/utils/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
-#include "CorePlotting/Mappers/HistogramMapper.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QDebug>
@@ -18,8 +19,7 @@
 #include <vector>
 
 PSTHPlotOpenGLWidget::PSTHPlotOpenGLWidget(QWidget * parent)
-    : QOpenGLWidget(parent)
-{
+    : QOpenGLWidget(parent) {
     // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
@@ -29,19 +29,17 @@ PSTHPlotOpenGLWidget::PSTHPlotOpenGLWidget(QWidget * parent)
     QSurfaceFormat format;
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4); // Enable multisampling
+    format.setSamples(4);// Enable multisampling
     setFormat(format);
 }
 
-PSTHPlotOpenGLWidget::~PSTHPlotOpenGLWidget()
-{
+PSTHPlotOpenGLWidget::~PSTHPlotOpenGLWidget() {
     makeCurrent();
     _scene_renderer.cleanup();
     doneCurrent();
 }
 
-void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state)
-{
+void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state) {
     // Disconnect old state signals
     if (_state) {
         _state->disconnect(this);
@@ -67,30 +65,25 @@ void PSTHPlotOpenGLWidget::setState(std::shared_ptr<PSTHState> state)
     }
 }
 
-void PSTHPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager)
-{
+void PSTHPlotOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
     _scene_dirty = true;
     update();
 }
 
-std::pair<double, double> PSTHPlotOpenGLWidget::getViewBounds() const
-{
+std::pair<double, double> PSTHPlotOpenGLWidget::getViewBounds() const {
     if (!_state) {
-        return {-500.0, 500.0};  // Default bounds
+        return {-500.0, 500.0};
     }
-
-    double window_size = _state->getWindowSize();
-    double half_window = window_size / 2.0;
-    return {-half_window, half_window};
+    auto const & vs = _state->viewState();
+    return {vs.x_min, vs.x_max};
 }
 
 // =============================================================================
 // OpenGL Lifecycle
 // =============================================================================
 
-void PSTHPlotOpenGLWidget::initializeGL()
-{
+void PSTHPlotOpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
 
     // Set clear color (dark theme)
@@ -118,8 +111,7 @@ void PSTHPlotOpenGLWidget::initializeGL()
     _opengl_initialized = true;
 }
 
-void PSTHPlotOpenGLWidget::paintGL()
-{
+void PSTHPlotOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_opengl_initialized) {
@@ -136,8 +128,7 @@ void PSTHPlotOpenGLWidget::paintGL()
     _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
-void PSTHPlotOpenGLWidget::resizeGL(int w, int h)
-{
+void PSTHPlotOpenGLWidget::resizeGL(int w, int h) {
     _widget_width = std::max(1, w);
     _widget_height = std::max(1, h);
     glViewport(0, 0, _widget_width, _widget_height);
@@ -148,8 +139,7 @@ void PSTHPlotOpenGLWidget::resizeGL(int w, int h)
 // Mouse Interaction
 // =============================================================================
 
-void PSTHPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
-{
+void PSTHPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         _click_start_pos = event->pos();
@@ -158,8 +148,7 @@ void PSTHPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
     event->accept();
 }
 
-void PSTHPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
-{
+void PSTHPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (event->buttons() & Qt::LeftButton) {
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
@@ -180,8 +169,7 @@ void PSTHPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
     event->accept();
 }
 
-void PSTHPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
-{
+void PSTHPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         if (_is_panning) {
             _is_panning = false;
@@ -191,8 +179,7 @@ void PSTHPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
     event->accept();
 }
 
-void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
-{
+void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         auto world_pos = screenToWorld(event->pos());
         // TODO: Convert world position to time frame index
@@ -202,8 +189,7 @@ void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
-void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
-{
+void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
     float const delta = event->angleDelta().y() / 120.0f;
     bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
     bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
@@ -215,8 +201,7 @@ void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 // Private Methods
 // =============================================================================
 
-void PSTHPlotOpenGLWidget::onStateChanged()
-{
+void PSTHPlotOpenGLWidget::onStateChanged() {
     if (_updating_y_max_from_rebuild) {
         return;
     }
@@ -224,8 +209,7 @@ void PSTHPlotOpenGLWidget::onStateChanged()
     update();
 }
 
-void PSTHPlotOpenGLWidget::onViewStateChanged()
-{
+void PSTHPlotOpenGLWidget::onViewStateChanged() {
     if (_state) {
         _cached_view_state = _state->viewState();
     }
@@ -234,8 +218,7 @@ void PSTHPlotOpenGLWidget::onViewStateChanged()
     emit viewBoundsChanged();
 }
 
-void PSTHPlotOpenGLWidget::rebuildScene()
-{
+void PSTHPlotOpenGLWidget::rebuildScene() {
     if (!_state || !_data_manager) {
         return;
     }
@@ -271,7 +254,7 @@ void PSTHPlotOpenGLWidget::rebuildScene()
     size_t total_trials = 0;
 
     // Process each plot event series
-    for (auto const & event_name : event_names) {
+    for (auto const & event_name: event_names) {
         auto const event_options = _state->getPlotEventOptions(event_name);
         if (!event_options || event_options->event_key.empty()) {
             continue;
@@ -279,9 +262,9 @@ void PSTHPlotOpenGLWidget::rebuildScene()
 
         // Gather aligned event data using PlotAlignmentGather
         auto gathered = WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
-            _data_manager,
-            event_options->event_key,
-            alignment_state->data());
+                _data_manager,
+                event_options->event_key,
+                alignment_state->data());
 
         if (gathered.empty()) {
             qDebug() << "PSTHPlotOpenGLWidget: Empty gather result for event" << event_name;
@@ -314,7 +297,7 @@ void PSTHPlotOpenGLWidget::rebuildScene()
             int alignment_time_abs = time_frame->getTimeAtIndex(TimeFrameIndex{alignment_time});
 
             // Iterate over events in this trial view
-            for (auto const & event_with_id : trial_view->view()) {
+            for (auto const & event_with_id: trial_view->view()) {
                 // Get event time as TimeFrameIndex
                 TimeFrameIndex event_time_idx = event_with_id.event_time;
 
@@ -341,7 +324,7 @@ void PSTHPlotOpenGLWidget::rebuildScene()
                 // Increment the count for this bin
                 histogram[bin_index] += 1.0;
             }
-            
+
             // Track total number of trials processed
             total_trials++;
         }
@@ -353,11 +336,11 @@ void PSTHPlotOpenGLWidget::rebuildScene()
     qDebug() << "  Bin size:" << bin_size;
     qDebug() << "  Number of bins:" << num_bins;
     qDebug() << "  Bin range: [" << -half_window << ":" << bin_size << ":" << half_window << "]";
-    
+
     // Print some statistics
     double total_events = 0.0;
     double max_count = 0.0;
-    for (double count : histogram) {
+    for (double count: histogram) {
         total_events += count;
         max_count = std::max(max_count, count);
     }
@@ -365,17 +348,17 @@ void PSTHPlotOpenGLWidget::rebuildScene()
     qDebug() << "  Max bin count:" << max_count;
     qDebug() << "  Number of trials:" << total_trials;
 
-    // Update y_max to match the maximum histogram value (with some padding)
-    // Use a flag to prevent rebuild loop
+    // Update y_max to match the maximum histogram value (with some padding).
+    // Sync both vertical axis state and view_state Y bounds so y panning uses correct range.
     if (_state && max_count > 0.0) {
         auto * vertical_axis_state = _state->verticalAxisState();
         if (vertical_axis_state) {
-            // Add 10% padding above the maximum
-            double new_y_max = max_count * 1.1;
-            // Only update if the value actually changed (to avoid unnecessary signals)
+            double const new_y_max = max_count * 1.1;
             if (std::abs(vertical_axis_state->getYMax() - new_y_max) > 0.01) {
                 _updating_y_max_from_rebuild = true;
                 vertical_axis_state->setYMax(new_y_max);
+                _state->setYBounds(vertical_axis_state->getYMin(),
+                                   vertical_axis_state->getYMax());
                 _updating_y_max_from_rebuild = false;
             }
         }
@@ -388,8 +371,7 @@ void PSTHPlotOpenGLWidget::rebuildScene()
     uploadHistogramScene();
 }
 
-void PSTHPlotOpenGLWidget::uploadHistogramScene()
-{
+void PSTHPlotOpenGLWidget::uploadHistogramScene() {
     if (_histogram_data.counts.empty()) {
         _scene_renderer.clearScene();
         return;
@@ -402,88 +384,54 @@ void PSTHPlotOpenGLWidget::uploadHistogramScene()
     }
 
     auto scene = CorePlotting::HistogramMapper::buildScene(
-        _histogram_data, mode, _histogram_style);
+            _histogram_data, mode, _histogram_style);
 
     _scene_renderer.uploadScene(scene);
 }
 
-QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const
-{
-    float const ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
-    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
-
-    glm::mat4 const inv_proj = glm::inverse(_projection_matrix);
-    glm::vec4 const ndc(ndc_x, ndc_y, 0.0f, 1.0f);
-    glm::vec4 const world = inv_proj * ndc;
-
-    return QPointF(world.x, world.y);
+QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
+    return WhiskerToolbox::Plots::screenToWorld(
+            _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
-void PSTHPlotOpenGLWidget::updateMatrices()
-{
-    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
+void PSTHPlotOpenGLWidget::updateMatrices() {
+    // Use view state for both X and Y bounds (single source of truth, like LinePlot)
+    float const x_range =
+            static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const x_center =
+            static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) /
+            2.0f;
 
-    float const zoomed_x_range = x_range / static_cast<float>(_cached_view_state.x_zoom);
-    // Y range comes from the vertical axis state: [y_min, y_max]
-    // Default is [0, 100]. Zoom/pan apply on top of that.
-    float y_min = 0.0f;
-    float y_max = 100.0f;
-    if (_state) {
-        auto * vas = _state->verticalAxisState();
-        if (vas) {
-            y_min = static_cast<float>(vas->getYMin());
-            y_max = static_cast<float>(vas->getYMax());
-        }
-    }
+    float const y_min = static_cast<float>(_cached_view_state.y_min);
+    float const y_max = static_cast<float>(_cached_view_state.y_max);
     float const y_range = y_max - y_min;
     float const y_center = (y_min + y_max) / 2.0f;
-    float const zoomed_y_range = y_range / static_cast<float>(_cached_view_state.y_zoom);
 
-    float const pan_x = static_cast<float>(_cached_view_state.x_pan);
-    float const pan_y = static_cast<float>(_cached_view_state.y_pan);
-
-    float const left  = x_center - zoomed_x_range / 2.0f + pan_x;
-    float const right = x_center + zoomed_x_range / 2.0f + pan_x;
-    float const bottom = y_center - zoomed_y_range / 2.0f + pan_y;
-    float const top    = y_center + zoomed_y_range / 2.0f + pan_y;
-
-    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
+            _cached_view_state, x_range, x_center, y_range, y_center);
     _view_matrix = glm::mat4(1.0f);
 }
 
-void PSTHPlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
-{
-    if (!_state) return;
-
-    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const world_per_pixel_x = x_range / (_widget_width * static_cast<float>(_cached_view_state.x_zoom));
-
-    // Y range from vertical axis state
-    float y_range = 100.0f;
-    if (auto * vas = _state->verticalAxisState()) {
-        y_range = static_cast<float>(vas->getYMax() - vas->getYMin());
+void PSTHPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
+    if (!_state) {
+        return;
     }
-    float const world_per_pixel_y = y_range / (_widget_height * static_cast<float>(_cached_view_state.y_zoom));
 
-    float const new_pan_x = static_cast<float>(_cached_view_state.x_pan) - delta_x * world_per_pixel_x;
-    float const new_pan_y = static_cast<float>(_cached_view_state.y_pan) + delta_y * world_per_pixel_y;
+    float const x_range =
+            static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
+    float const y_range =
+            static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
 
-    _state->setPan(new_pan_x, new_pan_y);
+    WhiskerToolbox::Plots::handlePanning(
+            *_state, _cached_view_state, delta_x, delta_y, x_range, y_range,
+            _widget_width, _widget_height);
 }
 
-void PSTHPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
-{
-    if (!_state) return;
-
-    float const factor = std::pow(1.1f, delta);
-
-    if (y_only) {
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else if (both_axes) {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
-        _state->setYZoom(_cached_view_state.y_zoom * factor);
-    } else {
-        _state->setXZoom(_cached_view_state.x_zoom * factor);
+void PSTHPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
+    if (!_state) {
+        return;
     }
+
+    WhiskerToolbox::Plots::handleZoom(
+            *_state, _cached_view_state, delta, y_only, both_axes);
 }

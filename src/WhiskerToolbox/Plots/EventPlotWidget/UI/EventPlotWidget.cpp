@@ -1,8 +1,8 @@
 #include "EventPlotWidget.hpp"
 
 #include "Core/EventPlotState.hpp"
-#include "Core/ViewStateAdapter.hpp"
 #include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
+#include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWidget.hpp"
@@ -160,7 +160,7 @@ void EventPlotWidget::wireTimeAxis() {
         if (!_state || !_opengl_widget) {
             return CorePlotting::ViewState{};
         }
-        return toCoreViewState(
+        return CorePlotting::toRuntimeViewState(
                 _state->viewState(),
                 _opengl_widget->width(),
                 _opengl_widget->height());
