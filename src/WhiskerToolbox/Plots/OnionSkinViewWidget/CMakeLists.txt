@@ -38,6 +38,7 @@ target_link_libraries(OnionSkinViewWidget PRIVATE
 
 target_link_libraries(OnionSkinViewWidget PRIVATE Collapsible_Widget)
 target_link_libraries(OnionSkinViewWidget PRIVATE CorePlotting)
+target_link_libraries(OnionSkinViewWidget PRIVATE PlottingOpenGL)
 target_link_libraries(OnionSkinViewWidget PRIVATE DataManager)
 target_link_libraries(OnionSkinViewWidget PRIVATE EditorState)
 target_link_libraries(OnionSkinViewWidget PRIVATE HorizontalAxisWidget)

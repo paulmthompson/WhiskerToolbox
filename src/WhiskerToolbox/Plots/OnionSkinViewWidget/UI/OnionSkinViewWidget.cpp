@@ -60,6 +60,7 @@ void OnionSkinViewWidget::setState(std::shared_ptr<OnionSkinViewState> state)
     _state = state;
     if (_opengl_widget) {
         _opengl_widget->setState(_state);
+        _opengl_widget->setDataManager(_data_manager);
     }
     if (!_state) {
         return;
@@ -245,9 +246,11 @@ std::pair<double, double> OnionSkinViewWidget::computeVisibleYRange() const
     return {y_center - half + vs.y_pan, y_center + half + vs.y_pan};
 }
 
-void OnionSkinViewWidget::_onTimeChanged(TimePosition /*position*/)
+void OnionSkinViewWidget::_onTimeChanged(TimePosition position)
 {
-    // Empty for now; can update view when time changes from EditorRegistry.
+    if (_opengl_widget) {
+        _opengl_widget->setCurrentTime(position.index.getValue());
+    }
 }
 
 OnionSkinViewState * OnionSkinViewWidget::state()

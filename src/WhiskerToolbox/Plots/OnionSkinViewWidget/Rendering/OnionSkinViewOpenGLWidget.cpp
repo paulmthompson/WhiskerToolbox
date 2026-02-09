@@ -1,12 +1,23 @@
 #include "OnionSkinViewOpenGLWidget.hpp"
 
 #include "Core/OnionSkinViewState.hpp"
+#include "CorePlotting/DataTypes/AlphaCurve.hpp"
+#include "CorePlotting/Mappers/MaskContourMapper.hpp"
+#include "CorePlotting/Mappers/SpatialMapper_Window.hpp"
+#include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "DataManager/DataManager.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "Points/Point_Data.hpp"
 
+#include <QDebug>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 OnionSkinViewOpenGLWidget::OnionSkinViewOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -24,6 +35,7 @@ OnionSkinViewOpenGLWidget::OnionSkinViewOpenGLWidget(QWidget * parent)
 OnionSkinViewOpenGLWidget::~OnionSkinViewOpenGLWidget()
 {
     makeCurrent();
+    _scene_renderer.cleanup();
     doneCurrent();
 }
 
@@ -39,7 +51,65 @@ void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> sta
                 this, &OnionSkinViewOpenGLWidget::onStateChanged);
         connect(_state.get(), &OnionSkinViewState::viewStateChanged,
                 this, &OnionSkinViewOpenGLWidget::onViewStateChanged);
+
+        // Data key signals
+        connect(_state.get(), &OnionSkinViewState::pointDataKeyAdded,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::pointDataKeyRemoved,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::pointDataKeysCleared,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::lineDataKeyAdded,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::lineDataKeyRemoved,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::lineDataKeysCleared,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::maskDataKeyAdded,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::maskDataKeyRemoved,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+        connect(_state.get(), &OnionSkinViewState::maskDataKeysCleared,
+                this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
+
+        // Rendering parameter signals
+        connect(_state.get(), &OnionSkinViewState::pointSizeChanged,
+                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
+                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
+                this, [this](bool) { _scene_dirty = true; update(); });
+
+        // Temporal window and alpha signals
+        connect(_state.get(), &OnionSkinViewState::windowBehindChanged,
+                this, [this](int) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::windowAheadChanged,
+                this, [this](int) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::alphaCurveChanged,
+                this, [this](QString const &) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::minAlphaChanged,
+                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::maxAlphaChanged,
+                this, [this](float) { _scene_dirty = true; update(); });
+
+        _scene_dirty = true;
         updateMatrices();
+        update();
+    }
+}
+
+void OnionSkinViewOpenGLWidget::setDataManager(std::shared_ptr<DataManager> data_manager)
+{
+    _data_manager = data_manager;
+    _scene_dirty = true;
+    update();
+}
+
+void OnionSkinViewOpenGLWidget::setCurrentTime(int64_t time_index)
+{
+    if (_current_time != time_index) {
+        _current_time = time_index;
+        _scene_dirty = true;
         update();
     }
 }
@@ -48,15 +118,32 @@ void OnionSkinViewOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Disable depth test — we handle draw order explicitly via temporal distance
+    // sorting (back-to-front) so that alpha blending works correctly.
+    glDisable(GL_DEPTH_TEST);
+
+    if (!_scene_renderer.initialize()) {
+        qWarning() << "OnionSkinViewOpenGLWidget: Failed to initialize SceneRenderer";
+    }
+    _opengl_initialized = true;
 }
 
 void OnionSkinViewOpenGLWidget::paintGL()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // TODO: Add temporal projection rendering logic here
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (!_state || !_opengl_initialized) {
+        return;
+    }
+
+    if (_scene_dirty) {
+        rebuildScene();
+        _scene_dirty = false;
+    }
+
+    _scene_renderer.render(_projection_matrix, _view_matrix);
 }
 
 void OnionSkinViewOpenGLWidget::resizeGL(int w, int h)
@@ -124,6 +211,7 @@ void OnionSkinViewOpenGLWidget::wheelEvent(QWheelEvent * event)
 
 void OnionSkinViewOpenGLWidget::onStateChanged()
 {
+    _scene_dirty = true;
     update();
 }
 
@@ -135,6 +223,328 @@ void OnionSkinViewOpenGLWidget::onViewStateChanged()
     updateMatrices();
     update();
     emit viewBoundsChanged();
+}
+
+void OnionSkinViewOpenGLWidget::onDataKeysChanged()
+{
+    _scene_dirty = true;
+    update();
+}
+
+void OnionSkinViewOpenGLWidget::rebuildScene()
+{
+    if (!_state || !_data_manager) {
+        return;
+    }
+
+    // === Read state parameters ===
+    auto const point_keys = _state->getPointDataKeys();
+    auto const line_keys = _state->getLineDataKeys();
+    auto const mask_keys = _state->getMaskDataKeys();
+    int const behind = _state->getWindowBehind();
+    int const ahead = _state->getWindowAhead();
+    float const point_size = _state->getPointSize();
+    float const line_width = _state->getLineWidth();
+    bool const highlight_current = _state->getHighlightCurrent();
+    float const min_alpha = _state->getMinAlpha();
+    float const max_alpha = _state->getMaxAlpha();
+    CorePlotting::AlphaCurve const alpha_curve =
+        CorePlotting::alphaCurveFromString(_state->getAlphaCurve().toStdString());
+
+    // Half-width for alpha computation (max of behind, ahead)
+    int const half_width = std::max(behind, ahead);
+
+    TimeFrameIndex const center{_current_time};
+
+    // Current frame highlight colors
+    glm::vec4 const current_point_color{1.0f, 0.3f, 0.1f, max_alpha};  // Bright orange-red
+    glm::vec4 const current_line_color{1.0f, 0.3f, 0.1f, max_alpha};
+    glm::vec4 const base_point_color{0.2f, 0.5f, 0.9f, 1.0f};  // Blue base
+    glm::vec4 const base_line_color{0.2f, 0.7f, 0.4f, 1.0f};   // Green base
+    glm::vec4 const base_mask_color{0.8f, 0.5f, 0.2f, 1.0f};   // Orange base
+
+    // === Map all windowed data ===
+    // Points
+    std::vector<CorePlotting::TimedMappedElement> all_points;
+    for (auto const & key_qstr : point_keys) {
+        auto point_data = _data_manager->getData<PointData>(key_qstr.toStdString());
+        if (!point_data) {
+            continue;
+        }
+        auto pts = CorePlotting::SpatialMapper::mapPointsInWindow(
+            *point_data, center, behind, ahead);
+        all_points.insert(all_points.end(),
+                         std::make_move_iterator(pts.begin()),
+                         std::make_move_iterator(pts.end()));
+    }
+
+    // Lines
+    std::vector<CorePlotting::TimedOwningLineView> all_lines;
+    for (auto const & key_qstr : line_keys) {
+        auto line_data = _data_manager->getData<LineData>(key_qstr.toStdString());
+        if (!line_data) {
+            continue;
+        }
+        auto lns = CorePlotting::SpatialMapper::mapLinesInWindow(
+            *line_data, center, behind, ahead);
+        all_lines.insert(all_lines.end(),
+                        std::make_move_iterator(lns.begin()),
+                        std::make_move_iterator(lns.end()));
+    }
+
+    // Mask contours
+    std::vector<CorePlotting::TimedOwningLineView> all_mask_contours;
+    for (auto const & key_qstr : mask_keys) {
+        auto mask_data = _data_manager->getData<MaskData>(key_qstr.toStdString());
+        if (!mask_data) {
+            continue;
+        }
+        auto contours = CorePlotting::SpatialMapper::mapMaskContoursInWindow(
+            *mask_data, center, behind, ahead);
+        all_mask_contours.insert(all_mask_contours.end(),
+                                std::make_move_iterator(contours.begin()),
+                                std::make_move_iterator(contours.end()));
+    }
+
+    // === Compute bounding box from data ===
+    float min_x = std::numeric_limits<float>::max();
+    float min_y = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float max_y = std::numeric_limits<float>::lowest();
+    bool has_data = false;
+
+    for (auto const & pt : all_points) {
+        min_x = std::min(min_x, pt.x);
+        min_y = std::min(min_y, pt.y);
+        max_x = std::max(max_x, pt.x);
+        max_y = std::max(max_y, pt.y);
+        has_data = true;
+    }
+
+    for (auto const & line : all_lines) {
+        for (auto const & v : line.vertices()) {
+            min_x = std::min(min_x, v.x);
+            min_y = std::min(min_y, v.y);
+            max_x = std::max(max_x, v.x);
+            max_y = std::max(max_y, v.y);
+            has_data = true;
+        }
+    }
+
+    for (auto const & contour : all_mask_contours) {
+        for (auto const & v : contour.vertices()) {
+            min_x = std::min(min_x, v.x);
+            min_y = std::min(min_y, v.y);
+            max_x = std::max(max_x, v.x);
+            max_y = std::max(max_y, v.y);
+            has_data = true;
+        }
+    }
+
+    // Fallback to ImageSize or default
+    if (!has_data) {
+        for (auto const & key_qstr : point_keys) {
+            auto pd = _data_manager->getData<PointData>(key_qstr.toStdString());
+            if (pd) {
+                auto sz = pd->getImageSize();
+                if (sz.width > 0 && sz.height > 0) {
+                    min_x = 0.0f; min_y = 0.0f;
+                    max_x = std::max(max_x, static_cast<float>(sz.width));
+                    max_y = std::max(max_y, static_cast<float>(sz.height));
+                    has_data = true;
+                }
+            }
+        }
+        for (auto const & key_qstr : line_keys) {
+            auto ld = _data_manager->getData<LineData>(key_qstr.toStdString());
+            if (ld) {
+                auto sz = ld->getImageSize();
+                if (sz.width > 0 && sz.height > 0) {
+                    min_x = 0.0f; min_y = 0.0f;
+                    max_x = std::max(max_x, static_cast<float>(sz.width));
+                    max_y = std::max(max_y, static_cast<float>(sz.height));
+                    has_data = true;
+                }
+            }
+        }
+    }
+
+    if (!has_data) {
+        min_x = 0.0f; min_y = 0.0f;
+        max_x = 100.0f; max_y = 100.0f;
+    }
+
+    // Add margin
+    float const margin_x = (max_x - min_x) * 0.02f;
+    float const margin_y = (max_y - min_y) * 0.02f;
+    min_x -= margin_x;
+    min_y -= margin_y;
+    max_x += margin_x;
+    max_y += margin_y;
+
+    // === Update view state bounds ===
+    auto const & vs = _state->viewState();
+    bool const bounds_changed = (vs.x_min != static_cast<double>(min_x)) ||
+                                (vs.x_max != static_cast<double>(max_x)) ||
+                                (vs.y_min != static_cast<double>(min_y)) ||
+                                (vs.y_max != static_cast<double>(max_y));
+    _state->setXBounds(static_cast<double>(min_x), static_cast<double>(max_x));
+    _state->setYBounds(static_cast<double>(min_y), static_cast<double>(max_y));
+    if (bounds_changed) {
+        _state->setXZoom(1.0);
+        _state->setYZoom(1.0);
+        _state->setPan(0.0, 0.0);
+    }
+
+    // === Build scene using SceneBuilder ===
+    // Strategy: Sort elements by temporal distance (farthest first = back-to-front)
+    // so that alpha blending produces correct results with closer/more-opaque
+    // elements drawn on top of farther/more-transparent ones.
+
+    CorePlotting::SceneBuilder builder;
+    builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
+
+    // --- Group points by temporal distance for sorted rendering ---
+    // Collect unique distances and sort descending (farthest first)
+    std::vector<int> point_distances;
+    for (auto const & pt : all_points) {
+        point_distances.push_back(pt.absTemporalDistance());
+    }
+    std::sort(point_distances.begin(), point_distances.end(), std::greater<>());
+    point_distances.erase(
+        std::unique(point_distances.begin(), point_distances.end()),
+        point_distances.end());
+
+    // Add glyph batches from farthest to nearest
+    for (int const dist : point_distances) {
+        float const alpha = CorePlotting::computeTemporalAlpha(
+            dist, half_width, alpha_curve, min_alpha, max_alpha);
+
+        // Build a batch of points at this temporal distance
+        CorePlotting::RenderableGlyphBatch batch;
+        batch.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
+        batch.model_matrix = glm::mat4(1.0f);
+
+        bool const is_current = (dist == 0);
+        float const this_size = (is_current && highlight_current)
+                                    ? point_size * 1.5f
+                                    : point_size;
+        batch.size = this_size;
+
+        for (auto const & pt : all_points) {
+            if (pt.absTemporalDistance() != dist) {
+                continue;
+            }
+            batch.positions.emplace_back(pt.x, pt.y);
+            batch.entity_ids.push_back(pt.entity_id);
+
+            glm::vec4 color = (is_current && highlight_current)
+                                  ? current_point_color
+                                  : glm::vec4{base_point_color.r, base_point_color.g,
+                                              base_point_color.b, alpha};
+            batch.colors.push_back(color);
+        }
+
+        if (!batch.positions.empty()) {
+            builder.addGlyphBatch(std::move(batch));
+        }
+    }
+
+    // --- Group lines by temporal distance for sorted rendering ---
+    // Sort lines: farthest temporal distance drawn first (ascending abs distance
+    // means we process in reverse order → draw most transparent first)
+    // We use indices to avoid moving the line data twice
+    std::vector<size_t> line_indices(all_lines.size());
+    std::iota(line_indices.begin(), line_indices.end(), 0);
+    std::sort(line_indices.begin(), line_indices.end(),
+              [&all_lines](size_t a, size_t b) {
+                  return all_lines[a].absTemporalDistance() >
+                         all_lines[b].absTemporalDistance();
+              });
+
+    for (size_t const idx : line_indices) {
+        auto const & line = all_lines[idx];
+        int const dist = line.absTemporalDistance();
+        float const alpha = CorePlotting::computeTemporalAlpha(
+            dist, half_width, alpha_curve, min_alpha, max_alpha);
+
+        bool const is_current = (dist == 0);
+
+        CorePlotting::RenderablePolyLineBatch batch;
+        batch.thickness = (is_current && highlight_current)
+                              ? line_width * 1.5f
+                              : line_width;
+        batch.model_matrix = glm::mat4(1.0f);
+        batch.entity_ids.push_back(line.entity_id);
+
+        glm::vec4 color = (is_current && highlight_current)
+                              ? current_line_color
+                              : glm::vec4{base_line_color.r, base_line_color.g,
+                                          base_line_color.b, alpha};
+        batch.colors.push_back(color);
+
+        int32_t vertex_count = 0;
+        batch.line_start_indices.push_back(0);
+
+        for (auto const & v : line.vertices()) {
+            batch.vertices.push_back(v.x);
+            batch.vertices.push_back(v.y);
+            ++vertex_count;
+        }
+        batch.line_vertex_counts.push_back(vertex_count);
+
+        if (vertex_count > 0) {
+            builder.addPolyLineBatch(std::move(batch));
+        }
+    }
+
+    // --- Mask contours (same pattern as lines) ---
+    std::vector<size_t> mask_indices(all_mask_contours.size());
+    std::iota(mask_indices.begin(), mask_indices.end(), 0);
+    std::sort(mask_indices.begin(), mask_indices.end(),
+              [&all_mask_contours](size_t a, size_t b) {
+                  return all_mask_contours[a].absTemporalDistance() >
+                         all_mask_contours[b].absTemporalDistance();
+              });
+
+    for (size_t const idx : mask_indices) {
+        auto const & contour = all_mask_contours[idx];
+        int const dist = contour.absTemporalDistance();
+        float const alpha = CorePlotting::computeTemporalAlpha(
+            dist, half_width, alpha_curve, min_alpha, max_alpha);
+
+        bool const is_current = (dist == 0);
+
+        CorePlotting::RenderablePolyLineBatch batch;
+        batch.thickness = (is_current && highlight_current)
+                              ? line_width * 1.5f
+                              : line_width;
+        batch.model_matrix = glm::mat4(1.0f);
+        batch.entity_ids.push_back(contour.entity_id);
+
+        glm::vec4 color = (is_current && highlight_current)
+                              ? current_line_color
+                              : glm::vec4{base_mask_color.r, base_mask_color.g,
+                                          base_mask_color.b, alpha};
+        batch.colors.push_back(color);
+
+        int32_t vertex_count = 0;
+        batch.line_start_indices.push_back(0);
+
+        for (auto const & v : contour.vertices()) {
+            batch.vertices.push_back(v.x);
+            batch.vertices.push_back(v.y);
+            ++vertex_count;
+        }
+        batch.line_vertex_counts.push_back(vertex_count);
+
+        if (vertex_count > 0) {
+            builder.addPolyLineBatch(std::move(batch));
+        }
+    }
+
+    _scene = builder.build();
+    _scene_renderer.uploadScene(_scene);
 }
 
 void OnionSkinViewOpenGLWidget::updateMatrices()

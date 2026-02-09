@@ -5,16 +5,30 @@
  * @file OnionSkinViewOpenGLWidget.hpp
  * @brief OpenGL-based onion skin view visualization widget
  *
- * Uses CorePlotting::ViewStateData cached from state for projection and
- * interaction. Delegates to WhiskerToolbox::Plots helpers for ortho projection,
- * screenToWorld, panning, and zoom.
+ * Renders a temporal window of spatial data (PointData, LineData, MaskData)
+ * around the current time position with alpha-graded fading. Elements at the
+ * current time are fully opaque; elements further away fade based on the
+ * configured alpha curve.
+ *
+ * Uses CorePlotting::SceneRenderer for all rendering. The scene is rebuilt
+ * on each time position change, mapping points/lines/masks within the window
+ * and assigning per-element alpha via computeTemporalAlpha().
+ *
+ * Per-glyph and per-line colors include the alpha channel, which the
+ * GlyphRenderer and PolyLineRenderer pass through to the GPU. GL blending
+ * is enabled (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA).
  *
  * @see OnionSkinViewState
- * @see PlotInteractionHelpers.hpp
+ * @see SpatialMapper_Window.hpp
+ * @see AlphaCurve.hpp
+ * @see PlottingOpenGL::SceneRenderer
  */
 
 #include "Core/OnionSkinViewState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
+#include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -22,14 +36,25 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+class DataManager;
 class QMouseEvent;
 class QWheelEvent;
 
 /**
  * @brief OpenGL widget for rendering onion skin views
  *
- * Displays 2D projections with pan/zoom; state holds view transform and axis
- * ranges.
+ * Displays a temporal window of spatial data with alpha-graded fading.
+ * Responds to time position changes to rebuild the scene. State holds
+ * data keys, window parameters, alpha curve settings, and view transform.
+ *
+ * Features:
+ * - Point rendering via SceneRenderer (GlyphRenderer) with per-glyph alpha
+ * - Line rendering via SceneRenderer (PolyLineRenderer) with per-line alpha
+ * - Mask contour rendering as polylines with per-line alpha
+ * - Current-frame highlight (distinct color or enlarged size)
+ * - Independent X/Y zooming, panning
+ * - Temporal alpha: Linear, Exponential, or Gaussian falloff
+ * - Depth-sorted rendering (farthest temporal distance drawn first)
  */
 class OnionSkinViewOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -44,6 +69,17 @@ public:
     OnionSkinViewOpenGLWidget & operator=(OnionSkinViewOpenGLWidget &&) = delete;
 
     void setState(std::shared_ptr<OnionSkinViewState> state);
+    void setDataManager(std::shared_ptr<DataManager> data_manager);
+
+    /**
+     * @brief Set the current time position
+     *
+     * Called when the time position changes (e.g., from scrubbing).
+     * Triggers a scene rebuild with the new temporal window.
+     *
+     * @param time_index Current time frame index to center the window on
+     */
+    void setCurrentTime(int64_t time_index);
 
 signals:
     void viewBoundsChanged();
@@ -61,9 +97,20 @@ protected:
 private slots:
     void onStateChanged();
     void onViewStateChanged();
+    void onDataKeysChanged();
 
 private:
     std::shared_ptr<OnionSkinViewState> _state;
+    std::shared_ptr<DataManager> _data_manager;
+
+    // --- Scene renderer ---
+    PlottingOpenGL::SceneRenderer _scene_renderer;
+    CorePlotting::RenderableScene _scene;
+
+    bool _scene_dirty{true};
+    bool _opengl_initialized{false};
+    int64_t _current_time{0};
+
     int _widget_width{1};
     int _widget_height{1};
 
@@ -76,6 +123,7 @@ private:
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
 
+    void rebuildScene();
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
