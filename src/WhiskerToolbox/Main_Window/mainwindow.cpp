@@ -38,15 +38,18 @@
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
+
 #include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
 #include "Plots/ACFWidget/ACFWidgetRegistration.hpp"
 #include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
 #include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
 #include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
 #include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
+#include "Plots/OnionSkinViewWidget/OnionSkinViewWidgetRegistration.hpp"
 #include "Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp"
 #include "Plots/SpectrogramWidget/SpectrogramWidgetRegistration.hpp"
 #include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
+
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -308,7 +311,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTemporal_Projection_View, &QAction::triggered, this, &MainWindow::openTemporalProjectionViewWidget);
     connect(ui->actionScatter_Plot, &QAction::triggered, this, &MainWindow::openScatterPlotWidget);
     connect(ui->action3D_Plot, &QAction::triggered, this, &MainWindow::open3DPlotWidget);
-
+    connect(ui->actionOnion_Skin_View, &QAction::triggered, this, &MainWindow::openOnionSkinViewWidget);
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
     auto getActiveMediaWidget = [this]() -> Media_Widget * {
@@ -810,6 +813,11 @@ void MainWindow::openTemporalProjectionViewWidget() {
     openEditor(QStringLiteral("TemporalProjectionViewWidget"));
 }
 
+void MainWindow::openOnionSkinViewWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("OnionSkinViewWidget"));
+}
+
 void MainWindow::openScatterPlotWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("ScatterPlotWidget"));
@@ -931,6 +939,8 @@ void MainWindow::_registerEditorTypes() {
     SpectrogramWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     ThreeDPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    OnionSkinViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

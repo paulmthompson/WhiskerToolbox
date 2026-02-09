@@ -162,5 +162,6 @@ private slots:
     void openTemporalProjectionViewWidget();
     void openScatterPlotWidget();
     void open3DPlotWidget();
+    void openOnionSkinViewWidget();
 };
 #endif// MAINWINDOW_HPP

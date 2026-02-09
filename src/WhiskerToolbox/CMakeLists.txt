@@ -115,6 +115,9 @@ add_subdirectory(Plots/HeatmapWidget)
 # Qt, DataManager, EditorState - Temporal projection view widget
 add_subdirectory(Plots/TemporalProjectionViewWidget)
 
+# Qt, DataManager, EditorState - Onion skin view widget
+add_subdirectory(Plots/OnionSkinViewWidget)
+
 # Qt, DataManager, EditorState - Scatter plot widget
 add_subdirectory(Plots/ScatterPlotWidget)
 
@@ -287,7 +290,7 @@ target_link_libraries(WhiskerToolbox PRIVATE TemporalProjectionViewWidget)
 target_link_libraries(WhiskerToolbox PRIVATE ScatterPlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE SpectrogramWidget)
 target_link_libraries(WhiskerToolbox PRIVATE 3DPlotWidget)
-
+target_link_libraries(WhiskerToolbox PRIVATE OnionSkinViewWidget)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
