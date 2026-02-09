@@ -229,19 +229,8 @@ void HeatmapOpenGLWidget::rebuildScene()
 
 void HeatmapOpenGLWidget::updateMatrices()
 {
-    // Use only cached view state for X and Y ranges (single source of truth)
-    float const x_range =
-        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const x_center =
-        static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
-
-    float const y_min = static_cast<float>(_cached_view_state.y_min);
-    float const y_max = static_cast<float>(_cached_view_state.y_max);
-    float const y_range = y_max - y_min;
-    float const y_center = (y_min + y_max) / 2.0f;
-
-    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
-        _cached_view_state, x_range, x_center, y_range, y_center);
+    _projection_matrix =
+        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 

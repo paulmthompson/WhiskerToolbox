@@ -86,6 +86,22 @@ concept ZoomPanSettable = requires(T & state, float f) {
     state.setYZoom(f);
 };
 
+/**
+ * @brief View state with explicit axis bounds (x_min, x_max, y_min, y_max).
+ *
+ * Satisfied by EventPlotViewState, LinePlotViewState, HeatmapViewState,
+ * PSTHViewState, ScatterPlotViewState, ACFViewState,
+ * TemporalProjectionViewViewState, OnionSkinViewViewState, etc.
+ * Used by the one-arg computeOrthoProjection overload to derive ranges.
+ */
+template <typename T>
+concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
+    { vs.x_min } -> std::convertible_to<double>;
+    { vs.x_max } -> std::convertible_to<double>;
+    { vs.y_min } -> std::convertible_to<double>;
+    { vs.y_max } -> std::convertible_to<double>;
+};
+
 // =============================================================================
 // Coordinate Transforms
 // =============================================================================
@@ -182,6 +198,32 @@ template <ViewStateLike ViewState>
     float const top    = y_center + zoomed_y_range / 2.0f + pan_y;
 
     return glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+}
+
+/**
+ * @brief Compute orthographic projection from view state with bounds.
+ *
+ * Convenience overload for view states that have x_min, x_max, y_min, y_max.
+ * Derives x_range, x_center, y_range, y_center and calls the 4-arg
+ * computeOrthoProjection.
+ *
+ * @tparam ViewState  A type satisfying ViewStateWithBounds.
+ * @param view_state  The cached view state (zoom, pan, and axis bounds).
+ * @return The orthographic projection matrix.
+ */
+template <ViewStateWithBounds ViewState>
+[[nodiscard]] glm::mat4 computeOrthoProjection(ViewState const & view_state)
+{
+    float const x_range =
+        static_cast<float>(view_state.x_max - view_state.x_min);
+    float const x_center =
+        static_cast<float>(view_state.x_min + view_state.x_max) / 2.0f;
+    float const y_range =
+        static_cast<float>(view_state.y_max - view_state.y_min);
+    float const y_center =
+        static_cast<float>(view_state.y_min + view_state.y_max) / 2.0f;
+    return computeOrthoProjection(view_state, x_range, x_center, y_range,
+                                 y_center);
 }
 
 // =============================================================================

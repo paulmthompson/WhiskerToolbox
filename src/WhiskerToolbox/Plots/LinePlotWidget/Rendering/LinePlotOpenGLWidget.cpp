@@ -503,18 +503,8 @@ void LinePlotOpenGLWidget::rebuildScene()
 
 void LinePlotOpenGLWidget::updateMatrices()
 {
-    // Compute data ranges from view state (both X and Y bounds are in ViewStateData)
-    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const x_center = static_cast<float>(_cached_view_state.x_min + _cached_view_state.x_max) / 2.0f;
-
-    float const y_min = static_cast<float>(_cached_view_state.y_min);
-    float const y_max = static_cast<float>(_cached_view_state.y_max);
-    float const y_range = y_max - y_min;
-    float const y_center = (y_min + y_max) / 2.0f;
-
-    // Use shared helper to compute projection matrix
-    _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(
-        _cached_view_state, x_range, x_center, y_range, y_center);
+    _projection_matrix =
+        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
