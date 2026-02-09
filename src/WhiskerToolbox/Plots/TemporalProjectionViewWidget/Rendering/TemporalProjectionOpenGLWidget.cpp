@@ -442,13 +442,9 @@ void TemporalProjectionOpenGLWidget::handlePanning(int delta_x, int delta_y)
     if (!_state) {
         return;
     }
-    float const x_range =
-        static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const y_range =
-        static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
-
-    WhiskerToolbox::Plots::handlePanning(*_state, _cached_view_state, delta_x, delta_y,
-                                         x_range, y_range, _widget_width, _widget_height);
+    WhiskerToolbox::Plots::handlePanning(
+        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+        _widget_height);
 }
 
 void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)

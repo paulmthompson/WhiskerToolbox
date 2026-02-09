@@ -14,31 +14,28 @@
  * can resolve its own x/y ranges (from view state, axis states, or fixed
  * values) and then delegate to the common math.
  *
- * ## Usage
+ * ## Usage (view state with bounds: x_min, x_max, y_min, y_max)
  *
  * @code
- * // In any OpenGL plot widget's handlePanning():
- * namespace Helpers = WhiskerToolbox::Plots;
- *
- * float x_range = _cached_view_state.x_max - _cached_view_state.x_min;
- * float y_range = 2.0f;  // or from vertical axis state
- * Helpers::handlePanning(*_state, _cached_view_state,
- *                        delta_x, delta_y,
- *                        x_range, y_range,
- *                        _widget_width, _widget_height);
- *
- * // In handleZoom():
- * Helpers::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
- *
  * // In updateMatrices():
- * _projection_matrix = Helpers::computeOrthoProjection(
- *     _cached_view_state, x_range, x_center, y_range, y_center);
+ * _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
  * _view_matrix = glm::mat4(1.0f);
  *
+ * // In handlePanning():
+ * WhiskerToolbox::Plots::handlePanning(*_state, _cached_view_state,
+ *     delta_x, delta_y, _widget_width, _widget_height);
+ *
+ * // In handleZoom():
+ * WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
+ *
  * // In screenToWorld():
- * QPointF world = Helpers::screenToWorld(
+ * QPointF world = WhiskerToolbox::Plots::screenToWorld(
  *     _projection_matrix, _widget_width, _widget_height, screen_pos);
  * @endcode
+ *
+ * For view states without bounds (zoom/pan only), use the 4-arg
+ * computeOrthoProjection(view_state, x_range, x_center, y_range, y_center)
+ * and the 8-arg handlePanning(..., x_range, y_range, ...).
  *
  * @see PlotAlignmentGather.hpp for trial-aligned data gathering helpers
  */
@@ -267,6 +264,38 @@ void handlePanning(
     float const new_pan_y = static_cast<float>(view_state.y_pan) + delta_y * world_per_pixel_y;
 
     state.setPan(new_pan_x, new_pan_y);
+}
+
+/**
+ * @brief Apply pan from view state with bounds (derives x_range/y_range).
+ *
+ * Convenience overload for view states that have x_min, x_max, y_min, y_max.
+ * Derives x_range and y_range and calls the 8-arg handlePanning.
+ *
+ * @tparam State      A type satisfying ZoomPanSettable.
+ * @tparam ViewState  A type satisfying ViewStateWithBounds.
+ * @param state       The mutable state object (setPan will be called).
+ * @param view_state  The cached view state snapshot (must have bounds).
+ * @param delta_x     Horizontal mouse drag in pixels.
+ * @param delta_y     Vertical mouse drag in pixels.
+ * @param widget_width  Widget width in pixels.
+ * @param widget_height Widget height in pixels.
+ */
+template <ZoomPanSettable State, ViewStateWithBounds ViewState>
+void handlePanning(
+    State & state,
+    ViewState const & view_state,
+    int delta_x,
+    int delta_y,
+    int widget_width,
+    int widget_height)
+{
+    float const x_range =
+        static_cast<float>(view_state.x_max - view_state.x_min);
+    float const y_range =
+        static_cast<float>(view_state.y_max - view_state.y_min);
+    handlePanning(state, view_state, delta_x, delta_y, x_range, y_range,
+                  widget_width, widget_height);
 }
 
 // =============================================================================

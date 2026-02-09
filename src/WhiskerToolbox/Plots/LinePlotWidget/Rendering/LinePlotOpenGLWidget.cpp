@@ -519,15 +519,9 @@ void LinePlotOpenGLWidget::handlePanning(int delta_x, int delta_y)
     if (!_state) {
         return;
     }
-
-    // Compute data ranges from view state (both X and Y bounds are in ViewStateData)
-    float const x_range = static_cast<float>(_cached_view_state.x_max - _cached_view_state.x_min);
-    float const y_range = static_cast<float>(_cached_view_state.y_max - _cached_view_state.y_min);
-
-    // Use shared helper for panning logic
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y,
-        x_range, y_range, _widget_width, _widget_height);
+        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+        _widget_height);
 }
 
 void LinePlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
