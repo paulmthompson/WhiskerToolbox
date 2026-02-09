@@ -6,6 +6,11 @@
 
 #include <QOpenGLExtraFunctions>
 
+// Define GL 4.3 constants if not available (macOS only supports GL 4.1)
+#ifndef GL_SHADER_STORAGE_BUFFER
+#define GL_SHADER_STORAGE_BUFFER 0x90D2
+#endif
+
 namespace PlottingOpenGL {
 
 GLSSBOBuffer::~GLSSBOBuffer()

@@ -17,6 +17,17 @@
 #include <iostream>
 #include <unordered_set>
 
+// Define GL 4.3 constants if not available (macOS only supports GL 4.1)
+#ifndef GL_SHADER_STORAGE_BUFFER
+#define GL_SHADER_STORAGE_BUFFER 0x90D2
+#endif
+#ifndef GL_SHADER_STORAGE_BARRIER_BIT
+#define GL_SHADER_STORAGE_BARRIER_BIT 0x00002000
+#endif
+#ifndef GL_MAX_COMPUTE_WORK_GROUP_COUNT
+#define GL_MAX_COMPUTE_WORK_GROUP_COUNT 0x91BE
+#endif
+
 namespace PlottingOpenGL {
 
 ComputeShaderIntersector::ComputeShaderIntersector(BatchLineStore & store)
