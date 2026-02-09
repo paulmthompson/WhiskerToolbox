@@ -28,6 +28,8 @@
 #include "nlohmann/json.hpp"
 #include <rfl.hpp>
 
+#include <numeric>  // For std::iota
+
 #include "transforms/TransformPipeline.hpp"
 #include "transforms/TransformRegistry.hpp"
 #include "utils/DerivedTimeFrame.hpp"
@@ -977,6 +979,20 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
                     auto item_key = item.value("name", "media");
+                    
+                    // Populate TimeFrame before setData() to avoid index-out-of-range errors
+                    auto time_key = TimeKey("time");
+                    auto timeframe = dm->getTime(time_key);
+                    if (!timeframe || timeframe->getTotalFrameCount() == 0) {
+                        auto frame_count = media_data->getTotalFrameCount();
+                        if (frame_count > 0) {
+                            std::vector<int> time_indices(frame_count);
+                            std::iota(std::begin(time_indices), std::end(time_indices), 0);
+                            auto new_timeframe = std::make_shared<TimeFrame>(time_indices);
+                            dm->setTime(time_key, new_timeframe, true);
+                        }
+                    }
+                    
                     dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
                     data_info_list.push_back({name, "VideoData", ""});
                 } else {
@@ -989,6 +1005,20 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
                     auto item_key = item.value("name", "media");
+                    
+                    // Populate TimeFrame before setData() to avoid index-out-of-range errors
+                    auto time_key = TimeKey("time");
+                    auto timeframe = dm->getTime(time_key);
+                    if (!timeframe || timeframe->getTotalFrameCount() == 0) {
+                        auto frame_count = media_data->getTotalFrameCount();
+                        if (frame_count > 0) {
+                            std::vector<int> time_indices(frame_count);
+                            std::iota(std::begin(time_indices), std::end(time_indices), 0);
+                            auto new_timeframe = std::make_shared<TimeFrame>(time_indices);
+                            dm->setTime(time_key, new_timeframe, true);
+                        }
+                    }
+                    
                     dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
                     data_info_list.push_back({name, "ImageData", ""});
                 } else {
