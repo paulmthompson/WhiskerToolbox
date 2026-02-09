@@ -58,6 +58,11 @@ public:
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
 
     /**
+     * @brief Clear all entity selections in the OpenGL widget
+     */
+    void clearSelection();
+
+    /**
      * @brief Handle time changes from EditorRegistry
      *
      * Slot for global time changes (e.g. TimeScrollBar). Can be used to update

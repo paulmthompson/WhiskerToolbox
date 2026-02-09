@@ -5,9 +5,12 @@
  * @file TemporalProjectionViewPropertiesWidget.hpp
  * @brief Properties panel for the Temporal Projection View Widget
  *
- * Axis range controls are provided via HorizontalAxisRangeControls and
- * VerticalAxisRangeControls in collapsible sections (set when setPlotWidget is
- * called).
+ * Provides controls for:
+ * - Adding/removing point and line data keys from DataManager
+ * - Point size and line width rendering controls
+ * - Selection mode toggle (None / Point / Line)
+ * - Axis range controls via HorizontalAxisRangeControls and VerticalAxisRangeControls
+ *   in collapsible sections (set when setPlotWidget is called)
  *
  * @see TemporalProjectionViewWidget, TemporalProjectionViewState,
  * TemporalProjectionViewWidgetRegistration
@@ -58,7 +61,36 @@ public:
      */
     void setPlotWidget(TemporalProjectionViewWidget * plot_widget);
 
+private slots:
+    // Point data key management
+    void _onAddPointClicked();
+    void _onRemovePointClicked();
+    void _onPointTableSelectionChanged();
+
+    // Line data key management
+    void _onAddLineClicked();
+    void _onRemoveLineClicked();
+    void _onLineTableSelectionChanged();
+
+    // Rendering controls
+    void _onPointSizeChanged(double value);
+    void _onLineWidthChanged(double value);
+
+    // Selection mode
+    void _onSelectionModeChanged(int index);
+    void _onClearSelectionClicked();
+
+    // State change handlers
+    void _onStatePointKeyAdded(QString const & key);
+    void _onStatePointKeyRemoved(QString const & key);
+    void _onStateLineKeyAdded(QString const & key);
+    void _onStateLineKeyRemoved(QString const & key);
+
 private:
+    void _populatePointComboBox();
+    void _populateLineComboBox();
+    void _updatePointDataTable();
+    void _updateLineDataTable();
     void _updateUIFromState();
 
     Ui::TemporalProjectionViewPropertiesWidget * ui;
@@ -69,6 +101,9 @@ private:
     Section * _horizontal_range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
+
+    /// DataManager observer callback ID (stored for cleanup)
+    int _dm_observer_id = -1;
 };
 
 #endif  // TEMPORAL_PROJECTION_VIEW_PROPERTIES_WIDGET_HPP

@@ -36,6 +36,7 @@ TemporalProjectionViewWidget::TemporalProjectionViewWidget(
     horizontal_layout->setContentsMargins(0, 0, 0, 0);
 
     _opengl_widget = new TemporalProjectionOpenGLWidget(this);
+    _opengl_widget->setDataManager(_data_manager);
     horizontal_layout->addWidget(_opengl_widget, 1);
 
     auto * vertical_layout = new QVBoxLayout();
@@ -248,6 +249,13 @@ std::pair<double, double> TemporalProjectionViewWidget::computeVisibleYRange() c
 void TemporalProjectionViewWidget::_onTimeChanged(TimePosition /*position*/)
 {
     // Empty for now; can update view when time changes from EditorRegistry.
+}
+
+void TemporalProjectionViewWidget::clearSelection()
+{
+    if (_opengl_widget) {
+        _opengl_widget->clearSelection();
+    }
 }
 
 TemporalProjectionViewState * TemporalProjectionViewWidget::state()

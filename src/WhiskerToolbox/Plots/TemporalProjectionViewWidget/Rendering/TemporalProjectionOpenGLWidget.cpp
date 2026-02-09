@@ -271,13 +271,59 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
         return;
     }
 
+    // === Compute unified bounding box from all data ImageSize ===
+    float min_x = 0.0f;
+    float min_y = 0.0f;
+    float max_x = 0.0f;
+    float max_y = 0.0f;
+    bool has_bounds = false;
+
+    auto const point_keys = _state->getPointDataKeys();
+    for (auto const & key_qstr : point_keys) {
+        std::string const key = key_qstr.toStdString();
+        auto point_data = _data_manager->getData<PointData>(key);
+        if (point_data) {
+            auto image_size = point_data->getImageSize();
+            if (image_size.width > 0 && image_size.height > 0) {
+                max_x = std::max(max_x, static_cast<float>(image_size.width));
+                max_y = std::max(max_y, static_cast<float>(image_size.height));
+                has_bounds = true;
+            }
+        }
+    }
+
+    auto const line_keys = _state->getLineDataKeys();
+    for (auto const & key_qstr : line_keys) {
+        std::string const key = key_qstr.toStdString();
+        auto line_data = _data_manager->getData<LineData>(key);
+        if (line_data) {
+            auto image_size = line_data->getImageSize();
+            if (image_size.width > 0 && image_size.height > 0) {
+                max_x = std::max(max_x, static_cast<float>(image_size.width));
+                max_y = std::max(max_y, static_cast<float>(image_size.height));
+                has_bounds = true;
+            }
+        }
+    }
+
+    // If no valid bounds found, use default
+    if (!has_bounds) {
+        max_x = 100.0f;
+        max_y = 100.0f;
+    }
+
+    // Update state bounds (for axes)
+    _state->setXBounds(static_cast<double>(min_x), static_cast<double>(max_x));
+    _state->setYBounds(static_cast<double>(min_y), static_cast<double>(max_y));
+
+    // Create SceneBuilder and set bounds for spatial indexing
     CorePlotting::SceneBuilder builder;
+    builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
     
     float const point_size = _state->getPointSize();
     float const line_width = _state->getLineWidth();
 
     // === Render all point data keys ===
-    auto const point_keys = _state->getPointDataKeys();
     for (auto const & key_qstr : point_keys) {
         std::string const key = key_qstr.toStdString();
         auto point_data = _data_manager->getData<PointData>(key);
@@ -301,7 +347,6 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     }
 
     // === Render all line data keys ===
-    auto const line_keys = _state->getLineDataKeys();
     for (auto const & key_qstr : line_keys) {
         std::string const key = key_qstr.toStdString();
         auto line_data = _data_manager->getData<LineData>(key);
