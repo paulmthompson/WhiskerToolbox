@@ -9,6 +9,9 @@ set(COREPLOTTING_SOURCES
     Mappers/TimeSeriesMapper.hpp
     Mappers/TimeSeriesMapper.cpp
     Mappers/SpatialMapper.hpp
+    Mappers/SpatialMapper_AllTimes.hpp
+    Mappers/SpatialMapper_Window.hpp
+    Mappers/MaskContourMapper.hpp
     Mappers/RasterMapper.hpp
     Mappers/HistogramMapper.hpp
     Mappers/HistogramMapper.cpp
@@ -16,6 +19,7 @@ set(COREPLOTTING_SOURCES
     DataTypes/SeriesStyle.hpp
     DataTypes/SeriesDataCache.hpp
     DataTypes/HistogramData.hpp
+    DataTypes/AlphaCurve.hpp
     # SceneGraph
     SceneGraph/RenderablePrimitives.hpp
     SceneGraph/RenderablePrimitives.cpp

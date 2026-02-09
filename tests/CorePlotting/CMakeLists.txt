@@ -28,6 +28,10 @@ add_executable(test_coreplotting
     SceneHitTester.test.cpp
     SceneBuilder.test.cpp
     Mappers.test.cpp
+    SpatialMapper_AllTimes.test.cpp
+    SpatialMapper_Window.test.cpp
+    MaskContourMapper.test.cpp
+    AlphaCurve.test.cpp
     HistogramMapper.test.cpp
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp
