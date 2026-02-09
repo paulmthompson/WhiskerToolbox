@@ -6,12 +6,14 @@
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
 #include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
+#include "CorePlotting/Interaction/GlyphPreview.hpp"
 #include "CorePlotting/Mappers/TimeSeriesMapper.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "PlottingOpenGL/LineBatch/ComputeShaderIntersector.hpp"
 
 #include <QDebug>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QString>
@@ -136,6 +138,12 @@ void LinePlotOpenGLWidget::initializeGL()
         qWarning() << "LinePlotOpenGLWidget: Failed to initialize BatchLineRenderer";
     }
 
+    // Set visible colors for line states
+    _line_renderer.setGlobalColor(glm::vec4{0.3f, 0.5f, 1.0f, 0.6f});   // Semi-transparent blue for normal lines
+    _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.2f, 0.2f, 1.0f}); // Bright red for selected lines
+    _line_renderer.setHoverColor(glm::vec4{1.0f, 1.0f, 0.0f, 1.0f});    // Yellow for hover
+    _line_renderer.setLineWidth(1.5f);
+
     // Pick intersector: GPU compute if GL 4.3+, CPU fallback otherwise
     bool const has_compute = [&] {
         auto * ctx = QOpenGLContext::currentContext();
@@ -182,7 +190,11 @@ void LinePlotOpenGLWidget::paintGL()
 
     // Render selection preview line if actively selecting
     if (_is_selecting) {
-        renderSelectionPreview();
+        // Disable depth test so the preview line draws on top of all lines
+        glDisable(GL_DEPTH_TEST);
+        auto preview = buildSelectionPreview();
+        _scene_renderer.renderPreview(preview, _widget_width, _widget_height);
+        glEnable(GL_DEPTH_TEST);
     }
 }
 
@@ -204,10 +216,16 @@ void LinePlotOpenGLWidget::resizeGL(int w, int h)
 void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
-        // Ctrl+Click starts line selection
+        // Ctrl+Click starts line selection (Shift+Ctrl = deselect mode)
         if (event->modifiers().testFlag(Qt::ControlModifier)) {
             bool const remove = event->modifiers().testFlag(Qt::ShiftModifier);
             startSelection(event->pos(), remove);
+            event->accept();
+            return;
+        }
+
+        // Don't start pan if we're in selection mode (shouldn't happen, but guard)
+        if (_is_selecting) {
             event->accept();
             return;
         }
@@ -223,7 +241,7 @@ void LinePlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 void LinePlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
     if (event->buttons() & Qt::LeftButton) {
-        // Selection drag
+        // Selection drag takes priority
         if (_is_selecting) {
             updateSelection(event->pos());
             event->accept();
@@ -268,20 +286,50 @@ void LinePlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
+        // Don't navigate while in selection mode
+        if (_is_selecting) {
+            event->accept();
+            return;
+        }
+
         QPointF world = screenToWorld(event->pos());
-        // TODO: Emit plotDoubleClicked with proper time frame index
-        emit plotDoubleClicked(static_cast<int64_t>(world.x()));
+
+        // world.x() is relative time (t=0 is the alignment point).
+        // Convert to absolute time using the first trial's alignment time.
+        // (All trials are overlaid, so we can't determine which trial was clicked.)
+        if (!_cached_alignment_times.empty()) {
+            int64_t alignment_time = _cached_alignment_times.front();
+            int64_t absolute_time = alignment_time + static_cast<int64_t>(world.x());
+            emit plotDoubleClicked(absolute_time, QString::fromStdString(_cached_series_key));
+        }
     }
     event->accept();
 }
 
 void LinePlotOpenGLWidget::wheelEvent(QWheelEvent * event)
 {
+    // Don't zoom while selecting
+    if (_is_selecting) {
+        event->accept();
+        return;
+    }
+
     float const delta = event->angleDelta().y() / 120.0f;
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
     event->accept();
+}
+
+void LinePlotOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
+{
+    // If Ctrl is released during selection drag, cancel the selection
+    if (event->key() == Qt::Key_Control && _is_selecting) {
+        cancelSelection();
+        event->accept();
+        return;
+    }
+    QOpenGLWidget::keyReleaseEvent(event);
 }
 
 // =============================================================================
@@ -319,6 +367,8 @@ void LinePlotOpenGLWidget::rebuildScene()
     if (!_state || !_data_manager) {
         _scene_renderer.clearScene();
         _line_renderer.clearData();
+        _cached_alignment_times.clear();
+        _cached_series_key.clear();
         return;
     }
 
@@ -327,6 +377,8 @@ void LinePlotOpenGLWidget::rebuildScene()
     if (gathered.empty()) {
         _scene_renderer.clearScene();
         _line_renderer.clearData();
+        _cached_alignment_times.clear();
+        _cached_series_key.clear();
         return;
     }
 
@@ -414,6 +466,20 @@ void LinePlotOpenGLWidget::rebuildScene()
     alignment_times.reserve(num_trials);
     for (size_t trial = 0; trial < num_trials; ++trial) {
         alignment_times.push_back(gathered.alignmentTimeAt(trial));
+    }
+
+    // Cache alignment times for relative→absolute time conversion on double-click
+    _cached_alignment_times = alignment_times;
+
+    // Cache the series key for TimeFrame resolution on double-click
+    {
+        auto series_names = _state->getPlotSeriesNames();
+        if (!series_names.empty()) {
+            auto opts = _state->getPlotSeriesOptions(series_names.front());
+            if (opts) {
+                _cached_series_key = opts->series_key;
+            }
+        }
     }
 
     auto batch = CorePlotting::buildLineBatchFromGatherResult(gathered, alignment_times);
@@ -549,6 +615,8 @@ void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove
     _selection_remove_mode = remove_mode;
     _selection_start_ndc = screenToNDC(screen_pos);
     _selection_end_ndc = _selection_start_ndc;
+    _selection_start_screen = screen_pos;
+    _selection_end_screen = screen_pos;
     setCursor(Qt::CrossCursor);
     update();
 }
@@ -556,6 +624,7 @@ void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove
 void LinePlotOpenGLWidget::updateSelection(QPoint const & screen_pos)
 {
     _selection_end_ndc = screenToNDC(screen_pos);
+    _selection_end_screen = screen_pos;
     update();
 }
 
@@ -629,23 +698,33 @@ void LinePlotOpenGLWidget::applyIntersectionResults(
     emit trialsSelected(_selected_trial_indices);
 }
 
-void LinePlotOpenGLWidget::renderSelectionPreview()
+void LinePlotOpenGLWidget::cancelSelection()
 {
-    // Draw a simple line in NDC from _selection_start_ndc to _selection_end_ndc
-    // using immediate-mode style (basic GL_LINES) for the preview overlay.
-    // This is intentionally simple — it's just a visual feedback line.
+    _is_selecting = false;
+    setCursor(Qt::ArrowCursor);
+    update();
+}
 
-    glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0f);
+CorePlotting::Interaction::GlyphPreview LinePlotOpenGLWidget::buildSelectionPreview() const
+{
+    CorePlotting::Interaction::GlyphPreview preview;
+    preview.type = CorePlotting::Interaction::GlyphPreview::Type::Line;
 
-    // We need a trivial shader or fixed-function for this.
-    // Since we're on Core Profile, use a minimal approach: re-use the
-    // fact that the embedded shader already handles MVP. We'll draw
-    // in NDC by passing an identity MVP. But that requires binding
-    // a shader. For simplicity, we skip the preview line if no GL state
-    // is available — the cursor change already gives feedback.
+    // PreviewRenderer expects canvas pixel coordinates (top-left origin)
+    preview.line_start = glm::vec2{
+        static_cast<float>(_selection_start_screen.x()),
+        static_cast<float>(_selection_start_screen.y())};
+    preview.line_end = glm::vec2{
+        static_cast<float>(_selection_end_screen.x()),
+        static_cast<float>(_selection_end_screen.y())};
 
-    // TODO: Add a simple preview line shader or use QPainter overlay
-    // For now, the CrossCursor provides visual feedback during selection.
-    glEnable(GL_DEPTH_TEST);
+    // Style: white stroke for normal selection, red for remove mode
+    if (_selection_remove_mode) {
+        preview.stroke_color = glm::vec4{1.0f, 0.3f, 0.3f, 0.9f};
+    } else {
+        preview.stroke_color = glm::vec4{1.0f, 1.0f, 1.0f, 0.9f};
+    }
+    preview.stroke_width = 2.0f;
+
+    return preview;
 }

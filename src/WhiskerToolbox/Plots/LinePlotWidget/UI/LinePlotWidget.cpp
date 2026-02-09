@@ -55,8 +55,17 @@ LinePlotWidget::LinePlotWidget(std::shared_ptr<DataManager> data_manager,
     setLayout(vertical_layout);
 
     connect(_opengl_widget, &LinePlotOpenGLWidget::plotDoubleClicked,
-            this, [this](int64_t time_frame_index) {
-                emit timePositionSelected(TimePosition(time_frame_index));
+            this, [this](int64_t absolute_time, QString const & series_key) {
+                // Resolve the TimeFrame from the data series key via DataManager
+                // This ensures the TimePosition carries the correct time base
+                std::shared_ptr<TimeFrame> time_frame;
+                if (_data_manager && !series_key.isEmpty()) {
+                    auto time_key = _data_manager->getTimeKey(series_key.toStdString());
+                    if (!time_key.empty()) {
+                        time_frame = _data_manager->getTime(time_key);
+                    }
+                }
+                emit timePositionSelected(TimePosition(TimeFrameIndex(absolute_time), time_frame));
             });
 }
 

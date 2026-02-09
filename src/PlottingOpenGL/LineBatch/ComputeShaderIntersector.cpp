@@ -10,6 +10,8 @@
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLShaderProgram>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
@@ -184,9 +186,10 @@ void ComputeShaderIntersector::dispatchBatched(
         query.end_ndc.x, query.end_ndc.y);
     m_compute_program->setUniformValue("u_line_width", query.tolerance);
 
-    // MVP matrix: QMatrix4x4 from glm::mat4
-    QMatrix4x4 qt_mvp(&query.mvp[0][0]);
-    m_compute_program->setUniformValue("u_mvp_matrix", qt_mvp);
+    // MVP matrix: glm stores column-major, QMatrix4x4(float*) reads row-major,
+    // so we must transpose to get the correct layout for Qt/GL uniforms.
+    QMatrix4x4 qt_mvp(glm::value_ptr(query.mvp));
+    m_compute_program->setUniformValue("u_mvp_matrix", qt_mvp.transposed());
 
     // Canvas size
     auto const & cpu = m_store.cpuData();

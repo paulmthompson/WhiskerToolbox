@@ -27,16 +27,19 @@ constexpr char const * VERTEX_SHADER = R"(
 
 layout(location = 0) in vec2 a_position;
 layout(location = 1) in uint a_line_id;
+layout(location = 2) in uint a_selected;
 
 uniform mat4 u_mvp_matrix;
 
 out vec2 v_position;
 flat out uint v_line_id;
+flat out uint v_selected;
 
 void main() {
     vec4 ndc_pos = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
     v_position = ndc_pos.xy;
     v_line_id = a_line_id;
+    v_selected = a_selected;
     gl_Position = ndc_pos;
 }
 )";
@@ -49,6 +52,7 @@ layout(triangle_strip, max_vertices = 4) out;
 
 in vec2 v_position[];
 flat in uint v_line_id[];
+flat in uint v_selected[];
 
 out vec2 g_position;
 flat out uint g_line_id;
@@ -59,6 +63,7 @@ uniform vec2 u_viewport_size;
 
 void main() {
     uint line_id = v_line_id[0];
+    uint is_selected = v_selected[0];
 
     vec2 p0 = v_position[0];
     vec2 p1 = v_position[1];
@@ -72,8 +77,6 @@ void main() {
     vec2 v1 = p0 + perp * half_width_ndc;
     vec2 v2 = p1 - perp * half_width_ndc;
     vec2 v3 = p1 + perp * half_width_ndc;
-
-    uint is_selected = 0u;
 
     g_position = v0; g_line_id = line_id; g_is_selected = is_selected;
     gl_Position = vec4(v0, 0.0, 1.0); EmitVertex();
@@ -174,7 +177,8 @@ bool BatchLineRenderer::initialize()
     }
 
     // VAO + VBOs
-    if (!m_vao.create() || !m_vertex_vbo.create() || !m_line_id_vbo.create()) {
+    if (!m_vao.create() || !m_vertex_vbo.create() || !m_line_id_vbo.create()
+        || !m_selection_vbo.create()) {
         return false;
     }
 
@@ -188,6 +192,7 @@ void BatchLineRenderer::cleanup()
 {
     m_vertex_vbo.destroy();
     m_line_id_vbo.destroy();
+    m_selection_vbo.destroy();
     m_vao.destroy();
     if (!m_use_shader_manager) {
         m_embedded_shader.destroy();
@@ -275,6 +280,25 @@ void BatchLineRenderer::syncFromStore()
         per_vertex_ids.data(),
         static_cast<int>(per_vertex_ids.size() * sizeof(std::uint32_t)));
     m_line_id_vbo.release();
+
+    // Upload per-vertex selection flags (for GL 4.1 embedded shader path).
+    // Each line_id is 1-based; look up selection_mask[line_id - 1].
+    std::vector<std::uint32_t> per_vertex_selection;
+    per_vertex_selection.reserve(cpu.line_ids.size() * 2);
+    for (auto const id : cpu.line_ids) {
+        std::uint32_t selected = 0;
+        if (id > 0 && (id - 1) < cpu.numLines()) {
+            selected = cpu.selection_mask[id - 1];
+        }
+        per_vertex_selection.push_back(selected);
+        per_vertex_selection.push_back(selected);
+    }
+
+    (void) m_selection_vbo.bind();
+    m_selection_vbo.allocate(
+        per_vertex_selection.data(),
+        static_cast<int>(per_vertex_selection.size() * sizeof(std::uint32_t)));
+    m_selection_vbo.release();
 
     m_vao.release();
 
@@ -370,6 +394,14 @@ void BatchLineRenderer::setupVertexAttributes()
     }
     f->glEnableVertexAttribArray(1);
     m_line_id_vbo.release();
+
+    // Attribute 2: selection flag uint (GL 4.1 fallback for selection rendering)
+    (void) m_selection_vbo.bind();
+    if (ef) {
+        ef->glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(std::uint32_t), nullptr);
+    }
+    f->glEnableVertexAttribArray(2);
+    m_selection_vbo.release();
 
     m_vao.release();
 }

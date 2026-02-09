@@ -31,6 +31,7 @@
 #include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
+#include "CorePlotting/Interaction/GlyphPreview.hpp"
 #include "CorePlotting/LineBatch/ILineBatchIntersector.hpp"
 #include "CorePlotting/LineBatch/LineBatchData.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
@@ -93,7 +94,9 @@ public:
     void clearSelection();
 
 signals:
-    void plotDoubleClicked(int64_t time_frame_index);
+    /// Emitted on double-click with absolute time and the data series key.
+    /// The absolute time accounts for alignment offset (relative → absolute).
+    void plotDoubleClicked(int64_t absolute_time, QString series_key);
     void viewBoundsChanged();
 
     /// Emitted when line selection changes. Indices are 0-based into GatherResult.
@@ -108,6 +111,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
+    void keyReleaseEvent(QKeyEvent * event) override;
 
 private slots:
     void onStateChanged();
@@ -144,8 +148,14 @@ private:
     bool _is_selecting{false};
     glm::vec2 _selection_start_ndc{0.0f};
     glm::vec2 _selection_end_ndc{0.0f};
+    QPoint _selection_start_screen{0, 0};
+    QPoint _selection_end_screen{0, 0};
     bool _selection_remove_mode{false};
     std::vector<std::uint32_t> _selected_trial_indices;
+
+    // --- Cached alignment data (for relative → absolute time conversion) ---
+    std::vector<std::int64_t> _cached_alignment_times;
+    std::string _cached_series_key;
 
     int _widget_width{1};
     int _widget_height{1};
@@ -162,7 +172,8 @@ private:
     void startSelection(QPoint const & screen_pos, bool remove_mode);
     void updateSelection(QPoint const & screen_pos);
     void completeSelection();
-    void renderSelectionPreview();
+    void cancelSelection();
+    [[nodiscard]] CorePlotting::Interaction::GlyphPreview buildSelectionPreview() const;
     void applyIntersectionResults(std::vector<CorePlotting::LineBatchIndex> const & hit_indices,
                                   bool remove);
 };

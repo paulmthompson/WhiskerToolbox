@@ -113,6 +113,7 @@ private:
     GLVertexArray m_vao;
     GLBuffer m_vertex_vbo{GLBuffer::Type::Vertex};
     GLBuffer m_line_id_vbo{GLBuffer::Type::Vertex};
+    GLBuffer m_selection_vbo{GLBuffer::Type::Vertex};  // Per-vertex selection flag (GL 4.1 fallback)
 
     // ── Shader state ───────────────────────────────────────────────────
     bool m_use_ssbos{false};          // True if GL 4.3 SSBOs available
