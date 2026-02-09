@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numeric>
 
 OnionSkinViewOpenGLWidget::OnionSkinViewOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -190,6 +191,22 @@ void OnionSkinViewOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
         if (_is_panning) {
             _is_panning = false;
             setCursor(Qt::ArrowCursor);
+        } else {
+            // Click (not drag) — brute-force nearest-point on current frame
+            QPointF const world_pos = screenToWorld(event->pos());
+            // Compute max pick distance in world coordinates
+            // Use 15 pixels converted to world space
+            float const pixel_radius = 15.0f;
+            QPointF const origin_world = screenToWorld(QPoint(0, 0));
+            QPointF const offset_world = screenToWorld(QPoint(static_cast<int>(pixel_radius), 0));
+            float const world_pick_dist = static_cast<float>(
+                std::abs(offset_world.x() - origin_world.x()));
+            float const max_dist_sq = world_pick_dist * world_pick_dist;
+
+            auto hit = findNearestPointAtCurrentTime(world_pos, max_dist_sq);
+            if (hit.has_value()) {
+                emit entitySelected(hit.value());
+            }
         }
     }
     event->accept();
@@ -197,6 +214,20 @@ void OnionSkinViewOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 
 void OnionSkinViewOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 {
+    if (event->button() == Qt::LeftButton) {
+        QPointF const world_pos = screenToWorld(event->pos());
+        float const pixel_radius = 15.0f;
+        QPointF const origin_world = screenToWorld(QPoint(0, 0));
+        QPointF const offset_world = screenToWorld(QPoint(static_cast<int>(pixel_radius), 0));
+        float const world_pick_dist = static_cast<float>(
+            std::abs(offset_world.x() - origin_world.x()));
+        float const max_dist_sq = world_pick_dist * world_pick_dist;
+
+        auto hit = findNearestPointAtCurrentTime(world_pos, max_dist_sq);
+        if (hit.has_value()) {
+            emit entityDoubleClicked(hit.value());
+        }
+    }
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
@@ -228,6 +259,7 @@ void OnionSkinViewOpenGLWidget::onViewStateChanged()
 void OnionSkinViewOpenGLWidget::onDataKeysChanged()
 {
     _scene_dirty = true;
+    _needs_bounds_update = true;
     update();
 }
 
@@ -382,18 +414,14 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     max_x += margin_x;
     max_y += margin_y;
 
-    // === Update view state bounds ===
-    auto const & vs = _state->viewState();
-    bool const bounds_changed = (vs.x_min != static_cast<double>(min_x)) ||
-                                (vs.x_max != static_cast<double>(max_x)) ||
-                                (vs.y_min != static_cast<double>(min_y)) ||
-                                (vs.y_max != static_cast<double>(max_y));
-    _state->setXBounds(static_cast<double>(min_x), static_cast<double>(max_x));
-    _state->setYBounds(static_cast<double>(min_y), static_cast<double>(max_y));
-    if (bounds_changed) {
+    // === Update view state bounds only when data keys change, not on every time change ===
+    if (_needs_bounds_update) {
+        _state->setXBounds(static_cast<double>(min_x), static_cast<double>(max_x));
+        _state->setYBounds(static_cast<double>(min_y), static_cast<double>(max_y));
         _state->setXZoom(1.0);
         _state->setYZoom(1.0);
         _state->setPan(0.0, 0.0);
+        _needs_bounds_update = false;
     }
 
     // === Build scene using SceneBuilder ===
@@ -545,12 +573,38 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
     _scene = builder.build();
     _scene_renderer.uploadScene(_scene);
+
+    // Cache current-frame points for click selection (P2.5)
+    _current_frame_points.clear();
+    for (auto const & pt : all_points) {
+        if (pt.temporal_distance == 0) {
+            _current_frame_points.push_back(pt);
+        }
+    }
 }
 
 void OnionSkinViewOpenGLWidget::updateMatrices()
 {
-    _projection_matrix =
-        WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+    // Inverted Y-axis projection: Y increases downward (image coordinates).
+    // This matches MediaWidget convention where Y=0 is at the top.
+    auto const & vs = _cached_view_state;
+    float const x_range = static_cast<float>(vs.x_max - vs.x_min);
+    float const x_center = static_cast<float>(vs.x_min + vs.x_max) / 2.0f;
+    float const y_range = static_cast<float>(vs.y_max - vs.y_min);
+    float const y_center = static_cast<float>(vs.y_min + vs.y_max) / 2.0f;
+
+    float const zoomed_x = x_range / static_cast<float>(vs.x_zoom);
+    float const zoomed_y = y_range / static_cast<float>(vs.y_zoom);
+    float const pan_x = static_cast<float>(vs.x_pan);
+    float const pan_y = static_cast<float>(vs.y_pan);
+
+    float const left = x_center - zoomed_x / 2.0f + pan_x;
+    float const right = x_center + zoomed_x / 2.0f + pan_x;
+    // Swap bottom/top so that small Y values are at the top of the screen
+    float const bottom = y_center + zoomed_y / 2.0f + pan_y;
+    float const top = y_center - zoomed_y / 2.0f + pan_y;
+
+    _projection_matrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -559,8 +613,11 @@ void OnionSkinViewOpenGLWidget::handlePanning(int delta_x, int delta_y)
     if (!_state) {
         return;
     }
+    // Negate delta_y because the Y-axis is inverted (image coordinates:
+    // screen-down corresponds to increasing world Y, but the standard
+    // panning helper assumes screen-down corresponds to decreasing world Y).
     WhiskerToolbox::Plots::handlePanning(
-        *_state, _cached_view_state, delta_x, delta_y, _widget_width,
+        *_state, _cached_view_state, delta_x, -delta_y, _widget_width,
         _widget_height);
 }
 
@@ -576,4 +633,26 @@ QPointF OnionSkinViewOpenGLWidget::screenToWorld(QPoint const & screen_pos) cons
 {
     return WhiskerToolbox::Plots::screenToWorld(_projection_matrix, _widget_width,
                                                _widget_height, screen_pos);
+}
+
+std::optional<EntityId> OnionSkinViewOpenGLWidget::findNearestPointAtCurrentTime(
+    QPointF const & world_pos, float max_distance_sq) const
+{
+    float best_dist_sq = max_distance_sq;
+    std::optional<EntityId> best_id;
+
+    float const wx = static_cast<float>(world_pos.x());
+    float const wy = static_cast<float>(world_pos.y());
+
+    for (auto const & pt : _current_frame_points) {
+        float const dx = pt.x - wx;
+        float const dy = pt.y - wy;
+        float const dist_sq = dx * dx + dy * dy;
+        if (dist_sq < best_dist_sq) {
+            best_dist_sq = dist_sq;
+            best_id = pt.entity_id;
+        }
+    }
+
+    return best_id;
 }

@@ -26,8 +26,10 @@
 
 #include "Core/OnionSkinViewState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/Mappers/SpatialMapper_Window.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include <QOpenGLFunctions>
@@ -35,6 +37,9 @@
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <optional>
+#include <unordered_set>
+#include <vector>
 
 class DataManager;
 class QMouseEvent;
@@ -84,6 +89,18 @@ public:
 signals:
     void viewBoundsChanged();
 
+    /**
+     * @brief Emitted when an entity is selected via click
+     * @param entity_id The selected entity's ID
+     */
+    void entitySelected(EntityId entity_id);
+
+    /**
+     * @brief Emitted on double-click to request frame jump to a specific entity
+     * @param entity_id The entity to jump to
+     */
+    void entityDoubleClicked(EntityId entity_id);
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -108,6 +125,7 @@ private:
     CorePlotting::RenderableScene _scene;
 
     bool _scene_dirty{true};
+    bool _needs_bounds_update{true};  ///< True when bounds should be recalculated (data keys changed)
     bool _opengl_initialized{false};
     int64_t _current_time{0};
 
@@ -128,6 +146,18 @@ private:
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
+
+    /**
+     * @brief Brute-force nearest-point search on current frame's points only
+     * @param world_pos Position in world coordinates
+     * @param max_distance_sq Maximum squared distance for a hit (in world units)
+     * @return EntityId of nearest point, or std::nullopt if none within range
+     */
+    [[nodiscard]] std::optional<EntityId> findNearestPointAtCurrentTime(
+        QPointF const & world_pos, float max_distance_sq) const;
+
+    /// Cached current-frame points (temporal_distance == 0), rebuilt each scene
+    std::vector<CorePlotting::TimedMappedElement> _current_frame_points;
 };
 
 #endif  // ONION_SKIN_VIEW_OPENGL_WIDGET_HPP

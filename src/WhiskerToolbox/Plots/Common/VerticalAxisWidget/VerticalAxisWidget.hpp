@@ -82,6 +82,24 @@ public:
     [[nodiscard]] CorePlotting::AxisMapping const * axisMapping() const;
 
     /**
+     * @brief Set whether the Y axis is inverted (min at top, max at bottom)
+     *
+     * When inverted, the axis displays like image coordinates where Y=0 is at
+     * the top and Y increases downward. This matches the convention used by
+     * MediaWidget and is appropriate for spatial data (points, masks, lines)
+     * derived from image frames.
+     *
+     * @param inverted true to invert the Y axis
+     */
+    void setInverted(bool inverted);
+
+    /**
+     * @brief Check whether the Y axis is currently inverted
+     * @return true if the axis is inverted (min at top, max at bottom)
+     */
+    [[nodiscard]] bool isInverted() const;
+
+    /**
      * @brief Connect to a QObject signal that indicates range changes
      * 
      * When the signal is emitted, the widget will call the RangeGetter
@@ -115,6 +133,9 @@ private:
 
     /// Optional axis mapping for domain↔world conversion and label formatting
     std::optional<CorePlotting::AxisMapping> _axis_mapping;
+
+    /// When true, axis is inverted: min at top, max at bottom (image coordinates)
+    bool _inverted = false;
 
     // Axis styling constants
     static constexpr int kAxisWidth = 50;

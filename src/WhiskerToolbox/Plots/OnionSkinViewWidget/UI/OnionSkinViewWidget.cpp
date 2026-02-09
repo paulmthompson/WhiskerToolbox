@@ -156,6 +156,8 @@ void OnionSkinViewWidget::wireVerticalAxis()
         return;
     }
     _vertical_axis_widget->setAxisMapping(CorePlotting::identityAxis("Y", 0));
+    // Invert Y axis to match image/media coordinate convention (Y=0 at top)
+    _vertical_axis_widget->setInverted(true);
     _vertical_axis_widget->setRangeGetter([this]() {
         if (!_state) {
             return std::make_pair(0.0, 100.0);
