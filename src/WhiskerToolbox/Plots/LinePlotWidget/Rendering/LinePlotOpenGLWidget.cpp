@@ -3,6 +3,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
+#include "Plots/Common/LineSelectionHelpers.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
 #include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
@@ -588,9 +589,8 @@ void LinePlotOpenGLWidget::clearSelection()
 
 glm::vec2 LinePlotOpenGLWidget::screenToNDC(QPoint const & screen_pos) const
 {
-    float const ndc_x = (2.0f * screen_pos.x() / _widget_width) - 1.0f;
-    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / _widget_height);
-    return glm::vec2{ndc_x, ndc_y};
+    return WhiskerToolbox::Plots::screenToNDC(screen_pos, _widget_width,
+                                             _widget_height);
 }
 
 void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove_mode)
@@ -617,20 +617,15 @@ void LinePlotOpenGLWidget::completeSelection()
     _is_selecting = false;
     setCursor(Qt::ArrowCursor);
 
-    if (!_intersector || _line_store.cpuData().empty()) {
+    if (!_intersector) {
+        update();
         return;
     }
-
-    // Build intersection query in NDC space
-    CorePlotting::LineIntersectionQuery query;
-    query.start_ndc = _selection_start_ndc;
-    query.end_ndc = _selection_end_ndc;
-    query.tolerance = 0.02f;
-    query.mvp = _projection_matrix * _view_matrix;
-
-    auto result = _intersector->intersect(_line_store.cpuData(), query);
-
-    applyIntersectionResults(result.intersected_line_indices, _selection_remove_mode);
+    std::vector<CorePlotting::LineBatchIndex> const hit_indices =
+        WhiskerToolbox::Plots::runLineSelectionIntersection(
+            *_intersector, _line_store.cpuData(), _selection_start_ndc,
+            _selection_end_ndc, _projection_matrix, _view_matrix);
+    applyIntersectionResults(hit_indices, _selection_remove_mode);
     update();
 }
 
@@ -691,24 +686,6 @@ void LinePlotOpenGLWidget::cancelSelection()
 
 CorePlotting::Interaction::GlyphPreview LinePlotOpenGLWidget::buildSelectionPreview() const
 {
-    CorePlotting::Interaction::GlyphPreview preview;
-    preview.type = CorePlotting::Interaction::GlyphPreview::Type::Line;
-
-    // PreviewRenderer expects canvas pixel coordinates (top-left origin)
-    preview.line_start = glm::vec2{
-        static_cast<float>(_selection_start_screen.x()),
-        static_cast<float>(_selection_start_screen.y())};
-    preview.line_end = glm::vec2{
-        static_cast<float>(_selection_end_screen.x()),
-        static_cast<float>(_selection_end_screen.y())};
-
-    // Style: white stroke for normal selection, red for remove mode
-    if (_selection_remove_mode) {
-        preview.stroke_color = glm::vec4{1.0f, 0.3f, 0.3f, 0.9f};
-    } else {
-        preview.stroke_color = glm::vec4{1.0f, 1.0f, 1.0f, 0.9f};
-    }
-    preview.stroke_width = 2.0f;
-
-    return preview;
+    return WhiskerToolbox::Plots::buildLineSelectionPreview(
+        _selection_start_screen, _selection_end_screen, _selection_remove_mode);
 }

@@ -104,6 +104,28 @@ concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
 // =============================================================================
 
 /**
+ * @brief Convert screen pixel coordinates to normalized device coordinates (NDC).
+ *
+ * NDC X is in [-1, 1] (left to right), NDC Y is in [-1, 1] (bottom to top).
+ * Same conversion used as the first step of screenToWorld; useful for
+ * selection rectangles and hit-testing in NDC space.
+ *
+ * @param screen_pos    Mouse position in widget-local pixels.
+ * @param widget_width  Widget width in pixels.
+ * @param widget_height Widget height in pixels.
+ * @return NDC (x, y) as glm::vec2.
+ */
+[[nodiscard]] inline glm::vec2 screenToNDC(
+    QPoint const & screen_pos,
+    int widget_width,
+    int widget_height)
+{
+    float const ndc_x = (2.0f * screen_pos.x() / widget_width) - 1.0f;
+    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / widget_height);
+    return glm::vec2(ndc_x, ndc_y);
+}
+
+/**
  * @brief Convert screen pixel coordinates to world coordinates.
  *
  * Uses the inverse of the projection matrix. Identical across all plot widgets.
