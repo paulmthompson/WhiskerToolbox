@@ -21,6 +21,7 @@
 #include <QWheelEvent>
 
 #include <cmath>
+#include <limits>
 
 TemporalProjectionOpenGLWidget::TemporalProjectionOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -99,10 +100,18 @@ void TemporalProjectionOpenGLWidget::initializeGL()
     if (!_scene_renderer.initialize()) {
         qWarning() << "TemporalProjectionOpenGLWidget: Failed to initialize SceneRenderer";
     }
-    // Initialize line batch store for selectable lines
+    // Initialize line batch store and renderer for selectable lines
     if (!_line_store.initialize()) {
         qWarning() << "TemporalProjectionOpenGLWidget: Failed to initialize BatchLineStore";
     }
+    if (!_line_renderer.initialize()) {
+        qWarning() << "TemporalProjectionOpenGLWidget: Failed to initialize BatchLineRenderer";
+    }
+
+    // Set visible colors for line states
+    _line_renderer.setGlobalColor(glm::vec4{0.8f, 0.2f, 0.2f, 0.6f});   // Semi-transparent red for normal lines
+    _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.8f, 0.0f, 1.0f}); // Bright yellow for selected lines
+    _line_renderer.setLineWidth(1.5f);
 
     // Initialize line intersector (GPU compute shader or CPU fallback)
     auto const sf = format();
@@ -272,109 +281,162 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
         return;
     }
 
-    // === Compute unified bounding box from all data ImageSize ===
-    float min_x = 0.0f;
-    float min_y = 0.0f;
-    float max_x = 0.0f;
-    float max_y = 0.0f;
-    bool has_bounds = false;
-
+    // === Phase 1: Map all data (needed for both rendering and bounding box) ===
     auto const point_keys = _state->getPointDataKeys();
-    for (auto const & key_qstr : point_keys) {
-        std::string const key = key_qstr.toStdString();
-        auto point_data = _data_manager->getData<PointData>(key);
-        if (point_data) {
-            auto image_size = point_data->getImageSize();
-            if (image_size.width > 0 && image_size.height > 0) {
-                max_x = std::max(max_x, static_cast<float>(image_size.width));
-                max_y = std::max(max_y, static_cast<float>(image_size.height));
-                has_bounds = true;
-            }
-        }
-    }
-
     auto const line_keys = _state->getLineDataKeys();
-    for (auto const & key_qstr : line_keys) {
-        std::string const key = key_qstr.toStdString();
-        auto line_data = _data_manager->getData<LineData>(key);
-        if (line_data) {
-            auto image_size = line_data->getImageSize();
-            if (image_size.width > 0 && image_size.height > 0) {
-                max_x = std::max(max_x, static_cast<float>(image_size.width));
-                max_y = std::max(max_y, static_cast<float>(image_size.height));
-                has_bounds = true;
-            }
-        }
-    }
 
-    // If no valid bounds found, use default
-    if (!has_bounds) {
-        max_x = 100.0f;
-        max_y = 100.0f;
-    }
+    // Map all point data across all time frames
+    struct PointBatchInfo {
+        std::string key;
+        std::vector<CorePlotting::MappedElement> mapped;
+    };
+    std::vector<PointBatchInfo> point_batches;
+    point_batches.reserve(point_keys.size());
 
-    // Update state bounds (for axes)
-    _state->setXBounds(static_cast<double>(min_x), static_cast<double>(max_x));
-    _state->setYBounds(static_cast<double>(min_y), static_cast<double>(max_y));
-
-    // Create SceneBuilder and set bounds for spatial indexing
-    CorePlotting::SceneBuilder builder;
-    builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
-    
-    float const point_size = _state->getPointSize();
-    float const line_width = _state->getLineWidth();
-
-    // === Render all point data keys ===
     for (auto const & key_qstr : point_keys) {
         std::string const key = key_qstr.toStdString();
         auto point_data = _data_manager->getData<PointData>(key);
         if (!point_data) {
             continue;
         }
+        auto mapped = CorePlotting::SpatialMapper::mapAllPoints(*point_data);
+        if (!mapped.empty()) {
+            point_batches.push_back({key, std::move(mapped)});
+        }
+    }
 
-        // Map all points across all time frames
-        auto mapped_points = CorePlotting::SpatialMapper::mapAllPoints(*point_data);
-        if (mapped_points.empty()) {
+    // Map all line data across all time frames (only used for bounding box;
+    // actual line rendering goes through BatchLineRenderer exclusively)
+
+    // === Phase 2: Compute bounding box from actual data coordinates ===
+    // ImageSize may be unset (-1,-1), so always scan the actual mapped data
+    float min_x = std::numeric_limits<float>::max();
+    float min_y = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float max_y = std::numeric_limits<float>::lowest();
+    bool has_data = false;
+
+    // Scan points
+    for (auto const & pb : point_batches) {
+        for (auto const & pt : pb.mapped) {
+            min_x = std::min(min_x, pt.x);
+            min_y = std::min(min_y, pt.y);
+            max_x = std::max(max_x, pt.x);
+            max_y = std::max(max_y, pt.y);
+            has_data = true;
+        }
+    }
+
+    // Scan line data from the raw LineData (iterate segments)
+    for (auto const & key_qstr : line_keys) {
+        std::string const key = key_qstr.toStdString();
+        auto line_data = _data_manager->getData<LineData>(key);
+        if (!line_data || line_data->getTotalEntryCount() == 0) {
             continue;
         }
+        for (auto const elem : line_data->elementsView()) {
+            auto const & line = elem.data();
+            for (auto const & pt : line) {
+                min_x = std::min(min_x, pt.x);
+                min_y = std::min(min_y, pt.y);
+                max_x = std::max(max_x, pt.x);
+                max_y = std::max(max_y, pt.y);
+                has_data = true;
+            }
+        }
+    }
 
-        // Use SceneBuilder's range-based API to add glyphs
+    // Fall back to ImageSize if data iteration found nothing useful,
+    // or use default 100×100
+    if (!has_data) {
+        // Try ImageSize as fallback
+        for (auto const & key_qstr : point_keys) {
+            auto pd = _data_manager->getData<PointData>(key_qstr.toStdString());
+            if (pd) {
+                auto sz = pd->getImageSize();
+                if (sz.width > 0 && sz.height > 0) {
+                    min_x = 0.0f; min_y = 0.0f;
+                    max_x = std::max(max_x, static_cast<float>(sz.width));
+                    max_y = std::max(max_y, static_cast<float>(sz.height));
+                    has_data = true;
+                }
+            }
+        }
+        for (auto const & key_qstr : line_keys) {
+            auto ld = _data_manager->getData<LineData>(key_qstr.toStdString());
+            if (ld) {
+                auto sz = ld->getImageSize();
+                if (sz.width > 0 && sz.height > 0) {
+                    min_x = 0.0f; min_y = 0.0f;
+                    max_x = std::max(max_x, static_cast<float>(sz.width));
+                    max_y = std::max(max_y, static_cast<float>(sz.height));
+                    has_data = true;
+                }
+            }
+        }
+    }
+
+    if (!has_data) {
+        min_x = 0.0f; min_y = 0.0f;
+        max_x = 100.0f; max_y = 100.0f;
+    }
+
+    // Add a small margin so points at edges aren't clipped
+    float const margin_x = (max_x - min_x) * 0.02f;
+    float const margin_y = (max_y - min_y) * 0.02f;
+    min_x -= margin_x;
+    min_y -= margin_y;
+    max_x += margin_x;
+    max_y += margin_y;
+
+    // === Phase 3: Update view state bounds and reset zoom/pan ===
+    auto const & vs = _state->viewState();
+    bool const bounds_changed = (vs.x_min != static_cast<double>(min_x)) ||
+                                (vs.x_max != static_cast<double>(max_x)) ||
+                                (vs.y_min != static_cast<double>(min_y)) ||
+                                (vs.y_max != static_cast<double>(max_y));
+    _state->setXBounds(static_cast<double>(min_x), static_cast<double>(max_x));
+    _state->setYBounds(static_cast<double>(min_y), static_cast<double>(max_y));
+    if (bounds_changed) {
+        // Reset zoom/pan so the view fits the new data extent
+        _state->setXZoom(1.0);
+        _state->setYZoom(1.0);
+        _state->setPan(0.0, 0.0);
+    }
+
+    // === Phase 4: Build SceneBuilder for points only ===
+    // Lines are rendered exclusively via BatchLineRenderer (avoids double-rendering)
+    CorePlotting::SceneBuilder builder;
+    builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
+    
+    float const point_size = _state->getPointSize();
+
+    for (auto const & pb : point_batches) {
         CorePlotting::GlyphStyle style;
         style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
         style.size = point_size;
         style.color = glm::vec4{0.2f, 0.4f, 0.8f, 1.0f}; // Blue points
         
-        builder.addGlyphs("points_" + key, mapped_points, style);
+        builder.addGlyphs("points_" + pb.key, pb.mapped, style);
     }
 
-    // === Render all line data keys ===
-    for (auto const & key_qstr : line_keys) {
-        std::string const key = key_qstr.toStdString();
-        auto line_data = _data_manager->getData<LineData>(key);
-        if (!line_data) {
-            continue;
-        }
-
-        // Map all lines across all time frames
-        auto mapped_lines = CorePlotting::SpatialMapper::mapAllLines(*line_data);
-        if (mapped_lines.empty()) {
-            continue;
-        }
-
-        // Use SceneBuilder's range-based API to add polylines
-        CorePlotting::PolyLineStyle style;
-        style.thickness = line_width;
-        style.color = glm::vec4{0.8f, 0.2f, 0.2f, 1.0f}; // Red lines
-        
-        builder.addPolyLines("lines_" + key, mapped_lines, style);
-    }
-
-    // Build scene from SceneBuilder and upload to renderer
+    // Build scene and apply selection highlighting to glyph colors
     _scene = builder.build();
+
+    if (!_selected_entity_ids.empty()) {
+        for (auto & glyph_batch : _scene.glyph_batches) {
+            for (size_t i = 0; i < glyph_batch.entity_ids.size(); ++i) {
+                if (_selected_entity_ids.count(glyph_batch.entity_ids[i])) {
+                    glyph_batch.colors[i] = glm::vec4{1.0f, 0.8f, 0.0f, 1.0f}; // Yellow
+                }
+            }
+        }
+    }
+
     _scene_renderer.uploadScene(_scene);
 
-    // === Build LineBatchData for selectable lines ===
-    // Aggregate all line data keys into a single batch for selection
+    // === Phase 5: Build LineBatchData for BatchLineRenderer (selectable lines) ===
+    // Lines are ONLY rendered via BatchLineRenderer — no SceneBuilder polylines
     CorePlotting::LineBatchData batch;
     batch.canvas_width = static_cast<float>(_widget_width);
     batch.canvas_height = static_cast<float>(_widget_height);
@@ -386,7 +448,6 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
             continue;
         }
 
-        // Build batch from this LineData
         auto key_batch = CorePlotting::buildLineBatchFromLineData(
             *line_data,
             static_cast<float>(_widget_width),
@@ -399,12 +460,10 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
         batch.segments.insert(batch.segments.end(),
                              key_batch.segments.begin(), key_batch.segments.end());
 
-        // Adjust line_ids to be globally unique across all keys
         for (auto lid : key_batch.line_ids) {
             batch.line_ids.push_back(lid + offset_line_id);
         }
 
-        // Adjust LineInfo::first_segment to reflect offset
         for (auto info : key_batch.lines) {
             info.first_segment += offset_segment;
             batch.lines.push_back(info);
@@ -479,7 +538,16 @@ void TemporalProjectionOpenGLWidget::keyReleaseEvent(QKeyEvent * event)
 void TemporalProjectionOpenGLWidget::clearSelection()
 {
     _selected_entity_ids.clear();
-    _scene_dirty = true;
+
+    // Clear line selection mask (cheap GPU update)
+    auto const & batch = _line_store.cpuData();
+    if (batch.numLines() > 0) {
+        std::vector<std::uint32_t> mask(batch.numLines(), 0);
+        _line_store.updateSelectionMask(mask);
+        _line_renderer.syncFromStore();
+    }
+
+    _scene_dirty = true;  // Need rebuild for point color reset
     update();
     emit entitiesSelected(_selected_entity_ids);
 }
@@ -584,8 +652,13 @@ void TemporalProjectionOpenGLWidget::cancelLineSelection()
 CorePlotting::Interaction::GlyphPreview
 TemporalProjectionOpenGLWidget::buildSelectionPreview() const
 {
-    return WhiskerToolbox::Plots::buildLineSelectionPreview(
+    auto preview = WhiskerToolbox::Plots::buildLineSelectionPreview(
         _selection_start_screen, _selection_end_screen, _selection_remove_mode);
+    // Override stroke color: light background needs dark line (not white)
+    if (!_selection_remove_mode) {
+        preview.stroke_color = glm::vec4{0.0f, 0.0f, 0.0f, 0.9f}; // Black
+    }
+    return preview;
 }
 
 
@@ -598,7 +671,6 @@ void TemporalProjectionOpenGLWidget::applyLineIntersectionResults(
     }
 
     // Extract EntityIDs from the intersected lines
-    // The LineBatchData stores entity_ids per line
     auto const & batch = _line_store.cpuData();
     
     for (auto const line_idx : hit_indices) {
@@ -613,6 +685,15 @@ void TemporalProjectionOpenGLWidget::applyLineIntersectionResults(
         }
     }
     
-    _scene_dirty = true;
+    // Update selection mask on the store (cheap GPU-only update, no full rebuild)
+    std::vector<std::uint32_t> mask(batch.numLines(), 0);
+    for (std::uint32_t i = 0; i < batch.numLines(); ++i) {
+        if (_selected_entity_ids.count(batch.lines[i].entity_id)) {
+            mask[i] = 1;
+        }
+    }
+    _line_store.updateSelectionMask(mask);
+    _line_renderer.syncFromStore();
+
     emit entitiesSelected(_selected_entity_ids);
 }
