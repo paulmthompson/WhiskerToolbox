@@ -75,12 +75,6 @@ public:
         return _vertical_axis_state.get();
     }
 
-    // === Legacy accessors (delegate to axis states) ===
-    [[nodiscard]] double getXMin() const;
-    [[nodiscard]] double getXMax() const;
-    [[nodiscard]] double getYMin() const;
-    [[nodiscard]] double getYMax() const;
-
     // === View state (zoom / pan / bounds) ===
     /** @brief Get the current view state (bounds + zoom + pan). */
     [[nodiscard]] CorePlotting::ViewStateData const & viewState() const

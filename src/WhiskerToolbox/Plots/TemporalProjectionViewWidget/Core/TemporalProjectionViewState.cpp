@@ -54,26 +54,6 @@ void TemporalProjectionViewState::setDisplayName(QString const & name)
     }
 }
 
-double TemporalProjectionViewState::getXMin() const
-{
-    return _horizontal_axis_state->getXMin();
-}
-
-double TemporalProjectionViewState::getXMax() const
-{
-    return _horizontal_axis_state->getXMax();
-}
-
-double TemporalProjectionViewState::getYMin() const
-{
-    return _vertical_axis_state->getYMin();
-}
-
-double TemporalProjectionViewState::getYMax() const
-{
-    return _vertical_axis_state->getYMax();
-}
-
 void TemporalProjectionViewState::setXZoom(double zoom)
 {
     if (_data.view_state.x_zoom != zoom) {
