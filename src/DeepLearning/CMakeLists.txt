@@ -49,6 +49,9 @@ set(DEEP_LEARNING_SOURCES
     models_v2/ModelBase.hpp
     models_v2/ModelExecution.hpp
     models_v2/ModelExecution.cpp
+
+    registry/ModelRegistry.hpp
+    registry/ModelRegistry.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
