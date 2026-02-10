@@ -16,6 +16,7 @@ find_package(glm CONFIG REQUIRED)
 
 # Create CorePlotting test executable
 add_executable(test_coreplotting
+    AxisMapping.test.cpp
     TimeSeriesViewState.test.cpp
     TimeAxisCoordinates.test.cpp
     SeriesCoordinateQuery.test.cpp
@@ -25,9 +26,20 @@ add_executable(test_coreplotting
     TimeFrameAdapters.test.cpp
     HitTestResult.test.cpp
     SceneHitTester.test.cpp
+    SceneBuilder.test.cpp
     Mappers.test.cpp
+    SpatialMapper_AllTimes.test.cpp
+    SpatialMapper_Window.test.cpp
+    MaskContourMapper.test.cpp
+    AlphaCurve.test.cpp
+    HistogramMapper.test.cpp
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp
+    ViewStateData.test.cpp
+    # LineBatch
+    LineBatch/LineBatchData.test.cpp
+    LineBatch/CpuLineBatchIntersector.test.cpp
+    LineBatch/LineBatchBuilder.test.cpp
 )
 
 target_link_libraries(test_coreplotting PRIVATE 

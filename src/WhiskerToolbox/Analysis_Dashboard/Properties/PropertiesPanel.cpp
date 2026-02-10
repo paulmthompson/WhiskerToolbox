@@ -1,8 +1,8 @@
 #include "PropertiesPanel.hpp"
 #include "AbstractPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
-#include "Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
-#include "Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp"
+//#include "Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
+//#include "Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
 #include "GlobalPropertiesWidget.hpp"
 #include "ui_PropertiesPanel.h"
@@ -159,14 +159,14 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
     qDebug() << "PropertiesPanel: Registered properties widget for 'Spatial Overlay Plot'";
 
     // Event Plot
-    EventPlotPropertiesWidget * event_properties = new EventPlotPropertiesWidget(this);
-    registerPlotPropertiesWidget("Event Plot", event_properties);
-    qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
+   // EventPlotPropertiesWidget * event_properties = new EventPlotPropertiesWidget(this);
+   // registerPlotPropertiesWidget("Event Plot", event_properties);
+   // qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
 
     // Scatter Plot
-    ScatterPlotPropertiesWidget * scatter_properties = new ScatterPlotPropertiesWidget(this);
-    registerPlotPropertiesWidget("Scatter Plot", scatter_properties);
-    qDebug() << "PropertiesPanel: Registered properties widget for 'Scatter Plot'";
+  //  ScatterPlotPropertiesWidget * scatter_properties = new ScatterPlotPropertiesWidget(this);
+  //  registerPlotPropertiesWidget("Scatter Plot", scatter_properties);
+   // qDebug() << "PropertiesPanel: Registered properties widget for 'Scatter Plot'";
 }
 
 AbstractPlotPropertiesWidget * PropertiesPanel::getPropertiesWidgetForPlotType(QString const & plot_type) {

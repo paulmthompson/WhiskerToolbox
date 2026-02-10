@@ -13,7 +13,8 @@ set(ZONE_MANAGER_SOURCES
     ZoneManagerWidgetRegistration.cpp
     EditorCreationController.hpp
     EditorCreationController.cpp
-    
+    SplitButtonHandler.hpp
+    SplitButtonHandler.cpp
 )
 
 add_library(ZoneManager STATIC

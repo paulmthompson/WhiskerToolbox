@@ -1859,7 +1859,16 @@ ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeli
 
         // Return projection function that applies all transforms and extracts Value
         return [chain = std::move(chain)](InElement const & input) -> Value {
-            ElementVariant current{input};
+            // Convert input to ElementVariant. If InElement is directly in the variant, use it.
+            // Otherwise, extract .time() for types like EventWithId that have a TimeFrameIndex member.
+            ElementVariant current = [&]() -> ElementVariant {
+                if constexpr (std::is_constructible_v<ElementVariant, InElement>) {
+                    return ElementVariant{input};
+                } else {
+                    // For types like EventWithId, extract the time member
+                    return ElementVariant{input.time()};
+                }
+            }();
             for (auto const & fn: chain) {
                 current = fn(current);
             }

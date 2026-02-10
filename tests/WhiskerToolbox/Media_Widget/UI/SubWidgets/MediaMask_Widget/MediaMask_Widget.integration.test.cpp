@@ -170,6 +170,27 @@ void simulateBrushStroke(MediaMask_Widget * mask_widget,
     QMetaObject::invokeMethod(mask_widget, "_mouseReleased", Qt::DirectConnection);
 }
 
+/**
+ * @brief Simulate an erase stroke on a MediaMask_Widget (right-click)
+ */
+void simulateEraseStroke(MediaMask_Widget * mask_widget, 
+                          std::vector<CanvasCoordinates> const & points) {
+    if (points.empty()) return;
+
+    // First point is a right-click (erase)
+    QMetaObject::invokeMethod(mask_widget, "_rightClickedInVideo", Qt::DirectConnection,
+                              Q_ARG(CanvasCoordinates, points[0]));
+
+    // Subsequent points are moves (while dragging)
+    for (size_t i = 1; i < points.size(); ++i) {
+        QMetaObject::invokeMethod(mask_widget, "_mouseMoveInVideo", Qt::DirectConnection,
+                                  Q_ARG(CanvasCoordinates, points[i]));
+    }
+
+    // Release
+    QMetaObject::invokeMethod(mask_widget, "_mouseReleased", Qt::DirectConnection);
+}
+
 }  // namespace
 
 // ============================================================================
@@ -516,4 +537,163 @@ TEST_CASE("Full integration: EditorRegistry creation with mask editing at non-ze
     auto const & masks_at_0 = mask_data->getAtTime(frame0_idx);
     INFO("Frame 0 should remain empty - this was the original bug");
     REQUIRE(masks_at_0.empty());
+}
+
+TEST_CASE("Mask pixels can be erased using right-click",
+          "[MediaMask_Widget][Mask][Erase][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<CanvasCoordinates>("CanvasCoordinates");
+
+    constexpr int kNumFrames = 100;
+    constexpr int kTargetFrame = 50;
+
+    auto data_manager = createDataManagerWithMask("test_mask", kNumFrames, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+
+    // Set the current position to the target frame
+    TimePosition position(TimeFrameIndex{kTargetFrame}, time_frame);
+    state->current_position = position;
+    REQUIRE(state->current_position.isValid());
+    REQUIRE(state->current_position.index.getValue() == kTargetFrame);
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.resize(900, 700);
+        props_widget.show();
+        app->processEvents();
+
+        auto mask_widget = selectMaskFeature(props_widget, "test_mask", app);
+        REQUIRE(mask_widget != nullptr);
+
+        enableBrushMode(mask_widget, app);
+
+        // First, add some mask pixels using left-click (add mode)
+        simulateBrushStroke(mask_widget, {
+            {200.0f, 200.0f},
+            {210.0f, 200.0f},
+            {220.0f, 200.0f},
+            {200.0f, 210.0f},
+            {210.0f, 210.0f},
+            {220.0f, 210.0f}
+        });
+        app->processEvents();
+
+        // Verify mask was added
+        auto mask_data = data_manager->getData<MaskData>("test_mask");
+        REQUIRE(mask_data != nullptr);
+
+        auto target_idx = TimeIndexAndFrame(TimeFrameIndex{kTargetFrame}, time_frame.get());
+        auto const & masks_at_target = mask_data->getAtTime(target_idx);
+        REQUIRE_FALSE(masks_at_target.empty());
+        REQUIRE_FALSE(masks_at_target[0].empty());
+        
+        // Record the initial pixel count
+        size_t initial_pixel_count = masks_at_target[0].size();
+        REQUIRE(initial_pixel_count > 0);
+
+        // Now erase some pixels using right-click (erase mode)
+        // Erase in the middle of the added region
+        simulateEraseStroke(mask_widget, {
+            {210.0f, 205.0f},
+            {215.0f, 205.0f}
+        });
+        app->processEvents();
+
+        // Verify pixels were erased
+        auto const & masks_after_erase = mask_data->getAtTime(target_idx);
+        REQUIRE_FALSE(masks_after_erase.empty());
+        
+        // The mask should still exist but with fewer pixels
+        size_t final_pixel_count = masks_after_erase[0].size();
+        REQUIRE(final_pixel_count < initial_pixel_count);
+        INFO("Initial pixels: " << initial_pixel_count << ", After erase: " << final_pixel_count);
+    }
+}
+
+TEST_CASE("Erasing mask pixels works at correct time frame",
+          "[MediaMask_Widget][Mask][Erase][Time][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<CanvasCoordinates>("CanvasCoordinates");
+
+    constexpr int kNumFrames = 100;
+    constexpr int kFrame1 = 30;
+    constexpr int kFrame2 = 70;
+
+    auto data_manager = createDataManagerWithMask("test_mask", kNumFrames, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.resize(900, 700);
+        props_widget.show();
+        app->processEvents();
+
+        auto mask_widget = selectMaskFeature(props_widget, "test_mask", app);
+        REQUIRE(mask_widget != nullptr);
+
+        enableBrushMode(mask_widget, app);
+
+        // Add mask at frame 30
+        state->current_position = TimePosition(TimeFrameIndex{kFrame1}, time_frame);
+        simulateBrushStroke(mask_widget, {
+            {100.0f, 100.0f},
+            {110.0f, 100.0f},
+            {100.0f, 110.0f}
+        });
+        app->processEvents();
+
+        // Add mask at frame 70
+        state->current_position = TimePosition(TimeFrameIndex{kFrame2}, time_frame);
+        simulateBrushStroke(mask_widget, {
+            {300.0f, 300.0f},
+            {310.0f, 300.0f},
+            {300.0f, 310.0f}
+        });
+        app->processEvents();
+
+        auto mask_data = data_manager->getData<MaskData>("test_mask");
+        REQUIRE(mask_data != nullptr);
+
+        // Verify both frames have masks
+        auto frame1_idx = TimeIndexAndFrame(TimeFrameIndex{kFrame1}, time_frame.get());
+        auto frame2_idx = TimeIndexAndFrame(TimeFrameIndex{kFrame2}, time_frame.get());
+        
+        auto const & masks_at_frame1 = mask_data->getAtTime(frame1_idx);
+        auto const & masks_at_frame2 = mask_data->getAtTime(frame2_idx);
+        
+        REQUIRE_FALSE(masks_at_frame1.empty());
+        REQUIRE_FALSE(masks_at_frame2.empty());
+        
+        size_t frame1_initial_count = masks_at_frame1[0].size();
+        size_t frame2_initial_count = masks_at_frame2[0].size();
+
+        // Erase from frame 30 only
+        state->current_position = TimePosition(TimeFrameIndex{kFrame1}, time_frame);
+        simulateEraseStroke(mask_widget, {
+            {105.0f, 105.0f}
+        });
+        app->processEvents();
+
+        // Verify frame 30 has fewer pixels, frame 70 is unchanged
+        auto const & masks_at_frame1_after = mask_data->getAtTime(frame1_idx);
+        auto const & masks_at_frame2_after = mask_data->getAtTime(frame2_idx);
+        
+        REQUIRE_FALSE(masks_at_frame1_after.empty());
+        REQUIRE_FALSE(masks_at_frame2_after.empty());
+        
+        REQUIRE(masks_at_frame1_after[0].size() < frame1_initial_count);
+        REQUIRE(masks_at_frame2_after[0].size() == frame2_initial_count);
+    }
 }

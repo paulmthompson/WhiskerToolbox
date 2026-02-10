@@ -3,6 +3,7 @@
 
 #include "CoreGeometry/boundingbox.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -51,7 +52,9 @@ public:
      * @param x X coordinate
      * @param y Y coordinate
      * @param data Associated data
-     * @return True if successfully inserted, false otherwise
+     * @return True if successfully inserted
+     * @pre Point (x, y) must be within the quadtree bounds. Inserting out-of-bounds
+     *      points is a logic error and will trigger an assertion failure.
      */
     bool insert(float x, float y, T data);
 
@@ -167,6 +170,10 @@ QuadTree<T> & QuadTree<T>::operator=(QuadTree && other) noexcept {
 
 template<typename T>
 bool QuadTree<T>::insert(float x, float y, T data) {
+    // Out-of-bounds insertion is a logic error - the caller must ensure
+    // coordinates are within bounds. The QuadTree is unit-agnostic; it's
+    // the caller's responsibility to use consistent coordinate systems.
+    assert(_bounds.contains(x, y) && "QuadTree::insert: point outside bounds - check coordinate system");
     if (!_bounds.contains(x, y)) {
         return false;
     }

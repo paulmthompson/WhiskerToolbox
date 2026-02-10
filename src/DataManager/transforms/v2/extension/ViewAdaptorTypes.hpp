@@ -172,17 +172,41 @@ using ReducerFn = std::function<Scalar(std::span<InElement const>)>;
 using ErasedReducerFn = std::function<std::any(std::any const &)>;
 
 /**
- * @brief Factory that creates a reducer from TrialContext
+ * @brief Factory that creates a reducer from TrialContext (legacy)
  *
  * Used when the pipeline contains context-aware transforms.
+ * For new code, prefer ReducerFactoryV2 with PipelineValueStore.
  */
 template<typename InElement, typename Scalar>
 using ReducerFactory = std::function<ReducerFn<InElement, Scalar>(TrialContext const &)>;
 
 /**
- * @brief Type-erased reducer factory
+ * @brief Type-erased reducer factory (legacy)
  */
 using ErasedReducerFactory = std::function<ErasedReducerFn(TrialContext const &)>;
+
+// Forward declaration for V2 types
+class PipelineValueStore;
+
+/**
+ * @brief Factory that creates a reducer from PipelineValueStore (V2 pattern)
+ *
+ * This is the V2 replacement for ReducerFactory that uses the generic
+ * PipelineValueStore instead of specialized TrialContext.
+ *
+ * @tparam InElement Input element type
+ * @tparam Scalar Output scalar type
+ *
+ * @see GatherResult::reduceV2() for usage
+ * @see PipelineValueStore for store documentation
+ */
+template<typename InElement, typename Scalar>
+using ReducerFactoryV2 = std::function<ReducerFn<InElement, Scalar>(PipelineValueStore const &)>;
+
+/**
+ * @brief Type-erased reducer factory (V2 pattern)
+ */
+using ErasedReducerFactoryV2 = std::function<ErasedReducerFn(PipelineValueStore const &)>;
 
 // ============================================================================
 // Concepts for View Adaptors

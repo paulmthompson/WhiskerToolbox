@@ -61,6 +61,20 @@
     <addaction name="actionZoom_In"/>
     <addaction name="actionZoom_Out"/>
    </widget>
+   <widget class="QMenu" name="menuPlots">
+    <property name="title">
+     <string>Plots</string>
+    </property>
+    <addaction name="actionEvent_Plot"/>
+    <addaction name="actionACF_Plot"/>
+    <addaction name="actionPSTH_Plot"/>
+    <addaction name="actionLine_Plot"/>
+    <addaction name="actionHeatmap_Plot"/>
+    <addaction name="actionTemporal_Projection_View"/>
+    <addaction name="actionScatter_Plot"/>
+    <addaction name="action3D_Plot"/>
+    <addaction name="actionOnion_Skin_View"/>
+   </widget>
    <widget class="QMenu" name="menuModules">
     <property name="title">
      <string>Modules</string>
@@ -86,6 +100,7 @@
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuImage"/>
+   <addaction name="menuPlots"/>
    <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -242,6 +257,51 @@
   <action name="actionData_Inspector">
    <property name="text">
     <string>Data Inspector</string>
+   </property>
+  </action>
+  <action name="actionEvent_Plot">
+   <property name="text">
+    <string>Event Plot</string>
+   </property>
+  </action>
+  <action name="actionACF_Plot">
+   <property name="text">
+    <string>Autocorrelation Function</string>
+   </property>
+  </action>
+  <action name="actionLine_Plot">
+   <property name="text">
+    <string>Line Plot</string>
+   </property>
+  </action>
+  <action name="actionPSTH_Plot">
+   <property name="text">
+    <string>PSTH Plot</string>
+   </property>
+  </action>
+  <action name="actionHeatmap_Plot">
+   <property name="text">
+    <string>Heatmap Plot</string>
+   </property>
+  </action>
+  <action name="actionTemporal_Projection_View">
+   <property name="text">
+    <string>Temporal Projection View</string>
+   </property>
+  </action>
+  <action name="actionScatter_Plot">
+   <property name="text">
+    <string>Scatter Plot</string>
+   </property>
+  </action>
+  <action name="action3D_Plot">
+   <property name="text">
+    <string>3D Plot</string>
+   </property>
+  </action>
+  <action name="actionOnion_Skin_View">
+   <property name="text">
+    <string>Onion Skin View</string>
    </property>
   </action>
  </widget>

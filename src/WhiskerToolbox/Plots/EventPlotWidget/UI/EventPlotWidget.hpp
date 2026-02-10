@@ -1,0 +1,151 @@
+#ifndef EVENT_PLOT_WIDGET_HPP
+#define EVENT_PLOT_WIDGET_HPP
+
+/**
+ * @file EventPlotWidget.hpp
+ * @brief Main widget for displaying event raster plots
+ * 
+ * EventPlotWidget displays neuroscience-style raster plots showing events
+ * across multiple channels or trials.
+ */
+
+#include "DataManager/DataManagerFwd.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
+#include <QWidget>
+
+#include <memory>
+#include <utility>
+
+class DataManager;
+class RelativeTimeAxisWidget;
+class RelativeTimeAxisRangeControls;
+class VerticalAxisWidget;
+class VerticalAxisRangeControls;
+class VerticalAxisState;
+class EventPlotOpenGLWidget;
+class EventPlotState;
+
+namespace Ui {
+class EventPlotWidget;
+}
+
+/**
+ * @brief Main widget for event raster plot visualization
+ */
+class EventPlotWidget : public QWidget {
+    Q_OBJECT
+
+public:
+    /**
+     * @brief Construct an EventPlotWidget
+     * @param data_manager Shared DataManager for data access
+     * @param parent Parent widget
+     */
+    EventPlotWidget(std::shared_ptr<DataManager> data_manager,
+                    QWidget * parent = nullptr);
+
+    ~EventPlotWidget() override;
+
+    /**
+     * @brief Set the EventPlotState for this widget
+     * 
+     * The state manages all serializable settings. This widget shares
+     * the state with the properties widget.
+     * 
+     * @param state Shared pointer to the state object
+     */
+    void setState(std::shared_ptr<EventPlotState> state);
+
+    /**
+     * @brief Get the current EventPlotState (const)
+     * @return Shared pointer to the state object
+     */
+    [[nodiscard]] std::shared_ptr<EventPlotState> state() const { return _state; }
+
+    /**
+     * @brief Get mutable state access
+     * @return Raw pointer to state for modification
+     */
+    [[nodiscard]] EventPlotState * state();
+
+    /**
+     * @brief Get the range controls widget (for placement in properties panel)
+     * @return Pointer to the range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] RelativeTimeAxisRangeControls * getRangeControls() const;
+
+
+    /**
+     * @brief Get the vertical axis range controls widget (for placement in properties panel)
+     * @return Pointer to the vertical axis range controls widget, or nullptr if not created
+     */
+    [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;
+
+    /**
+     * @brief Get the vertical axis state (for external updates)
+     * @return Pointer to the vertical axis state
+     */
+    [[nodiscard]] VerticalAxisState * getVerticalAxisState() const;
+
+signals:
+    /**
+     * @brief Emitted when a time position is selected in the view
+     * @param position TimePosition to navigate to
+     */
+    void timePositionSelected(TimePosition position);
+
+    /**
+     * @brief Emitted when user single-clicks on an event to select it
+     * @param trial_index The trial (row) index of the selected event
+     * @param relative_time_ms The time relative to alignment in ms
+     * @param series_key The key of the event series containing the event
+     */
+    void eventSelected(int trial_index, float relative_time_ms, QString const & series_key);
+
+protected:
+    void resizeEvent(QResizeEvent * event) override;
+
+private:
+    // -- setState decomposition --
+    void createTimeAxisIfNeeded();
+    void wireTimeAxis();
+    void wireVerticalAxis();
+    void connectViewChangeSignals();
+    void syncTimeAxisRange();
+    void syncVerticalAxisRange();
+
+    // -- Visible range helpers (deduplicate zoom/pan → domain math) --
+    [[nodiscard]] std::pair<double, double> computeVisibleTrialRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleTimeRange() const;
+
+    std::shared_ptr<DataManager> _data_manager;
+    Ui::EventPlotWidget * ui;
+
+    /// Serializable state shared with properties widget
+    std::shared_ptr<EventPlotState> _state;
+
+    /// OpenGL rendering widget
+    EventPlotOpenGLWidget * _opengl_widget;
+
+    /// Time axis widget below the plot
+    RelativeTimeAxisWidget * _axis_widget;
+
+    /// Range controls widget (can be placed in properties panel)
+    RelativeTimeAxisRangeControls * _range_controls;
+
+    /// Vertical axis widget on the left side
+    VerticalAxisWidget * _vertical_axis_widget;
+
+    /// Vertical axis range controls widget (can be placed in properties panel)
+    VerticalAxisRangeControls * _vertical_range_controls;
+
+    /// Vertical axis state for coordinating axis and controls
+    /// Note: This is not serialized in EventPlotState since Y-axis is trial-based
+    std::unique_ptr<VerticalAxisState> _vertical_axis_state;
+
+    /// Cached trial count for vertical axis range calculation
+    size_t _trial_count = 0;
+};
+
+#endif// EVENT_PLOT_WIDGET_HPP

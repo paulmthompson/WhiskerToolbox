@@ -27,7 +27,7 @@ add_executable(test_data_manager
         utils/TimeSeriesConcepts.test.cpp
         utils/TimeSeriesFilters.test.cpp
         utils/GatherResult.test.cpp
-        utils/GatherResult_Pipeline.test.cpp
+        utils/GatherResult_ValueStore.test.cpp
 
         test_filename_timeframe.cpp
         test_tableview.cpp

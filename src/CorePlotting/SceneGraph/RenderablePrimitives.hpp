@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 
 #include <cstdint>
+#include <unordered_map>
 #include <memory>
 #include <optional>
 #include <unordered_set>
@@ -128,6 +129,10 @@ struct RenderableScene {
     // Built alongside geometry to ensure synchronization
     // Uses same world-space coordinates as Model matrices
     std::unique_ptr<QuadTree<EntityId>> spatial_index;
+
+    // Mapping from EntityId to series_key for hit test result enrichment
+    // Populated by SceneBuilder::addGlyphs/addRectangles during scene construction
+    std::unordered_map<EntityId, std::string> entity_to_series_key;
 
     // Selection state (queryable from the scene)
     // EntityIds of currently selected elements

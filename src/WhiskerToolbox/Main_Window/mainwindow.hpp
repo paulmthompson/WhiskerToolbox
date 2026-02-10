@@ -16,6 +16,7 @@ class EditorCreationController;
 class EditorRegistry;
 class GroupManager;
 class GroupManagementWidget;
+class SplitButtonHandler;
 class TimeScrollBar;
 class TimeScrollBarState;
 class ZoneManager;
@@ -99,6 +100,7 @@ private:
     std::unique_ptr<EditorCreationController> _editor_creation_controller;
 
     std::unique_ptr<GroupManager> _group_manager;
+    std::unique_ptr<SplitButtonHandler> _split_button_handler;
 
     // Main widgets created programmatically (not in UI file)
     TimeScrollBar * _time_scrollbar;
@@ -152,5 +154,14 @@ private slots:
     void openTableDesignerWidget();
     void openZoneLayoutManager();
     void openDataInspector();
+    void openEventPlotWidget();
+    void openACFPlotWidget();
+    void openPSTHPlotWidget();
+    void openLinePlotWidget();
+    void openHeatmapPlotWidget();
+    void openTemporalProjectionViewWidget();
+    void openScatterPlotWidget();
+    void open3DPlotWidget();
+    void openOnionSkinViewWidget();
 };
 #endif// MAINWINDOW_HPP

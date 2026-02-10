@@ -44,6 +44,9 @@ protected:
 
 int main(int argc, char *argv[])
 {
+    // https://githubuser0xffff.github.io/Qt-Advanced-Docking-System/doc/user-guide.html#opengl--ads
+    QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+
     // Explicitly trigger HDF5Explorer registration (static lib needs explicit reference)
 #ifdef ENABLE_HDF5
     HDF5ExplorerRegistration::registerHDF5Explorer();

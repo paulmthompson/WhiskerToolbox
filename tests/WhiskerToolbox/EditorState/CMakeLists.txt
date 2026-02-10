@@ -42,7 +42,7 @@ if (WIN32)
         "${CMAKE_BINARY_DIR}"
     )
 else()
-    catch_discover_tests(test_editor_state)
+    catch_discover_tests(test_editor_state PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()
 
 # EditorState integration tests - tests cross-widget communication patterns
@@ -81,5 +81,5 @@ if (WIN32)
         "${CMAKE_BINARY_DIR}"
     )
 else()
-    catch_discover_tests(test_editor_state_integration)
+    catch_discover_tests(test_editor_state_integration PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
 endif()

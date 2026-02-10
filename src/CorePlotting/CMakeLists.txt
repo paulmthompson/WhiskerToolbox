@@ -9,10 +9,17 @@ set(COREPLOTTING_SOURCES
     Mappers/TimeSeriesMapper.hpp
     Mappers/TimeSeriesMapper.cpp
     Mappers/SpatialMapper.hpp
+    Mappers/SpatialMapper_AllTimes.hpp
+    Mappers/SpatialMapper_Window.hpp
+    Mappers/MaskContourMapper.hpp
     Mappers/RasterMapper.hpp
+    Mappers/HistogramMapper.hpp
+    Mappers/HistogramMapper.cpp
     # DataTypes (style, cache - used by widgets)
     DataTypes/SeriesStyle.hpp
     DataTypes/SeriesDataCache.hpp
+    DataTypes/HistogramData.hpp
+    DataTypes/AlphaCurve.hpp
     # SceneGraph
     SceneGraph/RenderablePrimitives.hpp
     SceneGraph/RenderablePrimitives.cpp
@@ -21,8 +28,11 @@ set(COREPLOTTING_SOURCES
     # CoordinateTransform
     CoordinateTransform/InverseTransform.cpp 
     CoordinateTransform/InverseTransform.hpp
+    CoordinateTransform/AxisMapping.hpp
+    CoordinateTransform/AxisMapping.cpp
     CoordinateTransform/ViewState.hpp
     CoordinateTransform/ViewState.cpp
+    CoordinateTransform/ViewStateData.hpp
     CoordinateTransform/TimeRange.hpp
     CoordinateTransform/TimeAxisCoordinates.hpp
     CoordinateTransform/TimeAxisCoordinates.cpp
@@ -63,6 +73,14 @@ set(COREPLOTTING_SOURCES
     # Export
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp
+    # LineBatch (batch line rendering & selection)
+    LineBatch/LineBatchData.hpp
+    LineBatch/LineBatchData.cpp
+    LineBatch/ILineBatchIntersector.hpp
+    LineBatch/CpuLineBatchIntersector.hpp
+    LineBatch/CpuLineBatchIntersector.cpp
+    LineBatch/LineBatchBuilder.hpp
+    LineBatch/LineBatchBuilder.cpp
 )
 
 add_library(CorePlotting STATIC ${COREPLOTTING_SOURCES}

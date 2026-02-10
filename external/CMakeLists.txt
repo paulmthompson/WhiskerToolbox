@@ -157,40 +157,69 @@ FetchContent_Declare(
 )
 
 set(CUDA OFF)
+#[[
+#Torch Stable URLs cpu
+https://https://download.pytorch.org/libtorch/cpu
 
+Cuda 12.6
+https://download.pytorch.org/libtorch/cu126
+
+]]
 if (LINUX)
     if (CUDA)
         message(STATUS "Fetching libtorch with CUDA")
         FetchContent_Declare(
             Torch
-            URL https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcu121.zip
+           # URL https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcu121.zip
+           URL https://download.pytorch.org/libtorch/cu126/libtorch-shared-with-deps-2.9.0%2Bcu126.zip
         )
     else()
         FetchContent_Declare(
             Torch
-            URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcpu.zip
-        )
+          #  URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcpu.zip
+            URL https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.9.0%2Bcpu.zip
+          )
     endif()
 elseif (APPLE)
     FetchContent_Declare(
         Torch
-        URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.5.1.zip
+       # URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.5.1.zip
+       URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.9.0.zip
     )
 elseif (WIN32)
     if (CUDA)
         FetchContent_Declare(
             Torch
-            URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
+            #URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
+            URL https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-2.9.0%2Bcu126.zip
         )
     else()
         FetchContent_Declare(
             Torch
-            URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.5.1%2Bcpu.zip
+          #  URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.5.1%2Bcpu.zip
+          URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.9.0%2Bcpu.zip
         )
     endif()
 endif()
 
-#We should use make available
+#[[
+FetchContent_Declare(
+    executorch
+    GIT_REPOSITORY https://github.com/pytorch/executorch.git
+    GIT_TAG v1.0.1
+    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/executorch # https://github.com/pytorch/executorch/issues/6475
+)
+
+set(EXECUTORCH_BUILD_PRESET_FILE ${CMAKE_BINARY_DIR}/external/_deps/executorch/tools/cmake/preset/linux.cmake)
+set(EXECUTORCH_BUILD_PORTABLE_OPS OFF)
+set(EXECUTORCH_BUILD_EXECUTOR_RUNNER OFF)
+]]#
+#[[
+#v1.1.0 = torch 2.11.0
+#v1.0.1 = torch 2.9.0 november 20, 2025
+#v1.0.0 = torch 2.9.0 October 17, 2025
+#v0.7.0 = torch 2.8.0 August 11, 2025
+]]
 
 set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir")
 

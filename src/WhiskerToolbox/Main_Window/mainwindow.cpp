@@ -13,6 +13,7 @@
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
+#include "DockWidget.h"
 #include "EditorCreationController.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -21,6 +22,7 @@
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/DisplayOptionsRegistry.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
+#include "SplitButtonHandler.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
 
@@ -36,6 +38,18 @@
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
+
+#include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
+#include "Plots/ACFWidget/ACFWidgetRegistration.hpp"
+#include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
+#include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
+#include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
+#include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
+#include "Plots/OnionSkinViewWidget/OnionSkinViewWidgetRegistration.hpp"
+#include "Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp"
+#include "Plots/SpectrogramWidget/SpectrogramWidgetRegistration.hpp"
+#include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
+
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -107,6 +121,22 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Create ZoneManager to manage standard UI zones
     _zone_manager = std::make_unique<ZoneManager>(_m_DockManager, this);
+
+    // Create SplitButtonHandler to add split buttons to dock area title bars
+    // This enables VS Code-like editor splitting functionality
+    _split_button_handler = std::make_unique<SplitButtonHandler>(_m_DockManager, this);
+    
+    // Connect split button signals (split implementation will be added later)
+    connect(_split_button_handler.get(), &SplitButtonHandler::splitDockWidgetRequested,
+            this, [this](ads::CDockWidget * dock_widget, SplitButtonHandler::SplitDirection direction) {
+                // TODO: Implement split functionality
+                // For now, just log the request
+                std::cout << "Split requested for dock widget: " 
+                          << dock_widget->objectName().toStdString()
+                          << " direction: " 
+                          << (direction == SplitButtonHandler::SplitDirection::Horizontal ? "horizontal" : "vertical")
+                          << std::endl;
+            });
 
     // Create EditorCreationController to handle unified editor creation and zone placement
     _editor_creation_controller = std::make_unique<EditorCreationController>(
@@ -273,7 +303,15 @@ void MainWindow::_createActions() {
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
     connect(ui->actionData_Import, &QAction::triggered, this, &MainWindow::openDataImport);
-
+    connect(ui->actionEvent_Plot, &QAction::triggered, this, &MainWindow::openEventPlotWidget);
+    connect(ui->actionACF_Plot, &QAction::triggered, this, &MainWindow::openACFPlotWidget);
+    connect(ui->actionPSTH_Plot, &QAction::triggered, this, &MainWindow::openPSTHPlotWidget);
+    connect(ui->actionLine_Plot, &QAction::triggered, this, &MainWindow::openLinePlotWidget);
+    connect(ui->actionHeatmap_Plot, &QAction::triggered, this, &MainWindow::openHeatmapPlotWidget);
+    connect(ui->actionTemporal_Projection_View, &QAction::triggered, this, &MainWindow::openTemporalProjectionViewWidget);
+    connect(ui->actionScatter_Plot, &QAction::triggered, this, &MainWindow::openScatterPlotWidget);
+    connect(ui->action3D_Plot, &QAction::triggered, this, &MainWindow::open3DPlotWidget);
+    connect(ui->actionOnion_Skin_View, &QAction::triggered, this, &MainWindow::openOnionSkinViewWidget);
     // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
     // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
     auto getActiveMediaWidget = [this]() -> Media_Widget * {
@@ -745,6 +783,51 @@ void MainWindow::openDataImport() {
     openEditor(QStringLiteral("DataImportWidget"));
 }
 
+void MainWindow::openEventPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("EventPlotWidget"));
+}
+
+void MainWindow::openACFPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("ACFWidget"));
+}
+
+void MainWindow::openPSTHPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("PSTHWidget"));
+}
+
+void MainWindow::openLinePlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("LinePlotWidget"));
+}
+
+void MainWindow::openHeatmapPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("HeatmapWidget"));
+}
+
+void MainWindow::openTemporalProjectionViewWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("TemporalProjectionViewWidget"));
+}
+
+void MainWindow::openOnionSkinViewWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("OnionSkinViewWidget"));
+}
+
+void MainWindow::openScatterPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("ScatterPlotWidget"));
+}
+
+void MainWindow::open3DPlotWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("3DPlotWidget"));
+}
+
 void MainWindow::openDataInspector() {
     // Create a new Data Inspector using EditorCreationController
     // The controller handles:
@@ -838,6 +921,26 @@ void MainWindow::_registerEditorTypes() {
     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TableDesignerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    EventPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    ACFWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    PSTHWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    LinePlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    HeatmapWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    TemporalProjectionViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    ScatterPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    SpectrogramWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    ThreeDPlotWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    OnionSkinViewWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     // Future: Add more module registrations here
     // AnalysisDashboardModule::registerTypes(_editor_registry.get(), _data_manager);

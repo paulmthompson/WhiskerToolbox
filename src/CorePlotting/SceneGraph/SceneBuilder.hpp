@@ -7,6 +7,7 @@
 #include "Mappers/MappedElement.hpp"
 #include "RenderablePrimitives.hpp"
 
+#include <cassert>
 #include <map>
 #include <optional>
 #include <ranges>
@@ -312,6 +313,9 @@ private:
     std::map<size_t, std::string> _rectangle_batch_key_map;
     std::map<size_t, std::string> _glyph_batch_key_map;
 
+    // Mapping from EntityId to series_key (for QuadTree hit test lookup)
+    std::unordered_map<EntityId, std::string> _entity_to_series_key;
+
     // Internal helper to build spatial index from pending inserts
     void buildSpatialIndexFromPending();
 };
@@ -339,13 +343,23 @@ SceneBuilder & SceneBuilder::addGlyphs(
         
         // Queue for spatial index
         _pending_spatial_inserts.push_back({elem.x, elem.y, elem.entity_id});
+        
+        // Track entity → series_key mapping for hit test result enrichment
+        _entity_to_series_key[elem.entity_id] = series_key;
     }
 
     // Track batch key mapping
     size_t const batch_index = _scene.glyph_batches.size();
     _glyph_batch_key_map[batch_index] = series_key;
 
+    // Assertion: batch.positions and _pending_spatial_inserts should grow together
+    // If this fires, something is wrong with range iteration
+    size_t const batch_size = batch.positions.size();
     _scene.glyph_batches.push_back(std::move(batch));
+    
+    assert((!_bounds.has_value() || _pending_spatial_inserts.size() >= batch_size) &&
+           "SceneBuilder: _pending_spatial_inserts not populated - template instantiation issue?");
+    
     _has_discrete_elements = true;
 
     return *this;
@@ -369,6 +383,9 @@ SceneBuilder & SceneBuilder::addRectangles(
         float const center_x = elem.x + elem.width / 2.0f;
         float const center_y = elem.y + elem.height / 2.0f;
         _pending_spatial_inserts.push_back({center_x, center_y, elem.entity_id});
+        
+        // Track entity → series_key mapping for hit test result enrichment
+        _entity_to_series_key[elem.entity_id] = series_key;
     }
 
     // Track batch key mapping

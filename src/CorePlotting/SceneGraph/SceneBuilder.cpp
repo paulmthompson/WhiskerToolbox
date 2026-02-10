@@ -165,6 +165,10 @@ void SceneBuilder::buildSpatialIndexFromPending() {
     for (auto const & insert : _pending_spatial_inserts) {
         _scene.spatial_index->insert(insert.x, insert.y, insert.entity_id);
     }
+    
+    // Verify all points were inserted - if this fails, points are outside bounds
+    assert(_scene.spatial_index->size() == _pending_spatial_inserts.size() &&
+           "SceneBuilder: Not all points inserted into spatial index - check bounds vs coordinates");
 }
 
 RenderableScene SceneBuilder::build() {
@@ -172,9 +176,16 @@ RenderableScene SceneBuilder::build() {
     if (_has_discrete_elements && !_pending_spatial_inserts.empty()) {
         buildSpatialIndexFromPending();
     }
+    
+    // Diagnostic: if we have discrete elements, we MUST have a spatial index
+    assert((!_has_discrete_elements || _pending_spatial_inserts.empty() || _scene.spatial_index != nullptr) &&
+           "SceneBuilder::build(): discrete elements added but spatial index is null");
 
     // Copy selection state to the scene (makes it queryable)
     _scene.selected_entities = _selected_entities;
+
+    // Copy entity → series_key mapping for hit test enrichment
+    _scene.entity_to_series_key = _entity_to_series_key;
 
     // Apply selection flags to all rectangle batches
     for (auto & batch : _scene.rectangle_batches) {
@@ -199,6 +210,7 @@ void SceneBuilder::reset() {
     _pending_spatial_inserts.clear();
     _rectangle_batch_key_map.clear();
     _glyph_batch_key_map.clear();
+    _entity_to_series_key.clear();
     _selected_entities.clear();
 }
 

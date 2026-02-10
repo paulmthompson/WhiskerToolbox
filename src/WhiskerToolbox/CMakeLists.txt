@@ -89,6 +89,44 @@ add_subdirectory(ML_Widget)
  # Qt, DataManager, EditorState, Geometry
 add_subdirectory(DataTransform_Widget)
 
+# Qt, DataManager - Shared plot alignment widget
+add_subdirectory(Plots/Common/PlotAlignmentWidget)
+
+# Qt, CorePlotting - Shared relative time axis widget
+add_subdirectory(Plots/Common/RelativeTimeAxisWidget)
+add_subdirectory(Plots/Common/VerticalAxisWidget)
+add_subdirectory(Plots/Common/HorizontalAxisWidget)
+
+# Qt, DataManager, EditorState - Event raster plot widget
+add_subdirectory(Plots/EventPlotWidget)
+
+# Qt, DataManager, EditorState - Autocorrelation function plot widget
+add_subdirectory(Plots/ACFWidget)
+
+# Qt, DataManager, EditorState - PSTH plot widget
+add_subdirectory(Plots/PSTHWidget)
+
+# Qt, DataManager, EditorState - Line plot widget
+add_subdirectory(Plots/LinePlotWidget)
+
+# Qt, DataManager, EditorState - Heatmap plot widget
+add_subdirectory(Plots/HeatmapWidget)
+
+# Qt, DataManager, EditorState - Temporal projection view widget
+add_subdirectory(Plots/TemporalProjectionViewWidget)
+
+# Qt, DataManager, EditorState - Onion skin view widget
+add_subdirectory(Plots/OnionSkinViewWidget)
+
+# Qt, DataManager, EditorState - Scatter plot widget
+add_subdirectory(Plots/ScatterPlotWidget)
+
+# Qt, DataManager, EditorState - Spectrogram widget
+add_subdirectory(Plots/SpectrogramWidget)
+
+# Qt, DataManager, EditorState - 3D plot widget
+add_subdirectory(Plots/3DPlot)
+
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
@@ -242,7 +280,17 @@ target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
-
+target_link_libraries(WhiskerToolbox PRIVATE PlotAlignmentWidget)
+target_link_libraries(WhiskerToolbox PRIVATE EventPlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE ACFWidget)
+target_link_libraries(WhiskerToolbox PRIVATE PSTHWidget)
+target_link_libraries(WhiskerToolbox PRIVATE LinePlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE HeatmapWidget)
+target_link_libraries(WhiskerToolbox PRIVATE TemporalProjectionViewWidget)
+target_link_libraries(WhiskerToolbox PRIVATE ScatterPlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE SpectrogramWidget)
+target_link_libraries(WhiskerToolbox PRIVATE 3DPlotWidget)
+target_link_libraries(WhiskerToolbox PRIVATE OnionSkinViewWidget)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 

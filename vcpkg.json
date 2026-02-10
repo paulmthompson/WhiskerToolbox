@@ -28,6 +28,12 @@
             "name": "openblas"
         },
         {
+            "name": "pybind11"
+        },
+        {
+            "name": "python3"
+        },
+        {
             "name": "reflectcpp"
         },
         {
@@ -191,6 +197,10 @@
         {
             "name": "protobuf",
             "version": "5.29.3"
+        },
+        {
+            "name": "python3",
+            "version": "3.12.9"
         }
     ]
 }

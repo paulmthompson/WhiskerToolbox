@@ -114,13 +114,9 @@ TEST_CASE("QuadTree Basic Operations", "[quadtree][basic]") {
         REQUIRE(results[0].data == 1);
     }
     
-    SECTION("Out of bounds insertion") {
-        REQUIRE_FALSE(tree.insert(-10, 50, 1));
-        REQUIRE_FALSE(tree.insert(110, 50, 1));
-        REQUIRE_FALSE(tree.insert(50, -10, 1));
-        REQUIRE_FALSE(tree.insert(50, 110, 1));
-        REQUIRE(tree.size() == 0);
-    }
+    // NOTE: Out of bounds insertion is now a programmer error (assertion failure).
+    // Inserting points outside the QuadTree bounds indicates a logic error in the calling code
+    // (e.g., coordinate system mismatch between bounds and data). This is caught by assert().
     
     SECTION("Boundary edge cases") {
         REQUIRE(tree.insert(0, 0, 1));

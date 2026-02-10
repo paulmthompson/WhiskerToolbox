@@ -12,6 +12,7 @@ set(points_sources
 
 # Create the PointData static library
 add_library(PointData STATIC ${points_sources})
+set_target_properties(PointData PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 
 target_include_directories(PointData PUBLIC
@@ -27,6 +28,7 @@ target_link_libraries(PointData PUBLIC
     TimeFrame                # TimeFrame  
     Entity                   # Entity
     nlohmann_json::nlohmann_json  # For JSON support
+    reflectcpp::reflectcpp
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
