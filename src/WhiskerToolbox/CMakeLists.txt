@@ -3,9 +3,6 @@ find_package(OpenCV CONFIG REQUIRED)
 
 message(STATUS ${CMAKE_PREFIX_PATH})
 
-set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
-find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets OpenGL Concurrent)
@@ -189,17 +186,6 @@ set(PROJECT_SOURCES
         utils/DataLoadUtils.hpp
         utils/DataLoadUtils.cpp
 
-        utils/Deep_Learning/Backbones/efficientvit.hpp
-        utils/Deep_Learning/Backbones/efficientvit.cpp
-
-        utils/Deep_Learning/torch_helpers.hpp
-
-        utils/Deep_Learning/scm.hpp
-        utils/Deep_Learning/scm.cpp
-
-        utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp
-        utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
-
         Test_Widget/Test_Widget.hpp
         Test_Widget/Test_Widget.cpp
         Test_Widget/Test_Widget.ui
@@ -224,8 +210,6 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(WhiskerToolbox PRIVATE glm::glm)
 
-message(STATUS ${TORCH_LIBRARIES})
-target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 
 target_include_directories(WhiskerToolbox PRIVATE
 
@@ -258,6 +242,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
+target_link_libraries(WhiskerToolbox PRIVATE DeepLearning)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

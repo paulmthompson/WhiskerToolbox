@@ -18,15 +18,7 @@
 #include <QElapsedTimer>
 #include <QFileDialog>
 
-//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
-#undef slots
-
-#include <torch/script.h>
-#include <torch/torch.h>
-
-#define slots Q_SLOTS
-
-#include "utils/Deep_Learning/scm.hpp"
+#include "DeepLearning/models/scm/scm.hpp"
 
 #include <algorithm>
 #include <iostream>

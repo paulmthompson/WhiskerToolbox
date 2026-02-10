@@ -1,7 +1,7 @@
 
 #include "EfficientSAM.hpp"
 
-#include "utils/Deep_Learning/torch_helpers.hpp"
+#include "torch_helpers.hpp"
 #include <torch/torch.h>
 
 namespace dl {
