@@ -31,6 +31,16 @@ set(DEEP_LEARNING_SOURCES
     channel_encoding/Line2DEncoder.cpp
     channel_encoding/EncoderFactory.hpp
     channel_encoding/EncoderFactory.cpp
+
+    channel_decoding/ChannelDecoder.hpp
+    channel_decoding/TensorToPoint2D.hpp
+    channel_decoding/TensorToPoint2D.cpp
+    channel_decoding/TensorToMask2D.hpp
+    channel_decoding/TensorToMask2D.cpp
+    channel_decoding/TensorToLine2D.hpp
+    channel_decoding/TensorToLine2D.cpp
+    channel_decoding/DecoderFactory.hpp
+    channel_decoding/DecoderFactory.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
