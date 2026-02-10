@@ -88,6 +88,7 @@
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionTongue_Tracking"/>
     <addaction name="actionMachine_Learning"/>
+    <addaction name="actionDeep_Learning_Widget"/>
     <addaction name="actionData_Viewer"/>
     <addaction name="actionNew_Media_Widget"/>
     <addaction name="actionData_Transforms"/>
@@ -177,6 +178,11 @@
   <action name="actionMachine_Learning">
    <property name="text">
     <string>Machine Learning</string>
+   </property>
+  </action>
+  <action name="actionDeep_Learning_Widget">
+   <property name="text">
+    <string>Deep Learning Widget</string>
    </property>
   </action>
   <action name="actionData_Viewer">

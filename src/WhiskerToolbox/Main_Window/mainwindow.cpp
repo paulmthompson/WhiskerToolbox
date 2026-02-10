@@ -34,21 +34,22 @@
 #include "DataManager_Widget/DataManagerWidgetRegistration.hpp"
 #include "DataTransform_Widget/DataTransformWidgetRegistration.hpp"
 #include "DataViewer_Widget/DataViewerWidgetRegistration.hpp"
+#include "DeepLearning_Widget/DeepLearningWidgetRegistration.hpp"
 #include "Export_Widgets/Export_Video_Widget/ExportVideoWidgetRegistration.hpp"
 #include "GroupManagementWidget/GroupManagementWidgetRegistration.hpp"
 #include "ML_Widget/MLWidgetRegistration.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 
-#include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
+#include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
 #include "Plots/ACFWidget/ACFWidgetRegistration.hpp"
-#include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
-#include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
+#include "Plots/EventPlotWidget/EventPlotWidgetRegistration.hpp"
 #include "Plots/HeatmapWidget/HeatmapWidgetRegistration.hpp"
-#include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
+#include "Plots/LinePlotWidget/LinePlotWidgetRegistration.hpp"
 #include "Plots/OnionSkinViewWidget/OnionSkinViewWidgetRegistration.hpp"
+#include "Plots/PSTHWidget/PSTHWidgetRegistration.hpp"
 #include "Plots/ScatterPlotWidget/ScatterPlotWidgetRegistration.hpp"
 #include "Plots/SpectrogramWidget/SpectrogramWidgetRegistration.hpp"
-#include "Plots/3DPlot/3DPlotWidgetRegistration.hpp"
+#include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
 
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
@@ -125,15 +126,15 @@ MainWindow::MainWindow(QWidget * parent)
     // Create SplitButtonHandler to add split buttons to dock area title bars
     // This enables VS Code-like editor splitting functionality
     _split_button_handler = std::make_unique<SplitButtonHandler>(_m_DockManager, this);
-    
+
     // Connect split button signals (split implementation will be added later)
     connect(_split_button_handler.get(), &SplitButtonHandler::splitDockWidgetRequested,
             this, [this](ads::CDockWidget * dock_widget, SplitButtonHandler::SplitDirection direction) {
                 // TODO: Implement split functionality
                 // For now, just log the request
-                std::cout << "Split requested for dock widget: " 
+                std::cout << "Split requested for dock widget: "
                           << dock_widget->objectName().toStdString()
-                          << " direction: " 
+                          << " direction: "
                           << (direction == SplitButtonHandler::SplitDirection::Horizontal ? "horizontal" : "vertical")
                           << std::endl;
             });
@@ -186,15 +187,15 @@ MainWindow::~MainWindow() {
     // Widgets (owned by Qt's widget tree via CDockManager) may reference _editor_registry.
     // We must delete the dock manager (and thus all docked widgets) BEFORE
     // _editor_registry is destroyed by unique_ptr cleanup.
-    
+
     // Delete the dock manager first - this destroys all docked widgets
     // which may try to unregister from EditorRegistry in their destructors
     delete _m_DockManager;
     _m_DockManager = nullptr;
-    
+
     // Now it's safe for unique_ptr members to be destroyed in reverse order
     // (_editor_registry, _zone_manager, etc.)
-    
+
     delete ui;
 }
 
@@ -280,14 +281,15 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
     // Connect TimeScrollBar to EditorRegistry for global time propagation
-    connect(_time_scrollbar, 
-        qOverload<TimePosition>(&TimeScrollBar::timeChanged),
-        _editor_registry.get(),
-        qOverload<TimePosition>(&EditorRegistry::setCurrentTime));
-    
+    connect(_time_scrollbar,
+            qOverload<TimePosition>(&TimeScrollBar::timeChanged),
+            _editor_registry.get(),
+            qOverload<TimePosition>(&EditorRegistry::setCurrentTime));
+
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
+    connect(ui->actionDeep_Learning_Widget, &QAction::triggered, this, &MainWindow::openDeepLearningWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
     connect(ui->actionNew_Media_Widget, &QAction::triggered, this, &MainWindow::openNewMediaWidget);
     connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
@@ -740,6 +742,11 @@ void MainWindow::openMLWidget() {
     openEditor(QStringLiteral("MLWidget"));
 }
 
+void MainWindow::openDeepLearningWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("DeepLearningWidget"));
+}
+
 void MainWindow::openTerminalWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("TerminalWidget"));
@@ -917,6 +924,8 @@ void MainWindow::_registerEditorTypes() {
     BatchProcessingWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    DeepLearningWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     DataViewerWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

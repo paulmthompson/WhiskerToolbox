@@ -140,6 +140,7 @@ private slots:
     void openWhiskerTracking();
     void openTongueTracking();
     void openMLWidget();
+    void openDeepLearningWidget();
     void openDataViewer();
     void openNewMediaWidget();
     void openBatchProcessingWidget();

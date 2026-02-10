@@ -83,6 +83,9 @@ add_subdirectory(TableDesignerWidget)
 # Feature_Table_Widget, EditorState
 add_subdirectory(ML_Widget)
 
+# Qt, DataManager, DeepLearning, EditorState
+add_subdirectory(DeepLearning_Widget)
+
  # Qt, DataManager, EditorState, Geometry
 add_subdirectory(DataTransform_Widget)
 
@@ -243,6 +246,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
 target_link_libraries(WhiskerToolbox PRIVATE DeepLearning)
+target_link_libraries(WhiskerToolbox PRIVATE DeepLearning_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)
