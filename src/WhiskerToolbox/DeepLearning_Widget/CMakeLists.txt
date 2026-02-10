@@ -6,14 +6,15 @@ set(DEEP_LEARNING_WIDGET_SOURCES
 
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
+    Core/DeepLearningBindingData.hpp
+    Core/SlotAssembler.hpp
+    Core/SlotAssembler.cpp
 
     UI/DeepLearningViewWidget.hpp
     UI/DeepLearningViewWidget.cpp
-    UI/DeepLearningViewWidget.ui
 
     UI/DeepLearningPropertiesWidget.hpp
     UI/DeepLearningPropertiesWidget.cpp
-    UI/DeepLearningPropertiesWidget.ui
 )
 
 add_library(DeepLearning_Widget STATIC ${DEEP_LEARNING_WIDGET_SOURCES})
