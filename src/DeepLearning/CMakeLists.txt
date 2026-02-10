@@ -58,6 +58,9 @@ set(DEEP_LEARNING_SOURCES
     runtime/RuntimeModelSpec.cpp
     runtime/RuntimeModel.hpp
     runtime/RuntimeModel.cpp
+
+    models_v2/neurosam/NeuroSAMModel.hpp
+    models_v2/neurosam/NeuroSAMModel.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})

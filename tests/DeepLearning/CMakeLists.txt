@@ -205,6 +205,51 @@ endif()
 # --- Phase 5: Runtime Model Tests ---
 find_package(reflectcpp CONFIG REQUIRED)
 
+# --- Phase 7: NeuroSAM Model Tests ---
+add_executable(test_neurosam_model
+    models_v2/NeuroSAMModel.test.cpp
+)
+
+target_link_libraries(test_neurosam_model PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+)
+
+target_include_directories(test_neurosam_model PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_neurosam_model PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_neurosam_model PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_neurosam_model PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_neurosam_model
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_neurosam_model)
+    endif()
+else()
+    add_test(NAME test_neurosam_model_all
+        COMMAND test_neurosam_model
+        )
+endif()
+
 add_executable(test_runtime_model
     runtime/RuntimeModelSpec.test.cpp
 )
