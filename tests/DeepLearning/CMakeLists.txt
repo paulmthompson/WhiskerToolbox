@@ -108,3 +108,51 @@ else()
         COMMAND test_channel_decoding
         )
 endif()
+
+# --- Phase 3: Model Wrapper Tests ---
+add_executable(test_model_wrapper
+    models_v2/TensorSlotDescriptor.test.cpp
+    models_v2/ModelBase.test.cpp
+    models_v2/ModelExecution.test.cpp
+    device/DeviceManager.test.cpp
+)
+
+target_link_libraries(test_model_wrapper PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+)
+
+target_include_directories(test_model_wrapper PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_model_wrapper PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_model_wrapper PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_model_wrapper PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_model_wrapper
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_model_wrapper)
+    endif()
+else()
+    add_test(NAME test_model_wrapper_all
+        COMMAND test_model_wrapper
+        )
+endif()

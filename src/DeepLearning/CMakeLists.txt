@@ -41,6 +41,14 @@ set(DEEP_LEARNING_SOURCES
     channel_decoding/TensorToLine2D.cpp
     channel_decoding/DecoderFactory.hpp
     channel_decoding/DecoderFactory.cpp
+
+    device/DeviceManager.hpp
+    device/DeviceManager.cpp
+
+    models_v2/TensorSlotDescriptor.hpp
+    models_v2/ModelBase.hpp
+    models_v2/ModelExecution.hpp
+    models_v2/ModelExecution.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
@@ -53,11 +61,9 @@ target_include_directories(DeepLearning PUBLIC
 
 target_link_libraries(DeepLearning PRIVATE "${TORCH_LIBRARIES}")
 target_link_libraries(DeepLearning PRIVATE NEURALYZER_GEOMETRY)
-target_link_libraries(DeepLearning PRIVATE executorch
-  #  executorch::backends
- #   executorch::extensions
- #   executorch::kernels
-)
+target_link_libraries(DeepLearning PRIVATE executorch)
+target_link_libraries(DeepLearning PRIVATE extension_module_static)
+target_link_libraries(DeepLearning PRIVATE extension_tensor)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DeepLearning PRIVATE ${CLANG_OPTIONS})
