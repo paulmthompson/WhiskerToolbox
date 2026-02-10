@@ -489,7 +489,7 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
     );
 }
 
-RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
+TableViewRowDescriptor TableView::getRowDescriptor(size_t row_index) const {
     if (m_rowSelector) {
         return m_rowSelector->getDescriptor(row_index);
     }

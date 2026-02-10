@@ -22,7 +22,7 @@
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #define slots Q_SLOTS
 
 #include <QAction>
@@ -39,6 +39,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <algorithm>
+#include <cmath>
 
 #include <iostream>
 
@@ -1935,7 +1936,7 @@ void Media_Window::_plotTensorData() {
 
         std::string const key = key_q.toStdString();
         auto tensor_data = _data_manager->getData<TensorData>(key);
-        if (!tensor_data) continue;
+        if (!tensor_data || tensor_data->isEmpty()) continue;
 
         // Convert current_position to tensor's timeframe if needed
         TimeFrameIndex tensor_time = current_position.index;
@@ -1944,31 +1945,113 @@ void Media_Window::_plotTensorData() {
             tensor_time = current_position.convertTo(tensor_timeframe.get());
         }
 
-        auto tensor_shape = tensor_data->getFeatureShape();
+        // Map TimeFrameIndex to row index
+        std::size_t row_index = 0;
+        if (tensor_data->rowType() == RowType::TimeFrameIndex) {
+            auto pos = tensor_data->rows().timeStorage().findArrayPositionForTimeIndex(tensor_time);
+            if (!pos.has_value()) continue; // No data at this time
+            row_index = pos.value();
+        } else {
+            // Ordinal: use raw index value, clamped
+            row_index = std::min(static_cast<std::size_t>(tensor_time.getValue()),
+                                 tensor_data->numRows() - 1);
+        }
 
-        auto tensor_slice = tensor_data->getChannelSlice(tensor_time, tensor_config->display_channel);
+        // Get the flat row data for this time step (all features)
+        auto const row_data = tensor_data->row(row_index);
+        if (row_data.empty()) continue;
 
-        // Create a QImage from the tensor data
-        QImage tensor_image(static_cast<int>(tensor_shape[1]), static_cast<int>(tensor_shape[0]), QImage::Format::Format_ARGB32);
-        for (size_t y = 0; y < tensor_shape[0]; ++y) {
-            for (size_t x = 0; x < tensor_shape[1]; ++x) {
-                float const value = tensor_slice[y * tensor_shape[1] + x];
-                //int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
+        auto const tensor_shape = tensor_data->shape();
+        auto const ndim = tensor_data->ndim();
 
-                // Use the config color with alpha
-                QColor const color(QString::fromStdString(tensor_config->hex_color()));
+        // Determine 2D image dimensions and extract the display slice.
+        // The new TensorData stores time as the row axis (axis 0).
+        //
+        // For 2D tensors [time, features]:
+        //   features is a flat spatial map — try to display as a square image.
+        // For 3D tensors [time, spatial, channels]:
+        //   spatial is a 1D extent, channels is the last axis. Display as 1×spatial.
+        // For 4D tensors [time, height, width, channels]:
+        //   Original spatial layout is preserved. Channel selection applies.
+
+        std::size_t img_height = 1;
+        std::size_t img_width = 1;
+        std::size_t num_channels = 1;
+        std::vector<float> display_data;
+
+        if (ndim == 2) {
+            // [time, features] — flat spatial, no channel dim
+            auto const num_features = tensor_shape[1];
+            auto const side = static_cast<std::size_t>(std::sqrt(static_cast<double>(num_features)));
+            if (side * side == num_features) {
+                img_height = side;
+                img_width = side;
+            } else {
+                // Not a perfect square — display as a horizontal strip
+                img_height = 1;
+                img_width = num_features;
+            }
+            display_data = row_data;
+        } else if (ndim == 3) {
+            // [time, spatial_or_height, channels_or_width]
+            // If display_channel is selectable (last axis > 1), treat last axis as channels
+            auto const d1 = tensor_shape[1];
+            auto const d2 = tensor_shape[2];
+            num_channels = d2;
+            img_height = 1;
+            img_width = d1;
+
+            // Extract channel slice: for each spatial element, pick the selected channel
+            int const channel = std::clamp(tensor_config->display_channel, 0,
+                                           static_cast<int>(num_channels) - 1);
+            display_data.resize(d1);
+            for (std::size_t i = 0; i < d1; ++i) {
+                display_data[i] = row_data[i * d2 + static_cast<std::size_t>(channel)];
+            }
+        } else if (ndim >= 4) {
+            // [time, height, width, channels, ...] — use first 3 inner dims
+            img_height = tensor_shape[1];
+            img_width = tensor_shape[2];
+            num_channels = tensor_shape[3];
+
+            int const channel = std::clamp(tensor_config->display_channel, 0,
+                                           static_cast<int>(num_channels) - 1);
+            display_data.resize(img_height * img_width);
+            for (std::size_t y = 0; y < img_height; ++y) {
+                for (std::size_t x = 0; x < img_width; ++x) {
+                    // row_data layout (row-major): [h, w, channels, ...]
+                    auto const flat_idx = (y * img_width + x) * num_channels
+                                          + static_cast<std::size_t>(channel);
+                    display_data[y * img_width + x] = (flat_idx < row_data.size())
+                                                      ? row_data[flat_idx] : 0.0f;
+                }
+            }
+        } else {
+            continue; // 1D or scalar — nothing to display spatially
+        }
+
+        // Create a QImage from the display data
+        QImage tensor_image(static_cast<int>(img_width), static_cast<int>(img_height),
+                            QImage::Format::Format_ARGB32);
+        QColor const color(QString::fromStdString(tensor_config->hex_color()));
+
+        for (std::size_t y = 0; y < img_height; ++y) {
+            for (std::size_t x = 0; x < img_width; ++x) {
+                float const value = display_data[y * img_width + x];
+
+                // Use the config color with alpha; zero values are fully transparent
                 int const alpha = std::lround(tensor_config->alpha() * 255.0f * (value > 0 ? 1.0f : 0.0f));
                 QRgb const rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
 
-                tensor_image.setPixel(x, y, rgb);
+                tensor_image.setPixel(static_cast<int>(x), static_cast<int>(y), rgb);
             }
         }
 
         // Scale the tensor image to the size of the canvas
-        QImage const scaled_tensor_image = tensor_image.scaled(_canvasWidth, _canvasHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        QImage const scaled_tensor_image = tensor_image.scaled(
+            _canvasWidth, _canvasHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
         auto tensor_pixmap = addPixmap(QPixmap::fromImage(scaled_tensor_image));
-
         _tensors.append(tensor_pixmap);
     }
 }

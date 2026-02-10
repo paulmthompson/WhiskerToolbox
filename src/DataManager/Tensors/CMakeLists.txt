@@ -23,7 +23,9 @@ if(TENSOR_BACKEND_LIBTORCH)
     
     # Backend sources
     set(BACKEND_SOURCES
-        Tensor_Data_LibTorch.cpp
+       # Tensor_Data_LibTorch.cpp
+        storage/LibTorchTensorStorage.hpp
+        storage/LibTorchTensorStorage.cpp
     )
     
     # Backend libraries (Armadillo always linked for ArmadilloTensorStorage)
@@ -37,7 +39,7 @@ else()
 
     # Backend sources
     set(BACKEND_SOURCES
-        Tensor_Data_Armadillo.cpp
+    #    Tensor_Data_Armadillo.cpp
     )
     
     # Backend libraries (also link Armadillo for ArmadilloTensorStorage which is always available)
@@ -50,7 +52,7 @@ endif()
 
 # Common tensor sources
 set(TENSOR_SOURCES
-    Tensor_Data.hpp
+    #Tensor_Data.hpp
     TensorData.hpp
     TensorData.cpp
     DimensionDescriptor.hpp
@@ -97,9 +99,18 @@ if(TENSOR_BACKEND_LIBTORCH)
     target_link_libraries(TensorData PRIVATE ${TORCH_LIBRARIES})
 endif()
 
-# Set backend-specific compile definitions
+# Set backend-specific compile definitions as PRIVATE
+# Note: TENSOR_BACKEND_LIBTORCH is PRIVATE because torch headers conflict with
+# Catch2's CHECK macro (c10/util/logging_is_not_google_glog.h defines CHECK).
+# Consumers that want the LibTorch API must opt in by defining
+# TENSOR_BACKEND_LIBTORCH themselves and linking torch.
+# The TENSOR_BACKEND_LIBTORCH_AVAILABLE definition is exported PUBLIC for
+# consumers to detect availability without including torch headers.
 message(STATUS "Using Backend definition: ${BACKEND_DEFINITIONS}")
 target_compile_definitions(TensorData PRIVATE ${BACKEND_DEFINITIONS})
+if(TENSOR_BACKEND_LIBTORCH)
+    target_compile_definitions(TensorData PUBLIC TENSOR_BACKEND_LIBTORCH_AVAILABLE)
+endif()
 
 # Compiler-specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

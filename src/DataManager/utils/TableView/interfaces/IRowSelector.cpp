@@ -15,7 +15,7 @@ std::vector<size_t> const & IndexSelector::getIndices() const {
     return m_indices;
 }
 
-RowDescriptor IndexSelector::getDescriptor(size_t row_index) const {
+TableViewRowDescriptor IndexSelector::getDescriptor(size_t row_index) const {
     if (row_index < m_indices.size()) {
         return m_indices[row_index];
     }
@@ -36,7 +36,7 @@ std::vector<TimeFrameIndex> const & TimestampSelector::getTimestamps() const {
     return m_timestamps;
 }
 
-RowDescriptor TimestampSelector::getDescriptor(size_t row_index) const {
+TableViewRowDescriptor TimestampSelector::getDescriptor(size_t row_index) const {
     if (row_index < m_timestamps.size()) {
         return m_timestamps[row_index];
     }
@@ -57,7 +57,7 @@ std::vector<TimeFrameInterval> const & IntervalSelector::getIntervals() const {
     return m_intervals;
 }
 
-RowDescriptor IntervalSelector::getDescriptor(size_t row_index) const {
+TableViewRowDescriptor IntervalSelector::getDescriptor(size_t row_index) const {
     if (row_index < m_intervals.size()) {
         return m_intervals[row_index];
     }

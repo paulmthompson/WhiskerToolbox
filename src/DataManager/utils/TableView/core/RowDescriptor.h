@@ -18,7 +18,7 @@ using DataSourceId = std::uint32_t;
  * This type allows for type-safe reverse lookup from a TableView row back to its 
  * original source definition. It makes the system easily extensible for new row types.
  */
-using RowDescriptor = std::variant<
+using TableViewRowDescriptor = std::variant<
     std::monostate,         // For cases where there's no descriptor
     size_t,                 // For IndexSelector
     TimeFrameIndex,         // For TimestampSelector

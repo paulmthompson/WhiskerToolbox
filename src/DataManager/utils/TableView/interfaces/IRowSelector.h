@@ -34,7 +34,7 @@ public:
      * @param row_index The index of the row to get the descriptor for.
      * @return RowDescriptor containing the source information for the row.
      */
-    virtual RowDescriptor getDescriptor(size_t row_index) const = 0;
+    virtual TableViewRowDescriptor getDescriptor(size_t row_index) const = 0;
 };
 
 /**
@@ -59,9 +59,9 @@ public:
     /**
      * @brief Gets a descriptor for the specified row index.
      * @param row_index The index of the row to get the descriptor for.
-     * @return RowDescriptor containing the source index for the row.
+     * @return TableViewRowDescriptor containing the source index for the row.
      */
-    RowDescriptor getDescriptor(size_t row_index) const override;
+    TableViewRowDescriptor getDescriptor(size_t row_index) const override;
     
     /**
      * @brief Gets the indices used for row selection.
@@ -96,9 +96,9 @@ public:
     /**
      * @brief Gets a descriptor for the specified row index.
      * @param row_index The index of the row to get the descriptor for.
-     * @return RowDescriptor containing the source timestamp for the row.
+     * @return TableViewRowDescriptor containing the source timestamp for the row.
      */
-    RowDescriptor getDescriptor(size_t row_index) const override;
+    TableViewRowDescriptor getDescriptor(size_t row_index) const override;
     
     /**
      * @brief Gets the timestamps used for row selection.
@@ -142,9 +142,9 @@ public:
     /**
      * @brief Gets a descriptor for the specified row index.
      * @param row_index The index of the row to get the descriptor for.
-     * @return RowDescriptor containing the source interval for the row.
+     * @return TableViewRowDescriptor containing the source interval for the row.
      */
-    RowDescriptor getDescriptor(size_t row_index) const override;
+    TableViewRowDescriptor getDescriptor(size_t row_index) const override;
     
     /**
      * @brief Gets the intervals used for row selection.

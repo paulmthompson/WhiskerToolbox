@@ -3,7 +3,7 @@
 
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <numeric>
@@ -135,20 +135,28 @@ arma::Mat<double> convertTensorDataToMlpackMatrix(
     // Determine the number of rows and columns for the Armadillo matrix
     std::size_t const numCols = timestamps.size();
 
-    auto feature_shape = tensor_data->getFeatureShape();
-    std::size_t const numRows = std::accumulate(
-            feature_shape.begin(),
-            feature_shape.end(),
-            1,
-            std::multiplies<>());
+    // For 2D time series, numColumns() gives us the feature dimension
+    std::size_t const numRows = tensor_data->numColumns();
 
     // Initialize the Armadillo matrix
     arma::Mat<double> result(numRows, numCols, arma::fill::zeros);
 
     // Fill the matrix with the tensor data
+    // Assuming timestamps map directly to row indices (dense sequential storage)
     for (std::size_t col = 0; col < numCols; ++col) {
-        // Use the backend-agnostic interface
-        auto tensor_data_vec = tensor_data->getTensorDataAtTime(TimeFrameIndex(timestamps[col]));
+        std::size_t const timestamp = timestamps[col];
+        
+        // Check if timestamp is within bounds
+        if (timestamp >= tensor_data->numRows()) {
+            // Out of bounds - fill with NaN
+            for (std::size_t row = 0; row < numRows; ++row) {
+                result(row, col) = arma::datum::nan;
+            }
+            continue;
+        }
+
+        // Get the row data at this timestamp
+        auto tensor_data_vec = tensor_data->row(timestamp);
 
         if (tensor_data_vec.empty()) {
             for (std::size_t row = 0; row < numRows; ++row) {
@@ -176,20 +184,38 @@ inline void updateTensorDataFromMlpackMatrix(
         arma::Mat<double> const & matrix,
         std::vector<std::size_t> const & timestamps,
         TensorData & tensor_data) {
-    auto feature_shape = tensor_data.getFeatureShape();
-
-    for (std::size_t i = 0; i < timestamps.size(); ++i) {
-        auto col = copyMatrixRowToVector<double>(matrix.col(i));
-
-        // Convert double vector to float vector for the backend-agnostic interface
-        std::vector<float> float_data;
-        float_data.reserve(col.size());
-        for (double val: col) {
-            float_data.push_back(static_cast<float>(val));
-        }
-
-        tensor_data.overwriteTensorAtTime(TimeFrameIndex(timestamps[i]), float_data, feature_shape);
+    // Get current shape and materialize data
+    auto const shape = tensor_data.shape();
+    if (shape.size() != 2) {
+        std::cerr << "Error: updateTensorDataFromMlpackMatrix only supports 2D tensors" << std::endl;
+        return;
     }
+    
+    std::size_t const num_rows = shape[0];
+    std::size_t const num_cols = shape[1];
+    
+    // Materialize the current data into a flat vector
+    auto flat_data = tensor_data.materializeFlat();
+    
+    // Update the specified rows (timestamps)
+    for (std::size_t i = 0; i < timestamps.size() && i < matrix.n_cols; ++i) {
+        std::size_t const timestamp = timestamps[i];
+        
+        // Check bounds
+        if (timestamp >= num_rows) {
+            std::cerr << "Warning: timestamp " << timestamp << " out of bounds (max: " << num_rows - 1 << ")" << std::endl;
+            continue;
+        }
+        
+        // Copy the column from the matrix into the appropriate row in flat_data
+        std::size_t const row_offset = timestamp * num_cols;
+        for (std::size_t j = 0; j < num_cols && j < matrix.n_rows; ++j) {
+            flat_data[row_offset + j] = static_cast<float>(matrix(j, i));
+        }
+    }
+    
+    // Replace the tensor data with the modified flat data
+    tensor_data.setData(std::move(flat_data), shape);
 }
 
 bool balance_training_data_by_subsampling(

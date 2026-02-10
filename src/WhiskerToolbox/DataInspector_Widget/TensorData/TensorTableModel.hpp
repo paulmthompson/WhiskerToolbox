@@ -1,95 +1,96 @@
 #ifndef TENSORTABLEMODEL_HPP
 #define TENSORTABLEMODEL_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
-
-//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
-#undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
-#define slots Q_SLOTS
+/**
+ * @file TensorTableModel.hpp
+ * @brief Qt table model for N-dimensional TensorData with user-selectable row/column dimensions
+ *
+ * The model lets the user choose which tensor axis maps to table rows and which
+ * maps to table columns. All remaining dimensions use a fixed slice index
+ * (controllable via setFixedIndex). Data is fetched lazily — Qt only calls
+ * data() for visible cells, so even very large tensors stay responsive.
+ *
+ * For 1-D tensors the column dimension is implicitly "none" and a single
+ * "Value" column is shown. For 0-D (scalar) tensors one row × one column is
+ * displayed.
+ */
 
 #include <QAbstractTableModel>
 
-#include <map>
+#include <cstddef>
+#include <string>
+#include <vector>
 
-class TensorData; // Forward declaration
+class TensorData;
 
 class TensorTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    explicit TensorTableModel(QObject * parent = nullptr)
-        : QAbstractTableModel(parent), _tensor_data(nullptr) {}
+    explicit TensorTableModel(QObject * parent = nullptr);
 
-    void setTensorData(TensorData* tensor_data) {
-        beginResetModel();
-        _tensor_data = tensor_data;
-        if (_tensor_data) {
-            _frame_indices = _tensor_data->getTimesWithTensors();
-        } else {
-            _frame_indices.clear();
-        }
-        endResetModel();
-    }
+    // ========== Data binding ==========
 
-    [[nodiscard]] int rowCount(QModelIndex const & parent) const override {
-        Q_UNUSED(parent);
-        return static_cast<int>(_frame_indices.size());
-    }
+    /**
+     * @brief Bind (or unbind) the model to a TensorData object
+     *
+     * Resets the model and auto-selects sensible row/column dimensions
+     * (row = 0, col = 1 if ndim >= 2).
+     */
+    void setTensorData(TensorData * tensor_data);
 
-    [[nodiscard]] int columnCount(QModelIndex const & parent) const override {
-        Q_UNUSED(parent);
-        return 2;// Frame and Shape columns
-    }
+    // ========== Dimension mapping ==========
 
-    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override {
-        if (!index.isValid() || role != Qt::DisplayRole || !_tensor_data) {
-            return QVariant{};
-        }
+    /**
+     * @brief Set which tensor axis maps to table rows
+     * @param dim Axis index (0-based). Must be < ndim() and != columnDimension()
+     */
+    void setRowDimension(int dim);
 
-        if (index.row() >= static_cast<int>(_frame_indices.size())) {
-            return QVariant{};
-        }
+    /**
+     * @brief Set which tensor axis maps to table columns
+     * @param dim Axis index (0-based), or -1 for "no column dimension" (single value column).
+     *            Must be != rowDimension()
+     */
+    void setColumnDimension(int dim);
 
-        auto const frame = _frame_indices[index.row()];
+    /**
+     * @brief Set the fixed slice index for a dimension that is neither row nor column
+     * @param dim Axis index
+     * @param index Slice index (must be < axis size)
+     */
+    void setFixedIndex(int dim, std::size_t index);
 
-        if (index.column() == 0) {
-            return QVariant::fromValue(frame.getValue());
-        } else if (index.column() == 1) {
-            auto tensor_shape = _tensor_data->getTensorShapeAtTime(frame);
-            if (tensor_shape.empty()) {
-                return QString("Unknown");
-            }
-            
-            QString shape = QString::number(tensor_shape[0]);
-            for (size_t i = 1; i < tensor_shape.size(); i++) {
-                shape += "x" + QString::number(tensor_shape[i]);
-            }
-            return shape;
-        }
+    // ========== Queries ==========
 
-        return QVariant{};
-    }
+    [[nodiscard]] int rowDimension() const noexcept { return _row_dim; }
+    [[nodiscard]] int columnDimension() const noexcept { return _col_dim; }
+    [[nodiscard]] std::size_t fixedIndex(int dim) const;
 
-    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
-        if (role != Qt::DisplayRole) {
-            return QVariant{};
-        }
+    /// Number of dimensions of the bound tensor (0 if unbound)
+    [[nodiscard]] std::size_t ndim() const noexcept;
 
-        if (orientation == Qt::Horizontal) {
-            if (section == 0) {
-                return QString("Frame");
-            } else if (section == 1) {
-                return QString("Shape");
-            }
-        }
+    /// Shape of the bound tensor (empty if unbound)
+    [[nodiscard]] std::vector<std::size_t> tensorShape() const;
 
-        return QVariant{};
-    }
+    /// Axis names of the bound tensor
+    [[nodiscard]] std::vector<std::string> axisNames() const;
+
+    // ========== QAbstractTableModel overrides ==========
+
+    [[nodiscard]] int rowCount(QModelIndex const & parent = QModelIndex()) const override;
+    [[nodiscard]] int columnCount(QModelIndex const & parent = QModelIndex()) const override;
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override;
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
 private:
-    TensorData* _tensor_data;
-    std::vector<TimeFrameIndex> _frame_indices;
+    /// Rebuild _fixed_indices vector and pick default row/col dims
+    void _resetDimensionMapping();
+
+    TensorData * _tensor_data{nullptr};
+    int _row_dim{0};            ///< Axis index shown as table rows
+    int _col_dim{-1};           ///< Axis index shown as table columns (-1 = single value column)
+    std::vector<std::size_t> _fixed_indices;  ///< One per tensor axis; only entries for "other" dims matter
 };
 
-#endif// TENSORTABLEMODEL_HPP
+#endif // TENSORTABLEMODEL_HPP

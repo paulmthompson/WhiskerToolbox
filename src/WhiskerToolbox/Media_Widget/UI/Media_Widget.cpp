@@ -15,7 +15,7 @@
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #define slots Q_SLOTS
 
 #include <QApplication>

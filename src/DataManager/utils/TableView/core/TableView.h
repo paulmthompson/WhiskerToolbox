@@ -141,7 +141,7 @@ public:
      * @param row_index The index of the row to get the descriptor for.
      * @return RowDescriptor containing the source information for the row.
      */
-    [[nodiscard]] auto getRowDescriptor(size_t row_index) const -> RowDescriptor;
+    [[nodiscard]] auto getRowDescriptor(size_t row_index) const -> TableViewRowDescriptor;
 
     /**
      * @brief Get contributing EntityIds for a given row, if available.

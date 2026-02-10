@@ -6,7 +6,7 @@
 
 // https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #include "DataManager/Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 #define slots Q_SLOTS
 
@@ -52,13 +52,13 @@ void TensorImport_Widget::_loadNumpyArray() {
 
         _data_manager->setData<TensorData>(tensor_key, std::make_shared<TensorData>(tensor_data), TimeKey("time"));
 
-        auto loaded_size = _data_manager->getData<TensorData>(tensor_key)->size();
-        std::cout << "Loaded tensor with " << loaded_size << " elements" << std::endl;
+        //auto loaded_size = _data_manager->getData<TensorData>(tensor_key)->size();
+        //std::cout << "Loaded tensor with " << loaded_size << " elements" << std::endl;
 
-        QMessageBox::information(this, tr("Import Successful"),
-            tr("Loaded tensor with %1 elements into '%2'")
-                .arg(loaded_size)
-                .arg(QString::fromStdString(tensor_key)));
+        //QMessageBox::information(this, tr("Import Successful"),
+        //    tr("Loaded tensor with %1 elements into '%2'")
+        //        .arg(loaded_size)
+        //        .arg(QString::fromStdString(tensor_key)));
 
         emit importCompleted(QString::fromStdString(tensor_key), "TensorData");
 

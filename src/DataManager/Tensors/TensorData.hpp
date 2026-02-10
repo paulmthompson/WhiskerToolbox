@@ -50,7 +50,12 @@
 #include <vector>
 
 #ifdef TENSOR_BACKEND_LIBTORCH
+// torch's c10 logging defines a CHECK macro that conflicts with testing
+// frameworks (Catch2) and other libraries. Save the current CHECK definition
+// (if any), include torch, then restore it.
+#pragma push_macro("CHECK")
 #include <torch/torch.h>
+#pragma pop_macro("CHECK")
 #endif
 
 // Forward declarations
@@ -64,7 +69,7 @@ class TimeIndexStorage;
  *
  * @code
  * // 2D time-series matrix (e.g., spectrogram)
- * auto spec = TensorDataV2::createTimeSeries2D(
+ * auto spec = TensorData::createTimeSeries2D(
  *     flat_magnitudes, num_time_bins, num_freq_bins,
  *     time_storage, time_frame,
  *     {"0-10 Hz", "10-20 Hz", "20-30 Hz"});
@@ -77,14 +82,14 @@ class TimeIndexStorage;
  *
  * @see tensor_data_refactor_proposal.md for full design rationale
  */
-class TensorDataV2 : public ObserverData {
+class TensorData : public ObserverData {
 public:
     // ========== DataTraits ==========
 
     /**
      * @brief Traits for generic trait-based dispatch in transforms v2
      */
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<TensorDataV2, float> {
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<TensorData, float> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = false;
@@ -96,20 +101,20 @@ public:
     /**
      * @brief Default constructor — empty tensor (no storage, ordinal 0 rows)
      */
-    TensorDataV2();
+    TensorData();
 
     /**
      * @brief Destructor (non-trivial due to shared_ptr members)
      */
-    ~TensorDataV2();
+    ~TensorData();
 
     /// Copy
-    TensorDataV2(TensorDataV2 const & other);
-    TensorDataV2 & operator=(TensorDataV2 const & other);
+    TensorData(TensorData const & other);
+    TensorData & operator=(TensorData const & other);
 
     /// Move
-    TensorDataV2(TensorDataV2 && other) noexcept;
-    TensorDataV2 & operator=(TensorDataV2 && other) noexcept;
+    TensorData(TensorData && other) noexcept;
+    TensorData & operator=(TensorData && other) noexcept;
 
     // ========== Named Constructors (Factory Methods) ==========
 
@@ -126,7 +131,7 @@ public:
      * @param column_names Optional column labels (size must match num_cols if provided)
      * @throws std::invalid_argument on size mismatches or null pointers
      */
-    [[nodiscard]] static TensorDataV2 createTimeSeries2D(
+    [[nodiscard]] static TensorData createTimeSeries2D(
         std::vector<float> const & data,
         std::size_t num_rows,
         std::size_t num_cols,
@@ -147,7 +152,7 @@ public:
      * @param column_names Optional column labels
      * @throws std::invalid_argument on size mismatches
      */
-    [[nodiscard]] static TensorDataV2 createFromIntervals(
+    [[nodiscard]] static TensorData createFromIntervals(
         std::vector<float> const & data,
         std::size_t num_rows,
         std::size_t num_cols,
@@ -165,7 +170,7 @@ public:
      * @param axes Ordered axis descriptors (outermost first)
      * @throws std::invalid_argument if data size doesn't match total elements
      */
-    [[nodiscard]] static TensorDataV2 createND(
+    [[nodiscard]] static TensorData createND(
         std::vector<float> const & data,
         std::vector<AxisDescriptor> axes);
 
@@ -177,7 +182,7 @@ public:
      * @param matrix Armadillo float matrix (moved into storage)
      * @param column_names Optional column labels
      */
-    [[nodiscard]] static TensorDataV2 createFromArmadillo(
+    [[nodiscard]] static TensorData createFromArmadillo(
         arma::fmat matrix,
         std::vector<std::string> column_names = {});
 
@@ -188,7 +193,7 @@ public:
      * @param axes Optional axis descriptors; if empty, defaults to
      *        {"dim0", nslices}, {"dim1", nrows}, {"dim2", ncols}
      */
-    [[nodiscard]] static TensorDataV2 createFromArmadillo(
+    [[nodiscard]] static TensorData createFromArmadillo(
         arma::fcube cube,
         std::vector<AxisDescriptor> axes = {});
 
@@ -203,7 +208,7 @@ public:
      * @param num_cols Number of columns
      * @param column_names Optional column labels
      */
-    [[nodiscard]] static TensorDataV2 createOrdinal2D(
+    [[nodiscard]] static TensorData createOrdinal2D(
         std::vector<float> const & data,
         std::size_t num_rows,
         std::size_t num_cols,
@@ -216,7 +221,7 @@ public:
      * @param tensor torch::Tensor (moved into LibTorchTensorStorage)
      * @param axes Optional axis descriptors; if empty, auto-generated
      */
-    [[nodiscard]] static TensorDataV2 createFromTorch(
+    [[nodiscard]] static TensorData createFromTorch(
         torch::Tensor tensor,
         std::vector<AxisDescriptor> axes = {});
 #endif
@@ -335,11 +340,11 @@ public:
      *
      * If the tensor is already backed by owned storage (Armadillo or Dense),
      * returns a copy. If backed by a View or Lazy storage, computes and
-     * returns a new TensorDataV2 with materialized data.
+     * returns a new TensorData with materialized data.
      *
      * Uses ArmadilloTensorStorage for ≤3D, DenseTensorStorage for >3D.
      */
-    [[nodiscard]] TensorDataV2 materialize() const;
+    [[nodiscard]] TensorData materialize() const;
 
     /**
      * @brief Convert to Armadillo-backed tensor (must be ≤3D)
@@ -349,7 +354,7 @@ public:
      *
      * @throws std::logic_error if ndim() > 3
      */
-    [[nodiscard]] TensorDataV2 toArmadillo() const;
+    [[nodiscard]] TensorData toArmadillo() const;
 
     /**
      * @brief Direct access to the underlying Armadillo matrix (2D only)
@@ -372,7 +377,7 @@ public:
      * If already LibTorch-backed, returns a shallow copy.
      * Otherwise, materializes flat data and wraps in torch::Tensor.
      */
-    [[nodiscard]] TensorDataV2 toLibTorch() const;
+    [[nodiscard]] TensorData toLibTorch() const;
 
     /**
      * @brief Direct access to the underlying torch::Tensor
@@ -451,7 +456,7 @@ private:
     /**
      * @brief Fully specified internal constructor
      */
-    TensorDataV2(DimensionDescriptor dimensions,
+    TensorData(DimensionDescriptor dimensions,
                  RowDescriptor rows,
                  TensorStorageWrapper storage,
                  std::shared_ptr<TimeFrame> time_frame);
@@ -462,5 +467,7 @@ private:
     TensorStorageWrapper _storage;            ///< Type-erased storage backend
     std::shared_ptr<TimeFrame> _time_frame;   ///< Absolute time reference (nullable)
 };
+
+
 
 #endif // TENSOR_DATA_V2_HPP

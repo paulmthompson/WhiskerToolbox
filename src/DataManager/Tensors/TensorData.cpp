@@ -1,6 +1,6 @@
 /**
  * @file TensorData.cpp
- * @brief Implementation of the refactored TensorDataV2 public API
+ * @brief Implementation of the refactored TensorData public API
  *
  * Wires together DimensionDescriptor, RowDescriptor, and TensorStorageWrapper
  * to provide a unified N-dimensional tensor type for DataManager.
@@ -13,6 +13,10 @@
 #include "Tensors/storage/ArmadilloTensorStorage.hpp"
 #include "Tensors/storage/DenseTensorStorage.hpp"
 #include "Tensors/storage/TensorStorageWrapper.hpp"
+
+#ifdef TENSOR_BACKEND_LIBTORCH
+#include "Tensors/storage/LibTorchTensorStorage.hpp"
+#endif
 
 #include "TimeFrame/TimeIndexStorage.hpp"
 
@@ -27,7 +31,7 @@
 // Default / Special Members
 // =============================================================================
 
-TensorDataV2::TensorDataV2()
+TensorData::TensorData()
     : _dimensions{}
     , _rows{RowDescriptor::ordinal(0)}
     , _storage{}
@@ -35,19 +39,19 @@ TensorDataV2::TensorDataV2()
 {
 }
 
-TensorDataV2::~TensorDataV2() = default;
+TensorData::~TensorData() = default;
 
-TensorDataV2::TensorDataV2(TensorDataV2 const & other) = default;
-TensorDataV2 & TensorDataV2::operator=(TensorDataV2 const & other) = default;
+TensorData::TensorData(TensorData const & other) = default;
+TensorData & TensorData::operator=(TensorData const & other) = default;
 
-TensorDataV2::TensorDataV2(TensorDataV2 && other) noexcept = default;
-TensorDataV2 & TensorDataV2::operator=(TensorDataV2 && other) noexcept = default;
+TensorData::TensorData(TensorData && other) noexcept = default;
+TensorData & TensorData::operator=(TensorData && other) noexcept = default;
 
 // =============================================================================
 // Private Constructor
 // =============================================================================
 
-TensorDataV2::TensorDataV2(DimensionDescriptor dimensions,
+TensorData::TensorData(DimensionDescriptor dimensions,
                             RowDescriptor rows,
                             TensorStorageWrapper storage,
                             std::shared_ptr<TimeFrame> time_frame)
@@ -76,7 +80,7 @@ TensorStorageWrapper makeStorage(std::vector<float> const & data,
 
     if (ndim == 0) {
         throw std::invalid_argument(
-            "TensorDataV2: cannot create storage with zero dimensions");
+            "TensorData: cannot create storage with zero dimensions");
     }
 
     // Validate total element count
@@ -86,7 +90,7 @@ TensorStorageWrapper makeStorage(std::vector<float> const & data,
     }
     if (data.size() != total) {
         throw std::invalid_argument(
-            "TensorDataV2: data size (" + std::to_string(data.size()) +
+            "TensorData: data size (" + std::to_string(data.size()) +
             ") doesn't match shape product (" + std::to_string(total) + ")");
     }
 
@@ -133,7 +137,7 @@ TensorStorageWrapper makeStorage(std::vector<float> const & data,
 // Factory: createTimeSeries2D
 // =============================================================================
 
-TensorDataV2 TensorDataV2::createTimeSeries2D(
+TensorData TensorData::createTimeSeries2D(
     std::vector<float> const & data,
     std::size_t num_rows,
     std::size_t num_cols,
@@ -143,15 +147,15 @@ TensorDataV2 TensorDataV2::createTimeSeries2D(
 {
     if (!time_storage) {
         throw std::invalid_argument(
-            "TensorDataV2::createTimeSeries2D: time_storage must not be null");
+            "TensorData::createTimeSeries2D: time_storage must not be null");
     }
     if (!time_frame) {
         throw std::invalid_argument(
-            "TensorDataV2::createTimeSeries2D: time_frame must not be null");
+            "TensorData::createTimeSeries2D: time_frame must not be null");
     }
     if (time_storage->size() != num_rows) {
         throw std::invalid_argument(
-            "TensorDataV2::createTimeSeries2D: time_storage size (" +
+            "TensorData::createTimeSeries2D: time_storage size (" +
             std::to_string(time_storage->size()) +
             ") must match num_rows (" + std::to_string(num_rows) + ")");
     }
@@ -170,7 +174,7 @@ TensorDataV2 TensorDataV2::createTimeSeries2D(
 
     auto storage = makeStorage(data, {num_rows, num_cols});
 
-    return TensorDataV2{std::move(dims), std::move(rows),
+    return TensorData{std::move(dims), std::move(rows),
                          std::move(storage), std::move(time_frame)};
 }
 
@@ -178,7 +182,7 @@ TensorDataV2 TensorDataV2::createTimeSeries2D(
 // Factory: createFromIntervals
 // =============================================================================
 
-TensorDataV2 TensorDataV2::createFromIntervals(
+TensorData TensorData::createFromIntervals(
     std::vector<float> const & data,
     std::size_t num_rows,
     std::size_t num_cols,
@@ -188,11 +192,11 @@ TensorDataV2 TensorDataV2::createFromIntervals(
 {
     if (!time_frame) {
         throw std::invalid_argument(
-            "TensorDataV2::createFromIntervals: time_frame must not be null");
+            "TensorData::createFromIntervals: time_frame must not be null");
     }
     if (intervals.size() != num_rows) {
         throw std::invalid_argument(
-            "TensorDataV2::createFromIntervals: intervals size (" +
+            "TensorData::createFromIntervals: intervals size (" +
             std::to_string(intervals.size()) +
             ") must match num_rows (" + std::to_string(num_rows) + ")");
     }
@@ -210,7 +214,7 @@ TensorDataV2 TensorDataV2::createFromIntervals(
 
     auto storage = makeStorage(data, {num_rows, num_cols});
 
-    return TensorDataV2{std::move(dims), std::move(rows),
+    return TensorData{std::move(dims), std::move(rows),
                          std::move(storage), std::move(time_frame)};
 }
 
@@ -218,13 +222,13 @@ TensorDataV2 TensorDataV2::createFromIntervals(
 // Factory: createND
 // =============================================================================
 
-TensorDataV2 TensorDataV2::createND(
+TensorData TensorData::createND(
     std::vector<float> const & data,
     std::vector<AxisDescriptor> axes)
 {
     if (axes.empty()) {
         throw std::invalid_argument(
-            "TensorDataV2::createND: axes must not be empty");
+            "TensorData::createND: axes must not be empty");
     }
 
     // Build shape vector
@@ -238,7 +242,7 @@ TensorDataV2 TensorDataV2::createND(
     auto rows = RowDescriptor::ordinal(shape_vec[0]);
     auto storage = makeStorage(data, shape_vec);
 
-    return TensorDataV2{std::move(dims), std::move(rows),
+    return TensorData{std::move(dims), std::move(rows),
                          std::move(storage), nullptr};
 }
 
@@ -246,7 +250,7 @@ TensorDataV2 TensorDataV2::createND(
 // Factory: createFromArmadillo (matrix)
 // =============================================================================
 
-TensorDataV2 TensorDataV2::createFromArmadillo(
+TensorData TensorData::createFromArmadillo(
     arma::fmat matrix,
     std::vector<std::string> column_names)
 {
@@ -264,7 +268,7 @@ TensorDataV2 TensorDataV2::createFromArmadillo(
     auto rows = RowDescriptor::ordinal(n_rows);
     auto storage = TensorStorageWrapper{ArmadilloTensorStorage{std::move(matrix)}};
 
-    return TensorDataV2{std::move(dims), std::move(rows),
+    return TensorData{std::move(dims), std::move(rows),
                          std::move(storage), nullptr};
 }
 
@@ -272,7 +276,7 @@ TensorDataV2 TensorDataV2::createFromArmadillo(
 // Factory: createFromArmadillo (cube)
 // =============================================================================
 
-TensorDataV2 TensorDataV2::createFromArmadillo(
+TensorData TensorData::createFromArmadillo(
     arma::fcube cube,
     std::vector<AxisDescriptor> axes)
 {
@@ -292,7 +296,7 @@ TensorDataV2 TensorDataV2::createFromArmadillo(
     auto rows = RowDescriptor::ordinal(n_slices);
     auto storage = TensorStorageWrapper{ArmadilloTensorStorage{std::move(cube)}};
 
-    return TensorDataV2{std::move(dims), std::move(rows),
+    return TensorData{std::move(dims), std::move(rows),
                          std::move(storage), nullptr};
 }
 
@@ -300,7 +304,7 @@ TensorDataV2 TensorDataV2::createFromArmadillo(
 // Factory: createOrdinal2D
 // =============================================================================
 
-TensorDataV2 TensorDataV2::createOrdinal2D(
+TensorData TensorData::createOrdinal2D(
     std::vector<float> const & data,
     std::size_t num_rows,
     std::size_t num_cols,
@@ -317,25 +321,75 @@ TensorDataV2 TensorDataV2::createOrdinal2D(
     auto rows = RowDescriptor::ordinal(num_rows);
     auto storage = makeStorage(data, {num_rows, num_cols});
 
-    return TensorDataV2{std::move(dims), std::move(rows),
+    return TensorData{std::move(dims), std::move(rows),
                          std::move(storage), nullptr};
 }
+
+// =============================================================================
+// Factory: createFromTorch (LibTorch)
+// =============================================================================
+
+#ifdef TENSOR_BACKEND_LIBTORCH
+TensorData TensorData::createFromTorch(
+    torch::Tensor tensor,
+    std::vector<AxisDescriptor> axes)
+{
+    if (!tensor.defined()) {
+        throw std::invalid_argument(
+            "TensorData::createFromTorch: tensor must be defined");
+    }
+
+    // Convert to float32 if needed (e.g., from double inference output)
+    if (tensor.scalar_type() != torch::kFloat32) {
+        tensor = tensor.to(torch::kFloat32);
+    }
+
+    auto const nd = tensor.dim();
+    if (nd == 0) {
+        throw std::invalid_argument(
+            "TensorData::createFromTorch: scalar tensors (0-dim) not supported");
+    }
+
+    // Auto-generate axis descriptors if not provided
+    if (axes.empty()) {
+        axes.reserve(static_cast<std::size_t>(nd));
+        for (int d = 0; d < nd; ++d) {
+            axes.push_back({"dim" + std::to_string(d),
+                            static_cast<std::size_t>(tensor.size(d))});
+        }
+    }
+
+    if (static_cast<int>(axes.size()) != nd) {
+        throw std::invalid_argument(
+            "TensorData::createFromTorch: axes count (" +
+            std::to_string(axes.size()) +
+            ") doesn't match tensor dims (" + std::to_string(nd) + ")");
+    }
+
+    DimensionDescriptor dims{axes};
+    auto rows = RowDescriptor::ordinal(static_cast<std::size_t>(tensor.size(0)));
+    auto storage = TensorStorageWrapper{LibTorchTensorStorage{std::move(tensor)}};
+
+    return TensorData{std::move(dims), std::move(rows),
+                         std::move(storage), nullptr};
+}
+#endif // TENSOR_BACKEND_LIBTORCH
 
 // =============================================================================
 // Dimension Queries
 // =============================================================================
 
-DimensionDescriptor const & TensorDataV2::dimensions() const noexcept
+DimensionDescriptor const & TensorData::dimensions() const noexcept
 {
     return _dimensions;
 }
 
-std::size_t TensorDataV2::ndim() const noexcept
+std::size_t TensorData::ndim() const noexcept
 {
     return _dimensions.ndim();
 }
 
-std::vector<std::size_t> TensorDataV2::shape() const
+std::vector<std::size_t> TensorData::shape() const
 {
     return _dimensions.shape();
 }
@@ -344,17 +398,17 @@ std::vector<std::size_t> TensorDataV2::shape() const
 // Row Queries
 // =============================================================================
 
-RowDescriptor const & TensorDataV2::rows() const noexcept
+RowDescriptor const & TensorData::rows() const noexcept
 {
     return _rows;
 }
 
-RowType TensorDataV2::rowType() const noexcept
+RowType TensorData::rowType() const noexcept
 {
     return _rows.type();
 }
 
-std::size_t TensorDataV2::numRows() const noexcept
+std::size_t TensorData::numRows() const noexcept
 {
     return _rows.count();
 }
@@ -363,17 +417,17 @@ std::size_t TensorDataV2::numRows() const noexcept
 // Column / Channel Access
 // =============================================================================
 
-bool TensorDataV2::hasNamedColumns() const noexcept
+bool TensorData::hasNamedColumns() const noexcept
 {
     return _dimensions.hasColumnNames();
 }
 
-std::vector<std::string> const & TensorDataV2::columnNames() const noexcept
+std::vector<std::string> const & TensorData::columnNames() const noexcept
 {
     return _dimensions.columnNames();
 }
 
-std::size_t TensorDataV2::numColumns() const noexcept
+std::size_t TensorData::numColumns() const noexcept
 {
     if (_dimensions.ndim() < 2) {
         return (_dimensions.ndim() == 1) ? 1 : 0;
@@ -381,25 +435,25 @@ std::size_t TensorDataV2::numColumns() const noexcept
     return _dimensions.axis(_dimensions.ndim() - 1).size;
 }
 
-std::vector<float> TensorDataV2::getColumn(std::size_t index) const
+std::vector<float> TensorData::getColumn(std::size_t index) const
 {
     if (!_storage.isValid()) {
-        throw std::runtime_error("TensorDataV2::getColumn: tensor has no storage");
+        throw std::runtime_error("TensorData::getColumn: tensor has no storage");
     }
     if (index >= numColumns()) {
         throw std::out_of_range(
-            "TensorDataV2::getColumn: index " + std::to_string(index) +
+            "TensorData::getColumn: index " + std::to_string(index) +
             " >= numColumns() " + std::to_string(numColumns()));
     }
     return _storage.getColumn(index);
 }
 
-std::vector<float> TensorDataV2::getColumn(std::string_view name) const
+std::vector<float> TensorData::getColumn(std::string_view name) const
 {
     auto const col_idx = _dimensions.findColumn(name);
     if (!col_idx.has_value()) {
         throw std::invalid_argument(
-            "TensorDataV2::getColumn: column '" + std::string(name) +
+            "TensorData::getColumn: column '" + std::string(name) +
             "' not found");
     }
     return getColumn(col_idx.value());
@@ -409,39 +463,39 @@ std::vector<float> TensorDataV2::getColumn(std::string_view name) const
 // Element Access
 // =============================================================================
 
-float TensorDataV2::at(std::span<std::size_t const> indices) const
+float TensorData::at(std::span<std::size_t const> indices) const
 {
     if (!_storage.isValid()) {
-        throw std::runtime_error("TensorDataV2::at: tensor has no storage");
+        throw std::runtime_error("TensorData::at: tensor has no storage");
     }
     return _storage.getValueAt(indices);
 }
 
-std::vector<float> TensorDataV2::row(std::size_t index) const
+std::vector<float> TensorData::row(std::size_t index) const
 {
     if (!_storage.isValid()) {
-        throw std::runtime_error("TensorDataV2::row: tensor has no storage");
+        throw std::runtime_error("TensorData::row: tensor has no storage");
     }
     if (_dimensions.ndim() == 0) {
-        throw std::logic_error("TensorDataV2::row: scalar tensor has no rows");
+        throw std::logic_error("TensorData::row: scalar tensor has no rows");
     }
     if (index >= _dimensions.axis(0).size) {
         throw std::out_of_range(
-            "TensorDataV2::row: index " + std::to_string(index) +
+            "TensorData::row: index " + std::to_string(index) +
             " >= axis(0).size " + std::to_string(_dimensions.axis(0).size));
     }
     return _storage.sliceAlongAxis(0, index);
 }
 
-std::span<float const> TensorDataV2::flatData() const
+std::span<float const> TensorData::flatData() const
 {
     if (!_storage.isValid()) {
-        throw std::runtime_error("TensorDataV2::flatData: tensor has no storage");
+        throw std::runtime_error("TensorData::flatData: tensor has no storage");
     }
     return _storage.flatData();
 }
 
-std::vector<float> TensorDataV2::materializeFlat() const
+std::vector<float> TensorData::materializeFlat() const
 {
     if (!_storage.isValid()) {
         return {};
@@ -481,7 +535,7 @@ std::vector<float> TensorDataV2::materializeFlat() const
 // Backend Conversion
 // =============================================================================
 
-TensorDataV2 TensorDataV2::materialize() const
+TensorData TensorData::materialize() const
 {
     if (!_storage.isValid()) {
         return *this; // empty tensor
@@ -506,14 +560,14 @@ TensorDataV2 TensorDataV2::materialize() const
 
     auto storage = makeStorage(data, s);
 
-    return TensorDataV2{std::move(dims), _rows, std::move(storage), _time_frame};
+    return TensorData{std::move(dims), _rows, std::move(storage), _time_frame};
 }
 
-TensorDataV2 TensorDataV2::toArmadillo() const
+TensorData TensorData::toArmadillo() const
 {
     if (_dimensions.ndim() > 3) {
         throw std::logic_error(
-            "TensorDataV2::toArmadillo: ndim() = " +
+            "TensorData::toArmadillo: ndim() = " +
             std::to_string(_dimensions.ndim()) + " > 3; Armadillo only supports ≤3D");
     }
 
@@ -527,43 +581,99 @@ TensorDataV2 TensorDataV2::toArmadillo() const
     return materialize();
 }
 
-arma::fmat const & TensorDataV2::asArmadilloMatrix() const
+arma::fmat const & TensorData::asArmadilloMatrix() const
 {
     if (!_storage.isValid()) {
-        throw std::logic_error("TensorDataV2::asArmadilloMatrix: empty tensor");
+        throw std::logic_error("TensorData::asArmadilloMatrix: empty tensor");
     }
     auto const * arma_storage = _storage.tryGetAs<ArmadilloTensorStorage>();
     if (!arma_storage) {
         throw std::logic_error(
-            "TensorDataV2::asArmadilloMatrix: storage is not Armadillo-backed "
+            "TensorData::asArmadilloMatrix: storage is not Armadillo-backed "
             "(use toArmadillo() first)");
     }
     return arma_storage->matrix(); // throws internally if not 2D
 }
 
-arma::fcube const & TensorDataV2::asArmadilloCube() const
+arma::fcube const & TensorData::asArmadilloCube() const
 {
     if (!_storage.isValid()) {
-        throw std::logic_error("TensorDataV2::asArmadilloCube: empty tensor");
+        throw std::logic_error("TensorData::asArmadilloCube: empty tensor");
     }
     auto const * arma_storage = _storage.tryGetAs<ArmadilloTensorStorage>();
     if (!arma_storage) {
         throw std::logic_error(
-            "TensorDataV2::asArmadilloCube: storage is not Armadillo-backed "
+            "TensorData::asArmadilloCube: storage is not Armadillo-backed "
             "(use toArmadillo() first)");
     }
     return arma_storage->cube(); // throws internally if not 3D
 }
 
 // =============================================================================
+// Backend Conversion: LibTorch
+// =============================================================================
+
+#ifdef TENSOR_BACKEND_LIBTORCH
+TensorData TensorData::toLibTorch() const
+{
+    // Already LibTorch-backed? Return shallow copy.
+    if (_storage.isValid() &&
+        _storage.getStorageType() == TensorStorageType::LibTorch) {
+        return *this;
+    }
+
+    if (!_storage.isValid()) {
+        throw std::logic_error("TensorData::toLibTorch: empty tensor");
+    }
+
+    // Materialize to row-major flat data, then wrap in torch::Tensor
+    auto flat = materializeFlat();
+    auto const s = _dimensions.shape();
+
+    auto torch_storage = LibTorchTensorStorage::fromFlatData(flat, s);
+
+    // Preserve dimensions, rows, timeframe
+    std::vector<AxisDescriptor> axes;
+    axes.reserve(s.size());
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        axes.push_back(_dimensions.axis(i));
+    }
+    DimensionDescriptor dims{axes};
+    if (_dimensions.hasColumnNames()) {
+        dims.setColumnNames(
+            std::vector<std::string>(_dimensions.columnNames().begin(),
+                                      _dimensions.columnNames().end()));
+    }
+
+    return TensorData{std::move(dims), _rows,
+                         TensorStorageWrapper{std::move(torch_storage)},
+                         _time_frame};
+}
+
+torch::Tensor const & TensorData::asTorchTensor() const
+{
+    if (!_storage.isValid()) {
+        throw std::logic_error("TensorData::asTorchTensor: empty tensor");
+    }
+    auto const * torch_storage = _storage.tryGetAs<LibTorchTensorStorage>();
+    if (!torch_storage) {
+        throw std::logic_error(
+            "TensorData::asTorchTensor: storage is not LibTorch-backed "
+            "(use toLibTorch() first)");
+    }
+    return torch_storage->tensor();
+}
+#endif // TENSOR_BACKEND_LIBTORCH
+
+// =============================================================================
 // Mutation
 // =============================================================================
 
-void TensorDataV2::setData(std::vector<float> const & data,
+void TensorData::setData(std::vector<float> const & data,
                             std::vector<std::size_t> const & new_shape)
 {
     if (new_shape.empty()) {
-        throw std::invalid_argument("TensorDataV2::setData: shape must not be empty");
+        throw std::invalid_argument("TensorData::setData: shape must not be empty");
     }
 
     _storage = makeStorage(data, new_shape);
@@ -582,7 +692,7 @@ void TensorDataV2::setData(std::vector<float> const & data,
     notifyObservers();
 }
 
-void TensorDataV2::setData(std::vector<float> && data,
+void TensorData::setData(std::vector<float> && data,
                             std::vector<std::size_t> const & new_shape)
 {
     // For now, delegating to the const-ref version since makeStorage takes const ref.
@@ -595,12 +705,12 @@ void TensorDataV2::setData(std::vector<float> && data,
 // Storage Access
 // =============================================================================
 
-TensorStorageWrapper const & TensorDataV2::storage() const noexcept
+TensorStorageWrapper const & TensorData::storage() const noexcept
 {
     return _storage;
 }
 
-bool TensorDataV2::isContiguous() const noexcept
+bool TensorData::isContiguous() const noexcept
 {
     if (!_storage.isValid()) {
         return false;
@@ -608,7 +718,7 @@ bool TensorDataV2::isContiguous() const noexcept
     return _storage.isContiguous();
 }
 
-bool TensorDataV2::isEmpty() const noexcept
+bool TensorData::isEmpty() const noexcept
 {
     return !_storage.isValid();
 }
@@ -617,12 +727,12 @@ bool TensorDataV2::isEmpty() const noexcept
 // TimeFrame
 // =============================================================================
 
-void TensorDataV2::setTimeFrame(std::shared_ptr<TimeFrame> tf)
+void TensorData::setTimeFrame(std::shared_ptr<TimeFrame> tf)
 {
     _time_frame = std::move(tf);
 }
 
-std::shared_ptr<TimeFrame> TensorDataV2::getTimeFrame() const noexcept
+std::shared_ptr<TimeFrame> TensorData::getTimeFrame() const noexcept
 {
     return _time_frame;
 }
@@ -631,7 +741,7 @@ std::shared_ptr<TimeFrame> TensorDataV2::getTimeFrame() const noexcept
 // Column Names Mutation
 // =============================================================================
 
-void TensorDataV2::setColumnNames(std::vector<std::string> names)
+void TensorData::setColumnNames(std::vector<std::string> names)
 {
     _dimensions.setColumnNames(std::move(names));
 }
