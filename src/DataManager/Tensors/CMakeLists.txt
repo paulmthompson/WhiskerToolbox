@@ -51,6 +51,8 @@ endif()
 # Common tensor sources
 set(TENSOR_SOURCES
     Tensor_Data.hpp
+    TensorData.hpp
+    TensorData.cpp
     DimensionDescriptor.hpp
     DimensionDescriptor.cpp
     RowDescriptor.hpp

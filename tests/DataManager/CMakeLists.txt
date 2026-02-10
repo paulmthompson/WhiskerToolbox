@@ -131,6 +131,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/ArmadilloTensorStorage.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/DenseTensorStorage.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/TensorStorageWrapper.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/TensorData.test.cpp
 
         TransformsV2/test_view_pipeline.test.cpp
         TransformsV2/test_line_min_point_dist_v2.test.cpp
