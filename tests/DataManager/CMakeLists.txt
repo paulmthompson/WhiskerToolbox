@@ -126,6 +126,12 @@ add_executable(test_data_manager
         # Loader tests
         loaders/test_analog_reflection.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/DimensionDescriptor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/RowDescriptor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/ArmadilloTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/DenseTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/TensorStorageWrapper.test.cpp
+
         TransformsV2/test_view_pipeline.test.cpp
         TransformsV2/test_line_min_point_dist_v2.test.cpp
         #TransformsV2/test_zipping_logic.test.cpp
@@ -188,6 +194,7 @@ endif()
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
+target_link_libraries(test_data_manager PRIVATE TensorData)
 
 target_include_directories(test_data_manager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
