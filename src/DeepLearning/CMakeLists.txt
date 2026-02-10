@@ -19,6 +19,18 @@ set(DEEP_LEARNING_SOURCES
 
     models/scm/scm.hpp
     models/scm/scm.cpp
+
+    channel_encoding/ChannelEncoder.hpp
+    channel_encoding/ImageEncoder.hpp
+    channel_encoding/ImageEncoder.cpp
+    channel_encoding/Point2DEncoder.hpp
+    channel_encoding/Point2DEncoder.cpp
+    channel_encoding/Mask2DEncoder.hpp
+    channel_encoding/Mask2DEncoder.cpp
+    channel_encoding/Line2DEncoder.hpp
+    channel_encoding/Line2DEncoder.cpp
+    channel_encoding/EncoderFactory.hpp
+    channel_encoding/EncoderFactory.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
@@ -31,6 +43,11 @@ target_include_directories(DeepLearning PUBLIC
 
 target_link_libraries(DeepLearning PRIVATE "${TORCH_LIBRARIES}")
 target_link_libraries(DeepLearning PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(DeepLearning PRIVATE executorch
+  #  executorch::backends
+ #   executorch::extensions
+ #   executorch::kernels
+)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DeepLearning PRIVATE ${CLANG_OPTIONS})

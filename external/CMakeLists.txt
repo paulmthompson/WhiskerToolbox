@@ -23,6 +23,7 @@ if(ENABLE_ORTOOLS)
             ortools
             GIT_REPOSITORY https://github.com/google/or-tools.git
             GIT_TAG         v9.14
+            GIT_SHALLOW 1
         )
         set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
         set(BUILD_DEPS OFF)
@@ -60,6 +61,7 @@ if(ENABLE_ORTOOLS)
             ortools
             GIT_REPOSITORY https://github.com/google/or-tools.git
             GIT_TAG         v9.14
+            GIT_SHALLOW 1
         )
         set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
         set(BUILD_DEPS OFF)
@@ -97,6 +99,7 @@ if(ENABLE_ORTOOLS)
           ortools
           GIT_REPOSITORY https://github.com/google/or-tools.git
           GIT_TAG         v9.14
+          GIT_SHALLOW 1
         )
       set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
       set(BUILD_DEPS OFF)
@@ -202,7 +205,6 @@ elseif (WIN32)
     endif()
 endif()
 
-#[[
 FetchContent_Declare(
     executorch
     GIT_REPOSITORY https://github.com/pytorch/executorch.git
@@ -210,10 +212,13 @@ FetchContent_Declare(
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/executorch # https://github.com/pytorch/executorch/issues/6475
 )
 
-set(EXECUTORCH_BUILD_PRESET_FILE ${CMAKE_BINARY_DIR}/external/_deps/executorch/tools/cmake/preset/linux.cmake)
+# Do NOT set EXECUTORCH_BUILD_PRESET_FILE to linux.cmake — it chains into
+# llm.cmake which enables EXECUTORCH_BUILD_KERNELS_OPTIMIZED and other features
+# that require a pip-installed torch (Python `import torch`). We use libtorch
+# (C++ only) via FetchContent, so we must disable those code paths.
 set(EXECUTORCH_BUILD_PORTABLE_OPS OFF)
 set(EXECUTORCH_BUILD_EXECUTOR_RUNNER OFF)
-]]#
+
 #[[
 #v1.1.0 = torch 2.11.0
 #v1.0.1 = torch 2.9.0 november 20, 2025
@@ -221,7 +226,8 @@ set(EXECUTORCH_BUILD_EXECUTOR_RUNNER OFF)
 #v0.7.0 = torch 2.8.0 August 11, 2025
 ]]
 
-set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir")
+
+set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir" "executorch")
 
 if(ENABLE_ORTOOLS)
     list(APPEND FETCHCONTENT_TARGETS "ortools")
@@ -299,3 +305,4 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torc
 set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
 set(iir_SOURCE_DIR ${iir_SOURCE_DIR} PARENT_SCOPE)
 set(ortools_SOURCE_DIR ${ortools_SOURCE_DIR} PARENT_SCOPE)
+
