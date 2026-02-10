@@ -4,6 +4,7 @@
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/TensorSlotDescriptor.hpp"
 
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
@@ -94,6 +95,14 @@ public:
     /// Returns nullptr if the model or slot is not found.
     [[nodiscard]] TensorSlotDescriptor const *
     getOutputSlot(std::string const & model_id, std::string const & slot_name) const;
+
+    /// Load a JSON model spec from a file and register the resulting RuntimeModel.
+    ///
+    /// On success, returns the model_id. On failure returns std::nullopt.
+    /// If @p error_out is non-null, it receives the error message on failure.
+    [[nodiscard]] std::optional<std::string>
+    registerFromJson(std::filesystem::path const & json_path,
+                     std::string * error_out = nullptr);
 
     /// Remove all registered models and clear the info cache.
     /// Primarily useful for testing.

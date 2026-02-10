@@ -2,6 +2,7 @@
 #I need this before torch include to avoid protobuf
 # target conflicts
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(reflectcpp CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
 set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
@@ -52,6 +53,11 @@ set(DEEP_LEARNING_SOURCES
 
     registry/ModelRegistry.hpp
     registry/ModelRegistry.cpp
+
+    runtime/RuntimeModelSpec.hpp
+    runtime/RuntimeModelSpec.cpp
+    runtime/RuntimeModel.hpp
+    runtime/RuntimeModel.cpp
 )
 
 add_library(DeepLearning STATIC ${DEEP_LEARNING_SOURCES})
@@ -67,6 +73,7 @@ target_link_libraries(DeepLearning PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(DeepLearning PRIVATE executorch)
 target_link_libraries(DeepLearning PRIVATE extension_module_static)
 target_link_libraries(DeepLearning PRIVATE extension_tensor)
+target_link_libraries(DeepLearning PUBLIC reflectcpp::reflectcpp)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DeepLearning PRIVATE ${CLANG_OPTIONS})

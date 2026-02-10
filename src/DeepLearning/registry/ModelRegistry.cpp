@@ -1,5 +1,8 @@
 #include "ModelRegistry.hpp"
 
+#include "runtime/RuntimeModel.hpp"
+#include "runtime/RuntimeModelSpec.hpp"
+
 #include <algorithm>
 #include <cassert>
 
@@ -107,6 +110,44 @@ ModelRegistry::getOutputSlot(std::string const & model_id,
         }
     }
     return nullptr;
+}
+
+std::optional<std::string>
+ModelRegistry::registerFromJson(std::filesystem::path const & json_path,
+                                std::string * error_out)
+{
+    auto spec_result = RuntimeModelSpec::fromJsonFile(json_path);
+    if (!spec_result) {
+        if (error_out != nullptr) {
+            *error_out = spec_result.error()->what();
+        }
+        return std::nullopt;
+    }
+
+    auto spec = std::move(spec_result.value());
+
+    auto validation_errors = spec.validate();
+    if (!validation_errors.empty()) {
+        if (error_out != nullptr) {
+            std::string combined = "Validation failed:";
+            for (auto const & err : validation_errors) {
+                combined += " " + err + ";";
+            }
+            *error_out = combined;
+        }
+        return std::nullopt;
+    }
+
+    auto model_id = spec.model_id;
+    auto shared_spec = std::make_shared<RuntimeModelSpec>(std::move(spec));
+
+    registerModel(
+        model_id,
+        [shared_spec] {
+            return std::make_unique<RuntimeModel>(*shared_spec);
+        });
+
+    return model_id;
 }
 
 void ModelRegistry::clear()

@@ -201,3 +201,51 @@ else()
         COMMAND test_model_registry
         )
 endif()
+
+# --- Phase 5: Runtime Model Tests ---
+find_package(reflectcpp CONFIG REQUIRED)
+
+add_executable(test_runtime_model
+    runtime/RuntimeModelSpec.test.cpp
+)
+
+target_link_libraries(test_runtime_model PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+    reflectcpp::reflectcpp
+)
+
+target_include_directories(test_runtime_model PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(test_runtime_model PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(test_runtime_model PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(test_runtime_model PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if (ENABLE_DETAILED_TEST_DISCOVERY)
+    if (WIN32)
+        catch_discover_tests(test_runtime_model
+                DL_PATHS
+                "$ENV{PATH}"
+                "${CMAKE_BINARY_DIR}"
+        )
+    else()
+        catch_discover_tests(test_runtime_model)
+    endif()
+else()
+    add_test(NAME test_runtime_model_all
+        COMMAND test_runtime_model
+        )
+endif()
