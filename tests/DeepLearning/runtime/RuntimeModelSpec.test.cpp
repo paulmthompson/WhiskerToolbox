@@ -621,3 +621,72 @@ TEST_CASE("ModelRegistry - registerFromJson with invalid spec", "[runtime]")
 
     std::filesystem::remove_all(tmp_dir);
 }
+
+// ──────────────────────────────────────────────────────────────
+// Phase 3A: backend field
+// ──────────────────────────────────────────────────────────────
+
+TEST_CASE("RuntimeModelSpec - parse with backend field", "[runtime]")
+{
+    auto json = R"({
+        "model_id": "backend_test",
+        "display_name": "Backend Test",
+        "weights_path": "/tmp/model.pt2",
+        "backend": "aotinductor",
+        "inputs": [
+            { "name": "x", "shape": [3, 64, 64] }
+        ],
+        "outputs": [
+            { "name": "y", "shape": [1, 64, 64] }
+        ]
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    auto const & spec = result.value();
+
+    REQUIRE(spec.backend.has_value());
+    CHECK(spec.backend.value() == "aotinductor");
+}
+
+TEST_CASE("RuntimeModelSpec - parse without backend field defaults to empty", "[runtime]")
+{
+    auto json = R"({
+        "model_id": "no_backend",
+        "display_name": "No Backend",
+        "inputs": [
+            { "name": "x", "shape": [1] }
+        ],
+        "outputs": [
+            { "name": "y", "shape": [1] }
+        ]
+    })";
+
+    auto result = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result);
+    CHECK_FALSE(result.value().backend.has_value());
+}
+
+TEST_CASE("RuntimeModelSpec - backend field roundtrips through toJson", "[runtime]")
+{
+    auto json = R"({
+        "model_id": "roundtrip_backend",
+        "display_name": "Roundtrip",
+        "backend": "torchscript",
+        "inputs": [
+            { "name": "x", "shape": [1] }
+        ],
+        "outputs": [
+            { "name": "y", "shape": [1] }
+        ]
+    })";
+
+    auto result1 = dl::RuntimeModelSpec::fromJson(json);
+    REQUIRE(result1);
+    auto serialized = result1.value().toJson();
+
+    auto result2 = dl::RuntimeModelSpec::fromJson(serialized);
+    REQUIRE(result2);
+    REQUIRE(result2.value().backend.has_value());
+    CHECK(result2.value().backend.value() == "torchscript");
+}

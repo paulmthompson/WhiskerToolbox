@@ -7,6 +7,16 @@
 
 namespace dl {
 
+/// Tensor data types supported for slot descriptors.
+/// Mapped to torch::ScalarType at runtime.
+enum class TensorDType : int {
+    Float32 = 0,   ///< torch::kFloat32
+    Float64 = 1,   ///< torch::kFloat64
+    Byte = 2,      ///< torch::kByte (uint8)
+    Int32 = 3,     ///< torch::kInt32
+    Int64 = 4      ///< torch::kInt64
+};
+
 /// Describes one named tensor input or output of a model.
 ///
 /// Each slot has a shape (excluding the leading batch dimension), a name,
@@ -19,6 +29,10 @@ struct TensorSlotDescriptor {
     std::string recommended_decoder;      ///< e.g. "TensorToMask2D"
     bool is_static = false;               ///< If true, user sets once (memory frames)
     bool is_boolean_mask = false;         ///< If true, values are 0/1 flags
+    
+    /// Expected tensor dtype. Default is Float32.
+    /// Use Byte (uint8) for image inputs that the model normalizes internally.
+    TensorDType dtype = TensorDType::Float32;
 
     /// Optional sequence dimension index within `shape`.
     /// When >= 0, this axis represents a sequence of frames (e.g., memory

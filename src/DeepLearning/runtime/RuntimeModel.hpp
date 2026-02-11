@@ -4,6 +4,7 @@
 #include "RuntimeModelSpec.hpp"
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/ModelExecution.hpp"
+#include "models_v2/backends/InferenceBackend.hpp"
 
 #include <filesystem>
 #include <string>

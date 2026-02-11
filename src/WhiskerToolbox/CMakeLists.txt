@@ -245,7 +245,19 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
-target_link_libraries(WhiskerToolbox PRIVATE DeepLearning)
+
+# Force whole-archive linking for DeepLearning to ensure static model registration runs
+# (NeuroSAMModel self-registers via DL_REGISTER_MODEL macro, but linker would strip it
+# since there are no direct symbol references)
+if(APPLE)
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,-force_load,$<TARGET_FILE:DeepLearning>)
+elseif(MSVC)
+    target_link_libraries(WhiskerToolbox PRIVATE /WHOLEARCHIVE:DeepLearning)
+else()
+    # Linux/GCC/Clang
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,--whole-archive DeepLearning -Wl,--no-whole-archive)
+endif()
+
 target_link_libraries(WhiskerToolbox PRIVATE DeepLearning_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets

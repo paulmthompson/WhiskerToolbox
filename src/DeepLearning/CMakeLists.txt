@@ -51,6 +51,12 @@ set(DEEP_LEARNING_SOURCES
     models_v2/ModelExecution.hpp
     models_v2/ModelExecution.cpp
 
+    models_v2/backends/InferenceBackend.hpp
+    models_v2/backends/TorchScriptBackend.hpp
+    models_v2/backends/TorchScriptBackend.cpp
+    models_v2/backends/AOTInductorBackend.hpp
+    models_v2/backends/AOTInductorBackend.cpp
+
     registry/ModelRegistry.hpp
     registry/ModelRegistry.cpp
 
@@ -73,9 +79,18 @@ target_include_directories(DeepLearning PUBLIC
 
 target_link_libraries(DeepLearning PRIVATE "${TORCH_LIBRARIES}")
 target_link_libraries(DeepLearning PRIVATE NEURALYZER_GEOMETRY)
-target_link_libraries(DeepLearning PRIVATE executorch)
-target_link_libraries(DeepLearning PRIVATE extension_module_static)
-target_link_libraries(DeepLearning PRIVATE extension_tensor)
+
+if(ENABLE_EXECUTORCH)
+    target_sources(DeepLearning PRIVATE
+        models_v2/backends/ExecuTorchBackend.hpp
+        models_v2/backends/ExecuTorchBackend.cpp
+    )
+    target_link_libraries(DeepLearning PRIVATE executorch)
+    target_link_libraries(DeepLearning PRIVATE extension_module_static)
+    target_link_libraries(DeepLearning PRIVATE extension_tensor)
+    target_compile_definitions(DeepLearning PUBLIC DL_HAS_EXECUTORCH)
+endif()
+
 target_link_libraries(DeepLearning PUBLIC reflectcpp::reflectcpp)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

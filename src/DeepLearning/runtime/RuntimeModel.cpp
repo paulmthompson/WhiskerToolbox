@@ -8,6 +8,9 @@ RuntimeModel::RuntimeModel(RuntimeModelSpec spec)
     : _spec(std::move(spec))
     , _input_slots(_spec.inputDescriptors())
     , _output_slots(_spec.outputDescriptors())
+    , _execution(_spec.backend.has_value()
+          ? backendTypeFromString(_spec.backend.value())
+          : BackendType::Auto)
 {
     _input_order.reserve(_input_slots.size());
     for (auto const & slot : _input_slots) {

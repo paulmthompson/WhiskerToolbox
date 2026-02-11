@@ -445,13 +445,21 @@ QGroupBox * DeepLearningPropertiesWidget::_buildStaticInputGroup(
     dl::TensorSlotDescriptor const & slot) {
 
     auto * group = new QGroupBox(
-        QString::fromStdString(slot.name) + tr(" (static)"),
+        QString::fromStdString(slot.name) + tr(" (memory)"),
         _dynamic_container);
     auto * layout = new QVBoxLayout(group);
 
     if (!slot.description.empty()) {
         group->setToolTip(QString::fromStdString(slot.description));
     }
+
+    // Info label explaining memory inputs
+    auto * info = new QLabel(
+        tr("Memory frame: loaded from DataManager at specified time offset (e.g., t-1 = previous frame)"),
+        group);
+    info->setWordWrap(true);
+    info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+    layout->addWidget(info);
 
     QString shape_str;
     for (std::size_t i = 0; i < slot.shape.size(); ++i) {

@@ -294,3 +294,34 @@ else()
         COMMAND test_runtime_model
         )
 endif()
+
+# ────────────────────────────────────────────────────────────────────────────
+# Standalone test driver for NeuroSAM debugging
+# ────────────────────────────────────────────────────────────────────────────
+
+add_executable(neurosam_test_driver
+    neurosam_test_driver.cpp
+)
+
+target_link_libraries(neurosam_test_driver PRIVATE
+    WhiskerToolbox::DeepLearning
+    NEURALYZER_GEOMETRY
+    "${TORCH_LIBRARIES}"
+)
+
+target_include_directories(neurosam_test_driver PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DeepLearning>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/CoreGeometry/include>"
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(neurosam_test_driver PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(neurosam_test_driver PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(neurosam_test_driver PRIVATE ${MSVC_WARNINGS})
+endif()

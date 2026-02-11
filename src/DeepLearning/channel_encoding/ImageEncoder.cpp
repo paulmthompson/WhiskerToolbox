@@ -39,29 +39,49 @@ void ImageEncoder::encode(std::vector<uint8_t> const & image_data,
         const_cast<uint8_t *>(image_data.data()),
         {source_size.height, source_size.width, num_channels},
         torch::kByte);
+    
+    // Check if output tensor is uint8 — if so, skip float conversion
+    bool const output_is_uint8 = (tensor.dtype() == torch::kByte);
+    
+    if (output_is_uint8) {
+        // Keep as uint8, no normalization
+        // Permute to [C, H, W]
+        src_tensor = src_tensor.permute({2, 0, 1}).clone();
+        
+        // Resize if needed (need float for interpolation, then back to uint8)
+        if (source_size.height != params.height || source_size.width != params.width) {
+            src_tensor = src_tensor.to(torch::kFloat32).unsqueeze(0);
+            src_tensor = torch::nn::functional::interpolate(
+                src_tensor,
+                torch::nn::functional::InterpolateFuncOptions()
+                    .size(std::vector<int64_t>{params.height, params.width})
+                    .mode(torch::kBilinear)
+                    .align_corners(false));
+            src_tensor = src_tensor.squeeze(0).clamp(0, 255).to(torch::kByte);
+        }
+    } else {
+        // Convert to float for float32 output
+        src_tensor = src_tensor.to(torch::kFloat32);
 
-    // Convert to float
-    src_tensor = src_tensor.to(torch::kFloat32);
+        // Normalize uint8 [0,255] -> [0,1]
+        if (params.normalize) {
+            src_tensor = src_tensor / 255.0f;
+        }
 
-    // Normalize uint8 [0,255] -> [0,1]
-    if (params.normalize) {
-        src_tensor = src_tensor / 255.0f;
-    }
+        // Permute to [C, H, W]
+        src_tensor = src_tensor.permute({2, 0, 1});
 
-    // Permute to [C, H, W]
-    src_tensor = src_tensor.permute({2, 0, 1});
-
-    // Resize to target spatial dimensions if needed
-    if (source_size.height != params.height || source_size.width != params.width) {
-        // Use bilinear interpolation: expects [N, C, H, W]
-        src_tensor = src_tensor.unsqueeze(0);
-        src_tensor = torch::nn::functional::interpolate(
-            src_tensor,
-            torch::nn::functional::InterpolateFuncOptions()
-                .size(std::vector<int64_t>{params.height, params.width})
-                .mode(torch::kBilinear)
-                .align_corners(false));
-        src_tensor = src_tensor.squeeze(0); // back to [C, H, W]
+        // Resize to target spatial dimensions if needed
+        if (source_size.height != params.height || source_size.width != params.width) {
+            src_tensor = src_tensor.unsqueeze(0);
+            src_tensor = torch::nn::functional::interpolate(
+                src_tensor,
+                torch::nn::functional::InterpolateFuncOptions()
+                    .size(std::vector<int64_t>{params.height, params.width})
+                    .mode(torch::kBilinear)
+                    .align_corners(false));
+            src_tensor = src_tensor.squeeze(0);
+        }
     }
 
     // Determine how many output channels to write

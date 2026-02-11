@@ -23,7 +23,6 @@ namespace dl {
 ///   - "encoder_image"  : [3, 256, 256]  — current video frame (RGB)
 ///   - "memory_images"  : [3, 256, 256]  — memory encoder frames (static, per-slot)
 ///   - "memory_masks"   : [1, 256, 256]  — memory ROI masks (static, per-slot)
-///   - "memory_mask"    : [1]            — boolean active flags (static, boolean)
 ///
 /// Output slots:
 ///   - "probability_map": [1, 256, 256]  — probability map (decode as mask or point)
@@ -73,7 +72,6 @@ public:
     static constexpr char const * kEncoderImageSlot = "encoder_image";
     static constexpr char const * kMemoryImagesSlot = "memory_images";
     static constexpr char const * kMemoryMasksSlot = "memory_masks";
-    static constexpr char const * kMemoryMaskSlot = "memory_mask";
     static constexpr char const * kProbabilityMapSlot = "probability_map";
 
 private:

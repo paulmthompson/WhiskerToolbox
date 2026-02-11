@@ -26,27 +26,48 @@ Mask2D TensorToMask2D::decode(torch::Tensor const & tensor,
     bool const needs_scaling =
         params.target_image_size.width > 0 && params.target_image_size.height > 0;
 
-    float const sx = needs_scaling
-        ? static_cast<float>(params.target_image_size.width) / static_cast<float>(w)
-        : 1.0f;
-    float const sy = needs_scaling
-        ? static_cast<float>(params.target_image_size.height) / static_cast<float>(h)
-        : 1.0f;
+    if (!needs_scaling) {
+        // No scaling needed - iterate over source and output directly
+        Mask2D mask;
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                if (accessor[y][x] > params.threshold) {
+                    mask.push_back(Point2D<uint32_t>{
+                        static_cast<uint32_t>(x),
+                        static_cast<uint32_t>(y)});
+                }
+            }
+        }
+        return mask;
+    }
+
+    // Upscaling with proper nearest-neighbor interpolation:
+    // Iterate over destination pixels and find corresponding source pixels.
+    // This fills the entire region without gaps.
+    int const dest_w = params.target_image_size.width;
+    int const dest_h = params.target_image_size.height;
+
+    // Scale factors: dest -> source mapping
+    float const x_scale = static_cast<float>(w) / static_cast<float>(dest_w);
+    float const y_scale = static_cast<float>(h) / static_cast<float>(dest_h);
 
     Mask2D mask;
+    for (int dest_y = 0; dest_y < dest_h; ++dest_y) {
+        // Find source y coordinate using nearest-neighbor mapping
+        int const src_y = std::clamp(
+            static_cast<int>((static_cast<float>(dest_y) + 0.5f) * y_scale),
+            0, h - 1);
 
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            if (accessor[y][x] > params.threshold) {
-                auto const px = static_cast<uint32_t>(
-                    std::clamp(static_cast<int>(std::round(static_cast<float>(x) * sx)),
-                               0,
-                               needs_scaling ? params.target_image_size.width - 1 : w - 1));
-                auto const py = static_cast<uint32_t>(
-                    std::clamp(static_cast<int>(std::round(static_cast<float>(y) * sy)),
-                               0,
-                               needs_scaling ? params.target_image_size.height - 1 : h - 1));
-                mask.push_back(Point2D<uint32_t>{px, py});
+        for (int dest_x = 0; dest_x < dest_w; ++dest_x) {
+            // Find source x coordinate using nearest-neighbor mapping
+            int const src_x = std::clamp(
+                static_cast<int>((static_cast<float>(dest_x) + 0.5f) * x_scale),
+                0, w - 1);
+
+            if (accessor[src_y][src_x] > params.threshold) {
+                mask.push_back(Point2D<uint32_t>{
+                    static_cast<uint32_t>(dest_x),
+                    static_cast<uint32_t>(dest_y)});
             }
         }
     }

@@ -47,11 +47,11 @@ TEST_CASE("NeuroSAMModel - maxBatchSize is 1", "[NeuroSAMModel]")
 
 // ─── Input Slot Tests ───────────────────────────────────────────
 
-TEST_CASE("NeuroSAMModel - has 4 input slots", "[NeuroSAMModel]")
+TEST_CASE("NeuroSAMModel - has 3 input slots", "[NeuroSAMModel]")
 {
     dl::NeuroSAMModel model;
     auto inputs = model.inputSlots();
-    REQUIRE(inputs.size() == 4);
+    REQUIRE(inputs.size() == 3);
 }
 
 TEST_CASE("NeuroSAMModel - encoder_image slot", "[NeuroSAMModel]")
@@ -100,20 +100,6 @@ TEST_CASE("NeuroSAMModel - memory_masks slot", "[NeuroSAMModel]")
     CHECK(slot.recommended_encoder == "Mask2DEncoder");
     CHECK(slot.is_static == true);
     CHECK(slot.is_boolean_mask == false);
-    CHECK(slot.sequence_dim == -1);
-}
-
-TEST_CASE("NeuroSAMModel - memory_mask slot (boolean)", "[NeuroSAMModel]")
-{
-    dl::NeuroSAMModel model;
-    auto inputs = model.inputSlots();
-    REQUIRE(inputs.size() >= 4);
-
-    auto const & slot = inputs[3];
-    CHECK(slot.name == "memory_mask");
-    CHECK(slot.shape == std::vector<int64_t>{1});
-    CHECK(slot.is_static == true);
-    CHECK(slot.is_boolean_mask == true);
     CHECK(slot.sequence_dim == -1);
 }
 
@@ -168,7 +154,6 @@ TEST_CASE("NeuroSAMModel - forward without weights throws", "[NeuroSAMModel]")
         {"encoder_image", torch::randn({1, 3, 256, 256})},
         {"memory_images", torch::randn({1, 3, 256, 256})},
         {"memory_masks", torch::randn({1, 1, 256, 256})},
-        {"memory_mask", torch::ones({1, 1})},
     };
 
     CHECK_THROWS_AS(model.forward(inputs), std::runtime_error);
@@ -183,11 +168,10 @@ TEST_CASE("NeuroSAMModel - forward with missing input throws", "[NeuroSAMModel][
     // Since we can't actually load weights in unit tests, we verify the error message.
     dl::NeuroSAMModel model;
 
-    // Missing memory_mask
+    // Missing memory_masks
     std::unordered_map<std::string, torch::Tensor> incomplete_inputs{
         {"encoder_image", torch::randn({1, 3, 256, 256})},
         {"memory_images", torch::randn({1, 3, 256, 256})},
-        {"memory_masks", torch::randn({1, 1, 256, 256})},
     };
 
     // Should throw because model isn't ready AND inputs are incomplete
@@ -213,7 +197,6 @@ TEST_CASE("NeuroSAMModel - slot name constants match slot descriptors", "[NeuroS
     CHECK(inputs[0].name == dl::NeuroSAMModel::kEncoderImageSlot);
     CHECK(inputs[1].name == dl::NeuroSAMModel::kMemoryImagesSlot);
     CHECK(inputs[2].name == dl::NeuroSAMModel::kMemoryMasksSlot);
-    CHECK(inputs[3].name == dl::NeuroSAMModel::kMemoryMaskSlot);
     CHECK(outputs[0].name == dl::NeuroSAMModel::kProbabilityMapSlot);
 }
 
@@ -233,9 +216,6 @@ TEST_CASE("NeuroSAMModel - slot numElements correct", "[NeuroSAMModel]")
 
     // memory_masks: 1 * 256 * 256
     CHECK(inputs[2].numElements() == 1 * 256 * 256);
-
-    // memory_mask: 1
-    CHECK(inputs[3].numElements() == 1);
 
     // probability_map: 1 * 256 * 256
     CHECK(outputs[0].numElements() == 1 * 256 * 256);
@@ -264,7 +244,7 @@ TEST_CASE("NeuroSAMModel - move constructor", "[NeuroSAMModel]")
 
     dl::NeuroSAMModel moved(std::move(original));
     CHECK(moved.modelId() == "neurosam");
-    CHECK(moved.inputSlots().size() == 4);
+    CHECK(moved.inputSlots().size() == 3);
     CHECK(moved.outputSlots().size() == 1);
 }
 
@@ -304,7 +284,7 @@ TEST_CASE("NeuroSAMModel - ModelInfo from registry", "[NeuroSAMModel][ModelRegis
     CHECK(info->model_id == "neurosam");
     CHECK(info->display_name == "NeuroSAM");
     CHECK_FALSE(info->description.empty());
-    CHECK(info->inputs.size() == 4);
+    CHECK(info->inputs.size() == 3);
     CHECK(info->outputs.size() == 1);
     CHECK(info->preferred_batch_size == 1);
     CHECK(info->max_batch_size == 1);
@@ -318,9 +298,9 @@ TEST_CASE("NeuroSAMModel - registry slot lookup", "[NeuroSAMModel][ModelRegistry
     REQUIRE(encoder_image != nullptr);
     CHECK(encoder_image->recommended_encoder == "ImageEncoder");
 
-    auto const * memory_mask = registry.getInputSlot("neurosam", "memory_mask");
-    REQUIRE(memory_mask != nullptr);
-    CHECK(memory_mask->is_boolean_mask == true);
+    auto const * memory_masks = registry.getInputSlot("neurosam", "memory_masks");
+    REQUIRE(memory_masks != nullptr);
+    CHECK(memory_masks->recommended_encoder == "Mask2DEncoder");
 
     auto const * prob_map = registry.getOutputSlot("neurosam", "probability_map");
     REQUIRE(prob_map != nullptr);

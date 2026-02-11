@@ -59,6 +59,7 @@ struct RuntimeModelSpec {
     std::string display_name;
     std::optional<std::string> description;
     std::optional<std::string> weights_path;
+    std::optional<std::string> backend;  ///< "auto", "torchscript", "aotinductor", "executorch"
     std::optional<int> preferred_batch_size;
     std::optional<int> max_batch_size;
     std::vector<SlotSpec> inputs;

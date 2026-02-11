@@ -12,8 +12,7 @@ namespace dl {
 // Construction / destruction / move
 // ---------------------------------------------------------------------------
 NeuroSAMModel::NeuroSAMModel()
-    : _input_order{kEncoderImageSlot, kMemoryImagesSlot,
-                   kMemoryMasksSlot, kMemoryMaskSlot}
+    : _input_order{kEncoderImageSlot, kMemoryImagesSlot, kMemoryMasksSlot}
 {
 }
 
@@ -53,6 +52,7 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::inputSlots() const
          .recommended_decoder = {},
          .is_static = false,
          .is_boolean_mask = false,
+         .dtype = TensorDType::Byte,  // Model expects uint8 images
          .sequence_dim = -1},
 
         {.name = kMemoryImagesSlot,
@@ -62,6 +62,7 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::inputSlots() const
          .recommended_decoder = {},
          .is_static = true,
          .is_boolean_mask = false,
+         .dtype = TensorDType::Byte,  // Model expects uint8 images
          .sequence_dim = -1},
 
         {.name = kMemoryMasksSlot,
@@ -71,15 +72,7 @@ std::vector<TensorSlotDescriptor> NeuroSAMModel::inputSlots() const
          .recommended_decoder = {},
          .is_static = true,
          .is_boolean_mask = false,
-         .sequence_dim = -1},
-
-        {.name = kMemoryMaskSlot,
-         .shape = {1},
-         .description = "Memory slot active flags",
-         .recommended_encoder = {},
-         .recommended_decoder = {},
-         .is_static = true,
-         .is_boolean_mask = true,
+         .dtype = TensorDType::Float32,  // Model expects float32 masks
          .sequence_dim = -1},
     };
 }
