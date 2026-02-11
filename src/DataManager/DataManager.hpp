@@ -15,6 +15,7 @@
 #include <unordered_map>// std::unordered_map
 #include <variant>      // std::variant
 #include <vector>       // std::vector
+#include <type_traits>  // std::is_same_v
 
 #include "nlohmann/json_fwd.hpp"
 
@@ -259,6 +260,21 @@ public:
                 return std::get<std::shared_ptr<T>>(it->second);
             }
         }
+        if constexpr (std::is_same_v<T, MediaData>) {
+            if (key == "media") {
+                std::shared_ptr<T> best_ptr = nullptr;
+                std::string best_key;
+                for (auto const & [fallback_key, value]: _data) {
+                    if (std::holds_alternative<std::shared_ptr<T>>(value)) {
+                        if (!best_ptr || fallback_key < best_key) {
+                            best_ptr = std::get<std::shared_ptr<T>>(value);
+                            best_key = fallback_key;
+                        }
+                    }
+                }
+                return best_ptr;
+            }
+        }
         return nullptr;
     }
 
@@ -333,6 +349,7 @@ public:
      *       - The shared_ptr will be automatically cleaned up when no other references exist
      */
     bool deleteData(std::string const & key);
+    [[nodiscard]] bool isEmptyMediaKey(std::string const & key) const;
 
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
 

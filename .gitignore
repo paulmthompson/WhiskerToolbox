@@ -24,3 +24,4 @@ tools
 ninja-build/ninja
 
 dist
+third_party/
