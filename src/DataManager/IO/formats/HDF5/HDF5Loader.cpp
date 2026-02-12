@@ -116,6 +116,17 @@ LoadResult HDF5Loader::loadMaskData(
             auto width = config["width"].get<int>();
             auto height = config["height"].get<int>();
             mask_data->setImageSize(ImageSize{width, height});
+
+            // Apply scaling if scaled dimensions are specified
+            int scaled_width = config.value("scaled_width", -1);
+            int scaled_height = config.value("scaled_height", -1);
+
+            if (scaled_width != -1 && scaled_height != -1 &&
+                (scaled_width != width || scaled_height != height)) {
+                mask_data->changeImageSize(ImageSize{scaled_width, scaled_height});
+                std::cout << "HDF5 mask data scaled from " << width << "x" << height
+                          << " to " << scaled_width << "x" << scaled_height << std::endl;
+            }
         }
         
         std::cout << "HDF5 mask loading complete: " << frames.size() << " frames loaded" << std::endl;
