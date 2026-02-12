@@ -148,15 +148,21 @@ void DeepLearningPropertiesWidget::_buildUi() {
 
         _run_single_btn = new QPushButton(tr("\u25B6 Run Frame"), this);
         _run_batch_btn = new QPushButton(tr("\u25B6\u25B6 Run Batch"), this);
+        _predict_current_frame_btn = new QPushButton(tr("\u25B6 Current"), this);
+        _predict_current_frame_btn->setToolTip(tr("Predict at current time position from timeline"));
         _run_single_btn->setEnabled(false);
         _run_batch_btn->setEnabled(false);
+        _predict_current_frame_btn->setEnabled(false);
         bar->addWidget(_run_single_btn);
+        bar->addWidget(_predict_current_frame_btn);
         bar->addWidget(_run_batch_btn);
 
         connect(_run_single_btn, &QPushButton::clicked,
                 this, &DeepLearningPropertiesWidget::_onRunSingleFrame);
         connect(_run_batch_btn, &QPushButton::clicked,
                 this, &DeepLearningPropertiesWidget::_onRunBatch);
+        connect(_predict_current_frame_btn, &QPushButton::clicked,
+                this, &DeepLearningPropertiesWidget::_onPredictCurrentFrame);
 
         main_layout->addLayout(bar);
     }
@@ -266,6 +272,7 @@ void DeepLearningPropertiesWidget::_loadModelIfReady() {
     bool const ready = _assembler->isModelReady();
     _run_single_btn->setEnabled(ready);
     _run_batch_btn->setEnabled(ready);
+    _predict_current_frame_btn->setEnabled(ready && _current_time_position.has_value());
 }
 
 void DeepLearningPropertiesWidget::_updateWeightsStatus() {
@@ -749,4 +756,68 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
         this, tr("Batch Inference"),
         tr("Batch inference is not yet implemented.\n"
            "Use \"Run Frame\" for single-frame inference."));
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Time Position Tracking
+// ────────────────────────────────────────────────────────────────────────────
+
+void DeepLearningPropertiesWidget::onTimeChanged(TimePosition position) {
+    _current_time_position = position;
+    
+    // Enable/disable the predict current frame button based on whether we have
+    // a valid time position and the model is ready
+    if (_predict_current_frame_btn) {
+        bool const ready = _assembler->isModelReady();
+        _predict_current_frame_btn->setEnabled(ready && _current_time_position.has_value());
+    }
+}
+
+void DeepLearningPropertiesWidget::_onPredictCurrentFrame() {
+    if (!_assembler->isModelReady()) {
+        QMessageBox::warning(this, tr("Not Ready"),
+                             tr("Model weights not loaded."));
+        return;
+    }
+
+    if (!_current_time_position.has_value()) {
+        QMessageBox::warning(this, tr("No Time Position"),
+                             tr("No current time position available from timeline."));
+        return;
+    }
+
+    _syncBindingsFromUi();
+
+    try {
+        // Get the frame index from the current time position
+        // The time position already has the index in the TimeFrame
+        int const frame = static_cast<int>(_current_time_position->index.getValue());
+
+        // Determine source image size from primary media binding
+        ImageSize source_size{256, 256};
+        for (auto const & binding : _state->inputBindings()) {
+            auto media = _data_manager->getData<MediaData>(binding.data_key);
+            if (media) {
+                source_size = media->getImageSize();
+                break;
+            }
+        }
+
+        _assembler->runSingleFrame(
+            *_data_manager,
+            _state->inputBindings(),
+            _state->staticInputs(),
+            _state->outputBindings(),
+            frame,
+            source_size);
+
+        _weights_status_label->setText(
+            tr("\u2713 Inference complete (current frame %1)").arg(frame));
+        _weights_status_label->setStyleSheet(QStringLiteral("color: green;"));
+
+    } catch (std::exception const & e) {
+        QMessageBox::critical(
+            this, tr("Inference Error"),
+            tr("Forward pass failed:\n%1").arg(QString::fromUtf8(e.what())));
+    }
 }

@@ -6,6 +6,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <iostream>
 
@@ -19,6 +20,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     auto dm = data_manager;
+    auto reg = registry;
 
     registry->registerType({.type_id = QStringLiteral("DeepLearningWidget"),
                             .display_name = QStringLiteral("Deep Learning"),
@@ -60,8 +62,33 @@ void registerTypes(EditorRegistry * registry,
                                 return props;
                             },
 
-                            // No custom editor creation needed - standard factories handle everything
-                            .create_editor_custom = nullptr});
+                            // Custom editor creation to connect time signal
+                            .create_editor_custom = [dm, reg](EditorRegistry * /*unused*/)
+                                    -> EditorRegistry::EditorInstance {
+                                // Create the shared state
+                                auto state = std::make_shared<DeepLearningState>();
+
+                                // Create the view widget
+                                auto * view = new DeepLearningViewWidget(state, dm);
+
+                                // Create the properties widget with the shared state
+                                auto * props = new DeepLearningPropertiesWidget(state, dm);
+
+                                // Connect EditorRegistry time changes to properties widget
+                                if (reg) {
+                                    QObject::connect(reg,
+                                                     QOverload<TimePosition>::of(&EditorRegistry::timeChanged),
+                                                     props, &DeepLearningPropertiesWidget::onTimeChanged);
+                                }
+
+                                // Register the state
+                                reg->registerState(state);
+
+                                return EditorRegistry::EditorInstance{
+                                        .state = state,
+                                        .view = view,
+                                        .properties = props};
+                            }});
 }
 
 }// namespace DeepLearningWidgetModule

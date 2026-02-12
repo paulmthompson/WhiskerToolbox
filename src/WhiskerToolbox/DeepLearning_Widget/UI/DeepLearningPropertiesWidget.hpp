@@ -15,6 +15,7 @@
  */
 
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
 
@@ -47,12 +48,23 @@ public:
 
     ~DeepLearningPropertiesWidget() override;
 
+public slots:
+    /**
+     * @brief Handle time changes from EditorRegistry
+     * 
+     * Updates the current time position for the "Predict Current Frame" feature.
+     * 
+     * @param position The new TimePosition
+     */
+    void onTimeChanged(TimePosition position);
+
 private slots:
     void _onModelComboChanged(int index);
     void _onWeightsBrowseClicked();
     void _onWeightsPathEdited();
     void _onRunSingleFrame();
     void _onRunBatch();
+    void _onPredictCurrentFrame();
 
 private:
     void _buildUi();
@@ -87,6 +99,7 @@ private:
     QSpinBox * _batch_size_spin = nullptr;
     QPushButton * _run_single_btn = nullptr;
     QPushButton * _run_batch_btn = nullptr;
+    QPushButton * _predict_current_frame_btn = nullptr;
 
     // Dynamic content container
     QVBoxLayout * _dynamic_layout = nullptr;
@@ -97,6 +110,9 @@ private:
 
     // Cached model display info (clean — no torch types).
     std::optional<ModelDisplayInfo> _current_info;
+
+    // Current time position from EditorRegistry
+    std::optional<TimePosition> _current_time_position;
 };
 
 #endif // DEEP_LEARNING_PROPERTIES_WIDGET_HPP
