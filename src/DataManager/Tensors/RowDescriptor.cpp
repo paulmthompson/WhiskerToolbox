@@ -1,6 +1,7 @@
 #include "RowDescriptor.hpp"
 
 #include <stdexcept>
+#include <string>
 
 RowDescriptor RowDescriptor::ordinal(std::size_t count) {
     RowDescriptor rd;

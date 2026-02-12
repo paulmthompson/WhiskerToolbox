@@ -252,7 +252,10 @@ target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
 if(APPLE)
     target_link_libraries(WhiskerToolbox PRIVATE -Wl,-force_load,$<TARGET_FILE:DeepLearning>)
 elseif(MSVC)
-    target_link_libraries(WhiskerToolbox PRIVATE /WHOLEARCHIVE:DeepLearning)
+    # MSVC requires /WHOLEARCHIVE as a linker option, not a library name
+    target_link_options(WhiskerToolbox PRIVATE /WHOLEARCHIVE:DeepLearning)
+    target_link_libraries(WhiskerToolbox PRIVATE DeepLearning)
+    #target_link_libraries(WhiskerToolbox PRIVATE /WHOLEARCHIVE:DeepLearning)
 else()
     # Linux/GCC/Clang
     target_link_libraries(WhiskerToolbox PRIVATE -Wl,--whole-archive DeepLearning -Wl,--no-whole-archive)
