@@ -90,7 +90,7 @@ void DeepLearningPropertiesWidget::_buildUi() {
         auto * path_row = new QHBoxLayout();
         _weights_path_edit = new QLineEdit(group);
         _weights_path_edit->setPlaceholderText(
-            tr("Path to .pte weights file..."));
+            tr("Path to model weights file..."));
         _weights_browse_btn = new QPushButton(tr("Browse..."), group);
         path_row->addWidget(_weights_path_edit);
         path_row->addWidget(_weights_browse_btn);
@@ -228,7 +228,11 @@ void DeepLearningPropertiesWidget::_onWeightsBrowseClicked() {
         this,
         tr("Select Model Weights"),
         QString::fromStdString(_state->weightsPath()),
-        tr("ExecuTorch Models (*.pte);;All Files (*)"));
+#ifdef DL_HAS_EXECUTORCH
+        tr("Model Files (*.pt2 *.pt *.pte);;AOT Inductor (*.pt2);;TorchScript (*.pt);;ExecuTorch (*.pte);;All Files (*)"));
+#else
+        tr("Model Files (*.pt2 *.pt);;AOT Inductor (*.pt2);;TorchScript (*.pt);;All Files (*)"));
+#endif
     if (!path.isEmpty()) {
         _weights_path_edit->setText(path);
         _state->setWeightsPath(path.toStdString());
