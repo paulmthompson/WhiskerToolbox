@@ -260,7 +260,16 @@ void MainWindow::_buildInitialLayout() {
     scrollbar_dock->setWidget(_time_scrollbar);
     scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+    scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetMovable, false);
+    scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetFloatable, false);
+    scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetPinnable, false);
     _zone_manager->addToZone(scrollbar_dock, Zone::Bottom);
+
+    // Hide the title bar (with its close/undock/split buttons) since the
+    // Timeline is the only widget in the Bottom zone and should look clean.
+    if (auto * area = scrollbar_dock->dockAreaWidget()) {
+        area->setDockAreaFlag(ads::CDockAreaWidget::HideSingleWidgetTitleBar, true);
+    }
 
     // === RIGHT ZONE: Properties ===
     // Properties widgets are now placed directly in Zone::Right as persistent tabs
