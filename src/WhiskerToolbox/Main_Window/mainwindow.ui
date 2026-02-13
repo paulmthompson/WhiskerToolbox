@@ -81,9 +81,7 @@
     </property>
     <addaction name="actionData_Import"/>
     <addaction name="actionTable_Designer"/>
-    <addaction name="actionData_Manager"/>
     <addaction name="actionData_Inspector"/>
-    <addaction name="actionGroup_Management"/>
     <addaction name="actionBatch_Processing"/>
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionTongue_Tracking"/>
@@ -94,7 +92,6 @@
     <addaction name="actionData_Transforms"/>
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionAnalysis_Dashboard"/>
-    <addaction name="actionTime_Scroll_Bar"/>
     <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
    </widget>
@@ -210,16 +207,6 @@
     <string>Data Import</string>
    </property>
   </action>
-  <action name="actionData_Manager">
-   <property name="text">
-    <string>Data Manager</string>
-   </property>
-  </action>
-  <action name="actionGroup_Management">
-   <property name="text">
-    <string>Group Management</string>
-   </property>
-  </action>
   <action name="actionExport_Video">
    <property name="text">
     <string>Export Video</string>
@@ -243,11 +230,6 @@
   <action name="actionTable_Designer">
    <property name="text">
     <string>Table Designer</string>
-   </property>
-  </action>
-  <action name="actionTime_Scroll_Bar">
-   <property name="text">
-    <string>Time Scroll Bar</string>
    </property>
   </action>
   <action name="actionTest_Widget">

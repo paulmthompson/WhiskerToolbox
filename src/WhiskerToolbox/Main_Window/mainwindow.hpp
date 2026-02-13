@@ -144,13 +144,10 @@ private slots:
     void openDataViewer();
     void openNewMediaWidget();
     void openBatchProcessingWidget();
-    void openDataManager();
-    void openGroupManagement();
     void openVideoExportWidget();
     void openDataTransforms();
     void openTerminalWidget();
     void openAnalysisDashboard();
-    void openTimeScrollBar();
     void openTestWidget();
     void openTableDesignerWidget();
     void openZoneLayoutManager();

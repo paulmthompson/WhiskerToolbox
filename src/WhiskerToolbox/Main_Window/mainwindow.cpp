@@ -218,9 +218,16 @@ void MainWindow::_buildInitialLayout() {
             true);// raise_view
 
     if (placed_group.view_dock) {
-        // Mark as non-closable since it's a core navigation widget
+        // Mark as non-closable and non-dockable since it's a core navigation widget
         placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+        placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetMovable, false);
+        placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetFloatable, false);
+        placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetPinnable, false);
+
+        if (auto * area = placed_group.view_dock->dockAreaWidget()) {
+            area->setDockAreaFlag(ads::CDockAreaWidget::HideSingleWidgetTitleBar, true);
+        }
     }
 
     // Create DataManager_Widget - we need manual placement with split
@@ -231,9 +238,16 @@ void MainWindow::_buildInitialLayout() {
         dm_dock->setWidget(dm_instance.view);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
+        dm_dock->setFeature(ads::CDockWidget::DockWidgetMovable, false);
+        dm_dock->setFeature(ads::CDockWidget::DockWidgetFloatable, false);
+        dm_dock->setFeature(ads::CDockWidget::DockWidgetPinnable, false);
 
         // Add below GroupManagement with 30/70 split (0.3 = top widget gets 30%)
         _zone_manager->addBelowInZone(dm_dock, Zone::Left, 0.30f);
+
+        if (auto * area = dm_dock->dockAreaWidget()) {
+            area->setDockAreaFlag(ads::CDockAreaWidget::HideSingleWidgetTitleBar, true);
+        }
     }
 
     // === CENTER ZONE: Primary visualization ===
@@ -302,14 +316,11 @@ void MainWindow::_createActions() {
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
     connect(ui->actionNew_Media_Widget, &QAction::triggered, this, &MainWindow::openNewMediaWidget);
     connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
-    connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
     connect(ui->actionData_Inspector, &QAction::triggered, this, &MainWindow::openDataInspector);
-    connect(ui->actionGroup_Management, &QAction::triggered, this, &MainWindow::openGroupManagement);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
-    connect(ui->actionTime_Scroll_Bar, &QAction::triggered, this, &MainWindow::openTimeScrollBar);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
@@ -721,11 +732,6 @@ void MainWindow::openAnalysisDashboard() {
     showDockWidget(key);
 }
 
-void MainWindow::openTimeScrollBar() {
-    // Toggle visibility of the time scroll bar dock widget
-    showDockWidget("scrollbar");
-}
-
 //=================================
 // New Editor Instances
 //=================================
@@ -764,20 +770,6 @@ void MainWindow::openTerminalWidget() {
 void MainWindow::openWhiskerTracking() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("WhiskerWidget"));
-}
-
-void MainWindow::openDataManager() {
-    // Use the standard editor opening mechanism
-    // DataManagerWidget is registered as a single-instance widget,
-    // so openEditor will find and show the existing instance
-    openEditor(QStringLiteral("DataManagerWidget"));
-}
-
-void MainWindow::openGroupManagement() {
-    // Use the standard editor opening mechanism
-    // GroupManagementWidget is registered as a single-instance widget,
-    // so openEditor will find and show the existing instance
-    openEditor(QStringLiteral("GroupManagementWidget"));
 }
 
 void MainWindow::openTestWidget() {
