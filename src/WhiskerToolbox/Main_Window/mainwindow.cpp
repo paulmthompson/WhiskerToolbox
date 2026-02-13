@@ -8,7 +8,6 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
 
-#include "Analysis_Dashboard/Analysis_Dashboard.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DockAreaWidget.h"
@@ -72,7 +71,6 @@
 #include <QListWidget>
 #include <QPlainTextEdit>
 #include <QProgressDialog>
-#include <QShortcut>
 #include <QSplitter>
 #include <QTableWidget>
 #include <QTextEdit>
@@ -310,7 +308,6 @@ void MainWindow::_createActions() {
             qOverload<TimePosition>(&EditorRegistry::setCurrentTime));
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
-    connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionDeep_Learning_Widget, &QAction::triggered, this, &MainWindow::openDeepLearningWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
@@ -320,7 +317,6 @@ void MainWindow::_createActions() {
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
-    connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
@@ -334,58 +330,6 @@ void MainWindow::_createActions() {
     connect(ui->actionScatter_Plot, &QAction::triggered, this, &MainWindow::openScatterPlotWidget);
     connect(ui->action3D_Plot, &QAction::triggered, this, &MainWindow::open3DPlotWidget);
     connect(ui->actionOnion_Skin_View, &QAction::triggered, this, &MainWindow::openOnionSkinViewWidget);
-    // Zoom actions - operates on the focused Media_Widget (via SelectionContext)
-    // Lambda to find the active Media_Widget based on SelectionContext::activeEditorId
-    auto getActiveMediaWidget = [this]() -> Media_Widget * {
-        auto * ctx = _editor_registry->selectionContext();
-        if (!ctx) return nullptr;
-
-        auto active_id = ctx->activeEditorId();
-        if (!active_id.isValid()) return nullptr;
-
-        // Find the Media_Widget with matching state instance_id
-        for (auto * dock: _m_DockManager->dockWidgetsMap()) {
-            if (auto * mw = dynamic_cast<Media_Widget *>(dock->widget())) {
-                if (mw->getState() && mw->getState()->getInstanceId() == active_id.toString()) {
-                    return mw;
-                }
-            }
-        }
-        return nullptr;
-    };
-
-    if (ui->actionZoom_In) {
-        ui->actionZoom_In->setShortcuts({});// clear
-        ui->actionZoom_In->setShortcut(QKeySequence());
-        // Explicit shortcuts below; set text AFTER clearing to force display
-        ui->actionZoom_In->setText("Zoom In\tCtrl+");
-        connect(ui->actionZoom_In, &QAction::triggered, this, [getActiveMediaWidget]() {
-            if (auto * mw = getActiveMediaWidget()) mw->zoomIn();
-        });
-        auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this);// Ctrl++ (numpad or main with shift)
-        s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() {
-            if (auto * mw = getActiveMediaWidget()) mw->zoomIn();
-        });
-        auto * s2 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Equal), this);// Ctrl+= (produces '+')
-        s2->setContext(Qt::ApplicationShortcut);
-        connect(s2, &QShortcut::activated, this, [getActiveMediaWidget]() {
-            if (auto * mw = getActiveMediaWidget()) mw->zoomIn();
-        });
-    }
-    if (ui->actionZoom_Out) {
-        ui->actionZoom_Out->setShortcuts({});
-        ui->actionZoom_Out->setShortcut(QKeySequence());
-        ui->actionZoom_Out->setText("Zoom Out\tCtrl-");
-        connect(ui->actionZoom_Out, &QAction::triggered, this, [getActiveMediaWidget]() {
-            if (auto * mw = getActiveMediaWidget()) mw->zoomOut();
-        });
-        auto * s1 = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Minus), this);
-        s1->setContext(Qt::ApplicationShortcut);
-        connect(s1, &QShortcut::activated, this, [getActiveMediaWidget]() {
-            if (auto * mw = getActiveMediaWidget()) mw->zoomOut();
-        });
-    }
 }
 
 /*
@@ -710,28 +654,6 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
 // Old Interface Widgets (No EditorRegistry)
 //=================================
 
-void MainWindow::openAnalysisDashboard() {
-    std::string const key = "Analysis_Dashboard_widget";
-
-    if (!_widgets.contains(key)) {
-        auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(
-                _data_manager,
-                _group_manager.get(),
-                _time_scrollbar,
-                _m_DockManager,
-                this);
-
-        analysis_dashboard_widget->setObjectName(key);
-        registerDockWidget(key, analysis_dashboard_widget.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(analysis_dashboard_widget);
-    }
-
-    auto ptr = dynamic_cast<Analysis_Dashboard *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
 //=================================
 // New Editor Instances
 //=================================
@@ -880,11 +802,6 @@ void MainWindow::openNewMediaWidget() {
 void MainWindow::openVideoExportWidget() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("ExportVideoWidget"));
-}
-
-void MainWindow::openTongueTracking() {
-    // Use EditorCreationController pattern - delegate to openEditor
-    openEditor(QStringLiteral("TongueWidget"));
 }
 
 //=================================

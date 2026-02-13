@@ -46,20 +46,14 @@
     </widget>
     <addaction name="separator"/>
     <addaction name="menuLoad_Data"/>
+    <addaction name="actionData_Import"/>
+    <addaction name="actionBatch_Processing"/>
     <addaction name="menuExport"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
-   </widget>
-   <widget class="QMenu" name="menuImage">
-    <property name="title">
-     <string>Image</string>
-    </property>
-    <addaction name="actionTake_Snapshot"/>
-    <addaction name="actionZoom_In"/>
-    <addaction name="actionZoom_Out"/>
    </widget>
    <widget class="QMenu" name="menuPlots">
     <property name="title">
@@ -74,49 +68,29 @@
     <addaction name="actionScatter_Plot"/>
     <addaction name="action3D_Plot"/>
     <addaction name="actionOnion_Skin_View"/>
+    <addaction name="actionData_Viewer"/>
    </widget>
    <widget class="QMenu" name="menuModules">
     <property name="title">
      <string>Modules</string>
     </property>
-    <addaction name="actionData_Import"/>
     <addaction name="actionTable_Designer"/>
     <addaction name="actionData_Inspector"/>
-    <addaction name="actionBatch_Processing"/>
     <addaction name="actionWhisker_Tracking"/>
-    <addaction name="actionTongue_Tracking"/>
     <addaction name="actionMachine_Learning"/>
     <addaction name="actionDeep_Learning_Widget"/>
-    <addaction name="actionData_Viewer"/>
     <addaction name="actionNew_Media_Widget"/>
     <addaction name="actionData_Transforms"/>
     <addaction name="actionTerminal_Output"/>
-    <addaction name="actionAnalysis_Dashboard"/>
     <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
-   <addaction name="menuImage"/>
    <addaction name="menuPlots"/>
    <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionTake_Snapshot">
-   <property name="text">
-    <string>Take Snapshot</string>
-   </property>
-  </action>
-  <action name="actionZoom_In">
-   <property name="text">
-    <string>Zoom In</string>
-   </property>
-  </action>
-  <action name="actionZoom_Out">
-   <property name="text">
-    <string>Zoom Out</string>
-   </property>
-  </action>
   <action name="actionWhisker_Tracking">
    <property name="text">
     <string>Whisker Tracking</string>
@@ -140,11 +114,6 @@
   <action name="actionImage_Processing">
    <property name="text">
     <string>Image Processing</string>
-   </property>
-  </action>
-  <action name="actionTongue_Tracking">
-   <property name="text">
-    <string>Tongue Tracking</string>
    </property>
   </action>
   <action name="actionLoad_Analog_Time_Series_CSV">
@@ -204,7 +173,7 @@
   </action>
   <action name="actionData_Import">
    <property name="text">
-    <string>Data Import</string>
+    <string>Import Data</string>
    </property>
   </action>
   <action name="actionExport_Video">
@@ -220,11 +189,6 @@
   <action name="actionTerminal_Output">
    <property name="text">
     <string>Terminal Output</string>
-   </property>
-  </action>
-  <action name="actionAnalysis_Dashboard">
-   <property name="text">
-    <string>Analysis Dashboard</string>
    </property>
   </action>
   <action name="actionTable_Designer">

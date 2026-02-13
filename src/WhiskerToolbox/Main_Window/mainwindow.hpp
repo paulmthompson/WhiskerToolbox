@@ -138,7 +138,6 @@ private slots:
 
     void openDataImport();
     void openWhiskerTracking();
-    void openTongueTracking();
     void openMLWidget();
     void openDeepLearningWidget();
     void openDataViewer();
@@ -147,7 +146,6 @@ private slots:
     void openVideoExportWidget();
     void openDataTransforms();
     void openTerminalWidget();
-    void openAnalysisDashboard();
     void openTestWidget();
     void openTableDesignerWidget();
     void openZoneLayoutManager();
