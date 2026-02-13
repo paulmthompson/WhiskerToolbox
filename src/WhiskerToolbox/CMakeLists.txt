@@ -36,12 +36,6 @@ add_subdirectory(TableViewerWidget) # Qt, DataManager
 
 add_subdirectory(ZoneManager) #Qt, EditorState, reflectcpp, qt6advanceddocking
 
-# Qt, DataManager, qt6advanceddocking, TimeScrollBar,
-# NEURALYZER_GEOMETRY, PlottingOpenGL, Feature_Table_Widget,
-# GroupManagementWidget, GroupContextMenu, nlohmann_json
-# coreplotting
-add_subdirectory(Analysis_Dashboard)
-
 add_subdirectory(Scaling_Widget) # Qt, CoreGeometry - shared widget for image scaling
 
 add_subdirectory(DataExport_Widget) # Qt, DataManager, Scaling_Widget
@@ -279,7 +273,6 @@ target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(WhiskerToolbox PRIVATE PlottingOpenGL)  # Contains ShaderManager
 target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
-target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)

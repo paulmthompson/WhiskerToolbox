@@ -54,6 +54,11 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionUndo_History"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
    </widget>
    <widget class="QMenu" name="menuPlots">
     <property name="title">
@@ -91,6 +96,38 @@
    <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionUndo_History">
+   <property name="text">
+    <string>Undo History</string>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+  </action>
   <action name="actionWhisker_Tracking">
    <property name="text">
     <string>Whisker Tracking</string>
