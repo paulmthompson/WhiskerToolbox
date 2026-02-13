@@ -46,8 +46,13 @@
     </widget>
     <addaction name="separator"/>
     <addaction name="menuLoad_Data"/>
-    <addaction name="actionData_Import"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave_Layout"/>
+    <addaction name="actionLoad_Layout"/>
+    <addaction name="separator"/>
     <addaction name="actionBatch_Processing"/>
+    <addaction name="separator"/>
+    <addaction name="actionData_Import"/>
     <addaction name="menuExport"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -123,6 +128,22 @@
   <action name="actionPreferences">
    <property name="text">
     <string>Preferences</string>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionSave_Layout">
+   <property name="text">
+    <string>Save Layout</string>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionLoad_Layout">
+   <property name="text">
+    <string>Load Layout</string>
    </property>
    <property name="enabled">
     <bool>false</bool>
