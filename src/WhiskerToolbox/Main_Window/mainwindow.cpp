@@ -51,6 +51,7 @@
 #include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
 
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
+#include "Python_Widget/PythonWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
@@ -319,6 +320,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
+    connect(ui->actionPython_Console, &QAction::triggered, this, &MainWindow::openPythonWidget);
     connect(ui->actionZone_Layout_Manager, &QAction::triggered, this, &MainWindow::openZoneLayoutManager);
     connect(ui->actionData_Import, &QAction::triggered, this, &MainWindow::openDataImport);
     connect(ui->actionEvent_Plot, &QAction::triggered, this, &MainWindow::openEventPlotWidget);
@@ -699,6 +701,11 @@ void MainWindow::openTestWidget() {
     openEditor(QStringLiteral("TestWidget"));
 }
 
+void MainWindow::openPythonWidget() {
+    // Use EditorCreationController pattern - delegate to openEditor
+    openEditor(QStringLiteral("PythonWidget"));
+}
+
 void MainWindow::openZoneLayoutManager() {
     // Delegate to generic openEditor using EditorRegistry
     openEditor(QStringLiteral("ZoneManagerWidget"));
@@ -836,6 +843,8 @@ void MainWindow::_registerEditorTypes() {
     GroupManagementWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     ZoneManagerWidgetRegistration::registerType(_editor_registry.get(), _zone_manager.get());
+
+    PythonWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TerminalWidgetModule::registerTypes(_editor_registry.get());
 

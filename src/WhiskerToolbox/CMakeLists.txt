@@ -91,6 +91,9 @@ add_subdirectory(Plots/Common/RelativeTimeAxisWidget)
 add_subdirectory(Plots/Common/VerticalAxisWidget)
 add_subdirectory(Plots/Common/HorizontalAxisWidget)
 
+# Qt, EditorState, reflectcpp - Python integration widget
+add_subdirectory(Python_Widget)
+
 # Qt, DataManager, EditorState - Event raster plot widget
 add_subdirectory(Plots/EventPlotWidget)
 
@@ -238,6 +241,7 @@ target_link_libraries(WhiskerToolbox PRIVATE TableDesignerWidget)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE Python_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
 
 # Force whole-archive linking for DeepLearning to ensure static model registration runs

@@ -94,6 +94,7 @@
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
+    <addaction name="actionPython_Console"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -312,6 +313,11 @@
   <action name="actionOnion_Skin_View">
    <property name="text">
     <string>Onion Skin View</string>
+   </property>
+  </action>
+  <action name="actionPython_Console">
+   <property name="text">
+    <string>Python Console</string>
    </property>
   </action>
  </widget>

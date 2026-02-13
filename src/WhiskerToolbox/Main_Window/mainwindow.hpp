@@ -159,5 +159,6 @@ private slots:
     void openScatterPlotWidget();
     void open3DPlotWidget();
     void openOnionSkinViewWidget();
+    void openPythonWidget();
 };
 #endif// MAINWINDOW_HPP
