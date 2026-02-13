@@ -7,6 +7,8 @@
 #include "DigitalIntervalSeries/DigitalIntervalSeriesInspector.hpp"
 #include "LineData/LineInspector.hpp"
 #include "LineData/LineTableView.hpp"
+#include "MaskData/MaskInspector.hpp"
+#include "MaskData/MaskTableView.hpp"
 #include "PointData/PointInspector.hpp"
 #include "PointData/PointTableView.hpp"
 #include "Inspectors/BaseInspector.hpp"
@@ -272,6 +274,15 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         auto * point_view = dynamic_cast<PointTableView *>(_view_widget->currentView());
         if (point_view) {
             point_inspector->setTableView(point_view);
+        }
+    }
+
+    // Check if this is a MaskInspector and connect it to the view
+    auto * mask_inspector = dynamic_cast<MaskInspector *>(_current_inspector.get());
+    if (mask_inspector) {
+        auto * mask_view = dynamic_cast<MaskTableView *>(_view_widget->currentView());
+        if (mask_view) {
+            mask_inspector->setDataView(mask_view);
         }
     }
 }
