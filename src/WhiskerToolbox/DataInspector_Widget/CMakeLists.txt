@@ -83,6 +83,7 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         TensorData/TensorInspector.hpp
         TensorData/TensorInspector.cpp
         TensorData/TensorTableModel.hpp
+        TensorData/TensorTableModel.cpp
         TensorData/TensorDataView.hpp
         TensorData/TensorDataView.cpp
         )

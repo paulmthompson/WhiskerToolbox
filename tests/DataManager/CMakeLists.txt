@@ -126,6 +126,14 @@ add_executable(test_data_manager
         # Loader tests
         loaders/test_analog_reflection.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/DimensionDescriptor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/RowDescriptor.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/ArmadilloTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/DenseTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/TensorStorageWrapper.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/LibTorchTensorStorage.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/TensorData.test.cpp
+
         TransformsV2/test_view_pipeline.test.cpp
         TransformsV2/test_line_min_point_dist_v2.test.cpp
         #TransformsV2/test_zipping_logic.test.cpp
@@ -188,6 +196,20 @@ endif()
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 target_link_libraries(test_data_manager PRIVATE DataManagerIO)
 target_link_libraries(test_data_manager PRIVATE Whisker-Analysis)
+target_link_libraries(test_data_manager PRIVATE TensorData)
+
+# When LibTorch is available, enable LibTorch-specific tests.
+# TENSOR_BACKEND_LIBTORCH is defined PRIVATE on TensorData to avoid
+# torch's CHECK macro conflicting with Catch2's CHECK in general consumers.
+# For the test target, we explicitly opt in so the #ifdef-guarded test sections compile.
+# We also link the torch imported target (which carries INTERFACE_INCLUDE_DIRECTORIES)
+# so that <torch/torch.h> can be found.
+if(TENSOR_BACKEND_LIBTORCH)
+    find_package(Torch REQUIRED)
+    target_compile_definitions(test_data_manager PRIVATE TENSOR_BACKEND_LIBTORCH)
+    target_link_libraries(test_data_manager PRIVATE torch ${TORCH_LIBRARIES})
+    target_include_directories(test_data_manager PRIVATE ${TORCH_INCLUDE_DIRS})
+endif()
 
 target_include_directories(test_data_manager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"

@@ -23,6 +23,7 @@ if(ENABLE_ORTOOLS)
             ortools
             GIT_REPOSITORY https://github.com/google/or-tools.git
             GIT_TAG         v9.14
+            GIT_SHALLOW 1
         )
         set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
         set(BUILD_DEPS OFF)
@@ -60,6 +61,7 @@ if(ENABLE_ORTOOLS)
             ortools
             GIT_REPOSITORY https://github.com/google/or-tools.git
             GIT_TAG         v9.14
+            GIT_SHALLOW 1
         )
         set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
         set(BUILD_DEPS OFF)
@@ -97,6 +99,7 @@ if(ENABLE_ORTOOLS)
           ortools
           GIT_REPOSITORY https://github.com/google/or-tools.git
           GIT_TAG         v9.14
+          GIT_SHALLOW 1
         )
       set(BUILD_SHARED_LIBS OFF) # disables dynamic(shared) library building
       set(BUILD_DEPS OFF)
@@ -150,6 +153,8 @@ FetchContent_Declare(
   GIT_TAG v1.0.1
 )
 
+option(ENABLE_EXECUTORCH "Build with ExecuTorch support for .pte models" OFF)
+
 FetchContent_Declare(
     iir 
     GIT_REPOSITORY https://github.com/berndporr/iir1/
@@ -202,26 +207,40 @@ elseif (WIN32)
     endif()
 endif()
 
-#[[
-FetchContent_Declare(
-    executorch
-    GIT_REPOSITORY https://github.com/pytorch/executorch.git
-    GIT_TAG v1.0.1
-    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/executorch # https://github.com/pytorch/executorch/issues/6475
-)
-
-set(EXECUTORCH_BUILD_PRESET_FILE ${CMAKE_BINARY_DIR}/external/_deps/executorch/tools/cmake/preset/linux.cmake)
-set(EXECUTORCH_BUILD_PORTABLE_OPS OFF)
-set(EXECUTORCH_BUILD_EXECUTOR_RUNNER OFF)
-]]#
-#[[
-#v1.1.0 = torch 2.11.0
-#v1.0.1 = torch 2.9.0 november 20, 2025
-#v1.0.0 = torch 2.9.0 October 17, 2025
-#v0.7.0 = torch 2.8.0 August 11, 2025
-]]
-
 set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir")
+
+if (ENABLE_EXECUTORCH)
+    message(STATUS "ExecuTorch support enabled")
+    FetchContent_Declare(
+        executorch
+        GIT_REPOSITORY https://github.com/pytorch/executorch.git
+        GIT_TAG v1.0.1
+        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/executorch # https://github.com/pytorch/executorch/issues/6475
+    )
+
+    # Do NOT set EXECUTORCH_BUILD_PRESET_FILE to linux.cmake — it chains into
+    # llm.cmake which enables EXECUTORCH_BUILD_KERNELS_OPTIMIZED and other features
+    # that require a pip-installed torch (Python `import torch`). We use libtorch
+    # (C++ only) via FetchContent, so we must disable those code paths.
+    set(EXECUTORCH_BUILD_PORTABLE_OPS OFF)
+    set(EXECUTORCH_BUILD_EXECUTOR_RUNNER OFF)
+
+    # Enable ExecuTorch extensions needed by the ModelExecution wrapper (Phase 3).
+    # extension_module depends on extension_data_loader and extension_flat_tensor.
+    set(EXECUTORCH_BUILD_EXTENSION_DATA_LOADER ON)
+    set(EXECUTORCH_BUILD_EXTENSION_MODULE ON)
+    set(EXECUTORCH_BUILD_EXTENSION_TENSOR ON)
+    set(EXECUTORCH_BUILD_EXTENSION_FLAT_TENSOR ON)
+    set(EXECUTORCH_BUILD_EXTENSION_NAMED_DATA_MAP ON)
+    #[[
+    #v1.1.0 = torch 2.11.0
+    #v1.0.1 = torch 2.9.0 november 20, 2025
+    #v1.0.0 = torch 2.9.0 October 17, 2025
+    #v0.7.0 = torch 2.8.0 August 11, 2025
+    ]]
+
+    list(APPEND FETCHCONTENT_TARGETS "executorch")
+endif()
 
 if(ENABLE_ORTOOLS)
     list(APPEND FETCHCONTENT_TARGETS "ortools")
@@ -299,3 +318,4 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torc
 set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
 set(iir_SOURCE_DIR ${iir_SOURCE_DIR} PARENT_SCOPE)
 set(ortools_SOURCE_DIR ${ortools_SOURCE_DIR} PARENT_SCOPE)
+

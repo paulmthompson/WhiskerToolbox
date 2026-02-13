@@ -2,6 +2,9 @@
 
 find_package(nlohmann_json CONFIG REQUIRED)
 
+# Armadillo is always required (for ArmadilloTensorStorage, which is always available)
+find_package(Armadillo REQUIRED)
+
 if(TENSOR_BACKEND_LIBTORCH)
     set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
     find_package(Torch REQUIRED)
@@ -20,27 +23,26 @@ if(TENSOR_BACKEND_LIBTORCH)
     
     # Backend sources
     set(BACKEND_SOURCES
-        Tensor_Data_LibTorch.cpp
+       # Tensor_Data_LibTorch.cpp
+        storage/LibTorchTensorStorage.hpp
+        storage/LibTorchTensorStorage.cpp
     )
     
-    # Backend libraries
-    set(BACKEND_LIBRARIES "${TORCH_LIBRARIES}")
+    # Backend libraries (Armadillo always linked for ArmadilloTensorStorage)
+    set(BACKEND_LIBRARIES "${TORCH_LIBRARIES}" armadillo ${ARMADILLO_LIBRARIES})
     
     # Backend definitions
     set(BACKEND_DEFINITIONS TENSOR_BACKEND_LIBTORCH)
     
 else()
     message(STATUS "TensorData: Using Armadillo backend")
-    
-    # Find Armadillo
-    find_package(Armadillo REQUIRED)
 
     # Backend sources
     set(BACKEND_SOURCES
-        Tensor_Data_Armadillo.cpp
+    #    Tensor_Data_Armadillo.cpp
     )
     
-    # Backend libraries
+    # Backend libraries (also link Armadillo for ArmadilloTensorStorage which is always available)
     set(BACKEND_LIBRARIES armadillo  ${ARMADILLO_LIBRARIES})
 
     # Backend definitions
@@ -50,7 +52,20 @@ endif()
 
 # Common tensor sources
 set(TENSOR_SOURCES
-    Tensor_Data.hpp
+    #Tensor_Data.hpp
+    TensorData.hpp
+    TensorData.cpp
+    DimensionDescriptor.hpp
+    DimensionDescriptor.cpp
+    RowDescriptor.hpp
+    RowDescriptor.cpp
+    storage/TensorStorageBase.hpp
+    storage/ArmadilloTensorStorage.hpp
+    storage/ArmadilloTensorStorage.cpp
+    storage/DenseTensorStorage.hpp
+    storage/DenseTensorStorage.cpp
+    storage/TensorStorageWrapper.hpp
+    storage/TensorStorageWrapper.cpp
     IO/numpy/Tensor_Data_numpy.hpp
     IO/numpy/Tensor_Data_numpy.cpp
     ${BACKEND_SOURCES}
@@ -76,12 +91,26 @@ target_link_libraries(TensorData PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(TensorData PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(TensorData PUBLIC WhiskerToolbox::TimeFrame)
 
-# Link backend-specific libraries
-target_link_libraries(TensorData PRIVATE ${BACKEND_LIBRARIES})
+# Armadillo is always PUBLIC (ArmadilloTensorStorage.hpp includes <armadillo>)
+target_link_libraries(TensorData PUBLIC armadillo ${ARMADILLO_LIBRARIES})
 
-# Set backend-specific compile definitions
+# Link additional backend-specific libraries (e.g., LibTorch) as PRIVATE
+if(TENSOR_BACKEND_LIBTORCH)
+    target_link_libraries(TensorData PRIVATE ${TORCH_LIBRARIES})
+endif()
+
+# Set backend-specific compile definitions as PRIVATE
+# Note: TENSOR_BACKEND_LIBTORCH is PRIVATE because torch headers conflict with
+# Catch2's CHECK macro (c10/util/logging_is_not_google_glog.h defines CHECK).
+# Consumers that want the LibTorch API must opt in by defining
+# TENSOR_BACKEND_LIBTORCH themselves and linking torch.
+# The TENSOR_BACKEND_LIBTORCH_AVAILABLE definition is exported PUBLIC for
+# consumers to detect availability without including torch headers.
 message(STATUS "Using Backend definition: ${BACKEND_DEFINITIONS}")
 target_compile_definitions(TensorData PRIVATE ${BACKEND_DEFINITIONS})
+if(TENSOR_BACKEND_LIBTORCH)
+    target_compile_definitions(TensorData PUBLIC TENSOR_BACKEND_LIBTORCH_AVAILABLE)
+endif()
 
 # Compiler-specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

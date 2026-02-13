@@ -4,7 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 
 #include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"
 #include "ML_Widget/mlpack_conversion.hpp"

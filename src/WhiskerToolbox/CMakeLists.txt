@@ -3,9 +3,6 @@ find_package(OpenCV CONFIG REQUIRED)
 
 message(STATUS ${CMAKE_PREFIX_PATH})
 
-set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
-find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets OpenGL Concurrent)
@@ -85,6 +82,9 @@ add_subdirectory(TableDesignerWidget)
 # OpenBLAS, armadillo, LAPACK, nlohmann_json, MLPACK
 # Feature_Table_Widget, EditorState
 add_subdirectory(ML_Widget)
+
+# Qt, DataManager, DeepLearning, EditorState
+add_subdirectory(DeepLearning_Widget)
 
  # Qt, DataManager, EditorState, Geometry
 add_subdirectory(DataTransform_Widget)
@@ -189,17 +189,6 @@ set(PROJECT_SOURCES
         utils/DataLoadUtils.hpp
         utils/DataLoadUtils.cpp
 
-        utils/Deep_Learning/Backbones/efficientvit.hpp
-        utils/Deep_Learning/Backbones/efficientvit.cpp
-
-        utils/Deep_Learning/torch_helpers.hpp
-
-        utils/Deep_Learning/scm.hpp
-        utils/Deep_Learning/scm.cpp
-
-        utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp
-        utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
-
         Test_Widget/Test_Widget.hpp
         Test_Widget/Test_Widget.cpp
         Test_Widget/Test_Widget.ui
@@ -224,8 +213,6 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 target_link_libraries(WhiskerToolbox PRIVATE glm::glm)
 
-message(STATUS ${TORCH_LIBRARIES})
-target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 
 target_include_directories(WhiskerToolbox PRIVATE
 
@@ -258,6 +245,23 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
+
+# Force whole-archive linking for DeepLearning to ensure static model registration runs
+# (NeuroSAMModel self-registers via DL_REGISTER_MODEL macro, but linker would strip it
+# since there are no direct symbol references)
+if(APPLE)
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,-force_load,$<TARGET_FILE:DeepLearning>)
+elseif(MSVC)
+    # MSVC requires /WHOLEARCHIVE as a linker option, not a library name
+    target_link_options(WhiskerToolbox PRIVATE /WHOLEARCHIVE:DeepLearning)
+    target_link_libraries(WhiskerToolbox PRIVATE DeepLearning)
+    #target_link_libraries(WhiskerToolbox PRIVATE /WHOLEARCHIVE:DeepLearning)
+else()
+    # Linux/GCC/Clang
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,--whole-archive DeepLearning -Wl,--no-whole-archive)
+endif()
+
+target_link_libraries(WhiskerToolbox PRIVATE DeepLearning_Widget)
 
 # Conditionally link CapnProto plugin for Binary IO widgets
 if(ENABLE_CAPNPROTO)

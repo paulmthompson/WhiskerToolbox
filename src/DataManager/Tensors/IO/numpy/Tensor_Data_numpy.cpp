@@ -1,11 +1,15 @@
 
 #include "Tensor_Data_numpy.hpp"
-#include "../../Tensor_Data.hpp"
+#include "../../TensorData.hpp"
 #include "npy.hpp"
+
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <filesystem>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 #if defined(_WIN32) || defined(__APPLE__)
 std::vector<long long> convertShape(const std::vector<unsigned long>& shape) {
@@ -51,40 +55,34 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
         // Assuming the tensor is a multi-dimensional tensor where the first dimension is time
         auto const time_steps = full_shape[0];
         
-        // Calculate the size of each time slice
-        std::size_t slice_size = 1;
-        std::vector<std::size_t> feature_shape;
+        // Calculate the total number of features (flatten all dimensions after time)
+        std::size_t num_features = 1;
         for (std::size_t i = 1; i < full_shape.size(); ++i) {
-            slice_size *= full_shape[i];
-            feature_shape.push_back(full_shape[i]);
+            num_features *= full_shape[i];
         }
 
-        // Set the feature shape
-        tensor_data.setFeatureShape(feature_shape);
 
-        // Extract data for each time step
-        for (std::size_t t = 0; t < time_steps; ++t) {
-            // Extract slice data for this time step
-            std::vector<float> slice_data;
-            slice_data.reserve(slice_size);
-            
-            std::size_t start_idx = t * slice_size;
-            std::size_t end_idx = start_idx + slice_size;
-            
-            for (std::size_t i = start_idx; i < end_idx && i < npy_data.data.size(); ++i) {
-                slice_data.push_back(npy_data.data[i]);
-            }
+        // Create TmeIndexStorage for dense sequential indices [0, 1, 2, ..., time_steps-1]
+        auto time_storage = TimeIndexStorageFactory::createDenseFromZero(time_steps);
 
-            // Add the slice to tensor data
-            tensor_data.addTensorAtTime(TimeFrameIndex(t), slice_data, feature_shape);
+        // Create TensorData using the factory method
+        // The numpy data is already in row-major format (time x features)
+        tensor_data = TensorData::createTimeSeries2D(
+            npy_data.data,      // flat vector of floats (already in row-major order)
+            time_steps,         // num_rows (time dimension)
+            num_features,       // num_cols (flattened feature dimensions)
+            time_storage,       // time index mapping
+            nullptr,         // time values
+            {}                  // no column names
+        );
+
+        std::cout << "Loaded " << time_steps << " timestamps of tensors with "
+                  << num_features << " features (";
+        for (std::size_t i = 1; i < full_shape.size(); ++i) {
+            std::cout << full_shape[i];
+            if (i < full_shape.size() - 1) std::cout << "x";
         }
-
-        std::cout << "Loaded " << time_steps << " timestamps of tensors with feature shape: ";
-        for (std::size_t i = 0; i < feature_shape.size(); ++i) {
-            std::cout << feature_shape[i];
-            if (i < feature_shape.size() - 1) std::cout << "x";
-        }
-        std::cout << std::endl;
+        std::cout << " flattened)" << std::endl;
 
     } catch (const std::exception& e) {
         std::cout << "Error loading tensor from file: " << e.what() << std::endl;

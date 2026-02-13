@@ -9,7 +9,7 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #include "transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "transforms/v2/core/ElementRegistry.hpp"
 #include "transforms/v2/core/ParameterIO.hpp"

@@ -8,7 +8,7 @@
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #include "mlpack_conversion.hpp"
 #define slots Q_SLOTS
 
@@ -1086,8 +1086,13 @@ arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & 
         } else if (data_type == DM_DataType::Tensor) {
             auto tensor_data = _data_manager->getData<TensorData>(base_key);
             if (tensor_data) {
-                auto feature_shape = tensor_data->getFeatureShape();
-                feature_rows = std::accumulate(feature_shape.begin(), feature_shape.end(), 1, std::multiplies<>());
+                // Total feature count per time row = product of all dims except axis 0 (time)
+                auto const tensor_shape = tensor_data->shape();
+                arma::uword feat_count = 1;
+                for (std::size_t d = 1; d < tensor_shape.size(); ++d) {
+                    feat_count *= static_cast<arma::uword>(tensor_shape[d]);
+                }
+                feature_rows = feat_count;
             }
         }
 

@@ -10,7 +10,8 @@
 #include "Masks/Mask_Data.hpp"
 #include "Media/MediaDataFactory.hpp"
 #include "Points/Point_Data.hpp"
-#include "Tensors/Tensor_Data.hpp"
+//#include "Tensors/Tensor_Data.hpp"
+#include "Tensors/TensorData.hpp"
 
 // Media includes - now from separate MediaData library
 #include "Media/Media_Data.hpp"

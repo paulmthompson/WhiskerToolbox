@@ -7,7 +7,7 @@
 #include "DataManager/DataManager.hpp"
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #define slots Q_SLOTS
 
 #include <iostream>
@@ -36,8 +36,9 @@ void MediaTensor_Widget::setActiveKey(std::string const & key) {
     if (_data_manager && !_active_key.empty()) {
         auto tensor_data = _data_manager->getData<TensorData>(_active_key);
         if (tensor_data) {
-            auto shape = tensor_data->getFeatureShape();
-            ui->horizontalSlider->setMaximum(static_cast<int>(shape.back()) - 1);
+            // The channel slider selects among the last-axis elements (columns)
+            auto const num_cols = tensor_data->numColumns();
+            ui->horizontalSlider->setMaximum(static_cast<int>(num_cols) - 1);
 
             ui->horizontalSlider->setValue(0);
             
