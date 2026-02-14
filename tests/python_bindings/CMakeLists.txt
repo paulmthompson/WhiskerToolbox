@@ -46,3 +46,27 @@ target_link_libraries(test_python_bridge PRIVATE
 )
 
 catch_discover_tests(test_python_bridge)
+
+# --- Phase 5: Script management & environment tests ---
+add_executable(test_python_phase5
+    ${CMAKE_SOURCE_DIR}/src/python_bindings/Phase5.test.cpp
+)
+
+target_link_libraries(test_python_phase5 PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::PythonBridge
+)
+
+catch_discover_tests(test_python_phase5)
+
+# --- Phase 6: Virtual environment support tests ---
+add_executable(test_python_phase6
+    ${CMAKE_SOURCE_DIR}/src/python_bindings/Phase6.test.cpp
+)
+
+target_link_libraries(test_python_phase6 PRIVATE
+    Catch2::Catch2WithMain
+    WhiskerToolbox::PythonBridge
+)
+
+catch_discover_tests(test_python_phase6)

@@ -13,9 +13,9 @@
 | Phase 1 — Embedded Interpreter | **Complete** | Feb 2026 |
 | Phase 2 — pybind11 Bindings | **Complete** | Feb 2026 |
 | Phase 3 — DataManager Bridge | **Complete** | Feb 2026 |
-| Phase 4 — Python_Widget UI | Not started | — |
-| Phase 5 — Script Management | Not started | — |
-| Phase 6 — Virtual Environment | Not started | — |
+| Phase 4 — Python_Widget UI | **Complete** | Feb 2026 |
+| Phase 5 — Script Management | **Complete** | Feb 2026 |
+| Phase 6 — Virtual Environment | **Complete** | Feb 2026 |
 | Phase 7 — Advanced Features | Not started | — |
 
 ---
@@ -514,7 +514,9 @@ The observer pattern is not thread-safe.
 
 ---
 
-## 5. Phase 4 — Python_Widget UI
+## 5. Phase 4 — Python_Widget UI ✅
+
+> **Status: COMPLETE** — All deliverables implemented: Console tab, Editor tab, Properties panel, Syntax highlighting, State serialization, Keyboard shortcuts.
 
 **Goal:** Build the interactive console and script editor in the existing Python_Widget
 shell.
@@ -636,16 +638,42 @@ Create a `PythonSyntaxHighlighter : QSyntaxHighlighter` that highlights:
 
 ### 5.7 Deliverables
 
-- [ ] Console tab: execute code, show output, command history
-- [ ] Editor tab: open/save/run `.py` files
-- [ ] Properties panel: env info, settings, namespace inspector
-- [ ] Syntax highlighting for both console and editor
-- [ ] State serialization of all new fields
-- [ ] Keyboard shortcuts (Shift+Enter to run, Ctrl+L to clear, Up/Down for history)
+- [x] Console tab: execute code, show output, command history
+- [x] Editor tab: open/save/run `.py` files
+- [x] Properties panel: env info, settings, namespace inspector
+- [x] Syntax highlighting for both console and editor
+- [x] State serialization of all new fields
+- [x] Keyboard shortcuts (Shift+Enter to run, Ctrl+L to clear, Up/Down for history)
+
+### 5.8 Implementation Notes
+
+**Files delivered:**
+
+| File | Purpose |
+|------|---------|
+| `src/WhiskerToolbox/Python_Widget/UI/PythonSyntaxHighlighter.hpp/.cpp` | `QSyntaxHighlighter` subclass — keywords, builtins, strings, comments, numbers, decorators, triple-quoted strings with block state tracking |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonConsoleWidget.hpp/.cpp` | Interactive REPL with split output/input areas, color-coded stdout (grey) / stderr (red) / prompt (blue), command history with Up/Down, Shift+Enter to execute, Ctrl+L to clear |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonEditorWidget.hpp/.cpp` | Script editor with `LineNumberEditor` (QPlainTextEdit subclass with line number gutter), Open/Save/SaveAs/RunScript/RunSelection, modified indicator in tab title |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonPropertiesWidget.hpp/.cpp` | Properties panel with QGroupBox sections: Environment (Python version, sys.executable), Settings (font size, auto-scroll, line numbers), Namespace inspector (QTreeWidget with variable names/types), Data Keys (DataManager keys with type, "Insert" button) |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonViewWidget.hpp/.cpp` | Main tabbed container owning `unique_ptr<PythonEngine>` + `unique_ptr<PythonBridge>`, QTabWidget with Console/Editor tabs, calls `exposeDataManager()` on construction |
+| `src/WhiskerToolbox/Python_Widget/Core/PythonWidgetStateData.hpp` | Extended with `command_history`, `recent_scripts`, `venv_path`, `last_working_directory`, `show_line_numbers`, `editor_content` |
+| `src/WhiskerToolbox/Python_Widget/Core/PythonWidgetState.hpp/.cpp` | New accessors/signals: `commandHistory()`, `recentScripts()`, `showLineNumbers()`, `editorContent()` with `showLineNumbersChanged` signal |
+| `src/WhiskerToolbox/Python_Widget/PythonWidgetRegistration.cpp` | Rewritten to use `create_editor_custom` pattern — factory creates state, view (with engine+bridge), properties (sharing bridge), and wires `executionFinished` → `refreshNamespace` and `insertCodeRequested` → console input |
+| `src/WhiskerToolbox/Python_Widget/CMakeLists.txt` | Added 6 new source files, linked `WhiskerToolbox::PythonBridge` (PUBLIC) and `DataManager` (PRIVATE) |
+
+**Key design decisions:**
+
+1. **pybind11 before Qt includes** — Python's `object.h` has a `slots` member that conflicts with Qt's `#define slots` macro. All `.cpp` files include PythonBridge/PythonEngine headers before any Qt headers.
+2. **`create_editor_custom` registration** — Uses the custom factory pattern (like DataImport_Widget) rather than separate `create_view`/`create_properties` to allow cross-wiring between view and properties widgets.
+3. **Engine+Bridge ownership** — `PythonViewWidget` owns both `PythonEngine` and `PythonBridge` as `unique_ptr` members. Bridge is destroyed before Engine (bridge holds reference to engine). Properties panel receives a raw pointer to the shared bridge.
+4. **Programmatic UI** — All UI is built in code (no `.ui` files) for better control over dark-themed styling and dynamic layout.
+5. **History management** — Command history kept to 500 entries max; recent scripts deduplicated and capped at 10. Editor content state deliberately skips `markDirty()` to avoid excessive serialization.
 
 ---
 
-## 6. Phase 5 — Script Management & File Editor
+## 6. Phase 5 — Script Management & File Editor ✅
+
+> **Status: COMPLETE** — All deliverables implemented and tested (15 tests, 39 assertions).
 
 **Goal:** Support loading, editing, saving and running `.py` scripts with proper
 working-directory management.
@@ -661,9 +689,59 @@ working-directory management.
 | 5.5 | Drag-and-drop | Drop `.py` file onto editor tab to open it. |
 | 5.6 | Recent files menu | Stored in state, accessible from toolbar. |
 
+### 6.2 Deliverables
+
+- [x] Working directory configurable in properties panel and restored from state
+- [x] `sys.argv` configurable via text field in properties panel
+- [x] Auto-import prelude with enable/disable toggle and editable text area
+- [x] Prelude re-executes on namespace clear/reset
+- [x] 6 script templates (Blank, AnalogTimeSeries Filter, Batch Processing, Data Export, Event Detection, Statistics Summary)
+- [x] Drag-and-drop `.py` files onto editor tab
+- [x] Recent files dropdown menu in editor toolbar with clear option
+- [x] Unit tests for all engine features (15 tests, 39 assertions)
+
+### 6.3 Implementation Notes
+
+**Files created/modified:**
+
+| File | Changes |
+|------|---------|
+| `src/python_bindings/PythonEngine.hpp` | Added `setWorkingDirectory()`, `getWorkingDirectory()`, `setSysArgv()`, `executePrelude()` |
+| `src/python_bindings/PythonEngine.cpp` | Implementations: `os.chdir()`, `shlex.split()` for args parsing, prelude execution |
+| `src/python_bindings/Phase5.test.cpp` | 15 Catch2 test cases (39 assertions) covering all Phase 5 engine features |
+| `src/WhiskerToolbox/Python_Widget/Core/PythonWidgetStateData.hpp` | Added `script_arguments`, `auto_import_prelude`, `prelude_enabled` fields |
+| `src/WhiskerToolbox/Python_Widget/Core/PythonWidgetState.hpp/.cpp` | Added accessors/signals for new fields + 4 new signals |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonEditorWidget.hpp/.cpp` | Added templates menu, recent files menu, drag-and-drop, `openFilePath()`, `loadTemplate()` |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonPropertiesWidget.hpp/.cpp` | Added Working Directory, Script Arguments, Auto-Import Prelude sections |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonViewWidget.cpp` | Prelude execution, working directory restore, sys.argv restore on startup |
+| `tests/python_bindings/CMakeLists.txt` | Added `test_python_phase5` target |
+
+**Key design decisions:**
+
+1. **`shlex.split()` for argument parsing** — Uses Python's `shlex` module to properly parse quoted strings and escape characters in `sys.argv`. Falls back to simple whitespace splitting if `shlex` is unavailable.
+2. **Prelude on reset** — When the user clicks "Clear Namespace" in properties, the prelude is automatically re-executed (if enabled) after `resetNamespace()` and `exposeDataManager()`.
+3. **Template content in code** — Templates are defined as `QString` constants in `_getTemplateContent()` rather than external files, avoiding deployment/path issues.
+4. **Recent files deduplication** — Reuses the existing `PythonWidgetState::addRecentScript()` mechanism (capped at 10, most-recent-first). Menu is rebuilt on each open/save operation.
+5. **Drag-and-drop** — `PythonEditorWidget` accepts drops via `setAcceptDrops(true)` and filters for `.py` file URLs.
+6. **Working directory persistence** — The `last_working_directory` field is stored in state and restored on widget construction. The properties panel also shows the current working directory and allows browsing.
+
+**Test coverage (15 tests):**
+- getWorkingDirectory returns non-empty path
+- setWorkingDirectory changes cwd (verified via `os.getcwd()`)
+- setWorkingDirectory with empty/nonexistent path is no-op
+- setSysArgv with arguments (basic, empty, quoted strings)
+- executePrelude runs code, empty string is no-op
+- executePrelude with imports (os/sys, whiskertoolbox_python)
+- executePrelude error doesn't break engine
+- executePrelude with multiline code including function definitions
+- Bridge + prelude + sys.argv integration test
+- Working directory affects executeFile
+
 ---
 
-## 7. Phase 6 — Virtual Environment Support
+## 7. Phase 6 — Virtual Environment Support ✅
+
+> **Status: COMPLETE** — All deliverables implemented and tested (18 tests, 46 assertions).
 
 **Goal:** Detect, select, and activate Python virtual environments so users can
 `import scipy`, `import sklearn`, etc.
@@ -672,48 +750,70 @@ working-directory management.
 
 The embedded interpreter's `sys.path` must be modified to include the venv's
 `site-packages`. Since `pybind11::embed` uses the compile-time Python, the venv
-must match the same Python 3.12 version.
+must match the same Python major.minor version.
 
 ### 7.2 Tasks
 
 | # | Task | Details |
 |---|------|---------|
-| 6.1 | Venv discovery | Scan common locations: `~/.virtualenvs/`, `~/.conda/envs/`, project-local `.venv/`, and user-configured paths. |
+| 6.1 | Venv discovery | Scan common locations: `~/.virtualenvs/`, `~/.conda/envs/`, `~/.pyenv/versions/`, and user-configured paths. |
 | 6.2 | Venv activation | Modify `sys.path` to prepend the venv's `site-packages`. Set `sys.prefix` and `VIRTUAL_ENV`. **Do not** re-exec the interpreter — just update paths. |
-| 6.3 | Venv validation | Before activation, confirm the venv's Python version matches the embedded interpreter (3.12.x). Show warning if mismatched. |
-| 6.4 | Package listing | After activation, `pip list` or `importlib.metadata` to show installed packages in properties panel. |
+| 6.3 | Venv validation | Before activation, confirm the venv's Python version matches the embedded interpreter (major.minor). Show warning if mismatched. |
+| 6.4 | Package listing | After activation, `importlib.metadata.distributions()` to show installed packages in properties panel. |
 | 6.5 | Install packages | "Install package" dialog that runs `pip install <pkg>` via subprocess in the venv. |
 | 6.6 | Persistence | Store selected venv path in `PythonWidgetStateData::venv_path`. Restore on next session. |
-| 6.7 | Indicator | Show active venv name in console prompt and properties panel. |
+| 6.7 | Indicator | Show active venv name + color status in properties panel. |
 
-### 7.3 Venv Activation Implementation
+### 7.3 Deliverables
 
-```cpp
-void PythonEngine::activateVenv(std::filesystem::path const & venv_path) {
-    // 1. Validate
-    auto site_packages = findSitePackages(venv_path);  // e.g. lib/python3.12/site-packages
+- [x] Venv discovery scanning `~/.virtualenvs`, `~/.conda/envs`, `~/.pyenv/versions`, and user-configured paths
+- [x] Venv dropdown in properties with autodiscovery + browse button + refresh
+- [x] Activation modifies `sys.path`, `sys.prefix`, `sys.exec_prefix`, `VIRTUAL_ENV`, and `PATH`
+- [x] Deactivation fully restores original `sys.path`, `sys.prefix`, `sys.exec_prefix`, and removes `VIRTUAL_ENV`
+- [x] Version validation against embedded interpreter (major.minor match required)
+- [x] Package listing via `importlib.metadata.distributions()` with `pkg_resources` fallback
+- [x] Package install via `pip install` subprocess with confirmation dialog
+- [x] Persistence: venv path saved in state, restored on next session
+- [x] Active venv indicator (green label) in properties panel
+- [x] Unit tests for all engine features (18 tests, 46 assertions)
 
-    // 2. Modify sys.path
-    py::module_ sys = py::module_::import("sys");
-    py::list path = sys.attr("path");
-    path.attr("insert")(0, site_packages.string());
+### 7.4 Implementation Notes
 
-    // 3. Set sys.prefix
-    sys.attr("prefix") = venv_path.string();
-    sys.attr("exec_prefix") = venv_path.string();
+**Files created/modified:**
 
-    // 4. Set environment variable
-    py::module_ os = py::module_::import("os");
-    os.attr("environ")["VIRTUAL_ENV"] = venv_path.string();
-}
-```
+| File | Changes |
+|------|--------|
+| `src/python_bindings/PythonEngine.hpp` | Added `discoverVenvs()`, `validateVenv()`, `activateVenv()`, `deactivateVenv()`, `activeVenvPath()`, `isVenvActive()`, `listInstalledPackages()`, `installPackage()`, `pythonVersionTuple()` + private helpers `_findSitePackages()`, `_readVenvPythonVersion()`, `_looksLikeVenv()` + member variables for venv state |
+| `src/python_bindings/PythonEngine.cpp` | Full implementations for all venv methods. Discovery scans `HOME` + extra paths. Validation reads `pyvenv.cfg` for version. Activation deep-copies `sys.path` for safe restore. Deactivation uses `py::exec` for env cleanup. |
+| `src/python_bindings/Phase6.test.cpp` | 18 Catch2 test cases (46 assertions) covering all Phase 6 engine features |
+| `src/WhiskerToolbox/Python_Widget/Core/PythonWidgetState.hpp/.cpp` | Added `venvPath()`, `setVenvPath()` accessor/signal |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonPropertiesWidget.hpp/.cpp` | Added Virtual Environment section: QComboBox selector, browse/refresh/deactivate buttons, package tree, install input |
+| `src/WhiskerToolbox/Python_Widget/UI/PythonViewWidget.cpp` | Venv restoration from state on startup |
+| `tests/python_bindings/CMakeLists.txt` | Added `test_python_phase6` target |
 
-### 7.4 Deliverables
+**Key design decisions:**
 
-- [ ] Venv dropdown in properties with autodiscovery
-- [ ] Activation modifies `sys.path` — `import numpy` works when numpy is in the venv
-- [ ] Version mismatch warning
-- [ ] Persistence across sessions
+1. **Deep copy for sys.path backup** — When activating a venv, `sys.path` is deep-copied (element by element) into `_original_sys_path` to avoid aliasing issues with Python's list reference semantics.
+2. **`py::exec` for VIRTUAL_ENV cleanup** — The `del os.environ['VIRTUAL_ENV']` operation is done via `py::exec()` rather than `dict.pop()` because `os.environ` is a special proxy object, not a plain dict.
+3. **Version detection from pyvenv.cfg** — Reads the `version = X.Y.Z` line from the venv's `pyvenv.cfg` file. Falls back to parsing directory names like `lib/python3.12/` if `pyvenv.cfg` is missing.
+4. **`_looksLikeVenv()` heuristic** — Checks for `pyvenv.cfg`, `bin/python`, `Scripts/python.exe`, or `conda-meta/` to support standard venvs, virtualenvs, and conda environments across platforms.
+5. **`importlib.metadata` with fallback** — Uses `importlib.metadata.distributions()` (Python 3.8+) for package listing, with `pkg_resources.working_set` as fallback for older setups.
+6. **Venv bin added to PATH** — The venv's `bin/` directory is prepended to `os.environ['PATH']` so that subprocess calls (e.g. `pip install`) use the venv's executables.
+7. **Auto-deactivate on switch** — Activating a new venv automatically deactivates any previously active one, restoring the original state first.
+
+**Test coverage (18 tests):**
+- pythonVersionTuple returns valid major.minor
+- discoverVenvs returns vector (no crash), finds venvs in extra paths, handles nonexistent paths
+- validateVenv: empty path, nonexistent path, non-venv directory, version mismatch, matching version
+- initially no venv active
+- activateVenv: valid fake venv (sys.path, sys.prefix, VIRTUAL_ENV verified)
+- deactivateVenv: restores all state, VIRTUAL_ENV removed
+- activateVenv with invalid path returns error
+- activating new venv deactivates old one
+- listInstalledPackages: returns packages, sorted results
+- installPackage with empty name returns error
+- Integration: activate venv + bridge + execute together
+- deactivateVenv restores original sys.path length
 
 ---
 
@@ -910,7 +1010,8 @@ in Phase 1-5 (single-threaded). For Phase 7, use the marshalling pattern above.
 | `PythonEngine.test.cpp` | Interpreter boot, execute, stdout/stderr capture, namespace persistence (14 tests, Phase 1) |
 | `bindings.test.cpp` | All Phase 2 bindings: geometry, timeframe, entity, analog, digital event/interval, line, mask, point, tensor, DataManager (24 tests, Phase 2) |
 | `PythonBridge.test.cpp` | Bridge integration: expose dm, setData/getData round-trips, observer notifications, importNewData, exposeData/TimeFrame, error recovery, e2e workflows (27 tests, Phase 3) |
-| `test_venv.cpp` | Venv activation, sys.path modification, import check |
+| `Phase5.test.cpp` | Working directory, sys.argv, auto-import prelude, integration with bridge (15 tests, Phase 5) |
+| `Phase6.test.cpp` | Venv discovery, validation, activation/deactivation, package listing, install error handling, integration with bridge (18 tests, Phase 6) |
 
 ### 11.2 Integration Tests
 
@@ -959,12 +1060,12 @@ in Phase 1-5 (single-threaded). For Phase 7, use the marshalling pattern above.
 Phase 1 (Interpreter)      ████████████████████  COMPLETE
 Phase 2 (Bindings)          ████████████████████  COMPLETE
 Phase 3 (Bridge)            ████████████████████  COMPLETE
-Phase 4 (Widget UI)         ░░░░░░░░░░░░░░██████  ~3 weeks  ← NEXT
-Phase 5 (Script Mgmt)       ░░░░░░░░░░░░░░░░░░██  ~1 week
-Phase 6 (Venv)              ░░░░░░░░░░░░░░░░░░██  ~1 week
-Phase 7 (Advanced)          ░░░░░░░░░░░░░░░░░░░░  ongoing
+Phase 4 (Widget UI)         ████████████████████  COMPLETE
+Phase 5 (Script Mgmt)       ████████████████████  COMPLETE
+Phase 6 (Venv)              ████████████████████  COMPLETE
+Phase 7 (Advanced)          ░░░░░░░░░░░░░░░░░░░░  ongoing   ← NEXT
 ```
 
 Phases 1–3 can be developed and tested without any Qt UI (pure C++ + pybind11).
-Phase 4 builds the UI on top of the working engine. Phases 5–6 are incremental
-enhancements. Phase 7 items are independent and can be tackled as-needed.
+Phase 4 builds the UI on top of the working engine (now complete). Phases 5–7 are
+incremental enhancements. Phase 7 items are independent and can be tackled as-needed.

@@ -11,18 +11,26 @@ set(PYTHON_WIDGET_SOURCES
 
     UI/PythonViewWidget.hpp
     UI/PythonViewWidget.cpp
-    UI/PythonViewWidget.ui
+
+    UI/PythonConsoleWidget.hpp
+    UI/PythonConsoleWidget.cpp
+
+    UI/PythonEditorWidget.hpp
+    UI/PythonEditorWidget.cpp
 
     UI/PythonPropertiesWidget.hpp
     UI/PythonPropertiesWidget.cpp
-    UI/PythonPropertiesWidget.ui
+
+    UI/PythonSyntaxHighlighter.hpp
+    UI/PythonSyntaxHighlighter.cpp
 )
 
 add_library(Python_Widget STATIC ${PYTHON_WIDGET_SOURCES})
 
 target_link_libraries(Python_Widget
     PUBLIC  EditorState
-    PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui reflectcpp::reflectcpp
+    PUBLIC  WhiskerToolbox::PythonBridge
+    PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui reflectcpp::reflectcpp DataManager
 )
 
 target_include_directories(Python_Widget PUBLIC
