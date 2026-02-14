@@ -103,27 +103,31 @@ PythonResult PythonEngine::execute(std::string const & code) {
         // If the code is a single expression like "1+1", eval() it and
         // auto-print the repr() of the result (unless None), just like
         // the interactive Python interpreter does.
-        bool evaluated_as_expr = false;
-        try {
-            // compile(code, "<input>", "eval") succeeds only for expressions
-            py::object builtins = py::module_::import("builtins");
-            py::object compiled = builtins.attr("compile")(
-                code, "<input>", "eval");
-            py::object value = builtins.attr("eval")(compiled, _globals);
+        //
+        // We use the Python C API (Py_CompileString) instead of
+        // exception-based control flow because catching
+        // py::error_already_set across DLL boundaries is unreliable
+        // on Windows/MSVC.
+        PyObject * compiled = Py_CompileString(code.c_str(), "<input>", Py_eval_input);
+        if (compiled != nullptr) {
+            // Valid expression — evaluate it
+            py::object code_obj = py::reinterpret_steal<py::object>(compiled);
+            py::object value = py::reinterpret_steal<py::object>(
+                PyEval_EvalCode(code_obj.ptr(), _globals.ptr(), _globals.ptr()));
+            if (!value) {
+                throw py::error_already_set();
+            }
             if (!value.is_none()) {
                 // Print repr like the interactive interpreter
+                py::object builtins = py::module_::import("builtins");
                 py::object repr_str = builtins.attr("repr")(value);
                 py::print(repr_str);
             }
             // Store the result as '_' in the namespace (standard REPL behavior)
             _globals["_"] = value;
-            evaluated_as_expr = true;
-        } catch (py::error_already_set &) {
-            // Not a valid expression — fall through to exec()
-            evaluated_as_expr = false;
-        }
-
-        if (!evaluated_as_expr) {
+        } else {
+            // Not a valid expression — clear the SyntaxError and use exec()
+            PyErr_Clear();
             py::exec(code, _globals);
         }
         result.success = true;
