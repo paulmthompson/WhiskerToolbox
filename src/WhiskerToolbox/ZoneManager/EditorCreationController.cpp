@@ -110,6 +110,63 @@ int EditorCreationController::createdCount(EditorLib::EditorTypeId const & type_
     return (it != _creation_counters.end()) ? it->second : 0;
 }
 
+EditorCreationController::PlacedEditor
+EditorCreationController::placeExistingEditor(
+        std::shared_ptr<EditorState> state,
+        Zone view_zone,
+        Zone properties_zone,
+        QString const & view_title,
+        bool raise_view)
+{
+    PlacedEditor result;
+
+    if (!state) {
+        std::cerr << "EditorCreationController::placeExistingEditor: null state" << std::endl;
+        return result;
+    }
+
+    auto const type_id = EditorLib::EditorTypeId(state->getTypeName());
+    auto const type_info = _registry->typeInfo(type_id);
+
+    result.state = state;
+
+    // Determine title
+    QString const title = view_title.isEmpty()
+            ? (state->getDisplayName().isEmpty()
+                    ? type_info.display_name
+                    : state->getDisplayName())
+            : view_title;
+
+    // Create view widget from existing state
+    auto * view = _registry->createView(state);
+    if (view) {
+        result.view_dock = createDockWidget(view, title, true);
+        if (result.view_dock) {
+            _zone_manager->addToZone(result.view_dock, view_zone, raise_view);
+        }
+    }
+
+    // Create properties widget from existing state
+    auto * properties = _registry->createProperties(state);
+    if (properties) {
+        QString const props_title = title + QStringLiteral(" Properties");
+        result.properties_dock = createDockWidget(properties, props_title, true);
+        if (result.properties_dock) {
+            bool const raise_props = type_info.auto_raise_properties;
+            _zone_manager->addToZone(result.properties_dock, properties_zone, raise_props);
+        }
+    }
+
+    // Connect cleanup signals
+    auto const instance_id = EditorLib::EditorInstanceId(result.state->getInstanceId());
+    connectCleanupSignals(result, instance_id);
+
+    _creation_counters[type_id]++;
+    emit editorPlaced(instance_id, type_id);
+
+    return result;
+}
+
 ads::CDockWidget * EditorCreationController::createDockWidget(QWidget * widget,
                                                                QString const & title,
                                                                bool closable)

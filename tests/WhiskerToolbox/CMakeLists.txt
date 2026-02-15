@@ -3,6 +3,7 @@
 
 add_subdirectory(EditorState)
 add_subdirectory(GroupManagementWidget)
+add_subdirectory(StateManagement)
 add_subdirectory(Feature_Table_Widget)
 add_subdirectory(Feature_Tree_Widget)
 add_subdirectory(DataViewer_Widget)

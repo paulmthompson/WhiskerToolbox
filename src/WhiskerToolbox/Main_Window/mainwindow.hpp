@@ -12,6 +12,10 @@
 #include <string>
 
 class DataManager;
+
+namespace StateManagement {
+class StateManager;
+}
 class EditorCreationController;
 class EditorRegistry;
 class GroupManager;
@@ -68,6 +72,12 @@ public:
     GroupManager * getGroupManager() const { return _group_manager.get(); }
 
     /**
+     * @brief Get the state manager for preferences and session memory
+     * @return Pointer to the StateManager
+     */
+    StateManagement::StateManager * stateManager() const { return _state_manager.get(); }
+
+    /**
      * @brief Get the editor registry for state and type management
      * 
      * EditorRegistry provides:
@@ -99,6 +109,7 @@ private:
     std::unique_ptr<ZoneManager> _zone_manager;
     std::unique_ptr<EditorCreationController> _editor_creation_controller;
 
+    std::unique_ptr<StateManagement::StateManager> _state_manager;
     std::unique_ptr<GroupManager> _group_manager;
     std::unique_ptr<SplitButtonHandler> _split_button_handler;
 
@@ -114,6 +125,7 @@ private:
     void _createActions();
     void _buildInitialLayout();
     void _registerEditorTypes();
+    void _updateTitleBar();
 
     /**
      * @brief Open an editor using the EditorRegistry
@@ -125,6 +137,8 @@ private:
      * 
      * @param type_id The editor type to open
      */
+    void closeEvent(QCloseEvent * event) override;
+
     void openEditor(QString const & type_id);
 
     void loadData();
@@ -135,6 +149,9 @@ private slots:
     void Load_Images();
 
     void _loadJSONConfig();
+
+    void _saveWorkspace();
+    void _openWorkspace();
 
     void openDataImport();
     void openWhiskerTracking();

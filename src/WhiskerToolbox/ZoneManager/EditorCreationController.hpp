@@ -148,6 +148,27 @@ public:
      */
     [[nodiscard]] int createdCount(EditorLib::EditorTypeId const & type_id) const;
 
+    /**
+     * @brief Create and place widgets for an already-registered EditorState
+     *
+     * Used during workspace restore: the state has been recreated via
+     * EditorRegistry::fromJson(), this method creates the view and
+     * properties widgets and places them in the requested zones.
+     *
+     * @param state An already-registered EditorState
+     * @param view_zone Zone for the view widget
+     * @param properties_zone Zone for the properties widget
+     * @param view_title Custom title (empty → use display name from type info)
+     * @param raise_view If true, make the view the active tab
+     * @return PlacedEditor containing the created dock widgets
+     */
+    [[nodiscard]] PlacedEditor placeExistingEditor(
+            std::shared_ptr<EditorState> state,
+            Zone view_zone,
+            Zone properties_zone,
+            QString const & view_title = {},
+            bool raise_view = false);
+
 signals:
     /**
      * @brief Emitted when an editor is successfully created and placed

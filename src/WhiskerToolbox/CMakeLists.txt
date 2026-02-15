@@ -36,6 +36,8 @@ add_subdirectory(TableViewerWidget) # Qt, DataManager
 
 add_subdirectory(ZoneManager) #Qt, EditorState, reflectcpp, qt6advanceddocking
 
+add_subdirectory(StateManagement) # Qt, reflectcpp, nlohmann_json, EditorState, ZoneManager
+
 add_subdirectory(Scaling_Widget) # Qt, CoreGeometry - shared widget for image scaling
 
 add_subdirectory(DataExport_Widget) # Qt, DataManager, Scaling_Widget
@@ -243,6 +245,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataInspector_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Terminal_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Python_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ZoneManager)
+target_link_libraries(WhiskerToolbox PRIVATE StateManagement)
 
 # Force whole-archive linking for DeepLearning to ensure static model registration runs
 # (NeuroSAMModel self-registers via DL_REGISTER_MODEL macro, but linker would strip it

@@ -62,10 +62,17 @@
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "TimeScrollBar/TimeScrollBarState.hpp"
 
+#include "StateManagement/StateManager.hpp"
+#include "StateManagement/SessionStore.hpp"
+#include "StateManagement/WorkspaceManager.hpp"
+
 #include "utils/DataLoadUtils.hpp"
 
+#include <QCloseEvent>
 #include <QComboBox>
+#include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QImage>
 #include <QKeyEvent>
 #include <QLineEdit>
@@ -91,10 +98,14 @@ MainWindow::MainWindow(QWidget * parent)
       _data_manager{std::make_shared<DataManager>()},
       _editor_registry{std::make_unique<EditorRegistry>(this)},
       _zone_manager(nullptr),
+      _state_manager{std::make_unique<StateManagement::StateManager>(this)},
       _group_manager(nullptr)
 
 {
     ui->setupUi(this);
+
+    // Load application preferences and session memory (before UI setup)
+    _state_manager->loadAll();
 
     // Register Qt metatypes for TimeFrame types (required for signal/slot)
     qRegisterMetaType<TimeKey>("TimeKey");
@@ -142,6 +153,10 @@ MainWindow::MainWindow(QWidget * parent)
     _editor_creation_controller = std::make_unique<EditorCreationController>(
             _editor_registry.get(), _zone_manager.get(), _m_DockManager, this);
 
+    // Wire up WorkspaceManager with its collaborators (created after StateManager)
+    _state_manager->workspace()->setEditorRegistry(_editor_registry.get());
+    _state_manager->workspace()->setZoneManager(_zone_manager.get());
+
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
@@ -179,6 +194,34 @@ MainWindow::MainWindow(QWidget * parent)
     qApp->installEventFilter(this);
 
     _buildInitialLayout();
+
+    // Restore window geometry from previous session
+    _state_manager->session()->restoreWindowGeometry(this);
+
+    // Connect workspace dirty flag to title bar updates
+    connect(_state_manager->workspace(), &StateManagement::WorkspaceManager::dirtyChanged,
+            this, &MainWindow::_updateTitleBar);
+    connect(_state_manager->workspace(), &StateManagement::WorkspaceManager::workspacePathChanged,
+            this, &MainWindow::_updateTitleBar);
+
+    // Enable crash-recovery auto-save
+    _state_manager->workspace()->enableAutoSave();
+
+    _updateTitleBar();
+}
+
+void MainWindow::closeEvent(QCloseEvent * event) {
+    // Capture window geometry before closing
+    _state_manager->session()->captureWindowGeometry(this);
+
+    // Persist all state to disk
+    _state_manager->saveAll();
+
+    // Clean shutdown — remove the crash-recovery file
+    _state_manager->workspace()->disableAutoSave();
+    _state_manager->workspace()->deleteRecoveryFile();
+
+    QMainWindow::closeEvent(event);
 }
 
 MainWindow::~MainWindow() {
@@ -302,6 +345,15 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
+    // Workspace save/load (re-purpose the old layout actions)
+    ui->actionSave_Layout->setText(QStringLiteral("Save Workspace"));
+    ui->actionSave_Layout->setEnabled(true);
+    connect(ui->actionSave_Layout, &QAction::triggered, this, &MainWindow::_saveWorkspace);
+
+    ui->actionLoad_Layout->setText(QStringLiteral("Open Workspace"));
+    ui->actionLoad_Layout->setEnabled(true);
+    connect(ui->actionLoad_Layout, &QAction::triggered, this, &MainWindow::_openWorkspace);
+
     // Connect TimeScrollBar to EditorRegistry for global time propagation
     connect(_time_scrollbar,
             qOverload<TimePosition>(&TimeScrollBar::timeChanged),
@@ -341,31 +393,42 @@ drawn on the video screen.
 
 */
 void MainWindow::Load_Video() {
+    auto const initial_dir = _state_manager->session()->lastUsedPath(
+            QStringLiteral("load_video"), QDir::currentPath());
     auto vid_name = QFileDialog::getOpenFileName(
             this,
             "Load Video File",
-            QDir::currentPath(),
+            initial_dir,
             "All files (*.*) ;; MP4 (*.mp4); HDF5 (*.h5); MAT (*.mat)");
 
     if (vid_name.isNull()) {
         return;
     }
 
+    _state_manager->session()->rememberPath(QStringLiteral("load_video"), vid_name);
+
     // Use the conditional video loader
     if (loadVideoData(vid_name.toStdString(), _data_manager.get())) {
+        _state_manager->workspace()->recordVideoLoad(vid_name);
         loadData();
     }
 }
 
 void MainWindow::Load_Images() {
+    auto const initial_dir = _state_manager->session()->lastUsedPath(
+            QStringLiteral("load_images"), QDir::currentPath());
     auto dir_name = QFileDialog::getExistingDirectory(
             this,
             "Load Video File",
-            QDir::currentPath());
+            initial_dir);
 
     if (dir_name.isNull()) {
         return;
     }
+
+    _state_manager->session()->rememberPath(QStringLiteral("load_images"), dir_name);
+
+    _state_manager->workspace()->recordImagesLoad(dir_name);
 
     auto media = std::make_shared<ImageData>();
     media->LoadMedia(dir_name.toStdString());
@@ -375,15 +438,19 @@ void MainWindow::Load_Images() {
 }
 
 void MainWindow::_loadJSONConfig() {
+    auto const initial_dir = _state_manager->session()->lastUsedPath(
+            QStringLiteral("load_json_config"), QDir::currentPath());
     auto filename = QFileDialog::getOpenFileName(
             this,
             "Load JSON File",
-            QDir::currentPath(),
+            initial_dir,
             "All files (*.*) ;; JSON (*.json)");
 
     if (filename.isNull()) {
         return;
     }
+
+    _state_manager->session()->rememberPath(QStringLiteral("load_json_config"), filename);
 
     // Create progress dialog without cancel button
     QProgressDialog progress("Preparing to load data...", nullptr, 0, 100, this);
@@ -426,6 +493,9 @@ void MainWindow::_loadJSONConfig() {
 
     // Set to 100% when complete
     progress.setValue(100);
+
+    // Record in workspace provenance
+    _state_manager->workspace()->recordJsonConfigLoad(filename);
 
     // Handle media-related updates (TimeScrollBar, Media_Widget refresh)
     // TODO: These should eventually be moved to widgets listening to DataManager observers
@@ -947,4 +1017,115 @@ void MainWindow::openEditor(QString const & type_id) {
               << " via EditorCreationController (instance: "
               << instance_id.toStdString() << ", zone: "
               << zoneToString(info.preferred_zone).toStdString() << ")" << std::endl;
+}
+
+// ---------------------------------------------------------------------------
+// Workspace save / load
+// ---------------------------------------------------------------------------
+
+void MainWindow::_saveWorkspace() {
+    auto const initial_dir = _state_manager->session()->lastUsedPath(
+            QStringLiteral("workspace"), QDir::currentPath());
+
+    auto const path = QFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("Save Workspace"),
+            initial_dir,
+            QStringLiteral("WhiskerToolbox Workspace (*.wtb)"));
+
+    if (path.isEmpty()) {
+        return;
+    }
+
+    _state_manager->session()->rememberPath(QStringLiteral("workspace"), path);
+
+    if (_state_manager->workspace()->saveWorkspace(path)) {
+        std::cout << "Workspace saved to: " << path.toStdString() << std::endl;
+    } else {
+        std::cerr << "Failed to save workspace to: " << path.toStdString() << std::endl;
+    }
+}
+
+void MainWindow::_openWorkspace() {
+    auto const initial_dir = _state_manager->session()->lastUsedPath(
+            QStringLiteral("workspace"), QDir::currentPath());
+
+    auto const path = QFileDialog::getOpenFileName(
+            this,
+            QStringLiteral("Open Workspace"),
+            initial_dir,
+            QStringLiteral("WhiskerToolbox Workspace (*.wtb)"));
+
+    if (path.isEmpty()) {
+        return;
+    }
+
+    _state_manager->session()->rememberPath(QStringLiteral("workspace"), path);
+
+    auto data = _state_manager->workspace()->readWorkspace(path);
+    if (!data) {
+        std::cerr << "Failed to read workspace from: " << path.toStdString() << std::endl;
+        return;
+    }
+
+    // --- Replay data loads ---
+    for (auto const & entry : data->data_loads) {
+        if (entry.loader_type == "json_config") {
+            auto const json_path = QString::fromStdString(entry.source_path);
+            if (QFile::exists(json_path)) {
+                auto data_info = loadDataAndBroadcastConfig(
+                        _data_manager.get(),
+                        _editor_registry.get(),
+                        entry.source_path);
+                processLoadedData(data_info);
+            } else {
+                std::cerr << "Workspace: JSON config not found: " << entry.source_path << std::endl;
+            }
+        } else if (entry.loader_type == "video") {
+            auto const vid_path = QString::fromStdString(entry.source_path);
+            if (QFile::exists(vid_path)) {
+                if (loadVideoData(entry.source_path, _data_manager.get())) {
+                    loadData();
+                }
+            } else {
+                std::cerr << "Workspace: Video not found: " << entry.source_path << std::endl;
+            }
+        } else if (entry.loader_type == "images") {
+            auto const dir_path = QString::fromStdString(entry.source_path);
+            if (QDir(dir_path).exists()) {
+                auto media = std::make_shared<ImageData>();
+                media->LoadMedia(entry.source_path);
+                _data_manager->setData<ImageData>("media", media, TimeKey("time"));
+                loadData();
+            } else {
+                std::cerr << "Workspace: Image directory not found: " << entry.source_path << std::endl;
+            }
+        }
+    }
+
+    // Restore data load provenance from the workspace
+    _state_manager->workspace()->clearDataLoads();
+    for (auto const & entry : data->data_loads) {
+        _state_manager->workspace()->recordDataLoad(entry);
+    }
+
+    // Mark the workspace as successfully restored
+    _state_manager->workspace()->markRestored(path);
+    std::cout << "Workspace loaded from: " << path.toStdString() << std::endl;
+}
+
+void MainWindow::_updateTitleBar() {
+    QString title = QStringLiteral("WhiskerToolbox");
+
+    auto const ws_path = _state_manager->workspace()->currentWorkspacePath();
+    if (!ws_path.isEmpty()) {
+        auto const file_name = QFileInfo(ws_path).fileName();
+        title = file_name + QStringLiteral(" — ") + title;
+    }
+
+    if (_state_manager->workspace()->hasUnsavedChanges()) {
+        title.prepend(QStringLiteral("● "));
+    }
+
+    setWindowTitle(title);
 }
