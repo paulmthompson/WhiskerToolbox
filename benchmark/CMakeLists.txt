@@ -38,6 +38,23 @@ if(TARGET benchmark_MaskArea)
     )
 endif()
 
+# Analog Load Benchmark
+add_selective_benchmark(
+    NAME AnalogLoad
+    SOURCES
+        AnalogLoad.benchmark.cpp
+    LINK_LIBRARIES
+        DataManager
+    DEFAULT ON
+)
+
+if(TARGET benchmark_AnalogLoad)
+    configure_benchmark_for_profiling(
+        TARGET benchmark_AnalogLoad
+        ENABLE_PERF ON
+        ENABLE_HEAPTRACK ON
+    )
+endif()
+
 # Print summary of configured benchmarks
 print_benchmark_summary()
-
