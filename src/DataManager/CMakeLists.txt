@@ -334,6 +334,9 @@ if(ENABLE_OPENCV)
     target_compile_definitions(DataManager PRIVATE ENABLE_OPENCV)
 endif()
 
+# Numpy loader is always available (header-only libnpy)
+target_link_libraries(DataManager PRIVATE DataManagerNumpy)
+
 #It is important to put these last to avoid linker errors with no OpenCV
 #I don't know exactly why
 target_link_libraries(DataManager PRIVATE armadillo)

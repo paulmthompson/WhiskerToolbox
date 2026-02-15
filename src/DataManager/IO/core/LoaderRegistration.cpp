@@ -21,6 +21,9 @@
 #include "formats/OpenCV/OpenCVFormatLoader.hpp"
 #endif
 
+// Numpy is always available (header-only libnpy)
+#include "formats/Numpy/NumpyFormatLoader.hpp"
+
 #include <iostream>
 #include <memory>
 
@@ -83,6 +86,9 @@ void registerExternalLoaders() {
 #else
     std::cout << "LoaderRegistration: OpenCV loader not available (ENABLE_OPENCV not defined)" << std::endl;
 #endif
+
+    // Numpy loader is always available (libnpy is a header-only dependency)
+    registry.registerLoader(std::make_unique<NumpyFormatLoader>());
 
     // Future external loaders can be added here with similar conditional compilation
 }

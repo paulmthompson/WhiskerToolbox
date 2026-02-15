@@ -67,6 +67,10 @@ if(ENABLE_OPENCV)
     target_link_libraries(DataManagerIO PRIVATE DataManagerOpenCV)
 endif()
 
+# Numpy is always available (header-only libnpy fetched via FetchContent)
+add_subdirectory(formats/Numpy)
+target_link_libraries(DataManagerIO PRIVATE DataManagerNumpy)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManagerIO PRIVATE ${CLANG_OPTIONS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")

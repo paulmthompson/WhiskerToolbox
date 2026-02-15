@@ -116,6 +116,8 @@ target_link_libraries(DataImport_Widget
         DataManager
         Scaling_Widget
         reflectcpp::reflectcpp
+    PRIVATE
+        DataManagerNumpy  # For TensorImport numpy loading
 )
 
 target_include_directories(DataImport_Widget
