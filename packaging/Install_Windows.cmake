@@ -139,6 +139,70 @@ copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${TORCH_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${ABSEIL_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
+# ---------------------------------------------------------------------------
+# Python standard library — needed by the embedded Python interpreter.
+# The PythonEngine sets PYTHONHOME to the exe directory, so the stdlib
+# must be in <install>/bin/Lib/ on Windows.
+# ---------------------------------------------------------------------------
+# Derive the vcpkg Python stdlib location from the found executable.
+# On Windows vcpkg the stdlib (Lib/) is typically next to the Python
+# executable under tools/python3/ — NOT at the triplet root.
+get_filename_component(_py_tools "${Python3_EXECUTABLE}" DIRECTORY)
+set(_py_stdlib_src "")
+
+# Try next to the Python executable first
+if(EXISTS "${_py_tools}/Lib/encodings/__init__.py")
+    set(_py_stdlib_src "${_py_tools}/Lib")
+    set(_py_prefix "${_py_tools}")
+else()
+    # Fallback: triplet root (two levels up from tools/python3/)
+    get_filename_component(_py_prefix "${_py_tools}" DIRECTORY)
+    get_filename_component(_py_prefix "${_py_prefix}" DIRECTORY)
+    set(_py_stdlib_src "${_py_prefix}/Lib")
+endif()
+
+if(IS_DIRECTORY "${_py_stdlib_src}")
+    install(DIRECTORY "${_py_stdlib_src}/"
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/Lib"
+            PATTERN "__pycache__" EXCLUDE
+            PATTERN "test" EXCLUDE
+            PATTERN "tests" EXCLUDE
+            PATTERN "tkinter" EXCLUDE
+            PATTERN "turtledemo" EXCLUDE
+            PATTERN "idlelib" EXCLUDE
+            PATTERN "ensurepip" EXCLUDE
+            PATTERN "distutils" EXCLUDE
+            PATTERN "lib2to3" EXCLUDE
+    )
+    message(STATUS "[Install] Python stdlib from: ${_py_stdlib_src}")
+else()
+    message(WARNING "[Install] Python stdlib not found at: ${_py_stdlib_src}")
+endif()
+
+# Also install the python3XX.dll if it links dynamically.
+# On Windows vcpkg it may be next to the exe (tools/python3/) or in bin/.
+set(_py_dll_candidates
+    "${_py_prefix}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
+    "${_py_prefix}/bin/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
+)
+foreach(_dll_candidate IN LISTS _py_dll_candidates)
+    if(EXISTS "${_dll_candidate}")
+        install(FILES "${_dll_candidate}" DESTINATION "${CMAKE_INSTALL_BINDIR}")
+        message(STATUS "[Install] Python DLL: ${_dll_candidate}")
+        break()
+    endif()
+endforeach()
+
+# Install DLLs directory (C extension modules like _json, _struct, etc.)
+set(_py_dlls_src "${_py_prefix}/DLLs")
+if(IS_DIRECTORY "${_py_dlls_src}")
+    install(DIRECTORY "${_py_dlls_src}/"
+            DESTINATION "${CMAKE_INSTALL_BINDIR}/DLLs"
+            PATTERN "__pycache__" EXCLUDE
+    )
+    message(STATUS "[Install] Python DLLs from: ${_py_dlls_src}")
+endif()
+
 # Print support and xml are dependencies of JKQTPlotter6
 # But they are not automatically found by qt windows deployment
 # and need to be added manually

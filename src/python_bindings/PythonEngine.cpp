@@ -11,6 +11,13 @@
 #include <iostream>
 #include <sstream>
 
+#ifdef _WIN32
+#  include <windows.h>
+#else
+#  include <unistd.h>
+#  include <climits>
+#endif
+
 namespace py = pybind11;
 
 // ---------------------------------------------------------------------------
@@ -29,11 +36,131 @@ PYBIND11_EMBEDDED_MODULE(_wt_internal, m) {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: find the directory containing the running executable.
+// ---------------------------------------------------------------------------
+static std::filesystem::path _getExecutableDir() {
+#ifdef _WIN32
+    wchar_t buf[MAX_PATH];
+    DWORD const len = GetModuleFileNameW(nullptr, buf, MAX_PATH);
+    if (len > 0 && len < MAX_PATH) {
+        return std::filesystem::path(buf).parent_path();
+    }
+#elif defined(__APPLE__)
+    // macOS: use _NSGetExecutablePath via /proc is unavailable,
+    // but for a bundled app QCoreApplication::applicationDirPath() is the
+    // right answer.  As a fallback we try /proc/self/exe (Linux).
+    char buf[PATH_MAX];
+    ssize_t const len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+    if (len > 0) {
+        buf[len] = '\0';
+        return std::filesystem::path(buf).parent_path();
+    }
+#else
+    // Linux
+    char buf[PATH_MAX];
+    ssize_t const len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+    if (len > 0) {
+        buf[len] = '\0';
+        return std::filesystem::path(buf).parent_path();
+    }
+#endif
+    return std::filesystem::current_path();
+}
+
+// ---------------------------------------------------------------------------
+// Helper: locate the Python stdlib relative to the executable directory.
+//
+// WT_PYTHON_STDLIB_REL_DIR is a compile-time string set by CMake, e.g.
+//   "Lib"                           (Windows)
+//   "lib/python3.12"                (Linux)
+//
+// If the stdlib does not exist next to the exe (e.g. during development
+// when running from the build tree), we also probe the vcpkg-installed
+// prefix to find it — this way the interpreter works both in the build
+// tree and in an installed/packaged layout.
+// ---------------------------------------------------------------------------
+static std::filesystem::path _findPythonHome() {
+    auto const exe_dir = _getExecutableDir();
+
+    // Helper: verify the candidate directory actually contains the Python
+    // standard library.  We probe for the 'encodings' package because
+    // that is the first thing the interpreter fails on when the stdlib
+    // is missing ("failed to get the Python codec of the filesystem
+    // encoding").  A bare directory-existence check is not enough — a
+    // stale or unrelated 'Lib' folder may exist in the build output.
+    auto const has_stdlib = [](std::filesystem::path const & prefix) {
+        auto const encodings =
+            prefix / WT_PYTHON_STDLIB_REL_DIR / "encodings" / "__init__.py";
+        return std::filesystem::is_regular_file(encodings);
+    };
+
+    // 1. Check next to the executable (installed / deployed layout)
+    if (has_stdlib(exe_dir)) {
+        return exe_dir;
+    }
+
+    // 2. Build-tree fallback: walk up from exe to find vcpkg_installed.
+    //    With multi-config generators (Visual Studio) the build output
+    //    is at  out/build/<preset>/Release/  while vcpkg_installed sits
+    //    one level up at  out/build/<preset>/vcpkg_installed/<triplet>/.
+    for (auto dir = exe_dir; dir.has_parent_path() && dir != dir.root_path();
+         dir = dir.parent_path()) {
+        if (std::filesystem::is_directory(dir / "vcpkg_installed")) {
+            // Scan triplet directories for the stdlib
+            for (auto const & triplet :
+                 std::filesystem::directory_iterator(dir / "vcpkg_installed")) {
+                if (!triplet.is_directory()) continue;
+                // Check triplet root (Linux layout: <triplet>/lib/pythonX.Y/)
+                if (has_stdlib(triplet.path())) {
+                    return triplet.path();
+                }
+                // Check tools/python3/ subdirectory (Windows vcpkg layout:
+                // <triplet>/tools/python3/Lib/)
+                auto const tools_python = triplet.path() / "tools" / "python3";
+                if (has_stdlib(tools_python)) {
+                    return tools_python;
+                }
+            }
+        }
+    }
+
+    // 3. Give up — let Python's default discovery handle it.
+    return {};
+}
+
+// Keep the wide-string alive for the lifetime of the process.
+// Py_SetPythonHome does NOT copy the string; it stores the pointer.
+static std::wstring s_python_home;
+
+// ---------------------------------------------------------------------------
 // Construction / Destruction
 // ---------------------------------------------------------------------------
 
+// Helper: configure PYTHONHOME and return a new interpreter.
+// Must run before any py::dict/py::object member is default-constructed.
+static std::unique_ptr<py::scoped_interpreter> _createInterpreter() {
+    // On Windows, the embedded interpreter looks for the standard library
+    // relative to the executable (e.g. <exe_dir>/Lib/).  If the stdlib
+    // isn't deployed there (common during development in the build tree),
+    // the interpreter fails with "failed to get the Python codec of the
+    // filesystem encoding".
+    //
+    // On Linux/macOS the interpreter typically discovers its stdlib via
+    // the system Python or linked-in paths, so we skip this override to
+    // avoid interfering with a working configuration.
+#ifdef _WIN32
+    auto const python_home = _findPythonHome();
+    if (!python_home.empty()) {
+        s_python_home = python_home.wstring();
+        Py_SetPythonHome(s_python_home.c_str());
+    }
+#endif
+
+    return std::make_unique<py::scoped_interpreter>();
+}
+
 PythonEngine::PythonEngine()
-    : _interpreter(std::make_unique<py::scoped_interpreter>()) {
+    : _interpreter(_createInterpreter()) {
     // Force the linker to include bindings.o (and all bind_*.o files
     // it references) even when linking from a static archive.
     ensure_whiskertoolbox_bindings_linked();
