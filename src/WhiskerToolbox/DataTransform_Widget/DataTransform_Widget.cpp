@@ -45,9 +45,10 @@
 #include "Media/WhiskerTracing_Widget/WhiskerTracing_Widget.hpp"
 
 #include <QApplication>
-#include <QFileDialog>
 #include <QFont>
 #include <QGroupBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 #include <QHBoxLayout>
 #include <QJsonDocument>
 #include <QJsonParseError>
@@ -650,11 +651,11 @@ void DataTransform_Widget::_setupJsonPipelineUI() {
 }
 
 void DataTransform_Widget::_loadJsonPipeline() {
-    QString fileName = QFileDialog::getOpenFileName(
+    QString fileName = AppFileDialog::getOpenFileName(
             this,
-            "Load JSON Pipeline",
-            "",
-            "JSON Files (*.json);;All Files (*)");
+            QStringLiteral("transform_json"),
+            QStringLiteral("Load JSON Pipeline"),
+            QStringLiteral("JSON Files (*.json);;All Files (*)"));
 
     if (!fileName.isEmpty()) {
         _updateJsonDisplay(fileName);

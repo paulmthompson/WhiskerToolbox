@@ -2,7 +2,6 @@
 #include "HDF5DatasetPreviewModel.hpp"
 #include "ui_HDF5Explorer_Widget.h"
 
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -11,6 +10,8 @@
 #include <QMessageBox>
 #include <QStyle>
 #include <QApplication>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <H5Cpp.h>
 
@@ -293,10 +294,10 @@ HDF5ObjectInfo HDF5Explorer_Widget::selectedObjectInfo() const {
 }
 
 void HDF5Explorer_Widget::_onBrowseClicked() {
-    QString file_path = QFileDialog::getOpenFileName(
+    QString file_path = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_hdf5"),
         tr("Select HDF5 File"),
-        QString(),
         tr("HDF5 Files (*.h5 *.hdf5 *.hdf);;All Files (*)")
     );
 

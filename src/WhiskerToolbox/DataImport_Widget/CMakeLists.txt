@@ -118,6 +118,7 @@ target_link_libraries(DataImport_Widget
         reflectcpp::reflectcpp
     PRIVATE
         DataManagerNumpy  # For TensorImport numpy loading
+        WhiskerToolbox::StateManagement
 )
 
 target_include_directories(DataImport_Widget

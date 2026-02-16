@@ -14,9 +14,10 @@
 #include "Lines/LMDB/LMDBLineImport_Widget.hpp"
 
 #include <QComboBox>
-#include <QFileDialog>
 #include <QStackedWidget>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -72,10 +73,10 @@ void LineImport_Widget::_onLoaderTypeChanged(int index) {
 }
 
 void LineImport_Widget::_handleSingleHDF5LoadRequested() {
-    auto filename = QFileDialog::getOpenFileName(
+    auto filename = AppFileDialog::getOpenFileName(
             this,
+            QStringLiteral("import_hdf5"),
             tr("Load Single HDF5 Line File"),
-            QDir::currentPath(),
             tr("HDF5 files (*.h5 *.hdf5);;All files (*.*)"));
 
     if (filename.isNull() || filename.isEmpty()) {
@@ -85,10 +86,10 @@ void LineImport_Widget::_handleSingleHDF5LoadRequested() {
 }
 
 void LineImport_Widget::_handleMultiHDF5LoadRequested(QString pattern) {
-    QString const dir_name = QFileDialog::getExistingDirectory(
+    QString const dir_name = AppFileDialog::getExistingDirectory(
             this,
-            tr("Select Directory Containing HDF5 Lines"),
-            QDir::currentPath());
+            QStringLiteral("import_hdf5_dir"),
+            tr("Select Directory Containing HDF5 Lines"));
 
     if (dir_name.isEmpty()) {
         return;

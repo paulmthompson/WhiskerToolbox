@@ -62,7 +62,9 @@
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "TimeScrollBar/TimeScrollBarState.hpp"
 
+#include "StateManagement/AppFileDialog.hpp"
 #include "StateManagement/StateManager.hpp"
+#include "StateManagement/AppPreferences.hpp"
 #include "StateManagement/SessionStore.hpp"
 #include "StateManagement/WorkspaceManager.hpp"
 
@@ -106,6 +108,9 @@ MainWindow::MainWindow(QWidget * parent)
 
     // Load application preferences and session memory (before UI setup)
     _state_manager->loadAll();
+
+    // Initialize the global file dialog wrapper with session path memory
+    AppFileDialog::init(_state_manager->session());
 
     // Register Qt metatypes for TimeFrame types (required for signal/slot)
     qRegisterMetaType<TimeKey>("TimeKey");
@@ -914,7 +919,7 @@ void MainWindow::_registerEditorTypes() {
 
     ZoneManagerWidgetRegistration::registerType(_editor_registry.get(), _zone_manager.get());
 
-    PythonWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    PythonWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _state_manager->preferences());
 
     TerminalWidgetModule::registerTypes(_editor_registry.get());
     

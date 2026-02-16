@@ -10,9 +10,10 @@
 #include "DataImportTypeRegistry.hpp"
 
 #include <QComboBox>
-#include <QFileDialog>
 #include <QStackedWidget>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <iostream>
 
@@ -46,10 +47,10 @@ void PointImport_Widget::_onLoaderTypeChanged(int index) {
 }
 
 void PointImport_Widget::_handleSingleCSVLoadRequested(CSVPointLoaderOptions options) {
-    auto keypoint_filename = QFileDialog::getOpenFileName(
+    auto keypoint_filename = AppFileDialog::getOpenFileName(
             this,
+            QStringLiteral("import_csv"),
             tr("Load Keypoints CSV File"),
-            QDir::currentPath(),
             tr("CSV files (*.csv);;All files (*.*)"));
 
     if (keypoint_filename.isNull() || keypoint_filename.isEmpty()) {

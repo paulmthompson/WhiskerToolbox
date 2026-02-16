@@ -10,9 +10,10 @@
 #include "IO/formats/Numpy/tensordata/Tensor_Data_numpy.hpp"
 #define slots Q_SLOTS
 
-#include <QFileDialog>
 #include <QPushButton>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <iostream>
 
@@ -30,10 +31,10 @@ TensorImport_Widget::~TensorImport_Widget() {
 }
 
 void TensorImport_Widget::_loadNumpyArray() {
-    auto numpy_filename = QFileDialog::getOpenFileName(
+    auto numpy_filename = AppFileDialog::getOpenFileName(
             this,
+            QStringLiteral("import_numpy"),
             tr("Load Numpy Array"),
-            QDir::currentPath(),
             tr("Numpy files (*.npy)"));
 
     if (numpy_filename.isNull()) {

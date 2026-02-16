@@ -14,8 +14,7 @@ namespace StateManagement {
 StateManager::StateManager(QObject * parent)
     : QObject(parent) {
     auto const config_dir =
-            QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
-            + QStringLiteral("/WhiskerToolbox");
+            QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + QStringLiteral("/WhiskerToolbox");
     _init(config_dir);
 }
 
@@ -53,4 +52,4 @@ void StateManager::saveAll() {
     _session->save();
 }
 
-} // namespace StateManagement
+}// namespace StateManagement

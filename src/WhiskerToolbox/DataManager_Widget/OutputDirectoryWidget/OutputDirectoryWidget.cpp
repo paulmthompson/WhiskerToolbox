@@ -3,7 +3,7 @@
 
 #include "ui_OutputDirectoryWidget.h"
 
-#include <QFileDialog>
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <filesystem>
 
@@ -27,11 +27,12 @@ void OutputDirectoryWidget::setDirLabel(QString const label) {
 
 void OutputDirectoryWidget::_changeOutputDir() {
 
-    QString const dir_name = QFileDialog::getExistingDirectory(
+    QString const dir_name = AppFileDialog::getExistingDirectory(
             this,
-            "Select Directory",
-            QDir::currentPath());
+            QStringLiteral("export_dir"),
+            "Select Directory");
 
-
-    emit dirChanged(dir_name);
+    if (!dir_name.isEmpty()) {
+        emit dirChanged(dir_name);
+    }
 }

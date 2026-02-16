@@ -5,9 +5,10 @@
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemModel>
+
+#include "StateManagement/AppFileDialog.hpp"
 #include <QFont>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -176,9 +177,10 @@ void BatchProcessing_Widget::setupFileSystemModel() {
 void BatchProcessing_Widget::selectTopLevelFolder() {
     QString currentFolder = m_state->topLevelFolder();
 
-    QString const folderPath = QFileDialog::getExistingDirectory(
+    QString const folderPath = AppFileDialog::getExistingDirectory(
             this,
-            "Select Top Level Folder",
+            QStringLiteral("batch_folder"),
+            QStringLiteral("Select Top Level Folder"),
             currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
@@ -206,11 +208,12 @@ void BatchProcessing_Widget::selectTopLevelFolder() {
 void BatchProcessing_Widget::loadJsonConfiguration() {
     QString currentJsonFile = m_state->jsonFilePath();
 
-    QString const jsonFilePath = QFileDialog::getOpenFileName(
+    QString const jsonFilePath = AppFileDialog::getOpenFileName(
             this,
-            "Load JSON Configuration",
-            currentJsonFile.isEmpty() ? QDir::homePath() : QFileInfo(currentJsonFile).absolutePath(),
-            "JSON Files (*.json);;All Files (*)");
+            QStringLiteral("batch_json"),
+            QStringLiteral("Load JSON Configuration"),
+            QStringLiteral("JSON Files (*.json);;All Files (*)"),
+            currentJsonFile.isEmpty() ? QDir::homePath() : QFileInfo(currentJsonFile).absolutePath());
 
     if (!jsonFilePath.isEmpty()) {
         updateJsonDisplay(jsonFilePath);

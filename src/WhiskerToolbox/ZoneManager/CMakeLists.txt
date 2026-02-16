@@ -30,6 +30,7 @@ target_link_libraries(ZoneManager
 
 target_link_libraries(ZoneManager PRIVATE reflectcpp::reflectcpp)
 target_link_libraries(ZoneManager PRIVATE qt6advanceddocking)
+target_link_libraries(ZoneManager PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(ZoneManager PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

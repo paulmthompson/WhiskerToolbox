@@ -2,10 +2,11 @@
 #include "BinaryDatasetPreviewModel.hpp"
 #include "ui_BinaryExplorer_Widget.h"
 
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 BinaryExplorer_Widget::BinaryExplorer_Widget(
     std::shared_ptr<DataManager> data_manager,
@@ -89,10 +90,10 @@ bool BinaryExplorer_Widget::loadFile(QString const & file_path) {
 }
 
 void BinaryExplorer_Widget::_onBrowseClicked() {
-    QString file_path = QFileDialog::getOpenFileName(
+    QString file_path = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_binary"),
         tr("Select Binary File"),
-        QString(),
         tr("Binary Files (*.bin *.dat *.raw *.binary);;All Files (*)")
     );
 

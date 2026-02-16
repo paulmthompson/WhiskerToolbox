@@ -2,7 +2,6 @@
 #include "ui_CSVLineImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QRadioButton>
 #include <QLineEdit>
 #include <QComboBox>
@@ -10,6 +9,8 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 CSVLineImport_Widget::CSVLineImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -39,18 +40,17 @@ void CSVLineImport_Widget::_onBrowseButtonClicked() {
     
     if (ui->single_file_radio->isChecked()) {
         // Single file mode - open file dialog
-        selectedPath = QFileDialog::getOpenFileName(
+        selectedPath = AppFileDialog::getOpenFileName(
             this,
+            QStringLiteral("import_csv"),
             "Select CSV File",
-            "",
             "CSV Files (*.csv);;All Files (*)");
     } else {
         // Multi file mode - open directory dialog
-        selectedPath = QFileDialog::getExistingDirectory(
+        selectedPath = AppFileDialog::getExistingDirectory(
             this,
-            "Select Directory Containing CSV Files",
-            "",
-            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+            QStringLiteral("import_csv_dir"),
+            "Select Directory Containing CSV Files");
     }
     
     if (!selectedPath.isEmpty()) {

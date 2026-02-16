@@ -2,10 +2,11 @@
 #include "CsvDatasetPreviewModel.hpp"
 #include "ui_CsvExplorer_Widget.h"
 
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 CsvExplorer_Widget::CsvExplorer_Widget(
     std::shared_ptr<DataManager> data_manager,
@@ -103,10 +104,10 @@ bool CsvExplorer_Widget::loadFile(QString const & file_path) {
 }
 
 void CsvExplorer_Widget::_onBrowseClicked() {
-    QString file_path = QFileDialog::getOpenFileName(
+    QString file_path = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_csv"),
         tr("Select CSV File"),
-        QString(),
         tr("CSV Files (*.csv *.tsv *.txt *.dat);;All Files (*)")
     );
 

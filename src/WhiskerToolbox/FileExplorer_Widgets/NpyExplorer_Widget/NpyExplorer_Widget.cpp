@@ -2,10 +2,11 @@
 #include "NpyDatasetPreviewModel.hpp"
 #include "ui_NpyExplorer_Widget.h"
 
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 NpyExplorer_Widget::NpyExplorer_Widget(
     std::shared_ptr<DataManager> data_manager,
@@ -73,10 +74,10 @@ bool NpyExplorer_Widget::loadFile(QString const & file_path) {
 }
 
 void NpyExplorer_Widget::_onBrowseClicked() {
-    QString file_path = QFileDialog::getOpenFileName(
+    QString file_path = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_numpy"),
         tr("Select NumPy File"),
-        QString(),
         tr("NumPy Files (*.npy);;All Files (*)")
     );
 

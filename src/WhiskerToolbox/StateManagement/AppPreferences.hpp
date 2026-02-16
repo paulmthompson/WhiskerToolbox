@@ -102,6 +102,6 @@ private:
     static constexpr int SaveDebounceMs = 500;
 };
 
-} // namespace StateManagement
+}// namespace StateManagement
 
-#endif // APP_PREFERENCES_HPP
+#endif// APP_PREFERENCES_HPP

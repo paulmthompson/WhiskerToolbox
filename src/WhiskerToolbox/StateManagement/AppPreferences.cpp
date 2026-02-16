@@ -138,4 +138,4 @@ void AppPreferences::setDefaultTimeFrameKey(std::string const & key) {
     }
 }
 
-} // namespace StateManagement
+}// namespace StateManagement

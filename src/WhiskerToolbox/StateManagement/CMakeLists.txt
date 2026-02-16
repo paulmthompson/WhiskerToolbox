@@ -8,6 +8,8 @@ find_package(reflectcpp CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 set(STATE_MANAGEMENT_SOURCES
+    AppFileDialog.hpp
+    AppFileDialog.cpp
     AppPreferencesData.hpp
     AppPreferences.hpp
     AppPreferences.cpp

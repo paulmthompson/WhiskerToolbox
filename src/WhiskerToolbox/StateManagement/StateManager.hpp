@@ -94,6 +94,6 @@ private:
     std::unique_ptr<WorkspaceManager> _workspace;
 };
 
-} // namespace StateManagement
+}// namespace StateManagement
 
-#endif // STATE_MANAGER_HPP
+#endif// STATE_MANAGER_HPP

@@ -23,6 +23,7 @@ target_link_libraries(DeepLearning_Widget PRIVATE Qt6::Widgets)
 target_link_libraries(DeepLearning_Widget PRIVATE EditorState)
 target_link_libraries(DeepLearning_Widget PRIVATE DataManager)
 target_link_libraries(DeepLearning_Widget PRIVATE DeepLearning)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(DeepLearning_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"

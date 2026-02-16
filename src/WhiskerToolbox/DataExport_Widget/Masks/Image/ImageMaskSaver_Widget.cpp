@@ -1,12 +1,13 @@
 #include "ImageMaskSaver_Widget.hpp"
 #include "ui_ImageMaskSaver_Widget.h"
 
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QPushButton>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 ImageMaskSaver_Widget::ImageMaskSaver_Widget(QWidget *parent)
     : QWidget(parent),
@@ -28,12 +29,10 @@ ImageMaskSaver_Widget::~ImageMaskSaver_Widget()
 
 void ImageMaskSaver_Widget::_onBrowseDirectoryButtonClicked()
 {
-    QString selectedDirectory = QFileDialog::getExistingDirectory(
+    QString selectedDirectory = AppFileDialog::getExistingDirectory(
         this,
-        "Select Output Directory for Mask Images",
-        "",
-        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
-    );
+        QStringLiteral("export_mask_dir"),
+        "Select Output Directory for Mask Images");
     
     if (!selectedDirectory.isEmpty()) {
         ui->directory_path_edit->setText(selectedDirectory);

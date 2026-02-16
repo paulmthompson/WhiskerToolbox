@@ -29,20 +29,20 @@ namespace StateManagement {
  * No Qt types — this struct can be tested without Qt.
  */
 struct AppPreferencesData {
-    std::string version = "1.0"; ///< Schema version for migration
+    std::string version = "1.0";///< Schema version for migration
 
     // === Python Environment ===
-    std::vector<std::string> python_env_search_paths; ///< Directories to search for Python environments
-    std::string preferred_python_env;                 ///< Last-used or preferred Python environment path
+    std::vector<std::string> python_env_search_paths;///< Directories to search for Python environments
+    std::string preferred_python_env;                ///< Last-used or preferred Python environment path
 
     // === File Dialogs ===
-    std::string default_import_directory; ///< Default directory for import dialogs
-    std::string default_export_directory; ///< Default directory for export dialogs
+    std::string default_import_directory;///< Default directory for import dialogs
+    std::string default_export_directory;///< Default directory for export dialogs
 
     // === Data Loading ===
-    std::string default_time_frame_key; ///< Default TimeFrame key for new data loads
+    std::string default_time_frame_key;///< Default TimeFrame key for new data loads
 };
 
-} // namespace StateManagement
+}// namespace StateManagement
 
-#endif // APP_PREFERENCES_DATA_HPP
+#endif// APP_PREFERENCES_DATA_HPP

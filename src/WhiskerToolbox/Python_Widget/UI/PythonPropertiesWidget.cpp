@@ -10,9 +10,13 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
 #include <QGroupBox>
+
+#include "StateManagement/AppFileDialog.hpp"
+#include "StateManagement/AppPreferences.hpp"
+
+#include <filesystem>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
@@ -28,11 +32,13 @@
 PythonPropertiesWidget::PythonPropertiesWidget(std::shared_ptr<PythonWidgetState> state,
                                                PythonBridge * bridge,
                                                std::shared_ptr<DataManager> data_manager,
+                                               StateManagement::AppPreferences * preferences,
                                                QWidget * parent)
     : QWidget(parent)
     , _state(std::move(state))
     , _bridge(bridge)
-    , _data_manager(std::move(data_manager)) {
+    , _data_manager(std::move(data_manager))
+    , _preferences(preferences) {
     _setupUI();
 }
 
@@ -398,8 +404,9 @@ void PythonPropertiesWidget::_onClearNamespace() {
 
 void PythonPropertiesWidget::_onBrowseWorkingDirectory() {
     QString const current = _working_dir_edit->text();
-    QString const dir = QFileDialog::getExistingDirectory(
+    QString const dir = AppFileDialog::getExistingDirectory(
         this,
+        QStringLiteral("python_working_dir"),
         QStringLiteral("Select Working Directory"),
         current.isEmpty() ? QDir::homePath() : current);
 
@@ -478,7 +485,16 @@ void PythonPropertiesWidget::_populateVenvCombo() {
         return;
     }
 
-    auto const venvs = _bridge->engine().discoverVenvs();
+    auto const venvs = _bridge->engine().discoverVenvs(
+        _preferences ? [this]() {
+            auto paths = _preferences->pythonEnvSearchPaths();
+            std::vector<std::filesystem::path> result;
+            result.reserve(paths.size());
+            for (auto const & p : paths) {
+                result.emplace_back(p);
+            }
+            return result;
+        }() : std::vector<std::filesystem::path>{});
     for (auto const & venv : venvs) {
         auto const name = QString::fromStdString(venv.filename().string());
         auto const path = QString::fromStdString(venv.string());
@@ -552,13 +568,19 @@ void PythonPropertiesWidget::_onVenvSelected(int index) {
         _state->setVenvPath(venv_path);
     }
 
+    // Save to app preferences
+    if (_preferences) {
+        _preferences->setPreferredPythonEnv(venv_path.toStdString());
+    }
+
     _updateVenvIndicator();
     _onRefreshPackages();
 }
 
 void PythonPropertiesWidget::_onBrowseVenv() {
-    QString const dir = QFileDialog::getExistingDirectory(
+    QString const dir = AppFileDialog::getExistingDirectory(
         this,
+        QStringLiteral("python_venv"),
         QStringLiteral("Select Virtual Environment Directory"),
         QDir::homePath());
 

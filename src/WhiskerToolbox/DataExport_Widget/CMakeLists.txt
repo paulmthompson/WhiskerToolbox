@@ -57,6 +57,7 @@ target_link_libraries(DataExport_Widget PRIVATE
 
 target_link_libraries(DataExport_Widget PRIVATE DataManager)
 target_link_libraries(DataExport_Widget PRIVATE Scaling_Widget)  # Shared library for image scaling
+target_link_libraries(DataExport_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(DataExport_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

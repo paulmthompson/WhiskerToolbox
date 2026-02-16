@@ -30,7 +30,7 @@ add_library(Python_Widget STATIC ${PYTHON_WIDGET_SOURCES})
 target_link_libraries(Python_Widget
     PUBLIC  EditorState
     PUBLIC  WhiskerToolbox::PythonBridge
-    PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui reflectcpp::reflectcpp DataManager
+    PRIVATE Qt6::Widgets Qt6::Core Qt6::Gui reflectcpp::reflectcpp DataManager WhiskerToolbox::StateManagement
 )
 
 target_include_directories(Python_Widget PUBLIC

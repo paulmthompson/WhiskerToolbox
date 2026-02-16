@@ -86,6 +86,7 @@ target_link_libraries(DataViewer_Widget PRIVATE ColorPicker_Widget)
 target_link_libraries(DataViewer_Widget PRIVATE TimeScrollBar)
 target_link_libraries(DataViewer_Widget PRIVATE CorePlotting)
 target_link_libraries(DataViewer_Widget PRIVATE EditorState)
+target_link_libraries(DataViewer_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 target_include_directories(DataViewer_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

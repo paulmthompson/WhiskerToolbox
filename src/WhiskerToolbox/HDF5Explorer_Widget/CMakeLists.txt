@@ -37,6 +37,7 @@ target_link_libraries(HDF5Explorer_Widget
     PRIVATE
         DataImport_Widget  # For DataImportTypeRegistry
         DataManager        # For future data import
+        WhiskerToolbox::StateManagement
 )
 
 # Platform-specific HDF5 linking (following the same pattern as DataManagerHDF5)

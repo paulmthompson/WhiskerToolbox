@@ -34,6 +34,10 @@ class QPushButton;
 class QSpinBox;
 class QTreeWidget;
 
+namespace StateManagement {
+class AppPreferences;
+}
+
 class PythonPropertiesWidget : public QWidget {
     Q_OBJECT
 
@@ -41,6 +45,7 @@ public:
     explicit PythonPropertiesWidget(std::shared_ptr<PythonWidgetState> state,
                                     PythonBridge * bridge,
                                     std::shared_ptr<DataManager> data_manager,
+                                    StateManagement::AppPreferences * preferences = nullptr,
                                     QWidget * parent = nullptr);
     ~PythonPropertiesWidget() override;
 
@@ -76,6 +81,7 @@ private:
     std::shared_ptr<PythonWidgetState> _state;
     PythonBridge * _bridge;
     std::shared_ptr<DataManager> _data_manager;
+    StateManagement::AppPreferences * _preferences{nullptr};
 
     // Environment section
     QLabel * _python_version_label{nullptr};

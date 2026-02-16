@@ -2,8 +2,9 @@
 #include "ui_BinaryLineImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QDir>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 BinaryLineImport_Widget::BinaryLineImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -18,10 +19,10 @@ BinaryLineImport_Widget::~BinaryLineImport_Widget() {
 }
 
 void BinaryLineImport_Widget::_onLoadBinaryFileButtonPressed() {
-    QString filePath = QFileDialog::getOpenFileName(
+    QString filePath = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_binary"),
         tr("Load Binary Line File"),
-        QDir::currentPath(),
         tr("Binary files (*.bin *.capnp);;All files (*.*)"));
 
     if (!filePath.isNull() && !filePath.isEmpty()) {

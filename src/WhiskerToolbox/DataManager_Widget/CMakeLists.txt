@@ -43,6 +43,7 @@ target_link_libraries(DataManager_Widget PRIVATE Entity)
 target_link_libraries(DataManager_Widget PRIVATE GroupManagementWidget)
 
 target_link_libraries(DataManager_Widget PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(DataManager_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 
 target_include_directories(DataManager_Widget PUBLIC

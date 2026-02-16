@@ -18,6 +18,10 @@
 class EditorRegistry;
 class DataManager;
 
+namespace StateManagement {
+class AppPreferences;
+}
+
 namespace PythonWidgetModule {
 
 /**
@@ -30,9 +34,11 @@ namespace PythonWidgetModule {
  *
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
+ * @param preferences Application preferences (for python env search paths)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   std::shared_ptr<DataManager> data_manager,
+                   StateManagement::AppPreferences * preferences = nullptr);
 
 }  // namespace PythonWidgetModule
 

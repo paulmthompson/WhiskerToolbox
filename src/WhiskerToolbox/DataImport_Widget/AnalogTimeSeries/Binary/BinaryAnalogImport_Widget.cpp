@@ -2,13 +2,14 @@
 #include "ui_BinaryAnalogImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QCheckBox>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 BinaryAnalogImport_Widget::BinaryAnalogImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -30,10 +31,10 @@ BinaryAnalogImport_Widget::~BinaryAnalogImport_Widget() {
 }
 
 void BinaryAnalogImport_Widget::_onBrowseButtonClicked() {
-    QString selectedPath = QFileDialog::getOpenFileName(
+    QString selectedPath = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_binary"),
         tr("Select Binary File"),
-        QString(),
         tr("Binary Files (*.bin *.dat *.raw);;All Files (*)"));
     
     if (!selectedPath.isEmpty()) {

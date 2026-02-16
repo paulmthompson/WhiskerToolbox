@@ -4,7 +4,6 @@
 
 #include <QCheckBox>
 #include <QDoubleSpinBox>
-#include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -14,6 +13,8 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QDateTime>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 ZoneManagerWidget::ZoneManagerWidget(ZoneManager * zone_manager, QWidget * parent)
     : QWidget(parent)
@@ -41,9 +42,11 @@ void ZoneManagerWidget::setupUi() {
     auto * browse_btn = new QPushButton(tr("..."));
     browse_btn->setMaximumWidth(30);
     connect(browse_btn, &QPushButton::clicked, this, [this]() {
-        QString const file_path = QFileDialog::getOpenFileName(
-            this, tr("Select Zone Configuration"),
-            QString(), tr("JSON Files (*.json);;All Files (*)"));
+        QString const file_path = AppFileDialog::getOpenFileName(
+            this,
+            QStringLiteral("zone_config"),
+            tr("Select Zone Configuration"),
+            tr("JSON Files (*.json);;All Files (*)"));
         if (!file_path.isEmpty()) {
             _config_path_edit->setText(file_path);
         }
@@ -110,9 +113,11 @@ void ZoneManagerWidget::setupUi() {
     _browse_autosave_btn = new QPushButton(tr("..."));
     _browse_autosave_btn->setMaximumWidth(30);
     connect(_browse_autosave_btn, &QPushButton::clicked, this, [this]() {
-        QString const file_path = QFileDialog::getSaveFileName(
-            this, tr("Select Auto-save Location"),
-            QString(), tr("JSON Files (*.json);;All Files (*)"));
+        QString const file_path = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("zone_config"),
+            tr("Select Auto-save Location"),
+            tr("JSON Files (*.json);;All Files (*)"));
         if (!file_path.isEmpty()) {
             _autosave_path_edit->setText(file_path);
             onAutoSavePathChanged();
@@ -197,9 +202,11 @@ void ZoneManagerWidget::onLoadConfigClicked() {
     QString file_path = _config_path_edit->text();
 
     if (file_path.isEmpty()) {
-        file_path = QFileDialog::getOpenFileName(
-            this, tr("Load Zone Configuration"),
-            QString(), tr("JSON Files (*.json);;All Files (*)"));
+        file_path = AppFileDialog::getOpenFileName(
+            this,
+            QStringLiteral("zone_config"),
+            tr("Load Zone Configuration"),
+            tr("JSON Files (*.json);;All Files (*)"));
 
         if (file_path.isEmpty()) {
             return;  // User cancelled
@@ -220,10 +227,13 @@ void ZoneManagerWidget::onSaveConfigClicked() {
     QString file_path = _config_path_edit->text();
 
     if (file_path.isEmpty()) {
-        file_path = QFileDialog::getSaveFileName(
-            this, tr("Save Zone Configuration"),
-            QStringLiteral("zone_config.json"),
-            tr("JSON Files (*.json);;All Files (*)"));
+        file_path = AppFileDialog::getSaveFileName(
+            this,
+            QStringLiteral("zone_config"),
+            tr("Save Zone Configuration"),
+            tr("JSON Files (*.json);;All Files (*)"),
+            {},
+            QStringLiteral("zone_config.json"));
 
         if (file_path.isEmpty()) {
             return;  // User cancelled

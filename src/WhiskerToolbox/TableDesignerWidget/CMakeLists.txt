@@ -39,6 +39,8 @@ target_link_libraries(TableDesignerWidget
         Collapsible_Widget
         EditorState
         reflectcpp::reflectcpp
+    PRIVATE
+        WhiskerToolbox::StateManagement
 )
 
 # Include directories

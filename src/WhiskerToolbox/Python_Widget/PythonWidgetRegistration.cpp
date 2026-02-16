@@ -6,6 +6,7 @@
 #include "UI/PythonConsoleWidget.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
+#include "StateManagement/AppPreferences.hpp"
 
 #include <QPlainTextEdit>
 #include <iostream>
@@ -13,7 +14,8 @@
 namespace PythonWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   StateManagement::AppPreferences * preferences) {
 
     if (!registry) {
         std::cerr << "PythonWidgetModule::registerTypes: registry is null" << std::endl;
@@ -21,6 +23,7 @@ void registerTypes(EditorRegistry * registry,
     }
 
     auto dm = data_manager;
+    auto * prefs = preferences;
 
     registry->registerType({
         .type_id = QStringLiteral("PythonWidget"),
@@ -46,7 +49,7 @@ void registerTypes(EditorRegistry * registry,
         .create_properties = nullptr,
 
         // Custom editor creation: view and properties need to share the PythonBridge
-        .create_editor_custom = [dm](EditorRegistry * reg)
+        .create_editor_custom = [dm, prefs](EditorRegistry * reg)
             -> EditorRegistry::EditorInstance
         {
             // Create the shared state
@@ -57,7 +60,7 @@ void registerTypes(EditorRegistry * registry,
 
             // Create the properties widget, sharing the bridge from the view
             auto * props = new PythonPropertiesWidget(
-                state, view->bridge(), dm);
+                state, view->bridge(), dm, prefs);
 
             // Connect: after execution → refresh properties namespace
             QObject::connect(view, &PythonViewWidget::executionFinished,

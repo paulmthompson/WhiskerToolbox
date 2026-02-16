@@ -25,7 +25,6 @@
 #include "EditorState/EditorRegistry.hpp"
 
 #include <QFile>
-#include <QFileDialog>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMetaObject>
@@ -34,6 +33,8 @@
 #include <QTextStream>
 #include <QTreeWidget>
 #include <QWheelEvent>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -864,10 +865,10 @@ void DataViewer_Widget::showGroupContextMenu(std::string const & group_name, QPo
 
 void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & group_name) {
     // Open file dialog to select spike sorter configuration file
-    QString path = QFileDialog::getOpenFileName(
+    QString path = AppFileDialog::getOpenFileName(
             this,
+            QStringLiteral("spike_sorter_config"),
             QString("Load spikesorter configuration for %1").arg(group_name),
-            QString(),
             "Text Files (*.txt *.cfg *.conf);;All Files (*)");
     if (path.isEmpty()) return;
 
@@ -1121,10 +1122,10 @@ void DataViewer_Widget::exportToSVG(bool includeScalebar, int scalebarLength) {
     std::cout << "SVG Export initiated" << std::endl;
 
     // Get save file path from user
-    QString const fileName = QFileDialog::getSaveFileName(
+    QString const fileName = AppFileDialog::getSaveFileName(
             this,
+            QStringLiteral("export_svg"),
             tr("Export Plot to SVG"),
-            QString(),
             tr("SVG Files (*.svg);;All Files (*)"));
 
     if (fileName.isEmpty()) {

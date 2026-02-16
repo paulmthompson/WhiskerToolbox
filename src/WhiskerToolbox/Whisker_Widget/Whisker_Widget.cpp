@@ -16,7 +16,8 @@
 
 #include "qevent.h"
 #include <QElapsedTimer>
-#include <QFileDialog>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 #include "DeepLearning/models/scm/scm.hpp"
 
@@ -543,11 +544,11 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, i
 }
 
 void Whisker_Widget::_loadJaneliaWhiskers() {
-    auto janelia_name = QFileDialog::getOpenFileName(
+    auto janelia_name = AppFileDialog::getOpenFileName(
             this,
-            "Load Whisker File",
-            QDir::currentPath(),
-            "All files (*.*) ;; whisker file (*.whiskers)");
+            QStringLiteral("import_whisker"),
+            QStringLiteral("Load Whisker File"),
+            QStringLiteral("All files (*.*) ;; whisker file (*.whiskers)"));
 
     if (janelia_name.isNull()) {
         return;

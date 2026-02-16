@@ -11,9 +11,10 @@
 
 #include <QComboBox>
 #include <QDoubleSpinBox>
-#include <QFileDialog>
 #include <QFormLayout>
 #include <QGroupBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -230,15 +231,16 @@ void DeepLearningPropertiesWidget::_onModelComboChanged(int index) {
 // ────────────────────────────────────────────────────────────────────────────
 
 void DeepLearningPropertiesWidget::_onWeightsBrowseClicked() {
-    auto const path = QFileDialog::getOpenFileName(
+    auto const path = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_model_weights"),
         tr("Select Model Weights"),
-        QString::fromStdString(_state->weightsPath()),
 #ifdef DL_HAS_EXECUTORCH
-        tr("Model Files (*.pt2 *.pt *.pte);;AOT Inductor (*.pt2);;TorchScript (*.pt);;ExecuTorch (*.pte);;All Files (*)"));
+        tr("Model Files (*.pt2 *.pt *.pte);;AOT Inductor (*.pt2);;TorchScript (*.pt);;ExecuTorch (*.pte);;All Files (*)"),
 #else
-        tr("Model Files (*.pt2 *.pt);;AOT Inductor (*.pt2);;TorchScript (*.pt);;All Files (*)"));
+        tr("Model Files (*.pt2 *.pt);;AOT Inductor (*.pt2);;TorchScript (*.pt);;All Files (*)"),
 #endif
+        QString::fromStdString(_state->weightsPath()));
     if (!path.isEmpty()) {
         _weights_path_edit->setText(path);
         _state->setWeightsPath(path.toStdString());

@@ -8,9 +8,10 @@
 
 #include <QDragEnterEvent>
 #include <QDropEvent>
-#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QMenu>
+
+#include "StateManagement/AppFileDialog.hpp"
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPainter>
@@ -308,11 +309,12 @@ void PythonEditorWidget::runSelection() {
 }
 
 void PythonEditorWidget::openFile() {
-    QString const path = QFileDialog::getOpenFileName(
+    QString const path = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("python_script"),
         QStringLiteral("Open Python Script"),
-        _current_file_path.isEmpty() ? QDir::homePath() : QFileInfo(_current_file_path).absolutePath(),
-        QStringLiteral("Python Files (*.py);;All Files (*)"));
+        QStringLiteral("Python Files (*.py);;All Files (*)"),
+        _current_file_path.isEmpty() ? QDir::homePath() : QFileInfo(_current_file_path).absolutePath());
 
     if (path.isEmpty()) {
         return;
@@ -367,11 +369,12 @@ void PythonEditorWidget::saveFile() {
 }
 
 void PythonEditorWidget::saveFileAs() {
-    QString const path = QFileDialog::getSaveFileName(
+    QString const path = AppFileDialog::getSaveFileName(
         this,
+        QStringLiteral("python_script"),
         QStringLiteral("Save Python Script"),
-        _current_file_path.isEmpty() ? QDir::homePath() : _current_file_path,
-        QStringLiteral("Python Files (*.py);;All Files (*)"));
+        QStringLiteral("Python Files (*.py);;All Files (*)"),
+        _current_file_path.isEmpty() ? QDir::homePath() : QFileInfo(_current_file_path).absolutePath());
 
     if (path.isEmpty()) {
         return;

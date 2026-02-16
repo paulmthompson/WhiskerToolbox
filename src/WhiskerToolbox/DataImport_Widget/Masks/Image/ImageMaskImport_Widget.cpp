@@ -2,12 +2,13 @@
 #include "ui_ImageMaskImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 ImageMaskImport_Widget::ImageMaskImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -26,12 +27,10 @@ ImageMaskImport_Widget::~ImageMaskImport_Widget() {
 }
 
 void ImageMaskImport_Widget::_onBrowseDirectoryClicked() {
-    QString selectedDirectory = QFileDialog::getExistingDirectory(
+    QString selectedDirectory = AppFileDialog::getExistingDirectory(
         this,
-        "Select Directory Containing Mask Images",
-        "",
-        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
-    );
+        QStringLiteral("import_mask_dir"),
+        "Select Directory Containing Mask Images");
     
     if (!selectedDirectory.isEmpty()) {
         ui->directory_path_edit->setText(selectedDirectory);

@@ -2,9 +2,10 @@
 #include "ui_TableJSONWidget.h"
 
 #include <QFile>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 TableJSONWidget::TableJSONWidget(QWidget * parent)
     : QWidget(parent),
@@ -28,7 +29,7 @@ QString TableJSONWidget::getJsonText() const {
 void TableJSONWidget::onLoadJsonClicked() {
     QString filename = m_forcedLoadPath;
     if (filename.isEmpty()) {
-        filename = QFileDialog::getOpenFileName(this, "Load Table JSON", QString(), "JSON Files (*.json);;All Files (*)");
+        filename = AppFileDialog::getOpenFileName(this, QStringLiteral("table_json"), "Load Table JSON", "JSON Files (*.json);;All Files (*)");
     }
     if (filename.isEmpty()) return;
     QFile file(filename);
@@ -51,7 +52,7 @@ void TableJSONWidget::setForcedLoadPathForTests(QString const & path) {
 }
 
 void TableJSONWidget::onSaveJsonClicked() {
-    QString filename = QFileDialog::getSaveFileName(this, "Save Table JSON", QString(), "JSON Files (*.json);;All Files (*)");
+    QString filename = AppFileDialog::getSaveFileName(this, QStringLiteral("table_json"), "Save Table JSON", "JSON Files (*.json);;All Files (*)");
     if (filename.isEmpty()) return;
     if (!filename.endsWith(".json", Qt::CaseInsensitive)) filename += ".json";
     QFile file(filename);

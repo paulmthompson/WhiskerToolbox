@@ -2,13 +2,14 @@
 #include "ui_CSVDigitalEventImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QLabel>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 CSVDigitalEventImport_Widget::CSVDigitalEventImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -30,10 +31,10 @@ CSVDigitalEventImport_Widget::~CSVDigitalEventImport_Widget() {
 }
 
 void CSVDigitalEventImport_Widget::_onBrowseButtonClicked() {
-    QString selectedPath = QFileDialog::getOpenFileName(
+    QString selectedPath = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_csv"),
         tr("Select CSV File"),
-        QString(),
         tr("CSV Files (*.csv);;All Files (*)"));
     
     if (!selectedPath.isEmpty()) {

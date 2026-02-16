@@ -35,6 +35,7 @@ target_link_libraries(BinaryExplorer_Widget
     PRIVATE
         DataImport_Widget  # For DataImportTypeRegistry
         DataManager        # For future data import
+        WhiskerToolbox::StateManagement
 )
 
 target_include_directories(BinaryExplorer_Widget

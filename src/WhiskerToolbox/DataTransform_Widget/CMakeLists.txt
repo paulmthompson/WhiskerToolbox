@@ -129,6 +129,7 @@ target_link_libraries(DataTransform_Widget PRIVATE
 target_link_libraries(DataTransform_Widget PRIVATE DataManager)
 target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::EditorState)
 target_link_libraries(DataTransform_Widget PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(DataTransform_Widget PRIVATE WhiskerToolbox::StateManagement)
 
 # Include directories
 target_include_directories(DataTransform_Widget PUBLIC

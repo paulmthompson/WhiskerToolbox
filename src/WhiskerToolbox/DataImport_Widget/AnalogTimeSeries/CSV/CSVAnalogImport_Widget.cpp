@@ -2,12 +2,13 @@
 #include "ui_CSVAnalogImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 CSVAnalogImport_Widget::CSVAnalogImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -30,10 +31,10 @@ CSVAnalogImport_Widget::~CSVAnalogImport_Widget() {
 }
 
 void CSVAnalogImport_Widget::_onBrowseButtonClicked() {
-    QString selectedPath = QFileDialog::getOpenFileName(
+    QString selectedPath = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_csv"),
         tr("Select CSV File"),
-        QString(),
         tr("CSV Files (*.csv);;Text Files (*.txt);;All Files (*)"));
     
     if (!selectedPath.isEmpty()) {

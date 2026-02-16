@@ -2,12 +2,13 @@
 #include "ui_CSVDigitalIntervalImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QCheckBox>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 CSVDigitalIntervalImport_Widget::CSVDigitalIntervalImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -25,10 +26,10 @@ CSVDigitalIntervalImport_Widget::~CSVDigitalIntervalImport_Widget() {
 }
 
 void CSVDigitalIntervalImport_Widget::_onBrowseButtonClicked() {
-    QString selectedPath = QFileDialog::getOpenFileName(
+    QString selectedPath = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_csv"),
         tr("Select CSV File"),
-        QString(),
         tr("CSV Files (*.csv);;All Files (*)"));
     
     if (!selectedPath.isEmpty()) {

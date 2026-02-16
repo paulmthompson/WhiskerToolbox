@@ -31,7 +31,6 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDebug>
-#include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -40,6 +39,8 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRegularExpression>
+
+#include "StateManagement/AppFileDialog.hpp"
 #include <QSpinBox>
 #include <QTableView>
 #include <QTreeWidget>
@@ -872,11 +873,11 @@ void TableDesignerWidget::onExportCsv() {
 }
 
 QString TableDesignerWidget::promptSaveCsvFilename() const {
-    return QFileDialog::getSaveFileName(const_cast<TableDesignerWidget *>(this), "Export Table to CSV", QString(), "CSV Files (*.csv)");
+    return AppFileDialog::getSaveFileName(const_cast<TableDesignerWidget *>(this), QStringLiteral("export_csv"), "Export Table to CSV", "CSV Files (*.csv)");
 }
 
 QString TableDesignerWidget::promptSaveDirectoryForGroupExport() const {
-    return QFileDialog::getExistingDirectory(const_cast<TableDesignerWidget *>(this), "Select Directory for Group CSV Export");
+    return AppFileDialog::getExistingDirectory(const_cast<TableDesignerWidget *>(this), QStringLiteral("export_csv"), "Select Directory for Group CSV Export");
 }
 
 bool TableDesignerWidget::exportTableToSingleCsv(TableView * view, QString const & filename,

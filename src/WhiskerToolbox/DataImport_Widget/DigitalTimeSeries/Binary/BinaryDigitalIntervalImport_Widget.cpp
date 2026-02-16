@@ -2,11 +2,12 @@
 #include "ui_BinaryDigitalIntervalImport_Widget.h"
 
 #include <QPushButton>
-#include <QFileDialog>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
 #include <QMessageBox>
+
+#include "StateManagement/AppFileDialog.hpp"
 
 BinaryDigitalIntervalImport_Widget::BinaryDigitalIntervalImport_Widget(QWidget * parent)
     : QWidget(parent),
@@ -30,10 +31,10 @@ BinaryDigitalIntervalImport_Widget::~BinaryDigitalIntervalImport_Widget() {
 }
 
 void BinaryDigitalIntervalImport_Widget::_onBrowseButtonClicked() {
-    QString selectedPath = QFileDialog::getOpenFileName(
+    QString selectedPath = AppFileDialog::getOpenFileName(
         this,
+        QStringLiteral("import_binary"),
         tr("Select Binary File"),
-        QString(),
         tr("Binary Files (*.bin *.dat);;All Files (*)"));
     
     if (!selectedPath.isEmpty()) {

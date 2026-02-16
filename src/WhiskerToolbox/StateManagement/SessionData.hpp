@@ -28,7 +28,7 @@ namespace StateManagement {
  * No Qt types — this struct can be tested without Qt.
  */
 struct SessionData {
-    std::string version = "1.0"; ///< Schema version for migration
+    std::string version = "1.0";///< Schema version for migration
 
     // === Per-Dialog Path Memory ===
     /// Maps dialog_id → last-used directory path.
@@ -52,6 +52,6 @@ struct SessionData {
     static constexpr int max_recent_workspaces = 10;
 };
 
-} // namespace StateManagement
+}// namespace StateManagement
 
-#endif // SESSION_DATA_HPP
+#endif// SESSION_DATA_HPP
