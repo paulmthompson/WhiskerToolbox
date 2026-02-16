@@ -45,11 +45,6 @@ add_subdirectory(DataExport_Widget) # Qt, DataManager, Scaling_Widget
 # Qt, DataManager, EditorState, Scaling_Widget - data import UI
 add_subdirectory(DataImport_Widget)
 
-# Qt, DataManager, HDF5 - HDF5 file browser widget (conditional)
-if(ENABLE_HDF5)
-    add_subdirectory(HDF5Explorer_Widget)
-endif()
-
 # File format explorer widgets (NumPy, etc.)
 add_subdirectory(FileExplorer_Widgets)
 
