@@ -5,8 +5,6 @@
 set(MASKDATA_SOURCES
     Mask_Data.hpp
     Mask_Data.cpp
-    IO/JSON/Mask_Data_JSON.hpp
-    IO/JSON/Mask_Data_JSON.cpp
     utils/connected_component.hpp
     utils/connected_component.cpp
     utils/hole_filling.hpp
