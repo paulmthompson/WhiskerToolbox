@@ -4,9 +4,10 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "fixtures/entity_id.hpp"
+#include "fixtures/DataManagerFixture.hpp"
+#include "fixtures/RaggedTimeSeriesTestTraits.hpp"
 
 #include <catch2/catch_test_macros.hpp>
-
 
 #include <set>
 #include <vector>
@@ -19,24 +20,19 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
 
     line_data.setTimeFrame(timeframe);
 
-    // Setup test data
-    std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
-    std::vector<float> y1 = {1.0f, 2.0f, 1.0f};
-
-    std::vector<float> x2 = {5.0f, 6.0f, 7.0f};
-    std::vector<float> y2 = {5.0f, 6.0f, 5.0f};
-
-    std::vector<float> x3 = {10.0f, 11.0f, 12.0f};
-    std::vector<float> y3 = {10.0f, 11.0f, 10.0f};
+    // Setup test data using traits for convenience
+    using Traits = RaggedDataTestTraits<LineData>;
+    auto item1 = Traits::createSingleItem();
+    auto item2 = Traits::createAnotherItem();
 
     SECTION("getElementsInRange functionality") {
         // Setup data at multiple time points
-        line_data.emplaceAtTime(TimeFrameIndex(5), x1, y1); // 1 line
-        line_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);// 1 line
-        line_data.emplaceAtTime(TimeFrameIndex(10), x2, y2);// 2nd line at same time
-        line_data.emplaceAtTime(TimeFrameIndex(15), x3, y3);// 1 line
-        line_data.emplaceAtTime(TimeFrameIndex(20), x1, y1);// 1 line
-        line_data.emplaceAtTime(TimeFrameIndex(25), x2, y2);// 1 line
+        line_data.addAtTime(TimeFrameIndex(5), item1, NotifyObservers::No); // 1 line
+        line_data.addAtTime(TimeFrameIndex(10), item1, NotifyObservers::No);// 1 line
+        line_data.addAtTime(TimeFrameIndex(10), item2, NotifyObservers::No);// 2nd line at same time
+        line_data.addAtTime(TimeFrameIndex(15), item2, NotifyObservers::No);// 1 line
+        line_data.addAtTime(TimeFrameIndex(20), item1, NotifyObservers::No);// 1 line
+        line_data.addAtTime(TimeFrameIndex(25), item2, NotifyObservers::No);// 1 line
 
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -143,9 +139,9 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             auto data_timeframe = std::make_shared<TimeFrame>(data_times);
 
             // Add data at target timeframe indices
-            timeframe_test_data.emplaceAtTime(TimeFrameIndex(2), x1, y1);// At data timeframe index 2 (time=10)
-            timeframe_test_data.emplaceAtTime(TimeFrameIndex(3), x2, y2);// At data timeframe index 3 (time=15)
-            timeframe_test_data.emplaceAtTime(TimeFrameIndex(4), x3, y3);// At data timeframe index 4 (time=20)
+            timeframe_test_data.addAtTime(TimeFrameIndex(2), item1, NotifyObservers::No);// At data timeframe index 2 (time=10)
+            timeframe_test_data.addAtTime(TimeFrameIndex(3), item2, NotifyObservers::No);// At data timeframe index 3 (time=15)
+            timeframe_test_data.addAtTime(TimeFrameIndex(4), item1, NotifyObservers::No);// At data timeframe index 4 (time=20)
 
             timeframe_test_data.setTimeFrame(data_timeframe);
 
@@ -177,17 +173,14 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
     // be set up through DataManager. For now, we test the API structure.
 
     LineData line_data;
-
-    std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
-    std::vector<float> y1 = {1.0f, 2.0f, 3.0f};
-
-    std::vector<float> x2 = {4.0f, 5.0f, 6.0f};
-    std::vector<float> y2 = {4.0f, 5.0f, 6.0f};
+    using Traits = RaggedDataTestTraits<LineData>;
+    auto item1 = Traits::createSingleItem();
+    auto item2 = Traits::createAnotherItem();
 
     // Add some test data
-    line_data.emplaceAtTime(TimeFrameIndex(10), x1, y1);
-    line_data.emplaceAtTime(TimeFrameIndex(10), x2, y2);// Two lines at same time
-    line_data.emplaceAtTime(TimeFrameIndex(20), x1, y1);// Same line at different time
+    line_data.addAtTime(TimeFrameIndex(10), item1, NotifyObservers::No);
+    line_data.addAtTime(TimeFrameIndex(10), item2, NotifyObservers::No);// Two lines at same time
+    line_data.addAtTime(TimeFrameIndex(20), item1, NotifyObservers::No);// Same line at different time
 
     SECTION("Entity lookup without registry returns nullopt") {
         // Without EntityRegistry setup, these should return empty/nullopt
@@ -204,11 +197,11 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
     SECTION("Entity ID retrieval methods work") {
         // These should work regardless of registry setup
         auto entity_ids_at_time = line_data.getEntityIdsAtTime(TimeFrameIndex(10));
-        REQUIRE(entity_ids_at_time.size() == 2);// Two lines at time 10
+        REQUIRE(std::ranges::distance(entity_ids_at_time) == 2);// Two lines at time 10
 
         // Check that empty time returns empty vector
         auto empty_time_ids = line_data.getEntityIdsAtTime(TimeFrameIndex(99));
-        REQUIRE(empty_time_ids.empty());
+        REQUIRE(std::ranges::distance(empty_time_ids) == 0);
     }
 
     SECTION("API structure validates correctly") {
@@ -223,325 +216,5 @@ TEST_CASE("LineData - Entity Lookup Methods", "[line][data][entity][lookup]") {
         // Verify return types are as expected (they should be empty/nullopt without registry)
         REQUIRE_FALSE(single_line.has_value());
         REQUIRE(std::ranges::distance(multiple_lines) == 0);
-    }
-}
-
-TEST_CASE("LineData - Copy and Move by EntityID", "[line][data][entity][copy][move][by_id]") {
-    // Setup test data vectors
-    std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
-    std::vector<float> y1 = {1.0f, 2.0f, 3.0f};
-
-    std::vector<float> x2 = {4.0f, 5.0f, 6.0f};
-    std::vector<float> y2 = {4.0f, 5.0f, 6.0f};
-
-    std::vector<float> x3 = {7.0f, 8.0f, 9.0f};
-    std::vector<float> y3 = {7.0f, 8.0f, 9.0f};
-
-    auto data_manager = std::make_unique<DataManager>();
-    auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30});
-    data_manager->setTime(TimeKey("test_time"), time_frame);
-
-    SECTION("Copy lines by EntityID - basic functionality") {
-        // Setup fresh source and target data
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-
-        // Add test lines
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        // Get entity IDs for testing
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        REQUIRE(entity_ids_10.size() == 2);
-
-        // Copy lines from time 10 (2 lines)
-        std::unordered_set<EntityId> ids_set_10c(entity_ids_10.begin(), entity_ids_10.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_10c, NotifyObservers::No);
-
-        REQUIRE(lines_copied == 2);
-
-        // Verify source data is unchanged
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
-
-        // Verify target has copied data
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 0);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
-
-        // Verify target has new entity IDs
-        auto target_entity_ids = get_all_entity_ids(*target_data);
-        REQUIRE(target_entity_ids.size() == 2);
-
-        // They should be different from the source entity IDs
-        std::vector<EntityId> entity_ids_10_copy(entity_ids_10.begin(), entity_ids_10.end());
-        REQUIRE(target_entity_ids != entity_ids_10_copy);
-    }
-
-    SECTION("Copy lines by EntityID - mixed times") {
-        // Setup fresh source and target data
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        // Add test lines
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        // Get entity IDs for testing
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        auto entity_ids_20 = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
-        REQUIRE(entity_ids_10.size() == 2);
-        REQUIRE(entity_ids_20.size() == 1);
-
-        // Copy one line from time 10 and one from time 20
-        std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
-        std::unordered_set<EntityId> ids_set_mixedc(mixed_entity_ids.begin(), mixed_entity_ids.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_mixedc, NotifyObservers::No);
-
-        REQUIRE(lines_copied == 2);
-
-        // Verify target has lines at both times
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
-    }
-
-    SECTION("Copy lines by EntityID - non-existent EntityIDs") {
-        // Setup fresh source and target data
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        // Add test lines
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
-        std::unordered_set<EntityId> ids_set_fakec(fake_entity_ids.begin(), fake_entity_ids.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_fakec, NotifyObservers::No);
-
-        REQUIRE(lines_copied == 0);
-        REQUIRE(target_data->getTimesWithData().empty());
-    }
-
-    SECTION("Copy lines by EntityID - empty EntityID list") {
-        // Clear target data to ensure clean test
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        std::vector<EntityId> empty_entity_ids;
-        std::unordered_set<EntityId> ids_set_emptyc(empty_entity_ids.begin(), empty_entity_ids.end());
-        std::size_t lines_copied = source_data->copyByEntityIds(*target_data, ids_set_emptyc, NotifyObservers::No);
-
-        REQUIRE(lines_copied == 0);
-        REQUIRE(target_data->getTimesWithData().empty());
-    }
-
-    SECTION("Move lines by EntityID - basic functionality") {
-        // Setup fresh source and target data
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        // Add test lines
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        // Get entity IDs for testing - materialize into vector before move operation
-        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        std::vector<EntityId> entity_ids_10(entity_ids_10_view.begin(), entity_ids_10_view.end());
-        REQUIRE(entity_ids_10.size() == 2);
-
-        // Move lines from time 10 (2 lines)
-        std::unordered_set<EntityId> const ids_set_10(entity_ids_10.begin(), entity_ids_10.end());
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_10, NotifyObservers::No);
-
-        REQUIRE(lines_moved == 2);
-
-        // Verify source data is reduced
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 0);
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
-
-        // Verify target has moved data
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 0);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
-
-        // Verify target has new entity IDs
-        auto target_entity_ids = get_all_entity_ids(*target_data);
-        REQUIRE(target_entity_ids.size() == 2);
-
-        // They should be the original entity IDs
-        REQUIRE(target_entity_ids == entity_ids_10);
-    }
-
-    SECTION("Move lines by EntityID - mixed times") {
-        // Clear target data to ensure clean test
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        // Materialize views into vectors before move operation
-        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        auto entity_ids_20_view = source_data->getEntityIdsAtTime(TimeFrameIndex(20));
-        std::vector<EntityId> entity_ids_10(entity_ids_10_view.begin(), entity_ids_10_view.end());
-        std::vector<EntityId> entity_ids_20(entity_ids_20_view.begin(), entity_ids_20_view.end());
-
-        // Move one line from time 10 and one from time 20
-        std::vector<EntityId> mixed_entity_ids = {entity_ids_10[0], entity_ids_20[0]};
-        std::unordered_set<EntityId> const ids_set_mixed(mixed_entity_ids.begin(), mixed_entity_ids.end());
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_mixed, NotifyObservers::No);
-
-        REQUIRE(lines_moved == 2);
-
-        // Verify source data is reduced
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 1);// 1 remaining
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 0);// Moved
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);// Unchanged
-
-        // Verify target has moved data
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(10)).size() == 1);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(target_data->getAtTime(TimeFrameIndex(30)).size() == 0);
-    }
-
-    SECTION("Move lines by EntityID - non-existent EntityIDs") {
-        // Clear target data to ensure clean test
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        std::vector<EntityId> fake_entity_ids = {EntityId(99999), EntityId(88888)};
-        std::unordered_set<EntityId> const ids_set_fake(fake_entity_ids.begin(), fake_entity_ids.end());
-        std::size_t lines_moved = source_data->moveByEntityIds(*target_data, ids_set_fake, NotifyObservers::No);
-
-        REQUIRE(lines_moved == 0);
-        REQUIRE(target_data->getTimesWithData().empty());
-
-        // Source should be unchanged
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(source_data->getAtTime(TimeFrameIndex(30)).size() == 1);
-    }
-
-    SECTION("Copy preserves line data integrity") {
-        // Clear target data to ensure clean test
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        auto entity_ids_10 = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        std::unordered_set<EntityId> ids_set_10c2(entity_ids_10.begin(), entity_ids_10.end());
-        source_data->copyByEntityIds(*target_data, ids_set_10c2, NotifyObservers::No);
-
-        auto source_lines = source_data->getAtTime(TimeFrameIndex(10));
-        auto target_lines = target_data->getAtTime(TimeFrameIndex(10));
-
-        REQUIRE(source_lines.size() == target_lines.size());
-
-        for (size_t i = 0; i < source_lines.size(); ++i) {
-            REQUIRE(source_lines[i].size() == target_lines[i].size());
-            for (size_t j = 0; j < source_lines[i].size(); ++j) {
-                REQUIRE(source_lines[i][j].x == target_lines[i][j].x);
-                REQUIRE(source_lines[i][j].y == target_lines[i][j].y);
-            }
-        }
-    }
-
-    SECTION("Move preserves line data integrity") {
-        // Clear target data to ensure clean test
-        data_manager->setData<LineData>("target_data", TimeKey("test_time"));
-        data_manager->setData<LineData>("source_data", TimeKey("test_time"));
-
-        auto source_data = data_manager->getData<LineData>("source_data");
-        auto target_data = data_manager->getData<LineData>("target_data");
-
-        source_data->emplaceAtTime(TimeFrameIndex(10), x1, y1);
-        source_data->emplaceAtTime(TimeFrameIndex(10), x2, y2);
-        source_data->emplaceAtTime(TimeFrameIndex(20), x3, y3);
-        source_data->emplaceAtTime(TimeFrameIndex(30), x1, y1);
-
-        // Materialize views into vectors before move operation
-        auto entity_ids_10_view = source_data->getEntityIdsAtTime(TimeFrameIndex(10));
-        std::vector<EntityId> entity_ids_10(entity_ids_10_view.begin(), entity_ids_10_view.end());
-        
-        // Get original line data before move - materialize view into vector
-        auto original_lines_view = source_data->getAtTime(TimeFrameIndex(10));
-        std::vector<Line2D> original_lines(original_lines_view.begin(), original_lines_view.end());
-        REQUIRE(original_lines.size() == 2);
-
-        std::unordered_set<EntityId> const ids_set_10b(entity_ids_10.begin(), entity_ids_10.end());
-        source_data->moveByEntityIds(*target_data, ids_set_10b, NotifyObservers::No);
-
-        auto target_lines = target_data->getAtTime(TimeFrameIndex(10));
-        REQUIRE(target_lines.size() == 2);
-
-        // Verify line content matches (order may be different due to new entity IDs)
-        for (size_t i = 0; i < original_lines.size(); ++i) {
-            bool found_match = false;
-            for (size_t j = 0; j < target_lines.size(); ++j) {
-                if (original_lines[i].size() == target_lines[j].size()) {
-                    bool lines_match = true;
-                    for (size_t k = 0; k < original_lines[i].size(); ++k) {
-                        if (original_lines[i][k].x != target_lines[j][k].x ||
-                            original_lines[i][k].y != target_lines[j][k].y) {
-                            lines_match = false;
-                            break;
-                        }
-                    }
-                    if (lines_match) {
-                        found_match = true;
-                        break;
-                    }
-                }
-            }
-            REQUIRE(found_match);
-        }
     }
 }
