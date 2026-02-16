@@ -21,6 +21,7 @@ add_subdirectory(TableDesignerWidget)
 add_subdirectory(Media_Widget)
 add_subdirectory(DataManager_Widget)
 add_subdirectory(DataImport_Widget)
+add_subdirectory(FileExplorer_Widgets)
 
 # Docking behavior test programs (manual GUI tests, not automated)
 add_subdirectory(DockingTests)

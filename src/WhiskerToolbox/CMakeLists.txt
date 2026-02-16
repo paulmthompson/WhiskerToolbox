@@ -279,6 +279,7 @@ endif()
 # File format explorer widgets
 target_link_libraries(WhiskerToolbox PRIVATE NpyExplorer_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE BinaryExplorer_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE CsvExplorer_Widget)
 
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
