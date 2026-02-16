@@ -7,5 +7,7 @@
 #
 # Current explorers:
 # - NpyExplorer_Widget: Browse NumPy .npy files
+# - BinaryExplorer_Widget: Browse raw binary data files
 
 add_subdirectory(NpyExplorer_Widget)
+add_subdirectory(BinaryExplorer_Widget)
