@@ -20,6 +20,7 @@ add_executable(test_data_manager
        test_data_manager.cpp
 
         ragged_storage_test.cpp
+        ragged_time_series_common.test.cpp
         ragged_analog_storage_test.cpp
         digital_event_storage_test.cpp
         digital_interval_storage_test.cpp
