@@ -18,7 +18,7 @@
 
 // Data type IO includes
 #include "Points/IO/JSON/Point_Data_JSON.hpp"  // For load_multiple_PointData_from_dlc
-#include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
+// Tensor numpy loading now handled through the IO registry (DataManagerNumpy library)
 #include "utils/TableView/TableRegistry.hpp"
 
 #include "IO/formats/Binary/common/binary_loaders.hpp"  // For Time data type loading
@@ -154,6 +154,15 @@ bool tryRegistryThenLegacyLoad(
 
                             std::string const color = item.value("color", "#0000FF");
                             data_info_list.push_back({name, "PointData", color});
+                        }
+                        break;
+                    }
+                    case DM_DataType::Tensor: {
+                        // Set the TensorData in DataManager
+                        if (std::holds_alternative<std::shared_ptr<TensorData>>(result.data)) {
+                            auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
+
+                            dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
                         }
                         break;
                     }
@@ -1106,16 +1115,13 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             }
             case DM_DataType::Tensor: {
 
-                if (item["format"] == "numpy") {
-
-                    TensorData tensor_data;
-                    loadNpyToTensorData(file_path, tensor_data);
-
-                    dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data), TimeKey("time"));
-
-                } else {
-                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+                // Try loading through the IO registry (handles numpy via DataManagerNumpy)
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                    break;
                 }
+
+                std::cerr << "Error: Failed to load TensorData from " << file_path 
+                          << " - no suitable loader found for format: " << item.value("format", "unknown") << std::endl;
                 break;
             }
             case DM_DataType::Time: {

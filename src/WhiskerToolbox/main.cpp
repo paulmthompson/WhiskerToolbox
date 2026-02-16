@@ -16,6 +16,8 @@
 #include "HDF5Explorer_Widget/HDF5ExplorerRegistration.hpp"
 #endif
 
+#include "FileExplorer_Widgets/NpyExplorer_Widget/NpyExplorerRegistration.hpp"
+
 // Event filter to disable mouse wheel scrolling on combo boxes
 class ComboBoxWheelFilter : public QObject
 {
@@ -51,6 +53,9 @@ int main(int argc, char *argv[])
 #ifdef ENABLE_HDF5
     HDF5ExplorerRegistration::registerHDF5Explorer();
 #endif
+
+    // Explicitly trigger NpyExplorer registration (static lib needs explicit reference)
+    NpyExplorerRegistration::registerNpyExplorer();
 
 #ifdef Q_OS_LINUX
     // Force X11 backend on Linux for proper Qt Advanced Docking System support.

@@ -917,7 +917,7 @@ void MainWindow::_registerEditorTypes() {
     PythonWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     TerminalWidgetModule::registerTypes(_editor_registry.get());
-
+    
     BatchProcessingWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);

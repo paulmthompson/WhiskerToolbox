@@ -50,6 +50,9 @@ if(ENABLE_HDF5)
     add_subdirectory(HDF5Explorer_Widget)
 endif()
 
+# File format explorer widgets (NumPy, etc.)
+add_subdirectory(FileExplorer_Widgets)
+
 # Qt, DataManager, DataManagerIO, TensorData,
 # EditorState, MediaExport, Feature_Table_Widget,
 # IO_Widget, Collapsible_Widget, Entity,
@@ -275,6 +278,11 @@ if(ENABLE_HDF5)
     target_link_libraries(WhiskerToolbox PRIVATE HDF5Explorer_Widget)
     target_compile_definitions(WhiskerToolbox PRIVATE ENABLE_HDF5)
 endif()
+
+# File format explorer widgets
+target_link_libraries(WhiskerToolbox PRIVATE NpyExplorer_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE BinaryExplorer_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE CsvExplorer_Widget)
 
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)

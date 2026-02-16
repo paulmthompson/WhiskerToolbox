@@ -66,8 +66,6 @@ set(TENSOR_SOURCES
     storage/DenseTensorStorage.cpp
     storage/TensorStorageWrapper.hpp
     storage/TensorStorageWrapper.cpp
-    IO/numpy/Tensor_Data_numpy.hpp
-    IO/numpy/Tensor_Data_numpy.cpp
     ${BACKEND_SOURCES}
 )
 
@@ -82,9 +80,7 @@ target_include_directories(TensorData PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(TensorData PRIVATE
-    "${npy_SOURCE_DIR}/include"  # For numpy loading
-)
+# Note: numpy loading has been moved to DataManagerNumpy (IO/formats/Numpy)
 
 # Link required libraries
 target_link_libraries(TensorData PUBLIC nlohmann_json::nlohmann_json)

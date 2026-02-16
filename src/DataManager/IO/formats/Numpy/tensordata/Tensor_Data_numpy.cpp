@@ -1,14 +1,13 @@
-
 #include "Tensor_Data_numpy.hpp"
-#include "../../TensorData.hpp"
+#include "Tensors/TensorData.hpp"
 #include "npy.hpp"
 
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
-#include <algorithm>
 #include <memory>
 
 #if defined(_WIN32) || defined(__APPLE__)
@@ -62,7 +61,7 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
         }
 
 
-        // Create TmeIndexStorage for dense sequential indices [0, 1, 2, ..., time_steps-1]
+        // Create TimeIndexStorage for dense sequential indices [0, 1, 2, ..., time_steps-1]
         auto time_storage = TimeIndexStorageFactory::createDenseFromZero(time_steps);
 
         // Create TensorData using the factory method
@@ -72,7 +71,7 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
             time_steps,         // num_rows (time dimension)
             num_features,       // num_cols (flattened feature dimensions)
             time_storage,       // time index mapping
-            nullptr,         // time values
+            nullptr,            // time values
             {}                  // no column names
         );
 

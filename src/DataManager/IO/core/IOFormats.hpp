@@ -26,6 +26,7 @@ enum class IOFormat {
     CapnProto,          ///< Cap'n Proto serialization format
     HDF5,               ///< HDF5 hierarchical data format
     Images,             ///< Image files (PNG, TIFF, etc.) via OpenCV
+    Numpy,              ///< Numpy .npy format for tensor data
     DLC_CSV,            ///< DeepLabCut CSV format for point data
     MultiColumnBinary,  ///< Multi-column binary with column mapping (e.g., timestamps + data)
     JSON,               ///< JSON format (for configuration or simple data)
@@ -45,6 +46,7 @@ inline std::string toString(IOFormat format) {
         case IOFormat::CapnProto: return "capnp";
         case IOFormat::HDF5: return "hdf5";
         case IOFormat::Images: return "images";
+        case IOFormat::Numpy: return "numpy";
         case IOFormat::DLC_CSV: return "dlc_csv";
         case IOFormat::MultiColumnBinary: return "multi_column_binary";
         case IOFormat::JSON: return "json";
@@ -76,6 +78,7 @@ inline IOFormat parseFormat(std::string_view format_str) {
     if (format_str == "capnp" || format_str == "capnproto") return IOFormat::CapnProto;
     if (format_str == "hdf5") return IOFormat::HDF5;
     if (format_str == "images" || format_str == "opencv") return IOFormat::Images;
+    if (format_str == "numpy" || format_str == "npy") return IOFormat::Numpy;
     if (format_str == "dlc_csv" || format_str == "deeplabcut") return IOFormat::DLC_CSV;
     if (format_str == "multi_column_binary") return IOFormat::MultiColumnBinary;
     if (format_str == "json") return IOFormat::JSON;
