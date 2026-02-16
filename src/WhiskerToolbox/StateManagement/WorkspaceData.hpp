@@ -39,6 +39,9 @@ struct DataLoadEntry {
 
     /// Absolute path to the source (JSON config file, video file, or image directory).
     std::string source_path;
+
+    /// Workspace-relative path (computed at save time, resolved at load time)
+    std::string relative_path;
 };
 
 /**
@@ -61,6 +64,12 @@ struct WorkspaceData {
 
     /// Opaque JSON string from ZoneConfig::saveToJson()
     std::string zone_layout_json;
+
+    /// Transform pipeline JSON strings applied during the session
+    std::vector<std::string> applied_pipelines;
+
+    /// Table definition JSON strings created during the session
+    std::vector<std::string> table_definitions;
 };
 
 } // namespace StateManagement

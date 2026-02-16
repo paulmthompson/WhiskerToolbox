@@ -19,6 +19,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_state_management_data
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/StateManagement/AppPreferencesData.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/StateManagement/SessionData.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/StateManagement/PathResolver.test.cpp
 )
 
 target_link_libraries(test_state_management_data PRIVATE

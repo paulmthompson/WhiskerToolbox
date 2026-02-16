@@ -24,6 +24,7 @@
 #include "SplitButtonHandler.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "ZoneManager.hpp"
+#include "ZoneManager/ZoneConfig.hpp"
 
 
 // Module registration headers - each module defines its own factory functions
@@ -51,6 +52,7 @@
 #include "Plots/TemporalProjectionViewWidget/TemporalProjectionViewWidgetRegistration.hpp"
 
 #include "TableDesignerWidget/TableDesignerWidgetRegistration.hpp"
+#include "TableDesignerWidget/TableDesignerWidget.hpp"
 #include "Python_Widget/PythonWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
@@ -67,6 +69,7 @@
 #include "StateManagement/AppPreferences.hpp"
 #include "StateManagement/SessionStore.hpp"
 #include "StateManagement/WorkspaceManager.hpp"
+#include "StateManagement/WorkspaceData.hpp"
 
 #include "utils/DataLoadUtils.hpp"
 
@@ -79,6 +82,8 @@
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMenu>
+#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProgressDialog>
 #include <QSplitter>
@@ -200,6 +205,9 @@ MainWindow::MainWindow(QWidget * parent)
 
     _buildInitialLayout();
 
+    // Wire up provenance tracking for pipeline execution and table creation
+    _connectProvenanceTracking();
+
     // Restore window geometry from previous session
     _state_manager->session()->restoreWindowGeometry(this);
 
@@ -213,6 +221,9 @@ MainWindow::MainWindow(QWidget * parent)
     _state_manager->workspace()->enableAutoSave();
 
     _updateTitleBar();
+
+    // Check for crash recovery file from a previous unclean shutdown
+    _checkCrashRecovery();
 }
 
 void MainWindow::closeEvent(QCloseEvent * event) {
@@ -358,6 +369,25 @@ void MainWindow::_createActions() {
     ui->actionLoad_Layout->setText(QStringLiteral("Open Workspace"));
     ui->actionLoad_Layout->setEnabled(true);
     connect(ui->actionLoad_Layout, &QAction::triggered, this, &MainWindow::_openWorkspace);
+
+    // Recent Workspaces submenu (inserted after Open Workspace in the File menu)
+    {
+        auto * file_menu = ui->menuFile;
+        _recent_workspaces_menu = new QMenu(QStringLiteral("Recent Workspaces"), file_menu);
+        // Insert after the Open Workspace action
+        auto * after_action = ui->actionLoad_Layout;
+        file_menu->insertMenu(file_menu->actions().indexOf(after_action) < file_menu->actions().size() - 1
+                                      ? file_menu->actions()[file_menu->actions().indexOf(after_action) + 1]
+                                      : nullptr,
+                              _recent_workspaces_menu);
+
+        // Rebuild from session store
+        _rebuildRecentWorkspacesMenu();
+
+        // Rebuild when session changes (e.g., after save/open)
+        connect(_state_manager->session(), &StateManagement::SessionStore::sessionChanged,
+                this, &MainWindow::_rebuildRecentWorkspacesMenu);
+    }
 
     // Connect TimeScrollBar to EditorRegistry for global time propagation
     connect(_time_scrollbar,
@@ -1045,6 +1075,7 @@ void MainWindow::_saveWorkspace() {
     _state_manager->session()->rememberPath(QStringLiteral("workspace"), path);
 
     if (_state_manager->workspace()->saveWorkspace(path)) {
+        _state_manager->session()->addRecentWorkspace(path);
         std::cout << "Workspace saved to: " << path.toStdString() << std::endl;
     } else {
         std::cerr << "Failed to save workspace to: " << path.toStdString() << std::endl;
@@ -1108,14 +1139,34 @@ void MainWindow::_openWorkspace() {
         }
     }
 
+    // --- Restore editor states (widget recreation) ---
+    _restoreEditorStates(*data);
+
+    // --- Restore zone layout ---
+    _restoreZoneLayout(*data);
+
     // Restore data load provenance from the workspace
     _state_manager->workspace()->clearDataLoads();
     for (auto const & entry : data->data_loads) {
         _state_manager->workspace()->recordDataLoad(entry);
     }
 
+    // Restore pipeline and table provenance
+    _state_manager->workspace()->clearAppliedPipelines();
+    for (auto const & pj : data->applied_pipelines) {
+        _state_manager->workspace()->recordAppliedPipeline(pj);
+    }
+    _state_manager->workspace()->clearTableDefinitions();
+    for (auto const & tj : data->table_definitions) {
+        _state_manager->workspace()->recordTableDefinition(tj);
+    }
+
     // Mark the workspace as successfully restored
     _state_manager->workspace()->markRestored(path);
+
+    // Add to recent workspaces
+    _state_manager->session()->addRecentWorkspace(path);
+
     std::cout << "Workspace loaded from: " << path.toStdString() << std::endl;
 }
 
@@ -1133,4 +1184,301 @@ void MainWindow::_updateTitleBar() {
     }
 
     setWindowTitle(title);
+}
+
+// ---------------------------------------------------------------------------
+// Crash Recovery
+// ---------------------------------------------------------------------------
+
+void MainWindow::_checkCrashRecovery() {
+    auto * ws = _state_manager->workspace();
+    if (!ws->hasRecoveryFile()) {
+        return;
+    }
+
+    auto recovery_data = ws->readRecoveryFile();
+    if (!recovery_data) {
+        // Corrupt recovery file — delete it silently
+        ws->deleteRecoveryFile();
+        return;
+    }
+
+    auto const answer = QMessageBox::question(
+            this,
+            QStringLiteral("Session Recovery"),
+            QStringLiteral("A previous session was not saved properly.\n\n"
+                           "Would you like to restore it?"),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::Yes);
+
+    if (answer == QMessageBox::Yes) {
+        // Replay data loads
+        for (auto const & entry : recovery_data->data_loads) {
+            if (entry.loader_type == "json_config") {
+                auto const json_path = QString::fromStdString(entry.source_path);
+                if (QFile::exists(json_path)) {
+                    auto data_info = loadDataAndBroadcastConfig(
+                            _data_manager.get(),
+                            _editor_registry.get(),
+                            entry.source_path);
+                    processLoadedData(data_info);
+                }
+            } else if (entry.loader_type == "video") {
+                if (QFile::exists(QString::fromStdString(entry.source_path))) {
+                    if (loadVideoData(entry.source_path, _data_manager.get())) {
+                        loadData();
+                    }
+                }
+            } else if (entry.loader_type == "images") {
+                if (QDir(QString::fromStdString(entry.source_path)).exists()) {
+                    auto media = std::make_shared<ImageData>();
+                    media->LoadMedia(entry.source_path);
+                    _data_manager->setData<ImageData>("media", media, TimeKey("time"));
+                    loadData();
+                }
+            }
+        }
+
+        // Restore editor states
+        _restoreEditorStates(*recovery_data);
+
+        // Restore zone layout
+        _restoreZoneLayout(*recovery_data);
+
+        // Restore provenance
+        ws->clearDataLoads();
+        for (auto const & entry : recovery_data->data_loads) {
+            ws->recordDataLoad(entry);
+        }
+        ws->clearAppliedPipelines();
+        for (auto const & pj : recovery_data->applied_pipelines) {
+            ws->recordAppliedPipeline(pj);
+        }
+        ws->clearTableDefinitions();
+        for (auto const & tj : recovery_data->table_definitions) {
+            ws->recordTableDefinition(tj);
+        }
+
+        // Mark dirty since this came from a recovery (not an explicit save)
+        ws->markDirty();
+        _updateTitleBar();
+
+        std::cout << "Session restored from recovery file" << std::endl;
+    }
+
+    // Delete the recovery file regardless of choice
+    ws->deleteRecoveryFile();
+}
+
+// ---------------------------------------------------------------------------
+// Recent Workspaces Menu
+// ---------------------------------------------------------------------------
+
+void MainWindow::_rebuildRecentWorkspacesMenu() {
+    if (!_recent_workspaces_menu) {
+        return;
+    }
+
+    _recent_workspaces_menu->clear();
+
+    auto const recent = _state_manager->session()->recentWorkspaces();
+    if (recent.isEmpty()) {
+        auto * empty_action = _recent_workspaces_menu->addAction(QStringLiteral("(No recent workspaces)"));
+        empty_action->setEnabled(false);
+        return;
+    }
+
+    for (auto const & ws_path : recent) {
+        auto const display = QFileInfo(ws_path).fileName();
+        auto * action = _recent_workspaces_menu->addAction(display);
+        action->setToolTip(ws_path);
+        connect(action, &QAction::triggered, this, [this, ws_path]() {
+            if (!QFile::exists(ws_path)) {
+                QMessageBox::warning(this,
+                                     QStringLiteral("File Not Found"),
+                                     QStringLiteral("Workspace file not found:\n%1").arg(ws_path));
+                _state_manager->session()->removeRecentWorkspace(ws_path);
+                return;
+            }
+
+            _state_manager->session()->rememberPath(QStringLiteral("workspace"), ws_path);
+
+            auto data = _state_manager->workspace()->readWorkspace(ws_path);
+            if (!data) {
+                QMessageBox::warning(this,
+                                     QStringLiteral("Load Error"),
+                                     QStringLiteral("Failed to read workspace:\n%1").arg(ws_path));
+                return;
+            }
+
+            // Replay data loads
+            for (auto const & entry : data->data_loads) {
+                if (entry.loader_type == "json_config") {
+                    if (QFile::exists(QString::fromStdString(entry.source_path))) {
+                        auto data_info = loadDataAndBroadcastConfig(
+                                _data_manager.get(), _editor_registry.get(), entry.source_path);
+                        processLoadedData(data_info);
+                    }
+                } else if (entry.loader_type == "video") {
+                    if (QFile::exists(QString::fromStdString(entry.source_path))) {
+                        if (loadVideoData(entry.source_path, _data_manager.get())) {
+                            loadData();
+                        }
+                    }
+                } else if (entry.loader_type == "images") {
+                    if (QDir(QString::fromStdString(entry.source_path)).exists()) {
+                        auto media = std::make_shared<ImageData>();
+                        media->LoadMedia(entry.source_path);
+                        _data_manager->setData<ImageData>("media", media, TimeKey("time"));
+                        loadData();
+                    }
+                }
+            }
+
+            _restoreEditorStates(*data);
+            _restoreZoneLayout(*data);
+
+            _state_manager->workspace()->clearDataLoads();
+            for (auto const & entry : data->data_loads) {
+                _state_manager->workspace()->recordDataLoad(entry);
+            }
+            _state_manager->workspace()->clearAppliedPipelines();
+            for (auto const & pj : data->applied_pipelines) {
+                _state_manager->workspace()->recordAppliedPipeline(pj);
+            }
+            _state_manager->workspace()->clearTableDefinitions();
+            for (auto const & tj : data->table_definitions) {
+                _state_manager->workspace()->recordTableDefinition(tj);
+            }
+
+            _state_manager->workspace()->markRestored(ws_path);
+            _state_manager->session()->addRecentWorkspace(ws_path);
+            std::cout << "Workspace loaded from recent: " << ws_path.toStdString() << std::endl;
+        });
+    }
+
+    // Separator + clear action
+    _recent_workspaces_menu->addSeparator();
+    auto * clear_action = _recent_workspaces_menu->addAction(QStringLiteral("Clear Recent"));
+    connect(clear_action, &QAction::triggered, this, [this]() {
+        auto const recent = _state_manager->session()->recentWorkspaces();
+        for (auto const & ws : recent) {
+            _state_manager->session()->removeRecentWorkspace(ws);
+        }
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Editor State & Zone Layout Restore
+// ---------------------------------------------------------------------------
+
+void MainWindow::_restoreEditorStates(StateManagement::WorkspaceData const & data) {
+    if (data.editor_states_json.empty()) {
+        return;
+    }
+
+    // Use EditorRegistry::fromJson() which:
+    // 1. Clears existing states
+    // 2. Creates new states from the serialized JSON
+    // 3. Registers them in the registry
+    if (!_editor_registry->fromJson(data.editor_states_json)) {
+        std::cerr << "Workspace: Failed to restore editor states from JSON" << std::endl;
+        return;
+    }
+
+    // Now recreate view/properties widgets for each restored state
+    // and place them in their preferred zones
+    auto const restored_states = _editor_registry->allStates();
+    for (auto const & state : restored_states) {
+        auto const type_id = EditorLib::EditorTypeId(state->getTypeName());
+        auto const info = _editor_registry->typeInfo(type_id);
+
+        if (info.type_id.isEmpty()) {
+            std::cerr << "Workspace: Unknown editor type during restore: "
+                      << state->getTypeName().toStdString() << std::endl;
+            continue;
+        }
+
+        // Skip certain built-in widgets that are always created in _buildInitialLayout
+        // (TimeScrollBar state is pre-registered and its widget is always present)
+        if (type_id.toString() == QStringLiteral("TimeScrollBar")) {
+            continue;
+        }
+
+        // Use placeExistingEditor to create views and place in zones
+        auto placed = _editor_creation_controller->placeExistingEditor(
+                state,
+                info.preferred_zone,
+                info.properties_zone,
+                {},    // use default title
+                false);// don't raise
+
+        if (!placed.isValid()) {
+            std::cerr << "Workspace: Failed to place restored editor: "
+                      << state->getInstanceId().toStdString() << std::endl;
+        }
+    }
+
+    std::cout << "Restored " << restored_states.size() << " editor states" << std::endl;
+}
+
+void MainWindow::_restoreZoneLayout(StateManagement::WorkspaceData const & data) {
+    if (data.zone_layout_json.empty()) {
+        return;
+    }
+
+    auto config_result = ZoneConfig::loadFromJson(data.zone_layout_json);
+    if (!config_result) {
+        std::cerr << "Workspace: Failed to parse zone layout JSON" << std::endl;
+        return;
+    }
+
+    _zone_manager->applyConfig(*config_result);
+
+    // Defer splitter size reapplication to after layout stabilizes
+    _zone_manager->reapplySplitterSizes(200);
+
+    std::cout << "Restored zone layout" << std::endl;
+}
+
+// ---------------------------------------------------------------------------
+// Provenance Tracking (Pipeline + Table)
+// ---------------------------------------------------------------------------
+
+void MainWindow::_connectProvenanceTracking() {
+    // This is called after the initial layout is built.
+    // We connect to signals from DataTransform_Widget and TableDesignerWidget
+    // instances as they are created.
+
+    // Connect to EditorRegistry's editorCreated signal to wire up
+    // provenance tracking for new widget instances
+    connect(_editor_registry.get(), &EditorRegistry::editorCreated,
+            this, [this](EditorInstanceId instance_id, EditorTypeId type_id) {
+                Q_UNUSED(instance_id);
+
+                // Find the dock widget for this instance and connect signals
+                if (type_id.toString() == QStringLiteral("DataTransformWidget")) {
+                    for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+                        if (auto * dtw = dynamic_cast<DataTransform_Widget *>(dock->widget())) {
+                            connect(dtw, &DataTransform_Widget::pipelineExecuted,
+                                    this, [this](QString const & json) {
+                                        _state_manager->workspace()->recordAppliedPipeline(
+                                                json.toStdString());
+                                    },
+                                    Qt::UniqueConnection);
+                        }
+                    }
+                } else if (type_id.toString() == QStringLiteral("TableDesignerWidget")) {
+                    for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+                        if (auto * tdw = dynamic_cast<TableDesignerWidget *>(dock->widget())) {
+                            connect(tdw, &TableDesignerWidget::tableCreated,
+                                    this, [this](QString const & table_id) {
+                                        _state_manager->workspace()->recordTableDefinition(
+                                                table_id.toStdString());
+                                    },
+                                    Qt::UniqueConnection);
+                        }
+                    }
+                }
+            });
 }

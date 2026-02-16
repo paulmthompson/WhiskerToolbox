@@ -66,6 +66,13 @@ public:
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
+signals:
+    /**
+     * @brief Emitted when a JSON pipeline is successfully executed
+     * @param pipeline_json The JSON content of the executed pipeline
+     */
+    void pipelineExecuted(QString const & pipeline_json);
+
 protected:
     void resizeEvent(QResizeEvent* event) override;
 

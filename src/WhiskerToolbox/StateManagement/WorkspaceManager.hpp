@@ -127,6 +127,28 @@ public:
     /// Get the current list of data load entries.
     [[nodiscard]] std::vector<DataLoadEntry> const & dataLoads() const;
 
+    // === Transform Pipeline Tracking ===
+
+    /// Record that a transform pipeline was applied (JSON string).
+    void recordAppliedPipeline(std::string const & pipeline_json);
+
+    /// Clear all recorded pipelines.
+    void clearAppliedPipelines();
+
+    /// Get the list of applied pipeline JSON strings.
+    [[nodiscard]] std::vector<std::string> const & appliedPipelines() const;
+
+    // === Table Definition Tracking ===
+
+    /// Record that a table definition was created (JSON string).
+    void recordTableDefinition(std::string const & table_json);
+
+    /// Clear all recorded table definitions.
+    void clearTableDefinitions();
+
+    /// Get the list of table definition JSON strings.
+    [[nodiscard]] std::vector<std::string> const & tableDefinitions() const;
+
     // === Auto-Save (Crash Recovery) ===
 
     /**
@@ -203,6 +225,14 @@ private:
     QString _current_path;
     bool _is_dirty = false;
     std::vector<DataLoadEntry> _data_loads;
+    std::vector<std::string> _applied_pipelines;
+    std::vector<std::string> _table_definitions;
+
+    /// Convert absolute paths to workspace-relative on save.
+    void _convertToRelativePaths(WorkspaceData & data, QString const & workspace_path) const;
+
+    /// Resolve relative paths to absolute on load.
+    void _resolveRelativePaths(WorkspaceData & data, QString const & workspace_path) const;
 
     // Collaborators (non-owning)
     EditorRegistry * _editor_registry = nullptr;

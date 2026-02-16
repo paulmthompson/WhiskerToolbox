@@ -636,6 +636,8 @@ void TableDesignerWidget::onBuildTable() {
                 qDebug() << "Successfully built table:" << _current_table_id << "with" << column_infos.size() << "columns";
                 // Populate JSON widget with the current configuration
                 setJsonTemplateFromCurrentState();
+                // Emit signal for workspace provenance tracking
+                emit tableCreated(_current_table_id);
             } else {
                 updateBuildStatus("Failed to store built table", true);
             }

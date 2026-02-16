@@ -800,6 +800,9 @@ void DataTransform_Widget::_executeJsonPipeline() {
                                          .arg(result.total_steps)
                                          .arg(result.total_execution_time_ms, 0, 'f', 1));
 
+        // Emit signal with the pipeline JSON for workspace provenance tracking
+        emit pipelineExecuted(_getCurrentJsonContent());
+
         // Note: With Phase 2.7, data selection happens via SelectionContext
         // No need to refresh an embedded feature table
     } else {

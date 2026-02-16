@@ -1,6 +1,7 @@
 #include "WorkspaceManager.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
+#include "PathResolver.hpp"
 #include "ZoneManager/ZoneConfig.hpp"
 #include "ZoneManager/ZoneManager.hpp"
 
@@ -51,6 +52,10 @@ void WorkspaceManager::setZoneManager(ZoneManager * zone_manager)
 bool WorkspaceManager::saveWorkspace(QString const & file_path)
 {
     auto data = _captureCurrentState();
+
+    // Convert absolute paths to workspace-relative before writing
+    _convertToRelativePaths(data, file_path);
+
     if (!_writeWorkspaceFile(file_path, data)) {
         return false;
     }
@@ -64,7 +69,12 @@ bool WorkspaceManager::saveWorkspace(QString const & file_path)
 
 std::optional<WorkspaceData> WorkspaceManager::readWorkspace(QString const & file_path) const
 {
-    return _readWorkspaceFile(file_path);
+    auto data = _readWorkspaceFile(file_path);
+    if (data) {
+        // Resolve relative paths to absolute based on workspace file location
+        _resolveRelativePaths(*data, file_path);
+    }
+    return data;
 }
 
 void WorkspaceManager::markRestored(QString const & file_path)
@@ -113,6 +123,46 @@ void WorkspaceManager::clearDataLoads()
 std::vector<DataLoadEntry> const & WorkspaceManager::dataLoads() const
 {
     return _data_loads;
+}
+
+// ---------------------------------------------------------------------------
+// Transform Pipeline Tracking
+// ---------------------------------------------------------------------------
+
+void WorkspaceManager::recordAppliedPipeline(std::string const & pipeline_json)
+{
+    _applied_pipelines.push_back(pipeline_json);
+    _setDirty(true);
+}
+
+void WorkspaceManager::clearAppliedPipelines()
+{
+    _applied_pipelines.clear();
+}
+
+std::vector<std::string> const & WorkspaceManager::appliedPipelines() const
+{
+    return _applied_pipelines;
+}
+
+// ---------------------------------------------------------------------------
+// Table Definition Tracking
+// ---------------------------------------------------------------------------
+
+void WorkspaceManager::recordTableDefinition(std::string const & table_json)
+{
+    _table_definitions.push_back(table_json);
+    _setDirty(true);
+}
+
+void WorkspaceManager::clearTableDefinitions()
+{
+    _table_definitions.clear();
+}
+
+std::vector<std::string> const & WorkspaceManager::tableDefinitions() const
+{
+    return _table_definitions;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,6 +264,8 @@ WorkspaceData WorkspaceManager::_captureCurrentState() const
     }
 
     data.data_loads = _data_loads;
+    data.applied_pipelines = _applied_pipelines;
+    data.table_definitions = _table_definitions;
 
     if (_editor_registry) {
         data.editor_states_json = _editor_registry->toJson();
@@ -236,12 +288,16 @@ bool WorkspaceManager::_writeWorkspaceFile(QString const & path,
         doc["created_at"] = data.created_at;
         doc["modified_at"] = data.modified_at;
 
-        // Data loads — simple array of objects
+        // Data loads — include both source_path and relative_path
         auto loads_arr = nlohmann::json::array();
         for (auto const & entry : data.data_loads) {
-            loads_arr.push_back({
-                    {"loader_type", entry.loader_type},
-                    {"source_path", entry.source_path}});
+            nlohmann::json entry_json;
+            entry_json["loader_type"] = entry.loader_type;
+            entry_json["source_path"] = entry.source_path;
+            if (!entry.relative_path.empty()) {
+                entry_json["relative_path"] = entry.relative_path;
+            }
+            loads_arr.push_back(entry_json);
         }
         doc["data_loads"] = loads_arr;
 
@@ -258,6 +314,28 @@ bool WorkspaceManager::_writeWorkspaceFile(QString const & path,
         } else {
             doc["zone_layout"] = nlohmann::json::object();
         }
+
+        // Applied pipelines
+        auto pipelines_arr = nlohmann::json::array();
+        for (auto const & pj : data.applied_pipelines) {
+            try {
+                pipelines_arr.push_back(nlohmann::json::parse(pj));
+            } catch (...) {
+                pipelines_arr.push_back(pj);
+            }
+        }
+        doc["applied_pipelines"] = pipelines_arr;
+
+        // Table definitions
+        auto tables_arr = nlohmann::json::array();
+        for (auto const & tj : data.table_definitions) {
+            try {
+                tables_arr.push_back(nlohmann::json::parse(tj));
+            } catch (...) {
+                tables_arr.push_back(tj);
+            }
+        }
+        doc["table_definitions"] = tables_arr;
 
         // Ensure directory exists
         QDir().mkpath(QFileInfo(path).absolutePath());
@@ -307,6 +385,7 @@ std::optional<WorkspaceData> WorkspaceManager::_readWorkspaceFile(QString const 
                 DataLoadEntry entry;
                 entry.loader_type = entry_json.value("loader_type", "");
                 entry.source_path = entry_json.value("source_path", "");
+                entry.relative_path = entry_json.value("relative_path", "");
                 data.data_loads.push_back(std::move(entry));
             }
         }
@@ -321,6 +400,20 @@ std::optional<WorkspaceData> WorkspaceManager::_readWorkspaceFile(QString const 
         if (doc.contains("zone_layout") && doc["zone_layout"].is_object()
             && !doc["zone_layout"].empty()) {
             data.zone_layout_json = doc["zone_layout"].dump();
+        }
+
+        // Applied pipelines
+        if (doc.contains("applied_pipelines") && doc["applied_pipelines"].is_array()) {
+            for (auto const & pj : doc["applied_pipelines"]) {
+                data.applied_pipelines.push_back(pj.is_string() ? pj.get<std::string>() : pj.dump());
+            }
+        }
+
+        // Table definitions
+        if (doc.contains("table_definitions") && doc["table_definitions"].is_array()) {
+            for (auto const & tj : doc["table_definitions"]) {
+                data.table_definitions.push_back(tj.is_string() ? tj.get<std::string>() : tj.dump());
+            }
         }
 
         return data;
@@ -347,6 +440,31 @@ void WorkspaceManager::_setDirty(bool dirty)
     if (_is_dirty != dirty) {
         _is_dirty = dirty;
         emit dirtyChanged(dirty);
+    }
+}
+
+void WorkspaceManager::_convertToRelativePaths(WorkspaceData & data,
+                                                QString const & workspace_path) const
+{
+    auto const ws_dir = QFileInfo(workspace_path).absolutePath().toStdString();
+    for (auto & entry : data.data_loads) {
+        entry.relative_path = PathResolver::toRelative(entry.source_path, ws_dir);
+    }
+}
+
+void WorkspaceManager::_resolveRelativePaths(WorkspaceData & data,
+                                              QString const & workspace_path) const
+{
+    auto const ws_dir = QFileInfo(workspace_path).absolutePath().toStdString();
+    for (auto & entry : data.data_loads) {
+        // If source_path doesn't exist but relative_path does, resolve it
+        if (!entry.relative_path.empty()) {
+            auto const resolved = PathResolver::toAbsolute(entry.relative_path, ws_dir);
+            if (PathResolver::fileExists(resolved)) {
+                entry.source_path = resolved;
+            }
+            // If original source_path still exists, keep it (takes priority)
+        }
     }
 }
 

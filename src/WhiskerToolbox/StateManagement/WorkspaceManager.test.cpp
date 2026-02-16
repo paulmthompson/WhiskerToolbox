@@ -313,3 +313,211 @@ TEST_CASE("WorkspaceManager - save creates parent directories", "[StateManagemen
     CHECK(saved);
     CHECK(QFile::exists(ws_path));
 }
+
+// ============================================================================
+// Pipeline Tracking Tests
+// ============================================================================
+
+TEST_CASE("WorkspaceManager - pipeline tracking", "[StateManagement][Workspace][Qt]") {
+    QTemporaryDir tmp_dir;
+    REQUIRE(tmp_dir.isValid());
+
+    WorkspaceManager mgr(tmp_dir.path());
+
+    CHECK(mgr.appliedPipelines().empty());
+
+    mgr.recordAppliedPipeline(R"({"name":"zscore","version":1})");
+    REQUIRE(mgr.appliedPipelines().size() == 1);
+    CHECK(mgr.appliedPipelines()[0] == R"({"name":"zscore","version":1})");
+
+    mgr.recordAppliedPipeline(R"({"name":"smooth","window":5})");
+    REQUIRE(mgr.appliedPipelines().size() == 2);
+
+    // Recording a pipeline should mark workspace dirty
+    CHECK(mgr.hasUnsavedChanges());
+
+    mgr.clearAppliedPipelines();
+    CHECK(mgr.appliedPipelines().empty());
+}
+
+TEST_CASE("WorkspaceManager - pipeline round-trip save/load", "[StateManagement][Workspace][Qt]") {
+    QTemporaryDir tmp_dir;
+    REQUIRE(tmp_dir.isValid());
+
+    auto const ws_path = tmp_dir.path() + QStringLiteral("/pipeline_test.wtb");
+
+    // Save with pipelines
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        mgr.recordAppliedPipeline(R"({"name":"zscore","version":1})");
+        mgr.recordAppliedPipeline(R"({"name":"smooth","window":5})");
+        bool saved = mgr.saveWorkspace(ws_path);
+        CHECK(saved);
+    }
+
+    // Load and verify
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        auto data = mgr.readWorkspace(ws_path);
+        REQUIRE(data.has_value());
+        REQUIRE(data->applied_pipelines.size() == 2);
+        // Pipelines are stored as JSON objects (re-serialized), verify structure
+        CHECK(data->applied_pipelines[0].find("zscore") != std::string::npos);
+        CHECK(data->applied_pipelines[1].find("smooth") != std::string::npos);
+    }
+}
+
+// ============================================================================
+// Table Definition Tracking Tests
+// ============================================================================
+
+TEST_CASE("WorkspaceManager - table definition tracking", "[StateManagement][Workspace][Qt]") {
+    QTemporaryDir tmp_dir;
+    REQUIRE(tmp_dir.isValid());
+
+    WorkspaceManager mgr(tmp_dir.path());
+
+    CHECK(mgr.tableDefinitions().empty());
+
+    mgr.recordTableDefinition("table_1");
+    REQUIRE(mgr.tableDefinitions().size() == 1);
+    CHECK(mgr.tableDefinitions()[0] == "table_1");
+
+    mgr.recordTableDefinition("table_2");
+    REQUIRE(mgr.tableDefinitions().size() == 2);
+
+    // Recording should mark dirty
+    CHECK(mgr.hasUnsavedChanges());
+
+    mgr.clearTableDefinitions();
+    CHECK(mgr.tableDefinitions().empty());
+}
+
+TEST_CASE("WorkspaceManager - table definitions round-trip save/load", "[StateManagement][Workspace][Qt]") {
+    QTemporaryDir tmp_dir;
+    REQUIRE(tmp_dir.isValid());
+
+    auto const ws_path = tmp_dir.path() + QStringLiteral("/table_test.wtb");
+
+    // Save with tables
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        mgr.recordTableDefinition("whisker_stats");
+        mgr.recordTableDefinition("trial_summary");
+        bool saved = mgr.saveWorkspace(ws_path);
+        CHECK(saved);
+    }
+
+    // Load and verify
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        auto data = mgr.readWorkspace(ws_path);
+        REQUIRE(data.has_value());
+        REQUIRE(data->table_definitions.size() == 2);
+        CHECK(data->table_definitions[0].find("whisker_stats") != std::string::npos);
+        CHECK(data->table_definitions[1].find("trial_summary") != std::string::npos);
+    }
+}
+
+// ============================================================================
+// Relative Path Conversion Tests
+// ============================================================================
+
+TEST_CASE("WorkspaceManager - relative paths saved in workspace file", "[StateManagement][Workspace][Qt]") {
+    QTemporaryDir tmp_dir;
+    REQUIRE(tmp_dir.isValid());
+
+    auto const data_dir = tmp_dir.path() + QStringLiteral("/data");
+    QDir().mkpath(data_dir);
+
+    // Create a dummy config file so the path is valid
+    auto const config_path = data_dir + QStringLiteral("/config.json");
+    {
+        QFile f(config_path);
+        f.open(QIODevice::WriteOnly);
+        f.write("{}");
+        f.close();
+    }
+
+    auto const ws_path = tmp_dir.path() + QStringLiteral("/project.wtb");
+
+    // Save — paths should be converted to relative
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        mgr.recordJsonConfigLoad(config_path);
+        bool saved = mgr.saveWorkspace(ws_path);
+        CHECK(saved);
+    }
+
+    // Read raw file and check for relative_path field
+    {
+        QFile f(ws_path);
+        REQUIRE(f.open(QIODevice::ReadOnly | QIODevice::Text));
+        auto const text = QString::fromUtf8(f.readAll());
+        f.close();
+
+        CHECK(text.contains(QStringLiteral("\"relative_path\"")));
+        CHECK(text.contains(QStringLiteral("data/config.json")));
+    }
+
+    // Load — verify relative path is populated
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        auto data = mgr.readWorkspace(ws_path);
+        REQUIRE(data.has_value());
+        REQUIRE(data->data_loads.size() == 1);
+        CHECK_FALSE(data->data_loads[0].relative_path.empty());
+        // source_path should still contain the original absolute path
+        CHECK(data->data_loads[0].source_path.find("config.json") != std::string::npos);
+    }
+}
+
+// ============================================================================
+// Combined Save/Load with All Phase 2b Fields
+// ============================================================================
+
+TEST_CASE("WorkspaceManager - full round-trip with pipelines tables and relative paths",
+          "[StateManagement][Workspace][Qt]") {
+    QTemporaryDir tmp_dir;
+    REQUIRE(tmp_dir.isValid());
+
+    auto const ws_path = tmp_dir.path() + QStringLiteral("/full_test.wtb");
+
+    // Save with all provenance
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        mgr.recordJsonConfigLoad(QStringLiteral("/data/config.json"));
+        mgr.recordAppliedPipeline(R"({"name":"normalize"})");
+        mgr.recordTableDefinition("main_table");
+        bool saved = mgr.saveWorkspace(ws_path);
+        CHECK(saved);
+    }
+
+    // Load and verify all fields preserved
+    {
+        WorkspaceManager mgr(tmp_dir.path());
+        auto data = mgr.readWorkspace(ws_path);
+        REQUIRE(data.has_value());
+
+        // Data loads present
+        REQUIRE(data->data_loads.size() == 1);
+        CHECK(data->data_loads[0].loader_type == "json_config");
+
+        // Pipelines present
+        REQUIRE(data->applied_pipelines.size() == 1);
+        CHECK(data->applied_pipelines[0].find("normalize") != std::string::npos);
+
+        // Table definitions present
+        REQUIRE(data->table_definitions.size() == 1);
+        CHECK(data->table_definitions[0].find("main_table") != std::string::npos);
+
+        // Workspace file format keys present
+        QFile f(ws_path);
+        REQUIRE(f.open(QIODevice::ReadOnly | QIODevice::Text));
+        auto const text = QString::fromUtf8(f.readAll());
+        f.close();
+
+        CHECK(text.contains(QStringLiteral("\"applied_pipelines\"")));
+        CHECK(text.contains(QStringLiteral("\"table_definitions\"")));
+    }
+}

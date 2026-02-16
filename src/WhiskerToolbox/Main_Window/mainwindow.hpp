@@ -12,9 +12,11 @@
 #include <string>
 
 class DataManager;
+class QMenu;
 
 namespace StateManagement {
 class StateManager;
+class WorkspaceData;
 }
 class EditorCreationController;
 class EditorRegistry;
@@ -126,6 +128,22 @@ private:
     void _buildInitialLayout();
     void _registerEditorTypes();
     void _updateTitleBar();
+
+    /// Check for crash recovery file and prompt user to restore
+    void _checkCrashRecovery();
+
+    /// Build the recent workspaces submenu from SessionStore
+    void _rebuildRecentWorkspacesMenu();
+
+    /// Restore editor states and zone layout from workspace data
+    void _restoreEditorStates(StateManagement::WorkspaceData const & data);
+    void _restoreZoneLayout(StateManagement::WorkspaceData const & data);
+
+    /// Connect tracking signals for pipeline/table provenance
+    void _connectProvenanceTracking();
+
+    /// Recent workspaces submenu (owned by menubar)
+    QMenu * _recent_workspaces_menu = nullptr;
 
     /**
      * @brief Open an editor using the EditorRegistry

@@ -13,6 +13,7 @@ set(STATE_MANAGEMENT_SOURCES
     AppPreferencesData.hpp
     AppPreferences.hpp
     AppPreferences.cpp
+    PathResolver.hpp
     SessionData.hpp
     SessionStore.hpp
     SessionStore.cpp
