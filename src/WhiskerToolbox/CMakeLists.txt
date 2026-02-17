@@ -83,6 +83,9 @@ add_subdirectory(DeepLearning_Widget)
  # Qt, DataManager, EditorState, Geometry
 add_subdirectory(DataTransform_Widget)
 
+# Qt, DataManager, EditorState - TransformsV2 pipeline UI
+add_subdirectory(TransformsV2_Widget)
+
 # Qt, DataManager - Shared plot alignment widget
 add_subdirectory(Plots/Common/PlotAlignmentWidget)
 
@@ -287,6 +290,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE TransformsV2_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE PlotAlignmentWidget)
 target_link_libraries(WhiskerToolbox PRIVATE EventPlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE ACFWidget)
