@@ -1,3 +1,8 @@
+/**
+ * @file DimensionDescriptor.cpp
+ * @brief Implementation of DimensionDescriptor axis shape and stride calculations
+ */
+
 #include "DimensionDescriptor.hpp"
 
 #include <algorithm>

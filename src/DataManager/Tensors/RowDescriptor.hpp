@@ -1,6 +1,19 @@
 #ifndef ROW_DESCRIPTOR_HPP
 #define ROW_DESCRIPTOR_HPP
 
+/**
+ * @file RowDescriptor.hpp
+ * @brief Describes the temporal meaning of a tensor's row axis
+ *
+ * A tensor's row axis (axis 0) can represent time-indexed samples
+ * (via TimeIndexStorage), time intervals (e.g., trials), or plain ordinal
+ * indices with no time semantics. RowDescriptor captures this as a
+ * discriminated variant with factory constructors and type-specific accessors.
+ *
+ * Part of the TensorData refactor (step 1).
+ * @see tensor_data_refactor_proposal.md §5 for design rationale.
+ */
+
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
 #include "TimeFrame/interval_data.hpp"

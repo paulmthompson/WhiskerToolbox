@@ -1,3 +1,11 @@
+/**
+ * @file DenseTensorStorage.cpp
+ * @brief Implementation of the Dense N-dimensional tensor storage backend
+ *
+ * Row-major flat buffer with precomputed strides for arbitrary-dimensional
+ * element access, slicing, and column extraction.
+ */
+
 #include "DenseTensorStorage.hpp"
 
 #include <algorithm>

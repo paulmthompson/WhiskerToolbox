@@ -1,6 +1,19 @@
 #ifndef DIMENSION_DESCRIPTOR_HPP
 #define DIMENSION_DESCRIPTOR_HPP
 
+/**
+ * @file DimensionDescriptor.hpp
+ * @brief Named axis descriptors and shape metadata for N-dimensional tensors
+ *
+ * Provides AxisDescriptor (name + size for a single axis) and DimensionDescriptor
+ * (ordered list of axes with precomputed row-major strides, optional column names,
+ * and axis-lookup-by-name). These are pure value types with no external dependencies,
+ * used by TensorData and TensorStorageBase to describe tensor shape and axis semantics.
+ *
+ * Part of the TensorData refactor (step 1).
+ * @see tensor_data_refactor_proposal.md §4 for design rationale.
+ */
+
 #include <algorithm>
 #include <cstddef>
 #include <numeric>

@@ -1,6 +1,19 @@
 #ifndef DENSE_TENSOR_STORAGE_HPP
 #define DENSE_TENSOR_STORAGE_HPP
 
+/**
+ * @file DenseTensorStorage.hpp
+ * @brief Fallback N-dimensional tensor storage using a flat std::vector<float>
+ *
+ * Stores tensor data in row-major (C-contiguous) order with precomputed strides.
+ * Used for tensors with >3 dimensions where Armadillo's arma::fcube limit does
+ * not suffice (e.g., 4D model I/O: batch × channel × height × width). Has no
+ * external dependencies beyond the standard library.
+ *
+ * Part of the TensorData refactor (step 3).
+ * @see tensor_data_refactor_proposal.md §6.3 for design rationale.
+ */
+
 #include "TensorStorageBase.hpp"
 
 #include <cstddef>

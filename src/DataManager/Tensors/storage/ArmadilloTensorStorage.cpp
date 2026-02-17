@@ -1,3 +1,11 @@
+/**
+ * @file ArmadilloTensorStorage.cpp
+ * @brief Implementation of the Armadillo tensor storage backend
+ *
+ * Handles column-major ↔ row-major translation for element access, column
+ * extraction, and slicing across 1D/2D/3D Armadillo containers.
+ */
+
 #include "ArmadilloTensorStorage.hpp"
 
 #include <algorithm>

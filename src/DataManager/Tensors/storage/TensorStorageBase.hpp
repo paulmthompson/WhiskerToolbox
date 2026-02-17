@@ -1,6 +1,22 @@
 #ifndef TENSOR_STORAGE_BASE_HPP
 #define TENSOR_STORAGE_BASE_HPP
 
+/**
+ * @file TensorStorageBase.hpp
+ * @brief CRTP base class and cache structure for tensor storage backends
+ *
+ * Defines the compile-time polymorphic interface that all tensor storage backends
+ * (Armadillo, Dense, LibTorch, View, Lazy) implement. The CRTP pattern eliminates
+ * virtual dispatch overhead while TensorStorageWrapper provides type-erased runtime
+ * polymorphism on top.
+ *
+ * Also defines TensorStorageCache for fast-path contiguous data access and
+ * TensorStorageType for backend identification.
+ *
+ * Part of the TensorData refactor (step 2).
+ * @see tensor_data_refactor_proposal.md §6.1 for design rationale.
+ */
+
 #include <cstddef>
 #include <span>
 #include <vector>

@@ -1,3 +1,8 @@
+/**
+ * @file RowDescriptor.cpp
+ * @brief Implementation of RowDescriptor factory methods and accessors
+ */
+
 #include "RowDescriptor.hpp"
 
 #include <stdexcept>

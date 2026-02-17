@@ -1,6 +1,20 @@
 #ifndef ARMADILLO_TENSOR_STORAGE_HPP
 #define ARMADILLO_TENSOR_STORAGE_HPP
 
+/**
+ * @file ArmadilloTensorStorage.hpp
+ * @brief Default tensor storage backend using Armadillo (≤3D)
+ *
+ * Wraps arma::fvec (1D), arma::fmat (2D), or arma::fcube (3D) with the
+ * TensorStorageBase CRTP interface. This is the default backend for tensors
+ * with ≤3 dimensions since Armadillo is a required project dependency and
+ * provides zero-copy interop with mlpack. Handles column-major to row-major
+ * translation transparently.
+ *
+ * Part of the TensorData refactor (step 2).
+ * @see tensor_data_refactor_proposal.md §6.2 for design rationale.
+ */
+
 #include "TensorStorageBase.hpp"
 
 #include <armadillo>
