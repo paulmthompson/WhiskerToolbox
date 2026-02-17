@@ -20,7 +20,6 @@
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
-#include "algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
 
@@ -57,7 +56,6 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
-    registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     return true;
 }();
@@ -466,25 +464,6 @@ auto const register_line_point_extraction_ctx = RegisterContextTransform<Line2D,
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
-
-// Register ZScoreNormalization (Multi-Pass Element Transform)
-auto const register_zscore_normalization = RegisterTransform<float, float, ZScoreNormalizationParams>(
-        "ZScoreNormalization",
-        zScoreNormalization,
-        TransformMetadata{
-                .name = "ZScoreNormalization",
-                .description = "Normalize values to z-scores (mean=0, std=1) using multi-pass statistics computation",
-                .category = "Statistics",
-                .input_type = typeid(float),
-                .output_type = typeid(float),
-                .params_type = typeid(ZScoreNormalizationParams),
-                .lineage_type = TransformLineageType::OneToOneByTime,
-                .input_type_name = "float",
-                .output_type_name = "float",
-                .params_type_name = "ZScoreNormalizationParams",
-                .is_expensive = false,
-                .is_deterministic = true,
-                .supports_cancellation = false});
 
 // Register ZScoreNormalizationV2 (Value Store Binding Transform)
 // Uses pre_reductions to compute mean/std instead of preprocessing
