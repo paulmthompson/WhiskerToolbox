@@ -12,6 +12,7 @@
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/storage/ArmadilloTensorStorage.hpp"
 #include "Tensors/storage/DenseTensorStorage.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #ifdef TENSOR_BACKEND_LIBTORCH
@@ -374,6 +375,62 @@ TensorData TensorData::createFromTorch(
                          std::move(storage), nullptr};
 }
 #endif // TENSOR_BACKEND_LIBTORCH
+
+// =============================================================================
+// Factory: createFromLazyColumns
+// =============================================================================
+
+TensorData TensorData::createFromLazyColumns(
+    std::size_t num_rows,
+    std::vector<ColumnSource> columns,
+    RowDescriptor rows,
+    InvalidationWiringFn wiring)
+{
+    if (num_rows == 0) {
+        throw std::invalid_argument(
+            "TensorData::createFromLazyColumns: num_rows must be > 0");
+    }
+    if (columns.empty()) {
+        throw std::invalid_argument(
+            "TensorData::createFromLazyColumns: must have at least one column");
+    }
+
+    auto const num_cols = columns.size();
+
+    // Extract column names for the DimensionDescriptor
+    std::vector<std::string> col_names;
+    col_names.reserve(num_cols);
+    for (auto const & col : columns) {
+        col_names.push_back(col.name);
+    }
+
+    // Build dimension descriptor: "row" × "channel" (same convention as other factories)
+    DimensionDescriptor dims{{
+        {"row", num_rows},
+        {"channel", num_cols}
+    }};
+    dims.setColumnNames(std::move(col_names));
+
+    // Extract time_frame from RowDescriptor if available
+    auto time_frame = rows.timeFrame();
+
+    // Build lazy storage
+    auto storage = TensorStorageWrapper{
+        LazyColumnTensorStorage{num_rows, std::move(columns)}};
+
+    auto tensor = TensorData{std::move(dims), std::move(rows),
+                                std::move(storage), std::move(time_frame)};
+
+    // Wire invalidation if a callback was provided
+    if (wiring) {
+        auto * lazy = tensor._storage.tryGetMutableAs<LazyColumnTensorStorage>();
+        if (lazy != nullptr) {
+            wiring(*lazy, tensor);
+        }
+    }
+
+    return tensor;
+}
 
 // =============================================================================
 // Dimension Queries
