@@ -33,7 +33,6 @@ target_link_libraries(MaskData PUBLIC
     WhiskerToolbox::ObserverData  # Observer
     TimeFrame                # TimeFrame  
     Entity                   # Entity
-    nlohmann_json::nlohmann_json  # For JSON support
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
