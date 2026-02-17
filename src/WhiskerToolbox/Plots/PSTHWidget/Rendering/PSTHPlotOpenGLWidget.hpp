@@ -26,7 +26,7 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "DataManager/utils/GatherResult.hpp"
+#include "GatherResult/GatherResult.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>

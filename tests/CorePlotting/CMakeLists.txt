@@ -49,6 +49,8 @@ target_link_libraries(test_coreplotting PRIVATE
     WhiskerToolbox::TimeFrame
     NEURALYZER_GEOMETRY
     glm::glm
+    TransformsV2
+    GatherResult
 )
 
 target_include_directories(test_coreplotting PRIVATE

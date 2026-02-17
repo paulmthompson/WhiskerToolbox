@@ -15,10 +15,13 @@
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/utils/GatherResult.hpp"
 
 #include <cstdint>
 #include <vector>
+
+template <typename T>
+class GatherResult;
+
 
 namespace CorePlotting {
 

@@ -26,8 +26,6 @@ add_executable(test_data_manager
 
         utils/TimeSeriesConcepts.test.cpp
         utils/TimeSeriesFilters.test.cpp
-        utils/GatherResult.test.cpp
-        utils/GatherResult_ValueStore.test.cpp
 
         test_filename_timeframe.cpp
         test_tableview.cpp
@@ -45,7 +43,6 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Lineage/DataManagerEntityDataSource.test.cpp
 
         Lineage/test_lineage_recorder.test.cpp
-        Lineage/test_transform_lineage_integration.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
@@ -135,41 +132,6 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/TensorStorageWrapper.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/storage/LibTorchTensorStorage.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/Tensors/TensorData.test.cpp
-
-        TransformsV2/test_view_pipeline.test.cpp
-        TransformsV2/test_line_min_point_dist_v2.test.cpp
-        #TransformsV2/test_zipping_logic.test.cpp
-        TransformsV2/test_pipeline_adaptors.test.cpp
-        TransformsV2/test_pipeline_loader.test.cpp
-        TransformsV2/test_pipeline_zipping.test.cpp
-        TransformsV2/test_mask_to_interval_pipeline.test.cpp
-        TransformsV2/test_multi_input_pipeline.test.cpp
-        TransformsV2/test_range_reduction_types.test.cpp
-        TransformsV2/test_range_reduction_registry.test.cpp
-        TransformsV2/test_range_reductions.test.cpp
-        TransformsV2/test_context_aware_params.test.cpp
-        TransformsV2/test_value_projection_types.test.cpp
-        TransformsV2/test_pipeline_value_store.test.cpp
-        TransformsV2/test_parameter_binding.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineAngle/LineAngle.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineClip/LineClip.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineCurvature/LineCurvature.test.cpp
-        #${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineResample/LineResample.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/LineSubsegment/LineSubsegment.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskArea/MaskArea.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/MaskCentroid/MaskCentroid.test.cpp
-        #Range Reductions
-        #SumReduction
-        ${CMAKE_SOURCE_DIR}/src/DataManager/transforms/v2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.test.cpp
-
 )
 
 # Add VideoData tests only if FFmpeg is enabled

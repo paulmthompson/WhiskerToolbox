@@ -11,7 +11,7 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/utils/GatherResult.hpp"
+#include "GatherResult/GatherResult.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <cstdint>

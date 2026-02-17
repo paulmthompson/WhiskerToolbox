@@ -46,6 +46,7 @@ target_link_libraries(LinePlotWidget PRIVATE CorePlotting)
 target_link_libraries(LinePlotWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(LinePlotWidget PRIVATE PlottingOpenGL)
 target_link_libraries(LinePlotWidget PRIVATE glm::glm)
+target_link_libraries(LinePlotWidget PRIVATE GatherResult)
 
 target_include_directories(LinePlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

@@ -46,6 +46,7 @@ target_link_libraries(EventPlotWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(EventPlotWidget PRIVATE PlottingOpenGL)
 target_link_libraries(EventPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(EventPlotWidget PRIVATE glm::glm)
+target_link_libraries(EventPlotWidget PRIVATE GatherResult)
 
 target_include_directories(EventPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

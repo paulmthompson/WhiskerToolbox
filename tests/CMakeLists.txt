@@ -20,6 +20,10 @@ add_subdirectory(CorePlotting)
 add_subdirectory(SpatialIndex)
 add_subdirectory(StateEstimation)
 add_subdirectory(DataManager)
+add_subdirectory(GatherResult)
+
+add_subdirectory(TransformsV2)
+
 add_subdirectory(DeepLearning)
 add_subdirectory(python_bindings)
 if (ENABLE_UI)

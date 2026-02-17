@@ -33,8 +33,8 @@
  */
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/utils/GatherResult.hpp"
-#include "DataManager/transforms/v2/extension/IntervalAdapters.hpp"
+#include "GatherResult/GatherResult.hpp"
+#include "TransformsV2/extension/IntervalAdapters.hpp"
 #include "PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 

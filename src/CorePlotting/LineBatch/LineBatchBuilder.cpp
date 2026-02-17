@@ -3,6 +3,7 @@
  * @brief Builder implementations for LineBatchData from LineData and GatherResult
  */
 #include "LineBatchBuilder.hpp"
+#include "GatherResult/GatherResult.hpp"
 
 #include <algorithm>
 #include <cstddef>

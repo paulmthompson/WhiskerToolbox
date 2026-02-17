@@ -10,11 +10,16 @@ add_subdirectory(SpatialIndex)
 
 add_subdirectory(FeatureExtraction)
 
+
 if (ENABLE_OPENCV)
     add_subdirectory(ImageProcessing)
 endif()
 add_subdirectory(StateEstimation)
+
 add_subdirectory(DataManager)
+add_subdirectory(TransformsV2)
+add_subdirectory(GatherResult)
+
 add_subdirectory(python_bindings)
 add_subdirectory(CorePlotting)
 add_subdirectory(DeepLearning)

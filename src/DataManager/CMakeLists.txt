@@ -38,7 +38,6 @@ set(DATAMANAGER_SOURCES
         utils/color.hpp
         utils/color.cpp
         utils/json_helpers.hpp
-        utils/GatherResult.hpp
         utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
         utils/polynomial/polynomial_fit.hpp
@@ -188,59 +187,6 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/Mask_Skeletonize/mask_skeletonize.hpp
         transforms/Media/whisker_tracing.cpp
         transforms/Media/whisker_tracing.hpp
-
-        transforms/v2/detail/ContainerTraits.hpp
-        transforms/v2/detail/ContainerTraits.cpp 
-        transforms/v2/core/DataManagerIntegration.hpp
-        transforms/v2/core/DataManagerIntegration.cpp
-        transforms/v2/core/ElementRegistry.hpp 
-        transforms/v2/extension/ElementTransform.hpp
-        transforms/v2/core/PipelineLoader.hpp
-        transforms/v2/core/PipelineLoader.cpp
-        transforms/v2/core/RangeReductionRegistry.hpp
-        transforms/v2/extension/RangeReductionTypes.hpp
-        transforms/v2/core/RegisteredTransforms.cpp
-        transforms/v2/core/TransformPipeline.hpp
-        transforms/v2/core/TransformPipeline.cpp
-        transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp
-        transforms/v2/algorithms/AnalogEventThreshold/AnalogEventThreshold.cpp
-        transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp
-        transforms/v2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.cpp
-        transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp
-        transforms/v2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.cpp
-        transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp
-        transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.cpp
-        transforms/v2/algorithms/MaskArea/MaskArea.hpp
-        transforms/v2/algorithms/MaskArea/MaskArea.cpp
-        transforms/v2/algorithms/SumReduction/SumReduction.hpp
-        transforms/v2/algorithms/SumReduction/SumReduction.cpp
-        transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.hpp
-        transforms/v2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.cpp
-        transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp
-        transforms/v2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp
-        transforms/v2/algorithms/LineAngle/LineAngle.hpp
-        transforms/v2/algorithms/LineAngle/LineAngle.cpp
-        transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.hpp
-        transforms/v2/algorithms/LineBaseFlip/LineBaseFlip.cpp
-        transforms/v2/algorithms/LineClip/LineClip.hpp
-        transforms/v2/algorithms/LineClip/LineClip.cpp
-        transforms/v2/algorithms/LineCurvature/LineCurvature.hpp
-        transforms/v2/algorithms/LineCurvature/LineCurvature.cpp
-        transforms/v2/algorithms/LineResample/LineResample.hpp
-        transforms/v2/algorithms/LineResample/LineResample.cpp
-        transforms/v2/algorithms/LineSubsegment/LineSubsegment.hpp
-        transforms/v2/algorithms/LineSubsegment/LineSubsegment.cpp
-        transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.hpp
-        transforms/v2/algorithms/LinePointExtraction/LinePointExtraction.cpp
-        transforms/v2/algorithms/MaskCentroid/MaskCentroid.hpp
-        transforms/v2/algorithms/MaskCentroid/MaskCentroid.cpp
-        transforms/v2/algorithms/RangeReductions/EventRangeReductions.hpp
-        transforms/v2/algorithms/RangeReductions/ValueRangeReductions.hpp
-        transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.hpp
-        transforms/v2/algorithms/RangeReductions/RegisteredRangeReductions.cpp
-        transforms/v2/algorithms/Temporal/NormalizeTime.hpp
-        transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.hpp
-        transforms/v2/algorithms/Temporal/RegisteredTemporalTransforms.cpp
 
         # Lineage subsystem (only DataManager-specific files remain here)
         # LineageTypes.hpp and LineageRegistry.hpp/cpp moved to Entity library

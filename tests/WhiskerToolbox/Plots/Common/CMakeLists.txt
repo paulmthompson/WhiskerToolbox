@@ -23,6 +23,7 @@ target_link_libraries(test_plot_alignment_gather PRIVATE
     DataManager
     PlotAlignmentWidget
     Qt6::Core
+    GatherResult
 )
 
 target_include_directories(test_plot_alignment_gather PRIVATE

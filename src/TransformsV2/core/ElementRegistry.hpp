@@ -1,0 +1,1724 @@
+#ifndef WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
+#define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
+
+#include "ComputeContext.hpp"
+#include "detail/ContainerExecutor.hpp"// for IContainerExecutor
+#include "detail/ContainerTraits.hpp"
+#include "detail/ParamExecutor.hpp"
+#include "extension/ContainerRegistry.hpp"
+#include "extension/ElementTransform.hpp"
+#include "extension/TransformTypes.hpp"
+
+#include "DataManagerTypes.hpp"
+
+#include "Observer/Observer_Data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+
+
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+
+#include <any>
+#include <functional>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <typeindex>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+
+namespace WhiskerToolbox::Transforms::V2 {
+
+struct TimeSeriesOps;
+
+// ============================================================================
+// Empty parameter type for stateless transforms
+// ============================================================================
+
+/**
+ * @brief Empty parameter struct for transforms that don't need configuration
+ */
+struct NoParams {};
+
+
+// ============================================================================
+// Transform Metadata
+// ============================================================================
+
+/**
+ * @brief Metadata about a registered transform
+ */
+struct TransformMetadata {
+    std::string name;
+    std::string description;
+    std::string category;// "Image Processing", "Geometry", "Statistics", etc.
+
+    std::type_index input_type = typeid(void);
+    std::type_index output_type = typeid(void);
+    std::type_index params_type = typeid(void);
+
+    bool is_multi_input = false;
+    size_t input_arity = 1;
+    std::vector<std::type_index> individual_input_types;// For multi-input
+
+    bool is_time_grouped = false;       // True if this operates on span<Element> per time
+    bool produces_single_output = false;// True if time-grouped transform produces exactly 1 output per time point
+
+    // Lineage tracking - describes the entity relationship between input and output
+    TransformLineageType lineage_type = TransformLineageType::None;
+
+    // For UI generation
+    std::string input_type_name;
+    std::string output_type_name;
+    std::string params_type_name;
+
+    // Version and authorship
+    std::string version = "1.0";
+    std::string author;
+
+    // Performance hints
+    bool is_expensive = false;// Hint for parallelization
+    bool is_deterministic = true;
+    bool supports_cancellation = false;
+};
+
+// ============================================================================
+// Element Registry
+// ============================================================================
+
+/**
+ * @brief Registry for element-level transforms
+ * 
+ * Maintains a compile-time typed registry of transforms that operate on
+ * individual elements (Mask2D, Line2D, float, etc.).
+ * 
+ * Features:
+ * - Type-safe registration and lookup
+ * - Query by input/output types
+ * - Automatic container lifting
+ * - Metadata for UI generation
+ */
+class ElementRegistry {
+public:
+    ElementRegistry() = default;
+
+    // Make registry non-copyable (singleton-like usage)
+    ElementRegistry(ElementRegistry const &) = delete;
+    ElementRegistry & operator=(ElementRegistry const &) = delete;
+    ElementRegistry(ElementRegistry &&) = default;
+    ElementRegistry & operator=(ElementRegistry &&) = default;
+
+    /**
+     * @brief Get global singleton instance
+     * 
+     * @return Reference to the global registry
+     */
+    static ElementRegistry & instance() {
+        static ElementRegistry registry;
+        return registry;
+    }
+
+    // ========================================================================
+    // Single-Input Transform Registration
+    // ========================================================================
+
+    /**
+     * @brief Register single-input element transform with parameters
+     * 
+     * @tparam In Input element type (e.g., Mask2D)
+     * @tparam Out Output element type (e.g., float)
+     * @tparam Params Parameter type (must be default constructible)
+     * 
+     * @param name Unique transform name
+     * @param func Transform function
+     * @param metadata Optional metadata for UI
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTransform(
+            std::string const & name,
+            std::function<Out(In const &, Params const &)> func,
+            TransformMetadata metadata = {}) {
+
+        // Create typed transform
+        auto transform = std::make_shared<TypedTransform<In, Out, Params>>(std::move(func));
+
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_type = std::type_index(typeid(In));
+        metadata.output_type = std::type_index(typeid(Out));
+        metadata.params_type = std::type_index(typeid(Params));
+        metadata.is_multi_input = false;
+        metadata.input_arity = 1;
+
+        // Store transform (type-erased)
+        auto key = std::make_pair(std::type_index(typeid(In)), name);
+        transforms_[key] = transform;
+
+        // Store metadata
+        metadata_[name] = metadata;
+
+        // Update type index maps
+        input_type_to_names_[std::type_index(typeid(In))].push_back(name);
+        output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+
+        // Auto-register all parameter-related factories (JSON, validator, executor, PipelineStep)
+        registerParamDeserializerIfNeeded<In, Out, Params>();
+
+        // Register container operations for input and output types
+        registerContainerOps<In>();
+        registerContainerOps<Out>();
+    }
+
+    /**
+     * @brief Register stateless transform (no parameters)
+     */
+    template<typename In, typename Out>
+    void registerTransform(
+            std::string const & name,
+            std::function<Out(In const &)> func,
+            TransformMetadata metadata = {}) {
+
+        registerTransform<In, Out, NoParams>(
+                name,
+                [f = std::move(func)](In const & in, NoParams const &) { return f(in); },
+                metadata);
+    }
+
+    // ========================================================================
+    // Time-Grouped Transform Registration (M→N per time)
+    // ========================================================================
+
+    /**
+     * @brief Register time-grouped transform
+     * 
+     * For transforms that operate on all elements at a single time point.
+     * Signature: (span<In>, Params) → vector<Out>
+     * 
+     * @tparam In Input element type (e.g., float)
+     * @tparam Out Output element type (e.g., float)
+     * @tparam Params Parameter type
+     * 
+     * Example: Sum reduction (span<float> → vector<float> with one element)
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTimeGroupedTransform(
+            std::string const & name,
+            std::function<std::vector<Out>(std::span<In const>, Params const &)> func,
+            TransformMetadata metadata = {}) {
+
+        // Create typed transform
+        auto transform = std::make_shared<TypedTimeGroupedTransform<In, Out, Params>>(std::move(func));
+
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_type = std::type_index(typeid(In));
+        metadata.output_type = std::type_index(typeid(Out));
+        metadata.params_type = std::type_index(typeid(Params));
+        metadata.is_multi_input = false;
+        metadata.input_arity = 1;
+        metadata.is_time_grouped = true;
+
+        // Store transform (type-erased)
+        auto key = std::make_pair(std::type_index(typeid(In)), name);
+        time_grouped_transforms_[key] = transform;
+
+        // Store metadata
+        metadata_[name] = metadata;
+
+        // Update type index maps
+        input_type_to_names_[std::type_index(typeid(In))].push_back(name);
+        output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+
+        // Auto-register all parameter-related factories
+        registerParamDeserializerIfNeeded<In, Out, Params>();
+
+        // Register container operations for input and output types
+        registerContainerOps<In>();
+        registerContainerOps<Out>();
+    }
+
+    /**
+     * @brief Register stateless time-grouped transform (no parameters)
+     */
+    template<typename In, typename Out>
+    void registerTimeGroupedTransform(
+            std::string const & name,
+            std::function<std::vector<Out>(std::span<In const>)> func,
+            TransformMetadata metadata = {}) {
+
+        registerTimeGroupedTransform<In, Out, NoParams>(
+                name,
+                [f = std::move(func)](std::span<In const> in, NoParams const &) { return f(in); },
+                metadata);
+    }
+
+    // ========================================================================
+    // Multi-Input Transform Registration
+    // ========================================================================
+
+    /**
+     * @brief Register binary element transform
+     * 
+     * Wraps binary function as tuple-input function for consistency.
+     */
+    template<typename In1, typename In2, typename Out, typename Params>
+    void registerBinaryTransform(
+            std::string const & name,
+            std::function<Out(In1 const &, In2 const &, Params const &)> func,
+            TransformMetadata metadata = {}) {
+
+        // Wrap as tuple-input function
+        auto wrapped = [f = std::move(func)](
+                               std::tuple<In1, In2> const & inputs,
+                               Params const & params) -> Out {
+            return f(std::get<0>(inputs), std::get<1>(inputs), params);
+        };
+
+        using TupleIn = std::tuple<In1, In2>;
+        auto transform = std::make_shared<TypedTransform<TupleIn, Out, Params>>(wrapped);
+
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_type = std::type_index(typeid(TupleIn));
+        metadata.output_type = std::type_index(typeid(Out));
+        metadata.params_type = std::type_index(typeid(Params));
+        metadata.is_multi_input = true;
+        metadata.input_arity = 2;
+        metadata.individual_input_types = {
+                std::type_index(typeid(In1)),
+                std::type_index(typeid(In2))};
+
+        // Store
+        auto key = std::make_pair(std::type_index(typeid(TupleIn)), name);
+        transforms_[key] = transform;
+        metadata_[name] = metadata;
+
+        // Update maps (both individual types point to this transform)
+        input_type_to_names_[std::type_index(typeid(In1))].push_back(name);
+        input_type_to_names_[std::type_index(typeid(In2))].push_back(name);
+        output_type_to_names_[std::type_index(typeid(Out))].push_back(name);
+
+        // Auto-register all parameter-related factories
+        // For binary transforms, use the tuple input type
+        registerParamDeserializerIfNeeded<TupleIn, Out, Params>();
+    }
+
+    // ========================================================================
+    // Transform Execution
+    // ========================================================================
+
+    /**
+     * @brief Execute single-input transform
+     * 
+     * @throws std::runtime_error if transform not found or type mismatch
+     */
+    template<typename In, typename Out, typename Params>
+    Out execute(std::string const & name,
+                In const & input,
+                Params const & params,
+                ComputeContext const & ctx = {}) const {
+
+        auto transform = getTransform<In, Out, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Transform not found: " + name);
+        }
+
+        return transform->execute(input, params, ctx);
+    }
+
+    /**
+     * @brief Execute binary transform
+     */
+    template<typename In1, typename In2, typename Out, typename Params>
+    Out executeBinary(std::string const & name,
+                      In1 const & input1,
+                      In2 const & input2,
+                      Params const & params,
+                      ComputeContext const & ctx = {}) const {
+
+        using TupleIn = std::tuple<In1, In2>;
+        auto transform = getTransform<TupleIn, Out, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Transform not found: " + name);
+        }
+
+        auto inputs = std::tie(input1, input2);
+        return transform->execute(inputs, params, ctx);
+    }
+
+    /**
+     * @brief Execute time-grouped transform
+     * 
+     * @throws std::runtime_error if transform not found or type mismatch
+     */
+    template<typename In, typename Out, typename Params>
+    std::vector<Out> executeTimeGrouped(std::string const & name,
+                                        std::span<In const> inputs,
+                                        Params const & params) const {
+
+        auto transform = getTimeGroupedTransform<In, Out, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Time-grouped transform not found: " + name);
+        }
+
+        return transform->execute(inputs, params);
+    }
+
+    // ========================================================================
+    // Container Transform Registration and Execution
+    // ========================================================================
+
+    /**
+     * @brief Register a container-level transform
+     * 
+     * These are transforms that need full container access (temporal dependencies, etc.)
+     * Transform function should be pure: take concrete types, return concrete types.
+     * No virtual inheritance, no variants - pipeline handles type erasure.
+     * 
+     * @tparam InContainer Input container type (e.g., AnalogTimeSeries)
+     * @tparam OutContainer Output container type (e.g., DigitalEventSeries)  
+     * @tparam Params Parameter type
+     * 
+     * @param name Unique transform name
+     * @param func Transform function: (Container const&, Params const&, Context const&) -> shared_ptr<Container>
+     * @param metadata Optional metadata
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    void registerContainerTransform(
+            std::string const & name,
+            std::function<std::shared_ptr<OutContainer>(
+                    InContainer const &,
+                    Params const &,
+                    ComputeContext const &)>
+                    func,
+            ContainerTransformMetadata metadata = {}) {
+
+        // Create typed transform wrapper
+        auto transform = std::make_shared<TypedContainerTransform<InContainer, OutContainer, Params>>(
+                std::move(func));
+
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_container_type = typeid(InContainer);
+        metadata.output_container_type = typeid(OutContainer);
+        metadata.params_type = typeid(Params);
+        metadata.input_type_name = typeid(InContainer).name();
+        metadata.output_type_name = typeid(OutContainer).name();
+        metadata.params_type_name = typeid(Params).name();
+
+        // Store (separate from element transforms)
+        auto key = std::make_pair(std::type_index(typeid(InContainer)), name);
+        container_transforms_[key] = transform;
+        container_metadata_[name] = metadata;
+
+        // Update lookup maps
+        container_input_to_names_[typeid(InContainer)].push_back(name);
+        container_output_to_names_[typeid(OutContainer)].push_back(name);
+
+        // Register parameter deserializer and executor factory
+        registerContainerParamHandling<InContainer, OutContainer, Params>();
+    }
+
+    /**
+     * @brief Execute a container transform
+     * 
+     * @tparam InContainer Input container type
+     * @tparam OutContainer Output container type
+     * @tparam Params Parameter type
+     * 
+     * @param name Transform name
+     * @param input Input container (concrete type, not variant)
+     * @param params Parameters (concrete type, not type-erased)
+     * @param ctx Compute context for progress/cancellation
+     * @return Shared pointer to output container
+     * 
+     * @throws std::runtime_error if transform not found
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    std::shared_ptr<OutContainer> executeContainerTransform(
+            std::string const & name,
+            InContainer const & input,
+            Params const & params,
+            ComputeContext const & ctx = {}) const {
+
+        auto transform = getContainerTransform<InContainer, OutContainer, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Container transform not found: " + name);
+        }
+
+        auto result = transform->execute(input, params, ctx);
+
+        // Pipeline/registry handles TimeFrame propagation
+        // Copy TimeFrame from input to output if output supports it
+        if (result && input.getTimeFrame()) {
+            result->setTimeFrame(input.getTimeFrame());
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Check if a transform is a container transform
+     */
+    bool isContainerTransform(std::string const & name) const {
+        return container_metadata_.find(name) != container_metadata_.end();
+    }
+
+    /**
+     * @brief Get container transform metadata
+     */
+    ContainerTransformMetadata const * getContainerMetadata(std::string const & name) const {
+        auto it = container_metadata_.find(name);
+        return (it != container_metadata_.end()) ? &it->second : nullptr;
+    }
+
+    /**
+     * @brief Get all container transforms for an input type
+     */
+    std::vector<std::string> getContainerTransformsForInputType(std::type_index input_type) const {
+        auto it = container_input_to_names_.find(input_type);
+        if (it != container_input_to_names_.end()) {
+            return it->second;
+        }
+        return {};
+    }
+
+    /**
+     * @brief Create a container executor from parameters
+     * 
+     * Uses the registered factory to create a typed executor with captured parameters.
+     * Returns the IContainerExecutor interface for type-erased execution.
+     * 
+     * @param name Transform name
+     * @param params_any Type-erased parameters (must match registered type)
+     * @return Shared pointer to IContainerExecutor, or nullptr if not found
+     */
+    std::shared_ptr<IContainerExecutor> createContainerExecutor(
+            std::string const & name,
+            std::any const & params_any) const {
+
+        auto const * meta = getContainerMetadata(name);
+        if (!meta) {
+            return nullptr;
+        }
+
+        TypeTriple key{
+                meta->input_container_type,
+                meta->output_container_type,
+                meta->params_type};
+
+        auto factory_it = container_executor_factories_.find(key);
+        if (factory_it == container_executor_factories_.end()) {
+            return nullptr;
+        }
+
+        return factory_it->second(params_any);
+    }
+
+    /**
+     * @brief Execute container transform with dynamic parameter dispatch
+     * 
+     * Creates an executor from the parameters and executes the transform.
+     * This is the primary entry point for dynamic container transform execution.
+     * 
+     * @param name Transform name
+     * @param input_variant Input data as DataTypeVariant
+     * @param params_any Type-erased parameters
+     * @param ctx Compute context
+     * @return Output data as DataTypeVariant
+     * 
+     * @throws std::runtime_error if transform not found or execution fails
+     */
+    DataTypeVariant executeContainerTransformDynamic(
+            std::string const & name,
+            DataTypeVariant const & input_variant,
+            std::any const & params_any,
+            ComputeContext const & ctx = {}) const {
+
+        auto executor = createContainerExecutor(name, params_any);
+        if (!executor) {
+            throw std::runtime_error("Container transform not found or failed to create executor: " + name);
+        }
+
+        return executor->execute(name, input_variant, ctx);
+    }
+
+    /**
+     * @brief Register binary container transform
+     * 
+     * For container-level transforms that need two full containers as input
+     * and handle their own time alignment and ragged structure.
+     * 
+     * Example: AnalogIntervalPeak(DigitalIntervalSeries, AnalogTimeSeries) → DigitalEventSeries
+     * 
+     * @tparam InContainer1 First input container type
+     * @tparam InContainer2 Second input container type
+     * @tparam OutContainer Output container type
+     * @tparam Params Parameter type
+     */
+    template<typename InContainer1, typename InContainer2, typename OutContainer, typename Params>
+    void registerBinaryContainerTransform(
+            std::string const & name,
+            std::function<std::shared_ptr<OutContainer>(
+                    InContainer1 const &,
+                    InContainer2 const &,
+                    Params const &,
+                    ComputeContext const &)>
+                    func,
+            ContainerTransformMetadata metadata = {}) {
+
+        // Wrap as tuple-input function (consistent with element-level)
+        // Use tuple of references to avoid copying large containers
+        auto wrapped = [f = std::move(func)](
+                               std::tuple<InContainer1 &, InContainer2 &> const & inputs,
+                               Params const & params,
+                               ComputeContext const & ctx) -> std::shared_ptr<OutContainer> {
+            return f(std::get<0>(inputs), std::get<1>(inputs), params, ctx);
+        };
+
+        using TupleIn = std::tuple<InContainer1 &, InContainer2 &>;
+        auto transform = std::make_shared<TypedContainerTransform<TupleIn, OutContainer, Params>>(
+                wrapped);
+
+        // Complete metadata
+        metadata.name = name;
+        metadata.input_container_type = typeid(TupleIn);
+        metadata.output_container_type = typeid(OutContainer);
+        metadata.params_type = typeid(Params);
+        metadata.is_multi_input = true;
+        metadata.input_arity = 2;
+        metadata.individual_input_types = {
+                std::type_index(typeid(InContainer1)),
+                std::type_index(typeid(InContainer2))};
+        metadata.input_type_name = std::string("std::tuple<") +
+                                   typeid(InContainer1).name() + ", " +
+                                   typeid(InContainer2).name() + ">";
+        metadata.output_type_name = typeid(OutContainer).name();
+        metadata.params_type_name = typeid(Params).name();
+
+        // Store
+        auto key = std::make_pair(std::type_index(typeid(TupleIn)), name);
+        container_transforms_[key] = transform;
+        container_metadata_[name] = metadata;
+
+        // Update maps (both individual types point to this transform)
+        container_input_to_names_[typeid(InContainer1)].push_back(name);
+        container_input_to_names_[typeid(InContainer2)].push_back(name);
+        container_output_to_names_[typeid(OutContainer)].push_back(name);
+
+        // Register parameter handling
+        registerContainerParamHandling<TupleIn, OutContainer, Params>();
+    }
+
+    /**
+     * @brief Execute binary container transform
+     * 
+     * @param name Transform name
+     * @param input1 First input container
+     * @param input2 Second input container
+     * @param params Parameters
+     * @param ctx Compute context
+     * @return Shared pointer to output container
+     */
+    template<typename InContainer1, typename InContainer2, typename OutContainer, typename Params>
+    std::shared_ptr<OutContainer> executeBinaryContainerTransform(
+            std::string const & name,
+            InContainer1 & input1,
+            InContainer2 & input2,
+            Params const & params,
+            ComputeContext const & ctx = {}) const {
+
+        using TupleIn = std::tuple<InContainer1 &, InContainer2 &>;
+        auto transform = getContainerTransform<TupleIn, OutContainer, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Binary container transform not found: " + name);
+        }
+
+        // Create tuple of references (no copying!)
+        auto const inputs = std::tie(input1, input2);
+        auto result = transform->execute(inputs, params, ctx);
+
+        // Propagate TimeFrame from first input if available
+        if (result && input1.getTimeFrame()) {
+            result->setTimeFrame(input1.getTimeFrame());
+        }
+
+        return result;
+    }
+
+    // ========================================================================
+    // Container-Level Execution (Automatic Lifting)
+    // ========================================================================
+
+    /**
+     * @brief Get a callable transform function from the registry
+     * 
+     * Returns a lambda that captures the transform and parameters,
+     * allowing it to be used with standard algorithms or materializers.
+     * 
+     * @tparam In Input element type
+     * @tparam Out Output element type
+     * @tparam Params Parameter type
+     * 
+     * @param name Transform name
+     * @param params Parameters to bind to the transform
+     * @return Callable that applies the transform
+     * 
+     * @throws std::runtime_error if transform not found
+     */
+    template<typename In, typename Out, typename Params>
+    auto getTransformFunction(std::string const & name, Params const & params) const {
+        auto transform = getTransform<In, Out, Params>(name);
+        if (!transform) {
+            throw std::runtime_error("Transform not found: " + name);
+        }
+
+        return [transform, params](In const & input) -> Out {
+            return transform->execute(input, params, ComputeContext{});
+        };
+    }
+
+    // ========================================================================
+    // Query Interface
+    // ========================================================================
+
+    /**
+     * @brief Get all transform names applicable to an input type
+     */
+    std::vector<std::string> getTransformsForInputType(std::type_index input_type) const {
+        auto it = input_type_to_names_.find(input_type);
+        if (it != input_type_to_names_.end()) {
+            return it->second;
+        }
+        return {};
+    }
+
+    /**
+     * @brief Get all transform names that produce an output type
+     */
+    std::vector<std::string> getTransformsForOutputType(std::type_index output_type) const {
+        auto it = output_type_to_names_.find(output_type);
+        if (it != output_type_to_names_.end()) {
+            return it->second;
+        }
+        return {};
+    }
+
+    /**
+     * @brief Get all transform names that take In and produce Out
+     */
+    template<typename In, typename Out>
+    std::vector<std::string> getCompatibleTransforms() const {
+        std::vector<std::string> result;
+
+        auto input_transforms = getTransformsForInputType(typeid(In));
+
+        for (auto const & name: input_transforms) {
+            auto const & meta = metadata_.at(name);
+            if (meta.output_type == typeid(Out)) {
+                result.push_back(name);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Get metadata for a transform
+     */
+    TransformMetadata const * getMetadata(std::string const & name) const {
+        auto it = metadata_.find(name);
+        return (it != metadata_.end()) ? &it->second : nullptr;
+    }
+
+    /**
+     * @brief Check if transform exists (element or container)
+     */
+    bool hasTransform(std::string const & name) const {
+        return metadata_.find(name) != metadata_.end() ||
+               container_metadata_.find(name) != container_metadata_.end();
+    }
+
+    /**
+     * @brief Check if an element-level transform exists (not container)
+     */
+    bool hasElementTransform(std::string const & name) const {
+        return metadata_.find(name) != metadata_.end();
+    }
+
+    /**
+     * @brief Get all registered transform names
+     */
+    std::vector<std::string> getAllTransformNames() const {
+        std::vector<std::string> names;
+        names.reserve(metadata_.size());
+        for (auto const & [name, _]: metadata_) {
+            names.push_back(name);
+        }
+        return names;
+    }
+
+    /**
+     * @brief Register JSON parameter deserializer for a parameter type
+     * 
+     * This allows the registry to deserialize JSON strings into typed parameters
+     * without needing a variant or manual dispatch.
+     * 
+     * @tparam Params Parameter type
+     * @param deserializer Function that converts JSON string to std::any containing Params
+     */
+    template<typename Params>
+    void registerParamDeserializer(
+            std::function<std::any(std::string const &)> deserializer) {
+        param_deserializers_[typeid(Params)] = std::move(deserializer);
+    }
+
+    /**
+     * @brief Deserialize JSON parameters for a transform by name
+     * 
+     * Looks up the transform's parameter type and uses the registered deserializer.
+     * 
+     * @param transform_name Name of the transform
+     * @param json_str JSON string containing parameters
+     * @return std::any containing typed parameters, or empty std::any on failure
+     */
+    std::any deserializeParameters(
+            std::string const & transform_name,
+            std::string const & json_str) const {
+        // Get metadata to find parameter type - check both element and container transforms
+        std::type_index params_type = typeid(void);
+
+        auto const * element_metadata = getMetadata(transform_name);
+        if (element_metadata) {
+            params_type = element_metadata->params_type;
+        } else {
+            auto const * container_metadata = getContainerMetadata(transform_name);
+            if (container_metadata) {
+                params_type = container_metadata->params_type;
+            } else {
+                return std::any{};// Transform not found in either registry
+            }
+        }
+
+        // Look up deserializer for this parameter type
+        auto it = param_deserializers_.find(params_type);
+        if (it == param_deserializers_.end()) {
+            return std::any{};// No deserializer registered
+        }
+
+        // Deserialize
+        try {
+            return it->second(json_str);
+        } catch (...) {
+            return std::any{};// Deserialization failed
+        }
+    }
+
+    /**
+     * @brief Validate that parameters match the expected type for a transform
+     * 
+     * This checks that the std::any contains parameters of the correct type
+     * for the given transform, based on registered metadata.
+     * 
+     * @param transform_name Name of the transform
+     * @param params_any Type-erased parameters to validate
+     * @return true if parameters are valid for this transform
+     */
+    bool validateParameters(
+            std::string const & transform_name,
+            std::any const & params_any) const {
+        // Get metadata to find parameter type - check both element and container transforms
+        std::type_index params_type = typeid(void);
+
+        auto const * element_metadata = getMetadata(transform_name);
+        if (element_metadata) {
+            params_type = element_metadata->params_type;
+        } else {
+            auto const * container_metadata = getContainerMetadata(transform_name);
+            if (container_metadata) {
+                params_type = container_metadata->params_type;
+            } else {
+                return false;// Transform not found in either registry
+            }
+        }
+
+        // Look up validator for this parameter type
+        auto it = param_validators_.find(params_type);
+        if (it == param_validators_.end()) {
+            return false;// No validator registered
+        }
+
+        // Validate
+        return it->second(params_any);
+    }
+
+    // ========================================================================
+    // Typed Parameter Executors (eliminates per-element dispatch)
+    // ========================================================================
+
+    /**
+     * @brief Register a typed executor factory for a specific type signature
+     * 
+     * The factory creates executors with parameters already captured,
+     * eliminating per-element parameter casts and type dispatch.
+     * 
+     * @tparam In Input element type
+     * @tparam Out Output element type
+     * @tparam Params Parameter type
+     * @param factory Function that creates executor from type-erased params
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTypedExecutorFactory(
+            std::function<std::unique_ptr<IParamExecutor>(std::any const &)> factory) {
+        TypeTriple key{typeid(In), typeid(Out), typeid(Params)};
+        typed_executor_factories_[key] = std::move(factory);
+    }
+
+    /**
+     * @brief Register a typed time-grouped executor factory
+     */
+    template<typename In, typename Out, typename Params>
+    void registerTimeGroupedExecutorFactory(
+            std::function<std::unique_ptr<ITimeGroupedParamExecutor>(std::any const &)> factory) {
+        TypeTriple key{typeid(In), typeid(Out), typeid(Params)};
+        time_grouped_executor_factories_[key] = std::move(factory);
+    }
+
+    /**
+     * @brief Create a typed executor for given parameters
+     * 
+     * Creates a fresh executor with parameters captured.
+     * No caching to avoid stale data issues with preprocessing.
+     * 
+     * @param key Type triple identifying the transform signature
+     * @param params Type-erased parameters
+     * @return Unique pointer to executor with captured state
+     */
+    std::unique_ptr<IParamExecutor> createTypedExecutor(
+            TypeTriple const & key,
+            std::any const & params) const {
+        // Look up factory
+        auto factory_it = typed_executor_factories_.find(key);
+        if (factory_it == typed_executor_factories_.end()) {
+            throw std::runtime_error("No typed executor factory registered for type triple: " +
+                                     std::string(key.input_type.name()) + " -> " +
+                                     std::string(key.output_type.name()) + " (" +
+                                     std::string(key.params_type.name()) + ")");
+        }
+
+        // Create executor with captured parameters
+        return factory_it->second(params);
+    }
+
+    /**
+     * @brief Create a typed time-grouped executor for given parameters
+     * 
+     * Creates a fresh executor with parameters captured.
+     * No caching to avoid stale data issues with preprocessing.
+     */
+    std::unique_ptr<ITimeGroupedParamExecutor> createTimeGroupedExecutor(
+            TypeTriple const & key,
+            std::any const & params) const {
+        // Look up factory
+        auto factory_it = time_grouped_executor_factories_.find(key);
+        if (factory_it == time_grouped_executor_factories_.end()) {
+            throw std::runtime_error("No typed time-grouped executor factory registered for type triple: " +
+                                     std::string(key.input_type.name()) + " -> " +
+                                     std::string(key.output_type.name()) + " (" +
+                                     std::string(key.params_type.name()) + ")");
+        }
+
+        // Create executor with captured parameters
+        return factory_it->second(params);
+    }
+
+    /**
+     * @brief Execute transform with typed executor (zero per-element dispatch)
+     * 
+     * Creates fresh executor with captured parameters and types,
+     * eliminating all per-element casts and dispatch overhead.
+     * 
+     * @param transform_name Name of the transform
+     * @param input_element Input element (variant)
+     * @param params Parameters (type-erased)
+     * @param in_type Input element type
+     * @param out_type Output element type
+     * @param param_type Parameter type
+     * @return Output element (variant)
+     */
+    ElementVariant executeWithDynamicParams(
+            std::string const & transform_name,
+            ElementVariant const & input_element,
+            std::any const & params,
+            std::type_index in_type,
+            std::type_index out_type,
+            std::type_index param_type) const {
+        TypeTriple key{in_type, out_type, param_type};
+
+        // Create fresh executor with captured state
+        auto executor = createTypedExecutor(key, params);
+
+        // Execute with zero per-element dispatch overhead!
+        return executor->execute(transform_name, input_element);
+    }
+
+    /**
+     * @brief Execute transform with dynamic parameters and arbitrary input type
+     * 
+     * Used for the "Head" of the pipeline where input might be a tuple or other type
+     * not supported by ElementVariant.
+     */
+    ElementVariant executeWithDynamicParamsAny(
+            std::string const & transform_name,
+            std::any const & input_element,
+            std::any const & params,
+            std::type_index in_type,
+            std::type_index out_type,
+            std::type_index param_type) const {
+        TypeTriple key{in_type, out_type, param_type};
+
+        // Create fresh executor with captured state
+        auto executor = createTypedExecutor(key, params);
+
+        // Execute using the generic input interface
+        return executor->executeAny(transform_name, input_element);
+    }
+
+    /**
+     * @brief Execute time-grouped transform with typed executor
+     */
+    BatchVariant executeTimeGroupedWithDynamicParams(
+            std::string const & transform_name,
+            BatchVariant const & input_span,
+            std::any const & params,
+            std::type_index in_type,
+            std::type_index out_type,
+            std::type_index param_type) const {
+        TypeTriple key{in_type, out_type, param_type};
+
+        // Create fresh executor with captured state
+        auto executor = createTimeGroupedExecutor(key, params);
+
+        // Execute
+        return executor->execute(transform_name, input_span);
+    }
+
+private:
+    /**
+     * @brief Auto-register all parameter-related factories for a parameter type
+     * 
+     * This is called automatically during transform registration and sets up:
+     * 1. JSON deserializer (using reflect-cpp)
+     * 2. Parameter validator
+     * 3. Typed executor factory (for pipeline execution)
+     * 4. PipelineStep factory (for pipeline loading from JSON)
+     * 
+     * @tparam In Input element type
+     * @tparam Out Output element type
+     * @tparam Params Parameter type (must be reflect-cpp serializable)
+     */
+    template<typename In, typename Out, typename Params>
+    void registerParamDeserializerIfNeeded() {
+        auto type_idx = std::type_index(typeid(Params));
+
+        // Only register deserializer/validator if not already present (per Params type)
+        if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
+            // 1. Register JSON deserializer using reflect-cpp
+            param_deserializers_[type_idx] = [](std::string const & json_str) -> std::any {
+                auto result = rfl::json::read<Params>(json_str);
+                if (result) {
+                    return std::any{result.value()};
+                }
+                return std::any{};// Failed deserialization
+            };
+
+            // 2. Register validator to check std::any contains correct type
+            param_validators_[type_idx] = [](std::any const & params_any) -> bool {
+                try {
+                    std::any_cast<Params const &>(params_any);
+                    return true;
+                } catch (...) {
+                    return false;
+                }
+            };
+        }
+
+        // ALWAYS register executor factories for this specific (In, Out, Params) combination
+        // These are keyed by the triple, so we need to register them even if Params is already known
+
+        // 3. Register typed executor factory (for zero-dispatch pipeline execution)
+        registerTypedExecutorFactory<In, Out, Params>(
+                [](std::any const & params_any) -> std::unique_ptr<IParamExecutor> {
+                    auto params = std::any_cast<Params>(params_any);
+                    return std::make_unique<TypedParamExecutor<In, Out, Params>>(
+                            std::move(params));
+                });
+
+        // 4. Register typed time-grouped executor factory
+        registerTimeGroupedExecutorFactory<In, Out, Params>(
+                [](std::any const & params_any) -> std::unique_ptr<ITimeGroupedParamExecutor> {
+                    auto params = std::any_cast<Params>(params_any);
+                    return std::make_unique<TypedTimeGroupedParamExecutor<In, Out, Params>>(
+                            std::move(params));
+                });
+    }
+
+    /**
+     * @brief Internal: Get typed transform
+     */
+    template<typename In, typename Out, typename Params>
+    std::shared_ptr<TypedTransform<In, Out, Params>>
+    getTransform(std::string const & name) const {
+        auto key = std::make_pair(std::type_index(typeid(In)), name);
+        auto it = transforms_.find(key);
+
+        if (it == transforms_.end()) {
+            return nullptr;
+        }
+
+        return std::static_pointer_cast<TypedTransform<In, Out, Params>>(it->second);
+    }
+
+    /**
+     * @brief Internal: Get typed time-grouped transform
+     */
+    template<typename In, typename Out, typename Params>
+    std::shared_ptr<TypedTimeGroupedTransform<In, Out, Params>>
+    getTimeGroupedTransform(std::string const & name) const {
+        auto key = std::make_pair(std::type_index(typeid(In)), name);
+        auto it = time_grouped_transforms_.find(key);
+
+        if (it == time_grouped_transforms_.end()) {
+            return nullptr;
+        }
+
+        return std::static_pointer_cast<TypedTimeGroupedTransform<In, Out, Params>>(it->second);
+    }
+
+    /**
+     * @brief Internal: Get typed container transform
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    std::shared_ptr<TypedContainerTransform<InContainer, OutContainer, Params>>
+    getContainerTransform(std::string const & name) const {
+        auto key = std::make_pair(std::type_index(typeid(InContainer)), name);
+        auto it = container_transforms_.find(key);
+        if (it == container_transforms_.end()) {
+            return nullptr;
+        }
+        return std::static_pointer_cast<TypedContainerTransform<InContainer, OutContainer, Params>>(
+                it->second);
+    }
+
+    /**
+     * @brief Register parameter handling for container transforms
+     */
+    template<typename InContainer, typename OutContainer, typename Params>
+    void registerContainerParamHandling() {
+        // Register JSON deserializer (reuse element system if not exists)
+        auto type_idx = std::type_index(typeid(Params));
+        if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
+            param_deserializers_[type_idx] = [](std::string const & json_str) -> std::any {
+                auto result = rfl::json::read<Params>(json_str);
+                return result ? std::any{result.value()} : std::any{};
+            };
+
+            param_validators_[type_idx] = [](std::any const & params_any) -> bool {
+                try {
+                    std::any_cast<Params const &>(params_any);
+                    return true;
+                } catch (...) {
+                    return false;
+                }
+            };
+        }
+
+        // Only register IContainerExecutor factory for single-input transforms
+        // Binary transforms (tuple inputs) require specialized execution paths
+        // because DataTypeVariant doesn't contain tuple types
+        if constexpr (!is_tuple_v<InContainer>) {
+            TypeTriple key{typeid(InContainer), typeid(OutContainer), typeid(Params)};
+
+            // Store factory that creates type-erased IContainerExecutor
+            // This is used for dynamic dispatch in DataManagerPipelineExecutor
+            container_executor_factories_[key] = [](std::any const & params_any) -> std::shared_ptr<IContainerExecutor> {
+                auto params = std::any_cast<Params>(params_any);
+                return std::make_shared<TypedContainerExecutor<InContainer, OutContainer, Params>>(
+                        std::move(params));
+            };
+        }
+    }
+
+    // Hash function for pair<type_index, string>
+    struct PairHash {
+        template<typename T1, typename T2>
+        std::size_t operator()(std::pair<T1, T2> const & p) const {
+            auto h1 = std::hash<T1>{}(p.first);
+            auto h2 = std::hash<T2>{}(p.second);
+            return h1 ^ (h2 << 1);
+        }
+
+        // Specialized hash for pair<TypeTriple, std::type_index>
+        std::size_t operator()(std::pair<TypeTriple, std::type_index> const & p) const {
+            TypeTripleHash triple_hash;
+            auto h1 = triple_hash(p.first);
+            auto h2 = std::hash<std::type_index>{}(p.second);
+            return h1 ^ (h2 << 1);
+        }
+    };
+
+    // Storage
+    std::unordered_map<
+            std::pair<std::type_index, std::string>,
+            std::shared_ptr<void>,
+            PairHash>
+            transforms_;
+
+    std::unordered_map<
+            std::pair<std::type_index, std::string>,
+            std::shared_ptr<void>,
+            PairHash>
+            time_grouped_transforms_;
+
+    std::unordered_map<std::string, TransformMetadata> metadata_;
+
+    std::unordered_map<std::type_index, std::vector<std::string>> input_type_to_names_;
+    std::unordered_map<std::type_index, std::vector<std::string>> output_type_to_names_;
+
+    // Typed executor factories (create executors with captured parameters)
+    std::unordered_map<
+            TypeTriple,
+            std::function<std::unique_ptr<IParamExecutor>(std::any const &)>,
+            TypeTripleHash>
+            typed_executor_factories_;
+
+    std::unordered_map<
+            TypeTriple,
+            std::function<std::unique_ptr<ITimeGroupedParamExecutor>(std::any const &)>,
+            TypeTripleHash>
+            time_grouped_executor_factories_;
+
+    // Note: No executor caching - executors are created fresh for each pipeline execution
+    // to avoid stale data issues with preprocessing. The per-element optimization
+    // (captured params, no per-element any_cast) is still achieved.
+
+    // JSON parameter deserializers (type_index -> JSON string -> std::any)
+    std::unordered_map<
+            std::type_index,
+            std::function<std::any(std::string const &)>>
+            param_deserializers_;
+
+    // Parameter type validators (type_index -> std::any validator)
+    // Just validates that std::any contains the correct type
+    mutable std::unordered_map<
+            std::type_index,
+            std::function<bool(std::any const &)>>
+            param_validators_;
+
+    // ========================================================================
+    // Container Transform Storage (Separate from Element Transforms)
+    // ========================================================================
+
+    // Container transforms storage
+    std::unordered_map<
+            std::pair<std::type_index, std::string>,
+            std::shared_ptr<void>,
+            PairHash>
+            container_transforms_;
+
+    std::unordered_map<std::string, ContainerTransformMetadata> container_metadata_;
+
+    std::unordered_map<std::type_index, std::vector<std::string>> container_input_to_names_;
+    std::unordered_map<std::type_index, std::vector<std::string>> container_output_to_names_;
+
+    // Container executor factories (keyed by TypeTriple)
+    // Returns IContainerExecutor which provides type-erased execution
+    std::unordered_map<
+            TypeTriple,
+            std::function<std::shared_ptr<IContainerExecutor>(std::any const &)>,
+            TypeTripleHash>
+            container_executor_factories_;
+
+    // Cache of container executors
+    mutable std::unordered_map<
+            std::pair<TypeTriple, std::type_index>,
+            std::shared_ptr<void>,
+            PairHash>
+            container_executor_cache_;
+
+    // ========================================================================
+    // Container Operations (Type Erasure Support)
+    // ========================================================================
+
+public:
+    struct ContainerOps {
+        // Get size of vector<T> wrapped in any
+        std::function<size_t(std::any const &)> getSize;
+
+        // Get element at index from vector<T> wrapped in any
+        std::function<std::any(std::any const &, size_t)> getElement;
+
+        // Build vector<T> from generator function
+        std::function<std::any(size_t, std::function<std::any(size_t)>)> buildVector;
+
+        // Convert vector<T> (in any) to span<T const> (in any)
+        std::function<std::any(std::any const &)> vectorToSpan;
+    };
+
+    /**
+     * @brief Register container operations for a type T
+     * 
+     * Enables generic pipeline execution by providing type-erased access
+     * to vector<T> and span<T>.
+     */
+    template<typename T>
+    void registerContainerOps() {
+        std::type_index type_idx = typeid(T);
+        if (container_ops_.find(type_idx) != container_ops_.end()) {
+            return;
+        }
+
+        ContainerOps ops;
+
+        ops.getSize = [](std::any const & vec_any) -> size_t {
+            auto const & vec = std::any_cast<std::vector<T> const &>(vec_any);
+            return vec.size();
+        };
+
+        ops.getElement = [](std::any const & vec_any, size_t index) -> std::any {
+            auto const & vec = std::any_cast<std::vector<T> const &>(vec_any);
+            return std::any{vec[index]};
+        };
+
+        ops.buildVector = [](size_t size, std::function<std::any(size_t)> generator) -> std::any {
+            std::vector<T> vec;
+            vec.reserve(size);
+            for (size_t i = 0; i < size; ++i) {
+                vec.push_back(std::any_cast<T>(generator(i)));
+            }
+            return std::any{std::move(vec)};
+        };
+
+        ops.vectorToSpan = [](std::any const & vec_any) -> std::any {
+            auto const & vec = std::any_cast<std::vector<T> const &>(vec_any);
+            return std::any{std::span<T const>{vec}};
+        };
+
+        container_ops_[type_idx] = std::move(ops);
+    }
+
+    /**
+     * @brief Get container operations for a type
+     */
+    ContainerOps const & getContainerOps(std::type_index type_idx) const {
+        auto it = container_ops_.find(type_idx);
+        if (it == container_ops_.end()) {
+            throw std::runtime_error("No container operations registered for type: " +
+                                     std::string(type_idx.name()));
+        }
+        return it->second;
+    }
+
+    // ========================================================================
+    // Time Series Operations (Type Erasure Support)
+    // ========================================================================
+
+public:
+    struct TimeSeriesOps {
+        // Get data at specific time (returns std::any containing the result)
+        // For RaggedTimeSeries: returns range/span
+        // For AnalogTimeSeries: returns optional<float>
+        std::function<std::any(std::any const & container, TimeFrameIndex time)> getAtTime;
+    };
+
+    /**
+     * @brief Register time series operations for a container type
+     */
+    template<typename Container>
+    void registerTimeSeriesOps() {
+        std::type_index type_idx = typeid(Container);
+        if (time_series_ops_.find(type_idx) != time_series_ops_.end()) {
+            return;
+        }
+
+        TimeSeriesOps ops;
+        ops.getAtTime = [](std::any const & container_any, TimeFrameIndex time) -> std::any {
+            auto const & container = std::any_cast<Container const &>(container_any);
+            return std::any{container.getAtTime(time)};
+        };
+        time_series_ops_[type_idx] = std::move(ops);
+    }
+
+    /**
+     * @brief Get time series operations for a type
+     */
+    TimeSeriesOps const & getTimeSeriesOps(std::type_index type_idx) const {
+        auto it = time_series_ops_.find(type_idx);
+        if (it == time_series_ops_.end()) {
+            throw std::runtime_error("No time series operations registered for type: " +
+                                     std::string(type_idx.name()));
+        }
+        return it->second;
+    }
+
+private:
+    // Container operations for type erasure
+    std::unordered_map<std::type_index, ContainerOps> container_ops_;
+    std::unordered_map<std::type_index, ElementRegistry::TimeSeriesOps> time_series_ops_;
+};
+
+// ============================================================================
+// TypedContainerExecutor Implementation (after ElementRegistry is fully declared)
+// ============================================================================
+
+template<typename InContainer, typename OutContainer, typename Params>
+TypedContainerExecutor<InContainer, OutContainer, Params>::TypedContainerExecutor(Params params)
+    : params_(std::move(params)) {}
+
+template<typename InContainer, typename OutContainer, typename Params>
+std::shared_ptr<OutContainer> TypedContainerExecutor<InContainer, OutContainer, Params>::executeTyped(
+        std::string const & name,
+        InContainer const & input,
+        ComputeContext const & ctx) const {
+    auto & registry = ElementRegistry::instance();
+    return registry.executeContainerTransform<InContainer, OutContainer, Params>(
+            name, input, params_, ctx);
+}
+
+template<typename InContainer, typename OutContainer, typename Params>
+DataTypeVariant TypedContainerExecutor<InContainer, OutContainer, Params>::execute(
+        std::string const & name,
+        DataTypeVariant const & input_variant,
+        ComputeContext const & ctx) const {
+
+    // Extract concrete type from variant (pipeline's job, not transform's)
+    auto const * input_ptr = std::get_if<std::shared_ptr<InContainer>>(&input_variant);
+    if (!input_ptr || !(*input_ptr)) {
+        throw std::runtime_error("Invalid input container type for transform: " + name);
+    }
+
+    // Execute pure transform using typed method
+    auto result = executeTyped(name, **input_ptr, ctx);
+
+    // Wrap result back in variant (pipeline's job)
+    return DataTypeVariant{result};
+}
+
+// ============================================================================
+// TypedParamExecutor Implementation (after ElementRegistry is fully declared)
+// ============================================================================
+
+template<typename In, typename Out, typename Params>
+TypedParamExecutor<In, Out, Params>::TypedParamExecutor(Params params)
+    : params_(std::move(params)) {}
+
+template<typename In, typename Out, typename Params>
+ElementVariant TypedParamExecutor<In, Out, Params>::execute(
+        std::string const & name,
+        ElementVariant const & input_variant) const {
+    // Check if In and Out are supported by ElementVariant
+    if constexpr (is_in_variant_v<In, ElementVariant> && is_in_variant_v<Out, ElementVariant>) {
+        // All types known - zero dispatch cost!
+        if (auto const * input = std::get_if<In>(&input_variant)) {
+            auto & registry = ElementRegistry::instance();
+            Out result = registry.execute<In, Out, Params>(name, *input, params_);
+            return ElementVariant{result};
+        }
+        throw std::runtime_error("Input variant does not hold expected type: " + std::string(typeid(In).name()));
+    } else {
+        throw std::runtime_error("Type combination not supported by ElementVariant: " +
+                                 std::string(typeid(In).name()) + " -> " + std::string(typeid(Out).name()));
+    }
+}
+
+template<typename In, typename Out, typename Params>
+ElementVariant TypedParamExecutor<In, Out, Params>::executeAny(
+        std::string const & name,
+        std::any const & input_any) const {
+
+    try {
+        auto const & input = std::any_cast<In const &>(input_any);
+        auto & registry = ElementRegistry::instance();
+
+        // Helper to wrap result
+        auto wrap_result = [](Out && res) -> ElementVariant {
+            if constexpr (is_in_variant_v<Out, ElementVariant>) {
+                return ElementVariant{std::move(res)};
+            } else {
+                // This path should ideally not be reached if Out is a supported type
+                // But if we ever support other types, we might need std::any in ElementVariant
+                throw std::runtime_error("Output type not supported by ElementVariant: " + std::string(typeid(Out).name()));
+            }
+        };
+
+        Out result = registry.execute<In, Out, Params>(name, input, params_);
+        return wrap_result(std::move(result));
+    } catch (std::bad_any_cast const &) {
+        throw std::runtime_error("Input std::any does not hold expected type: " + std::string(typeid(In).name()));
+    }
+}
+
+template<typename In, typename Out, typename Params>
+TypedTimeGroupedParamExecutor<In, Out, Params>::TypedTimeGroupedParamExecutor(Params params)
+    : params_(std::move(params)) {}
+
+template<typename In, typename Out, typename Params>
+BatchVariant TypedTimeGroupedParamExecutor<In, Out, Params>::execute(
+        std::string const & name,
+        BatchVariant const & input_batch) const {
+
+    // Check if std::vector<In> and std::vector<Out> are supported by BatchVariant
+    using InVec = std::vector<In>;
+    using OutVec = std::vector<Out>;
+
+    if constexpr (is_in_variant_v<InVec, BatchVariant> && is_in_variant_v<OutVec, BatchVariant>) {
+        if (auto const * input_vec = std::get_if<InVec>(&input_batch)) {
+            auto & registry = ElementRegistry::instance();
+            std::span<In const> input_span(*input_vec);
+            std::vector<Out> result = registry.executeTimeGrouped<In, Out, Params>(name, input_span, params_);
+            return BatchVariant{result};
+        }
+        throw std::runtime_error("Input batch does not hold expected type: " + std::string(typeid(InVec).name()));
+    } else {
+        throw std::runtime_error("Type combination not supported by BatchVariant: " +
+                                 std::string(typeid(InVec).name()) + " -> " + std::string(typeid(OutVec).name()));
+    }
+    throw std::runtime_error("Input batch does not hold expected type: " + std::string(typeid(std::vector<In>).name()));
+}
+
+// ============================================================================
+// Helper: Auto-register typed executor factory during transform registration
+// ============================================================================
+
+/**
+ * @brief Automatically register typed executor factory when registering transform
+ * 
+ * This helper ensures that every registered transform automatically gets
+ * a typed executor factory, eliminating manual registration boilerplate.
+ */
+template<typename In, typename Out, typename Params>
+struct AutoRegisterTypedExecutor {
+    AutoRegisterTypedExecutor() {
+        auto & registry = ElementRegistry::instance();
+
+        registry.registerTypedExecutorFactory<In, Out, Params>(
+                [](std::any const & params_any) -> std::unique_ptr<IParamExecutor> {
+                    auto params = std::any_cast<Params>(params_any);
+                    return std::make_unique<TypedParamExecutor<In, Out, Params>>(std::move(params));
+                });
+    }
+};
+
+// Invoke during static initialization for each transform type
+#define AUTO_REGISTER_TYPED_EXECUTOR(In, Out, Params)             \
+    namespace {                                                   \
+    static AutoRegisterTypedExecutor<In, Out, Params>             \
+            auto_register_typed_executor_##In##_##Out##_##Params; \
+    }
+
+// ============================================================================
+// Compile-Time Registration Helper
+// ============================================================================
+
+/**
+ * @brief RAII helper for compile-time transform registration
+ * 
+ * This class is designed to be instantiated as a static variable,
+ * triggering registration during static initialization.
+ * 
+ * Example usage:
+ * ```cpp
+ * namespace {
+ *     auto const register_mask_area = RegisterTransform<Mask2D, float, MaskAreaParams>(
+ *         "CalculateMaskArea",
+ *         calculateMaskArea,
+ *         TransformMetadata{
+ *             .description = "Calculate mask area",
+ *             .category = "Image Processing"
+ *         }
+ *     );
+ * }
+ * ```
+ */
+template<typename In, typename Out, typename Params>
+class RegisterTransform {
+public:
+    RegisterTransform(
+            std::string const & name,
+            std::function<Out(In const &, Params const &)> func,
+            TransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerTransform<In, Out, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time stateless transform registration
+ */
+template<typename In, typename Out>
+class RegisterStatelessTransform {
+public:
+    RegisterStatelessTransform(
+            std::string const & name,
+            std::function<Out(In const &)> func,
+            TransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerTransform<In, Out>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time context-aware transform registration
+ */
+template<typename In, typename Out, typename Params>
+class RegisterContextTransform {
+public:
+    RegisterContextTransform(
+            std::string const & name,
+            std::function<Out(In const &, Params const &, ComputeContext const &)> func,
+            TransformMetadata metadata = {}) {
+        // Wrap the context-aware function to match the expected signature
+        auto wrapped = [func](In const & in, Params const & p) -> Out {
+            ComputeContext ctx;// Default context
+            return func(in, p, ctx);
+        };
+        ElementRegistry::instance().registerTransform<In, Out, Params>(
+                name, wrapped, std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time time-grouped transform registration
+ */
+template<typename In, typename Out, typename Params>
+class RegisterTimeGroupedTransform {
+public:
+    RegisterTimeGroupedTransform(
+            std::string const & name,
+            std::function<std::vector<Out>(std::span<In const>, Params const &)> func,
+            TransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerTimeGroupedTransform<In, Out, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time stateless time-grouped transform registration
+ */
+template<typename In, typename Out>
+class RegisterStatelessTimeGroupedTransform {
+public:
+    RegisterStatelessTimeGroupedTransform(
+            std::string const & name,
+            std::function<std::vector<Out>(std::span<In const>)> func,
+            TransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerTimeGroupedTransform<In, Out>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time context-aware time-grouped transform registration
+ */
+template<typename In, typename Out, typename Params>
+class RegisterContextTimeGroupedTransform {
+public:
+    RegisterContextTimeGroupedTransform(
+            std::string const & name,
+            std::function<std::vector<Out>(std::span<In const>, Params const &, ComputeContext const &)> func,
+            TransformMetadata metadata = {}) {
+        // Wrap the context-aware function to match the expected signature
+        auto wrapped = [func](std::span<In const> inputs, Params const & p) -> std::vector<Out> {
+            ComputeContext ctx;// Default context
+            return func(inputs, p, ctx);
+        };
+        ElementRegistry::instance().registerTimeGroupedTransform<In, Out, Params>(
+                name, wrapped, std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time binary transform registration
+ * 
+ * Registers a transform that takes two separate inputs.
+ */
+template<typename In1, typename In2, typename Out, typename Params>
+class RegisterBinaryTransform {
+public:
+    RegisterBinaryTransform(
+            std::string const & name,
+            std::function<Out(In1 const &, In2 const &, Params const &)> func,
+            TransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerBinaryTransform<In1, In2, Out, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time container transform registration
+ * 
+ * Registers a container-level transform that operates on entire containers.
+ */
+template<typename InContainer, typename OutContainer, typename Params>
+class RegisterContainerTransform {
+public:
+    RegisterContainerTransform(
+            std::string const & name,
+            std::function<std::shared_ptr<OutContainer>(
+                    InContainer const &,
+                    Params const &,
+                    ComputeContext const &)>
+                    func,
+            ContainerTransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerContainerTransform<InContainer, OutContainer, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+/**
+ * @brief RAII helper for compile-time binary container transform registration
+ * 
+ * Registers a container-level transform that takes two containers as input.
+ * 
+ * Example usage:
+ * ```cpp
+ * namespace {
+ *     auto const register_digital_interval_boolean = 
+ *         RegisterBinaryContainerTransform<
+ *             DigitalIntervalSeries,
+ *             DigitalIntervalSeries,
+ *             DigitalIntervalSeries,
+ *             DigitalIntervalBooleanParams>(
+ *         "DigitalIntervalBoolean",
+ *         digitalIntervalBoolean,
+ *         ContainerTransformMetadata{
+ *             .description = "Apply boolean logic between two interval series",
+ *             .category = "Signal Processing / Logic"
+ *         }
+ *     );
+ * }
+ * ```
+ */
+template<typename InContainer1, typename InContainer2, typename OutContainer, typename Params>
+class RegisterBinaryContainerTransform {
+public:
+    RegisterBinaryContainerTransform(
+            std::string const & name,
+            std::function<std::shared_ptr<OutContainer>(
+                    InContainer1 const &,
+                    InContainer2 const &,
+                    Params const &,
+                    ComputeContext const &)>
+                    func,
+            ContainerTransformMetadata metadata = {}) {
+        ElementRegistry::instance().registerBinaryContainerTransform<InContainer1, InContainer2, OutContainer, Params>(
+                name, std::move(func), std::move(metadata));
+    }
+};
+
+
+}// namespace WhiskerToolbox::Transforms::V2
+
+#endif// WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP

@@ -1,7 +1,7 @@
 #include "EventPlotOpenGLWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/utils/GatherResult.hpp"
+#include "GatherResult/GatherResult.hpp"
 #include "DataManager/utils/color.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"

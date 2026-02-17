@@ -3,7 +3,7 @@
 #include "CorePlotting/Mappers/HistogramMapper.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/utils/GatherResult.hpp"
+#include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"

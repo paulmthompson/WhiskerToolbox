@@ -98,6 +98,8 @@ target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(CorePlotting PUBLIC WhiskerToolbox::Entity)
 target_link_libraries(CorePlotting PUBLIC DataManager)
 target_link_libraries(CorePlotting PUBLIC SpatialIndex)
+target_link_libraries(CorePlotting PRIVATE GatherResult)
+target_link_libraries(CorePlotting PRIVATE TransformsV2)
 
 target_link_libraries(CorePlotting PUBLIC glm::glm)
 

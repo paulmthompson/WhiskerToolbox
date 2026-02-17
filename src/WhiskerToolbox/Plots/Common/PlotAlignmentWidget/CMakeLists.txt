@@ -26,7 +26,7 @@ target_link_libraries(PlotAlignmentWidget PRIVATE
     Qt6::Gui
 )
 
-target_link_libraries(PlotAlignmentWidget PRIVATE DataManager)
+target_link_libraries(PlotAlignmentWidget PRIVATE DataManager GatherResult)
 
 target_include_directories(PlotAlignmentWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

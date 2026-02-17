@@ -42,7 +42,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "DataManager/utils/GatherResult.hpp"
+#include "GatherResult/GatherResult.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
