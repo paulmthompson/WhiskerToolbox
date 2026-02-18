@@ -18,6 +18,7 @@ add_executable(test_MLCore
     FeatureConverter.test.cpp
     FeatureValidator.test.cpp
     LabelAssembler.test.cpp
+    LogisticRegressionOperation.test.cpp
     MLModelOperation.test.cpp
     NaiveBayesOperation.test.cpp
     PredictionWriter.test.cpp

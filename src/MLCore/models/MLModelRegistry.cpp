@@ -1,5 +1,6 @@
 #include "MLModelRegistry.hpp"
 
+#include "supervised/LogisticRegressionOperation.hpp"
 #include "supervised/NaiveBayesOperation.hpp"
 #include "supervised/RandomForestOperation.hpp"
 
@@ -16,8 +17,8 @@ MLModelRegistry::MLModelRegistry()
     // Built-in model registrations — added as models are implemented (Phase 2)
     registerModel<RandomForestOperation>();
     registerModel<NaiveBayesOperation>();
+    registerModel<LogisticRegressionOperation>();
     // Future:
-    //   registerModel<LogisticRegressionOperation>();
     //   registerModel<KMeansOperation>();
     //   registerModel<DBSCANOperation>();
     //   registerModel<GaussianMixtureOperation>();

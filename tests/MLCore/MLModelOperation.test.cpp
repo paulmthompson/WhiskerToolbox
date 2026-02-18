@@ -536,8 +536,8 @@ TEST_CASE("MLModelRegistry getModelNames filters by task", "[MLCore][MLModelRegi
     SECTION("BinaryClassification")
     {
         auto names = registry.getModelNames(MLTaskType::BinaryClassification);
-        REQUIRE(names.size() == 1);
-        CHECK(names[0] == "Stub Classifier");
+        // Built-in "Logistic Regression" is also BinaryClassification
+        CHECK(std::find(names.begin(), names.end(), "Stub Classifier") != names.end());
     }
 
     SECTION("MultiClassClassification")
