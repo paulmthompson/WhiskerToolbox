@@ -12,7 +12,7 @@
  * Features:
  * - Conforms to the evolved MLModelOperation interface (unsupervised path)
  * - Overrides fit() and assignClusters()
- * - Naturally provides soft assignments via probability output
+ * - Provides soft (probabilistic) cluster assignments via clusterProbabilities()
  * - Stores fitted GMM parameters (means, covariances, weights) for assignment
  *   on new data
  * - Supports save/load for model persistence via binary serialization

@@ -1,3 +1,7 @@
+/**
+ * @file ClassBalancing.cpp
+ * @brief Implementation of class balancing strategies (subsample, oversample)
+ */
 
 #include "ClassBalancing.hpp"
 

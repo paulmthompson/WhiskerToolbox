@@ -1,3 +1,8 @@
+/**
+ * @file NaiveBayesOperation.cpp
+ * @brief Implementation of Naive Bayes classification via mlpack
+ */
+
 #include "NaiveBayesOperation.hpp"
 
 #include "mlpack.hpp"

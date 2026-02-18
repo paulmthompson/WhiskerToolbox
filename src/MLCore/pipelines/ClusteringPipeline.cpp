@@ -1,3 +1,7 @@
+/**
+ * @file ClusteringPipeline.cpp
+ * @brief Implementation of the end-to-end unsupervised clustering pipeline
+ */
 
 #include "ClusteringPipeline.hpp"
 

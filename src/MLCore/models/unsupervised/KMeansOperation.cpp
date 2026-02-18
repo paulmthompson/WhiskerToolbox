@@ -1,3 +1,8 @@
+/**
+ * @file KMeansOperation.cpp
+ * @brief Implementation of K-Means clustering via mlpack
+ */
+
 #include "KMeansOperation.hpp"
 
 #include "mlpack.hpp"

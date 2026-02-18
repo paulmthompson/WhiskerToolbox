@@ -1,3 +1,7 @@
+/**
+ * @file TimeEntityUtils.cpp
+ * @brief Implementation of TimeEntity bulk registration and interval/entity conversions
+ */
 
 #include "TimeEntityUtils.hpp"
 

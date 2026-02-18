@@ -1,3 +1,7 @@
+/**
+ * @file FeatureConverter.cpp
+ * @brief Implementation of TensorData to arma::mat conversion with NaN handling and z-score normalization
+ */
 
 #include "FeatureConverter.hpp"
 

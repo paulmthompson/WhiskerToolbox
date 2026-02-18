@@ -1,3 +1,8 @@
+/**
+ * @file GaussianMixtureOperation.cpp
+ * @brief Implementation of Gaussian Mixture Model clustering via mlpack
+ */
+
 #include "GaussianMixtureOperation.hpp"
 
 #include "mlpack.hpp"

@@ -13,6 +13,7 @@
  * - **DigitalIntervalSeries**: Contiguous prediction regions per class
  * - **AnalogTimeSeries**: Per-class probability curves
  * - **Entity groups**: Putative groups for classified entities (TimeEntity or data entities)
+ * - **Cluster groups**: Entity group assignments for unsupervised clustering output
  *
  * The writer never modifies source label groups. Re-running a model creates
  * fresh putative groups without destroying previous labels or predictions.

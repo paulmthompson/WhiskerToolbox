@@ -1,3 +1,7 @@
+/**
+ * @file LabelAssembler.cpp
+ * @brief Implementation of label assembly from intervals, time-entity groups, and data-entity groups
+ */
 
 #include "LabelAssembler.hpp"
 

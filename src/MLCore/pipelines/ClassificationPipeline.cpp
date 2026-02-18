@@ -1,3 +1,7 @@
+/**
+ * @file ClassificationPipeline.cpp
+ * @brief Implementation of the end-to-end supervised classification pipeline
+ */
 
 #include "ClassificationPipeline.hpp"
 

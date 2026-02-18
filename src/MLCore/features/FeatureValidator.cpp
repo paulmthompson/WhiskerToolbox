@@ -1,3 +1,7 @@
+/**
+ * @file FeatureValidator.cpp
+ * @brief Implementation of feature tensor and feature-label compatibility validation
+ */
 
 #include "FeatureValidator.hpp"
 

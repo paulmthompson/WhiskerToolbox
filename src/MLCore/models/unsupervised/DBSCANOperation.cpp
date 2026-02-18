@@ -1,3 +1,8 @@
+/**
+ * @file DBSCANOperation.cpp
+ * @brief Implementation of DBSCAN density-based clustering via mlpack
+ */
+
 #include "DBSCANOperation.hpp"
 
 #include "mlpack.hpp"

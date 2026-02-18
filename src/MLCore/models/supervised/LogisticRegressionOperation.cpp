@@ -1,3 +1,8 @@
+/**
+ * @file LogisticRegressionOperation.cpp
+ * @brief Implementation of binary logistic regression via mlpack
+ */
+
 #include "LogisticRegressionOperation.hpp"
 
 #include "mlpack.hpp"

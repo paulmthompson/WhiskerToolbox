@@ -1,3 +1,7 @@
+/**
+ * @file PredictionWriter.cpp
+ * @brief Implementation of prediction output to DataManager and entity groups
+ */
 
 #include "PredictionWriter.hpp"
 

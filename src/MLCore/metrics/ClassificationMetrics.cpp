@@ -1,3 +1,7 @@
+/**
+ * @file ClassificationMetrics.cpp
+ * @brief Implementation of binary and multi-class classification metric computation
+ */
 
 #include "ClassificationMetrics.hpp"
 

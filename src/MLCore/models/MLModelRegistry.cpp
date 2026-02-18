@@ -1,3 +1,8 @@
+/**
+ * @file MLModelRegistry.cpp
+ * @brief Implementation of MLModelRegistry with built-in model registration
+ */
+
 #include "MLModelRegistry.hpp"
 
 #include "supervised/LogisticRegressionOperation.hpp"

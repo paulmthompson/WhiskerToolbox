@@ -1,3 +1,8 @@
+/**
+ * @file RandomForestOperation.cpp
+ * @brief Implementation of Random Forest classification via mlpack
+ */
+
 #include "RandomForestOperation.hpp"
 
 #include "mlpack.hpp"

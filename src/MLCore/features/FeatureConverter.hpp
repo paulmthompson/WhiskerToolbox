@@ -14,6 +14,9 @@
  * - Optional z-score normalization
  * - Transposition to mlpack's expected layout (features × observations)
  *
+ * Also provides convertTensorToArmaRowMajor() for row-major output and
+ * applyZscoreNormalization() for applying pre-computed normalization parameters.
+ *
  * The resulting ConvertedFeatures struct tracks which rows survived NaN dropping
  * so that predictions can be mapped back to the original time frames.
  *
