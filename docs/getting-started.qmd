@@ -1,0 +1,43 @@
+---
+title: "Getting Started"
+---
+
+Ready to start analyzing? Follow these simple steps to get Neuralyzer running on your system.
+
+## 1. Download
+
+The latest version of Neuralyzer is available on our GitHub Releases page.
+
+[Download Latest Release](https://github.com/paulmthompson/WhiskerToolbox/releases/latest){.btn .btn-primary .btn-lg role="button"}
+
+Select the appropriate file for your operating system:
+
+-   **Windows**: `Neuralyzer-Windows-x64.zip`
+-   **macOS**: `Neuralyzer-macOS.dmg`
+-   **Linux**: `Neuralyzer-Linux.tar.gz`
+
+## 2. Install & Run
+
+::: panel-tabset
+## Windows
+
+1.  **Unzip** the downloaded `Run_WhiskerToolbox_Windows.zip` file to your preferred location.
+2.  Open the extracted folder and navigate to the `bin` directory.
+3.  Double-click **`WhiskerToolbox.exe`** to launch the application.
+
+*Note: You may update your desktop shortcut to point to this executable for easier access.*
+
+## macOS
+
+1.  **Double-click** the downloaded `.dmg` file to mount it.
+2.  **Drag and drop** the Neuralyzer application icon into your **Applications** folder.
+3.  Open your Applications folder and launch **Neuralyzer**.
+
+*Note: On the first launch, you may need to approve the application in your security settings if it's not notarized.*
+
+## Linux
+
+1.  **Extract** the downloaded archive: `bash     tar -xzf Neuralyzer-Linux.tar.gz`
+2.  Navigate to the binary directory: `bash     cd Neuralyzer/bin`
+3.  Run the executable: `bash     ./WhiskerToolbox`
+:::

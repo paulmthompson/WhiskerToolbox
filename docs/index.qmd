@@ -1,37 +1,57 @@
 ---
 title: "Neuralyzer"
+page-layout: full
+toc: false
 ---
 
-Neuralyzer is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments.
+# Complex Neuroscience Analysis. No Coding Required.
 
-## Installation
+**A powerful, cross-platform toolkit for visualizing and analyzing experimental data.**
 
-The software comes as compiled .exe, .dmg or tar files and can be immediately used on Windows, Mac and Linux - no install required !
+[Get Started](getting-started.qmd){.btn .btn-primary .btn-lg role="button"} [Download](https://github.com/paulmthompson/WhiskerToolbox/releases/latest){.btn .btn-outline-primary .btn-lg role="button"}
 
-Latest Release: [link](https://github.com/paulmthompson/WhiskerToolbox/releases/latest)
+------------------------------------------------------------------------
 
-Old Releases: [link](https://github.com/paulmthompson/WhiskerToolbox/releases/)
+:::::: grid
+::: {.g-col-12 .g-col-md-4}
+## Synchronized Visualization
 
-## Supported Data Types
+Experience your data in perfect context. Neuralyzer provides temporally synchronized playback of high-speed video, analog traces, and spike data, reproducing the entire experiment. Navigate seamlessly between different levels of abstraction—from raw data points to complex analysis results—to verify every insight.
+:::
 
-Some currently supported data types include:
+::: {.g-col-12 .g-col-md-4}
+## Powerful Analysis
 
--   Multimedia - High speed video and collections of images
+Access a comprehensive suite of built-in algorithms for tracking, signal processing, and behavioral quantification. For advanced needs, native Python support allows you to integrate custom analysis routines and instantly visualize the results within the application.
+:::
 
--   Arrays of simple 2D shapes - Points, Lines, and masks that vary with time.
+::: {.g-col-12 .g-col-md-4}
+## Data Management
 
--   Digital time series data - Events, timestamps,
+Tame your experimental data. Streamline your workflow from data ingestion to dataset generation. Visualize and create deep learning labels directly on your data, manage complex experimental hierarchies, and export labeled videos for training or presentation.
+:::
+::::::
 
--   Analog time series data - Continuous movement variables
+------------------------------------------------------------------------
 
-## How Documentation is Organized
+## Community & Support
 
-This documentation will follow the quadrants of the [Diátaxis documentation authoring framework](https://diataxis.fr/)
+:::::: grid
+::: {.g-col-12 .g-col-md-4}
+### Learning Resources
 
--   Tutorials
+Master Neuralyzer with our comprehensive collection of tutorials and how-to guides. [Explore Resources](learning-resources.qmd){.btn .btn-secondary role="button"}
+:::
 
--   How-to Guides
+::: {.g-col-12 .g-col-md-4}
+### Join the Discussion
 
--   Concepts
+Connect with other users, ask questions, and share your feedback on GitHub. [GitHub Discussions](https://github.com/paulmthompson/WhiskerToolbox/discussions/){.btn .btn-secondary role="button"}
+:::
 
--   Reference Guides
+::: {.g-col-12 .g-col-md-4}
+### Developer Documentation
+
+Interested in contributing? Dive into our technical guides and API reference. [Developer Guide](developer/index.qmd){.btn .btn-secondary role="button"}
+:::
+::::::

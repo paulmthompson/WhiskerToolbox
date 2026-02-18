@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Entity Manager – Neuralyzer</title>
+<title>Entity Library – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -67,6 +101,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="../../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="../../styles.css">
@@ -90,39 +127,17 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../index.html"> 
+    <a class="nav-link" href="../../introduction.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
-  <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Tutorials</span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
-        <li>
-    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
- <span class="dropdown-text">Keypoint Labeling</span></a>
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
   </li>  
-    </ul>
-  </li>
-  <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-how-to-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">How-to guides</span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
-        <li>
-    <a class="dropdown-item" href="../../labeling/keypoint.html">
- <span class="dropdown-text">Label Creation</span></a>
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources.html"> 
+<span class="menu-text">Learning Resources</span></a>
   </li>  
-        <li>
-    <a class="dropdown-item" href="../../labeling/mask.html">
- <span class="dropdown-text">Mask Creation</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../../examples/tabular_binary_events.html">
- <span class="dropdown-text">Load Tabular Binary Events</span></a>
-  </li>  
-    </ul>
-  </li>
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Reference Guides</span>
@@ -147,11 +162,6 @@ ul.task-list li input[type="checkbox"] {
 </i> 
 <span class="menu-text"></span></a>
   </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Concepts</span>
-    </span>
-  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -164,7 +174,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/Entity/index.html">Entity Manager</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/Entity/index.html">Entity Library</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -266,7 +276,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../developer/Entity/index.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Entity Manager</span></a>
+ <span class="menu-text">Entity Library</span></a>
   </div>
 </li>
       </ul>
@@ -375,15 +385,50 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#entity-library" id="toc-entity-library" class="nav-link active" data-scroll-target="#entity-library">Entity Library</a>
+  <ul class="collapse">
+  <li><a href="#architecture-overview" id="toc-architecture-overview" class="nav-link" data-scroll-target="#architecture-overview">Architecture Overview</a></li>
+  <li><a href="#core-components" id="toc-core-components" class="nav-link" data-scroll-target="#core-components">Core Components</a>
+  <ul class="collapse">
+  <li><a href="#entitytypes" id="toc-entitytypes" class="nav-link" data-scroll-target="#entitytypes">EntityTypes</a></li>
+  <li><a href="#entityregistry" id="toc-entityregistry" class="nav-link" data-scroll-target="#entityregistry">EntityRegistry</a></li>
+  <li><a href="#entitygroupmanager" id="toc-entitygroupmanager" class="nav-link" data-scroll-target="#entitygroupmanager">EntityGroupManager</a></li>
+  </ul></li>
+  <li><a href="#lineage-subsystem" id="toc-lineage-subsystem" class="nav-link" data-scroll-target="#lineage-subsystem">Lineage Subsystem</a>
+  <ul class="collapse">
+  <li><a href="#lineage-types" id="toc-lineage-types" class="nav-link" data-scroll-target="#lineage-types">Lineage Types</a></li>
+  <li><a href="#lineageregistry" id="toc-lineageregistry" class="nav-link" data-scroll-target="#lineageregistry">LineageRegistry</a></li>
+  <li><a href="#lineageresolver" id="toc-lineageresolver" class="nav-link" data-scroll-target="#lineageresolver">LineageResolver</a></li>
+  <li><a href="#ientitydatasource-interface" id="toc-ientitydatasource-interface" class="nav-link" data-scroll-target="#ientitydatasource-interface">IEntityDataSource Interface</a></li>
+  </ul></li>
+  <li><a href="#integration-with-datamanager" id="toc-integration-with-datamanager" class="nav-link" data-scroll-target="#integration-with-datamanager">Integration with DataManager</a></li>
+  <li><a href="#dependencies" id="toc-dependencies" class="nav-link" data-scroll-target="#dependencies">Dependencies</a></li>
+  <li><a href="#thread-safety-summary" id="toc-thread-safety-summary" class="nav-link" data-scroll-target="#thread-safety-summary">Thread Safety Summary</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
+  <li><a href="#migration-guide" id="toc-migration-guide" class="nav-link" data-scroll-target="#migration-guide">Migration Guide</a>
+  <ul class="collapse">
+  <li><a href="#from-datamanagerlineage-to-entitylineage" id="toc-from-datamanagerlineage-to-entitylineage" class="nav-link" data-scroll-target="#from-datamanagerlineage-to-entitylineage">From DataManager/Lineage to Entity/Lineage</a></li>
+  <li><a href="#key-api-changes" id="toc-key-api-changes" class="nav-link" data-scroll-target="#key-api-changes">Key API Changes</a></li>
+  <li><a href="#entityresolver-backward-compatibility" id="toc-entityresolver-backward-compatibility" class="nav-link" data-scroll-target="#entityresolver-backward-compatibility">EntityResolver Backward Compatibility</a></li>
+  </ul></li>
+  <li><a href="#example-custom-data-source" id="toc-example-custom-data-source" class="nav-link" data-scroll-target="#example-custom-data-source">Example: Custom Data Source</a></li>
+  <li><a href="#performance-considerations" id="toc-performance-considerations" class="nav-link" data-scroll-target="#performance-considerations">Performance Considerations</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/Entity/index.html">Entity Manager</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/CoreGeometry/index.html">Core Libraries</a></li><li class="breadcrumb-item"><a href="../../developer/Entity/index.html">Entity Library</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Entity Manager</h1>
+<h1 class="title">Entity Library</h1>
 </div>
 
 
@@ -400,8 +445,586 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="entity-library" class="level1">
+<h1>Entity Library</h1>
+<p>The Entity library provides core functionality for entity identification, registration, grouping, and lineage tracking in WhiskerToolbox. It is designed as a <strong>DataManager-independent library</strong>, enabling reuse across different data management systems.</p>
+<section id="architecture-overview" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-overview">Architecture Overview</h2>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph TB
+    subgraph Entity["Entity Library"]
+        ET["EntityTypes.hpp&lt;br/&gt;(EntityId, EntityKind, etc.)"]
+        ER["EntityRegistry&lt;br/&gt;(ID allocation)"]
+        EGM["EntityGroupManager&lt;br/&gt;(grouping)"]
+        
+        subgraph Lineage["Lineage Subsystem"]
+            LT["LineageTypes.hpp&lt;br/&gt;(variant types)"]
+            LReg["LineageRegistry&lt;br/&gt;(metadata storage)"]
+            LRes["LineageResolver&lt;br/&gt;(resolution logic)"]
+            IDS["IEntityDataSource&lt;br/&gt;(abstract interface)"]
+        end
+    end
+    
+    ET --&gt; ER
+    ET --&gt; EGM
+    LT --&gt; LReg
+    IDS --&gt; LRes
+    LReg --&gt; LRes
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="core-components" class="level2">
+<h2 class="anchored" data-anchor-id="core-components">Core Components</h2>
+<section id="entitytypes" class="level3">
+<h3 class="anchored" data-anchor-id="entitytypes">EntityTypes</h3>
+<p>Located in <code>Entity/EntityTypes.hpp</code>, defines the fundamental types:</p>
+<ul>
+<li><strong><code>EntityId</code></strong>: Strongly-typed identifier for entities (wraps <code>uint64_t</code>)</li>
+<li><strong><code>EntityKind</code></strong>: Enumeration of entity categories (Point, Line, Event, Interval, Mask)</li>
+<li><strong><code>EntityDescriptor</code></strong>: Combines data_key, kind, time_value, and local_index</li>
+<li><strong><code>EntityTupleKey</code></strong>: Composite key for entity registry lookups</li>
+<li><strong><code>DataEntry&lt;T&gt;</code></strong>: Template wrapper pairing data with EntityId</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityTypes.hpp"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// EntityId requires explicit construction</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>EntityId id<span class="op">(</span><span class="dv">42</span><span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// EntityIds are comparable and hashable</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>id <span class="op">==</span> EntityId<span class="op">(</span><span class="dv">42</span><span class="op">))</span> <span class="op">{</span> <span class="co">/* ... */</span> <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Use in unordered containers (std::hash specialization provided)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> entity_set<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>entity_set<span class="op">.</span>insert<span class="op">(</span>id<span class="op">);</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// EntityKind enumeration</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>EntityKind kind <span class="op">=</span> EntityKind<span class="op">::</span>MaskEntity<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="entityregistry" class="level3">
+<h3 class="anchored" data-anchor-id="entityregistry">EntityRegistry</h3>
+<p>Thread-safe registry that maps (data_key, kind, time, local_index) tuples to unique EntityIds:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityRegistry.hpp"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>EntityRegistry registry<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Get or create an EntityId for the tuple (idempotent)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>EntityId id <span class="op">=</span> registry<span class="op">.</span>ensureId<span class="op">(</span><span class="st">"masks"</span><span class="op">,</span> EntityKind<span class="op">::</span>MaskEntity<span class="op">,</span> </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                                 TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Lookup descriptor for an EntityId</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> desc <span class="op">=</span> registry<span class="op">.</span>get<span class="op">(</span>id<span class="op">);</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>desc<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Data key: "</span> <span class="op">&lt;&lt;</span> desc<span class="op">-&gt;</span>data_key <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Time: "</span> <span class="op">&lt;&lt;</span> desc<span class="op">-&gt;</span>time_value <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Clear all entities (session reset)</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>clear<span class="op">();</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Thread Safety</strong>: <code>EntityRegistry</code> uses <code>std::mutex</code> internally and is safe to use from multiple threads.</p>
+</section>
+<section id="entitygroupmanager" class="level3">
+<h3 class="anchored" data-anchor-id="entitygroupmanager">EntityGroupManager</h3>
+<p>Manages user-defined groups of entities with observer notification support:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityGroupManager.hpp"</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>EntityGroupManager manager<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Create a group (returns unique GroupId)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>GroupId group <span class="op">=</span> manager<span class="op">.</span>createGroup<span class="op">(</span><span class="st">"whisker_1"</span><span class="op">,</span> <span class="st">"First whisker entities"</span><span class="op">);</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Add single entity</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>addEntityToGroup<span class="op">(</span>group<span class="op">,</span> EntityId<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Add multiple entities efficiently</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> ids <span class="op">=</span> <span class="op">{</span>EntityId<span class="op">(</span><span class="dv">101</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">102</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">103</span><span class="op">)};</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t added <span class="op">=</span> manager<span class="op">.</span>addEntitiesToGroup<span class="op">(</span>group<span class="op">,</span> ids<span class="op">);</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Query group contents</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> members <span class="op">=</span> manager<span class="op">.</span>getEntitiesInGroup<span class="op">(</span>group<span class="op">);</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> in_group <span class="op">=</span> manager<span class="op">.</span>isEntityInGroup<span class="op">(</span>group<span class="op">,</span> EntityId<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Reverse lookup: which groups contain an entity?</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> groups <span class="op">=</span> manager<span class="op">.</span>getGroupsContainingEntity<span class="op">(</span>EntityId<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Get group metadata</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> descriptor <span class="op">=</span> manager<span class="op">.</span>getGroupDescriptor<span class="op">(</span>group<span class="op">);</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>descriptor<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Name: "</span> <span class="op">&lt;&lt;</span> descriptor<span class="op">-&gt;</span>name <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Size: "</span> <span class="op">&lt;&lt;</span> descriptor<span class="op">-&gt;</span>entity_count <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Observe changes (for UI updates)</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>getGroupObservers<span class="op">().</span>addObserver<span class="op">([]()</span> <span class="op">{</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Refresh UI when groups change</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>notifyGroupsChanged<span class="op">();</span>  <span class="co">// Call after bulk updates</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Thread Safety</strong>: <code>EntityGroupManager</code> is <strong>not</strong> thread-safe. Callers must synchronize access when using from multiple threads.</p>
+</section>
+</section>
+<section id="lineage-subsystem" class="level2">
+<h2 class="anchored" data-anchor-id="lineage-subsystem">Lineage Subsystem</h2>
+<p>The Lineage subsystem tracks data provenance—how derived data relates to source data. This enables features like:</p>
+<ul>
+<li>Tracing computed values back to original entities</li>
+<li>Invalidating derived data when sources change</li>
+<li>Visualizing data relationships in the UI</li>
+</ul>
+<section id="lineage-types" class="level3">
+<h3 class="anchored" data-anchor-id="lineage-types">Lineage Types</h3>
+<p>Located in <code>Entity/Lineage/LineageTypes.hpp</code>, defines 8 lineage strategies as a <code>std::variant</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 44%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Description</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Source</code></td>
+<td>Root data with no parent</td>
+<td>Raw loaded data</td>
+</tr>
+<tr class="even">
+<td><code>OneToOneByTime</code></td>
+<td>1:1 mapping at each time point</td>
+<td>MaskData → Area values</td>
+</tr>
+<tr class="odd">
+<td><code>AllToOneByTime</code></td>
+<td>N:1 aggregation at each time</td>
+<td>Sum of all areas at time T</td>
+</tr>
+<tr class="even">
+<td><code>SubsetLineage</code></td>
+<td>Filtered subset of source</td>
+<td>Excluded/selected entities</td>
+</tr>
+<tr class="odd">
+<td><code>MultiSourceLineage</code></td>
+<td>Multiple sources combined</td>
+<td>Merged datasets</td>
+</tr>
+<tr class="even">
+<td><code>ExplicitLineage</code></td>
+<td>Manual per-element mapping</td>
+<td>Custom transformations</td>
+</tr>
+<tr class="odd">
+<td><code>EntityMappedLineage</code></td>
+<td>EntityId → EntityId mapping</td>
+<td>Persistent entity relationships</td>
+</tr>
+<tr class="even">
+<td><code>ImplicitEntityMapping</code></td>
+<td>Cardinality-based inference</td>
+<td>Broadcast/reduce operations</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/Lineage/LineageTypes.hpp"</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// One-to-one relationship: derived[T, i] ← source[T, i]</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>OneToOneByTime lineage<span class="op">{</span><span class="st">"source_masks"</span><span class="op">};</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Aggregation: derived[T] ← ALL source[T, *]</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>AllToOneByTime agg_lineage<span class="op">{</span><span class="st">"mask_areas"</span><span class="op">};</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Subset with specific entities</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>SubsetLineage subset<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>subset<span class="op">.</span>source_key <span class="op">=</span> <span class="st">"masks"</span><span class="op">;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>subset<span class="op">.</span>included_entities <span class="op">=</span> <span class="op">{</span>EntityId<span class="op">(</span><span class="dv">100</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">102</span><span class="op">)};</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Entity-to-entity mapping for entity-bearing derived containers</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>EntityMappedLineage mapped<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>mapped<span class="op">.</span>source_key <span class="op">=</span> <span class="st">"masks"</span><span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>mapped<span class="op">.</span>entity_mapping <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>EntityId<span class="op">(</span><span class="dv">200</span><span class="op">),</span> <span class="op">{</span>EntityId<span class="op">(</span><span class="dv">100</span><span class="op">)}},</span>  <span class="co">// Line 200 from Mask 100</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span>EntityId<span class="op">(</span><span class="dv">201</span><span class="op">),</span> <span class="op">{</span>EntityId<span class="op">(</span><span class="dv">100</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">101</span><span class="op">)}}</span>  <span class="co">// Line 201 from Masks 100 &amp; 101</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Type-erased descriptor for storage</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>Descriptor desc <span class="op">=</span> lineage<span class="op">;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">// Query helpers</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_source <span class="op">=</span> isSource<span class="op">(</span>desc<span class="op">);</span>  <span class="co">// false</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> keys <span class="op">=</span> getSourceKeys<span class="op">(</span>desc<span class="op">);</span>  <span class="co">// {"source_masks"}</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string name <span class="op">=</span> getLineageTypeName<span class="op">(</span>desc<span class="op">);</span>  <span class="co">// "OneToOneByTime"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="lineageregistry" class="level3">
+<h3 class="anchored" data-anchor-id="lineageregistry">LineageRegistry</h3>
+<p>Stores lineage metadata for data containers with staleness tracking:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/Lineage/LineageRegistry.hpp"</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>LineageRegistry registry<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Register source data (no parent)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>setLineage<span class="op">(</span><span class="st">"masks"</span><span class="op">,</span> Source<span class="op">{});</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Register derived data chain</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>setLineage<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">,</span> OneToOneByTime<span class="op">{</span><span class="st">"masks"</span><span class="op">});</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>setLineage<span class="op">(</span><span class="st">"total_area"</span><span class="op">,</span> AllToOneByTime<span class="op">{</span><span class="st">"mask_areas"</span><span class="op">});</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Query lineage</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>registry<span class="op">.</span>hasLineage<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> lineage <span class="op">=</span> registry<span class="op">.</span>getLineage<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">);</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use std::visit to dispatch on lineage type</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Get full chain from derived to root</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> chain <span class="op">=</span> registry<span class="op">.</span>getLineageChain<span class="op">(</span><span class="st">"total_area"</span><span class="op">);</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: ["total_area", "mask_areas", "masks"]</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Find dependents (reverse lookup)</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> dependents <span class="op">=</span> registry<span class="op">.</span>getDependentKeys<span class="op">(</span><span class="st">"masks"</span><span class="op">);</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: ["mask_areas"]</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if source</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_src <span class="op">=</span> registry<span class="op">.</span>isSource<span class="op">(</span><span class="st">"masks"</span><span class="op">);</span>  <span class="co">// true</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Staleness tracking for cache invalidation</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>markStale<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">);</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> stale <span class="op">=</span> registry<span class="op">.</span>isStale<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">);</span>  <span class="co">// true</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>propagateStale<span class="op">(</span><span class="st">"masks"</span><span class="op">);</span>  <span class="co">// Marks masks and all dependents stale</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>markValid<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">);</span>  <span class="co">// After recomputation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Thread Safety</strong>: <code>LineageRegistry</code> is <strong>not</strong> thread-safe. Callers must synchronize access.</p>
+</section>
+<section id="lineageresolver" class="level3">
+<h3 class="anchored" data-anchor-id="lineageresolver">LineageResolver</h3>
+<p>Resolves lineage to find source EntityIds. Uses the abstract <code>IEntityDataSource</code> interface to decouple from specific data storage implementations:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/Lineage/LineageResolver.hpp"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// IEntityDataSource implementation provides data access</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">// (e.g., DataManagerEntityDataSource in DataManager library)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>MyDataSource data_source<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>LineageRegistry registry<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolver takes non-owning pointers (caller must ensure lifetime)</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>LineageResolver resolver<span class="op">(&amp;</span>data_source<span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolve single step: derived → immediate source EntityIds</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> source_ids <span class="op">=</span> resolver<span class="op">.</span>resolveToSource<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">,</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolve full chain: derived → root source(s)</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Handles multi-level derivations like: masks → areas → peaks</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> root_ids <span class="op">=</span> resolver<span class="op">.</span>resolveToRoot<span class="op">(</span><span class="st">"total_area"</span><span class="op">,</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">// For EntityMappedLineage: resolve by derived EntityId</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> parent_ids <span class="op">=</span> resolver<span class="op">.</span>resolveByEntityId<span class="op">(</span><span class="st">"derived_lines"</span><span class="op">,</span> EntityId<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Query helpers</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> has_lin <span class="op">=</span> resolver<span class="op">.</span>hasLineage<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">);</span>  <span class="co">// true</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_src <span class="op">=</span> resolver<span class="op">.</span>isSource<span class="op">(</span><span class="st">"masks"</span><span class="op">);</span>  <span class="co">// true</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> chain <span class="op">=</span> resolver<span class="op">.</span>getLineageChain<span class="op">(</span><span class="st">"total_area"</span><span class="op">);</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> all_sources <span class="op">=</span> resolver<span class="op">.</span>getAllSourceEntities<span class="op">(</span><span class="st">"mask_areas"</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Resolution Semantics by Lineage Type:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Lineage Type</th>
+<th><code>resolveToSource()</code> Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Source</code></td>
+<td>EntityIds from the container itself</td>
+</tr>
+<tr class="even">
+<td><code>OneToOneByTime</code></td>
+<td>EntityId at same (time, index) in source</td>
+</tr>
+<tr class="odd">
+<td><code>AllToOneByTime</code></td>
+<td>All EntityIds at that time in source</td>
+</tr>
+<tr class="even">
+<td><code>SubsetLineage</code></td>
+<td>Filtered EntityIds from source</td>
+</tr>
+<tr class="odd">
+<td><code>EntityMappedLineage</code></td>
+<td>Use <code>resolveByEntityId()</code> instead</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ientitydatasource-interface" class="level3">
+<h3 class="anchored" data-anchor-id="ientitydatasource-interface">IEntityDataSource Interface</h3>
+<p>Abstract interface for data source access, enabling lineage resolution without DataManager dependency:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> IEntityDataSource <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">virtual</span> <span class="op">~</span>IEntityDataSource<span class="op">()</span> <span class="op">=</span> <span class="cf">default</span><span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get EntityId at specific time and index</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> getEntityIds<span class="op">(</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>size_t local_index<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get all EntityIds at a time point</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> getAllEntityIdsAtTime<span class="op">(</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get all EntityIds across all times</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> getAllEntityIds<span class="op">(</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get element count at time</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">virtual</span> <span class="bu">std::</span>size_t getElementCount<span class="op">(</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="integration-with-datamanager" class="level2">
+<h2 class="anchored" data-anchor-id="integration-with-datamanager">Integration with DataManager</h2>
+<p>The DataManager library provides <code>DataManagerEntityDataSource</code> which implements <code>IEntityDataSource</code>, and <code>EntityResolver</code> as a convenience wrapper:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lineage/EntityResolver.hpp"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>DataManager dm<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// ... add data and register lineage via dm.getLineageRegistry() ...</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">// EntityResolver composes DataManagerEntityDataSource + LineageResolver internally</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>EntityResolver resolver<span class="op">(&amp;</span>dm<span class="op">);</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">// All LineageResolver methods are available</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> source_ids <span class="op">=</span> resolver<span class="op">.</span>resolveToSource<span class="op">(</span><span class="st">"derived_data"</span><span class="op">,</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> root_ids <span class="op">=</span> resolver<span class="op">.</span>resolveToRoot<span class="op">(</span><span class="st">"derived_data"</span><span class="op">,</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> chain <span class="op">=</span> resolver<span class="op">.</span>getLineageChain<span class="op">(</span><span class="st">"derived_data"</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The separation allows the Entity library to be tested and used without DataManager dependency.</p>
+</section>
+<section id="dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="dependencies">Dependencies</h2>
+<p>The Entity library has minimal dependencies:</p>
+<ul>
+<li><strong>TimeFrame</strong>: For <code>TimeFrameIndex</code> type</li>
+<li><strong>Observer</strong>: For <code>EntityGroupManager</code> change notifications</li>
+</ul>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph LR
+    Observer["Observer&lt;br/&gt;(no deps)"]
+    TimeFrame["TimeFrame&lt;br/&gt;(no deps)"]
+    Entity["Entity"]
+    
+    Observer --&gt; Entity
+    TimeFrame --&gt; Entity
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="thread-safety-summary" class="level2">
+<h2 class="anchored" data-anchor-id="thread-safety-summary">Thread Safety Summary</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Thread Safety</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>EntityRegistry</code></td>
+<td>✅ Thread-safe</td>
+<td>Uses internal mutex</td>
+</tr>
+<tr class="even">
+<td><code>EntityGroupManager</code></td>
+<td>❌ Not thread-safe</td>
+<td>Caller must synchronize</td>
+</tr>
+<tr class="odd">
+<td><code>LineageRegistry</code></td>
+<td>❌ Not thread-safe</td>
+<td>Caller must synchronize</td>
+</tr>
+<tr class="even">
+<td><code>LineageResolver</code></td>
+<td>✅ Thread-safe*</td>
+<td>*If data source is thread-safe</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="testing" class="level2">
+<h2 class="anchored" data-anchor-id="testing">Testing</h2>
+<p>Unit tests are co-located with source files in <code>src/Entity/</code>:</p>
+<ul>
+<li><code>EntityRegistry.test.cpp</code> - ID allocation and lookup</li>
+<li><code>EntityGroupManager.test.cpp</code> - Group CRUD and queries</li>
+<li><code>Lineage/LineageRegistry.test.cpp</code> - Lineage storage and staleness</li>
+<li><code>Lineage/LineageResolver.test.cpp</code> - Resolution with mock data source</li>
+</ul>
+<p>Integration tests are in <code>tests/DataManager/Lineage/</code>:</p>
+<ul>
+<li><code>test_transform_lineage_integration.test.cpp</code> - Full pipeline tests (700+ lines)</li>
+<li><code>DataManagerEntityDataSource.test.cpp</code> - Type dispatch tests</li>
+</ul>
+<p>Run entity tests:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">-R</span> Entity</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Run all lineage-related tests:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">-R</span> <span class="st">"[Ll]ineage"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="migration-guide" class="level2">
+<h2 class="anchored" data-anchor-id="migration-guide">Migration Guide</h2>
+<section id="from-datamanagerlineage-to-entitylineage" class="level3">
+<h3 class="anchored" data-anchor-id="from-datamanagerlineage-to-entitylineage">From DataManager/Lineage to Entity/Lineage</h3>
+<p>If you have code using the old locations (pre-January 2026):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// OLD (no longer available)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/Lineage/LineageTypes.hpp"</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/Lineage/LineageRegistry.hpp"</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Lineage<span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">// NEW</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/Lineage/LineageTypes.hpp"</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/Lineage/LineageRegistry.hpp"</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="key-api-changes" class="level3">
+<h3 class="anchored" data-anchor-id="key-api-changes">Key API Changes</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Old</th>
+<th>New</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>WhiskerToolbox::Lineage</code> namespace</td>
+<td><code>WhiskerToolbox::Entity::Lineage</code></td>
+</tr>
+<tr class="even">
+<td>Lineage types in DataManager</td>
+<td>Lineage types in Entity</td>
+</tr>
+<tr class="odd">
+<td>Direct DataManager coupling</td>
+<td>Abstract <code>IEntityDataSource</code> interface</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="entityresolver-backward-compatibility" class="level3">
+<h3 class="anchored" data-anchor-id="entityresolver-backward-compatibility">EntityResolver Backward Compatibility</h3>
+<p>The <code>EntityResolver</code> class in <code>DataManager/Lineage/</code> maintains its public API. Existing code using <code>EntityResolver</code> with DataManager should continue to work without changes.</p>
+</section>
+</section>
+<section id="example-custom-data-source" class="level2">
+<h2 class="anchored" data-anchor-id="example-custom-data-source">Example: Custom Data Source</h2>
+<p>To use lineage resolution with a custom data backend, implement <code>IEntityDataSource</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/Lineage/LineageResolver.hpp"</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyCustomDataSource <span class="op">:</span> <span class="kw">public</span> IEntityDataSource <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> getEntityIds<span class="op">(</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>size_t local_index<span class="op">)</span> <span class="at">const</span> <span class="kw">override</span> </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Return EntityId at specific position</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Return empty vector if not found</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> it <span class="op">=</span> _data<span class="op">.</span>find<span class="op">({</span>data_key<span class="op">,</span> time<span class="op">.</span>getValue<span class="op">()});</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>it <span class="op">==</span> _data<span class="op">.</span>end<span class="op">()</span> <span class="op">||</span> local_index <span class="op">&gt;=</span> it<span class="op">-&gt;</span>second<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{</span>it<span class="op">-&gt;</span>second<span class="op">[</span>local_index<span class="op">]};</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> getAllEntityIdsAtTime<span class="op">(</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="kw">override</span> </span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> it <span class="op">=</span> _data<span class="op">.</span>find<span class="op">({</span>data_key<span class="op">,</span> time<span class="op">.</span>getValue<span class="op">()});</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>it <span class="op">==</span> _data<span class="op">.</span>end<span class="op">())</span> <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> it<span class="op">-&gt;</span>second<span class="op">;</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> getAllEntityIds<span class="op">(</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">)</span> <span class="at">const</span> <span class="kw">override</span> </span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> <span class="op">[</span>key<span class="op">,</span> ids<span class="op">]</span> <span class="op">:</span> _data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>key<span class="op">.</span>first <span class="op">==</span> data_key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>                result<span class="op">.</span>insert<span class="op">(</span>ids<span class="op">.</span>begin<span class="op">(),</span> ids<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t getElementCount<span class="op">(</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="kw">override</span> </span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> it <span class="op">=</span> _data<span class="op">.</span>find<span class="op">({</span>data_key<span class="op">,</span> time<span class="op">.</span>getValue<span class="op">()});</span></span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> it <span class="op">!=</span> _data<span class="op">.</span>end<span class="op">()</span> <span class="op">?</span> it<span class="op">-&gt;</span>second<span class="op">.</span>size<span class="op">()</span> <span class="op">:</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Example storage: (data_key, time) → vector of EntityIds</span></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="dt">int64_t</span><span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;&gt;</span> _data<span class="op">;</span></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a><span class="co">// Use with LineageResolver</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>MyCustomDataSource data_source<span class="op">;</span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a>LineageRegistry registry<span class="op">;</span></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a>LineageResolver resolver<span class="op">(&amp;</span>data_source<span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co">// Now resolution works with your custom backend</span></span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> ids <span class="op">=</span> resolver<span class="op">.</span>resolveToSource<span class="op">(</span><span class="st">"derived"</span><span class="op">,</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="performance-considerations" class="level2">
+<h2 class="anchored" data-anchor-id="performance-considerations">Performance Considerations</h2>
+<ul>
+<li><strong>EntityRegistry</strong>: O(1) lookup and insertion via hash maps</li>
+<li><strong>EntityGroupManager</strong>: O(1) for membership queries; O(n) for batch operations</li>
+<li><strong>LineageRegistry</strong>: O(1) for single-key queries; O(n) for chain traversal</li>
+<li><strong>LineageResolver</strong>: Resolution cost depends on lineage depth and data source implementation; <code>resolveAllToOneToRoot</code> is O(n × depth) for n elements at a time point</li>
+</ul>
+</section>
+<section id="see-also" class="level2">
+<h2 class="anchored" data-anchor-id="see-also">See Also</h2>
+<ul>
+<li><a href="../transforms/index.qmd">Transform Pipeline</a> - Data transformation system</li>
+<li><a href="../../developer/table_view.html">Table View</a> - Tabular data views</li>
+<li><a href="../data_manager.qmd">DataManager</a> - Central data storage</li>
+</ul>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
