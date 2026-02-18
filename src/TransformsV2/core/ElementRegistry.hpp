@@ -2,6 +2,7 @@
 #define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
 
 #include "ComputeContext.hpp"
+#include "ParameterSchema.hpp"
 #include "detail/ContainerExecutor.hpp"// for IContainerExecutor
 #include "detail/ContainerTraits.hpp"
 #include "detail/ParamExecutor.hpp"
@@ -733,6 +734,68 @@ public:
         return (it != metadata_.end()) ? &it->second : nullptr;
     }
 
+    // ========================================================================
+    // Parameter Schema Query
+    // ========================================================================
+
+    /**
+     * @brief Get the parameter schema for a transform by name
+     *
+     * Returns the ParameterSchema describing all fields and their types,
+     * constraints, and UI hints for the transform's parameter struct.
+     *
+     * @param transform_name Name of the transform
+     * @return Pointer to ParameterSchema, or nullptr if not found
+     */
+    ParameterSchema const * getParameterSchema(std::string const & transform_name) const {
+        // Find the params type_index from either element or container metadata
+        std::type_index params_type = typeid(void);
+
+        auto const * element_meta = getMetadata(transform_name);
+        if (element_meta) {
+            params_type = element_meta->params_type;
+        } else {
+            auto const * container_meta = getContainerMetadata(transform_name);
+            if (container_meta) {
+                params_type = container_meta->params_type;
+            } else {
+                return nullptr;
+            }
+        }
+
+        auto it = schema_cache_.find(params_type);
+        if (it != schema_cache_.end()) {
+            return &it->second;
+        }
+
+        // Generate and cache the schema on first access
+        auto factory_it = schema_factories_.find(params_type);
+        if (factory_it == schema_factories_.end()) {
+            return nullptr;
+        }
+
+        auto [cache_it, _] = schema_cache_.emplace(params_type, factory_it->second());
+        return &cache_it->second;
+    }
+
+    /**
+     * @brief Get the parameter schema for a params type_index directly
+     */
+    ParameterSchema const * getParameterSchemaByType(std::type_index params_type) const {
+        auto it = schema_cache_.find(params_type);
+        if (it != schema_cache_.end()) {
+            return &it->second;
+        }
+
+        auto factory_it = schema_factories_.find(params_type);
+        if (factory_it == schema_factories_.end()) {
+            return nullptr;
+        }
+
+        auto [cache_it, _] = schema_cache_.emplace(params_type, factory_it->second());
+        return &cache_it->second;
+    }
+
     /**
      * @brief Check if transform exists (element or container)
      */
@@ -1023,7 +1086,7 @@ private:
     void registerParamDeserializerIfNeeded() {
         auto type_idx = std::type_index(typeid(Params));
 
-        // Only register deserializer/validator if not already present (per Params type)
+        // Only register deserializer/validator/schema if not already present (per Params type)
         if (param_deserializers_.find(type_idx) == param_deserializers_.end()) {
             // 1. Register JSON deserializer using reflect-cpp
             param_deserializers_[type_idx] = [](std::string const & json_str) -> std::any {
@@ -1042,6 +1105,11 @@ private:
                 } catch (...) {
                     return false;
                 }
+            };
+
+            // 3. Register parameter schema factory for auto-generated UI
+            schema_factories_[type_idx] = []() -> ParameterSchema {
+                return extractParameterSchema<Params>();
             };
         }
 
@@ -1133,6 +1201,11 @@ private:
                     return false;
                 }
             };
+
+            // Register parameter schema factory for auto-generated UI
+            schema_factories_[type_idx] = []() -> ParameterSchema {
+                return extractParameterSchema<Params>();
+            };
         }
 
         // Only register IContainerExecutor factory for single-input transforms
@@ -1216,6 +1289,20 @@ private:
             std::type_index,
             std::function<bool(std::any const &)>>
             param_validators_;
+
+    // ========================================================================
+    // Parameter Schema (Auto-Generated UI Support)
+    // ========================================================================
+
+    // Schema factories (type_index -> factory that produces ParameterSchema)
+    // Registered alongside deserializers during transform registration
+    std::unordered_map<
+            std::type_index,
+            std::function<ParameterSchema()>>
+            schema_factories_;
+
+    // Cached schemas (lazily populated on first access)
+    mutable std::unordered_map<std::type_index, ParameterSchema> schema_cache_;
 
     // ========================================================================
     // Container Transform Storage (Separate from Element Transforms)

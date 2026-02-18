@@ -25,6 +25,7 @@ add_executable(test_TransformsV2
         test_value_projection_types.test.cpp
         test_pipeline_value_store.test.cpp
         test_parameter_binding.test.cpp
+        test_parameter_schema.test.cpp
         test_transform_lineage_integration.test.cpp
 
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp

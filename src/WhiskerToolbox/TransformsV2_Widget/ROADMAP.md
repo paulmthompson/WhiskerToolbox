@@ -1,0 +1,501 @@
+# TransformsV2 Widget — Implementation Roadmap
+
+## Overview
+
+The TransformsV2 Widget replaces the V1 `DataTransform_Widget` with a pipeline-centric UI for composing, configuring, executing, and sharing V2 transform pipelines. Key improvements over V1:
+
+| Concern | V1 | V2 |
+|---|---|---|
+| Transform model | Single operation in → out | Multi-step composable pipeline |
+| Parameter UI | Hand-written widget per transform | Auto-generated from reflect-cpp, with override support |
+| JSON integration | Load/execute only | Bidirectional: UI ↔ JSON, live serialization |
+| Reusability | Standalone widget only | Embeddable; JSON pipeline connects to TensorData lazy columns, TableView, etc. |
+| State | Minimal (selected key/operation) | Pipeline descriptor as serializable state |
+| Intermediate data | Materialized to DataManager | Optional; pipeline fusion avoids allocation |
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              TransformsV2Properties_Widget               │
+│  ┌───────────────────────┐  ┌────────────────────────┐  │
+│  │   Pipeline Builder    │  │   JSON Panel           │  │
+│  │  ┌─────────────────┐  │  │  ┌──────────────────┐  │  │
+│  │  │ Input Selector   │  │  │  │ Live JSON View   │  │  │
+│  │  │ (DataFocusAware) │  │  │  │ (auto-synced)    │  │  │
+│  │  ├─────────────────┤  │  │  ├──────────────────┤  │  │
+│  │  │ Step List        │  │  │  │ Load/Save        │  │  │
+│  │  │ (add/remove/     │  │  │  │ Validate         │  │  │
+│  │  │  reorder steps)  │  │  │  │ Execute          │  │  │
+│  │  ├─────────────────┤  │  │  └──────────────────┘  │  │
+│  │  │ Step Config      │  │  └────────────────────────┘  │
+│  │  │ (auto-generated  │  │                              │
+│  │  │  or custom)      │  │  ┌────────────────────────┐  │
+│  │  ├─────────────────┤  │  │   Output Config         │  │
+│  │  │ Pre-Reductions   │  │  │  ┌──────────────────┐  │  │
+│  │  └─────────────────┘  │  │  │ Output key name   │  │  │
+│  └───────────────────────┘  │  │ Mode: DataManager  │  │  │
+│                              │  │   or JSON-only     │  │  │
+│                              │  │ Execute button     │  │  │
+│                              │  └──────────────────┘  │  │
+│                              └────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+         │                                    │
+         │ builds                             │ serializes to/from
+         ▼                                    ▼
+  TransformPipeline                    PipelineDescriptor
+  (executable)                         (JSON-serializable)
+         │
+         ▼
+  DataManager / External Consumer
+```
+
+---
+
+## Phase 0: Auto-Generated Parameter UI Infrastructure ✅ COMPLETE
+
+**Goal:** Build the compile-time → runtime bridge that converts any reflect-cpp parameter struct into a Qt form, eliminating the need for a hand-written widget per transform.
+
+### 0.1 — `ParameterFieldDescriptor` Runtime Schema ✅
+
+Implemented in `src/TransformsV2/core/ParameterSchema.hpp`.
+
+`ParameterFieldDescriptor` captures field name, underlying type (parsed from the reflect-cpp type string), display name (snake_case → "Title Case"), optional validator constraints (min/max, exclusive flags), allowed values for enum-like string fields, default value JSON, and UI hints (tooltip, group, is_advanced, display_order, is_optional, is_bound).
+
+`ParameterSchema` wraps a vector of descriptors and provides `field(name)` lookup.
+
+### 0.2 — Compile-Time Schema Extraction ✅
+
+Implemented via `extractParameterSchema<Params>()` in `src/TransformsV2/core/ParameterSchema.hpp`.
+
+Uses `rfl::fields<Params>()` to enumerate fields at compile time. The type string from each `MetaField` is parsed by helpers in `src/TransformsV2/core/ParameterSchema.cpp`:
+- `snakeCaseToDisplay()` — "scale_factor" → "Scale Factor"
+- `parseUnderlyingType()` — strips optional/Validator wrappers to find the base type
+- `isOptionalType()`, `hasValidator()` — type string classification
+- `extractConstraints()` — parses `rfl::ExclusiveMinimum`, `rfl::Minimum`, etc. into `ConstraintInfo`
+
+Schema factories are registered automatically in `ElementRegistry::registerParamDeserializerIfNeeded<In, Out, Params>()` alongside the existing JSON deserializers. Schemas are lazily cached on first access. New public methods on `ElementRegistry`: `getParameterSchema(name)` and `getParameterSchemaByType(type_index)`.
+
+### 0.3 — UI Hint Annotations (Optional Override) ✅
+
+Implemented via `ParameterUIHints<Params>` template trait in `src/TransformsV2/core/ParameterSchema.hpp`. Specialize the template alongside a params struct to annotate fields with tooltips, allowed values, grouping, and advanced flags. The default (unspecialized) version is a no-op. `extractParameterSchema<T>()` calls `ParameterUIHints<T>::annotate(schema)` automatically after auto-extraction.
+
+### 0.4 — `AutoParamWidget`: Generic Qt Form Generator ✅
+
+Implemented in `src/WhiskerToolbox/TransformsV2_Widget/UI/AutoParamWidget.hpp/.cpp`.
+
+Field type → widget mapping:
+
+| Field Type | Widget |
+|---|---|
+| `float` / `double` | `QDoubleSpinBox` (range set from validator constraints) |
+| `int` | `QSpinBox` |
+| `bool` | `QCheckBox` |
+| `std::string` (with `allowed_values`) | `QComboBox` |
+| `std::string` (free-form) | `QLineEdit` |
+| `std::optional<T>` | Checkbox-gated inner widget (unchecked = use default) |
+
+Advanced fields are placed in a collapsible `QGroupBox`. Exposes `setSchema()`, `toJson()`, `fromJson()`, and `parametersChanged()` signal. Uses `rfl::Object::get()` (public API) for JSON field lookup.
+
+### 0.5 — Custom Widget Override Registry ✅
+
+Implemented as `ParamWidgetRegistry` singleton in `src/WhiskerToolbox/TransformsV2_Widget/UI/ParamWidgetRegistry.hpp`. Register a factory with `registerCustomWidget<Params>(factory)`. Query with `hasCustomWidget(type_index)` and `createCustomWidget(type_index, parent)`. Header-only; no `.cpp` needed.
+
+**Implemented files:**
+- `src/TransformsV2/core/ParameterSchema.hpp` — `ParameterFieldDescriptor`, `ParameterSchema`, `ParameterUIHints<T>`, `extractParameterSchema<T>()`
+- `src/TransformsV2/core/ParameterSchema.cpp` — `snakeCaseToDisplay`, `parseUnderlyingType`, `isOptionalType`, `hasValidator`, `extractConstraints`
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/AutoParamWidget.hpp/.cpp` — generic form generator
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/ParamWidgetRegistry.hpp` — custom widget override registry
+- `tests/TransformsV2/test_parameter_schema.test.cpp` — 14 test cases / 115 assertions (all passing)
+
+---
+
+## Phase 1: Pipeline Builder Core UI
+
+**Goal:** Replace the V1 "single transform" model with a multi-step pipeline builder.
+
+### 1.1 — Input Selector with DataFocusAware
+
+- Implement `DataFocusAware` on the properties widget
+- When data is focused in `DataManager_Widget`, update the input display (key name + type)
+- Query `ElementRegistry` for transforms compatible with the input type
+- Store the selected input key in `TransformsV2State`
+
+### 1.2 — Step List Widget
+
+A `QListWidget` (or custom `QWidget` with a `QVBoxLayout`) showing the current pipeline steps:
+
+```
+┌──────────────────────────────────────┐
+│ Pipeline Steps                    [+]│
+├──────────────────────────────────────┤
+│ 1. CalculateMaskArea          [✕][↕]│
+│ 2. ZScoreNormalizeV2          [✕][↕]│
+│                                      │
+│         (drop new step here)         │
+└──────────────────────────────────────┘
+```
+
+- **[+] Add Step**: Opens a filtered combo box of transforms compatible with the *current output type* of the last step (or the input type if the pipeline is empty). This is the key UX improvement — type-directed step suggestions.
+- **[✕] Remove**: Removes step and re-validates the pipeline.
+- **[↕] Reorder**: Drag-and-drop or up/down buttons; re-validates type chain after reorder.
+- Selecting a step expands its configuration panel below.
+
+### 1.3 — Step Configuration Panel
+
+When a step is selected in the list:
+1. Look up the params type from `ElementRegistry::metadata_[step.transform_name].params_type`
+2. Check `ParamWidgetRegistry` for a custom widget; fall back to `AutoParamWidget`
+3. Display the widget; populate from existing step params JSON
+4. Connect `parametersChanged()` to update the internal `PipelineDescriptor`
+
+### 1.4 — Pre-Reduction Configuration
+
+For pipelines that need pre-reductions (e.g., ZScore):
+- Show a separate "Pre-Computation" section above the step list
+- List available `RangeReductionRegistry` entries
+- Each pre-reduction has: name, output_key, optional params
+- Param bindings shown on the step that references them
+
+### 1.5 — Type Chain Validation
+
+After every edit, validate the full pipeline type chain:
+1. Start with the input data type → determine element type via `ContainerTraits`
+2. For each step, check `metadata.input_type` matches current element type
+3. Update `metadata.output_type` for the next step
+4. Show validation errors inline (red border on incompatible step)
+
+**Files to create:**
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineStepListWidget.hpp/.cpp`
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/StepConfigPanel.hpp/.cpp`
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PreReductionPanel.hpp/.cpp`
+- Update `TransformsV2Properties_Widget.ui` with layout sections
+
+**Estimated effort:** Large. This is the core pipeline building experience.
+
+---
+
+## Phase 2: Bidirectional JSON Synchronization
+
+**Goal:** The UI and JSON representations stay in sync. Users can configure in UI and get JSON, or paste JSON and see it reflected in UI.
+
+### 2.1 — Live JSON Panel
+
+A `QTextEdit` (monospace) in a collapsible section that shows the current `PipelineDescriptor` as pretty-printed JSON. Updated in real-time as the user edits in the UI.
+
+```cpp
+void TransformsV2Properties_Widget::onPipelineChanged() {
+    auto descriptor = buildDescriptorFromUI();
+    auto json = WhiskerToolbox::Transforms::V2::Examples::savePipelineToJson(descriptor);
+    _jsonPanel->setPlainText(QString::fromStdString(json));
+}
+```
+
+### 2.2 — JSON → UI Loading
+
+When the user edits JSON directly or loads from file:
+1. Parse with `rfl::json::read<PipelineDescriptor>`
+2. Validate each step via `loadStepFromDescriptor()`
+3. Rebuild the step list UI from the descriptor
+4. Populate each step's parameter widget from the step's `parameters` field
+
+### 2.3 — Copy/Paste and File I/O
+
+- **Copy JSON**: Button copies current pipeline JSON to clipboard
+- **Load JSON**: File dialog; populate JSON panel and rebuild UI
+- **Save JSON**: File dialog; save current pipeline JSON
+- **Import from V1**: Accept V1 `DataManagerPipelineDescriptor` format, convert to V2 `PipelineDescriptor`
+
+### 2.4 — `pipelineDescriptorChanged` Signal
+
+Emit a signal whenever the pipeline descriptor changes (from UI edits or JSON edits). This is the hook for external consumers (see Phase 4).
+
+**Files to modify:**
+- `TransformsV2Properties_Widget.hpp/.cpp` — add JSON panel, sync logic
+- `TransformsV2State` — store `PipelineDescriptor` JSON as state field
+
+**Estimated effort:** Medium.
+
+---
+
+## Phase 3: Pipeline Execution
+
+**Goal:** Execute the configured pipeline against data in DataManager and store results.
+
+### 3.1 — Output Configuration
+
+Below the pipeline builder:
+- **Output key name**: `QLineEdit`, auto-generated from input key + last transform name (same logic as V1 `_generateOutputName()`)
+- **Execution mode** combo:
+  - *"Save to DataManager"* — materializes result into a new data key
+  - *"JSON Pipeline Only"* — just produces the JSON (for embedding in other widgets)
+
+### 3.2 — Execution via `DataManagerPipelineExecutor`
+
+Build the `TransformPipeline` from the `PipelineDescriptor` using `loadPipelineFromJson()`, then execute:
+
+```cpp
+void TransformsV2Properties_Widget::executePipeline() {
+    auto json = _jsonPanel->toPlainText().toStdString();
+    auto pipeline_result = loadPipelineFromJson(json);
+    if (!pipeline_result) { showError(...); return; }
+    
+    auto& pipeline = *pipeline_result;
+    auto input_variant = _data_manager->getDataVariant(_input_key);
+    auto result = executePipeline(*input_variant, pipeline);
+    _data_manager->setData(_output_key, result, time_key);
+}
+```
+
+### 3.3 — Progress Reporting
+
+- `QProgressBar` below the execute button
+- For multi-step pipelines, show `"Step 2/5: ZScoreNormalize (45%)"` format
+- Use `QApplication::processEvents()` for responsiveness (same pattern as V1)
+
+### 3.4 — Error Display
+
+- Inline error banner for execution failures
+- Per-step error indicators in the step list
+- JSON validation errors shown in the JSON panel
+
+**Files to modify:**
+- `TransformsV2Properties_Widget` — execute button, progress bar, output config
+- `TransformsV2State` — store last output key, execution mode
+
+**Estimated effort:** Medium. Most execution logic already exists in `DataManagerPipelineExecutor`.
+
+---
+
+## Phase 4: External Pipeline Consumers (Embeddable Mode)
+
+**Goal:** Allow other widgets to use the TransformsV2 pipeline builder to configure pipelines without executing them against DataManager. This is the key extensibility point.
+
+### 4.1 — `PipelineConfigResult` Abstraction
+
+Define a result type that decouples pipeline *configuration* from pipeline *execution*:
+
+```cpp
+struct PipelineConfigResult {
+    std::string pipeline_json;                    // Serialized PipelineDescriptor
+    std::optional<TransformPipeline> pipeline;    // Ready-to-execute pipeline object
+    std::string input_type_name;                  // E.g., "AnalogTimeSeries"
+    std::string output_type_name;                 // E.g., "DigitalEventSeries"
+};
+```
+
+### 4.2 — Embeddable Pipeline Builder Widget
+
+Factor the pipeline builder into a reusable widget that can be embedded:
+
+```cpp
+class PipelineBuilderWidget : public QWidget {
+    Q_OBJECT
+public:
+    // Set the input data type (no DataManager needed)
+    void setInputType(std::type_index input_element_type);
+    
+    // Get the configured pipeline as JSON
+    [[nodiscard]] std::string pipelineJson() const;
+    
+    // Load a pipeline from JSON
+    void loadFromJson(std::string const& json);
+    
+signals:
+    void pipelineChanged(PipelineConfigResult const& result);
+};
+```
+
+### 4.3 — TensorData Lazy Column Integration
+
+In the TensorInspector widget, when configuring a lazy-evaluated column:
+1. Embed a `PipelineBuilderWidget` in a dialog or sub-panel
+2. Set the input type to the tensor's element type
+3. On `pipelineChanged`, store the JSON in the `TensorData` column definition
+4. The lazy backend uses `loadPipelineFromJson()` to reconstruct the pipeline at evaluation time
+
+### 4.4 — TableView Column Computer Integration
+
+Similar pattern: `TableDesignerWidget` can embed a `PipelineBuilderWidget` to define computed columns:
+1. User selects source column → sets input type
+2. Builds a pipeline in the embedded builder
+3. Pipeline JSON stored in the column computer definition
+4. On table evaluation, pipeline is reconstructed and executed per cell/row
+
+**Files to create:**
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineBuilderWidget.hpp/.cpp` — reusable embeddable builder
+- Modify `TransformsV2Properties_Widget` to embed `PipelineBuilderWidget` + add execution/output controls
+
+**Estimated effort:** Medium. The builder widget is a refactor of Phase 1 UI into a reusable component.
+
+---
+
+## Phase 5: State Serialization
+
+**Goal:** Minimal EditorState that preserves the user's workspace without tracking internal sub-widget details.
+
+### 5.1 — `TransformsV2StateData` Extension
+
+```cpp
+struct TransformsV2StateData {
+    std::string instance_id;
+    std::string display_name = "Transforms V2";
+    
+    // Pipeline state (the JSON is the source of truth)
+    std::optional<std::string> pipeline_json;       // Current PipelineDescriptor as JSON
+    std::optional<std::string> input_data_key;      // Currently selected input
+    std::optional<std::string> output_data_key;     // Last used output key name
+    std::optional<std::string> execution_mode;      // "data_manager" or "json_only"
+    
+    // UI preferences (not pipeline internals)
+    bool json_panel_expanded = false;
+    bool pre_reduction_panel_expanded = false;
+};
+```
+
+This deliberately does **not** store the internal state of individual parameter widgets. The pipeline JSON captures all parameter values. On workspace restore:
+1. `fromJson()` restores the state data
+2. Pipeline JSON is loaded into the builder (Phase 2.2 path)
+3. Builder reconstructs step widgets from the descriptor
+
+### 5.2 — Dirty Tracking
+
+Mark state dirty on any pipeline change. This integrates with the workspace save system.
+
+**Files to modify:**
+- `TransformsV2State.hpp/.cpp` — extend `TransformsV2StateData`
+
+**Estimated effort:** Small.
+
+---
+
+## Phase 6: Transform Migration & Polish
+
+**Goal:** Port V1 transforms to V2, add UX polish.
+
+### 6.1 — Priority Transforms to Port
+
+Focus on transforms that benefit most from pipelining:
+
+| V1 Transform | V2 Status | Notes |
+|---|---|---|
+| Mask Area | ✅ Done | `CalculateMaskArea` |
+| Line Angle | ✅ Done | `CalculateLineAngle` |
+| Line Curvature | ✅ Done | `CalculateLineCurvature` |
+| Z-Score Normalize | ✅ Done | `ZScoreNormalizeV2` with pre-reductions |
+| Analog Event Threshold | ✅ Done | Container transform |
+| Mask Centroid | ✅ Done | `CalculateMaskCentroid` |
+| Analog Filter | 🔄 Port | Good pipeline candidate (filter → threshold → detect) |
+| Line Resample | ✅ Done | `ResampleLine` |
+| Others | 🔄 Port | Follow registration pattern |
+
+### 6.2 — UI Polish
+
+- Keyboard shortcuts (Ctrl+Enter to execute, Ctrl+S to save JSON)
+- Undo/redo for pipeline edits (store descriptor stack)
+- Transform search/filter in the add-step combo box
+- Category grouping in the transform list (from `TransformMetadata.category`)
+- Tooltips from `TransformMetadata.description`
+- Dark/light theme support for JSON editor (syntax highlighting)
+
+### 6.3 — Deprecation Path for V1 Widget
+
+- V1 and V2 widgets coexist; V2 is registered under `"View/Tools"` menu
+- V1 JSON pipelines can be loaded in V2 (V1 format → V2 descriptor conversion)
+- Once all transforms are ported, V1 widget can be removed
+
+---
+
+## Implementation Order & Dependencies
+
+```
+Phase 0 (Auto-UI Infrastructure) ✅ COMPLETE
+    │
+    ├──→ Phase 1 (Pipeline Builder UI)  ──→ Phase 2 (JSON Sync)
+    │                                           │
+    │                                           ├──→ Phase 3 (Execution)
+    │                                           │
+    │                                           └──→ Phase 4 (Embeddable Mode)
+    │
+    └──→ Phase 5 (State Serialization)  [can start early, small]
+    
+Phase 6 (Migration & Polish)  [ongoing, parallel with Phases 1-4]
+```
+
+**Recommended start:** Phase 0.1–0.4 first (auto-UI is the biggest lever), then Phase 1 in parallel with Phase 5.
+
+---
+
+## Key Design Decisions
+
+### Why JSON as the Inter-Widget Protocol?
+
+The pipeline JSON (`PipelineDescriptor`) is already a reflect-cpp struct with automatic serialization. Using it as the interchange format means:
+- **No new IPC mechanism** — widgets pass strings
+- **Human-readable** — users can inspect, edit, and version-control pipelines
+- **Reproducible** — JSON pipelines are scripts that can be re-executed
+- **Decoupled** — the consumer widget doesn't need to link against TransformsV2_Widget, only against TransformsV2 core
+
+### Why Not Store Sub-Widget State in EditorState?
+
+Each transform's parameter widget is ephemeral. The pipeline JSON already captures all parameter values with full fidelity (it's the same format used for execution). Storing sub-widget state separately would create a parallel source of truth. Instead:
+- Pipeline JSON is the single source of truth for all parameter values
+- UI state (which sections are expanded) is minimal and stored in `TransformsV2StateData`
+- On restore, the JSON is loaded and widgets are reconstructed from it
+
+### Why `rfl::fields<T>()` for Auto-UI?
+
+reflect-cpp's `rfl::fields<T>()` returns `std::array<MetaField, N>` with field name and type as strings at compile time. Combined with `rfl::to_view()` for mutable access, this gives us:
+- **Zero-boilerplate field enumeration** for any params struct
+- **Type string parsing** to select appropriate Qt widgets
+- **Validator constraint extraction** from `rfl::Validator<T, Constraint>` type strings to set min/max on spin boxes
+- **Default values** from default-constructed params via the `getXxx()` helpers
+
+The alternative (manually writing a widget per transform) doesn't scale — V1 has 30+ hand-written widgets each with 50-150 lines of boilerplate.
+
+### Why Embeddable Builder Instead of Signals?
+
+A signal-only approach (`pipelineExecuted(QString json)`) is one-directional. The embeddable `PipelineBuilderWidget` allows:
+- Setting input type constraints (no DataManager needed)
+- Receiving pipeline changes in real-time (not just on execution)
+- Pre-populating with an existing pipeline (e.g., editing a TensorData lazy column)
+- Being placed in dialogs, dock panels, or inline in other widgets
+
+---
+
+## File Structure
+
+```
+TransformsV2_Widget/
+├── CMakeLists.txt
+├── ROADMAP.md
+├── TransformsV2WidgetRegistration.hpp       ✅ exists (skeleton)
+├── TransformsV2WidgetRegistration.cpp       ✅ exists (skeleton)
+├── Core/
+│   ├── TransformsV2State.hpp                ✅ exists (skeleton, needs Phase 5 extension)
+│   └── TransformsV2State.cpp                ✅ exists (skeleton)
+└── UI/
+    ├── TransformsV2Properties_Widget.hpp    ✅ exists (skeleton, needs Phase 1 content)
+    ├── TransformsV2Properties_Widget.cpp    ✅ exists (skeleton)
+    ├── TransformsV2Properties_Widget.ui     ✅ exists (placeholder label)
+    ├── AutoParamWidget.hpp                  ✅ Phase 0 complete
+    ├── AutoParamWidget.cpp                  ✅ Phase 0 complete
+    ├── ParamWidgetRegistry.hpp              ✅ Phase 0 complete
+    ├── PipelineBuilderWidget.hpp            ⬜ Phase 4
+    ├── PipelineBuilderWidget.cpp            ⬜ Phase 4
+    ├── PipelineStepListWidget.hpp           ⬜ Phase 1
+    ├── PipelineStepListWidget.cpp           ⬜ Phase 1
+    ├── StepConfigPanel.hpp                  ⬜ Phase 1
+    ├── StepConfigPanel.cpp                  ⬜ Phase 1
+    ├── PreReductionPanel.hpp                ⬜ Phase 1
+    └── PreReductionPanel.cpp                ⬜ Phase 1
+
+# In TransformsV2 core library (non-Qt):
+TransformsV2/core/
+├── ParameterSchema.hpp                      ✅ Phase 0 complete
+└── ParameterSchema.cpp                      ✅ Phase 0 complete
+
+# Tests:
+tests/TransformsV2/
+└── test_parameter_schema.test.cpp           ✅ Phase 0 complete (14 cases, 115 assertions)
+```

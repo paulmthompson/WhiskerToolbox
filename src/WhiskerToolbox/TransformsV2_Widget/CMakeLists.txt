@@ -4,6 +4,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 set(TRANSFORMS_V2_WIDGET_SOURCES
         Core/TransformsV2State.hpp
         Core/TransformsV2State.cpp
+        UI/AutoParamWidget.hpp
+        UI/AutoParamWidget.cpp
+        UI/ParamWidgetRegistry.hpp
         UI/TransformsV2Properties_Widget.hpp
         UI/TransformsV2Properties_Widget.cpp
         UI/TransformsV2Properties_Widget.ui
@@ -25,4 +28,5 @@ target_link_libraries(TransformsV2_Widget PUBLIC
         Qt6::Gui
         EditorState
         DataManager
+        TransformsV2
 )
