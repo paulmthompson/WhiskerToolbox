@@ -16,6 +16,8 @@
 #include "TransformsV2/core/PipelineLoader.hpp"
 #define slots Q_SLOTS
 
+#include "EditorState/OperationContext.hpp"
+
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
@@ -109,10 +111,13 @@ std::vector<OperationEntry> getOperationsForSource(
 ColumnConfigDialog::ColumnConfigDialog(
     std::shared_ptr<DataManager> data_manager,
     DesignerRowType row_type,
+    EditorLib::OperationContext * operation_context,
     QWidget * parent)
     : QDialog(parent)
     , _data_manager(std::move(data_manager))
-    , _row_type(row_type) {
+    , _row_type(row_type)
+    , _operation_context(operation_context)
+    , _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
     _setupUi();
     _connectSignals();
     _populateSourceKeys();
@@ -122,17 +127,22 @@ ColumnConfigDialog::ColumnConfigDialog(
     std::shared_ptr<DataManager> data_manager,
     DesignerRowType row_type,
     ColumnRecipe const & recipe,
+    EditorLib::OperationContext * operation_context,
     QWidget * parent)
     : QDialog(parent)
     , _data_manager(std::move(data_manager))
-    , _row_type(row_type) {
+    , _row_type(row_type)
+    , _operation_context(operation_context)
+    , _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
     _setupUi();
     _connectSignals();
     _populateSourceKeys();
     _applyRecipe(recipe);
 }
 
-ColumnConfigDialog::~ColumnConfigDialog() = default;
+ColumnConfigDialog::~ColumnConfigDialog() {
+    _cleanupPendingOperation();
+}
 
 // =============================================================================
 // Public API
@@ -397,9 +407,9 @@ void ColumnConfigDialog::_setupUi() {
     _request_tv2_btn = new QPushButton(
         QStringLiteral("Request from Transforms V2"), _advanced_group);
     _request_tv2_btn->setToolTip(
-        QStringLiteral("Request pipeline JSON from the Transforms V2 widget "
-                       "(requires OperationContext — Phase 6.4)"));
-    _request_tv2_btn->setEnabled(false); // Enabled in Phase 6.4
+        QStringLiteral("Open the Transforms V2 widget and request a pipeline. "
+                       "Configure your pipeline there, then click 'Send Pipeline' to deliver it here."));
+    _request_tv2_btn->setEnabled(_operation_context != nullptr);
     adv_btn_layout->addWidget(_request_tv2_btn);
     adv_layout->addLayout(adv_btn_layout);
 
@@ -438,6 +448,16 @@ void ColumnConfigDialog::_connectSignals() {
             this, &ColumnConfigDialog::_onValidateClicked);
     connect(_advanced_json_edit, &QTextEdit::textChanged,
             this, &ColumnConfigDialog::_onAdvancedJsonEdited);
+    connect(_request_tv2_btn, &QPushButton::clicked,
+            this, &ColumnConfigDialog::_onRequestTV2Clicked);
+
+    // OperationContext delivery and close signals
+    if (_operation_context) {
+        connect(_operation_context, &EditorLib::OperationContext::operationDelivered,
+                this, &ColumnConfigDialog::_onOperationDelivered);
+        connect(_operation_context, &EditorLib::OperationContext::operationClosed,
+                this, &ColumnConfigDialog::_onOperationClosed);
+    }
 }
 
 void ColumnConfigDialog::_populateSourceKeys() {
@@ -696,6 +716,111 @@ void ColumnConfigDialog::_onAdvancedJsonEdited() {
 
     // Clear validation on edit
     _validation_label->clear();
+}
+
+void ColumnConfigDialog::_onRequestTV2Clicked() {
+    if (!_operation_context) {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+            QStringLiteral("OperationContext not available. Cannot request pipeline."));
+        return;
+    }
+
+    // Clean up any previous request
+    _cleanupPendingOperation();
+
+    // Ensure advanced section is open
+    if (!_advanced_group->isChecked()) {
+        _advanced_group->setChecked(true);
+    }
+
+    // Request a pipeline from TransformsV2Widget
+    auto result = _operation_context->requestOperation(
+        EditorLib::EditorInstanceId(_requester_id),
+        EditorLib::EditorTypeId(QStringLiteral("TransformsV2Widget")),
+        EditorLib::OperationRequestOptions{
+            .channel = EditorLib::DataChannels::TransformPipeline,
+            .close_on_selection_change = false,
+            .close_after_delivery = true
+        });
+
+    if (result.has_value()) {
+        _pending_operation_id = result->id.toString();
+        _request_tv2_btn->setText(QStringLiteral("Waiting for pipeline..."));
+        _request_tv2_btn->setEnabled(false);
+        _validation_label->setStyleSheet(QStringLiteral("color: #0066cc;"));
+        _validation_label->setText(
+            QStringLiteral("Requested pipeline from Transforms V2 widget. "
+                           "Configure your pipeline there, then click 'Send Pipeline'."));
+    } else {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+            QStringLiteral("Failed to request pipeline from Transforms V2 widget."));
+    }
+}
+
+void ColumnConfigDialog::_onOperationDelivered(
+    EditorLib::PendingOperation const & op,
+    EditorLib::OperationResult const & result) {
+
+    // Check if this delivery is for our request
+    if (op.requester.toString() != _requester_id) {
+        return;
+    }
+
+    // Extract the pipeline JSON from the result
+    auto const * json_ptr = result.peek<std::string>();
+    if (!json_ptr) {
+        _validation_label->setStyleSheet(QStringLiteral("color: red;"));
+        _validation_label->setText(
+            QStringLiteral("Received result but could not extract pipeline JSON."));
+        _resetRequestButton();
+        return;
+    }
+
+    // Populate the advanced text edit with the received JSON
+    _syncing_json = true;
+    _use_advanced_json = true;
+    try {
+        auto j = nlohmann::json::parse(*json_ptr);
+        _advanced_json_edit->setPlainText(
+            QString::fromStdString(j.dump(2)));
+    } catch (...) {
+        _advanced_json_edit->setPlainText(
+            QString::fromStdString(*json_ptr));
+    }
+    _syncing_json = false;
+
+    // Auto-validate the received pipeline
+    _onValidateClicked();
+
+    // Reset the button and clear the pending operation ID
+    _pending_operation_id.clear();
+    _resetRequestButton();
+}
+
+void ColumnConfigDialog::_onOperationClosed(EditorLib::OperationId const & id) {
+    if (id.toString() != _pending_operation_id) {
+        return;
+    }
+    _pending_operation_id.clear();
+    _resetRequestButton();
+}
+
+void ColumnConfigDialog::_cleanupPendingOperation() {
+    if (!_pending_operation_id.isEmpty() && _operation_context) {
+        _operation_context->closeOperation(
+            EditorLib::OperationId(_pending_operation_id),
+            EditorLib::OperationCloseReason::RequesterClosed);
+        _pending_operation_id.clear();
+    }
+}
+
+void ColumnConfigDialog::_resetRequestButton() {
+    if (_request_tv2_btn) {
+        _request_tv2_btn->setText(QStringLiteral("Request from Transforms V2"));
+        _request_tv2_btn->setEnabled(_operation_context != nullptr);
+    }
 }
 
 // =============================================================================

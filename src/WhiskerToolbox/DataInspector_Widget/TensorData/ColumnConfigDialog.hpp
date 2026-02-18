@@ -38,6 +38,14 @@ class QWidget;
 
 enum class DesignerRowType;
 
+namespace EditorLib {
+class OperationContext;
+struct PendingOperation;
+struct OperationResult;
+struct EditorInstanceId;
+struct OperationId;
+} // namespace EditorLib
+
 namespace WhiskerToolbox::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
@@ -57,11 +65,13 @@ public:
      * @brief Construct column configuration dialog
      * @param data_manager DataManager for source key enumeration
      * @param row_type Current row type of the tensor designer
+     * @param operation_context OperationContext for requesting pipelines from TransformsV2 (nullable)
      * @param parent Parent widget
      */
     explicit ColumnConfigDialog(
         std::shared_ptr<DataManager> data_manager,
         DesignerRowType row_type,
+        EditorLib::OperationContext * operation_context = nullptr,
         QWidget * parent = nullptr);
 
     /**
@@ -69,12 +79,14 @@ public:
      * @param data_manager DataManager for source key enumeration
      * @param row_type Current row type
      * @param recipe Existing recipe to edit
+     * @param operation_context OperationContext for requesting pipelines from TransformsV2 (nullable)
      * @param parent Parent widget
      */
     ColumnConfigDialog(
         std::shared_ptr<DataManager> data_manager,
         DesignerRowType row_type,
         WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe,
+        EditorLib::OperationContext * operation_context = nullptr,
         QWidget * parent = nullptr);
 
     ~ColumnConfigDialog() override;
@@ -93,6 +105,10 @@ private slots:
     void _onAdvancedToggled(bool checked);
     void _onValidateClicked();
     void _onAdvancedJsonEdited();
+    void _onRequestTV2Clicked();
+    void _onOperationDelivered(EditorLib::PendingOperation const & op,
+                               EditorLib::OperationResult const & result);
+    void _onOperationClosed(EditorLib::OperationId const & id);
 
 private:
     void _setupUi();
@@ -108,9 +124,18 @@ private:
     /// be described by the simple combo-box UX (multi-step, custom params, etc.)
     [[nodiscard]] bool _isAdvancedPipelineJson(std::string const & json) const;
 
+    /// Clean up any pending OperationContext request on dialog close
+    void _cleanupPendingOperation();
+
+    /// Reset the "Request from Transforms V2" button to its default state
+    void _resetRequestButton();
+
     std::shared_ptr<DataManager> _data_manager;
     DesignerRowType _row_type;
-    bool _auto_name{true}; ///< Auto-generate column name from source + operation
+    EditorLib::OperationContext * _operation_context{nullptr};
+    QString _requester_id;         ///< EditorInstanceId for OperationContext requests
+    QString _pending_operation_id;  ///< OperationId of our pending request (empty if none)
+    bool _auto_name{true};         ///< Auto-generate column name from source + operation
 
     // UI
     QVBoxLayout * _layout{nullptr};

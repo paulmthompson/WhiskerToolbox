@@ -22,6 +22,10 @@
 #include <string>
 #include <typeindex>
 
+namespace EditorLib {
+class OperationContext;
+} // namespace EditorLib
+
 class TransformsV2State;
 class SelectionContext;
 class DataManager;
@@ -64,6 +68,18 @@ public:
     void onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
                             QString const & data_type) override;
 
+    /**
+     * @brief Set the OperationContext for inter-widget pipeline delivery
+     *
+     * When set, the widget shows a "Send Pipeline" button whenever
+     * there is a pending operation from a consumer (e.g., TensorDesigner's
+     * ColumnConfigDialog). Clicking the button delivers the current
+     * pipeline JSON to the requester.
+     *
+     * @param context OperationContext instance (can be nullptr)
+     */
+    void setOperationContext(EditorLib::OperationContext * context);
+
 signals:
     /**
      * @brief Emitted whenever the pipeline descriptor changes
@@ -88,6 +104,10 @@ private slots:
     // Phase 3: Execution slots
     void onExecuteClicked();
     void onOutputKeyEdited(QString const & text);
+
+    // Phase 6.4: OperationContext delivery
+    void onDeliverPipelineClicked();
+    void onPendingOperationChanged(EditorLib::EditorTypeId const & producer_type);
 
 private:
     void setupUI();
@@ -131,6 +151,21 @@ private:
      */
     void updateExecuteButtonState();
 
+    /**
+     * @brief Attempt to deliver the current pipeline JSON to a pending consumer
+     *
+     * If there is a pending operation for "TransformsV2Widget", delivers
+     * the pipeline JSON via OperationContext.
+     *
+     * @return true if delivery succeeded
+     */
+    bool tryDeliverPipeline();
+
+    /**
+     * @brief Update visibility/state of the deliver button based on pending operations
+     */
+    void updateDeliverButtonState();
+
     /// Guard against feedback loops during bidirectional sync
     bool _syncing_json = false;
 
@@ -170,6 +205,10 @@ private:
     QLabel * _progress_label = nullptr;
     QLabel * _error_label = nullptr;
     bool _output_key_user_edited = false;  ///< True if user manually edited the output key
+
+    // OperationContext delivery (Phase 6.4)
+    EditorLib::OperationContext * _operation_context = nullptr;
+    QPushButton * _deliver_pipeline_btn = nullptr;
 };
 
 #endif // TRANSFORMS_V2_PROPERTIES_WIDGET_HPP

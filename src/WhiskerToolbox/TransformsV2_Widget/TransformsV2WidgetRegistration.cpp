@@ -4,6 +4,7 @@
 #include "UI/TransformsV2Properties_Widget.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/OperationContext.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <iostream>
@@ -50,6 +51,7 @@ void registerTypes(EditorRegistry * registry,
             auto * selection_context = reg->selectionContext();
 
             auto * widget = new TransformsV2Properties_Widget(state, selection_context, nullptr);
+            widget->setOperationContext(reg->operationContext());
             widget->setMinimumSize(350, 400);
             widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 
