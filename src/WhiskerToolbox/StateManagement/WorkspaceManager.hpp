@@ -39,6 +39,7 @@
 #include <QObject>
 #include <QString>
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -71,6 +72,15 @@ public:
 
     void setEditorRegistry(EditorRegistry * registry);
     void setZoneManager(ZoneManager * zone_manager);
+
+    /**
+     * @brief Set a callback to capture ADS dock state for layout persistence
+     *
+     * The callback should return a base64-encoded string of the ADS
+     * CDockManager::saveState() QByteArray. This avoids coupling
+     * WorkspaceManager to the ADS library.
+     */
+    void setDockStateCaptureCallback(std::function<std::string()> callback);
 
     // === Save / Load ===
 
@@ -237,6 +247,9 @@ private:
     // Collaborators (non-owning)
     EditorRegistry * _editor_registry = nullptr;
     ZoneManager * _zone_manager = nullptr;
+
+    /// Optional callback to capture ADS dock layout state
+    std::function<std::string()> _dock_state_capture;
 
     // Auto-save
     QTimer * _auto_save_timer = nullptr;

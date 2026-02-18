@@ -69,9 +69,13 @@ EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const 
     // Increment creation counter for this type
     _creation_counters[type_id]++;
     
+    // Build unique, stable object names from instance ID for ADS state persistence
+    auto const instance_id_str = result.state->getInstanceId();
+
     // Create and place the view dock widget
     if (editor_instance.view) {
-        result.view_dock = createDockWidget(editor_instance.view, view_title, true);
+        auto const view_obj_name = QStringLiteral("view_%1").arg(instance_id_str);
+        result.view_dock = createDockWidget(editor_instance.view, view_title, view_obj_name, true);
         
         if (result.view_dock) {
             // Add to the preferred zone
@@ -82,7 +86,8 @@ EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const 
     // Create and place the properties dock widget (if properties factory exists)
     if (editor_instance.properties) {
         QString const props_title = view_title + QStringLiteral(" Properties");
-        result.properties_dock = createDockWidget(editor_instance.properties, props_title, true);
+        auto const props_obj_name = QStringLiteral("props_%1").arg(instance_id_str);
+        result.properties_dock = createDockWidget(editor_instance.properties, props_title, props_obj_name, true);
         
         if (result.properties_dock) {
             // Determine whether to raise properties based on type info
@@ -137,10 +142,14 @@ EditorCreationController::placeExistingEditor(
                     : state->getDisplayName())
             : view_title;
 
+    // Build unique, stable object names from instance ID for ADS state persistence
+    auto const instance_id_str = state->getInstanceId();
+
     // Create view widget from existing state
     auto * view = _registry->createView(state);
     if (view) {
-        result.view_dock = createDockWidget(view, title, true);
+        auto const view_obj_name = QStringLiteral("view_%1").arg(instance_id_str);
+        result.view_dock = createDockWidget(view, title, view_obj_name, true);
         if (result.view_dock) {
             _zone_manager->addToZone(result.view_dock, view_zone, raise_view);
         }
@@ -150,7 +159,8 @@ EditorCreationController::placeExistingEditor(
     auto * properties = _registry->createProperties(state);
     if (properties) {
         QString const props_title = title + QStringLiteral(" Properties");
-        result.properties_dock = createDockWidget(properties, props_title, true);
+        auto const props_obj_name = QStringLiteral("props_%1").arg(instance_id_str);
+        result.properties_dock = createDockWidget(properties, props_title, props_obj_name, true);
         if (result.properties_dock) {
             bool const raise_props = type_info.auto_raise_properties;
             _zone_manager->addToZone(result.properties_dock, properties_zone, raise_props);
@@ -169,6 +179,7 @@ EditorCreationController::placeExistingEditor(
 
 ads::CDockWidget * EditorCreationController::createDockWidget(QWidget * widget,
                                                                QString const & title,
+                                                               QString const & object_name,
                                                                bool closable)
 {
     if (!widget) {
@@ -177,6 +188,12 @@ ads::CDockWidget * EditorCreationController::createDockWidget(QWidget * widget,
     
     auto * dock = new ads::CDockWidget(title);
     dock->setWidget(widget);
+
+    // Set a unique, stable object name for ADS state save/restore.
+    // ADS uses objectName() to identify dock widgets in saveState()/restoreState().
+    if (!object_name.isEmpty()) {
+        dock->setObjectName(object_name);
+    }
     
     // Configure dock features
     dock->setFeature(ads::CDockWidget::DockWidgetClosable, closable);

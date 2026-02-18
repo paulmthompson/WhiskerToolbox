@@ -198,12 +198,14 @@ private:
      * @brief Create a dock widget for a widget
      * 
      * @param widget The widget to wrap
-     * @param title The dock widget title
+     * @param title The dock widget title (displayed to the user)
+     * @param object_name Unique object name for ADS state save/restore
      * @param closable Whether the dock can be closed by the user
      * @return The created dock widget
      */
     ads::CDockWidget * createDockWidget(QWidget * widget, 
                                          QString const & title,
+                                         QString const & object_name,
                                          bool closable = true);
 
     /**

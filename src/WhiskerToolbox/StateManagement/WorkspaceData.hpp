@@ -65,6 +65,9 @@ struct WorkspaceData {
     /// Opaque JSON string from ZoneConfig::saveToJson()
     std::string zone_layout_json;
 
+    /// Base64-encoded ADS CDockManager::saveState() for exact dock widget positions
+    std::string dock_state_base64;
+
     /// Transform pipeline JSON strings applied during the session
     std::vector<std::string> applied_pipelines;
 

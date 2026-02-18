@@ -45,6 +45,11 @@ void WorkspaceManager::setZoneManager(ZoneManager * zone_manager)
     _zone_manager = zone_manager;
 }
 
+void WorkspaceManager::setDockStateCaptureCallback(std::function<std::string()> callback)
+{
+    _dock_state_capture = std::move(callback);
+}
+
 // ---------------------------------------------------------------------------
 // Save / Load
 // ---------------------------------------------------------------------------
@@ -276,6 +281,11 @@ WorkspaceData WorkspaceManager::_captureCurrentState() const
         data.zone_layout_json = ZoneConfig::saveToJson(config);
     }
 
+    // Capture ADS dock state for exact widget positions/splits
+    if (_dock_state_capture) {
+        data.dock_state_base64 = _dock_state_capture();
+    }
+
     return data;
 }
 
@@ -313,6 +323,11 @@ bool WorkspaceManager::_writeWorkspaceFile(QString const & path,
             doc["zone_layout"] = nlohmann::json::parse(data.zone_layout_json);
         } else {
             doc["zone_layout"] = nlohmann::json::object();
+        }
+
+        // ADS dock state for exact widget positions/splits
+        if (!data.dock_state_base64.empty()) {
+            doc["dock_state"] = data.dock_state_base64;
         }
 
         // Applied pipelines
@@ -400,6 +415,11 @@ std::optional<WorkspaceData> WorkspaceManager::_readWorkspaceFile(QString const 
         if (doc.contains("zone_layout") && doc["zone_layout"].is_object()
             && !doc["zone_layout"].empty()) {
             data.zone_layout_json = doc["zone_layout"].dump();
+        }
+
+        // ADS dock state
+        if (doc.contains("dock_state") && doc["dock_state"].is_string()) {
+            data.dock_state_base64 = doc["dock_state"].get<std::string>();
         }
 
         // Applied pipelines
