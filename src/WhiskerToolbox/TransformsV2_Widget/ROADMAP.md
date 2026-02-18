@@ -325,14 +325,6 @@ In the TensorInspector widget, when configuring a lazy-evaluated column:
 3. On `pipelineChanged`, store the JSON in the `TensorData` column definition
 4. The lazy backend uses `loadPipelineFromJson()` to reconstruct the pipeline at evaluation time
 
-### 4.4 — TableView Column Computer Integration
-
-Similar pattern: `TableDesignerWidget` can embed a `PipelineBuilderWidget` to define computed columns:
-1. User selects source column → sets input type
-2. Builds a pipeline in the embedded builder
-3. Pipeline JSON stored in the column computer definition
-4. On table evaluation, pipeline is reconstructed and executed per cell/row
-
 **Files to create:**
 - `src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineBuilderWidget.hpp/.cpp` — reusable embeddable builder
 - Modify `TransformsV2Properties_Widget` to embed `PipelineBuilderWidget` + add execution/output controls
