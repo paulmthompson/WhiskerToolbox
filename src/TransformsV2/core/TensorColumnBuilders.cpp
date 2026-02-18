@@ -9,18 +9,23 @@
 
 #include "GatherResult/GatherResult.hpp"
 
+#include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/core/PipelineValueStore.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/extension/RangeReductionTypes.hpp"
+#include "TransformsV2/extension/TransformTypes.hpp"
 #include "TransformsV2/extension/ViewAdaptorTypes.hpp"
 
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <cmath>     // NAN
+#include <functional>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 
 namespace WhiskerToolbox::TensorBuilders {
 
@@ -114,6 +119,184 @@ std::shared_ptr<DigitalIntervalSeries> prepareIntervalsForGather(
     return result;
 }
 
+// ============================================================================
+// Multi-Step Pipeline Helpers
+// ============================================================================
+
+using ElementVariant = Transforms::V2::ElementVariant;
+
+/**
+ * @brief Validate that a pipeline's element steps produce float output.
+ *
+ * The first step must accept float input (since AnalogTimeSeries values
+ * are extracted as floats), and the last step must produce float output
+ * (since tensor columns store floats).
+ *
+ * @throws std::runtime_error if the chain is invalid
+ */
+void validateStepChainForFloats(Transforms::V2::TransformPipeline const & pipeline) {
+    auto & registry = Transforms::V2::ElementRegistry::instance();
+
+    // Validate first step accepts float input
+    auto const * first_meta = registry.getMetadata(
+        pipeline.getStep(0).transform_name);
+    if (!first_meta) {
+        throw std::runtime_error(
+            "validateStepChainForFloats: transform '" +
+            pipeline.getStep(0).transform_name + "' not found in ElementRegistry");
+    }
+    if (first_meta->input_type != std::type_index(typeid(float))) {
+        throw std::runtime_error(
+            "validateStepChainForFloats: first step '" +
+            pipeline.getStep(0).transform_name +
+            "' expects non-float input, but AnalogTimeSeries values are float");
+    }
+
+    // Validate last step produces float output
+    auto const * last_meta = registry.getMetadata(
+        pipeline.getStep(pipeline.size() - 1).transform_name);
+    if (!last_meta) {
+        throw std::runtime_error(
+            "validateStepChainForFloats: transform '" +
+            pipeline.getStep(pipeline.size() - 1).transform_name +
+            "' not found in ElementRegistry");
+    }
+    if (last_meta->output_type != std::type_index(typeid(float))) {
+        throw std::runtime_error(
+            "validateStepChainForFloats: last step '" +
+            pipeline.getStep(pipeline.size() - 1).transform_name +
+            "' does not produce float output");
+    }
+}
+
+/**
+ * @brief Build a vector of type-erased element transform functions from pipeline steps.
+ *
+ * Each function in the returned vector wraps one pipeline step and can be
+ * applied to an ElementVariant. The chain captures step params by reference
+ * (via the pipeline's steps), so parameter binding modifications (from
+ * pre-reductions) are visible to the chain.
+ *
+ * @param pipeline Pipeline whose steps define the transform chain
+ * @return Vector of type-erased functions: ElementVariant → ElementVariant
+ */
+std::vector<std::function<ElementVariant(ElementVariant)>>
+buildElementChain(Transforms::V2::TransformPipeline const & pipeline) {
+    auto & registry = Transforms::V2::ElementRegistry::instance();
+
+    std::vector<std::function<ElementVariant(ElementVariant)>> chain;
+    chain.reserve(pipeline.size());
+
+    for (std::size_t i = 0; i < pipeline.size(); ++i) {
+        auto const & step = pipeline.getStep(i);
+        auto const * meta = registry.getMetadata(step.transform_name);
+        if (!meta) {
+            throw std::runtime_error(
+                "buildElementChain: transform '" + step.transform_name +
+                "' not found in ElementRegistry");
+        }
+
+        // Capture &step (reference to pipeline's step) so that binding
+        // modifications to step.params are visible to the chain.
+        chain.push_back(
+            [&registry, name = step.transform_name, &step, meta](
+                ElementVariant input) -> ElementVariant {
+                return registry.executeWithDynamicParams(
+                    name, input, step.params,
+                    meta->input_type, meta->output_type, meta->params_type);
+            });
+    }
+
+    return chain;
+}
+
+/**
+ * @brief Apply an element transform chain to a float value.
+ *
+ * Wraps the float in an ElementVariant, applies all chain functions,
+ * and extracts the float result.
+ *
+ * @param chain Vector of element transform functions
+ * @param value Input float value
+ * @return Transformed float value
+ */
+float applyChainToFloat(
+    std::vector<std::function<ElementVariant(ElementVariant)>> const & chain,
+    float value)
+{
+    ElementVariant current{value};
+    for (auto const & fn : chain) {
+        current = fn(std::move(current));
+    }
+    return std::get<float>(std::move(current));
+}
+
+/**
+ * @brief Execute pre-reductions on a span of elements and populate a PipelineValueStore.
+ *
+ * Runs each pre-reduction step from the pipeline on the given input span,
+ * storing results in the provided value store. The store can then be used
+ * to apply bindings to subsequent transform step parameters.
+ *
+ * @tparam ElementType The element type of the input data (e.g., TimeValuePoint)
+ * @param pipeline Pipeline with pre-reductions
+ * @param input_span Input data span to reduce
+ * @param store Output value store to populate
+ */
+template<typename ElementType>
+void executePreReductionsOnSpan(
+    Transforms::V2::TransformPipeline const & pipeline,
+    std::span<ElementType const> input_span,
+    Transforms::V2::PipelineValueStore & store)
+{
+    auto & registry = Transforms::V2::RangeReductionRegistry::instance();
+
+    for (auto const & pre_red : pipeline.getPreReductions()) {
+        std::any input_any{input_span};
+        std::any params_to_use = pre_red.params.has_value()
+            ? pre_red.params
+            : std::any{Transforms::V2::NoReductionParams{}};
+
+        std::any result_any = registry.executeErased(
+            pre_red.reduction_name, pre_red.input_type,
+            input_any, params_to_use);
+
+        // Store result in value store, converting to the appropriate type
+        if (pre_red.output_type == std::type_index(typeid(float))) {
+            store.set(pre_red.output_key, std::any_cast<float>(result_any));
+        } else if (pre_red.output_type == std::type_index(typeid(double))) {
+            store.set(pre_red.output_key,
+                      static_cast<float>(std::any_cast<double>(result_any)));
+        } else if (pre_red.output_type == std::type_index(typeid(int))) {
+            store.set(pre_red.output_key,
+                      static_cast<int64_t>(std::any_cast<int>(result_any)));
+        } else if (pre_red.output_type == std::type_index(typeid(int64_t))) {
+            store.set(pre_red.output_key, std::any_cast<int64_t>(result_any));
+        }
+    }
+}
+
+/**
+ * @brief Apply pre-reduction bindings to all steps in a pipeline.
+ *
+ * After pre-reductions populate a PipelineValueStore, this function
+ * applies the configured bindings to each step's parameters.
+ *
+ * @param pipeline Pipeline whose steps have parameter bindings
+ * @param store Value store populated by pre-reductions
+ */
+void applyBindingsToAllSteps(
+    Transforms::V2::TransformPipeline const & pipeline,
+    Transforms::V2::PipelineValueStore const & store)
+{
+    for (std::size_t s = 0; s < pipeline.size(); ++s) {
+        auto const & step = pipeline.getStep(s);
+        if (step.hasBindings()) {
+            step.applyBindings(store);
+        }
+    }
+}
+
 } // anonymous namespace
 
 // ============================================================================
@@ -174,26 +357,94 @@ ColumnProviderFn buildTimeSeriesColumnProvider(
         return buildDirectColumnProvider(dm, source_key, row_times);
     }
 
-    // If the pipeline has a range reduction set, we use bindReducer to get
-    // a reducer that transforms+reduces. For per-element timestamp columns,
-    // however, we usually won't have a range reduction — each row produces
-    // exactly one value, not a reduced span.
-    //
-    // Case 1: pipeline has steps but NO range reduction → apply element
-    //         transforms to sample value at each timestamp, return transformed value.
-    // Case 2: pipeline HAS range reduction → treat each single-sample as a
-    //         one-element span and reduce.
+    bool const has_steps = !pipeline.empty();
+    bool const has_reduction = pipeline.hasRangeReduction();
 
-    // For timestamp-row columns with a reduction, apply the reduction to
-    // each single-sample span.  We build the reducer via the RangeReductionRegistry
-    // directly (since TimeValuePoint is not in ElementVariant and cannot use
-    // the generic buildComposedTransformFn path in bindReducer).
-    //
-    // For pipelines with element-transform steps but no reduction, we fall
-    // back to passthrough (element transforms on single-sample timeseries
-    // columns are an advanced use case to be added later).
+    // ────────────────────────────────────────────────────────────────
+    // Case 1: Element steps only, no range reduction
+    // Apply the transform chain to each sample value.
+    // ────────────────────────────────────────────────────────────────
+    if (has_steps && !has_reduction) {
+        validateStepChainForFloats(pipeline);
 
-    if (pipeline.hasRangeReduction()) {
+        // We must capture the pipeline by value so that the chain's &step
+        // references remain valid (they point into the captured pipeline).
+        return [&dm, key = source_key, times = row_times,
+                pipe = std::move(pipeline)]() -> std::vector<float> {
+            auto src = dm.getData<AnalogTimeSeries>(key);
+            if (!src) {
+                throw std::runtime_error(
+                    "buildTimeSeriesColumnProvider: source '" + key +
+                    "' no longer available");
+            }
+
+            auto chain = buildElementChain(pipe);
+
+            std::vector<float> result;
+            result.reserve(times.size());
+            for (auto const & t : times) {
+                auto val = src->getAtTime(t);
+                if (!val.has_value()) {
+                    result.push_back(NAN);
+                    continue;
+                }
+                result.push_back(applyChainToFloat(chain, val.value()));
+            }
+            return result;
+        };
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Case 2: Element steps + range reduction
+    // Transform each sample value, then apply reduction on the single
+    // transformed element. (Degenerate but supported for completeness.)
+    // ────────────────────────────────────────────────────────────────
+    if (has_steps && has_reduction) {
+        validateStepChainForFloats(pipeline);
+
+        auto const & reduction = pipeline.getRangeReduction().value();
+        auto reduction_name = reduction.reduction_name;
+        auto reduction_params = ensureReductionParams(reduction.params);
+
+        return [&dm, key = source_key, times = row_times,
+                pipe = std::move(pipeline),
+                red_name = std::move(reduction_name),
+                red_params = std::move(reduction_params)]() -> std::vector<float> {
+            using TimeValuePoint = AnalogTimeSeries::TimeValuePoint;
+            auto src = dm.getData<AnalogTimeSeries>(key);
+            if (!src) {
+                throw std::runtime_error(
+                    "buildTimeSeriesColumnProvider: source '" + key +
+                    "' no longer available");
+            }
+
+            auto chain = buildElementChain(pipe);
+            auto & registry = Transforms::V2::RangeReductionRegistry::instance();
+
+            std::vector<float> result;
+            result.reserve(times.size());
+            for (auto const & t : times) {
+                auto val = src->getAtTime(t);
+                if (!val.has_value()) {
+                    result.push_back(NAN);
+                    continue;
+                }
+                float transformed = applyChainToFloat(chain, val.value());
+                TimeValuePoint tvp{t, transformed};
+                std::span<TimeValuePoint const> span{&tvp, 1};
+                std::any input_any{span};
+                std::any res = registry.executeErased(
+                    red_name, typeid(TimeValuePoint), input_any, red_params);
+                result.push_back(castReductionResult(res));
+            }
+            return result;
+        };
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Case 3: Range reduction only, no element steps (existing behavior)
+    // ────────────────────────────────────────────────────────────────
+    if (has_reduction) {
         auto const & reduction = pipeline.getRangeReduction().value();
         auto reduction_name = reduction.reduction_name;
         auto reduction_params = ensureReductionParams(reduction.params);
@@ -230,27 +481,8 @@ ColumnProviderFn buildTimeSeriesColumnProvider(
         };
     }
 
-    // Pipeline has steps but no range reduction → element-level transform only.
-    // For now, fall back to passthrough; full element-transform chains for
-    // single-sample timestamp columns will be added when the ElementRegistry
-    // gains a single-element execution API.
-
-    return [&dm, key = source_key, times = row_times]() -> std::vector<float> {
-        auto src = dm.getData<AnalogTimeSeries>(key);
-        if (!src) {
-            throw std::runtime_error(
-                "buildTimeSeriesColumnProvider: source '" + key +
-                "' no longer available");
-        }
-
-        std::vector<float> result;
-        result.reserve(times.size());
-        for (auto const & t : times) {
-            auto val = src->getAtTime(t);
-            result.push_back(val.value_or(NAN));
-        }
-        return result;
-    };
+    // Should not reach here — fall back to direct passthrough as safety net
+    return buildDirectColumnProvider(dm, source_key, row_times);
 }
 
 // ============================================================================
@@ -261,6 +493,17 @@ namespace {
 
 /**
  * @brief Helper: gather AnalogTimeSeries over intervals and reduce.
+ *
+ * When the pipeline has element transform steps, the flow per interval is:
+ *   1. Gather raw TimeValuePoints
+ *   2. Execute pre-reductions (MeanValue, StdValue, etc.) on raw data
+ *   3. Apply parameter bindings (inject pre-reduction results into step params)
+ *   4. Apply element transform chain (float → float) to each gathered value
+ *   5. Reconstruct TimeValuePoints with transformed values (preserving times)
+ *   6. Apply final range reduction on the transformed TimeValuePoints
+ *
+ * When the pipeline has no element steps (only a range reduction), the simpler
+ * gather → reduce path using GatherResult::reduce() is used.
  *
  * Uses RangeReductionRegistry::executeErased() directly rather than
  * bindReducer<TimeValuePoint, float>() to avoid a template-instantiation
@@ -280,6 +523,77 @@ ColumnProviderFn buildIntervalReductionForAnalog(
     auto const & reduction = pipeline.getRangeReduction().value();
     auto reduction_name = reduction.reduction_name;
     auto reduction_params = ensureReductionParams(reduction.params);
+
+    bool const has_steps = !pipeline.empty();
+
+    // ────────────────────────────────────────────────────────────────
+    // Multi-step path: element transforms (+ optional pre-reductions)
+    // ────────────────────────────────────────────────────────────────
+    if (has_steps) {
+        validateStepChainForFloats(pipeline);
+
+        return [&dm, key = source_key,
+                ivals = std::move(intervals),
+                pipe = std::move(pipeline),
+                red_name = std::move(reduction_name),
+                red_params = std::move(reduction_params)]() -> std::vector<float> {
+            auto src = dm.getData<AnalogTimeSeries>(key);
+            if (!src) {
+                throw std::runtime_error(
+                    "buildIntervalReductionForAnalog(MultiStep): source '" +
+                    key + "' no longer available");
+            }
+
+            auto gather_ivals = prepareIntervalsForGather(ivals, src->getTimeFrame());
+            auto gather = GatherResult<AnalogTimeSeries>::create(src, gather_ivals);
+
+            auto & reduction_registry =
+                Transforms::V2::RangeReductionRegistry::instance();
+
+            std::vector<float> result;
+            result.reserve(gather.size());
+
+            for (std::size_t i = 0; i < gather.size(); ++i) {
+                // Materialize the gathered view for this interval
+                auto view = gather[i]->view();
+                std::vector<TimeValuePoint> elements(view.begin(), view.end());
+                std::span<TimeValuePoint const> element_span{elements};
+
+                // 1. Execute pre-reductions on RAW gathered data
+                Transforms::V2::PipelineValueStore store;
+                if (pipe.hasPreReductions()) {
+                    executePreReductionsOnSpan(pipe, element_span, store);
+                }
+
+                // 2. Apply bindings to step params (e.g., inject mean/std)
+                applyBindingsToAllSteps(pipe, store);
+
+                // 3. Build element chain and transform each value
+                //    The chain captures &step references into the pipeline,
+                //    so binding modifications from step 2 are visible.
+                auto chain = buildElementChain(pipe);
+                std::vector<TimeValuePoint> transformed;
+                transformed.reserve(elements.size());
+                for (auto const & tvp : elements) {
+                    float new_val = applyChainToFloat(chain, tvp.value());
+                    transformed.push_back({tvp.time(), new_val});
+                }
+
+                // 4. Apply final range reduction on transformed data
+                std::span<TimeValuePoint const> transformed_span{transformed};
+                std::any input_any{transformed_span};
+                std::any res = reduction_registry.executeErased(
+                    red_name, typeid(TimeValuePoint), input_any, red_params);
+                result.push_back(castReductionResult(res));
+            }
+
+            return result;
+        };
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Simple path: range reduction only, no element steps
+    // ────────────────────────────────────────────────────────────────
 
     // Build a ReducerFactoryV2 that creates a ReducerFn on the fly using
     // the erased registry.
