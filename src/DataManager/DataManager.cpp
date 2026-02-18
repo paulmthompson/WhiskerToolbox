@@ -655,6 +655,100 @@ bool DataManager::deleteData(std::string const & key) {
     return true;
 }
 
+// ======= Time Entity helpers =======
+
+EntityId DataManager::ensureTimeEntityId(TimeKey const & time_key, TimeFrameIndex index) {
+    return _entity_registry->ensureId(
+        time_key.str(), EntityKind::TimeEntity, index, /*local_index=*/0);
+}
+
+std::vector<EntityId> DataManager::ensureTimeEntityIds(
+        TimeKey const & time_key, TimeFrameIndex start, TimeFrameIndex end) {
+    std::vector<EntityId> ids;
+    auto const count = end.getValue() - start.getValue() + 1;
+    if (count <= 0) {
+        return ids;
+    }
+    ids.reserve(static_cast<std::size_t>(count));
+    for (auto idx = start; idx <= end; ++idx) {
+        ids.push_back(ensureTimeEntityId(time_key, idx));
+    }
+    return ids;
+}
+
+std::optional<std::pair<TimeKey, TimeFrameIndex>>
+DataManager::resolveTimeEntity(EntityId id) const {
+    auto desc = _entity_registry->get(id);
+    if (!desc.has_value()) {
+        return std::nullopt;
+    }
+    if (desc->kind != EntityKind::TimeEntity) {
+        return std::nullopt;
+    }
+    return std::make_pair(TimeKey(desc->data_key), TimeFrameIndex(desc->time_value));
+}
+
+std::vector<TimeFrameIndex>
+DataManager::getTimeIndicesInGroup(GroupId group_id, TimeKey const & time_key) const {
+    std::vector<TimeFrameIndex> result;
+
+    auto entities = _entity_group_manager->getEntitiesInGroup(group_id);
+    result.reserve(entities.size());
+
+    for (auto const & entity_id : entities) {
+        auto desc = _entity_registry->get(entity_id);
+        if (!desc.has_value() || desc->kind != EntityKind::TimeEntity) {
+            continue;
+        }
+        if (TimeKey(desc->data_key) != time_key) {
+            continue;
+        }
+        result.emplace_back(desc->time_value);
+    }
+    return result;
+}
+
+std::vector<TimeFrameIndex>
+DataManager::getTimeIndicesInGroupConverted(GroupId group_id, TimeKey const & target_key) const {
+    std::vector<TimeFrameIndex> result;
+
+    // Look up the target TimeFrame (need non-const find since _times is mutable map)
+    auto target_it = _times.find(target_key);
+    if (target_it == _times.end() || !target_it->second) {
+        return result;
+    }
+    auto const * target_tf = target_it->second.get();
+
+    auto entities = _entity_group_manager->getEntitiesInGroup(group_id);
+    result.reserve(entities.size());
+
+    for (auto const & entity_id : entities) {
+        auto desc = _entity_registry->get(entity_id);
+        if (!desc.has_value() || desc->kind != EntityKind::TimeEntity) {
+            continue;
+        }
+
+        TimeFrameIndex const source_idx(desc->time_value);
+        TimeKey const source_key(desc->data_key);
+
+        if (source_key == target_key) {
+            // Same clock — no conversion needed
+            result.push_back(source_idx);
+            continue;
+        }
+
+        // Look up the source TimeFrame for cross-clock conversion
+        auto source_it = _times.find(source_key);
+        if (source_it == _times.end() || !source_it->second) {
+            continue; // skip if source clock is not registered
+        }
+
+        result.push_back(
+            convert_time_index(source_idx, source_it->second.get(), target_tf));
+    }
+    return result;
+}
+
 std::optional<std::string> processFilePath(
         std::string const & file_path,
         std::string const & base_path) {

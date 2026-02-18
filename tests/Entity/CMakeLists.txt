@@ -15,6 +15,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_entity
     test_entity_registry.cpp
     test_entity_types.cpp
+    test_time_entity.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Entity/EntityGroupManager.test.cpp
 
