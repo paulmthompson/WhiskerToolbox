@@ -44,6 +44,9 @@ add_executable(test_data_manager
 
         Lineage/test_lineage_recorder.test.cpp
 
+        test_time_entity.cpp
+        test_time_entity_groups.cpp
+
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 

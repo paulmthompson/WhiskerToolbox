@@ -195,5 +195,6 @@ private slots:
     void open3DPlotWidget();
     void openOnionSkinViewWidget();
     void openPythonWidget();
+    void openTransformsV2Widget();
 };
 #endif// MAINWINDOW_HPP

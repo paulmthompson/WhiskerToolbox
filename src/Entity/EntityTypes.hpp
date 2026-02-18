@@ -72,7 +72,8 @@ enum class EntityKind : std::uint8_t {
     LineEntity = 1,
     EventEntity = 2,
     IntervalEntity = 3,
-    MaskEntity = 4
+    MaskEntity = 4,
+    TimeEntity = 5      ///< A single time point within a specific TimeFrame (clock)
 };
 
 /**

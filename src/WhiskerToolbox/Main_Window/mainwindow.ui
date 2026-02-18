@@ -91,6 +91,7 @@
     <addaction name="actionDeep_Learning_Widget"/>
     <addaction name="actionNew_Media_Widget"/>
     <addaction name="actionData_Transforms"/>
+    <addaction name="actionTransforms_V2"/>
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionZone_Layout_Manager"/>
     <addaction name="actionTest_Widget"/>
@@ -243,6 +244,11 @@
   <action name="actionData_Transforms">
    <property name="text">
     <string>Data Transforms</string>
+   </property>
+  </action>
+  <action name="actionTransforms_V2">
+   <property name="text">
+    <string>Transforms V2</string>
    </property>
   </action>
   <action name="actionTerminal_Output">
