@@ -24,6 +24,8 @@ add_subdirectory(GatherResult)
 
 add_subdirectory(TransformsV2)
 
+add_subdirectory(MLCore)
+
 add_subdirectory(DeepLearning)
 add_subdirectory(python_bindings)
 if (ENABLE_UI)
