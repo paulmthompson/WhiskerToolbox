@@ -34,6 +34,8 @@ set(MLCore_SOURCES
     models/supervised/RandomForestOperation.cpp
     models/supervised/RandomForestOperation.hpp
 
+    models/unsupervised/DBSCANOperation.cpp
+    models/unsupervised/DBSCANOperation.hpp
     models/unsupervised/KMeansOperation.cpp
     models/unsupervised/KMeansOperation.hpp
 
