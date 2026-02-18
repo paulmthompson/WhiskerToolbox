@@ -430,6 +430,43 @@ ColumnProviderFn buildIntervalPropertyProvider(
 }
 
 // ============================================================================
+// buildAnalogSampleAtOffsetProvider
+// ============================================================================
+
+ColumnProviderFn buildAnalogSampleAtOffsetProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::vector<TimeFrameIndex> const & row_times,
+    int64_t offset)
+{
+    // Validate source exists
+    auto source = dm.getData<AnalogTimeSeries>(source_key);
+    if (!source) {
+        throw std::runtime_error(
+            "buildAnalogSampleAtOffsetProvider: source_key '" + source_key +
+            "' not found or is not AnalogTimeSeries");
+    }
+
+    return [&dm, key = source_key, times = row_times, off = offset]() -> std::vector<float> {
+        auto src = dm.getData<AnalogTimeSeries>(key);
+        if (!src) {
+            throw std::runtime_error(
+                "buildAnalogSampleAtOffsetProvider: source '" + key +
+                "' no longer available");
+        }
+
+        std::vector<float> result;
+        result.reserve(times.size());
+        for (auto const & t : times) {
+            auto offset_time = TimeFrameIndex(t.getValue() + off);
+            auto val = src->getAtTime(offset_time);
+            result.push_back(val.value_or(NAN));
+        }
+        return result;
+    };
+}
+
+// ============================================================================
 // buildProviderFromRecipe
 // ============================================================================
 

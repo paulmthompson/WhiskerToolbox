@@ -48,6 +48,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/LineClip/LineClip.cpp
         algorithms/LineCurvature/LineCurvature.hpp
         algorithms/LineCurvature/LineCurvature.cpp
+        algorithms/LineLength/LineLength.hpp
+        algorithms/LineLength/LineLength.cpp
         algorithms/LineResample/LineResample.hpp
         algorithms/LineResample/LineResample.cpp
         algorithms/LineSubsegment/LineSubsegment.hpp
@@ -57,6 +59,7 @@ set(TRANSFORM_V2_SOURCES
         algorithms/MaskCentroid/MaskCentroid.hpp
         algorithms/MaskCentroid/MaskCentroid.cpp
         algorithms/RangeReductions/EventRangeReductions.hpp
+        algorithms/RangeReductions/IntervalRangeReductions.hpp
         algorithms/RangeReductions/ValueRangeReductions.hpp
         algorithms/RangeReductions/RegisteredRangeReductions.hpp
         algorithms/RangeReductions/RegisteredRangeReductions.cpp

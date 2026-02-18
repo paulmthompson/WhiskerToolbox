@@ -215,6 +215,23 @@ template<typename Element>
     return last_time - first_time;
 }
 
+/**
+ * @brief Determine whether any events are present in the range
+ *
+ * Returns 1 if the range contains any events, 0 otherwise.
+ * Stored as int for consistency with EventCount (both are integer-valued).
+ *
+ * Equivalent to the old EventInIntervalComputer "Presence" mode.
+ *
+ * @tparam Element Event element type
+ * @param events Range of events
+ * @return 1 if any events exist, 0 otherwise
+ */
+template<typename Element>
+[[nodiscard]] inline int eventPresence(std::span<Element const> events) {
+    return events.empty() ? 0 : 1;
+}
+
 }// namespace WhiskerToolbox::Transforms::V2::RangeReductions
 
 #endif// WHISKERTOOLBOX_V2_EVENT_RANGE_REDUCTIONS_HPP

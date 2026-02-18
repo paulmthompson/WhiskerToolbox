@@ -183,6 +183,30 @@ ColumnProviderFn buildIntervalPropertyProvider(
     IntervalProperty property);
 
 /**
+ * @brief Build a ColumnProviderFn that samples an AnalogTimeSeries at
+ *        each row timestamp plus a fixed offset.
+ *
+ * For each row i the provider reads source.getAtTime(row_times[i] + offset).
+ * Returns NaN for any sample that falls outside the source range.
+ *
+ * This replaces the old AnalogTimestampOffsetsMultiComputer — each offset
+ * produces one call to this function, yielding one column.
+ *
+ * @param dm         DataManager that owns the source data
+ * @param source_key DataManager key for an AnalogTimeSeries
+ * @param row_times  Ordered vector of TimeFrameIndex values (one per row)
+ * @param offset     Time offset to add to each row timestamp (may be negative)
+ * @return ColumnProviderFn producing one float per row
+ *
+ * @throws std::runtime_error if source_key is not an AnalogTimeSeries
+ */
+ColumnProviderFn buildAnalogSampleAtOffsetProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::vector<TimeFrameIndex> const & row_times,
+    int64_t offset);
+
+/**
  * @brief Build a ColumnProviderFn from a ColumnRecipe.
  *
  * This is the main entry point for building providers from serialized

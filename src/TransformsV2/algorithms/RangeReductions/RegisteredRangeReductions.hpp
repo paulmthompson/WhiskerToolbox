@@ -74,6 +74,18 @@ void registerEventRangeReductions();
  */
 void registerValueRangeReductions();
 
+/**
+ * @brief Register interval-based range reductions (IntervalWithId)
+ *
+ * Registers:
+ * - IntervalCount: Count of intervals in gathered range
+ * - IntervalStartExtract: Start time of first interval
+ * - IntervalEndExtract: End time of first interval
+ * - IntervalSourceIndex: Entity ID of first interval
+ * - EventPresence: Whether any events exist (1 or 0)
+ */
+void registerIntervalRangeReductions();
+
 }// namespace WhiskerToolbox::Transforms::V2::RangeReductions
 
 #endif// WHISKERTOOLBOX_V2_REGISTERED_RANGE_REDUCTIONS_HPP
