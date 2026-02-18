@@ -27,6 +27,8 @@ set(MLCore_SOURCES
     models/MLModelRegistry.hpp
     models/MLTaskType.hpp
 
+    models/supervised/NaiveBayesOperation.cpp
+    models/supervised/NaiveBayesOperation.hpp
     models/supervised/RandomForestOperation.cpp
     models/supervised/RandomForestOperation.hpp
 
