@@ -21,6 +21,15 @@ set(MLCore_SOURCES
     metrics/ClassificationMetrics.cpp
     metrics/ClassificationMetrics.hpp
 
+    models/MLModelOperation.hpp
+    models/MLModelParameters.hpp
+    models/MLModelRegistry.cpp
+    models/MLModelRegistry.hpp
+    models/MLTaskType.hpp
+
+    models/supervised/RandomForestOperation.cpp
+    models/supervised/RandomForestOperation.hpp
+
     output/PredictionWriter.cpp
     output/PredictionWriter.hpp
 

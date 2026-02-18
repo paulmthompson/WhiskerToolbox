@@ -18,7 +18,9 @@ add_executable(test_MLCore
     FeatureConverter.test.cpp
     FeatureValidator.test.cpp
     LabelAssembler.test.cpp
+    MLModelOperation.test.cpp
     PredictionWriter.test.cpp
+    RandomForestOperation.test.cpp
     TimeEntityUtils.test.cpp
 )
 
