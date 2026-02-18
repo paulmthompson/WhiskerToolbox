@@ -37,15 +37,21 @@ Tame your experimental data. Streamline your workflow from data ingestion to dat
 ## Community & Support
 
 ::::: grid
-::: {.g-col-12 .g-col-md-6}
+::: {.g-col-12 .g-col-md-4}
 ### Learning Resources
 
 Master Neuralyzer with our comprehensive collection of tutorials and how-to guides. [Explore Resources](learning-resources.qmd){.btn .btn-secondary role="button"}
 :::
 
-::: {.g-col-12 .g-col-md-6}
+::: {.g-col-12 .g-col-md-4}
 ### Join the Discussion
 
 Connect with other users, ask questions, and share your feedback on GitHub. [GitHub Discussions](https://github.com/paulmthompson/WhiskerToolbox/discussions/){.btn .btn-secondary role="button"}
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### Developer Documentation
+
+Interested in contributing? Dive into our technical guides and API reference. [Developer Guide](developer/index.qmd){.btn .btn-secondary role="button"}
 :::
 :::::
