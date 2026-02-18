@@ -4,6 +4,7 @@
 #include "DataManagerTypes.hpp"
 #include "datamanager_export.h"
 
+#include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -21,6 +22,9 @@
 // Forward declarations for identity
 class EntityRegistry;
 class EntityGroupManager;
+/// Re-declare GroupId (defined in EntityGroupManager.hpp as std::uint64_t)
+/// to avoid pulling the full header into DataManager.hpp.
+using GroupId = std::uint64_t;
 
 class TableRegistry;
 struct TableEvent;
@@ -343,6 +347,74 @@ public:
     }
 
     void notifyTableObservers(TableEvent const & ev);
+
+    // ======= Time Entity helpers =======
+
+    /**
+     * @brief Register (or retrieve) an EntityId for a specific time point on a clock.
+     *
+     * Uses the TimeKey string as the entity's data_key and EntityKind::TimeEntity.
+     * The local_index is always 0 since a TimeFrameIndex uniquely identifies
+     * a time point within a clock.
+     *
+     * @param time_key The TimeFrame key (clock identity)
+     * @param index The TimeFrameIndex within that clock
+     * @return The EntityId for this time point
+     */
+    [[nodiscard]] EntityId ensureTimeEntityId(TimeKey const & time_key, TimeFrameIndex index);
+
+    /**
+     * @brief Batch-register EntityIds for a contiguous range of time points [start, end].
+     *
+     * Inclusive on both ends. Iterates the range and calls ensureTimeEntityId for each.
+     *
+     * @param time_key The TimeFrame key (clock identity)
+     * @param start First TimeFrameIndex in the range
+     * @param end Last TimeFrameIndex in the range (inclusive)
+     * @return Vector of EntityIds, one per index in [start, end]
+     */
+    [[nodiscard]] std::vector<EntityId> ensureTimeEntityIds(
+        TimeKey const & time_key, TimeFrameIndex start, TimeFrameIndex end);
+
+    /**
+     * @brief Resolve a TimeEntity's EntityId back to its (TimeKey, TimeFrameIndex).
+     *
+     * @param id The EntityId to look up
+     * @return A pair of (TimeKey, TimeFrameIndex) if the entity is a TimeEntity,
+     *         std::nullopt otherwise (including if the id is not registered)
+     */
+    [[nodiscard]] std::optional<std::pair<TimeKey, TimeFrameIndex>>
+    resolveTimeEntity(EntityId id) const;
+
+    /**
+     * @brief Get all TimeFrameIndex values in a group for a specific clock.
+     *
+     * Iterates the group's entities, filters to TimeEntity entries whose data_key
+     * matches the given TimeKey, and returns their TimeFrameIndex values.
+     * Non-TimeEntity members and TimeEntities from other clocks are skipped.
+     *
+     * @param group_id The group to query
+     * @param time_key The clock to filter by
+     * @return Vector of TimeFrameIndex values (unordered), empty if group doesn't exist
+     */
+    [[nodiscard]] std::vector<TimeFrameIndex>
+    getTimeIndicesInGroup(GroupId group_id, TimeKey const & time_key) const;
+
+    /**
+     * @brief Get all TimeFrameIndex values in a group, converted to a target clock.
+     *
+     * For each TimeEntity in the group (regardless of its source clock), converts
+     * its index to the target clock using convert_time_index(). TimeEntities already
+     * on the target clock are included without conversion. Non-TimeEntity members
+     * are skipped. Requires that both the source and target TimeFrames are registered.
+     *
+     * @param group_id The group to query
+     * @param target_key The target clock to convert indices into
+     * @return Vector of converted TimeFrameIndex values (unordered), empty if group
+     *         doesn't exist or target TimeFrame is not registered
+     */
+    [[nodiscard]] std::vector<TimeFrameIndex>
+    getTimeIndicesInGroupConverted(GroupId group_id, TimeKey const & target_key) const;
 
     /**
      * @brief Access the session-scoped EntityRegistry.

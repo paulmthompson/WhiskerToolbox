@@ -13,6 +13,7 @@
 #include "algorithms/LineClip/LineClip.hpp"
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "algorithms/LineCurvature/LineCurvature.hpp"
+#include "algorithms/LineLength/LineLength.hpp"
 #include "algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "algorithms/LinePointExtraction/LinePointExtraction.hpp"
 #include "algorithms/LineResample/LineResample.hpp"
@@ -20,7 +21,6 @@
 #include "algorithms/MaskArea/MaskArea.hpp"
 #include "algorithms/MaskCentroid/MaskCentroid.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
-#include "algorithms/ZScoreNormalization/ZScoreNormalization.hpp"
 #include "algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 #include "core/ElementRegistry.hpp"
 
@@ -49,6 +49,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
     registerPipelineStepFactoryFor<LineClipParams>();
     registerPipelineStepFactoryFor<LineCurvatureParams>();
+    registerPipelineStepFactoryFor<LineLengthParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<LinePointExtractionParams>();
     registerPipelineStepFactoryFor<LineResampleParams>();
@@ -57,7 +58,6 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
-    registerPipelineStepFactoryFor<ZScoreNormalizationParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     return true;
 }();
@@ -315,6 +315,44 @@ auto const register_line_curvature_ctx = RegisterContextTransform<Line2D, float,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 
+// Register LineLengthTransform (Unary — Line2D → float)
+auto const register_line_length = RegisterTransform<Line2D, float, LineLengthParams>(
+        "CalculateLineLength",
+        calculateLineLength,
+        TransformMetadata{
+                .name = "CalculateLineLength",
+                .description = "Calculate the total arc length of a line",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineLengthParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineLengthParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of LineLength
+auto const register_line_length_ctx = RegisterContextTransform<Line2D, float, LineLengthParams>(
+        "CalculateLineLengthWithContext",
+        calculateLineLengthWithContext,
+        TransformMetadata{
+                .name = "CalculateLineLengthWithContext",
+                .description = "Calculate the total arc length of a line with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineLengthParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineLengthParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
 // Register LineBaseFlipTransform (Unary - takes Line2D, returns Line2D)
 auto const register_line_base_flip = RegisterTransform<Line2D, Line2D, LineBaseFlipParams>(
         "FlipLineBase",
@@ -466,25 +504,6 @@ auto const register_line_point_extraction_ctx = RegisterContextTransform<Line2D,
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
-
-// Register ZScoreNormalization (Multi-Pass Element Transform)
-auto const register_zscore_normalization = RegisterTransform<float, float, ZScoreNormalizationParams>(
-        "ZScoreNormalization",
-        zScoreNormalization,
-        TransformMetadata{
-                .name = "ZScoreNormalization",
-                .description = "Normalize values to z-scores (mean=0, std=1) using multi-pass statistics computation",
-                .category = "Statistics",
-                .input_type = typeid(float),
-                .output_type = typeid(float),
-                .params_type = typeid(ZScoreNormalizationParams),
-                .lineage_type = TransformLineageType::OneToOneByTime,
-                .input_type_name = "float",
-                .output_type_name = "float",
-                .params_type_name = "ZScoreNormalizationParams",
-                .is_expensive = false,
-                .is_deterministic = true,
-                .supports_cancellation = false});
 
 // Register ZScoreNormalizationV2 (Value Store Binding Transform)
 // Uses pre_reductions to compute mean/std instead of preprocessing

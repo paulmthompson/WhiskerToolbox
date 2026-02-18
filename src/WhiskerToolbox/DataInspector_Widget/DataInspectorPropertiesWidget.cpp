@@ -9,6 +9,7 @@
 #include "LineData/LineTableView.hpp"
 #include "PointData/PointInspector.hpp"
 #include "PointData/PointTableView.hpp"
+#include "TensorData/TensorInspector.hpp"
 #include "Inspectors/BaseInspector.hpp"
 #include "Inspectors/InspectorFactory.hpp"
 
@@ -273,5 +274,18 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         if (point_view) {
             point_inspector->setTableView(point_view);
         }
+    }
+
+    // Check if this is a TensorInspector and wire SelectionContext + tensorCreated
+    auto * tensor_inspector = dynamic_cast<TensorInspector *>(_current_inspector.get());
+    if (tensor_inspector) {
+        if (_selection_context) {
+            tensor_inspector->setSelectionContext(_selection_context);
+        }
+        // When designer creates a tensor, navigate the inspector to it
+        QObject::connect(tensor_inspector, &TensorInspector::tensorCreated,
+                         this, [this](QString const & key) {
+                             inspectData(key);
+                         });
     }
 }

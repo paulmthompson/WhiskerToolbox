@@ -12,6 +12,7 @@
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/storage/ArmadilloTensorStorage.hpp"
 #include "Tensors/storage/DenseTensorStorage.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 #include "Tensors/storage/TensorStorageWrapper.hpp"
 
 #ifdef TENSOR_BACKEND_LIBTORCH
@@ -376,6 +377,62 @@ TensorData TensorData::createFromTorch(
 #endif // TENSOR_BACKEND_LIBTORCH
 
 // =============================================================================
+// Factory: createFromLazyColumns
+// =============================================================================
+
+TensorData TensorData::createFromLazyColumns(
+    std::size_t num_rows,
+    std::vector<ColumnSource> columns,
+    RowDescriptor rows,
+    InvalidationWiringFn wiring)
+{
+    if (num_rows == 0) {
+        throw std::invalid_argument(
+            "TensorData::createFromLazyColumns: num_rows must be > 0");
+    }
+    if (columns.empty()) {
+        throw std::invalid_argument(
+            "TensorData::createFromLazyColumns: must have at least one column");
+    }
+
+    auto const num_cols = columns.size();
+
+    // Extract column names for the DimensionDescriptor
+    std::vector<std::string> col_names;
+    col_names.reserve(num_cols);
+    for (auto const & col : columns) {
+        col_names.push_back(col.name);
+    }
+
+    // Build dimension descriptor: "row" × "channel" (same convention as other factories)
+    DimensionDescriptor dims{{
+        {"row", num_rows},
+        {"channel", num_cols}
+    }};
+    dims.setColumnNames(std::move(col_names));
+
+    // Extract time_frame from RowDescriptor if available
+    auto time_frame = rows.timeFrame();
+
+    // Build lazy storage
+    auto storage = TensorStorageWrapper{
+        LazyColumnTensorStorage{num_rows, std::move(columns)}};
+
+    auto tensor = TensorData{std::move(dims), std::move(rows),
+                                std::move(storage), std::move(time_frame)};
+
+    // Wire invalidation if a callback was provided
+    if (wiring) {
+        auto * lazy = tensor._storage.tryGetMutableAs<LazyColumnTensorStorage>();
+        if (lazy != nullptr) {
+            wiring(*lazy, tensor);
+        }
+    }
+
+    return tensor;
+}
+
+// =============================================================================
 // Dimension Queries
 // =============================================================================
 
@@ -699,6 +756,59 @@ void TensorData::setData(std::vector<float> && data,
     // The Dense storage constructor does accept by value, but we'd need to refactor
     // makeStorage to accept rvalue. Keeping this simple for initial implementation.
     setData(static_cast<std::vector<float> const &>(data), new_shape);
+}
+
+// =============================================================================
+// Column Mutation (LazyColumnTensorStorage only)
+// =============================================================================
+
+std::size_t TensorData::appendColumn(std::string name, ColumnProviderFn provider)
+{
+    auto * lazy = _storage.tryGetMutableAs<LazyColumnTensorStorage>();
+    if (lazy == nullptr) {
+        throw std::logic_error(
+            "TensorData::appendColumn: only supported for LazyColumnTensorStorage");
+    }
+
+    // Append to storage
+    auto const new_col_index = lazy->appendColumn(name, std::move(provider));
+
+    // Update dimension descriptor: resize last axis + update column names
+    auto const new_num_cols = lazy->numColumns();
+    auto col_axis_index = _dimensions.findAxis("channel");
+    if (col_axis_index.has_value()) {
+        _dimensions.setAxisSize(*col_axis_index, new_num_cols);
+    }
+
+    // Rebuild column names from storage (authoritative source)
+    _dimensions.setColumnNames(lazy->columnNames());
+
+    notifyObservers();
+    return new_col_index;
+}
+
+void TensorData::removeColumn(std::size_t col)
+{
+    auto * lazy = _storage.tryGetMutableAs<LazyColumnTensorStorage>();
+    if (lazy == nullptr) {
+        throw std::logic_error(
+            "TensorData::removeColumn: only supported for LazyColumnTensorStorage");
+    }
+
+    // Remove from storage (validates col index and > 1 column)
+    lazy->removeColumn(col);
+
+    // Update dimension descriptor: resize last axis + update column names
+    auto const new_num_cols = lazy->numColumns();
+    auto col_axis_index = _dimensions.findAxis("channel");
+    if (col_axis_index.has_value()) {
+        _dimensions.setAxisSize(*col_axis_index, new_num_cols);
+    }
+
+    // Rebuild column names from storage
+    _dimensions.setColumnNames(lazy->columnNames());
+
+    notifyObservers();
 }
 
 // =============================================================================

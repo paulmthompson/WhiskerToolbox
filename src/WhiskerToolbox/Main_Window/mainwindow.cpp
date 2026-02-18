@@ -56,6 +56,7 @@
 #include "Python_Widget/PythonWidgetRegistration.hpp"
 #include "Terminal_Widget/TerminalWidgetRegistration.hpp"
 #include "Test_Widget/TestWidgetRegistration.hpp"
+#include "TransformsV2_Widget/TransformsV2WidgetRegistration.hpp"
 #include "TimeScrollBar/TimeScrollBarRegistration.hpp"
 #include "Tongue_Widget/TongueWidgetRegistration.hpp"
 #include "Whisker_Widget/WhiskerWidgetRegistration.hpp"
@@ -404,6 +405,7 @@ void MainWindow::_createActions() {
     connect(ui->actionData_Inspector, &QAction::triggered, this, &MainWindow::openDataInspector);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
+    connect(ui->actionTransforms_V2, &QAction::triggered, this, &MainWindow::openTransformsV2Widget);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionTable_Designer, &QAction::triggered, this, &MainWindow::openTableDesignerWidget);
     connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
@@ -820,6 +822,10 @@ void MainWindow::openDataTransforms() {
     openEditor(QStringLiteral("DataTransformWidget"));
 }
 
+void MainWindow::openTransformsV2Widget() {
+    openEditor(QStringLiteral("TransformsV2Widget"));
+}
+
 void MainWindow::openDataImport() {
     // Use EditorCreationController pattern - delegate to openEditor
     openEditor(QStringLiteral("DataImportWidget"));
@@ -930,6 +936,8 @@ void MainWindow::_registerEditorTypes() {
     DataInspectorModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     DataTransformWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+
+    TransformsV2WidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
     DataImportWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

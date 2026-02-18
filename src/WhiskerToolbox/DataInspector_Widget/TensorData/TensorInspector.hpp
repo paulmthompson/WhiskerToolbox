@@ -3,25 +3,35 @@
 
 /**
  * @file TensorInspector.hpp
- * @brief Inspector widget for TensorData
- * 
- * TensorInspector provides inspection capabilities for TensorData objects.
- * 
+ * @brief Inspector widget for TensorData with integrated TensorDesigner
+ *
+ * TensorInspector provides inspection capabilities for TensorData objects
+ * and hosts the TensorDesigner panel for interactive column building.
+ *
  * ## Features
  * - Data change callbacks for tensor data
- * 
+ * - Embedded TensorDesigner for creating/editing lazy-column tensors
+ * - SelectionContext integration for passive data awareness
+ * - JSON save/load for column configurations
+ * - CSV export for tensor data
+ *
  * Note: Tensor table view is provided by TensorDataView in the view panel.
- * 
+ *
  * @see BaseInspector for the base class
  * @see TensorDataView for the table view
+ * @see TensorDesigner for the column-building panel
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
 
+class SelectionContext;
+class TensorDesigner;
+
 /**
- * @brief Inspector widget for TensorData
- * 
- * Provides callback management for tensor data inspection.
+ * @brief Inspector widget for TensorData with design mode
+ *
+ * Provides callback management for tensor data inspection and
+ * hosts TensorDesigner for interactive lazy-column tensor building.
  * The actual table view is handled by TensorDataView.
  */
 class TensorInspector : public BaseInspector {
@@ -55,14 +65,45 @@ public:
     [[nodiscard]] bool supportsExport() const override { return true; }
     [[nodiscard]] bool supportsGroupFiltering() const override { return false; }
 
+    // =========================================================================
+    // SelectionContext Integration
+    // =========================================================================
+
+    /**
+     * @brief Set the SelectionContext for passive data awareness
+     * @param context SelectionContext instance (can be nullptr)
+     */
+    void setSelectionContext(SelectionContext * context);
+
+    /**
+     * @brief Get the embedded TensorDesigner widget
+     * @return Pointer to TensorDesigner, or nullptr if not created
+     */
+    [[nodiscard]] TensorDesigner * designer() const { return _designer; }
+
+signals:
+    /**
+     * @brief Emitted when the designer creates or updates a tensor
+     * @param key DataManager key of the tensor
+     */
+    void tensorCreated(QString const & key);
+
 private slots:
     /**
      * @brief Handle data change notifications
      */
     void _onDataChanged();
 
+    /**
+     * @brief Handle tensor creation from designer
+     */
+    void _onTensorCreated(QString const & key);
+
 private:
+    void _setupDesignerUi();
     void _assignCallbacks();
+
+    TensorDesigner * _designer{nullptr};
 };
 
 #endif // TENSOR_INSPECTOR_HPP

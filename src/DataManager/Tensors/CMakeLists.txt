@@ -64,6 +64,8 @@ set(TENSOR_SOURCES
     storage/ArmadilloTensorStorage.cpp
     storage/DenseTensorStorage.hpp
     storage/DenseTensorStorage.cpp
+    storage/LazyColumnTensorStorage.hpp
+    storage/LazyColumnTensorStorage.cpp
     storage/TensorStorageWrapper.hpp
     storage/TensorStorageWrapper.cpp
     ${BACKEND_SOURCES}
