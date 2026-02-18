@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -90,39 +124,17 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../index.html"> 
+    <a class="nav-link" href="../../introduction.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
-  <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tutorials" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Tutorials</span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
-        <li>
-    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
- <span class="dropdown-text">Keypoint Labeling</span></a>
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
   </li>  
-    </ul>
-  </li>
-  <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-how-to-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">How-to guides</span>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
-        <li>
-    <a class="dropdown-item" href="../../labeling/keypoint.html">
- <span class="dropdown-text">Label Creation</span></a>
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources.html"> 
+<span class="menu-text">Learning Resources</span></a>
   </li>  
-        <li>
-    <a class="dropdown-item" href="../../labeling/mask.html">
- <span class="dropdown-text">Mask Creation</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../../examples/tabular_binary_events.html">
- <span class="dropdown-text">Load Tabular Binary Events</span></a>
-  </li>  
-    </ul>
-  </li>
   <li class="nav-item dropdown ">
     <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
  <span class="menu-text">Reference Guides</span>
@@ -213,6 +225,12 @@ ul.task-list li input[type="checkbox"] {
   <div class="sidebar-item-container"> 
   <a href="../../user_guide/data_loading/Video_Loading.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Video Loading</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../user_guide/data_loading/Image_Loading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Stack Loading</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -556,8 +574,33 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#supported-formats" id="toc-supported-formats" class="nav-link" data-scroll-target="#supported-formats">Supported Formats</a></li>
+  <li><a href="#loading-methods" id="toc-loading-methods" class="nav-link" data-scroll-target="#loading-methods">Loading Methods</a>
+  <ul class="collapse">
+  <li><a href="#gui-file-menu" id="toc-gui-file-menu" class="nav-link" data-scroll-target="#gui-file-menu">GUI: File Menu</a></li>
+  <li><a href="#json-configuration" id="toc-json-configuration" class="nav-link" data-scroll-target="#json-configuration">JSON Configuration</a></li>
+  </ul></li>
+  <li><a href="#json-configuration-reference" id="toc-json-configuration-reference" class="nav-link" data-scroll-target="#json-configuration-reference">JSON Configuration Reference</a>
+  <ul class="collapse">
+  <li><a href="#video-data-type" id="toc-video-data-type" class="nav-link" data-scroll-target="#video-data-type">Video Data Type</a></li>
+  <li><a href="#complete-example" id="toc-complete-example" class="nav-link" data-scroll-target="#complete-example">Complete Example</a></li>
+  </ul></li>
+  <li><a href="#technical-details" id="toc-technical-details" class="nav-link" data-scroll-target="#technical-details">Technical Details</a>
+  <ul class="collapse">
+  <li><a href="#frame-decoding" id="toc-frame-decoding" class="nav-link" data-scroll-target="#frame-decoding">Frame Decoding</a></li>
+  <li><a href="#display-formats" id="toc-display-formats" class="nav-link" data-scroll-target="#display-formats">Display Formats</a></li>
+  <li><a href="#memory-considerations" id="toc-memory-considerations" class="nav-link" data-scroll-target="#memory-considerations">Memory Considerations</a></li>
+  </ul></li>
+  <li><a href="#programmatic-access" id="toc-programmatic-access" class="nav-link" data-scroll-target="#programmatic-access">Programmatic Access</a></li>
+  <li><a href="#related-topics" id="toc-related-topics" class="nav-link" data-scroll-target="#related-topics">Related Topics</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -581,8 +624,202 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>Video files are a primary data source in Neuralyzer, providing the visual context for behavioral analysis. This reference guide covers all aspects of loading video data into the application.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+How-To Guide
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For step-by-step instructions including GUI walkthroughs and troubleshooting, see <a href="../../examples/video_import.html">How to Import Video</a>.</p>
+</div>
+</div>
+</section>
+<section id="supported-formats" class="level2">
+<h2 class="anchored" data-anchor-id="supported-formats">Supported Formats</h2>
+<p>Neuralyzer uses FFmpeg for video decoding, supporting these common formats:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Format</th>
+<th>Extension</th>
+<th>Codec Support</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MPEG-4</td>
+<td><code>.mp4</code></td>
+<td>H.264, H.265</td>
+</tr>
+<tr class="even">
+<td>AVI</td>
+<td><code>.avi</code></td>
+<td>Various</td>
+</tr>
+<tr class="odd">
+<td>QuickTime</td>
+<td><code>.mov</code></td>
+<td>H.264, ProRes</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+B-Frame Limitation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Videos encoded with <strong>B-frames are not supported</strong>. B-frames use bidirectional compression that breaks sequential decoding required for efficient frame-by-frame access.</p>
+<p>See <a href="../../examples/video_import.html#checking-for-and-removing-b-frames">How to Import Video - B-Frame Section</a> for detection and removal instructions.</p>
+</div>
+</div>
+</section>
+<section id="loading-methods" class="level2">
+<h2 class="anchored" data-anchor-id="loading-methods">Loading Methods</h2>
+<section id="gui-file-menu" class="level3">
+<h3 class="anchored" data-anchor-id="gui-file-menu">GUI: File Menu</h3>
+<p>Load a video directly through the application menu:</p>
+<p><strong>File → Load Data</strong> → Select video file → <strong>Open</strong></p>
+<p>The video loads into the default “media” slot with an auto-generated TimeFrame.</p>
+</section>
+<section id="json-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="json-configuration">JSON Configuration</h3>
+<p>Define video loading in a configuration file for reproducible workflows:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"recording.mp4"</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"video"</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"media"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Load via <strong>File → Load JSON Configuration</strong>.</p>
+</section>
+</section>
+<section id="json-configuration-reference" class="level2">
+<h2 class="anchored" data-anchor-id="json-configuration-reference">JSON Configuration Reference</h2>
+<section id="video-data-type" class="level3">
+<h3 class="anchored" data-anchor-id="video-data-type">Video Data Type</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 27%">
+<col style="width: 22%">
+<col style="width: 12%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Description</th>
+<th>Required?</th>
+<th>Type</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>filepath</code></td>
+<td>Path to video file, relative to JSON config</td>
+<td>Yes</td>
+<td>string</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>data_type</code></td>
+<td>Must be <code>"video"</code></td>
+<td>Yes</td>
+<td>string</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>name</code></td>
+<td>Identifier for this video in Neuralyzer</td>
+<td>No</td>
+<td>string</td>
+<td><code>"media"</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="complete-example" class="level3">
+<h3 class="anchored" data-anchor-id="complete-example">Complete Example</h3>
+<p>Load video along with associated tracking data:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"behavior_video.mp4"</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"video"</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"media"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"dlc_output.csv"</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"point"</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"nose_tip"</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"clock"</span><span class="fu">:</span> <span class="st">"time"</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="technical-details" class="level2">
+<h2 class="anchored" data-anchor-id="technical-details">Technical Details</h2>
+<section id="frame-decoding" class="level3">
+<h3 class="anchored" data-anchor-id="frame-decoding">Frame Decoding</h3>
+<p>Neuralyzer optimizes video playback using these strategies:</p>
+<ul>
+<li><strong>Sequential access</strong>: When playing forward, frames decode sequentially without seeking</li>
+<li><strong>Keyframe seeking</strong>: For random access (scrubbing, jumping), the decoder seeks to the nearest keyframe</li>
+<li><strong>Large jumps</strong>: Forward jumps greater than 100 frames trigger keyframe seeking</li>
+</ul>
+</section>
+<section id="display-formats" class="level3">
+<h3 class="anchored" data-anchor-id="display-formats">Display Formats</h3>
+<p>Videos can be displayed in:</p>
+<ul>
+<li><strong>Grayscale</strong> (<code>Gray</code>) - Single channel, 8-bit</li>
+<li><strong>Color</strong> (<code>Color</code>) - ARGB, 32-bit</li>
+</ul>
+<p>The display format affects how the video is processed and rendered but does not modify the source file.</p>
+</section>
+<section id="memory-considerations" class="level3">
+<h3 class="anchored" data-anchor-id="memory-considerations">Memory Considerations</h3>
+<p>Only the current frame is held in memory. Large videos (4K, long duration) are handled efficiently since the entire video is not loaded at once.</p>
+</section>
+</section>
+<section id="programmatic-access" class="level2">
+<h2 class="anchored" data-anchor-id="programmatic-access">Programmatic Access</h2>
+<p>For developers integrating video loading:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/Media/Video_Data_Loader.hpp"</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Load video into a VideoData object</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> video_data <span class="op">=</span> load_video_into_VideoData<span class="op">(</span><span class="st">"path/to/video.mp4"</span><span class="op">);</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Access frame count</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> total_frames <span class="op">=</span> video_data<span class="op">-&gt;</span>getTotalFrameCount<span class="op">();</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Load a specific frame</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>video_data<span class="op">-&gt;</span>LoadFrame<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span><span class="op">&amp;</span> frame_data <span class="op">=</span> video_data<span class="op">-&gt;</span>getRawData8<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>See the <a href="../../developer/media_widget.qmd">Developer Guide</a> for more details on programmatic media handling.</p>
+</section>
+<section id="related-topics" class="level2">
+<h2 class="anchored" data-anchor-id="related-topics">Related Topics</h2>
+<ul>
+<li><a href="../../examples/video_import.html">How to Import Video</a> - Step-by-step import guide with troubleshooting</li>
+<li><a href="../../user_guide/data_loading/JSON_loading.html">JSON Loading Reference</a> - Complete JSON configuration options</li>
+<li><a href="../../user_guide/media_viewer/overview.html">Media Viewer Overview</a> - Working with loaded video</li>
+<li><a href="../../user_guide/data_loading/index.html">Data Loading Overview</a> - All data loading options</li>
+</ul>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

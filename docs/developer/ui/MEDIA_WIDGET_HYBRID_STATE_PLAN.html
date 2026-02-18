@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>media_widget_hybrid_state_plan – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">Concepts</span>
+    </span>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#mediawidgetstate-hybrid-architecture-plan" id="toc-mediawidgetstate-hybrid-architecture-plan" class="nav-link active" data-scroll-target="#mediawidgetstate-hybrid-architecture-plan">MediaWidgetState Hybrid Architecture Plan</a>
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#current-assessment" id="toc-current-assessment" class="nav-link" data-scroll-target="#current-assessment">Current Assessment</a>
+  <ul class="collapse">
+  <li><a href="#what-mediawidgetstate-actually-needs" id="toc-what-mediawidgetstate-actually-needs" class="nav-link" data-scroll-target="#what-mediawidgetstate-actually-needs">What MediaWidgetState Actually Needs</a></li>
+  <li><a href="#what-it-does-not-need" id="toc-what-it-does-not-need" class="nav-link" data-scroll-target="#what-it-does-not-need">What It Does NOT Need</a></li>
+  </ul></li>
+  <li><a href="#target-architecture" id="toc-target-architecture" class="nav-link" data-scroll-target="#target-architecture">Target Architecture</a></li>
+  <li><a href="#phase-4a-introduce-displayoptionsregistry" id="toc-phase-4a-introduce-displayoptionsregistry" class="nav-link" data-scroll-target="#phase-4a-introduce-displayoptionsregistry">Phase 4A: Introduce DisplayOptionsRegistry</a>
+  <ul class="collapse">
+  <li><a href="#step-4a.1-create-displayoptionsregistry-class" id="toc-step-4a.1-create-displayoptionsregistry-class" class="nav-link" data-scroll-target="#step-4a.1-create-displayoptionsregistry-class">Step 4A.1: Create DisplayOptionsRegistry class</a></li>
+  <li><a href="#step-4a.2-implement-with-template-specializations" id="toc-step-4a.2-implement-with-template-specializations" class="nav-link" data-scroll-target="#step-4a.2-implement-with-template-specializations">Step 4A.2: Implement with template specializations</a></li>
+  <li><a href="#step-4a.3-add-to-mediawidgetstate" id="toc-step-4a.3-add-to-mediawidgetstate" class="nav-link" data-scroll-target="#step-4a.3-add-to-mediawidgetstate">Step 4A.3: Add to MediaWidgetState</a></li>
+  <li><a href="#step-4a.4-update-call-sites-incrementally" id="toc-step-4a.4-update-call-sites-incrementally" class="nav-link" data-scroll-target="#step-4a.4-update-call-sites-incrementally">Step 4A.4: Update call sites incrementally</a></li>
+  <li><a href="#step-4a.5-tests-for-displayoptionsregistry" id="toc-step-4a.5-tests-for-displayoptionsregistry" class="nav-link" data-scroll-target="#step-4a.5-tests-for-displayoptionsregistry">Step 4A.5: Tests for DisplayOptionsRegistry</a></li>
+  <li><a href="#files-to-create" id="toc-files-to-create" class="nav-link" data-scroll-target="#files-to-create">Files to Create</a></li>
+  <li><a href="#files-to-modify" id="toc-files-to-modify" class="nav-link" data-scroll-target="#files-to-modify">Files to Modify</a></li>
+  </ul></li>
+  <li><a href="#phase-4b-simplify-remaining-accessors" id="toc-phase-4b-simplify-remaining-accessors" class="nav-link" data-scroll-target="#phase-4b-simplify-remaining-accessors">Phase 4B: Simplify Remaining Accessors</a>
+  <ul class="collapse">
+  <li><a href="#step-4b.1-audit-remaining-methods" id="toc-step-4b.1-audit-remaining-methods" class="nav-link" data-scroll-target="#step-4b.1-audit-remaining-methods">Step 4B.1: Audit remaining methods</a></li>
+  <li><a href="#step-4b.2-consolidate-signals" id="toc-step-4b.2-consolidate-signals" class="nav-link" data-scroll-target="#step-4b.2-consolidate-signals">Step 4B.2: Consolidate signals</a></li>
+  <li><a href="#step-4b.3-tests-updated" id="toc-step-4b.3-tests-updated" class="nav-link" data-scroll-target="#step-4b.3-tests-updated">Step 4B.3: Tests updated</a></li>
+  </ul></li>
+  <li><a href="#phase-4c-wire-up-media_window" id="toc-phase-4c-wire-up-media_window" class="nav-link" data-scroll-target="#phase-4c-wire-up-media_window">Phase 4C: Wire Up Media_Window</a>
+  <ul class="collapse">
+  <li><a href="#step-4c.1-remove-duplicate-storage-from-media_window" id="toc-step-4c.1-remove-duplicate-storage-from-media_window" class="nav-link" data-scroll-target="#step-4c.1-remove-duplicate-storage-from-media_window">Step 4C.1: Remove duplicate storage from Media_Window</a></li>
+  <li><a href="#step-4c.2-update-media_window-methods" id="toc-step-4c.2-update-media_window-methods" class="nav-link" data-scroll-target="#step-4c.2-update-media_window-methods">Step 4C.2: Update Media_Window methods</a></li>
+  <li><a href="#step-4c.3-update-accessor-methods" id="toc-step-4c.3-update-accessor-methods" class="nav-link" data-scroll-target="#step-4c.3-update-accessor-methods">Step 4C.3: Update accessor methods</a></li>
+  </ul></li>
+  <li><a href="#phase-4d-wire-up-sub-widgets" id="toc-phase-4d-wire-up-sub-widgets" class="nav-link" data-scroll-target="#phase-4d-wire-up-sub-widgets">Phase 4D: Wire Up Sub-Widgets</a>
+  <ul class="collapse">
+  <li><a href="#pattern-for-each-sub-widget" id="toc-pattern-for-each-sub-widget" class="nav-link" data-scroll-target="#pattern-for-each-sub-widget">Pattern for each sub-widget</a></li>
+  <li><a href="#estimated-effort-per-sub-widget" id="toc-estimated-effort-per-sub-widget" class="nav-link" data-scroll-target="#estimated-effort-per-sub-widget">Estimated effort per sub-widget</a></li>
+  </ul></li>
+  <li><a href="#phase-4e-viewport-integration" id="toc-phase-4e-viewport-integration" class="nav-link" data-scroll-target="#phase-4e-viewport-integration">Phase 4E: Viewport Integration</a>
+  <ul class="collapse">
+  <li><a href="#implementation-summary" id="toc-implementation-summary" class="nav-link" data-scroll-target="#implementation-summary">Implementation Summary</a></li>
+  <li><a href="#code-examples" id="toc-code-examples" class="nav-link" data-scroll-target="#code-examples">Code Examples</a></li>
+  </ul></li>
+  <li><a href="#summary-timeline" id="toc-summary-timeline" class="nav-link" data-scroll-target="#summary-timeline">Summary Timeline</a></li>
+  <li><a href="#files-summary" id="toc-files-summary" class="nav-link" data-scroll-target="#files-summary">Files Summary</a>
+  <ul class="collapse">
+  <li><a href="#new-files" id="toc-new-files" class="nav-link" data-scroll-target="#new-files">New Files</a></li>
+  <li><a href="#modified-files" id="toc-modified-files" class="nav-link" data-scroll-target="#modified-files">Modified Files</a></li>
+  </ul></li>
+  <li><a href="#success-criteria" id="toc-success-criteria" class="nav-link" data-scroll-target="#success-criteria">Success Criteria</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="mediawidgetstate-hybrid-architecture-plan" class="level1">
+<h1>MediaWidgetState Hybrid Architecture Plan</h1>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This document describes the incremental plan to refactor <code>MediaWidgetState</code> from a monolithic class with 60+ methods to a cleaner hybrid architecture with ~25 methods using a generic <code>DisplayOptionsRegistry</code>.</p>
+</section>
+<section id="current-assessment" class="level2">
+<h2 class="anchored" data-anchor-id="current-assessment">Current Assessment</h2>
+<section id="what-mediawidgetstate-actually-needs" class="level3">
+<h3 class="anchored" data-anchor-id="what-mediawidgetstate-actually-needs">What MediaWidgetState Actually Needs</h3>
+<ol type="1">
+<li><strong>Serialize/deserialize</strong> for workspace save/restore</li>
+<li><strong>Store display options</strong> (colors, visibility, thickness, etc.) - 6 types</li>
+<li><strong>Store interaction preferences</strong> (brush size, edge snapping, etc.)</li>
+<li><strong>Store viewport state</strong> (zoom, pan)</li>
+<li><strong>Store text overlays</strong></li>
+<li><strong>Store active tool modes</strong></li>
+</ol>
+</section>
+<section id="what-it-does-not-need" class="level3">
+<h3 class="anchored" data-anchor-id="what-it-does-not-need">What It Does NOT Need</h3>
+<ul>
+<li>Data change notification (DataManager handles this)</li>
+<li>Inter-widget communication (WorkspaceManager handles this)</li>
+<li>Complex intra-widget state synchronization (case-by-case is fine)</li>
+</ul>
+</section>
+</section>
+<section id="target-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="target-architecture">Target Architecture</h2>
+<pre><code>MediaWidgetState (EditorState)
+├── _data: MediaWidgetStateData          // Single serializable struct (unchanged)
+├── _display_options: DisplayOptionsRegistry  // Generic for all 6 types
+├── Viewport accessors (5 methods)       // Direct, not a slice
+├── Interaction prefs accessors (6 methods)  // Direct, not a slice  
+├── Text overlay accessors (6 methods)   // Direct, not a slice
+├── Tool mode accessors (6 methods)      // Direct, not a slice
+└── toJson() / fromJson()                // Unchanged</code></pre>
+<p><strong>Method count reduction</strong>: ~60 methods → ~25 methods (primarily by genericizing display options)</p>
+<hr>
+</section>
+<section id="phase-4a-introduce-displayoptionsregistry" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4a-introduce-displayoptionsregistry">Phase 4A: Introduce DisplayOptionsRegistry</h2>
+<p><strong>Goal</strong>: Replace 6 sets of display option methods with a single generic registry.</p>
+<p><strong>Status</strong>: ✅ Complete (January 2026)</p>
+<p><strong>Duration</strong>: 3-4 days</p>
+<section id="step-4a.1-create-displayoptionsregistry-class" class="level3">
+<h3 class="anchored" data-anchor-id="step-4a.1-create-displayoptionsregistry-class">Step 4A.1: Create DisplayOptionsRegistry class</h3>
+<p>Create a new class that provides type-safe generic access to all display option types:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// DisplayOptionsRegistry.hpp</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DisplayOptionsRegistry <span class="op">:</span> <span class="kw">public</span> <span class="ex">QObject</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> DisplayOptionsRegistry<span class="op">(</span>MediaWidgetStateData<span class="op">*</span> data<span class="op">,</span> <span class="ex">QObject</span><span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Generic type-safe API ===</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> set<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">,</span> T <span class="at">const</span><span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span><span class="op">*</span> get<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> remove<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> has<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QStringList</span> keys<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QStringList</span> enabledKeys<span class="op">()</span> <span class="at">const</span><span class="op">;</span>  <span class="co">// Where is_visible == true</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Visibility convenience ===</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setVisible<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> type<span class="op">,</span> <span class="dt">bool</span> visible<span class="op">);</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> isVisible<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> type<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> optionsChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> type<span class="op">);</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> optionsRemoved<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> type<span class="op">);</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> visibilityChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> type<span class="op">,</span> <span class="dt">bool</span> visible<span class="op">);</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    MediaWidgetStateData<span class="op">*</span> _data<span class="op">;</span>  <span class="co">// Non-owning, points to parent's _data</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="step-4a.2-implement-with-template-specializations" class="level3">
+<h3 class="anchored" data-anchor-id="step-4a.2-implement-with-template-specializations">Step 4A.2: Implement with template specializations</h3>
+<p>Each display option type gets explicit template specializations for type safety.</p>
+</section>
+<section id="step-4a.3-add-to-mediawidgetstate" class="level3">
+<h3 class="anchored" data-anchor-id="step-4a.3-add-to-mediawidgetstate">Step 4A.3: Add to MediaWidgetState</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// MediaWidgetState.hpp changes</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MediaWidgetState <span class="op">:</span> <span class="kw">public</span> EditorState <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// NEW: Generic display options access</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    DisplayOptionsRegistry<span class="op">&amp;</span> displayOptions<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> _display_options<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    DisplayOptionsRegistry <span class="at">const</span><span class="op">&amp;</span> displayOptions<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _display_options<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">DEPRECATED</span><span class="co"> but still working: Old typed accessors (forward to registry)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">deprecated</span><span class="op">(</span><span class="st">"Use displayOptions().get&lt;LineDisplayOptions&gt;(key)"</span><span class="op">)]]</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    LineDisplayOptions <span class="at">const</span><span class="op">*</span> lineOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> key<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    DisplayOptionsRegistry _display_options<span class="op">{&amp;</span>_data<span class="op">,</span> <span class="kw">this</span><span class="op">};</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="step-4a.4-update-call-sites-incrementally" class="level3">
+<h3 class="anchored" data-anchor-id="step-4a.4-update-call-sites-incrementally">Step 4A.4: Update call sites incrementally</h3>
+<p><strong>Example - Media_Window.cpp</strong>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">*</span> opts <span class="op">=</span> _media_widget_state<span class="op">-&gt;</span>lineOptions<span class="op">(</span>key<span class="op">))</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// After  </span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">*</span> opts <span class="op">=</span> _media_widget_state<span class="op">-&gt;</span>displayOptions<span class="op">().</span>get<span class="op">&lt;</span>LineDisplayOptions<span class="op">&gt;(</span>key<span class="op">))</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="step-4a.5-tests-for-displayoptionsregistry" class="level3">
+<h3 class="anchored" data-anchor-id="step-4a.5-tests-for-displayoptionsregistry">Step 4A.5: Tests for DisplayOptionsRegistry</h3>
+<p>Create unit tests covering: - set/get round-trip for all 6 types - remove functionality - keys() and enabledKeys() - Signal emission verification - Type safety (can’t get wrong type)</p>
+</section>
+<section id="files-to-create" class="level3">
+<h3 class="anchored" data-anchor-id="files-to-create">Files to Create</h3>
+<ul>
+<li><code>src/WhiskerToolbox/Media_Widget/DisplayOptionsRegistry.hpp</code></li>
+<li><code>src/WhiskerToolbox/Media_Widget/DisplayOptionsRegistry.cpp</code></li>
+<li><code>src/WhiskerToolbox/Media_Widget/DisplayOptionsRegistry.test.cpp</code></li>
+</ul>
+</section>
+<section id="files-to-modify" class="level3">
+<h3 class="anchored" data-anchor-id="files-to-modify">Files to Modify</h3>
+<ul>
+<li><code>src/WhiskerToolbox/Media_Widget/MediaWidgetState.hpp</code></li>
+<li><code>src/WhiskerToolbox/Media_Widget/MediaWidgetState.cpp</code></li>
+<li><code>src/WhiskerToolbox/Media_Widget/CMakeLists.txt</code></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="phase-4b-simplify-remaining-accessors" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4b-simplify-remaining-accessors">Phase 4B: Simplify Remaining Accessors</h2>
+<p><strong>Goal</strong>: Keep direct accessors for non-display-option state, but consolidate signals.</p>
+<p><strong>Status</strong>: ✅ Complete (January 2026)</p>
+<p><strong>Duration</strong>: 1-2 days</p>
+<section id="step-4b.1-audit-remaining-methods" class="level3">
+<h3 class="anchored" data-anchor-id="step-4b.1-audit-remaining-methods">Step 4B.1: Audit remaining methods</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 28%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Category</th>
+<th>Methods</th>
+<th>Keep As-Is?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Viewport</td>
+<td><code>setZoom</code>, <code>zoom</code>, <code>setPan</code>, <code>pan</code>, <code>setCanvasSize</code>, <code>canvasSize</code>, <code>setViewport</code>, <code>viewport</code></td>
+<td>✅ Yes - only 8 methods</td>
+</tr>
+<tr class="even">
+<td>Interaction Prefs</td>
+<td><code>setLinePrefs</code>, <code>linePrefs</code>, <code>setMaskPrefs</code>, <code>maskPrefs</code>, <code>setPointPrefs</code>, <code>pointPrefs</code></td>
+<td>✅ Yes - only 6 methods</td>
+</tr>
+<tr class="odd">
+<td>Text Overlays</td>
+<td><code>addTextOverlay</code>, <code>removeTextOverlay</code>, <code>updateTextOverlay</code>, <code>clearTextOverlays</code>, <code>getTextOverlay</code>, <code>textOverlays</code></td>
+<td>✅ Yes - only 6 methods</td>
+</tr>
+<tr class="even">
+<td>Tool Modes</td>
+<td><code>setActiveLineMode</code>, <code>activeLineMode</code>, etc.</td>
+<td>✅ Yes - only 6 methods</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total non-display-options methods: ~26</strong> - manageable without further abstraction.</p>
+</section>
+<section id="step-4b.2-consolidate-signals" class="level3">
+<h3 class="anchored" data-anchor-id="step-4b.2-consolidate-signals">Step 4B.2: Consolidate signals</h3>
+<p>Replaced fine-grained signals with 3 new consolidated signals:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Consolidated category signals (ONLY) ===</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionPrefsChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> category<span class="op">);</span>  <span class="co">// "line", "mask", "point"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> textOverlaysChanged<span class="op">();</span>  <span class="co">// After any add/remove/update/clear</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> toolModesChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span><span class="op">&amp;</span> category<span class="op">);</span>  <span class="co">// "line", "mask", "point"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Display options (from registry) ===</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// optionsChanged, optionsRemoved, visibilityChanged - from DisplayOptionsRegistry</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Old fine-grained signals (<code>linePrefsChanged</code>, <code>maskPrefsChanged</code>, <code>pointPrefsChanged</code>, <code>textOverlayAdded</code>, <code>textOverlayRemoved</code>, <code>textOverlayUpdated</code>, <code>textOverlaysCleared</code>, <code>activeLineModeChanged</code>, <code>activeMaskModeChanged</code>, <code>activePointModeChanged</code>) have been completely removed.</p>
+</section>
+<section id="step-4b.3-tests-updated" class="level3">
+<h3 class="anchored" data-anchor-id="step-4b.3-tests-updated">Step 4B.3: Tests updated</h3>
+<p>Existing test cases have been removed and consolidated signals are now the only ones tested: - <code>interactionPrefsChanged</code> verified with correct category for line/mask/point prefs - <code>textOverlaysChanged</code> verified on add/remove/update/clear operations - <code>toolModesChanged</code> verified with correct category for line/mask/point modes - No spurious emissions when setting same value</p>
+<hr>
+</section>
+</section>
+<section id="phase-4c-wire-up-media_window" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4c-wire-up-media_window">Phase 4C: Wire Up Media_Window</h2>
+<p><strong>Goal</strong>: Media_Window uses state for display options instead of local maps.</p>
+<p><strong>Status</strong>: ✅ Complete (January 2026)</p>
+<p><strong>Duration</strong>: 2-3 days</p>
+<section id="step-4c.1-remove-duplicate-storage-from-media_window" class="level3">
+<h3 class="anchored" data-anchor-id="step-4c.1-remove-duplicate-storage-from-media_window">Step 4C.1: Remove duplicate storage from Media_Window</h3>
+</section>
+<section id="step-4c.2-update-media_window-methods" class="level3">
+<h3 class="anchored" data-anchor-id="step-4c.2-update-media_window-methods">Step 4C.2: Update Media_Window methods</h3>
+<p>All <code>add*ToScene</code> and <code>_plot*Data</code> methods read from state instead of local maps.</p>
+</section>
+<section id="step-4c.3-update-accessor-methods" class="level3">
+<h3 class="anchored" data-anchor-id="step-4c.3-update-accessor-methods">Step 4C.3: Update accessor methods</h3>
+<p>Methods like <code>getLineConfig()</code> forward to state’s display options registry.</p>
+<hr>
+</section>
+</section>
+<section id="phase-4d-wire-up-sub-widgets" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4d-wire-up-sub-widgets">Phase 4D: Wire Up Sub-Widgets</h2>
+<p><strong>Goal</strong>: Sub-widgets read/write display options through state.</p>
+<p><strong>Status</strong>: ✅ Complete (January 2026)</p>
+<p><strong>Duration</strong>: 3-4 days</p>
+<section id="pattern-for-each-sub-widget" class="level3">
+<h3 class="anchored" data-anchor-id="pattern-for-each-sub-widget">Pattern for each sub-widget</h3>
+<p>Each sub-widget needs: 1. Pointer to state (set by Media_Widget) 2. Read options on show/setActiveKey 3. Write options when UI changes</p>
+</section>
+<section id="estimated-effort-per-sub-widget" class="level3">
+<h3 class="anchored" data-anchor-id="estimated-effort-per-sub-widget">Estimated effort per sub-widget</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Widget</th>
+<th>Complexity</th>
+<th>Estimated Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MediaLine_Widget</td>
+<td>Medium (many options)</td>
+<td>2-3 hours</td>
+</tr>
+<tr class="even">
+<td>MediaMask_Widget</td>
+<td>Low</td>
+<td>1-2 hours</td>
+</tr>
+<tr class="odd">
+<td>MediaPoint_Widget</td>
+<td>Low</td>
+<td>1 hour</td>
+</tr>
+<tr class="even">
+<td>MediaTensor_Widget</td>
+<td>Low</td>
+<td>1 hour</td>
+</tr>
+<tr class="odd">
+<td>MediaInterval_Widget</td>
+<td>Low</td>
+<td>1 hour</td>
+</tr>
+<tr class="even">
+<td>MediaProcessing_Widget</td>
+<td>Medium (media options)</td>
+<td>2-3 hours</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="phase-4e-viewport-integration" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4e-viewport-integration">Phase 4E: Viewport Integration</h2>
+<p><strong>Goal</strong>: Media_Widget syncs zoom/pan with state for persistence.</p>
+<p><strong>Status</strong>: ✅ Complete (January 2026)</p>
+<p><strong>Duration</strong>: 1 day</p>
+<section id="implementation-summary" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-summary">Implementation Summary</h3>
+<p><strong>Key Changes Made:</strong></p>
+<ol type="1">
+<li><strong>Removed duplicate state storage</strong> from Media_Widget:
+<ul>
+<li>Removed <code>_current_zoom</code> member variable</li>
+<li>Removed <code>_user_zoom_active</code> member variable</li>
+<li>Made zoom constants (<code>_zoom_step</code>, <code>_min_zoom</code>, <code>_max_zoom</code>) <code>constexpr</code></li>
+</ul></li>
+<li><strong>Made state the single source of truth</strong> for zoom/pan:
+<ul>
+<li><code>_applyZoom()</code> now reads current zoom from <code>_state-&gt;zoom()</code> and writes back via <code>_state-&gt;setZoom()</code></li>
+<li><code>resetZoom()</code> directly sets <code>_state-&gt;setZoom(1.0)</code> instead of syncing</li>
+<li>Pan changes during drag update state directly via <code>_state-&gt;setPan()</code></li>
+</ul></li>
+<li><strong>Added helper method</strong> <code>_isUserZoomActive()</code>:
+<ul>
+<li>Derives from <code>_state-&gt;zoom() != 1.0</code> instead of storing separate flag</li>
+<li>Used in <code>resizeEvent()</code> and <code>_updateCanvasSize()</code></li>
+</ul></li>
+<li><strong>Removed intermediate sync methods</strong>:
+<ul>
+<li>Deleted <code>_syncZoomToState()</code> (zoom is set directly to state)</li>
+<li>Deleted <code>_syncPanToState()</code> (pan is set directly to state)</li>
+<li>Kept <code>_syncCanvasSizeToState()</code> (canvas size is still derived from scene)</li>
+</ul></li>
+<li><strong>Simplified state signal handlers</strong>:
+<ul>
+<li><code>_onStateZoomChanged()</code> reads current transform from QGraphicsView instead of comparing to local variable</li>
+<li><code>_onStatePanChanged()</code> remains unchanged (reads from scrollbars)</li>
+</ul></li>
+<li><strong>Updated restoreFromState()</strong>:
+<ul>
+<li>Removed assignments to deleted member variables</li>
+<li>Applies zoom/pan directly from state to QGraphicsView</li>
+</ul></li>
+</ol>
+</section>
+<section id="code-examples" class="level3">
+<h3 class="anchored" data-anchor-id="code-examples">Code Examples</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before: Duplicate storage</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> _current_zoom<span class="op">{</span><span class="fl">1.0</span><span class="op">};</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> _user_zoom_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">// After: State is the source of truth</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// (No member variables - read from _state-&gt;zoom())</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> Media_Widget<span class="op">::</span>_isUserZoomActive<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>abs<span class="op">(</span>_state<span class="op">-&gt;</span>zoom<span class="op">()</span> <span class="op">-</span> <span class="fl">1.0</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1e-6</span><span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> Media_Widget<span class="op">::</span>_applyZoom<span class="op">(</span><span class="dt">double</span> factor<span class="op">,</span> <span class="dt">bool</span> anchor_under_mouse<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>ui<span class="op">-&gt;</span>graphicsView <span class="op">||</span> <span class="op">!</span>_state<span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> current_zoom <span class="op">=</span> _state<span class="op">-&gt;</span>zoom<span class="op">();</span>  <span class="co">// Read from state</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> new_zoom <span class="op">=</span> current_zoom <span class="op">*</span> factor<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    new_zoom <span class="op">=</span> <span class="bu">std::</span>clamp<span class="op">(</span>new_zoom<span class="op">,</span> _min_zoom<span class="op">,</span> _max_zoom<span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... apply to QGraphicsView ...</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    _state<span class="op">-&gt;</span>setZoom<span class="op">(</span>new_zoom<span class="op">);</span>  <span class="co">// Write to state</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<hr>
+</section>
+</section>
+<section id="summary-timeline" class="level2">
+<h2 class="anchored" data-anchor-id="summary-timeline">Summary Timeline</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 25%">
+<col style="width: 20%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Duration</th>
+<th>Status</th>
+<th>Deliverables</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>4A: DisplayOptionsRegistry</td>
+<td>3-4 days</td>
+<td>✅ Complete</td>
+<td>Generic registry, deprecate old methods</td>
+</tr>
+<tr class="even">
+<td>4B: Simplify Accessors</td>
+<td>1-2 days</td>
+<td>✅ Complete</td>
+<td>Consolidated signals, audit complete</td>
+</tr>
+<tr class="odd">
+<td>4C: Media_Window Integration</td>
+<td>2-3 days</td>
+<td>✅ Complete</td>
+<td>Remove duplicate storage, use state</td>
+</tr>
+<tr class="even">
+<td>4D: Sub-Widget Integration</td>
+<td>3-4 days</td>
+<td>✅ Complete</td>
+<td>All 6 sub-widgets wired up</td>
+</tr>
+<tr class="odd">
+<td>4E: Viewport Integration</td>
+<td>1 day</td>
+<td>✅ Complete</td>
+<td>State as single source of truth for zoom/pan</td>
+</tr>
+<tr class="even">
+<td><strong>Total</strong></td>
+<td><strong>~2 weeks</strong></td>
+<td><strong>✅ Complete</strong></td>
+<td><strong>Full hybrid architecture achieved</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="files-summary" class="level2">
+<h2 class="anchored" data-anchor-id="files-summary">Files Summary</h2>
+<section id="new-files" class="level3">
+<h3 class="anchored" data-anchor-id="new-files">New Files</h3>
+<ul>
+<li><code>DisplayOptionsRegistry.hpp</code></li>
+<li><code>DisplayOptionsRegistry.cpp</code></li>
+<li><code>DisplayOptionsRegistry.test.cpp</code></li>
+</ul>
+</section>
+<section id="modified-files" class="level3">
+<h3 class="anchored" data-anchor-id="modified-files">Modified Files</h3>
+<ul>
+<li><code>MediaWidgetState.hpp</code> - Add registry, deprecate old methods</li>
+<li><code>MediaWidgetState.cpp</code> - Forward deprecated methods to registry</li>
+<li><code>Media_Window.hpp</code> - Remove <code>_*_configs</code> maps</li>
+<li><code>Media_Window.cpp</code> - Use state for all display options</li>
+<li><code>MediaLine_Widget.cpp</code> - Read/write via state</li>
+<li><code>MediaMask_Widget.cpp</code> - Read/write via state</li>
+<li><code>MediaPoint_Widget.cpp</code> - Read/write via state</li>
+<li><code>MediaTensor_Widget.cpp</code> - Read/write via state</li>
+<li><code>MediaInterval_Widget.cpp</code> - Read/write via state</li>
+<li><code>MediaProcessing_Widget.cpp</code> - Read/write via state</li>
+<li><code>Media_Widget.hpp</code> - Remove <code>_current_zoom</code>, <code>_user_zoom_active</code>; add <code>_isUserZoomActive()</code> helper</li>
+<li><code>Media_Widget.cpp</code> - State as single source of truth for zoom/pan; remove sync methods</li>
+<li><code>CMakeLists.txt</code> - Add new source files</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="success-criteria" class="level2">
+<h2 class="anchored" data-anchor-id="success-criteria">Success Criteria</h2>
+<ol type="1">
+<li>✅ <strong>Method reduction</strong>: ~60 methods → ~25 methods</li>
+<li>✅ <strong>Signal reduction</strong>: ~20 signals → ~8 signals</li>
+<li>✅ <strong>Single source of truth</strong>: Display options only in MediaWidgetStateData</li>
+<li>✅ <strong>No duplicate storage</strong>: Media_Window doesn’t have its own option maps; Media_Widget doesn’t duplicate zoom/pan</li>
+<li>✅ <strong>All tests passing</strong>: Existing + new DisplayOptionsRegistry tests</li>
+<li>✅ <strong>Serialization works</strong>: Workspace save/restore functions correctly with zoom/pan persistence</li>
+</ol>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>The MediaWidgetState hybrid architecture refactoring is now <strong>complete</strong>. All phases (4A-4E) have been successfully implemented and tested. The state class now provides:</p>
+<ul>
+<li>A clean, generic <code>DisplayOptionsRegistry</code> for all 6 display option types</li>
+<li>Consolidated signals (3 category signals vs.&nbsp;10+ individual signals)</li>
+<li>Single source of truth for all widget state (display options, viewport, preferences, overlays, tool modes)</li>
+<li>No duplicate storage between state and widgets</li>
+<li>Full workspace serialization support</li>
+</ul>
+<p>The architecture is ready for production use.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

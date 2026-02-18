@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>AnalogTimeSeries View Storage Performance Analysis – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <span class="nav-link">
+<span class="menu-text">Concepts</span>
+    </span>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
+  <li><a href="#key-difference-from-digitaleventseries-views" id="toc-key-difference-from-digitaleventseries-views" class="nav-link" data-scroll-target="#key-difference-from-digitaleventseries-views">Key Difference from DigitalEventSeries Views</a></li>
+  <li><a href="#benchmark-configuration" id="toc-benchmark-configuration" class="nav-link" data-scroll-target="#benchmark-configuration">Benchmark Configuration</a></li>
+  <li><a href="#results-summary" id="toc-results-summary" class="nav-link" data-scroll-target="#results-summary">Results Summary</a>
+  <ul class="collapse">
+  <li><a href="#full-pipeline-performance" id="toc-full-pipeline-performance" class="nav-link" data-scroll-target="#full-pipeline-performance">Full Pipeline Performance</a></li>
+  <li><a href="#phase-breakdown" id="toc-phase-breakdown" class="nav-link" data-scroll-target="#phase-breakdown">Phase Breakdown</a></li>
+  </ul></li>
+  <li><a href="#key-insights" id="toc-key-insights" class="nav-link" data-scroll-target="#key-insights">Key Insights</a>
+  <ul class="collapse">
+  <li><a href="#view-creation-is-now-faster-than-copying-0.58x" id="toc-view-creation-is-now-faster-than-copying-0.58x" class="nav-link" data-scroll-target="#view-creation-is-now-faster-than-copying-0.58x">View Creation is Now Faster Than Copying (0.58x)</a></li>
+  <li><a href="#iteration-performance-is-identical-with-span-access-1.01x" id="toc-iteration-performance-is-identical-with-span-access-1.01x" class="nav-link" data-scroll-target="#iteration-performance-is-identical-with-span-access-1.01x">Iteration Performance is Identical with Span Access (1.01x)</a></li>
+  <li><a href="#iterator-access-has-3x-overhead" id="toc-iterator-access-has-3x-overhead" class="nav-link" data-scroll-target="#iterator-access-has-3x-overhead">Iterator Access Has 3x Overhead</a></li>
+  </ul></li>
+  <li><a href="#architecture-zero-copy-view-storage" id="toc-architecture-zero-copy-view-storage" class="nav-link" data-scroll-target="#architecture-zero-copy-view-storage">Architecture: Zero-Copy View Storage</a>
+  <ul class="collapse">
+  <li><a href="#how-it-works" id="toc-how-it-works" class="nav-link" data-scroll-target="#how-it-works">How It Works</a></li>
+  <li><a href="#view-storage-structure" id="toc-view-storage-structure" class="nav-link" data-scroll-target="#view-storage-structure">View Storage Structure</a></li>
+  </ul></li>
+  <li><a href="#historical-note-the-unique_ptr-bug" id="toc-historical-note-the-unique_ptr-bug" class="nav-link" data-scroll-target="#historical-note-the-unique_ptr-bug">Historical Note: The unique_ptr Bug</a></li>
+  <li><a href="#when-to-use-views-vs.-raw-vectors" id="toc-when-to-use-views-vs.-raw-vectors" class="nav-link" data-scroll-target="#when-to-use-views-vs.-raw-vectors">When to Use Views vs.&nbsp;Raw Vectors</a></li>
+  <li><a href="#access-pattern-recommendations" id="toc-access-pattern-recommendations" class="nav-link" data-scroll-target="#access-pattern-recommendations">Access Pattern Recommendations</a></li>
+  <li><a href="#running-the-benchmark" id="toc-running-the-benchmark" class="nav-link" data-scroll-target="#running-the-benchmark">Running the Benchmark</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">AnalogTimeSeries View Storage Performance Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This document describes the performance analysis of using <code>AnalogTimeSeries</code> views vs.&nbsp;raw vectors for line plot generation, a common operation in neural data visualization.</p>
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>A line plot displays continuous analog signals (e.g., LFP, EMG) aligned to trial events. For each alignment event, we need to:</p>
+<ol type="1">
+<li>Extract samples within a time window around the alignment point</li>
+<li>Transform the data for GPU rendering (populate vertex buffers)</li>
+</ol>
+<p>We compared two approaches:</p>
+<ol type="1">
+<li><strong>Baseline (Raw Vectors)</strong>: Use <code>std::vector&lt;std::vector&lt;float&gt;&gt;</code> for windowed signals</li>
+<li><strong>View-Based</strong>: Use <code>std::vector&lt;shared_ptr&lt;AnalogTimeSeries&gt;&gt;</code> with view storage backend</li>
+</ol>
+</section>
+<section id="key-difference-from-digitaleventseries-views" class="level2">
+<h2 class="anchored" data-anchor-id="key-difference-from-digitaleventseries-views">Key Difference from DigitalEventSeries Views</h2>
+<p>Unlike <code>DigitalEventSeries</code> views which use index indirection (each access requires looking up an index, then accessing the source), <code>AnalogTimeSeries</code> views provide <strong>contiguous span access</strong> because:</p>
+<ul>
+<li><code>ViewAnalogDataStorage</code> stores start/end offsets into the source <code>VectorAnalogDataStorage</code></li>
+<li>The source data is always contiguous in memory</li>
+<li>Views can return <code>std::span&lt;float const&gt;</code> directly pointing into source memory</li>
+</ul>
+<p>This means iteration performance is essentially identical to raw vectors once views are created.</p>
+</section>
+<section id="benchmark-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="benchmark-configuration">Benchmark Configuration</h2>
+<pre><code>Total samples:       1,000,000 (full analog time series)
+Alignment events:      1,000   (number of trials/windows)
+Window size:           1,000   (±500 samples around each alignment)
+Samples per window:    1,000   (contiguous block)</code></pre>
+</section>
+<section id="results-summary" class="level2">
+<h2 class="anchored" data-anchor-id="results-summary">Results Summary</h2>
+<section id="full-pipeline-performance" class="level3">
+<h3 class="anchored" data-anchor-id="full-pipeline-performance">Full Pipeline Performance</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Time (µs)</th>
+<th>Relative</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline (Raw Vectors)</td>
+<td>2,629</td>
+<td>1.0x</td>
+</tr>
+<tr class="even">
+<td>View-Based (Span)</td>
+<td>2,058</td>
+<td><strong>0.78x (faster!)</strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="phase-breakdown" class="level3">
+<h3 class="anchored" data-anchor-id="phase-breakdown">Phase Breakdown</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Baseline (µs)</th>
+<th>View-Based (µs)</th>
+<th>Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Window/View Creation</td>
+<td>310</td>
+<td>181</td>
+<td><strong>0.58x (faster!)</strong></td>
+</tr>
+<tr class="even">
+<td>Iteration Only (Span)</td>
+<td>1,069</td>
+<td>1,078</td>
+<td>1.01x</td>
+</tr>
+<tr class="odd">
+<td>Iteration Only (Iterator)</td>
+<td>1,069</td>
+<td>3,220</td>
+<td>3.0x</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="key-insights" class="level2">
+<h2 class="anchored" data-anchor-id="key-insights">Key Insights</h2>
+<section id="view-creation-is-now-faster-than-copying-0.58x" class="level3">
+<h3 class="anchored" data-anchor-id="view-creation-is-now-faster-than-copying-0.58x">View Creation is Now Faster Than Copying (0.58x)</h3>
+<p>After optimizing time storage creation, views are now <strong>faster to create</strong> than raw vector copies:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline: Copy 1000 floats × 1000 windows</td>
+<td>~310 µs (memcpy ~4MB)</td>
+</tr>
+<tr class="even">
+<td>View: Create 1000 views with O(1) time storage</td>
+<td>~181 µs</td>
+</tr>
+</tbody>
+</table>
+<p>The optimization detects when the source has <code>DenseTimeIndexStorage</code> (the common case for uniformly sampled data) and creates the view’s time storage as a new dense range in O(1) instead of materializing a vector in O(n):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span><span class="op">*</span> dense_source <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DenseTimeIndexStorage <span class="at">const</span><span class="op">*&gt;(</span>source<span class="op">-&gt;</span>_time_storage<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>dense_source <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// O(1): Just store new start index and count</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex view_start <span class="op">=</span> dense_source<span class="op">-&gt;</span>getTimeFrameIndexAt<span class="op">(</span>start_idx<span class="op">);</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    view_time_storage <span class="op">=</span> TimeIndexStorageFactory<span class="op">::</span>createDense<span class="op">(</span>view_start<span class="op">,</span> view_count<span class="op">);</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// O(n): Sparse case - must materialize time indices</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... fallback to vector construction</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="iteration-performance-is-identical-with-span-access-1.01x" class="level3">
+<h3 class="anchored" data-anchor-id="iteration-performance-is-identical-with-span-access-1.01x">Iteration Performance is Identical with Span Access (1.01x)</h3>
+<p>Once views are created, span-based iteration matches raw vector performance exactly:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Both compile to essentially the same code</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> val <span class="op">:</span> vector<span class="op">)</span> <span class="op">{</span> sum <span class="op">+=</span> val<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> val <span class="op">:</span> view<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">())</span> <span class="op">{</span> sum <span class="op">+=</span> val<span class="op">;</span> <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is because <code>ViewAnalogDataStorage::getSpanImpl()</code> returns a span pointing directly into the source memory.</p>
+</section>
+<section id="iterator-access-has-3x-overhead" class="level3">
+<h3 class="anchored" data-anchor-id="iterator-access-has-3x-overhead">Iterator Access Has 3x Overhead</h3>
+<p>Using <code>elements()</code> iterator instead of span access adds overhead:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// This is 3x slower due to virtual dispatch and pair construction</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> <span class="op">[</span>time<span class="op">,</span> value<span class="op">]</span> <span class="op">:</span> view<span class="op">-&gt;</span>elements<span class="op">())</span> <span class="op">{</span> sum <span class="op">+=</span> value<span class="op">;</span> <span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="architecture-zero-copy-view-storage" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-zero-copy-view-storage">Architecture: Zero-Copy View Storage</h2>
+<section id="how-it-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-it-works">How It Works</h3>
+<p>The <code>DataStorageWrapper</code> uses <code>shared_ptr</code> internally (fixed from previous <code>unique_ptr</code> bug):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DataStorageWrapper <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>StorageConcept<span class="op">&gt;</span> _impl<span class="op">;</span>  <span class="co">// Shared ownership of storage</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When creating a view, we use the <strong>aliasing constructor</strong> of <code>shared_ptr</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>VectorAnalogDataStorage <span class="at">const</span><span class="op">&gt;</span> getSharedVectorStorage<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> vector_model <span class="op">=</span> <span class="bu">std::</span>dynamic_pointer_cast<span class="op">&lt;</span>StorageModel<span class="op">&lt;</span>VectorAnalogDataStorage<span class="op">&gt;</span> <span class="at">const</span><span class="op">&gt;(</span>_impl<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Aliasing constructor: shares ownership with _impl but points to inner storage</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>VectorAnalogDataStorage <span class="at">const</span><span class="op">&gt;(</span>vector_model<span class="op">,</span> <span class="op">&amp;</span>vector_model<span class="op">-&gt;</span>_storage<span class="op">);</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="view-storage-structure" class="level3">
+<h3 class="anchored" data-anchor-id="view-storage-structure">View Storage Structure</h3>
+<p>Each view consists of:</p>
+<ol type="1">
+<li>A <code>shared_ptr</code> to the source’s <code>VectorAnalogDataStorage</code> (shared among all views)</li>
+<li>Start and end indices defining the view window</li>
+<li>A separate <code>TimeIndexStorage</code> for the view’s time indices</li>
+</ol>
+<pre><code>Source (1M samples)
+    └── _data_storage (DataStorageWrapper)
+            └── _impl (shared_ptr&lt;StorageConcept&gt;)
+                    └── VectorAnalogDataStorage with float* data
+
+View 1 (window around alignment 0)      ──┐
+    └── ViewAnalogDataStorage            │
+        ├── _source (shared_ptr) ────────┼── All share same source
+        ├── _start_index = 1000          │
+        └── _end_index = 2000            │
+                                         │
+View 2 (window around alignment 1)      ──┤
+    └── ViewAnalogDataStorage            │
+        ├── _source (shared_ptr) ────────┘
+        ├── _start_index = 5500
+        └── _end_index = 6500
+...</code></pre>
+</section>
+</section>
+<section id="historical-note-the-unique_ptr-bug" class="level2">
+<h2 class="anchored" data-anchor-id="historical-note-the-unique_ptr-bug">Historical Note: The unique_ptr Bug</h2>
+<p>The original <code>DataStorageWrapper</code> implementation used <code>std::unique_ptr&lt;StorageConcept&gt;</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">BUG</span><span class="co">: unique_ptr prevented sharing - had to copy entire storage for views!</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>StorageConcept<span class="op">&gt;</span> _impl<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This was the same bug found in <code>DigitalEventStorageWrapper</code>. The fix changed to <code>shared_ptr</code> to enable:</p>
+<ul>
+<li>Zero-copy view creation via aliasing constructor</li>
+<li>Correct lifetime management (source outlives views)</li>
+<li>Multiple views sharing one underlying storage</li>
+</ul>
+</section>
+<section id="when-to-use-views-vs.-raw-vectors" class="level2">
+<h2 class="anchored" data-anchor-id="when-to-use-views-vs.-raw-vectors">When to Use Views vs.&nbsp;Raw Vectors</h2>
+<p><strong>Views are now the preferred approach for most use cases:</strong></p>
+<ul>
+<li>Zero-copy data sharing (no memcpy)</li>
+<li>Faster creation than raw vector extraction for dense time storage</li>
+<li>Integration with TimeFrame conversion system</li>
+<li>Chaining with lazy transforms</li>
+<li>Full <code>AnalogTimeSeries</code> API (getAtTime, elements, etc.)</li>
+</ul>
+<p><strong>Raw vectors may still be preferred for:</strong></p>
+<ul>
+<li>Sparse time storage sources (where O(n) time materialization is required)</li>
+<li>When you need to mutate the extracted data</li>
+<li>Integration with external libraries expecting <code>std::vector&lt;float&gt;</code></li>
+</ul>
+</section>
+<section id="access-pattern-recommendations" class="level2">
+<h2 class="anchored" data-anchor-id="access-pattern-recommendations">Access Pattern Recommendations</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Access Pattern</th>
+<th>Method</th>
+<th>Relative Speed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Best</strong></td>
+<td><code>getAnalogTimeSeries()</code> → span</td>
+<td>1.0x</td>
+</tr>
+<tr class="even">
+<td>Good</td>
+<td><code>getDataInTimeFrameIndexRange()</code> → span</td>
+<td>1.0x</td>
+</tr>
+<tr class="odd">
+<td>Slower</td>
+<td><code>elements()</code> iterator</td>
+<td>3.0x</td>
+</tr>
+<tr class="even">
+<td>Slowest</td>
+<td><code>getAtTime()</code> per-sample</td>
+<td>10x+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="running-the-benchmark" class="level2">
+<h2 class="anchored" data-anchor-id="running-the-benchmark">Running the Benchmark</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> linux-clang-release <span class="at">-DENABLE_BENCHMARK</span><span class="op">=</span>ON</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> linux-clang-release <span class="at">--target</span> benchmark_LinePlotViews</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all tests</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./out/build/Clang/Release/benchmark/benchmark_LinePlotViews</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific tests</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_LinePlotViews</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"FullPipeline"</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_LinePlotViews</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"IterationOnly"</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Cache analysis</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> stat <span class="at">-e</span> cache-references,cache-misses,L1-dcache-load-misses <span class="dt">\</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    ./benchmark_LinePlotViews <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"IterationOnly"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>The view-based approach using <code>AnalogTimeSeries</code> achieves true zero-copy data sharing via <code>shared_ptr</code> with aliasing constructor. With the optimized dense time storage creation, <strong>views are now faster than raw vector extraction</strong> for the common case of uniformly sampled data.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Baseline</th>
+<th>View-Based</th>
+<th>Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Creation</td>
+<td>310 µs</td>
+<td>181 µs</td>
+<td><strong>Views (1.7x faster)</strong></td>
+</tr>
+<tr class="even">
+<td>Full Pipeline</td>
+<td>2,629 µs</td>
+<td>2,058 µs</td>
+<td><strong>Views (1.3x faster)</strong></td>
+</tr>
+<tr class="odd">
+<td>Iteration (Span)</td>
+<td>1,069 µs</td>
+<td>1,078 µs</td>
+<td>Tie</td>
+</tr>
+</tbody>
+</table>
+<p>The key optimizations that made this possible:</p>
+<ol type="1">
+<li><strong>shared_ptr for storage</strong> (bug fix): Enables zero-copy view creation via aliasing constructor</li>
+<li><strong>O(1) dense time storage</strong>: Detects <code>DenseTimeIndexStorage</code> and creates view time storage as <code>createDense(start, count)</code> instead of materializing an O(n) vector</li>
+</ol>
+<p><strong>Key recommendation</strong>: Use <code>createView()</code> for windowed access to <code>AnalogTimeSeries</code> data. Always use <code>getAnalogTimeSeries()</code> or <code>getDataInTimeFrameIndexRange()</code> for span-based iteration rather than <code>elements()</code> iterator.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

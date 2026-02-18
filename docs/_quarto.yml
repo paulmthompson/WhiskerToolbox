@@ -11,25 +11,13 @@ website:
     right:
       - id: intro
         text: "Introduction"
-        href: index.qmd
+        href: introduction.qmd
+
+      - text: "Getting Started"
+        href: getting-started.qmd
         
-      - text: "Tutorials"
-        menu:
-          - text: "Keypoint Labeling"
-            href: examples/keypoint_labeling.qmd
-            
-      - text: "How-to guides"
-        menu:
-          - text: "Label Creation"
-            href: labeling/keypoint.qmd
-          - text: "Mask Creation"
-            href: labeling/mask.qmd
-          - text: "Video Import"
-            href: examples/video_import.qmd
-          - text: "Image Stack Import"
-            href: examples/image_stack_import.qmd
-          - text: "Load Tabular Binary Events"
-            href: examples/tabular_binary_events.qmd
+      - text: "Learning Resources"
+        href: learning-resources.qmd
             
       - text: "Reference Guides"
         menu:
@@ -85,6 +73,26 @@ website:
               href: developer/ui/Features/overview.qmd
               contents:
                   - developer/ui/Features/Collapsible_Widget.qmd
+
+    - title: "Learning Resources"
+      contents:
+        - learning-resources.qmd
+        - section: "Tutorials"
+          contents:
+            - text: "Keypoint Labeling"
+              href: examples/keypoint_labeling.qmd
+        - section: "How-to Guides"
+          contents:
+            - text: "Label Creation"
+              href: labeling/keypoint.qmd
+            - text: "Mask Creation"
+              href: labeling/mask.qmd
+            - text: "Video Import"
+              href: examples/video_import.qmd
+            - text: "Image Stack Import"
+              href: examples/image_stack_import.qmd
+            - text: "Load Tabular Binary Events"
+              href: examples/tabular_binary_events.qmd
 
     - title: "User Guide"
       style: "docked"
