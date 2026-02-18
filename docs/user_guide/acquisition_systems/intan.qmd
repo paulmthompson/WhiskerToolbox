@@ -1,0 +1,81 @@
+---
+title: "Intan"
+---
+
+[Intan Technologies](https://intantech.com/) acquisition systems are commonly used for electrophysiology. The system saves data in several files, with `amplifier.dat` and `digitalin.dat` being the primary files for analog and digital data, respectively.
+
+## File Formats
+
+### amplifier.dat
+
+The `amplifier.dat` file contains the analog data from the amplifier channels. - **Format:** 2D array of `int16` values. - **Organization:** Time-major (all channels at t=0, then all channels at t=1, etc.). - **Conversion:** The values be converted to microvolts using a bit resolution of **0.196 µV/bit**. - **Sampling Rate:** Typically **30 kHz**.
+
+### digitalin.dat
+
+The `digitalin.dat` file contains digital input data. - **Format:** Binary file with one `uint16` value per sampling tick. - **Content:** Each bit of the `uint16` value represents a high (1) or low (0) state for a specific digital input channel.
+
+## Loading Data
+
+Data can be loaded using JSON configuration objects. Below are examples for common loading scenarios.
+
+### Loading Analog Time Series
+
+To load `amplifier.dat` as an analog time series:
+
+``` json
+{
+    "filepath": "amplifier.dat",
+    "data_type": "analog",
+    "name": "voltage",
+    "format": "int16",
+    "header_size": 0,
+    "channel_count": 32,
+    "clock": "master",
+    "use_memory_mapped": true
+}
+```
+
+### Loading Digital Interval Series
+
+To load a specific digital input (e.g., channel 0) as a series of intervals:
+
+``` json
+{
+    "filepath": "digitalin.dat",
+    "data_type": "digital_interval",
+    "name": "pico",
+    "format": "uint16",
+    "channel": 0,
+    "transition": "rising",
+    "clock": "master",
+    "header_size": 0
+}
+```
+
+### Creating a TimeFrame from Digital Input
+
+If a digital input represents a time reference (e.g., channel 1):
+
+``` json
+{
+    "filepath": "digitalin.dat",
+    "data_type": "time",
+    "name": "time",
+    "format": "uint16",
+    "channel": 1,
+    "transition": "rising"
+}
+```
+
+### Creating a TimeFrame from Total Samples
+
+To create a TimeFrame based on the total number of samples in the file:
+
+``` json
+{
+    "filepath": "digitalin.dat",
+    "data_type": "time",
+    "name": "master",
+    "format": "uint16_length"
+}
+```

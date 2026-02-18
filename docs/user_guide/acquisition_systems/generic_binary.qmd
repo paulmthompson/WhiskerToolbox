@@ -1,0 +1,5 @@
+---
+title: "Generic Binary"
+---
+
+Instructions for loading generic binary data.
