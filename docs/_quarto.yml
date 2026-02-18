@@ -32,8 +32,7 @@ website:
         href: https://github.com/paulmthompson/WhiskerToolbox
         aria-label: GitHub
 
-      - text: "Concepts"
-            
+
   sidebar:
     - title: "Developer Documentation"
       style: "docked"
@@ -81,6 +80,8 @@ website:
           contents:
             - text: "Keypoint Labeling"
               href: examples/keypoint_labeling.qmd
+        - section: "Concepts"
+          contents: []
         - section: "How-to Guides"
           contents:
             - text: "Label Creation"

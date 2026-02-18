@@ -36,7 +36,7 @@ Tame your experimental data. Streamline your workflow from data ingestion to dat
 
 ## Community & Support
 
-::::: grid
+:::::: grid
 ::: {.g-col-12 .g-col-md-4}
 ### Learning Resources
 
@@ -54,4 +54,4 @@ Connect with other users, ask questions, and share your feedback on GitHub. [Git
 
 Interested in contributing? Dive into our technical guides and API reference. [Developer Guide](developer/index.qmd){.btn .btn-secondary role="button"}
 :::
-:::::
+::::::

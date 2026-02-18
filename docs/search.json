@@ -756,11 +756,21 @@
     ]
   },
   {
+    "objectID": "learning-resources.html#concepts",
+    "href": "learning-resources.html#concepts",
+    "title": "Learning Resources",
+    "section": "Concepts",
+    "text": "Concepts\nDeep dive into the core concepts and theory behind Neuralyzer.",
+    "crumbs": [
+      "Learning Resources"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Neuralyzer",
     "section": "",
-    "text": "A powerful, cross-platform toolkit for visualizing and analyzing experimental data.\nGet Started Download\n\n\n\n\nExperience your data in perfect context. Neuralyzer provides temporally synchronized playback of high-speed video, analog traces, and spike data, reproducing the entire experiment. Navigate seamlessly between different levels of abstraction—from raw data points to complex analysis results—to verify every insight.\n\n\n\nAccess a comprehensive suite of built-in algorithms for tracking, signal processing, and behavioral quantification. For advanced needs, native Python support allows you to integrate custom analysis routines and instantly visualize the results within the application.\n\n\n\nTame your experimental data. Streamline your workflow from data ingestion to dataset generation. Visualize and create deep learning labels directly on your data, manage complex experimental hierarchies, and export labeled videos for training or presentation.\n\n\n\n\n\n\n\n\nMaster Neuralyzer with our comprehensive collection of tutorials and how-to guides. Explore Resources\n\n\n\nConnect with other users, ask questions, and share your feedback on GitHub. GitHub Discussions"
+    "text": "A powerful, cross-platform toolkit for visualizing and analyzing experimental data.\nGet Started Download\n\n\n\n\nExperience your data in perfect context. Neuralyzer provides temporally synchronized playback of high-speed video, analog traces, and spike data, reproducing the entire experiment. Navigate seamlessly between different levels of abstraction—from raw data points to complex analysis results—to verify every insight.\n\n\n\nAccess a comprehensive suite of built-in algorithms for tracking, signal processing, and behavioral quantification. For advanced needs, native Python support allows you to integrate custom analysis routines and instantly visualize the results within the application.\n\n\n\nTame your experimental data. Streamline your workflow from data ingestion to dataset generation. Visualize and create deep learning labels directly on your data, manage complex experimental hierarchies, and export labeled videos for training or presentation.\n\n\n\n\n\n\n\n\nMaster Neuralyzer with our comprehensive collection of tutorials and how-to guides. Explore Resources\n\n\n\nConnect with other users, ask questions, and share your feedback on GitHub. GitHub Discussions\n\n\n\nInterested in contributing? Dive into our technical guides and API reference. Developer Guide"
   },
   {
     "objectID": "index.html#synchronized-visualization",
@@ -788,7 +798,7 @@
     "href": "index.html#community-support",
     "title": "Neuralyzer",
     "section": "",
-    "text": "Master Neuralyzer with our comprehensive collection of tutorials and how-to guides. Explore Resources\n\n\n\nConnect with other users, ask questions, and share your feedback on GitHub. GitHub Discussions"
+    "text": "Master Neuralyzer with our comprehensive collection of tutorials and how-to guides. Explore Resources\n\n\n\nConnect with other users, ask questions, and share your feedback on GitHub. GitHub Discussions\n\n\n\nInterested in contributing? Dive into our technical guides and API reference. Developer Guide"
   },
   {
     "objectID": "examples/video_import.html",
@@ -3465,7 +3475,21 @@
     "href": "getting-started.html",
     "title": "Getting Started",
     "section": "",
-    "text": "(Content to be added)"
+    "text": "Ready to start analyzing? Follow these simple steps to get Neuralyzer running on your system."
+  },
+  {
+    "objectID": "getting-started.html#download",
+    "href": "getting-started.html#download",
+    "title": "Getting Started",
+    "section": "1. Download",
+    "text": "1. Download\nThe latest version of Neuralyzer is available on our GitHub Releases page.\nDownload Latest Release\nSelect the appropriate file for your operating system:\n\nWindows: Neuralyzer-Windows-x64.zip\nmacOS: Neuralyzer-macOS.dmg\nLinux: Neuralyzer-Linux.tar.gz"
+  },
+  {
+    "objectID": "getting-started.html#install-run",
+    "href": "getting-started.html#install-run",
+    "title": "Getting Started",
+    "section": "2. Install & Run",
+    "text": "2. Install & Run\n\nWindowsmacOSLinux\n\n\n\nUnzip the downloaded Run_WhiskerToolbox_Windows.zip file to your preferred location.\nOpen the extracted folder and navigate to the bin directory.\nDouble-click WhiskerToolbox.exe to launch the application.\n\nNote: You may update your desktop shortcut to point to this executable for easier access.\n\n\n\nDouble-click the downloaded .dmg file to mount it.\nDrag and drop the Neuralyzer application icon into your Applications folder.\nOpen your Applications folder and launch Neuralyzer.\n\nNote: On the first launch, you may need to approve the application in your security settings if it’s not notarized.\n\n\n\nExtract the downloaded archive: bash     tar -xzf Neuralyzer-Linux.tar.gz\nNavigate to the binary directory: bash     cd Neuralyzer/bin\nRun the executable: bash     ./WhiskerToolbox"
   },
   {
     "objectID": "introduction.html",

@@ -125,11 +125,6 @@ ul.task-list li input[type="checkbox"] {
 </i> 
 <span class="menu-text"></span></a>
   </li>  
-  <li class="nav-item">
-    <span class="nav-link">
-<span class="menu-text">Concepts</span>
-    </span>
-  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -142,8 +137,15 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#download" id="toc-download" class="nav-link active" data-scroll-target="#download">1. Download</a></li>
+  <li><a href="#install-run" id="toc-install-run" class="nav-link" data-scroll-target="#install-run">2. Install &amp; Run</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -167,9 +169,51 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>(Content to be added)</p>
+<p>Ready to start analyzing? Follow these simple steps to get Neuralyzer running on your system.</p>
+<section id="download" class="level2">
+<h2 class="anchored" data-anchor-id="download">1. Download</h2>
+<p>The latest version of Neuralyzer is available on our GitHub Releases page.</p>
+<p><a href="https://github.com/paulmthompson/WhiskerToolbox/releases/latest" class="btn btn-primary btn-lg" role="button">Download Latest Release</a></p>
+<p>Select the appropriate file for your operating system:</p>
+<ul>
+<li><strong>Windows</strong>: <code>Neuralyzer-Windows-x64.zip</code></li>
+<li><strong>macOS</strong>: <code>Neuralyzer-macOS.dmg</code></li>
+<li><strong>Linux</strong>: <code>Neuralyzer-Linux.tar.gz</code></li>
+</ul>
+</section>
+<section id="install-run" class="level2">
+<h2 class="anchored" data-anchor-id="install-run">2. Install &amp; Run</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Windows</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">macOS</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Linux</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<ol type="1">
+<li><strong>Unzip</strong> the downloaded <code>Run_WhiskerToolbox_Windows.zip</code> file to your preferred location.</li>
+<li>Open the extracted folder and navigate to the <code>bin</code> directory.</li>
+<li>Double-click <strong><code>WhiskerToolbox.exe</code></strong> to launch the application.</li>
+</ol>
+<p><em>Note: You may update your desktop shortcut to point to this executable for easier access.</em></p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<ol type="1">
+<li><strong>Double-click</strong> the downloaded <code>.dmg</code> file to mount it.</li>
+<li><strong>Drag and drop</strong> the Neuralyzer application icon into your <strong>Applications</strong> folder.</li>
+<li>Open your Applications folder and launch <strong>Neuralyzer</strong>.</li>
+</ol>
+<p><em>Note: On the first launch, you may need to approve the application in your security settings if it’s not notarized.</em></p>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<ol type="1">
+<li><strong>Extract</strong> the downloaded archive: <code>bash     tar -xzf Neuralyzer-Linux.tar.gz</code></li>
+<li>Navigate to the binary directory: <code>bash     cd Neuralyzer/bin</code></li>
+<li>Run the executable: <code>bash     ./WhiskerToolbox</code></li>
+</ol>
+</div>
+</div>
+</div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

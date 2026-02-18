@@ -3,7 +3,13 @@ title: "Learning Resources"
 ---
 
 ## Tutorials
+
 Detailed step-by-step guides to help you learn the basics.
 
 ## How-to Guides
+
 Practical guides to help you achieve specific tasks.
+
+## Concepts
+
+Deep dive into the core concepts and theory behind Neuralyzer.

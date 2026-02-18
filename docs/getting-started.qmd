@@ -12,14 +12,13 @@ The latest version of Neuralyzer is available on our GitHub Releases page.
 
 Select the appropriate file for your operating system:
 
-*   **Windows**: `Neuralyzer-Windows-x64.zip`
-*   **macOS**: `Neuralyzer-macOS.dmg`
-*   **Linux**: `Neuralyzer-Linux.tar.gz`
+-   **Windows**: `Neuralyzer-Windows-x64.zip`
+-   **macOS**: `Neuralyzer-macOS.dmg`
+-   **Linux**: `Neuralyzer-Linux.tar.gz`
 
 ## 2. Install & Run
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ## Windows
 
 1.  **Unzip** the downloaded `Run_WhiskerToolbox_Windows.zip` file to your preferred location.
@@ -38,17 +37,7 @@ Select the appropriate file for your operating system:
 
 ## Linux
 
-1.  **Extract** the downloaded archive:
-    ```bash
-    tar -xzf Neuralyzer-Linux.tar.gz
-    ```
-2.  Navigate to the binary directory:
-    ```bash
-    cd Neuralyzer/bin
-    ```
-3.  Run the executable:
-    ```bash
-    ./WhiskerToolbox
-    ```
-
+1.  **Extract** the downloaded archive: `bash     tar -xzf Neuralyzer-Linux.tar.gz`
+2.  Navigate to the binary directory: `bash     cd Neuralyzer/bin`
+3.  Run the executable: `bash     ./WhiskerToolbox`
 :::
