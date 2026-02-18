@@ -206,6 +206,10 @@ QWidget * EditorRegistry::createView(std::shared_ptr<EditorState> state) {
         return nullptr;
     }
 
+    if (!it->second.create_view) {
+        return nullptr;// No view factory - type uses create_editor_custom
+    }
+
     return it->second.create_view(state);
 }
 

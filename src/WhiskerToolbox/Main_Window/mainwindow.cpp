@@ -1408,9 +1408,11 @@ void MainWindow::_restoreEditorStates(StateManagement::WorkspaceData const & dat
             continue;
         }
 
-        // Skip certain built-in widgets that are always created in _buildInitialLayout
-        // (TimeScrollBar state is pre-registered and its widget is always present)
-        if (type_id.toString() == QStringLiteral("TimeScrollBar")) {
+        // Skip types that only have create_editor_custom (no create_view factory).
+        // These are built-in widgets always created by _buildInitialLayout and cannot
+        // be recreated from state alone (they need DataManager, GroupManager, etc.).
+        // Their state is still restored by fromJson() above; we just skip view creation.
+        if (!info.create_view) {
             continue;
         }
 
