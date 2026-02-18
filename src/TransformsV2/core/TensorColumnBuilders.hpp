@@ -1,0 +1,229 @@
+#ifndef WHISKERTOOLBOX_V2_TENSOR_COLUMN_BUILDERS_HPP
+#define WHISKERTOOLBOX_V2_TENSOR_COLUMN_BUILDERS_HPP
+
+/**
+ * @file TensorColumnBuilders.hpp
+ * @brief Builder layer that connects DataManager sources, TransformPipeline
+ *        execution, and GatherResult gather+reduce patterns into
+ *        ColumnProviderFn closures for LazyColumnTensorStorage.
+ *
+ * This is Phase 1.1b of the TableView → TensorData refactoring plan.
+ *
+ * The builders live in TransformsV2 (which depends on DataManager and
+ * GatherResult) so they can reference all source types. The resulting
+ * ColumnProviderFn closures are plain std::function<std::vector<float>()>
+ * — they are injected into LazyColumnTensorStorage, which has no
+ * TransformsV2 dependency.
+ *
+ * @see LazyColumnTensorStorage for the storage backend
+ * @see TensorData::createFromLazyColumns() for factory usage
+ * @see GatherResult for the gather+reduce pattern
+ */
+
+#include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp" // ColumnProviderFn, ColumnSource
+#include "DataManager/Tensors/TensorData.hpp"                      // InvalidationWiringFn
+
+#include <functional>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+
+// Forward declarations
+class DataManager;
+class AnalogTimeSeries;
+class DigitalEventSeries;
+class DigitalIntervalSeries;
+
+namespace WhiskerToolbox::Transforms::V2 {
+class TransformPipeline;
+} // namespace WhiskerToolbox::Transforms::V2
+
+namespace WhiskerToolbox::TensorBuilders {
+
+// ============================================================================
+// Interval Property Enum
+// ============================================================================
+
+/**
+ * @brief Property to extract from row intervals.
+ *
+ * Used by buildIntervalPropertyProvider() to determine which scalar is
+ * produced for each interval row.
+ */
+enum class IntervalProperty : std::uint8_t {
+    Start,    ///< Returns the start time of the interval
+    End,      ///< Returns the end time of the interval
+    Duration  ///< Returns the duration (end − start) of the interval
+};
+
+// ============================================================================
+// ColumnRecipe — JSON-serializable column specification
+// ============================================================================
+
+/**
+ * @brief Describes how one tensor column is computed.
+ *
+ * A ColumnRecipe captures all the information needed to build a
+ * ColumnProviderFn closure.  It is JSON-serializable (via reflect-cpp)
+ * for save/load of TensorDesigner configurations.
+ *
+ * The recipe does NOT store the closure itself — closures capture
+ * runtime pointers (DataManager*, shared_ptrs) that are not serializable.
+ * Use buildProviderFromRecipe() to reconstruct the closure at runtime.
+ */
+struct ColumnRecipe {
+    /// Display name for this column
+    std::string column_name;
+
+    /// DataManager key for the source data (empty for interval-property columns)
+    std::string source_key;
+
+    /// JSON string describing the TransformPipeline (empty for passthrough)
+    std::string pipeline_json;
+
+    /// Hint for which gather type to use (e.g. "AnalogTimeSeries",
+    /// "DigitalEventSeries", "DigitalIntervalSeries").
+    /// Empty string means auto-detect from DataManager.
+    std::string gather_type;
+
+    /// If this is an interval-property column, which property to extract.
+    /// nullopt means this is a data-source column, not an interval-property column.
+    std::optional<IntervalProperty> interval_property;
+};
+
+// ============================================================================
+// Builder Functions
+// ============================================================================
+
+/**
+ * @brief Build a passthrough ColumnProviderFn that reads AnalogTimeSeries
+ *        values at the timestamps given by @p row_times.
+ *
+ * For each row, the provider samples the source AnalogTimeSeries at the
+ * corresponding timestamp. If a timestamp has no matching sample, NaN is
+ * returned for that row.
+ *
+ * @param dm         DataManager that owns the source data
+ * @param source_key DataManager key for an AnalogTimeSeries
+ * @param row_times  Ordered vector of TimeFrameIndex values (one per row)
+ * @return ColumnProviderFn that produces a float vector of size row_times.size()
+ *
+ * @throws std::runtime_error if source_key does not exist or is not AnalogTimeSeries
+ */
+ColumnProviderFn buildDirectColumnProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::vector<TimeFrameIndex> const & row_times);
+
+/**
+ * @brief Build a ColumnProviderFn that samples an AnalogTimeSeries at
+ *        row timestamps and applies a TransformPipeline + range reduction.
+ *
+ * Unlike buildDirectColumnProvider(), this variant first constructs a
+ * TransformPipeline from @p pipeline and applies it element-wise before
+ * returning the results.
+ *
+ * If the pipeline contains a range reduction, it is applied per-element
+ * (NOT over a gathered interval). For interval-based reductions, use
+ * buildIntervalReductionProvider() instead.
+ *
+ * @param dm         DataManager that owns the source data
+ * @param source_key DataManager key for an AnalogTimeSeries
+ * @param row_times  Ordered vector of TimeFrameIndex values (one per row)
+ * @param pipeline   TransformPipeline describing element transforms
+ * @return ColumnProviderFn producing one float per row
+ */
+ColumnProviderFn buildTimeSeriesColumnProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::vector<TimeFrameIndex> const & row_times,
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+
+/**
+ * @brief Build a ColumnProviderFn that gathers source data over intervals
+ *        and applies a range reduction per interval.
+ *
+ * Internally creates a GatherResult\<T\> from the source and intervals,
+ * then applies the pipeline's range reduction to each gathered view.
+ * The source type T is dispatched at runtime from the DataManager key.
+ *
+ * Supported source types:
+ *   - AnalogTimeSeries (element_type = TimeValuePoint)
+ *   - DigitalEventSeries (element_type = EventWithId)
+ *   - DigitalIntervalSeries (element_type = IntervalWithId)
+ *
+ * @param dm            DataManager that owns the source data
+ * @param source_key    DataManager key
+ * @param intervals     Shared pointer to the DigitalIntervalSeries defining rows
+ * @param pipeline      TransformPipeline with a range reduction set
+ * @return ColumnProviderFn producing one float per interval
+ *
+ * @throws std::runtime_error if source type is unsupported or pipeline has no reduction
+ */
+ColumnProviderFn buildIntervalReductionProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::shared_ptr<DigitalIntervalSeries> intervals,
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+
+/**
+ * @brief Build a ColumnProviderFn that extracts a property (start, end,
+ *        or duration) from the row intervals.
+ *
+ * This does NOT consult any DataManager source — the values come entirely
+ * from the interval endpoints.
+ *
+ * @param intervals Row intervals
+ * @param property  Which property to extract
+ * @return ColumnProviderFn producing one float per interval
+ */
+ColumnProviderFn buildIntervalPropertyProvider(
+    std::shared_ptr<DigitalIntervalSeries> intervals,
+    IntervalProperty property);
+
+/**
+ * @brief Build a ColumnProviderFn from a ColumnRecipe.
+ *
+ * This is the main entry point for building providers from serialized
+ * configurations. It dispatches to the appropriate builder based on the
+ * recipe's fields.
+ *
+ * @param dm         DataManager that owns source data
+ * @param recipe     Column specification
+ * @param row_times  Row timestamps (for timestamp-row tensors; empty for interval-row)
+ * @param intervals  Row intervals (for interval-row tensors; nullptr for timestamp-row)
+ * @return ColumnProviderFn
+ */
+ColumnProviderFn buildProviderFromRecipe(
+    DataManager & dm,
+    ColumnRecipe const & recipe,
+    std::vector<TimeFrameIndex> const & row_times,
+    std::shared_ptr<DigitalIntervalSeries> intervals);
+
+// ============================================================================
+// Invalidation Wiring
+// ============================================================================
+
+/**
+ * @brief Build an InvalidationWiringFn that registers DataManager observers
+ *        to invalidate tensor columns when source data changes.
+ *
+ * For each (column_index, source_key) pair, the wiring function registers
+ * an observer on the source data. When the source notifies, the wiring
+ * callback invalidates the corresponding column and notifies the tensor's
+ * own observers.
+ *
+ * @param dm          DataManager that owns source data
+ * @param source_keys Ordered list of DataManager keys, one per column.
+ *                    Empty strings mean "no source dependency" (e.g. interval
+ *                    property columns) and will be skipped.
+ * @return InvalidationWiringFn suitable for TensorData::createFromLazyColumns()
+ */
+InvalidationWiringFn buildInvalidationWiringFn(
+    DataManager & dm,
+    std::vector<std::string> const & source_keys);
+
+} // namespace WhiskerToolbox::TensorBuilders
+
+#endif // WHISKERTOOLBOX_V2_TENSOR_COLUMN_BUILDERS_HPP

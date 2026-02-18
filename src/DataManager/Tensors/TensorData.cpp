@@ -759,6 +759,59 @@ void TensorData::setData(std::vector<float> && data,
 }
 
 // =============================================================================
+// Column Mutation (LazyColumnTensorStorage only)
+// =============================================================================
+
+std::size_t TensorData::appendColumn(std::string name, ColumnProviderFn provider)
+{
+    auto * lazy = _storage.tryGetMutableAs<LazyColumnTensorStorage>();
+    if (lazy == nullptr) {
+        throw std::logic_error(
+            "TensorData::appendColumn: only supported for LazyColumnTensorStorage");
+    }
+
+    // Append to storage
+    auto const new_col_index = lazy->appendColumn(name, std::move(provider));
+
+    // Update dimension descriptor: resize last axis + update column names
+    auto const new_num_cols = lazy->numColumns();
+    auto col_axis_index = _dimensions.findAxis("channel");
+    if (col_axis_index.has_value()) {
+        _dimensions.setAxisSize(*col_axis_index, new_num_cols);
+    }
+
+    // Rebuild column names from storage (authoritative source)
+    _dimensions.setColumnNames(lazy->columnNames());
+
+    notifyObservers();
+    return new_col_index;
+}
+
+void TensorData::removeColumn(std::size_t col)
+{
+    auto * lazy = _storage.tryGetMutableAs<LazyColumnTensorStorage>();
+    if (lazy == nullptr) {
+        throw std::logic_error(
+            "TensorData::removeColumn: only supported for LazyColumnTensorStorage");
+    }
+
+    // Remove from storage (validates col index and > 1 column)
+    lazy->removeColumn(col);
+
+    // Update dimension descriptor: resize last axis + update column names
+    auto const new_num_cols = lazy->numColumns();
+    auto col_axis_index = _dimensions.findAxis("channel");
+    if (col_axis_index.has_value()) {
+        _dimensions.setAxisSize(*col_axis_index, new_num_cols);
+    }
+
+    // Rebuild column names from storage
+    _dimensions.setColumnNames(lazy->columnNames());
+
+    notifyObservers();
+}
+
+// =============================================================================
 // Storage Access
 // =============================================================================
 

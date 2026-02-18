@@ -84,6 +84,28 @@ void LazyColumnTensorStorage::setColumnProvider(
     _columns[col].cache.reset();
 }
 
+std::size_t LazyColumnTensorStorage::appendColumn(
+    std::string name, ColumnProviderFn provider) {
+    if (!provider) {
+        throw std::invalid_argument(
+            "LazyColumnTensorStorage::appendColumn: provider must not be null");
+    }
+    std::lock_guard lock(*_mutex);
+    auto const new_index = _columns.size();
+    _columns.push_back(ColumnSource{std::move(name), std::move(provider), {}});
+    return new_index;
+}
+
+void LazyColumnTensorStorage::removeColumn(std::size_t col) {
+    validateColumn(col);
+    if (_columns.size() <= 1) {
+        throw std::logic_error(
+            "LazyColumnTensorStorage::removeColumn: cannot remove the last column");
+    }
+    std::lock_guard lock(*_mutex);
+    _columns.erase(_columns.begin() + static_cast<std::ptrdiff_t>(col));
+}
+
 std::size_t LazyColumnTensorStorage::numColumns() const noexcept {
     return _columns.size();
 }

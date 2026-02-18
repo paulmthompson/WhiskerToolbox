@@ -447,6 +447,37 @@ public:
     void setData(std::vector<float> && data,
                  std::vector<std::size_t> const & new_shape);
 
+    // ========== Column Mutation (LazyColumnTensorStorage only) ==========
+
+    /**
+     * @brief Append a new lazy column
+     *
+     * Adds a column to the end of the tensor. Only valid when the underlying
+     * storage is `LazyColumnTensorStorage`. Updates the dimension descriptor
+     * (axis size + column names) and notifies observers.
+     *
+     * @param name Column name
+     * @param provider Provider function that returns `numRows()` floats
+     * @return The index of the newly appended column
+     * @throws std::logic_error if the storage is not LazyColumnTensorStorage
+     * @throws std::invalid_argument if provider is null
+     */
+    std::size_t appendColumn(std::string name, ColumnProviderFn provider);
+
+    /**
+     * @brief Remove a column by index
+     *
+     * Removes the column at the given index. Only valid when the underlying
+     * storage is `LazyColumnTensorStorage`. The tensor must have more than
+     * one column. Updates the dimension descriptor and notifies observers.
+     *
+     * @param col Column index to remove
+     * @throws std::logic_error if the storage is not LazyColumnTensorStorage
+     * @throws std::out_of_range if col >= numColumns()
+     * @throws std::logic_error if removing the column would leave zero columns
+     */
+    void removeColumn(std::size_t col);
+
     // ========== Storage Access ==========
 
     /**

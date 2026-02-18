@@ -13,6 +13,8 @@ set(TRANSFORM_V2_SOURCES
         core/PipelineValueStore.hpp
         core/RangeReductionRegistry.hpp
         core/RegisteredTransforms.cpp
+        core/TensorColumnBuilders.hpp
+        core/TensorColumnBuilders.cpp
         core/TransformPipeline.hpp
         core/TransformPipeline.cpp
 

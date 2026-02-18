@@ -854,3 +854,295 @@ TEST_CASE("TensorData with lazy storage copy shares data", "[TensorData][LazyCol
     CHECK(*call_count == 1);
     CHECK(col[0] == 7.0f);
 }
+
+// =============================================================================
+// appendColumn Tests (LazyColumnTensorStorage)
+// =============================================================================
+
+TEST_CASE("LazyColumnTensorStorage appendColumn", "[LazyColumnTensorStorage]") {
+    std::vector<ColumnSource> cols = {
+        {"col_a", makeSequentialProvider(4, 1.0f), {}},
+    };
+    LazyColumnTensorStorage storage(4, std::move(cols));
+
+    SECTION("appending increases column count and shape") {
+        CHECK(storage.numColumns() == 1);
+        CHECK(storage.shapeImpl() == std::vector<std::size_t>{4, 1});
+
+        auto idx = storage.appendColumn("col_b", makeSequentialProvider(4, 10.0f));
+        CHECK(idx == 1);
+        CHECK(storage.numColumns() == 2);
+        CHECK(storage.shapeImpl() == std::vector<std::size_t>{4, 2});
+
+        auto names = storage.columnNames();
+        CHECK(names.size() == 2);
+        CHECK(names[0] == "col_a");
+        CHECK(names[1] == "col_b");
+    }
+
+    SECTION("appended column data is correct") {
+        storage.appendColumn("col_b", makeSequentialProvider(4, 100.0f));
+        auto col = storage.getColumnImpl(1);
+        REQUIRE(col.size() == 4);
+        CHECK_THAT(col[0], WithinAbs(100.0f, 1e-6));
+        CHECK_THAT(col[1], WithinAbs(101.0f, 1e-6));
+        CHECK_THAT(col[2], WithinAbs(102.0f, 1e-6));
+        CHECK_THAT(col[3], WithinAbs(103.0f, 1e-6));
+    }
+
+    SECTION("appended column is lazy") {
+        auto call_count = std::make_shared<std::atomic<int>>(0);
+        storage.appendColumn("col_b", makeCountingProvider(4, 5.0f, call_count));
+        CHECK(*call_count == 0); // not called yet
+
+        storage.getColumnImpl(1);
+        CHECK(*call_count == 1);
+    }
+
+    SECTION("existing cached columns preserved after append") {
+        auto call_count = std::make_shared<std::atomic<int>>(0);
+        // Replace col_a with counting provider and materialize it
+        storage.setColumnProvider(0, "col_a", makeCountingProvider(4, 1.0f, call_count));
+        storage.materializeColumn(0);
+        CHECK(*call_count == 1);
+
+        // Append doesn't disturb the existing column's cache
+        storage.appendColumn("col_b", makeSequentialProvider(4, 10.0f));
+        storage.getColumnImpl(0);
+        CHECK(*call_count == 1); // still 1, used cache
+    }
+
+    SECTION("multiple appends") {
+        storage.appendColumn("col_b", makeSequentialProvider(4, 10.0f));
+        storage.appendColumn("col_c", makeSequentialProvider(4, 20.0f));
+        storage.appendColumn("col_d", makeSequentialProvider(4, 30.0f));
+        CHECK(storage.numColumns() == 4);
+        CHECK(storage.shapeImpl() == std::vector<std::size_t>{4, 4});
+    }
+
+    SECTION("null provider throws") {
+        CHECK_THROWS_AS(
+            storage.appendColumn("bad", ColumnProviderFn{}),
+            std::invalid_argument);
+    }
+
+    SECTION("materializeFlat includes appended columns") {
+        storage.appendColumn("col_b", makeSequentialProvider(4, 10.0f));
+        auto flat = storage.materializeFlat();
+        // Row-major: [row0_col0, row0_col1, row1_col0, row1_col1, ...]
+        REQUIRE(flat.size() == 8);
+        CHECK_THAT(flat[0], WithinAbs(1.0f, 1e-6));   // row0, col_a
+        CHECK_THAT(flat[1], WithinAbs(10.0f, 1e-6));   // row0, col_b
+        CHECK_THAT(flat[2], WithinAbs(2.0f, 1e-6));    // row1, col_a
+        CHECK_THAT(flat[3], WithinAbs(11.0f, 1e-6));   // row1, col_b
+    }
+}
+
+// =============================================================================
+// removeColumn Tests (LazyColumnTensorStorage)
+// =============================================================================
+
+TEST_CASE("LazyColumnTensorStorage removeColumn", "[LazyColumnTensorStorage]") {
+    std::vector<ColumnSource> cols = {
+        {"col_a", makeSequentialProvider(3, 1.0f), {}},
+        {"col_b", makeSequentialProvider(3, 10.0f), {}},
+        {"col_c", makeSequentialProvider(3, 100.0f), {}},
+    };
+    LazyColumnTensorStorage storage(3, std::move(cols));
+
+    SECTION("remove middle column") {
+        storage.removeColumn(1);
+        CHECK(storage.numColumns() == 2);
+        auto names = storage.columnNames();
+        CHECK(names[0] == "col_a");
+        CHECK(names[1] == "col_c");
+
+        // col_c data is now at index 1
+        auto col = storage.getColumnImpl(1);
+        CHECK_THAT(col[0], WithinAbs(100.0f, 1e-6));
+    }
+
+    SECTION("remove first column") {
+        storage.removeColumn(0);
+        CHECK(storage.numColumns() == 2);
+        auto names = storage.columnNames();
+        CHECK(names[0] == "col_b");
+        CHECK(names[1] == "col_c");
+    }
+
+    SECTION("remove last column") {
+        storage.removeColumn(2);
+        CHECK(storage.numColumns() == 2);
+        auto names = storage.columnNames();
+        CHECK(names[0] == "col_a");
+        CHECK(names[1] == "col_b");
+    }
+
+    SECTION("cannot remove when only one column left") {
+        storage.removeColumn(0);
+        storage.removeColumn(0);
+        CHECK(storage.numColumns() == 1);
+        CHECK_THROWS_AS(storage.removeColumn(0), std::logic_error);
+    }
+
+    SECTION("out-of-range throws") {
+        CHECK_THROWS_AS(storage.removeColumn(3), std::out_of_range);
+        CHECK_THROWS_AS(storage.removeColumn(100), std::out_of_range);
+    }
+
+    SECTION("shape updates after removal") {
+        storage.removeColumn(1);
+        CHECK(storage.shapeImpl() == std::vector<std::size_t>{3, 2});
+        CHECK(storage.totalElementsImpl() == 6);
+    }
+}
+
+// =============================================================================
+// TensorData appendColumn / removeColumn
+// =============================================================================
+
+TEST_CASE("TensorData appendColumn", "[TensorData][LazyColumnTensorStorage]") {
+    std::vector<ColumnSource> cols = {
+        {"alpha", makeSequentialProvider(5, 0.0f), {}},
+    };
+    auto tensor = TensorData::createFromLazyColumns(
+        5, std::move(cols), RowDescriptor::ordinal(5));
+
+    SECTION("append updates shape, names, and data") {
+        CHECK(tensor.numColumns() == 1);
+        CHECK(tensor.shape() == std::vector<std::size_t>{5, 1});
+
+        auto idx = tensor.appendColumn("beta", makeSequentialProvider(5, 50.0f));
+        CHECK(idx == 1);
+        CHECK(tensor.numColumns() == 2);
+        CHECK(tensor.shape() == std::vector<std::size_t>{5, 2});
+        CHECK(tensor.columnNames().size() == 2);
+        CHECK(tensor.columnNames()[0] == "alpha");
+        CHECK(tensor.columnNames()[1] == "beta");
+
+        auto col = tensor.getColumn(1);
+        REQUIRE(col.size() == 5);
+        CHECK_THAT(col[0], WithinAbs(50.0f, 1e-6));
+        CHECK_THAT(col[4], WithinAbs(54.0f, 1e-6));
+    }
+
+    SECTION("append by name retrieval") {
+        tensor.appendColumn("gamma", makeSequentialProvider(5, 99.0f));
+        auto col = tensor.getColumn("gamma");
+        REQUIRE(col.size() == 5);
+        CHECK_THAT(col[0], WithinAbs(99.0f, 1e-6));
+    }
+
+    SECTION("append notifies observers") {
+        int notify_count = 0;
+        tensor.addObserver([&notify_count]() { notify_count++; });
+        tensor.appendColumn("beta", makeSequentialProvider(5, 0.0f));
+        CHECK(notify_count == 1);
+    }
+
+    SECTION("append on non-lazy storage throws") {
+        auto ordinal = TensorData::createOrdinal2D({1, 2, 3, 4}, 2, 2);
+        CHECK_THROWS_AS(
+            ordinal.appendColumn("x", makeSequentialProvider(2, 0.0f)),
+            std::logic_error);
+    }
+}
+
+TEST_CASE("TensorData removeColumn", "[TensorData][LazyColumnTensorStorage]") {
+    std::vector<ColumnSource> cols = {
+        {"alpha", makeSequentialProvider(4, 0.0f), {}},
+        {"beta", makeSequentialProvider(4, 10.0f), {}},
+        {"gamma", makeSequentialProvider(4, 20.0f), {}},
+    };
+    auto tensor = TensorData::createFromLazyColumns(
+        4, std::move(cols), RowDescriptor::ordinal(4));
+
+    SECTION("remove updates shape and names") {
+        tensor.removeColumn(1);
+        CHECK(tensor.numColumns() == 2);
+        CHECK(tensor.shape() == std::vector<std::size_t>{4, 2});
+        CHECK(tensor.columnNames()[0] == "alpha");
+        CHECK(tensor.columnNames()[1] == "gamma");
+    }
+
+    SECTION("remove preserves remaining data") {
+        tensor.removeColumn(0);
+        auto col = tensor.getColumn(0);
+        CHECK_THAT(col[0], WithinAbs(10.0f, 1e-6));  // was "beta"
+    }
+
+    SECTION("remove notifies observers") {
+        int notify_count = 0;
+        tensor.addObserver([&notify_count]() { notify_count++; });
+        tensor.removeColumn(0);
+        CHECK(notify_count == 1);
+    }
+
+    SECTION("remove on non-lazy storage throws") {
+        auto ordinal = TensorData::createOrdinal2D({1, 2, 3, 4}, 2, 2);
+        CHECK_THROWS_AS(ordinal.removeColumn(0), std::logic_error);
+    }
+
+    SECTION("cannot remove last column") {
+        tensor.removeColumn(0);
+        tensor.removeColumn(0);
+        CHECK(tensor.numColumns() == 1);
+        CHECK_THROWS_AS(tensor.removeColumn(0), std::logic_error);
+    }
+}
+
+// =============================================================================
+// DimensionDescriptor setAxisSize
+// =============================================================================
+
+TEST_CASE("DimensionDescriptor setAxisSize", "[DimensionDescriptor]") {
+    DimensionDescriptor dd({{{"row", 5}, {"channel", 3}}});
+
+    SECTION("resize updates shape and strides") {
+        dd.setAxisSize(1, 4);
+        auto shape = dd.shape();
+        CHECK(shape[0] == 5);
+        CHECK(shape[1] == 4);
+        CHECK(dd.totalElements() == 20);
+
+        // Strides should be recomputed (row-major)
+        CHECK(dd.strides()[0] == 4);  // stride for row
+        CHECK(dd.strides()[1] == 1);  // stride for channel
+    }
+
+    SECTION("resize first axis") {
+        dd.setAxisSize(0, 10);
+        CHECK(dd.shape()[0] == 10);
+        CHECK(dd.totalElements() == 30);
+    }
+
+    SECTION("resize clears column names if last axis changed") {
+        dd.setColumnNames({"a", "b", "c"});
+        CHECK(dd.hasColumnNames());
+
+        dd.setAxisSize(1, 4);
+        CHECK_FALSE(dd.hasColumnNames()); // cleared because size changed
+    }
+
+    SECTION("resize preserves column names if non-last axis changed") {
+        dd.setColumnNames({"a", "b", "c"});
+        dd.setAxisSize(0, 10); // changing row axis, not channel
+        CHECK(dd.hasColumnNames());
+        CHECK(dd.columnNames().size() == 3);
+    }
+
+    SECTION("resize preserves column names if last axis same size") {
+        dd.setColumnNames({"a", "b", "c"});
+        dd.setAxisSize(1, 3); // same size as before
+        CHECK(dd.hasColumnNames());
+        CHECK(dd.columnNames().size() == 3);
+    }
+
+    SECTION("zero size throws") {
+        CHECK_THROWS_AS(dd.setAxisSize(1, 0), std::invalid_argument);
+    }
+
+    SECTION("out-of-range throws") {
+        CHECK_THROWS_AS(dd.setAxisSize(2, 5), std::out_of_range);
+    }
+}

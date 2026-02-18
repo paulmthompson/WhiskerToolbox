@@ -86,6 +86,26 @@ void DimensionDescriptor::setColumnNames(std::vector<std::string> names) {
     _column_names = std::move(names);
 }
 
+void DimensionDescriptor::setAxisSize(std::size_t axis_index, std::size_t new_size) {
+    if (axis_index >= _axes.size()) {
+        throw std::out_of_range(
+            "DimensionDescriptor::setAxisSize: index " + std::to_string(axis_index) +
+            " out of range (ndim=" + std::to_string(_axes.size()) + ")");
+    }
+    if (new_size == 0) {
+        throw std::invalid_argument(
+            "DimensionDescriptor::setAxisSize: new_size must be > 0");
+    }
+    _axes[axis_index].size = new_size;
+    computeStrides();
+
+    // If the resized axis is the last axis, column names may no longer match
+    if (axis_index == _axes.size() - 1 && !_column_names.empty()
+        && _column_names.size() != new_size) {
+        _column_names.clear();
+    }
+}
+
 std::optional<std::size_t> DimensionDescriptor::findColumn(std::string_view name) const noexcept {
     for (std::size_t i = 0; i < _column_names.size(); ++i) {
         if (_column_names[i] == name) {

@@ -143,6 +143,31 @@ public:
     void setColumnProvider(std::size_t col, std::string name, ColumnProviderFn provider);
 
     /**
+     * @brief Append a new column
+     *
+     * Adds a column to the end of the column list. The provider must return
+     * exactly `numRows()` elements when called.
+     *
+     * @param name Column name
+     * @param provider Provider function for the new column
+     * @return The index of the newly appended column
+     * @throws std::invalid_argument if provider is null
+     */
+    std::size_t appendColumn(std::string name, ColumnProviderFn provider);
+
+    /**
+     * @brief Remove a column by index
+     *
+     * Removes the column at the given index, shifting subsequent columns.
+     * The storage must have more than one column (cannot remove the last column).
+     *
+     * @param col Column index to remove
+     * @throws std::out_of_range if col >= numColumns()
+     * @throws std::logic_error if removing the column would leave zero columns
+     */
+    void removeColumn(std::size_t col);
+
+    /**
      * @brief Number of columns
      */
     [[nodiscard]] std::size_t numColumns() const noexcept;
