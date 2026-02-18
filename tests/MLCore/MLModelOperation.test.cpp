@@ -550,8 +550,10 @@ TEST_CASE("MLModelRegistry getModelNames filters by task", "[MLCore][MLModelRegi
     SECTION("Clustering")
     {
         auto names = registry.getModelNames(MLTaskType::Clustering);
-        REQUIRE(names.size() == 1);
-        CHECK(names[0] == "Stub Clusterer");
+        // Built-in "K-Means" + our "Stub Clusterer"
+        CHECK(names.size() >= 2);
+        CHECK(std::find(names.begin(), names.end(), "Stub Clusterer") != names.end());
+        CHECK(std::find(names.begin(), names.end(), "K-Means") != names.end());
     }
 }
 

@@ -17,6 +17,7 @@ add_executable(test_MLCore
     ClassificationMetrics.test.cpp
     FeatureConverter.test.cpp
     FeatureValidator.test.cpp
+    KMeansOperation.test.cpp
     LabelAssembler.test.cpp
     LogisticRegressionOperation.test.cpp
     MLModelOperation.test.cpp

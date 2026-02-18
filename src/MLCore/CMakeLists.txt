@@ -34,6 +34,9 @@ set(MLCore_SOURCES
     models/supervised/RandomForestOperation.cpp
     models/supervised/RandomForestOperation.hpp
 
+    models/unsupervised/KMeansOperation.cpp
+    models/unsupervised/KMeansOperation.hpp
+
     output/PredictionWriter.cpp
     output/PredictionWriter.hpp
 
