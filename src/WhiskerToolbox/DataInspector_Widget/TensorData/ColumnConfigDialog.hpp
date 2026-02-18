@@ -27,9 +27,12 @@
 class DataManager;
 class QComboBox;
 class QDoubleSpinBox;
+class QGroupBox;
 class QLabel;
 class QLineEdit;
+class QPushButton;
 class QStackedWidget;
+class QTextEdit;
 class QVBoxLayout;
 class QWidget;
 
@@ -87,6 +90,9 @@ private slots:
     void _onOperationChanged(int index);
     void _onColumnNameEdited(QString const & text);
     void _updateAutoName();
+    void _onAdvancedToggled(bool checked);
+    void _onValidateClicked();
+    void _onAdvancedJsonEdited();
 
 private:
     void _setupUi();
@@ -94,6 +100,13 @@ private:
     void _populateSourceKeys();
     void _populateOperations();
     void _applyRecipe(WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe);
+
+    /// Build a pipeline JSON string from the current simple combo-box selection
+    [[nodiscard]] std::string _buildJsonFromComboSelection() const;
+
+    /// Check if the current advanced JSON represents a pipeline that cannot
+    /// be described by the simple combo-box UX (multi-step, custom params, etc.)
+    [[nodiscard]] bool _isAdvancedPipelineJson(std::string const & json) const;
 
     std::shared_ptr<DataManager> _data_manager;
     DesignerRowType _row_type;
@@ -121,6 +134,15 @@ private:
 
     // Empty page (for operations with no parameters)
     QWidget * _empty_page{nullptr};
+
+    // --- Advanced Pipeline JSON section ---
+    QGroupBox * _advanced_group{nullptr};
+    QTextEdit * _advanced_json_edit{nullptr};
+    QPushButton * _validate_btn{nullptr};
+    QPushButton * _request_tv2_btn{nullptr}; ///< Placeholder for Phase 6.4 OperationContext
+    QLabel * _validation_label{nullptr};
+    bool _use_advanced_json{false}; ///< True when user has activated advanced mode
+    bool _syncing_json{false};     ///< Guard against recursive update loops
 
     // Column name
     QLabel * _name_label{nullptr};

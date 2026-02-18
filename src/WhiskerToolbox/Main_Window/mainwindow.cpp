@@ -15,6 +15,7 @@
 #include "DockWidget.h"
 #include "EditorCreationController.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
@@ -1457,6 +1458,17 @@ void MainWindow::_connectProvenanceTracking() {
     // This is called after the initial layout is built.
     // We connect to signals from DataTransform_Widget and TableDesignerWidget
     // instances as they are created.
+
+    // Wire OperationContext: when any widget requests an operation from a producer
+    // type, auto-open/focus the producer widget so the user can configure it.
+    // This enables e.g. TensorDesigner's ColumnConfigDialog to request a pipeline
+    // from TransformsV2Widget without the user manually opening it first.
+    if (auto * op_ctx = _editor_registry->operationContext()) {
+        connect(op_ctx, &EditorLib::OperationContext::operationRequested,
+                this, [this](EditorLib::PendingOperation const & op) {
+                    openEditor(op.producer_type.toString());
+                });
+    }
 
     // Connect to EditorRegistry's editorCreated signal to wire up
     // provenance tracking for new widget instances
