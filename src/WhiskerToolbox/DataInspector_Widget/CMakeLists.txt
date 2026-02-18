@@ -86,6 +86,10 @@ set(DATA_INSPECTOR_WIDGET_SOURCES
         TensorData/TensorTableModel.cpp
         TensorData/TensorDataView.hpp
         TensorData/TensorDataView.cpp
+        TensorData/TensorDesigner.hpp
+        TensorData/TensorDesigner.cpp
+        TensorData/ColumnConfigDialog.hpp
+        TensorData/ColumnConfigDialog.cpp
         )
 
 add_library(DataInspector_Widget STATIC ${DATA_INSPECTOR_WIDGET_SOURCES})
@@ -113,6 +117,7 @@ target_link_libraries(DataInspector_Widget PRIVATE DataExport_Widget)
 target_link_libraries(DataInspector_Widget PRIVATE DataManagerIO)
 target_link_libraries(DataInspector_Widget PRIVATE MediaExport)
 target_link_libraries(DataInspector_Widget PRIVATE Collapsible_Widget)
+target_link_libraries(DataInspector_Widget PRIVATE TransformsV2)
 
 target_include_directories(DataInspector_Widget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" # This directory
