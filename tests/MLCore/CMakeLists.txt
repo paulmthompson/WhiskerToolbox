@@ -16,6 +16,7 @@ add_executable(test_MLCore
     ClassBalancing.test.cpp
     ClassificationMetrics.test.cpp
     ClassificationPipeline.test.cpp
+    ClusteringPipeline.test.cpp
     FeatureConverter.test.cpp
     FeatureValidator.test.cpp
     DBSCANOperation.test.cpp

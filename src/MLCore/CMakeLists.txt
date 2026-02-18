@@ -47,6 +47,9 @@ set(MLCore_SOURCES
     pipelines/ClassificationPipeline.cpp
     pipelines/ClassificationPipeline.hpp
 
+    pipelines/ClusteringPipeline.cpp
+    pipelines/ClusteringPipeline.hpp
+
     preprocessing/ClassBalancing.cpp
     preprocessing/ClassBalancing.hpp
 
