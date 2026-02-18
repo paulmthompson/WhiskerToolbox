@@ -59,9 +59,8 @@ public:
     /**
      * @brief Construct the registry and register all built-in models
      *
-     * Currently empty — built-in models will be registered as they are
-     * implemented in Phase 2 tasks (2.2–2.7). The constructor is defined
-     * in the .cpp file to allow incremental addition of models.
+     * Registers all six built-in models: RandomForest, NaiveBayes,
+     * LogisticRegression, KMeans, DBSCAN, and GaussianMixture.
      */
     MLModelRegistry();
 
