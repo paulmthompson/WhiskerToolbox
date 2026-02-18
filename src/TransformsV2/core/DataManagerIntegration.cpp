@@ -1,6 +1,8 @@
 #include "DataManagerIntegration.hpp"
 
+#include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
+#include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "core/ElementRegistry.hpp"
 #include "core/ParameterIO.hpp"
 #include "core/PipelineLoader.hpp"
@@ -624,6 +626,39 @@ auto executeBinaryTransformImpl(
  * 
  * Uses std::visit to dispatch to the correct typed execution.
  */
+/**
+ * @brief Try to execute a binary container transform with a specific output type.
+ *
+ * The output type must be known at compile time to instantiate the template.
+ * Returns std::nullopt if the output_container_type doesn't match Output.
+ */
+template<typename Container1, typename Container2, typename Output, typename Params>
+std::optional<DataTypeVariant> tryExecuteWithOutput(
+        ElementRegistry & registry,
+        std::string const & transform_name,
+        Container1 & data1,
+        Container2 & data2,
+        Params const & params,
+        ComputeContext & ctx,
+        ContainerTransformMetadata const * meta) {
+
+    if (meta->output_container_type != std::type_index(typeid(Output))) {
+        return std::nullopt;
+    }
+
+    try {
+        auto result = registry.executeBinaryContainerTransform<
+                Container1, Container2, Output, Params>(
+                transform_name, data1, data2, params, ctx);
+        if (result) {
+            return DataTypeVariant{result};
+        }
+    } catch (std::exception const & e) {
+        std::cerr << "Binary container transform failed: " << e.what() << std::endl;
+    }
+    return std::nullopt;
+}
+
 template<typename Container1, typename Container2, typename Params>
 std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
         std::shared_ptr<Container1> const & data1_ptr,
@@ -652,27 +687,38 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
         return std::nullopt;
     }
 
-    // For DigitalIntervalSeries x DigitalIntervalSeries -> DigitalIntervalSeries
-    // This is the specific case we need to handle
+    // DigitalIntervalSeries x DigitalIntervalSeries -> DIS or TensorData
     if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
                   std::is_same_v<Container2, DigitalIntervalSeries>) {
-        try {
-            auto result = registry.executeBinaryContainerTransform<
-                    DigitalIntervalSeries,
-                    DigitalIntervalSeries,
-                    DigitalIntervalSeries,
-                    Params>(
-                    transform_name,
-                    *data1_ptr,
-                    *data2_ptr,
-                    params,
-                    ctx);
+        if (auto r = tryExecuteWithOutput<Container1, Container2, DigitalIntervalSeries, Params>(
+                    registry, transform_name, *data1_ptr, *data2_ptr, params, ctx, meta)) {
+            return r;
+        }
+        if (auto r = tryExecuteWithOutput<Container1, Container2, TensorData, Params>(
+                    registry, transform_name, *data1_ptr, *data2_ptr, params, ctx, meta)) {
+            return r;
+        }
+    }
 
-            if (result) {
-                return DataTypeVariant{result};
-            }
-        } catch (std::exception const & e) {
-            std::cerr << "Binary container transform failed: " << e.what() << std::endl;
+    // DigitalIntervalSeries x AnalogTimeSeries -> DES or TensorData
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
+                  std::is_same_v<Container2, AnalogTimeSeries>) {
+        if (auto r = tryExecuteWithOutput<Container1, Container2, DigitalEventSeries, Params>(
+                    registry, transform_name, *data1_ptr, *data2_ptr, params, ctx, meta)) {
+            return r;
+        }
+        if (auto r = tryExecuteWithOutput<Container1, Container2, TensorData, Params>(
+                    registry, transform_name, *data1_ptr, *data2_ptr, params, ctx, meta)) {
+            return r;
+        }
+    }
+
+    // DigitalIntervalSeries x DigitalEventSeries -> TensorData
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
+                  std::is_same_v<Container2, DigitalEventSeries>) {
+        if (auto r = tryExecuteWithOutput<Container1, Container2, TensorData, Params>(
+                    registry, transform_name, *data1_ptr, *data2_ptr, params, ctx, meta)) {
+            return r;
         }
     }
 
@@ -689,19 +735,47 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransformAny(
         std::string const & transform_name,
         std::any const & params_any) {
 
-    // Try known parameter types for binary container transforms
-    // DigitalIntervalBoolean uses DigitalIntervalBooleanParams
+    // Try known parameter types for each input type combination
+
+    // DIS x DIS: DigitalIntervalBooleanParams, IntervalReductionParams
     if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
                   std::is_same_v<Container2, DigitalIntervalSeries>) {
         try {
             auto const & params = std::any_cast<DigitalIntervalBooleanParams const &>(params_any);
-            return tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
-        } catch (std::bad_any_cast const &) {
-            // Not the right param type, continue
-        }
+            auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+            if (r.has_value()) return r;
+        } catch (std::bad_any_cast const &) {}
+        try {
+            auto const & params = std::any_cast<IntervalReductionParams const &>(params_any);
+            auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+            if (r.has_value()) return r;
+        } catch (std::bad_any_cast const &) {}
     }
 
-    // Add more binary container transform parameter types here as needed
+    // DIS x ATS: AnalogIntervalPeakParams, IntervalReductionParams
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
+                  std::is_same_v<Container2, AnalogTimeSeries>) {
+        try {
+            auto const & params = std::any_cast<AnalogIntervalPeakParams const &>(params_any);
+            auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+            if (r.has_value()) return r;
+        } catch (std::bad_any_cast const &) {}
+        try {
+            auto const & params = std::any_cast<IntervalReductionParams const &>(params_any);
+            auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+            if (r.has_value()) return r;
+        } catch (std::bad_any_cast const &) {}
+    }
+
+    // DIS x DES: IntervalReductionParams
+    if constexpr (std::is_same_v<Container1, DigitalIntervalSeries> &&
+                  std::is_same_v<Container2, DigitalEventSeries>) {
+        try {
+            auto const & params = std::any_cast<IntervalReductionParams const &>(params_any);
+            auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+            if (r.has_value()) return r;
+        } catch (std::bad_any_cast const &) {}
+    }
 
     return std::nullopt;
 }

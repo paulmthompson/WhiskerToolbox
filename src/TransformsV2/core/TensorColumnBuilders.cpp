@@ -15,6 +15,9 @@
 #include "TransformsV2/extension/RangeReductionTypes.hpp"
 #include "TransformsV2/extension/ViewAdaptorTypes.hpp"
 
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/interval_data.hpp"
+
 #include <cmath>     // NAN
 #include <stdexcept>
 #include <utility>
@@ -66,6 +69,49 @@ float castReductionResult(std::any const & result) {
         return static_cast<float>(*sz);
     }
     throw std::runtime_error("castReductionResult: unsupported reduction output type");
+}
+
+/**
+ * @brief Prepare intervals for gathering, with cross-TimeFrame conversion if needed.
+ *
+ * If the source data and interval series have different TimeFrames, the interval
+ * boundaries are converted from the interval's coordinate system to the source's
+ * coordinate system so that GatherResult queries the correct data range.
+ *
+ * When no conversion is needed (same TimeFrame, or either is null), the original
+ * intervals shared_ptr is returned to avoid unnecessary copies.
+ *
+ * @param intervals The original interval series (in its own TimeFrame)
+ * @param source_tf The source data's TimeFrame
+ * @return Shared pointer to intervals with boundaries in the source's TimeFrame
+ */
+std::shared_ptr<DigitalIntervalSeries> prepareIntervalsForGather(
+        std::shared_ptr<DigitalIntervalSeries> const & intervals,
+        std::shared_ptr<TimeFrame> const & source_tf) {
+
+    auto interval_tf = intervals->getTimeFrame();
+
+    // No conversion needed if same TimeFrame or either is null
+    if (!source_tf || !interval_tf || source_tf.get() == interval_tf.get()) {
+        return intervals;
+    }
+
+    // Convert interval boundaries from interval's TimeFrame to source's TimeFrame
+    auto const & interval_data = intervals->view();
+    std::vector<Interval> converted;
+    converted.reserve(interval_data.size());
+
+    for (auto const & iv : interval_data) {
+        auto [new_start, new_end] = convertTimeFrameRange(
+                TimeFrameIndex(iv.interval.start),
+                TimeFrameIndex(iv.interval.end),
+                *interval_tf, *source_tf);
+        converted.push_back(Interval{new_start.getValue(), new_end.getValue()});
+    }
+
+    auto result = std::make_shared<DigitalIntervalSeries>(converted);
+    result->setTimeFrame(source_tf);
+    return result;
 }
 
 } // anonymous namespace
@@ -260,7 +306,8 @@ ColumnProviderFn buildIntervalReductionForAnalog(
                 "' no longer available");
         }
 
-        auto gather = GatherResult<AnalogTimeSeries>::create(src, ivals);
+        auto gather_ivals = prepareIntervalsForGather(ivals, src->getTimeFrame());
+        auto gather = GatherResult<AnalogTimeSeries>::create(src, gather_ivals);
         return gather.template reduce<float>(fac);
     };
 }
@@ -303,7 +350,8 @@ ColumnProviderFn buildIntervalReductionForEvents(
                 "' no longer available");
         }
 
-        auto gather = GatherResult<DigitalEventSeries>::create(src, ivals);
+        auto gather_ivals = prepareIntervalsForGather(ivals, src->getTimeFrame());
+        auto gather = GatherResult<DigitalEventSeries>::create(src, gather_ivals);
         return gather.template reduce<float>(fac);
     };
 }
@@ -346,7 +394,8 @@ ColumnProviderFn buildIntervalReductionForIntervals(
                 "' no longer available");
         }
 
-        auto gather = GatherResult<DigitalIntervalSeries>::create(src, ivals);
+        auto gather_ivals = prepareIntervalsForGather(ivals, src->getTimeFrame());
+        auto gather = GatherResult<DigitalIntervalSeries>::create(src, gather_ivals);
         return gather.template reduce<float>(fac);
     };
 }

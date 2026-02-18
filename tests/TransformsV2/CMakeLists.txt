@@ -34,6 +34,7 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/IntervalReduction/IntervalReduction.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineAngle/LineAngle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineClip/LineClip.test.cpp
