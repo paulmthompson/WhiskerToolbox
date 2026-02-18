@@ -760,28 +760,35 @@
     "href": "index.html",
     "title": "Neuralyzer",
     "section": "",
-    "text": "Neuralyzer is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments."
+    "text": "A powerful, cross-platform toolkit for visualizing and analyzing experimental data.\nGet Started Download\n\n\n\n\nExperience your data in perfect context. Neuralyzer provides temporally synchronized playback of high-speed video, analog traces, and spike data, reproducing the entire experiment. Navigate seamlessly between different levels of abstraction—from raw data points to complex analysis results—to verify every insight.\n\n\n\nAccess a comprehensive suite of built-in algorithms for tracking, signal processing, and behavioral quantification. For advanced needs, native Python support allows you to integrate custom analysis routines and instantly visualize the results within the application.\n\n\n\nTame your experimental data. Streamline your workflow from data ingestion to dataset generation. Visualize and create deep learning labels directly on your data, manage complex experimental hierarchies, and export labeled videos for training or presentation.\n\n\n\n\n\n\n\n\nMaster Neuralyzer with our comprehensive collection of tutorials and how-to guides. Explore Resources\n\n\n\nConnect with other users, ask questions, and share your feedback on GitHub. GitHub Discussions"
   },
   {
-    "objectID": "index.html#installation",
-    "href": "index.html#installation",
+    "objectID": "index.html#synchronized-visualization",
+    "href": "index.html#synchronized-visualization",
     "title": "Neuralyzer",
-    "section": "Installation",
-    "text": "Installation\nThe software comes as compiled .exe, .dmg or tar files and can be immediately used on Windows, Mac and Linux - no install required !\nLatest Release: link\nOld Releases: link"
+    "section": "",
+    "text": "Experience your data in perfect context. Neuralyzer provides temporally synchronized playback of high-speed video, analog traces, and spike data, reproducing the entire experiment. Navigate seamlessly between different levels of abstraction—from raw data points to complex analysis results—to verify every insight."
   },
   {
-    "objectID": "index.html#supported-data-types",
-    "href": "index.html#supported-data-types",
+    "objectID": "index.html#powerful-analysis",
+    "href": "index.html#powerful-analysis",
     "title": "Neuralyzer",
-    "section": "Supported Data Types",
-    "text": "Supported Data Types\nSome currently supported data types include:\n\nMultimedia - High speed video and collections of images\nArrays of simple 2D shapes - Points, Lines, and masks that vary with time.\nDigital time series data - Events, timestamps,\nAnalog time series data - Continuous movement variables"
+    "section": "",
+    "text": "Access a comprehensive suite of built-in algorithms for tracking, signal processing, and behavioral quantification. For advanced needs, native Python support allows you to integrate custom analysis routines and instantly visualize the results within the application."
   },
   {
-    "objectID": "index.html#how-documentation-is-organized",
-    "href": "index.html#how-documentation-is-organized",
+    "objectID": "index.html#data-management",
+    "href": "index.html#data-management",
     "title": "Neuralyzer",
-    "section": "How Documentation is Organized",
-    "text": "How Documentation is Organized\nThis documentation will follow the quadrants of the Diátaxis documentation authoring framework\n\nTutorials\nHow-to Guides\nConcepts\nReference Guides"
+    "section": "",
+    "text": "Tame your experimental data. Streamline your workflow from data ingestion to dataset generation. Visualize and create deep learning labels directly on your data, manage complex experimental hierarchies, and export labeled videos for training or presentation."
+  },
+  {
+    "objectID": "index.html#community-support",
+    "href": "index.html#community-support",
+    "title": "Neuralyzer",
+    "section": "",
+    "text": "Master Neuralyzer with our comprehensive collection of tutorials and how-to guides. Explore Resources\n\n\n\nConnect with other users, ask questions, and share your feedback on GitHub. GitHub Discussions"
   },
   {
     "objectID": "examples/video_import.html",
