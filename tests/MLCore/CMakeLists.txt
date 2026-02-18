@@ -15,6 +15,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_MLCore
     ClassBalancing.test.cpp
     ClassificationMetrics.test.cpp
+    ClassificationPipeline.test.cpp
     FeatureConverter.test.cpp
     FeatureValidator.test.cpp
     DBSCANOperation.test.cpp

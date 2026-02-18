@@ -44,6 +44,9 @@ set(MLCore_SOURCES
     output/PredictionWriter.cpp
     output/PredictionWriter.hpp
 
+    pipelines/ClassificationPipeline.cpp
+    pipelines/ClassificationPipeline.hpp
+
     preprocessing/ClassBalancing.cpp
     preprocessing/ClassBalancing.hpp
 
