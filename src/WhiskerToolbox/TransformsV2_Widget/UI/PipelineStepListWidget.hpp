@@ -26,6 +26,10 @@ namespace WhiskerToolbox::Transforms::V2 {
 struct TransformMetadata;
 } // namespace WhiskerToolbox::Transforms::V2
 
+namespace WhiskerToolbox::Transforms::V2::Examples {
+struct PipelineStepDescriptor;
+} // namespace WhiskerToolbox::Transforms::V2::Examples
+
 /**
  * @brief Represents a single step in the pipeline UI
  */
@@ -112,6 +116,18 @@ public:
      * @param params_json The new parameters JSON
      */
     void updateStepParams(int step_index, std::string const & params_json);
+
+    /**
+     * @brief Rebuild all steps from a list of PipelineStepDescriptors
+     *
+     * Used by JSON → UI loading (Phase 2). Clears existing steps, then adds
+     * each step using the descriptor's transform_name and serialized parameters.
+     *
+     * @param descriptors The step descriptors from a parsed PipelineDescriptor
+     * @return true if all steps were loaded successfully
+     */
+    bool loadFromDescriptors(
+            std::vector<WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor> const & descriptors);
 
 signals:
     /**

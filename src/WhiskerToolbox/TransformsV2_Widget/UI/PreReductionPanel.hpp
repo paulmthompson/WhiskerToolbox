@@ -21,6 +21,10 @@ class QListWidget;
 class QPushButton;
 class QVBoxLayout;
 
+namespace WhiskerToolbox::Transforms::V2::Examples {
+struct PreReductionStepDescriptor;
+} // namespace WhiskerToolbox::Transforms::V2::Examples
+
 /**
  * @brief Represents a single pre-reduction step in the UI
  */
@@ -69,6 +73,18 @@ public:
      * @return true if successfully added
      */
     bool addEntry(std::string const & reduction_name, std::string const & output_key);
+
+    /**
+     * @brief Rebuild all entries from a list of PreReductionStepDescriptors
+     *
+     * Used by JSON → UI loading (Phase 2). Clears existing entries, then adds
+     * each entry from the descriptor's reduction_name and output_key fields.
+     *
+     * @param descriptors The pre-reduction descriptors from a parsed PipelineDescriptor
+     * @return true if all entries were loaded successfully
+     */
+    bool loadFromDescriptors(
+            std::vector<WhiskerToolbox::Transforms::V2::Examples::PreReductionStepDescriptor> const & descriptors);
 
 signals:
     /**

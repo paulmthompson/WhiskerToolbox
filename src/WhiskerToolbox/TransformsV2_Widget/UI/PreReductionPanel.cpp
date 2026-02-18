@@ -1,5 +1,6 @@
 #include "PreReductionPanel.hpp"
 
+#include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 
 #include <QGroupBox>
@@ -172,4 +173,41 @@ std::vector<std::string> PreReductionPanel::getAvailableReductions() const {
 
     auto & registry = RangeReductionRegistry::instance();
     return registry.getReductionsForInputType(_input_element_type);
+}
+
+// ============================================================================
+// Phase 2: Load from descriptors
+// ============================================================================
+
+bool PreReductionPanel::loadFromDescriptors(
+        std::vector<WhiskerToolbox::Transforms::V2::Examples::PreReductionStepDescriptor> const & descriptors) {
+
+    _entries.clear();
+    _list_widget->clear();
+
+    bool all_ok = true;
+
+    for (auto const & desc : descriptors) {
+        PreReductionEntry entry;
+        entry.reduction_name = desc.reduction_name;
+        entry.output_key = desc.output_key;
+
+        if (desc.parameters.has_value()) {
+            entry.parameters_json = rfl::json::write(desc.parameters.value());
+        } else {
+            entry.parameters_json = "{}";
+        }
+
+        _entries.push_back(std::move(entry));
+    }
+
+    rebuildListDisplay();
+
+    // Expand the group if entries were loaded
+    if (!_entries.empty()) {
+        _group_box->setChecked(true);
+    }
+
+    emit preReductionsChanged();
+    return all_ok;
 }

@@ -1,6 +1,7 @@
 #include "PipelineStepListWidget.hpp"
 
 #include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
 #include <QHBoxLayout>
@@ -14,6 +15,7 @@
 #include <format>
 
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 // ============================================================================
 // Construction / Destruction
@@ -363,4 +365,59 @@ void PipelineStepListWidget::updateButtonStates() {
     _remove_button->setEnabled(has_selection);
     _move_up_button->setEnabled(has_selection && row > 0);
     _move_down_button->setEnabled(has_selection && row < count - 1);
+}
+
+// ============================================================================
+// Phase 2: Load from descriptors
+// ============================================================================
+
+bool PipelineStepListWidget::loadFromDescriptors(
+        std::vector<PipelineStepDescriptor> const & descriptors) {
+
+    // Block signals during bulk load to avoid intermediate emits
+    blockSignals(true);
+
+    _steps.clear();
+    _list_widget->clear();
+
+    bool all_ok = true;
+
+    for (auto const & desc : descriptors) {
+        // Serialize the step's parameters back to JSON for the params_json field
+        std::string params_json = "{}";
+        if (desc.parameters.has_value()) {
+            // Convert rfl::Generic parameters to JSON string
+            params_json = rfl::json::write(desc.parameters.value());
+        }
+
+        auto & registry = ElementRegistry::instance();
+        auto const * meta = registry.getMetadata(desc.transform_name);
+        if (!meta) {
+            all_ok = false;
+            continue;
+        }
+
+        PipelineStepEntry entry;
+        entry.step_id = desc.step_id;
+        entry.transform_name = desc.transform_name;
+        entry.parameters_json = params_json;
+        entry.input_type = meta->input_type;
+        entry.output_type = meta->output_type;
+        entry.is_container_transform = registry.isContainerTransform(desc.transform_name);
+
+        _steps.push_back(std::move(entry));
+    }
+
+    validateTypeChain();
+    rebuildListDisplay();
+
+    blockSignals(false);
+
+    // Select first step if any
+    if (!_steps.empty()) {
+        _list_widget->setCurrentRow(0);
+    }
+
+    emit pipelineChanged();
+    return all_ok;
 }

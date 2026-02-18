@@ -29,6 +29,8 @@ class StepConfigPanel;
 class PreReductionPanel;
 class QLabel;
 class QGroupBox;
+class QPushButton;
+class QTextEdit;
 class QVBoxLayout;
 
 namespace Ui {
@@ -58,16 +60,55 @@ public:
     void onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
                             QString const & data_type) override;
 
+signals:
+    /**
+     * @brief Emitted whenever the pipeline descriptor changes
+     *
+     * This signal fires on any change to the pipeline (UI edits or JSON edits).
+     * External consumers (Phase 4) can connect to this for real-time updates.
+     * @param pipeline_json The current pipeline descriptor as a JSON string
+     */
+    void pipelineDescriptorChanged(std::string const & pipeline_json);
+
 private slots:
     void onStepSelected(int step_index);
     void onPipelineChanged();
     void onStepParametersChanged(std::string const & params_json);
     void onValidationChanged(bool all_valid);
+    void onJsonPanelEdited();
+    void onCopyJsonClicked();
+    void onLoadJsonClicked();
+    void onSaveJsonClicked();
+    void onApplyJsonClicked();
 
 private:
     void setupUI();
     void updateInputDisplay();
     void resolveInputTypes();
+
+    /**
+     * @brief Build a PipelineDescriptor from the current UI state
+     * @return JSON string representing the PipelineDescriptor
+     */
+    [[nodiscard]] std::string buildJsonFromUI() const;
+
+    /**
+     * @brief Sync the JSON panel text from the current UI state
+     *
+     * Called after any UI change (add/remove/reorder steps, parameter changes, etc.).
+     * Suppresses feedback loops with _syncing_json guard.
+     */
+    void syncJsonFromUI();
+
+    /**
+     * @brief Rebuild the UI from a JSON string
+     * @param json_str The PipelineDescriptor JSON to load
+     * @return true if the JSON was valid and loaded successfully
+     */
+    bool loadUIFromJson(std::string const & json_str);
+
+    /// Guard against feedback loops during bidirectional sync
+    bool _syncing_json = false;
 
     std::unique_ptr<Ui::TransformsV2Properties_Widget> ui;
     std::shared_ptr<TransformsV2State> _state;
@@ -87,6 +128,14 @@ private:
     StepConfigPanel * _step_config = nullptr;
     PreReductionPanel * _pre_reduction_panel = nullptr;
     QLabel * _validation_label = nullptr;
+
+    // JSON Panel (Phase 2)
+    QGroupBox * _json_group = nullptr;
+    QTextEdit * _json_panel = nullptr;
+    QPushButton * _copy_json_button = nullptr;
+    QPushButton * _load_json_button = nullptr;
+    QPushButton * _save_json_button = nullptr;
+    QPushButton * _apply_json_button = nullptr;
 };
 
 #endif // TRANSFORMS_V2_PROPERTIES_WIDGET_HPP

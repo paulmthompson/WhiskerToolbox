@@ -8,16 +8,25 @@
 #include "Core/TransformsV2State.hpp"
 #include "EditorState/SelectionContext.hpp"
 
+#include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
+#include <QClipboard>
+#include <QFileDialog>
 #include <QGroupBox>
+#include <QGuiApplication>
+#include <QHBoxLayout>
 #include <QLabel>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QSplitter>
+#include <QTextEdit>
 #include <QVBoxLayout>
 
 #include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
+using namespace WhiskerToolbox::Transforms::V2::Examples;
 
 // ============================================================================
 // Construction / Destruction
@@ -87,7 +96,7 @@ void TransformsV2Properties_Widget::onStepSelected(int step_index) {
 }
 
 void TransformsV2Properties_Widget::onPipelineChanged() {
-    // Pipeline changed — state tracking will be extended in Phase 5
+    syncJsonFromUI();
     emit _state->stateChanged();
 }
 
@@ -161,6 +170,45 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(pipeline_group, 1);
 
+    // --- JSON Panel (Phase 2) ---
+    _json_group = new QGroupBox(tr("Pipeline JSON"), this);
+    _json_group->setCheckable(true);
+    _json_group->setChecked(_state->jsonPanelExpanded());
+    auto * json_layout = new QVBoxLayout(_json_group);
+    json_layout->setSpacing(4);
+
+    _json_panel = new QTextEdit(_json_group);
+    _json_panel->setFont(QFont("monospace", 9));
+    _json_panel->setAcceptRichText(false);
+    _json_panel->setPlaceholderText(tr("Pipeline JSON will appear here..."));
+    _json_panel->setMinimumHeight(120);
+    json_layout->addWidget(_json_panel);
+
+    // Button row: Copy | Apply | Load | Save
+    auto * json_button_layout = new QHBoxLayout();
+    json_button_layout->setSpacing(4);
+
+    _copy_json_button = new QPushButton(tr("Copy"), _json_group);
+    _copy_json_button->setToolTip(tr("Copy pipeline JSON to clipboard"));
+    json_button_layout->addWidget(_copy_json_button);
+
+    _apply_json_button = new QPushButton(tr("Apply"), _json_group);
+    _apply_json_button->setToolTip(tr("Apply edited JSON to rebuild the pipeline UI"));
+    json_button_layout->addWidget(_apply_json_button);
+
+    _load_json_button = new QPushButton(tr("Load..."), _json_group);
+    _load_json_button->setToolTip(tr("Load pipeline JSON from file"));
+    json_button_layout->addWidget(_load_json_button);
+
+    _save_json_button = new QPushButton(tr("Save..."), _json_group);
+    _save_json_button->setToolTip(tr("Save pipeline JSON to file"));
+    json_button_layout->addWidget(_save_json_button);
+
+    json_button_layout->addStretch();
+    json_layout->addLayout(json_button_layout);
+
+    main_layout->addWidget(_json_group);
+
     // --- Connections ---
     connect(_step_list, &PipelineStepListWidget::stepSelected,
             this, &TransformsV2Properties_Widget::onStepSelected);
@@ -172,6 +220,22 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onStepParametersChanged);
     connect(_pre_reduction_panel, &PreReductionPanel::preReductionsChanged,
             this, &TransformsV2Properties_Widget::onPipelineChanged);
+
+    // JSON panel connections
+    connect(_json_panel, &QTextEdit::textChanged,
+            this, &TransformsV2Properties_Widget::onJsonPanelEdited);
+    connect(_copy_json_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onCopyJsonClicked);
+    connect(_apply_json_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onApplyJsonClicked);
+    connect(_load_json_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onLoadJsonClicked);
+    connect(_save_json_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onSaveJsonClicked);
+    connect(_json_group, &QGroupBox::toggled,
+            this, [this](bool checked) {
+                _state->setJsonPanelExpanded(checked);
+            });
 }
 
 // ============================================================================
@@ -206,4 +270,177 @@ void TransformsV2Properties_Widget::resolveInputTypes() {
         _input_element_type = typeid(void);
         _input_container_type = typeid(void);
     }
+}
+
+// ============================================================================
+// Phase 2: Bidirectional JSON Synchronization
+// ============================================================================
+
+std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
+    PipelineDescriptor descriptor;
+
+    // Build steps from the step list widget
+    auto const & steps = _step_list->steps();
+    for (auto const & step : steps) {
+        PipelineStepDescriptor step_desc;
+        step_desc.step_id = step.step_id;
+        step_desc.transform_name = step.transform_name;
+
+        // Parse the stored JSON params string into rfl::Generic
+        if (step.parameters_json != "{}" && !step.parameters_json.empty()) {
+            auto params_result = rfl::json::read<rfl::Generic>(step.parameters_json);
+            if (params_result) {
+                step_desc.parameters = params_result.value();
+            }
+        }
+
+        descriptor.steps.push_back(std::move(step_desc));
+    }
+
+    // Build pre-reductions from the pre-reduction panel
+    auto const & pre_entries = _pre_reduction_panel->entries();
+    if (!pre_entries.empty()) {
+        std::vector<PreReductionStepDescriptor> pre_descs;
+        for (auto const & entry : pre_entries) {
+            PreReductionStepDescriptor pre_desc;
+            pre_desc.reduction_name = entry.reduction_name;
+            pre_desc.output_key = entry.output_key;
+
+            if (entry.parameters_json != "{}" && !entry.parameters_json.empty()) {
+                auto params_result = rfl::json::read<rfl::Generic>(entry.parameters_json);
+                if (params_result) {
+                    pre_desc.parameters = params_result.value();
+                }
+            }
+
+            pre_descs.push_back(std::move(pre_desc));
+        }
+        descriptor.pre_reductions = std::move(pre_descs);
+    }
+
+    return savePipelineToJson(descriptor);
+}
+
+void TransformsV2Properties_Widget::syncJsonFromUI() {
+    if (_syncing_json) {
+        return;
+    }
+    _syncing_json = true;
+
+    auto json = buildJsonFromUI();
+    _json_panel->setPlainText(QString::fromStdString(json));
+
+    // Store in state and emit signal
+    _state->setPipelineJson(json);
+    emit pipelineDescriptorChanged(json);
+
+    _syncing_json = false;
+}
+
+bool TransformsV2Properties_Widget::loadUIFromJson(std::string const & json_str) {
+    // Parse the JSON into a PipelineDescriptor
+    auto result = rfl::json::read<PipelineDescriptor>(json_str);
+    if (!result) {
+        return false;
+    }
+
+    auto const & descriptor = result.value();
+
+    _syncing_json = true;
+
+    // Load pre-reductions
+    if (descriptor.pre_reductions.has_value()) {
+        _pre_reduction_panel->loadFromDescriptors(descriptor.pre_reductions.value());
+    } else {
+        _pre_reduction_panel->clearEntries();
+    }
+
+    // Load steps
+    _step_list->loadFromDescriptors(descriptor.steps);
+
+    // Update the JSON panel text to show the canonical (re-serialized) JSON
+    auto canonical_json = buildJsonFromUI();
+    _json_panel->setPlainText(QString::fromStdString(canonical_json));
+
+    // Store in state and emit signal
+    _state->setPipelineJson(canonical_json);
+    emit pipelineDescriptorChanged(canonical_json);
+
+    _syncing_json = false;
+    return true;
+}
+
+// ============================================================================
+// Phase 2: JSON Panel Slots
+// ============================================================================
+
+void TransformsV2Properties_Widget::onJsonPanelEdited() {
+    // Ignore edits caused by syncJsonFromUI() or loadUIFromJson()
+    // The user manually editing the JSON panel does NOT auto-apply.
+    // They must click "Apply" to rebuild the UI from JSON.
+}
+
+void TransformsV2Properties_Widget::onCopyJsonClicked() {
+    auto * clipboard = QGuiApplication::clipboard();
+    clipboard->setText(_json_panel->toPlainText());
+}
+
+void TransformsV2Properties_Widget::onApplyJsonClicked() {
+    auto json_str = _json_panel->toPlainText().toStdString();
+    if (json_str.empty()) {
+        QMessageBox::warning(this, tr("Empty JSON"),
+                             tr("The JSON panel is empty. Nothing to apply."));
+        return;
+    }
+
+    if (!loadUIFromJson(json_str)) {
+        QMessageBox::warning(this, tr("Invalid JSON"),
+                             tr("The JSON could not be parsed as a valid PipelineDescriptor. "
+                                "Please check the format and try again."));
+    }
+}
+
+void TransformsV2Properties_Widget::onLoadJsonClicked() {
+    auto filepath = QFileDialog::getOpenFileName(
+            this, tr("Load Pipeline JSON"),
+            QString(), tr("JSON Files (*.json);;All Files (*)"));
+
+    if (filepath.isEmpty()) {
+        return;
+    }
+
+    QFile file(filepath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, tr("Load Failed"),
+                             tr("Could not open file: %1").arg(filepath));
+        return;
+    }
+
+    auto json_str = QString(file.readAll()).toStdString();
+    file.close();
+
+    if (!loadUIFromJson(json_str)) {
+        QMessageBox::warning(this, tr("Invalid JSON"),
+                             tr("The file does not contain a valid PipelineDescriptor JSON."));
+    }
+}
+
+void TransformsV2Properties_Widget::onSaveJsonClicked() {
+    auto filepath = QFileDialog::getSaveFileName(
+            this, tr("Save Pipeline JSON"),
+            QString(), tr("JSON Files (*.json);;All Files (*)"));
+
+    if (filepath.isEmpty()) {
+        return;
+    }
+
+    QFile file(filepath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, tr("Save Failed"),
+                             tr("Could not open file for writing: %1").arg(filepath));
+        return;
+    }
+
+    file.write(_json_panel->toPlainText().toUtf8());
+    file.close();
 }

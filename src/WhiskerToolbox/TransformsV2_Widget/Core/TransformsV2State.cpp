@@ -50,3 +50,18 @@ void TransformsV2State::setInputDataKey(std::string const & key) {
         emit inputDataKeyChanged(key);
     }
 }
+
+void TransformsV2State::setPipelineJson(std::string const & json) {
+    if (_data.pipeline_json != json) {
+        _data.pipeline_json = json;
+        markDirty();
+        emit pipelineJsonChanged(json);
+    }
+}
+
+void TransformsV2State::setJsonPanelExpanded(bool expanded) {
+    if (_data.json_panel_expanded != expanded) {
+        _data.json_panel_expanded = expanded;
+        markDirty();
+    }
+}

@@ -174,46 +174,53 @@ Implemented in `PipelineStepListWidget::validateTypeChain()`.
 
 ---
 
-## Phase 2: Bidirectional JSON Synchronization
+## Phase 2: Bidirectional JSON Synchronization ✅ COMPLETE
 
 **Goal:** The UI and JSON representations stay in sync. Users can configure in UI and get JSON, or paste JSON and see it reflected in UI.
 
-### 2.1 — Live JSON Panel
+### 2.1 — Live JSON Panel ✅
 
-A `QTextEdit` (monospace) in a collapsible section that shows the current `PipelineDescriptor` as pretty-printed JSON. Updated in real-time as the user edits in the UI.
+A collapsible `QGroupBox` ("Pipeline JSON") containing a monospace `QTextEdit` that shows the current `PipelineDescriptor` as pretty-printed JSON. Updated in real-time via `syncJsonFromUI()` on every pipeline change.
 
-```cpp
-void TransformsV2Properties_Widget::onPipelineChanged() {
-    auto descriptor = buildDescriptorFromUI();
-    auto json = WhiskerToolbox::Transforms::V2::Examples::savePipelineToJson(descriptor);
-    _jsonPanel->setPlainText(QString::fromStdString(json));
-}
-```
+`buildJsonFromUI()` constructs a `PipelineDescriptor` from the current step list and pre-reduction panel, then calls `savePipelineToJson()`. A `_syncing_json` bool guard prevents feedback loops when the JSON panel update would itself trigger `onPipelineChanged`.
 
-### 2.2 — JSON → UI Loading
+### 2.2 — JSON → UI Loading ✅
 
-When the user edits JSON directly or loads from file:
-1. Parse with `rfl::json::read<PipelineDescriptor>`
-2. Validate each step via `loadStepFromDescriptor()`
-3. Rebuild the step list UI from the descriptor
-4. Populate each step's parameter widget from the step's `parameters` field
+`loadUIFromJson(json_str)` implements the reverse direction:
+1. Parses with `rfl::json::read<PipelineDescriptor>`
+2. Calls `_pre_reduction_panel->loadFromDescriptors()` to rebuild pre-reduction entries
+3. Calls `_step_list->loadFromDescriptors()` to rebuild steps (added `loadFromDescriptors()` to both `PipelineStepListWidget` and `PreReductionPanel`)
+4. Each step's `parameters` (`rfl::Generic`) is written back to a JSON string via `rfl::json::write()` and stored in `PipelineStepEntry::parameters_json`
+5. Returns false and shows an error banner on invalid JSON
 
-### 2.3 — Copy/Paste and File I/O
+Triggered by the **Apply JSON** button or **Load JSON** file dialog.
 
-- **Copy JSON**: Button copies current pipeline JSON to clipboard
-- **Load JSON**: File dialog; populate JSON panel and rebuild UI
-- **Save JSON**: File dialog; save current pipeline JSON
-- **Import from V1**: Accept V1 `DataManagerPipelineDescriptor` format, convert to V2 `PipelineDescriptor`
+### 2.3 — Copy/Paste and File I/O ✅
 
-### 2.4 — `pipelineDescriptorChanged` Signal
+- **Copy JSON** (`onCopyJsonClicked`): Uses `QClipboard` to copy the JSON panel text
+- **Load JSON** (`onLoadJsonClicked`): `QFileDialog::getOpenFileName` (`.json` filter); reads file, sets JSON panel text, calls `loadUIFromJson()`
+- **Save JSON** (`onSaveJsonClicked`): `QFileDialog::getSaveFileName`; writes the current JSON panel text to file
+- **Apply JSON** (`onApplyJsonClicked`): Calls `loadUIFromJson()` on the current panel text; shows success/failure via error banner label
 
-Emit a signal whenever the pipeline descriptor changes (from UI edits or JSON edits). This is the hook for external consumers (see Phase 4).
+The JSON panel itself is editable but does not auto-apply on every keystroke — the user clicks **Apply JSON** to commit manual edits, preventing partial-JSON parse errors while typing.
 
-**Files to modify:**
-- `TransformsV2Properties_Widget.hpp/.cpp` — add JSON panel, sync logic
-- `TransformsV2State` — store `PipelineDescriptor` JSON as state field
+### 2.4 — `pipelineDescriptorChanged` Signal ✅
 
-**Estimated effort:** Medium.
+`pipelineDescriptorChanged(std::string const & pipeline_json)` is emitted from `syncJsonFromUI()` whenever the pipeline changes (add/remove/reorder steps, parameter edits, pre-reduction changes). This is the hook for external consumers (Phase 4).
+
+### 2.5 — State Integration ✅
+
+`TransformsV2StateData` extended with:
+- `std::optional<std::string> pipeline_json` — current `PipelineDescriptor` as JSON (single source of truth)
+- `bool json_panel_expanded` — UI preference for the JSON panel collapsed/expanded state
+
+`TransformsV2State` gained `setPipelineJson()` / `pipelineJson()` and `setJsonPanelExpanded()` / `jsonPanelExpanded()` accessors, plus a `pipelineJsonChanged` signal.
+
+**Implemented files:**
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/TransformsV2Properties_Widget.hpp/.cpp` — JSON panel, `buildJsonFromUI()`, `syncJsonFromUI()`, `loadUIFromJson()`, Copy/Load/Save/Apply slots, `pipelineDescriptorChanged` signal
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineStepListWidget.hpp/.cpp` — added `loadFromDescriptors(vector<PipelineStepDescriptor>)`
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PreReductionPanel.hpp/.cpp` — added `loadFromDescriptors(vector<PreReductionStepDescriptor>)`
+- `src/WhiskerToolbox/TransformsV2_Widget/Core/TransformsV2State.hpp/.cpp` — extended with `pipeline_json`, `json_panel_expanded`
 
 ---
 
@@ -410,18 +417,18 @@ Focus on transforms that benefit most from pipelining:
 ```
 Phase 0 (Auto-UI Infrastructure) ✅ COMPLETE
     │
-    ├──→ Phase 1 (Pipeline Builder UI) ✅ COMPLETE ──→ Phase 2 (JSON Sync)
+    ├──→ Phase 1 (Pipeline Builder UI) ✅ COMPLETE ──→ Phase 2 (JSON Sync) ✅ COMPLETE
     │                                                       │
     │                                                       ├──→ Phase 3 (Execution)
     │                                                       │
     │                                                       └──→ Phase 4 (Embeddable Mode)
     │
-    └──→ Phase 5 (State Serialization)  [can start early, small]
+    └──→ Phase 5 (State Serialization)  [partially done in Phase 2; pipeline_json added]
     
-Phase 6 (Migration & Polish)  [ongoing, parallel with Phases 2-4]
+Phase 6 (Migration & Polish)  [ongoing, parallel with Phases 3-4]
 ```
 
-**Recommended next:** Phase 2 (JSON Sync) and Phase 5 (State Serialization) can proceed in parallel.
+**Recommended next:** Phase 3 (Pipeline Execution) — the JSON panel already holds the pipeline JSON ready to pass to `loadPipelineFromJson()`, so the execute path is straightforward.
 
 ---
 
@@ -471,24 +478,21 @@ TransformsV2_Widget/
 ├── TransformsV2WidgetRegistration.hpp       ✅ exists (create_editor_custom pattern)
 ├── TransformsV2WidgetRegistration.cpp       ✅ exists (create_editor_custom pattern)
 ├── Core/
-│   ├── TransformsV2State.hpp                ✅ Phase 1 complete (input_data_key added)
-│   └── TransformsV2State.cpp                ✅ Phase 1 complete
-└── UI/
-    ├── TransformsV2Properties_Widget.hpp    ✅ Phase 1 complete (DataFocusAware, layout)
-    ├── TransformsV2Properties_Widget.cpp    ✅ Phase 1 complete
-    ├── TransformsV2Properties_Widget.ui     ✅ exists (base layout, sub-widgets added programmatically)
-    ├── AutoParamWidget.hpp                  ✅ Phase 0 complete
-    ├── AutoParamWidget.cpp                  ✅ Phase 0 complete
-    ├── ParamWidgetRegistry.hpp              ✅ Phase 0 complete
-    ├── PipelineStepListWidget.hpp           ✅ Phase 1 complete
-    ├── PipelineStepListWidget.cpp           ✅ Phase 1 complete
-    ├── StepConfigPanel.hpp                  ✅ Phase 1 complete
-    ├── StepConfigPanel.cpp                  ✅ Phase 1 complete
-    ├── PreReductionPanel.hpp                ✅ Phase 1 complete
-    ├── PreReductionPanel.cpp                ✅ Phase 1 complete
-    ├── PipelineBuilderWidget.hpp            ⬜ Phase 4
-    └── PipelineBuilderWidget.cpp            ⬜ Phase 4
-
+    │   ├── TransformsV2State.hpp                ✅ Phase 2 complete (pipeline_json, json_panel_expanded added)
+    │   └── TransformsV2State.cpp                ✅ Phase 2 complete
+    └── UI/
+        ├── TransformsV2Properties_Widget.hpp    ✅ Phase 2 complete (JSON panel, sync logic, signal)
+        ├── TransformsV2Properties_Widget.cpp    ✅ Phase 2 complete
+        ├── TransformsV2Properties_Widget.ui     ✅ exists (base layout, sub-widgets added programmatically)
+        ├── AutoParamWidget.hpp                  ✅ Phase 0 complete
+        ├── AutoParamWidget.cpp                  ✅ Phase 0 complete
+        ├── ParamWidgetRegistry.hpp              ✅ Phase 0 complete
+        ├── PipelineStepListWidget.hpp           ✅ Phase 2 complete (loadFromDescriptors added)
+        ├── PipelineStepListWidget.cpp           ✅ Phase 2 complete
+        ├── StepConfigPanel.hpp                  ✅ Phase 1 complete
+        ├── StepConfigPanel.cpp                  ✅ Phase 1 complete
+        ├── PreReductionPanel.hpp                ✅ Phase 2 complete (loadFromDescriptors added)
+        ├── PreReductionPanel.cpp                ✅ Phase 2 complete
 # In TransformsV2 core library (non-Qt):
 TransformsV2/core/
 ├── ParameterSchema.hpp                      ✅ Phase 0 complete

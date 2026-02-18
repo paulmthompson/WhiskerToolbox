@@ -35,6 +35,12 @@ struct TransformsV2StateData {
 
     // Phase 1: Input state
     std::optional<std::string> input_data_key;        ///< Currently focused input data key
+
+    // Phase 2: Pipeline JSON — single source of truth for pipeline state
+    std::optional<std::string> pipeline_json;         ///< Current PipelineDescriptor as JSON
+
+    // Phase 2: UI preferences
+    bool json_panel_expanded = false;                 ///< Whether the JSON panel is expanded
 };
 
 /**
@@ -67,8 +73,17 @@ public:
     void setInputDataKey(std::string const & key);
     [[nodiscard]] std::optional<std::string> inputDataKey() const { return _data.input_data_key; }
 
+    // Phase 2: Pipeline JSON
+    void setPipelineJson(std::string const & json);
+    [[nodiscard]] std::optional<std::string> pipelineJson() const { return _data.pipeline_json; }
+
+    // Phase 2: JSON panel expanded state
+    void setJsonPanelExpanded(bool expanded);
+    [[nodiscard]] bool jsonPanelExpanded() const { return _data.json_panel_expanded; }
+
 signals:
     void inputDataKeyChanged(std::string const & key);
+    void pipelineJsonChanged(std::string const & json);
 
 private:
     std::shared_ptr<DataManager> _data_manager;
