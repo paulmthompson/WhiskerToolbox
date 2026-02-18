@@ -42,3 +42,11 @@ bool TransformsV2State::fromJson(std::string const & json) {
     std::cerr << "TransformsV2State::fromJson: Failed to parse JSON" << std::endl;
     return false;
 }
+
+void TransformsV2State::setInputDataKey(std::string const & key) {
+    if (_data.input_data_key != key) {
+        _data.input_data_key = key;
+        markDirty();
+        emit inputDataKeyChanged(key);
+    }
+}

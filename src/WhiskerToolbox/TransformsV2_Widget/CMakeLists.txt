@@ -7,6 +7,12 @@ set(TRANSFORMS_V2_WIDGET_SOURCES
         UI/AutoParamWidget.hpp
         UI/AutoParamWidget.cpp
         UI/ParamWidgetRegistry.hpp
+        UI/PipelineStepListWidget.hpp
+        UI/PipelineStepListWidget.cpp
+        UI/StepConfigPanel.hpp
+        UI/StepConfigPanel.cpp
+        UI/PreReductionPanel.hpp
+        UI/PreReductionPanel.cpp
         UI/TransformsV2Properties_Widget.hpp
         UI/TransformsV2Properties_Widget.cpp
         UI/TransformsV2Properties_Widget.ui

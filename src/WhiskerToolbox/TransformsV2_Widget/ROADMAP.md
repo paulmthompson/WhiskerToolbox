@@ -110,68 +110,67 @@ Implemented as `ParamWidgetRegistry` singleton in `src/WhiskerToolbox/Transforms
 
 ---
 
-## Phase 1: Pipeline Builder Core UI
+## Phase 1: Pipeline Builder Core UI ✅ COMPLETE
 
 **Goal:** Replace the V1 "single transform" model with a multi-step pipeline builder.
 
-### 1.1 — Input Selector with DataFocusAware
+### 1.1 — Input Selector with DataFocusAware ✅
 
-- Implement `DataFocusAware` on the properties widget
-- When data is focused in `DataManager_Widget`, update the input display (key name + type)
-- Query `ElementRegistry` for transforms compatible with the input type
-- Store the selected input key in `TransformsV2State`
+Implemented in `TransformsV2Properties_Widget`. The widget inherits `DataFocusAware` and connects to `SelectionContext` via `create_editor_custom` registration pattern (same as `DataImport_Widget`). When data is focused in `DataManager_Widget`, `onDataFocusChanged()` updates the input display (key name + type label), resolves element/container types via `TypeIndexMapper`, and propagates to sub-widgets. Selected input key stored in `TransformsV2State::input_data_key`.
 
-### 1.2 — Step List Widget
+### 1.2 — Step List Widget ✅
 
-A `QListWidget` (or custom `QWidget` with a `QVBoxLayout`) showing the current pipeline steps:
+Implemented as `PipelineStepListWidget` (`UI/PipelineStepListWidget.hpp/.cpp`).
 
-```
-┌──────────────────────────────────────┐
-│ Pipeline Steps                    [+]│
-├──────────────────────────────────────┤
-│ 1. CalculateMaskArea          [✕][↕]│
-│ 2. ZScoreNormalizeV2          [✕][↕]│
-│                                      │
-│         (drop new step here)         │
-└──────────────────────────────────────┘
-```
+- `QListWidget` showing numbered pipeline steps
+- **[+] Add Step**: `QInputDialog` with filtered list of transforms compatible with the current output type (queries both `getTransformsForInputType()` and `getContainerTransformsForInputType()`)
+- **[✕] Remove**: Removes step, re-validates type chain
+- **[↑][↓] Reorder**: Move up/down buttons with type chain revalidation
+- Step selection emits `stepSelected(int)` for the config panel
+- `PipelineStepEntry` struct tracks step_id, transform_name, parameters_json, input/output types, validity, and container flag
 
-- **[+] Add Step**: Opens a filtered combo box of transforms compatible with the *current output type* of the last step (or the input type if the pipeline is empty). This is the key UX improvement — type-directed step suggestions.
-- **[✕] Remove**: Removes step and re-validates the pipeline.
-- **[↕] Reorder**: Drag-and-drop or up/down buttons; re-validates type chain after reorder.
-- Selecting a step expands its configuration panel below.
+### 1.3 — Step Configuration Panel ✅
 
-### 1.3 — Step Configuration Panel
+Implemented as `StepConfigPanel` (`UI/StepConfigPanel.hpp/.cpp`).
 
-When a step is selected in the list:
-1. Look up the params type from `ElementRegistry::metadata_[step.transform_name].params_type`
-2. Check `ParamWidgetRegistry` for a custom widget; fall back to `AutoParamWidget`
-3. Display the widget; populate from existing step params JSON
-4. Connect `parametersChanged()` to update the internal `PipelineDescriptor`
+When a step is selected:
+1. Looks up `TransformMetadata` from `ElementRegistry::getMetadata()`
+2. Checks `ParamWidgetRegistry` for custom widget override
+3. Falls back to `AutoParamWidget` with schema from `ElementRegistry::getParameterSchema()`
+4. Populates from existing step params JSON via `fromJson()`
+5. `parametersChanged()` signal propagates back to `PipelineStepListWidget::updateStepParams()`
 
-### 1.4 — Pre-Reduction Configuration
+Header shows transform name (bold) and description (gray). Scrollable content area for parameter forms. "No configurable parameters" placeholder for `NoParams` transforms.
 
-For pipelines that need pre-reductions (e.g., ZScore):
-- Show a separate "Pre-Computation" section above the step list
-- List available `RangeReductionRegistry` entries
-- Each pre-reduction has: name, output_key, optional params
-- Param bindings shown on the step that references them
+### 1.4 — Pre-Reduction Configuration ✅
 
-### 1.5 — Type Chain Validation
+Implemented as `PreReductionPanel` (`UI/PreReductionPanel.hpp/.cpp`).
 
-After every edit, validate the full pipeline type chain:
-1. Start with the input data type → determine element type via `ContainerTraits`
-2. For each step, check `metadata.input_type` matches current element type
-3. Update `metadata.output_type` for the next step
-4. Show validation errors inline (red border on incompatible step)
+- Collapsible `QGroupBox` ("Pre-Computations", collapsed by default)
+- Lists configured pre-reduction entries with `reduction_name → output_key` format
+- **[+] Add**: `QInputDialog` filtered by `RangeReductionRegistry::getReductionsForInputType()`; second dialog for output key name
+- **[✕] Remove**: Removes entry
+- `PreReductionEntry` struct tracks reduction_name, output_key, parameters_json
+- `preReductionsChanged()` signal notifies the parent widget
 
-**Files to create:**
-- `src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineStepListWidget.hpp/.cpp`
-- `src/WhiskerToolbox/TransformsV2_Widget/UI/StepConfigPanel.hpp/.cpp`
-- `src/WhiskerToolbox/TransformsV2_Widget/UI/PreReductionPanel.hpp/.cpp`
-- Update `TransformsV2Properties_Widget.ui` with layout sections
+### 1.5 — Type Chain Validation ✅
 
-**Estimated effort:** Large. This is the core pipeline building experience.
+Implemented in `PipelineStepListWidget::validateTypeChain()`.
+
+- Walks the step chain from input type forward
+- Element transforms: validates `metadata.input_type` matches current element type; updates via `metadata.output_type`
+- Container transforms: validates `ContainerTransformMetadata.input_container_type`; updates via `output_container_type`
+- Cross-domain mapping via `TypeIndexMapper::elementToContainer()` / `containerToElement()`
+- Invalid steps shown with light-red background and tooltip in the list
+- `validationChanged(bool)` signal drives a status label ("Pipeline valid ✓" / "Pipeline has type errors ✗")
+
+**Implemented files:**
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PipelineStepListWidget.hpp/.cpp` — step list with add/remove/reorder/validation
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/StepConfigPanel.hpp/.cpp` — auto-generated or custom param editing
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/PreReductionPanel.hpp/.cpp` — pre-computation configuration
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/TransformsV2Properties_Widget.hpp/.cpp` — main widget with DataFocusAware, layout integration
+- `src/WhiskerToolbox/TransformsV2_Widget/Core/TransformsV2State.hpp/.cpp` — extended with `input_data_key`
+- `src/WhiskerToolbox/TransformsV2_Widget/TransformsV2WidgetRegistration.cpp` — switched to `create_editor_custom` for SelectionContext access
 
 ---
 
@@ -411,18 +410,18 @@ Focus on transforms that benefit most from pipelining:
 ```
 Phase 0 (Auto-UI Infrastructure) ✅ COMPLETE
     │
-    ├──→ Phase 1 (Pipeline Builder UI)  ──→ Phase 2 (JSON Sync)
-    │                                           │
-    │                                           ├──→ Phase 3 (Execution)
-    │                                           │
-    │                                           └──→ Phase 4 (Embeddable Mode)
+    ├──→ Phase 1 (Pipeline Builder UI) ✅ COMPLETE ──→ Phase 2 (JSON Sync)
+    │                                                       │
+    │                                                       ├──→ Phase 3 (Execution)
+    │                                                       │
+    │                                                       └──→ Phase 4 (Embeddable Mode)
     │
     └──→ Phase 5 (State Serialization)  [can start early, small]
     
-Phase 6 (Migration & Polish)  [ongoing, parallel with Phases 1-4]
+Phase 6 (Migration & Polish)  [ongoing, parallel with Phases 2-4]
 ```
 
-**Recommended start:** Phase 0.1–0.4 first (auto-UI is the biggest lever), then Phase 1 in parallel with Phase 5.
+**Recommended next:** Phase 2 (JSON Sync) and Phase 5 (State Serialization) can proceed in parallel.
 
 ---
 
@@ -469,26 +468,26 @@ A signal-only approach (`pipelineExecuted(QString json)`) is one-directional. Th
 TransformsV2_Widget/
 ├── CMakeLists.txt
 ├── ROADMAP.md
-├── TransformsV2WidgetRegistration.hpp       ✅ exists (skeleton)
-├── TransformsV2WidgetRegistration.cpp       ✅ exists (skeleton)
+├── TransformsV2WidgetRegistration.hpp       ✅ exists (create_editor_custom pattern)
+├── TransformsV2WidgetRegistration.cpp       ✅ exists (create_editor_custom pattern)
 ├── Core/
-│   ├── TransformsV2State.hpp                ✅ exists (skeleton, needs Phase 5 extension)
-│   └── TransformsV2State.cpp                ✅ exists (skeleton)
+│   ├── TransformsV2State.hpp                ✅ Phase 1 complete (input_data_key added)
+│   └── TransformsV2State.cpp                ✅ Phase 1 complete
 └── UI/
-    ├── TransformsV2Properties_Widget.hpp    ✅ exists (skeleton, needs Phase 1 content)
-    ├── TransformsV2Properties_Widget.cpp    ✅ exists (skeleton)
-    ├── TransformsV2Properties_Widget.ui     ✅ exists (placeholder label)
+    ├── TransformsV2Properties_Widget.hpp    ✅ Phase 1 complete (DataFocusAware, layout)
+    ├── TransformsV2Properties_Widget.cpp    ✅ Phase 1 complete
+    ├── TransformsV2Properties_Widget.ui     ✅ exists (base layout, sub-widgets added programmatically)
     ├── AutoParamWidget.hpp                  ✅ Phase 0 complete
     ├── AutoParamWidget.cpp                  ✅ Phase 0 complete
     ├── ParamWidgetRegistry.hpp              ✅ Phase 0 complete
+    ├── PipelineStepListWidget.hpp           ✅ Phase 1 complete
+    ├── PipelineStepListWidget.cpp           ✅ Phase 1 complete
+    ├── StepConfigPanel.hpp                  ✅ Phase 1 complete
+    ├── StepConfigPanel.cpp                  ✅ Phase 1 complete
+    ├── PreReductionPanel.hpp                ✅ Phase 1 complete
+    ├── PreReductionPanel.cpp                ✅ Phase 1 complete
     ├── PipelineBuilderWidget.hpp            ⬜ Phase 4
-    ├── PipelineBuilderWidget.cpp            ⬜ Phase 4
-    ├── PipelineStepListWidget.hpp           ⬜ Phase 1
-    ├── PipelineStepListWidget.cpp           ⬜ Phase 1
-    ├── StepConfigPanel.hpp                  ⬜ Phase 1
-    ├── StepConfigPanel.cpp                  ⬜ Phase 1
-    ├── PreReductionPanel.hpp                ⬜ Phase 1
-    └── PreReductionPanel.cpp                ⬜ Phase 1
+    └── PipelineBuilderWidget.cpp            ⬜ Phase 4
 
 # In TransformsV2 core library (non-Qt):
 TransformsV2/core/

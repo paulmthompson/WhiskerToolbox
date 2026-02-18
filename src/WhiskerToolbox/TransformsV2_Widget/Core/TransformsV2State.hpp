@@ -18,6 +18,7 @@
 #include <rfl/json.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 class DataManager;
@@ -31,6 +32,9 @@ class DataManager;
 struct TransformsV2StateData {
     std::string instance_id;                          ///< Unique instance ID (preserved across serialization)
     std::string display_name = "Transforms V2";       ///< User-visible name
+
+    // Phase 1: Input state
+    std::optional<std::string> input_data_key;        ///< Currently focused input data key
 };
 
 /**
@@ -59,7 +63,12 @@ public:
     // === Accessors ===
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const { return _data_manager; }
 
+    // Phase 1: Input data key
+    void setInputDataKey(std::string const & key);
+    [[nodiscard]] std::optional<std::string> inputDataKey() const { return _data.input_data_key; }
+
 signals:
+    void inputDataKeyChanged(std::string const & key);
 
 private:
     std::shared_ptr<DataManager> _data_manager;

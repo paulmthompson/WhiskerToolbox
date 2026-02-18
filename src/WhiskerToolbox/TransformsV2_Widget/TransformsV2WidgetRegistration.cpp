@@ -30,24 +30,37 @@ void registerTypes(EditorRegistry * registry,
         .auto_raise_properties = false,
         .allow_multiple = false,
 
+        // State factory
         .create_state = [dm]() {
             return std::make_shared<TransformsV2State>(dm);
         },
 
+        // View factory — nullptr, we use create_editor_custom
         .create_view = nullptr,
 
-        .create_properties = [](std::shared_ptr<EditorState> state) -> QWidget * {
-            auto tv2_state = std::dynamic_pointer_cast<TransformsV2State>(state);
-            if (!tv2_state) {
-                return nullptr;
-            }
-            auto * widget = new TransformsV2Properties_Widget(tv2_state);
+        // Properties factory — nullptr, we use create_editor_custom
+        .create_properties = nullptr,
+
+        // Custom editor creation for SelectionContext access
+        .create_editor_custom = [dm](EditorRegistry * reg)
+            -> EditorRegistry::EditorInstance
+        {
+            auto state = std::make_shared<TransformsV2State>(dm);
+
+            auto * selection_context = reg->selectionContext();
+
+            auto * widget = new TransformsV2Properties_Widget(state, selection_context, nullptr);
             widget->setMinimumSize(350, 400);
             widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-            return widget;
-        },
 
-        .create_editor_custom = nullptr
+            reg->registerState(state);
+
+            return EditorRegistry::EditorInstance{
+                .state = state,
+                .view = widget,
+                .properties = nullptr
+            };
+        }
     });
 }
 
