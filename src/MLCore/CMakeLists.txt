@@ -36,6 +36,8 @@ set(MLCore_SOURCES
 
     models/unsupervised/DBSCANOperation.cpp
     models/unsupervised/DBSCANOperation.hpp
+    models/unsupervised/GaussianMixtureOperation.cpp
+    models/unsupervised/GaussianMixtureOperation.hpp
     models/unsupervised/KMeansOperation.cpp
     models/unsupervised/KMeansOperation.hpp
 

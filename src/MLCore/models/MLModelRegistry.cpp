@@ -4,6 +4,7 @@
 #include "supervised/NaiveBayesOperation.hpp"
 #include "supervised/RandomForestOperation.hpp"
 #include "unsupervised/DBSCANOperation.hpp"
+#include "unsupervised/GaussianMixtureOperation.hpp"
 #include "unsupervised/KMeansOperation.hpp"
 
 #include <algorithm>
@@ -22,8 +23,7 @@ MLModelRegistry::MLModelRegistry()
     registerModel<LogisticRegressionOperation>();
     registerModel<KMeansOperation>();
     registerModel<DBSCANOperation>();
-    // Future:
-    //   registerModel<GaussianMixtureOperation>();
+    registerModel<GaussianMixtureOperation>();
 }
 
 // ============================================================================
