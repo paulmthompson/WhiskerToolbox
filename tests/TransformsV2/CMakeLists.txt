@@ -27,6 +27,8 @@ add_executable(test_TransformsV2
         test_parameter_binding.test.cpp
         test_parameter_schema.test.cpp
         test_transform_lineage_integration.test.cpp
+        test_tensor_column_builders.test.cpp
+        test_phase1_3_4_reductions_transforms.test.cpp
 
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
@@ -57,6 +59,7 @@ target_include_directories(test_TransformsV2 PRIVATE
 
 target_link_libraries(test_TransformsV2 PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(test_TransformsV2 PRIVATE DataManager)
+target_link_libraries(test_TransformsV2 PRIVATE WhiskerToolbox::TensorData)
 
 # Force whole-archive linking for TransformsV2 to ensure static transform registration
 # (RegisteredTransforms.cpp has file-scope RAII objects that register transforms into

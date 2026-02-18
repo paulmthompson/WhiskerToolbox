@@ -1,11 +1,13 @@
 #include "RegisteredRangeReductions.hpp"
 
 #include "algorithms/RangeReductions/EventRangeReductions.hpp"
+#include "algorithms/RangeReductions/IntervalRangeReductions.hpp"
 #include "algorithms/RangeReductions/ValueRangeReductions.hpp"
 #include "core/RangeReductionRegistry.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
+#include "DigitalTimeSeries/IntervalWithId.hpp"
 
 namespace WhiskerToolbox::Transforms::V2::RangeReductions {
 
@@ -16,6 +18,7 @@ namespace WhiskerToolbox::Transforms::V2::RangeReductions {
 void registerAllRangeReductions() {
     registerEventRangeReductions();
     registerValueRangeReductions();
+    registerIntervalRangeReductions();
 }
 
 // ============================================================================
@@ -303,6 +306,74 @@ void registerValueRangeReductions() {
                     .category = "Value Statistics (Raw)",
                     .requires_time_series_element = false,
                     .requires_value_element = false});
+}
+
+// ============================================================================
+// Interval Range Reductions Registration
+// ============================================================================
+
+void registerIntervalRangeReductions() {
+    auto & registry = RangeReductionRegistry::instance();
+
+    // IntervalCount - stateless
+    registry.registerStatelessReduction<IntervalWithId, int>(
+            "IntervalCount",
+            [](std::span<IntervalWithId const> intervals) -> int {
+                return intervalCount(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "Count of intervals in gathered range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    // IntervalStartExtract - stateless
+    registry.registerStatelessReduction<IntervalWithId, float>(
+            "IntervalStartExtract",
+            [](std::span<IntervalWithId const> intervals) -> float {
+                return intervalStartExtract(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "Start time of first interval in range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    // IntervalEndExtract - stateless
+    registry.registerStatelessReduction<IntervalWithId, float>(
+            "IntervalEndExtract",
+            [](std::span<IntervalWithId const> intervals) -> float {
+                return intervalEndExtract(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "End time of first interval in range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    // IntervalSourceIndex - stateless
+    registry.registerStatelessReduction<IntervalWithId, int>(
+            "IntervalSourceIndex",
+            [](std::span<IntervalWithId const> intervals) -> int {
+                return intervalSourceIndex(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "Entity ID of first interval in range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    // EventPresence - stateless (EventWithId input)
+    registry.registerStatelessReduction<EventWithId, int>(
+            "EventPresence",
+            [](std::span<EventWithId const> events) -> int {
+                return eventPresence(events);
+            },
+            RangeReductionMetadata{
+                    .description = "Whether any events exist in range (1=yes, 0=no)",
+                    .category = "Event Statistics",
+                    .requires_time_series_element = true,
+                    .requires_entity_element = true});
 }
 
 // ============================================================================

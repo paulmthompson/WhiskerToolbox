@@ -132,6 +132,21 @@ public:
     // ========== Named column support ==========
 
     /**
+     * @brief Set the size of a specific axis and recompute strides
+     *
+     * Used by column mutation operations (append/remove) to keep the
+     * DimensionDescriptor in sync with the underlying storage.
+     *
+     * @param axis_index Positional index of the axis to resize
+     * @param new_size New size for the axis (must be > 0)
+     * @throws std::out_of_range if axis_index >= ndim()
+     * @throws std::invalid_argument if new_size == 0
+     * @note This invalidates any previously set column names if the
+     *       resized axis is the last axis.
+     */
+    void setAxisSize(std::size_t axis_index, std::size_t new_size);
+
+    /**
      * @brief Assign human-readable names to columns (last axis)
      *
      * @param names Column names; must have size == last axis size

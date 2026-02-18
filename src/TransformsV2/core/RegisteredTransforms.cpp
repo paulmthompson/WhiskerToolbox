@@ -13,6 +13,7 @@
 #include "algorithms/LineClip/LineClip.hpp"
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "algorithms/LineCurvature/LineCurvature.hpp"
+#include "algorithms/LineLength/LineLength.hpp"
 #include "algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "algorithms/LinePointExtraction/LinePointExtraction.hpp"
 #include "algorithms/LineResample/LineResample.hpp"
@@ -48,6 +49,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
     registerPipelineStepFactoryFor<LineClipParams>();
     registerPipelineStepFactoryFor<LineCurvatureParams>();
+    registerPipelineStepFactoryFor<LineLengthParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
     registerPipelineStepFactoryFor<LinePointExtractionParams>();
     registerPipelineStepFactoryFor<LineResampleParams>();
@@ -309,6 +311,44 @@ auto const register_line_curvature_ctx = RegisterContextTransform<Line2D, float,
                 .input_type_name = "Line2D",
                 .output_type_name = "float",
                 .params_type_name = "LineCurvatureParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register LineLengthTransform (Unary — Line2D → float)
+auto const register_line_length = RegisterTransform<Line2D, float, LineLengthParams>(
+        "CalculateLineLength",
+        calculateLineLength,
+        TransformMetadata{
+                .name = "CalculateLineLength",
+                .description = "Calculate the total arc length of a line",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineLengthParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineLengthParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+// Register context-aware version of LineLength
+auto const register_line_length_ctx = RegisterContextTransform<Line2D, float, LineLengthParams>(
+        "CalculateLineLengthWithContext",
+        calculateLineLengthWithContext,
+        TransformMetadata{
+                .name = "CalculateLineLengthWithContext",
+                .description = "Calculate the total arc length of a line with progress reporting",
+                .category = "Geometry",
+                .input_type = typeid(Line2D),
+                .output_type = typeid(float),
+                .params_type = typeid(LineLengthParams),
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "Line2D",
+                .output_type_name = "float",
+                .params_type_name = "LineLengthParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});

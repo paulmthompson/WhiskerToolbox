@@ -33,6 +33,7 @@
 
 #include "DimensionDescriptor.hpp"
 #include "RowDescriptor.hpp"
+#include "storage/LazyColumnTensorStorage.hpp"
 #include "storage/TensorStorageWrapper.hpp"
 
 #include "Observer/Observer_Data.hpp"
@@ -43,6 +44,7 @@
 #include <armadillo>
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <span>
 #include <string>
@@ -60,6 +62,19 @@
 
 // Forward declarations
 class TimeIndexStorage;
+class LazyColumnTensorStorage;
+class TensorData;
+
+/**
+ * @brief Callback that wires observer invalidation after lazy tensor construction.
+ *
+ * Receives the lazy storage (for invalidateColumn) and the TensorData
+ * (for notifyObservers). Called exactly once, at the end of createFromLazyColumns().
+ * Constructed at the builder layer (e.g., TensorColumnBuilders.hpp in TransformsV2).
+ *
+ * @see tensor_data_refactor_proposal.md §6.6 for design rationale.
+ */
+using InvalidationWiringFn = std::function<void(LazyColumnTensorStorage &, TensorData &)>;
 
 /**
  * @brief Refactored N-dimensional tensor with named axes, multiple storage
@@ -225,6 +240,30 @@ public:
         torch::Tensor tensor,
         std::vector<AxisDescriptor> axes = {});
 #endif
+
+    /**
+     * @brief Create a 2D tensor with lazily-computed columns
+     *
+     * Each column is backed by a type-erased provider function that computes
+     * the column data on demand. Results are cached per-column and can be
+     * invalidated to trigger recomputation.
+     *
+     * Column names are taken from the ColumnSource::name fields.
+     * Row semantics are specified by the RowDescriptor.
+     *
+     * @param num_rows Number of rows (each provider must return this many floats)
+     * @param columns Column sources (name + provider); must not be empty
+     * @param rows Row descriptor (ordinal, time-indexed, or interval)
+     * @param wiring Optional callback for observer invalidation wiring;
+     *               called once after construction with references to the
+     *               LazyColumnTensorStorage and TensorData
+     * @throws std::invalid_argument if num_rows == 0 or columns is empty
+     */
+    [[nodiscard]] static TensorData createFromLazyColumns(
+        std::size_t num_rows,
+        std::vector<ColumnSource> columns,
+        RowDescriptor rows,
+        InvalidationWiringFn wiring = {});
 
     // ========== Dimension Queries ==========
 
@@ -407,6 +446,37 @@ public:
      */
     void setData(std::vector<float> && data,
                  std::vector<std::size_t> const & new_shape);
+
+    // ========== Column Mutation (LazyColumnTensorStorage only) ==========
+
+    /**
+     * @brief Append a new lazy column
+     *
+     * Adds a column to the end of the tensor. Only valid when the underlying
+     * storage is `LazyColumnTensorStorage`. Updates the dimension descriptor
+     * (axis size + column names) and notifies observers.
+     *
+     * @param name Column name
+     * @param provider Provider function that returns `numRows()` floats
+     * @return The index of the newly appended column
+     * @throws std::logic_error if the storage is not LazyColumnTensorStorage
+     * @throws std::invalid_argument if provider is null
+     */
+    std::size_t appendColumn(std::string name, ColumnProviderFn provider);
+
+    /**
+     * @brief Remove a column by index
+     *
+     * Removes the column at the given index. Only valid when the underlying
+     * storage is `LazyColumnTensorStorage`. The tensor must have more than
+     * one column. Updates the dimension descriptor and notifies observers.
+     *
+     * @param col Column index to remove
+     * @throws std::logic_error if the storage is not LazyColumnTensorStorage
+     * @throws std::out_of_range if col >= numColumns()
+     * @throws std::logic_error if removing the column would leave zero columns
+     */
+    void removeColumn(std::size_t col);
 
     // ========== Storage Access ==========
 
