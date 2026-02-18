@@ -8,21 +8,28 @@
 #include "Core/TransformsV2State.hpp"
 #include "EditorState/SelectionContext.hpp"
 
+#include "DataManager/DataManager.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"
+#include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
+#include <QApplication>
 #include <QClipboard>
+#include <QComboBox>
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMessageBox>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QSplitter>
 #include <QTextEdit>
 #include <QVBoxLayout>
 
+#include <chrono>
 #include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
@@ -79,6 +86,10 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
 
     // Store in state
     _state->setInputDataKey(_input_data_key);
+
+    // Update output key and execute button state
+    updateOutputKeyFromPipeline();
+    updateExecuteButtonState();
 }
 
 // ============================================================================
@@ -97,6 +108,8 @@ void TransformsV2Properties_Widget::onStepSelected(int step_index) {
 
 void TransformsV2Properties_Widget::onPipelineChanged() {
     syncJsonFromUI();
+    updateOutputKeyFromPipeline();
+    updateExecuteButtonState();
     emit _state->stateChanged();
 }
 
@@ -116,6 +129,7 @@ void TransformsV2Properties_Widget::onValidationChanged(bool all_valid) {
         _validation_label->setStyleSheet("color: red; font-weight: bold;");
     }
     _validation_label->setVisible(!_step_list->steps().empty());
+    updateExecuteButtonState();
 }
 
 // ============================================================================
@@ -209,6 +223,79 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(_json_group);
 
+    // --- Output & Execution Section (Phase 3) ---
+    _output_group = new QGroupBox(tr("Output && Execution"), this);
+    auto * output_layout = new QVBoxLayout(_output_group);
+    output_layout->setSpacing(4);
+
+    // Output key name
+    auto * output_key_layout = new QHBoxLayout();
+    auto * output_key_label = new QLabel(tr("Output Key:"), _output_group);
+    _output_key_edit = new QLineEdit(_output_group);
+    _output_key_edit->setPlaceholderText(tr("Auto-generated from input + transform"));
+    _output_key_edit->setToolTip(tr("Name of the data key to store the result in DataManager"));
+    output_key_layout->addWidget(output_key_label);
+    output_key_layout->addWidget(_output_key_edit, 1);
+    output_layout->addLayout(output_key_layout);
+
+    // Restore saved output key if available
+    if (auto saved_key = _state->outputDataKey(); saved_key.has_value()) {
+        _output_key_edit->setText(QString::fromStdString(*saved_key));
+        _output_key_user_edited = true;
+    }
+
+    // Execution mode combo
+    auto * mode_layout = new QHBoxLayout();
+    auto * mode_label = new QLabel(tr("Mode:"), _output_group);
+    _execution_mode_combo = new QComboBox(_output_group);
+    _execution_mode_combo->addItem(tr("Save to DataManager"), QStringLiteral("data_manager"));
+    _execution_mode_combo->addItem(tr("JSON Pipeline Only"), QStringLiteral("json_only"));
+    _execution_mode_combo->setToolTip(tr("Save to DataManager materializes results; JSON Pipeline Only just produces the descriptor"));
+
+    // Restore saved execution mode
+    auto const & saved_mode = _state->executionMode();
+    int mode_index = _execution_mode_combo->findData(QString::fromStdString(saved_mode));
+    if (mode_index >= 0) {
+        _execution_mode_combo->setCurrentIndex(mode_index);
+    }
+
+    mode_layout->addWidget(mode_label);
+    mode_layout->addWidget(_execution_mode_combo, 1);
+    output_layout->addLayout(mode_layout);
+
+    // Execute button
+    _execute_button = new QPushButton(tr("Execute Pipeline"), _output_group);
+    _execute_button->setToolTip(tr("Build and execute the pipeline on the selected input data"));
+    _execute_button->setEnabled(false);  // Enabled when pipeline is valid + input selected
+    _execute_button->setStyleSheet(
+            "QPushButton { font-weight: bold; padding: 6px; }"
+            "QPushButton:enabled { background-color: #4CAF50; color: white; }"
+            "QPushButton:disabled { background-color: #cccccc; }");
+    output_layout->addWidget(_execute_button);
+
+    // Progress bar
+    _progress_bar = new QProgressBar(_output_group);
+    _progress_bar->setRange(0, 100);
+    _progress_bar->setValue(0);
+    _progress_bar->setVisible(false);
+    _progress_bar->setTextVisible(true);
+    output_layout->addWidget(_progress_bar);
+
+    // Progress label (step name)
+    _progress_label = new QLabel(_output_group);
+    _progress_label->setStyleSheet("color: gray; font-size: 9pt;");
+    _progress_label->setVisible(false);
+    output_layout->addWidget(_progress_label);
+
+    // Error label
+    _error_label = new QLabel(_output_group);
+    _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+    _error_label->setWordWrap(true);
+    _error_label->setVisible(false);
+    output_layout->addWidget(_error_label);
+
+    main_layout->addWidget(_output_group);
+
     // --- Connections ---
     connect(_step_list, &PipelineStepListWidget::stepSelected,
             this, &TransformsV2Properties_Widget::onStepSelected);
@@ -235,6 +322,18 @@ void TransformsV2Properties_Widget::setupUI() {
     connect(_json_group, &QGroupBox::toggled,
             this, [this](bool checked) {
                 _state->setJsonPanelExpanded(checked);
+            });
+
+    // Phase 3: Output & Execution connections
+    connect(_execute_button, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onExecuteClicked);
+    connect(_output_key_edit, &QLineEdit::textEdited,
+            this, &TransformsV2Properties_Widget::onOutputKeyEdited);
+    connect(_execution_mode_combo, &QComboBox::currentIndexChanged,
+            this, [this](int /*index*/) {
+                auto mode = _execution_mode_combo->currentData().toString().toStdString();
+                _state->setExecutionMode(mode);
+                updateExecuteButtonState();
             });
 }
 
@@ -443,4 +542,208 @@ void TransformsV2Properties_Widget::onSaveJsonClicked() {
 
     file.write(_json_panel->toPlainText().toUtf8());
     file.close();
+}
+
+// ============================================================================
+// Phase 3: Output Key Generation
+// ============================================================================
+
+std::string TransformsV2Properties_Widget::generateOutputName() const {
+    if (_input_data_key.empty()) {
+        return {};
+    }
+
+    auto const & steps = _step_list->steps();
+    if (steps.empty()) {
+        return _input_data_key + "_transformed";
+    }
+
+    // Use the last transform name, cleaned up like V1
+    auto transform_name = QString::fromStdString(steps.back().transform_name);
+    transform_name = transform_name.toLower().replace(' ', '_');
+
+    // Strip common prefixes
+    for (auto const * prefix : {"calculate_", "extract_", "convert_", "threshold_"}) {
+        if (transform_name.startsWith(QLatin1String(prefix))) {
+            transform_name = transform_name.mid(
+                    static_cast<int>(std::strlen(prefix)));
+            break;
+        }
+    }
+
+    return _input_data_key + "_" + transform_name.toStdString();
+}
+
+void TransformsV2Properties_Widget::updateOutputKeyFromPipeline() {
+    // Only auto-update if the user hasn't manually edited the key
+    if (_output_key_user_edited) {
+        return;
+    }
+
+    auto name = generateOutputName();
+    if (!name.empty()) {
+        _output_key_edit->setText(QString::fromStdString(name));
+    }
+}
+
+void TransformsV2Properties_Widget::updateExecuteButtonState() {
+    bool const has_input = !_input_data_key.empty();
+    bool const has_steps = !_step_list->steps().empty();
+    bool const has_output_key = !_output_key_edit->text().trimmed().isEmpty();
+    bool const is_data_manager_mode =
+            _execution_mode_combo->currentData().toString() == QStringLiteral("data_manager");
+
+    // For data_manager mode: need valid input, steps, and output key
+    // For json_only mode: just need steps (the JSON is already produced)
+    bool can_execute = false;
+    if (is_data_manager_mode) {
+        can_execute = has_input && has_steps && has_output_key;
+    } else {
+        // JSON-only mode: the JSON panel is always up-to-date; nothing to "execute"
+        // But allow the button so users get feedback
+        can_execute = has_steps;
+    }
+
+    _execute_button->setEnabled(can_execute);
+}
+
+// ============================================================================
+// Phase 3: Execution Slots
+// ============================================================================
+
+void TransformsV2Properties_Widget::onOutputKeyEdited(QString const & text) {
+    _output_key_user_edited = !text.trimmed().isEmpty();
+    _state->setOutputDataKey(text.toStdString());
+    updateExecuteButtonState();
+}
+
+void TransformsV2Properties_Widget::onExecuteClicked() {
+    _error_label->setVisible(false);
+
+    auto mode = _execution_mode_combo->currentData().toString();
+
+    if (mode == QStringLiteral("json_only")) {
+        // JSON-only mode: the JSON is already in the panel, just confirm
+        _error_label->setStyleSheet("color: green; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Pipeline JSON is ready in the panel above."));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    // --- Data Manager execution mode ---
+
+    auto * dm = _state->dataManager().get();
+    if (!dm) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Error: DataManager not available."));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    if (_input_data_key.empty()) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Error: No input data selected."));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    auto output_key = _output_key_edit->text().trimmed().toStdString();
+    if (output_key.empty()) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Error: Output key name is empty."));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    // Get the JSON from the panel
+    auto json_str = _json_panel->toPlainText().toStdString();
+    if (json_str.empty()) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Error: Pipeline JSON is empty."));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    // Build the TransformPipeline from the PipelineDescriptor JSON
+    auto pipeline_result = loadPipelineFromJson(json_str);
+    if (!pipeline_result) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Error: Failed to build pipeline from JSON."));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    // Get the input data variant
+    auto input_variant = dm->getDataVariant(_input_data_key);
+    if (!input_variant.has_value()) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(
+                tr("Error: Input data key '%1' not found in DataManager.")
+                        .arg(QString::fromStdString(_input_data_key)));
+        _error_label->setVisible(true);
+        return;
+    }
+
+    // Show progress
+    auto const & steps = _step_list->steps();
+    int total_steps = static_cast<int>(steps.size());
+    _progress_bar->setRange(0, total_steps > 0 ? total_steps : 1);
+    _progress_bar->setValue(0);
+    _progress_bar->setVisible(true);
+    _progress_label->setText(tr("Executing pipeline..."));
+    _progress_label->setVisible(true);
+    _execute_button->setEnabled(false);
+    QApplication::processEvents();
+
+    // Execute the pipeline
+    auto start_time = std::chrono::steady_clock::now();
+
+    try {
+        // Update progress for each step (the executePipeline free function doesn't
+        // provide per-step callbacks, so we show overall progress at start/end)
+        for (int i = 0; i < total_steps; ++i) {
+            _progress_bar->setValue(i);
+            _progress_label->setText(
+                    tr("Step %1/%2: %3")
+                            .arg(i + 1)
+                            .arg(total_steps)
+                            .arg(QString::fromStdString(steps[static_cast<size_t>(i)].transform_name)));
+            QApplication::processEvents();
+        }
+
+        auto result = executePipeline(input_variant.value(), pipeline_result.value());
+
+        auto end_time = std::chrono::steady_clock::now();
+        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                  end_time - start_time)
+                                  .count();
+
+        // Store the result in DataManager using the same time key as the input
+        auto time_key = dm->getTimeKey(_input_data_key);
+        dm->setData(output_key, result, time_key);
+
+        // Store the output key in state
+        _state->setOutputDataKey(output_key);
+
+        // Show success
+        _progress_bar->setValue(total_steps);
+        _progress_label->setVisible(false);
+        _error_label->setStyleSheet("color: green; font-weight: bold; padding: 4px;");
+        _error_label->setText(
+                tr("Success! Result stored as '%1' (%2 ms)")
+                        .arg(QString::fromStdString(output_key))
+                        .arg(elapsed_ms));
+        _error_label->setVisible(true);
+
+    } catch (std::exception const & e) {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(
+                tr("Execution error: %1").arg(QString::fromUtf8(e.what())));
+        _error_label->setVisible(true);
+    }
+
+    // Restore UI
+    _progress_bar->setVisible(false);
+    _progress_label->setVisible(false);
+    updateExecuteButtonState();
 }

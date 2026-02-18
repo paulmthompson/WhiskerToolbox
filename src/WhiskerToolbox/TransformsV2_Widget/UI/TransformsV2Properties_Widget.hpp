@@ -24,11 +24,15 @@
 
 class TransformsV2State;
 class SelectionContext;
+class DataManager;
 class PipelineStepListWidget;
 class StepConfigPanel;
 class PreReductionPanel;
 class QLabel;
 class QGroupBox;
+class QComboBox;
+class QLineEdit;
+class QProgressBar;
 class QPushButton;
 class QTextEdit;
 class QVBoxLayout;
@@ -81,6 +85,10 @@ private slots:
     void onSaveJsonClicked();
     void onApplyJsonClicked();
 
+    // Phase 3: Execution slots
+    void onExecuteClicked();
+    void onOutputKeyEdited(QString const & text);
+
 private:
     void setupUI();
     void updateInputDisplay();
@@ -106,6 +114,22 @@ private:
      * @return true if the JSON was valid and loaded successfully
      */
     bool loadUIFromJson(std::string const & json_str);
+
+    /**
+     * @brief Generate an output key name from the input key and last transform
+     * @return Auto-generated output key string
+     */
+    [[nodiscard]] std::string generateOutputName() const;
+
+    /**
+     * @brief Update the output key line edit with an auto-generated name
+     */
+    void updateOutputKeyFromPipeline();
+
+    /**
+     * @brief Update execute button enabled state based on validation
+     */
+    void updateExecuteButtonState();
 
     /// Guard against feedback loops during bidirectional sync
     bool _syncing_json = false;
@@ -136,6 +160,16 @@ private:
     QPushButton * _load_json_button = nullptr;
     QPushButton * _save_json_button = nullptr;
     QPushButton * _apply_json_button = nullptr;
+
+    // Output & Execution (Phase 3)
+    QGroupBox * _output_group = nullptr;
+    QLineEdit * _output_key_edit = nullptr;
+    QComboBox * _execution_mode_combo = nullptr;
+    QPushButton * _execute_button = nullptr;
+    QProgressBar * _progress_bar = nullptr;
+    QLabel * _progress_label = nullptr;
+    QLabel * _error_label = nullptr;
+    bool _output_key_user_edited = false;  ///< True if user manually edited the output key
 };
 
 #endif // TRANSFORMS_V2_PROPERTIES_WIDGET_HPP

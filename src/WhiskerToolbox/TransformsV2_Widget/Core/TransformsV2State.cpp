@@ -59,6 +59,21 @@ void TransformsV2State::setPipelineJson(std::string const & json) {
     }
 }
 
+void TransformsV2State::setOutputDataKey(std::string const & key) {
+    if (_data.output_data_key != key) {
+        _data.output_data_key = key;
+        markDirty();
+        emit outputDataKeyChanged(key);
+    }
+}
+
+void TransformsV2State::setExecutionMode(std::string const & mode) {
+    if (_data.execution_mode != mode) {
+        _data.execution_mode = mode;
+        markDirty();
+    }
+}
+
 void TransformsV2State::setJsonPanelExpanded(bool expanded) {
     if (_data.json_panel_expanded != expanded) {
         _data.json_panel_expanded = expanded;

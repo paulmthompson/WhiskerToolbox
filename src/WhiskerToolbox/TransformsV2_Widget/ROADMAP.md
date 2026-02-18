@@ -224,52 +224,57 @@ The JSON panel itself is editable but does not auto-apply on every keystroke —
 
 ---
 
-## Phase 3: Pipeline Execution
+## Phase 3: Pipeline Execution ✅ COMPLETE
 
 **Goal:** Execute the configured pipeline against data in DataManager and store results.
 
-### 3.1 — Output Configuration
+### 3.1 — Output Configuration ✅
 
-Below the pipeline builder:
-- **Output key name**: `QLineEdit`, auto-generated from input key + last transform name (same logic as V1 `_generateOutputName()`)
-- **Execution mode** combo:
+Added an **Output && Execution** `QGroupBox` below the JSON panel containing:
+- **Output key name**: `QLineEdit`, auto-populated via `generateOutputName()` (input key + last transform name, stripping common prefixes like `calculate_`, `extract_`, `convert_`, `threshold_`). User edits are tracked via `_output_key_user_edited`; auto-generation only fires when the user hasn't manually typed a name.
+- **Execution mode** `QComboBox`:
   - *"Save to DataManager"* — materializes result into a new data key
-  - *"JSON Pipeline Only"* — just produces the JSON (for embedding in other widgets)
+  - *"JSON Pipeline Only"* — confirms the JSON is ready; no DataManager write
 
-### 3.2 — Execution via `DataManagerPipelineExecutor`
+Both values are persisted in `TransformsV2StateData` (`output_data_key`, `execution_mode`) and restored on widget creation.
 
-Build the `TransformPipeline` from the `PipelineDescriptor` using `loadPipelineFromJson()`, then execute:
+### 3.2 — Execution via `loadPipelineFromJson` + `executePipeline` ✅
 
-```cpp
-void TransformsV2Properties_Widget::executePipeline() {
-    auto json = _jsonPanel->toPlainText().toStdString();
-    auto pipeline_result = loadPipelineFromJson(json);
-    if (!pipeline_result) { showError(...); return; }
-    
-    auto& pipeline = *pipeline_result;
-    auto input_variant = _data_manager->getDataVariant(_input_key);
-    auto result = executePipeline(*input_variant, pipeline);
-    _data_manager->setData(_output_key, result, time_key);
-}
-```
+`onExecuteClicked()` implements the full execution path:
+1. Resolves execution mode; JSON-only mode shows a success message and returns early
+2. Validates DataManager is available, input key is selected, output key is non-empty
+3. Calls `loadPipelineFromJson(json_str)` → `rfl::Result<TransformPipeline>` (from `PipelineLoader.hpp`)
+4. Retrieves `input_variant` via `DataManager::getDataVariant(_input_data_key)`
+5. Calls the free function `executePipeline(input_variant, pipeline)` → `DataTypeVariant`
+6. Stores result via `DataManager::setData(output_key, result, dm->getTimeKey(_input_data_key))`
+7. Updates `_state->setOutputDataKey()` and shows a success message with elapsed time (ms)
 
-### 3.3 — Progress Reporting
+Note: Uses `loadPipelineFromJson` + `executePipeline` (free function) directly rather than `DataManagerPipelineExecutor`, because the widget's `PipelineDescriptor` (no input/output keys) is a different type from `DataManagerPipelineDescriptor`.
 
-- `QProgressBar` below the execute button
-- For multi-step pipelines, show `"Step 2/5: ZScoreNormalize (45%)"` format
-- Use `QApplication::processEvents()` for responsiveness (same pattern as V1)
+### 3.3 — Progress Reporting ✅
 
-### 3.4 — Error Display
+- `QProgressBar` below the execute button, range 0…N steps, hidden when idle
+- `QLabel` progress label showing `"Step K/N: TransformName"` for each step, updated via `QApplication::processEvents()` before calling `executePipeline`
+- Execute button disabled during execution, re-enabled via `updateExecuteButtonState()` on completion
 
-- Inline error banner for execution failures
-- Per-step error indicators in the step list
-- JSON validation errors shown in the JSON panel
+### 3.4 — Error Display ✅
 
-**Files to modify:**
-- `TransformsV2Properties_Widget` — execute button, progress bar, output config
-- `TransformsV2State` — store last output key, execution mode
+- Inline `_error_label` (`QLabel`) styled red for errors, green for success
+- Shows descriptive messages for: no DataManager, no input selected, empty output key, empty JSON, pipeline build failure, and `std::exception` from execution
+- Execute button enabled/disabled by `updateExecuteButtonState()`: requires valid input key + non-empty steps + non-empty output key (for DataManager mode)
 
-**Estimated effort:** Medium. Most execution logic already exists in `DataManagerPipelineExecutor`.
+### 3.5 — State Integration ✅
+
+`TransformsV2StateData` extended with:
+- `std::optional<std::string> output_data_key` — last used output key name
+- `std::string execution_mode = "data_manager"` — persisted execution mode
+
+`TransformsV2State` gained `setOutputDataKey()` / `outputDataKey()`, `setExecutionMode()` / `executionMode()`, and `outputDataKeyChanged` signal.
+
+**Modified files:**
+- `src/WhiskerToolbox/TransformsV2_Widget/Core/TransformsV2State.hpp/.cpp` — extended with `output_data_key`, `execution_mode`, accessors, `outputDataKeyChanged` signal
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/TransformsV2Properties_Widget.hpp` — added `QLineEdit`, `QComboBox`, `QProgressBar`, `QLabel` members; `onExecuteClicked`, `onOutputKeyEdited` slots; `generateOutputName`, `updateOutputKeyFromPipeline`, `updateExecuteButtonState` helpers; `DataManager` forward declaration; `_output_key_user_edited` guard
+- `src/WhiskerToolbox/TransformsV2_Widget/UI/TransformsV2Properties_Widget.cpp` — output/execution section in `setupUI()`, all Phase 3 slot/helper implementations; added `DataManager/DataManager.hpp` and `TransformsV2/core/TransformPipeline.hpp` includes
 
 ---
 
@@ -419,16 +424,16 @@ Phase 0 (Auto-UI Infrastructure) ✅ COMPLETE
     │
     ├──→ Phase 1 (Pipeline Builder UI) ✅ COMPLETE ──→ Phase 2 (JSON Sync) ✅ COMPLETE
     │                                                       │
-    │                                                       ├──→ Phase 3 (Execution)
+    │                                                       ├──→ Phase 3 (Execution) ✅ COMPLETE
     │                                                       │
     │                                                       └──→ Phase 4 (Embeddable Mode)
     │
-    └──→ Phase 5 (State Serialization)  [partially done in Phase 2; pipeline_json added]
+    └──→ Phase 5 (State Serialization)  [partially done in Phases 2–3; pipeline_json, output_data_key, execution_mode added]
     
-Phase 6 (Migration & Polish)  [ongoing, parallel with Phases 3-4]
+Phase 6 (Migration & Polish)  [ongoing, parallel with Phase 4]
 ```
 
-**Recommended next:** Phase 3 (Pipeline Execution) — the JSON panel already holds the pipeline JSON ready to pass to `loadPipelineFromJson()`, so the execute path is straightforward.
+**Recommended next:** Phase 4 (Embeddable Mode) — factor the pipeline builder into a reusable `PipelineBuilderWidget` for embedding in `TensorInspector` and `TableDesignerWidget`. Phase 5 (remaining state fields: `pre_reduction_panel_expanded`) is a small add-on.
 
 ---
 
@@ -478,11 +483,11 @@ TransformsV2_Widget/
 ├── TransformsV2WidgetRegistration.hpp       ✅ exists (create_editor_custom pattern)
 ├── TransformsV2WidgetRegistration.cpp       ✅ exists (create_editor_custom pattern)
 ├── Core/
-    │   ├── TransformsV2State.hpp                ✅ Phase 2 complete (pipeline_json, json_panel_expanded added)
-    │   └── TransformsV2State.cpp                ✅ Phase 2 complete
+    │   ├── TransformsV2State.hpp                ✅ Phase 3 complete (output_data_key, execution_mode added)
+    │   └── TransformsV2State.cpp                ✅ Phase 3 complete
     └── UI/
-        ├── TransformsV2Properties_Widget.hpp    ✅ Phase 2 complete (JSON panel, sync logic, signal)
-        ├── TransformsV2Properties_Widget.cpp    ✅ Phase 2 complete
+        ├── TransformsV2Properties_Widget.hpp    ✅ Phase 3 complete (output config, execute button, progress bar, error label)
+        ├── TransformsV2Properties_Widget.cpp    ✅ Phase 3 complete (onExecuteClicked, generateOutputName, updateExecuteButtonState)
         ├── TransformsV2Properties_Widget.ui     ✅ exists (base layout, sub-widgets added programmatically)
         ├── AutoParamWidget.hpp                  ✅ Phase 0 complete
         ├── AutoParamWidget.cpp                  ✅ Phase 0 complete
