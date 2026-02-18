@@ -114,10 +114,6 @@ void TransformsV2Properties_Widget::onValidationChanged(bool all_valid) {
 // ============================================================================
 
 void TransformsV2Properties_Widget::setupUI() {
-    // Remove the placeholder from the .ui file
-    delete ui->placeholderLabel;
-    delete ui->verticalSpacer;
-
     auto * main_layout = ui->verticalLayout;
 
     // --- Input Section ---
