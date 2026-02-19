@@ -72,6 +72,10 @@ void DataInspectorPropertiesWidget::setSelectionContext(SelectionContext * conte
     }
 }
 
+void DataInspectorPropertiesWidget::setOperationContext(EditorLib::OperationContext * context) {
+    _operation_context = context;
+}
+
 void DataInspectorPropertiesWidget::inspectData(QString const & key) {
     if (_state) {
         _state->setInspectedDataKey(key);
@@ -281,6 +285,9 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
     if (tensor_inspector) {
         if (_selection_context) {
             tensor_inspector->setSelectionContext(_selection_context);
+        }
+        if (_operation_context) {
+            tensor_inspector->setOperationContext(_operation_context);
         }
         // When designer creates a tensor, navigate the inspector to it
         QObject::connect(tensor_inspector, &TensorInspector::tensorCreated,

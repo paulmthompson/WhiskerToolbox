@@ -38,6 +38,10 @@ class GroupManager;
 class SelectionContext;
 struct SelectionSource;
 
+namespace EditorLib {
+class OperationContext;
+} // namespace EditorLib
+
 namespace Ui {
 class DataInspectorPropertiesWidget;
 }
@@ -85,6 +89,12 @@ public:
     void setSelectionContext(SelectionContext * context);
 
     /**
+     * @brief Set the OperationContext for inter-widget pipeline requests
+     * @param context OperationContext instance (can be nullptr)
+     */
+    void setOperationContext(EditorLib::OperationContext * context);
+
+    /**
      * @brief Directly set the data key to inspect (bypasses SelectionContext)
      * @param key Data key in DataManager
      */
@@ -123,6 +133,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     std::shared_ptr<DataInspectorState> _state;
     SelectionContext * _selection_context{nullptr};
+    EditorLib::OperationContext * _operation_context{nullptr};
     GroupManager * _group_manager{nullptr};
     
     // Current inspector (type-specific, created by InspectorFactory)

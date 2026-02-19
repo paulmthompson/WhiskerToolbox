@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>DigitalEventSeries View Storage Performance Analysis – Neuralyzer</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_reference.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
+  <li><a href="#benchmark-configuration" id="toc-benchmark-configuration" class="nav-link" data-scroll-target="#benchmark-configuration">Benchmark Configuration</a></li>
+  <li><a href="#results-summary" id="toc-results-summary" class="nav-link" data-scroll-target="#results-summary">Results Summary</a>
+  <ul class="collapse">
+  <li><a href="#full-pipeline-performance" id="toc-full-pipeline-performance" class="nav-link" data-scroll-target="#full-pipeline-performance">Full Pipeline Performance</a></li>
+  <li><a href="#phase-breakdown" id="toc-phase-breakdown" class="nav-link" data-scroll-target="#phase-breakdown">Phase Breakdown</a></li>
+  <li><a href="#transform-helper-performance" id="toc-transform-helper-performance" class="nav-link" data-scroll-target="#transform-helper-performance">Transform Helper Performance</a></li>
+  </ul></li>
+  <li><a href="#architecture-zero-copy-view-storage" id="toc-architecture-zero-copy-view-storage" class="nav-link" data-scroll-target="#architecture-zero-copy-view-storage">Architecture: Zero-Copy View Storage</a>
+  <ul class="collapse">
+  <li><a href="#how-it-works" id="toc-how-it-works" class="nav-link" data-scroll-target="#how-it-works">How It Works</a></li>
+  <li><a href="#view-storage-structure" id="toc-view-storage-structure" class="nav-link" data-scroll-target="#view-storage-structure">View Storage Structure</a></li>
+  </ul></li>
+  <li><a href="#performance-characteristics" id="toc-performance-characteristics" class="nav-link" data-scroll-target="#performance-characteristics">Performance Characteristics</a>
+  <ul class="collapse">
+  <li><a href="#view-creation-overhead-5.6x" id="toc-view-creation-overhead-5.6x" class="nav-link" data-scroll-target="#view-creation-overhead-5.6x">View Creation Overhead (5.6x)</a></li>
+  <li><a href="#iteration-overhead-1.6x" id="toc-iteration-overhead-1.6x" class="nav-link" data-scroll-target="#iteration-overhead-1.6x">Iteration Overhead (1.6x)</a></li>
+  </ul></li>
+  <li><a href="#scalability-analysis" id="toc-scalability-analysis" class="nav-link" data-scroll-target="#scalability-analysis">Scalability Analysis</a></li>
+  <li><a href="#historical-note-the-copy-bug" id="toc-historical-note-the-copy-bug" class="nav-link" data-scroll-target="#historical-note-the-copy-bug">Historical Note: The Copy Bug</a></li>
+  <li><a href="#when-to-use-each-approach" id="toc-when-to-use-each-approach" class="nav-link" data-scroll-target="#when-to-use-each-approach">When to Use Each Approach</a>
+  <ul class="collapse">
+  <li><a href="#raw-vectors" id="toc-raw-vectors" class="nav-link" data-scroll-target="#raw-vectors">Raw Vectors</a></li>
+  <li><a href="#gather-with-gatherresult" id="toc-gather-with-gatherresult" class="nav-link" data-scroll-target="#gather-with-gatherresult">gather() with GatherResult</a></li>
+  <li><a href="#manual-view-creation" id="toc-manual-view-creation" class="nav-link" data-scroll-target="#manual-view-creation">Manual View Creation</a></li>
+  </ul></li>
+  <li><a href="#alternative-approaches" id="toc-alternative-approaches" class="nav-link" data-scroll-target="#alternative-approaches">Alternative Approaches</a></li>
+  <li><a href="#running-the-benchmark" id="toc-running-the-benchmark" class="nav-link" data-scroll-target="#running-the-benchmark">Running the Benchmark</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#time-normalization-with-transform-pipeline" id="toc-time-normalization-with-transform-pipeline" class="nav-link" data-scroll-target="#time-normalization-with-transform-pipeline">Time Normalization with Transform Pipeline</a>
+  <ul class="collapse">
+  <li><a href="#normalization-benchmark-setup" id="toc-normalization-benchmark-setup" class="nav-link" data-scroll-target="#normalization-benchmark-setup">Normalization Benchmark Setup</a></li>
+  <li><a href="#full-pipeline-results-with-normalization" id="toc-full-pipeline-results-with-normalization" class="nav-link" data-scroll-target="#full-pipeline-results-with-normalization">Full Pipeline Results (With Normalization)</a></li>
+  <li><a href="#isolated-normalization-phase-analysis" id="toc-isolated-normalization-phase-analysis" class="nav-link" data-scroll-target="#isolated-normalization-phase-analysis">Isolated Normalization Phase Analysis</a></li>
+  <li><a href="#phase-breakdown-where-does-the-overhead-come-from" id="toc-phase-breakdown-where-does-the-overhead-come-from" class="nav-link" data-scroll-target="#phase-breakdown-where-does-the-overhead-come-from">Phase Breakdown: Where Does the Overhead Come From?</a></li>
+  <li><a href="#context-aware-transform-infrastructure" id="toc-context-aware-transform-infrastructure" class="nav-link" data-scroll-target="#context-aware-transform-infrastructure">Context-Aware Transform Infrastructure</a></li>
+  <li><a href="#why-is-gather-slower-for-normalization" id="toc-why-is-gather-slower-for-normalization" class="nav-link" data-scroll-target="#why-is-gather-slower-for-normalization">Why Is Gather Slower for Normalization?</a></li>
+  <li><a href="#performance-sweet-spot" id="toc-performance-sweet-spot" class="nav-link" data-scroll-target="#performance-sweet-spot">Performance Sweet Spot</a></li>
+  <li><a href="#conclusion-on-normalization" id="toc-conclusion-on-normalization" class="nav-link" data-scroll-target="#conclusion-on-normalization">Conclusion on Normalization</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">DigitalEventSeries View Storage Performance Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This document describes the performance analysis of using <code>DigitalEventSeries</code> views vs.&nbsp;raw vectors for raster plot generation, a common operation in neural data visualization.</p>
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>A raster plot displays events (e.g., neural spikes) aligned to trial events (e.g., stimulus onsets). For each alignment event, we need to:</p>
+<ol type="1">
+<li>Extract events within a time window around the alignment point</li>
+<li>Transform the data for GPU rendering (populate vertex buffers)</li>
+</ol>
+<p>We compared three approaches:</p>
+<ol type="1">
+<li><strong>Baseline (Raw Vectors)</strong>: Use <code>std::vector&lt;std::vector&lt;TimeFrameIndex&gt;&gt;</code> for windowed events</li>
+<li><strong>View-Based (Manual)</strong>: Use <code>std::vector&lt;std::shared_ptr&lt;DigitalEventSeries&gt;&gt;</code> with view storage, creating views in a manual loop</li>
+<li><strong>Gather-Based</strong>: Use <code>GatherResult&lt;DigitalEventSeries&gt;</code> via the <code>gather()</code> utility function</li>
+</ol>
+</section>
+<section id="benchmark-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="benchmark-configuration">Benchmark Configuration</h2>
+<pre><code>Raster events:     100,000 (total events to filter)
+Alignment events:    1,000 (number of trials/windows)
+Window size:         1,000 (±500 around each alignment)
+Expected events/window: ~100 (based on density)</code></pre>
+</section>
+<section id="results-summary" class="level2">
+<h2 class="anchored" data-anchor-id="results-summary">Results Summary</h2>
+<section id="full-pipeline-performance" class="level3">
+<h3 class="anchored" data-anchor-id="full-pipeline-performance">Full Pipeline Performance</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Time (µs)</th>
+<th>Relative</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline (Raw Vectors)</td>
+<td>368</td>
+<td>1.0x</td>
+</tr>
+<tr class="even">
+<td>View-Based (Manual)</td>
+<td>1,229</td>
+<td>3.3x slower</td>
+</tr>
+<tr class="odd">
+<td>Gather-Based</td>
+<td>1,229</td>
+<td>3.3x slower</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>gather()</code> utility matches the performance of manual view creation while providing a cleaner API.</p>
+</section>
+<section id="phase-breakdown" class="level3">
+<h3 class="anchored" data-anchor-id="phase-breakdown">Phase Breakdown</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 20%">
+<col style="width: 22%">
+<col style="width: 17%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Baseline (µs)</th>
+<th>View-Based (µs)</th>
+<th>Gather (µs)</th>
+<th>Ratio (View/Baseline)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Window/View Creation</td>
+<td>182</td>
+<td>1,096</td>
+<td>984</td>
+<td>5.4x</td>
+</tr>
+<tr class="even">
+<td>Buffer Population</td>
+<td>175</td>
+<td>215</td>
+<td>215</td>
+<td>1.2x</td>
+</tr>
+<tr class="odd">
+<td>Iteration Only</td>
+<td>17.5</td>
+<td>29.9</td>
+<td>27.2</td>
+<td>1.6x</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notable</strong>: <code>gather()</code> is ~10% faster than manual view creation due to better reservation and single-pass interval iteration.</p>
+</section>
+<section id="transform-helper-performance" class="level3">
+<h3 class="anchored" data-anchor-id="transform-helper-performance">Transform Helper Performance</h3>
+<p>The <code>GatherResult::transform()</code> method enables efficient per-trial computations:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Time (µs)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>gathered.transform([](v) { return v-&gt;size(); })</code></td>
+<td>4.17</td>
+</tr>
+</tbody>
+</table>
+<p>This is very fast for computing statistics like spike counts across 1,000 trials.</p>
+</section>
+</section>
+<section id="architecture-zero-copy-view-storage" class="level2">
+<h2 class="anchored" data-anchor-id="architecture-zero-copy-view-storage">Architecture: Zero-Copy View Storage</h2>
+<section id="how-it-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-it-works">How It Works</h3>
+<p>The <code>DigitalEventStorageWrapper</code> uses a type-erased <code>shared_ptr</code> design that enables true zero-copy view creation:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DigitalEventStorageWrapper <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>StorageConcept<span class="op">&gt;</span> _impl<span class="op">;</span>  <span class="co">// Shared ownership of storage</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When creating a view, we use the <strong>aliasing constructor</strong> of <code>shared_ptr</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>OwningDigitalEventStorage <span class="at">const</span><span class="op">&gt;</span> getSharedOwningStorage<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> owning_model <span class="op">=</span> <span class="bu">std::</span>dynamic_pointer_cast<span class="op">&lt;</span>StorageModel<span class="op">&lt;</span>OwningDigitalEventStorage<span class="op">&gt;</span> <span class="at">const</span><span class="op">&gt;(</span>_impl<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Aliasing constructor: shares ownership with _impl but points to inner storage</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>OwningDigitalEventStorage <span class="at">const</span><span class="op">&gt;(</span>owning_model<span class="op">,</span> <span class="op">&amp;</span>owning_model<span class="op">-&gt;</span>_storage<span class="op">);</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This allows:</p>
+<ul>
+<li><strong>Zero data copying</strong>: The returned <code>shared_ptr</code> points directly into the existing storage</li>
+<li><strong>Correct lifetime management</strong>: The source storage stays alive as long as any view exists</li>
+<li><strong>Shared references</strong>: Multiple views from the same source share one underlying storage</li>
+</ul>
+</section>
+<section id="view-storage-structure" class="level3">
+<h3 class="anchored" data-anchor-id="view-storage-structure">View Storage Structure</h3>
+<p>Each view consists of:</p>
+<ol type="1">
+<li>A <code>shared_ptr</code> to the source’s owning storage (shared among all views)</li>
+<li>A vector of indices specifying which events are visible</li>
+<li>Time range bounds for filtering</li>
+</ol>
+<pre><code>Source (100K events)
+    └── _storage (DigitalEventStorageWrapper)
+            └── _impl (shared_ptr&lt;StorageConcept&gt;)
+                    └── OwningDigitalEventStorage with actual data
+
+View 1 (window around alignment 0)      ──┐
+View 2 (window around alignment 1)      ──┼── All share same source via shared_ptr
+...                                       │
+View 1000 (window around alignment 999) ──┘</code></pre>
+</section>
+</section>
+<section id="performance-characteristics" class="level2">
+<h2 class="anchored" data-anchor-id="performance-characteristics">Performance Characteristics</h2>
+<section id="view-creation-overhead-5.6x" class="level3">
+<h3 class="anchored" data-anchor-id="view-creation-overhead-5.6x">View Creation Overhead (5.6x)</h3>
+<p>Creating 1,000 views takes ~1ms. This overhead comes from:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Factor</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>shared_ptr</code> allocation per view</td>
+<td>~400ns each</td>
+</tr>
+<tr class="even">
+<td><code>ViewDigitalEventStorage</code> setup</td>
+<td>Index vector allocation</td>
+</tr>
+<tr class="odd">
+<td><code>filterByTimeRange()</code></td>
+<td>Binary search + index copy</td>
+</tr>
+<tr class="even">
+<td>Type erasure wrapper construction</td>
+<td><code>StorageModel</code> allocation</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="iteration-overhead-1.6x" class="level3">
+<h3 class="anchored" data-anchor-id="iteration-overhead-1.6x">Iteration Overhead (1.6x)</h3>
+<p>Once views are created, iterating through them is reasonably efficient:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 26%">
+<col style="width: 31%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Factor</th>
+<th>Baseline</th>
+<th>View-Based</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Access Pattern</strong></td>
+<td><code>events[i]</code></td>
+<td><code>source-&gt;getEvent(indices[i])</code></td>
+<td>Double indirection</td>
+</tr>
+<tr class="even">
+<td><strong>Data Layout</strong></td>
+<td>Contiguous</td>
+<td>Index + data arrays</td>
+<td>Reduced cache locality</td>
+</tr>
+<tr class="odd">
+<td><strong>Virtual Dispatch</strong></td>
+<td>None</td>
+<td>Through type erasure</td>
+<td>Minimal (~1-2ns/call)</td>
+</tr>
+</tbody>
+</table>
+<p>The 1.6x iteration overhead is acceptable for most use cases.</p>
+</section>
+</section>
+<section id="scalability-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="scalability-analysis">Scalability Analysis</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 17%">
+<col style="width: 19%">
+<col style="width: 14%">
+<col style="width: 16%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Alignments</th>
+<th>Baseline (µs)</th>
+<th>View-Based (µs)</th>
+<th>Gather (µs)</th>
+<th>Ratio (View)</th>
+<th>Ratio (Gather)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100</td>
+<td>31</td>
+<td>110</td>
+<td>120</td>
+<td>3.5x</td>
+<td>3.9x</td>
+</tr>
+<tr class="even">
+<td>500</td>
+<td>186</td>
+<td>575</td>
+<td>588</td>
+<td>3.1x</td>
+<td>3.2x</td>
+</tr>
+<tr class="odd">
+<td>1,000</td>
+<td>367</td>
+<td>1,204</td>
+<td>1,169</td>
+<td>3.3x</td>
+<td>3.2x</td>
+</tr>
+<tr class="even">
+<td>2,000</td>
+<td>720</td>
+<td>2,530</td>
+<td>2,491</td>
+<td>3.5x</td>
+<td>3.5x</td>
+</tr>
+<tr class="odd">
+<td>5,000</td>
+<td>1,926</td>
+<td>7,105</td>
+<td>6,573</td>
+<td>3.7x</td>
+<td>3.4x</td>
+</tr>
+</tbody>
+</table>
+<p>Both view-based approaches scale linearly with alignment count. At higher alignment counts (5000), <code>gather()</code> is ~8% faster than manual view creation.</p>
+</section>
+<section id="historical-note-the-copy-bug" class="level2">
+<h2 class="anchored" data-anchor-id="historical-note-the-copy-bug">Historical Note: The Copy Bug</h2>
+<p>An earlier implementation had a critical bug causing ~5000x slowdown:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">BUG</span><span class="co">: This copied the entire storage for every view!</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> view_storage <span class="op">=</span> ViewDigitalEventStorage<span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>make_shared<span class="op">&lt;</span>OwningDigitalEventStorage <span class="at">const</span><span class="op">&gt;(*</span>src_owning<span class="op">)</span>  <span class="co">// COPIES!</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>With 1,000 views of 100K events, this meant 100 million unnecessary event copies. The fix was changing <code>DigitalEventStorageWrapper</code> from <code>unique_ptr</code> to <code>shared_ptr</code> with aliasing constructor support.</p>
+</section>
+<section id="when-to-use-each-approach" class="level2">
+<h2 class="anchored" data-anchor-id="when-to-use-each-approach">When to Use Each Approach</h2>
+<section id="raw-vectors" class="level3">
+<h3 class="anchored" data-anchor-id="raw-vectors">Raw Vectors</h3>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>High-frequency rendering loops (60+ FPS animation)</li>
+<li>Simple iteration without entity tracking</li>
+<li>When data is already filtered at load time</li>
+<li>Performance-critical hot paths</li>
+</ul>
+</section>
+<section id="gather-with-gatherresult" class="level3">
+<h3 class="anchored" data-anchor-id="gather-with-gatherresult">gather() with GatherResult</h3>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Trial-aligned analysis (raster plots, PSTHs, etc.)</li>
+<li>When you need source tracking and interval metadata</li>
+<li>Applying functions across all trials via <code>transform()</code></li>
+<li>Clean, self-documenting code with no performance penalty vs.&nbsp;manual views</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Raster plot with gather()</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> spikes <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span><span class="st">"spikes"</span><span class="op">);</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> trials <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span><span class="st">"trials"</span><span class="op">);</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> raster <span class="op">=</span> gather<span class="op">(</span>spikes<span class="op">,</span> trials<span class="op">);</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Compute spike counts per trial</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> counts <span class="op">=</span> raster<span class="op">.</span>transform<span class="op">([](</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> trial<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trial<span class="op">-&gt;</span>size<span class="op">();</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">});</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Access interval metadata</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> raster<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    Interval interval <span class="op">=</span> raster<span class="op">.</span>intervalAt<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use raster[i] for the view...</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="manual-view-creation" class="level3">
+<h3 class="anchored" data-anchor-id="manual-view-creation">Manual View Creation</h3>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Custom filtering logic not supported by gather()</li>
+<li>When you need fine-grained control over view creation</li>
+<li>Integration with existing code that expects <code>std::vector&lt;shared_ptr&lt;T&gt;&gt;</code></li>
+</ul>
+</section>
+</section>
+<section id="alternative-approaches" class="level2">
+<h2 class="anchored" data-anchor-id="alternative-approaches">Alternative Approaches</h2>
+<p>For specific use cases, consider:</p>
+<ol type="1">
+<li><strong>Span-based views</strong>: For contiguous time ranges, return <code>std::span&lt;TimeFrameIndex&gt;</code> directly</li>
+<li><strong>Index pairs</strong>: For windowed queries, return <code>(start_idx, end_idx)</code> into source</li>
+<li><strong>Materialized views</strong>: For repeated iteration, call <code>materialize()</code> once and reuse</li>
+</ol>
+</section>
+<section id="running-the-benchmark" class="level2">
+<h2 class="anchored" data-anchor-id="running-the-benchmark">Running the Benchmark</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> linux-clang-release <span class="at">-DENABLE_BENCHMARK</span><span class="op">=</span>ON</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> linux-clang-release <span class="at">--target</span> benchmark_RasterPlotViews</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all tests</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./out/build/Clang/Release/benchmark/benchmark_RasterPlotViews</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific tests</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_RasterPlotViews</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"FullPipeline"</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_RasterPlotViews</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"IterationOnly"</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_RasterPlotViews</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"Gather"</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_RasterPlotViews</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"ScaleAlignments"</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Cache analysis</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> stat <span class="at">-e</span> cache-references,cache-misses,L1-dcache-load-misses <span class="dt">\</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    ./benchmark_RasterPlotViews <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"IterationOnly"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>The view-based approaches using <code>DigitalEventSeries</code> achieve true zero-copy storage sharing via <code>shared_ptr</code> with aliasing constructor. The overall overhead is ~3.3x compared to raw vectors, primarily from view object allocation (~1ms for 1000 views) and index indirection during iteration (~1.6x).</p>
+<p><strong>Key findings:</strong></p>
+<ol type="1">
+<li><p><strong><code>gather()</code> matches or slightly beats manual view creation</strong> - The ~10% improvement at scale comes from better reservation and single-pass interval iteration.</p></li>
+<li><p><strong>Both view approaches are ~3.3x slower than raw vectors</strong> - This is the expected cost of abstraction (shared_ptr allocations, type erasure, indirection).</p></li>
+<li><p><strong><code>gather()</code> provides cleaner API with no performance penalty</strong> - You get ergonomic benefits (source tracking, <code>transform()</code>, <code>intervalAt()</code>) for free.</p></li>
+<li><p><strong>The <code>transform()</code> helper is very fast</strong> - 4µs to compute statistics across 1000 trials.</p></li>
+</ol>
+<p>For most interactive visualization and analysis use cases, the view-based overhead is acceptable. The <code>gather()</code> utility is recommended for trial-aligned operations as it provides the cleanest API. For performance-critical rendering loops requiring maximum throughput, raw vectors remain the better choice.</p>
+</section>
+<section id="time-normalization-with-transform-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="time-normalization-with-transform-pipeline">Time Normalization with Transform Pipeline</h2>
+<p>Building on the gather/view infrastructure, we evaluated the performance of applying value projections (time normalization) to trial-aligned data. This is essential for raster plots and other trial-aligned visualizations where events need to be normalized relative to an alignment point (t=0 at trial start).</p>
+<section id="normalization-benchmark-setup" class="level3">
+<h3 class="anchored" data-anchor-id="normalization-benchmark-setup">Normalization Benchmark Setup</h3>
+<p>Configuration remains the same: - 100,000 total events - 1,000 alignment events (trials) - Window size: ±500 around each alignment</p>
+<p>Three normalization approaches tested:</p>
+<ol type="1">
+<li><strong>Baseline + Normalization</strong>: Extract events and normalize times in a single pass (manual)</li>
+<li><strong>Gather + Value Projection</strong>: Use <code>GatherResult</code> with per-trial value projections via <code>NormalizeTimeValue</code> transform</li>
+<li><strong>Isolated Normalization</strong>: Just the normalization step without buffer population</li>
+</ol>
+</section>
+<section id="full-pipeline-results-with-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="full-pipeline-results-with-normalization">Full Pipeline Results (With Normalization)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Time (µs)</th>
+<th>Relative to Baseline</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline (No Normalization)</td>
+<td>367</td>
+<td>1.0x</td>
+</tr>
+<tr class="even">
+<td>Baseline + Normalization</td>
+<td>598</td>
+<td>1.6x</td>
+</tr>
+<tr class="odd">
+<td>Gather (No Normalization)</td>
+<td>1,223</td>
+<td>3.3x</td>
+</tr>
+<tr class="even">
+<td>Gather + Normalization</td>
+<td>1,424</td>
+<td>3.9x</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Insight</strong>: Adding normalization costs only ~63% more for baseline (231µs), but ~17% more for gather (201µs). The gather approach absorbs normalization overhead more efficiently due to better amortization across the view creation cost.</p>
+</section>
+<section id="isolated-normalization-phase-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="isolated-normalization-phase-analysis">Isolated Normalization Phase Analysis</h3>
+<p>Measuring just the normalization step (without buffer population):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 30%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Approach</th>
+<th>Time (µs)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline Normalization</td>
+<td>429</td>
+<td>Extract windows + normalize (1000 trials × ~100 events)</td>
+</tr>
+<tr class="even">
+<td>Gather + Projection</td>
+<td>1,484</td>
+<td>Create gather result + build projections + iterate with projection</td>
+</tr>
+<tr class="odd">
+<td>Difference</td>
+<td>+1,055</td>
+<td>Gather overhead for normalization</td>
+</tr>
+<tr class="even">
+<td>Overhead Factor</td>
+<td>3.5x</td>
+<td>Gather normalization is 3.5x slower</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="phase-breakdown-where-does-the-overhead-come-from" class="level3">
+<h3 class="anchored" data-anchor-id="phase-breakdown-where-does-the-overhead-come-from">Phase Breakdown: Where Does the Overhead Come From?</h3>
+<p>Breaking down the Gather + Normalization pipeline:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Time (µs)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Create gather result</td>
+<td>~240</td>
+<td>View creation (1000 views)</td>
+</tr>
+<tr class="even">
+<td>Build projections</td>
+<td>~50</td>
+<td>Create projection factory for each trial</td>
+</tr>
+<tr class="odd">
+<td>Apply projections</td>
+<td>~1,194</td>
+<td>Iterate views + project each event time</td>
+</tr>
+<tr class="even">
+<td><strong>Total</strong></td>
+<td><strong>1,484</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>For comparison, Baseline Normalization breakdown:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Time (µs)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Extract + normalize</td>
+<td>429</td>
+<td>Binary search + memory copy + subtract</td>
+</tr>
+<tr class="even">
+<td><strong>Total</strong></td>
+<td><strong>429</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="context-aware-transform-infrastructure" class="level3">
+<h3 class="anchored" data-anchor-id="context-aware-transform-infrastructure">Context-Aware Transform Infrastructure</h3>
+<p>The gather approach uses the transform pipeline infrastructure:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pattern: Context-aware value projection for each trial</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> projection_factory <span class="op">=</span> <span class="op">[](</span>TrialContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">)</span> <span class="op">-&gt;</span> ValueProjectionFn<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParams params<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>setContext<span class="op">(</span>ctx<span class="op">);</span>  <span class="co">// Inject trial alignment time</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">[</span>params<span class="op">](</span>EventWithId <span class="at">const</span><span class="op">&amp;</span> event<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">float</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> normalizeTimeValue<span class="op">(</span>event<span class="op">.</span>time<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Build projections per trial</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gathered<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> gathered<span class="op">.</span>buildContext<span class="op">(</span>i<span class="op">);</span>  <span class="co">// Get alignment info</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    projections<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> projection_factory<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="why-is-gather-slower-for-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="why-is-gather-slower-for-normalization">Why Is Gather Slower for Normalization?</h3>
+<p>Several factors contribute to the 3.5x overhead:</p>
+<ol type="1">
+<li><strong>View Creation Overhead</strong>: Creating 1000 views takes ~240µs, amortized across the operation</li>
+<li><strong>Lambda Captures</strong>: Each trial’s projection captures its context parameters (NormalizeTimeParams)</li>
+<li><strong>Virtual Dispatch</strong>: Type-erased storage adds indirection on each event access</li>
+<li><strong>Memory Layout</strong>: Events accessed via index indirection rather than contiguous array</li>
+<li><strong>Cache Locality</strong>: Jumping between indices and data arrays reduces cache efficiency</li>
+</ol>
+</section>
+<section id="performance-sweet-spot" class="level3">
+<h3 class="anchored" data-anchor-id="performance-sweet-spot">Performance Sweet Spot</h3>
+<p>Despite the overhead, gather with projections has advantages in certain scenarios:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 30%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Winner</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Single pass, raw raster</strong></td>
+<td>Baseline</td>
+<td>No abstraction overhead needed</td>
+</tr>
+<tr class="even">
+<td><strong>Multiple analyses on same gather</strong></td>
+<td>Gather</td>
+<td>Amortize view creation across multiple operations</td>
+</tr>
+<tr class="odd">
+<td><strong>Trial sorting by metric</strong></td>
+<td>Gather</td>
+<td>Use <code>reduce()</code> with 4µs overhead per operation</td>
+</tr>
+<tr class="even">
+<td><strong>Complex filtering</strong></td>
+<td>Gather</td>
+<td>View-based filtering is composable and clean</td>
+</tr>
+<tr class="odd">
+<td><strong>Interactive UI updates</strong></td>
+<td>Gather</td>
+<td>Cached views make incremental updates cheap</td>
+</tr>
+</tbody>
+</table>
+<p>Example: If you need to compute spike counts, first-spike latencies, AND draw raster:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> gathered <span class="op">=</span> gather<span class="op">(</span>spikes<span class="op">,</span> trials<span class="op">);</span>  <span class="co">// 1,223µs - one-time cost</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Operation 1: Count spikes</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> counts <span class="op">=</span> gathered<span class="op">.</span>transform<span class="op">([](</span><span class="kw">auto</span> v<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> v<span class="op">-&gt;</span>size<span class="op">();</span> <span class="op">});</span>  <span class="co">// 4µs</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Operation 2: Compute latencies  </span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> latencies <span class="op">=</span> gathered<span class="op">.</span>reduce<span class="op">(</span>latency_reducer<span class="op">);</span>  <span class="co">// ~50µs</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Operation 3: Draw raster with normalization</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> projections <span class="op">=</span> gathered<span class="op">.</span>project<span class="op">(</span>normalize_factory<span class="op">);</span>  <span class="co">// 50µs</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">// ... then iterate with projections  // ~1,194µs</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Total: 1,223 + 4 + 50 + 50 + 1,194 = 2,521µs vs. 3× separate baseline runs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="conclusion-on-normalization" class="level3">
+<h3 class="anchored" data-anchor-id="conclusion-on-normalization">Conclusion on Normalization</h3>
+<ol type="1">
+<li><p><strong>Baseline normalization is simple and fast</strong> - Direct extraction + subtraction takes 429µs</p></li>
+<li><p><strong>Gather + projection adds abstraction overhead</strong> - 3.5x slower in isolation, but provides composability</p></li>
+<li><p><strong>The cost is reasonable for trial-aligned analysis</strong> - Additional 201µs for gather+normalization vs.&nbsp;gather alone is ~2.5% of the gather cost</p></li>
+<li><p><strong>Transform pipeline infrastructure is ready</strong> - Context-aware parameters enable flexible trial-based transformations</p></li>
+<li><p><strong>Use baseline for performance-critical tight loops</strong> - Use gather for analysis pipelines where composability matters more than raw speed</p></li>
+</ol>
+<p>For raster plot generation where you’re only doing visualization, stick with baseline or raw vectors. For interactive analysis dashboards where you compute multiple metrics per trial, gather+transforms provide better code organization and reusability with acceptable performance cost.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

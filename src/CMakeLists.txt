@@ -20,6 +20,8 @@ add_subdirectory(DataManager)
 add_subdirectory(TransformsV2)
 add_subdirectory(GatherResult)
 
+add_subdirectory(MLCore)
+
 add_subdirectory(python_bindings)
 add_subdirectory(CorePlotting)
 add_subdirectory(DeepLearning)

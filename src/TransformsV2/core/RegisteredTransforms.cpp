@@ -4,11 +4,13 @@
 #include "CoreGeometry/points.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Tensors/TensorData.hpp"
 
 #include "algorithms/AnalogEventThreshold/AnalogEventThreshold.hpp"
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
+#include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "algorithms/LineAngle/LineAngle.hpp"
 #include "algorithms/LineClip/LineClip.hpp"
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
@@ -58,6 +60,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
+    registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     return true;
 }();
@@ -592,11 +595,57 @@ auto const register_digital_interval_boolean = RegisterBinaryContainerTransform<
                 .is_deterministic = true,
                 .supports_cancellation = true});
 
+// Register AnalogIntervalReduction (Binary Container Transform)
+auto const register_analog_interval_reduction = RegisterBinaryContainerTransform<
+        DigitalIntervalSeries,
+        AnalogTimeSeries,
+        TensorData,
+        IntervalReductionParams>(
+        "AnalogIntervalReduction",
+        analogIntervalReduction,
+        ContainerTransformMetadata{
+                .description = "Gather analog data within intervals and reduce to a TensorData column",
+                .category = "Signal Processing / Reduction",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register EventIntervalReduction (Binary Container Transform)
+auto const register_event_interval_reduction = RegisterBinaryContainerTransform<
+        DigitalIntervalSeries,
+        DigitalEventSeries,
+        TensorData,
+        IntervalReductionParams>(
+        "EventIntervalReduction",
+        eventIntervalReduction,
+        ContainerTransformMetadata{
+                .description = "Gather event data within intervals and reduce to a TensorData column",
+                .category = "Signal Processing / Reduction",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register IntervalOverlapReduction (Binary Container Transform)
+auto const register_interval_overlap_reduction = RegisterBinaryContainerTransform<
+        DigitalIntervalSeries,
+        DigitalIntervalSeries,
+        TensorData,
+        IntervalReductionParams>(
+        "IntervalOverlapReduction",
+        intervalOverlapReduction,
+        ContainerTransformMetadata{
+                .description = "Gather overlapping intervals and reduce to a TensorData column",
+                .category = "Signal Processing / Reduction",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
 auto const container_transform_registration = []() {
     registerAnalogEventThreshold();
     registerAnalogIntervalPeak();
     registerAnalogIntervalThreshold();
     // DigitalIntervalBoolean is now registered via compile-time RAII above
+    // IntervalReduction transforms are registered via compile-time RAII above
     return true;
 }();
 

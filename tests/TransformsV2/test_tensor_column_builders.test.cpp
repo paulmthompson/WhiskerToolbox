@@ -27,6 +27,7 @@
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -582,4 +583,193 @@ TEST_CASE("Integration - multiple columns added via appendColumn", "[TensorColum
 
     CHECK_THAT(means[0], WithinAbs(4.5, 0.01));
     CHECK_THAT(durations[0], WithinAbs(9.0, 0.01));
+}
+
+// ============================================================================
+// Cross-TimeFrame Builder Tests (Phase 3.3)
+// ============================================================================
+
+TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame analog mean",
+          "[TensorColumnBuilders][cross_timeframe]") {
+    DataManager dm;
+
+    // Interval TimeFrame: 10 Hz → times [0, 100, 200, ...]
+    std::vector<int> interval_times;
+    for (int i = 0; i < 20; ++i) {
+        interval_times.push_back(i * 100);
+    }
+    auto interval_tf = std::make_shared<TimeFrame>(interval_times);
+    dm.setTime(TimeKey("interval_clock"), interval_tf);
+
+    // Source TimeFrame: 100 Hz → times [0, 10, 20, ...]
+    std::vector<int> source_times;
+    for (int i = 0; i < 200; ++i) {
+        source_times.push_back(i * 10);
+    }
+    auto source_tf = std::make_shared<TimeFrame>(source_times);
+    dm.setTime(TimeKey("source_clock"), source_tf);
+
+    // Analog signal at 100 Hz: values [0, 1, 2, ..., 199]
+    auto ats = createLinearAnalog(200);
+    ats->setTimeFrame(source_tf);
+    dm.setData<AnalogTimeSeries>("signal", ats, TimeKey("source_clock"));
+
+    // Intervals at 10 Hz: [0,4] → [0ms, 400ms] → source [0, 40]
+    auto intervals = createIntervalSeries({{0, 4}, {10, 14}});
+    intervals->setTimeFrame(interval_tf);
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("interval_clock"));
+
+    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    pipeline.setRangeReductionErased("MeanValue", std::any{});
+
+    auto provider = buildIntervalReductionProvider(
+            dm, "signal", intervals, std::move(pipeline));
+
+    auto values = provider();
+    REQUIRE(values.size() == 2);
+
+    // [0,4] at 10Hz → [0ms,400ms] → source [0..40] → values ~[0..40], mean ≈ 20
+    // [10,14] at 10Hz → [1000ms,1400ms] → source [100..140] → values ~[100..140], mean ≈ 120
+    CHECK_THAT(values[0], WithinAbs(20.0, 1.0));
+    CHECK_THAT(values[1], WithinAbs(120.0, 1.0));
+}
+
+TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame event count",
+          "[TensorColumnBuilders][cross_timeframe]") {
+    DataManager dm;
+
+    std::vector<int> interval_times;
+    for (int i = 0; i < 20; ++i) {
+        interval_times.push_back(i * 100);
+    }
+    auto interval_tf = std::make_shared<TimeFrame>(interval_times);
+    dm.setTime(TimeKey("interval_clock"), interval_tf);
+
+    std::vector<int> source_times;
+    for (int i = 0; i < 200; ++i) {
+        source_times.push_back(i * 10);
+    }
+    auto source_tf = std::make_shared<TimeFrame>(source_times);
+    dm.setTime(TimeKey("source_clock"), source_tf);
+
+    // Events at source indices: 5, 15, 25, 105, 115
+    auto des = createEventSeries({5, 15, 25, 105, 115});
+    des->setTimeFrame(source_tf);
+    dm.setData<DigitalEventSeries>("events", des, TimeKey("source_clock"));
+
+    // Intervals at 10 Hz:
+    // [0,4] → [0ms,400ms] → source [0,40] → events {5,15,25} → count=3
+    // [10,14] → [1000ms,1400ms] → source [100,140] → events {105,115} → count=2
+    auto intervals = createIntervalSeries({{0, 4}, {10, 14}});
+    intervals->setTimeFrame(interval_tf);
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("interval_clock"));
+
+    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    pipeline.setRangeReductionErased("EventCount", std::any{});
+
+    auto provider = buildIntervalReductionProvider(
+            dm, "events", intervals, std::move(pipeline));
+
+    auto values = provider();
+    REQUIRE(values.size() == 2);
+    CHECK_THAT(values[0], WithinAbs(3.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
+}
+
+TEST_CASE("buildIntervalReductionProvider - same TimeFrame produces same results",
+          "[TensorColumnBuilders][cross_timeframe]") {
+    DataManager dm;
+
+    // Both use the same TimeFrame
+    auto shared_tf = std::make_shared<TimeFrame>(
+            std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    dm.setTime(TimeKey("default"), shared_tf);
+
+    auto ats = createLinearAnalog(10);
+    ats->setTimeFrame(shared_tf);
+    dm.setData<AnalogTimeSeries>("signal", ats, TimeKey("default"));
+
+    auto intervals = createIntervalSeries({{0, 4}, {5, 9}});
+    intervals->setTimeFrame(shared_tf);
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("default"));
+
+    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    pipeline.setRangeReductionErased("MeanValue", std::any{});
+
+    auto provider = buildIntervalReductionProvider(
+            dm, "signal", intervals, std::move(pipeline));
+
+    auto values = provider();
+    REQUIRE(values.size() == 2);
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(7.0, 0.01));
+}
+
+TEST_CASE("Integration - cross-TimeFrame lazy tensor assembly",
+          "[TensorColumnBuilders][cross_timeframe]") {
+    DataManager dm;
+
+    // Setup two different time bases
+    std::vector<int> interval_times;
+    for (int i = 0; i < 20; ++i) {
+        interval_times.push_back(i * 100);
+    }
+    auto interval_tf = std::make_shared<TimeFrame>(interval_times);
+    dm.setTime(TimeKey("interval_clock"), interval_tf);
+
+    std::vector<int> source_times;
+    for (int i = 0; i < 200; ++i) {
+        source_times.push_back(i * 10);
+    }
+    auto source_tf = std::make_shared<TimeFrame>(source_times);
+    dm.setTime(TimeKey("source_clock"), source_tf);
+
+    // Analog signal at 100 Hz: values [0, 1, 2, ..., 199]
+    auto ats = createLinearAnalog(200);
+    ats->setTimeFrame(source_tf);
+    dm.setData<AnalogTimeSeries>("signal", ats, TimeKey("source_clock"));
+
+    // Intervals at 10 Hz
+    auto intervals = createIntervalSeries({{0, 4}, {10, 14}});
+    intervals->setTimeFrame(interval_tf);
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("interval_clock"));
+
+    // Build two columns: mean and max, both with cross-TimeFrame
+    auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
+    auto mean_provider = buildIntervalReductionProvider(
+            dm, "signal", intervals, std::move(mean_pipeline));
+
+    auto max_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    max_pipeline.setRangeReductionErased("MaxValue", std::any{});
+    auto max_provider = buildIntervalReductionProvider(
+            dm, "signal", intervals, std::move(max_pipeline));
+
+    // Also add interval duration column (no cross-TF needed for properties)
+    auto dur_provider = buildIntervalPropertyProvider(intervals, IntervalProperty::Duration);
+
+    std::vector<ColumnSource> columns;
+    columns.push_back(ColumnSource{"mean", std::move(mean_provider), {}});
+    columns.push_back(ColumnSource{"max", std::move(max_provider), {}});
+    columns.push_back(ColumnSource{"duration", std::move(dur_provider), {}});
+
+    auto row_desc = RowDescriptor::ordinal(2);
+    auto tensor = TensorData::createFromLazyColumns(2, std::move(columns), std::move(row_desc));
+
+    REQUIRE(tensor.numRows() == 2);
+    REQUIRE(tensor.numColumns() == 3);
+
+    auto means = tensor.getColumn(0);
+    auto maxes = tensor.getColumn(1);
+    auto durations = tensor.getColumn(2);
+
+    // Row 0: interval [0,4] at 10Hz → [0ms,400ms] → source [0..40]
+    CHECK_THAT(means[0], WithinAbs(20.0, 1.0));
+    CHECK_THAT(maxes[0], WithinAbs(40.0, 1.0));
+    CHECK_THAT(durations[0], WithinAbs(4.0, 0.01));  // duration in interval-TF indices
+
+    // Row 1: interval [10,14] at 10Hz → [1000ms,1400ms] → source [100..140]
+    CHECK_THAT(means[1], WithinAbs(120.0, 1.0));
+    CHECK_THAT(maxes[1], WithinAbs(140.0, 1.0));
+    CHECK_THAT(durations[1], WithinAbs(4.0, 0.01));
 }

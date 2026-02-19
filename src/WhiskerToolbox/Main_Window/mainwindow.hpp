@@ -135,6 +135,9 @@ private:
     /// Build the recent workspaces submenu from SessionStore
     void _rebuildRecentWorkspacesMenu();
 
+    /// Close all dynamically-created editor dock widgets before restore
+    void _closeDynamicEditors();
+
     /// Restore editor states and zone layout from workspace data
     void _restoreEditorStates(StateManagement::WorkspaceData const & data);
     void _restoreZoneLayout(StateManagement::WorkspaceData const & data);
