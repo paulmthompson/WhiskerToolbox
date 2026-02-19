@@ -4,6 +4,7 @@
 #include "LabelConfigPanel.hpp"
 #include "MLCoreWidgetState.hpp"
 #include "ModelConfigPanel.hpp"
+#include "PredictionPanel.hpp"
 #include "RegionSelectionPanel.hpp"
 
 #include <QLabel>
@@ -48,6 +49,10 @@ void MLCoreWidget::_setupUi() {
     // Model configuration panel
     _model_config_panel = new ModelConfigPanel(_state, _data_manager, classification_tab);
     classification_layout->addWidget(_model_config_panel);
+
+    // Prediction panel
+    _prediction_panel = new PredictionPanel(_state, _data_manager, classification_tab);
+    classification_layout->addWidget(_prediction_panel);
 
     classification_layout->addStretch();
 

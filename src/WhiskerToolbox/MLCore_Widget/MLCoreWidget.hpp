@@ -11,11 +11,10 @@
  * - **Classification**: Supervised classification using MLCore pipelines
  * - **Clustering**: Unsupervised clustering using MLCore pipelines
  *
- * This is a stub implementation for task 4.1 (state + registration)
- * with the FeatureSelectionPanel added in task 4.2 and
- * RegionSelectionPanel added in task 4.3.
- * Additional sub-panels (LabelConfigPanel, ModelConfigPanel, etc.)
- * will be added in subsequent tasks (4.4–4.7).
+ * The Classification tab contains sub-panels for each workflow step:
+ * FeatureSelectionPanel (4.2), RegionSelectionPanel (4.3),
+ * LabelConfigPanel (4.4), ModelConfigPanel (4.5), and
+ * PredictionPanel (4.6). The ResultsPanel (4.7) will be added next.
  *
  * ## Architecture
  *
@@ -41,6 +40,7 @@ class FeatureSelectionPanel;
 class LabelConfigPanel;
 class MLCoreWidgetState;
 class ModelConfigPanel;
+class PredictionPanel;
 class RegionSelectionPanel;
 class SelectionContext;
 
@@ -75,6 +75,7 @@ private:
     RegionSelectionPanel * _training_region_panel = nullptr;
     LabelConfigPanel * _label_panel = nullptr;
     ModelConfigPanel * _model_config_panel = nullptr;
+    PredictionPanel * _prediction_panel = nullptr;
 };
 
 #endif // MLCORE_WIDGET_HPP
