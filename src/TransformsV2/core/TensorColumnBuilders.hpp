@@ -80,11 +80,6 @@ struct ColumnRecipe {
     /// JSON string describing the TransformPipeline (empty for passthrough)
     std::string pipeline_json;
 
-    /// Hint for which gather type to use (e.g. "AnalogTimeSeries",
-    /// "DigitalEventSeries", "DigitalIntervalSeries").
-    /// Empty string means auto-detect from DataManager.
-    std::string gather_type;
-
     /// If this is an interval-property column, which property to extract.
     /// nullopt means this is a data-source column, not an interval-property column.
     std::optional<IntervalProperty> interval_property;

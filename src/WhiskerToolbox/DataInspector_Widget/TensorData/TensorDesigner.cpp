@@ -123,7 +123,6 @@ std::string TensorDesigner::toJson() const {
         col["name"] = recipe.column_name;
         col["source_key"] = recipe.source_key;
         col["pipeline_json"] = recipe.pipeline_json;
-        col["gather_type"] = recipe.gather_type;
         if (recipe.interval_property.has_value()) {
             switch (recipe.interval_property.value()) {
                 case IntervalProperty::Start:
@@ -184,7 +183,6 @@ bool TensorDesigner::fromJson(std::string const & json) {
                 recipe.column_name = col.value("name", "");
                 recipe.source_key = col.value("source_key", "");
                 recipe.pipeline_json = col.value("pipeline_json", "");
-                recipe.gather_type = col.value("gather_type", "");
 
                 if (col.contains("interval_property")) {
                     auto prop = col["interval_property"].get<std::string>();
@@ -690,9 +688,12 @@ void TensorDesigner::_refreshColumnList() {
         }
         if (recipe.interval_property.has_value()) {
             text += QStringLiteral(" (interval property)");
-        } else if (!recipe.gather_type.empty()) {
-            text += QStringLiteral(" → %1").arg(
-                    QString::fromStdString(recipe.gather_type));
+        } else if (!recipe.source_key.empty() && _data_manager) {
+            auto const src_type = _data_manager->getType(recipe.source_key);
+            if (src_type != DM_DataType::Unknown) {
+                text += QStringLiteral(" \u2192 %1").arg(
+                        QString::fromStdString(convert_data_type_to_string(src_type)));
+            }
         }
         _column_list->addItem(text);
     }

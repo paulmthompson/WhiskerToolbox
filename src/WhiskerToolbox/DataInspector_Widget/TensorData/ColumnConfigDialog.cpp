@@ -42,7 +42,6 @@ namespace {
 struct OperationEntry {
     QString display_name;
     QString operation_key;///< Reduction name or special key
-    QString gather_type;  ///< "AnalogTimeSeries", "DigitalEventSeries", etc.
     bool is_interval_property{false};
     bool is_passthrough{false};
     bool is_offset{false};
@@ -56,47 +55,47 @@ std::vector<OperationEntry> getOperationsForSource(
 
     if (row_type == DesignerRowType::Interval) {
         if (source_type == DM_DataType::Analog) {
-            ops.push_back({QStringLiteral("Mean Value"), "MeanValue", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Max Value"), "MaxValue", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Min Value"), "MinValue", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Std Dev"), "StdValue", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Sum"), "SumValue", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Value Range"), "ValueRange", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Area Under Curve"), "AreaUnderCurve", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Time of Max"), "TimeOfMax", "AnalogTimeSeries", false, false, false});
-            ops.push_back({QStringLiteral("Time of Min"), "TimeOfMin", "AnalogTimeSeries", false, false, false});
+            ops.push_back({QStringLiteral("Mean Value"), "MeanValue", false, false, false});
+            ops.push_back({QStringLiteral("Max Value"), "MaxValue", false, false, false});
+            ops.push_back({QStringLiteral("Min Value"), "MinValue", false, false, false});
+            ops.push_back({QStringLiteral("Std Dev"), "StdValue", false, false, false});
+            ops.push_back({QStringLiteral("Sum"), "SumValue", false, false, false});
+            ops.push_back({QStringLiteral("Value Range"), "ValueRange", false, false, false});
+            ops.push_back({QStringLiteral("Area Under Curve"), "AreaUnderCurve", false, false, false});
+            ops.push_back({QStringLiteral("Time of Max"), "TimeOfMax", false, false, false});
+            ops.push_back({QStringLiteral("Time of Min"), "TimeOfMin", false, false, false});
         } else if (source_type == DM_DataType::DigitalEvent) {
-            ops.push_back({QStringLiteral("Event Count"), "EventCount", "DigitalEventSeries", false, false, false});
-            ops.push_back({QStringLiteral("Event Presence"), "EventPresence", "DigitalEventSeries", false, false, false});
-            ops.push_back({QStringLiteral("First Positive Latency"), "FirstPositiveLatency", "DigitalEventSeries", false, false, false});
-            ops.push_back({QStringLiteral("Last Negative Latency"), "LastNegativeLatency", "DigitalEventSeries", false, false, false});
-            ops.push_back({QStringLiteral("Mean Inter-Event Interval"), "MeanInterEventInterval", "DigitalEventSeries", false, false, false});
+            ops.push_back({QStringLiteral("Event Count"), "EventCount", false, false, false});
+            ops.push_back({QStringLiteral("Event Presence"), "EventPresence", false, false, false});
+            ops.push_back({QStringLiteral("First Positive Latency"), "FirstPositiveLatency", false, false, false});
+            ops.push_back({QStringLiteral("Last Negative Latency"), "LastNegativeLatency", false, false, false});
+            ops.push_back({QStringLiteral("Mean Inter-Event Interval"), "MeanInterEventInterval", false, false, false});
         } else if (source_type == DM_DataType::DigitalInterval) {
-            ops.push_back({QStringLiteral("Interval Count"), "IntervalCount", "DigitalIntervalSeries", false, false, false});
-            ops.push_back({QStringLiteral("Interval Start"), "IntervalStartExtract", "DigitalIntervalSeries", false, false, false});
-            ops.push_back({QStringLiteral("Interval End"), "IntervalEndExtract", "DigitalIntervalSeries", false, false, false});
-            ops.push_back({QStringLiteral("Interval Source Index"), "IntervalSourceIndex", "DigitalIntervalSeries", false, false, false});
+            ops.push_back({QStringLiteral("Interval Count"), "IntervalCount", false, false, false});
+            ops.push_back({QStringLiteral("Interval Start"), "IntervalStartExtract", false, false, false});
+            ops.push_back({QStringLiteral("Interval End"), "IntervalEndExtract", false, false, false});
+            ops.push_back({QStringLiteral("Interval Source Index"), "IntervalSourceIndex", false, false, false});
             // Also interval properties from the row itself
-            ops.push_back({QStringLiteral("Row Start (property)"), "IntervalStart", "", true, false, false});
-            ops.push_back({QStringLiteral("Row End (property)"), "IntervalEnd", "", true, false, false});
-            ops.push_back({QStringLiteral("Row Duration (property)"), "IntervalDuration", "", true, false, false});
+            ops.push_back({QStringLiteral("Row Start (property)"), "IntervalStart", true, false, false});
+            ops.push_back({QStringLiteral("Row End (property)"), "IntervalEnd", true, false, false});
+            ops.push_back({QStringLiteral("Row Duration (property)"), "IntervalDuration", true, false, false});
         }
 
         // Interval property operations available regardless of source type
         // (they extract from the row intervals themselves)
         if (source_type != DM_DataType::DigitalInterval) {
             // Add interval properties only once (not duplicated)
-            ops.push_back({QStringLiteral("Row Start (property)"), "IntervalStart", "", true, false, false});
-            ops.push_back({QStringLiteral("Row End (property)"), "IntervalEnd", "", true, false, false});
-            ops.push_back({QStringLiteral("Row Duration (property)"), "IntervalDuration", "", true, false, false});
+            ops.push_back({QStringLiteral("Row Start (property)"), "IntervalStart", true, false, false});
+            ops.push_back({QStringLiteral("Row End (property)"), "IntervalEnd", true, false, false});
+            ops.push_back({QStringLiteral("Row Duration (property)"), "IntervalDuration", true, false, false});
         }
     } else if (row_type == DesignerRowType::Timestamp ||
                row_type == DesignerRowType::DerivedFromSource) {
         if (source_type == DM_DataType::Analog) {
-            ops.push_back({QStringLiteral("Direct Value (passthrough)"), "Passthrough", "AnalogTimeSeries", false, true, false});
-            ops.push_back({QStringLiteral("Value at Offset"), "AnalogSampleAtOffset", "AnalogTimeSeries", false, false, true});
+            ops.push_back({QStringLiteral("Direct Value (passthrough)"), "Passthrough", false, true, false});
+            ops.push_back({QStringLiteral("Value at Offset"), "AnalogSampleAtOffset", false, false, true});
         } else if (source_type == DM_DataType::Line) {
-            ops.push_back({QStringLiteral("Line Length"), "CalculateLineLength", "LineData", false, false, false});
+            ops.push_back({QStringLiteral("Line Length"), "CalculateLineLength", false, false, false});
         }
     }
 
@@ -161,42 +160,11 @@ ColumnRecipe ColumnConfigDialog::getRecipe() const {
 
     // --- Advanced pipeline JSON mode ---
     // If the advanced section is active and contains non-empty text,
-    // use it directly as the pipeline_json, preserving the gather_type
-    // from the source.
+    // use it directly as the pipeline_json.
     if (_use_advanced_json) {
         auto const json_text = _advanced_json_edit->toPlainText().trimmed().toStdString();
         if (!json_text.empty()) {
             recipe.pipeline_json = json_text;
-            // Determine gather_type from source
-            if (_data_manager && !recipe.source_key.empty()) {
-                auto const src_type = _data_manager->getType(recipe.source_key);
-                switch (src_type) {
-                    case DM_DataType::Analog:
-                        recipe.gather_type = "AnalogTimeSeries";
-                        break;
-                    case DM_DataType::DigitalEvent:
-                        recipe.gather_type = "DigitalEventSeries";
-                        break;
-                    case DM_DataType::DigitalInterval:
-                        recipe.gather_type = "DigitalIntervalSeries";
-                        break;
-                    case DM_DataType::Line:
-                        recipe.gather_type = "LineData";
-                        break;
-                    case DM_DataType::Mask:
-                        recipe.gather_type = "MaskData";
-                        break;
-                    case DM_DataType::Points:
-                        recipe.gather_type = "PointData";
-                        break;
-                    case DM_DataType::RaggedAnalog:
-                        recipe.gather_type = "RaggedAnalogTimeSeries";
-                        break;
-                    default:
-                        recipe.gather_type = "";
-                        break;
-                }
-            }
             return recipe;
         }
     }
@@ -212,7 +180,6 @@ ColumnRecipe ColumnConfigDialog::getRecipe() const {
         for (auto const & op: operations) {
             if (op.operation_key.toStdString() == key) {
                 if (op.is_interval_property) {
-                    recipe.gather_type = "";
                     recipe.pipeline_json = "";
                     if (key == "IntervalStart") {
                         recipe.interval_property = IntervalProperty::Start;
@@ -222,17 +189,13 @@ ColumnRecipe ColumnConfigDialog::getRecipe() const {
                         recipe.interval_property = IntervalProperty::Duration;
                     }
                 } else if (op.is_passthrough) {
-                    recipe.gather_type = op.gather_type.toStdString();
                     recipe.pipeline_json = "";
                 } else if (op.is_offset) {
-                    recipe.gather_type = op.gather_type.toStdString();
-                    recipe.pipeline_json = "";// Offset handled separately
-                    // For offset, we encode in pipeline_json
+                    // For offset, encode in pipeline_json
                     auto offset_val = static_cast<int64_t>(_offset_spin->value());
                     recipe.pipeline_json = R"({"offset": )" + std::to_string(offset_val) + "}";
                 } else {
                     // Standard reduction
-                    recipe.gather_type = op.gather_type.toStdString();
                     recipe.pipeline_json = R"({"range_reduction": {"name": ")" + key + R"(", "parameters": {}}})";
                 }
                 break;
