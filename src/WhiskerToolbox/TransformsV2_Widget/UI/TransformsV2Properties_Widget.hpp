@@ -13,7 +13,6 @@
  * available transforms to those compatible with the focused data type.
  */
 
-#include "Collapsible_Widget/Section.hpp"
 #include "EditorState/DataFocusAware.hpp"
 #include "EditorState/StrongTypes.hpp"
 
@@ -87,7 +86,7 @@ signals:
      * @brief Emitted whenever the pipeline descriptor changes
      *
      * This signal fires on any change to the pipeline (UI edits or JSON edits).
-     * External consumers (Phase 4) can connect to this for real-time updates.
+     * External consumers can connect to this for real-time updates.
      * @param pipeline_json The current pipeline descriptor as a JSON string
      */
     void pipelineDescriptorChanged(std::string const & pipeline_json);
@@ -103,11 +102,11 @@ private slots:
     void onSaveJsonClicked();
     void onApplyJsonClicked();
 
-    // Phase 3: Execution slots
+    // Execution slots
     void onExecuteClicked();
     void onOutputKeyEdited(QString const & text);
 
-    // Phase 6.4: OperationContext delivery
+    // OperationContext delivery
     void onDeliverPipelineClicked();
     void onPendingOperationChanged(EditorLib::EditorTypeId const & producer_type);
 
@@ -202,7 +201,7 @@ private:
     PreReductionPanel * _pre_reduction_panel = nullptr;
     QLabel * _validation_label = nullptr;
 
-    // JSON Panel (Phase 2)
+    // JSON Panel
     Section * _json_section = nullptr;
     QTextEdit * _json_panel = nullptr;
     QPushButton * _copy_json_button = nullptr;
@@ -210,7 +209,7 @@ private:
     QPushButton * _save_json_button = nullptr;
     QPushButton * _apply_json_button = nullptr;
 
-    // Output & Execution (Phase 3)
+    // Output & Execution
     QGroupBox * _output_group = nullptr;
     QLineEdit * _output_key_edit = nullptr;
     QComboBox * _execution_mode_combo = nullptr;
@@ -220,7 +219,7 @@ private:
     QLabel * _error_label = nullptr;
     bool _output_key_user_edited = false;///< True if user manually edited the output key
 
-    // OperationContext delivery (Phase 6.4)
+    // OperationContext delivery
     EditorLib::OperationContext * _operation_context = nullptr;
     QPushButton * _deliver_pipeline_btn = nullptr;
 };

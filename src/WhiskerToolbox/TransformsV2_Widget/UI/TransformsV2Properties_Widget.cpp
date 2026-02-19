@@ -5,11 +5,11 @@
 #include "PreReductionPanel.hpp"
 #include "StepConfigPanel.hpp"
 
+#include "Collapsible_Widget/Section.hpp"
 #include "Core/TransformsV2State.hpp"
+#include "DataManager/DataManager.hpp"
 #include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
-
-#include "DataManager/DataManager.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
@@ -203,7 +203,7 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(pipeline_group, 1);
 
-    // --- Output & Execution Section (Phase 3) ---
+    // --- Output & Execution Section ---
     _output_group = new QGroupBox(tr("Output && Execution"), this);
     auto * output_layout = new QVBoxLayout(_output_group);
     output_layout->setSpacing(4);
@@ -276,7 +276,7 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(_output_group);
 
-    // --- JSON Panel (Phase 2, collapsed by default) ---
+    // --- JSON Panel (collapsed by default) ---
     _json_section = new Section(scroll_content, tr("Pipeline JSON"));
     auto * json_content_layout = new QVBoxLayout();
     json_content_layout->setSpacing(4);
@@ -314,7 +314,7 @@ void TransformsV2Properties_Widget::setupUI() {
     _json_section->setContentLayout(*json_content_layout);
     main_layout->addWidget(_json_section);
 
-    // --- Pipeline Delivery Button (Phase 6.4) ---
+    // --- Pipeline Delivery Button ---
     // Shows when a consumer (e.g., TensorDesigner's ColumnConfigDialog) has
     // requested a pipeline via OperationContext.
     _deliver_pipeline_btn = new QPushButton(
@@ -356,7 +356,7 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onLoadJsonClicked);
     connect(_save_json_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onSaveJsonClicked);
-    // Phase 3: Output & Execution connections
+    // Output & Execution connections
     connect(_execute_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onExecuteClicked);
     connect(_output_key_edit, &QLineEdit::textEdited,
@@ -368,7 +368,7 @@ void TransformsV2Properties_Widget::setupUI() {
                 updateExecuteButtonState();
             });
 
-    // Phase 6.4: OperationContext delivery connection
+    // OperationContext delivery connection
     connect(_deliver_pipeline_btn, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onDeliverPipelineClicked);
 }
@@ -397,14 +397,22 @@ std::string TransformsV2Properties_Widget::resolveDataTypeFromManager(std::strin
 
     auto const dm_type = dm->getType(key);
     switch (dm_type) {
-        case DM_DataType::Mask:            return "MaskData";
-        case DM_DataType::Line:            return "LineData";
-        case DM_DataType::Points:          return "PointData";
-        case DM_DataType::Analog:          return "AnalogTimeSeries";
-        case DM_DataType::RaggedAnalog:    return "RaggedAnalogTimeSeries";
-        case DM_DataType::DigitalEvent:    return "DigitalEventSeries";
-        case DM_DataType::DigitalInterval: return "DigitalIntervalSeries";
-        default:                           return {};
+        case DM_DataType::Mask:
+            return "MaskData";
+        case DM_DataType::Line:
+            return "LineData";
+        case DM_DataType::Points:
+            return "PointData";
+        case DM_DataType::Analog:
+            return "AnalogTimeSeries";
+        case DM_DataType::RaggedAnalog:
+            return "RaggedAnalogTimeSeries";
+        case DM_DataType::DigitalEvent:
+            return "DigitalEventSeries";
+        case DM_DataType::DigitalInterval:
+            return "DigitalIntervalSeries";
+        default:
+            return {};
     }
 }
 
@@ -436,7 +444,7 @@ void TransformsV2Properties_Widget::resolveInputTypes() {
 }
 
 // ============================================================================
-// Phase 2: Bidirectional JSON Synchronization
+// Bidirectional JSON Synchronization
 // ============================================================================
 
 std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
@@ -534,7 +542,7 @@ bool TransformsV2Properties_Widget::loadUIFromJson(std::string const & json_str)
 }
 
 // ============================================================================
-// Phase 2: JSON Panel Slots
+// JSON Panel Slots
 // ============================================================================
 
 void TransformsV2Properties_Widget::onJsonPanelEdited() {
@@ -609,7 +617,7 @@ void TransformsV2Properties_Widget::onSaveJsonClicked() {
 }
 
 // ============================================================================
-// Phase 3: Output Key Generation
+// Output Key Generation
 // ============================================================================
 
 std::string TransformsV2Properties_Widget::generateOutputName() const {
@@ -672,7 +680,7 @@ void TransformsV2Properties_Widget::updateExecuteButtonState() {
 }
 
 // ============================================================================
-// Phase 3: Execution Slots
+// Execution Slots
 // ============================================================================
 
 void TransformsV2Properties_Widget::onOutputKeyEdited(QString const & text) {
@@ -816,7 +824,7 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
 }
 
 // ============================================================================
-// Phase 6.4: OperationContext Integration
+// OperationContext Integration
 // ============================================================================
 
 void TransformsV2Properties_Widget::setOperationContext(EditorLib::OperationContext * context) {
