@@ -12,6 +12,7 @@
 #include "Points/Point_Data.hpp"
 
 #include <stdexcept>
+#include <unordered_set>
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -83,6 +84,17 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
     }
 
     throw std::runtime_error("Unknown container name: " + name);
+}
+
+bool TypeIndexMapper::isContainerRagged(std::type_index container_type) {
+    // All containers with DataTraits::is_ragged == true
+    static std::unordered_set<std::type_index> const ragged_types = {
+            typeid(MaskData),
+            typeid(LineData),
+            typeid(PointData),
+            typeid(RaggedAnalogTimeSeries)};
+
+    return ragged_types.contains(container_type);
 }
 
 }// namespace WhiskerToolbox::Transforms::V2

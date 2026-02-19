@@ -36,6 +36,7 @@
 
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/ParameterSchema.hpp"
+#include "TransformsV2/core/TypeChainResolver.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
 using namespace WhiskerToolbox::Transforms::V2;
@@ -760,5 +761,123 @@ TEST_CASE("ElementRegistry has expected transforms registered",
         auto element = TypeIndexMapper::containerToElement(container);
         auto back_to_container = TypeIndexMapper::elementToContainer(element);
         CHECK(back_to_container == container);
+    }
+}
+
+// ============================================================================
+// Section 6: resolveTypeChain
+// ============================================================================
+
+TEST_CASE("resolveTypeChain produces correct per-step type info",
+          "[TransformsV2Widget][TypeChainResolver]") {
+
+    SECTION("Empty step list returns input types unchanged") {
+        auto container = TypeIndexMapper::stringToContainer("MaskData");
+        auto result = resolveTypeChain(container, {});
+
+        CHECK(result.all_valid);
+        CHECK(result.steps.empty());
+        CHECK(result.output_container_type == container);
+    }
+
+    SECTION("Single element transform: MaskData -> CalculateMaskArea -> RaggedAnalogTimeSeries") {
+        auto container = TypeIndexMapper::stringToContainer("MaskData");
+        std::vector<std::string> names = {"CalculateMaskArea"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 1);
+        CHECK(result.all_valid);
+        CHECK(result.steps[0].input_type_name == "MaskData");
+        CHECK(result.steps[0].output_type_name == "RaggedAnalogTimeSeries");
+        CHECK(result.steps[0].is_valid);
+    }
+
+    SECTION("Two-step chain: MaskData -> CalculateMaskArea -> SumReduction -> AnalogTimeSeries") {
+        auto container = TypeIndexMapper::stringToContainer("MaskData");
+        std::vector<std::string> names = {"CalculateMaskArea", "SumReduction"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 2);
+        CHECK(result.all_valid);
+
+        // Step 1: Mask2D -> float, container becomes RaggedAnalogTimeSeries
+        CHECK(result.steps[0].input_type_name == "MaskData");
+        CHECK(result.steps[0].output_type_name == "RaggedAnalogTimeSeries");
+        CHECK(result.steps[0].is_valid);
+
+        // Step 2: SumReduction (time-grouped, produces_single_output)
+        //         input is RaggedAnalogTimeSeries, output is AnalogTimeSeries
+        CHECK(result.steps[1].input_type_name == "RaggedAnalogTimeSeries");
+        CHECK(result.steps[1].output_type_name == "AnalogTimeSeries");
+        CHECK(result.steps[1].is_valid);
+
+        // Final output should be AnalogTimeSeries
+        CHECK(result.output_container_type == TypeIndexMapper::stringToContainer("AnalogTimeSeries"));
+    }
+
+    SECTION("Type mismatch marks step as invalid") {
+        auto container = TypeIndexMapper::stringToContainer("MaskData");
+        // SumReduction expects float input, not Mask2D
+        std::vector<std::string> names = {"SumReduction"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 1);
+        CHECK_FALSE(result.all_valid);
+        CHECK_FALSE(result.steps[0].is_valid);
+    }
+
+    SECTION("AnalogTimeSeries preserves non-ragged container for float transforms") {
+        auto container = TypeIndexMapper::stringToContainer("AnalogTimeSeries");
+        // ZScoreNormalizeV2 is float -> float, non-time-grouped
+        std::vector<std::string> names = {"ZScoreNormalizeV2"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 1);
+        CHECK(result.all_valid);
+        CHECK(result.steps[0].input_type_name == "AnalogTimeSeries");
+        CHECK(result.steps[0].output_type_name == "AnalogTimeSeries");
+        CHECK(result.output_container_type == TypeIndexMapper::stringToContainer("AnalogTimeSeries"));
+    }
+
+    SECTION("RaggedAnalogTimeSeries preserves ragged container for float transforms") {
+        auto container = TypeIndexMapper::stringToContainer("RaggedAnalogTimeSeries");
+        // ZScoreNormalizeV2 is float -> float, non-time-grouped
+        std::vector<std::string> names = {"ZScoreNormalizeV2"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 1);
+        CHECK(result.all_valid);
+        CHECK(result.steps[0].input_type_name == "RaggedAnalogTimeSeries");
+        CHECK(result.steps[0].output_type_name == "RaggedAnalogTimeSeries");
+        CHECK(result.output_container_type == TypeIndexMapper::stringToContainer("RaggedAnalogTimeSeries"));
+    }
+
+    SECTION("Line transform chain: LineData -> CalculateLineAngle -> RaggedAnalogTimeSeries") {
+        auto container = TypeIndexMapper::stringToContainer("LineData");
+        std::vector<std::string> names = {"CalculateLineAngle"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 1);
+        CHECK(result.all_valid);
+        CHECK(result.steps[0].input_type_name == "LineData");
+        CHECK(result.steps[0].output_type_name == "RaggedAnalogTimeSeries");
+    }
+
+    SECTION("Unknown transform name marks step invalid") {
+        auto container = TypeIndexMapper::stringToContainer("MaskData");
+        std::vector<std::string> names = {"NonExistentTransform"};
+
+        auto result = resolveTypeChain(container, names);
+
+        REQUIRE(result.steps.size() == 1);
+        CHECK_FALSE(result.all_valid);
+        CHECK_FALSE(result.steps[0].is_valid);
+        CHECK(result.steps[0].output_type_name == "Unknown");
     }
 }

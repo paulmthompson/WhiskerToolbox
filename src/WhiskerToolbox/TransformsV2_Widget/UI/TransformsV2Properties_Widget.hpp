@@ -31,7 +31,6 @@ class SelectionContext;
 class DataManager;
 class PipelineStepListWidget;
 class StepConfigPanel;
-class PreReductionPanel;
 class QLabel;
 class QGroupBox;
 class QComboBox;
@@ -51,9 +50,8 @@ class TransformsV2Properties_Widget;
  *
  * Integrates:
  * - Input Selector (DataFocusAware) — responds to data selection
- * - Pipeline Step List — add/remove/reorder transform steps
+ * - Pipeline Step List — add/remove transform steps with inline transform browser
  * - Step Configuration — auto-generated parameter forms
- * - Pre-Reduction Panel — pre-computation steps for pipeline
  * - Type Chain Validation — inline validation of the pipeline
  */
 class TransformsV2Properties_Widget : public QWidget, public DataFocusAware {
@@ -198,7 +196,6 @@ private:
     QGroupBox * _input_group = nullptr;
     PipelineStepListWidget * _step_list = nullptr;
     StepConfigPanel * _step_config = nullptr;
-    PreReductionPanel * _pre_reduction_panel = nullptr;
     QLabel * _validation_label = nullptr;
 
     // JSON Panel

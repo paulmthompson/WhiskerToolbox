@@ -2,7 +2,6 @@
 #include "ui_TransformsV2Properties_Widget.h"
 
 #include "PipelineStepListWidget.hpp"
-#include "PreReductionPanel.hpp"
 #include "StepConfigPanel.hpp"
 
 #include "Collapsible_Widget/Section.hpp"
@@ -92,7 +91,6 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
 
     // Update sub-widgets with new input type
     _step_list->setInputType(_input_element_type, _input_container_type);
-    _pre_reduction_panel->setInputType(_input_element_type);
 
     // Store in state
     _state->setInputDataKey(_input_data_key);
@@ -173,10 +171,6 @@ void TransformsV2Properties_Widget::setupUI() {
     input_layout->addWidget(_input_type_label);
 
     main_layout->addWidget(_input_group);
-
-    // --- Pre-Reduction Panel ---
-    _pre_reduction_panel = new PreReductionPanel(this);
-    main_layout->addWidget(_pre_reduction_panel);
 
     // --- Pipeline Steps (with splitter between list and config) ---
     auto * pipeline_group = new QGroupBox(tr("Pipeline Steps"), this);
@@ -342,8 +336,6 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onValidationChanged);
     connect(_step_config, &StepConfigPanel::parametersChanged,
             this, &TransformsV2Properties_Widget::onStepParametersChanged);
-    connect(_pre_reduction_panel, &PreReductionPanel::preReductionsChanged,
-            this, &TransformsV2Properties_Widget::onPipelineChanged);
 
     // JSON panel connections
     connect(_json_panel, &QTextEdit::textChanged,
@@ -468,27 +460,6 @@ std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
         descriptor.steps.push_back(std::move(step_desc));
     }
 
-    // Build pre-reductions from the pre-reduction panel
-    auto const & pre_entries = _pre_reduction_panel->entries();
-    if (!pre_entries.empty()) {
-        std::vector<PreReductionStepDescriptor> pre_descs;
-        for (auto const & entry: pre_entries) {
-            PreReductionStepDescriptor pre_desc;
-            pre_desc.reduction_name = entry.reduction_name;
-            pre_desc.output_key = entry.output_key;
-
-            if (entry.parameters_json != "{}" && !entry.parameters_json.empty()) {
-                auto params_result = rfl::json::read<rfl::Generic>(entry.parameters_json);
-                if (params_result) {
-                    pre_desc.parameters = params_result.value();
-                }
-            }
-
-            pre_descs.push_back(std::move(pre_desc));
-        }
-        descriptor.pre_reductions = std::move(pre_descs);
-    }
-
     return savePipelineToJson(descriptor);
 }
 
@@ -519,14 +490,8 @@ bool TransformsV2Properties_Widget::loadUIFromJson(std::string const & json_str)
 
     _syncing_json = true;
 
-    // Load pre-reductions
-    if (descriptor.pre_reductions.has_value()) {
-        _pre_reduction_panel->loadFromDescriptors(descriptor.pre_reductions.value());
-    } else {
-        _pre_reduction_panel->clearEntries();
-    }
-
-    // Load steps
+    // Load steps (pre-reductions from JSON are preserved in the descriptor
+    // but not exposed in the UI — they are an implementation detail)
     _step_list->loadFromDescriptors(descriptor.steps);
 
     // Update the JSON panel text to show the canonical (re-serialized) JSON

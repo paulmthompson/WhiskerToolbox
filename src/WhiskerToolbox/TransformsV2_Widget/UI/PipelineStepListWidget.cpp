@@ -2,13 +2,13 @@
 
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"
-#include "TransformsV2/detail/ContainerTraits.hpp"
+#include "TransformsV2/core/TypeChainResolver.hpp"
 
 #include <QHBoxLayout>
-#include <QInputDialog>
-#include <QListWidget>
-#include <QMessageBox>
+#include <QHeaderView>
+#include <QLabel>
 #include <QPushButton>
+#include <QTableWidget>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -28,49 +28,64 @@ PipelineStepListWidget::PipelineStepListWidget(QWidget * parent)
     main_layout->setContentsMargins(0, 0, 0, 0);
     main_layout->setSpacing(4);
 
-    // --- List widget ---
-    _list_widget = new QListWidget(this);
-    _list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
-    _list_widget->setDragDropMode(QAbstractItemView::NoDragDrop);
-    _list_widget->setMinimumHeight(100);
-    main_layout->addWidget(_list_widget, 1);
+    // --- Steps Table ---
+    _steps_table = new QTableWidget(0, 4, this);
+    _steps_table->setHorizontalHeaderLabels({tr("#"), tr("Input Type"), tr("Transform"), tr("Output Type")});
+    _steps_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    _steps_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    _steps_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    _steps_table->verticalHeader()->setVisible(false);
+    _steps_table->setMinimumHeight(80);
 
-    // --- Button row ---
+    // Column sizing
+    _steps_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);// #
+    _steps_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);         // Input Type
+    _steps_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);         // Transform
+    _steps_table->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);         // Output Type
+
+    main_layout->addWidget(_steps_table, 1);
+
+    // --- Button row (remove only) ---
     auto * button_layout = new QHBoxLayout();
     button_layout->setSpacing(4);
 
-    _add_button = new QPushButton(tr("+"), this);
-    _add_button->setToolTip(tr("Add a new pipeline step"));
-    _add_button->setFixedWidth(32);
-    button_layout->addWidget(_add_button);
-
-    _remove_button = new QPushButton(tr("✕"), this);
-    _remove_button->setToolTip(tr("Remove selected step"));
-    _remove_button->setFixedWidth(32);
+    _remove_button = new QPushButton(tr("Remove Step"), this);
+    _remove_button->setToolTip(tr("Remove the selected pipeline step"));
     _remove_button->setEnabled(false);
     button_layout->addWidget(_remove_button);
-
-    _move_up_button = new QPushButton(tr("↑"), this);
-    _move_up_button->setToolTip(tr("Move step up"));
-    _move_up_button->setFixedWidth(32);
-    _move_up_button->setEnabled(false);
-    button_layout->addWidget(_move_up_button);
-
-    _move_down_button = new QPushButton(tr("↓"), this);
-    _move_down_button->setToolTip(tr("Move step down"));
-    _move_down_button->setFixedWidth(32);
-    _move_down_button->setEnabled(false);
-    button_layout->addWidget(_move_down_button);
 
     button_layout->addStretch();
     main_layout->addLayout(button_layout);
 
+    // --- Available Transforms Browser ---
+    _browser_label = new QLabel(tr("Available Transforms"), this);
+    _browser_label->setStyleSheet("font-weight: bold; margin-top: 6px;");
+    main_layout->addWidget(_browser_label);
+
+    _browser_table = new QTableWidget(0, 3, this);
+    _browser_table->setHorizontalHeaderLabels({tr("Name"), tr("Description"), tr("Output Type")});
+    _browser_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    _browser_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    _browser_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    _browser_table->verticalHeader()->setVisible(false);
+    _browser_table->setMinimumHeight(100);
+    _browser_table->setToolTip(tr("Double-click a transform to add it to the pipeline"));
+
+    // Column sizing for browser
+    _browser_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);// Name
+    _browser_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);         // Description
+    _browser_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);// Output Type
+
+    main_layout->addWidget(_browser_table, 2);
+
     // --- Connections ---
-    connect(_add_button, &QPushButton::clicked, this, &PipelineStepListWidget::onAddStepClicked);
     connect(_remove_button, &QPushButton::clicked, this, &PipelineStepListWidget::onRemoveStepClicked);
-    connect(_move_up_button, &QPushButton::clicked, this, &PipelineStepListWidget::onMoveUpClicked);
-    connect(_move_down_button, &QPushButton::clicked, this, &PipelineStepListWidget::onMoveDownClicked);
-    connect(_list_widget, &QListWidget::currentRowChanged, this, &PipelineStepListWidget::onSelectionChanged);
+    connect(_steps_table, &QTableWidget::currentCellChanged,
+            this, [this](int /*row*/, int /*col*/, int /*prevRow*/, int /*prevCol*/) {
+                onStepSelectionChanged();
+            });
+    connect(_browser_table, &QTableWidget::cellDoubleClicked,
+            this, &PipelineStepListWidget::onAvailableTransformDoubleClicked);
 }
 
 PipelineStepListWidget::~PipelineStepListWidget() = default;
@@ -83,38 +98,25 @@ void PipelineStepListWidget::setInputType(std::type_index element_type,
                                           std::type_index container_type) {
     _input_element_type = element_type;
     _input_container_type = container_type;
-
-    validateTypeChain();
-    rebuildListDisplay();
+    refreshChain();
 }
 
 std::type_index PipelineStepListWidget::currentOutputElementType() const {
-    if (_steps.empty()) {
-        return _input_element_type;
-    }
-    return _steps.back().output_type;
+    return _chain_result.output_element_type;
 }
 
 std::type_index PipelineStepListWidget::currentOutputContainerType() const {
-    if (_steps.empty()) {
-        return _input_container_type;
-    }
-    // Try to map the output element type to a container type
-    try {
-        return TypeIndexMapper::elementToContainer(_steps.back().output_type);
-    } catch (...) {
-        return _input_container_type;
-    }
+    return _chain_result.output_container_type;
 }
 
 int PipelineStepListWidget::selectedStepIndex() const {
-    return _list_widget->currentRow();
+    return _steps_table->currentRow();
 }
 
 void PipelineStepListWidget::clearSteps() {
     _steps.clear();
-    _list_widget->clear();
-    updateButtonStates();
+    _steps_table->setRowCount(0);
+    refreshChain();
     emit pipelineChanged();
     emit stepSelected(-1);
 }
@@ -135,7 +137,6 @@ bool PipelineStepListWidget::addStep(std::string const & transform_name,
         entry.input_type = meta->input_type;
         entry.output_type = meta->output_type;
     } else {
-        // Fall back to container transform metadata
         auto const * cmeta = registry.getContainerMetadata(transform_name);
         if (!cmeta) {
             return false;
@@ -145,12 +146,10 @@ bool PipelineStepListWidget::addStep(std::string const & transform_name,
     }
 
     _steps.push_back(std::move(entry));
-
-    validateTypeChain();
-    rebuildListDisplay();
+    refreshChain();
 
     // Select the newly added step
-    _list_widget->setCurrentRow(static_cast<int>(_steps.size()) - 1);
+    _steps_table->setCurrentCell(static_cast<int>(_steps.size()) - 1, 0);
 
     emit pipelineChanged();
     return true;
@@ -168,181 +167,171 @@ void PipelineStepListWidget::updateStepParams(int step_index, std::string const 
 // Slots
 // ============================================================================
 
-void PipelineStepListWidget::onAddStepClicked() {
-    // Determine the current chain end type
-    auto current_element_type = currentOutputElementType();
-    auto current_container_type = currentOutputContainerType();
-
-    auto compatible = getCompatibleTransforms(current_element_type, current_container_type);
-
-    if (compatible.empty()) {
-        QMessageBox::information(this, tr("No Compatible Transforms"),
-                                 tr("No transforms are available for the current output type."));
-        return;
-    }
-
-    // Build list of display items
-    QStringList items;
-    for (auto const & name: compatible) {
-        auto const * meta = ElementRegistry::instance().getMetadata(name);
-        if (meta && !meta->description.empty()) {
-            items << QString::fromStdString(
-                    std::format("{} — {}", name, meta->description));
-        } else {
-            items << QString::fromStdString(name);
-        }
-    }
-
-    bool ok = false;
-    auto selected = QInputDialog::getItem(this, tr("Add Pipeline Step"),
-                                          tr("Select transform:"),
-                                          items, 0, false, &ok);
-    if (!ok || selected.isEmpty()) {
-        return;
-    }
-
-    // Extract transform name (before the " — " separator)
-    auto name_str = selected.toStdString();
-    auto dash_pos = name_str.find(" — ");
-    if (dash_pos != std::string::npos) {
-        name_str = name_str.substr(0, dash_pos);
-    }
-
-    addStep(name_str);
-}
-
 void PipelineStepListWidget::onRemoveStepClicked() {
-    int row = _list_widget->currentRow();
+    int row = _steps_table->currentRow();
     if (row < 0 || row >= static_cast<int>(_steps.size())) {
         return;
     }
 
     _steps.erase(_steps.begin() + row);
-    validateTypeChain();
-    rebuildListDisplay();
+    refreshChain();
 
     // Select the previous step or the first one
     if (!_steps.empty()) {
         int new_row = std::min(row, static_cast<int>(_steps.size()) - 1);
-        _list_widget->setCurrentRow(new_row);
+        _steps_table->setCurrentCell(new_row, 0);
     }
 
     emit pipelineChanged();
 }
 
-void PipelineStepListWidget::onMoveUpClicked() {
-    int row = _list_widget->currentRow();
-    if (row <= 0 || row >= static_cast<int>(_steps.size())) {
-        return;
-    }
-
-    std::swap(_steps[static_cast<size_t>(row)], _steps[static_cast<size_t>(row - 1)]);
-    validateTypeChain();
-    rebuildListDisplay();
-    _list_widget->setCurrentRow(row - 1);
-    emit pipelineChanged();
-}
-
-void PipelineStepListWidget::onMoveDownClicked() {
-    int row = _list_widget->currentRow();
-    if (row < 0 || row >= static_cast<int>(_steps.size()) - 1) {
-        return;
-    }
-
-    std::swap(_steps[static_cast<size_t>(row)], _steps[static_cast<size_t>(row + 1)]);
-    validateTypeChain();
-    rebuildListDisplay();
-    _list_widget->setCurrentRow(row + 1);
-    emit pipelineChanged();
-}
-
-void PipelineStepListWidget::onSelectionChanged() {
+void PipelineStepListWidget::onStepSelectionChanged() {
     updateButtonStates();
-    emit stepSelected(_list_widget->currentRow());
+    updateAvailableTransforms();
+    emit stepSelected(_steps_table->currentRow());
+}
+
+void PipelineStepListWidget::onAvailableTransformDoubleClicked(int row, int /*column*/) {
+    if (row < 0 || row >= static_cast<int>(_current_compatible.size())) {
+        return;
+    }
+
+    auto const & transform_name = _current_compatible[static_cast<size_t>(row)];
+    addStep(transform_name);
 }
 
 // ============================================================================
-// Private Helpers
+// Core chain resolution
 // ============================================================================
 
-void PipelineStepListWidget::rebuildListDisplay() {
-    int saved_row = _list_widget->currentRow();
-    _list_widget->blockSignals(true);
-    _list_widget->clear();
+void PipelineStepListWidget::refreshChain() {
+    // Extract step names
+    std::vector<std::string> step_names;
+    step_names.reserve(_steps.size());
+    for (auto const & s : _steps) {
+        step_names.push_back(s.transform_name);
+    }
 
-    for (size_t i = 0; i < _steps.size(); ++i) {
+    // Resolve the full type chain in one call
+    _chain_result = resolveTypeChain(_input_container_type, step_names);
+
+    // Propagate validity back to the step entries
+    for (size_t i = 0; i < _steps.size() && i < _chain_result.steps.size(); ++i) {
+        _steps[i].is_valid = _chain_result.steps[i].is_valid;
+    }
+
+    rebuildStepsTable();
+    updateAvailableTransforms();
+    emit validationChanged(_chain_result.all_valid);
+}
+
+// ============================================================================
+// Table display
+// ============================================================================
+
+void PipelineStepListWidget::rebuildStepsTable() {
+    int saved_row = _steps_table->currentRow();
+    _steps_table->blockSignals(true);
+    _steps_table->setRowCount(0);
+
+    for (size_t i = 0; i < _steps.size() && i < _chain_result.steps.size(); ++i) {
         auto const & step = _steps[i];
-        auto display = QString::fromStdString(
-                std::format("{}. {}", i + 1, step.transform_name));
+        auto const & type_info = _chain_result.steps[i];
+        int row = static_cast<int>(i);
+        _steps_table->insertRow(row);
 
-        auto * item = new QListWidgetItem(display, _list_widget);
+        // Column 0: Step number
+        auto * num_item = new QTableWidgetItem(QString::number(i + 1));
+        num_item->setTextAlignment(Qt::AlignCenter);
+        _steps_table->setItem(row, 0, num_item);
 
+        // Column 1: Input type
+        _steps_table->setItem(row, 1,
+                new QTableWidgetItem(QString::fromStdString(type_info.input_type_name)));
+
+        // Column 2: Transform name
+        _steps_table->setItem(row, 2,
+                new QTableWidgetItem(QString::fromStdString(step.transform_name)));
+
+        // Column 3: Output type
+        _steps_table->setItem(row, 3,
+                new QTableWidgetItem(QString::fromStdString(type_info.output_type_name)));
+
+        // Highlight invalid steps
         if (!step.is_valid) {
-            item->setBackground(QColor(255, 200, 200));// Light red for invalid
-            item->setToolTip(tr("Type mismatch: this step's input type is incompatible "
-                                "with the previous step's output type"));
+            QColor invalid_bg(255, 200, 200);// Light red
+            for (int col = 0; col < 4; ++col) {
+                _steps_table->item(row, col)->setBackground(invalid_bg);
+                _steps_table->item(row, col)->setToolTip(
+                        tr("Type mismatch: this step's input type is incompatible "
+                           "with the previous step's output type"));
+            }
         }
     }
 
     // Restore selection
-    if (saved_row >= 0 && saved_row < _list_widget->count()) {
-        _list_widget->setCurrentRow(saved_row);
+    if (saved_row >= 0 && saved_row < _steps_table->rowCount()) {
+        _steps_table->setCurrentCell(saved_row, 0);
     }
 
-    _list_widget->blockSignals(false);
+    _steps_table->blockSignals(false);
     updateButtonStates();
 }
 
-void PipelineStepListWidget::validateTypeChain() {
-    if (_steps.empty()) {
-        emit validationChanged(true);
-        return;
-    }
+void PipelineStepListWidget::updateAvailableTransforms() {
+    // Determine the type context from the end of the resolved chain
+    auto elem_type = _chain_result.output_element_type;
+    auto cont_type = _chain_result.output_container_type;
 
-    bool all_valid = true;
-    auto current_element_type = _input_element_type;
-    auto current_container_type = _input_container_type;
+    auto compatible = getCompatibleTransforms(elem_type, cont_type);
+    _current_compatible = compatible;
 
-    for (auto & step: _steps) {
-        auto const & registry = ElementRegistry::instance();
+    _browser_table->blockSignals(true);
+    _browser_table->setRowCount(0);
 
-        if (step.is_container_transform) {
-            // Container transforms match on container type
-            auto const * cmeta = registry.getContainerMetadata(step.transform_name);
-            if (cmeta) {
-                step.is_valid = (cmeta->input_container_type == current_container_type);
-                if (step.is_valid) {
-                    current_container_type = cmeta->output_container_type;
-                    // Update element type from the new container type
-                    try {
-                        current_element_type = TypeIndexMapper::containerToElement(current_container_type);
-                    } catch (...) {
-                        // Keep previous element type if mapping fails
-                    }
-                }
-            } else {
-                step.is_valid = false;
-            }
+    auto & registry = ElementRegistry::instance();
+
+    for (size_t i = 0; i < compatible.size(); ++i) {
+        auto const & name = compatible[i];
+        int row = static_cast<int>(i);
+        _browser_table->insertRow(row);
+
+        // Column 0: Name
+        _browser_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(name)));
+
+        // Column 1: Description
+        std::string description;
+        std::string output_type_name;
+
+        auto const * meta = registry.getMetadata(name);
+        if (meta) {
+            description = meta->description;
         } else {
-            // Element transforms match on element type
-            step.is_valid = (step.input_type == current_element_type);
-            if (step.is_valid) {
-                current_element_type = step.output_type;
-                // Update container type from new element type
-                try {
-                    current_container_type = TypeIndexMapper::elementToContainer(current_element_type);
-                } catch (...) {
-                    // Keep previous container type if mapping fails
-                }
+            auto const * cmeta = registry.getContainerMetadata(name);
+            if (cmeta) {
+                description = cmeta->description;
             }
         }
+        _browser_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(description)));
 
-        if (!step.is_valid) {
-            all_valid = false;
+        // Column 2: Output type — resolve by probing a one-step chain
+        auto probe = resolveTypeChain(cont_type, std::span(&name, 1));
+        if (!probe.steps.empty()) {
+            output_type_name = probe.steps[0].output_type_name;
         }
+        _browser_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(output_type_name)));
     }
 
-    emit validationChanged(all_valid);
+    _browser_table->blockSignals(false);
+
+    // Update label
+    if (_input_element_type == typeid(void) && _input_container_type == typeid(void)) {
+        _browser_label->setText(tr("Available Transforms (select input data first)"));
+    } else if (compatible.empty()) {
+        _browser_label->setText(tr("Available Transforms (none for current type)"));
+    } else {
+        _browser_label->setText(tr("Available Transforms — double-click to add"));
+    }
 }
 
 std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
@@ -363,8 +352,8 @@ std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
 
     // Filter out "WithContext" variants — they are internal duplicates
     // of the base transforms used only for context-aware pipeline execution.
-    std::erase_if(result, [](std::string const & name) {
-        return name.size() > 11 && name.ends_with("WithContext");
+    std::erase_if(result, [](std::string const & n) {
+        return n.size() > 11 && n.ends_with("WithContext");
     });
 
     std::sort(result.begin(), result.end());
@@ -374,35 +363,29 @@ std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
 }
 
 void PipelineStepListWidget::updateButtonStates() {
-    int row = _list_widget->currentRow();
+    int row = _steps_table->currentRow();
     bool has_selection = (row >= 0);
-    int count = static_cast<int>(_steps.size());
-
     _remove_button->setEnabled(has_selection);
-    _move_up_button->setEnabled(has_selection && row > 0);
-    _move_down_button->setEnabled(has_selection && row < count - 1);
 }
 
 // ============================================================================
-// Phase 2: Load from descriptors
+// Load from descriptors
 // ============================================================================
 
 bool PipelineStepListWidget::loadFromDescriptors(
         std::vector<PipelineStepDescriptor> const & descriptors) {
 
-    // Block signals during bulk load to avoid intermediate emits
     blockSignals(true);
 
     _steps.clear();
-    _list_widget->clear();
+    _steps_table->setRowCount(0);
 
     bool all_ok = true;
 
-    for (auto const & desc: descriptors) {
+    for (auto const & desc : descriptors) {
         // Serialize the step's parameters back to JSON for the params_json field
         std::string params_json = "{}";
         if (desc.parameters.has_value()) {
-            // Convert rfl::Generic parameters to JSON string
             params_json = rfl::json::write(desc.parameters.value());
         }
 
@@ -431,14 +414,13 @@ bool PipelineStepListWidget::loadFromDescriptors(
         _steps.push_back(std::move(entry));
     }
 
-    validateTypeChain();
-    rebuildListDisplay();
-
     blockSignals(false);
+
+    refreshChain();
 
     // Select first step if any
     if (!_steps.empty()) {
-        _list_widget->setCurrentRow(0);
+        _steps_table->setCurrentCell(0, 0);
     }
 
     emit pipelineChanged();

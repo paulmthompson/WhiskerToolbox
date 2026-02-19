@@ -19,6 +19,8 @@ set(TRANSFORM_V2_SOURCES
         core/TensorColumnBuilders.cpp
         core/TransformPipeline.hpp
         core/TransformPipeline.cpp
+        core/TypeChainResolver.hpp
+        core/TypeChainResolver.cpp
 
         extension/ElementTransform.hpp
         extension/RangeReductionTypes.hpp

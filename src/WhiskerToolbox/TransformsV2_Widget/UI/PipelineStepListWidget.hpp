@@ -5,30 +5,33 @@
  * @file PipelineStepListWidget.hpp
  * @brief Widget for displaying and managing pipeline steps
  *
- * Shows the current pipeline steps in a list with add/remove/reorder controls.
- * Type-directed step suggestions filter available transforms based on the
- * current output type of the last step in the chain.
+ * Shows the current pipeline steps in a table with columns for step number,
+ * input type, transform name, and output type.
+ *
+ * Below the steps table is an inline "Available Transforms" browser table
+ * that shows compatible transforms based on the current chain output type.
+ * Double-clicking a row in the browser adds the transform as a new step.
+ *
+ * All type-chain resolution (validation, ragged-tracking, container naming)
+ * is delegated to @ref resolveTypeChain, which mirrors the logic in
+ * TransformPipeline::execute() without requiring actual data.
  */
+
+#include "TransformsV2/core/TypeChainResolver.hpp"
 
 #include <QWidget>
 
-#include <optional>
 #include <string>
 #include <typeindex>
 #include <vector>
 
-class QListWidget;
-class QListWidgetItem;
+class QTableWidget;
+class QLabel;
 class QPushButton;
-class QVBoxLayout;
-
-namespace WhiskerToolbox::Transforms::V2 {
-struct TransformMetadata;
-}// namespace WhiskerToolbox::Transforms::V2
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 struct PipelineStepDescriptor;
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+} // namespace WhiskerToolbox::Transforms::V2::Examples
 
 /**
  * @brief Represents a single step in the pipeline UI
@@ -37,26 +40,25 @@ struct PipelineStepEntry {
     std::string step_id;                ///< Unique step identifier
     std::string transform_name;         ///< Name of the transform
     std::string parameters_json;        ///< Current parameters as JSON
-    std::type_index input_type;         ///< Expected input element type
-    std::type_index output_type;        ///< Produced output element type
+    std::type_index input_type{typeid(void)};  ///< Expected input element type
+    std::type_index output_type{typeid(void)}; ///< Produced output element type
     bool is_valid = true;               ///< Whether this step is type-compatible
     bool is_container_transform = false;///< Whether this is a container-level transform
 
-    PipelineStepEntry()
-        : input_type(typeid(void)),
-          output_type(typeid(void)) {}
+    PipelineStepEntry() = default;
 };
 
 /**
  * @brief Widget for managing the ordered list of pipeline steps
  *
  * Provides:
- * - Visual list of steps with numbering
- * - [+] Add Step button that suggests type-compatible transforms
- * - [✕] Remove button per step
- * - [↑][↓] Reorder buttons
- * - Inline validation indicators (red border on incompatible steps)
+ * - Steps table with columns: #, Input Type, Transform, Output Type
+ * - Inline "Available Transforms" browser (no popup dialog)
+ * - [Remove] button for the selected step
+ * - Inline validation indicators (red background on incompatible steps)
  * - Selection → emits stepSelected() for the config panel
+ *
+ * Double-clicking a row in the Available Transforms table adds it to the pipeline.
  */
 class PipelineStepListWidget : public QWidget {
     Q_OBJECT
@@ -82,7 +84,7 @@ public:
 
     /**
      * @brief Get the current output container type of the pipeline
-     * @return The output container type after the last step, or the input container type if empty
+     * @return The output container type after the last step
      */
     [[nodiscard]] std::type_index currentOutputContainerType() const;
 
@@ -120,7 +122,7 @@ public:
     /**
      * @brief Rebuild all steps from a list of PipelineStepDescriptors
      *
-     * Used by JSON → UI loading (Phase 2). Clears existing steps, then adds
+     * Used by JSON → UI loading.  Clears existing steps, then adds
      * each step using the descriptor's transform_name and serialized parameters.
      *
      * @param descriptors The step descriptors from a parsed PipelineDescriptor
@@ -130,46 +132,46 @@ public:
             std::vector<WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor> const & descriptors);
 
 signals:
-    /**
-     * @brief Emitted when a step is selected in the list
-     * @param step_index The index of the selected step (-1 if deselected)
-     */
     void stepSelected(int step_index);
-
-    /**
-     * @brief Emitted when the pipeline changes (add/remove/reorder/params)
-     */
     void pipelineChanged();
-
-    /**
-     * @brief Emitted when the type chain validation state changes
-     * @param all_valid True if the entire chain is valid
-     */
     void validationChanged(bool all_valid);
 
 private slots:
-    void onAddStepClicked();
     void onRemoveStepClicked();
-    void onMoveUpClicked();
-    void onMoveDownClicked();
-    void onSelectionChanged();
+    void onStepSelectionChanged();
+    void onAvailableTransformDoubleClicked(int row, int column);
 
 private:
-    void rebuildListDisplay();
-    void validateTypeChain();
-    std::vector<std::string> getCompatibleTransforms(std::type_index element_type,
-                                                     std::type_index container_type) const;
+    /**
+     * @brief Re-resolve the type chain and refresh all UI
+     *
+     * Calls resolveTypeChain(), updates per-step validity,
+     * rebuilds the steps table, refreshes the browser, and
+     * emits validationChanged().
+     */
+    void refreshChain();
+
+    void rebuildStepsTable();
+    void updateAvailableTransforms();
+    std::vector<std::string> getCompatibleTransforms(
+            std::type_index element_type,
+            std::type_index container_type) const;
     void updateButtonStates();
 
-    QListWidget * _list_widget = nullptr;
-    QPushButton * _add_button = nullptr;
+    // --- Widgets ---
+    QTableWidget * _steps_table = nullptr;
     QPushButton * _remove_button = nullptr;
-    QPushButton * _move_up_button = nullptr;
-    QPushButton * _move_down_button = nullptr;
+    QLabel * _browser_label = nullptr;
+    QTableWidget * _browser_table = nullptr;
 
+    // --- Model ---
     std::vector<PipelineStepEntry> _steps;
+    std::vector<std::string> _current_compatible; ///< Names in the browser table
     std::type_index _input_element_type{typeid(void)};
     std::type_index _input_container_type{typeid(void)};
+
+    /// Cached result of the last resolveTypeChain() call
+    WhiskerToolbox::Transforms::V2::TypeChainResult _chain_result;
 };
 
-#endif// WHISKERTOOLBOX_PIPELINE_STEP_LIST_WIDGET_HPP
+#endif // WHISKERTOOLBOX_PIPELINE_STEP_LIST_WIDGET_HPP
