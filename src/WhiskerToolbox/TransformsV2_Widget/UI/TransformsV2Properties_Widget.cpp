@@ -26,12 +26,12 @@
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSplitter>
 #include <QTextEdit>
 #include <QVBoxLayout>
 
 #include <chrono>
-#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
@@ -90,13 +90,6 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
     resolveInputTypes();
     updateInputDisplay();
 
-    std::cout << "[TransformsV2] onDataFocusChanged:"
-              << " key='" << _input_data_key << "'"
-              << " type_name='" << _input_data_type_name << "'"
-              << " element_type='" << _input_element_type.name() << "'"
-              << " container_type='" << _input_container_type.name() << "'"
-              << std::endl;
-
     // Update sub-widgets with new input type
     _step_list->setInputType(_input_element_type, _input_container_type);
     _pre_reduction_panel->setInputType(_input_element_type);
@@ -154,7 +147,16 @@ void TransformsV2Properties_Widget::onValidationChanged(bool all_valid) {
 // ============================================================================
 
 void TransformsV2Properties_Widget::setupUI() {
-    auto * main_layout = ui->verticalLayout;
+    auto * outer_layout = ui->verticalLayout;
+
+    // Wrap all content in a scroll area so the widget is scrollable
+    auto * scroll_area = new QScrollArea(this);
+    scroll_area->setWidgetResizable(true);
+    scroll_area->setFrameShape(QFrame::NoFrame);
+
+    auto * scroll_content = new QWidget();
+    auto * main_layout = new QVBoxLayout(scroll_content);
+    main_layout->setContentsMargins(0, 0, 0, 0);
 
     // --- Input Section ---
     _input_group = new QGroupBox(tr("Input"), this);
@@ -327,6 +329,10 @@ void TransformsV2Properties_Widget::setupUI() {
             tr("Deliver the current pipeline JSON to the widget that requested it"));
     _deliver_pipeline_btn->setVisible(false);// Hidden until a pending operation exists
     main_layout->addWidget(_deliver_pipeline_btn);
+
+    // Finalize scroll area
+    scroll_area->setWidget(scroll_content);
+    outer_layout->addWidget(scroll_area);
 
     // --- Connections ---
     connect(_step_list, &PipelineStepListWidget::stepSelected,

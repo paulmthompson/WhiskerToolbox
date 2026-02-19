@@ -13,7 +13,6 @@
 
 #include <algorithm>
 #include <format>
-#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
@@ -84,11 +83,6 @@ void PipelineStepListWidget::setInputType(std::type_index element_type,
                                           std::type_index container_type) {
     _input_element_type = element_type;
     _input_container_type = container_type;
-
-    std::cout << "[PipelineStepList] setInputType:"
-              << " element='" << _input_element_type.name() << "'"
-              << " container='" << _input_container_type.name() << "'"
-              << std::endl;
 
     validateTypeChain();
     rebuildListDisplay();
@@ -361,18 +355,17 @@ std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
     auto element_transforms = registry.getTransformsForInputType(element_type);
     auto container_transforms = registry.getContainerTransformsForInputType(container_type);
 
-    std::cout << "[PipelineStepList] getCompatibleTransforms:"
-              << " element_type='" << element_type.name() << "'"
-              << " container_type='" << container_type.name() << "'"
-              << " element_transforms=" << element_transforms.size()
-              << " container_transforms=" << container_transforms.size()
-              << std::endl;
-
     // Merge and deduplicate
     std::vector<std::string> result;
     result.reserve(element_transforms.size() + container_transforms.size());
     result.insert(result.end(), element_transforms.begin(), element_transforms.end());
     result.insert(result.end(), container_transforms.begin(), container_transforms.end());
+
+    // Filter out "WithContext" variants — they are internal duplicates
+    // of the base transforms used only for context-aware pipeline execution.
+    std::erase_if(result, [](std::string const & name) {
+        return name.size() > 11 && name.ends_with("WithContext");
+    });
 
     std::sort(result.begin(), result.end());
     result.erase(std::unique(result.begin(), result.end()), result.end());
