@@ -56,6 +56,7 @@ target_link_libraries(MLCore_Widget
     PRIVATE
         DataManager
         MLCore
+        GroupManagementWidget
         reflectcpp::reflectcpp
 )
 

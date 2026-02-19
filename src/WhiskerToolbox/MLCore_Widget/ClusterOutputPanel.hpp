@@ -53,6 +53,8 @@ namespace MLCore {
 struct ClusteringPipelineResult;
 } // namespace MLCore
 
+class GroupManager;
+
 namespace Ui {
 class ClusterOutputPanel;
 }
@@ -64,9 +66,11 @@ public:
     /**
      * @brief Construct the cluster output panel
      *
+     * @param group_manager Optional GroupManager for color display and entity tracking
      * @param parent Optional parent widget
      */
-    explicit ClusterOutputPanel(QWidget * parent = nullptr);
+    explicit ClusterOutputPanel(GroupManager * group_manager = nullptr,
+                                QWidget * parent = nullptr);
 
     ~ClusterOutputPanel() override;
 
@@ -121,6 +125,16 @@ signals:
     void outputKeyClicked(QString const & key);
 
     /**
+     * @brief Emitted when the user clicks a putative group entry in the list
+     *
+     * The parent widget should wire this to
+     * SelectionContext::setSelectedEntities() using the group's members.
+     *
+     * @param group_id The GroupId of the clicked group
+     */
+    void groupClicked(int group_id);
+
+    /**
      * @brief Emitted when results are cleared (via button or programmatically)
      */
     void resultsCleared();
@@ -146,6 +160,8 @@ private:
     void _updateNoiseInfo(std::size_t noise_points);
 
     Ui::ClusterOutputPanel * ui;
+    GroupManager * _group_manager = nullptr;
+    std::vector<uint64_t> _last_putative_group_ids;
     bool _has_results = false;
 };
 

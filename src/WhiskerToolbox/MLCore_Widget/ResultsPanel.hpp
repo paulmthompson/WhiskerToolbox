@@ -58,6 +58,8 @@ struct ClassificationPipelineResult;
 struct PredictionWriterResult;
 } // namespace MLCore
 
+class GroupManager;
+
 namespace Ui {
 class ResultsPanel;
 }
@@ -69,9 +71,11 @@ public:
     /**
      * @brief Construct the results panel
      *
+     * @param group_manager Optional GroupManager for color display and entity tracking
      * @param parent Optional parent widget
      */
-    explicit ResultsPanel(QWidget * parent = nullptr);
+    explicit ResultsPanel(GroupManager * group_manager = nullptr,
+                          QWidget * parent = nullptr);
 
     ~ResultsPanel() override;
 
@@ -127,10 +131,12 @@ public:
      * @param interval_keys DataManager keys for DigitalIntervalSeries outputs
      * @param probability_keys DataManager keys for AnalogTimeSeries outputs
      * @param class_names Class names corresponding to the keys
+     * @param putative_group_ids GroupIds of created putative groups (optional)
      */
     void setOutputKeys(std::vector<std::string> const & interval_keys,
                        std::vector<std::string> const & probability_keys,
-                       std::vector<std::string> const & class_names);
+                       std::vector<std::string> const & class_names,
+                       std::vector<uint64_t> const & putative_group_ids = {});
 
     /**
      * @brief Clear all displayed results and return to the placeholder state
@@ -152,6 +158,16 @@ signals:
      * @param key The DataManager key of the clicked output
      */
     void outputKeyClicked(QString const & key);
+
+    /**
+     * @brief Emitted when the user clicks a putative group entry in the list
+     *
+     * The parent widget should wire this to
+     * SelectionContext::setSelectedEntities() using the group's members.
+     *
+     * @param group_id The GroupId of the clicked group
+     */
+    void groupClicked(int group_id);
 
     /**
      * @brief Emitted when results are cleared (via button or programmatically)
@@ -183,6 +199,8 @@ private:
         std::vector<std::string> const & class_names);
 
     Ui::ResultsPanel * ui;
+    GroupManager * _group_manager = nullptr;
+    std::vector<uint64_t> _last_putative_group_ids;
     bool _has_results = false;
 };
 

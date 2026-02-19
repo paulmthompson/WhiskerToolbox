@@ -61,6 +61,7 @@ class ClusteringPanel;
 class ClusterOutputPanel;
 class DataManager;
 class FeatureSelectionPanel;
+class GroupManager;
 class LabelConfigPanel;
 class MLCoreWidgetState;
 class ModelConfigPanel;
@@ -89,11 +90,13 @@ public:
      * @param state Shared state object for serialization and signal coordination
      * @param data_manager Shared DataManager for accessing data keys
      * @param selection_context SelectionContext for passive data focus awareness
+     * @param group_manager GroupManager for group colors and entity tracking (nullable)
      * @param parent Optional parent widget
      */
     explicit MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
                           std::shared_ptr<DataManager> data_manager,
                           SelectionContext * selection_context,
+                          GroupManager * group_manager = nullptr,
                           QWidget * parent = nullptr);
 
     ~MLCoreWidget() override;
@@ -161,9 +164,21 @@ private:
     void _runClusteringPipelineAsync(MLCore::ClusteringPipelineConfig config);
     void _setClusteringPipelineRunning(bool running);
 
+    /**
+     * @brief Select all entities in a group via SelectionContext
+     *
+     * When the user clicks a putative group entry in ClusterOutputPanel or
+     * ResultsPanel, this method retrieves the group's member entities from
+     * EntityGroupManager and calls SelectionContext::setSelectedEntities().
+     *
+     * @param group_id The GroupId whose entities should be selected
+     */
+    void _selectEntitiesInGroup(int group_id);
+
     std::shared_ptr<MLCoreWidgetState> _state;
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context;
+    GroupManager * _group_manager = nullptr;
 
     // Sub-panels (Classification)
     FeatureSelectionPanel * _feature_panel = nullptr;

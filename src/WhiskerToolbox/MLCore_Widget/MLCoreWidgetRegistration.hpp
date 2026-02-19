@@ -40,6 +40,7 @@
 // Forward declarations
 class DataManager;
 class EditorRegistry;
+class GroupManager;
 
 namespace MLCoreWidgetModule {
 
@@ -56,9 +57,11 @@ namespace MLCoreWidgetModule {
  *
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
+ * @param group_manager GroupManager for group color and entity tracking (nullable)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager = nullptr);
 
 }  // namespace MLCoreWidgetModule
 

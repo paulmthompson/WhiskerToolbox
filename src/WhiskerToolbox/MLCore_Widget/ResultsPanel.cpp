@@ -2,11 +2,13 @@
 
 #include "ui_ResultsPanel.h"
 
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "metrics/ClassificationMetrics.hpp"
 #include "output/PredictionWriter.hpp"
 #include "pipelines/ClassificationPipeline.hpp"
 
 #include <QListWidgetItem>
+#include <QPixmap>
 #include <QString>
 
 #include <algorithm>
@@ -17,9 +19,10 @@
 // Construction / destruction
 // =============================================================================
 
-ResultsPanel::ResultsPanel(QWidget * parent)
+ResultsPanel::ResultsPanel(GroupManager * group_manager, QWidget * parent)
     : QWidget(parent)
-    , ui(new Ui::ResultsPanel) {
+    , ui(new Ui::ResultsPanel)
+    , _group_manager(group_manager) {
     ui->setupUi(this);
 
     connect(ui->outputKeysListWidget, &QListWidget::itemClicked,
@@ -68,7 +71,8 @@ void ResultsPanel::showClassificationResult(
     if (result.writer_result.has_value()) {
         setOutputKeys(result.writer_result->interval_keys,
                       result.writer_result->probability_keys,
-                      result.writer_result->class_names);
+                      result.writer_result->class_names,
+                      result.writer_result->putative_group_ids);
     }
 
     _has_results = true;
@@ -103,9 +107,35 @@ void ResultsPanel::showMultiClassMetrics(
 void ResultsPanel::setOutputKeys(
     std::vector<std::string> const & interval_keys,
     std::vector<std::string> const & probability_keys,
-    std::vector<std::string> const & class_names) {
+    std::vector<std::string> const & class_names,
+    std::vector<uint64_t> const & putative_group_ids) {
 
     ui->outputKeysListWidget->clear();
+    _last_putative_group_ids = putative_group_ids;
+
+    // Add putative group entries with color swatches (if groups were created)
+    for (std::size_t i = 0; i < putative_group_ids.size(); ++i) {
+        std::string const name = (i < class_names.size())
+                                     ? class_names[i]
+                                     : "Class " + std::to_string(i);
+        QString const label = QStringLiteral("Group: %1 (id %2)")
+                                  .arg(QString::fromStdString(name))
+                                  .arg(putative_group_ids[i]);
+        auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
+        item->setData(Qt::UserRole, QString::fromStdString(name));
+        item->setData(Qt::UserRole + 1, static_cast<int>(putative_group_ids[i]));
+        item->setToolTip(QStringLiteral("Putative entity group — click to select entities"));
+
+        // Show color swatch from GroupManager if available
+        if (_group_manager) {
+            auto group = _group_manager->getGroup(static_cast<int>(putative_group_ids[i]));
+            if (group.has_value()) {
+                QPixmap swatch(12, 12);
+                swatch.fill(group->color);
+                item->setIcon(QIcon(swatch));
+            }
+        }
+    }
 
     // Add interval series keys
     for (std::size_t i = 0; i < interval_keys.size(); ++i) {
@@ -114,9 +144,6 @@ void ResultsPanel::setOutputKeys(
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
         item->setToolTip(QStringLiteral("DigitalIntervalSeries — click to focus in DataViewer"));
-        if (i < class_names.size()) {
-            item->setIcon(QIcon{});  // Could add a class-specific icon in the future
-        }
     }
 
     // Add probability series keys
@@ -131,6 +158,7 @@ void ResultsPanel::setOutputKeys(
 
 void ResultsPanel::clearResults() {
     _showNoResultsState();
+    _last_putative_group_ids.clear();
     _has_results = false;
     emit resultsCleared();
 }
@@ -147,6 +175,15 @@ void ResultsPanel::_onOutputItemClicked(QListWidgetItem * item) {
     if (!item) {
         return;
     }
+
+    // Check if this is a group entry (stores group_id in UserRole+1)
+    QVariant const group_data = item->data(Qt::UserRole + 1);
+    if (group_data.isValid()) {
+        emit groupClicked(group_data.toInt());
+        return;
+    }
+
+    // Otherwise it's a data key entry
     QVariant const data = item->data(Qt::UserRole);
     if (data.isValid()) {
         emit outputKeyClicked(data.toString());

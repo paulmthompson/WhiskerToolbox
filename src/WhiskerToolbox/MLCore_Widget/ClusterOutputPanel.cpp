@@ -2,10 +2,12 @@
 
 #include "ui_ClusterOutputPanel.h"
 
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "pipelines/ClusteringPipeline.hpp"
 
 #include <QHeaderView>
 #include <QListWidgetItem>
+#include <QPixmap>
 #include <QString>
 #include <QTableWidgetItem>
 
@@ -13,9 +15,11 @@
 // Construction / destruction
 // =============================================================================
 
-ClusterOutputPanel::ClusterOutputPanel(QWidget * parent)
+ClusterOutputPanel::ClusterOutputPanel(GroupManager * group_manager,
+                                       QWidget * parent)
     : QWidget(parent)
-    , ui(new Ui::ClusterOutputPanel) {
+    , ui(new Ui::ClusterOutputPanel)
+    , _group_manager(group_manager) {
     ui->setupUi(this);
 
     // Configure table header sizing
@@ -82,8 +86,9 @@ void ClusterOutputPanel::setOutputKeys(
     std::vector<uint64_t> const & group_ids) {
 
     ui->outputKeysListWidget->clear();
+    _last_putative_group_ids = group_ids;
 
-    // Add putative group entries
+    // Add putative group entries with color swatches
     for (std::size_t i = 0; i < group_ids.size(); ++i) {
         std::string const name = (i < cluster_names.size())
                                      ? cluster_names[i]
@@ -92,9 +97,21 @@ void ClusterOutputPanel::setOutputKeys(
                                   .arg(QString::fromStdString(name))
                                   .arg(group_ids[i]);
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
-        // Groups don't have a DataManager key, but store the name for reference
+        // Store the group name for display reference
         item->setData(Qt::UserRole, QString::fromStdString(name));
-        item->setToolTip(QStringLiteral("Putative entity group"));
+        // Store group_id for entity selection on click
+        item->setData(Qt::UserRole + 1, static_cast<int>(group_ids[i]));
+        item->setToolTip(QStringLiteral("Putative entity group — click to select entities"));
+
+        // Show color swatch from GroupManager if available
+        if (_group_manager) {
+            auto group = _group_manager->getGroup(static_cast<int>(group_ids[i]));
+            if (group.has_value()) {
+                QPixmap swatch(12, 12);
+                swatch.fill(group->color);
+                item->setIcon(QIcon(swatch));
+            }
+        }
     }
 
     // Add interval series keys
@@ -122,6 +139,7 @@ void ClusterOutputPanel::setOutputKeys(
 
 void ClusterOutputPanel::clearResults() {
     _showNoResultsState();
+    _last_putative_group_ids.clear();
     _has_results = false;
     emit resultsCleared();
 }
@@ -138,6 +156,15 @@ void ClusterOutputPanel::_onOutputItemClicked(QListWidgetItem * item) {
     if (!item) {
         return;
     }
+
+    // Check if this is a group entry (stores group_id in UserRole+1)
+    QVariant const group_data = item->data(Qt::UserRole + 1);
+    if (group_data.isValid()) {
+        emit groupClicked(group_data.toInt());
+        return;
+    }
+
+    // Otherwise it's a data key entry
     QVariant const data = item->data(Qt::UserRole);
     if (data.isValid()) {
         emit outputKeyClicked(data.toString());

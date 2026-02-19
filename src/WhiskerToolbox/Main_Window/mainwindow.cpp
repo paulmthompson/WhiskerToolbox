@@ -975,7 +975,7 @@ void MainWindow::_registerEditorTypes() {
 
     MLWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 
-    MLCoreWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
+    MLCoreWidgetModule::registerTypes(_editor_registry.get(), _data_manager, _group_manager.get());
 
     DeepLearningWidgetModule::registerTypes(_editor_registry.get(), _data_manager);
 

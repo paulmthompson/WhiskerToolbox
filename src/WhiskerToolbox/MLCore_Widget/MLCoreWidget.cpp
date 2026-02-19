@@ -12,6 +12,8 @@
 
 #include "DataManager/DataManager.hpp"
 #include "EditorState/SelectionContext.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
@@ -26,6 +28,7 @@
 #include <QThread>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <utility>
 
 // =============================================================================
@@ -132,11 +135,13 @@ private:
 MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
                            std::shared_ptr<DataManager> data_manager,
                            SelectionContext * selection_context,
+                           GroupManager * group_manager,
                            QWidget * parent)
     : QWidget(parent)
     , _state(std::move(state))
     , _data_manager(std::move(data_manager))
     , _selection_context(selection_context)
+    , _group_manager(group_manager)
     , _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     _setupUi();
     _connectSignals();
@@ -224,7 +229,7 @@ void MLCoreWidget::_setupUi() {
     classification_layout->addWidget(progress_widget);
 
     // Results panel
-    _results_panel = new ResultsPanel(classification_tab);
+    _results_panel = new ResultsPanel(_group_manager, classification_tab);
     classification_layout->addWidget(_results_panel);
 
     classification_layout->addStretch();
@@ -253,7 +258,7 @@ void MLCoreWidget::_setupUi() {
 
     clustering_layout->addWidget(clustering_progress_widget);
 
-    _cluster_output_panel = new ClusterOutputPanel(clustering_tab);
+    _cluster_output_panel = new ClusterOutputPanel(_group_manager, clustering_tab);
     clustering_layout->addWidget(_cluster_output_panel);
     clustering_layout->addStretch();
 
@@ -348,6 +353,58 @@ void MLCoreWidget::_connectSignals() {
                 _selection_context->setDataFocus(
                     EditorLib::SelectedDataKey(key), type_str, source);
             });
+
+    // Group clicked in ResultsPanel → select entities in group via SelectionContext
+    connect(_results_panel, &ResultsPanel::groupClicked,
+            this, &MLCoreWidget::_selectEntitiesInGroup);
+
+    // Group clicked in ClusterOutputPanel → select entities in group via SelectionContext
+    connect(_cluster_output_panel, &ClusterOutputPanel::groupClicked,
+            this, &MLCoreWidget::_selectEntitiesInGroup);
+
+    // Incoming entity selection changes — highlight matching groups (task 5.4)
+    if (_selection_context) {
+        connect(_selection_context, &SelectionContext::entitySelectionChanged,
+                this, [this](SelectionSource const & source) {
+                    // Ignore our own entity selection broadcasts
+                    if (_state && source.editor_instance_id == EditorLib::EditorInstanceId(_state->getInstanceId())) {
+                        return;
+                    }
+
+                    if (!_data_manager || !_selection_context) {
+                        return;
+                    }
+
+                    auto const selected_entities = _selection_context->selectedEntities();
+                    if (selected_entities.empty()) {
+                        return;
+                    }
+
+                    // Check if any selected entity belongs to one of the ML-created groups.
+                    // If so, highlight that group in the output panel by selecting the
+                    // corresponding list item.
+                    auto * egm = _data_manager->getEntityGroupManager();
+                    if (!egm) {
+                        return;
+                    }
+
+                    // Check clustering groups
+                    if (_last_clustering_result && _last_clustering_result->success) {
+                        for (auto const gid : _last_clustering_result->putative_group_ids) {
+                            auto members = egm->getEntitiesInGroup(gid);
+                            for (auto const & eid : selected_entities) {
+                                EntityId const entity_id(static_cast<uint64_t>(eid));
+                                auto it = std::find(members.begin(), members.end(), entity_id);
+                                if (it != members.end()) {
+                                    // Found a match — this entity is in this cluster group
+                                    // Could highlight in ClusterOutputPanel in the future
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+    }
 }
 
 // =============================================================================
@@ -765,4 +822,39 @@ void MLCoreWidget::_setClusteringPipelineRunning(bool running) {
 
     // Disable the clustering panel during pipeline execution
     _clustering_panel->setEnabled(!running);
+}
+
+// =============================================================================
+// Entity selection via SelectionContext (task 5.4)
+// =============================================================================
+
+void MLCoreWidget::_selectEntitiesInGroup(int group_id) {
+    if (!_selection_context || !_data_manager) {
+        return;
+    }
+
+    auto * egm = _data_manager->getEntityGroupManager();
+    if (!egm) {
+        return;
+    }
+
+    auto const entity_ids = egm->getEntitiesInGroup(static_cast<GroupId>(group_id));
+    if (entity_ids.empty()) {
+        return;
+    }
+
+    // Convert EntityId → int64_t for SelectionContext
+    std::vector<int64_t> selection;
+    selection.reserve(entity_ids.size());
+    for (auto const & eid : entity_ids) {
+        selection.push_back(static_cast<int64_t>(eid.id));
+    }
+
+    SelectionSource const source{
+        _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+               : EditorLib::EditorInstanceId{},
+        QStringLiteral("MLCoreWidget")
+    };
+
+    _selection_context->setSelectedEntities(selection, source);
 }

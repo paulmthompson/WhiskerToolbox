@@ -10,7 +10,8 @@
 namespace MLCoreWidgetModule {
 
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager) {
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager) {
 
     if (!registry) {
         std::cerr << "MLCoreWidgetModule::registerTypes: registry is null" << std::endl;
@@ -42,14 +43,15 @@ void registerTypes(EditorRegistry * registry,
         .create_view = nullptr,
         .create_properties = nullptr,
 
-        .create_editor_custom = [dm](EditorRegistry * reg)
+        .create_editor_custom = [dm, group_manager](EditorRegistry * reg)
             -> EditorRegistry::EditorInstance
         {
             auto state = std::make_shared<MLCoreWidgetState>();
 
             auto * selection_context = reg->selectionContext();
 
-            auto * widget = new MLCoreWidget(state, dm, selection_context, nullptr);
+            auto * widget = new MLCoreWidget(state, dm, selection_context,
+                                             group_manager, nullptr);
 
             widget->setMinimumSize(350, 500);
             widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
