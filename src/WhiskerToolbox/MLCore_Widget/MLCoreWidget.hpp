@@ -21,6 +21,19 @@
  * background thread. Progress is reported via a status label and progress bar.
  * On completion, results are displayed in ResultsPanel.
  *
+ * ## SelectionContext Integration (Task 4.9)
+ *
+ * MLCoreWidget implements the DataFocusAware mixin for passive awareness:
+ *
+ * - **Incoming focus**: When another widget focuses a TensorData key via
+ *   SelectionContext, the FeatureSelectionPanel auto-selects it. This lets
+ *   users click a tensor in DataInspector and have it appear here.
+ *
+ * - **Outgoing focus**: When the user clicks an output data key in
+ *   ResultsPanel (e.g., a predicted interval series or probability series),
+ *   MLCoreWidget calls SelectionContext::setDataFocus so other widgets
+ *   (DataViewer, DataInspector) can navigate to that output.
+ *
  * ## Architecture
  *
  * MLCoreWidget follows the self-contained tool widget pattern:
@@ -28,12 +41,15 @@
  * - Placed in Zone::Right as a tabbed panel
  * - Consumes MLCoreWidgetState for serializable configuration
  * - Accesses DataManager for data keys and SelectionContext for focus awareness
+ * - Inherits DataFocusAware for passive data focus handling
  *
  * @see MLCoreWidgetState for the state this widget observes
  * @see MLCoreWidgetRegistration for how this widget is created
  * @see ClassificationPipeline for the underlying supervised pipeline
  * @see ClusteringPipeline for the underlying unsupervised pipeline
  */
+
+#include "EditorState/DataFocusAware.hpp"
 
 #include <QWidget>
 
@@ -59,7 +75,7 @@ struct ClassificationPipelineConfig;
 struct ClassificationPipelineResult;
 } // namespace MLCore
 
-class MLCoreWidget : public QWidget {
+class MLCoreWidget : public QWidget, public DataFocusAware {
     Q_OBJECT
 
 public:
@@ -77,6 +93,21 @@ public:
                           QWidget * parent = nullptr);
 
     ~MLCoreWidget() override;
+
+    // === DataFocusAware interface ===
+
+    /**
+     * @brief Respond to data focus changes from other widgets
+     *
+     * When a TensorData key is focused elsewhere, auto-selects it in the
+     * FeatureSelectionPanel. This provides passive awareness so users can
+     * click a tensor in DataInspector and have it appear in the ML workflow.
+     *
+     * @param data_key The newly focused data key
+     * @param data_type The type of the focused data (e.g., "TensorData")
+     */
+    void onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
+                            QString const & data_type) override;
 
 signals:
     /**

@@ -9,6 +9,7 @@
 #include "ResultsPanel.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
@@ -93,9 +94,36 @@ MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
     , _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     _setupUi();
     _connectSignals();
+
+    // Connect to SelectionContext for passive data focus awareness (task 4.9)
+    if (_selection_context) {
+        connectToSelectionContext(_selection_context, this);
+    }
 }
 
 MLCoreWidget::~MLCoreWidget() = default;
+
+// =============================================================================
+// DataFocusAware — passive awareness (task 4.9)
+// =============================================================================
+
+void MLCoreWidget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
+                                       QString const & data_type) {
+    if (!_state || !_data_manager) {
+        return;
+    }
+
+    QString const key_str = data_key.toString();
+    if (key_str.isEmpty()) {
+        return;
+    }
+
+    // When a TensorData key is focused elsewhere, auto-select it in
+    // the feature panel so the user can quickly switch feature matrices.
+    if (data_type == QStringLiteral("TensorData")) {
+        _state->setFeatureTensorKey(key_str.toStdString());
+    }
+}
 
 // =============================================================================
 // UI setup
@@ -205,6 +233,30 @@ void MLCoreWidget::_connectSignals() {
     connect(this, &MLCoreWidget::_pipelineProgressReported,
             this, &MLCoreWidget::_onPipelineProgress,
             Qt::QueuedConnection);
+
+    // Output key clicked in ResultsPanel → emit data focus via SelectionContext (task 4.9)
+    connect(_results_panel, &ResultsPanel::outputKeyClicked,
+            this, [this](QString const & key) {
+                if (!_selection_context || !_data_manager) {
+                    return;
+                }
+
+                std::string const key_std = key.toStdString();
+
+                // Look up the data type from DataManager and convert to string
+                DM_DataType const dm_type = _data_manager->getType(key_std);
+                QString const type_str = QString::fromStdString(
+                    convert_data_type_to_string(dm_type));
+
+                SelectionSource const source{
+                    _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                           : EditorLib::EditorInstanceId{},
+                    QStringLiteral("ResultsPanel")
+                };
+
+                _selection_context->setDataFocus(
+                    EditorLib::SelectedDataKey(key), type_str, source);
+            });
 }
 
 // =============================================================================
