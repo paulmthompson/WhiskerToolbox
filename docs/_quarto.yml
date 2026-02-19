@@ -38,6 +38,7 @@ website:
       style: "docked"
       contents:
         - developer/index.qmd
+        - developer/python_integration.qmd
         - developer/benchmark/benchmarking.qmd
         - developer/building.qmd
         - developer/code_quality.qmd
@@ -195,6 +196,9 @@ website:
           contents:
             - user_guide/behaviors/whisker.qmd
             - user_guide/behaviors/tongue.qmd
+        - section: "Python Console"
+          contents:
+            - user_guide/python_console.qmd
 
 
 format:
