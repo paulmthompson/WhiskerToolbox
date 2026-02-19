@@ -34,7 +34,6 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
 class DataManager;
 class MLCoreWidgetState;
 
@@ -113,4 +112,4 @@ private:
     bool _valid = false;
 };
 
-#endif // FEATURE_SELECTION_PANEL_HPP
+#endif// FEATURE_SELECTION_PANEL_HPP

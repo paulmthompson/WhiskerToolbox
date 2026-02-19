@@ -19,29 +19,29 @@
 namespace {
 
 // Parameter stack page indices — must match the order in the .ui file
-constexpr int kPageEmpty              = 0;
-constexpr int kPageRandomForest       = 1;
-constexpr int kPageNaiveBayes         = 2;
+constexpr int kPageEmpty = 0;
+constexpr int kPageRandomForest = 1;
+constexpr int kPageNaiveBayes = 2;
 constexpr int kPageLogisticRegression = 3;
-constexpr int kPageKMeans             = 4;
-constexpr int kPageDBSCAN             = 5;
-constexpr int kPageGMM                = 6;
+constexpr int kPageKMeans = 4;
+constexpr int kPageDBSCAN = 5;
+constexpr int kPageGMM = 6;
 
-} // namespace
+}// namespace
 
 // =============================================================================
 // Construction / destruction
 // =============================================================================
 
 ModelConfigPanel::ModelConfigPanel(
-    std::shared_ptr<MLCoreWidgetState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::ModelConfigPanel)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager))
-    , _registry(std::make_unique<MLCore::MLModelRegistry>()) {
+        std::shared_ptr<MLCoreWidgetState> state,
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::ModelConfigPanel),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)),
+      _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     ui->setupUi(this);
     _populateTaskTypes();
     _populateBalancingStrategies();
@@ -72,52 +72,52 @@ std::unique_ptr<MLCore::MLModelParametersBase> ModelConfigPanel::currentParamete
     int const page = _pageIndexForModel(name);
 
     switch (page) {
-    case kPageRandomForest: {
-        auto params = std::make_unique<MLCore::RandomForestParameters>();
-        params->num_trees = ui->rfNumTreesSpinBox->value();
-        params->minimum_leaf_size = ui->rfMinLeafSpinBox->value();
-        params->maximum_depth = ui->rfMaxDepthSpinBox->value();
-        return params;
-    }
-    case kPageNaiveBayes: {
-        auto params = std::make_unique<MLCore::NaiveBayesParameters>();
-        params->epsilon = ui->nbEpsilonSpinBox->value();
-        return params;
-    }
-    case kPageLogisticRegression: {
-        auto params = std::make_unique<MLCore::LogisticRegressionParameters>();
-        params->lambda = ui->lrLambdaSpinBox->value();
-        params->max_iterations = static_cast<std::size_t>(ui->lrMaxIterSpinBox->value());
-        return params;
-    }
-    case kPageKMeans: {
-        auto params = std::make_unique<MLCore::KMeansParameters>();
-        params->k = static_cast<std::size_t>(ui->kmKSpinBox->value());
-        params->max_iterations = static_cast<std::size_t>(ui->kmMaxIterSpinBox->value());
-        int const seed_val = ui->kmSeedSpinBox->value();
-        if (seed_val >= 0) {
-            params->seed = static_cast<std::size_t>(seed_val);
+        case kPageRandomForest: {
+            auto params = std::make_unique<MLCore::RandomForestParameters>();
+            params->num_trees = ui->rfNumTreesSpinBox->value();
+            params->minimum_leaf_size = ui->rfMinLeafSpinBox->value();
+            params->maximum_depth = ui->rfMaxDepthSpinBox->value();
+            return params;
         }
-        return params;
-    }
-    case kPageDBSCAN: {
-        auto params = std::make_unique<MLCore::DBSCANParameters>();
-        params->epsilon = ui->dbEpsilonSpinBox->value();
-        params->min_points = static_cast<std::size_t>(ui->dbMinPointsSpinBox->value());
-        return params;
-    }
-    case kPageGMM: {
-        auto params = std::make_unique<MLCore::GMMParameters>();
-        params->k = static_cast<std::size_t>(ui->gmmKSpinBox->value());
-        params->max_iterations = static_cast<std::size_t>(ui->gmmMaxIterSpinBox->value());
-        int const seed_val = ui->gmmSeedSpinBox->value();
-        if (seed_val >= 0) {
-            params->seed = static_cast<std::size_t>(seed_val);
+        case kPageNaiveBayes: {
+            auto params = std::make_unique<MLCore::NaiveBayesParameters>();
+            params->epsilon = ui->nbEpsilonSpinBox->value();
+            return params;
         }
-        return params;
-    }
-    default:
-        return nullptr;
+        case kPageLogisticRegression: {
+            auto params = std::make_unique<MLCore::LogisticRegressionParameters>();
+            params->lambda = ui->lrLambdaSpinBox->value();
+            params->max_iterations = static_cast<std::size_t>(ui->lrMaxIterSpinBox->value());
+            return params;
+        }
+        case kPageKMeans: {
+            auto params = std::make_unique<MLCore::KMeansParameters>();
+            params->k = static_cast<std::size_t>(ui->kmKSpinBox->value());
+            params->max_iterations = static_cast<std::size_t>(ui->kmMaxIterSpinBox->value());
+            int const seed_val = ui->kmSeedSpinBox->value();
+            if (seed_val >= 0) {
+                params->seed = static_cast<std::size_t>(seed_val);
+            }
+            return params;
+        }
+        case kPageDBSCAN: {
+            auto params = std::make_unique<MLCore::DBSCANParameters>();
+            params->epsilon = ui->dbEpsilonSpinBox->value();
+            params->min_points = static_cast<std::size_t>(ui->dbMinPointsSpinBox->value());
+            return params;
+        }
+        case kPageGMM: {
+            auto params = std::make_unique<MLCore::GMMParameters>();
+            params->k = static_cast<std::size_t>(ui->gmmKSpinBox->value());
+            params->max_iterations = static_cast<std::size_t>(ui->gmmMaxIterSpinBox->value());
+            int const seed_val = ui->gmmSeedSpinBox->value();
+            if (seed_val >= 0) {
+                params->seed = static_cast<std::size_t>(seed_val);
+            }
+            return params;
+        }
+        default:
+            return nullptr;
     }
 }
 
@@ -279,14 +279,14 @@ void ModelConfigPanel::_populateTaskTypes() {
     ui->taskTypeComboBox->clear();
 
     ui->taskTypeComboBox->addItem(
-        QStringLiteral("Binary Classification"),
-        static_cast<int>(MLCore::MLTaskType::BinaryClassification));
+            QStringLiteral("Binary Classification"),
+            static_cast<int>(MLCore::MLTaskType::BinaryClassification));
     ui->taskTypeComboBox->addItem(
-        QStringLiteral("Multi-Class Classification"),
-        static_cast<int>(MLCore::MLTaskType::MultiClassClassification));
+            QStringLiteral("Multi-Class Classification"),
+            static_cast<int>(MLCore::MLTaskType::MultiClassClassification));
     ui->taskTypeComboBox->addItem(
-        QStringLiteral("Clustering"),
-        static_cast<int>(MLCore::MLTaskType::Clustering));
+            QStringLiteral("Clustering"),
+            static_cast<int>(MLCore::MLTaskType::Clustering));
 
     // Default to Multi-Class Classification (covers binary too)
     ui->taskTypeComboBox->setCurrentIndex(1);
@@ -307,10 +307,10 @@ void ModelConfigPanel::_populateAlgorithms() {
     ui->algorithmComboBox->clear();
 
     auto const model_names = _registry->getModelNames(task);
-    for (auto const & name : model_names) {
+    for (auto const & name: model_names) {
         ui->algorithmComboBox->addItem(
-            QString::fromStdString(name),
-            QString::fromStdString(name));
+                QString::fromStdString(name),
+                QString::fromStdString(name));
     }
 
     // Try to restore previous selection
@@ -353,8 +353,8 @@ void ModelConfigPanel::_updateBalancingVisibility() {
 
     // Balancing is only relevant for classification tasks
     bool const is_classification =
-        (task == MLCore::MLTaskType::BinaryClassification ||
-         task == MLCore::MLTaskType::MultiClassClassification);
+            (task == MLCore::MLTaskType::BinaryClassification ||
+             task == MLCore::MLTaskType::MultiClassClassification);
 
     ui->balancingGroupBox->setVisible(is_classification);
 }
@@ -367,9 +367,9 @@ void ModelConfigPanel::_syncToState() {
     _state->setSelectedModelName(selectedModelName());
     _state->setBalancingEnabled(isBalancingEnabled());
     _state->setBalancingStrategy(
-        balancingStrategy() == MLCore::BalancingStrategy::Oversample
-            ? "oversample"
-            : "subsample");
+            balancingStrategy() == MLCore::BalancingStrategy::Oversample
+                    ? "oversample"
+                    : "subsample");
     _state->setBalancingMaxRatio(balancingMaxRatio());
 
     // Serialize current parameters to JSON for state persistence
@@ -392,7 +392,7 @@ void ModelConfigPanel::_restoreFromState() {
         if (task_type) {
             // Set task type combo
             int const task_idx = ui->taskTypeComboBox->findData(
-                static_cast<int>(*task_type));
+                    static_cast<int>(*task_type));
             if (task_idx >= 0) {
                 ui->taskTypeComboBox->setCurrentIndex(task_idx);
             }
@@ -404,7 +404,7 @@ void ModelConfigPanel::_restoreFromState() {
 
             // Set algorithm combo
             int const algo_idx = ui->algorithmComboBox->findData(
-                QString::fromStdString(model_name));
+                    QString::fromStdString(model_name));
             if (algo_idx >= 0) {
                 ui->algorithmComboBox->setCurrentIndex(algo_idx);
                 _switchParameterPage(model_name);

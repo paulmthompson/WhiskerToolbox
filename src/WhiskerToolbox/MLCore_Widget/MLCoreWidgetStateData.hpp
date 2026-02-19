@@ -133,4 +133,4 @@ struct MLCoreWidgetStateData {
     int active_tab = 0;
 };
 
-#endif // MLCORE_WIDGET_STATE_DATA_HPP
+#endif// MLCORE_WIDGET_STATE_DATA_HPP

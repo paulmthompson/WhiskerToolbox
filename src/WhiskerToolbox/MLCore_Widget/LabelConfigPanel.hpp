@@ -44,7 +44,6 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 class MLCoreWidgetState;
 
@@ -170,4 +169,4 @@ private:
     std::vector<uint64_t> _selected_data_group_ids;
 };
 
-#endif // LABEL_CONFIG_PANEL_HPP
+#endif// LABEL_CONFIG_PANEL_HPP

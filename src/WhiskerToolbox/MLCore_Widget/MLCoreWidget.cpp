@@ -1,7 +1,7 @@
 #include "MLCoreWidget.hpp"
 
-#include "ClusteringPanel.hpp"
 #include "ClusterOutputPanel.hpp"
+#include "ClusteringPanel.hpp"
 #include "FeatureSelectionPanel.hpp"
 #include "LabelConfigPanel.hpp"
 #include "MLCoreWidgetState.hpp"
@@ -51,10 +51,10 @@ public:
                    MLCore::MLModelRegistry const * registry,
                    MLCore::ClassificationPipelineConfig config,
                    QObject * parent = nullptr)
-        : QThread(parent)
-        , _dm(dm)
-        , _registry(registry)
-        , _config(std::move(config)) {}
+        : QThread(parent),
+          _dm(dm),
+          _registry(registry),
+          _config(std::move(config)) {}
 
     [[nodiscard]] MLCore::ClassificationPipelineResult takeResult() {
         return std::move(_result);
@@ -94,10 +94,10 @@ public:
                              MLCore::MLModelRegistry const * registry,
                              MLCore::ClusteringPipelineConfig config,
                              QObject * parent = nullptr)
-        : QThread(parent)
-        , _dm(dm)
-        , _registry(registry)
-        , _config(std::move(config)) {}
+        : QThread(parent),
+          _dm(dm),
+          _registry(registry),
+          _config(std::move(config)) {}
 
     [[nodiscard]] MLCore::ClusteringPipelineResult takeResult() {
         return std::move(_result);
@@ -123,7 +123,7 @@ private:
     MLCore::ClusteringPipelineResult _result;
 };
 
-} // namespace
+}// namespace
 
 // Need to include the moc for the anonymous-namespace QObject subclass
 #include "MLCoreWidget.moc"
@@ -137,12 +137,12 @@ MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
                            SelectionContext * selection_context,
                            GroupManager * group_manager,
                            QWidget * parent)
-    : QWidget(parent)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager))
-    , _selection_context(selection_context)
-    , _group_manager(group_manager)
-    , _registry(std::make_unique<MLCore::MLModelRegistry>()) {
+    : QWidget(parent),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)),
+      _selection_context(selection_context),
+      _group_manager(group_manager),
+      _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     _setupUi();
     _connectSignals();
 
@@ -159,7 +159,7 @@ MLCoreWidget::~MLCoreWidget() = default;
 // =============================================================================
 
 void MLCoreWidget::onDataFocusChanged(EditorLib::SelectedDataKey const & data_key,
-                                       QString const & data_type) {
+                                      QString const & data_type) {
     if (!_state || !_data_manager) {
         return;
     }
@@ -196,7 +196,7 @@ void MLCoreWidget::_setupUi() {
 
     // Training region panel
     _training_region_panel = new RegionSelectionPanel(
-        _state, _data_manager, RegionMode::Training, classification_tab);
+            _state, _data_manager, RegionMode::Training, classification_tab);
     classification_layout->addWidget(_training_region_panel);
 
     // Label configuration panel
@@ -221,7 +221,7 @@ void MLCoreWidget::_setupUi() {
     progress_layout->addWidget(_status_label, 1);
 
     _progress_bar = new QProgressBar(classification_tab);
-    _progress_bar->setRange(0, 0); // indeterminate
+    _progress_bar->setRange(0, 0);// indeterminate
     _progress_bar->setMaximumWidth(120);
     _progress_bar->setVisible(false);
     progress_layout->addWidget(_progress_bar);
@@ -251,7 +251,7 @@ void MLCoreWidget::_setupUi() {
     clustering_progress_layout->addWidget(_clustering_status_label, 1);
 
     _clustering_progress_bar = new QProgressBar(clustering_tab);
-    _clustering_progress_bar->setRange(0, 0); // indeterminate
+    _clustering_progress_bar->setRange(0, 0);// indeterminate
     _clustering_progress_bar->setMaximumWidth(120);
     _clustering_progress_bar->setVisible(false);
     clustering_progress_layout->addWidget(_clustering_progress_bar);
@@ -319,16 +319,15 @@ void MLCoreWidget::_connectSignals() {
                 // Look up the data type from DataManager and convert to string
                 DM_DataType const dm_type = _data_manager->getType(key_std);
                 QString const type_str = QString::fromStdString(
-                    convert_data_type_to_string(dm_type));
+                        convert_data_type_to_string(dm_type));
 
                 SelectionSource const source{
-                    _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
-                           : EditorLib::EditorInstanceId{},
-                    QStringLiteral("ResultsPanel")
-                };
+                        _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                               : EditorLib::EditorInstanceId{},
+                        QStringLiteral("ResultsPanel")};
 
                 _selection_context->setDataFocus(
-                    EditorLib::SelectedDataKey(key), type_str, source);
+                        EditorLib::SelectedDataKey(key), type_str, source);
             });
 
     // Output key clicked in ClusterOutputPanel → emit data focus via SelectionContext
@@ -342,16 +341,15 @@ void MLCoreWidget::_connectSignals() {
 
                 DM_DataType const dm_type = _data_manager->getType(key_std);
                 QString const type_str = QString::fromStdString(
-                    convert_data_type_to_string(dm_type));
+                        convert_data_type_to_string(dm_type));
 
                 SelectionSource const source{
-                    _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
-                           : EditorLib::EditorInstanceId{},
-                    QStringLiteral("ClusterOutputPanel")
-                };
+                        _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                               : EditorLib::EditorInstanceId{},
+                        QStringLiteral("ClusterOutputPanel")};
 
                 _selection_context->setDataFocus(
-                    EditorLib::SelectedDataKey(key), type_str, source);
+                        EditorLib::SelectedDataKey(key), type_str, source);
             });
 
     // Group clicked in ResultsPanel → select entities in group via SelectionContext
@@ -390,9 +388,9 @@ void MLCoreWidget::_connectSignals() {
 
                     // Check clustering groups
                     if (_last_clustering_result && _last_clustering_result->success) {
-                        for (auto const gid : _last_clustering_result->putative_group_ids) {
+                        for (auto const gid: _last_clustering_result->putative_group_ids) {
                             auto members = egm->getEntitiesInGroup(gid);
-                            for (auto const & eid : selected_entities) {
+                            for (auto const & eid: selected_entities) {
                                 EntityId const entity_id(static_cast<uint64_t>(eid));
                                 auto it = std::find(members.begin(), members.end(), entity_id);
                                 if (it != members.end()) {
@@ -450,7 +448,7 @@ void MLCoreWidget::_onPipelineProgress(int stage_index, QString const & message)
     QString const stage_name = QString::fromStdString(MLCore::toString(stage));
 
     _status_label->setText(
-        QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
+            QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
 }
 
 void MLCoreWidget::_onPipelineComplete() {
@@ -458,23 +456,23 @@ void MLCoreWidget::_onPipelineComplete() {
 
     if (!_last_result) {
         _status_label->setText(
-            QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
+                QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
         return;
     }
 
     if (!_last_result->success) {
         auto const stage_name = QString::fromStdString(
-            MLCore::toString(_last_result->failed_stage));
+                MLCore::toString(_last_result->failed_stage));
         _status_label->setText(
-            QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
-                .arg(stage_name,
-                     QString::fromStdString(_last_result->error_message)));
+                QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
+                        .arg(stage_name,
+                             QString::fromStdString(_last_result->error_message)));
         return;
     }
 
     // Success — show results
     _status_label->setText(
-        QStringLiteral("<span style='color: green;'>Pipeline completed successfully</span>"));
+            QStringLiteral("<span style='color: green;'>Pipeline completed successfully</span>"));
 
     std::string const model_name = _model_config_panel->selectedModelName();
     _results_panel->showClassificationResult(*_last_result, model_name);
@@ -502,10 +500,10 @@ bool MLCoreWidget::_validatePanels() const {
 
     if (!issues.isEmpty()) {
         QMessageBox::warning(
-            const_cast<MLCoreWidget *>(this),
-            QStringLiteral("Cannot Run Pipeline"),
-            QStringLiteral("Please fix the following issues before running:\n\n• ") +
-                issues.join(QStringLiteral("\n• ")));
+                const_cast<MLCoreWidget *>(this),
+                QStringLiteral("Cannot Run Pipeline"),
+                QStringLiteral("Please fix the following issues before running:\n\n• ") +
+                        issues.join(QStringLiteral("\n• ")));
         return false;
     }
 
@@ -527,7 +525,7 @@ MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const 
     // the pipeline's model creation to use defaults — BUT we should pass the
     // user-configured parameters. The pipeline takes a non-owning pointer, so
     // we'll store the parameters on the stack in _runPipelineAsync.
-    config.model_params = nullptr; // set in _runPipelineAsync
+    config.model_params = nullptr;// set in _runPipelineAsync
 
     // -- Features --
     config.feature_tensor_key = _feature_panel->selectedTensorKey();
@@ -620,7 +618,7 @@ void MLCoreWidget::_runPipelineAsync(MLCore::ClassificationPipelineConfig config
     config.model_params = params.get();
 
     auto * worker = new PipelineWorker(
-        _data_manager.get(), _registry.get(), std::move(config), this);
+            _data_manager.get(), _registry.get(), std::move(config), this);
 
     // Forward worker progress signal → our cross-thread signal
     connect(worker, &PipelineWorker::progressUpdate,
@@ -629,9 +627,9 @@ void MLCoreWidget::_runPipelineAsync(MLCore::ClassificationPipelineConfig config
     // On completion, harvest result and clean up
     connect(worker, &QThread::finished, this, [this, worker, p = std::move(params)]() mutable {
         _last_result = std::make_unique<MLCore::ClassificationPipelineResult>(
-            worker->takeResult());
+                worker->takeResult());
         worker->deleteLater();
-        p.reset(); // release parameter storage now that pipeline is done
+        p.reset();// release parameter storage now that pipeline is done
         _onPipelineComplete();
     });
 
@@ -689,10 +687,10 @@ bool MLCoreWidget::_validateClusteringPanels() const {
 
     if (!issues.isEmpty()) {
         QMessageBox::warning(
-            const_cast<MLCoreWidget *>(this),
-            QStringLiteral("Cannot Run Clustering Pipeline"),
-            QStringLiteral("Please fix the following issues before running:\n\n• ") +
-                issues.join(QStringLiteral("\n• ")));
+                const_cast<MLCoreWidget *>(this),
+                QStringLiteral("Cannot Run Clustering Pipeline"),
+                QStringLiteral("Please fix the following issues before running:\n\n• ") +
+                        issues.join(QStringLiteral("\n• ")));
         return false;
     }
 
@@ -708,7 +706,7 @@ MLCore::ClusteringPipelineConfig MLCoreWidget::_buildClusteringPipelineConfig() 
 
     // -- Model --
     config.model_name = _clustering_panel->selectedAlgorithmName();
-    config.model_params = nullptr; // set in _runClusteringPipelineAsync
+    config.model_params = nullptr;// set in _runClusteringPipelineAsync
 
     // -- Features --
     config.feature_tensor_key = _clustering_panel->selectedTensorKey();
@@ -751,7 +749,7 @@ void MLCoreWidget::_runClusteringPipelineAsync(MLCore::ClusteringPipelineConfig 
     config.model_params = params.get();
 
     auto * worker = new ClusteringPipelineWorker(
-        _data_manager.get(), _registry.get(), std::move(config), this);
+            _data_manager.get(), _registry.get(), std::move(config), this);
 
     // Forward worker progress signal → our cross-thread signal
     connect(worker, &ClusteringPipelineWorker::progressUpdate,
@@ -760,9 +758,9 @@ void MLCoreWidget::_runClusteringPipelineAsync(MLCore::ClusteringPipelineConfig 
     // On completion, harvest result and clean up
     connect(worker, &QThread::finished, this, [this, worker, p = std::move(params)]() mutable {
         _last_clustering_result = std::make_unique<MLCore::ClusteringPipelineResult>(
-            worker->takeResult());
+                worker->takeResult());
         worker->deleteLater();
-        p.reset(); // release parameter storage now that pipeline is done
+        p.reset();// release parameter storage now that pipeline is done
         _onClusteringPipelineComplete();
     });
 
@@ -778,7 +776,7 @@ void MLCoreWidget::_onClusteringProgress(int stage_index, QString const & messag
     QString const stage_name = QString::fromStdString(MLCore::toString(stage));
 
     _clustering_status_label->setText(
-        QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
+            QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
 }
 
 void MLCoreWidget::_onClusteringPipelineComplete() {
@@ -786,23 +784,23 @@ void MLCoreWidget::_onClusteringPipelineComplete() {
 
     if (!_last_clustering_result) {
         _clustering_status_label->setText(
-            QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
+                QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
         return;
     }
 
     if (!_last_clustering_result->success) {
         auto const stage_name = QString::fromStdString(
-            MLCore::toString(_last_clustering_result->failed_stage));
+                MLCore::toString(_last_clustering_result->failed_stage));
         _clustering_status_label->setText(
-            QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
-                .arg(stage_name,
-                     QString::fromStdString(_last_clustering_result->error_message)));
+                QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
+                        .arg(stage_name,
+                             QString::fromStdString(_last_clustering_result->error_message)));
         return;
     }
 
     // Success — show results
     _clustering_status_label->setText(
-        QStringLiteral("<span style='color: green;'>Clustering completed successfully</span>"));
+            QStringLiteral("<span style='color: green;'>Clustering completed successfully</span>"));
 
     std::string const algorithm_name = _clustering_panel->selectedAlgorithmName();
     _cluster_output_panel->showClusteringResult(*_last_clustering_result, algorithm_name);
@@ -846,15 +844,14 @@ void MLCoreWidget::_selectEntitiesInGroup(int group_id) {
     // Convert EntityId → int64_t for SelectionContext
     std::vector<int64_t> selection;
     selection.reserve(entity_ids.size());
-    for (auto const & eid : entity_ids) {
+    for (auto const & eid: entity_ids) {
         selection.push_back(static_cast<int64_t>(eid.id));
     }
 
     SelectionSource const source{
-        _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
-               : EditorLib::EditorInstanceId{},
-        QStringLiteral("MLCoreWidget")
-    };
+            _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                   : EditorLib::EditorInstanceId{},
+            QStringLiteral("MLCoreWidget")};
 
     _selection_context->setSelectedEntities(selection, source);
 }

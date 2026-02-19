@@ -177,4 +177,4 @@ private:
     MLCoreWidgetStateData _data;
 };
 
-#endif // MLCORE_WIDGET_STATE_HPP
+#endif// MLCORE_WIDGET_STATE_HPP

@@ -21,26 +21,26 @@
 namespace {
 
 // Parameter stack page indices — must match the order in ClusteringPanel.ui
-constexpr int kPageEmpty  = 0;
+constexpr int kPageEmpty = 0;
 constexpr int kPageKMeans = 1;
 constexpr int kPageDBSCAN = 2;
-constexpr int kPageGMM    = 3;
+constexpr int kPageGMM = 3;
 
-} // namespace
+}// namespace
 
 // =============================================================================
 // Construction / destruction
 // =============================================================================
 
 ClusteringPanel::ClusteringPanel(
-    std::shared_ptr<MLCoreWidgetState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::ClusteringPanel)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager))
-    , _registry(std::make_unique<MLCore::MLModelRegistry>()) {
+        std::shared_ptr<MLCoreWidgetState> state,
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::ClusteringPanel),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)),
+      _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     ui->setupUi(this);
     _populateAlgorithms();
     _setupConnections();
@@ -89,34 +89,34 @@ std::unique_ptr<MLCore::MLModelParametersBase> ClusteringPanel::currentParameter
     int const page = _pageIndexForModel(name);
 
     switch (page) {
-    case kPageKMeans: {
-        auto params = std::make_unique<MLCore::KMeansParameters>();
-        params->k = static_cast<std::size_t>(ui->kmKSpinBox->value());
-        params->max_iterations = static_cast<std::size_t>(ui->kmMaxIterSpinBox->value());
-        int const seed_val = ui->kmSeedSpinBox->value();
-        if (seed_val >= 0) {
-            params->seed = static_cast<std::size_t>(seed_val);
+        case kPageKMeans: {
+            auto params = std::make_unique<MLCore::KMeansParameters>();
+            params->k = static_cast<std::size_t>(ui->kmKSpinBox->value());
+            params->max_iterations = static_cast<std::size_t>(ui->kmMaxIterSpinBox->value());
+            int const seed_val = ui->kmSeedSpinBox->value();
+            if (seed_val >= 0) {
+                params->seed = static_cast<std::size_t>(seed_val);
+            }
+            return params;
         }
-        return params;
-    }
-    case kPageDBSCAN: {
-        auto params = std::make_unique<MLCore::DBSCANParameters>();
-        params->epsilon = ui->dbEpsilonSpinBox->value();
-        params->min_points = static_cast<std::size_t>(ui->dbMinPointsSpinBox->value());
-        return params;
-    }
-    case kPageGMM: {
-        auto params = std::make_unique<MLCore::GMMParameters>();
-        params->k = static_cast<std::size_t>(ui->gmmKSpinBox->value());
-        params->max_iterations = static_cast<std::size_t>(ui->gmmMaxIterSpinBox->value());
-        int const seed_val = ui->gmmSeedSpinBox->value();
-        if (seed_val >= 0) {
-            params->seed = static_cast<std::size_t>(seed_val);
+        case kPageDBSCAN: {
+            auto params = std::make_unique<MLCore::DBSCANParameters>();
+            params->epsilon = ui->dbEpsilonSpinBox->value();
+            params->min_points = static_cast<std::size_t>(ui->dbMinPointsSpinBox->value());
+            return params;
         }
-        return params;
-    }
-    default:
-        return nullptr;
+        case kPageGMM: {
+            auto params = std::make_unique<MLCore::GMMParameters>();
+            params->k = static_cast<std::size_t>(ui->gmmKSpinBox->value());
+            params->max_iterations = static_cast<std::size_t>(ui->gmmMaxIterSpinBox->value());
+            int const seed_val = ui->gmmSeedSpinBox->value();
+            if (seed_val >= 0) {
+                params->seed = static_cast<std::size_t>(seed_val);
+            }
+            return params;
+        }
+        default:
+            return nullptr;
     }
 }
 
@@ -169,13 +169,13 @@ void ClusteringPanel::refreshTensorList() {
     auto tensor_keys = _data_manager->getKeys<TensorData>();
     std::sort(tensor_keys.begin(), tensor_keys.end());
 
-    for (auto const & key : tensor_keys) {
+    for (auto const & key: tensor_keys) {
         auto tensor = _data_manager->getData<TensorData>(key);
         if (tensor) {
             QString display = QStringLiteral("%1 (%2×%3)")
-                                  .arg(QString::fromStdString(key))
-                                  .arg(tensor->numRows())
-                                  .arg(tensor->numColumns());
+                                      .arg(QString::fromStdString(key))
+                                      .arg(tensor->numRows())
+                                      .arg(tensor->numColumns());
             ui->tensorComboBox->addItem(display, QString::fromStdString(key));
         } else {
             ui->tensorComboBox->addItem(QString::fromStdString(key),
@@ -374,10 +374,10 @@ void ClusteringPanel::_populateAlgorithms() {
     ui->algorithmComboBox->clear();
 
     auto const names = _registry->getModelNames(MLCore::MLTaskType::Clustering);
-    for (auto const & name : names) {
+    for (auto const & name: names) {
         ui->algorithmComboBox->addItem(
-            QString::fromStdString(name),
-            QString::fromStdString(name));
+                QString::fromStdString(name),
+                QString::fromStdString(name));
     }
 
     if (ui->algorithmComboBox->count() > 0) {
@@ -404,8 +404,8 @@ void ClusteringPanel::_updateTensorInfo() {
     auto tensor = _data_manager->getData<TensorData>(key);
     if (!tensor) {
         ui->tensorInfoLabel->setText(
-            QStringLiteral("<span style='color: red;'>Tensor \"%1\" not found</span>")
-                .arg(QString::fromStdString(key)));
+                QStringLiteral("<span style='color: red;'>Tensor \"%1\" not found</span>")
+                        .arg(QString::fromStdString(key)));
         ui->columnListLabel->setText(QString{});
         ui->validationLabel->setText(QString{});
         return;
@@ -428,9 +428,9 @@ void ClusteringPanel::_updateTensorInfo() {
     // Shape info
     QString info = QStringLiteral("<b>Shape:</b> %1 rows × %2 columns<br>"
                                   "<b>Row type:</b> %3")
-                       .arg(tensor->numRows())
-                       .arg(tensor->numColumns())
-                       .arg(row_type_str);
+                           .arg(tensor->numRows())
+                           .arg(tensor->numColumns())
+                           .arg(row_type_str);
 
     // Time frame info (if temporal)
     if (tensor->rowType() != RowType::Ordinal) {
@@ -438,10 +438,10 @@ void ClusteringPanel::_updateTensorInfo() {
         if (!time_key.empty()) {
             auto time_frame = _data_manager->getTime(time_key);
             QString tf_info = QStringLiteral("<br><b>Time frame:</b> %1")
-                                  .arg(QString::fromStdString(time_key.str()));
+                                      .arg(QString::fromStdString(time_key.str()));
             if (time_frame) {
                 tf_info += QStringLiteral(" (%1 total frames)")
-                               .arg(time_frame->getTotalFrameCount());
+                                   .arg(time_frame->getTotalFrameCount());
             }
             info += tf_info;
         }
@@ -454,7 +454,7 @@ void ClusteringPanel::_updateTensorInfo() {
         auto const & names = tensor->columnNames();
         QStringList col_list;
         col_list.reserve(static_cast<int>(names.size()));
-        for (auto const & name : names) {
+        for (auto const & name: names) {
             col_list.append(QString::fromStdString(name));
         }
 
@@ -465,24 +465,24 @@ void ClusteringPanel::_updateTensorInfo() {
         } else {
             QStringList truncated = col_list.mid(0, max_display_cols);
             col_text = QStringLiteral("<b>Columns:</b> %1, ... (+%2 more)")
-                           .arg(truncated.join(", "))
-                           .arg(col_list.size() - max_display_cols);
+                               .arg(truncated.join(", "))
+                               .arg(col_list.size() - max_display_cols);
         }
         ui->columnListLabel->setText(col_text);
     } else {
         ui->columnListLabel->setText(
-            QStringLiteral("<b>Columns:</b> %1 unnamed columns")
-                .arg(tensor->numColumns()));
+                QStringLiteral("<b>Columns:</b> %1 unnamed columns")
+                        .arg(tensor->numColumns()));
     }
 
     // --- Validation ---
     QString validation_msg;
     if (tensor->numRows() == 0) {
         validation_msg = QStringLiteral(
-            "<span style='color: orange;'>Warning: tensor has 0 rows</span>");
+                "<span style='color: orange;'>Warning: tensor has 0 rows</span>");
     } else if (tensor->numColumns() == 0) {
         validation_msg = QStringLiteral(
-            "<span style='color: orange;'>Warning: tensor has 0 columns</span>");
+                "<span style='color: orange;'>Warning: tensor has 0 columns</span>");
     }
     ui->validationLabel->setText(validation_msg);
 }
@@ -548,7 +548,7 @@ void ClusteringPanel::_restoreFromState() {
     // Restore output config
     if (!_state->clusteringOutputPrefix().empty()) {
         ui->prefixLineEdit->setText(
-            QString::fromStdString(_state->clusteringOutputPrefix()));
+                QString::fromStdString(_state->clusteringOutputPrefix()));
     }
 
     ui->writeIntervalsCheckBox->setChecked(_state->clusteringWriteIntervals());

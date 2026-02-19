@@ -15,13 +15,13 @@
 // =============================================================================
 
 PredictionPanel::PredictionPanel(
-    std::shared_ptr<MLCoreWidgetState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::PredictionPanel)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager)) {
+        std::shared_ptr<MLCoreWidgetState> state,
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::PredictionPanel),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)) {
     ui->setupUi(this);
     _setupConnections();
     _registerDataManagerObserver();
@@ -112,12 +112,12 @@ void PredictionPanel::refreshRegionList() {
     auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
     std::sort(interval_keys.begin(), interval_keys.end());
 
-    for (auto const & key : interval_keys) {
+    for (auto const & key: interval_keys) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         if (series) {
             QString display = QStringLiteral("%1 (%2 intervals)")
-                                  .arg(QString::fromStdString(key))
-                                  .arg(series->size());
+                                      .arg(QString::fromStdString(key))
+                                      .arg(series->size());
             ui->regionComboBox->addItem(display, QString::fromStdString(key));
         } else {
             ui->regionComboBox->addItem(QString::fromStdString(key),
@@ -366,7 +366,7 @@ void PredictionPanel::_updateRegionInfo() {
     // "All remaining frames" mode
     if (ui->allFramesCheckBox->isChecked()) {
         ui->regionInfoLabel->setText(
-            QStringLiteral("<b>All remaining frames</b> will be used for prediction"));
+                QStringLiteral("<b>All remaining frames</b> will be used for prediction"));
         _updateValidity();
         return;
     }
@@ -382,8 +382,8 @@ void PredictionPanel::_updateRegionInfo() {
     auto series = _data_manager->getData<DigitalIntervalSeries>(key);
     if (!series) {
         ui->regionInfoLabel->setText(
-            QStringLiteral("<span style='color: red;'>Interval series \"%1\" not found</span>")
-                .arg(QString::fromStdString(key)));
+                QStringLiteral("<span style='color: red;'>Interval series \"%1\" not found</span>")
+                        .arg(QString::fromStdString(key)));
         _updateValidity();
         return;
     }
@@ -392,7 +392,7 @@ void PredictionPanel::_updateRegionInfo() {
     size_t const interval_count = series->size();
 
     int64_t total_frames = 0;
-    for (auto const & iwid : series->view()) {
+    for (auto const & iwid: series->view()) {
         int64_t const span = iwid.interval.end - iwid.interval.start + 1;
         if (span > 0) {
             total_frames += span;
@@ -401,18 +401,18 @@ void PredictionPanel::_updateRegionInfo() {
 
     QString info = QStringLiteral("<b>Intervals:</b> %1<br>"
                                   "<b>Frames:</b> %2 across %1 intervals")
-                       .arg(interval_count)
-                       .arg(total_frames);
+                           .arg(interval_count)
+                           .arg(total_frames);
 
     // Time frame info
     TimeKey const time_key = _data_manager->getTimeKey(key);
     if (!time_key.empty()) {
         auto time_frame = _data_manager->getTime(time_key);
         QString tf_info = QStringLiteral("<br><b>Time frame:</b> %1")
-                              .arg(QString::fromStdString(time_key.str()));
+                                  .arg(QString::fromStdString(time_key.str()));
         if (time_frame) {
             tf_info += QStringLiteral(" (%1 total frames)")
-                           .arg(time_frame->getTotalFrameCount());
+                               .arg(time_frame->getTotalFrameCount());
         }
         info += tf_info;
     }
@@ -435,24 +435,24 @@ void PredictionPanel::_updateValidity() {
     }
 
     bool const output_ok =
-        ui->outputPredictionsCheckBox->isChecked() ||
-        ui->outputProbabilitiesCheckBox->isChecked();
+            ui->outputPredictionsCheckBox->isChecked() ||
+            ui->outputProbabilitiesCheckBox->isChecked();
 
     bool const new_valid = region_ok && output_ok;
 
     // Update status label with helpful messages
     if (!region_ok && !output_ok) {
         ui->statusLabel->setText(
-            QStringLiteral("<span style='color: orange;'>Select a prediction region "
-                           "and at least one output type</span>"));
+                QStringLiteral("<span style='color: orange;'>Select a prediction region "
+                               "and at least one output type</span>"));
     } else if (!region_ok) {
         ui->statusLabel->setText(
-            QStringLiteral("<span style='color: orange;'>Select a prediction region "
-                           "or check \"All remaining frames\"</span>"));
+                QStringLiteral("<span style='color: orange;'>Select a prediction region "
+                               "or check \"All remaining frames\"</span>"));
     } else if (!output_ok) {
         ui->statusLabel->setText(
-            QStringLiteral("<span style='color: orange;'>Select at least one output "
-                           "type (predictions or probabilities)</span>"));
+                QStringLiteral("<span style='color: orange;'>Select at least one output "
+                               "type (predictions or probabilities)</span>"));
     } else {
         ui->statusLabel->setText(QString{});
     }

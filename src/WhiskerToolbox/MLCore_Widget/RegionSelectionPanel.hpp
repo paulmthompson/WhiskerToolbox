@@ -26,7 +26,6 @@
  * ## Integration
  *
  * - Embedded in the Classification tab of MLCoreWidget (for training region)
- * - Can be reused in PredictionPanel (task 4.6) for prediction region
  * - Refreshes automatically when DataManager contents change
  * - Validates that a region is selected or "All frames" is checked
  *
@@ -41,7 +40,6 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
 class DataManager;
 class MLCoreWidgetState;
 
@@ -53,8 +51,8 @@ class RegionSelectionPanel;
  * @brief Determines which state field the panel binds to
  */
 enum class RegionMode {
-    Training,  ///< Binds to MLCoreWidgetState::trainingRegionKey
-    Prediction ///< Binds to MLCoreWidgetState::predictionRegionKey
+    Training, ///< Binds to MLCoreWidgetState::trainingRegionKey
+    Prediction///< Binds to MLCoreWidgetState::predictionRegionKey
 };
 
 class RegionSelectionPanel : public QWidget {
@@ -148,4 +146,4 @@ private:
     bool _valid = false;
 };
 
-#endif // REGION_SELECTION_PANEL_HPP
+#endif// REGION_SELECTION_PANEL_HPP

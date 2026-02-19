@@ -53,7 +53,6 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
 class DataManager;
 class MLCoreWidgetState;
 
@@ -186,7 +185,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     int _dm_observer_id = -1;
     bool _valid = false;
-    bool _updating = false; ///< Suppress state writes during programmatic updates
+    bool _updating = false;///< Suppress state writes during programmatic updates
 };
 
-#endif // PREDICTION_PANEL_HPP
+#endif// PREDICTION_PANEL_HPP

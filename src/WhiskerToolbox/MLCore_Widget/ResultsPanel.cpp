@@ -20,9 +20,9 @@
 // =============================================================================
 
 ResultsPanel::ResultsPanel(GroupManager * group_manager, QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::ResultsPanel)
-    , _group_manager(group_manager) {
+    : QWidget(parent),
+      ui(new Ui::ResultsPanel),
+      _group_manager(group_manager) {
     ui->setupUi(this);
 
     connect(ui->outputKeysListWidget, &QListWidget::itemClicked,
@@ -42,8 +42,8 @@ ResultsPanel::~ResultsPanel() {
 // =============================================================================
 
 void ResultsPanel::showClassificationResult(
-    MLCore::ClassificationPipelineResult const & result,
-    std::string const & model_name) {
+        MLCore::ClassificationPipelineResult const & result,
+        std::string const & model_name) {
 
     if (!result.success) {
         clearResults();
@@ -79,10 +79,10 @@ void ResultsPanel::showClassificationResult(
 }
 
 void ResultsPanel::showBinaryMetrics(
-    MLCore::BinaryClassificationMetrics const & metrics,
-    std::string const & model_name,
-    std::size_t training_observations,
-    std::size_t num_features) {
+        MLCore::BinaryClassificationMetrics const & metrics,
+        std::string const & model_name,
+        std::size_t training_observations,
+        std::size_t num_features) {
 
     _showResultsState();
     _updateModelSummary(model_name, training_observations, num_features, 2, false);
@@ -91,11 +91,11 @@ void ResultsPanel::showBinaryMetrics(
 }
 
 void ResultsPanel::showMultiClassMetrics(
-    MLCore::MultiClassMetrics const & metrics,
-    std::vector<std::string> const & class_names,
-    std::string const & model_name,
-    std::size_t training_observations,
-    std::size_t num_features) {
+        MLCore::MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names,
+        std::string const & model_name,
+        std::size_t training_observations,
+        std::size_t num_features) {
 
     _showResultsState();
     _updateModelSummary(model_name, training_observations, num_features,
@@ -105,10 +105,10 @@ void ResultsPanel::showMultiClassMetrics(
 }
 
 void ResultsPanel::setOutputKeys(
-    std::vector<std::string> const & interval_keys,
-    std::vector<std::string> const & probability_keys,
-    std::vector<std::string> const & class_names,
-    std::vector<uint64_t> const & putative_group_ids) {
+        std::vector<std::string> const & interval_keys,
+        std::vector<std::string> const & probability_keys,
+        std::vector<std::string> const & class_names,
+        std::vector<uint64_t> const & putative_group_ids) {
 
     ui->outputKeysListWidget->clear();
     _last_putative_group_ids = putative_group_ids;
@@ -116,11 +116,11 @@ void ResultsPanel::setOutputKeys(
     // Add putative group entries with color swatches (if groups were created)
     for (std::size_t i = 0; i < putative_group_ids.size(); ++i) {
         std::string const name = (i < class_names.size())
-                                     ? class_names[i]
-                                     : "Class " + std::to_string(i);
+                                         ? class_names[i]
+                                         : "Class " + std::to_string(i);
         QString const label = QStringLiteral("Group: %1 (id %2)")
-                                  .arg(QString::fromStdString(name))
-                                  .arg(putative_group_ids[i]);
+                                      .arg(QString::fromStdString(name))
+                                      .arg(putative_group_ids[i]);
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(name));
         item->setData(Qt::UserRole + 1, static_cast<int>(putative_group_ids[i]));
@@ -208,53 +208,53 @@ void ResultsPanel::_showResultsState() {
 }
 
 void ResultsPanel::_updateBinaryMetricsDisplay(
-    MLCore::BinaryClassificationMetrics const & metrics) {
+        MLCore::BinaryClassificationMetrics const & metrics) {
 
     ui->metricsHeaderLabel->setText(QStringLiteral("Binary Classification Metrics"));
 
     ui->accuracyValueLabel->setText(
-        QStringLiteral("%1%").arg(metrics.accuracy * 100.0, 0, 'f', 2));
+            QStringLiteral("%1%").arg(metrics.accuracy * 100.0, 0, 'f', 2));
     ui->sensitivityValueLabel->setText(
-        QStringLiteral("%1%").arg(metrics.sensitivity * 100.0, 0, 'f', 2));
+            QStringLiteral("%1%").arg(metrics.sensitivity * 100.0, 0, 'f', 2));
     ui->specificityValueLabel->setText(
-        QStringLiteral("%1%").arg(metrics.specificity * 100.0, 0, 'f', 2));
+            QStringLiteral("%1%").arg(metrics.specificity * 100.0, 0, 'f', 2));
     ui->diceScoreValueLabel->setText(
-        QStringLiteral("%1%").arg(metrics.dice_score * 100.0, 0, 'f', 2));
+            QStringLiteral("%1%").arg(metrics.dice_score * 100.0, 0, 'f', 2));
 
     ui->confusionMatrixLabel->setText(_formatConfusionMatrix(metrics));
 }
 
 void ResultsPanel::_updateMultiClassMetricsDisplay(
-    MLCore::MultiClassMetrics const & metrics,
-    std::vector<std::string> const & class_names) {
+        MLCore::MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names) {
 
     ui->metricsHeaderLabel->setText(
-        QStringLiteral("Multi-Class Metrics (%1 classes)").arg(metrics.num_classes));
+            QStringLiteral("Multi-Class Metrics (%1 classes)").arg(metrics.num_classes));
 
     ui->accuracyValueLabel->setText(
-        QStringLiteral("%1%").arg(metrics.overall_accuracy * 100.0, 0, 'f', 2));
+            QStringLiteral("%1%").arg(metrics.overall_accuracy * 100.0, 0, 'f', 2));
 
     // For multi-class, show macro-averaged precision/recall/F1
     if (!metrics.per_class_recall.empty()) {
         double avg_recall = 0.0;
-        for (double const r : metrics.per_class_recall) {
+        for (double const r: metrics.per_class_recall) {
             avg_recall += r;
         }
         avg_recall /= static_cast<double>(metrics.per_class_recall.size());
         ui->sensitivityValueLabel->setText(
-            QStringLiteral("%1% (macro avg)").arg(avg_recall * 100.0, 0, 'f', 2));
+                QStringLiteral("%1% (macro avg)").arg(avg_recall * 100.0, 0, 'f', 2));
     } else {
         ui->sensitivityValueLabel->setText(QStringLiteral("--"));
     }
 
     if (!metrics.per_class_precision.empty()) {
         double avg_precision = 0.0;
-        for (double const p : metrics.per_class_precision) {
+        for (double const p: metrics.per_class_precision) {
             avg_precision += p;
         }
         avg_precision /= static_cast<double>(metrics.per_class_precision.size());
         ui->specificityValueLabel->setText(
-            QStringLiteral("%1% (macro avg)").arg(avg_precision * 100.0, 0, 'f', 2));
+                QStringLiteral("%1% (macro avg)").arg(avg_precision * 100.0, 0, 'f', 2));
         // Re-label for multi-class: specificity becomes precision
         ui->specificityTextLabel->setText(QStringLiteral("Precision (macro):"));
     } else {
@@ -263,26 +263,26 @@ void ResultsPanel::_updateMultiClassMetricsDisplay(
 
     if (!metrics.per_class_f1.empty()) {
         double avg_f1 = 0.0;
-        for (double const f : metrics.per_class_f1) {
+        for (double const f: metrics.per_class_f1) {
             avg_f1 += f;
         }
         avg_f1 /= static_cast<double>(metrics.per_class_f1.size());
         ui->diceScoreValueLabel->setText(
-            QStringLiteral("%1% (macro avg)").arg(avg_f1 * 100.0, 0, 'f', 2));
+                QStringLiteral("%1% (macro avg)").arg(avg_f1 * 100.0, 0, 'f', 2));
     } else {
         ui->diceScoreValueLabel->setText(QStringLiteral("--"));
     }
 
     ui->confusionMatrixLabel->setText(
-        _formatMultiClassConfusionMatrix(metrics, class_names));
+            _formatMultiClassConfusionMatrix(metrics, class_names));
 }
 
 void ResultsPanel::_updateModelSummary(
-    std::string const & model_name,
-    std::size_t training_observations,
-    std::size_t num_features,
-    std::size_t num_classes,
-    bool was_balanced) {
+        std::string const & model_name,
+        std::size_t training_observations,
+        std::size_t num_features,
+        std::size_t num_classes,
+        bool was_balanced) {
 
     QString summary = QStringLiteral("Model: %1").arg(QString::fromStdString(model_name));
     if (was_balanced) {
@@ -291,10 +291,10 @@ void ResultsPanel::_updateModelSummary(
     ui->modelSummaryLabel->setText(summary);
 
     ui->trainingSummaryLabel->setText(
-        QStringLiteral("Training: %1 observations, %2 features, %3 classes")
-            .arg(training_observations)
-            .arg(num_features)
-            .arg(num_classes));
+            QStringLiteral("Training: %1 observations, %2 features, %3 classes")
+                    .arg(training_observations)
+                    .arg(num_features)
+                    .arg(num_classes));
 }
 
 // =============================================================================
@@ -302,7 +302,7 @@ void ResultsPanel::_updateModelSummary(
 // =============================================================================
 
 QString ResultsPanel::_formatConfusionMatrix(
-    MLCore::BinaryClassificationMetrics const & metrics) {
+        MLCore::BinaryClassificationMetrics const & metrics) {
 
     std::size_t const max_val = std::max({metrics.true_positives, metrics.true_negatives,
                                           metrics.false_positives, metrics.false_negatives});
@@ -324,8 +324,8 @@ QString ResultsPanel::_formatConfusionMatrix(
 }
 
 QString ResultsPanel::_formatMultiClassConfusionMatrix(
-    MLCore::MultiClassMetrics const & metrics,
-    std::vector<std::string> const & class_names) {
+        MLCore::MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names) {
 
     if (!metrics.isValid()) {
         return QStringLiteral("No confusion matrix available");

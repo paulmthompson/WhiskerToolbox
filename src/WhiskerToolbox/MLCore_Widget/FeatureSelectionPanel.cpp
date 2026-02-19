@@ -11,13 +11,13 @@
 #include <algorithm>
 
 FeatureSelectionPanel::FeatureSelectionPanel(
-    std::shared_ptr<MLCoreWidgetState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::FeatureSelectionPanel)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager)) {
+        std::shared_ptr<MLCoreWidgetState> state,
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::FeatureSelectionPanel),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)) {
     ui->setupUi(this);
     _setupConnections();
     _registerDataManagerObserver();
@@ -28,7 +28,7 @@ FeatureSelectionPanel::FeatureSelectionPanel(
     // Restore selection from state
     if (_state && !_state->featureTensorKey().empty()) {
         int idx = ui->tensorComboBox->findText(
-            QString::fromStdString(_state->featureTensorKey()));
+                QString::fromStdString(_state->featureTensorKey()));
         if (idx != -1) {
             ui->tensorComboBox->setCurrentIndex(idx);
         }
@@ -67,14 +67,14 @@ void FeatureSelectionPanel::refreshTensorList() {
     auto tensor_keys = _data_manager->getKeys<TensorData>();
     std::sort(tensor_keys.begin(), tensor_keys.end());
 
-    for (auto const & key : tensor_keys) {
+    for (auto const & key: tensor_keys) {
         // Build display text with shape info
         auto tensor = _data_manager->getData<TensorData>(key);
         if (tensor) {
             QString display = QStringLiteral("%1 (%2×%3)")
-                                  .arg(QString::fromStdString(key))
-                                  .arg(tensor->numRows())
-                                  .arg(tensor->numColumns());
+                                      .arg(QString::fromStdString(key))
+                                      .arg(tensor->numRows())
+                                      .arg(tensor->numColumns());
             ui->tensorComboBox->addItem(display, QString::fromStdString(key));
         } else {
             ui->tensorComboBox->addItem(QString::fromStdString(key),
@@ -174,8 +174,8 @@ void FeatureSelectionPanel::_updateTensorInfo() {
     auto tensor = _data_manager->getData<TensorData>(key);
     if (!tensor) {
         ui->tensorInfoLabel->setText(
-            QStringLiteral("<span style='color: red;'>Tensor \"%1\" not found</span>")
-                .arg(QString::fromStdString(key)));
+                QStringLiteral("<span style='color: red;'>Tensor \"%1\" not found</span>")
+                        .arg(QString::fromStdString(key)));
         ui->columnListLabel->setText(QString{});
         ui->validationLabel->setText(QString{});
 
@@ -206,9 +206,9 @@ void FeatureSelectionPanel::_updateTensorInfo() {
     // Shape info
     QString info = QStringLiteral("<b>Shape:</b> %1 rows × %2 columns<br>"
                                   "<b>Row type:</b> %3")
-                       .arg(tensor->numRows())
-                       .arg(tensor->numColumns())
-                       .arg(row_type_str);
+                           .arg(tensor->numRows())
+                           .arg(tensor->numColumns())
+                           .arg(row_type_str);
 
     // Time frame info (if temporal)
     if (tensor->rowType() != RowType::Ordinal) {
@@ -216,10 +216,10 @@ void FeatureSelectionPanel::_updateTensorInfo() {
         if (!time_key.empty()) {
             auto time_frame = _data_manager->getTime(time_key);
             QString tf_info = QStringLiteral("<br><b>Time frame:</b> %1")
-                                  .arg(QString::fromStdString(time_key.str()));
+                                      .arg(QString::fromStdString(time_key.str()));
             if (time_frame) {
                 tf_info += QStringLiteral(" (%1 total frames)")
-                               .arg(time_frame->getTotalFrameCount());
+                                   .arg(time_frame->getTotalFrameCount());
             }
             info += tf_info;
         }
@@ -232,7 +232,7 @@ void FeatureSelectionPanel::_updateTensorInfo() {
         auto const & names = tensor->columnNames();
         QStringList col_list;
         col_list.reserve(static_cast<int>(names.size()));
-        for (auto const & name : names) {
+        for (auto const & name: names) {
             col_list.append(QString::fromStdString(name));
         }
 
@@ -244,14 +244,14 @@ void FeatureSelectionPanel::_updateTensorInfo() {
         } else {
             QStringList truncated = col_list.mid(0, max_display_cols);
             col_text = QStringLiteral("<b>Columns:</b> %1, ... (+%2 more)")
-                           .arg(truncated.join(", "))
-                           .arg(col_list.size() - max_display_cols);
+                               .arg(truncated.join(", "))
+                               .arg(col_list.size() - max_display_cols);
         }
         ui->columnListLabel->setText(col_text);
     } else {
         ui->columnListLabel->setText(
-            QStringLiteral("<b>Columns:</b> %1 unnamed columns")
-                .arg(tensor->numColumns()));
+                QStringLiteral("<b>Columns:</b> %1 unnamed columns")
+                        .arg(tensor->numColumns()));
     }
 
     // --- Validation ---
@@ -260,10 +260,10 @@ void FeatureSelectionPanel::_updateTensorInfo() {
 
     if (tensor->numRows() == 0) {
         validation_msg = QStringLiteral(
-            "<span style='color: orange;'>Warning: tensor has 0 rows</span>");
+                "<span style='color: orange;'>Warning: tensor has 0 rows</span>");
     } else if (tensor->numColumns() == 0) {
         validation_msg = QStringLiteral(
-            "<span style='color: orange;'>Warning: tensor has 0 columns</span>");
+                "<span style='color: orange;'>Warning: tensor has 0 columns</span>");
     }
 
     ui->validationLabel->setText(validation_msg);

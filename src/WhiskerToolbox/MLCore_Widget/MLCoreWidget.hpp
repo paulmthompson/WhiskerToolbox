@@ -12,16 +12,16 @@
  * - **Clustering**: Unsupervised clustering using MLCore pipelines
  *
  * The Classification tab contains sub-panels for each workflow step:
- * FeatureSelectionPanel (4.2), RegionSelectionPanel (4.3),
- * LabelConfigPanel (4.4), ModelConfigPanel (4.5),
- * PredictionPanel (4.6), and ResultsPanel (4.7).
+ * FeatureSelectionPanel, RegionSelectionPanel,
+ * LabelConfigPanel, ModelConfigPanel,
+ * PredictionPanel, and ResultsPanel.
  *
- * The widget wires up the ClassificationPipeline (task 4.8): the "Train"
+ * The widget wires up the ClassificationPipeline: the "Train"
  * button in ModelConfigPanel triggers a full train+predict pipeline run in a
  * background thread. Progress is reported via a status label and progress bar.
  * On completion, results are displayed in ResultsPanel.
  *
- * ## SelectionContext Integration (Task 4.9)
+ * ## SelectionContext Integration
  *
  * MLCoreWidget implements the DataFocusAware mixin for passive awareness:
  *
@@ -56,7 +56,6 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
 class ClusteringPanel;
 class ClusterOutputPanel;
 class DataManager;
@@ -78,7 +77,7 @@ struct ClassificationPipelineConfig;
 struct ClassificationPipelineResult;
 struct ClusteringPipelineConfig;
 struct ClusteringPipelineResult;
-} // namespace MLCore
+}// namespace MLCore
 
 class MLCoreWidget : public QWidget, public DataFocusAware {
     Q_OBJECT
@@ -208,4 +207,4 @@ private:
     bool _clustering_pipeline_running = false;
 };
 
-#endif // MLCORE_WIDGET_HPP
+#endif// MLCORE_WIDGET_HPP

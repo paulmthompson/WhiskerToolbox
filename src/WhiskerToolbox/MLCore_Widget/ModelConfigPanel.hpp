@@ -39,10 +39,8 @@
  * ## Architecture
  *
  * The panel uses the MLModelRegistry from MLCore to enumerate available models
- * and create fresh instances for parameter introspection. It does NOT use the
- * legacy MLParameterWidgetBase pattern (which depends on legacy MLModelParameters).
- * Instead, each page is a standard QWidget with spin boxes that directly
- * create MLCore::*Parameters structs.
+ * and create fresh instances for parameter introspection. Each page is a 
+ * standard QWidget with spin boxes that directly create MLCore::*Parameters structs.
  *
  * @see MLCoreWidget for the parent widget
  * @see MLCoreWidgetState for the persisted model configuration
@@ -56,7 +54,6 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
 class DataManager;
 class MLCoreWidgetState;
 
@@ -64,7 +61,7 @@ namespace MLCore {
 class MLModelRegistry;
 struct MLModelParametersBase;
 enum class BalancingStrategy;
-} // namespace MLCore
+}// namespace MLCore
 
 namespace Ui {
 class ModelConfigPanel;
@@ -183,4 +180,4 @@ private:
     bool _updating = false;
 };
 
-#endif // MODEL_CONFIG_PANEL_HPP
+#endif// MODEL_CONFIG_PANEL_HPP

@@ -16,13 +16,13 @@
 // =============================================================================
 
 LabelConfigPanel::LabelConfigPanel(
-    std::shared_ptr<MLCoreWidgetState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::LabelConfigPanel)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager)) {
+        std::shared_ptr<MLCoreWidgetState> state,
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::LabelConfigPanel),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)) {
     ui->setupUi(this);
     _setupConnections();
     _registerObservers();
@@ -444,18 +444,18 @@ void LabelConfigPanel::_refreshIntervalCombo() {
 
     ui->intervalComboBox->blockSignals(true);
     ui->intervalComboBox->clear();
-    ui->intervalComboBox->addItem(QString{}); // empty sentinel
+    ui->intervalComboBox->addItem(QString{});// empty sentinel
 
     auto keys = _data_manager->getKeys<DigitalIntervalSeries>();
     std::sort(keys.begin(), keys.end());
 
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         QString display = series
-                              ? QStringLiteral("%1 (%2 intervals)")
-                                    .arg(QString::fromStdString(key))
-                                    .arg(series->size())
-                              : QString::fromStdString(key);
+                                  ? QStringLiteral("%1 (%2 intervals)")
+                                            .arg(QString::fromStdString(key))
+                                            .arg(series->size())
+                                  : QString::fromStdString(key);
         ui->intervalComboBox->addItem(display, QString::fromStdString(key));
     }
 
@@ -474,9 +474,9 @@ void LabelConfigPanel::_refreshIntervalCombo() {
     ui->intervalComboBox->blockSignals(false);
 
     _updateIntervalInfo(
-        restore_idx > 0
-            ? ui->intervalComboBox->itemData(restore_idx).toString().toStdString()
-            : std::string{});
+            restore_idx > 0
+                    ? ui->intervalComboBox->itemData(restore_idx).toString().toStdString()
+                    : std::string{});
 }
 
 void LabelConfigPanel::_refreshGroupCombo() {
@@ -486,7 +486,7 @@ void LabelConfigPanel::_refreshGroupCombo() {
 
     ui->groupComboBox->blockSignals(true);
     ui->groupComboBox->clear();
-    ui->groupComboBox->addItem(QString{}); // empty sentinel
+    ui->groupComboBox->addItem(QString{});// empty sentinel
 
     auto * group_mgr = _data_manager->getEntityGroupManager();
     auto descriptors = group_mgr->getAllGroupDescriptors();
@@ -495,10 +495,10 @@ void LabelConfigPanel::_refreshGroupCombo() {
     std::sort(descriptors.begin(), descriptors.end(),
               [](auto const & a, auto const & b) { return a.name < b.name; });
 
-    for (auto const & desc : descriptors) {
+    for (auto const & desc: descriptors) {
         QString display = QStringLiteral("%1 (%2 entities)")
-                              .arg(QString::fromStdString(desc.name))
-                              .arg(desc.entity_count);
+                                  .arg(QString::fromStdString(desc.name))
+                                  .arg(desc.entity_count);
         ui->groupComboBox->addItem(display, QVariant::fromValue(desc.id));
     }
 
@@ -519,12 +519,12 @@ void LabelConfigPanel::_refreshDataKeyCombo() {
 
     ui->dataKeyComboBox->blockSignals(true);
     ui->dataKeyComboBox->clear();
-    ui->dataKeyComboBox->addItem(QString{}); // empty sentinel
+    ui->dataKeyComboBox->addItem(QString{});// empty sentinel
 
     auto keys = _data_manager->getAllKeys();
     std::sort(keys.begin(), keys.end());
 
-    for (auto const & key : keys) {
+    for (auto const & key: keys) {
         ui->dataKeyComboBox->addItem(QString::fromStdString(key),
                                      QString::fromStdString(key));
     }
@@ -551,7 +551,7 @@ void LabelConfigPanel::_refreshDataGroupCombo() {
 
     ui->dataGroupComboBox->blockSignals(true);
     ui->dataGroupComboBox->clear();
-    ui->dataGroupComboBox->addItem(QString{}); // empty sentinel
+    ui->dataGroupComboBox->addItem(QString{});// empty sentinel
 
     auto * group_mgr = _data_manager->getEntityGroupManager();
     auto descriptors = group_mgr->getAllGroupDescriptors();
@@ -559,10 +559,10 @@ void LabelConfigPanel::_refreshDataGroupCombo() {
     std::sort(descriptors.begin(), descriptors.end(),
               [](auto const & a, auto const & b) { return a.name < b.name; });
 
-    for (auto const & desc : descriptors) {
+    for (auto const & desc: descriptors) {
         QString display = QStringLiteral("%1 (%2 entities)")
-                              .arg(QString::fromStdString(desc.name))
-                              .arg(desc.entity_count);
+                                  .arg(QString::fromStdString(desc.name))
+                                  .arg(desc.entity_count);
         ui->dataGroupComboBox->addItem(display, QVariant::fromValue(desc.id));
     }
 
@@ -588,9 +588,9 @@ void LabelConfigPanel::_rebuildClassList() {
         QString text;
         if (desc) {
             text = QStringLiteral("Class %1: \"%2\" (%3 entities)")
-                       .arg(i)
-                       .arg(QString::fromStdString(desc->name))
-                       .arg(desc->entity_count);
+                           .arg(i)
+                           .arg(QString::fromStdString(desc->name))
+                           .arg(desc->entity_count);
         } else {
             text = QStringLiteral("Class %1: <deleted group %2>").arg(i).arg(gid);
         }
@@ -613,9 +613,9 @@ void LabelConfigPanel::_rebuildDataClassList() {
         QString text;
         if (desc) {
             text = QStringLiteral("Class %1: \"%2\" (%3 entities)")
-                       .arg(i)
-                       .arg(QString::fromStdString(desc->name))
-                       .arg(desc->entity_count);
+                           .arg(i)
+                           .arg(QString::fromStdString(desc->name))
+                           .arg(desc->entity_count);
         } else {
             text = QStringLiteral("Class %1: <deleted group %2>").arg(i).arg(gid);
         }
@@ -636,15 +636,15 @@ void LabelConfigPanel::_updateIntervalInfo(std::string const & key) {
     auto series = _data_manager->getData<DigitalIntervalSeries>(key);
     if (!series) {
         ui->intervalInfoLabel->setText(
-            QStringLiteral("<span style='color: red;'>Interval series \"%1\" not found</span>")
-                .arg(QString::fromStdString(key)));
+                QStringLiteral("<span style='color: red;'>Interval series \"%1\" not found</span>")
+                        .arg(QString::fromStdString(key)));
         return;
     }
 
     std::size_t interval_count = series->size();
 
     int64_t total_frames = 0;
-    for (auto const & iwid : series->view()) {
+    for (auto const & iwid: series->view()) {
         int64_t span = iwid.interval.end - iwid.interval.start + 1;
         if (span > 0) {
             total_frames += span;
@@ -652,9 +652,9 @@ void LabelConfigPanel::_updateIntervalInfo(std::string const & key) {
     }
 
     ui->intervalInfoLabel->setText(
-        QStringLiteral("<b>%1</b> intervals, <b>%2</b> frames total")
-            .arg(interval_count)
-            .arg(total_frames));
+            QStringLiteral("<b>%1</b> intervals, <b>%2</b> frames total")
+                    .arg(interval_count)
+                    .arg(total_frames));
 }
 
 // =============================================================================
@@ -675,7 +675,7 @@ void LabelConfigPanel::_updateValidation() {
 
         if (!has_key) {
             msg = QStringLiteral(
-                "<span style='color: orange;'>Select an interval series for binary labeling</span>");
+                    "<span style='color: orange;'>Select an interval series for binary labeling</span>");
         } else {
             new_valid = true;
         }
@@ -683,7 +683,7 @@ void LabelConfigPanel::_updateValidation() {
         // Valid if at least 2 groups are selected
         if (_selected_group_ids.size() < 2) {
             msg = QStringLiteral(
-                "<span style='color: orange;'>Select at least 2 groups for multi-class labeling</span>");
+                    "<span style='color: orange;'>Select at least 2 groups for multi-class labeling</span>");
         } else {
             new_valid = true;
         }
@@ -695,10 +695,10 @@ void LabelConfigPanel::_updateValidation() {
 
         if (!has_data_key) {
             msg = QStringLiteral(
-                "<span style='color: orange;'>Select a data key for entity matching</span>");
+                    "<span style='color: orange;'>Select a data key for entity matching</span>");
         } else if (_selected_data_group_ids.size() < 2) {
             msg = QStringLiteral(
-                "<span style='color: orange;'>Select at least 2 groups for multi-class labeling</span>");
+                    "<span style='color: orange;'>Select at least 2 groups for multi-class labeling</span>");
         } else {
             new_valid = true;
         }
@@ -756,9 +756,9 @@ void LabelConfigPanel::_restoreFromState() {
 
     // Restore class names
     ui->positiveClassEdit->setText(
-        QString::fromStdString(_state->labelPositiveClassName()));
+            QString::fromStdString(_state->labelPositiveClassName()));
     ui->negativeClassEdit->setText(
-        QString::fromStdString(_state->labelNegativeClassName()));
+            QString::fromStdString(_state->labelNegativeClassName()));
 
     // Restore group IDs
     auto const & ids = _state->labelGroupIds();
@@ -817,5 +817,5 @@ int LabelConfigPanel::_sourceTypeToPageIndex(std::string const & type) {
     if (type == "entity_groups") {
         return 2;
     }
-    return 1; // "groups" or default
+    return 1;// "groups" or default
 }

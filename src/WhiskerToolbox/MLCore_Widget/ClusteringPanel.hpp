@@ -56,14 +56,13 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
 class DataManager;
 class MLCoreWidgetState;
 
 namespace MLCore {
 class MLModelRegistry;
 struct MLModelParametersBase;
-} // namespace MLCore
+}// namespace MLCore
 
 namespace Ui {
 class ClusteringPanel;
@@ -200,4 +199,4 @@ private:
     bool _updating = false;
 };
 
-#endif // CLUSTERING_PANEL_HPP
+#endif// CLUSTERING_PANEL_HPP

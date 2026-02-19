@@ -37,7 +37,6 @@
 
 #include <memory>
 
-// Forward declarations
 class DataManager;
 class EditorRegistry;
 class GroupManager;
@@ -63,6 +62,6 @@ void registerTypes(EditorRegistry * registry,
                    std::shared_ptr<DataManager> data_manager,
                    GroupManager * group_manager = nullptr);
 
-}  // namespace MLCoreWidgetModule
+}// namespace MLCoreWidgetModule
 
-#endif  // MLCORE_WIDGET_REGISTRATION_HPP
+#endif// MLCORE_WIDGET_REGISTRATION_HPP

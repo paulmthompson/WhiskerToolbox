@@ -12,8 +12,7 @@
  *    count, class count, whether balancing was applied.
  *
  * 2. **Classification metrics** — accuracy, sensitivity/recall, specificity,
- *    F1/Dice score displayed as percentages. Mirrors the visual layout of the
- *    legacy ModelMetricsWidget but consumes MLCore metric types directly.
+ *    F1/Dice score displayed as percentages. 
  *
  * 3. **Confusion matrix** — monospaced text display of the binary confusion
  *    matrix (TP, TN, FP, FN) or multi-class confusion matrix.
@@ -50,13 +49,12 @@
 #include <string>
 #include <vector>
 
-// Forward declarations — MLCore types
 namespace MLCore {
 struct BinaryClassificationMetrics;
 struct MultiClassMetrics;
 struct ClassificationPipelineResult;
 struct PredictionWriterResult;
-} // namespace MLCore
+}// namespace MLCore
 
 class GroupManager;
 
@@ -192,11 +190,11 @@ private:
                              bool was_balanced);
 
     [[nodiscard]] static QString _formatConfusionMatrix(
-        MLCore::BinaryClassificationMetrics const & metrics);
+            MLCore::BinaryClassificationMetrics const & metrics);
 
     [[nodiscard]] static QString _formatMultiClassConfusionMatrix(
-        MLCore::MultiClassMetrics const & metrics,
-        std::vector<std::string> const & class_names);
+            MLCore::MultiClassMetrics const & metrics,
+            std::vector<std::string> const & class_names);
 
     Ui::ResultsPanel * ui;
     GroupManager * _group_manager = nullptr;
@@ -204,4 +202,4 @@ private:
     bool _has_results = false;
 };
 
-#endif // RESULTS_PANEL_HPP
+#endif// RESULTS_PANEL_HPP

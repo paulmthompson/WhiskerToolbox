@@ -17,19 +17,19 @@
 
 ClusterOutputPanel::ClusterOutputPanel(GroupManager * group_manager,
                                        QWidget * parent)
-    : QWidget(parent)
-    , ui(new Ui::ClusterOutputPanel)
-    , _group_manager(group_manager) {
+    : QWidget(parent),
+      ui(new Ui::ClusterOutputPanel),
+      _group_manager(group_manager) {
     ui->setupUi(this);
 
     // Configure table header sizing
     ui->clusterTable->horizontalHeader()->setStretchLastSection(true);
     ui->clusterTable->horizontalHeader()->setSectionResizeMode(
-        0, QHeaderView::Stretch);
+            0, QHeaderView::Stretch);
     ui->clusterTable->horizontalHeader()->setSectionResizeMode(
-        1, QHeaderView::ResizeToContents);
+            1, QHeaderView::ResizeToContents);
     ui->clusterTable->horizontalHeader()->setSectionResizeMode(
-        2, QHeaderView::ResizeToContents);
+            2, QHeaderView::ResizeToContents);
     ui->clusterTable->verticalHeader()->setVisible(false);
 
     connect(ui->outputKeysListWidget, &QListWidget::itemClicked,
@@ -49,8 +49,8 @@ ClusterOutputPanel::~ClusterOutputPanel() {
 // =============================================================================
 
 void ClusterOutputPanel::showClusteringResult(
-    MLCore::ClusteringPipelineResult const & result,
-    std::string const & algorithm_name) {
+        MLCore::ClusteringPipelineResult const & result,
+        std::string const & algorithm_name) {
 
     if (!result.success) {
         clearResults();
@@ -80,10 +80,10 @@ void ClusterOutputPanel::showClusteringResult(
 }
 
 void ClusterOutputPanel::setOutputKeys(
-    std::vector<std::string> const & interval_keys,
-    std::vector<std::string> const & probability_keys,
-    std::vector<std::string> const & cluster_names,
-    std::vector<uint64_t> const & group_ids) {
+        std::vector<std::string> const & interval_keys,
+        std::vector<std::string> const & probability_keys,
+        std::vector<std::string> const & cluster_names,
+        std::vector<uint64_t> const & group_ids) {
 
     ui->outputKeysListWidget->clear();
     _last_putative_group_ids = group_ids;
@@ -91,11 +91,11 @@ void ClusterOutputPanel::setOutputKeys(
     // Add putative group entries with color swatches
     for (std::size_t i = 0; i < group_ids.size(); ++i) {
         std::string const name = (i < cluster_names.size())
-                                     ? cluster_names[i]
-                                     : "Cluster " + std::to_string(i);
+                                         ? cluster_names[i]
+                                         : "Cluster " + std::to_string(i);
         QString const label = QStringLiteral("Group: %1 (id %2)")
-                                  .arg(QString::fromStdString(name))
-                                  .arg(group_ids[i]);
+                                      .arg(QString::fromStdString(name))
+                                      .arg(group_ids[i]);
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         // Store the group name for display reference
         item->setData(Qt::UserRole, QString::fromStdString(name));
@@ -118,22 +118,22 @@ void ClusterOutputPanel::setOutputKeys(
     for (std::size_t i = 0; i < interval_keys.size(); ++i) {
         auto const & key = interval_keys[i];
         QString const label = QStringLiteral("Intervals: %1")
-                                  .arg(QString::fromStdString(key));
+                                      .arg(QString::fromStdString(key));
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
         item->setToolTip(
-            QStringLiteral("DigitalIntervalSeries — click to focus in DataViewer"));
+                QStringLiteral("DigitalIntervalSeries — click to focus in DataViewer"));
     }
 
     // Add probability series keys
     for (std::size_t i = 0; i < probability_keys.size(); ++i) {
         auto const & key = probability_keys[i];
         QString const label = QStringLiteral("Probabilities: %1")
-                                  .arg(QString::fromStdString(key));
+                                      .arg(QString::fromStdString(key));
         auto * item = new QListWidgetItem(label, ui->outputKeysListWidget);
         item->setData(Qt::UserRole, QString::fromStdString(key));
         item->setToolTip(
-            QStringLiteral("AnalogTimeSeries — click to focus in DataViewer"));
+                QStringLiteral("AnalogTimeSeries — click to focus in DataViewer"));
     }
 }
 
@@ -191,52 +191,52 @@ void ClusterOutputPanel::_showResultsState() {
 }
 
 void ClusterOutputPanel::_updateSummary(
-    std::string const & algorithm_name,
-    std::size_t fitting_observations,
-    std::size_t num_features,
-    std::size_t num_clusters,
-    std::size_t rows_dropped_nan) {
+        std::string const & algorithm_name,
+        std::size_t fitting_observations,
+        std::size_t num_features,
+        std::size_t num_clusters,
+        std::size_t rows_dropped_nan) {
 
     ui->summaryLabel->setText(
-        QStringLiteral("Algorithm: %1 — %2 clusters")
-            .arg(QString::fromStdString(algorithm_name))
-            .arg(num_clusters));
+            QStringLiteral("Algorithm: %1 — %2 clusters")
+                    .arg(QString::fromStdString(algorithm_name))
+                    .arg(num_clusters));
 
     QString fitting_text = QStringLiteral("Fitting: %1 observations, %2 features")
-                               .arg(fitting_observations)
-                               .arg(num_features);
+                                   .arg(fitting_observations)
+                                   .arg(num_features);
     if (rows_dropped_nan > 0) {
         fitting_text += QStringLiteral(" (%1 rows dropped due to NaN)")
-                            .arg(rows_dropped_nan);
+                                .arg(rows_dropped_nan);
     }
     ui->fittingInfoLabel->setText(fitting_text);
 }
 
 void ClusterOutputPanel::_updateClusterTable(
-    std::vector<std::string> const & cluster_names,
-    std::vector<std::size_t> const & cluster_sizes,
-    std::size_t total_assigned) {
+        std::vector<std::string> const & cluster_names,
+        std::vector<std::size_t> const & cluster_sizes,
+        std::size_t total_assigned) {
 
     std::size_t const num_clusters = cluster_names.size();
     ui->clusterTable->setRowCount(static_cast<int>(num_clusters));
 
     double const total = (total_assigned > 0)
-                             ? static_cast<double>(total_assigned)
-                             : 1.0;
+                                 ? static_cast<double>(total_assigned)
+                                 : 1.0;
 
     for (std::size_t i = 0; i < num_clusters; ++i) {
         int const row = static_cast<int>(i);
 
         // Cluster name
         auto * name_item = new QTableWidgetItem(
-            QString::fromStdString(cluster_names[i]));
+                QString::fromStdString(cluster_names[i]));
         name_item->setFlags(Qt::ItemIsEnabled);
         ui->clusterTable->setItem(row, 0, name_item);
 
         // Count
         std::size_t const count = (i < cluster_sizes.size()) ? cluster_sizes[i] : 0;
         auto * count_item = new QTableWidgetItem(
-            QString::number(static_cast<qulonglong>(count)));
+                QString::number(static_cast<qulonglong>(count)));
         count_item->setFlags(Qt::ItemIsEnabled);
         count_item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         ui->clusterTable->setItem(row, 1, count_item);
@@ -244,7 +244,7 @@ void ClusterOutputPanel::_updateClusterTable(
         // Fraction
         double const fraction = static_cast<double>(count) / total * 100.0;
         auto * fraction_item = new QTableWidgetItem(
-            QStringLiteral("%1%").arg(fraction, 0, 'f', 1));
+                QStringLiteral("%1%").arg(fraction, 0, 'f', 1));
         fraction_item->setFlags(Qt::ItemIsEnabled);
         fraction_item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
         ui->clusterTable->setItem(row, 2, fraction_item);
@@ -256,8 +256,7 @@ void ClusterOutputPanel::_updateClusterTable(
 void ClusterOutputPanel::_updateNoiseInfo(std::size_t noise_points) {
     if (noise_points > 0) {
         ui->noiseLabel->setText(
-            QStringLiteral("Noise points (unassigned): %1").arg(
-                static_cast<qulonglong>(noise_points)));
+                QStringLiteral("Noise points (unassigned): %1").arg(static_cast<qulonglong>(noise_points)));
         ui->noiseLabel->setVisible(true);
     } else {
         ui->noiseLabel->clear();

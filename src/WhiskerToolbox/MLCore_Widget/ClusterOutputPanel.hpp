@@ -48,10 +48,9 @@
 #include <string>
 #include <vector>
 
-// Forward declarations — MLCore types
 namespace MLCore {
 struct ClusteringPipelineResult;
-} // namespace MLCore
+}// namespace MLCore
 
 class GroupManager;
 
@@ -165,4 +164,4 @@ private:
     bool _has_results = false;
 };
 
-#endif // CLUSTER_OUTPUT_PANEL_HPP
+#endif// CLUSTER_OUTPUT_PANEL_HPP
