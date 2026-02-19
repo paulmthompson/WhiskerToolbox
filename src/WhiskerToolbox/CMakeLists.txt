@@ -77,6 +77,9 @@ add_subdirectory(TableDesignerWidget)
 # Feature_Table_Widget, EditorState
 add_subdirectory(ML_Widget)
 
+# Qt, DataManager, EditorState, reflectcpp - MLCore ML workflow UI
+add_subdirectory(MLCore_Widget)
+
 # Qt, DataManager, DeepLearning, EditorState
 add_subdirectory(DeepLearning_Widget)
 
@@ -289,6 +292,7 @@ target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE MLCore_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE TransformsV2_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE PlotAlignmentWidget)
