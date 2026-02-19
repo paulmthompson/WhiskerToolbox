@@ -75,6 +75,8 @@ namespace MLCore {
 class MLModelRegistry;
 struct ClassificationPipelineConfig;
 struct ClassificationPipelineResult;
+struct ClusteringPipelineConfig;
+struct ClusteringPipelineResult;
 } // namespace MLCore
 
 class MLCoreWidget : public QWidget, public DataFocusAware {
@@ -113,7 +115,7 @@ public:
 
 signals:
     /**
-     * @brief Emitted from the worker thread to report pipeline progress
+     * @brief Emitted from the worker thread to report classification pipeline progress
      *
      * Connected to _onPipelineProgress via Qt::QueuedConnection to safely
      * update UI from the main thread.
@@ -121,15 +123,29 @@ signals:
     void _pipelineProgressReported(int stage_index, QString message);
 
     /**
-     * @brief Emitted when the pipeline finishes (success or failure)
+     * @brief Emitted when the classification pipeline finishes (success or failure)
      */
     void _pipelineFinished();
+
+    /**
+     * @brief Emitted from the worker thread to report clustering pipeline progress
+     */
+    void _clusteringProgressReported(int stage_index, QString message);
+
+    /**
+     * @brief Emitted when the clustering pipeline finishes (success or failure)
+     */
+    void _clusteringPipelineFinished();
 
 private slots:
     void _onTrainRequested();
     void _onPredictRequested();
     void _onPipelineProgress(int stage_index, QString const & message);
     void _onPipelineComplete();
+
+    void _onClusteringFitRequested();
+    void _onClusteringProgress(int stage_index, QString const & message);
+    void _onClusteringPipelineComplete();
 
 private:
     void _setupUi();
@@ -139,6 +155,11 @@ private:
     [[nodiscard]] MLCore::ClassificationPipelineConfig _buildPipelineConfig() const;
     void _runPipelineAsync(MLCore::ClassificationPipelineConfig config);
     void _setPipelineRunning(bool running);
+
+    [[nodiscard]] bool _validateClusteringPanels() const;
+    [[nodiscard]] MLCore::ClusteringPipelineConfig _buildClusteringPipelineConfig() const;
+    void _runClusteringPipelineAsync(MLCore::ClusteringPipelineConfig config);
+    void _setClusteringPipelineRunning(bool running);
 
     std::shared_ptr<MLCoreWidgetState> _state;
     std::shared_ptr<DataManager> _data_manager;
@@ -156,14 +177,20 @@ private:
     ClusteringPanel * _clustering_panel = nullptr;
     ClusterOutputPanel * _cluster_output_panel = nullptr;
 
-    // Progress UI
+    // Progress UI (Classification)
     QLabel * _status_label = nullptr;
     QProgressBar * _progress_bar = nullptr;
+
+    // Progress UI (Clustering)
+    QLabel * _clustering_status_label = nullptr;
+    QProgressBar * _clustering_progress_bar = nullptr;
 
     // Pipeline infrastructure
     std::unique_ptr<MLCore::MLModelRegistry> _registry;
     std::unique_ptr<MLCore::ClassificationPipelineResult> _last_result;
+    std::unique_ptr<MLCore::ClusteringPipelineResult> _last_clustering_result;
     bool _pipeline_running = false;
+    bool _clustering_pipeline_running = false;
 };
 
 #endif // MLCORE_WIDGET_HPP

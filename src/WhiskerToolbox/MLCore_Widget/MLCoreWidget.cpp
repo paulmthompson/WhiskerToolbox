@@ -15,6 +15,7 @@
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/MLModelRegistry.hpp"
 #include "MLCore/pipelines/ClassificationPipeline.hpp"
+#include "MLCore/pipelines/ClusteringPipeline.hpp"
 #include "MLCore/preprocessing/ClassBalancing.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
@@ -74,6 +75,49 @@ private:
     MLCore::MLModelRegistry const * _registry;
     MLCore::ClassificationPipelineConfig _config;
     MLCore::ClassificationPipelineResult _result;
+};
+
+/**
+ * @brief Worker that runs the ClusteringPipeline on a background thread
+ *
+ * Owns the pipeline config and result. Emits progress via a signal connected
+ * to the main thread with Qt::QueuedConnection (handled by MLCoreWidget).
+ */
+class ClusteringPipelineWorker : public QThread {
+    Q_OBJECT
+
+public:
+    ClusteringPipelineWorker(DataManager * dm,
+                             MLCore::MLModelRegistry const * registry,
+                             MLCore::ClusteringPipelineConfig config,
+                             QObject * parent = nullptr)
+        : QThread(parent)
+        , _dm(dm)
+        , _registry(registry)
+        , _config(std::move(config)) {}
+
+    [[nodiscard]] MLCore::ClusteringPipelineResult takeResult() {
+        return std::move(_result);
+    }
+
+signals:
+    void progressUpdate(int stage_index, QString message);
+
+protected:
+    void run() override {
+        auto progress_cb = [this](MLCore::ClusteringStage stage,
+                                  std::string const & msg) {
+            emit progressUpdate(static_cast<int>(stage), QString::fromStdString(msg));
+        };
+
+        _result = MLCore::runClusteringPipeline(*_dm, *_registry, _config, progress_cb);
+    }
+
+private:
+    DataManager * _dm;
+    MLCore::MLModelRegistry const * _registry;
+    MLCore::ClusteringPipelineConfig _config;
+    MLCore::ClusteringPipelineResult _result;
 };
 
 } // namespace
@@ -192,6 +236,23 @@ void MLCoreWidget::_setupUi() {
     _clustering_panel = new ClusteringPanel(_state, _data_manager, clustering_tab);
     clustering_layout->addWidget(_clustering_panel);
 
+    // Progress / status UI for clustering (between panel and output)
+    auto * clustering_progress_widget = new QWidget(clustering_tab);
+    auto * clustering_progress_layout = new QHBoxLayout(clustering_progress_widget);
+    clustering_progress_layout->setContentsMargins(0, 2, 0, 2);
+
+    _clustering_status_label = new QLabel(clustering_tab);
+    _clustering_status_label->setWordWrap(true);
+    clustering_progress_layout->addWidget(_clustering_status_label, 1);
+
+    _clustering_progress_bar = new QProgressBar(clustering_tab);
+    _clustering_progress_bar->setRange(0, 0); // indeterminate
+    _clustering_progress_bar->setMaximumWidth(120);
+    _clustering_progress_bar->setVisible(false);
+    clustering_progress_layout->addWidget(_clustering_progress_bar);
+
+    clustering_layout->addWidget(clustering_progress_widget);
+
     _cluster_output_panel = new ClusterOutputPanel(clustering_tab);
     clustering_layout->addWidget(_cluster_output_panel);
     clustering_layout->addStretch();
@@ -227,9 +288,18 @@ void MLCoreWidget::_connectSignals() {
     connect(_prediction_panel, &PredictionPanel::predictRequested,
             this, &MLCoreWidget::_onPredictRequested);
 
+    // "Fit & Assign" button in ClusteringPanel → run clustering pipeline
+    connect(_clustering_panel, &ClusteringPanel::fitRequested,
+            this, &MLCoreWidget::_onClusteringFitRequested);
+
     // Pipeline progress (cross-thread signal → main-thread slot)
     connect(this, &MLCoreWidget::_pipelineProgressReported,
             this, &MLCoreWidget::_onPipelineProgress,
+            Qt::QueuedConnection);
+
+    // Clustering pipeline progress (cross-thread signal → main-thread slot)
+    connect(this, &MLCoreWidget::_clusteringProgressReported,
+            this, &MLCoreWidget::_onClusteringProgress,
             Qt::QueuedConnection);
 
     // Output key clicked in ResultsPanel → emit data focus via SelectionContext (task 4.9)
@@ -529,4 +599,170 @@ void MLCoreWidget::_setPipelineRunning(bool running) {
     _label_panel->setEnabled(!running);
     _model_config_panel->setEnabled(!running);
     _prediction_panel->setEnabled(!running);
+}
+
+// =============================================================================
+// Clustering — Fit slot
+// =============================================================================
+
+void MLCoreWidget::_onClusteringFitRequested() {
+    if (_clustering_pipeline_running) {
+        return;
+    }
+
+    if (!_validateClusteringPanels()) {
+        return;
+    }
+
+    auto config = _buildClusteringPipelineConfig();
+    _runClusteringPipelineAsync(std::move(config));
+}
+
+// =============================================================================
+// Clustering — Validation
+// =============================================================================
+
+bool MLCoreWidget::_validateClusteringPanels() const {
+    QStringList issues;
+
+    if (!_clustering_panel->hasValidConfiguration()) {
+        issues << QStringLiteral("Clustering panel configuration is incomplete "
+                                 "(select a tensor and algorithm)");
+    }
+
+    if (!issues.isEmpty()) {
+        QMessageBox::warning(
+            const_cast<MLCoreWidget *>(this),
+            QStringLiteral("Cannot Run Clustering Pipeline"),
+            QStringLiteral("Please fix the following issues before running:\n\n• ") +
+                issues.join(QStringLiteral("\n• ")));
+        return false;
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Clustering — Pipeline config assembly
+// =============================================================================
+
+MLCore::ClusteringPipelineConfig MLCoreWidget::_buildClusteringPipelineConfig() const {
+    MLCore::ClusteringPipelineConfig config;
+
+    // -- Model --
+    config.model_name = _clustering_panel->selectedAlgorithmName();
+    config.model_params = nullptr; // set in _runClusteringPipelineAsync
+
+    // -- Features --
+    config.feature_tensor_key = _clustering_panel->selectedTensorKey();
+
+    // -- Time key (from the tensor's registered time frame in DataManager) --
+    if (_data_manager) {
+        TimeKey const tk = _data_manager->getTimeKey(config.feature_tensor_key);
+        if (!tk.empty()) {
+            config.time_key_str = tk.str();
+        }
+    }
+
+    // -- Feature conversion --
+    config.conversion_config.drop_nan = true;
+    config.conversion_config.zscore_normalize = _clustering_panel->zscoreNormalize();
+
+    // -- Assignment region (assign all rows of fitting tensor) --
+    config.assignment_region.assign_all_rows = true;
+
+    // -- Output --
+    config.output_config.output_prefix = _clustering_panel->outputPrefix();
+    config.output_config.write_intervals = _clustering_panel->writeIntervals();
+    config.output_config.write_probabilities = _clustering_panel->writeProbabilities();
+    config.output_config.write_to_putative_groups = true;
+    config.output_config.time_key_str = config.time_key_str;
+
+    return config;
+}
+
+// =============================================================================
+// Clustering — Async execution
+// =============================================================================
+
+void MLCoreWidget::_runClusteringPipelineAsync(MLCore::ClusteringPipelineConfig config) {
+    _setClusteringPipelineRunning(true);
+    _cluster_output_panel->clearResults();
+
+    // Retrieve user-configured model parameters and bind to config
+    auto params = _clustering_panel->currentParameters();
+    config.model_params = params.get();
+
+    auto * worker = new ClusteringPipelineWorker(
+        _data_manager.get(), _registry.get(), std::move(config), this);
+
+    // Forward worker progress signal → our cross-thread signal
+    connect(worker, &ClusteringPipelineWorker::progressUpdate,
+            this, &MLCoreWidget::_clusteringProgressReported);
+
+    // On completion, harvest result and clean up
+    connect(worker, &QThread::finished, this, [this, worker, p = std::move(params)]() mutable {
+        _last_clustering_result = std::make_unique<MLCore::ClusteringPipelineResult>(
+            worker->takeResult());
+        worker->deleteLater();
+        p.reset(); // release parameter storage now that pipeline is done
+        _onClusteringPipelineComplete();
+    });
+
+    worker->start();
+}
+
+// =============================================================================
+// Clustering — Progress and completion
+// =============================================================================
+
+void MLCoreWidget::_onClusteringProgress(int stage_index, QString const & message) {
+    auto const stage = static_cast<MLCore::ClusteringStage>(stage_index);
+    QString const stage_name = QString::fromStdString(MLCore::toString(stage));
+
+    _clustering_status_label->setText(
+        QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
+}
+
+void MLCoreWidget::_onClusteringPipelineComplete() {
+    _setClusteringPipelineRunning(false);
+
+    if (!_last_clustering_result) {
+        _clustering_status_label->setText(
+            QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
+        return;
+    }
+
+    if (!_last_clustering_result->success) {
+        auto const stage_name = QString::fromStdString(
+            MLCore::toString(_last_clustering_result->failed_stage));
+        _clustering_status_label->setText(
+            QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
+                .arg(stage_name,
+                     QString::fromStdString(_last_clustering_result->error_message)));
+        return;
+    }
+
+    // Success — show results
+    _clustering_status_label->setText(
+        QStringLiteral("<span style='color: green;'>Clustering completed successfully</span>"));
+
+    std::string const algorithm_name = _clustering_panel->selectedAlgorithmName();
+    _cluster_output_panel->showClusteringResult(*_last_clustering_result, algorithm_name);
+}
+
+// =============================================================================
+// Clustering — UI state management
+// =============================================================================
+
+void MLCoreWidget::_setClusteringPipelineRunning(bool running) {
+    _clustering_pipeline_running = running;
+    _clustering_progress_bar->setVisible(running);
+
+    if (running) {
+        _clustering_status_label->setText(QStringLiteral("Starting clustering pipeline..."));
+    }
+
+    // Disable the clustering panel during pipeline execution
+    _clustering_panel->setEnabled(!running);
 }
