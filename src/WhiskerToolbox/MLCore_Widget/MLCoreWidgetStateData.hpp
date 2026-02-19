@@ -82,6 +82,17 @@ struct MLCoreWidgetStateData {
     /// JSON string of model-specific parameters
     std::string model_parameters_json;
 
+    // === Balancing configuration ===
+
+    /// Whether class balancing is enabled
+    bool balancing_enabled = false;
+
+    /// Balancing strategy: "subsample" or "oversample"
+    std::string balancing_strategy = "subsample";
+
+    /// Maximum ratio of majority to minority class samples
+    double balancing_max_ratio = 1.0;
+
     // === Output configuration ===
 
     /// Prefix for output data keys (e.g. "ml_contact" → "Predicted:contact")

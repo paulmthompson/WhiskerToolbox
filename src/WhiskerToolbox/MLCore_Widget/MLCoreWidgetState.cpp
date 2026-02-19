@@ -48,6 +48,9 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit labelDataKeyChanged(QString::fromStdString(_data.label_data_key));
         emit selectedModelNameChanged(QString::fromStdString(_data.selected_model_name));
         emit modelParametersJsonChanged();
+        emit balancingEnabledChanged(_data.balancing_enabled);
+        emit balancingStrategyChanged(QString::fromStdString(_data.balancing_strategy));
+        emit balancingMaxRatioChanged(_data.balancing_max_ratio);
         emit outputPrefixChanged(QString::fromStdString(_data.output_prefix));
         emit probabilityThresholdChanged(_data.probability_threshold);
         emit outputProbabilitiesChanged(_data.output_probabilities);
@@ -196,6 +199,44 @@ void MLCoreWidgetState::setModelParametersJson(std::string const & json) {
 
 std::string const & MLCoreWidgetState::modelParametersJson() const {
     return _data.model_parameters_json;
+}
+
+// === Balancing configuration ===
+
+void MLCoreWidgetState::setBalancingEnabled(bool enabled) {
+    if (_data.balancing_enabled != enabled) {
+        _data.balancing_enabled = enabled;
+        markDirty();
+        emit balancingEnabledChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::balancingEnabled() const {
+    return _data.balancing_enabled;
+}
+
+void MLCoreWidgetState::setBalancingStrategy(std::string const & strategy) {
+    if (_data.balancing_strategy != strategy) {
+        _data.balancing_strategy = strategy;
+        markDirty();
+        emit balancingStrategyChanged(QString::fromStdString(strategy));
+    }
+}
+
+std::string const & MLCoreWidgetState::balancingStrategy() const {
+    return _data.balancing_strategy;
+}
+
+void MLCoreWidgetState::setBalancingMaxRatio(double ratio) {
+    if (_data.balancing_max_ratio != ratio) {
+        _data.balancing_max_ratio = ratio;
+        markDirty();
+        emit balancingMaxRatioChanged(ratio);
+    }
+}
+
+double MLCoreWidgetState::balancingMaxRatio() const {
+    return _data.balancing_max_ratio;
 }
 
 // === Output configuration ===

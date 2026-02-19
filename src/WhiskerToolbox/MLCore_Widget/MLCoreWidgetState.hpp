@@ -96,6 +96,17 @@ public:
     void setModelParametersJson(std::string const & json);
     [[nodiscard]] std::string const & modelParametersJson() const;
 
+    // === Balancing configuration ===
+
+    void setBalancingEnabled(bool enabled);
+    [[nodiscard]] bool balancingEnabled() const;
+
+    void setBalancingStrategy(std::string const & strategy);
+    [[nodiscard]] std::string const & balancingStrategy() const;
+
+    void setBalancingMaxRatio(double ratio);
+    [[nodiscard]] double balancingMaxRatio() const;
+
     // === Output configuration ===
 
     void setOutputPrefix(std::string const & prefix);
@@ -127,6 +138,9 @@ signals:
     void labelDataKeyChanged(QString const & key);
     void selectedModelNameChanged(QString const & name);
     void modelParametersJsonChanged();
+    void balancingEnabledChanged(bool enabled);
+    void balancingStrategyChanged(QString const & strategy);
+    void balancingMaxRatioChanged(double ratio);
     void outputPrefixChanged(QString const & prefix);
     void probabilityThresholdChanged(double threshold);
     void outputProbabilitiesChanged(bool enabled);

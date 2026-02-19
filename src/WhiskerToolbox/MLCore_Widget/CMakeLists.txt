@@ -22,6 +22,9 @@ set(MLCORE_WIDGET_SOURCES
     LabelConfigPanel.hpp
     LabelConfigPanel.cpp
     LabelConfigPanel.ui
+    ModelConfigPanel.hpp
+    ModelConfigPanel.cpp
+    ModelConfigPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})
@@ -40,6 +43,7 @@ target_link_libraries(MLCore_Widget
         EditorState
     PRIVATE
         DataManager
+        MLCore
         reflectcpp::reflectcpp
 )
 
