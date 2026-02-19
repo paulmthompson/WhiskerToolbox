@@ -1,0 +1,19 @@
+---
+title: "TransformsV2"
+format: html
+---
+
+**TransformsV2** is the second generation data transformation library in WhiskerToolbox, designed for high performance, type safety, and composability.
+
+## Key Goals
+
+-   **Type Safety**: Leveraging C++20 concepts and strong typing to prevent runtime errors where possible.
+-   **Performance**: Minimizing allocations through "Fusion" of element-wise operations.
+-   **Flexibility**: Supporting complex pipelines that can be defined at runtime (e.g., via JSON) or compile-time.
+-   **Lifting**: Automatically generalizing element-wise operations (like `Mask2D -> Point2D`) to work on containers (like `MaskData`).
+
+## Contents
+
+-   [Architecture](architecture.qmd): Deep dive into how pipelines, lifting, and fusion work.
+-   [Adding Transforms](adding_transforms.qmd): Guide to implementing and registering new transforms.
+-   [Tensor Inspector](../ui/data_inspectors/tensor_inspector.qmd): Developer notes on the Tensor Inspector widget.

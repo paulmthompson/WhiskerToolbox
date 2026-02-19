@@ -1,0 +1,21 @@
+---
+title: "Tensor Inspector (Dev)"
+format: html
+---
+
+The **Tensor Inspector** is designed to view and manipulate `TensorData` objects.
+
+## Architecture
+
+-   **Data Storage**: Uses `TensorData` (a multi-dimensional array wrapper).
+-   **UI**:
+    -   **Inspector**: `TensorInspector` (manages callbacks, side panels).
+    -   **View**: `TensorDataView` (the main table/grid view).
+    -   **Designer**: `TensorDesigner` (side panel for adding/editing columns).
+
+## Pipeline Integration
+
+The `TensorDesigner` uses `TransformPipeline` to define how computed columns are populated.
+
+-   **Lazy Columns**: Columns can be defined by a pipeline but not computed until requested.
+-   **Serialization**: The pipeline definition is stored in the column metadata.

@@ -52,7 +52,7 @@ To load a specific digital input (e.g., channel 0) as a series of intervals:
 }
 ```
 
-### Creating a TimeFrame from Digital Input
+### Creating a [TimeFrame](../../concepts/timeframe.qmd) from Digital Input
 
 If a digital input represents a time reference (e.g., channel 1):
 
@@ -67,9 +67,9 @@ If a digital input represents a time reference (e.g., channel 1):
 }
 ```
 
-### Creating a TimeFrame from Total Samples
+### Creating a [TimeFrame](../../concepts/timeframe.qmd) from Total Samples
 
-To create a TimeFrame based on the total number of samples in the file:
+To create a [TimeFrame](../../concepts/timeframe.qmd) based on the total number of samples in the file:
 
 ``` json
 {

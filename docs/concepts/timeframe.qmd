@@ -1,0 +1,7 @@
+---
+title: "TimeFrame"
+---
+
+A **TimeFrame** is a fundamental concept in WhiskerToolbox.
+
+*(This section is currently under construction)*
