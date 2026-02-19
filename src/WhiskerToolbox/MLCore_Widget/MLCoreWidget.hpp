@@ -13,8 +13,8 @@
  *
  * The Classification tab contains sub-panels for each workflow step:
  * FeatureSelectionPanel (4.2), RegionSelectionPanel (4.3),
- * LabelConfigPanel (4.4), ModelConfigPanel (4.5), and
- * PredictionPanel (4.6). The ResultsPanel (4.7) will be added next.
+ * LabelConfigPanel (4.4), ModelConfigPanel (4.5),
+ * PredictionPanel (4.6), and ResultsPanel (4.7).
  *
  * ## Architecture
  *
@@ -42,6 +42,7 @@ class MLCoreWidgetState;
 class ModelConfigPanel;
 class PredictionPanel;
 class RegionSelectionPanel;
+class ResultsPanel;
 class SelectionContext;
 
 class MLCoreWidget : public QWidget {
@@ -76,6 +77,7 @@ private:
     LabelConfigPanel * _label_panel = nullptr;
     ModelConfigPanel * _model_config_panel = nullptr;
     PredictionPanel * _prediction_panel = nullptr;
+    ResultsPanel * _results_panel = nullptr;
 };
 
 #endif // MLCORE_WIDGET_HPP

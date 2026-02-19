@@ -6,6 +6,7 @@
 #include "ModelConfigPanel.hpp"
 #include "PredictionPanel.hpp"
 #include "RegionSelectionPanel.hpp"
+#include "ResultsPanel.hpp"
 
 #include <QLabel>
 #include <QTabWidget>
@@ -53,6 +54,10 @@ void MLCoreWidget::_setupUi() {
     // Prediction panel
     _prediction_panel = new PredictionPanel(_state, _data_manager, classification_tab);
     classification_layout->addWidget(_prediction_panel);
+
+    // Results panel
+    _results_panel = new ResultsPanel(classification_tab);
+    classification_layout->addWidget(_results_panel);
 
     classification_layout->addStretch();
 

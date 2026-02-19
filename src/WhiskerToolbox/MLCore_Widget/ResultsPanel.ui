@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ResultsPanel</class>
+ <widget class="QWidget" name="ResultsPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="resultsGroupBox">
+     <property name="title">
+      <string>Results</string>
+     </property>
+     <layout class="QVBoxLayout" name="groupBoxLayout">
+      <!-- Stacked widget: no-results page vs. results page -->
+      <item>
+       <widget class="QStackedWidget" name="stackedWidget">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <!-- Page 0: No results placeholder -->
+        <widget class="QWidget" name="noResultsPage">
+         <layout class="QVBoxLayout" name="noResultsLayout">
+          <item>
+           <spacer name="noResultsTopSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="noResultsLabel">
+            <property name="text">
+             <string>No results available.
+Train a model and run predictions to see results here.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { color: #666; font-style: italic; font-size: 11pt; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="noResultsBottomSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 1: Results display -->
+        <widget class="QWidget" name="resultsPage">
+         <layout class="QVBoxLayout" name="resultsLayout">
+          <!-- Model / Training summary -->
+          <item>
+           <widget class="QLabel" name="modelSummaryLabel">
+            <property name="text">
+             <string>Model: --</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; color: #333; }</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="trainingSummaryLabel">
+            <property name="text">
+             <string>Training: -- observations, -- features, -- classes</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="metricsSeparator">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <!-- Metrics display -->
+          <item>
+           <widget class="QLabel" name="metricsHeaderLabel">
+            <property name="text">
+             <string>Classification Metrics</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="metricsFormLayout">
+            <property name="horizontalSpacing">
+             <number>10</number>
+            </property>
+            <property name="verticalSpacing">
+             <number>4</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="accuracyTextLabel">
+              <property name="text">
+               <string>Accuracy:</string>
+              </property>
+              <property name="toolTip">
+               <string>Overall correctness: (TP + TN) / Total</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="accuracyValueLabel">
+              <property name="text">
+               <string>--</string>
+              </property>
+              <property name="styleSheet">
+               <string>QLabel { font-weight: bold; color: #2E8B57; }</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="sensitivityTextLabel">
+              <property name="text">
+               <string>Sensitivity (Recall):</string>
+              </property>
+              <property name="toolTip">
+               <string>True Positive Rate: TP / (TP + FN)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="sensitivityValueLabel">
+              <property name="text">
+               <string>--</string>
+              </property>
+              <property name="styleSheet">
+               <string>QLabel { font-weight: bold; color: #2E8B57; }</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="specificityTextLabel">
+              <property name="text">
+               <string>Specificity:</string>
+              </property>
+              <property name="toolTip">
+               <string>True Negative Rate: TN / (TN + FP)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="specificityValueLabel">
+              <property name="text">
+               <string>--</string>
+              </property>
+              <property name="styleSheet">
+               <string>QLabel { font-weight: bold; color: #2E8B57; }</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="diceScoreTextLabel">
+              <property name="text">
+               <string>Dice Score (F1):</string>
+              </property>
+              <property name="toolTip">
+               <string>Harmonic mean of precision and recall: 2·TP / (2·TP + FP + FN)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="diceScoreValueLabel">
+              <property name="text">
+               <string>--</string>
+              </property>
+              <property name="styleSheet">
+               <string>QLabel { font-weight: bold; color: #2E8B57; }</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <!-- Confusion matrix -->
+          <item>
+           <widget class="QLabel" name="confusionMatrixHeaderLabel">
+            <property name="text">
+             <string>Confusion Matrix:</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="confusionMatrixLabel">
+            <property name="text">
+             <string>No data available</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel {
+    font-family: 'Courier New', monospace;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 4px;
+}</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="outputsSeparator">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <!-- Output data keys list -->
+          <item>
+           <widget class="QLabel" name="outputsHeaderLabel">
+            <property name="text">
+             <string>Created Outputs:</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="outputKeysListWidget">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>150</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Click an output key to focus it in the DataViewer</string>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <!-- Clear button -->
+          <item>
+           <layout class="QHBoxLayout" name="buttonLayout">
+            <item>
+             <spacer name="buttonSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="clearButton">
+              <property name="text">
+               <string>Clear Results</string>
+              </property>
+              <property name="toolTip">
+               <string>Clear the displayed results</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

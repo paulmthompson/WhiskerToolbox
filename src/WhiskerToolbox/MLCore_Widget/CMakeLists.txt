@@ -28,6 +28,9 @@ set(MLCORE_WIDGET_SOURCES
     PredictionPanel.hpp
     PredictionPanel.cpp
     PredictionPanel.ui
+    ResultsPanel.hpp
+    ResultsPanel.cpp
+    ResultsPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})
