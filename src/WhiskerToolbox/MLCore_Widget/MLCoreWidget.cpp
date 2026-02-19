@@ -8,9 +8,79 @@
 #include "RegionSelectionPanel.hpp"
 #include "ResultsPanel.hpp"
 
+#include "DataManager/DataManager.hpp"
+#include "MLCore/models/MLModelParameters.hpp"
+#include "MLCore/models/MLModelRegistry.hpp"
+#include "MLCore/pipelines/ClassificationPipeline.hpp"
+#include "MLCore/preprocessing/ClassBalancing.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
+
 #include <QLabel>
+#include <QMessageBox>
+#include <QProgressBar>
 #include <QTabWidget>
+#include <QThread>
 #include <QVBoxLayout>
+
+#include <utility>
+
+// =============================================================================
+// Pipeline worker thread
+// =============================================================================
+
+namespace {
+
+/**
+ * @brief Worker that runs the ClassificationPipeline on a background thread
+ *
+ * Owns the pipeline config and result. Emits progress via a signal connected
+ * to the main thread with Qt::QueuedConnection (handled by MLCoreWidget).
+ */
+class PipelineWorker : public QThread {
+    Q_OBJECT
+
+public:
+    PipelineWorker(DataManager * dm,
+                   MLCore::MLModelRegistry const * registry,
+                   MLCore::ClassificationPipelineConfig config,
+                   QObject * parent = nullptr)
+        : QThread(parent)
+        , _dm(dm)
+        , _registry(registry)
+        , _config(std::move(config)) {}
+
+    [[nodiscard]] MLCore::ClassificationPipelineResult takeResult() {
+        return std::move(_result);
+    }
+
+signals:
+    void progressUpdate(int stage_index, QString message);
+
+protected:
+    void run() override {
+        auto progress_cb = [this](MLCore::ClassificationStage stage,
+                                  std::string const & msg) {
+            emit progressUpdate(static_cast<int>(stage), QString::fromStdString(msg));
+        };
+
+        _result = MLCore::runClassificationPipeline(*_dm, *_registry, _config, progress_cb);
+    }
+
+private:
+    DataManager * _dm;
+    MLCore::MLModelRegistry const * _registry;
+    MLCore::ClassificationPipelineConfig _config;
+    MLCore::ClassificationPipelineResult _result;
+};
+
+} // namespace
+
+// Need to include the moc for the anonymous-namespace QObject subclass
+#include "MLCoreWidget.moc"
+
+// =============================================================================
+// Construction / destruction
+// =============================================================================
 
 MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
                            std::shared_ptr<DataManager> data_manager,
@@ -19,10 +89,17 @@ MLCoreWidget::MLCoreWidget(std::shared_ptr<MLCoreWidgetState> state,
     : QWidget(parent)
     , _state(std::move(state))
     , _data_manager(std::move(data_manager))
-    , _selection_context(selection_context) {
+    , _selection_context(selection_context)
+    , _registry(std::make_unique<MLCore::MLModelRegistry>()) {
     _setupUi();
     _connectSignals();
 }
+
+MLCoreWidget::~MLCoreWidget() = default;
+
+// =============================================================================
+// UI setup
+// =============================================================================
 
 void MLCoreWidget::_setupUi() {
     auto * layout = new QVBoxLayout(this);
@@ -54,6 +131,23 @@ void MLCoreWidget::_setupUi() {
     // Prediction panel
     _prediction_panel = new PredictionPanel(_state, _data_manager, classification_tab);
     classification_layout->addWidget(_prediction_panel);
+
+    // Progress / status UI (between prediction and results)
+    auto * progress_widget = new QWidget(classification_tab);
+    auto * progress_layout = new QHBoxLayout(progress_widget);
+    progress_layout->setContentsMargins(0, 2, 0, 2);
+
+    _status_label = new QLabel(classification_tab);
+    _status_label->setWordWrap(true);
+    progress_layout->addWidget(_status_label, 1);
+
+    _progress_bar = new QProgressBar(classification_tab);
+    _progress_bar->setRange(0, 0); // indeterminate
+    _progress_bar->setMaximumWidth(120);
+    _progress_bar->setVisible(false);
+    progress_layout->addWidget(_progress_bar);
+
+    classification_layout->addWidget(progress_widget);
 
     // Results panel
     _results_panel = new ResultsPanel(classification_tab);
@@ -94,7 +188,272 @@ void MLCoreWidget::_setupUi() {
     layout->addWidget(tabs);
 }
 
+// =============================================================================
+// Signal wiring
+// =============================================================================
+
 void MLCoreWidget::_connectSignals() {
-    // Future: connect SelectionContext::dataFocusChanged for passive awareness
-    // Future: connect state signals to update UI panels
+    // "Train" button in ModelConfigPanel → run full train+predict pipeline
+    connect(_model_config_panel, &ModelConfigPanel::trainRequested,
+            this, &MLCoreWidget::_onTrainRequested);
+
+    // "Predict" button in PredictionPanel → run prediction using last trained model
+    connect(_prediction_panel, &PredictionPanel::predictRequested,
+            this, &MLCoreWidget::_onPredictRequested);
+
+    // Pipeline progress (cross-thread signal → main-thread slot)
+    connect(this, &MLCoreWidget::_pipelineProgressReported,
+            this, &MLCoreWidget::_onPipelineProgress,
+            Qt::QueuedConnection);
+}
+
+// =============================================================================
+// Train / Predict slots
+// =============================================================================
+
+void MLCoreWidget::_onTrainRequested() {
+    if (_pipeline_running) {
+        return;
+    }
+
+    if (!_validatePanels()) {
+        return;
+    }
+
+    auto config = _buildPipelineConfig();
+    _runPipelineAsync(std::move(config));
+}
+
+void MLCoreWidget::_onPredictRequested() {
+    if (_pipeline_running) {
+        return;
+    }
+
+    if (!_validatePanels()) {
+        return;
+    }
+
+    // "Predict" runs the full pipeline (train then predict) since we
+    // compose training + prediction in a single pipeline call. The user
+    // can adjust prediction region / threshold between runs.
+    auto config = _buildPipelineConfig();
+    _runPipelineAsync(std::move(config));
+}
+
+// =============================================================================
+// Pipeline progress and completion
+// =============================================================================
+
+void MLCoreWidget::_onPipelineProgress(int stage_index, QString const & message) {
+    // Map stage index to progress description
+    auto const stage = static_cast<MLCore::ClassificationStage>(stage_index);
+    QString const stage_name = QString::fromStdString(MLCore::toString(stage));
+
+    _status_label->setText(
+        QStringLiteral("<b>%1:</b> %2").arg(stage_name, message));
+}
+
+void MLCoreWidget::_onPipelineComplete() {
+    _setPipelineRunning(false);
+
+    if (!_last_result) {
+        _status_label->setText(
+            QStringLiteral("<span style='color: red;'>Pipeline returned no result</span>"));
+        return;
+    }
+
+    if (!_last_result->success) {
+        auto const stage_name = QString::fromStdString(
+            MLCore::toString(_last_result->failed_stage));
+        _status_label->setText(
+            QStringLiteral("<span style='color: red;'>Failed at %1: %2</span>")
+                .arg(stage_name,
+                     QString::fromStdString(_last_result->error_message)));
+        return;
+    }
+
+    // Success — show results
+    _status_label->setText(
+        QStringLiteral("<span style='color: green;'>Pipeline completed successfully</span>"));
+
+    std::string const model_name = _model_config_panel->selectedModelName();
+    _results_panel->showClassificationResult(*_last_result, model_name);
+}
+
+// =============================================================================
+// Validation
+// =============================================================================
+
+bool MLCoreWidget::_validatePanels() const {
+    // Build a list of validation failures
+    QStringList issues;
+
+    if (!_feature_panel->hasValidSelection()) {
+        issues << QStringLiteral("No feature tensor selected");
+    }
+
+    if (!_label_panel->hasValidSelection()) {
+        issues << QStringLiteral("Label configuration is incomplete");
+    }
+
+    if (!_model_config_panel->hasValidConfiguration()) {
+        issues << QStringLiteral("No model selected");
+    }
+
+    if (!issues.isEmpty()) {
+        QMessageBox::warning(
+            const_cast<MLCoreWidget *>(this),
+            QStringLiteral("Cannot Run Pipeline"),
+            QStringLiteral("Please fix the following issues before running:\n\n• ") +
+                issues.join(QStringLiteral("\n• ")));
+        return false;
+    }
+
+    return true;
+}
+
+// =============================================================================
+// Pipeline config assembly
+// =============================================================================
+
+MLCore::ClassificationPipelineConfig MLCoreWidget::_buildPipelineConfig() const {
+    MLCore::ClassificationPipelineConfig config;
+
+    // -- Model --
+    config.model_name = _model_config_panel->selectedModelName();
+    // model_params is owned by the pipeline config — use getDefaultParameters as
+    // the pipeline will re-create the model, but we need to pass params through.
+    // Since the pipeline takes a raw pointer, we set it to nullptr and rely on
+    // the pipeline's model creation to use defaults — BUT we should pass the
+    // user-configured parameters. The pipeline takes a non-owning pointer, so
+    // we'll store the parameters on the stack in _runPipelineAsync.
+    config.model_params = nullptr; // set in _runPipelineAsync
+
+    // -- Features --
+    config.feature_tensor_key = _feature_panel->selectedTensorKey();
+
+    // -- Time key (from the tensor's registered time frame in DataManager) --
+    if (_data_manager) {
+        TimeKey const tk = _data_manager->getTimeKey(config.feature_tensor_key);
+        if (!tk.empty()) {
+            config.time_key_str = tk.str();
+        }
+    }
+
+    // -- Labels --
+    std::string const source_type = _label_panel->labelSourceType();
+
+    if (source_type == "intervals") {
+        MLCore::LabelFromIntervals label_cfg;
+        if (_state) {
+            label_cfg.positive_class_name = _state->labelPositiveClassName();
+            label_cfg.negative_class_name = _state->labelNegativeClassName();
+        }
+        config.label_config = label_cfg;
+        if (_state) {
+            config.label_interval_key = _state->labelIntervalKey();
+        }
+    } else if (source_type == "groups") {
+        MLCore::LabelFromTimeEntityGroups label_cfg;
+        auto const group_ids = _label_panel->selectedGroupIds();
+        label_cfg.class_groups.assign(group_ids.begin(), group_ids.end());
+        label_cfg.time_key = config.time_key_str;
+        config.label_config = label_cfg;
+    } else if (source_type == "entity_groups") {
+        MLCore::LabelFromDataEntityGroups label_cfg;
+        auto const group_ids = _label_panel->selectedGroupIds();
+        label_cfg.class_groups.assign(group_ids.begin(), group_ids.end());
+        if (_state) {
+            label_cfg.data_key = _state->labelDataKey();
+        }
+        config.label_config = label_cfg;
+    }
+
+    // -- Feature conversion (use sensible defaults) --
+    config.conversion_config.drop_nan = true;
+    config.conversion_config.zscore_normalize = false;
+
+    // -- Class balancing --
+    config.balance_classes = _model_config_panel->isBalancingEnabled();
+    if (config.balance_classes) {
+        config.balancing_config.strategy = _model_config_panel->balancingStrategy();
+        config.balancing_config.max_ratio = _model_config_panel->balancingMaxRatio();
+    }
+
+    // -- Prediction region --
+    if (_prediction_panel->isAllFramesChecked()) {
+        config.prediction_region.predict_all_rows = true;
+        config.prediction_region.prediction_tensor_key.clear();
+    } else {
+        std::string const pred_key = _prediction_panel->selectedRegionKey();
+        if (pred_key.empty()) {
+            // No prediction region selected — predict on training data
+            config.prediction_region.predict_all_rows = true;
+        } else {
+            // A prediction interval was selected but the pipeline works with tensors.
+            // For now, predict on all rows of the training tensor (the recommended
+            // workflow). Future: build a separate prediction tensor filtered by intervals.
+            config.prediction_region.predict_all_rows = true;
+        }
+    }
+
+    // -- Output --
+    config.output_config.output_prefix = _prediction_panel->outputPrefix();
+    config.output_config.write_intervals = _prediction_panel->outputPredictions();
+    config.output_config.write_probabilities = _prediction_panel->outputProbabilities();
+    config.output_config.write_to_putative_groups = true;
+    config.output_config.time_key_str = config.time_key_str;
+
+    return config;
+}
+
+// =============================================================================
+// Async pipeline execution
+// =============================================================================
+
+void MLCoreWidget::_runPipelineAsync(MLCore::ClassificationPipelineConfig config) {
+    _setPipelineRunning(true);
+    _results_panel->clearResults();
+
+    // Retrieve user-configured model parameters and bind to config
+    auto params = _model_config_panel->currentParameters();
+    config.model_params = params.get();
+
+    auto * worker = new PipelineWorker(
+        _data_manager.get(), _registry.get(), std::move(config), this);
+
+    // Forward worker progress signal → our cross-thread signal
+    connect(worker, &PipelineWorker::progressUpdate,
+            this, &MLCoreWidget::_pipelineProgressReported);
+
+    // On completion, harvest result and clean up
+    connect(worker, &QThread::finished, this, [this, worker, p = std::move(params)]() mutable {
+        _last_result = std::make_unique<MLCore::ClassificationPipelineResult>(
+            worker->takeResult());
+        worker->deleteLater();
+        p.reset(); // release parameter storage now that pipeline is done
+        _onPipelineComplete();
+    });
+
+    worker->start();
+}
+
+// =============================================================================
+// UI state management
+// =============================================================================
+
+void MLCoreWidget::_setPipelineRunning(bool running) {
+    _pipeline_running = running;
+    _progress_bar->setVisible(running);
+
+    if (running) {
+        _status_label->setText(QStringLiteral("Starting pipeline..."));
+    }
+
+    // Disable interaction with panels that feed into the pipeline
+    _feature_panel->setEnabled(!running);
+    _training_region_panel->setEnabled(!running);
+    _label_panel->setEnabled(!running);
+    _model_config_panel->setEnabled(!running);
+    _prediction_panel->setEnabled(!running);
 }
