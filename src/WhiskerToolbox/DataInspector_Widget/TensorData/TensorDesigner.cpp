@@ -68,6 +68,10 @@ void TensorDesigner::setSelectionContext(SelectionContext * context) {
     }
 }
 
+void TensorDesigner::setOperationContext(EditorLib::OperationContext * context) {
+    _operation_context = context;
+}
+
 // =============================================================================
 // Tensor management
 // =============================================================================
@@ -323,7 +327,7 @@ void TensorDesigner::_onAddColumnClicked() {
         return;
     }
 
-    ColumnConfigDialog dialog(_data_manager, _row_type, this);
+    ColumnConfigDialog dialog(_data_manager, _row_type, _operation_context, this);
     if (dialog.exec() == QDialog::Accepted) {
         auto recipe = dialog.getRecipe();
         if (recipe.column_name.empty()) {
@@ -362,7 +366,7 @@ void TensorDesigner::_onEditColumnClicked() {
         return;
     }
 
-    ColumnConfigDialog dialog(_data_manager, _row_type, _column_recipes[row], this);
+    ColumnConfigDialog dialog(_data_manager, _row_type, _column_recipes[row], _operation_context, this);
     if (dialog.exec() == QDialog::Accepted) {
         _column_recipes[row] = dialog.getRecipe();
         _refreshColumnList();

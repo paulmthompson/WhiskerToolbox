@@ -29,12 +29,14 @@ add_executable(test_TransformsV2
         test_transform_lineage_integration.test.cpp
         test_tensor_column_builders.test.cpp
         test_phase1_3_4_reductions_transforms.test.cpp
+        test_multistep_column_builders.test.cpp
 
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogEventThreshold/AnalogEventThreshold.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogHilbertPhase/AnalogHilbertPhase.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/IntervalReduction/IntervalReduction.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineAngle/LineAngle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineClip/LineClip.test.cpp

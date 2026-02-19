@@ -27,6 +27,10 @@
 class SelectionContext;
 class TensorDesigner;
 
+namespace EditorLib {
+class OperationContext;
+} // namespace EditorLib
+
 /**
  * @brief Inspector widget for TensorData with design mode
  *
@@ -74,6 +78,12 @@ public:
      * @param context SelectionContext instance (can be nullptr)
      */
     void setSelectionContext(SelectionContext * context);
+
+    /**
+     * @brief Set the OperationContext for inter-widget pipeline requests
+     * @param context OperationContext instance (can be nullptr)
+     */
+    void setOperationContext(EditorLib::OperationContext * context);
 
     /**
      * @brief Get the embedded TensorDesigner widget

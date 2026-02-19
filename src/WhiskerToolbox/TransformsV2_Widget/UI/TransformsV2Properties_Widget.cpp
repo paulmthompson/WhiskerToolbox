@@ -6,6 +6,7 @@
 #include "StepConfigPanel.hpp"
 
 #include "Core/TransformsV2State.hpp"
+#include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -296,6 +297,21 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(_output_group);
 
+    // --- Pipeline Delivery Button (Phase 6.4) ---
+    // Shows when a consumer (e.g., TensorDesigner's ColumnConfigDialog) has
+    // requested a pipeline via OperationContext.
+    _deliver_pipeline_btn = new QPushButton(
+        tr("Send Pipeline to Column Builder"), this);
+    _deliver_pipeline_btn->setStyleSheet(
+        QStringLiteral("QPushButton { background-color: #0066cc; color: white; "
+                        "padding: 6px 12px; font-weight: bold; border-radius: 4px; }"
+                        "QPushButton:hover { background-color: #0055aa; }"
+                        "QPushButton:disabled { background-color: #999; }"));
+    _deliver_pipeline_btn->setToolTip(
+        tr("Deliver the current pipeline JSON to the widget that requested it"));
+    _deliver_pipeline_btn->setVisible(false); // Hidden until a pending operation exists
+    main_layout->addWidget(_deliver_pipeline_btn);
+
     // --- Connections ---
     connect(_step_list, &PipelineStepListWidget::stepSelected,
             this, &TransformsV2Properties_Widget::onStepSelected);
@@ -335,6 +351,10 @@ void TransformsV2Properties_Widget::setupUI() {
                 _state->setExecutionMode(mode);
                 updateExecuteButtonState();
             });
+
+    // Phase 6.4: OperationContext delivery connection
+    connect(_deliver_pipeline_btn, &QPushButton::clicked,
+            this, &TransformsV2Properties_Widget::onDeliverPipelineClicked);
 }
 
 // ============================================================================
@@ -746,4 +766,99 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
     _progress_bar->setVisible(false);
     _progress_label->setVisible(false);
     updateExecuteButtonState();
+
+    // Also deliver to pending consumer if one exists
+    tryDeliverPipeline();
+}
+
+// ============================================================================
+// Phase 6.4: OperationContext Integration
+// ============================================================================
+
+void TransformsV2Properties_Widget::setOperationContext(EditorLib::OperationContext * context) {
+    // Disconnect from old context
+    if (_operation_context) {
+        disconnect(_operation_context, nullptr, this, nullptr);
+    }
+
+    _operation_context = context;
+
+    if (_operation_context) {
+        connect(_operation_context,
+                &EditorLib::OperationContext::pendingOperationChanged,
+                this,
+                &TransformsV2Properties_Widget::onPendingOperationChanged);
+    }
+
+    updateDeliverButtonState();
+}
+
+void TransformsV2Properties_Widget::onDeliverPipelineClicked() {
+    if (tryDeliverPipeline()) {
+        _error_label->setStyleSheet("color: green; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Pipeline delivered to requester."));
+        _error_label->setVisible(true);
+    } else {
+        _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+        _error_label->setText(tr("Failed to deliver pipeline. No pending request found."));
+        _error_label->setVisible(true);
+    }
+}
+
+void TransformsV2Properties_Widget::onPendingOperationChanged(
+    EditorLib::EditorTypeId const & producer_type) {
+
+    // Only respond to changes for our producer type
+    if (producer_type.toStdString() != "TransformsV2Widget") {
+        return;
+    }
+
+    updateDeliverButtonState();
+}
+
+bool TransformsV2Properties_Widget::tryDeliverPipeline() {
+    if (!_operation_context) {
+        return false;
+    }
+
+    static auto const tv2_type = EditorLib::EditorTypeId(
+        QStringLiteral("TransformsV2Widget"));
+
+    auto pending = _operation_context->pendingOperationFor(tv2_type);
+    if (!pending.has_value()) {
+        return false;
+    }
+
+    // Get the current pipeline JSON from the panel
+    auto json_str = _json_panel->toPlainText().trimmed().toStdString();
+    if (json_str.empty()) {
+        // Try building from the UI
+        json_str = buildJsonFromUI();
+    }
+
+    if (json_str.empty()) {
+        return false;
+    }
+
+    // Deliver the pipeline JSON as an OperationResult
+    auto result = EditorLib::OperationResult::create(
+        EditorLib::DataChannels::TransformPipeline,
+        json_str);
+
+    return _operation_context->deliverResult(tv2_type, std::move(result));
+}
+
+void TransformsV2Properties_Widget::updateDeliverButtonState() {
+    if (!_deliver_pipeline_btn || !_operation_context) {
+        if (_deliver_pipeline_btn) {
+            _deliver_pipeline_btn->setVisible(false);
+        }
+        return;
+    }
+
+    static auto const tv2_type = EditorLib::EditorTypeId(
+        QStringLiteral("TransformsV2Widget"));
+
+    auto pending = _operation_context->pendingOperationFor(tv2_type);
+    _deliver_pipeline_btn->setVisible(pending.has_value());
 }

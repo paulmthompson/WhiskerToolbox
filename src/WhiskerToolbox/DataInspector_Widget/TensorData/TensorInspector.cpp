@@ -60,6 +60,12 @@ void TensorInspector::setSelectionContext(SelectionContext * context) {
     }
 }
 
+void TensorInspector::setOperationContext(EditorLib::OperationContext * context) {
+    if (_designer) {
+        _designer->setOperationContext(context);
+    }
+}
+
 // =============================================================================
 // Private slots
 // =============================================================================

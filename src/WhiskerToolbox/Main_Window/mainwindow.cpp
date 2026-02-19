@@ -15,6 +15,7 @@
 #include "DockWidget.h"
 #include "EditorCreationController.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "GroupManagementWidget/GroupManagementWidget.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
@@ -167,6 +168,10 @@ MainWindow::MainWindow(QWidget * parent)
     // Wire up WorkspaceManager with its collaborators (created after StateManager)
     _state_manager->workspace()->setEditorRegistry(_editor_registry.get());
     _state_manager->workspace()->setZoneManager(_zone_manager.get());
+    _state_manager->workspace()->setDockStateCaptureCallback([this]() -> std::string {
+        QByteArray const ads_state = _m_DockManager->saveState();
+        return ads_state.toBase64().toStdString();
+    });
 
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
@@ -277,6 +282,8 @@ void MainWindow::_buildInitialLayout() {
             true);// raise_view
 
     if (placed_group.view_dock) {
+        // Use a fixed object name so ADS restoreState() can find this widget across sessions
+        placed_group.view_dock->setObjectName(QStringLiteral("builtin_group_manager"));
         // Mark as non-closable and non-dockable since it's a core navigation widget
         placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         placed_group.view_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
@@ -295,6 +302,8 @@ void MainWindow::_buildInitialLayout() {
     if (dm_instance.state && dm_instance.view) {
         auto * dm_dock = new ads::CDockWidget(QStringLiteral("Data Manager"));
         dm_dock->setWidget(dm_instance.view);
+        // Use a fixed object name so ADS restoreState() can find this widget across sessions
+        dm_dock->setObjectName(QStringLiteral("builtin_data_manager"));
         dm_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
         dm_dock->setFeature(ads::CDockWidget::DockWidgetMovable, false);
@@ -319,9 +328,7 @@ void MainWindow::_buildInitialLayout() {
             true);// raise_view
 
     if (placed_media.view_dock) {
-        // Mark the initial media widget as non-closable
         placed_media.view_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
-        placed_media.view_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
     }
 
     // === BOTTOM ZONE: Timeline ===
@@ -331,6 +338,8 @@ void MainWindow::_buildInitialLayout() {
     // need it during registration. Here we just wrap it in a dock widget.
     auto * scrollbar_dock = new ads::CDockWidget(QStringLiteral("Timeline"));
     scrollbar_dock->setWidget(_time_scrollbar);
+    // Set stable object name for ADS state persistence
+    scrollbar_dock->setObjectName(QStringLiteral("builtin_timeline"));
     scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetClosable, false);
     scrollbar_dock->setFeature(ads::CDockWidget::DockWidgetMovable, false);
@@ -1148,10 +1157,17 @@ void MainWindow::_openWorkspace() {
     }
 
     // --- Restore editor states (widget recreation) ---
+    // Pause auto-save during the full restore sequence to prevent
+    // captureCurrentConfig() from accessing freed dock areas.
+    _state_manager->workspace()->disableAutoSave();
+
     _restoreEditorStates(*data);
 
     // --- Restore zone layout ---
     _restoreZoneLayout(*data);
+
+    // Re-enable auto-save now that the layout is fully stable
+    _state_manager->workspace()->enableAutoSave();
 
     // Restore data load provenance from the workspace
     _state_manager->workspace()->clearDataLoads();
@@ -1248,10 +1264,12 @@ void MainWindow::_checkCrashRecovery() {
         }
 
         // Restore editor states
+        _state_manager->workspace()->disableAutoSave();
         _restoreEditorStates(*recovery_data);
 
         // Restore zone layout
         _restoreZoneLayout(*recovery_data);
+        _state_manager->workspace()->enableAutoSave();
 
         // Restore provenance
         ws->clearDataLoads();
@@ -1343,8 +1361,10 @@ void MainWindow::_rebuildRecentWorkspacesMenu() {
                 }
             }
 
+            _state_manager->workspace()->disableAutoSave();
             _restoreEditorStates(*data);
             _restoreZoneLayout(*data);
+            _state_manager->workspace()->enableAutoSave();
 
             _state_manager->workspace()->clearDataLoads();
             for (auto const & entry : data->data_loads) {
@@ -1380,10 +1400,36 @@ void MainWindow::_rebuildRecentWorkspacesMenu() {
 // Editor State & Zone Layout Restore
 // ---------------------------------------------------------------------------
 
+void MainWindow::_closeDynamicEditors() {
+    // Collect dock widgets to close. We must collect first, then close,
+    // because closing can modify the dock manager's internal map.
+    std::vector<ads::CDockWidget *> to_close;
+
+    for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+        if (!dock || !dock->widget()) {
+            continue;
+        }
+
+        // Skip non-closable widgets (built-in: DataManager, GroupManager, Timeline)
+        if (!dock->features().testFlag(ads::CDockWidget::DockWidgetClosable)) {
+            continue;
+        }
+
+        to_close.push_back(dock);
+    }
+
+    for (auto * dock : to_close) {
+        dock->closeDockWidget();
+    }
+}
+
 void MainWindow::_restoreEditorStates(StateManagement::WorkspaceData const & data) {
     if (data.editor_states_json.empty()) {
         return;
     }
+
+    // Close all dynamically-created editor widgets so restore is a full replacement
+    _closeDynamicEditors();
 
     // Use EditorRegistry::fromJson() which:
     // 1. Clears existing states
@@ -1407,9 +1453,11 @@ void MainWindow::_restoreEditorStates(StateManagement::WorkspaceData const & dat
             continue;
         }
 
-        // Skip certain built-in widgets that are always created in _buildInitialLayout
-        // (TimeScrollBar state is pre-registered and its widget is always present)
-        if (type_id.toString() == QStringLiteral("TimeScrollBar")) {
+        // Skip types that only have create_editor_custom (no create_view factory).
+        // These are built-in widgets always created by _buildInitialLayout and cannot
+        // be recreated from state alone (they need DataManager, GroupManager, etc.).
+        // Their state is still restored by fromJson() above; we just skip view creation.
+        if (!info.create_view) {
             continue;
         }
 
@@ -1431,6 +1479,46 @@ void MainWindow::_restoreEditorStates(StateManagement::WorkspaceData const & dat
 }
 
 void MainWindow::_restoreZoneLayout(StateManagement::WorkspaceData const & data) {
+    // Prefer ADS dock state for exact widget positions (splits, tabs, sizes).
+    // Fall back to the zone-ratio-only config for older workspace files.
+    if (!data.dock_state_base64.empty()) {
+        QByteArray const ads_state = QByteArray::fromBase64(
+                QByteArray::fromStdString(data.dock_state_base64));
+        if (_m_DockManager->restoreState(ads_state)) {
+            // ADS restoreState() may destroy and recreate CDockAreaWidget
+            // objects, leaving ZoneManager with dangling pointers. Refresh
+            // them now so that captureCurrentConfig() (called by autosave)
+            // operates on valid pointers.
+            _zone_manager->refreshZoneAreas();
+
+            // Ensure built-in (non-closable) widgets are visible and docked.
+            // ADS restoreState() may hide widgets whose objectName changed
+            // between sessions (e.g. the first save used a UUID name but the
+            // code now uses a fixed name like "builtin_group_manager").
+            // Simply calling toggleView(true) would open them as floating
+            // windows, so we re-dock them into their proper zones instead.
+            for (auto * dock : _m_DockManager->dockWidgetsMap()) {
+                if (!dock || dock->features().testFlag(ads::CDockWidget::DockWidgetClosable)) {
+                    continue;
+                }
+                if (dock->isClosed() || dock->isFloating()) {
+                    auto const obj_name = dock->objectName();
+                    if (obj_name == QStringLiteral("builtin_group_manager")) {
+                        _zone_manager->addToZone(dock, Zone::Left, false);
+                    } else if (obj_name == QStringLiteral("builtin_data_manager")) {
+                        _zone_manager->addToZone(dock, Zone::Left, false);
+                    } else if (obj_name == QStringLiteral("builtin_timeline")) {
+                        _zone_manager->addToZone(dock, Zone::Bottom, false);
+                    }
+                }
+            }
+
+            std::cout << "Restored exact dock layout from ADS state" << std::endl;
+            return;
+        }
+        std::cerr << "Workspace: ADS restoreState failed, falling back to zone ratios" << std::endl;
+    }
+
     if (data.zone_layout_json.empty()) {
         return;
     }
@@ -1457,6 +1545,17 @@ void MainWindow::_connectProvenanceTracking() {
     // This is called after the initial layout is built.
     // We connect to signals from DataTransform_Widget and TableDesignerWidget
     // instances as they are created.
+
+    // Wire OperationContext: when any widget requests an operation from a producer
+    // type, auto-open/focus the producer widget so the user can configure it.
+    // This enables e.g. TensorDesigner's ColumnConfigDialog to request a pipeline
+    // from TransformsV2Widget without the user manually opening it first.
+    if (auto * op_ctx = _editor_registry->operationContext()) {
+        connect(op_ctx, &EditorLib::OperationContext::operationRequested,
+                this, [this](EditorLib::PendingOperation const & op) {
+                    openEditor(op.producer_type.toString());
+                });
+    }
 
     // Connect to EditorRegistry's editorCreated signal to wire up
     // provenance tracking for new widget instances

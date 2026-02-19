@@ -210,6 +210,18 @@ public:
      */
     [[nodiscard]] ads::CDockManager * dockManager() const { return _dock_manager; }
 
+    /**
+     * @brief Refresh zone area pointers after ADS restoreState()
+     *
+     * ADS restoreState() can destroy and recreate CDockAreaWidget objects,
+     * leaving _zone_areas with dangling pointers. This method updates
+     * each entry by querying the surviving placeholder dock widget for
+     * its current parent dock area.
+     *
+     * Call this immediately after CDockManager::restoreState().
+     */
+    void refreshZoneAreas();
+
     // ========== Runtime Configuration ==========
 
     /**

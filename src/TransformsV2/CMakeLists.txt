@@ -42,6 +42,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/AnalogHilbertPhase/AnalogHilbertPhase.cpp
         algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp
         algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp
+        algorithms/IntervalReduction/IntervalReduction.hpp
+        algorithms/IntervalReduction/IntervalReduction.cpp
         algorithms/LineAngle/LineAngle.hpp
         algorithms/LineAngle/LineAngle.cpp
         algorithms/LineBaseFlip/LineBaseFlip.hpp

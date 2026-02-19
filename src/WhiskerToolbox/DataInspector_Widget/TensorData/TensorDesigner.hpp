@@ -47,6 +47,10 @@ class TensorData;
 class SelectionContext;
 struct SelectionSource;
 
+namespace EditorLib {
+class OperationContext;
+} // namespace EditorLib
+
 namespace WhiskerToolbox::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
@@ -86,6 +90,12 @@ public:
      * @param context SelectionContext instance (can be nullptr)
      */
     void setSelectionContext(SelectionContext * context);
+
+    /**
+     * @brief Set the OperationContext for inter-widget pipeline requests
+     * @param context OperationContext instance (can be nullptr)
+     */
+    void setOperationContext(EditorLib::OperationContext * context);
 
     // =========================================================================
     // Tensor Management
@@ -173,6 +183,7 @@ private:
     // --- Data ---
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context{nullptr};
+    EditorLib::OperationContext * _operation_context{nullptr};
     std::string _tensor_key;
 
     // --- Row configuration ---

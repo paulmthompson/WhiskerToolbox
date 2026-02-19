@@ -5,6 +5,7 @@
 #include "DataInspectorPropertiesWidget.hpp"
 
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/OperationContext.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GroupManagementWidget/GroupManager.hpp"
 
@@ -87,6 +88,7 @@ void registerTypes(EditorRegistry * registry,
             // Connect properties to selection context from registry
             if (reg) {
                 props->setSelectionContext(reg->selectionContext());
+                props->setOperationContext(reg->operationContext());
             }
 
             // Connect frame selection signals

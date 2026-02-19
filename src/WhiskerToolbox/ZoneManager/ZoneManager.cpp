@@ -74,6 +74,26 @@ ads::CDockAreaWidget * ZoneManager::getZoneArea(Zone zone) const {
     return nullptr;
 }
 
+void ZoneManager::refreshZoneAreas() {
+    // After ADS restoreState(), the CDockAreaWidget objects stored in
+    // _zone_areas may have been destroyed and replaced.  The placeholder
+    // dock widgets survive (DeleteOnClose = false), so we can use them
+    // to obtain the new CDockAreaWidget pointers.
+    for (auto & [zone, area_ptr] : _zone_areas) {
+        auto ph_it = _placeholder_docks.find(zone);
+        if (ph_it != _placeholder_docks.end() && ph_it->second) {
+            auto * new_area = ph_it->second->dockAreaWidget();
+            if (new_area) {
+                area_ptr = new_area;
+            } else {
+                std::cerr << "ZoneManager::refreshZoneAreas: placeholder for zone "
+                          << zoneToString(zone).toStdString()
+                          << " has no dock area after restore" << std::endl;
+            }
+        }
+    }
+}
+
 void ZoneManager::addToZone(ads::CDockWidget * dock_widget, Zone zone, bool raise) {
     if (!_zones_initialized) {
         std::cerr << "ZoneManager::addToZone: Zones not initialized!" << std::endl;
