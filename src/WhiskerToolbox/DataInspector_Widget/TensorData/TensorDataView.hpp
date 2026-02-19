@@ -40,8 +40,8 @@ class TensorDataView : public BaseDataView {
 
 public:
     explicit TensorDataView(
-        std::shared_ptr<DataManager> data_manager,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            QWidget * parent = nullptr);
 
     ~TensorDataView() override;
 
@@ -82,12 +82,12 @@ private:
     // Fixed dimension slicers
     QWidget * _fixed_dims_widget{nullptr};
     QGridLayout * _fixed_dims_layout{nullptr};
-    std::vector<QSpinBox *> _fixed_spinboxes;   ///< One per "other" dimension
-    std::vector<int> _fixed_spinbox_dims;        ///< Maps spinbox index → tensor axis index
+    std::vector<QSpinBox *> _fixed_spinboxes;///< One per "other" dimension
+    std::vector<int> _fixed_spinbox_dims;    ///< Maps spinbox index → tensor axis index
 
     // Table
     QTableView * _table_view{nullptr};
     TensorTableModel * _table_model{nullptr};
 };
 
-#endif // TENSOR_DATA_VIEW_HPP
+#endif// TENSOR_DATA_VIEW_HPP

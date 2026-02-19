@@ -88,9 +88,9 @@ private:
     void _resetDimensionMapping();
 
     TensorData * _tensor_data{nullptr};
-    int _row_dim{0};            ///< Axis index shown as table rows
-    int _col_dim{-1};           ///< Axis index shown as table columns (-1 = single value column)
-    std::vector<std::size_t> _fixed_indices;  ///< One per tensor axis; only entries for "other" dims matter
+    int _row_dim{0};                        ///< Axis index shown as table rows
+    int _col_dim{-1};                       ///< Axis index shown as table columns (-1 = single value column)
+    std::vector<std::size_t> _fixed_indices;///< One per tensor axis; only entries for "other" dims matter
 };
 
-#endif // TENSORTABLEMODEL_HPP
+#endif// TENSORTABLEMODEL_HPP

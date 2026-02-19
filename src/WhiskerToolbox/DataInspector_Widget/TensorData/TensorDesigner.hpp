@@ -11,9 +11,6 @@
  * add columns by configuring DataManager source keys with 
  * TransformsV2 range reductions or element transforms.
  *
- * This replaces the legacy TableDesignerWidget with the modern
- * TensorData + TransformsV2 infrastructure.
- *
  * ## Architecture
  * - Row configuration: Select a DigitalIntervalSeries (interval rows),
  *   DigitalEventSeries (timestamp rows), or ordinal rows
@@ -34,7 +31,6 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 class QComboBox;
 class QLabel;
@@ -49,21 +45,21 @@ struct SelectionSource;
 
 namespace EditorLib {
 class OperationContext;
-} // namespace EditorLib
+}// namespace EditorLib
 
 namespace WhiskerToolbox::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
-} // namespace WhiskerToolbox::TensorBuilders
+}// namespace WhiskerToolbox::TensorBuilders
 
 /**
  * @brief Row source type for the tensor designer
  */
 enum class DesignerRowType {
-    None,              ///< No row source selected
-    Interval,          ///< Rows from DigitalIntervalSeries
-    Timestamp,         ///< Rows from DigitalEventSeries
-    Ordinal            ///< Manual ordinal rows
+    None,     ///< No row source selected
+    Interval, ///< Rows from DigitalIntervalSeries
+    Timestamp,///< Rows from DigitalEventSeries
+    Ordinal   ///< Manual ordinal rows
 };
 
 /**
@@ -77,8 +73,8 @@ class TensorDesigner : public QWidget {
 
 public:
     explicit TensorDesigner(
-        std::shared_ptr<DataManager> data_manager,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            QWidget * parent = nullptr);
     ~TensorDesigner() override;
 
     // =========================================================================
@@ -169,8 +165,8 @@ private slots:
     void _onSaveJsonClicked();
     void _onLoadJsonClicked();
     void _onDataFocusChanged(
-        QString const & data_key,
-        QString const & data_type);
+            QString const & data_key,
+            QString const & data_type);
 
 private:
     void _setupUi();
@@ -221,4 +217,4 @@ private:
     QLabel * _status_label{nullptr};
 };
 
-#endif // TENSOR_DESIGNER_HPP
+#endif// TENSOR_DESIGNER_HPP

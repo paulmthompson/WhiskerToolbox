@@ -11,8 +11,8 @@
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 #define slots Q_SLOTS
 
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
@@ -39,10 +39,10 @@ using namespace WhiskerToolbox::TensorBuilders;
 // =============================================================================
 
 TensorDesigner::TensorDesigner(
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent)
-    , _data_manager(std::move(data_manager)) {
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : QWidget(parent),
+      _data_manager(std::move(data_manager)) {
     _setupUi();
     _connectSignals();
 }
@@ -109,7 +109,7 @@ std::string TensorDesigner::toJson() const {
 
     // Columns
     nlohmann::json columns = nlohmann::json::array();
-    for (auto const & recipe : _column_recipes) {
+    for (auto const & recipe: _column_recipes) {
         nlohmann::json col;
         col["name"] = recipe.column_name;
         col["source_key"] = recipe.source_key;
@@ -147,13 +147,13 @@ bool TensorDesigner::fromJson(std::string const & json) {
 
             // Set row type combo
             if (row_type_str == "interval") {
-                _row_type_combo->setCurrentIndex(1); // Interval
+                _row_type_combo->setCurrentIndex(1);// Interval
             } else if (row_type_str == "timestamp") {
-                _row_type_combo->setCurrentIndex(2); // Timestamp
+                _row_type_combo->setCurrentIndex(2);// Timestamp
             } else if (row_type_str == "ordinal") {
-                _row_type_combo->setCurrentIndex(3); // Ordinal
+                _row_type_combo->setCurrentIndex(3);// Ordinal
             } else {
-                _row_type_combo->setCurrentIndex(0); // None
+                _row_type_combo->setCurrentIndex(0);// None
             }
 
             // Set row source key
@@ -168,7 +168,7 @@ bool TensorDesigner::fromJson(std::string const & json) {
         // Parse columns
         _column_recipes.clear();
         if (j.contains("columns") && j["columns"].is_array()) {
-            for (auto const & col : j["columns"]) {
+            for (auto const & col: j["columns"]) {
                 ColumnRecipe recipe;
                 recipe.column_name = col.value("name", "");
                 recipe.source_key = col.value("source_key", "");
@@ -192,12 +192,12 @@ bool TensorDesigner::fromJson(std::string const & json) {
 
         _refreshColumnList();
         _updateStatus(QStringLiteral("Configuration loaded: %1 columns")
-                          .arg(static_cast<int>(_column_recipes.size())));
+                              .arg(static_cast<int>(_column_recipes.size())));
         return true;
 
     } catch (std::exception const & e) {
         _updateStatus(QStringLiteral("Failed to load JSON: %1")
-                          .arg(QString::fromUtf8(e.what())));
+                              .arg(QString::fromUtf8(e.what())));
         return false;
     }
 }
@@ -207,9 +207,9 @@ bool TensorDesigner::fromJson(std::string const & json) {
 // =============================================================================
 
 bool TensorDesigner::exportToCsv(
-    std::string const & file_path,
-    char delimiter,
-    int precision) const {
+        std::string const & file_path,
+        char delimiter,
+        int precision) const {
 
     if (_tensor_key.empty() || !_data_manager) {
         return false;
@@ -238,7 +238,7 @@ bool TensorDesigner::exportToCsv(
     // Write header: row_label, col0, col1, ...
     ofs << "row";
     if (dims.hasColumnNames()) {
-        for (auto const & cn : dims.columnNames()) {
+        for (auto const & cn: dims.columnNames()) {
             ofs << delimiter << cn;
         }
     } else {
@@ -286,11 +286,21 @@ bool TensorDesigner::exportToCsv(
 
 void TensorDesigner::_onRowSourceTypeChanged(int index) {
     switch (index) {
-        case 0: _row_type = DesignerRowType::None; break;
-        case 1: _row_type = DesignerRowType::Interval; break;
-        case 2: _row_type = DesignerRowType::Timestamp; break;
-        case 3: _row_type = DesignerRowType::Ordinal; break;
-        default: _row_type = DesignerRowType::None; break;
+        case 0:
+            _row_type = DesignerRowType::None;
+            break;
+        case 1:
+            _row_type = DesignerRowType::Interval;
+            break;
+        case 2:
+            _row_type = DesignerRowType::Timestamp;
+            break;
+        case 3:
+            _row_type = DesignerRowType::Ordinal;
+            break;
+        default:
+            _row_type = DesignerRowType::None;
+            break;
     }
     _populateRowSourceKeys();
 }
@@ -309,13 +319,13 @@ void TensorDesigner::_onRowSourceKeyChanged(int index) {
         auto intervals = _data_manager->getData<DigitalIntervalSeries>(_row_source_key);
         if (intervals) {
             _row_info_label->setText(
-                QStringLiteral("Rows: %1 intervals").arg(static_cast<int>(intervals->size())));
+                    QStringLiteral("Rows: %1 intervals").arg(static_cast<int>(intervals->size())));
         }
     } else if (_row_type == DesignerRowType::Timestamp) {
         auto events = _data_manager->getData<DigitalEventSeries>(_row_source_key);
         if (events) {
             _row_info_label->setText(
-                QStringLiteral("Rows: %1 timestamps").arg(static_cast<int>(events->size())));
+                    QStringLiteral("Rows: %1 timestamps").arg(static_cast<int>(events->size())));
         }
     }
 }
@@ -336,7 +346,7 @@ void TensorDesigner::_onAddColumnClicked() {
         _column_recipes.push_back(std::move(recipe));
         _refreshColumnList();
         _updateStatus(QStringLiteral("Column added: %1 columns total")
-                          .arg(static_cast<int>(_column_recipes.size())));
+                              .arg(static_cast<int>(_column_recipes.size())));
     }
 }
 
@@ -351,7 +361,7 @@ void TensorDesigner::_onRemoveColumnClicked() {
         _column_recipes.erase(_column_recipes.begin() + row);
         _refreshColumnList();
         _updateStatus(QStringLiteral("Column removed: %1 columns remaining")
-                          .arg(static_cast<int>(_column_recipes.size())));
+                              .arg(static_cast<int>(_column_recipes.size())));
     }
 }
 
@@ -391,7 +401,7 @@ void TensorDesigner::_onExportCsvClicked() {
     }
 
     QString file_path = QFileDialog::getSaveFileName(
-        this, QStringLiteral("Export CSV"), QString(), QStringLiteral("CSV Files (*.csv)"));
+            this, QStringLiteral("Export CSV"), QString(), QStringLiteral("CSV Files (*.csv)"));
 
     if (file_path.isEmpty()) {
         return;
@@ -406,8 +416,8 @@ void TensorDesigner::_onExportCsvClicked() {
 
 void TensorDesigner::_onSaveJsonClicked() {
     QString file_path = QFileDialog::getSaveFileName(
-        this, QStringLiteral("Save Configuration"),
-        QString(), QStringLiteral("JSON Files (*.json)"));
+            this, QStringLiteral("Save Configuration"),
+            QString(), QStringLiteral("JSON Files (*.json)"));
 
     if (file_path.isEmpty()) {
         return;
@@ -424,8 +434,8 @@ void TensorDesigner::_onSaveJsonClicked() {
 
 void TensorDesigner::_onLoadJsonClicked() {
     QString file_path = QFileDialog::getOpenFileName(
-        this, QStringLiteral("Load Configuration"),
-        QString(), QStringLiteral("JSON Files (*.json)"));
+            this, QStringLiteral("Load Configuration"),
+            QString(), QStringLiteral("JSON Files (*.json)"));
 
     if (file_path.isEmpty()) {
         return;
@@ -442,8 +452,8 @@ void TensorDesigner::_onLoadJsonClicked() {
 }
 
 void TensorDesigner::_onDataFocusChanged(
-    QString const & data_key,
-    QString const & /*data_type*/) {
+        QString const & data_key,
+        QString const & /*data_type*/) {
 
     // If user focuses a data key that could be a column source, do nothing
     // automatically — just update status to suggest it
@@ -452,7 +462,7 @@ void TensorDesigner::_onDataFocusChanged(
         if (type == DM_DataType::Analog || type == DM_DataType::DigitalEvent ||
             type == DM_DataType::DigitalInterval || type == DM_DataType::Line) {
             _updateStatus(QStringLiteral("Focused: %1 — use 'Add Column' to include")
-                              .arg(data_key));
+                                  .arg(data_key));
         }
     }
 }
@@ -574,15 +584,15 @@ void TensorDesigner::_populateRowSourceKeys() {
 
     if (_row_type == DesignerRowType::Interval) {
         auto keys = _data_manager->getKeys<DigitalIntervalSeries>();
-        for (auto const & key : keys) {
+        for (auto const & key: keys) {
             _row_source_combo->addItem(
-                QString::fromStdString(key), QString::fromStdString(key));
+                    QString::fromStdString(key), QString::fromStdString(key));
         }
     } else if (_row_type == DesignerRowType::Timestamp) {
         auto keys = _data_manager->getKeys<DigitalEventSeries>();
-        for (auto const & key : keys) {
+        for (auto const & key: keys) {
             _row_source_combo->addItem(
-                QString::fromStdString(key), QString::fromStdString(key));
+                    QString::fromStdString(key), QString::fromStdString(key));
         }
     }
     // For Ordinal, no source key needed
@@ -597,25 +607,24 @@ void TensorDesigner::_populateRowSourceKeys() {
     } else {
         _row_source_key.clear();
         _row_info_label->setText(
-            _row_type == DesignerRowType::None
-                ? QStringLiteral("No row source selected")
-                : QStringLiteral("No compatible data found for this row type"));
+                _row_type == DesignerRowType::None
+                        ? QStringLiteral("No row source selected")
+                        : QStringLiteral("No compatible data found for this row type"));
     }
 }
 
 void TensorDesigner::_refreshColumnList() {
     _column_list->clear();
-    for (auto const & recipe : _column_recipes) {
+    for (auto const & recipe: _column_recipes) {
         QString text = QString::fromStdString(recipe.column_name);
         if (!recipe.source_key.empty()) {
-            text += QStringLiteral(" [src: %1]").arg(
-                QString::fromStdString(recipe.source_key));
+            text += QStringLiteral(" [src: %1]").arg(QString::fromStdString(recipe.source_key));
         }
         if (recipe.interval_property.has_value()) {
             text += QStringLiteral(" (interval property)");
         } else if (!recipe.gather_type.empty()) {
             text += QStringLiteral(" → %1").arg(
-                QString::fromStdString(recipe.gather_type));
+                    QString::fromStdString(recipe.gather_type));
         }
         _column_list->addItem(text);
     }
@@ -650,13 +659,13 @@ void TensorDesigner::_buildTensor() {
             // Build TimeFrameInterval vector for RowDescriptor
             std::vector<TimeFrameInterval> tfi_intervals;
             tfi_intervals.reserve(num_rows);
-            for (auto const & iw : intervals->view()) {
+            for (auto const & iw: intervals->view()) {
                 tfi_intervals.push_back(TimeFrameInterval{
-                    TimeFrameIndex(iw.interval.start),
-                    TimeFrameIndex(iw.interval.end)});
+                        TimeFrameIndex(iw.interval.start),
+                        TimeFrameIndex(iw.interval.end)});
             }
             row_desc = RowDescriptor::fromIntervals(
-                std::move(tfi_intervals), intervals->getTimeFrame());
+                    std::move(tfi_intervals), intervals->getTimeFrame());
 
         } else if (_row_type == DesignerRowType::Timestamp) {
             auto events = _data_manager->getData<DigitalEventSeries>(_row_source_key);
@@ -668,14 +677,14 @@ void TensorDesigner::_buildTensor() {
 
             // Collect event timestamps
             row_times.reserve(num_rows);
-            for (auto const & ew : events->view()) {
+            for (auto const & ew: events->view()) {
                 row_times.push_back(ew.event_time);
             }
 
             // Build TimeIndexStorage for RowDescriptor
             auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(row_times);
             row_desc = RowDescriptor::fromTimeIndices(
-                std::move(time_storage), events->getTimeFrame());
+                    std::move(time_storage), events->getTimeFrame());
 
         } else if (_row_type == DesignerRowType::Ordinal) {
             // For ordinal, user can define count (for now use column count)
@@ -688,37 +697,37 @@ void TensorDesigner::_buildTensor() {
         std::vector<std::string> source_keys;
         column_sources.reserve(_column_recipes.size());
 
-        for (auto const & recipe : _column_recipes) {
+        for (auto const & recipe: _column_recipes) {
             ColumnProviderFn provider;
 
             if (recipe.interval_property.has_value()) {
                 provider = buildIntervalPropertyProvider(
-                    intervals, recipe.interval_property.value());
+                        intervals, recipe.interval_property.value());
             } else if (recipe.pipeline_json.find("\"offset\"") != std::string::npos) {
                 // Parse offset
                 try {
                     auto j = nlohmann::json::parse(recipe.pipeline_json);
                     auto offset = j.value("offset", int64_t{0});
                     provider = buildAnalogSampleAtOffsetProvider(
-                        *_data_manager, recipe.source_key, row_times, offset);
+                            *_data_manager, recipe.source_key, row_times, offset);
                 } catch (...) {
                     provider = buildDirectColumnProvider(
-                        *_data_manager, recipe.source_key, row_times);
+                            *_data_manager, recipe.source_key, row_times);
                 }
             } else if (recipe.pipeline_json.empty() && !recipe.source_key.empty() &&
                        !recipe.interval_property.has_value()) {
                 // Passthrough (direct column)
                 provider = buildDirectColumnProvider(
-                    *_data_manager, recipe.source_key, row_times);
+                        *_data_manager, recipe.source_key, row_times);
             } else {
                 // Use buildProviderFromRecipe for standard cases
                 provider = buildProviderFromRecipe(
-                    *_data_manager, recipe, row_times, intervals);
+                        *_data_manager, recipe, row_times, intervals);
             }
 
             column_sources.push_back(ColumnSource{
-                .name = recipe.column_name,
-                .provider = std::move(provider)});
+                    .name = recipe.column_name,
+                    .provider = std::move(provider)});
 
             if (!recipe.source_key.empty()) {
                 source_keys.push_back(recipe.source_key);
@@ -730,31 +739,31 @@ void TensorDesigner::_buildTensor() {
 
         // Create TensorData
         auto tensor = TensorData::createFromLazyColumns(
-            num_rows, std::move(column_sources), std::move(row_desc), std::move(wiring));
+                num_rows, std::move(column_sources), std::move(row_desc), std::move(wiring));
 
         // Generate a unique key
         if (_tensor_key.empty()) {
             _tensor_key = "designed_tensor_" +
                           std::to_string(
-                              std::chrono::steady_clock::now().time_since_epoch().count());
+                                  std::chrono::steady_clock::now().time_since_epoch().count());
         }
 
         // Store in DataManager
         _data_manager->setData<TensorData>(
-            _tensor_key,
-            std::make_shared<TensorData>(std::move(tensor)),
-            TimeKey("default"));
+                _tensor_key,
+                std::make_shared<TensorData>(std::move(tensor)),
+                TimeKey("default"));
 
         _updateStatus(QStringLiteral("Tensor built: %1 rows × %2 columns → '%3'")
-                          .arg(static_cast<int>(num_rows))
-                          .arg(static_cast<int>(_column_recipes.size()))
-                          .arg(QString::fromStdString(_tensor_key)));
+                              .arg(static_cast<int>(num_rows))
+                              .arg(static_cast<int>(_column_recipes.size()))
+                              .arg(QString::fromStdString(_tensor_key)));
 
         emit tensorCreated(QString::fromStdString(_tensor_key));
 
     } catch (std::exception const & e) {
         _updateStatus(QStringLiteral("Build failed: %1")
-                          .arg(QString::fromUtf8(e.what())));
+                              .arg(QString::fromUtf8(e.what())));
     }
 }
 

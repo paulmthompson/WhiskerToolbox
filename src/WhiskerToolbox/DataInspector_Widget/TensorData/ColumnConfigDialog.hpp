@@ -44,12 +44,12 @@ struct PendingOperation;
 struct OperationResult;
 struct EditorInstanceId;
 struct OperationId;
-} // namespace EditorLib
+}// namespace EditorLib
 
 namespace WhiskerToolbox::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
-} // namespace WhiskerToolbox::TensorBuilders
+}// namespace WhiskerToolbox::TensorBuilders
 
 /**
  * @brief Dialog for configuring a tensor column
@@ -69,10 +69,10 @@ public:
      * @param parent Parent widget
      */
     explicit ColumnConfigDialog(
-        std::shared_ptr<DataManager> data_manager,
-        DesignerRowType row_type,
-        EditorLib::OperationContext * operation_context = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            DesignerRowType row_type,
+            EditorLib::OperationContext * operation_context = nullptr,
+            QWidget * parent = nullptr);
 
     /**
      * @brief Construct dialog pre-populated with an existing recipe
@@ -83,11 +83,11 @@ public:
      * @param parent Parent widget
      */
     ColumnConfigDialog(
-        std::shared_ptr<DataManager> data_manager,
-        DesignerRowType row_type,
-        WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe,
-        EditorLib::OperationContext * operation_context = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            DesignerRowType row_type,
+            WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe,
+            EditorLib::OperationContext * operation_context = nullptr,
+            QWidget * parent = nullptr);
 
     ~ColumnConfigDialog() override;
 
@@ -133,9 +133,9 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     DesignerRowType _row_type;
     EditorLib::OperationContext * _operation_context{nullptr};
-    QString _requester_id;         ///< EditorInstanceId for OperationContext requests
-    QString _pending_operation_id;  ///< OperationId of our pending request (empty if none)
-    bool _auto_name{true};         ///< Auto-generate column name from source + operation
+    QString _requester_id;        ///< EditorInstanceId for OperationContext requests
+    QString _pending_operation_id;///< OperationId of our pending request (empty if none)
+    bool _auto_name{true};        ///< Auto-generate column name from source + operation
 
     // UI
     QVBoxLayout * _layout{nullptr};
@@ -164,9 +164,9 @@ private:
     QGroupBox * _advanced_group{nullptr};
     QTextEdit * _advanced_json_edit{nullptr};
     QPushButton * _validate_btn{nullptr};
-    QPushButton * _request_tv2_btn{nullptr}; ///< Placeholder for Phase 6.4 OperationContext
+    QPushButton * _request_tv2_btn{nullptr};///< Placeholder for Phase 6.4 OperationContext
     QLabel * _validation_label{nullptr};
-    bool _use_advanced_json{false}; ///< True when user has activated advanced mode
+    bool _use_advanced_json{false};///< True when user has activated advanced mode
     bool _syncing_json{false};     ///< Guard against recursive update loops
 
     // Column name
@@ -174,4 +174,4 @@ private:
     QLineEdit * _name_edit{nullptr};
 };
 
-#endif // COLUMN_CONFIG_DIALOG_HPP
+#endif// COLUMN_CONFIG_DIALOG_HPP

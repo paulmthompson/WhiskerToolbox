@@ -21,10 +21,10 @@
 #include <iostream>
 
 TensorDataView::TensorDataView(
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : BaseDataView(std::move(data_manager), parent)
-    , _table_model(new TensorTableModel(this)) {
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : BaseDataView(std::move(data_manager), parent),
+      _table_model(new TensorTableModel(this)) {
     _setupUi();
     _connectSignals();
 }
@@ -131,7 +131,7 @@ void TensorDataView::_rebuildDimensionControls() {
     _col_dim_combo->clear();
 
     // Clear old fixed-dim spinboxes
-    for (auto * sb : _fixed_spinboxes) {
+    for (auto * sb: _fixed_spinboxes) {
         sb->deleteLater();
     }
     _fixed_spinboxes.clear();
@@ -172,7 +172,7 @@ void TensorDataView::_rebuildDimensionControls() {
     // Set current selections to match the model
     _row_dim_combo->setCurrentIndex(_table_model->rowDimension());
     if (_table_model->columnDimension() < 0) {
-        _col_dim_combo->setCurrentIndex(static_cast<int>(nd)); // the "None" entry
+        _col_dim_combo->setCurrentIndex(static_cast<int>(nd));// the "None" entry
     } else {
         _col_dim_combo->setCurrentIndex(_table_model->columnDimension());
     }
@@ -191,7 +191,7 @@ void TensorDataView::_rebuildDimensionControls() {
             continue;
         }
         auto * label = new QLabel(
-            QString::fromStdString(names[i]) + " slice:", _fixed_dims_widget);
+                QString::fromStdString(names[i]) + " slice:", _fixed_dims_widget);
         auto * spinbox = new QSpinBox(_fixed_dims_widget);
         spinbox->setRange(0, static_cast<int>(shape[i]) - 1);
         spinbox->setValue(static_cast<int>(_table_model->fixedIndex(dim_i)));

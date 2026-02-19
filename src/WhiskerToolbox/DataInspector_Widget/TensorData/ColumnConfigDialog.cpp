@@ -1,6 +1,6 @@
 #include "ColumnConfigDialog.hpp"
 
-#include "TensorDesigner.hpp" // For DesignerRowType
+#include "TensorDesigner.hpp"// For DesignerRowType
 
 #include "DataManager/DataManager.hpp"
 
@@ -41,16 +41,16 @@ namespace {
 
 struct OperationEntry {
     QString display_name;
-    QString operation_key;    ///< Reduction name or special key
-    QString gather_type;      ///< "AnalogTimeSeries", "DigitalEventSeries", etc.
+    QString operation_key;///< Reduction name or special key
+    QString gather_type;  ///< "AnalogTimeSeries", "DigitalEventSeries", etc.
     bool is_interval_property{false};
     bool is_passthrough{false};
     bool is_offset{false};
 };
 
 std::vector<OperationEntry> getOperationsForSource(
-    DM_DataType source_type,
-    DesignerRowType row_type) {
+        DM_DataType source_type,
+        DesignerRowType row_type) {
 
     std::vector<OperationEntry> ops;
 
@@ -102,38 +102,38 @@ std::vector<OperationEntry> getOperationsForSource(
     return ops;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // =============================================================================
 // Construction
 // =============================================================================
 
 ColumnConfigDialog::ColumnConfigDialog(
-    std::shared_ptr<DataManager> data_manager,
-    DesignerRowType row_type,
-    EditorLib::OperationContext * operation_context,
-    QWidget * parent)
-    : QDialog(parent)
-    , _data_manager(std::move(data_manager))
-    , _row_type(row_type)
-    , _operation_context(operation_context)
-    , _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
+        std::shared_ptr<DataManager> data_manager,
+        DesignerRowType row_type,
+        EditorLib::OperationContext * operation_context,
+        QWidget * parent)
+    : QDialog(parent),
+      _data_manager(std::move(data_manager)),
+      _row_type(row_type),
+      _operation_context(operation_context),
+      _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
     _setupUi();
     _connectSignals();
     _populateSourceKeys();
 }
 
 ColumnConfigDialog::ColumnConfigDialog(
-    std::shared_ptr<DataManager> data_manager,
-    DesignerRowType row_type,
-    ColumnRecipe const & recipe,
-    EditorLib::OperationContext * operation_context,
-    QWidget * parent)
-    : QDialog(parent)
-    , _data_manager(std::move(data_manager))
-    , _row_type(row_type)
-    , _operation_context(operation_context)
-    , _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
+        std::shared_ptr<DataManager> data_manager,
+        DesignerRowType row_type,
+        ColumnRecipe const & recipe,
+        EditorLib::OperationContext * operation_context,
+        QWidget * parent)
+    : QDialog(parent),
+      _data_manager(std::move(data_manager)),
+      _row_type(row_type),
+      _operation_context(operation_context),
+      _requester_id(EditorLib::EditorInstanceId::generate().toString()) {
     _setupUi();
     _connectSignals();
     _populateSourceKeys();
@@ -199,7 +199,7 @@ ColumnRecipe ColumnConfigDialog::getRecipe() const {
         auto const source_type = _data_manager ? _data_manager->getType(source_key_str) : DM_DataType::Unknown;
 
         auto operations = getOperationsForSource(source_type, _row_type);
-        for (auto const & op : operations) {
+        for (auto const & op: operations) {
             if (op.operation_key.toStdString() == key) {
                 if (op.is_interval_property) {
                     recipe.gather_type = "";
@@ -216,7 +216,7 @@ ColumnRecipe ColumnConfigDialog::getRecipe() const {
                     recipe.pipeline_json = "";
                 } else if (op.is_offset) {
                     recipe.gather_type = op.gather_type.toStdString();
-                    recipe.pipeline_json = ""; // Offset handled separately
+                    recipe.pipeline_json = "";// Offset handled separately
                     // For offset, we encode in pipeline_json
                     auto offset_val = static_cast<int64_t>(_offset_spin->value());
                     recipe.pipeline_json = R"({"offset": )" + std::to_string(offset_val) + "}";
@@ -264,10 +264,10 @@ void ColumnConfigDialog::_onOperationChanged(int index) {
             try {
                 auto j = nlohmann::json::parse(json);
                 _advanced_json_edit->setPlainText(
-                    QString::fromStdString(j.dump(2)));
+                        QString::fromStdString(j.dump(2)));
             } catch (...) {
                 _advanced_json_edit->setPlainText(
-                    QString::fromStdString(json));
+                        QString::fromStdString(json));
             }
         }
         _syncing_json = false;
@@ -277,7 +277,7 @@ void ColumnConfigDialog::_onOperationChanged(int index) {
 }
 
 void ColumnConfigDialog::_onColumnNameEdited(QString const & /*text*/) {
-    _auto_name = false; // User typed a custom name
+    _auto_name = false;// User typed a custom name
 }
 
 void ColumnConfigDialog::_updateAutoName() {
@@ -383,14 +383,14 @@ void ColumnConfigDialog::_setupUi() {
 
     _advanced_json_edit = new QTextEdit(_advanced_group);
     _advanced_json_edit->setPlaceholderText(
-        QStringLiteral("Paste or type pipeline JSON here...\n"
-                       "Example:\n"
-                       "{\n"
-                       "  \"range_reduction\": {\n"
-                       "    \"name\": \"MeanValue\",\n"
-                       "    \"parameters\": {}\n"
-                       "  }\n"
-                       "}"));
+            QStringLiteral("Paste or type pipeline JSON here...\n"
+                           "Example:\n"
+                           "{\n"
+                           "  \"range_reduction\": {\n"
+                           "    \"name\": \"MeanValue\",\n"
+                           "    \"parameters\": {}\n"
+                           "  }\n"
+                           "}"));
     _advanced_json_edit->setAcceptRichText(false);
     _advanced_json_edit->setTabChangesFocus(false);
     auto font = _advanced_json_edit->font();
@@ -405,10 +405,10 @@ void ColumnConfigDialog::_setupUi() {
     adv_btn_layout->addWidget(_validate_btn);
 
     _request_tv2_btn = new QPushButton(
-        QStringLiteral("Request from Transforms V2"), _advanced_group);
+            QStringLiteral("Request from Transforms V2"), _advanced_group);
     _request_tv2_btn->setToolTip(
-        QStringLiteral("Open the Transforms V2 widget and request a pipeline. "
-                       "Configure your pipeline there, then click 'Send Pipeline' to deliver it here."));
+            QStringLiteral("Open the Transforms V2 widget and request a pipeline. "
+                           "Configure your pipeline there, then click 'Send Pipeline' to deliver it here."));
     _request_tv2_btn->setEnabled(_operation_context != nullptr);
     adv_btn_layout->addWidget(_request_tv2_btn);
     adv_layout->addLayout(adv_btn_layout);
@@ -427,7 +427,7 @@ void ColumnConfigDialog::_setupUi() {
 
     // --- Dialog buttons ---
     auto * button_box = new QDialogButtonBox(
-        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+            QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
     _layout->addWidget(button_box);
@@ -471,7 +471,7 @@ void ColumnConfigDialog::_populateSourceKeys() {
 
     // Get all keys and filter by compatible types
     auto all_keys = _data_manager->getAllKeys();
-    for (auto const & key : all_keys) {
+    for (auto const & key: all_keys) {
         auto const type = _data_manager->getType(key);
 
         // Filter based on row type
@@ -519,10 +519,10 @@ void ColumnConfigDialog::_populateOperations() {
 
     // Update source type label
     _source_type_label->setText(
-        QString::fromStdString(convert_data_type_to_string(source_type)));
+            QString::fromStdString(convert_data_type_to_string(source_type)));
 
     auto operations = getOperationsForSource(source_type, _row_type);
-    for (auto const & op : operations) {
+    for (auto const & op: operations) {
         _operation_combo->addItem(op.display_name, op.operation_key);
     }
 
@@ -548,9 +548,15 @@ void ColumnConfigDialog::_applyRecipe(ColumnRecipe const & recipe) {
     if (recipe.interval_property.has_value()) {
         QString op_key;
         switch (recipe.interval_property.value()) {
-            case IntervalProperty::Start: op_key = QStringLiteral("IntervalStart"); break;
-            case IntervalProperty::End: op_key = QStringLiteral("IntervalEnd"); break;
-            case IntervalProperty::Duration: op_key = QStringLiteral("IntervalDuration"); break;
+            case IntervalProperty::Start:
+                op_key = QStringLiteral("IntervalStart");
+                break;
+            case IntervalProperty::End:
+                op_key = QStringLiteral("IntervalEnd");
+                break;
+            case IntervalProperty::Duration:
+                op_key = QStringLiteral("IntervalDuration");
+                break;
         }
         for (int i = 0; i < _operation_combo->count(); ++i) {
             if (_operation_combo->itemData(i).toString() == op_key) {
@@ -610,10 +616,10 @@ void ColumnConfigDialog::_applyRecipe(ColumnRecipe const & recipe) {
         try {
             auto j = nlohmann::json::parse(recipe.pipeline_json);
             _advanced_json_edit->setPlainText(
-                QString::fromStdString(j.dump(2)));
+                    QString::fromStdString(j.dump(2)));
         } catch (...) {
             _advanced_json_edit->setPlainText(
-                QString::fromStdString(recipe.pipeline_json));
+                    QString::fromStdString(recipe.pipeline_json));
         }
     }
 }
@@ -639,10 +645,10 @@ void ColumnConfigDialog::_onAdvancedToggled(bool checked) {
                 try {
                     auto j = nlohmann::json::parse(json);
                     _advanced_json_edit->setPlainText(
-                        QString::fromStdString(j.dump(2)));
+                            QString::fromStdString(j.dump(2)));
                 } catch (...) {
                     _advanced_json_edit->setPlainText(
-                        QString::fromStdString(json));
+                            QString::fromStdString(json));
                 }
                 _syncing_json = false;
             }
@@ -668,8 +674,8 @@ void ColumnConfigDialog::_onValidateClicked() {
     } catch (nlohmann::json::parse_error const & e) {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
         _validation_label->setText(
-            QStringLiteral("JSON parse error: ") +
-            QString::fromStdString(e.what()));
+                QStringLiteral("JSON parse error: ") +
+                QString::fromStdString(e.what()));
         return;
     }
 
@@ -694,12 +700,12 @@ void ColumnConfigDialog::_onValidateClicked() {
         }
         _validation_label->setStyleSheet(QStringLiteral("color: green;"));
         _validation_label->setText(
-            QStringLiteral("\u2713 Valid pipeline: ") + detail);
+                QStringLiteral("\u2713 Valid pipeline: ") + detail);
     } else {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
         _validation_label->setText(
-            QStringLiteral("Pipeline load error: ") +
-            QString::fromStdString(result.error()->what()));
+                QStringLiteral("Pipeline load error: ") +
+                QString::fromStdString(result.error()->what()));
     }
 }
 
@@ -722,7 +728,7 @@ void ColumnConfigDialog::_onRequestTV2Clicked() {
     if (!_operation_context) {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
         _validation_label->setText(
-            QStringLiteral("OperationContext not available. Cannot request pipeline."));
+                QStringLiteral("OperationContext not available. Cannot request pipeline."));
         return;
     }
 
@@ -736,13 +742,12 @@ void ColumnConfigDialog::_onRequestTV2Clicked() {
 
     // Request a pipeline from TransformsV2Widget
     auto result = _operation_context->requestOperation(
-        EditorLib::EditorInstanceId(_requester_id),
-        EditorLib::EditorTypeId(QStringLiteral("TransformsV2Widget")),
-        EditorLib::OperationRequestOptions{
-            .channel = EditorLib::DataChannels::TransformPipeline,
-            .close_on_selection_change = false,
-            .close_after_delivery = true
-        });
+            EditorLib::EditorInstanceId(_requester_id),
+            EditorLib::EditorTypeId(QStringLiteral("TransformsV2Widget")),
+            EditorLib::OperationRequestOptions{
+                    .channel = EditorLib::DataChannels::TransformPipeline,
+                    .close_on_selection_change = false,
+                    .close_after_delivery = true});
 
     if (result.has_value()) {
         _pending_operation_id = result->id.toString();
@@ -750,18 +755,18 @@ void ColumnConfigDialog::_onRequestTV2Clicked() {
         _request_tv2_btn->setEnabled(false);
         _validation_label->setStyleSheet(QStringLiteral("color: #0066cc;"));
         _validation_label->setText(
-            QStringLiteral("Requested pipeline from Transforms V2 widget. "
-                           "Configure your pipeline there, then click 'Send Pipeline'."));
+                QStringLiteral("Requested pipeline from Transforms V2 widget. "
+                               "Configure your pipeline there, then click 'Send Pipeline'."));
     } else {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
         _validation_label->setText(
-            QStringLiteral("Failed to request pipeline from Transforms V2 widget."));
+                QStringLiteral("Failed to request pipeline from Transforms V2 widget."));
     }
 }
 
 void ColumnConfigDialog::_onOperationDelivered(
-    EditorLib::PendingOperation const & op,
-    EditorLib::OperationResult const & result) {
+        EditorLib::PendingOperation const & op,
+        EditorLib::OperationResult const & result) {
 
     // Check if this delivery is for our request
     if (op.requester.toString() != _requester_id) {
@@ -773,7 +778,7 @@ void ColumnConfigDialog::_onOperationDelivered(
     if (!json_ptr) {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
         _validation_label->setText(
-            QStringLiteral("Received result but could not extract pipeline JSON."));
+                QStringLiteral("Received result but could not extract pipeline JSON."));
         _resetRequestButton();
         return;
     }
@@ -784,10 +789,10 @@ void ColumnConfigDialog::_onOperationDelivered(
     try {
         auto j = nlohmann::json::parse(*json_ptr);
         _advanced_json_edit->setPlainText(
-            QString::fromStdString(j.dump(2)));
+                QString::fromStdString(j.dump(2)));
     } catch (...) {
         _advanced_json_edit->setPlainText(
-            QString::fromStdString(*json_ptr));
+                QString::fromStdString(*json_ptr));
     }
     _syncing_json = false;
 
@@ -810,8 +815,8 @@ void ColumnConfigDialog::_onOperationClosed(EditorLib::OperationId const & id) {
 void ColumnConfigDialog::_cleanupPendingOperation() {
     if (!_pending_operation_id.isEmpty() && _operation_context) {
         _operation_context->closeOperation(
-            EditorLib::OperationId(_pending_operation_id),
-            EditorLib::OperationCloseReason::RequesterClosed);
+                EditorLib::OperationId(_pending_operation_id),
+                EditorLib::OperationCloseReason::RequesterClosed);
         _pending_operation_id.clear();
     }
 }
@@ -840,11 +845,11 @@ std::string ColumnConfigDialog::_buildJsonFromComboSelection() const {
     auto const source_type = _data_manager ? _data_manager->getType(source_key) : DM_DataType::Unknown;
 
     auto operations = getOperationsForSource(source_type, _row_type);
-    for (auto const & op : operations) {
+    for (auto const & op: operations) {
         if (op.operation_key.toStdString() != key) continue;
 
         if (op.is_interval_property || op.is_passthrough) {
-            return {}; // No pipeline JSON for these
+            return {};// No pipeline JSON for these
         }
         if (op.is_offset) {
             auto offset_val = static_cast<int64_t>(_offset_spin->value());
