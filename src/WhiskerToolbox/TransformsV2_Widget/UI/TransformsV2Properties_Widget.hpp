@@ -24,7 +24,7 @@
 
 namespace EditorLib {
 class OperationContext;
-} // namespace EditorLib
+}// namespace EditorLib
 
 class TransformsV2State;
 class SelectionContext;
@@ -175,7 +175,7 @@ private:
 
     // Input state
     std::string _input_data_key;
-    std::string _input_data_type_name;  // e.g. "MaskData", "AnalogTimeSeries"
+    std::string _input_data_type_name;// e.g. "MaskData", "AnalogTimeSeries"
     std::type_index _input_element_type{typeid(void)};
     std::type_index _input_container_type{typeid(void)};
 
@@ -204,11 +204,11 @@ private:
     QProgressBar * _progress_bar = nullptr;
     QLabel * _progress_label = nullptr;
     QLabel * _error_label = nullptr;
-    bool _output_key_user_edited = false;  ///< True if user manually edited the output key
+    bool _output_key_user_edited = false;///< True if user manually edited the output key
 
     // OperationContext delivery (Phase 6.4)
     EditorLib::OperationContext * _operation_context = nullptr;
     QPushButton * _deliver_pipeline_btn = nullptr;
 };
 
-#endif // TRANSFORMS_V2_PROPERTIES_WIDGET_HPP
+#endif// TRANSFORMS_V2_PROPERTIES_WIDGET_HPP

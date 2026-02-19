@@ -30,21 +30,21 @@ class DataManager;
  * All members should be default-constructible and serializable.
  */
 struct TransformsV2StateData {
-    std::string instance_id;                          ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Transforms V2";       ///< User-visible name
+    std::string instance_id;                   ///< Unique instance ID (preserved across serialization)
+    std::string display_name = "Transforms V2";///< User-visible name
 
     // Phase 1: Input state
-    std::optional<std::string> input_data_key;        ///< Currently focused input data key
+    std::optional<std::string> input_data_key;///< Currently focused input data key
 
     // Phase 2: Pipeline JSON — single source of truth for pipeline state
-    std::optional<std::string> pipeline_json;         ///< Current PipelineDescriptor as JSON
+    std::optional<std::string> pipeline_json;///< Current PipelineDescriptor as JSON
 
     // Phase 3: Output configuration
-    std::optional<std::string> output_data_key;       ///< Output data key for execution results
-    std::string execution_mode = "data_manager";      ///< "data_manager" or "json_only"
+    std::optional<std::string> output_data_key; ///< Output data key for execution results
+    std::string execution_mode = "data_manager";///< "data_manager" or "json_only"
 
     // Phase 2: UI preferences
-    bool json_panel_expanded = false;                 ///< Whether the JSON panel is expanded
+    bool json_panel_expanded = false;///< Whether the JSON panel is expanded
 };
 
 /**
@@ -103,4 +103,4 @@ private:
     TransformsV2StateData _data;
 };
 
-#endif // TRANSFORMS_V2_STATE_HPP
+#endif// TRANSFORMS_V2_STATE_HPP

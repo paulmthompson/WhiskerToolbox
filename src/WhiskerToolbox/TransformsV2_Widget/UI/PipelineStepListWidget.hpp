@@ -24,27 +24,27 @@ class QVBoxLayout;
 
 namespace WhiskerToolbox::Transforms::V2 {
 struct TransformMetadata;
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 struct PipelineStepDescriptor;
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace WhiskerToolbox::Transforms::V2::Examples
 
 /**
  * @brief Represents a single step in the pipeline UI
  */
 struct PipelineStepEntry {
-    std::string step_id;                     ///< Unique step identifier
-    std::string transform_name;              ///< Name of the transform
-    std::string parameters_json;             ///< Current parameters as JSON
-    std::type_index input_type;              ///< Expected input element type
-    std::type_index output_type;             ///< Produced output element type
-    bool is_valid = true;                    ///< Whether this step is type-compatible
-    bool is_container_transform = false;     ///< Whether this is a container-level transform
+    std::string step_id;                ///< Unique step identifier
+    std::string transform_name;         ///< Name of the transform
+    std::string parameters_json;        ///< Current parameters as JSON
+    std::type_index input_type;         ///< Expected input element type
+    std::type_index output_type;        ///< Produced output element type
+    bool is_valid = true;               ///< Whether this step is type-compatible
+    bool is_container_transform = false;///< Whether this is a container-level transform
 
     PipelineStepEntry()
-        : input_type(typeid(void))
-        , output_type(typeid(void)) {}
+        : input_type(typeid(void)),
+          output_type(typeid(void)) {}
 };
 
 /**
@@ -158,7 +158,7 @@ private:
     void rebuildListDisplay();
     void validateTypeChain();
     std::vector<std::string> getCompatibleTransforms(std::type_index element_type,
-                                                      std::type_index container_type) const;
+                                                     std::type_index container_type) const;
     void updateButtonStates();
 
     QListWidget * _list_widget = nullptr;
@@ -172,4 +172,4 @@ private:
     std::type_index _input_container_type{typeid(void)};
 };
 
-#endif // WHISKERTOOLBOX_PIPELINE_STEP_LIST_WIDGET_HPP
+#endif// WHISKERTOOLBOX_PIPELINE_STEP_LIST_WIDGET_HPP

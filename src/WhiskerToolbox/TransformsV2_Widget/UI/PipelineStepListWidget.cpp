@@ -80,7 +80,7 @@ PipelineStepListWidget::~PipelineStepListWidget() = default;
 // ============================================================================
 
 void PipelineStepListWidget::setInputType(std::type_index element_type,
-                                           std::type_index container_type) {
+                                          std::type_index container_type) {
     _input_element_type = element_type;
     _input_container_type = container_type;
     validateTypeChain();
@@ -119,7 +119,7 @@ void PipelineStepListWidget::clearSteps() {
 }
 
 bool PipelineStepListWidget::addStep(std::string const & transform_name,
-                                      std::string const & params_json) {
+                                     std::string const & params_json) {
     auto & registry = ElementRegistry::instance();
     auto const * meta = registry.getMetadata(transform_name);
     if (!meta) {
@@ -173,11 +173,11 @@ void PipelineStepListWidget::onAddStepClicked() {
 
     // Build list of display items
     QStringList items;
-    for (auto const & name : compatible) {
+    for (auto const & name: compatible) {
         auto const * meta = ElementRegistry::instance().getMetadata(name);
         if (meta && !meta->description.empty()) {
             items << QString::fromStdString(
-                std::format("{} — {}", name, meta->description));
+                    std::format("{} — {}", name, meta->description));
         } else {
             items << QString::fromStdString(name);
         }
@@ -185,8 +185,8 @@ void PipelineStepListWidget::onAddStepClicked() {
 
     bool ok = false;
     auto selected = QInputDialog::getItem(this, tr("Add Pipeline Step"),
-                                           tr("Select transform:"),
-                                           items, 0, false, &ok);
+                                          tr("Select transform:"),
+                                          items, 0, false, &ok);
     if (!ok || selected.isEmpty()) {
         return;
     }
@@ -263,12 +263,12 @@ void PipelineStepListWidget::rebuildListDisplay() {
     for (size_t i = 0; i < _steps.size(); ++i) {
         auto const & step = _steps[i];
         auto display = QString::fromStdString(
-            std::format("{}. {}", i + 1, step.transform_name));
+                std::format("{}. {}", i + 1, step.transform_name));
 
         auto * item = new QListWidgetItem(display, _list_widget);
 
         if (!step.is_valid) {
-            item->setBackground(QColor(255, 200, 200)); // Light red for invalid
+            item->setBackground(QColor(255, 200, 200));// Light red for invalid
             item->setToolTip(tr("Type mismatch: this step's input type is incompatible "
                                 "with the previous step's output type"));
         }
@@ -293,7 +293,7 @@ void PipelineStepListWidget::validateTypeChain() {
     auto current_element_type = _input_element_type;
     auto current_container_type = _input_container_type;
 
-    for (auto & step : _steps) {
+    for (auto & step: _steps) {
         auto const & registry = ElementRegistry::instance();
 
         if (step.is_container_transform) {
@@ -382,7 +382,7 @@ bool PipelineStepListWidget::loadFromDescriptors(
 
     bool all_ok = true;
 
-    for (auto const & desc : descriptors) {
+    for (auto const & desc: descriptors) {
         // Serialize the step's parameters back to JSON for the params_json field
         std::string params_json = "{}";
         if (desc.parameters.has_value()) {

@@ -23,7 +23,7 @@ class AutoParamWidget;
 namespace WhiskerToolbox::Transforms::V2 {
 struct ParameterSchema;
 struct TransformMetadata;
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
 /**
  * @brief Configuration panel for a single transform step's parameters
@@ -74,9 +74,9 @@ signals:
 
 private:
     void setupAutoParamWidget(std::string const & transform_name,
-                               std::string const & params_json);
+                              std::string const & params_json);
     void setupCustomWidget(std::string const & transform_name,
-                            std::string const & params_json);
+                           std::string const & params_json);
     void clearCurrentWidget();
 
     QVBoxLayout * _main_layout = nullptr;
@@ -93,4 +93,4 @@ private:
     std::string _current_transform_name;
 };
 
-#endif // WHISKERTOOLBOX_STEP_CONFIG_PANEL_HPP
+#endif// WHISKERTOOLBOX_STEP_CONFIG_PANEL_HPP

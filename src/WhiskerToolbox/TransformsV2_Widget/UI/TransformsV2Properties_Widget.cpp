@@ -44,10 +44,10 @@ TransformsV2Properties_Widget::TransformsV2Properties_Widget(
         std::shared_ptr<TransformsV2State> state,
         SelectionContext * selection_context,
         QWidget * parent)
-    : QWidget(parent)
-    , ui(std::make_unique<Ui::TransformsV2Properties_Widget>())
-    , _state(std::move(state))
-    , _selection_context(selection_context) {
+    : QWidget(parent),
+      ui(std::make_unique<Ui::TransformsV2Properties_Widget>()),
+      _state(std::move(state)),
+      _selection_context(selection_context) {
 
     ui->setupUi(this);
     setupUI();
@@ -173,8 +173,8 @@ void TransformsV2Properties_Widget::setupUI() {
     _step_config = new StepConfigPanel(splitter);
     splitter->addWidget(_step_config);
 
-    splitter->setStretchFactor(0, 1); // Step list gets 1 part
-    splitter->setStretchFactor(1, 2); // Config panel gets 2 parts
+    splitter->setStretchFactor(0, 1);// Step list gets 1 part
+    splitter->setStretchFactor(1, 2);// Config panel gets 2 parts
 
     pipeline_layout->addWidget(splitter);
 
@@ -267,7 +267,7 @@ void TransformsV2Properties_Widget::setupUI() {
     // Execute button
     _execute_button = new QPushButton(tr("Execute Pipeline"), _output_group);
     _execute_button->setToolTip(tr("Build and execute the pipeline on the selected input data"));
-    _execute_button->setEnabled(false);  // Enabled when pipeline is valid + input selected
+    _execute_button->setEnabled(false);// Enabled when pipeline is valid + input selected
     _execute_button->setStyleSheet(
             "QPushButton { font-weight: bold; padding: 6px; }"
             "QPushButton:enabled { background-color: #4CAF50; color: white; }"
@@ -301,15 +301,15 @@ void TransformsV2Properties_Widget::setupUI() {
     // Shows when a consumer (e.g., TensorDesigner's ColumnConfigDialog) has
     // requested a pipeline via OperationContext.
     _deliver_pipeline_btn = new QPushButton(
-        tr("Send Pipeline to Column Builder"), this);
+            tr("Send Pipeline to Column Builder"), this);
     _deliver_pipeline_btn->setStyleSheet(
-        QStringLiteral("QPushButton { background-color: #0066cc; color: white; "
-                        "padding: 6px 12px; font-weight: bold; border-radius: 4px; }"
-                        "QPushButton:hover { background-color: #0055aa; }"
-                        "QPushButton:disabled { background-color: #999; }"));
+            QStringLiteral("QPushButton { background-color: #0066cc; color: white; "
+                           "padding: 6px 12px; font-weight: bold; border-radius: 4px; }"
+                           "QPushButton:hover { background-color: #0055aa; }"
+                           "QPushButton:disabled { background-color: #999; }"));
     _deliver_pipeline_btn->setToolTip(
-        tr("Deliver the current pipeline JSON to the widget that requested it"));
-    _deliver_pipeline_btn->setVisible(false); // Hidden until a pending operation exists
+            tr("Deliver the current pipeline JSON to the widget that requested it"));
+    _deliver_pipeline_btn->setVisible(false);// Hidden until a pending operation exists
     main_layout->addWidget(_deliver_pipeline_btn);
 
     // --- Connections ---
@@ -400,7 +400,7 @@ std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
 
     // Build steps from the step list widget
     auto const & steps = _step_list->steps();
-    for (auto const & step : steps) {
+    for (auto const & step: steps) {
         PipelineStepDescriptor step_desc;
         step_desc.step_id = step.step_id;
         step_desc.transform_name = step.transform_name;
@@ -420,7 +420,7 @@ std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
     auto const & pre_entries = _pre_reduction_panel->entries();
     if (!pre_entries.empty()) {
         std::vector<PreReductionStepDescriptor> pre_descs;
-        for (auto const & entry : pre_entries) {
+        for (auto const & entry: pre_entries) {
             PreReductionStepDescriptor pre_desc;
             pre_desc.reduction_name = entry.reduction_name;
             pre_desc.output_key = entry.output_key;
@@ -583,7 +583,7 @@ std::string TransformsV2Properties_Widget::generateOutputName() const {
     transform_name = transform_name.toLower().replace(' ', '_');
 
     // Strip common prefixes
-    for (auto const * prefix : {"calculate_", "extract_", "convert_", "threshold_"}) {
+    for (auto const * prefix: {"calculate_", "extract_", "convert_", "threshold_"}) {
         if (transform_name.startsWith(QLatin1String(prefix))) {
             transform_name = transform_name.mid(
                     static_cast<int>(std::strlen(prefix)));
@@ -806,7 +806,7 @@ void TransformsV2Properties_Widget::onDeliverPipelineClicked() {
 }
 
 void TransformsV2Properties_Widget::onPendingOperationChanged(
-    EditorLib::EditorTypeId const & producer_type) {
+        EditorLib::EditorTypeId const & producer_type) {
 
     // Only respond to changes for our producer type
     if (producer_type.toStdString() != "TransformsV2Widget") {
@@ -822,7 +822,7 @@ bool TransformsV2Properties_Widget::tryDeliverPipeline() {
     }
 
     static auto const tv2_type = EditorLib::EditorTypeId(
-        QStringLiteral("TransformsV2Widget"));
+            QStringLiteral("TransformsV2Widget"));
 
     auto pending = _operation_context->pendingOperationFor(tv2_type);
     if (!pending.has_value()) {
@@ -842,8 +842,8 @@ bool TransformsV2Properties_Widget::tryDeliverPipeline() {
 
     // Deliver the pipeline JSON as an OperationResult
     auto result = EditorLib::OperationResult::create(
-        EditorLib::DataChannels::TransformPipeline,
-        json_str);
+            EditorLib::DataChannels::TransformPipeline,
+            json_str);
 
     return _operation_context->deliverResult(tv2_type, std::move(result));
 }
@@ -857,7 +857,7 @@ void TransformsV2Properties_Widget::updateDeliverButtonState() {
     }
 
     static auto const tv2_type = EditorLib::EditorTypeId(
-        QStringLiteral("TransformsV2Widget"));
+            QStringLiteral("TransformsV2Widget"));
 
     auto pending = _operation_context->pendingOperationFor(tv2_type);
     _deliver_pipeline_btn->setVisible(pending.has_value());

@@ -87,7 +87,7 @@ void PreReductionPanel::clearEntries() {
 }
 
 bool PreReductionPanel::addEntry(std::string const & reduction_name,
-                                  std::string const & output_key) {
+                                 std::string const & output_key) {
     PreReductionEntry entry;
     entry.reduction_name = reduction_name;
     entry.output_key = output_key;
@@ -113,14 +113,14 @@ void PreReductionPanel::onAddClicked() {
     }
 
     QStringList items;
-    for (auto const & name : available) {
+    for (auto const & name: available) {
         items << QString::fromStdString(name);
     }
 
     bool ok = false;
     auto selected = QInputDialog::getItem(this, tr("Add Pre-Computation"),
-                                           tr("Select reduction:"),
-                                           items, 0, false, &ok);
+                                          tr("Select reduction:"),
+                                          items, 0, false, &ok);
     if (!ok || selected.isEmpty()) {
         return;
     }
@@ -130,8 +130,8 @@ void PreReductionPanel::onAddClicked() {
     // Ask for output key
     auto default_key = QString::fromStdString(reduction_name + "_result");
     auto output_key = QInputDialog::getText(this, tr("Output Key"),
-                                             tr("Key name for this pre-computation:"),
-                                             QLineEdit::Normal, default_key, &ok);
+                                            tr("Key name for this pre-computation:"),
+                                            QLineEdit::Normal, default_key, &ok);
     if (!ok || output_key.isEmpty()) {
         return;
     }
@@ -157,9 +157,9 @@ void PreReductionPanel::onRemoveClicked() {
 void PreReductionPanel::rebuildListDisplay() {
     _list_widget->clear();
 
-    for (auto const & entry : _entries) {
+    for (auto const & entry: _entries) {
         auto display = QString::fromStdString(
-            std::format("{} → {}", entry.reduction_name, entry.output_key));
+                std::format("{} → {}", entry.reduction_name, entry.output_key));
         _list_widget->addItem(display);
     }
 
@@ -187,7 +187,7 @@ bool PreReductionPanel::loadFromDescriptors(
 
     bool all_ok = true;
 
-    for (auto const & desc : descriptors) {
+    for (auto const & desc: descriptors) {
         PreReductionEntry entry;
         entry.reduction_name = desc.reduction_name;
         entry.output_key = desc.output_key;

@@ -55,7 +55,7 @@ StepConfigPanel::~StepConfigPanel() = default;
 // ============================================================================
 
 void StepConfigPanel::showStepConfig(std::string const & transform_name,
-                                      std::string const & params_json) {
+                                     std::string const & params_json) {
     clearCurrentWidget();
 
     _current_transform_name = transform_name;
@@ -111,7 +111,7 @@ std::string StepConfigPanel::currentParamsJson() const {
 // ============================================================================
 
 void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
-                                            std::string const & params_json) {
+                                           std::string const & params_json) {
     auto const * schema = ElementRegistry::instance().getParameterSchema(transform_name);
     if (!schema || schema->fields.empty()) {
         // Transform has no parameters (NoParams)
@@ -142,14 +142,14 @@ void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
 }
 
 void StepConfigPanel::setupCustomWidget(std::string const & transform_name,
-                                         std::string const & /* params_json */) {
+                                        std::string const & /* params_json */) {
     auto const * meta = ElementRegistry::instance().getMetadata(transform_name);
     if (!meta) {
         return;
     }
 
     _custom_widget = ParamWidgetRegistry::instance().createCustomWidget(
-        meta->params_type, _scroll_content);
+            meta->params_type, _scroll_content);
 
     if (_custom_widget) {
         _scroll_layout->insertWidget(0, _custom_widget);
@@ -171,7 +171,7 @@ void StepConfigPanel::clearCurrentWidget() {
     }
 
     // Also remove any "no parameters" labels
-    while (_scroll_layout->count() > 1) { // Keep the stretch
+    while (_scroll_layout->count() > 1) {// Keep the stretch
         auto * item = _scroll_layout->takeAt(0);
         if (auto * widget = item->widget()) {
             widget->deleteLater();
