@@ -8,8 +8,8 @@
 #include "DataManager/Tensors/TensorData.hpp"
 
 #include <cmath>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 namespace MLCore {
 
@@ -70,7 +70,7 @@ std::pair<arma::mat, std::vector<std::size_t>> dropNonFiniteRows(arma::mat const
 
     // Count surviving rows
     std::size_t valid_count = 0;
-    for (bool f : finite) {
+    for (bool f: finite) {
         if (f) ++valid_count;
     }
 
@@ -123,16 +123,15 @@ void validateForConversion(TensorData const & tensor) {
     }
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // Z-score normalization
 // ============================================================================
 
 std::pair<std::vector<double>, std::vector<double>> zscoreNormalize(
-    arma::mat & matrix,
-    double epsilon)
-{
+        arma::mat & matrix,
+        double epsilon) {
     auto const n_features = matrix.n_rows;
     std::vector<double> means(n_features);
     std::vector<double> stds(n_features);
@@ -140,7 +139,7 @@ std::pair<std::vector<double>, std::vector<double>> zscoreNormalize(
     for (arma::uword f = 0; f < n_features; ++f) {
         arma::rowvec row = matrix.row(f);
         double mean = arma::mean(row);
-        double sd = arma::stddev(row, 0);  // 0 = sample stddev (N-1)
+        double sd = arma::stddev(row, 0);// 0 = sample stddev (N-1)
 
         means[f] = mean;
         stds[f] = sd;
@@ -152,11 +151,10 @@ std::pair<std::vector<double>, std::vector<double>> zscoreNormalize(
 }
 
 void applyZscoreNormalization(
-    arma::mat & matrix,
-    std::vector<double> const & means,
-    std::vector<double> const & stds,
-    double epsilon)
-{
+        arma::mat & matrix,
+        std::vector<double> const & means,
+        std::vector<double> const & stds,
+        double epsilon) {
     if (means.size() != matrix.n_rows || stds.size() != matrix.n_rows) {
         std::ostringstream oss;
         oss << "Z-score parameter size mismatch: matrix has " << matrix.n_rows
@@ -175,9 +173,8 @@ void applyZscoreNormalization(
 // ============================================================================
 
 ConvertedFeatures convertTensorToArma(
-    TensorData const & tensor,
-    ConversionConfig const & config)
-{
+        TensorData const & tensor,
+        ConversionConfig const & config) {
     validateForConversion(tensor);
 
     ConvertedFeatures result;
@@ -223,9 +220,8 @@ ConvertedFeatures convertTensorToArma(
 }
 
 ConvertedFeatures convertTensorToArmaRowMajor(
-    TensorData const & tensor,
-    ConversionConfig const & config)
-{
+        TensorData const & tensor,
+        ConversionConfig const & config) {
     validateForConversion(tensor);
 
     ConvertedFeatures result;
@@ -281,4 +277,4 @@ ConvertedFeatures convertTensorToArmaRowMajor(
     return result;
 }
 
-} // namespace MLCore
+}// namespace MLCore

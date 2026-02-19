@@ -5,10 +5,6 @@
  * @file LogisticRegressionOperation.hpp
  * @brief MLCore-native Logistic Regression classifier (wraps mlpack::LogisticRegression)
  *
- * This is a fresh implementation conforming to the MLCore::MLModelOperation
- * interface. It does NOT depend on or modify any legacy code in
- * src/WhiskerToolbox/ML_Widget/.
- *
  * Features:
  * - Conforms to the evolved MLModelOperation interface (MLTaskType, numFeatures, etc.)
  * - Naturally provides probability estimates via LogisticRegression::Classify()
@@ -21,7 +17,6 @@
  * For multi-class logistic regression, mlpack provides SoftmaxRegression, which
  * could be added as a separate operation in the future.
  *
- * @see ml_library_roadmap.md §2.4
  */
 
 #include "MLCore/models/MLModelOperation.hpp"
@@ -83,17 +78,17 @@ public:
     // ========================================================================
 
     bool train(
-        arma::mat const & features,
-        arma::Row<std::size_t> const & labels,
-        MLModelParametersBase const * params) override;
+            arma::mat const & features,
+            arma::Row<std::size_t> const & labels,
+            MLModelParametersBase const * params) override;
 
     bool predict(
-        arma::mat const & features,
-        arma::Row<std::size_t> & predictions) override;
+            arma::mat const & features,
+            arma::Row<std::size_t> & predictions) override;
 
     bool predictProbabilities(
-        arma::mat const & features,
-        arma::mat & probabilities) override;
+            arma::mat const & features,
+            arma::mat & probabilities) override;
 
     // ========================================================================
     // Serialization
@@ -116,6 +111,6 @@ private:
     std::unique_ptr<Impl> _impl;
 };
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_LOGISTICREGRESSIONOPERATION_HPP
+#endif// MLCORE_LOGISTICREGRESSIONOPERATION_HPP

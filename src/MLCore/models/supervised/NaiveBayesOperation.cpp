@@ -34,8 +34,7 @@ struct NaiveBayesOperation::Impl {
 // ============================================================================
 
 NaiveBayesOperation::NaiveBayesOperation()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 NaiveBayesOperation::~NaiveBayesOperation() = default;
@@ -47,18 +46,15 @@ NaiveBayesOperation & NaiveBayesOperation::operator=(NaiveBayesOperation &&) noe
 // Identity & metadata
 // ============================================================================
 
-std::string NaiveBayesOperation::getName() const
-{
+std::string NaiveBayesOperation::getName() const {
     return "Naive Bayes";
 }
 
-MLTaskType NaiveBayesOperation::getTaskType() const
-{
+MLTaskType NaiveBayesOperation::getTaskType() const {
     return MLTaskType::MultiClassClassification;
 }
 
-std::unique_ptr<MLModelParametersBase> NaiveBayesOperation::getDefaultParameters() const
-{
+std::unique_ptr<MLModelParametersBase> NaiveBayesOperation::getDefaultParameters() const {
     return std::make_unique<NaiveBayesParameters>();
 }
 
@@ -67,10 +63,9 @@ std::unique_ptr<MLModelParametersBase> NaiveBayesOperation::getDefaultParameters
 // ============================================================================
 
 bool NaiveBayesOperation::train(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    MLModelParametersBase const * params)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        MLModelParametersBase const * params) {
     // Validate inputs
     if (features.empty()) {
         std::cerr << "NaiveBayesOperation::train: Feature matrix is empty.\n";
@@ -110,9 +105,9 @@ bool NaiveBayesOperation::train(
 
         // mlpack::NaiveBayesClassifier trains on construction
         _impl->model = std::make_unique<NBModel>(
-            smoothed_features,
-            labels,
-            num_classes);
+                smoothed_features,
+                labels,
+                num_classes);
 
         _impl->num_classes = num_classes;
         _impl->num_features = features.n_rows;
@@ -131,9 +126,8 @@ bool NaiveBayesOperation::train(
 // ============================================================================
 
 bool NaiveBayesOperation::predict(
-    arma::mat const & features,
-    arma::Row<std::size_t> & predictions)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> & predictions) {
     if (!_impl->trained || !_impl->model) {
         std::cerr << "NaiveBayesOperation::predict: Model not trained.\n";
         return false;
@@ -159,9 +153,8 @@ bool NaiveBayesOperation::predict(
 }
 
 bool NaiveBayesOperation::predictProbabilities(
-    arma::mat const & features,
-    arma::mat & probabilities)
-{
+        arma::mat const & features,
+        arma::mat & probabilities) {
     if (!_impl->trained || !_impl->model) {
         std::cerr << "NaiveBayesOperation::predictProbabilities: Model not trained.\n";
         return false;
@@ -191,8 +184,7 @@ bool NaiveBayesOperation::predictProbabilities(
 // Serialization
 // ============================================================================
 
-bool NaiveBayesOperation::save(std::ostream & out) const
-{
+bool NaiveBayesOperation::save(std::ostream & out) const {
     if (!_impl->trained || !_impl->model) {
         return false;
     }
@@ -211,8 +203,7 @@ bool NaiveBayesOperation::save(std::ostream & out) const
     }
 }
 
-bool NaiveBayesOperation::load(std::istream & in)
-{
+bool NaiveBayesOperation::load(std::istream & in) {
     try {
         cereal::BinaryInputArchive ar(in);
 
@@ -240,19 +231,16 @@ bool NaiveBayesOperation::load(std::istream & in)
 // Query / introspection
 // ============================================================================
 
-bool NaiveBayesOperation::isTrained() const
-{
+bool NaiveBayesOperation::isTrained() const {
     return _impl->trained;
 }
 
-std::size_t NaiveBayesOperation::numClasses() const
-{
+std::size_t NaiveBayesOperation::numClasses() const {
     return _impl->trained ? _impl->num_classes : 0;
 }
 
-std::size_t NaiveBayesOperation::numFeatures() const
-{
+std::size_t NaiveBayesOperation::numFeatures() const {
     return _impl->trained ? _impl->num_features : 0;
 }
 
-} // namespace MLCore
+}// namespace MLCore

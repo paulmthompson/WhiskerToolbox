@@ -22,8 +22,7 @@ namespace {
 /**
  * @brief Create a random engine from config (deterministic or random)
  */
-std::mt19937 makeRng(BalancingConfig const & config)
-{
+std::mt19937 makeRng(BalancingConfig const & config) {
     if (config.random_seed.has_value()) {
         return std::mt19937{static_cast<std::mt19937::result_type>(*config.random_seed)};
     }
@@ -37,8 +36,7 @@ std::mt19937 makeRng(BalancingConfig const & config)
  * Returns a map from class label → vector of column indices.
  */
 std::map<std::size_t, std::vector<std::size_t>> gatherClassIndices(
-    arma::Row<std::size_t> const & labels)
-{
+        arma::Row<std::size_t> const & labels) {
     std::map<std::size_t, std::vector<std::size_t>> class_indices;
     for (std::size_t i = 0; i < labels.n_elem; ++i) {
         class_indices[labels[i]].push_back(i);
@@ -50,11 +48,10 @@ std::map<std::size_t, std::vector<std::size_t>> gatherClassIndices(
  * @brief Build BalancedData from selected indices
  */
 BalancedData buildFromIndices(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    std::vector<std::size_t> & selected_indices,
-    std::mt19937 & rng)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        std::vector<std::size_t> & selected_indices,
+        std::mt19937 & rng) {
     // Final shuffle to mix classes
     std::shuffle(selected_indices.begin(), selected_indices.end(), rng);
 
@@ -74,7 +71,7 @@ BalancedData buildFromIndices(
         counts[result.labels[i]]++;
     }
     // Store as vector (sparse — only present classes)
-    for (auto const & [cls, cnt] : counts) {
+    for (auto const & [cls, cnt]: counts) {
         // Ensure vector is large enough
         if (cls >= result.class_counts.size()) {
             result.class_counts.resize(cls + 1, 0);
@@ -86,7 +83,7 @@ BalancedData buildFromIndices(
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // balanceClasses — Subsample
@@ -95,16 +92,15 @@ BalancedData buildFromIndices(
 namespace {
 
 BalancedData subsample(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    BalancingConfig const & config)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        BalancingConfig const & config) {
     auto rng = makeRng(config);
     auto class_indices = gatherClassIndices(labels);
 
     // Find minimum non-zero class count
     std::size_t min_count = std::numeric_limits<std::size_t>::max();
-    for (auto const & [cls, indices] : class_indices) {
+    for (auto const & [cls, indices]: class_indices) {
         if (!indices.empty() && indices.size() < min_count) {
             min_count = indices.size();
         }
@@ -116,11 +112,11 @@ BalancedData subsample(
     }
 
     std::size_t const target_per_class =
-        static_cast<std::size_t>(std::round(static_cast<double>(min_count) * config.max_ratio));
+            static_cast<std::size_t>(std::round(static_cast<double>(min_count) * config.max_ratio));
 
     // Subsample each class
     std::vector<std::size_t> selected_indices;
-    for (auto & [cls, indices] : class_indices) {
+    for (auto & [cls, indices]: class_indices) {
         std::shuffle(indices.begin(), indices.end(), rng);
         std::size_t const take = std::min(indices.size(), target_per_class);
         selected_indices.insert(selected_indices.end(),
@@ -139,16 +135,15 @@ BalancedData subsample(
 // ============================================================================
 
 BalancedData oversample(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    BalancingConfig const & config)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        BalancingConfig const & config) {
     auto rng = makeRng(config);
     auto class_indices = gatherClassIndices(labels);
 
     // Find maximum class count
     std::size_t max_count = 0;
-    for (auto const & [cls, indices] : class_indices) {
+    for (auto const & [cls, indices]: class_indices) {
         max_count = std::max(max_count, indices.size());
     }
 
@@ -158,7 +153,7 @@ BalancedData oversample(
 
     // Oversample each class to max_count via random duplication
     std::vector<std::size_t> selected_indices;
-    for (auto & [cls, indices] : class_indices) {
+    for (auto & [cls, indices]: class_indices) {
         if (indices.empty()) {
             continue;
         }
@@ -179,23 +174,22 @@ BalancedData oversample(
     return buildFromIndices(features, labels, selected_indices, rng);
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // Public API
 // ============================================================================
 
 BalancedData balanceClasses(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    BalancingConfig const & config)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        BalancingConfig const & config) {
     if (features.n_cols != labels.n_elem) {
         throw std::invalid_argument(
-            "balanceClasses: features.n_cols (" +
-            std::to_string(features.n_cols) +
-            ") != labels.n_elem (" +
-            std::to_string(labels.n_elem) + ")");
+                "balanceClasses: features.n_cols (" +
+                std::to_string(features.n_cols) +
+                ") != labels.n_elem (" +
+                std::to_string(labels.n_elem) + ")");
     }
 
     if (features.n_cols == 0) {
@@ -204,9 +198,9 @@ BalancedData balanceClasses(
 
     if (config.max_ratio < 1.0) {
         throw std::invalid_argument(
-            "balanceClasses: max_ratio (" +
-            std::to_string(config.max_ratio) +
-            ") must be >= 1.0");
+                "balanceClasses: max_ratio (" +
+                std::to_string(config.max_ratio) +
+                ") must be >= 1.0");
     }
 
     // If already balanced, return a copy
@@ -222,7 +216,7 @@ BalancedData balanceClasses(
         for (std::size_t i = 0; i < labels.n_elem; ++i) {
             counts[labels[i]]++;
         }
-        for (auto const & [cls, cnt] : counts) {
+        for (auto const & [cls, cnt]: counts) {
             if (cls >= result.class_counts.size()) {
                 result.class_counts.resize(cls + 1, 0);
             }
@@ -243,8 +237,7 @@ BalancedData balanceClasses(
 }
 
 std::vector<std::pair<std::size_t, std::size_t>> getClassDistribution(
-    arma::Row<std::size_t> const & labels)
-{
+        arma::Row<std::size_t> const & labels) {
     std::map<std::size_t, std::size_t> counts;
     for (std::size_t i = 0; i < labels.n_elem; ++i) {
         counts[labels[i]]++;
@@ -253,9 +246,8 @@ std::vector<std::pair<std::size_t, std::size_t>> getClassDistribution(
 }
 
 bool isBalanced(
-    arma::Row<std::size_t> const & labels,
-    double max_acceptable_ratio)
-{
+        arma::Row<std::size_t> const & labels,
+        double max_acceptable_ratio) {
     if (labels.n_elem == 0) {
         return true;
     }
@@ -266,12 +258,12 @@ bool isBalanced(
     }
 
     if (counts.size() <= 1) {
-        return true;   // Single class or empty → balanced by definition
+        return true;// Single class or empty → balanced by definition
     }
 
     std::size_t min_count = std::numeric_limits<std::size_t>::max();
     std::size_t max_count = 0;
-    for (auto const & [cls, cnt] : counts) {
+    for (auto const & [cls, cnt]: counts) {
         if (cnt > 0) {
             min_count = std::min(min_count, cnt);
             max_count = std::max(max_count, cnt);
@@ -279,20 +271,21 @@ bool isBalanced(
     }
 
     if (min_count == 0) {
-        return false;   // A class with zero samples is always imbalanced
+        return false;// A class with zero samples is always imbalanced
     }
 
     double const ratio = static_cast<double>(max_count) / static_cast<double>(min_count);
     return ratio <= max_acceptable_ratio;
 }
 
-std::string toString(BalancingStrategy strategy)
-{
+std::string toString(BalancingStrategy strategy) {
     switch (strategy) {
-        case BalancingStrategy::Subsample:  return "Subsample";
-        case BalancingStrategy::Oversample: return "Oversample";
+        case BalancingStrategy::Subsample:
+            return "Subsample";
+        case BalancingStrategy::Oversample:
+            return "Oversample";
     }
     return "Unknown";
 }
 
-} // namespace MLCore
+}// namespace MLCore

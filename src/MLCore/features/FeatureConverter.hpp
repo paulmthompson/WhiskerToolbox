@@ -19,8 +19,6 @@
  *
  * The resulting ConvertedFeatures struct tracks which rows survived NaN dropping
  * so that predictions can be mapped back to the original time frames.
- *
- * @see ml_library_roadmap.md §3.4.3
  */
 
 #include <armadillo>
@@ -30,7 +28,6 @@
 #include <string>
 #include <vector>
 
-// Forward declaration
 class TensorData;
 
 namespace MLCore {
@@ -43,9 +40,9 @@ namespace MLCore {
  * @brief Configuration for TensorData → arma::mat conversion
  */
 struct ConversionConfig {
-    bool drop_nan = true;              ///< Remove rows containing NaN or Inf
-    bool zscore_normalize = false;     ///< Z-score normalize each column (mean=0, std=1)
-    double zscore_epsilon = 1e-10;     ///< Added to std to avoid division by zero
+    bool drop_nan = true;         ///< Remove rows containing NaN or Inf
+    bool zscore_normalize = false;///< Z-score normalize each column (mean=0, std=1)
+    double zscore_epsilon = 1e-10;///< Added to std to avoid division by zero
 };
 
 // ============================================================================
@@ -120,8 +117,8 @@ struct ConvertedFeatures {
  * @throws std::invalid_argument if tensor is empty or not 2D
  */
 [[nodiscard]] ConvertedFeatures convertTensorToArma(
-    TensorData const & tensor,
-    ConversionConfig const & config = {});
+        TensorData const & tensor,
+        ConversionConfig const & config = {});
 
 /**
  * @brief Convert a TensorData to a row-major arma::mat (observations × features)
@@ -136,8 +133,8 @@ struct ConvertedFeatures {
  * @throws std::invalid_argument if tensor is empty or not 2D
  */
 [[nodiscard]] ConvertedFeatures convertTensorToArmaRowMajor(
-    TensorData const & tensor,
-    ConversionConfig const & config = {});
+        TensorData const & tensor,
+        ConversionConfig const & config = {});
 
 /**
  * @brief Apply z-score normalization to an arma::mat in-place
@@ -150,8 +147,8 @@ struct ConvertedFeatures {
  * @return Pair of {means, stds} vectors (one per row/feature)
  */
 [[nodiscard]] std::pair<std::vector<double>, std::vector<double>> zscoreNormalize(
-    arma::mat & matrix,
-    double epsilon = 1e-10);
+        arma::mat & matrix,
+        double epsilon = 1e-10);
 
 /**
  * @brief Apply previously computed z-score parameters to new data
@@ -166,11 +163,11 @@ struct ConvertedFeatures {
  * @throws std::invalid_argument if means/stds size doesn't match matrix rows
  */
 void applyZscoreNormalization(
-    arma::mat & matrix,
-    std::vector<double> const & means,
-    std::vector<double> const & stds,
-    double epsilon = 1e-10);
+        arma::mat & matrix,
+        std::vector<double> const & means,
+        std::vector<double> const & stds,
+        double epsilon = 1e-10);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_FEATURECONVERTER_HPP
+#endif// MLCORE_FEATURECONVERTER_HPP

@@ -5,8 +5,8 @@
 
 #include "FeatureValidator.hpp"
 
-#include "DataManager/Tensors/TensorData.hpp"
 #include "DataManager/Tensors/RowDescriptor.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 
 #include <cmath>
 #include <sstream>
@@ -19,13 +19,20 @@ namespace MLCore {
 
 std::string toString(RowCompatibility rc) {
     switch (rc) {
-        case RowCompatibility::Compatible:       return "Compatible";
-        case RowCompatibility::EmptyTensor:       return "Empty tensor (no storage or zero rows)";
-        case RowCompatibility::Not2D:             return "Tensor is not 2-dimensional";
-        case RowCompatibility::NoColumns:         return "Tensor has zero columns";
-        case RowCompatibility::RowTypeMismatch:   return "Row type mismatch between features and labels";
-        case RowCompatibility::TimeFrameMismatch: return "Time frame mismatch between features and labels";
-        case RowCompatibility::RowCountMismatch:  return "Row count mismatch between features and labels";
+        case RowCompatibility::Compatible:
+            return "Compatible";
+        case RowCompatibility::EmptyTensor:
+            return "Empty tensor (no storage or zero rows)";
+        case RowCompatibility::Not2D:
+            return "Tensor is not 2-dimensional";
+        case RowCompatibility::NoColumns:
+            return "Tensor has zero columns";
+        case RowCompatibility::RowTypeMismatch:
+            return "Row type mismatch between features and labels";
+        case RowCompatibility::TimeFrameMismatch:
+            return "Time frame mismatch between features and labels";
+        case RowCompatibility::RowCountMismatch:
+            return "Row count mismatch between features and labels";
     }
     return "Unknown";
 }
@@ -69,10 +76,9 @@ namespace {
  * Materializes column data via getColumn() which handles lazy backends.
  */
 bool isRowNonFinite(
-    std::vector<std::vector<float>> const & columns,
-    std::size_t row)
-{
-    for (auto const & col : columns) {
+        std::vector<std::vector<float>> const & columns,
+        std::size_t row) {
+    for (auto const & col: columns) {
         if (!std::isfinite(col[row])) {
             return true;
         }
@@ -95,7 +101,7 @@ std::vector<std::vector<float>> materializeColumns(TensorData const & features) 
     return columns;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 std::size_t countNonFiniteRows(TensorData const & features) {
     if (features.isEmpty() || features.numRows() == 0) {
@@ -138,20 +144,18 @@ std::vector<std::size_t> findNonFiniteRows(TensorData const & features) {
 // ============================================================================
 
 FeatureLabelValidationResult validateFeatureLabelCompatibility(
-    TensorData const & features,
-    LabelSourceDescriptor const & label_source)
-{
+        TensorData const & features,
+        LabelSourceDescriptor const & label_source) {
     // First run standalone tensor validation
     auto tensor_result = validateFeatureTensor(features);
     if (!tensor_result.valid) {
         return {
-            false,
-            tensor_result.reason,
-            tensor_result.message,
-            features.isEmpty() ? 0 : features.numRows(),
-            features.isEmpty() ? 0 : features.numColumns(),
-            0
-        };
+                false,
+                tensor_result.reason,
+                tensor_result.message,
+                features.isEmpty() ? 0 : features.numRows(),
+                features.isEmpty() ? 0 : features.numColumns(),
+                0};
     }
 
     auto const feature_rows = features.numRows();
@@ -165,7 +169,8 @@ FeatureLabelValidationResult validateFeatureLabelCompatibility(
         } else {
             return src.total_label_count;
         }
-    }, label_source);
+    },
+                                        label_source);
 
     // Check row type compatibility
     auto const row_type = features.rowType();
@@ -191,13 +196,15 @@ FeatureLabelValidationResult validateFeatureLabelCompatibility(
         }
 
         return RowCompatibility::Compatible;
-    }, label_source);
+    },
+                                          label_source);
 
     if (compatibility != RowCompatibility::Compatible) {
         std::ostringstream oss;
         oss << "Row type mismatch: feature tensor has "
             << (row_type == RowType::TimeFrameIndex ? "TimeFrameIndex"
-                : row_type == RowType::Interval ? "Interval" : "Ordinal")
+                : row_type == RowType::Interval     ? "Interval"
+                                                    : "Ordinal")
             << " rows, which is incompatible with the label source";
         return {false, compatibility, oss.str(), feature_rows, feature_cols, label_count};
     }
@@ -215,4 +222,4 @@ FeatureLabelValidationResult validateFeatureLabelCompatibility(
             feature_rows, feature_cols, label_count};
 }
 
-} // namespace MLCore
+}// namespace MLCore

@@ -23,7 +23,6 @@
  * Feature assembly is handled by TensorDesigner / TensorColumnBuilders.
  * The LabelAssembler only concerns itself with producing aligned labels.
  *
- * @see ml_library_roadmap.md §3.4.4
  */
 
 #include <armadillo>
@@ -34,7 +33,6 @@
 #include <variant>
 #include <vector>
 
-// Forward declarations
 class DigitalIntervalSeries;
 class EntityGroupManager;
 class EntityRegistry;
@@ -55,8 +53,8 @@ namespace MLCore {
  * frames outside all intervals are labeled 0 (negative_class_name).
  */
 struct LabelFromIntervals {
-    std::string positive_class_name = "Inside";   ///< Name for class 1 (inside interval)
-    std::string negative_class_name = "Outside";  ///< Name for class 0 (outside interval)
+    std::string positive_class_name = "Inside"; ///< Name for class 1 (inside interval)
+    std::string negative_class_name = "Outside";///< Name for class 0 (outside interval)
 };
 
 /**
@@ -66,8 +64,8 @@ struct LabelFromIntervals {
  * TimeEntity entities are matched by time_key and EntityKind::TimeEntity.
  */
 struct LabelFromTimeEntityGroups {
-    std::vector<GroupId> class_groups;   ///< group[i] → label i
-    std::string time_key;               ///< TimeFrame key for entity lookup
+    std::vector<GroupId> class_groups;///< group[i] → label i
+    std::string time_key;             ///< TimeFrame key for entity lookup
 };
 
 /**
@@ -77,8 +75,8 @@ struct LabelFromTimeEntityGroups {
  * by data_key (any EntityKind except TimeEntity).
  */
 struct LabelFromDataEntityGroups {
-    std::string data_key;                ///< DataManager key for the data object
-    std::vector<GroupId> class_groups;   ///< group[i] → label i
+    std::string data_key;             ///< DataManager key for the data object
+    std::vector<GroupId> class_groups;///< group[i] → label i
 };
 
 /**
@@ -87,9 +85,9 @@ struct LabelFromDataEntityGroups {
  * Select one of the three labeling modes.
  */
 using LabelAssemblyConfig = std::variant<
-    LabelFromIntervals,
-    LabelFromTimeEntityGroups,
-    LabelFromDataEntityGroups>;
+        LabelFromIntervals,
+        LabelFromTimeEntityGroups,
+        LabelFromDataEntityGroups>;
 
 // ============================================================================
 // Result type
@@ -154,10 +152,10 @@ struct AssembledLabels {
  * @throws std::invalid_argument if row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromIntervals(
-    DigitalIntervalSeries const & intervals,
-    TimeFrame const & source_time_frame,
-    std::span<TimeFrameIndex const> row_times,
-    LabelFromIntervals const & config = {});
+        DigitalIntervalSeries const & intervals,
+        TimeFrame const & source_time_frame,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromIntervals const & config = {});
 
 /**
  * @brief Assemble multi-class labels from TimeEntity groups
@@ -181,10 +179,10 @@ struct AssembledLabels {
  * @throws std::invalid_argument if class_groups or row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromTimeEntityGroups(
-    EntityGroupManager const & groups,
-    EntityRegistry const & registry,
-    std::span<TimeFrameIndex const> row_times,
-    LabelFromTimeEntityGroups const & config);
+        EntityGroupManager const & groups,
+        EntityRegistry const & registry,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromTimeEntityGroups const & config);
 
 /**
  * @brief Assemble multi-class labels from data-object entity groups
@@ -204,10 +202,10 @@ struct AssembledLabels {
  * @throws std::invalid_argument if class_groups or row_times is empty
  */
 [[nodiscard]] AssembledLabels assembleLabelsFromDataEntityGroups(
-    EntityGroupManager const & groups,
-    EntityRegistry const & registry,
-    std::span<TimeFrameIndex const> row_times,
-    LabelFromDataEntityGroups const & config);
+        EntityGroupManager const & groups,
+        EntityRegistry const & registry,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromDataEntityGroups const & config);
 
 // ============================================================================
 // Utility functions
@@ -224,8 +222,8 @@ struct AssembledLabels {
  * @return Vector of class names in the same order as class_group_ids
  */
 [[nodiscard]] std::vector<std::string> getClassNamesFromGroups(
-    EntityGroupManager const & groups,
-    std::vector<GroupId> const & class_group_ids);
+        EntityGroupManager const & groups,
+        std::vector<GroupId> const & class_group_ids);
 
 /**
  * @brief Count how many row_times fall inside intervals
@@ -239,10 +237,10 @@ struct AssembledLabels {
  * @return Number of row_times that fall inside at least one interval
  */
 [[nodiscard]] std::size_t countRowsInsideIntervals(
-    DigitalIntervalSeries const & intervals,
-    TimeFrame const & source_time_frame,
-    std::span<TimeFrameIndex const> row_times);
+        DigitalIntervalSeries const & intervals,
+        TimeFrame const & source_time_frame,
+        std::span<TimeFrameIndex const> row_times);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_LABELASSEMBLER_HPP
+#endif// MLCORE_LABELASSEMBLER_HPP

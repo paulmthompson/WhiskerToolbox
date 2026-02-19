@@ -5,10 +5,6 @@
  * @file MLModelOperation.hpp
  * @brief Abstract interface for all ML model operations (supervised & unsupervised)
  *
- * This is the evolved model interface for the MLCore library, replacing the
- * legacy `MLModelOperation` in `src/WhiskerToolbox/ML_Widget/MLModelOperation.hpp`.
- *
- * Key extensions over the legacy interface:
  * - **MLTaskType**: each operation declares what task it performs, enabling
  *   the registry to filter by task type
  * - **Unsupervised support**: `fit()` and `assignClusters()` for clustering
@@ -27,7 +23,6 @@
  * Concrete implementations (RandomForestOperation, KMeansOperation, etc.)
  * live in `models/supervised/` and `models/unsupervised/` subdirectories.
  *
- * @see ml_library_roadmap.md §3.4.1
  */
 
 #include "MLModelParameters.hpp"
@@ -123,10 +118,9 @@ public:
      * The default implementation returns false (unsupervised models).
      */
     virtual bool train(
-        arma::mat const & features,
-        arma::Row<std::size_t> const & labels,
-        MLModelParametersBase const * params)
-    {
+            arma::mat const & features,
+            arma::Row<std::size_t> const & labels,
+            MLModelParametersBase const * params) {
         static_cast<void>(features);
         static_cast<void>(labels);
         static_cast<void>(params);
@@ -146,9 +140,8 @@ public:
      * The default implementation returns false (unsupervised models).
      */
     virtual bool predict(
-        arma::mat const & features,
-        arma::Row<std::size_t> & predictions)
-    {
+            arma::mat const & features,
+            arma::Row<std::size_t> & predictions) {
         static_cast<void>(features);
         static_cast<void>(predictions);
         return false;
@@ -167,9 +160,8 @@ public:
      * override this method.
      */
     virtual bool predictProbabilities(
-        arma::mat const & features,
-        arma::mat & probabilities)
-    {
+            arma::mat const & features,
+            arma::mat & probabilities) {
         static_cast<void>(features);
         static_cast<void>(probabilities);
         return false;
@@ -193,9 +185,8 @@ public:
      * The default implementation returns false (supervised models).
      */
     virtual bool fit(
-        arma::mat const & features,
-        MLModelParametersBase const * params)
-    {
+            arma::mat const & features,
+            MLModelParametersBase const * params) {
         static_cast<void>(features);
         static_cast<void>(params);
         return false;
@@ -214,9 +205,8 @@ public:
      * The default implementation returns false (supervised models).
      */
     virtual bool assignClusters(
-        arma::mat const & features,
-        arma::Row<std::size_t> & assignments)
-    {
+            arma::mat const & features,
+            arma::Row<std::size_t> & assignments) {
         static_cast<void>(features);
         static_cast<void>(assignments);
         return false;
@@ -234,8 +224,7 @@ public:
      *
      * The default implementation returns false (no persistence support).
      */
-    virtual bool save(std::ostream & out) const
-    {
+    virtual bool save(std::ostream & out) const {
         static_cast<void>(out);
         return false;
     }
@@ -249,8 +238,7 @@ public:
      * After successful loading, `isTrained()` should return true.
      * The default implementation returns false (no persistence support).
      */
-    virtual bool load(std::istream & in)
-    {
+    virtual bool load(std::istream & in) {
         static_cast<void>(in);
         return false;
     }
@@ -284,6 +272,6 @@ public:
     [[nodiscard]] virtual std::size_t numFeatures() const { return 0; }
 };
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_MLMODELOPERATION_HPP
+#endif// MLCORE_MLMODELOPERATION_HPP

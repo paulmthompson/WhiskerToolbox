@@ -15,8 +15,6 @@
  *
  * Also provides LabelSourceDescriptor types for describing label sources,
  * and utility functions countNonFiniteRows() / findNonFiniteRows() for NaN auditing.
- *
- * @see ml_library_roadmap.md §3.4.3
  */
 
 #include <cstddef>
@@ -24,7 +22,6 @@
 #include <variant>
 #include <vector>
 
-// Forward declarations
 class TensorData;
 class RowDescriptor;
 
@@ -38,13 +35,13 @@ namespace MLCore {
  * @brief Reason why a feature tensor is incompatible with a label source
  */
 enum class RowCompatibility {
-    Compatible,           ///< Feature tensor is compatible with label source
-    EmptyTensor,          ///< Tensor has no storage or zero rows
-    Not2D,                ///< Tensor is not 2-dimensional
-    NoColumns,            ///< Tensor has zero columns
-    RowTypeMismatch,      ///< e.g., tensor has Interval rows but labels expect TimeFrameIndex
-    TimeFrameMismatch,    ///< Feature and label time frames are different objects (different clocks)
-    RowCountMismatch,     ///< Number of tensor rows != expected label count
+    Compatible,       ///< Feature tensor is compatible with label source
+    EmptyTensor,      ///< Tensor has no storage or zero rows
+    Not2D,            ///< Tensor is not 2-dimensional
+    NoColumns,        ///< Tensor has zero columns
+    RowTypeMismatch,  ///< e.g., tensor has Interval rows but labels expect TimeFrameIndex
+    TimeFrameMismatch,///< Feature and label time frames are different objects (different clocks)
+    RowCountMismatch, ///< Number of tensor rows != expected label count
 };
 
 /**
@@ -63,8 +60,8 @@ enum class RowCompatibility {
  * of entity counts across all groups.
  */
 struct LabelSourceTimeGroups {
-    std::size_t total_label_count{0};   ///< Total entities across all class groups
-    bool has_time_frame{false};         ///< Whether the time entities reference a time frame
+    std::size_t total_label_count{0};///< Total entities across all class groups
+    bool has_time_frame{false};      ///< Whether the time entities reference a time frame
 };
 
 /**
@@ -73,8 +70,8 @@ struct LabelSourceTimeGroups {
  * Binary labeling: frames inside intervals = class 1, outside = class 0.
  */
 struct LabelSourceIntervals {
-    std::size_t expected_row_count{0};  ///< Number of rows (frames) to label
-    bool has_time_frame{false};         ///< Whether the interval series has a time frame
+    std::size_t expected_row_count{0};///< Number of rows (frames) to label
+    bool has_time_frame{false};       ///< Whether the interval series has a time frame
 };
 
 /**
@@ -83,7 +80,7 @@ struct LabelSourceIntervals {
  * Each group contains entities (e.g., lines, points) that map to class labels.
  */
 struct LabelSourceEntityGroups {
-    std::size_t total_label_count{0};   ///< Total entities across all class groups
+    std::size_t total_label_count{0};///< Total entities across all class groups
 };
 
 /**
@@ -94,9 +91,9 @@ struct LabelSourceEntityGroups {
  * access to the full DataManager or EntityGroupManager.
  */
 using LabelSourceDescriptor = std::variant<
-    LabelSourceTimeGroups,
-    LabelSourceIntervals,
-    LabelSourceEntityGroups>;
+        LabelSourceTimeGroups,
+        LabelSourceIntervals,
+        LabelSourceEntityGroups>;
 
 // ============================================================================
 // Tensor validation (standalone — no label dependency)
@@ -155,8 +152,8 @@ struct FeatureLabelValidationResult {
  * @return Detailed validation result
  */
 [[nodiscard]] FeatureLabelValidationResult validateFeatureLabelCompatibility(
-    TensorData const & features,
-    LabelSourceDescriptor const & label_source);
+        TensorData const & features,
+        LabelSourceDescriptor const & label_source);
 
 /**
  * @brief Check if a feature tensor contains any NaN or Inf values
@@ -177,6 +174,6 @@ struct FeatureLabelValidationResult {
  */
 [[nodiscard]] std::vector<std::size_t> findNonFiniteRows(TensorData const & features);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_FEATUREVALIDATOR_HPP
+#endif// MLCORE_FEATUREVALIDATOR_HPP

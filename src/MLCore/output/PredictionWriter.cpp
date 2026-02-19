@@ -35,33 +35,28 @@ namespace {
  * @brief Validate common preconditions for prediction writing
  */
 void validatePredictionOutput(
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names)
-{
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names) {
     if (output.class_predictions.n_elem != output.prediction_times.size()) {
         throw std::invalid_argument(
-            "PredictionWriter: class_predictions length ("
-            + std::to_string(output.class_predictions.n_elem)
-            + ") != prediction_times length ("
-            + std::to_string(output.prediction_times.size()) + ")");
+                "PredictionWriter: class_predictions length (" + std::to_string(output.class_predictions.n_elem) + ") != prediction_times length (" + std::to_string(output.prediction_times.size()) + ")");
     }
 
     if (output.prediction_times.empty()) {
         throw std::invalid_argument(
-            "PredictionWriter: prediction_times is empty");
+                "PredictionWriter: prediction_times is empty");
     }
 
     if (class_names.empty()) {
         throw std::invalid_argument(
-            "PredictionWriter: class_names is empty");
+                "PredictionWriter: class_names is empty");
     }
 
     // Check that all predictions are within class_names range
     auto max_label = output.class_predictions.max();
     if (max_label >= class_names.size()) {
         throw std::invalid_argument(
-            "PredictionWriter: prediction label " + std::to_string(max_label)
-            + " exceeds class_names size (" + std::to_string(class_names.size()) + ")");
+                "PredictionWriter: prediction label " + std::to_string(max_label) + " exceeds class_names size (" + std::to_string(class_names.size()) + ")");
     }
 }
 
@@ -73,10 +68,9 @@ void validatePredictionOutput(
  * by 1 are merged into a single interval.
  */
 std::shared_ptr<DigitalIntervalSeries> buildIntervalsForClass(
-    arma::Row<std::size_t> const & predictions,
-    std::vector<TimeFrameIndex> const & times,
-    std::size_t class_index)
-{
+        arma::Row<std::size_t> const & predictions,
+        std::vector<TimeFrameIndex> const & times,
+        std::size_t class_index) {
     auto series = std::make_shared<DigitalIntervalSeries>();
 
     std::optional<int64_t> interval_start;
@@ -122,25 +116,23 @@ std::shared_ptr<DigitalIntervalSeries> buildIntervalsForClass(
  * @brief Determine the number of classes from class_names
  */
 std::size_t determineNumClasses(
-    std::vector<std::string> const & class_names)
-{
+        std::vector<std::string> const & class_names) {
     // Use class_names size as the authoritative class count
     // (there may be classes with zero predictions)
     return class_names.size();
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // writePredictionsAsIntervals
 // ============================================================================
 
 std::vector<std::string> writePredictionsAsIntervals(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config)
-{
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config) {
     validatePredictionOutput(output, class_names);
 
     std::size_t const num_classes = determineNumClasses(class_names);
@@ -149,7 +141,7 @@ std::vector<std::string> writePredictionsAsIntervals(
 
     for (std::size_t c = 0; c < num_classes; ++c) {
         auto intervals = buildIntervalsForClass(
-            output.class_predictions, output.prediction_times, c);
+                output.class_predictions, output.prediction_times, c);
 
         std::string key = config.output_prefix + class_names[c];
         dm.setData<DigitalIntervalSeries>(key, intervals, TimeKey(config.time_key_str));
@@ -164,11 +156,10 @@ std::vector<std::string> writePredictionsAsIntervals(
 // ============================================================================
 
 std::vector<std::string> writeProbabilitiesAsAnalog(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config)
-{
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config) {
     if (!output.class_probabilities.has_value()) {
         return {};
     }
@@ -182,11 +173,7 @@ std::vector<std::string> writeProbabilitiesAsAnalog(
     // Probabilities matrix: num_classes × num_observations (mlpack convention)
     if (probs.n_rows < num_classes || probs.n_cols != num_obs) {
         throw std::invalid_argument(
-            "PredictionWriter: class_probabilities dimensions ("
-            + std::to_string(probs.n_rows) + "×" + std::to_string(probs.n_cols)
-            + ") incompatible with "
-            + std::to_string(num_classes) + " classes and "
-            + std::to_string(num_obs) + " observations");
+                "PredictionWriter: class_probabilities dimensions (" + std::to_string(probs.n_rows) + "×" + std::to_string(probs.n_cols) + ") incompatible with " + std::to_string(num_classes) + " classes and " + std::to_string(num_obs) + " observations");
     }
 
     std::vector<std::string> keys;
@@ -217,17 +204,16 @@ std::vector<std::string> writeProbabilitiesAsAnalog(
 // ============================================================================
 
 std::vector<GroupId> writeTimePredictionsToGroups(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config)
-{
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config) {
     validatePredictionOutput(output, class_names);
 
     auto * groups = dm.getEntityGroupManager();
     if (!groups) {
         throw std::invalid_argument(
-            "PredictionWriter: DataManager has no EntityGroupManager");
+                "PredictionWriter: DataManager has no EntityGroupManager");
     }
 
     std::size_t const num_classes = determineNumClasses(class_names);
@@ -246,13 +232,13 @@ std::vector<GroupId> writeTimePredictionsToGroups(
         // Create putative group
         std::string group_name = config.output_prefix + class_names[c];
         GroupId gid = groups->createGroup(group_name,
-            "ML prediction output for class: " + class_names[c]);
+                                          "ML prediction output for class: " + class_names[c]);
 
         // Register TimeEntities and add to group
         std::vector<EntityId> entity_ids;
         entity_ids.reserve(class_obs[c].size());
 
-        for (std::size_t obs_idx : class_obs[c]) {
+        for (std::size_t obs_idx: class_obs[c]) {
             EntityId eid = dm.ensureTimeEntityId(TimeKey(config.time_key_str), output.prediction_times[obs_idx]);
             entity_ids.push_back(eid);
         }
@@ -271,17 +257,13 @@ std::vector<GroupId> writeTimePredictionsToGroups(
 // ============================================================================
 
 std::vector<GroupId> writeClusterAssignmentsToGroups(
-    EntityGroupManager & groups,
-    arma::Row<std::size_t> const & assignments,
-    std::span<EntityId const> entity_ids,
-    std::string const & group_prefix)
-{
+        EntityGroupManager & groups,
+        arma::Row<std::size_t> const & assignments,
+        std::span<EntityId const> entity_ids,
+        std::string const & group_prefix) {
     if (assignments.n_elem != entity_ids.size()) {
         throw std::invalid_argument(
-            "PredictionWriter: assignments length ("
-            + std::to_string(assignments.n_elem)
-            + ") != entity_ids length ("
-            + std::to_string(entity_ids.size()) + ")");
+                "PredictionWriter: assignments length (" + std::to_string(assignments.n_elem) + ") != entity_ids length (" + std::to_string(entity_ids.size()) + ")");
     }
 
     if (entity_ids.empty()) {
@@ -303,7 +285,7 @@ std::vector<GroupId> writeClusterAssignmentsToGroups(
     for (std::size_t k = 0; k < num_clusters; ++k) {
         std::string cluster_name = group_prefix + std::to_string(k);
         GroupId gid = groups.createGroup(cluster_name,
-            "Cluster assignment from unsupervised ML");
+                                         "Cluster assignment from unsupervised ML");
 
         groups.addEntitiesToGroup(gid, cluster_entities[k]);
         group_ids.push_back(gid);
@@ -319,11 +301,10 @@ std::vector<GroupId> writeClusterAssignmentsToGroups(
 // ============================================================================
 
 PredictionWriterResult writePredictions(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config)
-{
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config) {
     validatePredictionOutput(output, class_names);
 
     PredictionWriterResult result;
@@ -347,4 +328,4 @@ PredictionWriterResult writePredictions(
     return result;
 }
 
-} // namespace MLCore
+}// namespace MLCore

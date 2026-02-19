@@ -29,12 +29,11 @@ namespace {
  * Falls back to "Class_<group_id>" if a group doesn't exist.
  */
 std::vector<std::string> buildClassNames(
-    EntityGroupManager const & groups,
-    std::vector<GroupId> const & class_groups)
-{
+        EntityGroupManager const & groups,
+        std::vector<GroupId> const & class_groups) {
     std::vector<std::string> names;
     names.reserve(class_groups.size());
-    for (auto gid : class_groups) {
+    for (auto gid: class_groups) {
         auto desc = groups.getGroupDescriptor(gid);
         names.push_back(desc ? desc->name : "Class_" + std::to_string(gid));
     }
@@ -59,17 +58,16 @@ std::vector<std::string> buildClassNames(
  * @return Map from time_value → class label
  */
 std::unordered_map<std::int64_t, std::size_t> buildTimeLabelMap(
-    EntityGroupManager const & groups,
-    EntityRegistry const & registry,
-    std::vector<GroupId> const & class_groups,
-    std::string const & match_key,
-    std::optional<EntityKind> require_kind)
-{
+        EntityGroupManager const & groups,
+        EntityRegistry const & registry,
+        std::vector<GroupId> const & class_groups,
+        std::string const & match_key,
+        std::optional<EntityKind> require_kind) {
     std::unordered_map<std::int64_t, std::size_t> time_to_label;
 
     for (std::size_t label = 0; label < class_groups.size(); ++label) {
         auto entity_ids = groups.getEntitiesInGroup(class_groups[label]);
-        for (auto eid : entity_ids) {
+        for (auto eid: entity_ids) {
             auto desc = registry.get(eid);
             if (!desc) continue;
             if (desc->data_key != match_key) continue;
@@ -89,11 +87,10 @@ std::unordered_map<std::int64_t, std::size_t> buildTimeLabelMap(
  * Assigns label num_classes (sentinel) to rows not found in the map.
  */
 AssembledLabels labelsFromTimeLabelMap(
-    std::unordered_map<std::int64_t, std::size_t> const & time_to_label,
-    std::vector<std::string> class_names,
-    std::size_t num_classes,
-    std::span<TimeFrameIndex const> row_times)
-{
+        std::unordered_map<std::int64_t, std::size_t> const & time_to_label,
+        std::vector<std::string> class_names,
+        std::size_t num_classes,
+        std::span<TimeFrameIndex const> row_times) {
     AssembledLabels result;
     result.num_classes = num_classes;
     result.class_names = std::move(class_names);
@@ -105,7 +102,7 @@ AssembledLabels labelsFromTimeLabelMap(
         if (it != time_to_label.end()) {
             result.labels(i) = it->second;
         } else {
-            result.labels(i) = num_classes;  // sentinel for unlabeled
+            result.labels(i) = num_classes;// sentinel for unlabeled
             ++result.unlabeled_count;
         }
     }
@@ -113,28 +110,27 @@ AssembledLabels labelsFromTimeLabelMap(
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // assembleLabelsFromIntervals
 // ============================================================================
 
 AssembledLabels assembleLabelsFromIntervals(
-    DigitalIntervalSeries const & intervals,
-    TimeFrame const & source_time_frame,
-    std::span<TimeFrameIndex const> row_times,
-    LabelFromIntervals const & config)
-{
+        DigitalIntervalSeries const & intervals,
+        TimeFrame const & source_time_frame,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromIntervals const & config) {
     if (row_times.empty()) {
         throw std::invalid_argument(
-            "row_times must not be empty for label assembly");
+                "row_times must not be empty for label assembly");
     }
 
     AssembledLabels result;
     result.num_classes = 2;
     result.class_names = {config.negative_class_name, config.positive_class_name};
     result.labels.set_size(row_times.size());
-    result.unlabeled_count = 0;  // binary mode: every row gets a label
+    result.unlabeled_count = 0;// binary mode: every row gets a label
 
     for (std::size_t i = 0; i < row_times.size(); ++i) {
         bool inside = intervals.hasIntervalAtTime(row_times[i], source_time_frame);
@@ -149,30 +145,29 @@ AssembledLabels assembleLabelsFromIntervals(
 // ============================================================================
 
 AssembledLabels assembleLabelsFromTimeEntityGroups(
-    EntityGroupManager const & groups,
-    EntityRegistry const & registry,
-    std::span<TimeFrameIndex const> row_times,
-    LabelFromTimeEntityGroups const & config)
-{
+        EntityGroupManager const & groups,
+        EntityRegistry const & registry,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromTimeEntityGroups const & config) {
     if (row_times.empty()) {
         throw std::invalid_argument(
-            "row_times must not be empty for label assembly");
+                "row_times must not be empty for label assembly");
     }
     if (config.class_groups.empty()) {
         throw std::invalid_argument(
-            "class_groups must not be empty for label assembly");
+                "class_groups must not be empty for label assembly");
     }
 
     auto class_names = buildClassNames(groups, config.class_groups);
 
     auto time_to_label = buildTimeLabelMap(
-        groups, registry, config.class_groups,
-        config.time_key,
-        EntityKind::TimeEntity);
+            groups, registry, config.class_groups,
+            config.time_key,
+            EntityKind::TimeEntity);
 
     return labelsFromTimeLabelMap(
-        time_to_label, std::move(class_names),
-        config.class_groups.size(), row_times);
+            time_to_label, std::move(class_names),
+            config.class_groups.size(), row_times);
 }
 
 // ============================================================================
@@ -180,31 +175,30 @@ AssembledLabels assembleLabelsFromTimeEntityGroups(
 // ============================================================================
 
 AssembledLabels assembleLabelsFromDataEntityGroups(
-    EntityGroupManager const & groups,
-    EntityRegistry const & registry,
-    std::span<TimeFrameIndex const> row_times,
-    LabelFromDataEntityGroups const & config)
-{
+        EntityGroupManager const & groups,
+        EntityRegistry const & registry,
+        std::span<TimeFrameIndex const> row_times,
+        LabelFromDataEntityGroups const & config) {
     if (row_times.empty()) {
         throw std::invalid_argument(
-            "row_times must not be empty for label assembly");
+                "row_times must not be empty for label assembly");
     }
     if (config.class_groups.empty()) {
         throw std::invalid_argument(
-            "class_groups must not be empty for label assembly");
+                "class_groups must not be empty for label assembly");
     }
 
     auto class_names = buildClassNames(groups, config.class_groups);
 
     // For data entity groups, match on data_key with any entity kind
     auto time_to_label = buildTimeLabelMap(
-        groups, registry, config.class_groups,
-        config.data_key,
-        std::nullopt); // no kind filter
+            groups, registry, config.class_groups,
+            config.data_key,
+            std::nullopt);// no kind filter
 
     return labelsFromTimeLabelMap(
-        time_to_label, std::move(class_names),
-        config.class_groups.size(), row_times);
+            time_to_label, std::move(class_names),
+            config.class_groups.size(), row_times);
 }
 
 // ============================================================================
@@ -212,19 +206,17 @@ AssembledLabels assembleLabelsFromDataEntityGroups(
 // ============================================================================
 
 std::vector<std::string> getClassNamesFromGroups(
-    EntityGroupManager const & groups,
-    std::vector<GroupId> const & class_group_ids)
-{
+        EntityGroupManager const & groups,
+        std::vector<GroupId> const & class_group_ids) {
     return buildClassNames(groups, class_group_ids);
 }
 
 std::size_t countRowsInsideIntervals(
-    DigitalIntervalSeries const & intervals,
-    TimeFrame const & source_time_frame,
-    std::span<TimeFrameIndex const> row_times)
-{
+        DigitalIntervalSeries const & intervals,
+        TimeFrame const & source_time_frame,
+        std::span<TimeFrameIndex const> row_times) {
     std::size_t count = 0;
-    for (auto const & t : row_times) {
+    for (auto const & t: row_times) {
         if (intervals.hasIntervalAtTime(t, source_time_frame)) {
             ++count;
         }
@@ -232,4 +224,4 @@ std::size_t countRowsInsideIntervals(
     return count;
 }
 
-} // namespace MLCore
+}// namespace MLCore

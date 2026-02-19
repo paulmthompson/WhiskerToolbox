@@ -17,8 +17,6 @@
  *
  * The writer never modifies source label groups. Re-running a model creates
  * fresh putative groups without destroying previous labels or predictions.
- *
- * @see ml_library_roadmap.md §3.4.5
  */
 
 #include <armadillo>
@@ -29,7 +27,6 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 class EntityGroupManager;
 class EntityRegistry;
@@ -181,10 +178,10 @@ struct PredictionWriterResult {
  * @throws std::invalid_argument if preconditions are violated
  */
 [[nodiscard]] PredictionWriterResult writePredictions(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config = {});
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config = {});
 
 // ============================================================================
 // Individual writer functions (lower-level)
@@ -206,10 +203,10 @@ struct PredictionWriterResult {
  * @note prediction_times must be sorted in ascending order for correct interval merging
  */
 [[nodiscard]] std::vector<std::string> writePredictionsAsIntervals(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config = {});
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config = {});
 
 /**
  * @brief Write per-class probabilities as AnalogTimeSeries
@@ -225,10 +222,10 @@ struct PredictionWriterResult {
  * @return DataManager keys of created analog series (one per class), empty if no probabilities
  */
 [[nodiscard]] std::vector<std::string> writeProbabilitiesAsAnalog(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config = {});
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config = {});
 
 /**
  * @brief Write time-entity predictions to putative groups
@@ -244,10 +241,10 @@ struct PredictionWriterResult {
  * @return GroupIds of created groups (one per class)
  */
 [[nodiscard]] std::vector<GroupId> writeTimePredictionsToGroups(
-    DataManager & dm,
-    PredictionOutput const & output,
-    std::vector<std::string> const & class_names,
-    PredictionWriterConfig const & config = {});
+        DataManager & dm,
+        PredictionOutput const & output,
+        std::vector<std::string> const & class_names,
+        PredictionWriterConfig const & config = {});
 
 /**
  * @brief Write cluster assignments to putative entity groups
@@ -265,11 +262,11 @@ struct PredictionWriterResult {
  * @throws std::invalid_argument if sizes don't match
  */
 [[nodiscard]] std::vector<GroupId> writeClusterAssignmentsToGroups(
-    EntityGroupManager & groups,
-    arma::Row<std::size_t> const & assignments,
-    std::span<EntityId const> entity_ids,
-    std::string const & group_prefix = "Cluster:");
+        EntityGroupManager & groups,
+        arma::Row<std::size_t> const & assignments,
+        std::span<EntityId const> entity_ids,
+        std::string const & group_prefix = "Cluster:");
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_PREDICTIONWRITER_HPP
+#endif// MLCORE_PREDICTIONWRITER_HPP

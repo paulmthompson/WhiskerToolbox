@@ -5,7 +5,7 @@
  * @file ClassificationMetrics.hpp
  * @brief Classification metric computation for binary and multi-class problems
  *
- * Provides pure functions (no Qt or UI dependency) for computing standard
+ * Provides functions for computing standard
  * classification metrics from prediction and ground-truth label vectors.
  *
  * Binary metrics include accuracy, sensitivity (recall), specificity,
@@ -14,10 +14,6 @@
  * Multi-class metrics include overall accuracy, per-class precision/recall/F1,
  * and a full confusion matrix.
  *
- * Extracted from the legacy ModelMetricsWidget to make metrics testable and
- * reusable without GUI dependencies.
- *
- * @see ml_library_roadmap.md §3.4.6
  */
 
 #include <armadillo>
@@ -40,13 +36,13 @@ namespace MLCore {
  * corresponding metric is 0.0.
  */
 struct BinaryClassificationMetrics {
-    double accuracy    = 0.0;  ///< (TP + TN) / Total
-    double sensitivity = 0.0;  ///< TP / (TP + FN)  — also called recall
-    double specificity = 0.0;  ///< TN / (TN + FP)
-    double dice_score  = 0.0;  ///< 2·TP / (2·TP + FP + FN) — also called F1
+    double accuracy = 0.0;   ///< (TP + TN) / Total
+    double sensitivity = 0.0;///< TP / (TP + FN)  — also called recall
+    double specificity = 0.0;///< TN / (TN + FP)
+    double dice_score = 0.0; ///< 2·TP / (2·TP + FP + FN) — also called F1
 
-    std::size_t true_positives  = 0;
-    std::size_t true_negatives  = 0;
+    std::size_t true_positives = 0;
+    std::size_t true_negatives = 0;
     std::size_t false_positives = 0;
     std::size_t false_negatives = 0;
 
@@ -80,12 +76,12 @@ struct BinaryClassificationMetrics {
  * When a denominator is zero, the corresponding metric is 0.0.
  */
 struct MultiClassMetrics {
-    double overall_accuracy = 0.0;           ///< Fraction of correct predictions
-    arma::umat confusion_matrix;             ///< Shape: (num_classes × num_classes), entry (true, pred)
-    std::vector<double> per_class_precision;  ///< precision[i] = TP_i / (TP_i + FP_i)
-    std::vector<double> per_class_recall;     ///< recall[i]    = TP_i / (TP_i + FN_i)
-    std::vector<double> per_class_f1;         ///< f1[i]        = 2·P·R / (P + R)
-    std::size_t num_classes = 0;             ///< Number of classes
+    double overall_accuracy = 0.0;          ///< Fraction of correct predictions
+    arma::umat confusion_matrix;            ///< Shape: (num_classes × num_classes), entry (true, pred)
+    std::vector<double> per_class_precision;///< precision[i] = TP_i / (TP_i + FP_i)
+    std::vector<double> per_class_recall;   ///< recall[i]    = TP_i / (TP_i + FN_i)
+    std::vector<double> per_class_f1;       ///< f1[i]        = 2·P·R / (P + R)
+    std::size_t num_classes = 0;            ///< Number of classes
 
     /**
      * @brief Check if any predictions were counted
@@ -113,8 +109,8 @@ struct MultiClassMetrics {
  * @note If both vectors are empty, returns a default (invalid) metrics struct.
  */
 [[nodiscard]] BinaryClassificationMetrics computeBinaryMetrics(
-    arma::Row<std::size_t> const & predictions,
-    arma::Row<std::size_t> const & truth);
+        arma::Row<std::size_t> const & predictions,
+        arma::Row<std::size_t> const & truth);
 
 /**
  * @brief Compute multi-class classification metrics
@@ -128,9 +124,9 @@ struct MultiClassMetrics {
  * @note If both vectors are empty, returns a default (invalid) metrics struct.
  */
 [[nodiscard]] MultiClassMetrics computeMultiClassMetrics(
-    arma::Row<std::size_t> const & predictions,
-    arma::Row<std::size_t> const & truth,
-    std::size_t num_classes);
+        arma::Row<std::size_t> const & predictions,
+        arma::Row<std::size_t> const & truth,
+        std::size_t num_classes);
 
 /**
  * @brief Infer the number of classes from label vectors and compute multi-class metrics
@@ -143,8 +139,8 @@ struct MultiClassMetrics {
  * @throws std::invalid_argument if vectors have different sizes
  */
 [[nodiscard]] MultiClassMetrics computeMultiClassMetrics(
-    arma::Row<std::size_t> const & predictions,
-    arma::Row<std::size_t> const & truth);
+        arma::Row<std::size_t> const & predictions,
+        arma::Row<std::size_t> const & truth);
 
 /**
  * @brief Format a BinaryClassificationMetrics struct as a human-readable string
@@ -168,9 +164,9 @@ struct MultiClassMetrics {
  * @return Formatted string including confusion matrix and per-class metrics
  */
 [[nodiscard]] std::string formatMultiClassMetrics(
-    MultiClassMetrics const & metrics,
-    std::vector<std::string> const & class_names = {});
+        MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names = {});
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_CLASSIFICATIONMETRICS_HPP
+#endif// MLCORE_CLASSIFICATIONMETRICS_HPP

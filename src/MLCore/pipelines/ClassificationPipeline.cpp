@@ -6,8 +6,8 @@
 #include "ClassificationPipeline.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/Tensors/TensorData.hpp"
 #include "DataManager/Tensors/RowDescriptor.hpp"
+#include "DataManager/Tensors/TensorData.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
@@ -40,16 +40,26 @@ namespace MLCore {
 
 std::string toString(ClassificationStage stage) {
     switch (stage) {
-        case ClassificationStage::ValidatingFeatures: return "Validating features";
-        case ClassificationStage::ConvertingFeatures:  return "Converting features";
-        case ClassificationStage::AssemblingLabels:    return "Assembling labels";
-        case ClassificationStage::BalancingClasses:    return "Balancing classes";
-        case ClassificationStage::Training:            return "Training model";
-        case ClassificationStage::Predicting:          return "Predicting";
-        case ClassificationStage::ComputingMetrics:    return "Computing metrics";
-        case ClassificationStage::WritingOutput:       return "Writing output";
-        case ClassificationStage::Complete:            return "Complete";
-        case ClassificationStage::Failed:              return "Failed";
+        case ClassificationStage::ValidatingFeatures:
+            return "Validating features";
+        case ClassificationStage::ConvertingFeatures:
+            return "Converting features";
+        case ClassificationStage::AssemblingLabels:
+            return "Assembling labels";
+        case ClassificationStage::BalancingClasses:
+            return "Balancing classes";
+        case ClassificationStage::Training:
+            return "Training model";
+        case ClassificationStage::Predicting:
+            return "Predicting";
+        case ClassificationStage::ComputingMetrics:
+            return "Computing metrics";
+        case ClassificationStage::WritingOutput:
+            return "Writing output";
+        case ClassificationStage::Complete:
+            return "Complete";
+        case ClassificationStage::Failed:
+            return "Failed";
     }
     return "Unknown";
 }
@@ -64,10 +74,9 @@ namespace {
  * @brief Report progress if a callback is registered
  */
 void reportProgress(
-    PipelineProgressCallback const & cb,
-    ClassificationStage stage,
-    std::string const & msg)
-{
+        PipelineProgressCallback const & cb,
+        ClassificationStage stage,
+        std::string const & msg) {
     if (cb) {
         cb(stage, msg);
     }
@@ -77,9 +86,8 @@ void reportProgress(
  * @brief Build a failure result at a specific stage
  */
 ClassificationPipelineResult makeFailure(
-    ClassificationStage stage,
-    std::string const & msg)
-{
+        ClassificationStage stage,
+        std::string const & msg) {
     ClassificationPipelineResult result;
     result.success = false;
     result.error_message = msg;
@@ -109,12 +117,11 @@ std::vector<TimeFrameIndex> extractRowTimes(TensorData const & tensor) {
  * @brief Filter a row_times vector to keep only indices that survived NaN dropping
  */
 std::vector<TimeFrameIndex> filterRowTimes(
-    std::vector<TimeFrameIndex> const & all_times,
-    std::vector<std::size_t> const & valid_indices)
-{
+        std::vector<TimeFrameIndex> const & all_times,
+        std::vector<std::size_t> const & valid_indices) {
     std::vector<TimeFrameIndex> filtered;
     filtered.reserve(valid_indices.size());
-    for (auto idx : valid_indices) {
+    for (auto idx: valid_indices) {
         filtered.push_back(all_times[idx]);
     }
     return filtered;
@@ -126,9 +133,8 @@ std::vector<TimeFrameIndex> filterRowTimes(
  * Returns a new row containing only elements at the specified indices.
  */
 arma::Row<std::size_t> filterLabels(
-    arma::Row<std::size_t> const & labels,
-    std::vector<std::size_t> const & valid_indices)
-{
+        arma::Row<std::size_t> const & labels,
+        std::vector<std::size_t> const & valid_indices) {
     arma::Row<std::size_t> filtered(valid_indices.size());
     for (std::size_t i = 0; i < valid_indices.size(); ++i) {
         filtered[i] = labels[valid_indices[i]];
@@ -136,18 +142,17 @@ arma::Row<std::size_t> filterLabels(
     return filtered;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // Pipeline implementation
 // ============================================================================
 
 ClassificationPipelineResult runClassificationPipeline(
-    DataManager & dm,
-    MLModelRegistry const & registry,
-    ClassificationPipelineConfig const & config,
-    PipelineProgressCallback progress)
-{
+        DataManager & dm,
+        MLModelRegistry const & registry,
+        ClassificationPipelineConfig const & config,
+        PipelineProgressCallback progress) {
     // ========================================================================
     // Stage 1: Validate features
     // ========================================================================
@@ -159,7 +164,7 @@ ClassificationPipelineResult runClassificationPipeline(
     if (!feature_tensor) {
         return makeFailure(ClassificationStage::ValidatingFeatures,
                            "Feature tensor '" + config.feature_tensor_key +
-                           "' not found in DataManager");
+                                   "' not found in DataManager");
     }
 
     // Validate tensor structure
@@ -183,7 +188,7 @@ ClassificationPipelineResult runClassificationPipeline(
     if (!registry.hasModel(config.model_name)) {
         return makeFailure(ClassificationStage::ValidatingFeatures,
                            "Model '" + config.model_name +
-                           "' not found in registry");
+                                   "' not found in registry");
     }
 
     // ========================================================================
@@ -191,7 +196,7 @@ ClassificationPipelineResult runClassificationPipeline(
     // ========================================================================
     reportProgress(progress, ClassificationStage::ConvertingFeatures,
                    "Converting " + std::to_string(feature_tensor->numRows()) + "×" +
-                   std::to_string(feature_tensor->numColumns()) + " tensor to arma::mat");
+                           std::to_string(feature_tensor->numColumns()) + " tensor to arma::mat");
 
     ConvertedFeatures converted;
     try {
@@ -215,7 +220,7 @@ ClassificationPipelineResult runClassificationPipeline(
     // ========================================================================
     reportProgress(progress, ClassificationStage::AssemblingLabels,
                    "Assembling labels for " + std::to_string(valid_row_times.size()) +
-                   " observations");
+                           " observations");
 
     AssembledLabels labels;
     try {
@@ -227,41 +232,42 @@ ClassificationPipelineResult runClassificationPipeline(
                 auto intervals = dm.getData<DigitalIntervalSeries>(config.label_interval_key);
                 if (!intervals) {
                     throw std::runtime_error(
-                        "Label interval series '" + config.label_interval_key +
-                        "' not found in DataManager");
+                            "Label interval series '" + config.label_interval_key +
+                            "' not found in DataManager");
                 }
                 auto time_frame = dm.getTime(TimeKey(config.time_key_str));
                 if (!time_frame) {
                     throw std::runtime_error(
-                        "TimeFrame '" + config.time_key_str + "' not found");
+                            "TimeFrame '" + config.time_key_str + "' not found");
                 }
                 return assembleLabelsFromIntervals(
-                    *intervals, *time_frame, valid_row_times, label_cfg);
+                        *intervals, *time_frame, valid_row_times, label_cfg);
 
             } else if constexpr (std::is_same_v<T, LabelFromTimeEntityGroups>) {
                 auto * groups = dm.getEntityGroupManager();
                 auto * reg = dm.getEntityRegistry();
                 if (!groups || !reg) {
                     throw std::runtime_error(
-                        "EntityGroupManager or EntityRegistry not available");
+                            "EntityGroupManager or EntityRegistry not available");
                 }
                 return assembleLabelsFromTimeEntityGroups(
-                    *groups, *reg, valid_row_times, label_cfg);
+                        *groups, *reg, valid_row_times, label_cfg);
 
             } else if constexpr (std::is_same_v<T, LabelFromDataEntityGroups>) {
                 auto * groups = dm.getEntityGroupManager();
                 auto * reg = dm.getEntityRegistry();
                 if (!groups || !reg) {
                     throw std::runtime_error(
-                        "EntityGroupManager or EntityRegistry not available");
+                            "EntityGroupManager or EntityRegistry not available");
                 }
                 return assembleLabelsFromDataEntityGroups(
-                    *groups, *reg, valid_row_times, label_cfg);
+                        *groups, *reg, valid_row_times, label_cfg);
 
             } else {
                 static_assert(sizeof(T) == 0, "Unhandled label config variant");
             }
-        }, config.label_config);
+        },
+                            config.label_config);
     } catch (std::exception const & e) {
         return makeFailure(ClassificationStage::AssemblingLabels,
                            std::string("Label assembly failed: ") + e.what());
@@ -270,7 +276,7 @@ ClassificationPipelineResult runClassificationPipeline(
     if (labels.num_classes < 2) {
         return makeFailure(ClassificationStage::AssemblingLabels,
                            "Need at least 2 classes for classification, got " +
-                           std::to_string(labels.num_classes));
+                                   std::to_string(labels.num_classes));
     }
 
     // For group-based labeling, filter out unlabeled observations
@@ -319,7 +325,7 @@ ClassificationPipelineResult runClassificationPipeline(
     if (config.balance_classes) {
         reportProgress(progress, ClassificationStage::BalancingClasses,
                        "Balancing " + std::to_string(train_features.n_cols) +
-                       " training observations");
+                               " training observations");
 
         try {
             auto balanced = balanceClasses(train_features, train_labels,
@@ -345,8 +351,8 @@ ClassificationPipelineResult runClassificationPipeline(
     // ========================================================================
     reportProgress(progress, ClassificationStage::Training,
                    "Training '" + config.model_name + "' on " +
-                   std::to_string(train_features.n_cols) + " observations × " +
-                   std::to_string(train_features.n_rows) + " features");
+                           std::to_string(train_features.n_cols) + " observations × " +
+                           std::to_string(train_features.n_rows) + " features");
 
     auto model = registry.create(config.model_name);
     if (!model) {
@@ -376,35 +382,35 @@ ClassificationPipelineResult runClassificationPipeline(
     } else if (!config.prediction_region.prediction_tensor_key.empty()) {
         // Predict on a separate tensor
         auto pred_tensor = dm.getData<TensorData>(
-            config.prediction_region.prediction_tensor_key);
+                config.prediction_region.prediction_tensor_key);
         if (!pred_tensor) {
             return makeFailure(ClassificationStage::Predicting,
                                "Prediction tensor '" +
-                               config.prediction_region.prediction_tensor_key +
-                               "' not found in DataManager");
+                                       config.prediction_region.prediction_tensor_key +
+                                       "' not found in DataManager");
         }
 
         try {
             auto pred_converted = convertTensorToArma(*pred_tensor,
-                                                       config.conversion_config);
+                                                      config.conversion_config);
             predict_features = std::move(pred_converted.matrix);
 
             if (pred_tensor->rows().type() == RowType::TimeFrameIndex) {
                 auto pred_all_times = extractRowTimes(*pred_tensor);
                 predict_row_times = filterRowTimes(pred_all_times,
-                                                    pred_converted.valid_row_indices);
+                                                   pred_converted.valid_row_indices);
             } else {
                 // Ordinal rows — generate synthetic sequential times
                 predict_row_times.reserve(pred_converted.valid_row_indices.size());
                 for (std::size_t i = 0; i < pred_converted.valid_row_indices.size(); ++i) {
                     predict_row_times.emplace_back(
-                        static_cast<std::int64_t>(pred_converted.valid_row_indices[i]));
+                            static_cast<std::int64_t>(pred_converted.valid_row_indices[i]));
                 }
             }
         } catch (std::exception const & e) {
             return makeFailure(ClassificationStage::Predicting,
                                std::string("Prediction feature conversion failed: ") +
-                               e.what());
+                                       e.what());
         }
         do_prediction = true;
     }
@@ -416,31 +422,31 @@ ClassificationPipelineResult runClassificationPipeline(
     if (do_prediction) {
         reportProgress(progress, ClassificationStage::Predicting,
                        "Predicting on " + std::to_string(predict_features.n_cols) +
-                       " observations");
+                               " observations");
 
         // Validate feature dimensionality matches training
         if (predict_features.n_rows != model->numFeatures()) {
             return makeFailure(ClassificationStage::Predicting,
                                "Prediction features have " +
-                               std::to_string(predict_features.n_rows) +
-                               " features but model expects " +
-                               std::to_string(model->numFeatures()));
+                                       std::to_string(predict_features.n_rows) +
+                                       " features but model expects " +
+                                       std::to_string(model->numFeatures()));
         }
 
         // Apply z-score normalization with training parameters if they were computed
         if (config.conversion_config.zscore_normalize &&
             !converted.zscore_means.empty() &&
-            !config.prediction_region.predict_all_rows)
-        {
+            !config.prediction_region.predict_all_rows) {
             try {
                 applyZscoreNormalization(predict_features,
-                                          converted.zscore_means,
-                                          converted.zscore_stds,
-                                          config.conversion_config.zscore_epsilon);
+                                         converted.zscore_means,
+                                         converted.zscore_stds,
+                                         config.conversion_config.zscore_epsilon);
             } catch (std::exception const & e) {
                 return makeFailure(ClassificationStage::Predicting,
                                    std::string("Z-score normalization of prediction "
-                                               "features failed: ") + e.what());
+                                               "features failed: ") +
+                                           e.what());
             }
         }
 
@@ -475,46 +481,47 @@ ClassificationPipelineResult runClassificationPipeline(
     if (do_prediction && prediction_count > 0) {
         reportProgress(progress, ClassificationStage::ComputingMetrics,
                        "Computing metrics on " + std::to_string(prediction_count) +
-                       " predictions");
+                               " predictions");
 
         // Compute metrics when predicting on training data (for training-set score)
         if (config.prediction_region.predict_all_rows) {
             // Assemble ground-truth labels on the valid rows for comparison
             try {
                 AssembledLabels pred_labels = std::visit(
-                    [&](auto const & label_cfg) -> AssembledLabels {
-                        using T = std::decay_t<decltype(label_cfg)>;
+                        [&](auto const & label_cfg) -> AssembledLabels {
+                            using T = std::decay_t<decltype(label_cfg)>;
 
-                        if constexpr (std::is_same_v<T, LabelFromIntervals>) {
-                            auto intervals = dm.getData<DigitalIntervalSeries>(
-                                config.label_interval_key);
-                            auto time_frame = dm.getTime(TimeKey(config.time_key_str));
-                            return assembleLabelsFromIntervals(
-                                *intervals, *time_frame, predict_row_times, label_cfg);
+                            if constexpr (std::is_same_v<T, LabelFromIntervals>) {
+                                auto intervals = dm.getData<DigitalIntervalSeries>(
+                                        config.label_interval_key);
+                                auto time_frame = dm.getTime(TimeKey(config.time_key_str));
+                                return assembleLabelsFromIntervals(
+                                        *intervals, *time_frame, predict_row_times, label_cfg);
 
-                        } else if constexpr (std::is_same_v<T, LabelFromTimeEntityGroups>) {
-                            return assembleLabelsFromTimeEntityGroups(
-                                *dm.getEntityGroupManager(),
-                                *dm.getEntityRegistry(),
-                                predict_row_times, label_cfg);
+                            } else if constexpr (std::is_same_v<T, LabelFromTimeEntityGroups>) {
+                                return assembleLabelsFromTimeEntityGroups(
+                                        *dm.getEntityGroupManager(),
+                                        *dm.getEntityRegistry(),
+                                        predict_row_times, label_cfg);
 
-                        } else if constexpr (std::is_same_v<T, LabelFromDataEntityGroups>) {
-                            return assembleLabelsFromDataEntityGroups(
-                                *dm.getEntityGroupManager(),
-                                *dm.getEntityRegistry(),
-                                predict_row_times, label_cfg);
+                            } else if constexpr (std::is_same_v<T, LabelFromDataEntityGroups>) {
+                                return assembleLabelsFromDataEntityGroups(
+                                        *dm.getEntityGroupManager(),
+                                        *dm.getEntityRegistry(),
+                                        predict_row_times, label_cfg);
 
-                        } else {
-                            static_assert(sizeof(T) == 0, "Unhandled label config variant");
-                        }
-                    }, config.label_config);
+                            } else {
+                                static_assert(sizeof(T) == 0, "Unhandled label config variant");
+                            }
+                        },
+                        config.label_config);
 
                 if (labels.num_classes == 2) {
                     result.binary_train_metrics = computeBinaryMetrics(
-                        predictions, pred_labels.labels);
+                            predictions, pred_labels.labels);
                 }
                 result.multi_class_train_metrics = computeMultiClassMetrics(
-                    predictions, pred_labels.labels, labels.num_classes);
+                        predictions, pred_labels.labels, labels.num_classes);
 
             } catch (...) {
                 // Metrics are best-effort — don't fail the pipeline
@@ -534,7 +541,7 @@ ClassificationPipelineResult runClassificationPipeline(
             pred_output.prediction_times = predict_row_times;
 
             auto writer_result = writePredictions(
-                dm, pred_output, labels.class_names, config.output_config);
+                    dm, pred_output, labels.class_names, config.output_config);
             result.writer_result = std::move(writer_result);
         } catch (std::exception const & e) {
             return makeFailure(ClassificationStage::WritingOutput,
@@ -548,4 +555,4 @@ ClassificationPipelineResult runClassificationPipeline(
     return result;
 }
 
-} // namespace MLCore
+}// namespace MLCore

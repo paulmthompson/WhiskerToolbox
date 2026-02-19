@@ -20,8 +20,7 @@ namespace MLCore {
 // Construction
 // ============================================================================
 
-MLModelRegistry::MLModelRegistry()
-{
+MLModelRegistry::MLModelRegistry() {
     // Built-in model registrations — added as models are implemented (Phase 2)
     registerModel<RandomForestOperation>();
     registerModel<NaiveBayesOperation>();
@@ -36,10 +35,9 @@ MLModelRegistry::MLModelRegistry()
 // ============================================================================
 
 void MLModelRegistry::registerModel(
-    std::string const & name,
-    MLTaskType task,
-    FactoryFn factory)
-{
+        std::string const & name,
+        MLTaskType task,
+        FactoryFn factory) {
     auto it = _name_index.find(name);
     if (it != _name_index.end()) {
         // Replace existing entry
@@ -55,20 +53,18 @@ void MLModelRegistry::registerModel(
 // Query
 // ============================================================================
 
-std::vector<std::string> MLModelRegistry::getAllModelNames() const
-{
+std::vector<std::string> MLModelRegistry::getAllModelNames() const {
     std::vector<std::string> names;
     names.reserve(_entries.size());
-    for (auto const & entry : _entries) {
+    for (auto const & entry: _entries) {
         names.push_back(entry.name);
     }
     return names;
 }
 
-std::vector<std::string> MLModelRegistry::getModelNames(MLTaskType task) const
-{
+std::vector<std::string> MLModelRegistry::getModelNames(MLTaskType task) const {
     std::vector<std::string> names;
-    for (auto const & entry : _entries) {
+    for (auto const & entry: _entries) {
         if (entry.task == task) {
             names.push_back(entry.name);
         }
@@ -76,13 +72,11 @@ std::vector<std::string> MLModelRegistry::getModelNames(MLTaskType task) const
     return names;
 }
 
-bool MLModelRegistry::hasModel(std::string const & name) const
-{
+bool MLModelRegistry::hasModel(std::string const & name) const {
     return _name_index.contains(name);
 }
 
-std::optional<MLTaskType> MLModelRegistry::getTaskType(std::string const & name) const
-{
+std::optional<MLTaskType> MLModelRegistry::getTaskType(std::string const & name) const {
     auto it = _name_index.find(name);
     if (it == _name_index.end()) {
         return std::nullopt;
@@ -90,8 +84,7 @@ std::optional<MLTaskType> MLModelRegistry::getTaskType(std::string const & name)
     return _entries[it->second].task;
 }
 
-std::size_t MLModelRegistry::size() const
-{
+std::size_t MLModelRegistry::size() const {
     return _entries.size();
 }
 
@@ -99,8 +92,7 @@ std::size_t MLModelRegistry::size() const
 // Factory
 // ============================================================================
 
-std::unique_ptr<MLModelOperation> MLModelRegistry::create(std::string const & name) const
-{
+std::unique_ptr<MLModelOperation> MLModelRegistry::create(std::string const & name) const {
     auto it = _name_index.find(name);
     if (it == _name_index.end()) {
         return nullptr;
@@ -108,4 +100,4 @@ std::unique_ptr<MLModelOperation> MLModelRegistry::create(std::string const & na
     return _entries[it->second].factory();
 }
 
-} // namespace MLCore
+}// namespace MLCore
