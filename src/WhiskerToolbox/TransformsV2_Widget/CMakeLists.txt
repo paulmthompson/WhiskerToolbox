@@ -35,4 +35,5 @@ target_link_libraries(TransformsV2_Widget PUBLIC
         EditorState
         DataManager
         TransformsV2
+        Collapsible_Widget
 )

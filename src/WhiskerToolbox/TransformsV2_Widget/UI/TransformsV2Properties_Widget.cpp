@@ -203,45 +203,6 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(pipeline_group, 1);
 
-    // --- JSON Panel (Phase 2) ---
-    _json_group = new QGroupBox(tr("Pipeline JSON"), this);
-    _json_group->setCheckable(true);
-    _json_group->setChecked(_state->jsonPanelExpanded());
-    auto * json_layout = new QVBoxLayout(_json_group);
-    json_layout->setSpacing(4);
-
-    _json_panel = new QTextEdit(_json_group);
-    _json_panel->setFont(QFont("monospace", 9));
-    _json_panel->setAcceptRichText(false);
-    _json_panel->setPlaceholderText(tr("Pipeline JSON will appear here..."));
-    _json_panel->setMinimumHeight(120);
-    json_layout->addWidget(_json_panel);
-
-    // Button row: Copy | Apply | Load | Save
-    auto * json_button_layout = new QHBoxLayout();
-    json_button_layout->setSpacing(4);
-
-    _copy_json_button = new QPushButton(tr("Copy"), _json_group);
-    _copy_json_button->setToolTip(tr("Copy pipeline JSON to clipboard"));
-    json_button_layout->addWidget(_copy_json_button);
-
-    _apply_json_button = new QPushButton(tr("Apply"), _json_group);
-    _apply_json_button->setToolTip(tr("Apply edited JSON to rebuild the pipeline UI"));
-    json_button_layout->addWidget(_apply_json_button);
-
-    _load_json_button = new QPushButton(tr("Load..."), _json_group);
-    _load_json_button->setToolTip(tr("Load pipeline JSON from file"));
-    json_button_layout->addWidget(_load_json_button);
-
-    _save_json_button = new QPushButton(tr("Save..."), _json_group);
-    _save_json_button->setToolTip(tr("Save pipeline JSON to file"));
-    json_button_layout->addWidget(_save_json_button);
-
-    json_button_layout->addStretch();
-    json_layout->addLayout(json_button_layout);
-
-    main_layout->addWidget(_json_group);
-
     // --- Output & Execution Section (Phase 3) ---
     _output_group = new QGroupBox(tr("Output && Execution"), this);
     auto * output_layout = new QVBoxLayout(_output_group);
@@ -315,6 +276,44 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(_output_group);
 
+    // --- JSON Panel (Phase 2, collapsed by default) ---
+    _json_section = new Section(scroll_content, tr("Pipeline JSON"));
+    auto * json_content_layout = new QVBoxLayout();
+    json_content_layout->setSpacing(4);
+
+    _json_panel = new QTextEdit();
+    _json_panel->setFont(QFont("monospace", 9));
+    _json_panel->setAcceptRichText(false);
+    _json_panel->setPlaceholderText(tr("Pipeline JSON will appear here..."));
+    _json_panel->setMinimumHeight(120);
+    json_content_layout->addWidget(_json_panel);
+
+    // Button row: Copy | Apply | Load | Save
+    auto * json_button_layout = new QHBoxLayout();
+    json_button_layout->setSpacing(4);
+
+    _copy_json_button = new QPushButton(tr("Copy"));
+    _copy_json_button->setToolTip(tr("Copy pipeline JSON to clipboard"));
+    json_button_layout->addWidget(_copy_json_button);
+
+    _apply_json_button = new QPushButton(tr("Apply"));
+    _apply_json_button->setToolTip(tr("Apply edited JSON to rebuild the pipeline UI"));
+    json_button_layout->addWidget(_apply_json_button);
+
+    _load_json_button = new QPushButton(tr("Load..."));
+    _load_json_button->setToolTip(tr("Load pipeline JSON from file"));
+    json_button_layout->addWidget(_load_json_button);
+
+    _save_json_button = new QPushButton(tr("Save..."));
+    _save_json_button->setToolTip(tr("Save pipeline JSON to file"));
+    json_button_layout->addWidget(_save_json_button);
+
+    json_button_layout->addStretch();
+    json_content_layout->addLayout(json_button_layout);
+
+    _json_section->setContentLayout(*json_content_layout);
+    main_layout->addWidget(_json_section);
+
     // --- Pipeline Delivery Button (Phase 6.4) ---
     // Shows when a consumer (e.g., TensorDesigner's ColumnConfigDialog) has
     // requested a pipeline via OperationContext.
@@ -357,11 +356,6 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onLoadJsonClicked);
     connect(_save_json_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onSaveJsonClicked);
-    connect(_json_group, &QGroupBox::toggled,
-            this, [this](bool checked) {
-                _state->setJsonPanelExpanded(checked);
-            });
-
     // Phase 3: Output & Execution connections
     connect(_execute_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onExecuteClicked);

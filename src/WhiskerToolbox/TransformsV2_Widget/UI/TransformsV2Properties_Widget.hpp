@@ -13,6 +13,7 @@
  * available transforms to those compatible with the focused data type.
  */
 
+#include "Collapsible_Widget/Section.hpp"
 #include "EditorState/DataFocusAware.hpp"
 #include "EditorState/StrongTypes.hpp"
 
@@ -35,6 +36,7 @@ class PreReductionPanel;
 class QLabel;
 class QGroupBox;
 class QComboBox;
+class Section;
 class QLineEdit;
 class QProgressBar;
 class QPushButton;
@@ -201,7 +203,7 @@ private:
     QLabel * _validation_label = nullptr;
 
     // JSON Panel (Phase 2)
-    QGroupBox * _json_group = nullptr;
+    Section * _json_section = nullptr;
     QTextEdit * _json_panel = nullptr;
     QPushButton * _copy_json_button = nullptr;
     QPushButton * _load_json_button = nullptr;
