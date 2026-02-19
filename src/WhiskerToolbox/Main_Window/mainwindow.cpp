@@ -793,9 +793,9 @@ void MainWindow::openDataViewer() {
 }
 
 void MainWindow::openMLWidget() {
-    // Use EditorCreationController for ML_Widget
+    // Use EditorCreationController for MLCoreWidget
     // This handles single-instance checking, state registration, and zone placement
-    openEditor(QStringLiteral("MLWidget"));
+    openEditor(QStringLiteral("MLCoreWidget"));
 }
 
 void MainWindow::openDeepLearningWidget() {
