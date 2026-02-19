@@ -2,6 +2,7 @@
 
 #include "FeatureSelectionPanel.hpp"
 #include "MLCoreWidgetState.hpp"
+#include "RegionSelectionPanel.hpp"
 
 #include <QLabel>
 #include <QTabWidget>
@@ -33,10 +34,14 @@ void MLCoreWidget::_setupUi() {
     _feature_panel = new FeatureSelectionPanel(_state, _data_manager, classification_tab);
     classification_layout->addWidget(_feature_panel);
 
+    // Training region panel
+    _training_region_panel = new RegionSelectionPanel(
+        _state, _data_manager, RegionMode::Training, classification_tab);
+    classification_layout->addWidget(_training_region_panel);
+
     // Placeholder for remaining classification sub-panels
     auto * classification_placeholder = new QLabel(
         QStringLiteral("Remaining panels will be added here:\n"
-                       "• Training Region\n"
                        "• Labels\n"
                        "• Model Configuration\n"
                        "• Prediction\n"

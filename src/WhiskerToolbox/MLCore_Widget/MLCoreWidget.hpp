@@ -12,9 +12,10 @@
  * - **Clustering**: Unsupervised clustering using MLCore pipelines
  *
  * This is a stub implementation for task 4.1 (state + registration)
- * with the FeatureSelectionPanel added in task 4.2.
- * Additional sub-panels (RegionSelectionPanel, LabelConfigPanel, etc.)
- * will be added in subsequent tasks (4.3–4.7).
+ * with the FeatureSelectionPanel added in task 4.2 and
+ * RegionSelectionPanel added in task 4.3.
+ * Additional sub-panels (LabelConfigPanel, ModelConfigPanel, etc.)
+ * will be added in subsequent tasks (4.4–4.7).
  *
  * ## Architecture
  *
@@ -38,6 +39,7 @@
 class DataManager;
 class FeatureSelectionPanel;
 class MLCoreWidgetState;
+class RegionSelectionPanel;
 class SelectionContext;
 
 class MLCoreWidget : public QWidget {
@@ -68,6 +70,7 @@ private:
     SelectionContext * _selection_context;
 
     FeatureSelectionPanel * _feature_panel = nullptr;
+    RegionSelectionPanel * _training_region_panel = nullptr;
 };
 
 #endif // MLCORE_WIDGET_HPP
