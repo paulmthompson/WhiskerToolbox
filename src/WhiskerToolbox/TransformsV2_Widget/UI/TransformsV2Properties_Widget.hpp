@@ -189,10 +189,12 @@ private:
     std::string _input_data_type_name;// e.g. "MaskData", "AnalogTimeSeries"
     std::type_index _input_element_type{typeid(void)};
     std::type_index _input_container_type{typeid(void)};
+    bool _input_pinned = false;///< True once the pipeline has steps; ignores DataManager focus changes
 
     // Sub-widgets
     QLabel * _input_key_label = nullptr;
     QLabel * _input_type_label = nullptr;
+    QLabel * _input_pinned_label = nullptr;///< Shows "(locked)" when pinned
     QGroupBox * _input_group = nullptr;
     PipelineStepListWidget * _step_list = nullptr;
     StepConfigPanel * _step_config = nullptr;

@@ -90,7 +90,8 @@ std::vector<OperationEntry> getOperationsForSource(
             ops.push_back({QStringLiteral("Row End (property)"), "IntervalEnd", "", true, false, false});
             ops.push_back({QStringLiteral("Row Duration (property)"), "IntervalDuration", "", true, false, false});
         }
-    } else if (row_type == DesignerRowType::Timestamp) {
+    } else if (row_type == DesignerRowType::Timestamp ||
+               row_type == DesignerRowType::DerivedFromSource) {
         if (source_type == DM_DataType::Analog) {
             ops.push_back({QStringLiteral("Direct Value (passthrough)"), "Passthrough", "AnalogTimeSeries", false, true, false});
             ops.push_back({QStringLiteral("Value at Offset"), "AnalogSampleAtOffset", "AnalogTimeSeries", false, false, true});
@@ -181,6 +182,15 @@ ColumnRecipe ColumnConfigDialog::getRecipe() const {
                         break;
                     case DM_DataType::Line:
                         recipe.gather_type = "LineData";
+                        break;
+                    case DM_DataType::Mask:
+                        recipe.gather_type = "MaskData";
+                        break;
+                    case DM_DataType::Points:
+                        recipe.gather_type = "PointData";
+                        break;
+                    case DM_DataType::RaggedAnalog:
+                        recipe.gather_type = "RaggedAnalogTimeSeries";
                         break;
                     default:
                         recipe.gather_type = "";
@@ -474,20 +484,12 @@ void ColumnConfigDialog::_populateSourceKeys() {
     for (auto const & key: all_keys) {
         auto const type = _data_manager->getType(key);
 
-        // Filter based on row type
-        bool compatible = false;
-        if (_row_type == DesignerRowType::Interval) {
-            compatible = (type == DM_DataType::Analog ||
-                          type == DM_DataType::DigitalEvent ||
-                          type == DM_DataType::DigitalInterval);
-        } else if (_row_type == DesignerRowType::Timestamp) {
-            compatible = (type == DM_DataType::Analog ||
-                          type == DM_DataType::Line);
-        } else {
-            // For None/Ordinal, show all data types
-            compatible = (type != DM_DataType::Unknown &&
-                          type != DM_DataType::Time);
-        }
+        // Show all concrete data types regardless of row type.
+        // The pipeline JSON (from TransformsV2) handles type-changing
+        // transforms, so any source type is potentially valid.
+        bool compatible = (type != DM_DataType::Unknown &&
+                           type != DM_DataType::Time &&
+                           type != DM_DataType::Tensor);
 
         if (compatible) {
             auto type_str = QString::fromStdString(convert_data_type_to_string(type));
@@ -773,7 +775,7 @@ void ColumnConfigDialog::_onOperationDelivered(
         return;
     }
 
-    // Extract the pipeline JSON from the result
+    // Extract the envelope JSON from the result
     auto const * json_ptr = result.peek<std::string>();
     if (!json_ptr) {
         _validation_label->setStyleSheet(QStringLiteral("color: red;"));
@@ -783,16 +785,68 @@ void ColumnConfigDialog::_onOperationDelivered(
         return;
     }
 
-    // Populate the advanced text edit with the received JSON
+    // Parse the envelope — it may contain { pipeline, input_key, input_type }
+    std::string pipeline_json_str;
+    std::string input_key;
+    std::string input_type;
+    try {
+        auto envelope = nlohmann::json::parse(*json_ptr);
+        if (envelope.contains("pipeline")) {
+            auto const & pipe = envelope["pipeline"];
+            pipeline_json_str = pipe.is_string()
+                    ? pipe.get<std::string>()
+                    : pipe.dump();
+        } else {
+            // Fallback: treat entire string as pipeline JSON
+            pipeline_json_str = *json_ptr;
+        }
+        if (envelope.contains("input_key")) {
+            input_key = envelope["input_key"].get<std::string>();
+        }
+        if (envelope.contains("input_type")) {
+            input_type = envelope["input_type"].get<std::string>();
+        }
+    } catch (...) {
+        // If envelope parsing fails, treat entire string as pipeline JSON
+        pipeline_json_str = *json_ptr;
+    }
+
+    // Auto-select the source key from the delivered metadata
+    if (!input_key.empty()) {
+        bool found = false;
+        for (int i = 0; i < _source_combo->count(); ++i) {
+            if (_source_combo->itemData(i).toString().toStdString() == input_key) {
+                _source_combo->setCurrentIndex(i);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            // Key not in combo — add it dynamically
+            QString display_type;
+            if (!input_type.empty()) {
+                display_type = QString::fromStdString(input_type);
+            } else if (_data_manager) {
+                display_type = QString::fromStdString(
+                        convert_data_type_to_string(_data_manager->getType(input_key)));
+            }
+            auto display = QString::fromStdString(input_key) +
+                           QStringLiteral(" [") + display_type + QStringLiteral("]");
+            _source_combo->addItem(display, QString::fromStdString(input_key));
+            _source_combo->setCurrentIndex(_source_combo->count() - 1);
+        }
+    }
+
+    // Populate the advanced text edit with the pipeline JSON (not the envelope)
     _syncing_json = true;
     _use_advanced_json = true;
     try {
-        auto j = nlohmann::json::parse(*json_ptr);
+        auto j = nlohmann::json::parse(pipeline_json_str);
         _advanced_json_edit->setPlainText(
                 QString::fromStdString(j.dump(2)));
     } catch (...) {
         _advanced_json_edit->setPlainText(
-                QString::fromStdString(*json_ptr));
+                QString::fromStdString(pipeline_json_str));
     }
     _syncing_json = false;
 

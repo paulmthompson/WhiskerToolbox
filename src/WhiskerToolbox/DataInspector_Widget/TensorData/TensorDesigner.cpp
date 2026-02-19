@@ -2,6 +2,7 @@
 
 #include "ColumnConfigDialog.hpp"
 
+#include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -13,6 +14,7 @@
 
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/utils/TimeIndexExtractor.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
@@ -72,6 +74,10 @@ void TensorDesigner::setOperationContext(EditorLib::OperationContext * context) 
     _operation_context = context;
 }
 
+void TensorDesigner::setInspectorState(std::shared_ptr<DataInspectorState> state) {
+    _inspector_state = std::move(state);
+}
+
 // =============================================================================
 // Tensor management
 // =============================================================================
@@ -100,6 +106,9 @@ std::string TensorDesigner::toJson() const {
             break;
         case DesignerRowType::Ordinal:
             row_source["row_type"] = "ordinal";
+            break;
+        case DesignerRowType::DerivedFromSource:
+            row_source["row_type"] = "derived_from_source";
             break;
         case DesignerRowType::None:
             row_source["row_type"] = "none";
@@ -152,6 +161,8 @@ bool TensorDesigner::fromJson(std::string const & json) {
                 _row_type_combo->setCurrentIndex(2);// Timestamp
             } else if (row_type_str == "ordinal") {
                 _row_type_combo->setCurrentIndex(3);// Ordinal
+            } else if (row_type_str == "derived_from_source") {
+                _row_type_combo->setCurrentIndex(4);// Derived from Source
             } else {
                 _row_type_combo->setCurrentIndex(0);// None
             }
@@ -298,6 +309,9 @@ void TensorDesigner::_onRowSourceTypeChanged(int index) {
         case 3:
             _row_type = DesignerRowType::Ordinal;
             break;
+        case 4:
+            _row_type = DesignerRowType::DerivedFromSource;
+            break;
         default:
             _row_type = DesignerRowType::None;
             break;
@@ -327,6 +341,11 @@ void TensorDesigner::_onRowSourceKeyChanged(int index) {
             _row_info_label->setText(
                     QStringLiteral("Rows: %1 timestamps").arg(static_cast<int>(events->size())));
         }
+    } else if (_row_type == DesignerRowType::DerivedFromSource) {
+        auto result = extractTimeIndices(*_data_manager, _row_source_key);
+        _row_info_label->setText(
+                QStringLiteral("Rows: %1 timestamps (derived from source)")
+                        .arg(static_cast<int>(result.size())));
     }
 }
 
@@ -337,17 +356,27 @@ void TensorDesigner::_onAddColumnClicked() {
         return;
     }
 
-    ColumnConfigDialog dialog(_data_manager, _row_type, _operation_context, this);
-    if (dialog.exec() == QDialog::Accepted) {
-        auto recipe = dialog.getRecipe();
-        if (recipe.column_name.empty()) {
-            recipe.column_name = "column_" + std::to_string(_column_recipes.size());
-        }
-        _column_recipes.push_back(std::move(recipe));
-        _refreshColumnList();
-        _updateStatus(QStringLiteral("Column added: %1 columns total")
-                              .arg(static_cast<int>(_column_recipes.size())));
+    // If a dialog is already open, just raise it
+    if (_active_dialog) {
+        _active_dialog->raise();
+        _active_dialog->activateWindow();
+        return;
     }
+
+    _pinInspectorForDialog();
+
+    auto * dialog = new ColumnConfigDialog(_data_manager, _row_type, _operation_context, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::NonModal);
+    _active_dialog = dialog;
+
+    connect(dialog, &QDialog::accepted, this, &TensorDesigner::_onDialogAcceptedAdd);
+    connect(dialog, &QDialog::finished, this, [this]() {
+        _active_dialog = nullptr;
+        _unpinInspectorAfterDialog();
+    });
+
+    dialog->show();
 }
 
 void TensorDesigner::_onRemoveColumnClicked() {
@@ -376,11 +405,29 @@ void TensorDesigner::_onEditColumnClicked() {
         return;
     }
 
-    ColumnConfigDialog dialog(_data_manager, _row_type, _column_recipes[row], _operation_context, this);
-    if (dialog.exec() == QDialog::Accepted) {
-        _column_recipes[row] = dialog.getRecipe();
-        _refreshColumnList();
+    // If a dialog is already open, just raise it
+    if (_active_dialog) {
+        _active_dialog->raise();
+        _active_dialog->activateWindow();
+        return;
     }
+
+    _pinInspectorForDialog();
+
+    auto * dialog = new ColumnConfigDialog(_data_manager, _row_type, _column_recipes[row], _operation_context, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::NonModal);
+    _active_dialog = dialog;
+
+    connect(dialog, &QDialog::accepted, this, [this, row]() {
+        _onDialogAcceptedEdit(row);
+    });
+    connect(dialog, &QDialog::finished, this, [this]() {
+        _active_dialog = nullptr;
+        _unpinInspectorAfterDialog();
+    });
+
+    dialog->show();
 }
 
 void TensorDesigner::_onColumnDoubleClicked(QListWidgetItem * item) {
@@ -488,6 +535,7 @@ void TensorDesigner::_setupUi() {
     _row_type_combo->addItem(QStringLiteral("Interval Rows"));
     _row_type_combo->addItem(QStringLiteral("Timestamp Rows"));
     _row_type_combo->addItem(QStringLiteral("Ordinal Rows"));
+    _row_type_combo->addItem(QStringLiteral("Derived from Source"));
     _row_type_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     row_layout->addWidget(_row_type_combo);
 
@@ -594,13 +642,33 @@ void TensorDesigner::_populateRowSourceKeys() {
             _row_source_combo->addItem(
                     QString::fromStdString(key), QString::fromStdString(key));
         }
+    } else if (_row_type == DesignerRowType::DerivedFromSource) {
+        // Show all data sources that have timestamps (Analog, DigitalEvent,
+        // DigitalInterval) so the user can derive row timestamps from any of them.
+        auto all_keys = _data_manager->getAllKeys();
+        for (auto const & key: all_keys) {
+            auto const type = _data_manager->getType(key);
+            bool has_timestamps = (type == DM_DataType::Analog ||
+                                   type == DM_DataType::DigitalEvent ||
+                                   type == DM_DataType::DigitalInterval ||
+                                   type == DM_DataType::Mask ||
+                                   type == DM_DataType::Line ||
+                                   type == DM_DataType::Points);
+            if (has_timestamps) {
+                auto type_str = QString::fromStdString(convert_data_type_to_string(type));
+                auto display = QString::fromStdString(key) +
+                               QStringLiteral(" [") + type_str + QStringLiteral("]");
+                _row_source_combo->addItem(display, QString::fromStdString(key));
+            }
+        }
     }
     // For Ordinal, no source key needed
 
     _row_source_combo->blockSignals(false);
 
     _row_source_combo->setVisible(_row_type == DesignerRowType::Interval ||
-                                  _row_type == DesignerRowType::Timestamp);
+                                  _row_type == DesignerRowType::Timestamp ||
+                                  _row_type == DesignerRowType::DerivedFromSource);
 
     if (_row_source_combo->count() > 0) {
         _onRowSourceKeyChanged(0);
@@ -690,6 +758,21 @@ void TensorDesigner::_buildTensor() {
             // For ordinal, user can define count (for now use column count)
             _updateStatus(QStringLiteral("Ordinal rows not yet fully supported."));
             return;
+
+        } else if (_row_type == DesignerRowType::DerivedFromSource) {
+            // Derive row timestamps from the selected data source
+            auto result = extractTimeIndices(*_data_manager, _row_source_key);
+            if (result.empty()) {
+                _updateStatus(QStringLiteral("Row source has no timestamps."));
+                return;
+            }
+            row_times = std::move(result.indices);
+            num_rows = row_times.size();
+
+            // Build RowDescriptor from derived timestamps
+            auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(row_times);
+            row_desc = RowDescriptor::fromTimeIndices(
+                    std::move(time_storage), std::move(result.time_frame));
         }
 
         // Build column sources
@@ -769,4 +852,48 @@ void TensorDesigner::_buildTensor() {
 
 void TensorDesigner::_updateStatus(QString const & message) {
     _status_label->setText(message);
+}
+
+// =============================================================================
+// Dialog result handlers
+// =============================================================================
+
+void TensorDesigner::_onDialogAcceptedAdd() {
+    if (!_active_dialog) return;
+
+    auto recipe = _active_dialog->getRecipe();
+    if (recipe.column_name.empty()) {
+        recipe.column_name = "column_" + std::to_string(_column_recipes.size());
+    }
+    _column_recipes.push_back(std::move(recipe));
+    _refreshColumnList();
+    _updateStatus(QStringLiteral("Column added: %1 columns total")
+                          .arg(static_cast<int>(_column_recipes.size())));
+}
+
+void TensorDesigner::_onDialogAcceptedEdit(int row) {
+    if (!_active_dialog) return;
+    if (row < 0 || row >= static_cast<int>(_column_recipes.size())) return;
+
+    _column_recipes[row] = _active_dialog->getRecipe();
+    _refreshColumnList();
+}
+
+// =============================================================================
+// Inspector pin helpers
+// =============================================================================
+
+void TensorDesigner::_pinInspectorForDialog() {
+    if (_inspector_state) {
+        _was_pinned_before_dialog = _inspector_state->isPinned();
+        if (!_was_pinned_before_dialog) {
+            _inspector_state->setPinned(true);
+        }
+    }
+}
+
+void TensorDesigner::_unpinInspectorAfterDialog() {
+    if (_inspector_state && !_was_pinned_before_dialog) {
+        _inspector_state->setPinned(false);
+    }
 }

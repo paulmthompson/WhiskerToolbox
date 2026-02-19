@@ -25,13 +25,16 @@
  * @see TensorInspector for the inspector that hosts this panel
  */
 
+#include <QPointer>
 #include <QWidget>
 
 #include <memory>
 #include <string>
 #include <vector>
 
+class ColumnConfigDialog;
 class DataManager;
+class DataInspectorState;
 class QComboBox;
 class QLabel;
 class QListWidget;
@@ -56,10 +59,11 @@ enum class IntervalProperty : std::uint8_t;
  * @brief Row source type for the tensor designer
  */
 enum class DesignerRowType {
-    None,     ///< No row source selected
-    Interval, ///< Rows from DigitalIntervalSeries
-    Timestamp,///< Rows from DigitalEventSeries
-    Ordinal   ///< Manual ordinal rows
+    None,             ///< No row source selected
+    Interval,         ///< Rows from DigitalIntervalSeries
+    Timestamp,        ///< Rows from DigitalEventSeries
+    Ordinal,          ///< Manual ordinal rows
+    DerivedFromSource ///< Derive row timestamps from any data source's timestamps
 };
 
 /**
@@ -92,6 +96,17 @@ public:
      * @param context OperationContext instance (can be nullptr)
      */
     void setOperationContext(EditorLib::OperationContext * context);
+
+    /**
+     * @brief Set the DataInspectorState for auto-pinning during dialog interaction
+     * @param state Shared state pointer (can be nullptr)
+     *
+     * When set, the designer will auto-pin the inspector when opening the
+     * ColumnConfigDialog to prevent SelectionContext changes from navigating
+     * away from the tensor being designed. The pin is restored when the
+     * dialog closes.
+     */
+    void setInspectorState(std::shared_ptr<DataInspectorState> state);
 
     // =========================================================================
     // Tensor Management
@@ -176,11 +191,28 @@ private:
     void _buildTensor();
     void _updateStatus(QString const & message);
 
+    /// Auto-pin the inspector state when opening a dialog
+    void _pinInspectorForDialog();
+
+    /// Restore previous pin state when the dialog closes
+    void _unpinInspectorAfterDialog();
+
+    /// Handle dialog result for adding a column
+    void _onDialogAcceptedAdd();
+
+    /// Handle dialog result for editing a column
+    void _onDialogAcceptedEdit(int row);
+
     // --- Data ---
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context{nullptr};
     EditorLib::OperationContext * _operation_context{nullptr};
+    std::shared_ptr<DataInspectorState> _inspector_state;
     std::string _tensor_key;
+
+    // Dialog tracking
+    QPointer<ColumnConfigDialog> _active_dialog;  ///< Active modeless dialog (if any)
+    bool _was_pinned_before_dialog{false};          ///< Pin state before dialog opened
 
     // --- Row configuration ---
     DesignerRowType _row_type{DesignerRowType::None};

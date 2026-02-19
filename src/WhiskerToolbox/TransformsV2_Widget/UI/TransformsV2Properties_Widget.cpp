@@ -13,6 +13,8 @@
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
@@ -74,6 +76,11 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
         EditorLib::SelectedDataKey const & data_key,
         QString const & data_type) {
 
+    // Once the pipeline has steps the input is pinned — ignore focus changes
+    if (_input_pinned) {
+        return;
+    }
+
     _input_data_key = data_key.toStdString();
 
     // If the data_type is provided, use it directly.
@@ -115,6 +122,26 @@ void TransformsV2Properties_Widget::onStepSelected(int step_index) {
 }
 
 void TransformsV2Properties_Widget::onPipelineChanged() {
+    // Pin / unpin input based on whether the pipeline has steps
+    bool const has_steps = !_step_list->steps().empty();
+    if (has_steps && !_input_pinned) {
+        _input_pinned = true;
+        _input_pinned_label->setVisible(true);
+    } else if (!has_steps && _input_pinned) {
+        _input_pinned = false;
+        _input_pinned_label->setVisible(false);
+
+        // Re-sync from the current SelectionContext focus
+        if (_selection_context) {
+            auto const & key = _selection_context->dataFocus();
+            auto const & type = _selection_context->dataFocusType();
+            if (!key.isEmpty()) {
+                // Call the base handler (pinning is now off)
+                onDataFocusChanged(key, type);
+            }
+        }
+    }
+
     syncJsonFromUI();
     updateOutputKeyFromPipeline();
     updateExecuteButtonState();
@@ -169,6 +196,11 @@ void TransformsV2Properties_Widget::setupUI() {
     _input_type_label->setStyleSheet("color: gray; font-size: 9pt;");
     _input_type_label->setVisible(false);
     input_layout->addWidget(_input_type_label);
+
+    _input_pinned_label = new QLabel(tr("\xF0\x9F\x94\x92 Locked — clear pipeline to change input"), _input_group);
+    _input_pinned_label->setStyleSheet("color: #888; font-size: 8pt; font-style: italic;");
+    _input_pinned_label->setVisible(false);
+    input_layout->addWidget(_input_pinned_label);
 
     main_layout->addWidget(_input_group);
 
@@ -857,10 +889,28 @@ bool TransformsV2Properties_Widget::tryDeliverPipeline() {
         return false;
     }
 
-    // Deliver the pipeline JSON as an OperationResult
+    // Wrap pipeline JSON with input metadata so the requester knows
+    // which DataManager key and data type the pipeline was configured for.
+    nlohmann::json envelope;
+    try {
+        envelope["pipeline"] = nlohmann::json::parse(json_str);
+    } catch (...) {
+        // If the JSON panel text isn't valid JSON, store as raw string
+        envelope["pipeline"] = json_str;
+    }
+    if (!_input_data_key.empty()) {
+        envelope["input_key"] = _input_data_key;
+    }
+    if (!_input_data_type_name.empty()) {
+        envelope["input_type"] = _input_data_type_name;
+    }
+
+    auto const envelope_str = envelope.dump();
+
+    // Deliver the envelope as an OperationResult
     auto result = EditorLib::OperationResult::create(
             EditorLib::DataChannels::TransformPipeline,
-            json_str);
+            envelope_str);
 
     return _operation_context->deliverResult(tv2_type, std::move(result));
 }

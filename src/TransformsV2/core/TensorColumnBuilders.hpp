@@ -7,8 +7,6 @@
  *        execution, and GatherResult gather+reduce patterns into
  *        ColumnProviderFn closures for LazyColumnTensorStorage.
  *
- * This is Phase 1.1b of the TableView → TensorData refactoring plan.
- *
  * The builders live in TransformsV2 (which depends on DataManager and
  * GatherResult) so they can reference all source types. The resulting
  * ColumnProviderFn closures are plain std::function<std::vector<float>()>

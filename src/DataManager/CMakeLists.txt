@@ -45,6 +45,8 @@ set(DATAMANAGER_SOURCES
         utils/polynomial/parametric_polynomial_utils.cpp
         utils/polynomial/parametric_polynomial_utils.hpp
         utils/string_manip.hpp
+        utils/TimeIndexExtractor.hpp
+        utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp
         utils/DerivedTimeFrame.cpp
         utils/filter/FilterFactory.hpp

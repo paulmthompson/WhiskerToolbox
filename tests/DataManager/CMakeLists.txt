@@ -27,6 +27,8 @@ add_executable(test_data_manager
         utils/TimeSeriesConcepts.test.cpp
         utils/TimeSeriesFilters.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/DataManager/utils/TimeIndexExtractor.test.cpp
+
         test_filename_timeframe.cpp
         test_tableview.cpp
         test_data_manager_fixtures.cpp
