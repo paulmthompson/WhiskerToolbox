@@ -57,6 +57,8 @@
 #include <string>
 
 // Forward declarations
+class ClusteringPanel;
+class ClusterOutputPanel;
 class DataManager;
 class FeatureSelectionPanel;
 class LabelConfigPanel;
@@ -142,13 +144,17 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context;
 
-    // Sub-panels
+    // Sub-panels (Classification)
     FeatureSelectionPanel * _feature_panel = nullptr;
     RegionSelectionPanel * _training_region_panel = nullptr;
     LabelConfigPanel * _label_panel = nullptr;
     ModelConfigPanel * _model_config_panel = nullptr;
     PredictionPanel * _prediction_panel = nullptr;
     ResultsPanel * _results_panel = nullptr;
+
+    // Sub-panels (Clustering)
+    ClusteringPanel * _clustering_panel = nullptr;
+    ClusterOutputPanel * _cluster_output_panel = nullptr;
 
     // Progress UI
     QLabel * _status_label = nullptr;

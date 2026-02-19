@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ClusterOutputPanel</class>
+ <widget class="QWidget" name="ClusterOutputPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>360</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="outputGroupBox">
+     <property name="title">
+      <string>Clustering Output</string>
+     </property>
+     <layout class="QVBoxLayout" name="groupBoxLayout">
+      <!-- Stacked widget: no-results page vs. results page -->
+      <item>
+       <widget class="QStackedWidget" name="stackedWidget">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <!-- Page 0: No results placeholder -->
+        <widget class="QWidget" name="noResultsPage">
+         <layout class="QVBoxLayout" name="noResultsLayout">
+          <item>
+           <spacer name="noResultsTopSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="noResultsLabel">
+            <property name="text">
+             <string>No clustering results available.
+Run "Fit &amp; Assign" to see cluster assignments here.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { color: #666; font-style: italic; font-size: 11pt; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="noResultsBottomSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 1: Results display -->
+        <widget class="QWidget" name="resultsPage">
+         <layout class="QVBoxLayout" name="resultsLayout">
+          <!-- Summary header -->
+          <item>
+           <widget class="QLabel" name="summaryLabel">
+            <property name="text">
+             <string>Algorithm: --</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; color: #333; }</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="fittingInfoLabel">
+            <property name="text">
+             <string>Fitting: -- observations, -- features</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="clustersSeparator">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <!-- Cluster assignments table -->
+          <item>
+           <widget class="QLabel" name="clustersHeaderLabel">
+            <property name="text">
+             <string>Cluster Assignments</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="clusterTable">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>200</height>
+             </size>
+            </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::NoEditTriggers</set>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::NoSelection</enum>
+            </property>
+            <property name="showGrid">
+             <bool>true</bool>
+            </property>
+            <property name="columnCount">
+             <number>3</number>
+            </property>
+            <column>
+             <property name="text">
+              <string>Cluster</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Count</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Fraction</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+          <!-- Noise info (only visible for DBSCAN) -->
+          <item>
+           <widget class="QLabel" name="noiseLabel">
+            <property name="text">
+             <string></string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { color: #888; font-style: italic; }</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="outputsSeparator">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <!-- Created outputs list -->
+          <item>
+           <widget class="QLabel" name="outputsHeaderLabel">
+            <property name="text">
+             <string>Created Outputs:</string>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { font-weight: bold; }</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="outputKeysListWidget">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>150</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Click an output key to focus it in the DataViewer</string>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <!-- Clear button -->
+          <item>
+           <layout class="QHBoxLayout" name="buttonLayout">
+            <item>
+             <spacer name="buttonSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="clearButton">
+              <property name="text">
+               <string>Clear Results</string>
+              </property>
+              <property name="toolTip">
+               <string>Clear the displayed clustering results</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

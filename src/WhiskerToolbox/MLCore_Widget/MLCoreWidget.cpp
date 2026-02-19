@@ -1,5 +1,7 @@
 #include "MLCoreWidget.hpp"
 
+#include "ClusteringPanel.hpp"
+#include "ClusterOutputPanel.hpp"
 #include "FeatureSelectionPanel.hpp"
 #include "LabelConfigPanel.hpp"
 #include "MLCoreWidgetState.hpp"
@@ -183,19 +185,15 @@ void MLCoreWidget::_setupUi() {
 
     classification_layout->addStretch();
 
-    // Clustering tab — stub placeholder
+    // Clustering tab
     auto * clustering_tab = new QWidget();
     auto * clustering_layout = new QVBoxLayout(clustering_tab);
-    auto * clustering_label = new QLabel(
-        QStringLiteral("Clustering workflow panels will be added here.\n\n"
-                       "Planned sub-panels:\n"
-                       "• Data Source\n"
-                       "• Algorithm Configuration\n"
-                       "• Output"),
-        clustering_tab);
-    clustering_label->setWordWrap(true);
-    clustering_label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    clustering_layout->addWidget(clustering_label);
+
+    _clustering_panel = new ClusteringPanel(_state, _data_manager, clustering_tab);
+    clustering_layout->addWidget(_clustering_panel);
+
+    _cluster_output_panel = new ClusterOutputPanel(clustering_tab);
+    clustering_layout->addWidget(_cluster_output_panel);
     clustering_layout->addStretch();
 
     tabs->addTab(classification_tab, QStringLiteral("Classification"));
@@ -252,6 +250,29 @@ void MLCoreWidget::_connectSignals() {
                     _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
                            : EditorLib::EditorInstanceId{},
                     QStringLiteral("ResultsPanel")
+                };
+
+                _selection_context->setDataFocus(
+                    EditorLib::SelectedDataKey(key), type_str, source);
+            });
+
+    // Output key clicked in ClusterOutputPanel → emit data focus via SelectionContext
+    connect(_cluster_output_panel, &ClusterOutputPanel::outputKeyClicked,
+            this, [this](QString const & key) {
+                if (!_selection_context || !_data_manager) {
+                    return;
+                }
+
+                std::string const key_std = key.toStdString();
+
+                DM_DataType const dm_type = _data_manager->getType(key_std);
+                QString const type_str = QString::fromStdString(
+                    convert_data_type_to_string(dm_type));
+
+                SelectionSource const source{
+                    _state ? EditorLib::EditorInstanceId(_state->getInstanceId())
+                           : EditorLib::EditorInstanceId{},
+                    QStringLiteral("ClusterOutputPanel")
                 };
 
                 _selection_context->setDataFocus(

@@ -107,6 +107,26 @@ struct MLCoreWidgetStateData {
     /// Whether to output predictions as DigitalIntervalSeries
     bool output_predictions = true;
 
+    // === Clustering configuration ===
+
+    /// DataManager key of the TensorData to use for clustering
+    std::string clustering_tensor_key;
+
+    /// Registry name of the selected clustering algorithm (e.g. "K-Means")
+    std::string clustering_model_name = "K-Means";
+
+    /// Output prefix for clustering results
+    std::string clustering_output_prefix = "Cluster:";
+
+    /// Whether to write cluster intervals to DataManager
+    bool clustering_write_intervals = true;
+
+    /// Whether to write cluster probabilities (if model supports them)
+    bool clustering_write_probabilities = true;
+
+    /// Whether to normalize features (z-score) before clustering
+    bool clustering_zscore_normalize = false;
+
     // === UI state ===
 
     /// Active workflow tab index (0 = classification, 1 = clustering)

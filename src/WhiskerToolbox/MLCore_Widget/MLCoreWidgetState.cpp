@@ -56,6 +56,12 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit outputProbabilitiesChanged(_data.output_probabilities);
         emit outputPredictionsChanged(_data.output_predictions);
         emit activeTabChanged(_data.active_tab);
+        emit clusteringTensorKeyChanged(QString::fromStdString(_data.clustering_tensor_key));
+        emit clusteringModelNameChanged(QString::fromStdString(_data.clustering_model_name));
+        emit clusteringOutputPrefixChanged(QString::fromStdString(_data.clustering_output_prefix));
+        emit clusteringWriteIntervalsChanged(_data.clustering_write_intervals);
+        emit clusteringWriteProbabilitiesChanged(_data.clustering_write_probabilities);
+        emit clusteringZscoreNormalizeChanged(_data.clustering_zscore_normalize);
         return true;
     }
     return false;
@@ -301,4 +307,78 @@ void MLCoreWidgetState::setActiveTab(int tab) {
 
 int MLCoreWidgetState::activeTab() const {
     return _data.active_tab;
+}
+
+// === Clustering configuration ===
+
+void MLCoreWidgetState::setClusteringTensorKey(std::string const & key) {
+    if (_data.clustering_tensor_key != key) {
+        _data.clustering_tensor_key = key;
+        markDirty();
+        emit clusteringTensorKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::clusteringTensorKey() const {
+    return _data.clustering_tensor_key;
+}
+
+void MLCoreWidgetState::setClusteringModelName(std::string const & name) {
+    if (_data.clustering_model_name != name) {
+        _data.clustering_model_name = name;
+        markDirty();
+        emit clusteringModelNameChanged(QString::fromStdString(name));
+    }
+}
+
+std::string const & MLCoreWidgetState::clusteringModelName() const {
+    return _data.clustering_model_name;
+}
+
+void MLCoreWidgetState::setClusteringOutputPrefix(std::string const & prefix) {
+    if (_data.clustering_output_prefix != prefix) {
+        _data.clustering_output_prefix = prefix;
+        markDirty();
+        emit clusteringOutputPrefixChanged(QString::fromStdString(prefix));
+    }
+}
+
+std::string const & MLCoreWidgetState::clusteringOutputPrefix() const {
+    return _data.clustering_output_prefix;
+}
+
+void MLCoreWidgetState::setClusteringWriteIntervals(bool enabled) {
+    if (_data.clustering_write_intervals != enabled) {
+        _data.clustering_write_intervals = enabled;
+        markDirty();
+        emit clusteringWriteIntervalsChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::clusteringWriteIntervals() const {
+    return _data.clustering_write_intervals;
+}
+
+void MLCoreWidgetState::setClusteringWriteProbabilities(bool enabled) {
+    if (_data.clustering_write_probabilities != enabled) {
+        _data.clustering_write_probabilities = enabled;
+        markDirty();
+        emit clusteringWriteProbabilitiesChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::clusteringWriteProbabilities() const {
+    return _data.clustering_write_probabilities;
+}
+
+void MLCoreWidgetState::setClusteringZscoreNormalize(bool enabled) {
+    if (_data.clustering_zscore_normalize != enabled) {
+        _data.clustering_zscore_normalize = enabled;
+        markDirty();
+        emit clusteringZscoreNormalizeChanged(enabled);
+    }
+}
+
+bool MLCoreWidgetState::clusteringZscoreNormalize() const {
+    return _data.clustering_zscore_normalize;
 }

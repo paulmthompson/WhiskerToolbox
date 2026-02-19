@@ -31,6 +31,12 @@ set(MLCORE_WIDGET_SOURCES
     ResultsPanel.hpp
     ResultsPanel.cpp
     ResultsPanel.ui
+    ClusteringPanel.hpp
+    ClusteringPanel.cpp
+    ClusteringPanel.ui
+    ClusterOutputPanel.hpp
+    ClusterOutputPanel.cpp
+    ClusterOutputPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})

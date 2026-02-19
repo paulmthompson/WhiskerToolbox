@@ -126,6 +126,26 @@ public:
     void setActiveTab(int tab);
     [[nodiscard]] int activeTab() const;
 
+    // === Clustering configuration ===
+
+    void setClusteringTensorKey(std::string const & key);
+    [[nodiscard]] std::string const & clusteringTensorKey() const;
+
+    void setClusteringModelName(std::string const & name);
+    [[nodiscard]] std::string const & clusteringModelName() const;
+
+    void setClusteringOutputPrefix(std::string const & prefix);
+    [[nodiscard]] std::string const & clusteringOutputPrefix() const;
+
+    void setClusteringWriteIntervals(bool enabled);
+    [[nodiscard]] bool clusteringWriteIntervals() const;
+
+    void setClusteringWriteProbabilities(bool enabled);
+    [[nodiscard]] bool clusteringWriteProbabilities() const;
+
+    void setClusteringZscoreNormalize(bool enabled);
+    [[nodiscard]] bool clusteringZscoreNormalize() const;
+
 signals:
     void featureTensorKeyChanged(QString const & key);
     void trainingRegionKeyChanged(QString const & key);
@@ -146,6 +166,12 @@ signals:
     void outputProbabilitiesChanged(bool enabled);
     void outputPredictionsChanged(bool enabled);
     void activeTabChanged(int tab);
+    void clusteringTensorKeyChanged(QString const & key);
+    void clusteringModelNameChanged(QString const & name);
+    void clusteringOutputPrefixChanged(QString const & prefix);
+    void clusteringWriteIntervalsChanged(bool enabled);
+    void clusteringWriteProbabilitiesChanged(bool enabled);
+    void clusteringZscoreNormalizeChanged(bool enabled);
 
 private:
     MLCoreWidgetStateData _data;
