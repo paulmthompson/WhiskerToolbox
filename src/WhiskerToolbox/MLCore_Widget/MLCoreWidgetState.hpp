@@ -76,8 +76,17 @@ public:
     void setLabelIntervalKey(std::string const & key);
     [[nodiscard]] std::string const & labelIntervalKey() const;
 
+    void setLabelPositiveClassName(std::string const & name);
+    [[nodiscard]] std::string const & labelPositiveClassName() const;
+
+    void setLabelNegativeClassName(std::string const & name);
+    [[nodiscard]] std::string const & labelNegativeClassName() const;
+
     void setLabelGroupIds(std::vector<uint64_t> const & ids);
     [[nodiscard]] std::vector<uint64_t> const & labelGroupIds() const;
+
+    void setLabelDataKey(std::string const & key);
+    [[nodiscard]] std::string const & labelDataKey() const;
 
     // === Model configuration ===
 
@@ -112,7 +121,10 @@ signals:
     void predictionRegionKeyChanged(QString const & key);
     void labelSourceTypeChanged(QString const & type);
     void labelIntervalKeyChanged(QString const & key);
+    void labelPositiveClassNameChanged(QString const & name);
+    void labelNegativeClassNameChanged(QString const & name);
     void labelGroupIdsChanged();
+    void labelDataKeyChanged(QString const & key);
     void selectedModelNameChanged(QString const & name);
     void modelParametersJsonChanged();
     void outputPrefixChanged(QString const & prefix);

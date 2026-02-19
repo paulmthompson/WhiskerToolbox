@@ -38,6 +38,7 @@
 // Forward declarations
 class DataManager;
 class FeatureSelectionPanel;
+class LabelConfigPanel;
 class MLCoreWidgetState;
 class RegionSelectionPanel;
 class SelectionContext;
@@ -71,6 +72,7 @@ private:
 
     FeatureSelectionPanel * _feature_panel = nullptr;
     RegionSelectionPanel * _training_region_panel = nullptr;
+    LabelConfigPanel * _label_panel = nullptr;
 };
 
 #endif // MLCORE_WIDGET_HPP

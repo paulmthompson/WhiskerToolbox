@@ -42,7 +42,10 @@ bool MLCoreWidgetState::fromJson(std::string const & json) {
         emit predictionRegionKeyChanged(QString::fromStdString(_data.prediction_region_key));
         emit labelSourceTypeChanged(QString::fromStdString(_data.label_source_type));
         emit labelIntervalKeyChanged(QString::fromStdString(_data.label_interval_key));
+        emit labelPositiveClassNameChanged(QString::fromStdString(_data.label_positive_class_name));
+        emit labelNegativeClassNameChanged(QString::fromStdString(_data.label_negative_class_name));
         emit labelGroupIdsChanged();
+        emit labelDataKeyChanged(QString::fromStdString(_data.label_data_key));
         emit selectedModelNameChanged(QString::fromStdString(_data.selected_model_name));
         emit modelParametersJsonChanged();
         emit outputPrefixChanged(QString::fromStdString(_data.output_prefix));
@@ -121,6 +124,30 @@ std::string const & MLCoreWidgetState::labelIntervalKey() const {
     return _data.label_interval_key;
 }
 
+void MLCoreWidgetState::setLabelPositiveClassName(std::string const & name) {
+    if (_data.label_positive_class_name != name) {
+        _data.label_positive_class_name = name;
+        markDirty();
+        emit labelPositiveClassNameChanged(QString::fromStdString(name));
+    }
+}
+
+std::string const & MLCoreWidgetState::labelPositiveClassName() const {
+    return _data.label_positive_class_name;
+}
+
+void MLCoreWidgetState::setLabelNegativeClassName(std::string const & name) {
+    if (_data.label_negative_class_name != name) {
+        _data.label_negative_class_name = name;
+        markDirty();
+        emit labelNegativeClassNameChanged(QString::fromStdString(name));
+    }
+}
+
+std::string const & MLCoreWidgetState::labelNegativeClassName() const {
+    return _data.label_negative_class_name;
+}
+
 void MLCoreWidgetState::setLabelGroupIds(std::vector<uint64_t> const & ids) {
     if (_data.label_group_ids != ids) {
         _data.label_group_ids = ids;
@@ -131,6 +158,18 @@ void MLCoreWidgetState::setLabelGroupIds(std::vector<uint64_t> const & ids) {
 
 std::vector<uint64_t> const & MLCoreWidgetState::labelGroupIds() const {
     return _data.label_group_ids;
+}
+
+void MLCoreWidgetState::setLabelDataKey(std::string const & key) {
+    if (_data.label_data_key != key) {
+        _data.label_data_key = key;
+        markDirty();
+        emit labelDataKeyChanged(QString::fromStdString(key));
+    }
+}
+
+std::string const & MLCoreWidgetState::labelDataKey() const {
+    return _data.label_data_key;
 }
 
 // === Model configuration ===

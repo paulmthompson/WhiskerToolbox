@@ -19,6 +19,9 @@ set(MLCORE_WIDGET_SOURCES
     RegionSelectionPanel.hpp
     RegionSelectionPanel.cpp
     RegionSelectionPanel.ui
+    LabelConfigPanel.hpp
+    LabelConfigPanel.cpp
+    LabelConfigPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})

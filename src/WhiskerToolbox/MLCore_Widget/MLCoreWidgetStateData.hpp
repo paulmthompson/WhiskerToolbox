@@ -62,8 +62,17 @@ struct MLCoreWidgetStateData {
     /// DigitalIntervalSeries key for binary interval-based labels
     std::string label_interval_key;
 
+    /// Class name for the positive class (inside intervals) in interval mode
+    std::string label_positive_class_name = "Inside";
+
+    /// Class name for the negative class (outside intervals) in interval mode
+    std::string label_negative_class_name = "Outside";
+
     /// EntityGroupManager group IDs for group-based labeling
     std::vector<uint64_t> label_group_ids;
+
+    /// DataManager key for data-entity group labeling (entity_groups mode)
+    std::string label_data_key;
 
     // === Model configuration ===
 
