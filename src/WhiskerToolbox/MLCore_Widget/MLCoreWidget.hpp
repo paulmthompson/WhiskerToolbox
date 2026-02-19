@@ -11,9 +11,10 @@
  * - **Classification**: Supervised classification using MLCore pipelines
  * - **Clustering**: Unsupervised clustering using MLCore pipelines
  *
- * This is a stub implementation for task 4.1 (state + registration).
- * Sub-panels (FeatureSelectionPanel, ModelConfigPanel, etc.) will be
- * added in subsequent tasks (4.2–4.7).
+ * This is a stub implementation for task 4.1 (state + registration)
+ * with the FeatureSelectionPanel added in task 4.2.
+ * Additional sub-panels (RegionSelectionPanel, LabelConfigPanel, etc.)
+ * will be added in subsequent tasks (4.3–4.7).
  *
  * ## Architecture
  *
@@ -35,6 +36,7 @@
 
 // Forward declarations
 class DataManager;
+class FeatureSelectionPanel;
 class MLCoreWidgetState;
 class SelectionContext;
 
@@ -64,6 +66,8 @@ private:
     std::shared_ptr<MLCoreWidgetState> _state;
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context;
+
+    FeatureSelectionPanel * _feature_panel = nullptr;
 };
 
 #endif // MLCORE_WIDGET_HPP

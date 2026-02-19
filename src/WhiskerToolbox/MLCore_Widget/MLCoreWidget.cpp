@@ -1,5 +1,6 @@
 #include "MLCoreWidget.hpp"
 
+#include "FeatureSelectionPanel.hpp"
 #include "MLCoreWidgetState.hpp"
 
 #include <QLabel>
@@ -24,22 +25,26 @@ void MLCoreWidget::_setupUi() {
 
     auto * tabs = new QTabWidget(this);
 
-    // Classification tab — stub placeholder
+    // Classification tab
     auto * classification_tab = new QWidget();
     auto * classification_layout = new QVBoxLayout(classification_tab);
-    auto * classification_label = new QLabel(
-        QStringLiteral("Classification workflow panels will be added here.\n\n"
-                       "Planned sub-panels:\n"
-                       "• Feature Selection\n"
+
+    // Feature selection panel
+    _feature_panel = new FeatureSelectionPanel(_state, _data_manager, classification_tab);
+    classification_layout->addWidget(_feature_panel);
+
+    // Placeholder for remaining classification sub-panels
+    auto * classification_placeholder = new QLabel(
+        QStringLiteral("Remaining panels will be added here:\n"
                        "• Training Region\n"
                        "• Labels\n"
                        "• Model Configuration\n"
                        "• Prediction\n"
                        "• Results"),
         classification_tab);
-    classification_label->setWordWrap(true);
-    classification_label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-    classification_layout->addWidget(classification_label);
+    classification_placeholder->setWordWrap(true);
+    classification_placeholder->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    classification_layout->addWidget(classification_placeholder);
     classification_layout->addStretch();
 
     // Clustering tab — stub placeholder

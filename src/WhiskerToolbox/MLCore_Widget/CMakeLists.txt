@@ -13,6 +13,9 @@ set(MLCORE_WIDGET_SOURCES
     MLCoreWidgetStateData.hpp
     MLCoreWidgetRegistration.hpp
     MLCoreWidgetRegistration.cpp
+    FeatureSelectionPanel.hpp
+    FeatureSelectionPanel.cpp
+    FeatureSelectionPanel.ui
 )
 
 add_library(MLCore_Widget STATIC ${MLCORE_WIDGET_SOURCES})
