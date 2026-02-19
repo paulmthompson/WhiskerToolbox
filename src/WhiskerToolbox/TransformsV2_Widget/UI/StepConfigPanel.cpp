@@ -60,28 +60,39 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
 
     _current_transform_name = transform_name;
 
-    // Look up metadata for display
+    // Look up metadata for display — try element first, then container
     auto const * meta = ElementRegistry::instance().getMetadata(transform_name);
-    if (meta) {
-        _header_label->setText(QString::fromStdString(meta->name));
-        _header_label->setVisible(true);
+    std::string display_name = transform_name;
+    std::string description;
+    std::type_index params_type = typeid(void);
 
-        if (!meta->description.empty()) {
-            _description_label->setText(QString::fromStdString(meta->description));
-            _description_label->setVisible(true);
-        } else {
-            _description_label->setVisible(false);
-        }
+    if (meta) {
+        display_name = meta->name;
+        description = meta->description;
+        params_type = meta->params_type;
     } else {
-        _header_label->setText(QString::fromStdString(transform_name));
-        _header_label->setVisible(true);
+        auto const * cmeta = ElementRegistry::instance().getContainerMetadata(transform_name);
+        if (cmeta) {
+            display_name = cmeta->name;
+            description = cmeta->description;
+            params_type = cmeta->params_type;
+        }
+    }
+
+    _header_label->setText(QString::fromStdString(display_name));
+    _header_label->setVisible(true);
+
+    if (!description.empty()) {
+        _description_label->setText(QString::fromStdString(description));
+        _description_label->setVisible(true);
+    } else {
         _description_label->setVisible(false);
     }
 
     // Check for custom widget override first
-    if (meta && meta->params_type != typeid(void) && meta->params_type != typeid(NoParams)) {
+    if (params_type != typeid(void) && params_type != typeid(NoParams)) {
         auto & widget_registry = ParamWidgetRegistry::instance();
-        if (widget_registry.hasCustomWidget(meta->params_type)) {
+        if (widget_registry.hasCustomWidget(params_type)) {
             setupCustomWidget(transform_name, params_json);
             return;
         }

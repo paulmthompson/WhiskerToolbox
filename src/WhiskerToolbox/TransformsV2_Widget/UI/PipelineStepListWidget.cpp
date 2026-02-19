@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <format>
+#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
@@ -83,6 +84,12 @@ void PipelineStepListWidget::setInputType(std::type_index element_type,
                                           std::type_index container_type) {
     _input_element_type = element_type;
     _input_container_type = container_type;
+
+    std::cout << "[PipelineStepList] setInputType:"
+              << " element='" << _input_element_type.name() << "'"
+              << " container='" << _input_container_type.name() << "'"
+              << std::endl;
+
     validateTypeChain();
     rebuildListDisplay();
 }
@@ -121,18 +128,27 @@ void PipelineStepListWidget::clearSteps() {
 bool PipelineStepListWidget::addStep(std::string const & transform_name,
                                      std::string const & params_json) {
     auto & registry = ElementRegistry::instance();
-    auto const * meta = registry.getMetadata(transform_name);
-    if (!meta) {
-        return false;
-    }
 
     PipelineStepEntry entry;
     entry.step_id = std::format("step_{}", _steps.size() + 1);
     entry.transform_name = transform_name;
     entry.parameters_json = params_json;
-    entry.input_type = meta->input_type;
-    entry.output_type = meta->output_type;
     entry.is_container_transform = registry.isContainerTransform(transform_name);
+
+    // Look up metadata from either element or container registry
+    auto const * meta = registry.getMetadata(transform_name);
+    if (meta) {
+        entry.input_type = meta->input_type;
+        entry.output_type = meta->output_type;
+    } else {
+        // Fall back to container transform metadata
+        auto const * cmeta = registry.getContainerMetadata(transform_name);
+        if (!cmeta) {
+            return false;
+        }
+        entry.input_type = cmeta->input_container_type;
+        entry.output_type = cmeta->output_container_type;
+    }
 
     _steps.push_back(std::move(entry));
 
@@ -345,6 +361,13 @@ std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
     auto element_transforms = registry.getTransformsForInputType(element_type);
     auto container_transforms = registry.getContainerTransformsForInputType(container_type);
 
+    std::cout << "[PipelineStepList] getCompatibleTransforms:"
+              << " element_type='" << element_type.name() << "'"
+              << " container_type='" << container_type.name() << "'"
+              << " element_transforms=" << element_transforms.size()
+              << " container_transforms=" << container_transforms.size()
+              << std::endl;
+
     // Merge and deduplicate
     std::vector<std::string> result;
     result.reserve(element_transforms.size() + container_transforms.size());
@@ -391,19 +414,26 @@ bool PipelineStepListWidget::loadFromDescriptors(
         }
 
         auto & registry = ElementRegistry::instance();
-        auto const * meta = registry.getMetadata(desc.transform_name);
-        if (!meta) {
-            all_ok = false;
-            continue;
-        }
-
         PipelineStepEntry entry;
         entry.step_id = desc.step_id;
         entry.transform_name = desc.transform_name;
         entry.parameters_json = params_json;
-        entry.input_type = meta->input_type;
-        entry.output_type = meta->output_type;
         entry.is_container_transform = registry.isContainerTransform(desc.transform_name);
+
+        // Look up metadata from either element or container registry
+        auto const * meta = registry.getMetadata(desc.transform_name);
+        if (meta) {
+            entry.input_type = meta->input_type;
+            entry.output_type = meta->output_type;
+        } else {
+            auto const * cmeta = registry.getContainerMetadata(desc.transform_name);
+            if (!cmeta) {
+                all_ok = false;
+                continue;
+            }
+            entry.input_type = cmeta->input_container_type;
+            entry.output_type = cmeta->output_container_type;
+        }
 
         _steps.push_back(std::move(entry));
     }

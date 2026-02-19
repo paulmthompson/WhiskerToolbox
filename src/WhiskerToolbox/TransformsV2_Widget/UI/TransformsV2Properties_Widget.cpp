@@ -76,10 +76,26 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
         QString const & data_type) {
 
     _input_data_key = data_key.toStdString();
-    _input_data_type_name = data_type.toStdString();
+
+    // If the data_type is provided, use it directly.
+    // Otherwise, look it up from DataManager (the SelectionContext may not
+    // always provide the type — e.g. DataManager_Widget uses setSelectedData
+    // which doesn't carry the type string).
+    if (!data_type.isEmpty()) {
+        _input_data_type_name = data_type.toStdString();
+    } else {
+        _input_data_type_name = resolveDataTypeFromManager(_input_data_key);
+    }
 
     resolveInputTypes();
     updateInputDisplay();
+
+    std::cout << "[TransformsV2] onDataFocusChanged:"
+              << " key='" << _input_data_key << "'"
+              << " type_name='" << _input_data_type_name << "'"
+              << " element_type='" << _input_element_type.name() << "'"
+              << " container_type='" << _input_container_type.name() << "'"
+              << std::endl;
 
     // Update sub-widgets with new input type
     _step_list->setInputType(_input_element_type, _input_container_type);
@@ -373,6 +389,25 @@ void TransformsV2Properties_Widget::updateInputDisplay() {
     _input_type_label->setVisible(true);
 }
 
+std::string TransformsV2Properties_Widget::resolveDataTypeFromManager(std::string const & key) const {
+    auto dm = _state ? _state->dataManager() : nullptr;
+    if (!dm || key.empty()) {
+        return {};
+    }
+
+    auto const dm_type = dm->getType(key);
+    switch (dm_type) {
+        case DM_DataType::Mask:            return "MaskData";
+        case DM_DataType::Line:            return "LineData";
+        case DM_DataType::Points:          return "PointData";
+        case DM_DataType::Analog:          return "AnalogTimeSeries";
+        case DM_DataType::RaggedAnalog:    return "RaggedAnalogTimeSeries";
+        case DM_DataType::DigitalEvent:    return "DigitalEventSeries";
+        case DM_DataType::DigitalInterval: return "DigitalIntervalSeries";
+        default:                           return {};
+    }
+}
+
 void TransformsV2Properties_Widget::resolveInputTypes() {
     if (_input_data_type_name.empty()) {
         _input_element_type = typeid(void);
@@ -382,12 +417,21 @@ void TransformsV2Properties_Widget::resolveInputTypes() {
 
     try {
         _input_container_type = TypeIndexMapper::stringToContainer(_input_data_type_name);
-        _input_element_type = TypeIndexMapper::containerToElement(_input_container_type);
     } catch (std::exception const & e) {
-        std::cerr << "TransformsV2Properties_Widget: Could not resolve types for '"
+        std::cerr << "TransformsV2Properties_Widget: Could not resolve container type for '"
                   << _input_data_type_name << "': " << e.what() << std::endl;
         _input_element_type = typeid(void);
         _input_container_type = typeid(void);
+        return;
+    }
+
+    // Some container types (e.g., DigitalEventSeries, DigitalIntervalSeries)
+    // are container-only and don't have an element type mapping.
+    // In that case we keep the container type valid but set element to void.
+    try {
+        _input_element_type = TypeIndexMapper::containerToElement(_input_container_type);
+    } catch (std::exception const &) {
+        _input_element_type = typeid(void);
     }
 }
 

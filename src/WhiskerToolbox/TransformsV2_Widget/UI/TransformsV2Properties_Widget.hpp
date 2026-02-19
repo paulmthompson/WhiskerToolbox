@@ -115,6 +115,18 @@ private:
     void resolveInputTypes();
 
     /**
+     * @brief Resolve the container type name from DataManager using the data key
+     *
+     * Looks up the DM_DataType for the given key via DataManager::getType()
+     * and converts it to the container class name string expected by
+     * TypeIndexMapper::stringToContainer (e.g. "MaskData", "LineData").
+     *
+     * @param key The data key in DataManager
+     * @return Container type name string, or empty string if unresolvable
+     */
+    [[nodiscard]] std::string resolveDataTypeFromManager(std::string const & key) const;
+
+    /**
      * @brief Build a PipelineDescriptor from the current UI state
      * @return JSON string representing the PipelineDescriptor
      */
