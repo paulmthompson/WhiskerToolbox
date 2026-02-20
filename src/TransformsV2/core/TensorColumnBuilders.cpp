@@ -14,6 +14,8 @@
 #include "TransformsV2/core/PipelineValueStore.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
+#include "TransformsV2/core/TypeChainResolver.hpp"
+#include "TransformsV2/detail/ContainerTraits.hpp"
 #include "TransformsV2/extension/RangeReductionTypes.hpp"
 #include "TransformsV2/extension/TransformTypes.hpp"
 #include "TransformsV2/extension/ViewAdaptorTypes.hpp"
@@ -23,6 +25,7 @@
 
 #include <cmath>     // NAN
 #include <functional>
+#include <span>
 #include <stdexcept>
 #include <utility>
 #include <variant>
@@ -117,6 +120,126 @@ std::shared_ptr<DigitalIntervalSeries> prepareIntervalsForGather(
     auto result = std::make_shared<DigitalIntervalSeries>(converted);
     result->setTimeFrame(source_tf);
     return result;
+}
+
+// ============================================================================
+// DM_DataType → std::type_index Mapping
+// ============================================================================
+
+/**
+ * @brief Map a DM_DataType enum value to the std::type_index of the
+ *        corresponding container class.
+ *
+ * This bridges the DataManager's runtime type enum to the type_index
+ * used by TypeChainResolver and TypeIndexMapper for pipeline validation.
+ *
+ * Uses TypeIndexMapper::stringToContainer() internally so the builder
+ * layer does not need to include concrete data type headers (MaskData,
+ * LineData, PointData, etc.).
+ *
+ * @throws std::runtime_error for types that cannot be used as pipeline sources
+ *         (Video, Images, Tensor, Time, Unknown).
+ */
+std::type_index dmTypeToContainerTypeIndex(DM_DataType type) {
+    using Transforms::V2::TypeIndexMapper;
+
+    switch (type) {
+        case DM_DataType::Analog:          return TypeIndexMapper::stringToContainer("AnalogTimeSeries");
+        case DM_DataType::RaggedAnalog:    return TypeIndexMapper::stringToContainer("RaggedAnalogTimeSeries");
+        case DM_DataType::Mask:            return TypeIndexMapper::stringToContainer("MaskData");
+        case DM_DataType::Line:            return TypeIndexMapper::stringToContainer("LineData");
+        case DM_DataType::Points:          return TypeIndexMapper::stringToContainer("PointData");
+        case DM_DataType::DigitalEvent:    return TypeIndexMapper::stringToContainer("DigitalEventSeries");
+        case DM_DataType::DigitalInterval: return TypeIndexMapper::stringToContainer("DigitalIntervalSeries");
+        default:
+            throw std::runtime_error(
+                "dmTypeToContainerTypeIndex: unsupported DM_DataType for pipeline source");
+    }
+}
+
+// ============================================================================
+// Pipeline Validation Helpers
+// ============================================================================
+
+/**
+ * @brief Extract the ordered transform step names from a pipeline.
+ *
+ * Used to feed TypeChainResolver::resolveTypeChain() which accepts
+ * a span<string const> of step names.
+ */
+std::vector<std::string> getStepNames(
+        Transforms::V2::TransformPipeline const & pipeline) {
+    std::vector<std::string> names;
+    names.reserve(pipeline.size());
+    for (std::size_t i = 0; i < pipeline.size(); ++i) {
+        names.push_back(pipeline.getStep(i).transform_name);
+    }
+    return names;
+}
+
+/**
+ * @brief Check whether a pipeline (element steps + optional range reduction)
+ *        will produce float output when applied to a source of the given
+ *        container type.
+ *
+ * Validation is entirely data-free — it walks the type chain using
+ * TypeChainResolver and checks the range reduction's output_type metadata.
+ *
+ * Three cases:
+ *  1. Element steps present → validate chain via resolveTypeChain().
+ *     If a range reduction follows, its output_type must be float-like.
+ *     If no reduction, the chain's output_element_type must be float.
+ *  2. No element steps but a range reduction → check reduction output_type.
+ *  3. Empty pipeline (no steps, no reduction) → source element type must
+ *     already be float (AnalogTimeSeries / RaggedAnalogTimeSeries).
+ *
+ * @param source_container_type  type_index of the source container
+ *        (obtained via dmTypeToContainerTypeIndex())
+ * @param pipeline               The pipeline to validate
+ * @return true if the pipeline's final output is a float-compatible scalar
+ */
+bool pipelineProducesFloat(
+        std::type_index source_container_type,
+        Transforms::V2::TransformPipeline const & pipeline) {
+    using Transforms::V2::TypeIndexMapper;
+    using Transforms::V2::resolveTypeChain;
+
+    auto const step_names = getStepNames(pipeline);
+
+    if (!step_names.empty()) {
+        // Validate the element transform chain
+        auto chain = resolveTypeChain(
+                source_container_type,
+                std::span<std::string const>{step_names});
+        if (!chain.all_valid) {
+            return false;
+        }
+
+        if (pipeline.hasRangeReduction()) {
+            // Range reduction follows the element chain —
+            // check the reduction's declared output type.
+            auto const & red = pipeline.getRangeReduction().value();
+            return red.output_type == typeid(float)
+                || red.output_type == typeid(double)
+                || red.output_type == typeid(int);
+        }
+
+        // No range reduction: the chain itself must end at float.
+        return chain.output_element_type == typeid(float);
+    }
+
+    if (pipeline.hasRangeReduction()) {
+        // Range-reduction-only (no element steps).
+        auto const & red = pipeline.getRangeReduction().value();
+        return red.output_type == typeid(float)
+            || red.output_type == typeid(double)
+            || red.output_type == typeid(int);
+    }
+
+    // Empty pipeline (identity / passthrough).
+    // Only valid when the source's element type is already float.
+    auto element_type = TypeIndexMapper::containerToElement(source_container_type);
+    return element_type == typeid(float);
 }
 
 // ============================================================================
