@@ -3,7 +3,7 @@
 #include "CoreGeometry/angle.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "core/ComputeContext.hpp"
-#include "utils/polynomial/polynomial_fit.hpp"
+#include "CoreMath/polynomial_fit.hpp"
 
 #include <algorithm>
 #include <cmath>

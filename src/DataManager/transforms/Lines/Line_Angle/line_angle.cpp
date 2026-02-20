@@ -5,7 +5,7 @@
 #include "CoreGeometry/angle.hpp"
 #include "CoreGeometry/line_geometry.hpp"
 #include "transforms/utils/variant_type_check.hpp"
-#include "utils/polynomial/polynomial_fit.hpp"
+#include "CoreMath/polynomial_fit.hpp"
 
 #include <armadillo>
 

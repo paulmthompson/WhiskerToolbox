@@ -5,7 +5,7 @@
 #include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
+#include "CoreMath/parametric_polynomial_utils.hpp"
 
 #include <algorithm>
 #include <cmath>

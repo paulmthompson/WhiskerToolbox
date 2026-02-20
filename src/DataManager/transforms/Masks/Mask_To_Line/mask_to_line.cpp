@@ -7,7 +7,7 @@
 #include "CoreGeometry/line_resampling.hpp"
 #include "CoreGeometry/order_line.hpp"
 #include "Masks/utils/skeletonize.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
+#include "CoreMath/parametric_polynomial_utils.hpp"
 
 #include <chrono>
 #include <cmath>

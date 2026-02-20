@@ -96,6 +96,7 @@ target_include_directories(TransformsV2 PRIVATE
 target_link_libraries(TransformsV2 PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::Entity)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::CoreMath)
 
 target_link_libraries(TransformsV2 PUBLIC reflectcpp::reflectcpp)
 

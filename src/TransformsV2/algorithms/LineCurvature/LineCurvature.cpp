@@ -1,8 +1,9 @@
 #include "LineCurvature.hpp"
 
-#include "CoreGeometry/lines.hpp"
 #include "core/ComputeContext.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
+
+#include "CoreGeometry/lines.hpp"
+#include "CoreMath/parametric_polynomial_utils.hpp"
 
 #include <algorithm>
 #include <cmath>

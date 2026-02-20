@@ -40,10 +40,6 @@ set(DATAMANAGER_SOURCES
         utils/json_helpers.hpp
         utils/map_timeseries.hpp
         utils/metaprogramming_utils.hpp
-        utils/polynomial/polynomial_fit.hpp
-        utils/polynomial/polynomial_fit.cpp
-        utils/polynomial/parametric_polynomial_utils.cpp
-        utils/polynomial/parametric_polynomial_utils.hpp
         utils/string_manip.hpp
         utils/TimeIndexExtractor.hpp
         utils/TimeIndexExtractor.cpp
@@ -242,6 +238,7 @@ target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::Entity)
+target_link_libraries(DataManager PRIVATE WhiskerToolbox::CoreMath)
 
 target_link_libraries(DataManager PRIVATE StateEstimation)
 

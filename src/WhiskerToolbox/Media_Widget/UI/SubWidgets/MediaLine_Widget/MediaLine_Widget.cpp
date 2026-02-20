@@ -15,7 +15,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
 #include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
-#include "DataManager/utils/polynomial/polynomial_fit.hpp"
+#include "CoreMath/polynomial_fit.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 
 #include <QButtonGroup>

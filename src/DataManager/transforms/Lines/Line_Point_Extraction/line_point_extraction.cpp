@@ -4,8 +4,9 @@
 #include "CoreGeometry/line_geometry.hpp"
 #include "Points/Point_Data.hpp"
 #include "transforms/utils/variant_type_check.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
-#include "utils/polynomial/polynomial_fit.hpp"
+
+#include "CoreMath/parametric_polynomial_utils.hpp"
+#include "CoreMath/polynomial_fit.hpp"
 
 
 #include <algorithm>
