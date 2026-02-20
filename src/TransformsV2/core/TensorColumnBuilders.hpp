@@ -29,8 +29,6 @@
 
 // Forward declarations
 class DataManager;
-class AnalogTimeSeries;
-class DigitalEventSeries;
 class DigitalIntervalSeries;
 
 namespace WhiskerToolbox::Transforms::V2 {
@@ -90,77 +88,6 @@ struct ColumnRecipe {
 // ============================================================================
 
 /**
- * @brief Build a passthrough ColumnProviderFn that reads AnalogTimeSeries
- *        values at the timestamps given by @p row_times.
- *
- * For each row, the provider samples the source AnalogTimeSeries at the
- * corresponding timestamp. If a timestamp has no matching sample, NaN is
- * returned for that row.
- *
- * @param dm         DataManager that owns the source data
- * @param source_key DataManager key for an AnalogTimeSeries
- * @param row_times  Ordered vector of TimeFrameIndex values (one per row)
- * @return ColumnProviderFn that produces a float vector of size row_times.size()
- *
- * @throws std::runtime_error if source_key does not exist or is not AnalogTimeSeries
- */
-ColumnProviderFn buildDirectColumnProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::vector<TimeFrameIndex> const & row_times);
-
-/**
- * @brief Build a ColumnProviderFn that samples an AnalogTimeSeries at
- *        row timestamps and applies a TransformPipeline + range reduction.
- *
- * Unlike buildDirectColumnProvider(), this variant first constructs a
- * TransformPipeline from @p pipeline and applies it element-wise before
- * returning the results.
- *
- * If the pipeline contains a range reduction, it is applied per-element
- * (NOT over a gathered interval). For interval-based reductions, use
- * buildIntervalReductionProvider() instead.
- *
- * @param dm         DataManager that owns the source data
- * @param source_key DataManager key for an AnalogTimeSeries
- * @param row_times  Ordered vector of TimeFrameIndex values (one per row)
- * @param pipeline   TransformPipeline describing element transforms
- * @return ColumnProviderFn producing one float per row
- */
-ColumnProviderFn buildTimeSeriesColumnProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::vector<TimeFrameIndex> const & row_times,
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
-
-/**
- * @brief Build a ColumnProviderFn that gathers source data over intervals
- *        and applies a range reduction per interval.
- *
- * Internally creates a GatherResult\<T\> from the source and intervals,
- * then applies the pipeline's range reduction to each gathered view.
- * The source type T is dispatched at runtime from the DataManager key.
- *
- * Supported source types:
- *   - AnalogTimeSeries (element_type = TimeValuePoint)
- *   - DigitalEventSeries (element_type = EventWithId)
- *   - DigitalIntervalSeries (element_type = IntervalWithId)
- *
- * @param dm            DataManager that owns the source data
- * @param source_key    DataManager key
- * @param intervals     Shared pointer to the DigitalIntervalSeries defining rows
- * @param pipeline      TransformPipeline with a range reduction set
- * @return ColumnProviderFn producing one float per interval
- *
- * @throws std::runtime_error if source type is unsupported or pipeline has no reduction
- */
-ColumnProviderFn buildIntervalReductionProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::shared_ptr<DigitalIntervalSeries> intervals,
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
-
-/**
  * @brief Build a ColumnProviderFn that extracts a property (start, end,
  *        or duration) from the row intervals.
  *
@@ -198,6 +125,81 @@ ColumnProviderFn buildAnalogSampleAtOffsetProvider(
     std::string const & source_key,
     std::vector<TimeFrameIndex> const & row_times,
     int64_t offset);
+
+/**
+ * @brief Build a generic ColumnProviderFn for timestamp-row tensors from any
+ *        source type (Pattern A).
+ *
+ * Works with any DataManager source type (AnalogTimeSeries, MaskData,
+ * LineData, PointData, etc.) as long as the pipeline transforms the source
+ * into float output (AnalogTimeSeries or RaggedAnalogTimeSeries).
+ *
+ * **Empty pipeline (passthrough):** The source must already be a float type
+ * (AnalogTimeSeries or RaggedAnalogTimeSeries). Samples the source directly
+ * at each row timestamp.
+ *
+ * **Non-empty pipeline:** Calls executePipeline() on the full source
+ * DataTypeVariant, then samples the resulting AnalogTimeSeries or
+ * RaggedAnalogTimeSeries at each row timestamp.
+ *
+ * Terminal range reductions are rejected — they collapse the entire series
+ * to a single scalar, which is not meaningful for timestamp-row columns.
+ * For interval-row columns that need range reductions, use
+ * buildIntervalPipelineProvider() (Pattern B) instead.
+ *
+ * Validation is performed at build time via pipelineProducesFloat().
+ *
+ * @param dm         DataManager that owns the source data
+ * @param source_key DataManager key for any supported source type
+ * @param row_times  Ordered vector of TimeFrameIndex values (one per row)
+ * @param pipeline   TransformPipeline (may be empty for passthrough)
+ * @return ColumnProviderFn producing one float per row
+ *
+ * @throws std::runtime_error if the pipeline does not produce float output,
+ *         has a terminal range reduction, or the source is unavailable
+ */
+ColumnProviderFn buildPipelineColumnProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::vector<TimeFrameIndex> const & row_times,
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+
+/**
+ * @brief Build a generic ColumnProviderFn for interval-row tensors from any
+ *        source type (Pattern B).
+ *
+ * Works with any DataManager source type that satisfies HasDataTraits
+ * (AnalogTimeSeries, MaskData, LineData, PointData, DigitalEventSeries,
+ * DigitalIntervalSeries) by delegating to gatherAndExecutePipeline().
+ *
+ * For each interval row, the function:
+ *   1. Gathers a view/copy of the source data within the interval boundaries
+ *   2. Executes the pipeline on that gathered view
+ *   3. Extracts a single float from the pipeline output via extractSingleFloat()
+ *
+ * The pipeline **must** contain a range reduction that collapses each gathered
+ * view to a single scalar. Pipelines without a range reduction are rejected
+ * at build time.
+ *
+ * Validation is performed at build time via pipelineProducesFloat().
+ *
+ * @param dm         DataManager that owns the source data
+ * @param source_key DataManager key for any supported source type
+ * @param intervals  Shared pointer to the DigitalIntervalSeries defining rows
+ * @param pipeline   TransformPipeline that must end with a range reduction
+ * @return ColumnProviderFn producing one float per interval
+ *
+ * @throws std::runtime_error if the pipeline does not produce float output,
+ *         lacks a range reduction, or the source is unavailable
+ *
+ * @note RaggedAnalogTimeSeries sources are not supported (no GatherResult
+ *       specialisation exists). Passing one will throw at materialization time.
+ */
+ColumnProviderFn buildIntervalPipelineProvider(
+    DataManager & dm,
+    std::string const & source_key,
+    std::shared_ptr<DigitalIntervalSeries> intervals,
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
 
 /**
  * @brief Build a ColumnProviderFn from a ColumnRecipe.

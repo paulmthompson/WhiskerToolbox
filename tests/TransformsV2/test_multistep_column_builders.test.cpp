@@ -113,7 +113,7 @@ TEST_CASE("MultiStep timestamp - ZScoreNormalizeV2 with fixed params",
     pipeline.addStep("ZScoreNormalizeV2",
                      ZScoreNormalizationParamsV2{.mean = 2.0f, .std_dev = 1.0f});
 
-    auto provider = buildTimeSeriesColumnProvider(*dm, "src", row_times, std::move(pipeline));
+    auto provider = buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 5);
@@ -135,7 +135,7 @@ TEST_CASE("MultiStep timestamp - element steps return NaN for missing timestamps
     pipeline.addStep("ZScoreNormalizeV2",
                      ZScoreNormalizationParamsV2{.mean = 20.0f, .std_dev = 10.0f});
 
-    auto provider = buildTimeSeriesColumnProvider(*dm, "src", row_times, std::move(pipeline));
+    auto provider = buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 3);
@@ -150,7 +150,7 @@ TEST_CASE("MultiStep timestamp - empty pipeline falls back to passthrough",
     auto row_times = makeRowTimes({0, 1, 2});
 
     TransformPipeline pipeline;  // empty, no steps, no reduction
-    auto provider = buildTimeSeriesColumnProvider(*dm, "src", row_times, std::move(pipeline));
+    auto provider = buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 3);
@@ -160,29 +160,24 @@ TEST_CASE("MultiStep timestamp - empty pipeline falls back to passthrough",
 }
 
 // =============================================================================
-// Section B: Timestamp rows with element steps + range reduction
+// Section B: Timestamp rows — range reductions are rejected (Pattern A)
 // =============================================================================
 
-TEST_CASE("MultiStep timestamp - element steps + reduction on single sample",
+TEST_CASE("MultiStep timestamp - range reduction on timestamp rows is rejected",
           "[TensorColumnBuilders][MultiStep]") {
     auto dm = makeDMWithAnalogValues("src", {0.0f, 5.0f, 10.0f});
     auto row_times = makeRowTimes({0, 1, 2});
 
-    // ZScore → then reduce each (single-element) span with MeanValue
-    // Since each span has one element, MeanValue just returns the element
+    // Range reductions collapse an entire series to a single scalar — they are
+    // not meaningful for timestamp-row columns. Use interval rows instead.
     TransformPipeline pipeline;
     pipeline.addStep("ZScoreNormalizeV2",
                      ZScoreNormalizationParamsV2{.mean = 5.0f, .std_dev = 5.0f});
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildTimeSeriesColumnProvider(*dm, "src", row_times, std::move(pipeline));
-    auto values = provider();
-
-    REQUIRE(values.size() == 3);
-    // z = (x - 5) / 5: -1, 0, 1
-    CHECK_THAT(values[0], WithinAbs(-1.0f, 1e-5f));
-    CHECK_THAT(values[1], WithinAbs(0.0f, 1e-5f));
-    CHECK_THAT(values[2], WithinAbs(1.0f, 1e-5f));
+    CHECK_THROWS_AS(
+        buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline)),
+        std::runtime_error);
 }
 
 // =============================================================================
@@ -204,7 +199,7 @@ TEST_CASE("MultiStep interval - element steps + MeanValue reduction",
                      ZScoreNormalizationParamsV2{.mean = 0.0f, .std_dev = 1.0f});
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -228,7 +223,7 @@ TEST_CASE("MultiStep interval - element steps transform values before reduction"
                      ZScoreNormalizationParamsV2{.mean = 30.0f, .std_dev = 10.0f});
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -249,7 +244,7 @@ TEST_CASE("MultiStep interval - element steps with MaxValue reduction",
                      ZScoreNormalizationParamsV2{.mean = 5.0f, .std_dev = 2.0f});
     pipeline.setRangeReductionErased("MaxValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -272,9 +267,10 @@ TEST_CASE("MultiStep interval - ZScore with pre-reductions (full pipeline)",
     // then take MeanValue of the z-scored data (should be ~0 for each interval)
     TransformPipeline pipeline;
 
-    // Pre-reductions: compute MeanValue and StdValue on TimeValuePoint spans
-    pipeline.addPreReduction("MeanValue", "computed_mean");
-    pipeline.addPreReduction("StdValue", "computed_std");
+    // Pre-reductions: use Raw variants for the pipeline's AnalogTimeSeries
+    // fast-path which operates on raw float spans
+    pipeline.addPreReduction("MeanValueRaw", "computed_mean");
+    pipeline.addPreReduction("StdValueRaw", "computed_std");
 
     // Element step: ZScore using bound mean/std
     pipeline.addStepWithBindings("ZScoreNormalizeV2",
@@ -283,7 +279,7 @@ TEST_CASE("MultiStep interval - ZScore with pre-reductions (full pipeline)",
 
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -306,13 +302,13 @@ TEST_CASE("MultiStep interval - pre-reduction computes per-interval stats",
     // Interval 1: values 0-4, mean=2. ZScore → [-2,-1,0,1,2]. Max=2
     // Interval 2: values 100-500, mean=300. ZScore → [-200,-100,0,100,200]. Max=200
     TransformPipeline pipeline;
-    pipeline.addPreReduction("MeanValue", "computed_mean");
+    pipeline.addPreReduction("MeanValueRaw", "computed_mean");
     pipeline.addStepWithBindings("ZScoreNormalizeV2",
         ZScoreNormalizationParamsV2{.std_dev = 1.0f},
         {{"mean", "computed_mean"}});
     pipeline.setRangeReductionErased("MaxValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -397,8 +393,8 @@ TEST_CASE("MultiStep recipe - interval rows with pre-reductions + steps JSON",
     // Full ZScore pipeline via JSON: pre-reduce mean/std → bind → normalize → MeanValue
     std::string json = R"({
         "pre_reductions": [
-            { "reduction_name": "MeanValue", "output_key": "computed_mean" },
-            { "reduction_name": "StdValue", "output_key": "computed_std" }
+            { "reduction_name": "MeanValueRaw", "output_key": "computed_mean" },
+            { "reduction_name": "StdValueRaw", "output_key": "computed_std" }
         ],
         "steps": [
             {
@@ -444,7 +440,7 @@ TEST_CASE("MultiStep timestamp - invalid source key throws",
                      ZScoreNormalizationParamsV2{.mean = 0.0f, .std_dev = 1.0f});
 
     CHECK_THROWS_AS(
-        buildTimeSeriesColumnProvider(*dm, "nonexistent", row_times, std::move(pipeline)),
+        buildPipelineColumnProvider(*dm, "nonexistent", row_times, std::move(pipeline)),
         std::runtime_error);
 }
 
@@ -458,7 +454,7 @@ TEST_CASE("MultiStep interval - empty interval series",
                      ZScoreNormalizationParamsV2{.mean = 2.0f, .std_dev = 1.0f});
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -476,7 +472,7 @@ TEST_CASE("MultiStep interval - single-element interval",
                      ZScoreNormalizationParamsV2{.mean = 42.0f, .std_dev = 1.0f});
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -495,7 +491,7 @@ TEST_CASE("MultiStep interval - reduction-only pipeline still works (regression)
     TransformPipeline pipeline;
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
@@ -516,7 +512,7 @@ TEST_CASE("MultiStep end-to-end - lazy tensor with multi-step columns",
     // Column 1: raw MeanValue
     TransformPipeline pipe1;
     pipe1.setRangeReductionErased("MeanValue", std::any{});
-    auto col1 = buildIntervalReductionProvider(
+    auto col1 = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipe1));
 
     // Column 2: ZScore(mean=55, std=10) → MeanValue
@@ -524,7 +520,7 @@ TEST_CASE("MultiStep end-to-end - lazy tensor with multi-step columns",
     pipe2.addStep("ZScoreNormalizeV2",
                   ZScoreNormalizationParamsV2{.mean = 55.0f, .std_dev = 10.0f});
     pipe2.setRangeReductionErased("MeanValue", std::any{});
-    auto col2 = buildIntervalReductionProvider(
+    auto col2 = buildIntervalPipelineProvider(
         *dm, "src", intervals, std::move(pipe2));
 
     // Assemble lazy tensor

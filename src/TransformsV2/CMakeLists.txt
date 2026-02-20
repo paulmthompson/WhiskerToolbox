@@ -17,6 +17,8 @@ set(TRANSFORM_V2_SOURCES
         core/RegisteredTransforms.cpp
         core/TensorColumnBuilders.hpp
         core/TensorColumnBuilders.cpp
+        core/GatherPipelineExecutor.hpp
+        core/GatherPipelineExecutor.cpp
         core/TransformPipeline.hpp
         core/TransformPipeline.cpp
         core/TypeChainResolver.hpp

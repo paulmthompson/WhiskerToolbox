@@ -107,6 +107,26 @@ DataTypeVariant TransformPipeline::execute(InputContainer const & input) const {
 
     auto & registry = ElementRegistry::instance();
 
+    // 0. Execute pre-reductions and apply bindings (V2 pattern)
+    //    Mirrors executeFused() — must run before building fused functions
+    //    so that step params have bound values when captured by pointer.
+    using InputElement = ElementFor_t<InputContainer>;
+
+    PipelineValueStore store;
+    if (hasPreReductions()) {
+        // For AnalogTimeSeries, use raw float span directly (no copying)
+        // Pre-reductions should use "Raw" variants (MeanValueRaw, StdValueRaw, etc.)
+        if constexpr (requires { input.getAnalogTimeSeries(); }) {
+            auto data_span = input.getAnalogTimeSeries();
+            executePreReductions<float>(data_span, store);
+        } else if constexpr (requires { input.getData(); }) {
+            auto const & data = input.getData();
+            std::span<InputElement const> data_span(data.data(), data.size());
+            executePreReductions<InputElement>(data_span, store);
+        }
+        applyBindingsToSteps(store);
+    }
+
     // 1. Compile pipeline into segments
     std::vector<Segment> segments;
     bool is_ragged = InputContainer::DataTraits::is_ragged;

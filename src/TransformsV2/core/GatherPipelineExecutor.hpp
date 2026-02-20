@@ -9,6 +9,10 @@
  * TensorColumnBuilders layer can dispatch interval-row column computation without
  * any per-type branching.
  *
+ * Lives in TransformsV2/core rather than GatherResult because TransformsV2
+ * already depends on DataManager and GatherResult (header-only), while
+ * GatherResult itself does not depend on TransformsV2.
+ *
  * ## Usage Pattern
  *
  * ```cpp

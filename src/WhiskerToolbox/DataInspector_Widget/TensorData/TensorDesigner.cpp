@@ -795,16 +795,12 @@ void TensorDesigner::_buildTensor() {
                     provider = buildAnalogSampleAtOffsetProvider(
                             *_data_manager, recipe.source_key, row_times, offset);
                 } catch (...) {
-                    provider = buildDirectColumnProvider(
-                            *_data_manager, recipe.source_key, row_times);
+                    provider = buildProviderFromRecipe(
+                            *_data_manager, recipe, row_times, intervals);
                 }
-            } else if (recipe.pipeline_json.empty() && !recipe.source_key.empty() &&
-                       !recipe.interval_property.has_value()) {
-                // Passthrough (direct column)
-                provider = buildDirectColumnProvider(
-                        *_data_manager, recipe.source_key, row_times);
             } else {
-                // Use buildProviderFromRecipe for standard cases
+                // Use buildProviderFromRecipe for all standard cases
+                // (handles passthrough, pipeline, interval rows)
                 provider = buildProviderFromRecipe(
                         *_data_manager, recipe, row_times, intervals);
             }
