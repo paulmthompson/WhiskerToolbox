@@ -1,0 +1,43 @@
+---
+title: "Architecture"
+format: html
+---
+
+**TransformsV2** is built on a few core concepts that allow it to be both flexible and performant.
+
+## Concepts
+
+### 1. Element Transforms
+
+At the lowest level, most logic is defined as **Element Transforms**. These are functions that operate on a single unit of data, such as a `Mask2D`, `Point2D`, or `float`.
+
+-   **Stateless**: They do not hold state between invocations.
+-   **Pure**: `f(x) -> y`.
+
+### 2. Lifting (ContainerTransform)
+
+The system automatically "lifts" these element transforms to work on containers.
+
+-   If you define `Mask2D -> float` (e.g., area calculation).
+-   The system provides `MaskData -> AnalogTimeSeries` automatically.
+-   This is done via `ContainerTransform`, which iterates over the input container, applies the element transform, and builds the output container.
+
+### 3. Pipeline & Fusion
+
+A `TransformPipeline` is a sequence of steps.
+
+-   **Naive Execution**: Step 1 runs on all data -\> Intermediate Result -\> Step 2 runs on Intermediate Result -\> ...
+-   **Fused Execution**: If multiple steps are element-wise, they are composed into a single function `h(x) = g(f(x))`.
+    -   The system iterates over the input container *once*.
+    -   Applies `h(x)` to each element.
+    -   Writes directly to the final output.
+    -   **Benefit**: Eliminates intermediate allocations and keeps data in CPU cache.
+
+### 4. PipelineValueStore (V2 Context)
+
+For operations that require global context (like normalization), we use a two-pass approach:
+
+1.  **Pre-Reduction**: Calculate global statistics (e.g., Mean) and store them in the `PipelineValueStore`.
+2.  **Transformation**: The transform step reads these values from the store (via parameter bindings) and applies them to each element.
+
+This keeps the element transforms stateless and parallelizable, while still allowing global context dependencies.

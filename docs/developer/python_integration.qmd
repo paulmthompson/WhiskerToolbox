@@ -1,0 +1,85 @@
+---
+title: "Python Integration"
+---
+
+This guide details the internal architecture of Neuralyzer's Python integration, explaining how the embedded interpreter works, how data is marshaled between C++ and Python, and how to extend the bindings.
+
+## Architecture Overview
+
+The Python integration is built on three main components:
+
+1.  **`PythonWidget` (Qt UI)**:
+    -   Located in `src/WhiskerToolbox/Python_Widget`.
+    -   Handles the visual interface: Console, Editor, and Properties panel.
+    -   Manages the `PythonEngine` instance.
+    -   Connects UI signals (like "Run" button) to the engine's `execute()` method.
+2.  **`PythonEngine` (Embedded Interpreter)**:
+    -   Located in `src/python_bindings/PythonEngine.cpp`.
+    -   Wraps `pybind11::embed`.
+    -   Manages the Python interpreter lifecycle (initialization, finalization).
+    -   Maintains the `globals()` dictionary to persist state across executions (REPL behavior).
+    -   Redirects `sys.stdout` and `sys.stderr` to C++ callbacks for display in the UI.
+3.  **`PythonBridge` (Data Marshalling)**:
+    -   Located in `src/python_bindings/PythonBridge.cpp`.
+    -   Acts as the bridge between the application's `DataManager` and the Python environment.
+    -   Injects the `dm` proxy object into the Python namespace on startup.
+    -   Handles the conversion of C++ data types to Python objects and vice-versa.
+
+## Bindings (`whiskertoolbox_python`)
+
+The core of the integration is the `whiskertoolbox_python` PyBind11 module. This module exposes C++ classes to Python. It is **embedded** directly into the application binary, so there is no separate `.pyd` or `.so` file to deploy.
+
+Source location: `src/python_bindings/`
+
+### Key Binding Files
+
+-   **`bind_module.hpp`**: Forward declarations for binding functions.
+-   **`bindings.cpp`**: The main `PYBIND11_EMBEDDED_MODULE` definition. Calls individual init functions.
+-   **`numpy_utils.hpp`**: Helper functions for zero-copy NumPy array creation.
+-   **`bind_datamanager.cpp`**: Binds the `DataManager` class and its methods.
+-   **`bind_analog.cpp`**: Binds `AnalogTimeSeries`.
+-   **`bind_point.cpp`**: Binds `PointData` and `Point2D`.
+-   **`bind_tensor.cpp`**: Binds `TensorData`.
+
+## Data Types and Zero-Copy Strategy
+
+To ensure high performance with large datasets (e.g., electrophysiology or high-speed video data), we prioritize **zero-copy** access where possible.
+
+### `AnalogTimeSeries` & `TensorData`
+
+These types store data in contiguous memory blocks (std::vector or similar). We expose these buffers to Python as **read-only NumPy arrays**.
+
+-   **C++ Side**: `std::span<float const>`
+-   **Python Side**: `numpy.ndarray` (flags: `WRITEABLE=False`)
+
+This allows users to use libraries like `numpy` and `scipy` directly on the data without the overhead of copying millions of samples.
+
+### Ragged Data (Points, Lines, Masks)
+
+Data types that are "ragged" (variable number of elements per time point) are more difficult to map directly to NumPy. \* Currently, these are exposed via `std::vector` copies (e.g., `getAtTime(t)` returns a list of objects). \* Future optimization may involve creating custom iterators or structured NumPy arrays.
+
+## Extending the Bindings
+
+To add a new data type to the Python environment:
+
+1.  **Create a Binding Function**: Create a new source file (e.g., `src/python_bindings/bind_mytype.cpp`). Define a function `void init_mytype(py::module_ & m)`. Use `py::class_` to bind your C++ class.
+
+    ``` cpp
+    #include "MyType.hpp"
+    #include "bind_module.hpp" // for init_mytype declaration
+
+    void init_mytype(py::module_ & m) {
+        py::class_<MyType, std::shared_ptr<MyType>>(m, "MyType")
+            .def(py::init<>())
+            .def("doSomething", &MyType::doSomething);
+    }
+    ```
+
+2.  **Register the Module**: Add the `init_mytype(m);` call to `src/python_bindings/bindings.cpp`.
+
+3.  **Update `getDataVariant`**: Ensure `DataManager::getDataVariant` (in C++) and `bind_datamanager.cpp` (in bindings) can handle the new type.
+
+    -   In `bind_datamanager.cpp`, add a `setData` overload for your new type.
+    -   The `getData` method uses `std::visit` and should handle the new type automatically if it's in the `DataTypeVariant`.
+
+4.  **Rebuild**: Recompile the application. The new type will be available in the `whiskertoolbox_python` module.

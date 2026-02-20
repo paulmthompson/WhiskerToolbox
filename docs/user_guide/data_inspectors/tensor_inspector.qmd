@@ -1,0 +1,22 @@
+---
+title: "Tensor Inspector"
+format: html
+---
+
+The **Tensor Inspector** allows you to view and manipulate multi-dimensional array data (Tensors).
+
+> \[!NOTE\] This documentation is currently under construction.
+
+## Overview
+
+Tensors in this toolbox are flexible containers that can hold various types of data in a tabular or multi-dimensional format. The Tensor Inspector provides tools to:
+
+-   View tensor contents.
+-   Design new tensor columns using the **Tensor Designer**.
+
+## Integration with Transform Widget
+
+The Tensor Inspector works closely with the [Transform Widget](transforms_v2_widget.qmd). You can define a transformation pipeline to generate data for a specific column in a tensor.
+
+-   **Column Population**: Use a transformation pipeline to calculate values for a column based on other data.
+-   **Lazy Evaluation**: Some tensor columns can be calculated on-the-fly using these pipelines.

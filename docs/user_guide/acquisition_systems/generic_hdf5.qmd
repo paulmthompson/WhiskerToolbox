@@ -1,0 +1,5 @@
+---
+title: "Generic HDF5"
+---
+
+Instructions for loading generic HDF5 data.
