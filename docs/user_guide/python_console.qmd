@@ -1,0 +1,174 @@
+---
+title: "Python Console"
+---
+
+The Python Console in Neuralyzer provides a powerful interface to interact with your data using Python 3.12. It allows you to run scripts, manipulate data structures, and perform custom analyses directly within the application.
+
+## Overview
+
+Neuralyzer embeds a full Python 3.12 interpreter. This means you have access to the standard Python library as well as a specialized `whiskertoolbox_python` module that bridges the gap between the application's C++ core and the Python environment.
+
+Key features include: - **Interactive Console (REPL)**: Test snippets and inspect data in real-time. - **Script Editor**: Write, save, and execute `.py` scripts. - **Data Manager Integration**: Seamless access to loaded data via the `dm` object. - **Zero-Copy Access**: Efficiently read large datasets (like analog signals and tensors) as NumPy arrays without copying memory.
+
+## Interface
+
+The Python Widget is divided into three main areas:
+
+1.  **Console Tab**:
+    -   **Output Area**: Displays the results of your code, standard output (grey), and errors (red).
+    -   **Input Area**: A multi-line text editor for typing commands. Press **Shift+Enter** to execute.
+    -   **History**: Use **Up/Down** arrows to navigate through your command history.
+2.  **Editor Tab**:
+    -   A full-featured text editor for writing longer scripts.
+    -   Supports **Open**, **Save**, and **Run** functionalities.
+    -   Drag and drop `.py` files to open them.
+3.  **Properties Panel** (Right Side):
+    -   **Environment**: Displays the current Python version and active virtual environment (if any).
+    -   **Settings**: Configure font size, auto-scrolling, and line numbers.
+    -   **Namespace**: A live view of all variables in the current Python session.
+    -   **Data Keys**: A list of all data objects currently in the Data Manager. Click "Insert" to paste the code to retrieve an object into the console.
+
+## Accessing Data
+
+The Data Manager is exposed to the Python environment as a pre-loaded object named `dm`. You can use `dm` to retrieve, modify, and create data.
+
+### Retrieving Data
+
+Use `dm.getData("key_name")` to get a reference to a data object.
+
+``` python
+# Get the analog signal named 'whisker_angle'
+angle_data = dm.getData("whisker_angle")
+
+# Check if data was found
+if angle_data:
+    print(f"Loaded {angle_data.getNumSamples()} samples")
+```
+
+### Creating and Registering Data
+
+You can create new data objects using classes from the `whiskertoolbox_python` module and register them back to the Data Manager using `dm.setData()`.
+
+## Example: Processing Point Data
+
+This example demonstrates how to: 1. Retrieve a `PointData` object (e.g., tracked nose position). 2. Iterate through the time points. 3. Extract the X-coordinate for each point. 4. Create a new `AnalogTimeSeries` from these values. 5. Register the new series back to the Data Manager.
+
+``` python
+from whiskertoolbox_python import AnalogTimeSeries, Point2D
+
+# 1. Retrieve the PointData object
+# systematic_name: 'nose_tracking'
+point_data = dm.getData("nose_tracking")
+
+if point_data:
+    # Prepare lists to store the processed data
+    x_values = []
+    times = []
+
+    # 2. Iterate through all times that have data
+    # getTimesWithData() returns a list of TimeFrameIndex
+    for t in point_data.getTimesWithData():
+        
+        # getAtTime(t) returns a list of Point2D objects at that time
+        points_at_t = point_data.getAtTime(t)
+        
+        # 3. Extract X coordinate (assuming one point per frame)
+        if points_at_t:
+            pt = points_at_t[0] 
+            x_values.append(pt.x)
+            times.append(t)
+
+    # Convert to standard Python lists or NumPy arrays if needed
+    # (The AnalogTimeSeries constructor accepts Python lists)
+    
+    # 4. Create a new AnalogTimeSeries
+    # Constructor: AnalogTimeSeries(values, times)
+    new_series = AnalogTimeSeries(x_values, times)
+    
+    # 5. Register back to the Data Manager
+    # We use the same time base as the original data
+    original_time_key = dm.getTimeKey("nose_tracking")
+    dm.setData("nose_x_position", new_series, original_time_key)
+    
+    print("Successfully created 'nose_x_position'")
+
+else:
+    print("Error: 'nose_tracking' data not found.")
+```
+
+## API Reference
+
+### DataManager (`dm`)
+
+-   `getData(key) -> object`: Retrieve data by key. Returns `None` if not found.
+-   `setData(key, object, time_key)`: Register a new data object.
+-   `getAllKeys() -> list[str]`: Get a list of all data keys.
+-   `deleteData(key) -> bool`: Delete data by key.
+-   `getTimeKey(data_key) -> str`: Get the time base name for a given data key.
+
+### PointData
+
+-   `getTimesWithData() -> list[int]`: Get sorted list of time indices with data.
+-   `getAtTime(time_index) -> list[Point2D]`: Get list of points at a specific time.
+-   `addAtTime(time_index, point)`: Add a point at a specific time.
+
+### Point2D
+
+-   `x`: Float coordinate.
+-   `y`: Float coordinate.
+
+### AnalogTimeSeries
+
+-   `AnalogTimeSeries(values, times)`: Constructor taking lists of floats and time indices.
+-   `values`: Read-only NumPy array of the data (zero-copy).
+-   `getNumSamples() -> int`: Get the number of samples.
+-   `toList() -> list[float]`: Copy data to a Python list.
+
+### MaskData
+
+-   `getTimesWithData() -> list[int]`: Get sorted list of time indices with data.
+-   `getAtTime(time_index) -> list[Mask2D]`: Get list of masks at a specific time.
+-   `addAtTime(time_index, mask)`: Add a mask at a specific time.
+-   `getDataByEntityId(entity_id) -> Mask2D`: Get mask for a specific entity ID.
+
+### Mask2D
+
+-   `Mask2D(points)`: Constructor taking a list of `Point2D`.
+-   `size() -> int`: Get the number of points in the mask.
+-   `points() -> list[Point2D]`: Get the list of points.
+-   `__iter__()`: Iterate over points in the mask.
+
+### LineData
+
+-   `getTimesWithData() -> list[int]`: Get sorted list of time indices with data.
+-   `getAtTime(time_index) -> list[Line2D]`: Get list of lines at a specific time.
+-   `addAtTime(time_index, line)`: Add a line at a specific time.
+-   `getDataByEntityId(entity_id) -> Line2D`: Get line for a specific entity ID.
+
+### Line2D
+
+-   `Line2D(points)`: Constructor taking a list of `Point2D`.
+-   `size() -> int`: Get the number of points in the line.
+-   `toList() -> list[Point2D]`: Copy points to a Python list.
+-   `__iter__()`: Iterate over points in the line.
+
+### DigitalEventSeries
+
+-   `addEvent(time_index)`: Add an event at the specified time index.
+-   `removeEvent(time_index)`: Remove an event at the specified time index.
+-   `clear()`: Remove all events.
+-   `size() -> int`: Get the number of events.
+-   `toList() -> list[int]`: Get all event times as a list.
+-   `toListWithIds() -> list[tuple]`: Get all events as (time, entity_id) tuples.
+
+### DigitalIntervalSeries
+
+-   `addEvent(interval)`: Add an interval object.
+-   `addInterval(start, end)`: Add an interval defined by start and end integers.
+-   `removeInterval(interval)`: Remove an interval.
+-   `clear()`: Remove all intervals.
+-   `size() -> int`: Get the number of intervals.
+-   `toList() -> list[Interval]`: Get all intervals as a list.
+-   `toListWithIds() -> list[tuple]`: Get all intervals as (Interval, entity_id) tuples.
+
+For a full reference of the C++ classes and their Python bindings, refer to the [Developer Documentation](../developer/python_integration.qmd).

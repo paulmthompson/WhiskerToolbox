@@ -1,0 +1,70 @@
+---
+title: "AutoParam System"
+format: html
+---
+
+The **AutoParam** system provides a mechanism to automatically generate Qt-based configuration forms from C++ structs. It leverages compile-time reflection (via `reflect-cpp`) to create a runtime schema, which is then used to build the UI dynamically.
+
+## Core Components
+
+### 1. Parameter Structs
+
+The foundation of the system is a simple C++ struct that defines your parameters.
+
+``` cpp
+struct MyTransformParams {
+    float threshold = 0.5f;
+    int iterations = 10;
+    std::string mode = "Fast";
+    bool enable_logging = true;
+};
+```
+
+### 2. ParameterSchema
+
+At runtime, we need a description of this struct to build the UI. `ParameterSchema` is a data structure that holds this information: \* **Fields**: Name, type, default value. \* **Constraints**: Min/max values for numbers. \* **UI Hints**: Tooltips, display names, grouping.
+
+This schema is extracted automatically using `reflect-cpp`.
+
+### 3. AutoParamWidget
+
+The `AutoParamWidget` is a generic Qt widget that takes a `ParameterSchema` and builds a form. \* `float/double` -\> `QDoubleSpinBox` \* `int` -\> `QSpinBox` \* `bool` -\> `QCheckBox` \* `std::string` -\> `QLineEdit` or `QComboBox` (if allowed values are provided) \* `std::optional<T>` -\> Checkbox-gated widget
+
+## Customization
+
+You can customize the generated UI without changing the `AutoParamWidget` code by using **ParameterUIHints**.
+
+### ParameterUIHints
+
+Specialize the `ParameterUIHints` template for your struct to provide additional metadata.
+
+``` cpp
+template<>
+struct ParameterUIHints<MyTransformParams> {
+    static void annotate(ParameterSchema& schema) {
+        // Add a tooltip
+        if (auto* f = schema.field("threshold")) {
+            f->tooltip = "Signal detection threshold (0.0 to 1.0)";
+            f->min_value = 0.0;
+            f->max_value = 1.0;
+        }
+
+        // Define allowed values for a string (creates a ComboBox)
+        if (auto* f = schema.field("mode")) {
+            f->allowed_values = {"Fast", "Accurate", "Debug"};
+        }
+    }
+};
+```
+
+### Custom Widgets
+
+If the standard widgets aren't enough, you can register a completely custom widget definition for your parameter type using the `ParamWidgetRegistry`.
+
+``` cpp
+ParamWidgetRegistry::instance().registerCustomWidget<MyComplexParams>(
+    [](QWidget* parent) { return new MyCustomEditor(parent); }
+);
+```
+
+If a custom widget is registered, the `AutoParamWidget` is bypassed entirely for that type.

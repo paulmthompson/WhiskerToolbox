@@ -1,0 +1,75 @@
+---
+title: "Adding New Transforms"
+format: html
+---
+
+This guide explains how to implement and register new transforms in the **TransformsV2** system.
+
+## 1. Implement the Transform Function
+
+A transform is simply a function (or a callable object). It should be stateless and pure if possible.
+
+### Element-Wise Transform
+
+For operations that transform a single element (e.g., a point, a mask, a number).
+
+``` cpp
+// Example: Scale a point by a factor
+struct ScalePointParams {
+    float factor = 1.0f;
+};
+
+Point2D ScalePoint(Point2D const& input, ScalePointParams const& params) {
+    return {input.x * params.factor, input.y * params.factor};
+}
+```
+
+### Time-Grouped Transform
+
+For operations that need access to all elements at a single time point (e.g., filtering, reduction).
+
+``` cpp
+// Example: Sum of a vector of floats
+float SumReduction(std::span<float const> inputs) {
+    float sum = 0.0f;
+    for (float v : inputs) sum += v;
+    return sum;
+}
+```
+
+## 2. Registration
+
+Register your transform in `RegisteredTransforms.cpp` (or a similar registry file).
+
+``` cpp
+// In RegisteredTransforms.cpp
+registry.registerTransform<Point2D, Point2D, ScalePointParams>(
+    "ScalePoint",
+    ScalePoint,
+    "Scales a point by a factor."
+);
+```
+
+### Metadata
+
+The registry automatically extracts type information. You can also provide:
+
+-   **Description**: A human-readable description.
+-   **Category**: To group transforms in the UI.
+-   **Keywords**: For search.
+
+## 3. Parameter Structs
+
+If your transform takes parameters, define a simple struct.
+
+-   **Reflection**: You *must* provide reflection for your parameter struct so the UI can generate a configuration form.
+-   **Serialization**: Ensure the struct is serializable to/from JSON.
+
+``` cpp
+struct ScalePointParams {
+    float factor = 1.0f;
+    
+    // Macro for reflection (example)
+    REFLECT(ScalePointParams, factor)
+};
+```

@@ -1,0 +1,62 @@
+---
+title: "Transform Widget"
+format: html
+---
+
+The **Transform Widget** is a powerful tool for processing data using the *TransformsV2* library. It allows you to build a sequence of operations (a **pipeline**) to manipulate your data, convert types, and extract features.
+
+## Overview
+
+The widget provides a visual interface to:
+
+1.  **Select Input Data**: Choose the data you want to transform.
+2.  **Define a Pipeline**: Add, remove, and reorder transformation steps.
+3.  **Configure Parameters**: Adjust settings for each step.
+4.  **Execute**: Run the pipeline and save the result.
+
+## Using the Widget
+
+### 1. Selecting Input
+
+Use the **Input Selector** at the top of the widget to choose a data item from your project.
+
+-   When you select data in the *Data Manager* or other widgets, the Transform Widget will automatically update to focus on that item.
+-   The valid transformation steps available to you depend on the type of data you have selected.
+
+### 2. Building a Pipeline
+
+The pipeline is a list of steps that run in order.
+
+-   **Add Step**: Click the `+` button or drag a transform from the library (if available) into the step list.
+-   **Remove Step**: Select a step and click the `-` button.
+-   **Reorder**: Drag and drop steps to change their execution order.
+
+Each step transforms the data from the previous step. The widget ensures that the output of one step is compatible with the input of the next.
+
+### 3. Pre-Reductions (Advanced)
+
+Some transformations require global statistics about the data *before* they can run. For example, a **Z-Score Normalization** needs the *Mean* and *Standard Deviation* of the entire dataset.
+
+-   Use the **Pre-Reduction Panel** to calculate these values.
+-   These values are stored in a temporary "Value Store" and can be bound to the parameters of your transformation steps.
+
+### 4. Step Configuration
+
+When you select a step in the list, its parameters appear in the **Configuration Panel**.
+
+-   Parameters can be simple values (numbers, text) or bindings to Pre-Reduction values.
+-   Adjust these settings to customize the transformation.
+
+### 5. Execution
+
+Once your pipeline is valid:
+
+1.  **Output Name**: Enter a name for the result. The widget may suggest one for you.
+2.  **Execute**: Click the **Run** button.
+3.  The result will be created and added to the *Data Manager*.
+
+## Integration with Tensor Inspector
+
+The Transform Widget's pipeline definition is portable. You can design a pipeline here and use it in the **Tensor Inspector** to populate columns of a tensor.
+
+-   See [Tensor Inspector](../data_inspectors/tensor_inspector.qmd) for more details.

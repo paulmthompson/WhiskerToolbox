@@ -1,0 +1,25 @@
+---
+title: "SpikeSorter"
+---
+
+[SpikeSorter](https://swindale.ecc.ubc.ca/home-page/software/) is a software used for spike sorting. It outputs spike timestamps in a CSV file format.
+
+## File Format
+
+The output file is a CSV with the following columns: 1. **Time**: The time of the event in seconds. 2. **Spike ID**: The identifier for the spike. 3. **Channel**: The channel with the highest amplitude during this event.
+
+## Loading Data
+
+To load the spike data as a `digital_event` series:
+
+``` json
+{
+    "filepath": "spikes.csv",
+    "data_type": "digital_event",
+    "name": "spikes",
+    "format": "csv",
+    "scale": 30000,
+    "identifier_column": 1,
+    "clock": "master"
+}
+```
