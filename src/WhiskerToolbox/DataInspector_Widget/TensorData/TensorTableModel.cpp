@@ -129,7 +129,7 @@ int TensorTableModel::columnCount(QModelIndex const & parent) const {
         return 0;
     }
     if (_col_dim < 0) {
-        return 1; // single "Value" column for 1-D tensors
+        return 1;// single "Value" column for 1-D tensors
     }
     auto const shape = tensorShape();
     return static_cast<int>(shape[static_cast<std::size_t>(_col_dim)]);
@@ -230,7 +230,7 @@ void TensorTableModel::_resetDimensionMapping() {
 
     if (nd == 1) {
         _row_dim = 0;
-        _col_dim = -1; // single value column
+        _col_dim = -1;// single value column
     } else {
         // Default: first axis = rows, second axis = columns
         _row_dim = 0;

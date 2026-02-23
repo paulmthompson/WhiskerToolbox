@@ -19,10 +19,6 @@
  * with a corresponding label row vector. The output is a new balanced pair
  * of (features, labels) with observations shuffled.
  *
- * Extracted and generalized from the legacy `balance_training_data_by_subsampling`
- * in mlpack_conversion.cpp.
- *
- * @see ml_library_roadmap.md §3.4.7
  */
 
 #include <armadillo>
@@ -42,8 +38,8 @@ namespace MLCore {
  * @brief Strategy used for class balancing
  */
 enum class BalancingStrategy {
-    Subsample,    ///< Down-sample majority classes to minority count × ratio
-    Oversample,   ///< Up-sample minority classes to majority count × ratio
+    Subsample, ///< Down-sample majority classes to minority count × ratio
+    Oversample,///< Up-sample minority classes to majority count × ratio
     // SMOTE,     ///< Synthetic Minority Oversampling (future)
 };
 
@@ -78,8 +74,8 @@ struct BalancingConfig {
  * @brief Result of a class balancing operation
  */
 struct BalancedData {
-    arma::mat features;              ///< Balanced feature matrix (features × observations)
-    arma::Row<std::size_t> labels;   ///< Balanced label vector
+    arma::mat features;           ///< Balanced feature matrix (features × observations)
+    arma::Row<std::size_t> labels;///< Balanced label vector
 
     /**
      * @brief Per-class sample counts after balancing
@@ -128,9 +124,9 @@ struct BalancedData {
  * @pre features.n_cols > 0
  */
 [[nodiscard]] BalancedData balanceClasses(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    BalancingConfig const & config = {});
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        BalancingConfig const & config = {});
 
 /**
  * @brief Compute per-class sample counts from a label vector
@@ -139,7 +135,7 @@ struct BalancedData {
  * @return Map from class label → count (sorted by label)
  */
 [[nodiscard]] std::vector<std::pair<std::size_t, std::size_t>> getClassDistribution(
-    arma::Row<std::size_t> const & labels);
+        arma::Row<std::size_t> const & labels);
 
 /**
  * @brief Check whether a dataset is balanced within a given tolerance
@@ -152,14 +148,14 @@ struct BalancedData {
  * @return true if already balanced within tolerance
  */
 [[nodiscard]] bool isBalanced(
-    arma::Row<std::size_t> const & labels,
-    double max_acceptable_ratio = 1.0);
+        arma::Row<std::size_t> const & labels,
+        double max_acceptable_ratio = 1.0);
 
 /**
  * @brief Convert a BalancingStrategy enum to a human-readable string
  */
 [[nodiscard]] std::string toString(BalancingStrategy strategy);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_CLASSBALANCING_HPP
+#endif// MLCORE_CLASSBALANCING_HPP

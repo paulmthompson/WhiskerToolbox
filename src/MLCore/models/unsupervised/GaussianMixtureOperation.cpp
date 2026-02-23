@@ -9,6 +9,7 @@
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -32,8 +33,7 @@ struct GaussianMixtureOperation::Impl {
     bool trained = false;
 
     /// Reconstruct an mlpack::GMM from stored parameters
-    [[nodiscard]] mlpack::GMM toMlpackGMM() const
-    {
+    [[nodiscard]] mlpack::GMM toMlpackGMM() const {
         // Build GaussianDistribution vector
         std::vector<mlpack::GaussianDistribution<>> dists;
         dists.reserve(num_components);
@@ -52,8 +52,7 @@ struct GaussianMixtureOperation::Impl {
 // ============================================================================
 
 GaussianMixtureOperation::GaussianMixtureOperation()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 GaussianMixtureOperation::~GaussianMixtureOperation() = default;
@@ -65,18 +64,15 @@ GaussianMixtureOperation & GaussianMixtureOperation::operator=(GaussianMixtureOp
 // Identity & metadata
 // ============================================================================
 
-std::string GaussianMixtureOperation::getName() const
-{
+std::string GaussianMixtureOperation::getName() const {
     return "Gaussian Mixture Model";
 }
 
-MLTaskType GaussianMixtureOperation::getTaskType() const
-{
+MLTaskType GaussianMixtureOperation::getTaskType() const {
     return MLTaskType::Clustering;
 }
 
-std::unique_ptr<MLModelParametersBase> GaussianMixtureOperation::getDefaultParameters() const
-{
+std::unique_ptr<MLModelParametersBase> GaussianMixtureOperation::getDefaultParameters() const {
     return std::make_unique<GMMParameters>();
 }
 
@@ -85,9 +81,8 @@ std::unique_ptr<MLModelParametersBase> GaussianMixtureOperation::getDefaultParam
 // ============================================================================
 
 bool GaussianMixtureOperation::fit(
-    arma::mat const & features,
-    MLModelParametersBase const * params)
-{
+        arma::mat const & features,
+        MLModelParametersBase const * params) {
     // Validate inputs
     if (features.empty()) {
         std::cerr << "GaussianMixtureOperation::fit: Feature matrix is empty.\n";
@@ -159,9 +154,8 @@ bool GaussianMixtureOperation::fit(
 // ============================================================================
 
 bool GaussianMixtureOperation::assignClusters(
-    arma::mat const & features,
-    arma::Row<std::size_t> & assignments)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> & assignments) {
     if (!_impl->trained) {
         std::cerr << "GaussianMixtureOperation::assignClusters: Model not fitted.\n";
         return false;
@@ -195,9 +189,8 @@ bool GaussianMixtureOperation::assignClusters(
 // ============================================================================
 
 bool GaussianMixtureOperation::clusterProbabilities(
-    arma::mat const & features,
-    arma::mat & probs) const
-{
+        arma::mat const & features,
+        arma::mat & probs) const {
     if (!_impl->trained) {
         std::cerr << "GaussianMixtureOperation::clusterProbabilities: Model not fitted.\n";
         return false;
@@ -226,8 +219,7 @@ bool GaussianMixtureOperation::clusterProbabilities(
             // Compute weighted log-probability for each component
             arma::vec log_probs(k);
             for (std::size_t c = 0; c < k; ++c) {
-                log_probs(c) = std::log(_impl->weights(c))
-                              + gmm.Component(c).LogProbability(obs);
+                log_probs(c) = std::log(_impl->weights(c)) + gmm.Component(c).LogProbability(obs);
             }
 
             // Log-sum-exp for numerical stability
@@ -251,8 +243,7 @@ bool GaussianMixtureOperation::clusterProbabilities(
 // Serialization
 // ============================================================================
 
-bool GaussianMixtureOperation::save(std::ostream & out) const
-{
+bool GaussianMixtureOperation::save(std::ostream & out) const {
     if (!_impl->trained) {
         return false;
     }
@@ -264,15 +255,15 @@ bool GaussianMixtureOperation::save(std::ostream & out) const
 
         // Serialize weights
         std::vector<double> weights_vec(
-            _impl->weights.memptr(),
-            _impl->weights.memptr() + _impl->weights.n_elem);
+                _impl->weights.memptr(),
+                _impl->weights.memptr() + _impl->weights.n_elem);
         ar(cereal::make_nvp("weights", weights_vec));
 
         // Serialize means — each as a flat vector
         for (std::size_t i = 0; i < _impl->num_components; ++i) {
             std::vector<double> mean_data(
-                _impl->means[i].memptr(),
-                _impl->means[i].memptr() + _impl->means[i].n_elem);
+                    _impl->means[i].memptr(),
+                    _impl->means[i].memptr() + _impl->means[i].n_elem);
             ar(cereal::make_nvp("mean", mean_data));
         }
 
@@ -285,8 +276,8 @@ bool GaussianMixtureOperation::save(std::ostream & out) const
             ar(cereal::make_nvp("cov_cols", cov_cols));
 
             std::vector<double> cov_data(
-                cov.memptr(),
-                cov.memptr() + cov_rows * cov_cols);
+                    cov.memptr(),
+                    cov.memptr() + cov_rows * cov_cols);
             ar(cereal::make_nvp("cov_data", cov_data));
         }
 
@@ -297,8 +288,7 @@ bool GaussianMixtureOperation::save(std::ostream & out) const
     }
 }
 
-bool GaussianMixtureOperation::load(std::istream & in)
-{
+bool GaussianMixtureOperation::load(std::istream & in) {
     try {
         cereal::BinaryInputArchive ar(in);
 
@@ -372,18 +362,15 @@ bool GaussianMixtureOperation::load(std::istream & in)
 // Query / introspection
 // ============================================================================
 
-bool GaussianMixtureOperation::isTrained() const
-{
+bool GaussianMixtureOperation::isTrained() const {
     return _impl->trained;
 }
 
-std::size_t GaussianMixtureOperation::numClasses() const
-{
+std::size_t GaussianMixtureOperation::numClasses() const {
     return _impl->trained ? _impl->num_components : 0;
 }
 
-std::size_t GaussianMixtureOperation::numFeatures() const
-{
+std::size_t GaussianMixtureOperation::numFeatures() const {
     return _impl->trained ? _impl->num_features : 0;
 }
 
@@ -391,22 +378,19 @@ std::size_t GaussianMixtureOperation::numFeatures() const
 // GMM-specific accessors
 // ============================================================================
 
-std::vector<arma::vec> const & GaussianMixtureOperation::means() const
-{
+std::vector<arma::vec> const & GaussianMixtureOperation::means() const {
     static std::vector<arma::vec> const empty;
     return _impl->trained ? _impl->means : empty;
 }
 
-std::vector<arma::mat> const & GaussianMixtureOperation::covariances() const
-{
+std::vector<arma::mat> const & GaussianMixtureOperation::covariances() const {
     static std::vector<arma::mat> const empty;
     return _impl->trained ? _impl->covariances : empty;
 }
 
-arma::vec const & GaussianMixtureOperation::weights() const
-{
+arma::vec const & GaussianMixtureOperation::weights() const {
     static arma::vec const empty;
     return _impl->trained ? _impl->weights : empty;
 }
 
-} // namespace MLCore
+}// namespace MLCore

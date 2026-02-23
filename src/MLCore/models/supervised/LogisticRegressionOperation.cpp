@@ -34,8 +34,7 @@ struct LogisticRegressionOperation::Impl {
 // ============================================================================
 
 LogisticRegressionOperation::LogisticRegressionOperation()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 LogisticRegressionOperation::~LogisticRegressionOperation() = default;
@@ -47,18 +46,15 @@ LogisticRegressionOperation & LogisticRegressionOperation::operator=(LogisticReg
 // Identity & metadata
 // ============================================================================
 
-std::string LogisticRegressionOperation::getName() const
-{
+std::string LogisticRegressionOperation::getName() const {
     return "Logistic Regression";
 }
 
-MLTaskType LogisticRegressionOperation::getTaskType() const
-{
+MLTaskType LogisticRegressionOperation::getTaskType() const {
     return MLTaskType::BinaryClassification;
 }
 
-std::unique_ptr<MLModelParametersBase> LogisticRegressionOperation::getDefaultParameters() const
-{
+std::unique_ptr<MLModelParametersBase> LogisticRegressionOperation::getDefaultParameters() const {
     return std::make_unique<LogisticRegressionParameters>();
 }
 
@@ -67,10 +63,9 @@ std::unique_ptr<MLModelParametersBase> LogisticRegressionOperation::getDefaultPa
 // ============================================================================
 
 bool LogisticRegressionOperation::train(
-    arma::mat const & features,
-    arma::Row<std::size_t> const & labels,
-    MLModelParametersBase const * params)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> const & labels,
+        MLModelParametersBase const * params) {
     // Validate inputs
     if (features.empty()) {
         std::cerr << "LogisticRegressionOperation::train: Feature matrix is empty.\n";
@@ -112,12 +107,12 @@ bool LogisticRegressionOperation::train(
 
         // mlpack::LogisticRegression trains on construction with optimizer
         _impl->model = std::make_unique<LRModel>(
-            features,
-            labels,
-            optimizer,
-            lambda);
+                features,
+                labels,
+                optimizer,
+                lambda);
 
-        _impl->num_classes = 2; // LogisticRegression is always binary
+        _impl->num_classes = 2;// LogisticRegression is always binary
         _impl->num_features = features.n_rows;
         _impl->trained = true;
         return true;
@@ -134,9 +129,8 @@ bool LogisticRegressionOperation::train(
 // ============================================================================
 
 bool LogisticRegressionOperation::predict(
-    arma::mat const & features,
-    arma::Row<std::size_t> & predictions)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> & predictions) {
     if (!_impl->trained || !_impl->model) {
         std::cerr << "LogisticRegressionOperation::predict: Model not trained.\n";
         return false;
@@ -162,9 +156,8 @@ bool LogisticRegressionOperation::predict(
 }
 
 bool LogisticRegressionOperation::predictProbabilities(
-    arma::mat const & features,
-    arma::mat & probabilities)
-{
+        arma::mat const & features,
+        arma::mat & probabilities) {
     if (!_impl->trained || !_impl->model) {
         std::cerr << "LogisticRegressionOperation::predictProbabilities: Model not trained.\n";
         return false;
@@ -194,8 +187,7 @@ bool LogisticRegressionOperation::predictProbabilities(
 // Serialization
 // ============================================================================
 
-bool LogisticRegressionOperation::save(std::ostream & out) const
-{
+bool LogisticRegressionOperation::save(std::ostream & out) const {
     if (!_impl->trained || !_impl->model) {
         return false;
     }
@@ -214,8 +206,7 @@ bool LogisticRegressionOperation::save(std::ostream & out) const
     }
 }
 
-bool LogisticRegressionOperation::load(std::istream & in)
-{
+bool LogisticRegressionOperation::load(std::istream & in) {
     try {
         cereal::BinaryInputArchive ar(in);
 
@@ -243,19 +234,16 @@ bool LogisticRegressionOperation::load(std::istream & in)
 // Query / introspection
 // ============================================================================
 
-bool LogisticRegressionOperation::isTrained() const
-{
+bool LogisticRegressionOperation::isTrained() const {
     return _impl->trained;
 }
 
-std::size_t LogisticRegressionOperation::numClasses() const
-{
+std::size_t LogisticRegressionOperation::numClasses() const {
     return _impl->trained ? _impl->num_classes : 0;
 }
 
-std::size_t LogisticRegressionOperation::numFeatures() const
-{
+std::size_t LogisticRegressionOperation::numFeatures() const {
     return _impl->trained ? _impl->num_features : 0;
 }
 
-} // namespace MLCore
+}// namespace MLCore

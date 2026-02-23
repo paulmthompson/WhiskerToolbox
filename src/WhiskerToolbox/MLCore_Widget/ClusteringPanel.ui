@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ClusteringPanel</class>
+ <widget class="QWidget" name="ClusteringPanel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>380</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <!-- Data Source section -->
+   <item>
+    <widget class="QGroupBox" name="dataSourceGroupBox">
+     <property name="title">
+      <string>Data Source</string>
+     </property>
+     <layout class="QVBoxLayout" name="dataSourceLayout">
+      <item>
+       <layout class="QHBoxLayout" name="tensorSelectorLayout">
+        <item>
+         <widget class="QLabel" name="tensorLabel">
+          <property name="text">
+           <string>TensorData:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="tensorComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Select a TensorData object to use as the data source for clustering</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="refreshButton">
+          <property name="text">
+           <string>↻</string>
+          </property>
+          <property name="toolTip">
+           <string>Refresh the list of available tensors</string>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>30</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="tensorInfoLabel">
+        <property name="text">
+         <string>No tensor selected</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="columnListLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="zscoreCheckBox">
+        <property name="text">
+         <string>Z-score normalize features before clustering</string>
+        </property>
+        <property name="toolTip">
+         <string>Standardize features to zero mean and unit variance. Recommended when features have different scales.</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Algorithm Configuration section -->
+   <item>
+    <widget class="QGroupBox" name="algorithmGroupBox">
+     <property name="title">
+      <string>Algorithm</string>
+     </property>
+     <layout class="QVBoxLayout" name="algorithmLayout">
+      <item>
+       <layout class="QHBoxLayout" name="algorithmSelectorLayout">
+        <item>
+         <widget class="QLabel" name="algorithmLabel">
+          <property name="text">
+           <string>Algorithm:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="algorithmComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Select the clustering algorithm to use</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- Parameter stacked widget -->
+      <item>
+       <widget class="QStackedWidget" name="parameterStack">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <!-- Page 0: Empty / no algorithm selected -->
+        <widget class="QWidget" name="emptyPage">
+         <layout class="QVBoxLayout" name="emptyPageLayout">
+          <item>
+           <widget class="QLabel" name="noParametersLabel">
+            <property name="text">
+             <string>Select an algorithm to configure parameters</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="styleSheet">
+             <string>QLabel { color: gray; font-style: italic; }</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 1: K-Means parameters -->
+        <widget class="QWidget" name="kMeansPage">
+         <layout class="QGridLayout" name="kmGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="kmKLabel">
+            <property name="text">
+             <string>K (clusters):</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of clusters</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="kmKSpinBox">
+            <property name="toolTip">
+             <string>Number of clusters to produce</string>
+            </property>
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="kmMaxIterLabel">
+            <property name="text">
+             <string>Max Iterations:</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum iterations (0 = unlimited)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="kmMaxIterSpinBox">
+            <property name="toolTip">
+             <string>Maximum number of iterations</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>1000000</number>
+            </property>
+            <property name="value">
+             <number>1000</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="kmSeedLabel">
+            <property name="text">
+             <string>Random Seed:</string>
+            </property>
+            <property name="toolTip">
+             <string>Seed for reproducibility (-1 = random)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="kmSeedSpinBox">
+            <property name="toolTip">
+             <string>Random seed for reproducibility (-1 = non-deterministic)</string>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 2: DBSCAN parameters -->
+        <widget class="QWidget" name="dbscanPage">
+         <layout class="QGridLayout" name="dbGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="dbEpsilonLabel">
+            <property name="text">
+             <string>Epsilon (neighborhood radius):</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum distance between two samples for them to be considered neighbors</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="dbEpsilonSpinBox">
+            <property name="toolTip">
+             <string>Neighborhood radius for density estimation</string>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="minimum">
+             <double>0.0001</double>
+            </property>
+            <property name="maximum">
+             <double>10000.0</double>
+            </property>
+            <property name="singleStep">
+             <double>0.1</double>
+            </property>
+            <property name="value">
+             <double>1.0</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="dbMinPointsLabel">
+            <property name="text">
+             <string>Min Points:</string>
+            </property>
+            <property name="toolTip">
+             <string>Minimum number of points to form a dense region</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="dbMinPointsSpinBox">
+            <property name="toolTip">
+             <string>Minimum points in epsilon-neighborhood to form core point</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>10000</number>
+            </property>
+            <property name="value">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Page 3: Gaussian Mixture parameters -->
+        <widget class="QWidget" name="gmmPage">
+         <layout class="QGridLayout" name="gmmGridLayout">
+          <property name="horizontalSpacing">
+           <number>10</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="gmmKLabel">
+            <property name="text">
+             <string>K (components):</string>
+            </property>
+            <property name="toolTip">
+             <string>Number of Gaussian components</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="gmmKSpinBox">
+            <property name="toolTip">
+             <string>Number of Gaussian mixture components</string>
+            </property>
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="gmmMaxIterLabel">
+            <property name="text">
+             <string>Max EM Iterations:</string>
+            </property>
+            <property name="toolTip">
+             <string>Maximum EM iterations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="gmmMaxIterSpinBox">
+            <property name="toolTip">
+             <string>Maximum number of EM iterations</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>1000000</number>
+            </property>
+            <property name="value">
+             <number>300</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="gmmSeedLabel">
+            <property name="text">
+             <string>Random Seed:</string>
+            </property>
+            <property name="toolTip">
+             <string>Seed for reproducibility (-1 = random)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="gmmSeedSpinBox">
+            <property name="toolTip">
+             <string>Random seed for reproducibility (-1 = non-deterministic)</string>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="maximum">
+             <number>999999</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Output Configuration section -->
+   <item>
+    <widget class="QGroupBox" name="outputGroupBox">
+     <property name="title">
+      <string>Output</string>
+     </property>
+     <layout class="QVBoxLayout" name="outputLayout">
+      <item>
+       <layout class="QHBoxLayout" name="prefixLayout">
+        <item>
+         <widget class="QLabel" name="prefixLabel">
+          <property name="text">
+           <string>Output Prefix:</string>
+          </property>
+          <property name="toolTip">
+           <string>Prefix for output group names and data keys (e.g. "Cluster:" → "Cluster:0", "Cluster:1")</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="prefixLineEdit">
+          <property name="text">
+           <string>Cluster:</string>
+          </property>
+          <property name="toolTip">
+           <string>Prefix for output group names and data keys</string>
+          </property>
+          <property name="placeholderText">
+           <string>Cluster:</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="writeIntervalsCheckBox">
+        <property name="text">
+         <string>Output cluster assignments as DigitalIntervalSeries</string>
+        </property>
+        <property name="toolTip">
+         <string>Create interval series from contiguous runs of each cluster assignment</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="writeProbabilitiesCheckBox">
+        <property name="text">
+         <string>Output cluster probabilities as AnalogTimeSeries</string>
+        </property>
+        <property name="toolTip">
+         <string>Write soft cluster probabilities (only for models that support them, e.g. GMM)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <!-- Fit button -->
+   <item>
+    <widget class="QPushButton" name="fitButton">
+     <property name="text">
+      <string>Fit &amp;&amp; Assign</string>
+     </property>
+     <property name="toolTip">
+      <string>Fit the selected clustering model to the data and assign cluster labels</string>
+     </property>
+    </widget>
+   </item>
+   <!-- Validation label -->
+   <item>
+    <widget class="QLabel" name="validationLabel">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -4,7 +4,7 @@
 #include "CoreGeometry/angle.hpp"
 #include "CoreGeometry/line_geometry.hpp"
 #include "CoreGeometry/lines.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
+#include "parametric_polynomial_utils.hpp"
 
 #include <armadillo>
 

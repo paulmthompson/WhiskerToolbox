@@ -28,8 +28,6 @@
  *     // result.train_metrics, result.prediction_result, etc.
  * }
  * ```
- *
- * @see ml_library_roadmap.md §2 task 2.8
  */
 
 #include "features/FeatureConverter.hpp"
@@ -48,7 +46,6 @@
 #include <variant>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 
 namespace MLCore {
@@ -322,11 +319,11 @@ struct ClassificationPipelineResult {
  * @return Complete pipeline result with metrics, outputs, and trained model
  */
 [[nodiscard]] ClassificationPipelineResult runClassificationPipeline(
-    DataManager & dm,
-    MLModelRegistry const & registry,
-    ClassificationPipelineConfig const & config,
-    PipelineProgressCallback progress = nullptr);
+        DataManager & dm,
+        MLModelRegistry const & registry,
+        ClassificationPipelineConfig const & config,
+        PipelineProgressCallback progress = nullptr);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_CLASSIFICATIONPIPELINE_HPP
+#endif// MLCORE_CLASSIFICATIONPIPELINE_HPP

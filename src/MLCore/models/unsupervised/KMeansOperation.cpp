@@ -32,8 +32,7 @@ struct KMeansOperation::Impl {
 // ============================================================================
 
 KMeansOperation::KMeansOperation()
-    : _impl(std::make_unique<Impl>())
-{
+    : _impl(std::make_unique<Impl>()) {
 }
 
 KMeansOperation::~KMeansOperation() = default;
@@ -45,18 +44,15 @@ KMeansOperation & KMeansOperation::operator=(KMeansOperation &&) noexcept = defa
 // Identity & metadata
 // ============================================================================
 
-std::string KMeansOperation::getName() const
-{
+std::string KMeansOperation::getName() const {
     return "K-Means";
 }
 
-MLTaskType KMeansOperation::getTaskType() const
-{
+MLTaskType KMeansOperation::getTaskType() const {
     return MLTaskType::Clustering;
 }
 
-std::unique_ptr<MLModelParametersBase> KMeansOperation::getDefaultParameters() const
-{
+std::unique_ptr<MLModelParametersBase> KMeansOperation::getDefaultParameters() const {
     return std::make_unique<KMeansParameters>();
 }
 
@@ -65,9 +61,8 @@ std::unique_ptr<MLModelParametersBase> KMeansOperation::getDefaultParameters() c
 // ============================================================================
 
 bool KMeansOperation::fit(
-    arma::mat const & features,
-    MLModelParametersBase const * params)
-{
+        arma::mat const & features,
+        MLModelParametersBase const * params) {
     // Validate inputs
     if (features.empty()) {
         std::cerr << "KMeansOperation::fit: Feature matrix is empty.\n";
@@ -107,7 +102,7 @@ bool KMeansOperation::fit(
 
         // Run clustering — output is centroids and assignments
         arma::Row<std::size_t> assignments;
-        _impl->centroids = arma::mat(); // clear previous
+        _impl->centroids = arma::mat();// clear previous
 
         kmeans.Cluster(features, k, assignments, _impl->centroids);
 
@@ -128,9 +123,8 @@ bool KMeansOperation::fit(
 // ============================================================================
 
 bool KMeansOperation::assignClusters(
-    arma::mat const & features,
-    arma::Row<std::size_t> & assignments)
-{
+        arma::mat const & features,
+        arma::Row<std::size_t> & assignments) {
     if (!_impl->trained) {
         std::cerr << "KMeansOperation::assignClusters: Model not fitted.\n";
         return false;
@@ -178,8 +172,7 @@ bool KMeansOperation::assignClusters(
 // Serialization
 // ============================================================================
 
-bool KMeansOperation::save(std::ostream & out) const
-{
+bool KMeansOperation::save(std::ostream & out) const {
     if (!_impl->trained) {
         return false;
     }
@@ -207,8 +200,7 @@ bool KMeansOperation::save(std::ostream & out) const
     }
 }
 
-bool KMeansOperation::load(std::istream & in)
-{
+bool KMeansOperation::load(std::istream & in) {
     try {
         cereal::BinaryInputArchive ar(in);
 
@@ -248,18 +240,15 @@ bool KMeansOperation::load(std::istream & in)
 // Query / introspection
 // ============================================================================
 
-bool KMeansOperation::isTrained() const
-{
+bool KMeansOperation::isTrained() const {
     return _impl->trained;
 }
 
-std::size_t KMeansOperation::numClasses() const
-{
+std::size_t KMeansOperation::numClasses() const {
     return _impl->trained ? _impl->num_clusters : 0;
 }
 
-std::size_t KMeansOperation::numFeatures() const
-{
+std::size_t KMeansOperation::numFeatures() const {
     return _impl->trained ? _impl->num_features : 0;
 }
 
@@ -267,10 +256,9 @@ std::size_t KMeansOperation::numFeatures() const
 // K-Means specific
 // ============================================================================
 
-arma::mat const & KMeansOperation::centroids() const
-{
+arma::mat const & KMeansOperation::centroids() const {
     static arma::mat const empty;
     return _impl->trained ? _impl->centroids : empty;
 }
 
-} // namespace MLCore
+}// namespace MLCore

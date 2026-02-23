@@ -17,8 +17,12 @@ set(TRANSFORM_V2_SOURCES
         core/RegisteredTransforms.cpp
         core/TensorColumnBuilders.hpp
         core/TensorColumnBuilders.cpp
+        core/GatherPipelineExecutor.hpp
+        core/GatherPipelineExecutor.cpp
         core/TransformPipeline.hpp
         core/TransformPipeline.cpp
+        core/TypeChainResolver.hpp
+        core/TypeChainResolver.cpp
 
         extension/ElementTransform.hpp
         extension/RangeReductionTypes.hpp
@@ -92,6 +96,7 @@ target_include_directories(TransformsV2 PRIVATE
 target_link_libraries(TransformsV2 PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::TimeFrame)
 target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::Entity)
+target_link_libraries(TransformsV2 PUBLIC WhiskerToolbox::CoreMath)
 
 target_link_libraries(TransformsV2 PUBLIC reflectcpp::reflectcpp)
 

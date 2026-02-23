@@ -38,7 +38,7 @@ rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & 
         return rfl::Error("Step '" + descriptor.step_id + "' is disabled");
     }
 
-    // Load parameters if provided
+    // Load parameters if provided, otherwise use default-constructed params
     PipelineStep step{descriptor.transform_name};
     if (descriptor.parameters.has_value()) {
         // Convert rfl::Generic back to JSON string for registry-based loading
@@ -59,6 +59,21 @@ rfl::Result<PipelineStep> loadStepFromDescriptor(PipelineStepDescriptor const & 
             return rfl::Error("Failed to create pipeline step for transform '" +
                               descriptor.transform_name + "': " + e.what());
         }
+    } else {
+        // No parameters provided — deserialize from "{}" to get default-constructed
+        // params of the correct type (avoids bad any_cast when params holds NoParams
+        // but the transform expects its specific param type)
+        auto params_any = loadParametersForTransform(descriptor.transform_name, "{}");
+        if (params_any.has_value()) {
+            try {
+                step = createPipelineStepFromRegistry(registry, descriptor.transform_name, params_any);
+            } catch (std::exception const & e) {
+                return rfl::Error("Failed to create pipeline step with default params for transform '" +
+                                  descriptor.transform_name + "': " + e.what());
+            }
+        }
+        // If loadParametersForTransform fails for "{}", keep the default PipelineStep
+        // (which uses NoParams — only valid for truly parameterless transforms)
     }
 
     // Apply param_bindings if provided

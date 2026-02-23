@@ -23,15 +23,15 @@ class QVBoxLayout;
 
 namespace WhiskerToolbox::Transforms::V2::Examples {
 struct PreReductionStepDescriptor;
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace WhiskerToolbox::Transforms::V2::Examples
 
 /**
  * @brief Represents a single pre-reduction step in the UI
  */
 struct PreReductionEntry {
-    std::string reduction_name;   ///< Name from RangeReductionRegistry
-    std::string output_key;       ///< Key used for param binding
-    std::string parameters_json;  ///< Optional parameters as JSON
+    std::string reduction_name; ///< Name from RangeReductionRegistry
+    std::string output_key;     ///< Key used for param binding
+    std::string parameters_json;///< Optional parameters as JSON
 };
 
 /**
@@ -109,4 +109,4 @@ private:
     std::type_index _input_element_type{typeid(void)};
 };
 
-#endif // WHISKERTOOLBOX_PRE_REDUCTION_PANEL_HPP
+#endif// WHISKERTOOLBOX_PRE_REDUCTION_PANEL_HPP

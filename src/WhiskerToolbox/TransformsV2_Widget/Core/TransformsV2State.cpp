@@ -6,8 +6,8 @@
 
 TransformsV2State::TransformsV2State(std::shared_ptr<DataManager> data_manager,
                                      QObject * parent)
-    : EditorState(parent)
-    , _data_manager(std::move(data_manager)) {
+    : EditorState(parent),
+      _data_manager(std::move(data_manager)) {
 }
 
 QString TransformsV2State::getDisplayName() const {

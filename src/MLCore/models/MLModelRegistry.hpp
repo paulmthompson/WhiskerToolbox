@@ -6,9 +6,7 @@
  * @brief Factory registry for ML model operations
  *
  * Maintains a collection of MLModelOperation instances and provides lookup
- * by name and filtering by task type. The registry follows the same factory
- * pattern as the legacy MLModelRegistry but lives in MLCore (no Qt dependency)
- * and supports the extended MLTaskType categories.
+ * by name and filtering by task type. 
  *
  * ## Usage
  * ```cpp
@@ -28,7 +26,6 @@
  * Models are registered in the constructor. External code can also register
  * additional models via `registerModel()`.
  *
- * @see ml_library_roadmap.md §3.4.2
  */
 
 #include "MLModelOperation.hpp"
@@ -83,9 +80,9 @@ public:
      * @param factory  Factory function that creates a fresh, untrained instance
      */
     void registerModel(
-        std::string const & name,
-        MLTaskType task,
-        FactoryFn factory);
+            std::string const & name,
+            MLTaskType task,
+            FactoryFn factory);
 
     /**
      * @brief Convenience: register by instantiating a model to extract metadata
@@ -95,16 +92,15 @@ public:
      *
      * @tparam ModelT  Concrete MLModelOperation subclass with a default constructor
      */
-    template <typename ModelT>
-    void registerModel()
-    {
+    template<typename ModelT>
+    void registerModel() {
         auto prototype = std::make_unique<ModelT>();
         auto name = prototype->getName();
         auto task = prototype->getTaskType();
         registerModel(
-            name,
-            task,
-            []() { return std::make_unique<ModelT>(); });
+                name,
+                task,
+                []() { return std::make_unique<ModelT>(); });
     }
 
     // ========================================================================
@@ -167,6 +163,6 @@ private:
     std::unordered_map<std::string, std::size_t> _name_index;
 };
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_MLMODELREGISTRY_HPP
+#endif// MLCORE_MLMODELREGISTRY_HPP

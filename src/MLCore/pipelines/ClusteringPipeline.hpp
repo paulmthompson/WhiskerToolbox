@@ -26,8 +26,6 @@
  *     // result.num_clusters, result.cluster_sizes, etc.
  * }
  * ```
- *
- * @see ml_library_roadmap.md §2 task 2.9
  */
 
 #include "features/FeatureConverter.hpp"
@@ -42,7 +40,6 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 
 namespace MLCore {
@@ -343,11 +340,11 @@ struct ClusteringPipelineResult {
  * @return Complete pipeline result with cluster info, outputs, and fitted model
  */
 [[nodiscard]] ClusteringPipelineResult runClusteringPipeline(
-    DataManager & dm,
-    MLModelRegistry const & registry,
-    ClusteringPipelineConfig const & config,
-    ClusteringProgressCallback progress = nullptr);
+        DataManager & dm,
+        MLModelRegistry const & registry,
+        ClusteringPipelineConfig const & config,
+        ClusteringProgressCallback progress = nullptr);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_CLUSTERINGPIPELINE_HPP
+#endif// MLCORE_CLUSTERINGPIPELINE_HPP

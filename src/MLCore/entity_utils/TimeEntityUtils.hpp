@@ -11,8 +11,6 @@
  *
  * These keep DigitalIntervalSeries as the compact representation for contiguous
  * time regions, while entity groups provide per-frame labeling for ML workflows.
- *
- * @see ml_library_roadmap.md §3.3
  */
 
 #include "Entity/EntityTypes.hpp"
@@ -24,7 +22,6 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 class DigitalIntervalSeries;
 class EntityGroupManager;
@@ -51,9 +48,9 @@ namespace MLCore {
  * @return             Vector of EntityIds, one per input frame (same order)
  */
 std::vector<EntityId> registerTimeEntities(
-    DataManager & dm,
-    std::string const & time_key_str,
-    std::span<TimeFrameIndex const> frames);
+        DataManager & dm,
+        std::string const & time_key_str,
+        std::span<TimeFrameIndex const> frames);
 
 // ============================================================================
 // Interval ↔ TimeEntity conversions
@@ -78,9 +75,9 @@ std::vector<EntityId> registerTimeEntities(
  *       interval lengths if intervals overlap.
  */
 std::vector<EntityId> intervalsToTimeEntities(
-    DataManager & dm,
-    DigitalIntervalSeries const & intervals,
-    std::string const & time_key_str);
+        DataManager & dm,
+        DigitalIntervalSeries const & intervals,
+        std::string const & time_key_str);
 
 /**
  * @brief Convert a group of TimeEntity IDs into a DigitalIntervalSeries.
@@ -100,10 +97,10 @@ std::vector<EntityId> intervalsToTimeEntities(
  *                       or has no matching TimeEntities
  */
 std::shared_ptr<DigitalIntervalSeries> timeEntitiesToIntervals(
-    DataManager & dm,
-    GroupId group_id,
-    std::string const & time_key_str);
+        DataManager & dm,
+        GroupId group_id,
+        std::string const & time_key_str);
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_TIMEENTITYUTILS_HPP
+#endif// MLCORE_TIMEENTITYUTILS_HPP

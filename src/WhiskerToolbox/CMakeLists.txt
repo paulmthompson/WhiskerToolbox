@@ -77,6 +77,9 @@ add_subdirectory(TableDesignerWidget)
 # Feature_Table_Widget, EditorState
 add_subdirectory(ML_Widget)
 
+# Qt, DataManager, EditorState, reflectcpp - MLCore ML workflow UI
+add_subdirectory(MLCore_Widget)
+
 # Qt, DataManager, DeepLearning, EditorState
 add_subdirectory(DeepLearning_Widget)
 
@@ -289,8 +292,22 @@ target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE Feature_Tree_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE ML_Widget)
+target_link_libraries(WhiskerToolbox PRIVATE MLCore_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE DataTransform_Widget)
 target_link_libraries(WhiskerToolbox PRIVATE TransformsV2_Widget)
+
+# Force whole-archive linking for TransformsV2 to ensure static transform registration
+# (RegisteredTransforms.cpp has file-scope RAII objects that register transforms into
+# ElementRegistry's singleton; without --whole-archive the linker strips them)
+if(APPLE)
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,-force_load,$<TARGET_FILE:TransformsV2>)
+elseif(MSVC)
+    target_link_options(WhiskerToolbox PRIVATE /WHOLEARCHIVE:TransformsV2)
+    target_link_libraries(WhiskerToolbox PRIVATE TransformsV2)
+else()
+    target_link_libraries(WhiskerToolbox PRIVATE -Wl,--whole-archive TransformsV2 -Wl,--no-whole-archive)
+endif()
+
 target_link_libraries(WhiskerToolbox PRIVATE PlotAlignmentWidget)
 target_link_libraries(WhiskerToolbox PRIVATE EventPlotWidget)
 target_link_libraries(WhiskerToolbox PRIVATE ACFWidget)

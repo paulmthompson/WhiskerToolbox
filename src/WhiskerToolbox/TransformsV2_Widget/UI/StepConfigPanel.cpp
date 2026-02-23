@@ -55,33 +55,44 @@ StepConfigPanel::~StepConfigPanel() = default;
 // ============================================================================
 
 void StepConfigPanel::showStepConfig(std::string const & transform_name,
-                                      std::string const & params_json) {
+                                     std::string const & params_json) {
     clearCurrentWidget();
 
     _current_transform_name = transform_name;
 
-    // Look up metadata for display
+    // Look up metadata for display — try element first, then container
     auto const * meta = ElementRegistry::instance().getMetadata(transform_name);
-    if (meta) {
-        _header_label->setText(QString::fromStdString(meta->name));
-        _header_label->setVisible(true);
+    std::string display_name = transform_name;
+    std::string description;
+    std::type_index params_type = typeid(void);
 
-        if (!meta->description.empty()) {
-            _description_label->setText(QString::fromStdString(meta->description));
-            _description_label->setVisible(true);
-        } else {
-            _description_label->setVisible(false);
-        }
+    if (meta) {
+        display_name = meta->name;
+        description = meta->description;
+        params_type = meta->params_type;
     } else {
-        _header_label->setText(QString::fromStdString(transform_name));
-        _header_label->setVisible(true);
+        auto const * cmeta = ElementRegistry::instance().getContainerMetadata(transform_name);
+        if (cmeta) {
+            display_name = cmeta->name;
+            description = cmeta->description;
+            params_type = cmeta->params_type;
+        }
+    }
+
+    _header_label->setText(QString::fromStdString(display_name));
+    _header_label->setVisible(true);
+
+    if (!description.empty()) {
+        _description_label->setText(QString::fromStdString(description));
+        _description_label->setVisible(true);
+    } else {
         _description_label->setVisible(false);
     }
 
     // Check for custom widget override first
-    if (meta && meta->params_type != typeid(void) && meta->params_type != typeid(NoParams)) {
+    if (params_type != typeid(void) && params_type != typeid(NoParams)) {
         auto & widget_registry = ParamWidgetRegistry::instance();
-        if (widget_registry.hasCustomWidget(meta->params_type)) {
+        if (widget_registry.hasCustomWidget(params_type)) {
             setupCustomWidget(transform_name, params_json);
             return;
         }
@@ -111,7 +122,7 @@ std::string StepConfigPanel::currentParamsJson() const {
 // ============================================================================
 
 void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
-                                            std::string const & params_json) {
+                                           std::string const & params_json) {
     auto const * schema = ElementRegistry::instance().getParameterSchema(transform_name);
     if (!schema || schema->fields.empty()) {
         // Transform has no parameters (NoParams)
@@ -142,14 +153,14 @@ void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
 }
 
 void StepConfigPanel::setupCustomWidget(std::string const & transform_name,
-                                         std::string const & /* params_json */) {
+                                        std::string const & /* params_json */) {
     auto const * meta = ElementRegistry::instance().getMetadata(transform_name);
     if (!meta) {
         return;
     }
 
     _custom_widget = ParamWidgetRegistry::instance().createCustomWidget(
-        meta->params_type, _scroll_content);
+            meta->params_type, _scroll_content);
 
     if (_custom_widget) {
         _scroll_layout->insertWidget(0, _custom_widget);
@@ -171,7 +182,7 @@ void StepConfigPanel::clearCurrentWidget() {
     }
 
     // Also remove any "no parameters" labels
-    while (_scroll_layout->count() > 1) { // Keep the stretch
+    while (_scroll_layout->count() > 1) {// Keep the stretch
         auto * item = _scroll_layout->takeAt(0);
         if (auto * widget = item->widget()) {
             widget->deleteLater();

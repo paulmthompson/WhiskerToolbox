@@ -5,10 +5,6 @@
  * @file DBSCANOperation.hpp
  * @brief MLCore-native DBSCAN clustering (wraps mlpack::DBSCAN)
  *
- * This is a fresh implementation conforming to the MLCore::MLModelOperation
- * interface. It does NOT depend on or modify any legacy code in
- * src/WhiskerToolbox/ML_Widget/.
- *
  * Features:
  * - Conforms to the evolved MLModelOperation interface (unsupervised path)
  * - Overrides fit() and assignClusters()
@@ -21,8 +17,6 @@
  * - Tracks metadata (numClusters, numFeatures) for validation
  * - Uses pimpl to isolate mlpack headers from consumers
  * - Uses MLCore::DBSCANParameters (epsilon, min_points)
- *
- * @see ml_library_roadmap.md §2.6
  */
 
 #include "MLCore/models/MLModelOperation.hpp"
@@ -90,12 +84,12 @@ public:
     // ========================================================================
 
     bool fit(
-        arma::mat const & features,
-        MLModelParametersBase const * params) override;
+            arma::mat const & features,
+            MLModelParametersBase const * params) override;
 
     bool assignClusters(
-        arma::mat const & features,
-        arma::Row<std::size_t> & assignments) override;
+            arma::mat const & features,
+            arma::Row<std::size_t> & assignments) override;
 
     // ========================================================================
     // Serialization
@@ -144,6 +138,6 @@ private:
     std::unique_ptr<Impl> _impl;
 };
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_DBSCANOPERATION_HPP
+#endif// MLCORE_DBSCANOPERATION_HPP

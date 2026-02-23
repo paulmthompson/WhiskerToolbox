@@ -1,8 +1,6 @@
 #ifndef POLYNOMIAL_FIT_HPP
 #define POLYNOMIAL_FIT_HPP
 
-#include "datamanager_export.h"
-
 #include "CoreGeometry/points.hpp" // For Point2D
 
 #include <vector>
@@ -17,7 +15,7 @@ class Line2D;
  * @param order The polynomial order to fit
  * @return std::vector<double> Polynomial coefficients (empty if fitting failed)
  */
-std::vector<double> DATAMANAGER_EXPORT fit_polynomial(std::vector<double> const & x, std::vector<double> const & y, int order);
+std::vector<double> fit_polynomial(std::vector<double> const & x, std::vector<double> const & y, int order);
 
 /**
  * @brief Evaluate polynomial at a given point
@@ -26,7 +24,7 @@ std::vector<double> DATAMANAGER_EXPORT fit_polynomial(std::vector<double> const 
  * @param x The x value at which to evaluate the polynomial
  * @return double The evaluated polynomial value
  */
-double DATAMANAGER_EXPORT evaluate_polynomial(std::vector<double> const & coeffs, double x);
+double evaluate_polynomial(std::vector<double> const & coeffs, double x);
 
 /**
  * @brief Evaluate polynomial derivative at a given point

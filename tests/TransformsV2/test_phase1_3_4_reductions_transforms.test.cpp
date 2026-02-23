@@ -319,12 +319,13 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — offset out of range produces Na
     CHECK(std::isnan(values[2]));
 }
 
-TEST_CASE("buildAnalogSampleAtOffsetProvider — zero offset same as direct", "[Phase1.4][AnalogSampleAtOffset]") {
+TEST_CASE("buildAnalogSampleAtOffsetProvider — zero offset same as passthrough", "[Phase1.4][AnalogSampleAtOffset]") {
     auto dm = makeDMWithAnalog("analog", 100);
     auto row_times = makeRowTimes({0, 50, 99});
 
     auto provider_offset = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 0);
-    auto provider_direct = buildDirectColumnProvider(*dm, "analog", row_times);
+    auto provider_direct = buildPipelineColumnProvider(*dm, "analog", row_times,
+        WhiskerToolbox::Transforms::V2::TransformPipeline{});
 
     auto vals_offset = provider_offset();
     auto vals_direct = provider_direct();
@@ -373,7 +374,7 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — multi-column offset scenario", 
 // Section E: End-to-end builder scenarios with new reductions
 // =============================================================================
 
-TEST_CASE("Builder scenario — IntervalCount through buildIntervalReductionProvider",
+TEST_CASE("Builder scenario — IntervalCount through buildIntervalPipelineProvider",
           "[Phase1.3][BuilderScenario]") {
     // Source: interval series with 3 intervals
     // Row intervals: 2 rows
@@ -390,7 +391,7 @@ TEST_CASE("Builder scenario — IntervalCount through buildIntervalReductionProv
     WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalCount", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
@@ -413,7 +414,7 @@ TEST_CASE("Builder scenario — IntervalStartExtract through builder",
     WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalStartExtract", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
@@ -434,7 +435,7 @@ TEST_CASE("Builder scenario — IntervalEndExtract through builder",
     WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalEndExtract", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
@@ -459,7 +460,7 @@ TEST_CASE("Builder scenario — EventPresence through builder",
     WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("EventPresence", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "spikes", row_intervals, std::move(pipeline));
 
     auto values = provider();
@@ -482,7 +483,7 @@ TEST_CASE("Builder scenario — IntervalSourceIndex through builder",
     WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalSourceIndex", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
         *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
@@ -506,7 +507,7 @@ TEST_CASE("Builder scenario — empty interval overlap produces default values",
     {
         WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
         pipeline.setRangeReductionErased("IntervalCount", std::any{});
-        auto provider = buildIntervalReductionProvider(
+        auto provider = buildIntervalPipelineProvider(
             *dm, "source_ivals", row_intervals, std::move(pipeline));
         auto values = provider();
         REQUIRE(values.size() == 1);
@@ -517,7 +518,7 @@ TEST_CASE("Builder scenario — empty interval overlap produces default values",
     {
         WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
         pipeline.setRangeReductionErased("IntervalStartExtract", std::any{});
-        auto provider = buildIntervalReductionProvider(
+        auto provider = buildIntervalPipelineProvider(
             *dm, "source_ivals", row_intervals, std::move(pipeline));
         auto values = provider();
         REQUIRE(values.size() == 1);
@@ -541,17 +542,17 @@ TEST_CASE("Builder scenario — multi-column tensor with new reductions",
     // Column 1: MeanValue of analog
     WhiskerToolbox::Transforms::V2::TransformPipeline p1;
     p1.setRangeReductionErased("MeanValue", std::any{});
-    auto prov1 = buildIntervalReductionProvider(*dm, "analog", row_intervals, std::move(p1));
+    auto prov1 = buildIntervalPipelineProvider(*dm, "analog", row_intervals, std::move(p1));
 
     // Column 2: EventCount
     WhiskerToolbox::Transforms::V2::TransformPipeline p2;
     p2.setRangeReductionErased("EventCount", std::any{});
-    auto prov2 = buildIntervalReductionProvider(*dm, "events", row_intervals, std::move(p2));
+    auto prov2 = buildIntervalPipelineProvider(*dm, "events", row_intervals, std::move(p2));
 
     // Column 3: EventPresence
     WhiskerToolbox::Transforms::V2::TransformPipeline p3;
     p3.setRangeReductionErased("EventPresence", std::any{});
-    auto prov3 = buildIntervalReductionProvider(*dm, "events", row_intervals, std::move(p3));
+    auto prov3 = buildIntervalPipelineProvider(*dm, "events", row_intervals, std::move(p3));
 
     // Build lazy tensor
     std::vector<ColumnSource> columns{

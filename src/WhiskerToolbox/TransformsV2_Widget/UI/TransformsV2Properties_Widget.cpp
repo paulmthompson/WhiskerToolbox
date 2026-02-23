@@ -2,17 +2,18 @@
 #include "ui_TransformsV2Properties_Widget.h"
 
 #include "PipelineStepListWidget.hpp"
-#include "PreReductionPanel.hpp"
 #include "StepConfigPanel.hpp"
 
+#include "Collapsible_Widget/Section.hpp"
 #include "Core/TransformsV2State.hpp"
+#include "DataManager/DataManager.hpp"
 #include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
-
-#include "DataManager/DataManager.hpp"
 #include "TransformsV2/core/PipelineLoader.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/ContainerTraits.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <QApplication>
 #include <QClipboard>
@@ -26,12 +27,12 @@
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSplitter>
 #include <QTextEdit>
 #include <QVBoxLayout>
 
 #include <chrono>
-#include <iostream>
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
@@ -44,10 +45,10 @@ TransformsV2Properties_Widget::TransformsV2Properties_Widget(
         std::shared_ptr<TransformsV2State> state,
         SelectionContext * selection_context,
         QWidget * parent)
-    : QWidget(parent)
-    , ui(std::make_unique<Ui::TransformsV2Properties_Widget>())
-    , _state(std::move(state))
-    , _selection_context(selection_context) {
+    : QWidget(parent),
+      ui(std::make_unique<Ui::TransformsV2Properties_Widget>()),
+      _state(std::move(state)),
+      _selection_context(selection_context) {
 
     ui->setupUi(this);
     setupUI();
@@ -75,15 +76,28 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
         EditorLib::SelectedDataKey const & data_key,
         QString const & data_type) {
 
+    // Once the pipeline has steps the input is pinned — ignore focus changes
+    if (_input_pinned) {
+        return;
+    }
+
     _input_data_key = data_key.toStdString();
-    _input_data_type_name = data_type.toStdString();
+
+    // If the data_type is provided, use it directly.
+    // Otherwise, look it up from DataManager (the SelectionContext may not
+    // always provide the type — e.g. DataManager_Widget uses setSelectedData
+    // which doesn't carry the type string).
+    if (!data_type.isEmpty()) {
+        _input_data_type_name = data_type.toStdString();
+    } else {
+        _input_data_type_name = resolveDataTypeFromManager(_input_data_key);
+    }
 
     resolveInputTypes();
     updateInputDisplay();
 
     // Update sub-widgets with new input type
     _step_list->setInputType(_input_element_type, _input_container_type);
-    _pre_reduction_panel->setInputType(_input_element_type);
 
     // Store in state
     _state->setInputDataKey(_input_data_key);
@@ -108,6 +122,26 @@ void TransformsV2Properties_Widget::onStepSelected(int step_index) {
 }
 
 void TransformsV2Properties_Widget::onPipelineChanged() {
+    // Pin / unpin input based on whether the pipeline has steps
+    bool const has_steps = !_step_list->steps().empty();
+    if (has_steps && !_input_pinned) {
+        _input_pinned = true;
+        _input_pinned_label->setVisible(true);
+    } else if (!has_steps && _input_pinned) {
+        _input_pinned = false;
+        _input_pinned_label->setVisible(false);
+
+        // Re-sync from the current SelectionContext focus
+        if (_selection_context) {
+            auto const & key = _selection_context->dataFocus();
+            auto const & type = _selection_context->dataFocusType();
+            if (!key.isEmpty()) {
+                // Call the base handler (pinning is now off)
+                onDataFocusChanged(key, type);
+            }
+        }
+    }
+
     syncJsonFromUI();
     updateOutputKeyFromPipeline();
     updateExecuteButtonState();
@@ -138,7 +172,16 @@ void TransformsV2Properties_Widget::onValidationChanged(bool all_valid) {
 // ============================================================================
 
 void TransformsV2Properties_Widget::setupUI() {
-    auto * main_layout = ui->verticalLayout;
+    auto * outer_layout = ui->verticalLayout;
+
+    // Wrap all content in a scroll area so the widget is scrollable
+    auto * scroll_area = new QScrollArea(this);
+    scroll_area->setWidgetResizable(true);
+    scroll_area->setFrameShape(QFrame::NoFrame);
+
+    auto * scroll_content = new QWidget();
+    auto * main_layout = new QVBoxLayout(scroll_content);
+    main_layout->setContentsMargins(0, 0, 0, 0);
 
     // --- Input Section ---
     _input_group = new QGroupBox(tr("Input"), this);
@@ -154,11 +197,12 @@ void TransformsV2Properties_Widget::setupUI() {
     _input_type_label->setVisible(false);
     input_layout->addWidget(_input_type_label);
 
-    main_layout->addWidget(_input_group);
+    _input_pinned_label = new QLabel(tr("\xF0\x9F\x94\x92 Locked — clear pipeline to change input"), _input_group);
+    _input_pinned_label->setStyleSheet("color: #888; font-size: 8pt; font-style: italic;");
+    _input_pinned_label->setVisible(false);
+    input_layout->addWidget(_input_pinned_label);
 
-    // --- Pre-Reduction Panel ---
-    _pre_reduction_panel = new PreReductionPanel(this);
-    main_layout->addWidget(_pre_reduction_panel);
+    main_layout->addWidget(_input_group);
 
     // --- Pipeline Steps (with splitter between list and config) ---
     auto * pipeline_group = new QGroupBox(tr("Pipeline Steps"), this);
@@ -173,8 +217,8 @@ void TransformsV2Properties_Widget::setupUI() {
     _step_config = new StepConfigPanel(splitter);
     splitter->addWidget(_step_config);
 
-    splitter->setStretchFactor(0, 1); // Step list gets 1 part
-    splitter->setStretchFactor(1, 2); // Config panel gets 2 parts
+    splitter->setStretchFactor(0, 1);// Step list gets 1 part
+    splitter->setStretchFactor(1, 2);// Config panel gets 2 parts
 
     pipeline_layout->addWidget(splitter);
 
@@ -185,46 +229,7 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(pipeline_group, 1);
 
-    // --- JSON Panel (Phase 2) ---
-    _json_group = new QGroupBox(tr("Pipeline JSON"), this);
-    _json_group->setCheckable(true);
-    _json_group->setChecked(_state->jsonPanelExpanded());
-    auto * json_layout = new QVBoxLayout(_json_group);
-    json_layout->setSpacing(4);
-
-    _json_panel = new QTextEdit(_json_group);
-    _json_panel->setFont(QFont("monospace", 9));
-    _json_panel->setAcceptRichText(false);
-    _json_panel->setPlaceholderText(tr("Pipeline JSON will appear here..."));
-    _json_panel->setMinimumHeight(120);
-    json_layout->addWidget(_json_panel);
-
-    // Button row: Copy | Apply | Load | Save
-    auto * json_button_layout = new QHBoxLayout();
-    json_button_layout->setSpacing(4);
-
-    _copy_json_button = new QPushButton(tr("Copy"), _json_group);
-    _copy_json_button->setToolTip(tr("Copy pipeline JSON to clipboard"));
-    json_button_layout->addWidget(_copy_json_button);
-
-    _apply_json_button = new QPushButton(tr("Apply"), _json_group);
-    _apply_json_button->setToolTip(tr("Apply edited JSON to rebuild the pipeline UI"));
-    json_button_layout->addWidget(_apply_json_button);
-
-    _load_json_button = new QPushButton(tr("Load..."), _json_group);
-    _load_json_button->setToolTip(tr("Load pipeline JSON from file"));
-    json_button_layout->addWidget(_load_json_button);
-
-    _save_json_button = new QPushButton(tr("Save..."), _json_group);
-    _save_json_button->setToolTip(tr("Save pipeline JSON to file"));
-    json_button_layout->addWidget(_save_json_button);
-
-    json_button_layout->addStretch();
-    json_layout->addLayout(json_button_layout);
-
-    main_layout->addWidget(_json_group);
-
-    // --- Output & Execution Section (Phase 3) ---
+    // --- Output & Execution Section ---
     _output_group = new QGroupBox(tr("Output && Execution"), this);
     auto * output_layout = new QVBoxLayout(_output_group);
     output_layout->setSpacing(4);
@@ -267,7 +272,7 @@ void TransformsV2Properties_Widget::setupUI() {
     // Execute button
     _execute_button = new QPushButton(tr("Execute Pipeline"), _output_group);
     _execute_button->setToolTip(tr("Build and execute the pipeline on the selected input data"));
-    _execute_button->setEnabled(false);  // Enabled when pipeline is valid + input selected
+    _execute_button->setEnabled(false);// Enabled when pipeline is valid + input selected
     _execute_button->setStyleSheet(
             "QPushButton { font-weight: bold; padding: 6px; }"
             "QPushButton:enabled { background-color: #4CAF50; color: white; }"
@@ -297,20 +302,62 @@ void TransformsV2Properties_Widget::setupUI() {
 
     main_layout->addWidget(_output_group);
 
-    // --- Pipeline Delivery Button (Phase 6.4) ---
+    // --- JSON Panel (collapsed by default) ---
+    _json_section = new Section(scroll_content, tr("Pipeline JSON"));
+    auto * json_content_layout = new QVBoxLayout();
+    json_content_layout->setSpacing(4);
+
+    _json_panel = new QTextEdit();
+    _json_panel->setFont(QFont("monospace", 9));
+    _json_panel->setAcceptRichText(false);
+    _json_panel->setPlaceholderText(tr("Pipeline JSON will appear here..."));
+    _json_panel->setMinimumHeight(120);
+    json_content_layout->addWidget(_json_panel);
+
+    // Button row: Copy | Apply | Load | Save
+    auto * json_button_layout = new QHBoxLayout();
+    json_button_layout->setSpacing(4);
+
+    _copy_json_button = new QPushButton(tr("Copy"));
+    _copy_json_button->setToolTip(tr("Copy pipeline JSON to clipboard"));
+    json_button_layout->addWidget(_copy_json_button);
+
+    _apply_json_button = new QPushButton(tr("Apply"));
+    _apply_json_button->setToolTip(tr("Apply edited JSON to rebuild the pipeline UI"));
+    json_button_layout->addWidget(_apply_json_button);
+
+    _load_json_button = new QPushButton(tr("Load..."));
+    _load_json_button->setToolTip(tr("Load pipeline JSON from file"));
+    json_button_layout->addWidget(_load_json_button);
+
+    _save_json_button = new QPushButton(tr("Save..."));
+    _save_json_button->setToolTip(tr("Save pipeline JSON to file"));
+    json_button_layout->addWidget(_save_json_button);
+
+    json_button_layout->addStretch();
+    json_content_layout->addLayout(json_button_layout);
+
+    _json_section->setContentLayout(*json_content_layout);
+    main_layout->addWidget(_json_section);
+
+    // --- Pipeline Delivery Button ---
     // Shows when a consumer (e.g., TensorDesigner's ColumnConfigDialog) has
     // requested a pipeline via OperationContext.
     _deliver_pipeline_btn = new QPushButton(
-        tr("Send Pipeline to Column Builder"), this);
+            tr("Send Pipeline to Column Builder"), this);
     _deliver_pipeline_btn->setStyleSheet(
-        QStringLiteral("QPushButton { background-color: #0066cc; color: white; "
-                        "padding: 6px 12px; font-weight: bold; border-radius: 4px; }"
-                        "QPushButton:hover { background-color: #0055aa; }"
-                        "QPushButton:disabled { background-color: #999; }"));
+            QStringLiteral("QPushButton { background-color: #0066cc; color: white; "
+                           "padding: 6px 12px; font-weight: bold; border-radius: 4px; }"
+                           "QPushButton:hover { background-color: #0055aa; }"
+                           "QPushButton:disabled { background-color: #999; }"));
     _deliver_pipeline_btn->setToolTip(
-        tr("Deliver the current pipeline JSON to the widget that requested it"));
-    _deliver_pipeline_btn->setVisible(false); // Hidden until a pending operation exists
+            tr("Deliver the current pipeline JSON to the widget that requested it"));
+    _deliver_pipeline_btn->setVisible(false);// Hidden until a pending operation exists
     main_layout->addWidget(_deliver_pipeline_btn);
+
+    // Finalize scroll area
+    scroll_area->setWidget(scroll_content);
+    outer_layout->addWidget(scroll_area);
 
     // --- Connections ---
     connect(_step_list, &PipelineStepListWidget::stepSelected,
@@ -321,8 +368,6 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onValidationChanged);
     connect(_step_config, &StepConfigPanel::parametersChanged,
             this, &TransformsV2Properties_Widget::onStepParametersChanged);
-    connect(_pre_reduction_panel, &PreReductionPanel::preReductionsChanged,
-            this, &TransformsV2Properties_Widget::onPipelineChanged);
 
     // JSON panel connections
     connect(_json_panel, &QTextEdit::textChanged,
@@ -335,12 +380,7 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onLoadJsonClicked);
     connect(_save_json_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onSaveJsonClicked);
-    connect(_json_group, &QGroupBox::toggled,
-            this, [this](bool checked) {
-                _state->setJsonPanelExpanded(checked);
-            });
-
-    // Phase 3: Output & Execution connections
+    // Output & Execution connections
     connect(_execute_button, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onExecuteClicked);
     connect(_output_key_edit, &QLineEdit::textEdited,
@@ -352,7 +392,7 @@ void TransformsV2Properties_Widget::setupUI() {
                 updateExecuteButtonState();
             });
 
-    // Phase 6.4: OperationContext delivery connection
+    // OperationContext delivery connection
     connect(_deliver_pipeline_btn, &QPushButton::clicked,
             this, &TransformsV2Properties_Widget::onDeliverPipelineClicked);
 }
@@ -373,6 +413,33 @@ void TransformsV2Properties_Widget::updateInputDisplay() {
     _input_type_label->setVisible(true);
 }
 
+std::string TransformsV2Properties_Widget::resolveDataTypeFromManager(std::string const & key) const {
+    auto dm = _state ? _state->dataManager() : nullptr;
+    if (!dm || key.empty()) {
+        return {};
+    }
+
+    auto const dm_type = dm->getType(key);
+    switch (dm_type) {
+        case DM_DataType::Mask:
+            return "MaskData";
+        case DM_DataType::Line:
+            return "LineData";
+        case DM_DataType::Points:
+            return "PointData";
+        case DM_DataType::Analog:
+            return "AnalogTimeSeries";
+        case DM_DataType::RaggedAnalog:
+            return "RaggedAnalogTimeSeries";
+        case DM_DataType::DigitalEvent:
+            return "DigitalEventSeries";
+        case DM_DataType::DigitalInterval:
+            return "DigitalIntervalSeries";
+        default:
+            return {};
+    }
+}
+
 void TransformsV2Properties_Widget::resolveInputTypes() {
     if (_input_data_type_name.empty()) {
         _input_element_type = typeid(void);
@@ -382,17 +449,26 @@ void TransformsV2Properties_Widget::resolveInputTypes() {
 
     try {
         _input_container_type = TypeIndexMapper::stringToContainer(_input_data_type_name);
-        _input_element_type = TypeIndexMapper::containerToElement(_input_container_type);
     } catch (std::exception const & e) {
-        std::cerr << "TransformsV2Properties_Widget: Could not resolve types for '"
+        std::cerr << "TransformsV2Properties_Widget: Could not resolve container type for '"
                   << _input_data_type_name << "': " << e.what() << std::endl;
         _input_element_type = typeid(void);
         _input_container_type = typeid(void);
+        return;
+    }
+
+    // Some container types (e.g., DigitalEventSeries, DigitalIntervalSeries)
+    // are container-only and don't have an element type mapping.
+    // In that case we keep the container type valid but set element to void.
+    try {
+        _input_element_type = TypeIndexMapper::containerToElement(_input_container_type);
+    } catch (std::exception const &) {
+        _input_element_type = typeid(void);
     }
 }
 
 // ============================================================================
-// Phase 2: Bidirectional JSON Synchronization
+// Bidirectional JSON Synchronization
 // ============================================================================
 
 std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
@@ -400,7 +476,7 @@ std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
 
     // Build steps from the step list widget
     auto const & steps = _step_list->steps();
-    for (auto const & step : steps) {
+    for (auto const & step: steps) {
         PipelineStepDescriptor step_desc;
         step_desc.step_id = step.step_id;
         step_desc.transform_name = step.transform_name;
@@ -414,27 +490,6 @@ std::string TransformsV2Properties_Widget::buildJsonFromUI() const {
         }
 
         descriptor.steps.push_back(std::move(step_desc));
-    }
-
-    // Build pre-reductions from the pre-reduction panel
-    auto const & pre_entries = _pre_reduction_panel->entries();
-    if (!pre_entries.empty()) {
-        std::vector<PreReductionStepDescriptor> pre_descs;
-        for (auto const & entry : pre_entries) {
-            PreReductionStepDescriptor pre_desc;
-            pre_desc.reduction_name = entry.reduction_name;
-            pre_desc.output_key = entry.output_key;
-
-            if (entry.parameters_json != "{}" && !entry.parameters_json.empty()) {
-                auto params_result = rfl::json::read<rfl::Generic>(entry.parameters_json);
-                if (params_result) {
-                    pre_desc.parameters = params_result.value();
-                }
-            }
-
-            pre_descs.push_back(std::move(pre_desc));
-        }
-        descriptor.pre_reductions = std::move(pre_descs);
     }
 
     return savePipelineToJson(descriptor);
@@ -467,14 +522,8 @@ bool TransformsV2Properties_Widget::loadUIFromJson(std::string const & json_str)
 
     _syncing_json = true;
 
-    // Load pre-reductions
-    if (descriptor.pre_reductions.has_value()) {
-        _pre_reduction_panel->loadFromDescriptors(descriptor.pre_reductions.value());
-    } else {
-        _pre_reduction_panel->clearEntries();
-    }
-
-    // Load steps
+    // Load steps (pre-reductions from JSON are preserved in the descriptor
+    // but not exposed in the UI — they are an implementation detail)
     _step_list->loadFromDescriptors(descriptor.steps);
 
     // Update the JSON panel text to show the canonical (re-serialized) JSON
@@ -490,7 +539,7 @@ bool TransformsV2Properties_Widget::loadUIFromJson(std::string const & json_str)
 }
 
 // ============================================================================
-// Phase 2: JSON Panel Slots
+// JSON Panel Slots
 // ============================================================================
 
 void TransformsV2Properties_Widget::onJsonPanelEdited() {
@@ -565,7 +614,7 @@ void TransformsV2Properties_Widget::onSaveJsonClicked() {
 }
 
 // ============================================================================
-// Phase 3: Output Key Generation
+// Output Key Generation
 // ============================================================================
 
 std::string TransformsV2Properties_Widget::generateOutputName() const {
@@ -583,7 +632,7 @@ std::string TransformsV2Properties_Widget::generateOutputName() const {
     transform_name = transform_name.toLower().replace(' ', '_');
 
     // Strip common prefixes
-    for (auto const * prefix : {"calculate_", "extract_", "convert_", "threshold_"}) {
+    for (auto const * prefix: {"calculate_", "extract_", "convert_", "threshold_"}) {
         if (transform_name.startsWith(QLatin1String(prefix))) {
             transform_name = transform_name.mid(
                     static_cast<int>(std::strlen(prefix)));
@@ -628,7 +677,7 @@ void TransformsV2Properties_Widget::updateExecuteButtonState() {
 }
 
 // ============================================================================
-// Phase 3: Execution Slots
+// Execution Slots
 // ============================================================================
 
 void TransformsV2Properties_Widget::onOutputKeyEdited(QString const & text) {
@@ -772,7 +821,7 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
 }
 
 // ============================================================================
-// Phase 6.4: OperationContext Integration
+// OperationContext Integration
 // ============================================================================
 
 void TransformsV2Properties_Widget::setOperationContext(EditorLib::OperationContext * context) {
@@ -806,7 +855,7 @@ void TransformsV2Properties_Widget::onDeliverPipelineClicked() {
 }
 
 void TransformsV2Properties_Widget::onPendingOperationChanged(
-    EditorLib::EditorTypeId const & producer_type) {
+        EditorLib::EditorTypeId const & producer_type) {
 
     // Only respond to changes for our producer type
     if (producer_type.toStdString() != "TransformsV2Widget") {
@@ -822,7 +871,7 @@ bool TransformsV2Properties_Widget::tryDeliverPipeline() {
     }
 
     static auto const tv2_type = EditorLib::EditorTypeId(
-        QStringLiteral("TransformsV2Widget"));
+            QStringLiteral("TransformsV2Widget"));
 
     auto pending = _operation_context->pendingOperationFor(tv2_type);
     if (!pending.has_value()) {
@@ -840,10 +889,28 @@ bool TransformsV2Properties_Widget::tryDeliverPipeline() {
         return false;
     }
 
-    // Deliver the pipeline JSON as an OperationResult
+    // Wrap pipeline JSON with input metadata so the requester knows
+    // which DataManager key and data type the pipeline was configured for.
+    nlohmann::json envelope;
+    try {
+        envelope["pipeline"] = nlohmann::json::parse(json_str);
+    } catch (...) {
+        // If the JSON panel text isn't valid JSON, store as raw string
+        envelope["pipeline"] = json_str;
+    }
+    if (!_input_data_key.empty()) {
+        envelope["input_key"] = _input_data_key;
+    }
+    if (!_input_data_type_name.empty()) {
+        envelope["input_type"] = _input_data_type_name;
+    }
+
+    auto const envelope_str = envelope.dump();
+
+    // Deliver the envelope as an OperationResult
     auto result = EditorLib::OperationResult::create(
-        EditorLib::DataChannels::TransformPipeline,
-        json_str);
+            EditorLib::DataChannels::TransformPipeline,
+            envelope_str);
 
     return _operation_context->deliverResult(tv2_type, std::move(result));
 }
@@ -857,7 +924,7 @@ void TransformsV2Properties_Widget::updateDeliverButtonState() {
     }
 
     static auto const tv2_type = EditorLib::EditorTypeId(
-        QStringLiteral("TransformsV2Widget"));
+            QStringLiteral("TransformsV2Widget"));
 
     auto pending = _operation_context->pendingOperationFor(tv2_type);
     _deliver_pipeline_btn->setVisible(pending.has_value());

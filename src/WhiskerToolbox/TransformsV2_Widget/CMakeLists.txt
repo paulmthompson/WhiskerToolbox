@@ -11,8 +11,6 @@ set(TRANSFORMS_V2_WIDGET_SOURCES
         UI/PipelineStepListWidget.cpp
         UI/StepConfigPanel.hpp
         UI/StepConfigPanel.cpp
-        UI/PreReductionPanel.hpp
-        UI/PreReductionPanel.cpp
         UI/TransformsV2Properties_Widget.hpp
         UI/TransformsV2Properties_Widget.cpp
         UI/TransformsV2Properties_Widget.ui
@@ -35,4 +33,5 @@ target_link_libraries(TransformsV2_Widget PUBLIC
         EditorState
         DataManager
         TransformsV2
+        Collapsible_Widget
 )

@@ -24,17 +24,17 @@
 
 namespace EditorLib {
 class OperationContext;
-} // namespace EditorLib
+}// namespace EditorLib
 
 class TransformsV2State;
 class SelectionContext;
 class DataManager;
 class PipelineStepListWidget;
 class StepConfigPanel;
-class PreReductionPanel;
 class QLabel;
 class QGroupBox;
 class QComboBox;
+class Section;
 class QLineEdit;
 class QProgressBar;
 class QPushButton;
@@ -50,9 +50,8 @@ class TransformsV2Properties_Widget;
  *
  * Integrates:
  * - Input Selector (DataFocusAware) — responds to data selection
- * - Pipeline Step List — add/remove/reorder transform steps
+ * - Pipeline Step List — add/remove transform steps with inline transform browser
  * - Step Configuration — auto-generated parameter forms
- * - Pre-Reduction Panel — pre-computation steps for pipeline
  * - Type Chain Validation — inline validation of the pipeline
  */
 class TransformsV2Properties_Widget : public QWidget, public DataFocusAware {
@@ -85,7 +84,7 @@ signals:
      * @brief Emitted whenever the pipeline descriptor changes
      *
      * This signal fires on any change to the pipeline (UI edits or JSON edits).
-     * External consumers (Phase 4) can connect to this for real-time updates.
+     * External consumers can connect to this for real-time updates.
      * @param pipeline_json The current pipeline descriptor as a JSON string
      */
     void pipelineDescriptorChanged(std::string const & pipeline_json);
@@ -101,11 +100,11 @@ private slots:
     void onSaveJsonClicked();
     void onApplyJsonClicked();
 
-    // Phase 3: Execution slots
+    // Execution slots
     void onExecuteClicked();
     void onOutputKeyEdited(QString const & text);
 
-    // Phase 6.4: OperationContext delivery
+    // OperationContext delivery
     void onDeliverPipelineClicked();
     void onPendingOperationChanged(EditorLib::EditorTypeId const & producer_type);
 
@@ -113,6 +112,18 @@ private:
     void setupUI();
     void updateInputDisplay();
     void resolveInputTypes();
+
+    /**
+     * @brief Resolve the container type name from DataManager using the data key
+     *
+     * Looks up the DM_DataType for the given key via DataManager::getType()
+     * and converts it to the container class name string expected by
+     * TypeIndexMapper::stringToContainer (e.g. "MaskData", "LineData").
+     *
+     * @param key The data key in DataManager
+     * @return Container type name string, or empty string if unresolvable
+     */
+    [[nodiscard]] std::string resolveDataTypeFromManager(std::string const & key) const;
 
     /**
      * @brief Build a PipelineDescriptor from the current UI state
@@ -175,28 +186,29 @@ private:
 
     // Input state
     std::string _input_data_key;
-    std::string _input_data_type_name;  // e.g. "MaskData", "AnalogTimeSeries"
+    std::string _input_data_type_name;// e.g. "MaskData", "AnalogTimeSeries"
     std::type_index _input_element_type{typeid(void)};
     std::type_index _input_container_type{typeid(void)};
+    bool _input_pinned = false;///< True once the pipeline has steps; ignores DataManager focus changes
 
     // Sub-widgets
     QLabel * _input_key_label = nullptr;
     QLabel * _input_type_label = nullptr;
+    QLabel * _input_pinned_label = nullptr;///< Shows "(locked)" when pinned
     QGroupBox * _input_group = nullptr;
     PipelineStepListWidget * _step_list = nullptr;
     StepConfigPanel * _step_config = nullptr;
-    PreReductionPanel * _pre_reduction_panel = nullptr;
     QLabel * _validation_label = nullptr;
 
-    // JSON Panel (Phase 2)
-    QGroupBox * _json_group = nullptr;
+    // JSON Panel
+    Section * _json_section = nullptr;
     QTextEdit * _json_panel = nullptr;
     QPushButton * _copy_json_button = nullptr;
     QPushButton * _load_json_button = nullptr;
     QPushButton * _save_json_button = nullptr;
     QPushButton * _apply_json_button = nullptr;
 
-    // Output & Execution (Phase 3)
+    // Output & Execution
     QGroupBox * _output_group = nullptr;
     QLineEdit * _output_key_edit = nullptr;
     QComboBox * _execution_mode_combo = nullptr;
@@ -204,11 +216,11 @@ private:
     QProgressBar * _progress_bar = nullptr;
     QLabel * _progress_label = nullptr;
     QLabel * _error_label = nullptr;
-    bool _output_key_user_edited = false;  ///< True if user manually edited the output key
+    bool _output_key_user_edited = false;///< True if user manually edited the output key
 
-    // OperationContext delivery (Phase 6.4)
+    // OperationContext delivery
     EditorLib::OperationContext * _operation_context = nullptr;
     QPushButton * _deliver_pipeline_btn = nullptr;
 };
 
-#endif // TRANSFORMS_V2_PROPERTIES_WIDGET_HPP
+#endif// TRANSFORMS_V2_PROPERTIES_WIDGET_HPP

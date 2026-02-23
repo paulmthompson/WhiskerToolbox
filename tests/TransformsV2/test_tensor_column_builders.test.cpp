@@ -1,11 +1,11 @@
 /**
  * @file TensorColumnBuilders.test.cpp
- * @brief Tests for TensorColumnBuilders — Phase 1.1b of the TableView → TensorData refactoring.
+ * @brief Tests for TensorColumnBuilders — generic pipeline column providers.
  *
  * Tests verify that builder-produced ColumnProviderFn closures generate correct
  * output for:
- *   - Direct passthrough of AnalogTimeSeries values at row timestamps
- *   - Interval gather + range reduction (Analog, Event, Interval sources)
+ *   - Pattern A: Generic pipeline passthrough (timestamp-row)
+ *   - Pattern B: Generic interval gather + pipeline (interval-row)
  *   - Interval property extraction (Start, End, Duration)
  *   - ColumnRecipe → ColumnProviderFn dispatching
  *   - Invalidation wiring (DataManager observers → column invalidation)
@@ -39,6 +39,7 @@
 #include <vector>
 
 using namespace WhiskerToolbox::TensorBuilders;
+using WhiskerToolbox::Transforms::V2::TransformPipeline;
 using Catch::Matchers::WithinAbs;
 
 // =============================================================================
@@ -116,14 +117,14 @@ std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & ts) {
 } // anonymous namespace
 
 // =============================================================================
-// buildDirectColumnProvider Tests
+// buildPipelineColumnProvider — Passthrough Tests (Pattern A, empty pipeline)
 // =============================================================================
 
-TEST_CASE("buildDirectColumnProvider - basic passthrough", "[TensorColumnBuilders]") {
+TEST_CASE("buildPipelineColumnProvider - basic passthrough", "[TensorColumnBuilders]") {
     auto dm = makeDMWithAnalog("analog_src", 100);
     auto row_times = makeRowTimes({0, 10, 20, 50, 99});
 
-    auto provider = buildDirectColumnProvider(*dm, "analog_src", row_times);
+    auto provider = buildPipelineColumnProvider(*dm, "analog_src", row_times, TransformPipeline{});
     auto values = provider();
 
     REQUIRE(values.size() == 5);
@@ -134,12 +135,12 @@ TEST_CASE("buildDirectColumnProvider - basic passthrough", "[TensorColumnBuilder
     CHECK(values[4] == 99.0f);
 }
 
-TEST_CASE("buildDirectColumnProvider - missing timestamps produce NaN", "[TensorColumnBuilders]") {
+TEST_CASE("buildPipelineColumnProvider - missing timestamps produce NaN", "[TensorColumnBuilders]") {
     auto dm = makeDMWithAnalog("analog_src", 10);
     // Request timestamps beyond the source range
     auto row_times = makeRowTimes({0, 5, 999});
 
-    auto provider = buildDirectColumnProvider(*dm, "analog_src", row_times);
+    auto provider = buildPipelineColumnProvider(*dm, "analog_src", row_times, TransformPipeline{});
     auto values = provider();
 
     REQUIRE(values.size() == 3);
@@ -148,22 +149,22 @@ TEST_CASE("buildDirectColumnProvider - missing timestamps produce NaN", "[Tensor
     CHECK(std::isnan(values[2]));
 }
 
-TEST_CASE("buildDirectColumnProvider - invalid source key throws", "[TensorColumnBuilders]") {
+TEST_CASE("buildPipelineColumnProvider - invalid source key throws", "[TensorColumnBuilders]") {
     DataManager dm;
     auto row_times = makeRowTimes({0, 1, 2});
 
     CHECK_THROWS_AS(
-        buildDirectColumnProvider(dm, "nonexistent", row_times),
+        buildPipelineColumnProvider(dm, "nonexistent", row_times, TransformPipeline{}),
         std::runtime_error);
 }
 
-TEST_CASE("buildDirectColumnProvider - reflects data changes on re-invoke", "[TensorColumnBuilders]") {
+TEST_CASE("buildPipelineColumnProvider - reflects data changes on re-invoke", "[TensorColumnBuilders]") {
     DataManager dm;
     auto analog = createLinearAnalog(10);
     dm.setData<AnalogTimeSeries>("src", analog, TimeKey("time"));
 
     auto row_times = makeRowTimes({0, 5});
-    auto provider = buildDirectColumnProvider(dm, "src", row_times);
+    auto provider = buildPipelineColumnProvider(dm, "src", row_times, TransformPipeline{});
 
     auto v1 = provider();
     CHECK(v1[0] == 0.0f);
@@ -182,14 +183,13 @@ TEST_CASE("buildDirectColumnProvider - reflects data changes on re-invoke", "[Te
     CHECK(v2[1] == 105.0f);
 }
 
-TEST_CASE("buildDirectColumnProvider - empty row times", "[TensorColumnBuilders]") {
+TEST_CASE("buildPipelineColumnProvider - empty row times throws", "[TensorColumnBuilders]") {
     auto dm = makeDMWithAnalog("src", 10);
     std::vector<TimeFrameIndex> empty_times;
 
-    auto provider = buildDirectColumnProvider(*dm, "src", empty_times);
-    auto values = provider();
-
-    CHECK(values.empty());
+    CHECK_THROWS_AS(
+        buildPipelineColumnProvider(*dm, "src", empty_times, TransformPipeline{}),
+        std::runtime_error);
 }
 
 // =============================================================================
@@ -239,10 +239,10 @@ TEST_CASE("buildIntervalPropertyProvider - null intervals throws", "[TensorColum
 }
 
 // =============================================================================
-// buildIntervalReductionProvider Tests — AnalogTimeSeries
+// buildIntervalPipelineProvider Tests — AnalogTimeSeries (Pattern B)
 // =============================================================================
 
-TEST_CASE("buildIntervalReductionProvider - Analog MeanValue", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - Analog MeanValue", "[TensorColumnBuilders]") {
     // Linear analog: values = 0..99 at times 0..99
     DataManager dm;
     auto analog = createLinearAnalog(100);
@@ -255,7 +255,7 @@ TEST_CASE("buildIntervalReductionProvider - Analog MeanValue", "[TensorColumnBui
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(dm, "analog", intervals, std::move(pipeline));
+    auto provider = buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 2);
@@ -267,7 +267,7 @@ TEST_CASE("buildIntervalReductionProvider - Analog MeanValue", "[TensorColumnBui
     CHECK_THAT(values[1], WithinAbs(55.0, 0.01));
 }
 
-TEST_CASE("buildIntervalReductionProvider - Analog SumValue", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - Analog SumValue", "[TensorColumnBuilders]") {
     DataManager dm;
     auto analog = createLinearAnalog(100);
     dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
@@ -277,7 +277,7 @@ TEST_CASE("buildIntervalReductionProvider - Analog SumValue", "[TensorColumnBuil
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("SumValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(dm, "analog", intervals, std::move(pipeline));
+    auto provider = buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 1);
@@ -285,7 +285,7 @@ TEST_CASE("buildIntervalReductionProvider - Analog SumValue", "[TensorColumnBuil
     CHECK_THAT(values[0], WithinAbs(10.0, 0.01));
 }
 
-TEST_CASE("buildIntervalReductionProvider - Analog MaxValue", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - Analog MaxValue", "[TensorColumnBuilders]") {
     DataManager dm;
     auto analog = createLinearAnalog(100);
     dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
@@ -295,7 +295,7 @@ TEST_CASE("buildIntervalReductionProvider - Analog MaxValue", "[TensorColumnBuil
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MaxValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(dm, "analog", intervals, std::move(pipeline));
+    auto provider = buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 2);
@@ -304,10 +304,10 @@ TEST_CASE("buildIntervalReductionProvider - Analog MaxValue", "[TensorColumnBuil
 }
 
 // =============================================================================
-// buildIntervalReductionProvider Tests — DigitalEventSeries
+// buildIntervalPipelineProvider Tests — DigitalEventSeries (Pattern B)
 // =============================================================================
 
-TEST_CASE("buildIntervalReductionProvider - Event EventCount", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - Event EventCount", "[TensorColumnBuilders]") {
     DataManager dm;
     auto events = createEventSeries({5, 15, 25, 35, 45, 55});
     dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
@@ -318,7 +318,7 @@ TEST_CASE("buildIntervalReductionProvider - Event EventCount", "[TensorColumnBui
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("EventCount", std::any{});
 
-    auto provider = buildIntervalReductionProvider(dm, "events", intervals, std::move(pipeline));
+    auto provider = buildIntervalPipelineProvider(dm, "events", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 2);
@@ -326,7 +326,7 @@ TEST_CASE("buildIntervalReductionProvider - Event EventCount", "[TensorColumnBui
     CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
 }
 
-TEST_CASE("buildIntervalReductionProvider - Event empty interval returns zero count",
+TEST_CASE("buildIntervalPipelineProvider - Event empty interval returns zero count",
           "[TensorColumnBuilders]") {
     DataManager dm;
     auto events = createEventSeries({5, 15, 25});
@@ -338,7 +338,7 @@ TEST_CASE("buildIntervalReductionProvider - Event empty interval returns zero co
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("EventCount", std::any{});
 
-    auto provider = buildIntervalReductionProvider(dm, "events", intervals, std::move(pipeline));
+    auto provider = buildIntervalPipelineProvider(dm, "events", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 1);
@@ -346,10 +346,10 @@ TEST_CASE("buildIntervalReductionProvider - Event empty interval returns zero co
 }
 
 // =============================================================================
-// buildIntervalReductionProvider — Validation
+// buildIntervalPipelineProvider — Validation
 // =============================================================================
 
-TEST_CASE("buildIntervalReductionProvider - null intervals throws", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - null intervals throws", "[TensorColumnBuilders]") {
     DataManager dm;
     auto analog = createLinearAnalog(10);
     dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
@@ -358,11 +358,11 @@ TEST_CASE("buildIntervalReductionProvider - null intervals throws", "[TensorColu
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     CHECK_THROWS_AS(
-        buildIntervalReductionProvider(dm, "analog", nullptr, std::move(pipeline)),
+        buildIntervalPipelineProvider(dm, "analog", nullptr, std::move(pipeline)),
         std::runtime_error);
 }
 
-TEST_CASE("buildIntervalReductionProvider - missing reduction throws", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - missing reduction throws", "[TensorColumnBuilders]") {
     DataManager dm;
     auto analog = createLinearAnalog(10);
     dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
@@ -372,22 +372,26 @@ TEST_CASE("buildIntervalReductionProvider - missing reduction throws", "[TensorC
     // No range reduction set
 
     CHECK_THROWS_AS(
-        buildIntervalReductionProvider(dm, "analog", intervals, std::move(pipeline)),
+        buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline)),
         std::runtime_error);
 }
 
-TEST_CASE("buildIntervalReductionProvider - unsupported source type throws", "[TensorColumnBuilders]") {
+TEST_CASE("buildIntervalPipelineProvider - PointData with incompatible reduction throws at runtime",
+          "[TensorColumnBuilders]") {
     DataManager dm;
-    // PointData is not supported for interval reduction
+    // PointData source with a MeanValue reduction — builds OK but fails at runtime
+    // because MeanValue operates on TimeValuePoint, not Point2D<float>
     dm.setData<PointData>("points", TimeKey("time"));
     auto intervals = createIntervalSeries({{0, 10}});
 
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    CHECK_THROWS_AS(
-        buildIntervalReductionProvider(dm, "points", intervals, std::move(pipeline)),
-        std::runtime_error);
+    // Build succeeds (pipelineProducesFloat passes — MeanValue declares float output)
+    auto provider = buildIntervalPipelineProvider(dm, "points", intervals, std::move(pipeline));
+
+    // Runtime execution throws because the pipeline cannot process PointData with MeanValue
+    CHECK_THROWS_AS(provider(), std::runtime_error);
 }
 
 // =============================================================================
@@ -403,8 +407,8 @@ TEST_CASE("buildInvalidationWiringFn - wires observers correctly", "[TensorColum
     // Build a lazy tensor with two columns
     auto row_times = makeRowTimes({0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
 
-    auto provider1 = buildDirectColumnProvider(dm, "src1", row_times);
-    auto provider2 = buildDirectColumnProvider(dm, "src2", row_times);
+    auto provider1 = buildPipelineColumnProvider(dm, "src1", row_times, TransformPipeline{});
+    auto provider2 = buildPipelineColumnProvider(dm, "src2", row_times, TransformPipeline{});
 
     std::vector<ColumnSource> columns;
     columns.push_back(ColumnSource{"col1", std::move(provider1), {}});
@@ -442,7 +446,7 @@ TEST_CASE("buildInvalidationWiringFn - empty source key skipped", "[TensorColumn
     // Column 1 has empty key (interval property — no source dependency)
     auto wiring = buildInvalidationWiringFn(dm, {"src1", ""});
 
-    auto provider1 = buildDirectColumnProvider(dm, "src1", makeRowTimes({0, 1, 2}));
+    auto provider1 = buildPipelineColumnProvider(dm, "src1", makeRowTimes({0, 1, 2}), TransformPipeline{});
 
     auto intervals = createIntervalSeries({{0, 1}, {2, 3}, {4, 5}});
     auto provider2 = buildIntervalPropertyProvider(intervals, IntervalProperty::Duration);
@@ -478,13 +482,13 @@ TEST_CASE("Integration - build lazy tensor from interval reductions", "[TensorCo
     // Build mean column
     auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
-    auto mean_provider = buildIntervalReductionProvider(
+    auto mean_provider = buildIntervalPipelineProvider(
         dm, "signal", intervals, std::move(mean_pipeline));
 
     // Build max column
     auto max_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     max_pipeline.setRangeReductionErased("MaxValue", std::any{});
-    auto max_provider = buildIntervalReductionProvider(
+    auto max_provider = buildIntervalPipelineProvider(
         dm, "signal", intervals, std::move(max_pipeline));
 
     // Build duration column
@@ -533,7 +537,7 @@ TEST_CASE("Integration - build lazy tensor from timestamp rows", "[TensorColumnB
 
     auto row_times = makeRowTimes({0, 25, 50, 75, 99});
 
-    auto provider = buildDirectColumnProvider(dm, "signal", row_times);
+    auto provider = buildPipelineColumnProvider(dm, "signal", row_times, TransformPipeline{});
 
     std::vector<ColumnSource> columns;
     columns.push_back(ColumnSource{"value", std::move(provider), {}});
@@ -561,7 +565,7 @@ TEST_CASE("Integration - multiple columns added via appendColumn", "[TensorColum
     // Start with just one column
     auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
-    auto mean_provider = buildIntervalReductionProvider(
+    auto mean_provider = buildIntervalPipelineProvider(
         dm, "signal", intervals, std::move(mean_pipeline));
 
     std::vector<ColumnSource> columns;
@@ -589,7 +593,7 @@ TEST_CASE("Integration - multiple columns added via appendColumn", "[TensorColum
 // Cross-TimeFrame Builder Tests (Phase 3.3)
 // ============================================================================
 
-TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame analog mean",
+TEST_CASE("buildIntervalPipelineProvider - cross-TimeFrame analog mean",
           "[TensorColumnBuilders][cross_timeframe]") {
     DataManager dm;
 
@@ -622,7 +626,7 @@ TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame analog mean",
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
             dm, "signal", intervals, std::move(pipeline));
 
     auto values = provider();
@@ -634,7 +638,7 @@ TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame analog mean",
     CHECK_THAT(values[1], WithinAbs(120.0, 1.0));
 }
 
-TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame event count",
+TEST_CASE("buildIntervalPipelineProvider - cross-TimeFrame event count",
           "[TensorColumnBuilders][cross_timeframe]") {
     DataManager dm;
 
@@ -667,7 +671,7 @@ TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame event count",
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("EventCount", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
             dm, "events", intervals, std::move(pipeline));
 
     auto values = provider();
@@ -676,7 +680,7 @@ TEST_CASE("buildIntervalReductionProvider - cross-TimeFrame event count",
     CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
 }
 
-TEST_CASE("buildIntervalReductionProvider - same TimeFrame produces same results",
+TEST_CASE("buildIntervalPipelineProvider - same TimeFrame produces same results",
           "[TensorColumnBuilders][cross_timeframe]") {
     DataManager dm;
 
@@ -696,7 +700,7 @@ TEST_CASE("buildIntervalReductionProvider - same TimeFrame produces same results
     auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
-    auto provider = buildIntervalReductionProvider(
+    auto provider = buildIntervalPipelineProvider(
             dm, "signal", intervals, std::move(pipeline));
 
     auto values = provider();
@@ -737,12 +741,12 @@ TEST_CASE("Integration - cross-TimeFrame lazy tensor assembly",
     // Build two columns: mean and max, both with cross-TimeFrame
     auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
-    auto mean_provider = buildIntervalReductionProvider(
+    auto mean_provider = buildIntervalPipelineProvider(
             dm, "signal", intervals, std::move(mean_pipeline));
 
     auto max_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
     max_pipeline.setRangeReductionErased("MaxValue", std::any{});
-    auto max_provider = buildIntervalReductionProvider(
+    auto max_provider = buildIntervalPipelineProvider(
             dm, "signal", intervals, std::move(max_pipeline));
 
     // Also add interval duration column (no cross-TF needed for properties)

@@ -5,18 +5,13 @@
  * @file NaiveBayesOperation.hpp
  * @brief MLCore-native Naive Bayes classifier (wraps mlpack::NaiveBayesClassifier)
  *
- * This is a fresh implementation conforming to the MLCore::MLModelOperation
- * interface. It does NOT depend on or modify the legacy NaiveBayesModelOperation
- * in src/WhiskerToolbox/ML_Widget/ML_Naive_Bayes_Widget/.
- *
- * Features beyond the legacy implementation:
+ * Features:
  * - Conforms to the evolved MLModelOperation interface (MLTaskType, numFeatures, etc.)
  * - Supports save/load for model persistence via binary serialization
  * - Tracks training metadata (numClasses, numFeatures) for validation
  * - Uses pimpl to isolate mlpack headers from consumers
  * - Uses the MLCore::NaiveBayesParameters (epsilon smoothing parameter)
  *
- * @see ml_library_roadmap.md §2.3
  */
 
 #include "MLCore/models/MLModelOperation.hpp"
@@ -78,17 +73,17 @@ public:
     // ========================================================================
 
     bool train(
-        arma::mat const & features,
-        arma::Row<std::size_t> const & labels,
-        MLModelParametersBase const * params) override;
+            arma::mat const & features,
+            arma::Row<std::size_t> const & labels,
+            MLModelParametersBase const * params) override;
 
     bool predict(
-        arma::mat const & features,
-        arma::Row<std::size_t> & predictions) override;
+            arma::mat const & features,
+            arma::Row<std::size_t> & predictions) override;
 
     bool predictProbabilities(
-        arma::mat const & features,
-        arma::mat & probabilities) override;
+            arma::mat const & features,
+            arma::mat & probabilities) override;
 
     // ========================================================================
     // Serialization
@@ -111,6 +106,6 @@ private:
     std::unique_ptr<Impl> _impl;
 };
 
-} // namespace MLCore
+}// namespace MLCore
 
-#endif // MLCORE_NAIVEBAYESOPERATION_HPP
+#endif// MLCORE_NAIVEBAYESOPERATION_HPP

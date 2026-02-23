@@ -1,7 +1,7 @@
 #ifndef ANALOG_HILBERT_PHASE_HPP
 #define ANALOG_HILBERT_PHASE_HPP
 
-
+#include "datamanager_export.h"
 #include "transforms/data_transforms.hpp"
 
 #include <memory>   // std::shared_ptr
@@ -64,7 +64,7 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
  * @return A new AnalogTimeSeries containing the instantaneous phase values in radians.
  *         Returns an empty series if input is null or empty.
  */
-std::shared_ptr<AnalogTimeSeries> hilbert_phase(
+std::shared_ptr<AnalogTimeSeries> DATAMANAGER_EXPORT hilbert_phase(
         AnalogTimeSeries const * analog_time_series,
         HilbertPhaseParams const & phaseParams,
         ProgressCallback progressCallback);

@@ -56,7 +56,7 @@ void AutoParamWidget::setSchema(ParameterSchema const & schema) {
 
     bool has_advanced = false;
 
-    for (auto const & desc : schema.fields) {
+    for (auto const & desc: schema.fields) {
         if (desc.is_advanced) {
             has_advanced = true;
             buildFieldRow(desc, _advanced_layout);
@@ -73,7 +73,7 @@ void AutoParamWidget::setSchema(ParameterSchema const & schema) {
 // ============================================================================
 
 void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
-                                     QFormLayout * layout) {
+                                    QFormLayout * layout) {
     FieldRow row;
     row.field_name = desc.name;
     row.type_name = desc.type_name;
@@ -139,7 +139,7 @@ void AutoParamWidget::buildFieldRow(ParameterFieldDescriptor const & desc,
 
     } else if (desc.type_name == "std::string" && !desc.allowed_values.empty()) {
         auto * combo = new QComboBox(this);
-        for (auto const & val : desc.allowed_values) {
+        for (auto const & val: desc.allowed_values) {
             combo->addItem(QString::fromStdString(val));
         }
 
@@ -203,7 +203,7 @@ std::string AutoParamWidget::toJson() const {
     oss << "{";
 
     bool first = true;
-    for (auto const & row : _field_rows) {
+    for (auto const & row: _field_rows) {
         // For optional fields, skip if the gate checkbox is unchecked
         if (row.is_optional && row.optional_gate && !row.optional_gate->isChecked()) {
             continue;
@@ -256,7 +256,7 @@ bool AutoParamWidget::fromJson(std::string const & json) {
 
     _updating = true;
 
-    for (auto & row : _field_rows) {
+    for (auto & row: _field_rows) {
         // Look for this field in the JSON object using the public get() API
         auto field_result = obj->get(row.field_name);
         bool has_value = static_cast<bool>(field_result);

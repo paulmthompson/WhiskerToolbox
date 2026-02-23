@@ -322,6 +322,17 @@ public:
     static std::type_index containerToElement(std::type_index container_type);
     static std::string containerToString(std::type_index container_type);
     static std::type_index stringToContainer(std::string const & name);
+
+    /**
+     * @brief Check whether a container type is ragged (multiple elements per time frame)
+     *
+     * MaskData, LineData, PointData, and RaggedAnalogTimeSeries are ragged.
+     * AnalogTimeSeries is not ragged.
+     *
+     * @param container_type The container type_index to check
+     * @return true if the container is ragged; false otherwise (including unknown types)
+     */
+    static bool isContainerRagged(std::type_index container_type);
 };
 
 // ============================================================================

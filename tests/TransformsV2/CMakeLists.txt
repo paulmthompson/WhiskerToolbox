@@ -28,6 +28,7 @@ add_executable(test_TransformsV2
         test_parameter_schema.test.cpp
         test_transform_lineage_integration.test.cpp
         test_tensor_column_builders.test.cpp
+        test_nonanalog_column_builders.test.cpp
         test_phase1_3_4_reductions_transforms.test.cpp
         test_multistep_column_builders.test.cpp
 

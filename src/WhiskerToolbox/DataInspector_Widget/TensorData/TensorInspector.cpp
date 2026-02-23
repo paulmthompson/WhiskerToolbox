@@ -18,9 +18,9 @@
 #include <iostream>
 
 TensorInspector::TensorInspector(
-    std::shared_ptr<DataManager> data_manager,
-    GroupManager * group_manager,
-    QWidget * parent)
+        std::shared_ptr<DataManager> data_manager,
+        GroupManager * group_manager,
+        QWidget * parent)
     : BaseInspector(std::move(data_manager), group_manager, parent) {
     _setupDesignerUi();
 }

@@ -12,6 +12,7 @@
 #include "Points/Point_Data.hpp"
 
 #include <stdexcept>
+#include <unordered_set>
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -21,6 +22,9 @@ std::type_index TypeIndexMapper::elementToContainer(std::type_index element_type
             {typeid(Line2D), typeid(LineData)},
             {typeid(Point2D<float>), typeid(PointData)},
             {typeid(float), typeid(RaggedAnalogTimeSeries)}};
+    // Note: float maps to RaggedAnalogTimeSeries here.
+    // AnalogTimeSeries also has float elements but uses a different storage model.
+    // See containerToElement() for the reverse mapping which covers both.
 
     auto it = map.find(element_type);
     if (it != map.end()) {
@@ -35,6 +39,7 @@ std::type_index TypeIndexMapper::containerToElement(std::type_index container_ty
             {typeid(MaskData), typeid(Mask2D)},
             {typeid(LineData), typeid(Line2D)},
             {typeid(PointData), typeid(Point2D<float>)},
+            {typeid(AnalogTimeSeries), typeid(float)},
             {typeid(RaggedAnalogTimeSeries), typeid(float)}};
 
     auto it = map.find(container_type);
@@ -79,6 +84,17 @@ std::type_index TypeIndexMapper::stringToContainer(std::string const & name) {
     }
 
     throw std::runtime_error("Unknown container name: " + name);
+}
+
+bool TypeIndexMapper::isContainerRagged(std::type_index container_type) {
+    // All containers with DataTraits::is_ragged == true
+    static std::unordered_set<std::type_index> const ragged_types = {
+            typeid(MaskData),
+            typeid(LineData),
+            typeid(PointData),
+            typeid(RaggedAnalogTimeSeries)};
+
+    return ragged_types.contains(container_type);
 }
 
 }// namespace WhiskerToolbox::Transforms::V2

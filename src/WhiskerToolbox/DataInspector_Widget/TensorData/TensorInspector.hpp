@@ -29,7 +29,7 @@ class TensorDesigner;
 
 namespace EditorLib {
 class OperationContext;
-} // namespace EditorLib
+}// namespace EditorLib
 
 /**
  * @brief Inspector widget for TensorData with design mode
@@ -49,9 +49,9 @@ public:
      * @param parent Parent widget
      */
     explicit TensorInspector(
-        std::shared_ptr<DataManager> data_manager,
-        GroupManager * group_manager = nullptr,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            GroupManager * group_manager = nullptr,
+            QWidget * parent = nullptr);
 
     ~TensorInspector() override;
 
@@ -116,4 +116,4 @@ private:
     TensorDesigner * _designer{nullptr};
 };
 
-#endif // TENSOR_INSPECTOR_HPP
+#endif// TENSOR_INSPECTOR_HPP

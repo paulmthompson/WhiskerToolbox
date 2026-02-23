@@ -10,6 +10,7 @@
 #include "PointData/PointInspector.hpp"
 #include "PointData/PointTableView.hpp"
 #include "TensorData/TensorInspector.hpp"
+#include "TensorData/TensorDesigner.hpp"
 #include "Inspectors/BaseInspector.hpp"
 #include "Inspectors/InspectorFactory.hpp"
 
@@ -288,6 +289,10 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         }
         if (_operation_context) {
             tensor_inspector->setOperationContext(_operation_context);
+        }
+        // Pass inspector state to designer for auto-pinning during dialog interaction
+        if (tensor_inspector->designer() && _state) {
+            tensor_inspector->designer()->setInspectorState(_state);
         }
         // When designer creates a tensor, navigate the inspector to it
         QObject::connect(tensor_inspector, &TensorInspector::tensorCreated,

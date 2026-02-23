@@ -11,9 +11,6 @@
  * add columns by configuring DataManager source keys with 
  * TransformsV2 range reductions or element transforms.
  *
- * This replaces the legacy TableDesignerWidget with the modern
- * TensorData + TransformsV2 infrastructure.
- *
  * ## Architecture
  * - Row configuration: Select a DigitalIntervalSeries (interval rows),
  *   DigitalEventSeries (timestamp rows), or ordinal rows
@@ -28,14 +25,16 @@
  * @see TensorInspector for the inspector that hosts this panel
  */
 
+#include <QPointer>
 #include <QWidget>
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// Forward declarations
+class ColumnConfigDialog;
 class DataManager;
+class DataInspectorState;
 class QComboBox;
 class QLabel;
 class QListWidget;
@@ -49,21 +48,22 @@ struct SelectionSource;
 
 namespace EditorLib {
 class OperationContext;
-} // namespace EditorLib
+}// namespace EditorLib
 
 namespace WhiskerToolbox::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
-} // namespace WhiskerToolbox::TensorBuilders
+}// namespace WhiskerToolbox::TensorBuilders
 
 /**
  * @brief Row source type for the tensor designer
  */
 enum class DesignerRowType {
-    None,              ///< No row source selected
-    Interval,          ///< Rows from DigitalIntervalSeries
-    Timestamp,         ///< Rows from DigitalEventSeries
-    Ordinal            ///< Manual ordinal rows
+    None,             ///< No row source selected
+    Interval,         ///< Rows from DigitalIntervalSeries
+    Timestamp,        ///< Rows from DigitalEventSeries
+    Ordinal,          ///< Manual ordinal rows
+    DerivedFromSource ///< Derive row timestamps from any data source's timestamps
 };
 
 /**
@@ -77,8 +77,8 @@ class TensorDesigner : public QWidget {
 
 public:
     explicit TensorDesigner(
-        std::shared_ptr<DataManager> data_manager,
-        QWidget * parent = nullptr);
+            std::shared_ptr<DataManager> data_manager,
+            QWidget * parent = nullptr);
     ~TensorDesigner() override;
 
     // =========================================================================
@@ -96,6 +96,17 @@ public:
      * @param context OperationContext instance (can be nullptr)
      */
     void setOperationContext(EditorLib::OperationContext * context);
+
+    /**
+     * @brief Set the DataInspectorState for auto-pinning during dialog interaction
+     * @param state Shared state pointer (can be nullptr)
+     *
+     * When set, the designer will auto-pin the inspector when opening the
+     * ColumnConfigDialog to prevent SelectionContext changes from navigating
+     * away from the tensor being designed. The pin is restored when the
+     * dialog closes.
+     */
+    void setInspectorState(std::shared_ptr<DataInspectorState> state);
 
     // =========================================================================
     // Tensor Management
@@ -169,8 +180,8 @@ private slots:
     void _onSaveJsonClicked();
     void _onLoadJsonClicked();
     void _onDataFocusChanged(
-        QString const & data_key,
-        QString const & data_type);
+            QString const & data_key,
+            QString const & data_type);
 
 private:
     void _setupUi();
@@ -180,11 +191,28 @@ private:
     void _buildTensor();
     void _updateStatus(QString const & message);
 
+    /// Auto-pin the inspector state when opening a dialog
+    void _pinInspectorForDialog();
+
+    /// Restore previous pin state when the dialog closes
+    void _unpinInspectorAfterDialog();
+
+    /// Handle dialog result for adding a column
+    void _onDialogAcceptedAdd();
+
+    /// Handle dialog result for editing a column
+    void _onDialogAcceptedEdit(int row);
+
     // --- Data ---
     std::shared_ptr<DataManager> _data_manager;
     SelectionContext * _selection_context{nullptr};
     EditorLib::OperationContext * _operation_context{nullptr};
+    std::shared_ptr<DataInspectorState> _inspector_state;
     std::string _tensor_key;
+
+    // Dialog tracking
+    QPointer<ColumnConfigDialog> _active_dialog;  ///< Active modeless dialog (if any)
+    bool _was_pinned_before_dialog{false};          ///< Pin state before dialog opened
 
     // --- Row configuration ---
     DesignerRowType _row_type{DesignerRowType::None};
@@ -221,4 +249,4 @@ private:
     QLabel * _status_label{nullptr};
 };
 
-#endif // TENSOR_DESIGNER_HPP
+#endif// TENSOR_DESIGNER_HPP

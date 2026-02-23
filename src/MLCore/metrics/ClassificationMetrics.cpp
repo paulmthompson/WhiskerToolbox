@@ -17,25 +17,24 @@ namespace MLCore {
 // ============================================================================
 
 BinaryClassificationMetrics computeBinaryMetrics(
-    arma::Row<std::size_t> const & predictions,
-    arma::Row<std::size_t> const & truth)
-{
+        arma::Row<std::size_t> const & predictions,
+        arma::Row<std::size_t> const & truth) {
     if (predictions.n_elem != truth.n_elem) {
         throw std::invalid_argument(
-            "computeBinaryMetrics: prediction size (" +
-            std::to_string(predictions.n_elem) +
-            ") != truth size (" +
-            std::to_string(truth.n_elem) + ")");
+                "computeBinaryMetrics: prediction size (" +
+                std::to_string(predictions.n_elem) +
+                ") != truth size (" +
+                std::to_string(truth.n_elem) + ")");
     }
 
     BinaryClassificationMetrics metrics;
 
     if (predictions.n_elem == 0) {
-        return metrics;   // isValid() == false
+        return metrics;// isValid() == false
     }
 
     for (std::size_t i = 0; i < predictions.n_elem; ++i) {
-        std::size_t const pred  = predictions[i];
+        std::size_t const pred = predictions[i];
         std::size_t const label = truth[i];
 
         // Skip non-binary values
@@ -49,7 +48,7 @@ BinaryClassificationMetrics computeBinaryMetrics(
             ++metrics.true_negatives;
         } else if (pred == 1 && label == 0) {
             ++metrics.false_positives;
-        } else {   // pred == 0 && label == 1
+        } else {// pred == 0 && label == 1
             ++metrics.false_negatives;
         }
     }
@@ -57,30 +56,30 @@ BinaryClassificationMetrics computeBinaryMetrics(
     std::size_t const total = metrics.getTotalPredictions();
     if (total > 0) {
         metrics.accuracy =
-            static_cast<double>(metrics.true_positives + metrics.true_negatives) /
-            static_cast<double>(total);
+                static_cast<double>(metrics.true_positives + metrics.true_negatives) /
+                static_cast<double>(total);
     }
 
     std::size_t const actual_positives = metrics.true_positives + metrics.false_negatives;
     if (actual_positives > 0) {
         metrics.sensitivity =
-            static_cast<double>(metrics.true_positives) /
-            static_cast<double>(actual_positives);
+                static_cast<double>(metrics.true_positives) /
+                static_cast<double>(actual_positives);
     }
 
     std::size_t const actual_negatives = metrics.true_negatives + metrics.false_positives;
     if (actual_negatives > 0) {
         metrics.specificity =
-            static_cast<double>(metrics.true_negatives) /
-            static_cast<double>(actual_negatives);
+                static_cast<double>(metrics.true_negatives) /
+                static_cast<double>(actual_negatives);
     }
 
     std::size_t const dice_denom =
-        2 * metrics.true_positives + metrics.false_positives + metrics.false_negatives;
+            2 * metrics.true_positives + metrics.false_positives + metrics.false_negatives;
     if (dice_denom > 0) {
         metrics.dice_score =
-            static_cast<double>(2 * metrics.true_positives) /
-            static_cast<double>(dice_denom);
+                static_cast<double>(2 * metrics.true_positives) /
+                static_cast<double>(dice_denom);
     }
 
     return metrics;
@@ -91,16 +90,15 @@ BinaryClassificationMetrics computeBinaryMetrics(
 // ============================================================================
 
 MultiClassMetrics computeMultiClassMetrics(
-    arma::Row<std::size_t> const & predictions,
-    arma::Row<std::size_t> const & truth,
-    std::size_t num_classes)
-{
+        arma::Row<std::size_t> const & predictions,
+        arma::Row<std::size_t> const & truth,
+        std::size_t num_classes) {
     if (predictions.n_elem != truth.n_elem) {
         throw std::invalid_argument(
-            "computeMultiClassMetrics: prediction size (" +
-            std::to_string(predictions.n_elem) +
-            ") != truth size (" +
-            std::to_string(truth.n_elem) + ")");
+                "computeMultiClassMetrics: prediction size (" +
+                std::to_string(predictions.n_elem) +
+                ") != truth size (" +
+                std::to_string(truth.n_elem) + ")");
     }
 
     if (num_classes == 0) {
@@ -111,7 +109,7 @@ MultiClassMetrics computeMultiClassMetrics(
     metrics.num_classes = num_classes;
 
     if (predictions.n_elem == 0) {
-        return metrics;   // isValid() == false (confusion_matrix is empty)
+        return metrics;// isValid() == false (confusion_matrix is empty)
     }
 
     // Build confusion matrix: entry (true_class, predicted_class)
@@ -119,7 +117,7 @@ MultiClassMetrics computeMultiClassMetrics(
 
     std::size_t correct = 0;
     for (std::size_t i = 0; i < predictions.n_elem; ++i) {
-        std::size_t const pred  = predictions[i];
+        std::size_t const pred = predictions[i];
         std::size_t const label = truth[i];
 
         if (pred < num_classes && label < num_classes) {
@@ -131,7 +129,7 @@ MultiClassMetrics computeMultiClassMetrics(
     }
 
     metrics.overall_accuracy =
-        static_cast<double>(correct) / static_cast<double>(predictions.n_elem);
+            static_cast<double>(correct) / static_cast<double>(predictions.n_elem);
 
     // Per-class precision, recall, F1
     metrics.per_class_precision.resize(num_classes, 0.0);
@@ -151,43 +149,42 @@ MultiClassMetrics computeMultiClassMetrics(
         std::size_t const fn = row_sum - tp;
 
         double const precision = (tp + fp > 0)
-            ? static_cast<double>(tp) / static_cast<double>(tp + fp)
-            : 0.0;
+                                         ? static_cast<double>(tp) / static_cast<double>(tp + fp)
+                                         : 0.0;
 
         double const recall = (tp + fn > 0)
-            ? static_cast<double>(tp) / static_cast<double>(tp + fn)
-            : 0.0;
+                                      ? static_cast<double>(tp) / static_cast<double>(tp + fn)
+                                      : 0.0;
 
         double const f1 = (precision + recall > 0.0)
-            ? 2.0 * precision * recall / (precision + recall)
-            : 0.0;
+                                  ? 2.0 * precision * recall / (precision + recall)
+                                  : 0.0;
 
         metrics.per_class_precision[c] = precision;
-        metrics.per_class_recall[c]    = recall;
-        metrics.per_class_f1[c]        = f1;
+        metrics.per_class_recall[c] = recall;
+        metrics.per_class_f1[c] = f1;
     }
 
     return metrics;
 }
 
 MultiClassMetrics computeMultiClassMetrics(
-    arma::Row<std::size_t> const & predictions,
-    arma::Row<std::size_t> const & truth)
-{
+        arma::Row<std::size_t> const & predictions,
+        arma::Row<std::size_t> const & truth) {
     if (predictions.n_elem != truth.n_elem) {
         throw std::invalid_argument(
-            "computeMultiClassMetrics: prediction size (" +
-            std::to_string(predictions.n_elem) +
-            ") != truth size (" +
-            std::to_string(truth.n_elem) + ")");
+                "computeMultiClassMetrics: prediction size (" +
+                std::to_string(predictions.n_elem) +
+                ") != truth size (" +
+                std::to_string(truth.n_elem) + ")");
     }
 
     if (predictions.n_elem == 0) {
         throw std::invalid_argument(
-            "computeMultiClassMetrics: cannot infer num_classes from empty vectors");
+                "computeMultiClassMetrics: cannot infer num_classes from empty vectors");
     }
 
-    std::size_t const max_pred  = predictions.max();
+    std::size_t const max_pred = predictions.max();
     std::size_t const max_truth = truth.max();
     std::size_t const num_classes = std::max(max_pred, max_truth) + 1;
 
@@ -198,14 +195,13 @@ MultiClassMetrics computeMultiClassMetrics(
 // Formatting
 // ============================================================================
 
-std::string formatBinaryMetrics(BinaryClassificationMetrics const & metrics)
-{
+std::string formatBinaryMetrics(BinaryClassificationMetrics const & metrics) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(4);
-    oss << "Accuracy: "    << metrics.accuracy
+    oss << "Accuracy: " << metrics.accuracy
         << "  Sensitivity: " << metrics.sensitivity
         << "  Specificity: " << metrics.specificity
-        << "  Dice/F1: "     << metrics.dice_score << '\n';
+        << "  Dice/F1: " << metrics.dice_score << '\n';
     oss << "TP: " << metrics.true_positives
         << "  TN: " << metrics.true_negatives
         << "  FP: " << metrics.false_positives
@@ -214,9 +210,8 @@ std::string formatBinaryMetrics(BinaryClassificationMetrics const & metrics)
 }
 
 std::string formatMultiClassMetrics(
-    MultiClassMetrics const & metrics,
-    std::vector<std::string> const & class_names)
-{
+        MultiClassMetrics const & metrics,
+        std::vector<std::string> const & class_names) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(4);
     oss << "Overall Accuracy: " << metrics.overall_accuracy << '\n';
@@ -254,4 +249,4 @@ std::string formatMultiClassMetrics(
     return oss.str();
 }
 
-} // namespace MLCore
+}// namespace MLCore

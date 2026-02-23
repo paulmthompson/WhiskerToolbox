@@ -29,15 +29,14 @@ namespace MLCore {
 // ============================================================================
 
 std::vector<EntityId> registerTimeEntities(
-    DataManager & dm,
-    std::string const & time_key_str,
-    std::span<TimeFrameIndex const> frames)
-{
+        DataManager & dm,
+        std::string const & time_key_str,
+        std::span<TimeFrameIndex const> frames) {
     std::vector<EntityId> ids;
     ids.reserve(frames.size());
 
     TimeKey const key(time_key_str);
-    for (auto const & frame : frames) {
+    for (auto const & frame: frames) {
         ids.push_back(dm.ensureTimeEntityId(key, frame));
     }
     return ids;
@@ -48,14 +47,13 @@ std::vector<EntityId> registerTimeEntities(
 // ============================================================================
 
 std::vector<EntityId> intervalsToTimeEntities(
-    DataManager & dm,
-    DigitalIntervalSeries const & intervals,
-    std::string const & time_key_str)
-{
+        DataManager & dm,
+        DigitalIntervalSeries const & intervals,
+        std::string const & time_key_str) {
     // Use a set to deduplicate overlapping intervals and produce sorted output
     std::set<int64_t> all_times;
 
-    for (auto const & iv : intervals.view()) {
+    for (auto const & iv: intervals.view()) {
         for (int64_t t = iv.interval.start; t <= iv.interval.end; ++t) {
             all_times.insert(t);
         }
@@ -65,7 +63,7 @@ std::vector<EntityId> intervalsToTimeEntities(
     ids.reserve(all_times.size());
 
     TimeKey const key(time_key_str);
-    for (int64_t t : all_times) {
+    for (int64_t t: all_times) {
         ids.push_back(dm.ensureTimeEntityId(key, TimeFrameIndex(t)));
     }
     return ids;
@@ -76,10 +74,9 @@ std::vector<EntityId> intervalsToTimeEntities(
 // ============================================================================
 
 std::shared_ptr<DigitalIntervalSeries> timeEntitiesToIntervals(
-    DataManager & dm,
-    GroupId group_id,
-    std::string const & time_key_str)
-{
+        DataManager & dm,
+        GroupId group_id,
+        std::string const & time_key_str) {
     // Retrieve sorted TimeFrameIndex values from the group
     TimeKey const key(time_key_str);
     auto frame_indices = dm.getTimeIndicesInGroup(group_id, key);
@@ -105,7 +102,7 @@ std::shared_ptr<DigitalIntervalSeries> timeEntitiesToIntervals(
     auto series = std::make_shared<DigitalIntervalSeries>();
 
     int64_t interval_start = frame_indices[0].getValue();
-    int64_t interval_end   = interval_start;
+    int64_t interval_end = interval_start;
 
     for (std::size_t i = 1; i < frame_indices.size(); ++i) {
         int64_t const t = frame_indices[i].getValue();
@@ -125,4 +122,4 @@ std::shared_ptr<DigitalIntervalSeries> timeEntitiesToIntervals(
     return series;
 }
 
-} // namespace MLCore
+}// namespace MLCore

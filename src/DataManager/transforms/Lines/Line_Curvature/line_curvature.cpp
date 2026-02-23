@@ -4,7 +4,8 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "transforms/utils/variant_type_check.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
+
+#include "CoreMath/parametric_polynomial_utils.hpp"
 
 #include <cmath>   // std::sqrt, std::pow, std::abs, NAN
 #include <iostream>// For std::cerr
