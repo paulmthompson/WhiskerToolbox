@@ -497,8 +497,8 @@ void ColumnConfigDialog::_onOperationDelivered(
         if (envelope.contains("pipeline")) {
             auto const & pipe = envelope["pipeline"];
             pipeline_json_str = pipe.is_string()
-                    ? pipe.get<std::string>()
-                    : pipe.dump();
+                                        ? pipe.get<std::string>()
+                                        : pipe.dump();
         } else {
             // Fallback: treat entire string as pipeline JSON
             pipeline_json_str = *json_ptr;

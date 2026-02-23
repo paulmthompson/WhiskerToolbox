@@ -1,9 +1,9 @@
 // Fuzz test for V2 transform parameter JSON loading
 // Tests both valid variations and invalid/malformed JSON to ensure robustness
 
-#include "transforms/v2/core/ParameterIO.hpp"
-#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
-#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
+#include "core/ParameterIO.hpp"
+#include "algorithms/MaskArea/MaskArea.hpp"
+#include "algorithms/SumReduction/SumReduction.hpp"
 
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>

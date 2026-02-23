@@ -18,8 +18,9 @@
  * @see GatherResult for the gather+reduce pattern
  */
 
-#include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp" // ColumnProviderFn, ColumnSource
-#include "DataManager/Tensors/TensorData.hpp"                      // InvalidationWiringFn
+#include "DataManager/Tensors/TensorData.hpp"                     // InvalidationWiringFn
+#include "DataManager/Tensors/storage/LazyColumnTensorStorage.hpp"// ColumnProviderFn, ColumnSource
+#include "TimeFrame/TimeFrame.hpp"                           // TimeFrameIndex
 
 #include <functional>
 #include <memory>
@@ -27,13 +28,12 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 class DigitalIntervalSeries;
 
 namespace WhiskerToolbox::Transforms::V2 {
 class TransformPipeline;
-} // namespace WhiskerToolbox::Transforms::V2
+}// namespace WhiskerToolbox::Transforms::V2
 
 namespace WhiskerToolbox::TensorBuilders {
 
@@ -48,9 +48,9 @@ namespace WhiskerToolbox::TensorBuilders {
  * produced for each interval row.
  */
 enum class IntervalProperty : std::uint8_t {
-    Start,    ///< Returns the start time of the interval
-    End,      ///< Returns the end time of the interval
-    Duration  ///< Returns the duration (end − start) of the interval
+    Start,  ///< Returns the start time of the interval
+    End,    ///< Returns the end time of the interval
+    Duration///< Returns the duration (end − start) of the interval
 };
 
 // ============================================================================
@@ -99,8 +99,8 @@ struct ColumnRecipe {
  * @return ColumnProviderFn producing one float per interval
  */
 ColumnProviderFn buildIntervalPropertyProvider(
-    std::shared_ptr<DigitalIntervalSeries> intervals,
-    IntervalProperty property);
+        std::shared_ptr<DigitalIntervalSeries> intervals,
+        IntervalProperty property);
 
 /**
  * @brief Build a ColumnProviderFn that samples an AnalogTimeSeries at
@@ -121,14 +121,14 @@ ColumnProviderFn buildIntervalPropertyProvider(
  * @throws std::runtime_error if source_key is not an AnalogTimeSeries
  */
 ColumnProviderFn buildAnalogSampleAtOffsetProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::vector<TimeFrameIndex> const & row_times,
-    int64_t offset);
+        DataManager & dm,
+        std::string const & source_key,
+        std::vector<TimeFrameIndex> const & row_times,
+        int64_t offset);
 
 /**
  * @brief Build a generic ColumnProviderFn for timestamp-row tensors from any
- *        source type (Pattern A).
+ *        source type.
  *
  * Works with any DataManager source type (AnalogTimeSeries, MaskData,
  * LineData, PointData, etc.) as long as the pipeline transforms the source
@@ -145,7 +145,7 @@ ColumnProviderFn buildAnalogSampleAtOffsetProvider(
  * Terminal range reductions are rejected — they collapse the entire series
  * to a single scalar, which is not meaningful for timestamp-row columns.
  * For interval-row columns that need range reductions, use
- * buildIntervalPipelineProvider() (Pattern B) instead.
+ * buildIntervalPipelineProvider() instead.
  *
  * Validation is performed at build time via pipelineProducesFloat().
  *
@@ -157,16 +157,18 @@ ColumnProviderFn buildAnalogSampleAtOffsetProvider(
  *
  * @throws std::runtime_error if the pipeline does not produce float output,
  *         has a terminal range reduction, or the source is unavailable
+ * 
+ * @see buildIntervalPipelineProvider() for interval-row tensors with reductions
  */
 ColumnProviderFn buildPipelineColumnProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::vector<TimeFrameIndex> const & row_times,
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+        DataManager & dm,
+        std::string const & source_key,
+        std::vector<TimeFrameIndex> const & row_times,
+        WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
 
 /**
  * @brief Build a generic ColumnProviderFn for interval-row tensors from any
- *        source type (Pattern B).
+ *        source type.
  *
  * Works with any DataManager source type that satisfies HasDataTraits
  * (AnalogTimeSeries, MaskData, LineData, PointData, DigitalEventSeries,
@@ -194,12 +196,14 @@ ColumnProviderFn buildPipelineColumnProvider(
  *
  * @note RaggedAnalogTimeSeries sources are not supported (no GatherResult
  *       specialisation exists). Passing one will throw at materialization time.
+ * 
+ * @see buildPipelineColumnProvider() for timestamp-row tensors without reductions
  */
 ColumnProviderFn buildIntervalPipelineProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::shared_ptr<DigitalIntervalSeries> intervals,
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+        DataManager & dm,
+        std::string const & source_key,
+        std::shared_ptr<DigitalIntervalSeries> intervals,
+        WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
 
 /**
  * @brief Build a ColumnProviderFn from a ColumnRecipe.
@@ -215,10 +219,10 @@ ColumnProviderFn buildIntervalPipelineProvider(
  * @return ColumnProviderFn
  */
 ColumnProviderFn buildProviderFromRecipe(
-    DataManager & dm,
-    ColumnRecipe const & recipe,
-    std::vector<TimeFrameIndex> const & row_times,
-    std::shared_ptr<DigitalIntervalSeries> intervals);
+        DataManager & dm,
+        ColumnRecipe const & recipe,
+        std::vector<TimeFrameIndex> const & row_times,
+        std::shared_ptr<DigitalIntervalSeries> intervals);
 
 // ============================================================================
 // Invalidation Wiring
@@ -240,9 +244,9 @@ ColumnProviderFn buildProviderFromRecipe(
  * @return InvalidationWiringFn suitable for TensorData::createFromLazyColumns()
  */
 InvalidationWiringFn buildInvalidationWiringFn(
-    DataManager & dm,
-    std::vector<std::string> const & source_keys);
+        DataManager & dm,
+        std::vector<std::string> const & source_keys);
 
-} // namespace WhiskerToolbox::TensorBuilders
+}// namespace WhiskerToolbox::TensorBuilders
 
-#endif // WHISKERTOOLBOX_V2_TENSOR_COLUMN_BUILDERS_HPP
+#endif// WHISKERTOOLBOX_V2_TENSOR_COLUMN_BUILDERS_HPP

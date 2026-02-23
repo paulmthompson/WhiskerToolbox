@@ -1,11 +1,11 @@
 // Fuzz tests for V2 Pipeline Loader
 // Tests robust JSON parsing and error handling for complete pipelines
 
-#include "transforms/v2/core/PipelineLoader.hpp"
-#include "transforms/v2/core/RegisteredTransforms.hpp"
-#include "transforms/v2/algorithms/MaskArea/MaskArea.hpp"
-#include "transforms/v2/algorithms/SumReduction/SumReduction.hpp"
-#include "transforms/v2/algorithms/LineMinPointDist/LineMinPointDist.hpp"
+#include "core/PipelineLoader.hpp"
+#include "core/RegisteredTransforms.hpp"
+#include "algorithms/MaskArea/MaskArea.hpp"
+#include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/LineMinPointDist/LineMinPointDist.hpp"
 
 #include <fuzztest/fuzztest.h>
 #include <gtest/gtest.h>
