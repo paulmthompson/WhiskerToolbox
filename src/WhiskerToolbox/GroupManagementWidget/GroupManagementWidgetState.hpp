@@ -16,6 +16,7 @@
  * @see SelectionContext for inter-widget communication
  */
 
+#include "GroupManagementWidget/GroupManagementWidgetStateData.hpp"
 #include "EditorState/EditorState.hpp"
 
 #include <rfl.hpp>
@@ -23,19 +24,6 @@
 
 #include <string>
 #include <vector>
-
-/**
- * @brief Serializable data structure for GroupManagementWidgetState
- * 
- * This struct is designed for reflect-cpp serialization.
- * All members should be default-constructible and serializable.
- */
-struct GroupManagementWidgetStateData {
-    int selected_group_id = -1;                 ///< Currently selected group ID (-1 = none)
-    std::vector<int> expanded_groups;           ///< List of expanded group IDs (for future tree view)
-    std::string instance_id;                    ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Group Manager"; ///< User-visible name
-};
 
 /**
  * @brief State class for GroupManagementWidget

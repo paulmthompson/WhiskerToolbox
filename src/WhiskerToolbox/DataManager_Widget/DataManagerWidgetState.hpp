@@ -20,24 +20,13 @@
  * @see SelectionContext for inter-widget communication
  */
 
+#include "DataManager_Widget/DataManagerWidgetStateData.hpp"
 #include "EditorState/EditorState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
 #include <string>
-
-/**
- * @brief Serializable data structure for DataManagerWidgetState
- * 
- * This struct is designed for reflect-cpp serialization.
- * All members should be default-constructible and serializable.
- */
-struct DataManagerWidgetStateData {
-    std::string selected_data_key;  ///< Currently selected data key in feature table
-    std::string instance_id;        ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Data Manager";  ///< User-visible name
-};
 
 /**
  * @brief State class for DataManager_Widget

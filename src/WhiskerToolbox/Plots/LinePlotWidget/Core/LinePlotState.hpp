@@ -11,6 +11,7 @@
  * @see EditorState for base class documentation
  */
 
+#include "Plots/LinePlotWidget/Core/LinePlotStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
@@ -28,28 +29,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-/**
- * @brief Options for plotting an analog time series in the line plot
- */
-struct LinePlotOptions {
-    std::string series_key;                           ///< Key of the AnalogTimeSeries to plot
-    double line_thickness = 1.0;                      ///< Thickness of the line (default: 1.0)
-    std::string hex_color = "#000000";                ///< Color as hex string (default: black)
-};
-
-/**
- * @brief Serializable state data for LinePlotWidget
- */
-struct LinePlotStateData {
-    std::string instance_id;
-    std::string display_name = "Line Plot";
-    PlotAlignmentData alignment;                                                      ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, LinePlotOptions> plot_series;                               ///< Map of series names to their plot options
-    CorePlotting::ViewStateData view_state;                                            ///< Zoom, pan, data bounds
-    RelativeTimeAxisStateData time_axis;                                              ///< Time axis settings (min_range, max_range)
-    VerticalAxisStateData vertical_axis;                                              ///< Vertical axis settings (y_min, y_max)
-};
 
 /**
  * @brief State class for LinePlotWidget
