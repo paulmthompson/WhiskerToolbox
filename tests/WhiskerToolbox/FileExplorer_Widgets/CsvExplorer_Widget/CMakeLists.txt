@@ -27,4 +27,10 @@ target_link_libraries(CsvDatasetPreviewModel_test
         DataManager
 )
 
-catch_discover_tests(CsvDatasetPreviewModel_test)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(CsvDatasetPreviewModel_test)
+else()
+    add_test(NAME CsvDatasetPreviewModel_test_all
+        COMMAND CsvDatasetPreviewModel_test
+        )
+endif()
