@@ -3,8 +3,11 @@
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
+#include "CorePlotting/CoordinateTransform/NumericSafety.hpp"
 
 #include <rfl/json.hpp>
+
+#include <cmath>
 
 PSTHState::PSTHState(QObject * parent)
     : EditorState(parent),
@@ -64,7 +67,9 @@ PSTHState::PSTHState(QObject * parent)
         // Sync to data for serialization
         _data.time_axis = _relative_time_axis_state->data();
         // Update window size to match range (centered at 0)
-        double range = _data.time_axis.max_range - _data.time_axis.min_range;
+        // Use safe_range to prevent overflow → infinity when bounds are extreme
+        double range = CorePlotting::safe_range(_data.time_axis.min_range,
+                                                _data.time_axis.max_range);
         if (std::abs(range - _data.alignment.window_size) > 0.01) {
             _data.alignment.window_size = range;
             _alignment_state->data().window_size = range;
@@ -259,6 +264,7 @@ void PSTHState::setPan(double x_pan, double y_pan) {
 }
 
 void PSTHState::setXBounds(double x_min, double x_max) {
+    if (!std::isfinite(x_min) || !std::isfinite(x_max)) return;
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -271,6 +277,7 @@ void PSTHState::setXBounds(double x_min, double x_max) {
 }
 
 void PSTHState::setYBounds(double y_min, double y_max) {
+    if (!std::isfinite(y_min) || !std::isfinite(y_max)) return;
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
         _data.view_state.y_max = y_max;

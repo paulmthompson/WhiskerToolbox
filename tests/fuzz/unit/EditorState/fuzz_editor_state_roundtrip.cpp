@@ -313,18 +313,26 @@ FUZZ_TEST(EditorStateRoundTrip, FuzzDataInspectorStateRoundTrip)
         fuzztest::Arbitrary<bool>());
 
 // ============================================================================
-// 7. LinePlotState — complex nested state, test via display_name only
-//    Note: Direct setter fuzzing (setOffset, setWindowSize, setXBounds, etc.)
-//    triggers a std::string(nullptr) crash in some code paths. This is a
-//    genuine bug found by Phase 2 fuzzing. For the EditorState round-trip test,
-//    we focus on the toJson/fromJson cycle with display_name only.
+// 7. LinePlotState — full setter fuzzing including alignment and view state
+//    Previously crashed due to arithmetic overflow (max - min → infinity)
+//    in syncTimeAxisData. Fixed by using CorePlotting::safe_range().
 // ============================================================================
 
 void FuzzLinePlotStateRoundTrip(
-    std::string const & display_name)
+    std::string const & display_name,
+    std::string const & alignment_event_key,
+    double offset,
+    double window_size,
+    double x_min, double x_max,
+    double y_min, double y_max)
 {
     auto state1 = std::make_shared<LinePlotState>();
     state1->setDisplayName(QString::fromStdString(display_name));
+    state1->setAlignmentEventKey(QString::fromStdString(alignment_event_key));
+    state1->setOffset(offset);
+    state1->setWindowSize(window_size);
+    state1->setXBounds(x_min, x_max);
+    state1->setYBounds(y_min, y_max);
 
     auto json1 = state1->toJson();
 
@@ -333,21 +341,34 @@ void FuzzLinePlotStateRoundTrip(
 }
 FUZZ_TEST(EditorStateRoundTrip, FuzzLinePlotStateRoundTrip)
     .WithDomains(
-        fuzztest::PrintableAsciiString().WithMaxSize(100));
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>());
 
 // ============================================================================
-// 8. EventPlotState — complex nested state, test via safe setters
-//    Note: Same setter crash issue as LinePlotState for alignment-related
-//    setters. Focus on display_name, background_color, and pinned.
+// 8. EventPlotState — alignment, background color, pinned, sorting
+//    EventPlotState does NOT have the range overflow bug (no syncTimeAxisData
+//    subtraction), so we can safely test more setters.
 // ============================================================================
 
 void FuzzEventPlotStateRoundTrip(
     std::string const & display_name,
+    std::string const & alignment_event_key,
+    double offset,
+    double window_size,
     std::string const & background_color,
     bool pinned)
 {
     auto state1 = std::make_shared<EventPlotState>();
     state1->setDisplayName(QString::fromStdString(display_name));
+    state1->setAlignmentEventKey(QString::fromStdString(alignment_event_key));
+    state1->setOffset(offset);
+    state1->setWindowSize(window_size);
     state1->setBackgroundColor(QString::fromStdString(background_color));
     state1->setPinned(pinned);
 
@@ -362,6 +383,9 @@ void FuzzEventPlotStateRoundTrip(
 FUZZ_TEST(EditorStateRoundTrip, FuzzEventPlotStateRoundTrip)
     .WithDomains(
         fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
         fuzztest::PrintableAsciiString().WithMaxSize(20),
         fuzztest::Arbitrary<bool>());
 
