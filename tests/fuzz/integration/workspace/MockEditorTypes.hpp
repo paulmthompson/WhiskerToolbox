@@ -172,4 +172,17 @@ void registerMockTypes(EditorRegistry * registry);
  */
 void registerMockTypes(EditorRegistry * registry, int count);
 
+/**
+ * @brief Register a subset of mock types with optional widget factories
+ *
+ * When with_widget_factories is true, `create_view` and `create_properties`
+ * return minimal QWidget instances. This enables EditorCreationController
+ * to create and place dock widgets during Phase 4 fuzz testing.
+ *
+ * @param registry The registry to register types with
+ * @param count How many to register (1-3, clamped)
+ * @param with_widget_factories If true, register create_view/create_properties
+ */
+void registerMockTypes(EditorRegistry * registry, int count, bool with_widget_factories);
+
 #endif // FUZZ_MOCK_EDITOR_TYPES_HPP

@@ -58,3 +58,61 @@ target_link_options(fuzz_registry
 gtest_discover_tests(fuzz_registry
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
+
+# ==============================================================================
+# Phase 4: Zone Placement Fuzz Tests
+# EditorCreationController + ZoneManager widget placement → serialize → restore
+# ==============================================================================
+
+add_executable(fuzz_workspace_placement
+    FuzzDockingHarness.cpp
+    MockEditorTypes.cpp
+    fuzz_workspace_placement.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_workspace_placement)
+
+set_target_properties(fuzz_workspace_placement PROPERTIES
+    AUTOMOC ON
+)
+
+target_include_directories(fuzz_workspace_placement
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(fuzz_workspace_placement
+    PRIVATE
+        # Fuzz/test infrastructure
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+        nlohmann_json::nlohmann_json
+        reflectcpp::reflectcpp
+        # Qt
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Test
+        # Editor framework
+        WhiskerToolbox::EditorState
+        # Zone/docking (Option B: link both ZoneManager + StateManagement)
+        ZoneManager
+        WhiskerToolbox::StateManagement
+        qt6advanceddocking
+)
+
+target_compile_options(fuzz_workspace_placement
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_workspace_placement
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_workspace_placement
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
+)

@@ -378,14 +378,16 @@ bool EditorRegistry::fromJson(std::string const & json) {
     }
 
     // Restore selection
+    // Important: setSelectedData() must be called first because it clears
+    // _selected_data. Then addToSelection() adds the remaining keys.
     SelectionSource source{EditorInstanceId("EditorRegistry"), "fromJson"};
     _selection_context->clearSelection(source);
-    for (auto const & key: workspace.all_selections) {
-        _selection_context->addToSelection(SelectedDataKey(QString::fromStdString(key)), source);
-    }
     if (!workspace.primary_selection.empty()) {
         _selection_context->setSelectedData(
                 SelectedDataKey(QString::fromStdString(workspace.primary_selection)), source);
+    }
+    for (auto const & key: workspace.all_selections) {
+        _selection_context->addToSelection(SelectedDataKey(QString::fromStdString(key)), source);
     }
 
     return true;

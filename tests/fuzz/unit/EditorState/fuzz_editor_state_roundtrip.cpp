@@ -469,12 +469,8 @@ TEST(EditorStateRoundTrip, FromJsonEmitsStateChanged) {
         auto state2 = std::make_shared<std::remove_reference_t<decltype(*state)>>();
         QSignalSpy spy(state2.get(), &EditorState::stateChanged);
         ASSERT_TRUE(state2->fromJson(json));
-        // Note: TimeScrollBarState::fromJson calls markClean() instead of emitting
-        // stateChanged(). This is a known inconsistency — most other states do emit.
-        if (state->getTypeName() != "TimeScrollBar") {
-            EXPECT_GE(spy.count(), 1)
-                << "stateChanged not emitted for: " << state->getTypeName().toStdString();
-        }
+        EXPECT_GE(spy.count(), 1)
+            << "stateChanged not emitted for: " << state->getTypeName().toStdString();
     };
 
     verify_signal(std::make_shared<DataManagerWidgetState>());

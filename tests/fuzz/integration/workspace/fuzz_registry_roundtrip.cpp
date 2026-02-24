@@ -258,14 +258,9 @@ FUZZ_TEST(RegistryRoundTrip, FuzzRegistryWithRandomizedFields)
 // ============================================================================
 // 3. Registry round-trip with selection context
 //
-// BUG DISCOVERED: EditorRegistry::fromJson() calls addToSelection() for all
-// keys, then setSelectedData() for the primary. But setSelectedData() calls
-// _selected_data.clear(), discarding the previously-added selections.
-// The result is that only the primary selection survives the round-trip.
-//
-// This test verifies the primary selection round-trips correctly and documents
-// the multi-select loss as a known bug. See SelectionContext::setSelectedData()
-// which unconditionally clears _selected_data.
+// Verifies primary selection and multi-select are both preserved across
+// round-trips. Previously, setSelectedData() was called last, clearing
+// selections added by addToSelection(). Fixed by reversing the restore order.
 // ============================================================================
 
 void FuzzRegistryWithSelectionContext(
@@ -294,6 +289,9 @@ void FuzzRegistryWithSelectionContext(
         }
     }
 
+    // Capture selection state before round-trip
+    auto all_before = registry.selectionContext()->allSelectedData();
+
     auto json1 = registry.toJson();
 
     EditorRegistry registry2;
@@ -309,19 +307,18 @@ void FuzzRegistryWithSelectionContext(
     EXPECT_EQ(primary_before, primary_after)
         << "Primary selection not preserved";
 
-    // KNOWN BUG: Multi-select is NOT preserved across round-trip.
-    // EditorRegistry::fromJson() calls setSelectedData(primary) after
-    // addToSelection(extras), but setSelectedData clears _selected_data.
-    // Only the primary survives. We verify the restored registry round-trips
-    // idempotently (i.e., the lossy output is stable on re-serialization).
-    auto json2 = registry2.toJson();
+    // Verify all selections preserved (multi-select fix)
+    auto all_after = registry2.selectionContext()->allSelectedData();
+    EXPECT_EQ(all_before.size(), all_after.size())
+        << "Multi-select count not preserved across round-trip";
+    for (auto const & key : all_before) {
+        EXPECT_TRUE(all_after.count(key))
+            << "Selection key lost: " << key.toString().toStdString();
+    }
 
-    // Re-load into a third registry to test idempotency of the (lossy) result
-    EditorRegistry registry3;
-    registerMockTypes(&registry3);
-    ASSERT_TRUE(registry3.fromJson(json2));
-    auto json3 = registry3.toJson();
-    ExpectJsonEqual(json2, json3);
+    // Verify idempotent round-trip
+    auto json2 = registry2.toJson();
+    ExpectJsonEqual(json1, json2);
 }
 FUZZ_TEST(RegistryRoundTrip, FuzzRegistryWithSelectionContext)
     .WithDomains(
@@ -531,8 +528,6 @@ TEST(RegistryRoundTrip, UnknownTypeSkipped) {
 
 // ============================================================================
 // 9. Deterministic: triple round-trip stability
-//    Uses only primary selection (no multi-select) to avoid the known
-//    SelectionContext bug documented in test #3.
 // ============================================================================
 
 TEST(RegistryRoundTrip, TripleRoundTripStability) {
@@ -553,9 +548,11 @@ TEST(RegistryRoundTrip, TripleRoundTripStability) {
     state_b2->setStringField("second");
     registry.registerState(state_b2);
 
-    // Single primary selection only (multi-select has known round-trip bug)
+    // Primary + multi-select
     SelectionSource source{EditorInstanceId("test"), "stability"};
     registry.selectionContext()->setSelectedData(SelectedDataKey("data_key_1"), source);
+    registry.selectionContext()->addToSelection(SelectedDataKey("data_key_2"), source);
+    registry.selectionContext()->addToSelection(SelectedDataKey("data_key_3"), source);
 
     auto json_original = registry.toJson();
 

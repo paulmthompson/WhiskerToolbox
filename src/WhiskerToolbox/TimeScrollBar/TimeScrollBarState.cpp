@@ -41,7 +41,7 @@ bool TimeScrollBarState::fromJson(std::string const & json) {
             if (!_data.instance_id.empty()) {
                 setInstanceId(QString::fromStdString(_data.instance_id));
             }
-            markClean();
+            emit stateChanged();
             return true;
         }
         return false;

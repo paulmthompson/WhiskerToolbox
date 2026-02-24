@@ -7,6 +7,10 @@
 
 #include "MockEditorTypes.hpp"
 
+#include "EditorState/ZoneTypes.hpp"
+
+#include <QWidget>
+
 #include <algorithm>
 
 // ============================================================================
@@ -173,32 +177,66 @@ void registerMockTypes(EditorRegistry * registry) {
 }
 
 void registerMockTypes(EditorRegistry * registry, int count) {
+    registerMockTypes(registry, count, false);
+}
+
+void registerMockTypes(EditorRegistry * registry, int count, bool with_widget_factories) {
     count = std::clamp(count, 0, 3);
 
+    // Factory that produces minimal QWidget instances for fuzz testing
+    // (no actual UI logic, just enough for ADS dock wrapping)
+    auto make_view = [](std::shared_ptr<EditorState> /*state*/) -> QWidget * {
+        return new QWidget();
+    };
+    auto make_props = [](std::shared_ptr<EditorState> /*state*/) -> QWidget * {
+        return new QWidget();
+    };
+
     if (count >= 1) {
-        registry->registerType({
+        EditorRegistry::EditorTypeInfo info{
             .type_id = "MockTypeA",
             .display_name = "Mock Widget A",
+            .preferred_zone = Zone::Left,
+            .properties_zone = Zone::Right,
             .allow_multiple = false,
             .create_state = [] { return std::make_shared<MockEditorStateA>(); },
-        });
+        };
+        if (with_widget_factories) {
+            info.create_view = make_view;
+            info.create_properties = make_props;
+        }
+        registry->registerType(std::move(info));
     }
 
     if (count >= 2) {
-        registry->registerType({
+        EditorRegistry::EditorTypeInfo info{
             .type_id = "MockTypeB",
             .display_name = "Mock Widget B",
+            .preferred_zone = Zone::Center,
+            .properties_zone = Zone::Right,
             .allow_multiple = true,
             .create_state = [] { return std::make_shared<MockEditorStateB>(); },
-        });
+        };
+        if (with_widget_factories) {
+            info.create_view = make_view;
+            info.create_properties = make_props;
+        }
+        registry->registerType(std::move(info));
     }
 
     if (count >= 3) {
-        registry->registerType({
+        EditorRegistry::EditorTypeInfo info{
             .type_id = "MockTypeC",
             .display_name = "Mock Widget C",
+            .preferred_zone = Zone::Center,
+            .properties_zone = Zone::Right,
             .allow_multiple = false,
             .create_state = [] { return std::make_shared<MockEditorStateC>(); },
-        });
+        };
+        if (with_widget_factories) {
+            info.create_view = make_view;
+            info.create_properties = make_props;
+        }
+        registry->registerType(std::move(info));
     }
 }
