@@ -183,6 +183,10 @@ add_executable(fuzz_real_widget_roundtrip
     MockEditorTypes.cpp
     WidgetCorpus.cpp
     fuzz_real_widget_roundtrip.cpp
+    # State-only sources for Core level widgets (avoids linking full widget UI libraries)
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DataInspectorState.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataImport_Widget/DataImportWidgetState.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataTransform_Widget/DataTransformWidgetState.cpp
 )
 
 add_fuzz_test_with_instantiations(fuzz_real_widget_roundtrip)

@@ -13,6 +13,11 @@
 // Real widget state headers (Minimal level)
 #include "Test_Widget/TestWidgetState.hpp"
 
+// Real widget state headers (Core level)
+#include "DataInspector_Widget/DataInspectorState.hpp"
+#include "DataImport_Widget/DataImportWidgetState.hpp"
+#include "DataTransform_Widget/DataTransformWidgetState.hpp"
+
 #include "DataManager/DataManager.hpp"
 
 #include <QWidget>
@@ -25,10 +30,19 @@ static std::vector<CorpusEntry> const kMinimalEntries = {
     {.type_id = "TestWidget", .allow_multiple = false},
 };
 
+static std::vector<CorpusEntry> const kCoreEntries = {
+    {.type_id = "DataInspector", .allow_multiple = true},
+    {.type_id = "DataImportWidget", .allow_multiple = false},
+    {.type_id = "DataTransformWidget", .allow_multiple = false},
+};
+
 std::vector<CorpusEntry> corpusEntries(CorpusLevel level) {
     std::vector<CorpusEntry> entries;
 
     switch (level) {
+    case CorpusLevel::Core:
+        entries.insert(entries.end(), kCoreEntries.begin(), kCoreEntries.end());
+        [[fallthrough]];
     case CorpusLevel::Minimal:
         entries.insert(entries.end(), kMinimalEntries.begin(), kMinimalEntries.end());
         [[fallthrough]];
@@ -76,6 +90,45 @@ void registerCorpusTypes(
                 .allow_multiple = false,
                 .create_state = [dm]() {
                     return std::make_shared<TestWidgetState>(dm);
+                },
+                .create_view = make_view,
+                .create_properties = make_props,
+            });
+        } else if (entry.type_id == "DataInspector") {
+            registry->registerType({
+                .type_id = "DataInspector",
+                .display_name = "Data Inspector",
+                .preferred_zone = Zone::Center,
+                .properties_zone = Zone::Right,
+                .allow_multiple = true,
+                .create_state = []() {
+                    return std::make_shared<DataInspectorState>();
+                },
+                .create_view = make_view,
+                .create_properties = make_props,
+            });
+        } else if (entry.type_id == "DataImportWidget") {
+            registry->registerType({
+                .type_id = "DataImportWidget",
+                .display_name = "Data Import",
+                .preferred_zone = Zone::Right,
+                .properties_zone = Zone::Right,
+                .allow_multiple = false,
+                .create_state = []() {
+                    return std::make_shared<DataImportWidgetState>();
+                },
+                .create_view = make_view,
+                .create_properties = make_props,
+            });
+        } else if (entry.type_id == "DataTransformWidget") {
+            registry->registerType({
+                .type_id = "DataTransformWidget",
+                .display_name = "Data Transforms",
+                .preferred_zone = Zone::Right,
+                .properties_zone = Zone::Right,
+                .allow_multiple = false,
+                .create_state = []() {
+                    return std::make_shared<DataTransformWidgetState>();
                 },
                 .create_view = make_view,
                 .create_properties = make_props,

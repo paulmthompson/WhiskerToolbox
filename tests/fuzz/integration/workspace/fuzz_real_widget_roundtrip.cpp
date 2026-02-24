@@ -8,7 +8,7 @@
  * but using real production EditorState subclasses instead of mock types.
  * This exercises actual serialization code paths with fuzz-generated state values.
  *
- * Currently covers CorpusLevel::Minimal (TestWidget only).
+ * Currently covers CorpusLevel::Core (TestWidget, DataInspector, DataImport, DataTransform).
  * New widget types are added by extending WidgetCorpus.hpp/cpp.
  *
  * Requires QApplication with QT_QPA_PLATFORM=offscreen.
@@ -33,6 +33,9 @@
 #include "EditorState/EditorState.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "Test_Widget/TestWidgetState.hpp"
+#include "DataInspector_Widget/DataInspectorState.hpp"
+#include "DataImport_Widget/DataImportWidgetState.hpp"
+#include "DataTransform_Widget/DataTransformWidgetState.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -109,7 +112,7 @@ std::vector<StateInfo> extractStateInfo(EditorRegistry const & registry) {
 // Shared corpus state
 // ============================================================================
 
-static auto const kCorpusLevel = CorpusLevel::Minimal;
+static auto const kCorpusLevel = CorpusLevel::Core;
 
 static std::vector<CorpusEntry> const & corpusEntriesRef() {
     static auto const entries = corpusEntries(kCorpusLevel);
@@ -723,6 +726,494 @@ TEST(RealWidgetDeterministic, TestWidgetInEachZone) {
         auto const json2 = ch2.harness.captureState();
         ExpectJsonEqual(json1, json2);
     }
+}
+
+// ============================================================================
+// Fuzz Tests — Core Level (DataInspector, DataImport, DataTransform)
+// ============================================================================
+
+// ---- FuzzDataInspectorStateValues ----
+void FuzzDataInspectorStateValues(
+    std::string const & inspected_key,
+    bool is_pinned,
+    std::string const & section1,
+    std::string const & section2,
+    std::string const & ui_json_value) {
+
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataInspector");
+    ASSERT_TRUE(placed.isValid());
+
+    auto const & states = harness.registry()->allStates();
+    ASSERT_EQ(states.size(), 1u);
+
+    auto * state = dynamic_cast<DataInspectorState *>(states[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setInspectedDataKey(QString::fromStdString(inspected_key));
+    state->setPinned(is_pinned);
+    if (!section1.empty()) {
+        state->setSectionCollapsed(QString::fromStdString(section1), true);
+    }
+    if (!section2.empty()) {
+        state->setSectionCollapsed(QString::fromStdString(section2), true);
+    }
+
+    // Only set ui_state_json if it parses as valid JSON
+    try {
+        auto parsed = nlohmann::json::parse(ui_json_value);
+        state->setTypeSpecificState(parsed);
+    } catch (...) {
+        // Invalid JSON — skip, don't set
+    }
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const & states2 = ch2.harness.registry()->allStates();
+    ASSERT_EQ(states2.size(), 1u);
+
+    auto * state2 = dynamic_cast<DataInspectorState *>(states2[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->inspectedDataKey(), state->inspectedDataKey());
+    EXPECT_EQ(state2->isPinned(), state->isPinned());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzDataInspectorStateValues)
+    .WithDomains(
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::Arbitrary<bool>(),
+        fuzztest::PrintableAsciiString().WithMaxSize(50),
+        fuzztest::PrintableAsciiString().WithMaxSize(50),
+        fuzztest::PrintableAsciiString().WithMaxSize(200));
+
+// ---- FuzzDataImportStateValues ----
+void FuzzDataImportStateValues(
+    std::string const & import_type,
+    std::string const & last_dir,
+    std::string const & pref_key,
+    std::string const & pref_value) {
+
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataImportWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto const & states = harness.registry()->allStates();
+    ASSERT_EQ(states.size(), 1u);
+
+    auto * state = dynamic_cast<DataImportWidgetState *>(states[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setSelectedImportType(QString::fromStdString(import_type));
+    state->setLastUsedDirectory(QString::fromStdString(last_dir));
+    if (!pref_key.empty()) {
+        state->setFormatPreference(
+            QString::fromStdString(pref_key),
+            QString::fromStdString(pref_value));
+    }
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const & states2 = ch2.harness.registry()->allStates();
+    ASSERT_EQ(states2.size(), 1u);
+
+    auto * state2 = dynamic_cast<DataImportWidgetState *>(states2[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->selectedImportType(), state->selectedImportType());
+    EXPECT_EQ(state2->lastUsedDirectory(), state->lastUsedDirectory());
+    if (!pref_key.empty()) {
+        EXPECT_EQ(state2->formatPreference(QString::fromStdString(pref_key)),
+                  state->formatPreference(QString::fromStdString(pref_key)));
+    }
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzDataImportStateValues)
+    .WithDomains(
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(200),
+        fuzztest::PrintableAsciiString().WithMaxSize(50),
+        fuzztest::PrintableAsciiString().WithMaxSize(50));
+
+// ---- FuzzDataTransformStateValues ----
+void FuzzDataTransformStateValues(
+    std::string const & input_key,
+    std::string const & operation,
+    std::string const & output_name) {
+
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataTransformWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto const & states = harness.registry()->allStates();
+    ASSERT_EQ(states.size(), 1u);
+
+    auto * state = dynamic_cast<DataTransformWidgetState *>(states[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setSelectedInputDataKey(QString::fromStdString(input_key));
+    state->setSelectedOperation(QString::fromStdString(operation));
+    state->setLastOutputName(QString::fromStdString(output_name));
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const & states2 = ch2.harness.registry()->allStates();
+    ASSERT_EQ(states2.size(), 1u);
+
+    auto * state2 = dynamic_cast<DataTransformWidgetState *>(states2[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->selectedInputDataKey(), state->selectedInputDataKey());
+    EXPECT_EQ(state2->selectedOperation(), state->selectedOperation());
+    EXPECT_EQ(state2->lastOutputName(), state->lastOutputName());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzDataTransformStateValues)
+    .WithDomains(
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(100));
+
+// ---- FuzzMultipleDataInspectors ----
+// DataInspector allows multiple instances — stress test that.
+void FuzzMultipleDataInspectors(int count) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto const n = std::clamp(count, 0, 10);
+    for (int i = 0; i < n; ++i) {
+        auto placed = harness.createAndPlace("DataInspector");
+        ASSERT_TRUE(placed.isValid()) << "Failed to create inspector " << i;
+    }
+
+    EXPECT_EQ(static_cast<int>(harness.registry()->stateCount()), n);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), harness.registry()->stateCount());
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzMultipleDataInspectors)
+    .WithDomains(fuzztest::InRange(0, 10));
+
+// ============================================================================
+// Deterministic Tests — Core Level
+// ============================================================================
+
+TEST(RealWidgetDeterministic, DataInspectorRoundTrip) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataInspector");
+    ASSERT_TRUE(placed.isValid());
+
+    EXPECT_EQ(harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataInspectorFieldPreservation) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataInspector");
+    ASSERT_TRUE(placed.isValid());
+
+    auto * state = dynamic_cast<DataInspectorState *>(
+        harness.registry()->allStates()[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setInspectedDataKey("my_analog_data");
+    state->setPinned(true);
+    state->setSectionCollapsed("properties", true);
+    state->setSectionCollapsed("export", true);
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    auto * state2 = dynamic_cast<DataInspectorState *>(
+        ch2.harness.registry()->allStates()[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->inspectedDataKey(), "my_analog_data");
+    EXPECT_TRUE(state2->isPinned());
+    EXPECT_TRUE(state2->isSectionCollapsed("properties"));
+    EXPECT_TRUE(state2->isSectionCollapsed("export"));
+    EXPECT_FALSE(state2->isSectionCollapsed("other"));
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataImportRoundTrip) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataImportWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    EXPECT_EQ(harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataImportFieldPreservation) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataImportWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto * state = dynamic_cast<DataImportWidgetState *>(
+        harness.registry()->allStates()[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setSelectedImportType("LineData");
+    state->setLastUsedDirectory("/home/user/data");
+    state->setFormatPreference("LineData", "CSV");
+    state->setFormatPreference("MaskData", "HDF5");
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    auto * state2 = dynamic_cast<DataImportWidgetState *>(
+        ch2.harness.registry()->allStates()[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->selectedImportType(), "LineData");
+    EXPECT_EQ(state2->lastUsedDirectory(), "/home/user/data");
+    EXPECT_EQ(state2->formatPreference("LineData"), "CSV");
+    EXPECT_EQ(state2->formatPreference("MaskData"), "HDF5");
+    EXPECT_EQ(state2->formatPreference("Unknown"), "");
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataTransformRoundTrip) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataTransformWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    EXPECT_EQ(harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataTransformFieldPreservation) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataTransformWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto * state = dynamic_cast<DataTransformWidgetState *>(
+        harness.registry()->allStates()[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setSelectedInputDataKey("my_mask_data");
+    state->setSelectedOperation("Calculate Area");
+    state->setLastOutputName("mask_area_result");
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    auto * state2 = dynamic_cast<DataTransformWidgetState *>(
+        ch2.harness.registry()->allStates()[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->selectedInputDataKey(), "my_mask_data");
+    EXPECT_EQ(state2->selectedOperation(), "Calculate Area");
+    EXPECT_EQ(state2->lastOutputName(), "mask_area_result");
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataInspectorSignalEmission) {
+    auto state = std::make_shared<DataInspectorState>();
+
+    QSignalSpy spy(state.get(), &EditorState::stateChanged);
+    ASSERT_TRUE(spy.isValid());
+
+    auto const json = state->toJson();
+    bool const ok = state->fromJson(json);
+    ASSERT_TRUE(ok);
+    EXPECT_GE(spy.count(), 1);
+}
+
+TEST(RealWidgetDeterministic, DataImportSignalEmission) {
+    auto state = std::make_shared<DataImportWidgetState>();
+
+    QSignalSpy spy(state.get(), &EditorState::stateChanged);
+    ASSERT_TRUE(spy.isValid());
+
+    auto const json = state->toJson();
+    bool const ok = state->fromJson(json);
+    ASSERT_TRUE(ok);
+    EXPECT_GE(spy.count(), 1);
+}
+
+TEST(RealWidgetDeterministic, DataTransformSignalEmission) {
+    auto state = std::make_shared<DataTransformWidgetState>();
+
+    QSignalSpy spy(state.get(), &EditorState::stateChanged);
+    ASSERT_TRUE(spy.isValid());
+
+    auto const json = state->toJson();
+    bool const ok = state->fromJson(json);
+    ASSERT_TRUE(ok);
+    EXPECT_GE(spy.count(), 1);
+}
+
+TEST(RealWidgetDeterministic, DataInspectorFromInvalidJson) {
+    auto state = std::make_shared<DataInspectorState>();
+    auto const original_id = state->getInstanceId();
+
+    EXPECT_FALSE(state->fromJson(""));
+    EXPECT_FALSE(state->fromJson("not json"));
+    EXPECT_FALSE(state->fromJson("null"));
+    EXPECT_FALSE(state->fromJson("[]"));
+    EXPECT_FALSE(state->fromJson("42"));
+
+    EXPECT_EQ(state->getInstanceId(), original_id);
+}
+
+TEST(RealWidgetDeterministic, DataImportFromInvalidJson) {
+    auto state = std::make_shared<DataImportWidgetState>();
+    auto const original_id = state->getInstanceId();
+
+    EXPECT_FALSE(state->fromJson(""));
+    EXPECT_FALSE(state->fromJson("not json"));
+    EXPECT_FALSE(state->fromJson("null"));
+    EXPECT_FALSE(state->fromJson("[]"));
+    EXPECT_FALSE(state->fromJson("42"));
+
+    EXPECT_EQ(state->getInstanceId(), original_id);
+}
+
+TEST(RealWidgetDeterministic, DataTransformFromInvalidJson) {
+    auto state = std::make_shared<DataTransformWidgetState>();
+    auto const original_id = state->getInstanceId();
+
+    EXPECT_FALSE(state->fromJson(""));
+    EXPECT_FALSE(state->fromJson("not json"));
+    EXPECT_FALSE(state->fromJson("null"));
+    EXPECT_FALSE(state->fromJson("[]"));
+    EXPECT_FALSE(state->fromJson("42"));
+
+    EXPECT_EQ(state->getInstanceId(), original_id);
+}
+
+TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    harness.createAndPlace("TestWidget");
+    harness.createAndPlace("DataInspector");
+    harness.createAndPlace("DataImportWidget");
+    harness.createAndPlace("DataTransformWidget");
+
+    EXPECT_EQ(harness.registry()->stateCount(), 4u);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 4u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const infos1 = extractStateInfo(*harness.registry());
+    auto const infos2 = extractStateInfo(*ch2.harness.registry());
+    EXPECT_EQ(infos1, infos2);
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
 }
 
 } // namespace
