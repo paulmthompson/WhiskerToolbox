@@ -18,6 +18,9 @@
 #include "DataImport_Widget/DataImportWidgetState.hpp"
 #include "DataTransform_Widget/DataTransformWidgetState.hpp"
 
+// Real widget state headers (Visualization level)
+#include "DataViewer_Widget/Core/DataViewerState.hpp"
+
 #include "DataManager/DataManager.hpp"
 
 #include <QWidget>
@@ -36,10 +39,17 @@ static std::vector<CorpusEntry> const kCoreEntries = {
     {.type_id = "DataTransformWidget", .allow_multiple = false},
 };
 
+static std::vector<CorpusEntry> const kVisualizationEntries = {
+    {.type_id = "DataViewerWidget", .allow_multiple = true},
+};
+
 std::vector<CorpusEntry> corpusEntries(CorpusLevel level) {
     std::vector<CorpusEntry> entries;
 
     switch (level) {
+    case CorpusLevel::Visualization:
+        entries.insert(entries.end(), kVisualizationEntries.begin(), kVisualizationEntries.end());
+        [[fallthrough]];
     case CorpusLevel::Core:
         entries.insert(entries.end(), kCoreEntries.begin(), kCoreEntries.end());
         [[fallthrough]];
@@ -129,6 +139,19 @@ void registerCorpusTypes(
                 .allow_multiple = false,
                 .create_state = []() {
                     return std::make_shared<DataTransformWidgetState>();
+                },
+                .create_view = make_view,
+                .create_properties = make_props,
+            });
+        } else if (entry.type_id == "DataViewerWidget") {
+            registry->registerType({
+                .type_id = "DataViewerWidget",
+                .display_name = "Data Viewer",
+                .preferred_zone = Zone::Center,
+                .properties_zone = Zone::Right,
+                .allow_multiple = true,
+                .create_state = []() {
+                    return std::make_shared<DataViewerState>();
                 },
                 .create_view = make_view,
                 .create_properties = make_props,

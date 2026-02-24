@@ -187,6 +187,9 @@ add_executable(fuzz_real_widget_roundtrip
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/DataInspectorState.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataImport_Widget/DataImportWidgetState.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataTransform_Widget/DataTransformWidgetState.cpp
+    # State-only sources for Visualization level widgets
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp
 )
 
 add_fuzz_test_with_instantiations(fuzz_real_widget_roundtrip)
@@ -222,6 +225,10 @@ target_link_libraries(fuzz_real_widget_roundtrip
         qt6advanceddocking
         # DataManager (needed by real widget state constructors)
         DataManager
+        # CorePlotting (needed by DataViewerStateData — TimeSeriesViewState, SeriesStyle)
+        CorePlotting
+        # TensorData (transitive dep: CorePlotting → TransformsV2 → TensorData)
+        WhiskerToolbox::TensorData
         # Real widget libraries (Phase 6 corpus)
         Test_Widget
 )

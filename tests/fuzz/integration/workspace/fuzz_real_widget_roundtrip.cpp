@@ -36,6 +36,7 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataImport_Widget/DataImportWidgetState.hpp"
 #include "DataTransform_Widget/DataTransformWidgetState.hpp"
+#include "DataViewer_Widget/Core/DataViewerState.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -112,7 +113,7 @@ std::vector<StateInfo> extractStateInfo(EditorRegistry const & registry) {
 // Shared corpus state
 // ============================================================================
 
-static auto const kCorpusLevel = CorpusLevel::Core;
+static auto const kCorpusLevel = CorpusLevel::Visualization;
 
 static std::vector<CorpusEntry> const & corpusEntriesRef() {
     static auto const entries = corpusEntries(kCorpusLevel);
@@ -941,6 +942,124 @@ void FuzzMultipleDataInspectors(int count) {
 FUZZ_TEST(RealWidgetFuzz, FuzzMultipleDataInspectors)
     .WithDomains(fuzztest::InRange(0, 10));
 
+// ---- FuzzDataViewerStateValues ----
+void FuzzDataViewerStateValues(
+    int64_t time_start,
+    int64_t time_end,
+    float y_min,
+    float y_max,
+    float global_zoom,
+    bool grid_enabled,
+    int grid_spacing,
+    std::string const & bg_color,
+    std::string const & analog_key,
+    std::string const & analog_color) {
+
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataViewerWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto const & states = harness.registry()->allStates();
+    ASSERT_EQ(states.size(), 1u);
+
+    auto * state = dynamic_cast<DataViewerState *>(states[0].get());
+    ASSERT_NE(state, nullptr);
+
+    // Set view state
+    state->setTimeWindow(time_start, time_end);
+    if (std::isfinite(y_min) && std::isfinite(y_max)) {
+        state->setYBounds(y_min, y_max);
+    }
+    if (std::isfinite(global_zoom) && global_zoom > 0.0f) {
+        state->setGlobalZoom(global_zoom);
+    }
+
+    // Set grid
+    state->setGridEnabled(grid_enabled);
+    state->setGridSpacing(grid_spacing);
+
+    // Set background color
+    if (!bg_color.empty()) {
+        state->setBackgroundColor(QString::fromStdString(bg_color));
+    }
+
+    // Set analog series options via registry
+    if (!analog_key.empty()) {
+        AnalogSeriesOptionsData opts;
+        opts.hex_color() = analog_color.empty() ? "#ff0000" : analog_color;
+        opts.user_scale_factor = 1.0f;
+        state->seriesOptions().set(QString::fromStdString(analog_key), opts);
+    }
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const & states2 = ch2.harness.registry()->allStates();
+    ASSERT_EQ(states2.size(), 1u);
+
+    auto * state2 = dynamic_cast<DataViewerState *>(states2[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->timeWindow(), state->timeWindow());
+    EXPECT_EQ(state2->gridEnabled(), state->gridEnabled());
+    EXPECT_EQ(state2->gridSpacing(), state->gridSpacing());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzDataViewerStateValues)
+    .WithDomains(
+        fuzztest::Arbitrary<int64_t>(),
+        fuzztest::Arbitrary<int64_t>(),
+        fuzztest::Finite<float>(),
+        fuzztest::Finite<float>(),
+        fuzztest::Finite<float>(),
+        fuzztest::Arbitrary<bool>(),
+        fuzztest::InRange(1, 10000),
+        fuzztest::PrintableAsciiString().WithMaxSize(20),
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(20));
+
+// ---- FuzzMultipleDataViewers ----
+// DataViewerWidget allows multiple instances — stress test that.
+void FuzzMultipleDataViewers(int count) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto const n = std::clamp(count, 0, 10);
+    for (int i = 0; i < n; ++i) {
+        auto placed = harness.createAndPlace("DataViewerWidget");
+        ASSERT_TRUE(placed.isValid()) << "Failed to create viewer " << i;
+    }
+
+    EXPECT_EQ(static_cast<int>(harness.registry()->stateCount()), n);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), harness.registry()->stateCount());
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzMultipleDataViewers)
+    .WithDomains(fuzztest::InRange(0, 10));
+
 // ============================================================================
 // Deterministic Tests — Core Level
 // ============================================================================
@@ -1188,6 +1307,121 @@ TEST(RealWidgetDeterministic, DataTransformFromInvalidJson) {
     EXPECT_EQ(state->getInstanceId(), original_id);
 }
 
+// ============================================================================
+// Deterministic Tests — Visualization Level (DataViewer)
+// ============================================================================
+
+TEST(RealWidgetDeterministic, DataViewerRoundTrip) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataViewerWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    EXPECT_EQ(harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataViewerFieldPreservation) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("DataViewerWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto * state = dynamic_cast<DataViewerState *>(
+        harness.registry()->allStates()[0].get());
+    ASSERT_NE(state, nullptr);
+
+    state->setTimeWindow(100, 5000);
+    state->setYBounds(-2.0f, 2.0f);
+    state->setGlobalZoom(1.5f);
+    state->setGridEnabled(true);
+    state->setGridSpacing(250);
+    state->setTheme(DataViewerTheme::Light);
+    state->setBackgroundColor("#ffffff");
+    state->setAxisColor("#333333");
+    state->setZoomScalingMode(DataViewerZoomScalingMode::Fixed);
+    state->setInteractionMode(DataViewerInteractionMode::CreateInterval);
+
+    // Add series options
+    AnalogSeriesOptionsData analog_opts;
+    analog_opts.hex_color() = "#0000ff";
+    analog_opts.user_scale_factor = 2.5f;
+    analog_opts.y_offset = 0.1f;
+    state->seriesOptions().set("channel_1", analog_opts);
+
+    DigitalEventSeriesOptionsData event_opts;
+    event_opts.hex_color() = "#ff0000";
+    event_opts.plotting_mode = EventPlottingModeData::Stacked;
+    state->seriesOptions().set("spikes", event_opts);
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    auto * state2 = dynamic_cast<DataViewerState *>(
+        ch2.harness.registry()->allStates()[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->timeWindow(), std::make_pair(int64_t{100}, int64_t{5000}));
+    EXPECT_FLOAT_EQ(state2->yBounds().first, -2.0f);
+    EXPECT_FLOAT_EQ(state2->yBounds().second, 2.0f);
+    EXPECT_TRUE(state2->gridEnabled());
+    EXPECT_EQ(state2->gridSpacing(), 250);
+
+    // Verify series options survived
+    auto const * restored_analog = state2->seriesOptions().get<AnalogSeriesOptionsData>("channel_1");
+    ASSERT_NE(restored_analog, nullptr);
+    EXPECT_EQ(restored_analog->hex_color(), "#0000ff");
+    EXPECT_FLOAT_EQ(restored_analog->user_scale_factor, 2.5f);
+
+    auto const * restored_events = state2->seriesOptions().get<DigitalEventSeriesOptionsData>("spikes");
+    ASSERT_NE(restored_events, nullptr);
+    EXPECT_EQ(restored_events->hex_color(), "#ff0000");
+    EXPECT_EQ(restored_events->plotting_mode, EventPlottingModeData::Stacked);
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, DataViewerSignalEmission) {
+    auto state = std::make_shared<DataViewerState>();
+
+    QSignalSpy spy(state.get(), &EditorState::stateChanged);
+    ASSERT_TRUE(spy.isValid());
+
+    auto const json = state->toJson();
+    bool const ok = state->fromJson(json);
+    ASSERT_TRUE(ok);
+    EXPECT_GE(spy.count(), 1);
+}
+
+TEST(RealWidgetDeterministic, DataViewerFromInvalidJson) {
+    auto state = std::make_shared<DataViewerState>();
+    auto const original_id = state->getInstanceId();
+
+    EXPECT_FALSE(state->fromJson(""));
+    EXPECT_FALSE(state->fromJson("not json"));
+    EXPECT_FALSE(state->fromJson("null"));
+    EXPECT_FALSE(state->fromJson("[]"));
+    EXPECT_FALSE(state->fromJson("42"));
+
+    EXPECT_EQ(state->getInstanceId(), original_id);
+}
+
 TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -1196,8 +1430,9 @@ TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     harness.createAndPlace("DataInspector");
     harness.createAndPlace("DataImportWidget");
     harness.createAndPlace("DataTransformWidget");
+    harness.createAndPlace("DataViewerWidget");
 
-    EXPECT_EQ(harness.registry()->stateCount(), 4u);
+    EXPECT_EQ(harness.registry()->stateCount(), 5u);
     EXPECT_TRUE(harness.verifyAllDocked());
 
     auto const json1 = harness.captureState();
@@ -1205,7 +1440,7 @@ TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     CorpusHarness ch2;
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
-    EXPECT_EQ(ch2.harness.registry()->stateCount(), 4u);
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 5u);
     EXPECT_TRUE(ch2.harness.verifyAllDocked());
 
     auto const infos1 = extractStateInfo(*harness.registry());
