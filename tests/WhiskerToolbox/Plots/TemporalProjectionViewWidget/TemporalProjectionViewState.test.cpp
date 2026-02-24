@@ -23,7 +23,7 @@ TEST_CASE("TemporalProjectionViewState construction", "[TemporalProjectionViewSt
     SECTION("default construction creates valid state") {
         TemporalProjectionViewState state;
         
-        REQUIRE(state.getTypeName() == "TemporalProjectionView");
+        REQUIRE(state.getTypeName() == "TemporalProjectionViewWidget");
         REQUIRE(state.getDisplayName() == "Spatial Overlay");
         REQUIRE_FALSE(state.getInstanceId().isEmpty());
         REQUIRE_FALSE(state.isDirty());

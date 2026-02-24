@@ -63,7 +63,7 @@ public:
      * @brief Get the type name for this state
      * @return "3DPlot"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("3DPlot"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("3DPlotWidget"); }
 
     /**
      * @brief Get the display name for UI

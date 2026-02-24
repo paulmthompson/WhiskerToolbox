@@ -25,7 +25,7 @@ TEST_CASE("OnionSkinViewState construction", "[OnionSkinViewState]")
     SECTION("default construction creates valid state") {
         OnionSkinViewState state;
 
-        REQUIRE(state.getTypeName() == "OnionSkinView");
+        REQUIRE(state.getTypeName() == "OnionSkinViewWidget");
         REQUIRE(state.getDisplayName() == "Onion Skin View");
         REQUIRE_FALSE(state.getInstanceId().isEmpty());
         REQUIRE_FALSE(state.isDirty());

@@ -92,7 +92,7 @@ public:
 
     // === Type Identification ===
 
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("BatchProcessing"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("BatchProcessingWidget"); }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;
 

@@ -95,7 +95,7 @@ public:
      * @brief Get the type name for this state
      * @return "Spectrogram"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("Spectrogram"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("SpectrogramWidget"); }
 
     /**
      * @brief Get the display name for UI

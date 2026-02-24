@@ -88,7 +88,7 @@ public:
      * @brief Get the type name for this state
      * @return "PSTH"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("PSTH"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("PSTHWidget"); }
 
     /**
      * @brief Get the display name for UI

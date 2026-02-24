@@ -82,7 +82,7 @@ public:
 
     [[nodiscard]] QString getTypeName() const override
     {
-        return QStringLiteral("OnionSkinView");
+        return QStringLiteral("OnionSkinViewWidget");
     }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;

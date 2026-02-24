@@ -55,7 +55,7 @@ public:
      * @brief Get the type name for this state
      * @return "EventPlot"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("EventPlot"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("EventPlotWidget"); }
 
     /**
      * @brief Get the display name for UI

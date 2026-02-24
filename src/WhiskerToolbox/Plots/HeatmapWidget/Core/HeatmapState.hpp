@@ -56,7 +56,7 @@ public:
     explicit HeatmapState(QObject * parent = nullptr);
     ~HeatmapState() override = default;
 
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("Heatmap"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("HeatmapWidget"); }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;
 

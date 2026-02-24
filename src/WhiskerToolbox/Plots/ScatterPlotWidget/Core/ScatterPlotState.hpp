@@ -51,7 +51,7 @@ public:
     explicit ScatterPlotState(QObject * parent = nullptr);
     ~ScatterPlotState() override = default;
 
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("ScatterPlot"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("ScatterPlotWidget"); }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;
 

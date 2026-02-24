@@ -57,7 +57,7 @@ public:
      * @brief Get the type name for this state
      * @return "LinePlot"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("LinePlot"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("LinePlotWidget"); }
 
     /**
      * @brief Get the display name for UI

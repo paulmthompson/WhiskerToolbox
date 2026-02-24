@@ -73,7 +73,7 @@ public:
 
     [[nodiscard]] QString getTypeName() const override
     {
-        return QStringLiteral("TemporalProjectionView");
+        return QStringLiteral("TemporalProjectionViewWidget");
     }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;

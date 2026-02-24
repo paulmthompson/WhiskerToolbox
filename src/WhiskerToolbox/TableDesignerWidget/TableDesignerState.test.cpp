@@ -26,7 +26,7 @@ TEST_CASE("TableDesignerState - Construction", "[TableDesignerState]") {
     TableDesignerState state;
     
     SECTION("Default values are set") {
-        CHECK(state.getTypeName() == "TableDesigner");
+        CHECK(state.getTypeName() == "TableDesignerWidget");
         CHECK(state.getDisplayName() == "Table Designer");
         CHECK(state.currentTableId().isEmpty());
         CHECK(state.rowSourceName().isEmpty());

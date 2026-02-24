@@ -63,7 +63,7 @@ public:
      * @brief Get the type name for this state
      * @return "ACF"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("ACF"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("ACFWidget"); }
 
     /**
      * @brief Get the display name for UI
