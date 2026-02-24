@@ -55,6 +55,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -293,12 +294,47 @@ public:
      */
     [[nodiscard]] std::shared_ptr<DataManager> dataManager() const;
 
+    // ========== Closed-State Cache ==========
+
+    /**
+     * @brief Cache a closed editor's state JSON for later reopen
+     *
+     * When an editor is closed (destroyed), its state is serialized and
+     * stored here keyed by type_id. When a new editor of the same type is
+     * created, the cached state is automatically applied so the new
+     * instance starts with the last-closed settings.
+     *
+     * The cache is:
+     * - Per type_id (last-closed wins for multi-instance types)
+     * - NOT included in workspace save (toJson)
+     * - Cleared on workspace restore (fromJson)
+     * - Session-scoped (lost on application exit)
+     *
+     * @param type_id The editor type
+     * @param state_json The serialized state JSON
+     */
+    void cacheClosedState(EditorTypeId const & type_id, std::string state_json);
+
+    /**
+     * @brief Get cached state JSON for a type, if any
+     * @return The cached JSON string, or std::nullopt if none exists
+     */
+    [[nodiscard]] std::optional<std::string> getCachedState(EditorTypeId const & type_id) const;
+
+    /**
+     * @brief Clear all cached closed states
+     *
+     * Called automatically during workspace restore (fromJson).
+     */
+    void clearStateCache();
+
     // ========== Serialization ==========
 
     /**
      * @brief Serialize workspace to JSON
      *
      * Includes all registered states and current selection.
+     * Does NOT include the closed-state cache.
      */
     [[nodiscard]] std::string toJson() const;
 
@@ -306,6 +342,7 @@ public:
      * @brief Restore workspace from JSON
      *
      * Clears existing states and recreates from JSON.
+     * Also clears the closed-state cache.
      * Types must be registered before calling this.
      *
      * @return true if successful
@@ -470,6 +507,10 @@ private:
 
     /// Active states (instance_id -> state)
     std::map<EditorInstanceId, std::shared_ptr<EditorState>> _states;
+
+    /// Closed-state cache (type_id -> last-closed state JSON)
+    /// NOT serialized into workspace; cleared on fromJson()
+    std::map<EditorTypeId, std::string> _closed_state_cache;
 
     /// Current visualization time state
     TimePosition _current_position;           ///< Current time position (index + TimeFrame pointer)

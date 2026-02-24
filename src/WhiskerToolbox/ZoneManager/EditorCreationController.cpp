@@ -7,6 +7,8 @@
 #include <DockWidget.h>
 #include <DockManager.h>
 
+#include <QPointer>
+
 #include <iostream>
 
 EditorCreationController::EditorCreationController(EditorRegistry * registry,
@@ -62,6 +64,14 @@ EditorCreationController::createAndPlaceWithTitle(EditorLib::EditorTypeId const 
         std::cerr << "EditorCreationController: Failed to create editor of type: "
                   << type_id.toString().toStdString() << std::endl;
         return result;
+    }
+    
+    // Restore cached state from previous close, if available.
+    // This lets reopened editors start with the last-used settings
+    // rather than defaults.  The view/properties widgets should
+    // react to the stateChanged() signal emitted by fromJson().
+    if (auto cached = _registry->getCachedState(type_id)) {
+        editor_instance.state->fromJson(*cached);
     }
     
     result.state = editor_instance.state;
@@ -197,7 +207,7 @@ ads::CDockWidget * EditorCreationController::createDockWidget(QWidget * widget,
     
     // Configure dock features
     dock->setFeature(ads::CDockWidget::DockWidgetClosable, closable);
-    dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
+    dock->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     dock->setFeature(ads::CDockWidget::DockWidgetMovable, true);
     dock->setFeature(ads::CDockWidget::DockWidgetFloatable, true);
     
@@ -211,18 +221,29 @@ void EditorCreationController::connectCleanupSignals(PlacedEditor const & editor
         return;
     }
     
-    // When the view dock is closed, unregister the state from the registry
+    // When the view dock is closed, cache state then unregister from the registry.
+    // With DockWidgetDeleteOnClose = true, the dock widget (and its child view widget)
+    // will be destroyed after this signal handler returns.
     connect(editor.view_dock, &ads::CDockWidget::closed, this, 
             [this, instance_id]() {
                 if (_registry) {
+                    // Cache state JSON before unregistering so reopening the
+                    // same editor type can restore the last-used settings.
+                    auto s = _registry->state(instance_id);
+                    if (s) {
+                        auto const type_id = EditorLib::EditorTypeId(s->getTypeName());
+                        _registry->cacheClosedState(type_id, s->toJson());
+                    }
                     _registry->unregisterState(instance_id);
                 }
                 emit editorClosed(instance_id);
             });
     
-    // If there's a properties dock, close it when the view is closed
+    // If there's a properties dock, close it when the view is closed.
+    // Use QPointer so the lambda is safe if the user independently
+    // closed (and destroyed) the properties dock before the view dock.
     if (editor.properties_dock) {
-        ads::CDockWidget * props_dock = editor.properties_dock;
+        QPointer<ads::CDockWidget> props_dock = editor.properties_dock;
         connect(editor.view_dock, &ads::CDockWidget::closed, this,
                 [props_dock]() {
                     if (props_dock) {

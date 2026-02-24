@@ -316,6 +316,22 @@ EditorLib::OperationContext * EditorRegistry::operationContext() const {
 
 // === Serialization ===
 
+void EditorRegistry::cacheClosedState(EditorTypeId const & type_id, std::string state_json) {
+    _closed_state_cache[type_id] = std::move(state_json);
+}
+
+std::optional<std::string> EditorRegistry::getCachedState(EditorTypeId const & type_id) const {
+    auto it = _closed_state_cache.find(type_id);
+    if (it != _closed_state_cache.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+void EditorRegistry::clearStateCache() {
+    _closed_state_cache.clear();
+}
+
 std::string EditorRegistry::toJson() const {
     SerializedWorkspace workspace;
 
@@ -350,6 +366,9 @@ bool EditorRegistry::fromJson(std::string const & json) {
     for (auto const & s: old_states) {
         unregisterState(EditorInstanceId(s->getInstanceId()));
     }
+
+    // Clear the closed-state cache — workspace restore defines the starting state
+    clearStateCache();
 
     // Restore states
     for (auto const & serialized: workspace.states) {
