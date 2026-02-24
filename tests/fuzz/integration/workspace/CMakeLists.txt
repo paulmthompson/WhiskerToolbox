@@ -116,3 +116,58 @@ target_link_options(fuzz_workspace_placement
 gtest_discover_tests(fuzz_workspace_placement
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
+
+# ==============================================================================
+# Phase 5: Workspace File Parsing Fuzz Tests
+# WorkspaceManager::readWorkspace() with arbitrary/malformed .wtb files
+# ==============================================================================
+
+add_executable(fuzz_workspace_file
+    MockEditorTypes.cpp
+    fuzz_workspace_file.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_workspace_file)
+
+set_target_properties(fuzz_workspace_file PROPERTIES
+    AUTOMOC ON
+)
+
+target_include_directories(fuzz_workspace_file
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(fuzz_workspace_file
+    PRIVATE
+        # Fuzz/test infrastructure
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+        nlohmann_json::nlohmann_json
+        reflectcpp::reflectcpp
+        # Qt
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Test
+        # Editor framework
+        WhiskerToolbox::EditorState
+        # StateManagement (provides WorkspaceManager)
+        WhiskerToolbox::StateManagement
+)
+
+target_compile_options(fuzz_workspace_file
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_workspace_file
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_workspace_file
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
+)
