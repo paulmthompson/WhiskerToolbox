@@ -21,6 +21,9 @@
 // Real widget state headers (Visualization level)
 #include "DataViewer_Widget/Core/DataViewerState.hpp"
 
+// Real widget state headers (Media level)
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+
 #include "DataManager/DataManager.hpp"
 
 #include <QWidget>
@@ -43,10 +46,17 @@ static std::vector<CorpusEntry> const kVisualizationEntries = {
     {.type_id = "DataViewerWidget", .allow_multiple = true},
 };
 
+static std::vector<CorpusEntry> const kMediaEntries = {
+    {.type_id = "MediaWidget", .allow_multiple = true},
+};
+
 std::vector<CorpusEntry> corpusEntries(CorpusLevel level) {
     std::vector<CorpusEntry> entries;
 
     switch (level) {
+    case CorpusLevel::Media:
+        entries.insert(entries.end(), kMediaEntries.begin(), kMediaEntries.end());
+        [[fallthrough]];
     case CorpusLevel::Visualization:
         entries.insert(entries.end(), kVisualizationEntries.begin(), kVisualizationEntries.end());
         [[fallthrough]];
@@ -152,6 +162,19 @@ void registerCorpusTypes(
                 .allow_multiple = true,
                 .create_state = []() {
                     return std::make_shared<DataViewerState>();
+                },
+                .create_view = make_view,
+                .create_properties = make_props,
+            });
+        } else if (entry.type_id == "MediaWidget") {
+            registry->registerType({
+                .type_id = "MediaWidget",
+                .display_name = "Media Viewer",
+                .preferred_zone = Zone::Center,
+                .properties_zone = Zone::Right,
+                .allow_multiple = true,
+                .create_state = []() {
+                    return std::make_shared<MediaWidgetState>();
                 },
                 .create_view = make_view,
                 .create_properties = make_props,

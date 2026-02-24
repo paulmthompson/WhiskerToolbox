@@ -37,6 +37,7 @@
 #include "DataImport_Widget/DataImportWidgetState.hpp"
 #include "DataTransform_Widget/DataTransformWidgetState.hpp"
 #include "DataViewer_Widget/Core/DataViewerState.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -113,7 +114,7 @@ std::vector<StateInfo> extractStateInfo(EditorRegistry const & registry) {
 // Shared corpus state
 // ============================================================================
 
-static auto const kCorpusLevel = CorpusLevel::Visualization;
+static auto const kCorpusLevel = CorpusLevel::Media;
 
 static std::vector<CorpusEntry> const & corpusEntriesRef() {
     static auto const entries = corpusEntries(kCorpusLevel);
@@ -1060,6 +1061,141 @@ void FuzzMultipleDataViewers(int count) {
 FUZZ_TEST(RealWidgetFuzz, FuzzMultipleDataViewers)
     .WithDomains(fuzztest::InRange(0, 10));
 
+// ---- FuzzMediaWidgetStateValues ----
+void FuzzMediaWidgetStateValues(
+    std::string const & media_key,
+    double zoom,
+    double pan_x,
+    double pan_y,
+    int canvas_w,
+    int canvas_h,
+    std::string const & line_key,
+    std::string const & line_color,
+    int line_thickness,
+    int brush_size,
+    float selection_threshold,
+    int tool_mode_idx) {
+
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("MediaWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto const & states = harness.registry()->allStates();
+    ASSERT_EQ(states.size(), 1u);
+
+    auto * state = dynamic_cast<MediaWidgetState *>(states[0].get());
+    ASSERT_NE(state, nullptr);
+
+    // Set displayed data key
+    if (!media_key.empty()) {
+        state->setDisplayedDataKey(QString::fromStdString(media_key));
+    }
+
+    // Set viewport
+    if (std::isfinite(zoom) && zoom > 0.0) {
+        state->setZoom(zoom);
+    }
+    if (std::isfinite(pan_x) && std::isfinite(pan_y)) {
+        state->setPan(pan_x, pan_y);
+    }
+    if (canvas_w > 0 && canvas_h > 0) {
+        state->setCanvasSize(canvas_w, canvas_h);
+    }
+
+    // Set line display options via registry
+    if (!line_key.empty()) {
+        LineDisplayOptions line_opts;
+        line_opts.hex_color() = line_color.empty() ? "#ff0000" : line_color;
+        line_opts.line_thickness = std::clamp(line_thickness, 1, 20);
+        state->displayOptions().set(QString::fromStdString(line_key), line_opts);
+    }
+
+    // Set interaction preferences
+    MaskInteractionPrefs mask_prefs;
+    mask_prefs.brush_size = std::clamp(brush_size, 1, 200);
+    state->setMaskPrefs(mask_prefs);
+
+    PointInteractionPrefs point_prefs;
+    if (std::isfinite(selection_threshold) && selection_threshold > 0.0f) {
+        point_prefs.selection_threshold = selection_threshold;
+    }
+    state->setPointPrefs(point_prefs);
+
+    // Set tool mode
+    auto const line_mode = static_cast<LineToolMode>(
+        std::abs(tool_mode_idx) % 5);
+    state->setActiveLineMode(line_mode);
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const & states2 = ch2.harness.registry()->allStates();
+    ASSERT_EQ(states2.size(), 1u);
+
+    auto * state2 = dynamic_cast<MediaWidgetState *>(states2[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    EXPECT_EQ(state2->displayedDataKey(), state->displayedDataKey());
+    EXPECT_EQ(state2->activeLineMode(), state->activeLineMode());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzMediaWidgetStateValues)
+    .WithDomains(
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
+        fuzztest::Finite<double>(),
+        fuzztest::InRange(1, 8192),
+        fuzztest::InRange(1, 8192),
+        fuzztest::PrintableAsciiString().WithMaxSize(100),
+        fuzztest::PrintableAsciiString().WithMaxSize(20),
+        fuzztest::InRange(1, 20),
+        fuzztest::InRange(1, 200),
+        fuzztest::Finite<float>(),
+        fuzztest::InRange(0, 4));
+
+// ---- FuzzMultipleMediaWidgets ----
+// MediaWidget allows multiple instances — stress test that.
+void FuzzMultipleMediaWidgets(int count) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto const n = std::clamp(count, 0, 10);
+    for (int i = 0; i < n; ++i) {
+        auto placed = harness.createAndPlace("MediaWidget");
+        ASSERT_TRUE(placed.isValid()) << "Failed to create media widget " << i;
+    }
+
+    EXPECT_EQ(static_cast<int>(harness.registry()->stateCount()), n);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+    ASSERT_FALSE(json1.empty());
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), harness.registry()->stateCount());
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+FUZZ_TEST(RealWidgetFuzz, FuzzMultipleMediaWidgets)
+    .WithDomains(fuzztest::InRange(0, 10));
+
 // ============================================================================
 // Deterministic Tests — Core Level
 // ============================================================================
@@ -1422,6 +1558,170 @@ TEST(RealWidgetDeterministic, DataViewerFromInvalidJson) {
     EXPECT_EQ(state->getInstanceId(), original_id);
 }
 
+// ============================================================================
+// Deterministic Tests — Media Level (MediaWidget)
+// ============================================================================
+
+TEST(RealWidgetDeterministic, MediaWidgetRoundTrip) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("MediaWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    EXPECT_EQ(harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(harness.verifyAllDocked());
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 1u);
+    EXPECT_TRUE(ch2.harness.verifyAllDocked());
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, MediaWidgetFieldPreservation) {
+    CorpusHarness ch;
+    auto & harness = ch.harness;
+
+    auto placed = harness.createAndPlace("MediaWidget");
+    ASSERT_TRUE(placed.isValid());
+
+    auto * state = dynamic_cast<MediaWidgetState *>(
+        harness.registry()->allStates()[0].get());
+    ASSERT_NE(state, nullptr);
+
+    // Set displayed data key
+    state->setDisplayedDataKey("test_video.mp4");
+
+    // Set viewport
+    state->setZoom(2.5);
+    state->setPan(100.0, -50.0);
+    state->setCanvasSize(1920, 1080);
+
+    // Set line display options
+    LineDisplayOptions line_opts;
+    line_opts.hex_color() = "#00ff00";
+    line_opts.line_thickness = 5;
+    state->displayOptions().set("whisker_1", line_opts);
+
+    // Set mask display options
+    MaskDisplayOptions mask_opts;
+    mask_opts.hex_color() = "#0000ff";
+    mask_opts.alpha() = 0.5f;
+    state->displayOptions().set("tongue_mask", mask_opts);
+
+    // Set interaction preferences
+    LineInteractionPrefs line_prefs;
+    line_prefs.polynomial_order = 5;
+    line_prefs.edge_snapping_enabled = true;
+    line_prefs.eraser_radius = 20;
+    state->setLinePrefs(line_prefs);
+
+    MaskInteractionPrefs mask_prefs;
+    mask_prefs.brush_size = 30;
+    mask_prefs.hover_circle_visible = false;
+    state->setMaskPrefs(mask_prefs);
+
+    // Set tool modes
+    state->setActiveLineMode(LineToolMode::Add);
+    state->setActiveMaskMode(MaskToolMode::Brush);
+    state->setActivePointMode(PointToolMode::Select);
+
+    // Add text overlay
+    TextOverlayData overlay;
+    overlay.text = "Frame: 100";
+    overlay.x_position = 0.1f;
+    overlay.y_position = 0.9f;
+    overlay.color = "#ffffff";
+    overlay.font_size = 16;
+    state->addTextOverlay(overlay);
+
+    auto const json1 = harness.captureState();
+
+    CorpusHarness ch2;
+    ASSERT_TRUE(ch2.harness.restoreState(json1));
+
+    auto * state2 = dynamic_cast<MediaWidgetState *>(
+        ch2.harness.registry()->allStates()[0].get());
+    ASSERT_NE(state2, nullptr);
+
+    // Verify primary display
+    EXPECT_EQ(state2->displayedDataKey(), "test_video.mp4");
+
+    // Verify viewport
+    EXPECT_DOUBLE_EQ(state2->zoom(), 2.5);
+    auto const [px, py] = state2->pan();
+    EXPECT_DOUBLE_EQ(px, 100.0);
+    EXPECT_DOUBLE_EQ(py, -50.0);
+    auto const [cw, ch_val] = state2->canvasSize();
+    EXPECT_EQ(cw, 1920);
+    EXPECT_EQ(ch_val, 1080);
+
+    // Verify line display options
+    auto const * restored_line = state2->displayOptions().get<LineDisplayOptions>("whisker_1");
+    ASSERT_NE(restored_line, nullptr);
+    EXPECT_EQ(restored_line->hex_color(), "#00ff00");
+    EXPECT_EQ(restored_line->line_thickness, 5);
+
+    // Verify mask display options
+    auto const * restored_mask = state2->displayOptions().get<MaskDisplayOptions>("tongue_mask");
+    ASSERT_NE(restored_mask, nullptr);
+    EXPECT_EQ(restored_mask->hex_color(), "#0000ff");
+    EXPECT_FLOAT_EQ(restored_mask->alpha(), 0.5f);
+
+    // Verify interaction preferences
+    EXPECT_EQ(state2->linePrefs().polynomial_order, 5);
+    EXPECT_TRUE(state2->linePrefs().edge_snapping_enabled);
+    EXPECT_EQ(state2->linePrefs().eraser_radius, 20);
+    EXPECT_EQ(state2->maskPrefs().brush_size, 30);
+    EXPECT_FALSE(state2->maskPrefs().hover_circle_visible);
+
+    // Verify tool modes
+    EXPECT_EQ(state2->activeLineMode(), LineToolMode::Add);
+    EXPECT_EQ(state2->activeMaskMode(), MaskToolMode::Brush);
+    EXPECT_EQ(state2->activePointMode(), PointToolMode::Select);
+
+    // Verify text overlays
+    ASSERT_EQ(state2->textOverlays().size(), 1u);
+    EXPECT_EQ(state2->textOverlays()[0].text, "Frame: 100");
+    EXPECT_FLOAT_EQ(state2->textOverlays()[0].x_position, 0.1f);
+    EXPECT_FLOAT_EQ(state2->textOverlays()[0].y_position, 0.9f);
+    EXPECT_EQ(state2->textOverlays()[0].font_size, 16);
+
+    auto const json2 = ch2.harness.captureState();
+    ExpectJsonEqual(json1, json2);
+}
+
+TEST(RealWidgetDeterministic, MediaWidgetSignalEmission) {
+    auto state = std::make_shared<MediaWidgetState>();
+
+    QSignalSpy spy(state.get(), &EditorState::stateChanged);
+    ASSERT_TRUE(spy.isValid());
+
+    auto const json = state->toJson();
+    bool const ok = state->fromJson(json);
+    ASSERT_TRUE(ok);
+    EXPECT_GE(spy.count(), 1);
+}
+
+TEST(RealWidgetDeterministic, MediaWidgetFromInvalidJson) {
+    auto state = std::make_shared<MediaWidgetState>();
+    auto const original_id = state->getInstanceId();
+
+    EXPECT_FALSE(state->fromJson(""));
+    EXPECT_FALSE(state->fromJson("not json"));
+    EXPECT_FALSE(state->fromJson("null"));
+    EXPECT_FALSE(state->fromJson("[]"));
+    EXPECT_FALSE(state->fromJson("42"));
+
+    EXPECT_EQ(state->getInstanceId(), original_id);
+}
+
 TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     CorpusHarness ch;
     auto & harness = ch.harness;
@@ -1431,8 +1731,9 @@ TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     harness.createAndPlace("DataImportWidget");
     harness.createAndPlace("DataTransformWidget");
     harness.createAndPlace("DataViewerWidget");
+    harness.createAndPlace("MediaWidget");
 
-    EXPECT_EQ(harness.registry()->stateCount(), 5u);
+    EXPECT_EQ(harness.registry()->stateCount(), 6u);
     EXPECT_TRUE(harness.verifyAllDocked());
 
     auto const json1 = harness.captureState();
@@ -1440,7 +1741,7 @@ TEST(RealWidgetDeterministic, AllCoreWidgetsRoundTrip) {
     CorpusHarness ch2;
     ASSERT_TRUE(ch2.harness.restoreState(json1));
 
-    EXPECT_EQ(ch2.harness.registry()->stateCount(), 5u);
+    EXPECT_EQ(ch2.harness.registry()->stateCount(), 6u);
     EXPECT_TRUE(ch2.harness.verifyAllDocked());
 
     auto const infos1 = extractStateInfo(*harness.registry());

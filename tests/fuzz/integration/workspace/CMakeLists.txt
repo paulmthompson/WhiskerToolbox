@@ -2,7 +2,7 @@
 # Phase 3 of Workspace Fuzz Testing Roadmap:
 # Registry toJson()/fromJson() round-trip and crash-resistance testing
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Test)
 find_package(reflectcpp CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
@@ -190,6 +190,9 @@ add_executable(fuzz_real_widget_roundtrip
     # State-only sources for Visualization level widgets
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerState.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer_Widget/Core/SeriesOptionsRegistry.cpp
+    # State-only sources for Media level widgets
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/Core/MediaWidgetState.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/DisplayOptionsRegistry.cpp
 )
 
 add_fuzz_test_with_instantiations(fuzz_real_widget_roundtrip)
@@ -203,6 +206,9 @@ target_include_directories(fuzz_real_widget_roundtrip
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}
+        # Media_Widget state-only compilation needs this for DisplayOptions/DisplayOptions.hpp
+        # and its relative include "../../DataManager/utils/color.hpp"
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget
 )
 
 target_link_libraries(fuzz_real_widget_roundtrip
@@ -216,6 +222,7 @@ target_link_libraries(fuzz_real_widget_roundtrip
         # Qt
         Qt6::Core
         Qt6::Widgets
+        Qt6::Gui
         Qt6::Test
         # Editor framework
         WhiskerToolbox::EditorState

@@ -33,6 +33,7 @@ enum class CorpusLevel {
     Minimal,    ///< TestWidget only (first real widget, simplest)
     Core,       ///< + DataInspector, DataImport, DataTransform
     Visualization, ///< + DataViewer (complex state, series options)
+    Media,      ///< + MediaWidget (complex state, display options registry, viewport)
     // Future levels:
     // Plotting,///< + LinePlot, EventPlot, ScatterPlot, Heatmap, PSTH, ACF
     // Full     ///< All editor types
