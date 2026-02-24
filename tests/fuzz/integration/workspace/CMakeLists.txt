@@ -171,3 +171,67 @@ target_link_options(fuzz_workspace_file
 gtest_discover_tests(fuzz_workspace_file
     PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
 )
+
+# ==============================================================================
+# Phase 6: Real Widget Adoption Fuzz Tests
+# Real EditorState subclasses (starting with TestWidget) through the full
+# placement → serialize → restore → verify pipeline.
+# ==============================================================================
+
+add_executable(fuzz_real_widget_roundtrip
+    FuzzDockingHarness.cpp
+    MockEditorTypes.cpp
+    WidgetCorpus.cpp
+    fuzz_real_widget_roundtrip.cpp
+)
+
+add_fuzz_test_with_instantiations(fuzz_real_widget_roundtrip)
+
+set_target_properties(fuzz_real_widget_roundtrip PROPERTIES
+    AUTOMOC ON
+)
+
+target_include_directories(fuzz_real_widget_roundtrip
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(fuzz_real_widget_roundtrip
+    PRIVATE
+        # Fuzz/test infrastructure
+        gtest
+        fuzztest::fuzztest
+        fuzztest::fuzztest_gtest_main
+        nlohmann_json::nlohmann_json
+        reflectcpp::reflectcpp
+        # Qt
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Test
+        # Editor framework
+        WhiskerToolbox::EditorState
+        # Zone/docking
+        ZoneManager
+        WhiskerToolbox::StateManagement
+        qt6advanceddocking
+        # DataManager (needed by real widget state constructors)
+        DataManager
+        # Real widget libraries (Phase 6 corpus)
+        Test_Widget
+)
+
+target_compile_options(fuzz_real_widget_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+target_link_options(fuzz_real_widget_roundtrip
+    PRIVATE
+        -fsanitize=address
+)
+
+gtest_discover_tests(fuzz_real_widget_roundtrip
+    PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0;QT_QPA_PLATFORM=offscreen"
+)
