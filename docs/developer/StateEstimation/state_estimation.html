@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Code Quality, Linters, and Analyzers – Neuralyzer</title>
+<title>State Estimation Library – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,23 +23,23 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../">
-<script src="../site_libs/quarto-html/quarto.js"></script>
-<script src="../site_libs/quarto-html/popper.min.js"></script>
-<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -69,17 +69,17 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -90,15 +90,15 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../introduction.html"> 
+    <a class="nav-link" href="../../introduction.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../getting-started.html"> 
+    <a class="nav-link" href="../../getting-started.html"> 
 <span class="menu-text">Getting Started</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../learning-resources.html"> 
+    <a class="nav-link" href="../../learning-resources.html"> 
 <span class="menu-text">Learning Resources</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -107,15 +107,15 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../user_guide/index.html">
+    <a class="dropdown-item" href="../../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../developer/index.html">
+    <a class="dropdown-item" href="../../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../api_reference.html">
+    <a class="dropdown-item" href="../../api_reference.html">
  <span class="dropdown-text">API Reference</span></a>
   </li>  
     </ul>
@@ -132,289 +132,29 @@ ul.task-list li input[type="checkbox"] {
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/code_quality.html">Code Quality, Linters, and Analyzers</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Developer Documentation</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/python_integration.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Python Integration</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/benchmark/benchmarking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Profiling and Performance</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Building</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/code_quality.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/copilot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">C++ Development Tools Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Contributing Code</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/fuzz/fuzzing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Fuzz Testing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/intro_to_c.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Introduction to C++</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/analysis/static_analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/testing/testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../api_reference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Core Libraries</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/CoreGeometry/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Core Geometry</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/coreplotting/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">CorePlotting Library</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/Entity/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Entity Library</span></a>
-  </div>
-</li>
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/transforms_v2/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Transforms V2</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/transforms_v2/architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Architecture</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/transforms_v2/adding_transforms.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Adding New Transforms</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Data Inspectors</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/data_inspectors/tensor_inspector.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Tensor Inspector (Dev)</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">Data Management</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/DataManager/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/DataManager/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/DataManager/data_structures.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Structure Performance</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/DataManager/binary_loading_performance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Binary Multi-Channel Loading Performance Analysis</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
- <span class="menu-text">User Interface</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/analysis_dashboard/analysis_dashboard.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Analysis Dashboard: Embedding OpenGL Widgets in QGraphicsScene</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/data_manager/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/data_transform/data_transform_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Transform Widget</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/data_viewer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/media_widget/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-          <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/ui/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Collapsible Widget</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/ui/autoparam.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">AutoParam System</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#clang-format" id="toc-clang-format" class="nav-link active" data-scroll-target="#clang-format">Clang Format</a></li>
-  <li><a href="#clang-tidy" id="toc-clang-tidy" class="nav-link" data-scroll-target="#clang-tidy">Clang Tidy</a></li>
-  <li><a href="#include-what-you-use-iwyu" id="toc-include-what-you-use-iwyu" class="nav-link" data-scroll-target="#include-what-you-use-iwyu">Include What you Use (IWYU)</a></li>
-  <li><a href="#code-checker" id="toc-code-checker" class="nav-link" data-scroll-target="#code-checker">Code Checker</a></li>
-  <li><a href="#optview2" id="toc-optview2" class="nav-link" data-scroll-target="#optview2">Optview2</a></li>
-  <li><a href="#gamma-ray" id="toc-gamma-ray" class="nav-link" data-scroll-target="#gamma-ray"><strong>Gamma Ray</strong></a></li>
-  <li><a href="#heaptrack" id="toc-heaptrack" class="nav-link" data-scroll-target="#heaptrack">HeapTrack</a></li>
-  <li><a href="#hotspot" id="toc-hotspot" class="nav-link" data-scroll-target="#hotspot">HotSpot</a></li>
-  <li><a href="#tracy-profiler" id="toc-tracy-profiler" class="nav-link" data-scroll-target="#tracy-profiler">Tracy Profiler</a></li>
-  <li><a href="#infer" id="toc-infer" class="nav-link" data-scroll-target="#infer">Infer</a></li>
+  <li><a href="#core-goals" id="toc-core-goals" class="nav-link active" data-scroll-target="#core-goals">Core Goals</a></li>
+  <li><a href="#design-principles-and-variation-points" id="toc-design-principles-and-variation-points" class="nav-link" data-scroll-target="#design-principles-and-variation-points">Design Principles and Variation Points</a>
+  <ul class="collapse">
+  <li><a href="#data-type" id="toc-data-type" class="nav-link" data-scroll-target="#data-type">Data Type</a></li>
+  <li><a href="#filtering-schemes" id="toc-filtering-schemes" class="nav-link" data-scroll-target="#filtering-schemes">Filtering Schemes</a></li>
+  <li><a href="#smoothing-operations" id="toc-smoothing-operations" class="nav-link" data-scroll-target="#smoothing-operations">Smoothing Operations</a></li>
+  <li><a href="#ancillary-tools-for-performance" id="toc-ancillary-tools-for-performance" class="nav-link" data-scroll-target="#ancillary-tools-for-performance">Ancillary Tools for Performance</a></li>
+  </ul></li>
+  <li><a href="#design-roadmap" id="toc-design-roadmap" class="nav-link" data-scroll-target="#design-roadmap">Design Roadmap</a>
+  <ul class="collapse">
+  <li><a href="#filter-types" id="toc-filter-types" class="nav-link" data-scroll-target="#filter-types">Filter Types</a></li>
+  <li><a href="#smoothing-types" id="toc-smoothing-types" class="nav-link" data-scroll-target="#smoothing-types">Smoothing Types</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -423,7 +163,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Code Quality, Linters, and Analyzers</h1>
+<h1 class="title">State Estimation Library</h1>
 </div>
 
 
@@ -440,38 +180,119 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="clang-format" class="level3">
-<h3 class="anchored" data-anchor-id="clang-format">Clang Format</h3>
+<section id="core-goals" class="level2">
+<h2 class="anchored" data-anchor-id="core-goals">Core Goals</h2>
+<p>The primary goals of this library are to provide a modular framework for state estimation tasks. The high-level objectives include:</p>
+<ul>
+<li><strong>Generate Smooth Estimates</strong>: Produce a smooth estimate of a state from raw data.</li>
+<li><strong>Compare and Validate</strong>: Generate a smooth estimate and compare it against a pre-existing estimate, with the ability to flag potential outliers.</li>
+<li><strong>Interpolate Missing Data</strong>: Generate smoothed predictions that can fill in gaps where data is missing. This is in contrast to simply refining existing measurements.</li>
+<li><strong>Assign Identity to Unlabeled Data</strong>: Use predictions to assign identities to measured data points within a time series that has only sparse labels.</li>
+</ul>
 </section>
-<section id="clang-tidy" class="level3">
-<h3 class="anchored" data-anchor-id="clang-tidy">Clang Tidy</h3>
+<section id="design-principles-and-variation-points" class="level2">
+<h2 class="anchored" data-anchor-id="design-principles-and-variation-points">Design Principles and Variation Points</h2>
+<p>The library should be designed in a modular fashion to accommodate several key points of variation in state estimation problems. The interfaces should be flexible enough to handle significant structural differences between algorithms.</p>
+<section id="data-type" class="level3">
+<h3 class="anchored" data-anchor-id="data-type">Data Type</h3>
+<p>The nature of the input data is a primary variation point. The library must handle:</p>
+<ul>
+<li><strong>Continuous Data</strong>: Analog time series or other continuous state variables.</li>
+<li><strong>Discrete Data</strong>: Data that exists on a discrete grid or set of points. An example would be making a prediction for a point within an image mask where only certain pixels are available.</li>
+</ul>
 </section>
-<section id="include-what-you-use-iwyu" class="level3">
-<h3 class="anchored" data-anchor-id="include-what-you-use-iwyu">Include What you Use (IWYU)</h3>
+<section id="filtering-schemes" class="level3">
+<h3 class="anchored" data-anchor-id="filtering-schemes">Filtering Schemes</h3>
+<p>The design must support different families of filtering algorithms, which may have different assumptions about data distributions and different methodological considerations.</p>
+<ul>
+<li><strong>Kalman Filters</strong>:
+<ul>
+<li>Standard Kalman Filter</li>
+<li>Extended Kalman Filter (EKF) for linearized systems</li>
+<li>Unscented Kalman Filter (UKF)</li>
+</ul></li>
+<li><strong>Particle Filters</strong>:
+<ul>
+<li>Bootstrap Particle Filter</li>
+<li>Sequential Importance Sampling with Resampling (SIR)</li>
+</ul></li>
+</ul>
 </section>
-<section id="code-checker" class="level3">
-<h3 class="anchored" data-anchor-id="code-checker">Code Checker</h3>
+<section id="smoothing-operations" class="level3">
+<h3 class="anchored" data-anchor-id="smoothing-operations">Smoothing Operations</h3>
+<p>Alongside forward-in-time filtering, the library must incorporate smoothing operations, which use the full dataset to refine estimates by making a backward pass through the data. The design should recognize that some smoothers are tightly paired with specific filters, while others may be more general.</p>
+<ul>
+<li><strong>Paired Smoother</strong>: An example is the Rauch-Tung-Striebel (RTS) smoother, which is specifically paired with the Kalman filter.</li>
+<li><strong>Complex Smoothers</strong>: For particle filters, smoothing and resampling schemes can be more complicated and may require filter-specific implementations.</li>
+</ul>
 </section>
-<section id="optview2" class="level3">
-<h3 class="anchored" data-anchor-id="optview2">Optview2</h3>
+<section id="ancillary-tools-for-performance" class="level3">
+<h3 class="anchored" data-anchor-id="ancillary-tools-for-performance">Ancillary Tools for Performance</h3>
+<p>To ensure high performance, especially for complex schemes, the library should incorporate specialized data structures and algorithms.</p>
+<ul>
+<li><strong>Example</strong>: For particle filters operating on spatial data, a k-d tree could be implemented to accelerate the lookup and resampling of large particle fields based on their location.</li>
+</ul>
+<p>The overall goal is to design interfaces that are modular enough to accommodate these major structural variations as new algorithms and techniques are implemented.</p>
 </section>
-<section id="gamma-ray" class="level3">
-<h3 class="anchored" data-anchor-id="gamma-ray"><strong>Gamma Ray</strong></h3>
 </section>
-<section id="heaptrack" class="level3">
-<h3 class="anchored" data-anchor-id="heaptrack">HeapTrack</h3>
+<section id="design-roadmap" class="level2">
+<h2 class="anchored" data-anchor-id="design-roadmap">Design Roadmap</h2>
+<section id="filter-types" class="level3">
+<h3 class="anchored" data-anchor-id="filter-types">Filter Types</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Filter Type</th>
+<th>Completion Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Standard Kalman Filter</td>
+<td>Implemented</td>
+</tr>
+<tr class="even">
+<td>Extended Kalman Filter (EKF)</td>
+<td>Planned</td>
+</tr>
+<tr class="odd">
+<td>Unscented Kalman Filter (UKF)</td>
+<td>Planned</td>
+</tr>
+<tr class="even">
+<td>Bootstrap Particle Filter</td>
+<td>Implemented</td>
+</tr>
+<tr class="odd">
+<td>Sequential Importance Resampling</td>
+<td>Planned</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="hotspot" class="level3">
-<h3 class="anchored" data-anchor-id="hotspot">HotSpot</h3>
-</section>
-<section id="tracy-profiler" class="level3">
-<h3 class="anchored" data-anchor-id="tracy-profiler">Tracy Profiler</h3>
-<p><a href="https://github.com/wolfpld/tracy" class="uri">https://github.com/wolfpld/tracy</a></p>
-</section>
-<section id="infer" class="level3">
-<h3 class="anchored" data-anchor-id="infer">Infer</h3>
+<section id="smoothing-types" class="level3">
+<h3 class="anchored" data-anchor-id="smoothing-types">Smoothing Types</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Smoothing Type</th>
+<th>Completion Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rauch-Tung-Striebel (RTS)</td>
+<td>Implemented</td>
+</tr>
+<tr class="even">
+<td>Particle Filter Smoother</td>
+<td>Planned</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

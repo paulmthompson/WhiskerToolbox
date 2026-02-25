@@ -296,7 +296,7 @@ Alternative all-in-one command:
 ## Summary
 
 | Tool | Purpose | Type | Output |
-|----|----|----|----|
+|------------------|------------------|------------------|------------------|
 | **IWYU** | Include dependency analysis | Static analysis | Terminal |
 | **cppcheck** | Bug & quality static analysis | Static analysis | Terminal |
 | **Infer** | Advanced bug detection | Static analysis | Terminal + HTML |
