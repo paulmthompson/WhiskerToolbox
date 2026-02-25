@@ -80,7 +80,6 @@ website:
             - developer/DataManager/storage_benchmarking_roadmap.qmd
         - section: "User Interface"
           contents:
-            - developer/ui/analysis_dashboard/analysis_dashboard.qmd
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
             - developer/ui/media_widget/media_widget.qmd
