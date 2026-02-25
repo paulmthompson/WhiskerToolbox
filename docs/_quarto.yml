@@ -83,7 +83,6 @@ website:
             - developer/ui/analysis_dashboard/analysis_dashboard.qmd
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
-            - developer/ui/data_viewer/data_viewer_widget.qmd
             - developer/ui/media_widget/media_widget.qmd
             - section: "Features"
               href: developer/ui/Features/overview.qmd
@@ -91,6 +90,20 @@ website:
                   - developer/ui/Features/Collapsible_Widget.qmd
             - text: "AutoParam System"
               href: developer/ui/autoparam.qmd
+            - section: "Plot Widgets"
+              href: developer/ui/Plots/plot_widget_guide.md
+              contents:
+                  - developer/ui/Plots/3DPlot/index.qmd
+                  - developer/ui/Plots/ACFWidget/index.qmd
+                  - developer/ui/Plots/DataViewerWidget/index.qmd
+                  - developer/ui/Plots/EventPlotWidget/index.qmd
+                  - developer/ui/Plots/HeatmapWidget/index.qmd
+                  - developer/ui/Plots/LinePlotWidget/index.qmd
+                  - developer/ui/Plots/OnionSkinViewWidget/index.qmd
+                  - developer/ui/Plots/PSTHWidget/index.qmd
+                  - developer/ui/Plots/ScatterPlotWidget/index.qmd
+                  - developer/ui/Plots/SpectrogramWidget/index.qmd
+                  - developer/ui/Plots/TemporalProjectionViewWidget/index.qmd
 
     - title: "Learning Resources"
       contents:

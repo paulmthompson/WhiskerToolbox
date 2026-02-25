@@ -1,0 +1,23 @@
+---
+title: "Line Plot Widget"
+---
+
+## Overview
+
+Developer documentation for `LinePlotWidget`, which displays line plots for visualizing time series data.
+
+## Source Location
+
+`src/WhiskerToolbox/Plots/LinePlotWidget/`
+
+## Architecture
+
+*TODO: Document widget architecture, state management, and key classes.*
+
+## Key Classes
+
+- `LinePlotWidget` — Main widget class
+
+## See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md)

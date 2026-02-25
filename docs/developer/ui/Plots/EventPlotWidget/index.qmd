@@ -1,0 +1,23 @@
+---
+title: "Event Plot Widget"
+---
+
+## Overview
+
+Developer documentation for `EventPlotWidget`, which displays neuroscience-style raster plots showing events across multiple channels or trials.
+
+## Source Location
+
+`src/WhiskerToolbox/Plots/EventPlotWidget/`
+
+## Architecture
+
+*TODO: Document widget architecture, state management, and key classes.*
+
+## Key Classes
+
+- `EventPlotWidget` — Main widget class
+
+## See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md)

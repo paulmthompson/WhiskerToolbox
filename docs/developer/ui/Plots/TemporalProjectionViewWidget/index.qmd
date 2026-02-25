@@ -1,0 +1,23 @@
+---
+title: "Temporal Projection View Widget"
+---
+
+## Overview
+
+Developer documentation for `TemporalProjectionViewWidget`, which displays 2D projections of data collapsed across temporal windows.
+
+## Source Location
+
+`src/WhiskerToolbox/Plots/TemporalProjectionViewWidget/`
+
+## Architecture
+
+*TODO: Document widget architecture, state management, and key classes.*
+
+## Key Classes
+
+- `TemporalProjectionViewWidget` — Main widget class
+
+## See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md)

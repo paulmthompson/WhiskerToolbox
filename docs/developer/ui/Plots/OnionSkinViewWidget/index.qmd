@@ -1,0 +1,23 @@
+---
+title: "Onion Skin View Widget"
+---
+
+## Overview
+
+Developer documentation for `OnionSkinViewWidget`, which displays onion skin views of data as overlaid temporal snapshots with spatial axes.
+
+## Source Location
+
+`src/WhiskerToolbox/Plots/OnionSkinViewWidget/`
+
+## Architecture
+
+*TODO: Document widget architecture, state management, and key classes.*
+
+## Key Classes
+
+- `OnionSkinViewWidget` — Main widget class
+
+## See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md)
