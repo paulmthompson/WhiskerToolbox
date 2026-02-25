@@ -5,187 +5,238 @@ format: html
 
 # Data Viewer Widget Overview
 
-The **data viewer widget** is designed for visualizing plots of **time series data**. It can operate on multiple distinct data types, such as **analog time series**, **interval series**, and **event series**. The widget contains a table of compatible data types and their corresponding keys, which can be selected for display in the viewer. It houses options to enable the visualization of different types and also includes an **OpenGL canvas** responsible for rendering the data according to user specifications.
+The **Data Viewer Widget** visualizes **time series data** — analog time series, digital event series, and digital interval series — on a shared OpenGL canvas. Users select data series by key from a feature tree, configure display options per series, and view synchronized plots that scroll with the application's global time bar.
+
+# Architecture
+
+The widget is structured into four subdirectories, each with a clear responsibility:
+
+```
+DataViewer_Widget/
+├── Core/           # State, data storage, series options
+├── Interaction/    # Input handling, selection, tooltips, coordinates
+├── Rendering/      # OpenGL canvas, scene building, SVG export
+└── UI/             # Qt widgets, properties panel, sub-widgets
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `DataViewer_Widget` (UI) | Top-level Qt widget — owns state, manages feature add/remove, time scroll |
+| `DataViewerPropertiesWidget` (UI) | Properties panel — feature tree, per-series controls, theme/grid/export |
+| `OpenGLWidget` (Rendering) | OpenGL canvas — builds scene, renders batches, handles mouse events |
+| `DataViewerState` (Core) | Serializable state — view window, theme, grid, per-series options |
+| `TimeSeriesDataStore` (Core) | Runtime data — series pointers, layout transforms, vertex caches |
+| `SeriesOptionsRegistry` (Core) | Type-safe registry for per-series display options in state |
+| `DataViewerInteractionManager` (Interaction) | Interaction state machine — interval creation/modification |
+| `DataViewerInputHandler` (Interaction) | Mouse event processing — pan, click, hover routing |
+| `DataViewerSelectionManager` (Interaction) | Entity selection — multi-select via Ctrl+click |
+| `DataViewerTooltipController` (Interaction) | Tooltip display with hover delay |
+| `DataViewerCoordinates` (Interaction) | Canvas ↔ world ↔ time coordinate conversions |
+| `SceneBuildingHelpers` (Rendering) | Converts series data into `RenderableBatch` primitives |
+| `TransformComposers` (Rendering) | Composes Y transforms from normalization, layout, and global scale |
+| `DataViewerWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The Data Viewer Widget follows the project's **EditorState** architecture:
+
+-   `DataViewerState` inherits from `EditorState`
+-   Registered with `EditorRegistry` via `DataViewerWidgetModule::registerTypes()`
+-   `DataViewer_Widget` is the **view** factory, `DataViewerPropertiesWidget` is the **properties** factory
+-   Both share the same `DataViewerState` instance
+-   State is placed in a zone (Center by default) via `ZoneManager`
+
+# State Management
+
+## Separation of Concerns
+
+The widget cleanly separates **serializable user preferences** from **runtime/computed data**:
+
+| What | Where | Serialized? |
+|------|-------|-------------|
+| Series display options (color, visibility, scale) | `DataViewerState` via `SeriesOptionsRegistry` | Yes |
+| View state (time window, Y bounds, zoom, pan) | `DataViewerState` | Yes |
+| Theme and grid settings | `DataViewerState` | Yes |
+| UI preferences (zoom mode, panel collapsed) | `DataViewerState` | Yes |
+| Interaction mode | `DataViewerState` | Yes |
+| Series data (`shared_ptr<AnalogTimeSeries>`, etc.) | `TimeSeriesDataStore` | No |
+| Layout transforms (offset, gain from LayoutEngine) | `TimeSeriesDataStore` | No |
+| Cached statistics (mean, std_dev) | `TimeSeriesDataStore` | No |
+| Vertex caches, OpenGL resources | `OpenGLWidget` / `TimeSeriesDataStore` | No |
+| Drag state, hover position, batch flags | Various interaction handlers | No |
+
+## Data Flow: Two-Lookup Pattern
+
+At render time, the renderer combines data from two sources:
+
+```cpp
+for (auto const& [key, entry] : _data_store->analogSeries()) {
+    // 1. Data + computed layout from TimeSeriesDataStore
+    auto const& series = entry.series;
+    auto const& layout_transform = entry.layout_transform;
+    auto const& data_cache = entry.data_cache;
+
+    // 2. User display options from DataViewerState
+    auto const* opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(key);
+    if (!opts || !opts->get_is_visible()) continue;
+
+    // Render using both sources
+    renderSeries(series, layout_transform, data_cache, *opts);
+}
+```
+
+## Signal Flow
+
+The state drives a unidirectional data flow:
+
+```
+User action (UI)
+    → Modify DataViewerState
+        → State emits signal (viewStateChanged, themeChanged, etc.)
+            → OpenGLWidget reacts → calls update()
+```
+
+Key principle: **UI modifies state directly; OpenGLWidget never has pass-through setter methods.** All rendering configuration flows through the state object.
+
+## SeriesOptionsRegistry
+
+The `SeriesOptionsRegistry` provides a **generic, type-safe API** for managing per-series display options across all three series types:
+
+```cpp
+auto& registry = state->seriesOptions();
+
+// Set (type inferred from argument)
+AnalogSeriesOptionsData opts;
+opts.hex_color() = "#ff0000";
+registry.set("channel_1", opts);
+
+// Get (type explicit)
+auto const* analog = registry.get<AnalogSeriesOptionsData>("channel_1");
+
+// Visibility queries
+QStringList visible = registry.visibleKeys<AnalogSeriesOptionsData>();
+```
+
+Three signals cover all change types: `optionsChanged`, `optionsRemoved`, `visibilityChanged`.
+
+## Serialization
+
+`DataViewerState` serializes to JSON via reflect-cpp. The underlying `DataViewerStateData` struct contains all persistent state:
+
+```json
+{
+  "instance_id": "abc123",
+  "display_name": "Data Viewer",
+  "view": { "time_start": 0, "time_end": 10000, "global_zoom": 1.5 },
+  "theme": { "theme": "Dark", "background_color": "#000000" },
+  "grid": { "enabled": false, "spacing": 100 },
+  "analog_options": {
+    "channel_1": { "hex_color": "#0000ff", "is_visible": true, "user_scale_factor": 1.0 }
+  }
+}
+```
+
+All enums serialize as human-readable strings. Style fields use `rfl::Flatten` for a flat JSON structure.
+
+# Rendering Pipeline
+
+## Layered Architecture
+
+The rendering system is organized into five layers:
+
+1.  **Data Storage** (`TimeSeriesDataStore`): Series data in typed maps with layout transforms and caches
+2.  **View State** (`DataViewerState`): Time window, Y bounds, zoom, pan — the "camera"
+3.  **Layout** (`CorePlotting::LayoutEngine`): Computes vertical positioning via `StackedLayoutStrategy`; produces a `LayoutResponse` with per-series `SeriesLayout`
+4.  **Scene Building** (`SceneBuildingHelpers`): Converts series data + layout into `RenderableBatch` primitives (polylines for analog, glyphs for events, rectangles for intervals)
+5.  **Rendering** (`PlottingOpenGL::SceneRenderer`): Uploads and draws batches via OpenGL shaders
+
+## Y-Axis Transform Pipeline
+
+Each series' vertical positioning is composed from multiple stages via `TransformComposers.hpp`:
+
+1.  **Data normalization** — z-score style: maps mean ± 3σ to ±1
+2.  **User adjustments** — intrinsic scale, `user_scale_factor`, vertical offset
+3.  **Layout positioning** — from `LayoutEngine` (lane center + half-height)
+4.  **Global scaling** — `global_zoom` and `global_vertical_scale` applied to amplitude only (lane position is NOT affected)
+
+```cpp
+// TransformComposers::composeAnalogYTransform
+auto data_norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
+auto user_adj  = NormalizationHelpers::manual(intrinsic_scale * user_scale_factor, offset);
+auto data_transform = user_adj.compose(data_norm);
+
+float effective_gain = layout.y_transform.gain * margin * global_zoom * global_vertical_scale;
+float final_gain   = data_transform.gain * effective_gain;
+float final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
+```
+
+All vertices use normalized coordinates (−1 to +1 in local space); the composed `LayoutTransform` handles all positioning and scaling. This is consistent across analog, event, and interval series.
 
 # Visualization Capabilities
 
-Multiple pieces of data can be drawn on the same canvas. Some data can be drawn in an overlapping manner, or they may be drawn with different axis offsets. Both the Y and X axes are **zoomable**, and data-specific scaling can be applied to the Y-axis to allow data with different magnitudes to be easily visualized simultaneously. Drawing is **synced to the time scroll bar** in the main program, enabling the user to scroll through the plot while concurrently visualizing data in other widgets, such as movies collected at the same time.
+Multiple series can be drawn on the same canvas with individual or overlapping positioning. Both X and Y axes are **zoomable**, and per-series amplitude scaling allows data of different magnitudes to be visualized simultaneously. Drawing is **synced to the global time scroll bar**, enabling simultaneous visualization across widgets (e.g., video + electrophysiology).
 
-Critically, the data viewer has a concept of **different sampling rates** for different data types and accounts for this during drawing. For instance, event data from camera frames sampled at 500 frames per second can be plotted appropriately with electrophysiological data sampled at 30,000 Hertz. A "Time frame concept" within the data manager is responsible for handling these conversions between coordinate systems, and the data viewer is responsible for plotting this data appropriately.
+The viewer handles **different sampling rates** transparently. For instance, camera-frame events at 500 Hz plot correctly alongside electrophysiology at 30 kHz. The `TimeFrame` system in `DataManager` handles coordinate conversions, and the viewer plots data appropriately in the master time frame.
 
-# Handling Grouped Data and Custom Arrangement
+# Time Frame Synchronization
 
-Some temporal data in neuroscience involves the concept of a **group of signals that are collected simultaneously** and would be visualized simultaneously. For instance, 32 channels recorded simultaneously from a silicon probe would be expected to have the same scaling properties and spacing. Consequently, groups of data like this should, by default, have mostly matching configuration options but maintain the ability to be **adjusted individually** as needed. For example, if there are dead channels on a probe, it should be easy for the user to turn these off from the display.
+-   **Master Time Frame**: `OpenGLWidget` holds a reference to the master time frame used for X-axis coordinates
+-   **Time Frame Conversion**: Series with different time frames are converted to master time for display
+-   **Cross-Rate Compatibility**: Simultaneous visualization of data at different sampling rates (e.g., 30 kHz electrophysiology with 500 Hz video)
+-   **Range Query Optimization**: Data range queries use each series' native time frame for efficient rendering
 
-The **arrangement of data** in the viewer is also important. Again, considering a silicon probe, the numerical channel arrangement is often not the same as the spatial channel arrangement, though the user may wish to view this data spatially arranged. The user should be able to **customize this arrangement**.
+# Handling Grouped Data
 
-# Interactive Analysis and Pre-processing
+Groups of signals collected simultaneously (e.g., 32 channels from a silicon probe) share scaling properties and spacing by default, while individual channels can be adjusted independently. Dead channels can be hidden per-channel.
 
-This representation may provide the user with information useful for certain data pre-processing tasks. For instance, the user may be able to determine a numerical threshold for event detection in a particular channel. Alternatively, in this view, the user may wish to determine the temporal range where it appears some behavior is taking place based on an analog signal change. For example, viewing the whisker angle versus time when zoomed out may be useful to identify times when the animal is whisking versus when it is stationary.
+Channel arrangement can be customized via **spike sorter configuration**, which reorders channels based on physical electrode positions rather than numerical channel order. The `SpikeSorterConfigLoader` reads position data and the `LayoutEngine` applies custom ordering.
 
-The user may even wish to **interactively define events or intervals** within this viewer window based on the temporal representation of data that would not be so easy to see in other widgets. Consequently, the data viewer is not just passive in its relationship with the data it is displaying but rather facilitates **active engagement**.
+# Interaction System
 
-## Event Viewer Features
+## Interaction Modes
 
-The EventViewer_Widget provides controls for digital event series visualization with two main display modes:
+The `DataViewerInteractionManager` implements a state machine with four modes:
 
-### Display Modes
+| Mode | Behavior |
+|------|----------|
+| `Normal` | Pan, select entities, hover tooltips |
+| `CreateInterval` | Click-drag to create a new digital interval |
+| `ModifyInterval` | Edge-drag to resize an existing interval |
+| `CreateLine` | Click-drag to draw a selection line |
 
-1.  **Stacked Mode (Default)**: Events are positioned in separate horizontal lanes with configurable spacing
-    -   Each event series gets its own horizontal "lane"
-    -   Configurable vertical spacing between lanes
-    -   Configurable event line height
-    -   Auto-calculation of optimal spacing when event groups are loaded
-2.  **Full Canvas Mode**: Events stretch from top to bottom of the entire canvas
-    -   Original behavior maintained for compatibility
-    -   All events span the full height of the display area
+Switching modes cancels any active interaction. Completed interactions emit `interactionCompleted` with `DataCoordinates` containing all information needed to update the `DataManager`.
 
-### Auto-Spacing for Event Groups
+## Entity Selection
 
-When a tree of digital event series is selected and enabled, the system automatically calculates optimal spacing to fit all events on the canvas:
+`DataViewerSelectionManager` provides multi-select support (Ctrl+click). Selection state is tracked via `EntityId` and emits `selectionChanged` signals.
 
--   If 40 events are enabled on a 400-pixel tall canvas, each event gets approximately 10 pixels of space
--   Spacing and height are calculated to ensure visual separation between different event series
--   Uses 80% of available canvas height, leaving margins at top and bottom
--   Event height is set to 60% of calculated spacing to prevent overlap
+## Coordinate Conversions
 
-### User Controls
+`DataViewerCoordinates` provides a unified interface for converting between:
 
-The EventViewer_Widget provides: - **Display Mode**: Combo box to switch between Stacked and Full Canvas modes - **Vertical Spacing**: Adjustable spacing between stacked event series (0.01-1.0 normalized units) - **Event Height**: Adjustable height of individual event lines (0.01-0.5 normalized units) - **Color Controls**: Standard color picker for event line colors and transparency
-
-### Implementation Details
-
--   Event stacking uses normalized coordinates for consistent spacing across different canvas sizes
--   State is preserved when switching between data series
--   Integration with existing TreeWidgetStateManager for persistence
--   Optimized rendering with proper OpenGL line thickness and positioning
-
-### Time Frame Synchronization
-
-The DataViewer Widget properly handles multi-rate data synchronization:
-
--   **Master Time Frame**: OpenGLWidget maintains a reference to the master time frame ("master" or "time") used for X-axis coordinates
--   **Time Frame Conversion**: When data series use different time frames from the master, proper coordinate conversion ensures synchronized display
--   **Cross-Rate Compatibility**: Supports simultaneous visualization of data collected at different sampling rates (e.g., 30kHz electrophysiology with 500Hz video)
--   **Consistent X-Axis**: All data types (analog time series, digital events, digital intervals) are rendered with consistent X-axis positioning regardless of their native time frame
--   **Range Query Optimization**: Data range queries are optimized for each time frame to ensure efficient rendering of large datasets
+-   **Canvas coordinates** (pixels, origin at top-left)
+-   **World coordinates** (normalized space used by scene/layout)
+-   **Time coordinates** (data time values)
+-   **Data values** (analog series values via inverse transform)
 
 ## Interactive Interval Editing
 
-The DataViewer Widget supports interactive editing of digital interval series through a mouse-based dragging interface that handles multi-timeframe data seamlessly.
+The widget supports editing digital interval series through mouse-based dragging:
 
-### Interval Selection and Highlighting
+-   **Click-to-Select**: Click on intervals to select them; selected intervals get enhanced borders
+-   **Edge Dragging**: Hover near boundaries (within 10px) shows resize cursor; drag to modify start/end times
+-   **Real-time Preview**: Original position shown dimmed alongside new position during drag
+-   **Collision Prevention**: Automatic constraints prevent overlap with neighboring intervals
+-   **Multi-Timeframe**: Mouse coordinates in master time frame are automatically converted to the series' native time frame; boundary constraints are enforced in native time frame for accuracy
+-   **Cancel**: ESC key restores original boundaries
 
--   **Click-to-Select**: Users can click on digital intervals to select them for editing
--   **Visual Feedback**: Selected intervals are highlighted with enhanced borders for clear identification
--   **Per-Series Selection**: Each digital interval series maintains its own independent selection state
+## Event Viewer Features
 
-### Interval Edge Dragging
+The `EventViewer_Widget` provides display mode controls:
 
-The widget provides precise interval boundary editing through a sophisticated dragging system:
+1.  **Stacked Mode (Default)**: Each event series gets a horizontal lane with configurable spacing and height; auto-calculated when groups are loaded
+2.  **Full Canvas Mode**: Events stretch top-to-bottom
 
-#### Core Functionality
-
--   **Edge Detection**: Mouse hover near interval boundaries (within 10 pixels) changes cursor to resize indicator
--   **Drag Initiation**: Click and drag on interval edges to modify interval start or end times
--   **Real-time Preview**: During dragging, both original (dimmed) and new (semi-transparent) interval positions are shown
--   **Collision Prevention**: Automatic constraint enforcement prevents intervals from overlapping with existing intervals
-
-#### Multi-Timeframe Support
-
-The interval dragging system automatically handles time frame conversion for data collected at different sampling rates:
-
--   **Coordinate Conversion**: Mouse coordinates (in master time frame) are automatically converted to the series' native time frame indices
--   **Precision Handling**: Dragged positions are rounded to the nearest valid index in the target time frame, accommodating different sampling resolutions
--   **Constraint Enforcement**: Collision detection and boundary constraints are performed in the series' native time frame for accuracy
--   **Display Consistency**: Visual feedback remains in master time frame coordinates for consistent user experience
-
-#### Error Handling and Robustness
-
--   **Graceful Degradation**: Failed time frame conversions abort the drag operation while preserving original data
--   **Data Integrity**: Invalid interval bounds (e.g., start ≥ end) are rejected without modifying existing data
--   **State Management**: Drag operations can be cancelled (ESC key) to restore original interval boundaries
-
-#### Example Use Cases
-
-1.  **Behavioral Annotation**: Researchers can precisely adjust behavioral event boundaries recorded at video frame rates (30-120 Hz) while viewing synchronized neural data at higher sampling rates (20-30 kHz)
-2.  **Event Refinement**: Fine-tune automatically detected events by dragging boundaries to match observed signal characteristics across different data modalities
-3.  **Cross-Modal Synchronization**: Align interval boundaries across different measurement systems with varying temporal resolutions
-
-### Technical Implementation
-
-The interval editing system leverages the existing TimeFrame infrastructure:
-
--   **TimeFrame.getIndexAtTime()**: Converts master time coordinates to series-specific indices
--   **TimeFrame.getTimeAtIndex()**: Converts series indices back to master time coordinates for display
--   **Automatic Snapping**: Ensures all interval boundaries align with valid time points in the target series
--   **Thread Safety**: All operations maintain data consistency during concurrent access
-
-This functionality enables precise temporal analysis workflows while abstracting away the complexity of multi-rate data synchronization from the end user.
-
-## Vertical Space Coordination
-
-The DataViewer_Widget includes a sophisticated vertical space management system that prevents overlap between different data types and ensures optimal use of screen real estate.
-
-### VerticalSpaceManager
-
-The `VerticalSpaceManager` class handles automatic positioning and scaling for all data series:
-
--   **Order-preserving**: New data positioned below existing data
--   **Type-aware spacing**: Different configurations for analog (larger heights), digital events (compact), and intervals (moderate)
--   **Auto-redistribution**: Adding new series triggers recalculation to prevent overlap
--   **Canvas-independent**: Uses normalized coordinates for flexibility
-
-### MVP Matrix Architecture
-
-The rendering system uses a systematic Model-View-Projection (MVP) matrix approach for consistent positioning and scaling across all data types:
-
-#### **Model Matrix** - Series-Specific Transforms
-
-Handles individual series positioning and scaling:
-
-``` cpp
-// For VerticalSpaceManager-positioned series:
-Model = glm::translate(Model, glm::vec3(0, series_center_y, 0));  // Position
-Model = glm::scale(Model, glm::vec3(1, series_height * 0.5f, 1)); // Scale
-
-// For analog series, additional amplitude scaling:
-float amplitude_scale = 1.0f / (stdDev * scale_factor);
-Model = glm::scale(Model, glm::vec3(1, amplitude_scale, 1));
-```
-
-#### **View Matrix** - Global Operations
-
-Handles operations applied to all series equally:
-
-``` cpp
-View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Global panning
-```
-
-#### **Projection Matrix** - Coordinate System Mapping
-
-Maps world coordinates to screen coordinates:
-
-``` cpp
-// X axis: time range [start_time, end_time] → screen width
-// Y axis: world coordinates [min_y, max_y] → screen height
-Projection = glm::ortho(start_time, end_time, min_y, max_y);
-```
-
-#### Vertex Coordinate Systems
-
-**VerticalSpaceManager Mode** (recommended): - Vertices use normalized coordinates (-1 to +1 in local space) - Model matrix handles all positioning and scaling - Consistent across all data types
-
-**Legacy Mode** (backward compatibility): - Vertices use world coordinates directly - Positioning handled by coordinate calculations - Index-based spacing for events
-
-#### Detection of Positioning Mode
-
-The system automatically detects which positioning mode to use:
-
--   **Digital Events**: `vertical_spacing == 0.0f` signals VerticalSpaceManager mode
--   **Analog Series**: `y_offset != 0.0f` signals VerticalSpaceManager mode\
--   **Digital Intervals**: `y_offset != 0.0f` signals VerticalSpaceManager mode
-
-This ensures backward compatibility while enabling the new systematic approach.
-
-## Interval Editing System
+Auto-spacing uses 80% of canvas height with 60% of spacing allocated to event height to prevent overlap.
