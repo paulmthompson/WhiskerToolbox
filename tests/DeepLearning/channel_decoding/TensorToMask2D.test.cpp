@@ -95,7 +95,9 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
 {
     dl::TensorToMask2D decoder;
 
-    // Single pixel at (5, 5) in 10x10 tensor → (50, 50) in 100x100 target
+    // Single pixel at (5, 5) in 10x10 tensor, upsampled via nearest-neighbor
+    // to 100x100 target. Scale factor is 10x, so source pixel (5,5) maps to
+    // a 10x10 block of destination pixels at x=[50..59], y=[50..59].
     auto tensor = torch::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
@@ -108,9 +110,20 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
     params.target_image_size = ImageSize{100, 100};
 
     auto const mask = decoder.decode(tensor, params);
-    REQUIRE(mask.size() == 1);
-    CHECK(mask[0].x == 50);
-    CHECK(mask[0].y == 50);
+
+    // Nearest-neighbor: 1 source pixel becomes a 10x10 block → 100 mask pixels
+    REQUIRE(mask.size() == 100);
+
+    // Every pixel in the block should be within x=[50..59], y=[50..59]
+    for (auto const & p : mask) {
+        CHECK(p.x >= 50);
+        CHECK(p.x <= 59);
+        CHECK(p.y >= 50);
+        CHECK(p.y <= 59);
+    }
+
+    // No mask pixels should exist outside the block
+    // (implicitly guaranteed by size == 100 and all within [50..59]^2)
 }
 
 TEST_CASE("TensorToMask2D - batch index", "[channel_decoding][TensorToMask2D]")
