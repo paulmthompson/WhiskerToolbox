@@ -1,0 +1,253 @@
+---
+title: "Storage Backend Testing Roadmap"
+author: "WhiskerToolbox Team"
+date: last-modified
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+# Overview
+
+This document tracks unit test coverage for the storage backend abstraction across all 
+five core time series types. The goal is to ensure every backend (Owning, View, Lazy) 
+has comprehensive, consistent test coverage.
+
+# Test Coverage Audit
+
+The matrix below shows which test categories exist for each data type and storage backend.
+**Existing** means the test is already written and passing. **Missing** means it should be added.
+
+## Core Storage Operations
+
+| Test Category | AnalogTimeSeries | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventSeries | DigitalIntervalSeries |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Empty storage semantics** | Existing | Missing | Existing | Missing | Missing |
+| **Owning CRUD** | Existing | Existing | Existing | Existing | Existing |
+| **View filtering (time)** | Existing | Existing | Existing | Existing | Existing |
+| **View filtering (EntityId)** | N/A | N/A | Existing | Existing | Existing |
+| **Lazy computation** | Existing | Existing | Existing | Existing | Existing |
+| **Mutation on read-only throws** | Missing | Missing | Existing | Existing | Existing |
+| **Move semantics** | Missing | Missing | Existing | Missing | Missing |
+
+## Cache Optimization
+
+| Test Category | AnalogTimeSeries | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventSeries | DigitalIntervalSeries |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Cache valid (owning)** | Existing | Existing | Existing | Existing | Existing |
+| **Cache valid (contiguous view)** | Missing | Missing | Existing | Existing | Existing |
+| **Cache invalid (sparse view)** | Missing | Missing | Existing | Missing | Missing |
+| **Cache invalid (lazy)** | Existing | Existing | Existing | Missing | Missing |
+
+## Factory Methods & Type Queries
+
+| Test Category | AnalogTimeSeries | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventSeries | DigitalIntervalSeries |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **createView (time)** | Existing | Existing | Existing | Existing | Existing |
+| **createView (EntityIds)** | N/A | N/A | Existing | Existing | Existing |
+| **createFromView** | Existing | Existing | Existing | Existing | Existing |
+| **materialize** | Existing | Existing | Existing | Existing | Existing |
+| **isView / isLazy** | Existing | Existing | Existing | Existing | Existing |
+| **getStorageType** | Existing | Existing | Existing | Existing | Existing |
+
+## Edge Cases
+
+| Test Category | AnalogTimeSeries | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventSeries | DigitalIntervalSeries |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Boundary times (0, max)** | Missing | Missing | Missing | Missing | Missing |
+| **Iterator fast-path** | Existing | Missing | Existing | Missing | Missing |
+| **Single-element storage** | Missing | Missing | Missing | Missing | Missing |
+| **Duplicate times** | Missing | Missing | Missing | Missing | Missing |
+
+## Integration
+
+| Test Category | AnalogTimeSeries | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventSeries | DigitalIntervalSeries |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **TimeFrame conversion** | Existing | Missing | Missing | Existing | Existing |
+| **DataManager round-trip** | Missing | Missing | Missing | Existing | Existing |
+| **Observer notification** | Missing | Missing | Missing | Missing | Missing |
+
+# Test File Locations
+
+| Data Type | Test File |
+|-----------|-----------|
+| AnalogTimeSeries | `tests/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp` |
+| RaggedAnalogTimeSeries | `tests/DataManager/ragged_analog_storage_test.cpp` |
+| RaggedTimeSeries\<T\> | `tests/DataManager/utils/RaggedStorage.test.cpp` |
+| RaggedTimeSeries (Line) | `tests/DataManager/Lines/LineData.test.cpp` |
+| RaggedTimeSeries (Mask) | `tests/DataManager/Masks/MaskData.test.cpp` |
+| RaggedTimeSeries (Point) | `tests/DataManager/Points/PointData.test.cpp` |
+| DigitalEventSeries | `tests/DataManager/digital_event_storage_test.cpp` |
+| DigitalIntervalSeries | `tests/DataManager/digital_interval_storage_test.cpp` |
+| Generic Filters | `tests/DataManager/utils/TimeSeriesFilters.test.cpp` |
+
+# Reducing Duplication with `TEMPLATE_TEST_CASE`
+
+Many test categories (empty semantics, cache validity, mutation exceptions, move semantics,
+factory methods) apply identically across all storage backends. Currently, each data type 
+has its own bespoke test file with hand-written tests for each category.
+
+Catch2's `TEMPLATE_TEST_CASE` can parameterize tests over types, reducing duplication and 
+ensuring consistent coverage:
+
+## Example: Backend-Parameterized Tests
+
+```cpp
+#include <catch2/catch_template_test_macros.hpp>
+
+// Define test fixture types that wrap each backend
+struct OwningDigitalEventFixture {
+    using series_type = DigitalEventSeries;
+    static auto create() -> std::shared_ptr<series_type> {
+        auto s = std::make_shared<series_type>();
+        s->addEvent(TimeFrameIndex{10});
+        s->addEvent(TimeFrameIndex{20});
+        s->addEvent(TimeFrameIndex{30});
+        return s;
+    }
+    static constexpr bool is_mutable = true;
+    static constexpr bool cache_valid = true;
+};
+
+struct ViewDigitalEventFixture {
+    using series_type = DigitalEventSeries;
+    static auto create() -> std::shared_ptr<series_type> {
+        auto source = OwningDigitalEventFixture::create();
+        return series_type::createView(
+            source, TimeFrameIndex{0}, TimeFrameIndex{100});
+    }
+    static constexpr bool is_mutable = false;
+    static constexpr bool cache_valid = true; // contiguous view
+};
+
+struct LazyDigitalEventFixture {
+    using series_type = DigitalEventSeries;
+    static auto create() -> std::shared_ptr<series_type> {
+        auto source = OwningDigitalEventFixture::create();
+        auto view = source->elementsView();
+        return series_type::createFromView<decltype(view)>(
+            std::move(view), source->size());
+    }
+    static constexpr bool is_mutable = false;
+    static constexpr bool cache_valid = false;
+};
+
+TEMPLATE_TEST_CASE(
+    "Storage backend: size and empty",
+    "[storage][backend]",
+    OwningDigitalEventFixture,
+    ViewDigitalEventFixture,
+    LazyDigitalEventFixture)
+{
+    auto series = TestType::create();
+    
+    SECTION("size returns correct count") {
+        REQUIRE(series->size() == 3);
+    }
+    
+    SECTION("empty returns false for non-empty series") {
+        REQUIRE_FALSE(series->empty());
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "Storage backend: mutation semantics",
+    "[storage][backend][mutation]",
+    OwningDigitalEventFixture,
+    ViewDigitalEventFixture,
+    LazyDigitalEventFixture)
+{
+    auto series = TestType::create();
+    
+    if constexpr (TestType::is_mutable) {
+        SECTION("mutable backends accept mutations") {
+            series->addEvent(TimeFrameIndex{40});
+            REQUIRE(series->size() == 4);
+        }
+    } else {
+        SECTION("read-only backends throw on mutation") {
+            REQUIRE_THROWS_AS(
+                series->addEvent(TimeFrameIndex{40}),
+                std::runtime_error);
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "Storage backend: cache validity",
+    "[storage][backend][cache]",
+    OwningDigitalEventFixture,
+    ViewDigitalEventFixture,
+    LazyDigitalEventFixture)
+{
+    auto series = TestType::create();
+    
+    SECTION("cache validity matches expected") {
+        // The specific check depends on the type's API
+        // For types exposing getStorageType():
+        if constexpr (TestType::cache_valid) {
+            // Verify iteration uses fast path
+            // (implementation-specific check)
+        }
+    }
+}
+```
+
+## Cross-Type Parameterization
+
+For tests that should be identical across data types (not just backends), a second level 
+of parameterization can be added:
+
+```cpp
+// Fixture for each data type + backend combination
+struct OwningAnalogFixture { /* ... */ };
+struct ViewAnalogFixture { /* ... */ };
+struct OwningDigitalEventFixture { /* ... */ };
+struct ViewDigitalEventFixture { /* ... */ };
+// ... etc.
+
+TEMPLATE_TEST_CASE(
+    "All series: materialize produces owning storage",
+    "[storage][materialize]",
+    ViewAnalogFixture,
+    LazyAnalogFixture,
+    ViewDigitalEventFixture,
+    LazyDigitalEventFixture,
+    ViewDigitalIntervalFixture,
+    LazyDigitalIntervalFixture,
+    ViewRaggedFixture,
+    LazyRaggedFixture)
+{
+    auto series = TestType::create();
+    auto materialized = series->materialize();
+    
+    REQUIRE_FALSE(materialized->isView());
+    REQUIRE_FALSE(materialized->isLazy());
+    REQUIRE(materialized->size() == series->size());
+}
+```
+
+## Recommended Test Organization
+
+```
+tests/DataManager/storage/
+├── StorageFixtures.hpp              # Shared fixture types for all backends
+├── StorageBackendCommon.test.cpp    # TEMPLATE_TEST_CASE across all backends
+├── AnalogTimeSeries.storage.test.cpp    # ATS-specific storage tests  
+├── RaggedAnalogTS.storage.test.cpp      # RATS-specific storage tests
+├── RaggedTS.storage.test.cpp            # RTS-specific storage tests
+├── DigitalEvent.storage.test.cpp        # DES-specific storage tests
+└── DigitalInterval.storage.test.cpp     # DIS-specific storage tests
+```
+
+The common test file covers categories that are uniform across all types (size/empty,
+mutation semantics, materialize, type queries). Type-specific files cover unique behaviors
+(interval overlap queries, memory-mapped loading, ragged time ranges, etc.).
+
+# Priority Order
+
+1. **High**: Empty storage semantics, cache validity for sparse views, lazy cache invalidity
+2. **Medium**: Move semantics, mutation exceptions on read-only backends, iterator fast-path
+3. **Low**: Boundary time handling, single-element storage, duplicate times, observer notification

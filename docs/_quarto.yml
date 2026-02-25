@@ -68,6 +68,10 @@ website:
             - developer/DataManager/file_io.qmd
             - developer/DataManager/data_structures.qmd
             - developer/DataManager/binary_loading_performance.qmd
+            - developer/DataManager/generic_time_series.qmd
+            - developer/DataManager/storage_architecture.qmd
+            - developer/DataManager/storage_testing_roadmap.qmd
+            - developer/DataManager/storage_benchmarking_roadmap.qmd
         - section: "User Interface"
           contents:
             - developer/ui/analysis_dashboard/analysis_dashboard.qmd
