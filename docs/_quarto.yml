@@ -41,7 +41,6 @@ website:
         - developer/python_integration.qmd
         - developer/benchmark/benchmarking.qmd
         - developer/building.qmd
-        - developer/code_quality.qmd
         - developer/copilot.qmd
         - developer/contributing_code.qmd
         - developer/fuzz/fuzzing.qmd
@@ -69,7 +68,6 @@ website:
             - developer/DataManager/file_io.qmd
             - developer/DataManager/data_structures.qmd
             - developer/DataManager/binary_loading_performance.qmd
-        - developer/table_view.qmd
         - section: "User Interface"
           contents:
             - developer/ui/analysis_dashboard/analysis_dashboard.qmd
