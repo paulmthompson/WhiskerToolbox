@@ -1,0 +1,350 @@
+---
+title: "AOT Inductor Export Tutorial"
+---
+
+## Overview
+
+This tutorial walks through exporting a toy PyTorch model using **AOT Inductor** so it can be 
+loaded into Neuralyzer. AOT Inductor compiles the model into native code (CPU or CUDA kernels) 
+ahead of time, producing a `.pt2` package that libtorch loads directly in C++.
+
+This is the **recommended export path** for new models. It provides the best inference 
+performance and is the current deployment strategy endorsed by the PyTorch team.
+
+## Prerequisites
+
+- Python 3.10+
+- PyTorch 2.9+ (`pip install torch`)
+- A trained model (or we'll create a toy one below)
+
+## Step 1: Define a Toy Model
+
+We'll create a simple U-Net-style model that takes a grayscale image and produces a 
+segmentation mask. This mimics a typical Neuralyzer use case (video frame → binary mask).
+
+```python
+import torch
+import torch.nn as nn
+
+class ToySegmenter(nn.Module):
+    """
+    A minimal encoder-decoder that takes a 3-channel image 
+    and predicts a single-channel probability map.
+    
+    Input:  [B, 3, 256, 256]
+    Output: [B, 1, 256, 256]
+    """
+    def __init__(self):
+        super().__init__()
+        # Encoder
+        self.enc1 = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(16, 16, kernel_size=3, padding=1),
+            nn.ReLU(),
+        )
+        self.pool = nn.MaxPool2d(2)
+        
+        self.enc2 = nn.Sequential(
+            nn.Conv2d(16, 32, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 32, kernel_size=3, padding=1),
+            nn.ReLU(),
+        )
+        
+        # Decoder
+        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
+        self.dec1 = nn.Sequential(
+            nn.Conv2d(32 + 16, 16, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(16, 16, kernel_size=3, padding=1),
+            nn.ReLU(),
+        )
+        
+        self.head = nn.Conv2d(16, 1, kernel_size=1)
+    
+    def forward(self, x):
+        # Encode
+        e1 = self.enc1(x)          # [B, 16, 256, 256]
+        e2 = self.enc2(self.pool(e1))  # [B, 32, 128, 128]
+        
+        # Decode with skip connection
+        d1 = self.up(e2)           # [B, 32, 256, 256]
+        d1 = torch.cat([d1, e1], dim=1)  # [B, 48, 256, 256]
+        d1 = self.dec1(d1)         # [B, 16, 256, 256]
+        
+        return torch.sigmoid(self.head(d1))  # [B, 1, 256, 256]
+```
+
+## Step 2: Export with AOT Inductor
+
+AOT Inductor uses the `torch.export` → `aoti_compile_and_package` pipeline:
+
+```python
+import os
+import torch
+
+# Create and prepare the model
+model = ToySegmenter()
+model.eval()
+
+# Define example inputs matching the model's expected shapes
+example_inputs = (torch.randn(1, 3, 256, 256),)
+
+# Export and compile
+with torch.no_grad():
+    exported = torch.export.export(model, example_inputs)
+    
+    output_path = torch._inductor.aoti_compile_and_package(
+        exported,
+        package_path=os.path.join(os.getcwd(), "toy_segmenter.pt2"),
+    )
+
+print(f"Model exported to: {output_path}")
+```
+
+The resulting `toy_segmenter.pt2` file contains compiled native code ready for libtorch.
+
+### Export Options
+
+#### Dynamic Batch Size
+
+If you want the model to accept variable batch sizes at inference time:
+
+```python
+batch_dim = torch.export.Dim("batch", min=1, max=32)
+dynamic_shapes = {"x": {0: batch_dim}}
+
+with torch.no_grad():
+    exported = torch.export.export(
+        model, example_inputs, dynamic_shapes=dynamic_shapes
+    )
+    torch._inductor.aoti_compile_and_package(
+        exported,
+        package_path="toy_segmenter.pt2",
+    )
+```
+
+#### CUDA Compilation
+
+If you export on a machine with a CUDA GPU, the compiled kernels will target that GPU 
+architecture. For CPU-only deployment, export on a CPU-only machine or explicitly specify:
+
+```python
+# Force CPU compilation
+with torch.no_grad():
+    exported = torch.export.export(model.cpu(), (torch.randn(1, 3, 256, 256),))
+    torch._inductor.aoti_compile_and_package(
+        exported,
+        package_path="toy_segmenter_cpu.pt2",
+    )
+```
+
+#### Performance Tuning
+
+Enable kernel autotuning for maximum performance (takes longer to compile):
+
+```python
+torch._inductor.aoti_compile_and_package(
+    exported,
+    package_path="toy_segmenter.pt2",
+    inductor_configs={"max_autotune": True},
+)
+```
+
+## Step 3: Create the JSON Model Spec
+
+Create `toy_segmenter.json` next to the `.pt2` file:
+
+```json
+{
+  "model_id": "toy_segmenter",
+  "display_name": "Toy Segmenter",
+  "description": "Demo model: predicts a binary mask from a video frame",
+  "weights_path": "toy_segmenter.pt2",
+  "inputs": [
+    {
+      "name": "image",
+      "shape": [3, 256, 256],
+      "description": "Input video frame (RGB, normalized to [0,1])",
+      "recommended_encoder": "ImageEncoder"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "mask",
+      "shape": [1, 256, 256],
+      "description": "Predicted segmentation probability map",
+      "recommended_decoder": "TensorToMask2D"
+    }
+  ]
+}
+```
+
+The `weights_path` is relative to the JSON file's directory — keep both files together.
+
+## Step 4: Load in Neuralyzer
+
+In the Deep Learning widget:
+
+1. The model can be registered from the JSON spec (see [Model Wrapper Guide](model_wrapper_guide.qmd))
+2. Select "Toy Segmenter" from the model dropdown
+3. Browse to the `.pt2` weights file
+4. Bind the "image" input to your video/media data
+5. Bind the "mask" output to a target MaskData key  
+6. Click **Run Frame** to run inference
+
+## Alternative: TorchScript Export
+
+If AOT Inductor export fails (e.g., unsupported operations), fall back to TorchScript:
+
+```python
+model = ToySegmenter()
+model.eval()
+
+example_input = torch.randn(1, 3, 256, 256)
+
+with torch.no_grad():
+    traced = torch.jit.trace(model, example_input)
+    traced.save("toy_segmenter.pt")
+```
+
+Update the JSON spec to point to the `.pt` file — the backend auto-detects from the extension.
+
+## Complete Export Script
+
+Here is a self-contained script that creates, exports, and tests a toy model:
+
+```python
+#!/usr/bin/env python3
+"""
+Export a toy segmentation model for Neuralyzer.
+Produces both AOT Inductor (.pt2) and TorchScript (.pt) formats.
+"""
+
+import json
+import os
+
+import torch
+import torch.nn as nn
+
+
+class ToySegmenter(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.enc1 = nn.Sequential(
+            nn.Conv2d(3, 16, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
+        )
+        self.pool = nn.MaxPool2d(2)
+        self.enc2 = nn.Sequential(
+            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(32, 32, 3, padding=1), nn.ReLU(),
+        )
+        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
+        self.dec1 = nn.Sequential(
+            nn.Conv2d(48, 16, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
+        )
+        self.head = nn.Conv2d(16, 1, 1)
+
+    def forward(self, x):
+        e1 = self.enc1(x)
+        e2 = self.enc2(self.pool(e1))
+        d1 = torch.cat([self.up(e2), e1], dim=1)
+        return torch.sigmoid(self.head(self.dec1(d1)))
+
+
+def main():
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    model = ToySegmenter()
+    model.eval()
+
+    example_input = torch.randn(1, 3, 256, 256)
+
+    # Verify output shape
+    with torch.no_grad():
+        out = model(example_input)
+        print(f"Output shape: {out.shape}")  # [1, 1, 256, 256]
+        assert out.shape == (1, 1, 256, 256)
+
+    # --- AOT Inductor export ---
+    print("Exporting with AOT Inductor...")
+    with torch.no_grad():
+        exported = torch.export.export(model, (example_input,))
+        pt2_path = torch._inductor.aoti_compile_and_package(
+            exported,
+            package_path=os.path.join(output_dir, "toy_segmenter.pt2"),
+        )
+    print(f"  -> {pt2_path}")
+
+    # --- TorchScript export (fallback) ---
+    print("Exporting with TorchScript...")
+    with torch.no_grad():
+        traced = torch.jit.trace(model, example_input)
+        pt_path = os.path.join(output_dir, "toy_segmenter.pt")
+        traced.save(pt_path)
+    print(f"  -> {pt_path}")
+
+    # --- JSON model spec ---
+    spec = {
+        "model_id": "toy_segmenter",
+        "display_name": "Toy Segmenter",
+        "description": "Demo model: predicts a binary mask from a video frame",
+        "weights_path": "toy_segmenter.pt2",
+        "inputs": [
+            {
+                "name": "image",
+                "shape": [3, 256, 256],
+                "description": "Input video frame (RGB)",
+                "recommended_encoder": "ImageEncoder",
+            }
+        ],
+        "outputs": [
+            {
+                "name": "mask",
+                "shape": [1, 256, 256],
+                "description": "Predicted segmentation probability map",
+                "recommended_decoder": "TensorToMask2D",
+            }
+        ],
+    }
+
+    json_path = os.path.join(output_dir, "toy_segmenter.json")
+    with open(json_path, "w") as f:
+        json.dump(spec, f, indent=2)
+    print(f"  -> {json_path}")
+
+    print("\nDone! Files ready for Neuralyzer:")
+    print(f"  Model (AOT Inductor): {pt2_path}")
+    print(f"  Model (TorchScript):  {pt_path}")
+    print(f"  JSON spec:            {json_path}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## Troubleshooting
+
+### `torch.export.export()` fails
+
+Some PyTorch operations are not yet supported by `torch.export`. Common issues:
+
+- **Data-dependent control flow** — `if tensor.item() > 0:` is not allowed. Restructure 
+  to use `torch.where()` or similar.
+- **Dynamic shapes** — operations that depend on the tensor shape at runtime may need 
+  explicit `Dim()` annotations.
+
+Fallback: use TorchScript export (`torch.jit.trace()`).
+
+### `.pt2` file doesn't load in Neuralyzer
+
+- Verify the libtorch version matches the PyTorch version used for export (both should be 2.9.x)
+- Check that the `.pt2` was compiled for the correct device (CPU vs CUDA)
+- Check the Neuralyzer console output for error messages from `AOTIModelPackageLoader`
+
+### Output shape mismatch
+
+The JSON spec's `shape` field must exactly match the model's output shape (excluding batch). 
+Run the model in Python and print `output.shape` to verify.
