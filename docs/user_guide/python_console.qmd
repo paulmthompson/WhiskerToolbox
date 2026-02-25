@@ -171,4 +171,4 @@ else:
 -   `toList() -> list[Interval]`: Get all intervals as a list.
 -   `toListWithIds() -> list[tuple]`: Get all intervals as (Interval, entity_id) tuples.
 
-For a full reference of the C++ classes and their Python bindings, refer to the [Developer Documentation](../developer/python_integration.qmd).
+For a full reference of the C++ classes and their Python bindings, refer to the [Developer Documentation](../developer/python_bindings/python_integration.qmd).

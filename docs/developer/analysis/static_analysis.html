@@ -157,7 +157,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/python_integration.html" class="sidebar-item-text sidebar-link">
+  <a href="../../developer/python_bindings/python_integration.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Python Integration</span></a>
   </div>
 </li>
@@ -171,12 +171,6 @@ ul.task-list li input[type="checkbox"] {
   <div class="sidebar-item-container"> 
   <a href="../../developer/building.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Building</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/code_quality.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Code Quality, Linters, and Analyzers</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -325,12 +319,6 @@ ul.task-list li input[type="checkbox"] {
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../../developer/table_view.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Table View</span></a>
-  </div>
-</li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
@@ -400,8 +388,23 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#clang-format" id="toc-clang-format" class="nav-link active" data-scroll-target="#clang-format">Clang Format</a></li>
+  <li><a href="#clang-tidy" id="toc-clang-tidy" class="nav-link" data-scroll-target="#clang-tidy">Clang Tidy</a></li>
+  <li><a href="#include-what-you-use-iwyu" id="toc-include-what-you-use-iwyu" class="nav-link" data-scroll-target="#include-what-you-use-iwyu">Include What you Use (IWYU)</a></li>
+  <li><a href="#code-checker" id="toc-code-checker" class="nav-link" data-scroll-target="#code-checker">Code Checker</a></li>
+  <li><a href="#optview2" id="toc-optview2" class="nav-link" data-scroll-target="#optview2">Optview2</a></li>
+  <li><a href="#gamma-ray" id="toc-gamma-ray" class="nav-link" data-scroll-target="#gamma-ray"><strong>Gamma Ray</strong></a></li>
+  <li><a href="#heaptrack" id="toc-heaptrack" class="nav-link" data-scroll-target="#heaptrack">HeapTrack</a></li>
+  <li><a href="#hotspot" id="toc-hotspot" class="nav-link" data-scroll-target="#hotspot">HotSpot</a></li>
+  <li><a href="#tracy-profiler" id="toc-tracy-profiler" class="nav-link" data-scroll-target="#tracy-profiler">Tracy Profiler</a></li>
+  <li><a href="#infer" id="toc-infer" class="nav-link" data-scroll-target="#infer">Infer</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -425,8 +428,39 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="clang-format" class="level3">
+<h3 class="anchored" data-anchor-id="clang-format">Clang Format</h3>
+</section>
+<section id="clang-tidy" class="level3">
+<h3 class="anchored" data-anchor-id="clang-tidy">Clang Tidy</h3>
+</section>
+<section id="include-what-you-use-iwyu" class="level3">
+<h3 class="anchored" data-anchor-id="include-what-you-use-iwyu">Include What you Use (IWYU)</h3>
+</section>
+<section id="code-checker" class="level3">
+<h3 class="anchored" data-anchor-id="code-checker">Code Checker</h3>
+</section>
+<section id="optview2" class="level3">
+<h3 class="anchored" data-anchor-id="optview2">Optview2</h3>
+</section>
+<section id="gamma-ray" class="level3">
+<h3 class="anchored" data-anchor-id="gamma-ray"><strong>Gamma Ray</strong></h3>
+</section>
+<section id="heaptrack" class="level3">
+<h3 class="anchored" data-anchor-id="heaptrack">HeapTrack</h3>
+</section>
+<section id="hotspot" class="level3">
+<h3 class="anchored" data-anchor-id="hotspot">HotSpot</h3>
+</section>
+<section id="tracy-profiler" class="level3">
+<h3 class="anchored" data-anchor-id="tracy-profiler">Tracy Profiler</h3>
+<p><a href="https://github.com/wolfpld/tracy" class="uri">https://github.com/wolfpld/tracy</a></p>
+</section>
+<section id="infer" class="level3">
+<h3 class="anchored" data-anchor-id="infer">Infer</h3>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

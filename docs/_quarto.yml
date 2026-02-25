@@ -38,7 +38,7 @@ website:
       style: "docked"
       contents:
         - developer/index.qmd
-        - developer/python_integration.qmd
+        - developer/python_bindings/python_integration.qmd
         - developer/benchmark/benchmarking.qmd
         - developer/building.qmd
         - developer/copilot.qmd
