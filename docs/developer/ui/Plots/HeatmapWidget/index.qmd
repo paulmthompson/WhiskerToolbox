@@ -1,23 +1,237 @@
 ---
 title: "Heatmap Widget"
+format: html
 ---
 
-## Overview
+# Heatmap Widget Overview
 
-Developer documentation for `HeatmapWidget`, which displays heatmap visualizations with event-aligned relative time and vertical axes.
+The **Heatmap Widget** renders a **multi-unit peri-stimulus time heatmap** showing the firing rate (or other scalar metric) of discrete events (`DigitalEventSeries`) across multiple units, aligned to a user-selected reference event or interval. Each row of the heatmap represents one unit's rate profile over relative time, with color intensity encoding the magnitude. This provides a compact population-level view that complements the single-unit [PSTHWidget](../PSTHWidget/index.qmd) and trial-level [EventPlotWidget](../EventPlotWidget/index.qmd).
 
-## Source Location
+The heatmap is constructed by performing the same per-unit rate estimation as [PSTHWidget](../PSTHWidget/index.qmd) — binning aligned spike times into uniform time bins and optionally smoothing — and then arranging each unit's rate profile as a row of colored cells. The result is a `units × time_bins` matrix visualized with a configurable colormap.
 
-`src/WhiskerToolbox/Plots/HeatmapWidget/`
+# Architecture
 
-## Architecture
+The widget follows the standard plot widget directory layout:
 
-*TODO: Document widget architecture, state management, and key classes.*
+```
+Plots/HeatmapWidget/
+├── CMakeLists.txt
+├── HeatmapWidgetRegistration.hpp    # EditorRegistry registration module
+├── HeatmapWidgetRegistration.cpp
+├── Core/
+│   └── HeatmapState.hpp             # QObject state class + serializable struct
+│       HeatmapState.cpp
+├── Rendering/
+│   ├── HeatmapOpenGLWidget.hpp      # OpenGL rendering + mouse interaction
+│   └── HeatmapOpenGLWidget.cpp
+└── UI/
+    ├── HeatmapWidget.hpp            # Main composite widget (axes + OpenGL + layout)
+    ├── HeatmapWidget.cpp
+    ├── HeatmapWidget.ui
+    ├── HeatmapPropertiesWidget.hpp  # Properties/settings panel
+    ├── HeatmapPropertiesWidget.cpp
+    └── HeatmapPropertiesWidget.ui
+```
 
-## Key Classes
+## Component Overview
 
-- `HeatmapWidget` — Main widget class
+| Component | Responsibility |
+|-----------|---------------|
+| `HeatmapWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, relative time axis, vertical axis |
+| `HeatmapPropertiesWidget` (UI) | Properties panel — alignment settings, axis range controls (via collapsible sections) |
+| `HeatmapOpenGLWidget` (Rendering) | OpenGL canvas — heatmap scene building, rendering, mouse interaction |
+| `HeatmapState` (Core) | Serializable state — alignment, view state, background color |
+| `HeatmapWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
 
-## See Also
+## EditorState Pattern
 
-- [Plot Widget Guide](../plot_widget_guide.md)
+The Heatmap Widget follows the project's **EditorState** architecture:
+
+- `HeatmapState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `HeatmapWidgetModule::registerTypes()`
+- `HeatmapWidget` is the **view** factory, `HeatmapPropertiesWidget` is the **properties** factory
+- Both share the same `HeatmapState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `HeatmapWidgetRegistration` handles coupling the view and properties widgets (e.g., connecting range controls and forwarding `timePositionSelected` to `EditorRegistry::setCurrentTime()`)
+
+# State Management
+
+## HeatmapStateData
+
+The serializable state struct (defined in `HeatmapState.hpp` alongside `HeatmapState`) contains all persistent configuration:
+
+```cpp
+struct HeatmapStateData {
+    std::string instance_id;
+    std::string display_name = "Heatmap Plot";
+    PlotAlignmentData alignment;
+    CorePlotting::ViewStateData view_state;
+    RelativeTimeAxisStateData time_axis;
+    VerticalAxisStateData vertical_axis;
+    std::string background_color = "#FFFFFF";
+};
+```
+
+Note that `HeatmapStateData` is defined in the same header as `HeatmapState` rather than in a separate `HeatmapStateData.hpp`. This is the same pattern used by [PSTHWidget](../PSTHWidget/index.qmd).
+
+## Signal Architecture
+
+HeatmapState emits category-level signals to minimize coupling complexity:
+
+| Signal | Trigger |
+|--------|---------|
+| `alignmentEventKeyChanged` | Alignment event/interval key changed |
+| `intervalAlignmentTypeChanged` | Interval alignment type changed |
+| `offsetChanged` | Alignment offset changed |
+| `windowSizeChanged` | Window size changed (also resets zoom/pan to fit) |
+| `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
+| `backgroundColorChanged` | Background color changed |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
+
+## Composition with PlotAlignmentState
+
+`HeatmapState` owns a `PlotAlignmentState` instance that manages alignment settings (event key, interval alignment type, offset, window size). This is the same shared component used by [EventPlotWidget](../EventPlotWidget/index.qmd) and [PSTHWidget](../PSTHWidget/index.qmd), ensuring consistent alignment behavior across all trial-aligned plot types.
+
+## Composition with Axis States
+
+`HeatmapState` owns both:
+
+- **`RelativeTimeAxisState`** — for the X-axis (relative time centered at t = 0). Synchronized bidirectionally with the view state using the "silent update" pattern described in the [Plot Widget Guide](../plot_widget_guide.md).
+- **`VerticalAxisState`** — for the Y-axis (unit index). The Y bounds are auto-adjusted when `trialCountChanged` is emitted by the OpenGL widget. Uses `identityAxis` mapping.
+
+The window size change handler resets the X view state bounds (`x_min`, `x_max`) and zoom/pan to fit the new window, then propagates to both `viewStateChanged` and `stateChanged`.
+
+# Rendering Pipeline
+
+## Data Flow (Current Scaffold)
+
+```
+HeatmapState (alignment settings)
+        ↓
+GatherResult<DigitalEventSeries> per unit (trial-aligned views)
+        ↓
+Rate estimation: aligned events → per-unit rate profile
+        ↓
+units × time_bins matrix
+        ↓
+Colormap: scalar values → RGBA colors
+        ↓
+RenderableRectangleBatch (one colored rectangle per cell)
+        ↓
+PlottingOpenGL::SceneRenderer::render()
+```
+
+The rendering pipeline currently has `TODO` placeholders in `rebuildScene()` for the data gathering and scene building steps. The OpenGL lifecycle, interaction, and projection infrastructure are fully wired.
+
+## GatherResult Integration
+
+Trial alignment will use the shared `GatherResult` infrastructure from DataManager, the same pattern as [PSTHWidget](../PSTHWidget/index.qmd) and [EventPlotWidget](../EventPlotWidget/index.qmd). The `rebuildScene()` method will:
+
+1. Read alignment settings from `HeatmapState::alignmentState()`
+2. For each configured `DigitalEventSeries` unit, call `WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>()` using the shared `PlotAlignmentGather` utility
+3. Perform rate estimation on each unit's gathered data (same computation as [PSTHWidget](../PSTHWidget/index.qmd))
+4. Assemble the resulting rate profiles into a `units × time_bins` matrix
+5. Map the matrix through a colormap to produce per-cell RGBA values
+6. Build a `RenderableRectangleBatch` for the heatmap cells
+
+## Shared Rate Estimation with PSTHWidget
+
+The per-unit rate estimation (binning → counting → optional normalization/smoothing) is identical to the computation performed by [PSTHWidget](../PSTHWidget/index.qmd). The [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2 proposes factoring this into a shared `CorePlotting::RateEstimation` module:
+
+```cpp
+namespace CorePlotting::RateEstimation {
+    std::vector<double> estimateRate(
+        GatherResult<DigitalEventSeries> const & gathered,
+        RateEstimationMethod method,
+        double bin_size,
+        double window_size,
+        double kernel_bandwidth = 20.0);
+}
+```
+
+The HeatmapWidget will call this once per unit, assembling the results into a matrix. All rate estimation parameters (bin size, smoothing method, kernel bandwidth) should be configurable in `HeatmapState` and shared as options with [PSTHWidget](../PSTHWidget/index.qmd).
+
+# Interaction
+
+## Zoom and Pan
+
+The widget supports separated X/Y zoom for independent exploration of time and unit dimensions, using the shared `PlotInteractionHelpers`:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only (time axis) |
+| Shift + wheel | Y-zoom only (unit axis) |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+The interaction delegates to `WhiskerToolbox::Plots::handlePanning()` and `WhiskerToolbox::Plots::handleZoom()` from `PlotInteractionHelpers`, which are shared across all OpenGL plot widgets. A `DRAG_THRESHOLD` of 5 pixels prevents accidental pans during clicks.
+
+Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance.
+
+## Double Click
+
+Double-clicking emits `plotDoubleClicked(time_frame_index)`, which the parent `HeatmapWidget` converts to a `TimePosition` and forwards to `EditorRegistry::setCurrentTime()`. This navigates other time-synced widgets to the clicked time position.
+
+# Axis System
+
+## Time Axis (X)
+
+Uses the shared `RelativeTimeAxisWidget` with `RelativeTimeAxisState`. The axis is synchronized bidirectionally with the view state:
+
+- **User changes axis range** → view state updates → scene rebuilds
+- **User zooms/pans** → axis range updates silently (no feedback loop)
+
+See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration details.
+
+## Unit Axis (Y)
+
+Uses a `VerticalAxisWidget` with `VerticalAxisState`. The Y bounds are automatically set when the OpenGL widget reports the unit count via `trialCountChanged`. The axis maps vertical position to unit index for labeling.
+
+# Properties Panel
+
+The `HeatmapPropertiesWidget` currently provides:
+
+1. **PlotAlignmentWidget** — Shared alignment UI (event/interval key, alignment type, offset, window size). Inserted in place of a placeholder in the `.ui` file.
+2. **Time Axis Range Controls** — `RelativeTimeAxisRangeControls` in a collapsible `Section`, created when `setPlotWidget()` is called.
+3. **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`, created when `setPlotWidget()` is called.
+
+The properties panel does not yet include unit selection, colormap, scaling, or sorting controls. These are planned in the [roadmap](roadmap.qmd).
+
+# Relationship to Other Widgets
+
+The Heatmap Widget is designed as the **population-level companion** to the single-unit [PSTHWidget](../PSTHWidget/index.qmd) and trial-level [EventPlotWidget](../EventPlotWidget/index.qmd):
+
+| Shared Component | HeatmapWidget | [EventPlotWidget](../EventPlotWidget/index.qmd) | [PSTHWidget](../PSTHWidget/index.qmd) |
+|-----------------|---------------|-----------|-----------|
+| `PlotAlignmentWidget` | Yes | Yes | Yes |
+| `PlotAlignmentState` | Yes | Yes | Yes |
+| `RelativeTimeAxisWidget` | Yes | Yes | Yes |
+| `GatherResult` | Yes (per-unit, aggregated) | Yes (per-trial views) | Yes (aggregated) |
+| Rate estimation | Yes (per-unit) | N/A | Yes (single-unit) |
+| `SelectionContext` linking | Planned (source) | Planned | Planned |
+| OpenGL rendering | `SceneRenderer` | `SceneRenderer` | `SceneRenderer` |
+| Zoom/Pan interaction | `PlotInteractionHelpers` | `PlotInteractionHelpers` | `PlotInteractionHelpers` |
+
+The intended workflow is:
+
+1. **HeatmapWidget** shows all units at a glance, colored by firing rate
+2. **Click a row** → updates [PSTHWidget](../PSTHWidget/index.qmd) and [EventPlotWidget](../EventPlotWidget/index.qmd) to show the selected unit's detailed histogram and raster
+3. **Hover over a row** → tooltip shows a miniature stacked PSTH + raster for that unit
+
+This three-widget ensemble provides a complete neural population analysis view. See the [roadmap](roadmap.qmd) for implementation plans.
+
+# Testing
+
+## Test Files
+
+- Properties widget observer tests follow the common pattern in `tests/WhiskerToolbox/Plots/HeatmapWidget/`
+- Common plot widget tests are instantiated via `PlotWidgetCommonTests.hpp` (see [Plot Widget Guide](../plot_widget_guide.md))
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [PSTHWidget](../PSTHWidget/index.qmd) — Single-unit PSTH; shares rate estimation and histogram infrastructure
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Trial-level raster plot; shares alignment and `GatherResult` infrastructure
+- [HeatmapWidget Roadmap](roadmap.qmd) — Planned features and development phases
