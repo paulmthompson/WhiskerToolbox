@@ -1,23 +1,312 @@
 ---
 title: "Onion Skin View Widget"
+format: html
 ---
+
+# Onion Skin View Widget Overview
+
+The **Onion Skin View Widget** renders a **temporal window of spatial data** (`PointData`, `LineData`, `MaskData`) centered on the current time frame, with alpha-graded temporal fading. Elements at the current time are drawn at full opacity; elements further away in time progressively fade according to a configurable alpha curve (linear, exponential, or Gaussian). This "onion skin" visualization is commonly used in animation and motion analysis to show the trajectory and shape evolution of tracked objects over a short time window.
+
+Unlike [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) which collapses **all** time frames into a single view, OnionSkinViewWidget displays only a configurable **window** around the current frame, making temporal proximity visible through transparency. Unlike trial-aligned plots ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)), this widget does **not** use `PlotAlignmentState` or `GatherResult`. Instead, it reads spatial data directly from `PointData`, `LineData`, and `MaskData` within a temporal window centered on the current `TimeFrameIndex`.
+
+Users can add multiple data keys of each type, configure temporal window size (frames behind/ahead), alpha curve settings, and rendering parameters (point size, line width), and interact via zoom, pan, and click-to-select.
+
+# Architecture
+
+The widget follows the standard plot widget directory layout:
+
+```
+Plots/OnionSkinViewWidget/
+├── CMakeLists.txt
+├── OnionSkinViewWidgetRegistration.hpp   # EditorRegistry registration module
+├── OnionSkinViewWidgetRegistration.cpp
+├── Core/
+│   ├── OnionSkinViewState.hpp            # QObject state class (EditorState subclass)
+│   └── OnionSkinViewState.cpp
+├── Rendering/
+│   ├── OnionSkinViewOpenGLWidget.hpp     # OpenGL rendering + mouse interaction
+│   └── OnionSkinViewOpenGLWidget.cpp
+└── UI/
+    ├── OnionSkinViewWidget.hpp           # Main composite widget (axes + OpenGL + layout)
+    ├── OnionSkinViewWidget.cpp
+    ├── OnionSkinViewWidget.ui
+    ├── OnionSkinViewPropertiesWidget.hpp # Properties/settings panel
+    ├── OnionSkinViewPropertiesWidget.cpp
+    └── OnionSkinViewPropertiesWidget.ui
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `OnionSkinViewWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, horizontal axis, vertical axis |
+| `OnionSkinViewPropertiesWidget` (UI) | Properties panel — data key management (point + line + mask), temporal window, alpha curve, rendering controls, axis range controls |
+| `OnionSkinViewOpenGLWidget` (Rendering) | OpenGL canvas — temporal window scene building, alpha-graded rendering, mouse interaction |
+| `OnionSkinViewState` (Core) | Serializable state — view state, axis ranges, data keys, temporal window, alpha curve, rendering parameters |
+| `OnionSkinViewWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The Onion Skin View Widget follows the project's **EditorState** architecture:
+
+- `OnionSkinViewState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `OnionSkinViewWidgetModule::registerTypes()`
+- `OnionSkinViewWidget` is the **view** factory, `OnionSkinViewPropertiesWidget` is the **properties** factory
+- Both share the same `OnionSkinViewState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `OnionSkinViewWidgetRegistration` handles coupling the view and properties widgets, connecting range controls and forwarding `timePositionSelected` to `EditorRegistry::setCurrentTime()`
+
+# State Management
+
+## OnionSkinViewStateData
+
+The serializable state struct contains all persistent configuration:
+
+```cpp
+struct OnionSkinViewStateData {
+    std::string instance_id;
+    std::string display_name = "Onion Skin View";
+    CorePlotting::ViewStateData view_state;
+    HorizontalAxisStateData horizontal_axis;
+    VerticalAxisStateData vertical_axis;
+
+    // Data keys
+    std::vector<std::string> point_data_keys;
+    std::vector<std::string> line_data_keys;
+    std::vector<std::string> mask_data_keys;
+
+    // Temporal window
+    int window_behind = 5;   ///< Samples before current time
+    int window_ahead = 5;    ///< Samples after current time
+
+    // Alpha curve
+    std::string alpha_curve = "linear"; ///< "linear", "exponential", "gaussian"
+    float min_alpha = 0.1f;
+    float max_alpha = 1.0f;
+
+    // Rendering
+    float point_size = 8.0f;
+    float line_width = 2.0f;
+    bool highlight_current = true;  ///< Draw current frame with distinct color/size
+};
+```
+
+## Signal Architecture
+
+`OnionSkinViewState` emits fine-grained signals to separate expensive scene rebuilds from cheap matrix updates:
+
+| Signal | Trigger |
+|--------|---------|
+| `viewStateChanged` | Zoom, pan, or bounds changed (matrix update only — no scene rebuild) |
+| `pointDataKeyAdded` / `pointDataKeyRemoved` / `pointDataKeysCleared` | Point data key changes |
+| `lineDataKeyAdded` / `lineDataKeyRemoved` / `lineDataKeysCleared` | Line data key changes |
+| `maskDataKeyAdded` / `maskDataKeyRemoved` / `maskDataKeysCleared` | Mask data key changes |
+| `windowBehindChanged` / `windowAheadChanged` | Temporal window size changed |
+| `alphaCurveChanged` / `minAlphaChanged` / `maxAlphaChanged` | Alpha curve parameters changed |
+| `pointSizeChanged` / `lineWidthChanged` | Rendering parameter changed |
+| `highlightCurrentChanged` | Current-frame highlight toggle changed |
+| `stateChanged` (inherited) | Any change requiring full state update |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild. Temporal window, alpha curve, data key, and rendering signals all trigger scene rebuilds via the `_scene_dirty` flag.
+
+## Axis States
+
+`OnionSkinViewState` owns both axis states:
+
+- **`HorizontalAxisState`** — X-axis (generic value axis). See [Plot Widget Guide](../plot_widget_guide.md) for full axis documentation.
+- **`VerticalAxisState`** — Y-axis (generic value axis). Supports the "silent update" pattern to prevent feedback loops during zoom/pan.
+
+Both axis states synchronize bidirectionally with the view state, using the same pattern as [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/index.qmd), and [ACFWidget](../ACFWidget/index.qmd).
+
+# Data Sources
 
 ## Overview
 
-Developer documentation for `OnionSkinViewWidget`, which displays onion skin views of data as overlaid temporal snapshots with spatial axes.
+The widget supports three spatial data types, each added as multiple keys from the DataManager:
 
-## Source Location
+| Data Type | Rendering Method | Description |
+|-----------|-----------------|-------------|
+| `PointData` | `SceneRenderer` via `SceneBuilder::addGlyphs()` | Points rendered as circle glyphs with per-point temporal alpha |
+| `LineData` | `SceneRenderer` via polyline primitives | Lines rendered as polylines with per-line temporal alpha |
+| `MaskData` | Contour extraction → polyline rendering | Mask boundaries rendered as polyline contours with per-contour temporal alpha |
 
-`src/WhiskerToolbox/Plots/OnionSkinViewWidget/`
+### PointData
 
-## Architecture
+Each `PointData` key in `point_data_keys` is loaded via `DataManager::getData<PointData>(key)`. Points within the temporal window `[current - window_behind, current + window_ahead]` are mapped using `CorePlotting::SpatialMapper::mapPointsInWindow()`, which returns `TimedMappedElement` objects containing world-space coordinates, associated EntityIDs, and temporal offset from the current frame.
 
-*TODO: Document widget architecture, state management, and key classes.*
+Points are rendered as circle glyphs via `SceneBuilder::addGlyphs()` → `SceneRenderer`. This shares the same glyph rendering infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/index.qmd), and [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
 
-## Key Classes
+### LineData
 
-- `OnionSkinViewWidget` — Main widget class
+Each `LineData` key in `line_data_keys` is loaded via `DataManager::getData<LineData>(key)`. Lines within the temporal window are mapped using `CorePlotting::SpatialMapper::mapLinesInWindow()`, which returns `TimedOwningLineView` objects containing vertex data and temporal offset.
 
-## See Also
+Lines are rendered as polylines within the `SceneRenderer`. This shares line rendering infrastructure used by [LinePlotWidget](../LinePlotWidget/index.qmd) and [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
 
-- [Plot Widget Guide](../plot_widget_guide.md)
+### MaskData
+
+Each `MaskData` key in `mask_data_keys` is loaded via `DataManager::getData<MaskData>(key)`. Mask boundaries within the temporal window are extracted as contour polylines using `CorePlotting::SpatialMapper::mapMaskContoursInWindow()`, which uses the `MaskContourMapper` to convert binary masks into polyline contours with temporal offset information.
+
+This is **unique to OnionSkinViewWidget** — no other plot widget currently renders `MaskData`. The mask contour extraction handles the conversion from binary pixel masks to smooth polyline boundaries for GPU rendering. Because masks are rendered as contour polylines, they share the same line rendering parameters (width, alpha) and are blended identically with `LineData` contours.
+
+## DataManager Observer
+
+The properties widget registers a DataManager observer to keep all three combo boxes (point, line, mask) current when data is added or removed:
+
+```cpp
+// Constructor
+_dm_observer_id = _data_manager->addObserver([this]() {
+    _populatePointComboBox();
+    _populateLineComboBox();
+    _populateMaskComboBox();
+});
+
+// Destructor — critical to avoid dangling references
+if (_data_manager && _dm_observer_id != -1) {
+    _data_manager->removeObserver(_dm_observer_id);
+}
+```
+
+See [Plot Widget Guide — DataManager Integration](../plot_widget_guide.md) for the full observer contract.
+
+# Rendering Pipeline
+
+## Data Flow
+
+```
+OnionSkinViewState (data keys + window + alpha + rendering params)
+        ↓
+DataManager::getData<PointData/LineData/MaskData>(key)
+        ↓
+SpatialMapper::mapPointsInWindow()       → TimedMappedElement[]
+SpatialMapper::mapLinesInWindow()        → TimedOwningLineView[]
+SpatialMapper::mapMaskContoursInWindow() → TimedOwningLineView[]
+        ↓
+AlphaCurve::computeTemporalAlpha(offset, half_width, curve, min, max)
+        ↓
+Bounding box computation (auto-fit from data)
+        ↓
+setXBounds() / setYBounds() → view state + axis sync
+        ↓
+SceneBuilder: addGlyphs() (points) + polylines (lines + mask contours)
+  — each element's color includes computed temporal alpha
+  — depth-sorted: farthest temporal distance drawn first (back-to-front)
+        ↓
+SceneRenderer::uploadScene() → SceneRenderer::render()
+```
+
+## Temporal Alpha Computation
+
+The `AlphaCurve` module (`CorePlotting/DataTypes/AlphaCurve.hpp`) computes per-element alpha values based on temporal distance from the current frame:
+
+| Curve Type | Formula | Behavior |
+|-----------|---------|----------|
+| **Linear** | `alpha = max - (max - min) * |offset| / half_width` | Uniform fade |
+| **Exponential** | `alpha = min + (max - min) * exp(-k * |offset| / half_width)` | Rapid initial fade, slow tail |
+| **Gaussian** | `alpha = min + (max - min) * exp(-|offset|² / (2σ²))` | Smooth bell-curve fade |
+
+Parameters:
+
+- `offset`: frame distance from current time (0 = current frame)
+- `half_width`: max(window_behind, window_ahead) — the normalization range
+- `min_alpha` / `max_alpha`: alpha range (default 0.1–1.0)
+
+## Rendering Order
+
+Elements are sorted by **decreasing temporal distance** (drawn back-to-front) so that blending works correctly with `GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA`. The current frame is drawn last (on top) with the highest alpha.
+
+When `highlight_current` is enabled, the current frame's elements are rendered with a distinct color:
+
+| Element Type | Current Frame Color | Non-Current Frame Color |
+|-------------|-------------------|------------------------|
+| Points | Bright orange-red (1.0, 0.3, 0.1) | Blue (0.2, 0.5, 0.9) |
+| Lines | Bright orange-red (1.0, 0.3, 0.1) | Green (0.2, 0.7, 0.4) |
+| Mask contours | Bright orange-red (1.0, 0.3, 0.1) | Orange (0.8, 0.5, 0.2) |
+
+## Auto-Fit Bounds
+
+After gathering all windowed data, the widget computes a tight bounding box from all point positions, line vertices, and mask contour vertices. Bounds update is triggered when data keys change (via the `_needs_bounds_update` flag).
+
+# Interaction
+
+## Zoom and Pan
+
+The widget uses the shared `PlotInteractionHelpers` for consistent zoom/pan behavior across all widgets:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only |
+| Shift + wheel | Y-zoom only |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+These are the same shared interaction helpers used across all plot widgets — see [Plot Widget Guide](../plot_widget_guide.md).
+
+## Entity Selection
+
+- **Click** on a point at the current frame: nearest-point lookup with 15-pixel tolerance; emits `entitySelected(EntityId)`
+- **Double-click**: emits `entityDoubleClicked(EntityId)` for frame navigation
+
+Point hit testing uses a brute-force nearest-point search limited to the current frame's points.
+
+# Properties Panel
+
+The `OnionSkinViewPropertiesWidget` provides controls organized into logical sections:
+
+## Data Key Management
+
+Three separate sections, one for each data type:
+
+- **Point data key combo box** + Add/Remove buttons — lists all `PointData` keys from DataManager
+- **Point data table** — shows currently added point data keys
+- **Line data key combo box** + Add/Remove buttons — lists all `LineData` keys from DataManager
+- **Line data table** — shows currently added line data keys
+- **Mask data key combo box** + Add/Remove buttons — lists all `MaskData` keys from DataManager
+- **Mask data table** — shows currently added mask data keys
+
+## Temporal Window Controls
+
+- **Window Behind spinbox** — number of frames before current time (default: 5)
+- **Window Ahead spinbox** — number of frames after current time (default: 5)
+
+## Alpha Curve Controls
+
+- **Alpha curve combo box** — Linear / Exponential / Gaussian
+- **Min alpha spinbox** — minimum opacity for farthest frames (default: 0.1)
+- **Max alpha spinbox** — maximum opacity for current frame (default: 1.0)
+
+## Rendering Controls
+
+- **Point size spinbox** — global point glyph radius (default: 8.0)
+- **Line width spinbox** — global line/contour thickness (default: 2.0)
+- **Highlight current checkbox** — toggles distinct current-frame coloring
+
+## Axis Range Controls
+
+When `setPlotWidget()` is called (during registration wiring), the properties panel creates:
+
+- **X-Axis Range Controls** — `HorizontalAxisRangeControls` in a collapsible `Section`
+- **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`
+
+# Comparison with Related Widgets
+
+Understanding the relationship between OnionSkinViewWidget and other spatial/line plot widgets helps clarify architecture decisions:
+
+| Feature | OnionSkinViewWidget | [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) | [LinePlotWidget](../LinePlotWidget/index.qmd) |
+|---------|--------------------|-----------------------------------------|-------------------------------|
+| Time scope | Windowed (configurable frames) | All time frames | Trial-aligned intervals |
+| Alpha fading | Yes (temporal distance) | No | No |
+| PointData | Yes | Yes | No |
+| LineData | Yes | Yes | No (AnalogTimeSeries) |
+| MaskData | Yes (contour rendering) | No | No |
+| Alignment | None (current frame ± window) | None (all time) | PlotAlignmentState |
+| X-Axis | HorizontalAxis | HorizontalAxis | RelativeTimeAxis |
+| Selection | Click-to-select (point) | Point + Line selection modes | Line selection |
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [Onion Skin View Roadmap](roadmap.qmd) — Development roadmap for upcoming features
+- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) — Full-projection counterpart (all-time spatial overlay)
+- [LinePlotWidget](../LinePlotWidget/index.qmd) — Shares line rendering infrastructure
+- [ScatterPlotWidget](../ScatterPlotWidget/index.qmd) — Shares point glyph rendering infrastructure
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Shares glyph rendering via `SceneRenderer`
