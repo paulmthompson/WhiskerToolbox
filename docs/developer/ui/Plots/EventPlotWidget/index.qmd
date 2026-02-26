@@ -1,23 +1,271 @@
 ---
 title: "Event Plot Widget"
+format: html
 ---
 
-## Overview
+# Event Plot Widget Overview
 
-Developer documentation for `EventPlotWidget`, which displays neuroscience-style raster plots showing events across multiple channels or trials.
+The **Event Plot Widget** renders neuroscience-style **raster plots** showing discrete events (spikes, behavioral markers) across multiple trials, aligned to a user-selected reference event or interval. Users can overlay multiple `DigitalEventSeries`, configure glyph appearance per series, sort trials by built-in or external features, and interact with the plot via zoom, pan, and single-click selection.
 
-## Source Location
+# Architecture
 
-`src/WhiskerToolbox/Plots/EventPlotWidget/`
+The widget follows the standard plot widget directory layout:
 
-## Architecture
+```
+Plots/EventPlotWidget/
+├── CMakeLists.txt
+├── EventPlotWidgetRegistration.hpp   # EditorRegistry registration module
+├── EventPlotWidgetRegistration.cpp
+├── Core/
+│   ├── EventPlotState.hpp            # QObject state class (EditorState subclass)
+│   ├── EventPlotState.cpp
+│   └── EventPlotStateData.hpp        # Plain serializable struct (rfl-compatible)
+├── Rendering/
+│   ├── EventPlotOpenGLWidget.hpp     # OpenGL rendering + mouse interaction
+│   └── EventPlotOpenGLWidget.cpp
+└── UI/
+    ├── EventPlotWidget.hpp           # Main composite widget (axis + OpenGL + layout)
+    ├── EventPlotWidget.cpp
+    ├── EventPlotWidget.ui
+    ├── EventPlotPropertiesWidget.hpp # Properties/settings panel
+    ├── EventPlotPropertiesWidget.cpp
+    └── EventPlotPropertiesWidget.ui
+```
 
-*TODO: Document widget architecture, state management, and key classes.*
+## Component Overview
 
-## Key Classes
+| Component | Responsibility |
+|-----------|---------------|
+| `EventPlotWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, time axis, vertical axis |
+| `EventPlotPropertiesWidget` (UI) | Properties panel — alignment settings, event series management, glyph options, sorting |
+| `EventPlotOpenGLWidget` (Rendering) | OpenGL canvas — scene building, raster rendering, mouse interaction, hit testing |
+| `EventPlotState` (Core) | Serializable state — alignment, view state, per-event options, sorting mode |
+| `EventPlotStateData` (Core) | Plain struct for serialization via `rfl::json` |
+| `EventPlotWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
 
-- `EventPlotWidget` — Main widget class
+## EditorState Pattern
 
-## See Also
+The Event Plot Widget follows the project's **EditorState** architecture:
 
-- [Plot Widget Guide](../plot_widget_guide.md)
+- `EventPlotState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `EventPlotWidgetModule::registerTypes()`
+- `EventPlotWidget` is the **view** factory, `EventPlotPropertiesWidget` is the **properties** factory
+- Both share the same `EventPlotState` instance
+- State is placed in a zone (Center by default) via `ZoneManager`
+
+# State Management
+
+## EventPlotStateData
+
+The serializable state struct contains all persistent configuration:
+
+```cpp
+struct EventPlotStateData {
+    std::string instance_id;
+    std::string display_name = "Event Plot";
+    PlotAlignmentData alignment;                              // Shared alignment config
+    std::map<std::string, EventPlotOptions> plot_events;     // Per-event series options
+    CorePlotting::ViewStateData view_state;                   // Zoom, pan, bounds
+    RelativeTimeAxisStateData time_axis;                      // Time axis range
+    EventPlotAxisOptions axis_options;                        // Axis labels, grid
+    std::string background_color = "#FFFFFF";
+    bool pinned = false;                                      // Cross-widget linking
+    TrialSortMode sorting_mode = TrialSortMode::TrialIndex;  // Trial ordering
+};
+```
+
+## Per-Event Options
+
+Each overlaid `DigitalEventSeries` has independent display options:
+
+```cpp
+struct EventPlotOptions {
+    std::string event_key;                             // DataManager key
+    double tick_thickness = 2.0;                       // Glyph stroke width
+    EventGlyphType glyph_type = EventGlyphType::Tick; // Tick, Circle, or Square
+    std::string hex_color = "#000000";                 // Color as hex string
+};
+```
+
+Events are stored in a `std::map<std::string, EventPlotOptions>` keyed by a user-assigned name. The state emits per-event signals (`plotEventAdded`, `plotEventRemoved`, `plotEventOptionsChanged`) so the UI and renderer can react granularly.
+
+## Consolidated Signal Design
+
+With multiple event series and many per-event properties, individual signals would create excessive complexity. EventPlotState uses **category-level signals** instead:
+
+| Signal | Trigger |
+|--------|---------|
+| `alignmentEventKeyChanged` | Alignment event/interval key changed |
+| `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
+| `plotEventAdded` / `plotEventRemoved` / `plotEventOptionsChanged` | Per-event series changes |
+| `sortingModeChanged` | Trial sorting mode changed |
+| `pinnedChanged` | Cross-widget linking pin toggled |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
+
+## Composition with PlotAlignmentState
+
+`EventPlotState` owns a `PlotAlignmentState` instance that manages alignment settings (event key, interval alignment type, offset, window size). This is the same shared component used by [HeatmapWidget](../HeatmapWidget/index.qmd) and [PSTHWidget](../PSTHWidget/index.qmd), ensuring consistent alignment behavior across all trial-aligned plot types.
+
+# Rendering Pipeline
+
+## Data Flow
+
+```
+EventPlotState (alignment settings + per-event options)
+        ↓
+GatherResult<DigitalEventSeries> (trial-aligned views)
+        ↓
+applySorting() → reordered GatherResult (if sorting enabled)
+        ↓
+RasterMapper::mapTrials() → MappedElement ranges
+        ↓
+SceneBuilder::addGlyphs() → RenderableScene
+        ↓
+SceneRenderer::render() (PlottingOpenGL)
+```
+
+## GatherResult Integration
+
+Trial alignment uses the shared `GatherResult` infrastructure from DataManager. The `gatherTrialData()` method creates aligned views of each `DigitalEventSeries` using the alignment settings from state:
+
+1. The alignment event key selects a `DigitalEventSeries` or `DigitalIntervalSeries` from the DataManager
+2. Each event/interval defines a trial center point
+3. The window size determines how much data is gathered around each trial center
+4. The result is a `GatherResult<DigitalEventSeries>` containing per-trial views
+
+## Scene Building
+
+The `EventPlotOpenGLWidget` manages the full rendering lifecycle:
+
+1. **Scene rebuild** (on `stateChanged`): Gathers trial data, applies sorting, maps events to glyphs via `RasterMapper`, and builds a `RenderableScene`
+2. **View update** (on `viewStateChanged`): Updates only the projection matrix — no data re-gathering
+3. **Paint** (on `paintGL`): Renders the cached scene through `PlottingOpenGL::SceneRenderer`
+
+The widget also renders a center line at t=0 and axis labels/tick marks.
+
+## Row Layout
+
+Trials are laid out vertically using `CorePlotting::RowLayoutStrategy`. Each trial occupies a row of equal height. The `LayoutResponse` is cached for use by the hit tester during interaction.
+
+# Interaction
+
+## Zoom and Pan
+
+The widget supports separated X/Y zoom for independent exploration of time and trial dimensions:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only (time axis) |
+| Shift + wheel | Y-zoom only (trial axis) |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance even with large datasets.
+
+## Hit Testing and Selection
+
+Single-click selection uses `CorePlotting::SceneHitTester` for point queries against the rendered scene:
+
+- **Single click**: Select event → emits `eventSelected(trial_index, relative_time_ms, series_key)`
+- **Double click**: Navigate to event time → emits `eventDoubleClicked(time_frame_index, series_key)`
+- **Click vs. drag detection**: 5-pixel threshold prevents accidental selections during panning
+
+## Tooltips
+
+Hover tooltips display trial index and relative time position. The tooltip timer prevents excessive updates during mouse movement.
+
+# Trial Sorting
+
+## Built-in Modes
+
+Three sorting modes are available via a combo box in the properties panel:
+
+| Mode | Behavior |
+|------|----------|
+| `TrialIndex` | Original trial order (default) |
+| `FirstEventLatency` | Sort by latency to first event at or after t=0 (ascending). Trials with no positive events are placed at the end. |
+| `EventCount` | Sort by total number of events in each trial's window (descending) |
+
+Sorting is applied after data gathering by computing sort indices and calling `GatherResult::reorder()`:
+
+```cpp
+auto sorting_mode = _state->getSortingMode();
+if (sorting_mode != TrialSortMode::TrialIndex) {
+    gathered = applySorting(gathered, sorting_mode);
+}
+```
+
+## External Feature Sorting
+
+External sorting via `TensorData` objects is planned. See the [EventPlot Roadmap](roadmap.qmd) for the design.
+
+# Axis System
+
+## Time Axis (X)
+
+Uses the shared `RelativeTimeAxisWidget` with `RelativeTimeAxisState`. The axis is synchronized bidirectionally with the view state:
+
+- **User changes axis range** → view state updates → scene rebuilds
+- **User zooms/pans** → axis range updates silently (no feedback loop)
+
+See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration details.
+
+## Trial Axis (Y)
+
+Uses a `VerticalAxisWidget` with `VerticalAxisState` managed locally (not serialized in `EventPlotStateData`, since Y bounds are derived from trial count). The axis uses `CorePlotting::trialIndexAxis()` mapping for integer trial labels.
+
+# Cross-Widget Linking
+
+## SelectionContext Integration
+
+The Event Plot Widget participates in the project's `SelectionContext` system for inter-widget communication. When a `DigitalEventSeries` is selected in another widget (e.g., clicking a row in [HeatmapWidget](../HeatmapWidget/index.qmd)), the Event Plot Widget can automatically update to display that series — unless **pinned**.
+
+## Pinning
+
+The `pinned` flag in state controls whether the widget responds to `SelectionContext` changes:
+
+- **Unpinned** (default): Widget updates when a compatible data key is selected elsewhere
+- **Pinned**: Widget ignores external selection changes, preserving its current view
+
+This enables workflows where one Event Plot is locked to a specific unit while another follows the user's selection across a [HeatmapWidget](../HeatmapWidget/index.qmd) or [PSTHWidget](../PSTHWidget/index.qmd).
+
+# Relationship to Other Widgets
+
+The Event Plot Widget shares significant infrastructure with two sibling trial-aligned plot types:
+
+| Shared Component | EventPlot | [HeatmapWidget](../HeatmapWidget/index.qmd) | [PSTHWidget](../PSTHWidget/index.qmd) |
+|-----------------|-----------|-------------|-----------|
+| `PlotAlignmentWidget` | Yes | Yes | Yes |
+| `RelativeTimeAxisWidget` | Yes | Yes | Yes |
+| `GatherResult` | Yes (per-trial views) | Yes (aggregated) | Yes (aggregated) |
+| `SelectionContext` linking | Yes | Yes (source) | Yes |
+| Trial sorting | Yes | Future | N/A |
+| OpenGL rendering | `SceneRenderer` | `SceneRenderer` | JKQTPlotter |
+
+All three widgets can be linked via `SelectionContext` so that clicking a unit in the Heatmap updates both the Event Plot and PSTH simultaneously.
+
+# Testing
+
+## Test Files
+
+- Properties widget observer tests follow the common pattern in `tests/WhiskerToolbox/Plots/EventPlotWidget/`
+- Common plot widget tests are instantiated via `PlotWidgetCommonTests.hpp`
+
+## Test Categories
+
+| Category | What It Verifies |
+|----------|-----------------|
+| Combo box population | Event series combo box reflects DataManager keys |
+| Observer refresh | Adding/removing data updates combo boxes |
+| Destruction cleanup | Observer removed in destructor; no crash after widget dies |
+| State serialization | Round-trip JSON serialization of `EventPlotStateData` |
+| Sorting correctness | Built-in sorting modes produce correct trial orderings |
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [HeatmapWidget](../HeatmapWidget/index.qmd) — Heatmap visualization (shares alignment and linking infrastructure)
+- [PSTHWidget](../PSTHWidget/index.qmd) — Peri-stimulus time histogram (shares alignment infrastructure)
+- [EventPlot Roadmap](roadmap.qmd) — Remaining development tasks and future features

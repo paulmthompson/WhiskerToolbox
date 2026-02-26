@@ -1,0 +1,334 @@
+---
+title: "Event Plot Roadmap"
+format: html
+---
+
+# EventPlotWidget Development Roadmap
+
+This document tracks remaining development tasks for the Event Plot Widget. For documentation 
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+## Completed Work Summary
+
+The following phases are complete and documented in [index.qmd](index.qmd):
+
+- **Phase 1 — Core Rendering Infrastructure**: OpenGL pipeline, `GatherResult` integration, `RasterMapper`, `SceneRenderer`
+- **Phase 2 — Interaction**: Separated X/Y zoom, pan, single-click hit testing via `SceneHitTester`, double-click time navigation
+- **Phase 4 (Built-in) — Trial Sorting**: Sort by first event latency, sort by event count
+- **Consolidated Signal Architecture**: Category-level signals in `EventPlotState`
+
+---
+
+## Phase 3: Visual Customization
+
+**Status**: Partially complete — glyph type and color picker exist; remaining items below.
+
+**Goal**: Full control over glyph appearance and axis labeling.
+
+### 3.1 Extended Glyph Options
+
+The current `EventPlotOptions` struct supports `event_key`, `tick_thickness`, `glyph_type`, and `hex_color`. The following additional options should be added:
+
+```cpp
+struct EventPlotOptions {
+    // ... existing fields ...
+
+    double glyph_size = 3.0;        // Size in pixels (currently only tick_thickness)
+    double tick_height = 0.8;       // For Tick type: fraction of row height
+    double alpha = 1.0;             // Opacity
+    
+    // Border (for Circle/Square glyphs)
+    bool show_border = false;
+    std::string border_color = "#000000";
+    double border_width = 1.0;
+};
+```
+
+### 3.2 Properties Panel Updates
+
+Update `EventPlotPropertiesWidget` to expose all glyph options:
+
+- Glyph size spinbox
+- Tick height slider (for Tick type)
+- Alpha slider
+- Border checkbox + color picker (for Circle/Square types)
+
+### 3.3 Axis Labels
+
+The `EventPlotAxisOptions` struct exists in state but is not yet rendered. Implementation requires:
+
+- Rendering axis labels using `PlottingOpenGL::AxisRenderer`
+- Connecting `EventPlotPropertiesWidget` controls to `EventPlotState::setAxisOptions()`
+- Grid line rendering (optional, controlled by `show_grid`)
+
+---
+
+## Phase 5: External Feature Sorting and Coloring via TensorData
+
+**Status**: Design complete. Ready for implementation.
+
+**Goal**: Allow trials to be sorted and colored by external computed features stored in `TensorData` objects.
+
+### Concept
+
+The project's `TensorData` structure supports:
+
+- **Multiple columns** with named column labels
+- **Interval-based rows** via `RowDescriptor` (`RowType::Interval`), where each row corresponds to a `TimeFrameInterval`
+- **Float-only storage** — all values are floats, including binarized features stored as 0.0/1.0
+
+This makes `TensorData` a natural container for per-trial computed features. A TransformsV2 pipeline can produce a `TensorData` where:
+
+- Each **row** corresponds to a trial interval
+- Each **column** represents a different feature (e.g., "firing_rate", "burst_count", "is_responsive")
+- Values are floats — continuous for sorting, binarized (0/1) for categorical coloring
+
+### UI Design
+
+#### TensorData Selection
+
+Add to `EventPlotPropertiesWidget`:
+
+1. **TensorData combo box**: Lists all `TensorData` objects in the DataManager
+2. **Column combo box**: When a `TensorData` is selected, shows its column names
+3. **Compatibility indicator**: Shows whether the selected tensor has a compatible number of rows (intervals)
+
+The row count of the `TensorData` need not exactly match the number of trials from the alignment aggregator. The matching strategy is:
+
+- Rows are matched by **interval overlap** — each alignment trial maps to the `TensorData` row whose interval overlaps it
+- Trials with no matching interval receive a default sort key (placed at the end) or default color
+
+#### Sort Mode: External
+
+Extend the `TrialSortMode` enum:
+
+```cpp
+enum class TrialSortMode {
+    TrialIndex,         ///< No sorting (default)
+    FirstEventLatency,  ///< Built-in: sort by first event latency
+    EventCount,         ///< Built-in: sort by event count
+    External            ///< Sort by column from TensorData
+};
+```
+
+When `External` is selected, the widget reads the selected column from the `TensorData` and uses the float values as sort keys. Ascending/descending toggle should be provided.
+
+#### State Changes
+
+Add to `EventPlotStateData`:
+
+```cpp
+struct ExternalFeatureConfig {
+    std::string tensor_key;          // DataManager key for TensorData
+    std::string column_name;         // Column within the TensorData
+    bool ascending = true;           // Sort direction (for sorting)
+};
+
+struct EventPlotStateData {
+    // ... existing fields ...
+    std::optional<ExternalFeatureConfig> external_sort_config;
+    std::optional<EventColorConfig> color_config;  // See coloring section below
+};
+```
+
+### External Feature Coloring
+
+Events within a trial can be colored based on the trial's feature value from the `TensorData`:
+
+```cpp
+struct EventColorConfig {
+    std::string color_mode = "fixed";  // "fixed" or "by_feature"
+    
+    // For fixed coloring (existing behavior)
+    std::string hex_color = "#000000";
+    
+    // For feature-based coloring
+    ExternalFeatureConfig feature;       // Which TensorData column
+    std::string colormap = "viridis";    // Colormap name
+    double color_min = 0.0;
+    double color_max = 1.0;
+    bool use_auto_range = true;          // Auto-detect min/max from data
+};
+```
+
+#### Continuous vs. Binarized Coloring
+
+Since `TensorData` stores all values as floats:
+
+- **Continuous features** (e.g., firing rate 0.0–50.0): Map through a colormap with configurable range
+- **Binarized features** (e.g., 0.0 or 1.0 from a threshold transform): Can be mapped through a two-color scheme or a colormap — the same infrastructure handles both
+
+The UI should auto-detect likely binarized columns (all values are 0.0 or 1.0) and suggest a categorical color scheme.
+
+### Implementation Sequence
+
+1. Add `ExternalFeatureConfig` and `EventColorConfig` to `EventPlotStateData`
+2. Add TensorData combo box + column combo box to properties panel
+3. Implement interval matching between alignment trials and TensorData rows
+4. Implement `TrialSortMode::External` in `applySorting()`
+5. Implement colormap infrastructure in CorePlotting (see below)
+6. Add per-trial color override in scene building
+
+### Colormap Infrastructure
+
+Add colormap utilities to CorePlotting (or a shared utility library):
+
+```cpp
+namespace CorePlotting::Colormaps {
+    // Returns RGBA for value in [0, 1]
+    glm::vec4 viridis(float t);
+    glm::vec4 plasma(float t);
+    glm::vec4 inferno(float t);
+    glm::vec4 coolwarm(float t);
+    
+    // Registry for lookup by name
+    glm::vec4 apply(std::string const& name, float t);
+}
+```
+
+This infrastructure is shared with [HeatmapWidget](../HeatmapWidget/index.qmd) which also needs colormaps.
+
+---
+
+## Phase 6: Cross-Widget Linking
+
+**Status**: Design complete. `pinned` field exists in state. Implementation needed.
+
+**Goal**: Enable EventPlot, [PSTHWidget](../PSTHWidget/index.qmd), and [HeatmapWidget](../HeatmapWidget/index.qmd) to synchronize on active unit selection.
+
+### SelectionContext Integration
+
+Following the existing `SelectionContext` pattern used by DataInspector widgets:
+
+```cpp
+// In EventPlotPropertiesWidget constructor
+connect(_selection_context, &SelectionContext::selectionChanged,
+        this, &EventPlotPropertiesWidget::_onSelectionChanged);
+
+void EventPlotPropertiesWidget::_onSelectionChanged(SelectionSource const& source) {
+    if (_state && _state->isPinned()) return;
+
+    if (_state && source.editor_instance_id.toString() == _state->getInstanceId()) return;
+    
+    if (_selection_context) {
+        auto const selected = _selection_context->primarySelectedData();
+        if (selected.isValid()) {
+            auto type = _data_manager->getType(selected.toString().toStdString());
+            if (type == DM_DataType::DigitalEventSeries) {
+                updateDisplayedEventSeries(selected.toString());
+            }
+        }
+    }
+}
+```
+
+### Pin Button UI
+
+Add a pin/unpin toggle button to the properties panel toolbar. When pinned, the widget ignores `SelectionContext` changes. The pinned state is serialized for workspace restoration.
+
+### Heatmap → Raster/PSTH Flow
+
+The primary cross-widget workflow:
+
+```
+HeatmapWidget row click
+        ↓
+SelectionContext::setSelectedData("unit_42", source)
+        ↓  
+EventPlotWidget (if not pinned) receives selectionChanged
+        ↓
+Checks type == DigitalEventSeries → updates plot
+        ↓
+PSTHWidget (if not pinned) also receives selectionChanged
+        ↓
+Updates histogram for same unit
+```
+
+This enables rapid exploration of neural data: click through units in the heatmap while the raster plot and PSTH update in sync.
+
+### Shared Alignment State (Future Consideration)
+
+Currently, each trial-aligned widget (EventPlot, PSTH, Heatmap) maintains its own independent `PlotAlignmentState`. A future enhancement could allow these widgets to **share** a single alignment state so that changing the alignment event or window size in one widget updates all linked widgets simultaneously.
+
+This is distinct from `SelectionContext` (which handles data key selection) — shared alignment would synchronize the trial structure itself.
+
+---
+
+## Phase 7: Shared Components Factoring
+
+**Status**: Design exploration. Depends on Phases 5 and 6 being implemented.
+
+**Goal**: Extract reusable components for PSTH, Heatmap, and ScatterPlot to reduce duplication across trial-aligned plot types.
+
+### Proposed Shared Components
+
+```
+Plots/Common/
+├── AlignedPlotDataProvider.hpp   # GatherResult-based data provision
+├── PlotLinkingController.hpp     # Cross-widget linking logic  
+├── GlyphSelectionManager.hpp     # Shared selection logic
+├── PlotViewState.hpp             # Common view state (zoom, pan)
+└── ColormapRegistry.hpp          # Shared colormap utilities
+```
+
+### AlignedPlotDataProvider
+
+Common data preparation pattern for all trial-aligned widgets:
+
+```cpp
+class AlignedPlotDataProvider {
+public:
+    void setAlignmentState(PlotAlignmentState* state);
+    void setDataManager(std::shared_ptr<DataManager> dm);
+    
+    GatherResult<DigitalEventSeries> gatherEvents(std::string const& key);
+
+    void setSortConfig(TrialSortConfig const& config);
+    
+signals:
+    void dataChanged();
+};
+```
+
+### Usage Across Widgets
+
+| Widget | Uses GatherResult | Uses PlotLinking | Uses Colormaps | Uses GlyphSelection |
+|--------|------------------|------------------|----------------|---------------------|
+| EventPlotWidget | Yes | Yes | Yes (Phase 5) | Yes |
+| [PSTHWidget](../PSTHWidget/index.qmd) | Yes (aggregate) | Yes | No | No |
+| [HeatmapWidget](../HeatmapWidget/index.qmd) | Yes (aggregate) | Yes (source) | Yes | Yes (rows) |
+| ScatterPlotWidget | No | No | Future | Yes |
+
+---
+
+## Implementation Priority
+
+### Next Up
+
+1. **Phase 3.1–3.2**: Extended glyph options and properties panel controls
+2. **Phase 3.3**: Axis label rendering
+3. **Phase 6**: Cross-widget linking implementation
+
+### Following
+
+4. **Phase 5**: External feature sorting/coloring via TensorData
+5. **Phase 7**: Shared component extraction
+
+### Open Questions
+
+1. **Colormap location**: Should colormaps live in CorePlotting or a separate shared utility library? The [HeatmapWidget](../HeatmapWidget/index.qmd) also needs colormaps.
+
+2. **Interval matching tolerance**: When matching alignment trial intervals to TensorData rows, how much overlap is required? Exact match, or any overlap?
+
+3. **Performance at scale**: What's the target trial count? Need benchmarks for 10K+ trials with 100+ events each. See `benchmark/RasterPlotViews.benchmark.cpp`.
+
+4. **Multi-unit raster**: Should EventPlotWidget support multiple units overlaid (different colors per unit), or is that the [HeatmapWidget](../HeatmapWidget/index.qmd)'s role?
+
+5. **Shared alignment state**: Should linked widgets share a single `PlotAlignmentState` or remain independent with manual synchronization?
+
+# See Also
+
+- [EventPlotWidget Documentation](index.qmd) — Full architecture and feature documentation
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [HeatmapWidget](../HeatmapWidget/index.qmd) — Shares alignment, linking, and colormap infrastructure
+- [PSTHWidget](../PSTHWidget/index.qmd) — Shares alignment and linking infrastructure
