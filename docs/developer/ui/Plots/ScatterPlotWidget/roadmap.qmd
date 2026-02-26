@@ -90,7 +90,6 @@ When the user selects X and Y sources, the widget must verify they are compatibl
 |----------|----------|---------------|
 | `AnalogTimeSeries` | `AnalogTimeSeries` | Always compatible (both `TimeFrameIndex`) |
 | `AnalogTimeSeries` | `TensorData` (`TimeFrameIndex` rows) | Compatible — 1:1 `TimeFrameIndex` join |
-| `AnalogTimeSeries` | `TensorData` (`Interval` rows) | Requires aggregation — mean/median of analog signal over each interval |
 | `TensorData` (`TimeFrameIndex`) | `TensorData` (`TimeFrameIndex`) | Compatible if same `TimeFrame` or joinable |
 | `TensorData` (`Interval`) | `TensorData` (`Interval`) | Compatible if same intervals |
 | `TensorData` (`Ordinal`) | `TensorData` (`Ordinal`) | Compatible if same row count |
@@ -122,25 +121,21 @@ ScatterPointData buildScatterPoints(
 **For `AnalogTimeSeries` × `TensorData` (`TimeFrameIndex` rows)**: Join on shared
 `TimeFrameIndex` values via the `TensorData`'s `RowDescriptor::timeStorage()`.
 
-**For `AnalogTimeSeries` × `TensorData` (`Interval` rows)**: For each interval row in
-the tensor, aggregate the analog signal over that interval (e.g., mean) to produce one
-point per row.
-
 ### 1.5 Point Rendering
 
-Render the point set via OpenGL. Options for the rendering backend:
+Render the point set via `SceneBuilder::addGlyphs()` → `SceneRenderer::render()`, reusing
+the glyph rendering infrastructure from [EventPlotWidget](../EventPlotWidget/index.qmd).
 
-**Option A: Use existing `SceneRenderer`** — Build `MappedElement` objects (one per point)
-and render via `SceneBuilder::addGlyphs()` → `SceneRenderer::render()`. This reuses the
-glyph rendering infrastructure from [EventPlotWidget](../EventPlotWidget/index.qmd).
+The `SceneBuilder::addGlyphs()` method collects all `MappedElement` positions into a single
+`RenderableGlyphBatch`, which `GlyphRenderer` then uploads as one GPU buffer and renders in
+a **single instanced draw call** (`glDrawArraysInstanced` for tick/square/cross, `glDrawArrays`
+for circles). This means even large point counts (tens of thousands) result in only one draw
+call, identical to how EventPlotWidget handles large spike counts.
 
-**Option B: Dedicated point renderer** — A new `PointBatchRenderer` in `PlottingOpenGL/`
-that takes flat arrays of (x, y) positions and renders via instanced draw calls. This
-would be more efficient for large point counts and could be shared with
-[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) for point cloud rendering.
-
-Initial implementation should use Option A for simplicity, with Option B as a performance
-optimization if needed.
+There is no need for a dedicated `PointBatchRenderer` — the `CorePlotting` abstraction layer
+(`MappedElement` → `SceneBuilder` → `SceneRenderer`) adds negligible overhead (one linear copy
+per scene rebuild) while providing spatial index integration for hit testing, entity-to-series
+mapping, and glyph customization — all of which the scatter plot needs.
 
 ### 1.6 Auto-Fit Bounds
 
@@ -148,6 +143,20 @@ After computing point data, scan for min/max X and Y values (with 5% padding) an
 `ScatterPlotState::setXBounds()` and `setYBounds()` to auto-fit the view. This is the same
 pattern used by [LinePlotWidget](../LinePlotWidget/index.qmd) for auto-fitting Y bounds
 from trial data.
+
+### 1.7 Reference Line Rendering ($y = x$)
+
+Render a $y = x$ diagonal reference line across the visible viewport. This is always available
+(not conditional on temporal offset) and useful for comparing two quantities on the same scale.
+
+The line should be rendered as a semi-transparent line in world coordinates using
+`SceneBuilder::addPolyLine()` with two vertices at the viewport corners along the diagonal.
+Update the line endpoints when the view bounds change (pan/zoom).
+
+Properties panel controls:
+
+- **Show reference line checkbox** — toggles the $y = x$ line
+- **Reference line style** — color and thickness
 
 ---
 
@@ -202,69 +211,69 @@ with the point's coordinates and `TimeFrameIndex`.
 **Goal**: Allow the user to select multiple points via polygon (lasso) selection and add their
 associated `TimeFrameIndex` entities to an entity group.
 
-### 3.1 Polygon Selection Infrastructure (Shared)
+### 3.1 Polygon Interaction (Existing Infrastructure)
 
-Polygon selection should be implemented as a **shared component** in `CorePlotting/Selection/`
-since it will be used by both `ScatterPlotWidget` (selecting scatter points) and
-[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (selecting projected `PointData`).
+The polygon drawing interaction is already implemented as a shared component:
+`CorePlotting::Interaction::PolygonInteractionController` (in
+`CorePlotting/Interaction/PolygonInteractionController.hpp/.cpp`). This controller provides:
+
+- Click-based polygon creation: `start()` → repeated `addVertex()` → `complete()`
+- Cursor preview via `updateCursorPosition()` (shows edge from last vertex to cursor)
+- Auto-close by clicking near the first vertex (configurable threshold)
+- Vertex drag mode for modifying existing polygons
+- Undo via `removeLastVertex()`
+- `GlyphPreview` output for rendering the polygon outline during construction
+- Configurable colors, stroke width, vertex size
+
+The ScatterPlotWidget needs to:
+
+1. **Instantiate** a `PolygonInteractionController` in `ScatterPlotOpenGLWidget`
+2. **Wire mouse events**: Ctrl+Click → `addVertex()`, mouse move → `updateCursorPosition()`,
+   Escape → `cancel()`, Ctrl+Double-click → `complete()`
+3. **Render the preview** via `getPreview()` using the existing `PreviewRenderer`
+4. **On completion**, extract `getVertices()` and run point-in-polygon selection
+
+### 3.1.1 Point-in-Polygon Selection
+
+A selection utility performs the actual point containment test after the polygon is closed:
 
 ```cpp
 namespace CorePlotting::Selection {
 
-/// A closed polygon in world coordinates
-struct SelectionPolygon {
-    std::vector<glm::vec2> vertices;
-
-    /// Test if a world-space point is inside the polygon
-    [[nodiscard]] bool contains(glm::vec2 point) const;
-
-    /// Test if the polygon is valid (≥ 3 vertices, non-degenerate)
-    [[nodiscard]] bool isValid() const;
-};
-
-/// Result of a polygon selection query
 struct PolygonSelectionResult {
     std::vector<std::size_t> selected_indices;  ///< Indices into the point array
 };
 
-/// Find all points inside the polygon
+/// Find all points inside the polygon (ray-casting algorithm)
 PolygonSelectionResult selectPointsInPolygon(
-    SelectionPolygon const & polygon,
+    std::span<glm::vec2 const> polygon_vertices,
     std::span<float const> x_values,
     std::span<float const> y_values);
 
 }  // namespace CorePlotting::Selection
 ```
 
-The `contains()` method uses the ray-casting (point-in-polygon) algorithm. This component
-has no Qt or OpenGL dependency and is fully unit-testable.
-
-**Shared with:**
-
-| Widget | Selection Target | Input Coordinates |
-|--------|-----------------|-------------------|
-| **ScatterPlotWidget** | (x, y) scatter point pairs → `TimeFrameIndex` | World-space data coordinates |
-| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Projected `PointData` positions → EntityID | World-space projection coordinates |
+This is a pure geometry function with no Qt or OpenGL dependency, placed in
+`CorePlotting/Selection/` for sharing with
+[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
 
 ### 3.2 Polygon Drawing Interaction
 
-In `ScatterPlotOpenGLWidget`, add a polygon drawing mode:
+In `ScatterPlotOpenGLWidget`, wire the existing `PolygonInteractionController`:
 
-| Input | Action |
-|-------|--------|
-| Ctrl + Click | Begin polygon — first vertex at click position |
-| Ctrl + Click (subsequent) | Add vertex to polygon |
-| Ctrl + Double-click | Close polygon and execute selection |
-| Escape | Cancel polygon drawing |
-| Shift + Ctrl + Click | Remove mode (deselect points in polygon) |
+| Input | Action | Controller Method |
+|-------|--------|-------------------|
+| Ctrl + Click | Begin polygon / add vertex | `start()` or `addVertex()` |
+| Mouse move (while active) | Update preview line | `updateCursorPosition()` |
+| Ctrl + Double-click | Close polygon and execute selection | `complete()` |
+| Escape | Cancel polygon drawing | `cancel()` |
+| Backspace (while drawing) | Undo last vertex | `removeLastVertex()` |
+| Click near first vertex | Auto-close polygon | `addVertex()` returns `ClosedPolygon` |
+| Shift + Ctrl + Click | Remove mode (deselect points in polygon) | New polygon in subtract mode |
 
-While drawing, render the polygon outline as a preview (similar to the selection stroke
-preview in [LinePlotWidget](../LinePlotWidget/index.qmd)).
-
-**Alternative: Freeform lasso** — Instead of click-per-vertex, allow Ctrl+Click+Drag to
-draw a freeform lasso shape. The drag path forms the polygon boundary. This is more
-intuitive for irregular selections but requires simplification of the path to a manageable
-vertex count.
+The `PolygonInteractionController::getPreview()` returns a `GlyphPreview` with `Type::Polygon`
+that the existing `PreviewRenderer` can render. The preview includes polygon edges, vertex
+markers, and a closure line from the last vertex to the cursor.
 
 ### 3.3 Selection State
 
@@ -418,20 +427,15 @@ When the user sets `time_offset = -1` for the Y-axis source:
 2. Points where the offset pushes $t$ outside valid range are excluded
 3. The `TimeFrameIndex` stored per point is the "primary" index (X-axis, no offset)
 
-### 5.3 Reference Line Rendering
+### 5.3 Reference Line
 
-Optionally render a $y = x$ diagonal reference line when both axes use the same source key
-and one has a temporal offset. This makes outlier identification immediate: points far from
-the line are rapid-change outliers.
-
-The reference line should be rendered as a semi-transparent dashed line in world coordinates,
-similar to the $t = 0$ center line in [EventPlotWidget](../EventPlotWidget/index.qmd).
+The $y = x$ reference line from Phase 1.7 is already available for this use case. When both
+axes use the same source key and one has a temporal offset, the reference line immediately
+shows which points represent rapid changes (far from the diagonal) vs. slow changes (near it).
 
 ### 5.4 Properties Panel Controls
 
 - **Offset spinbox** — per-axis integer spinbox (already in Phase 1.2)
-- **Show reference line checkbox** — auto-enabled when same key + offset detected
-- **Reference line style** — color, thickness, dash pattern
 
 ---
 
@@ -555,12 +559,12 @@ Add to `ScatterPlotPropertiesWidget` in a "Point Coloring" collapsible section:
 ## Dependency Graph
 
 ```
-Phase 1: Data Source Selection + Rendering (FOUNDATION)
+Phase 1: Data Source Selection + Rendering + Reference Line (FOUNDATION)
     ↓
     ├── Phase 2: Click-to-Navigate
     ├── Phase 3: Polygon Selection + Groups
-    │       └── depends on: CorePlotting::Selection::SelectionPolygon
-    │           (shared with TemporalProjectionViewWidget)
+    │       └── uses: PolygonInteractionController (already implemented)
+    │       └── needs: CorePlotting::Selection::selectPointsInPolygon (new)
     ├── Phase 4: Glyph Customization
     ├── Phase 5: Temporal Offset
     └── Phase 6: DataManager Observer
@@ -581,22 +585,28 @@ Components that should be factored into shared locations rather than implemented
 
 | Component | Proposed Location | Used By |
 |-----------|-------------------|---------|
-| `SelectionPolygon` | `CorePlotting/Selection/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `selectPointsInPolygon` | `CorePlotting/Selection/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
 | `GroupManagementPanel` | `Plots/Common/` | ScatterPlotWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
 | `Colormaps` | `CorePlotting/Colormaps/` | ScatterPlotWidget, [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
-| `PointBatchRenderer` (optional) | `PlottingOpenGL/PointBatch/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
 
-## Open Questions
 
-1. **Aggregation strategy for `Interval` rows**: When pairing `AnalogTimeSeries` with `TensorData` (`Interval` rows), should the default aggregation be mean, median, or configurable? Mean is simplest; median is more robust to outliers.
+## Design Decisions
 
-2. **Point count scalability**: What is the expected maximum point count? For `AnalogTimeSeries` at high sampling rates, the point count could reach hundreds of thousands. If > 50K points, a dedicated `PointBatchRenderer` (Phase 1.5 Option B) becomes important.
+1. **Point count scalability**: The `SceneBuilder::addGlyphs()` → `GlyphRenderer` pipeline uses
+   instanced rendering (single GPU draw call for all points in a batch). This is the same path
+   EventPlotWidget uses for large spike counts and scales well to tens of thousands of points.
+   No dedicated `PointBatchRenderer` is needed.
 
-3. **Polygon selection vs. brush selection**: Should the primary multi-point selection mode be a polygon (click vertices) or a freeform lasso (drag to draw boundary)? The lasso is more intuitive but requires path simplification. Both could be supported.
+2. **Polygon interaction**: Uses the existing `PolygonInteractionController` from
+   `CorePlotting/Interaction/`. This shared controller handles click-based polygon creation,
+   vertex drag modification, cursor preview, and auto-close detection.
 
-4. **Reference line generalization**: Should the $y = x$ reference line (Phase 5.3) be generalized to arbitrary linear reference lines ($y = ax + b$)? Useful for visualizing deviations from expected relationships.
+3. **Reference line**: Only $y = x$ reference line for now (Phase 1.7). Can be generalized to
+   arbitrary linear reference lines ($y = ax + b$) in a future phase if needed.
 
-5. **Multiple glyphs per data source**: Should the widget support overlaying multiple scatter series (e.g., two different X/Y pairs in the same plot with distinct colors/glyphs)? This would require a series management pattern similar to [LinePlotWidget](../LinePlotWidget/index.qmd).
+4. **Single dataset per plot**: Each ScatterPlotWidget displays a single X/Y data source pair.
+   Users can open multiple scatter plot instances via the Analysis Dashboard for side-by-side
+   comparison of different variable pairs.
 
 # See Also
 

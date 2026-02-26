@@ -158,40 +158,51 @@ selection are implemented.
 **Goal**: Allow the user to draw a polygon (lasso) to select multiple points at once,
 complementing the existing click-to-select and stroke-to-intersect modes.
 
-### 4.1 Shared Polygon Selection Infrastructure
+### 4.1 Polygon Interaction (Existing Infrastructure)
 
-Polygon selection should be implemented as a **shared component** in `CorePlotting/Selection/`,
-since it will also be used by [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 3).
+The polygon drawing interaction is already implemented as a shared component:
+`CorePlotting::Interaction::PolygonInteractionController` (in
+`CorePlotting/Interaction/PolygonInteractionController.hpp/.cpp`). This controller provides:
+
+- Click-based polygon creation: `start()` → repeated `addVertex()` → `complete()`
+- Cursor preview via `updateCursorPosition()` (shows edge from last vertex to cursor)
+- Auto-close by clicking near the first vertex (configurable threshold)
+- Vertex drag mode for modifying existing polygons
+- Undo via `removeLastVertex()`
+- `GlyphPreview` output for rendering the polygon outline during construction
+- Configurable colors, stroke width, vertex size via `PolygonInteractionConfig`
+
+The TemporalProjectionViewWidget needs to:
+
+1. **Instantiate** a `PolygonInteractionController` in `TemporalProjectionOpenGLWidget`
+2. **Wire mouse events**: Ctrl+Click → `addVertex()`, mouse move → `updateCursorPosition()`,
+   Escape → `cancel()`, Ctrl+Double-click → `complete()`
+3. **Render the preview** via `getPreview()` using the existing `PreviewRenderer`
+4. **On completion**, extract `getVertices()` and run point-in-polygon selection
+
+### 4.1.1 Point-in-Polygon Selection
+
+A selection utility performs the actual point containment test after the polygon is closed:
 
 ```cpp
 namespace CorePlotting::Selection {
 
-/// A closed polygon in world coordinates
-struct SelectionPolygon {
-    std::vector<glm::vec2> vertices;
-
-    /// Test if a world-space point is inside the polygon (ray-casting algorithm)
-    [[nodiscard]] bool contains(glm::vec2 point) const;
-
-    /// Test if the polygon is valid (≥ 3 vertices, non-degenerate)
-    [[nodiscard]] bool isValid() const;
-};
-
-/// Result of a polygon selection query
 struct PolygonSelectionResult {
-    std::vector<std::size_t> selected_indices;
+    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
 };
 
-/// Find all points inside the polygon
+/// Find all points inside the polygon (ray-casting algorithm)
 PolygonSelectionResult selectPointsInPolygon(
-    SelectionPolygon const & polygon,
+    std::span<glm::vec2 const> polygon_vertices,
     std::span<float const> x_values,
     std::span<float const> y_values);
 
 }  // namespace CorePlotting::Selection
 ```
 
-This component has no Qt or OpenGL dependency and is fully unit-testable.
+This is a pure geometry function with no Qt or OpenGL dependency, placed in
+`CorePlotting/Selection/` for sharing with
+[ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 3).
 
 **Shared with:**
 
@@ -213,19 +224,21 @@ Add `"polygon"` as a fourth selection mode (the state already declares it in the
 
 ### 4.3 Polygon Drawing Interaction
 
-| Input | Action |
-|-------|--------|
-| Ctrl + Click | Begin polygon / add vertex at click position |
-| Ctrl + Double-click | Close polygon and execute selection |
-| Escape | Cancel polygon drawing |
-| Ctrl + Shift + Click | Remove mode (deselect points in polygon) |
+In `TemporalProjectionOpenGLWidget`, wire the existing `PolygonInteractionController`:
 
-While drawing, render the polygon outline as a preview overlay (similar to the line
-selection stroke preview using `SceneRenderer::renderPreview()`).
+| Input | Action | Controller Method |
+|-------|--------|-------------------|
+| Ctrl + Click | Begin polygon / add vertex | `start()` or `addVertex()` |
+| Mouse move (while active) | Update preview line | `updateCursorPosition()` |
+| Ctrl + Double-click | Close polygon and execute selection | `complete()` |
+| Escape | Cancel polygon drawing | `cancel()` |
+| Backspace (while drawing) | Undo last vertex | `removeLastVertex()` |
+| Click near first vertex | Auto-close polygon | `addVertex()` returns `ClosedPolygon` |
+| Ctrl + Shift + Click | Remove mode (deselect points in polygon) | New polygon in subtract mode |
 
-**Alternative: Freeform lasso** — Instead of click-per-vertex, allow Ctrl+Click+Drag to
-draw a freeform lasso shape. This is more intuitive for irregular selections but requires
-path simplification to a manageable vertex count.
+The `PolygonInteractionController::getPreview()` returns a `GlyphPreview` with `Type::Polygon`
+that the existing `PreviewRenderer` can render. The preview includes polygon edges, vertex
+markers, and a closure line from the last vertex to the cursor.
 
 ### 4.4 Integration with Existing Selection
 
@@ -484,8 +497,8 @@ Phase 3: Double-Click Time Navigation
     │   (all independent of each other, can be done in any order)
     │
 Phase 4: Polygon Selection
-    └── depends on: CorePlotting::Selection::SelectionPolygon
-        (shared with ScatterPlotWidget)
+    └── uses: PolygonInteractionController (already implemented)
+    └── needs: CorePlotting::Selection::selectPointsInPolygon (new)
     │
 Phase 5: Selection → Group Integration
     ├── depends on: Phase 4 (polygon selection adds to selection set)
@@ -517,33 +530,33 @@ Components that should be factored into shared locations rather than implemented
 
 | Component | Proposed Location | Used By |
 |-----------|-------------------|---------|
-| `SelectionPolygon` | `CorePlotting/Selection/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+| `selectPointsInPolygon` | `CorePlotting/Selection/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
 | `GroupManagementPanel` | `Plots/Common/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
 | `GroupColorMapper` | `CorePlotting/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd) |
 | Extended `GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | TemporalProjectionViewWidget, [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd), [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
 | `GlyphStyleControls` widget | `Plots/Common/GlyphStyleWidget/` | TemporalProjectionViewWidget, [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
-| `PointBatchRenderer` (optional) | `PlottingOpenGL/PointBatch/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+## Design Decisions
+
+1. **Per-key vs. global rendering options**: Phase 1 and Phase 2 start with global options
+   (simpler), extended to per-key options in Phase 8 to avoid premature complexity.
+
+2. **Polygon interaction**: Uses the existing `PolygonInteractionController` from
+   `CorePlotting/Interaction/`. This shared controller handles click-based polygon creation,
+   vertex drag modification, cursor preview, and auto-close detection. Only a new
+   `selectPointsInPolygon()` utility is needed for the ray-casting containment test.
 
 ## Open Questions
 
-1. **Per-key vs. global rendering options**: Should Phase 1 and Phase 2 start with global options
-   (simpler) or go directly to per-key options? Starting global and extending in Phase 8 is
-   recommended to avoid premature complexity.
-
-2. **Polygon selection vs. freeform lasso**: Should the primary multi-point selection be
-   click-per-vertex polygon or drag-to-draw lasso? Lasso is more intuitive but requires path
-   simplification. Both could be supported behind a toggle.
-
-3. **Group color conflict resolution**: When an entity belongs to multiple groups, which group's
+1. **Group color conflict resolution**: When an entity belongs to multiple groups, which group's
    color takes priority? Options: first group alphabetically, most recently assigned, or a
    blended color. First-match is simplest.
 
-4. **Visibility filtering performance**: For very large datasets, should visibility filtering
+2. **Visibility filtering performance**: For very large datasets, should visibility filtering
    happen at the data-gathering stage (skip loading invisible entities entirely) or at the
    rendering stage (set visibility mask to 0)? The mask approach is simpler and sufficient
    for moderate dataset sizes.
 
-5. **MaskData support**: The state struct has a comment noting "mask_data_keys deferred due to
+3. **MaskData support**: The state struct has a comment noting "mask_data_keys deferred due to
    CPU contour extraction performance". If GPU-based contour extraction becomes available,
    `MaskData` rendering could be added as a future phase.
 
