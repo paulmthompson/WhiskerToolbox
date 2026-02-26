@@ -1,0 +1,613 @@
+---
+title: "Scatter Plot Widget Roadmap"
+format: html
+---
+
+# ScatterPlotWidget Development Roadmap
+
+This document tracks remaining development tasks for the Scatter Plot Widget. For documentation
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+## Completed Work Summary
+
+The following features are complete and documented in [index.qmd](index.qmd):
+
+- **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
+- **State management**: `ScatterPlotState` with `HorizontalAxisState`, `VerticalAxisState` composition; `ScatterPlotStateData` serializable struct
+- **Axis system**: `HorizontalAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync, including the "silent update" pattern
+- **Interaction**: Separated X/Y zoom, pan via shared `PlotInteractionHelpers`
+- **Properties panel**: Axis range controls in collapsible `Section` widgets
+- **OpenGL lifecycle**: `ScatterPlotOpenGLWidget` initialization, projection/view matrix management, pan/zoom mouse handlers
+- **State serialization**: Full round-trip JSON via `rfl::json`
+- **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
+
+**Not yet implemented**: Data source selection, point rendering, click-to-navigate, glyph customization,
+temporal offset, polygon selection, group integration, and DataManager observer pattern described below.
+
+---
+
+## Phase 1: Data Source Selection and Point Rendering
+
+**Status**: Not started. OpenGL scaffold and axis system are complete; data pipeline is the next essential step.
+
+**Goal**: Allow the user to select X and Y data sources from `AnalogTimeSeries` and `TensorData` columns,
+compute the paired (x, y) point set, and render scatter points in the OpenGL canvas.
+
+### 1.1 Data Source Configuration in State
+
+Extend `ScatterPlotStateData` with data source configuration:
+
+```cpp
+/// Describes a single axis data source (X or Y)
+struct ScatterAxisSource {
+    std::string data_key;                            ///< DataManager key (AnalogTimeSeries or TensorData)
+    std::optional<std::string> tensor_column_name;   ///< Column name (only for TensorData)
+    std::optional<std::size_t> tensor_column_index;  ///< Column index fallback (if no names)
+    int time_offset = 0;                             ///< Temporal offset in TimeFrameIndex steps
+};
+
+struct ScatterPlotStateData {
+    std::string instance_id;
+    std::string display_name = "Scatter Plot";
+    CorePlotting::ViewStateData view_state;
+    HorizontalAxisStateData horizontal_axis;
+    VerticalAxisStateData vertical_axis;
+
+    std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
+    std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
+};
+```
+
+Add signals to `ScatterPlotState`:
+
+| Signal | Trigger |
+|--------|---------|
+| `xSourceChanged` | X-axis data source key, column, or offset changed |
+| `ySourceChanged` | Y-axis data source key, column, or offset changed |
+
+Both source change signals should also emit `stateChanged()` to trigger a scene rebuild.
+
+### 1.2 Data Source UI in Properties Panel
+
+Add to `ScatterPlotPropertiesWidget` in a "Data Sources" section:
+
+**For each axis (X and Y):**
+
+1. **Data type selector** — combo box or radio: `AnalogTimeSeries` / `TensorData`
+2. **Key combo box** — lists all keys of the selected type from DataManager (via `getKeys<AnalogTimeSeries>()` or `getKeys<TensorData>()`)
+3. **Column combo box** — visible **only** when `TensorData` is selected; populated with column names from `TensorData::getColumnNames()`, falling back to numeric indices (0, 1, 2, ...) if no names are set
+4. **Offset spinbox** — integer spinbox for temporal offset in `TimeFrameIndex` steps (default: 0)
+
+The combo boxes must be kept in sync with DataManager via the standard observer pattern
+(see [Plot Widget Guide](../plot_widget_guide.md)). Register an observer in the constructor
+and remove it in the destructor.
+
+### 1.3 Row Type Compatibility Validation
+
+When the user selects X and Y sources, the widget must verify they are compatible:
+
+| X Source | Y Source | Compatibility |
+|----------|----------|---------------|
+| `AnalogTimeSeries` | `AnalogTimeSeries` | Always compatible (both `TimeFrameIndex`) |
+| `AnalogTimeSeries` | `TensorData` (`TimeFrameIndex` rows) | Compatible — 1:1 `TimeFrameIndex` join |
+| `AnalogTimeSeries` | `TensorData` (`Interval` rows) | Requires aggregation — mean/median of analog signal over each interval |
+| `TensorData` (`TimeFrameIndex`) | `TensorData` (`TimeFrameIndex`) | Compatible if same `TimeFrame` or joinable |
+| `TensorData` (`Interval`) | `TensorData` (`Interval`) | Compatible if same intervals |
+| `TensorData` (`Ordinal`) | `TensorData` (`Ordinal`) | Compatible if same row count |
+
+When sources are incompatible, display a warning label in the properties panel and disable
+rendering. The `RowDescriptor::type()` accessor provides the row type for validation.
+
+### 1.4 Point Pair Computation
+
+A new data-gathering function builds the (x, y, `TimeFrameIndex`) triples:
+
+```cpp
+struct ScatterPointData {
+    std::vector<float> x_values;
+    std::vector<float> y_values;
+    std::vector<TimeFrameIndex> time_indices;  ///< For click-to-navigate and group integration
+};
+
+/// Build scatter point data from two axis sources
+ScatterPointData buildScatterPoints(
+    DataManager const & dm,
+    ScatterAxisSource const & x_source,
+    ScatterAxisSource const & y_source);
+```
+
+**For `AnalogTimeSeries` × `AnalogTimeSeries`**: Iterate over the intersection of valid
+`TimeFrameIndex` values from both series. Apply temporal offset by shifting the index.
+
+**For `AnalogTimeSeries` × `TensorData` (`TimeFrameIndex` rows)**: Join on shared
+`TimeFrameIndex` values via the `TensorData`'s `RowDescriptor::timeStorage()`.
+
+**For `AnalogTimeSeries` × `TensorData` (`Interval` rows)**: For each interval row in
+the tensor, aggregate the analog signal over that interval (e.g., mean) to produce one
+point per row.
+
+### 1.5 Point Rendering
+
+Render the point set via OpenGL. Options for the rendering backend:
+
+**Option A: Use existing `SceneRenderer`** — Build `MappedElement` objects (one per point)
+and render via `SceneBuilder::addGlyphs()` → `SceneRenderer::render()`. This reuses the
+glyph rendering infrastructure from [EventPlotWidget](../EventPlotWidget/index.qmd).
+
+**Option B: Dedicated point renderer** — A new `PointBatchRenderer` in `PlottingOpenGL/`
+that takes flat arrays of (x, y) positions and renders via instanced draw calls. This
+would be more efficient for large point counts and could be shared with
+[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) for point cloud rendering.
+
+Initial implementation should use Option A for simplicity, with Option B as a performance
+optimization if needed.
+
+### 1.6 Auto-Fit Bounds
+
+After computing point data, scan for min/max X and Y values (with 5% padding) and call
+`ScatterPlotState::setXBounds()` and `setYBounds()` to auto-fit the view. This is the same
+pattern used by [LinePlotWidget](../LinePlotWidget/index.qmd) for auto-fitting Y bounds
+from trial data.
+
+---
+
+## Phase 2: Click-to-Navigate
+
+**Status**: Not started. Signal wiring exists (`timePositionSelected` → `EditorRegistry::setCurrentTime()`);
+hit testing implementation needed.
+
+**Goal**: Allow the user to click on a scatter point to navigate other time-synced widgets to
+that point's `TimeFrameIndex`.
+
+### 2.1 Point Hit Testing
+
+Implement hit testing in `ScatterPlotOpenGLWidget`:
+
+1. On `mouseReleaseEvent` (when not panning, i.e., distance from click start < `DRAG_THRESHOLD`):
+2. Convert click position to world coordinates via `screenToWorld()`
+3. Find the nearest point within a configurable pixel radius (e.g., 8 pixels)
+4. If a hit is found, look up the associated `TimeFrameIndex` from the cached `ScatterPointData`
+
+**Hit testing approach:** For moderate point counts (< 50K), a brute-force distance scan is
+sufficient. For larger datasets, a spatial index (e.g., from `SpatialIndex/`) could be used.
+
+### 2.2 Navigation Signal
+
+On click hit:
+
+```cpp
+TimeFrameIndex tfi = _scatter_data.time_indices[hit_index];
+TimePosition position = time_frame->getTimeAtIndex(tfi);
+emit timePositionClicked(position);
+```
+
+The parent `ScatterPlotWidget` forwards this as `timePositionSelected(TimePosition)`, which
+the registration already wires to `EditorRegistry::setCurrentTime()`.
+
+This is the same navigation pattern used by [EventPlotWidget](../EventPlotWidget/index.qmd)
+(double-click → `eventDoubleClicked` → `setCurrentTime()`). The ScatterPlot uses single-click
+since there is no separate "select" vs "navigate" distinction needed initially.
+
+### 2.3 Visual Feedback
+
+Optionally highlight the clicked point (e.g., a larger glyph or a ring) and show a tooltip
+with the point's coordinates and `TimeFrameIndex`.
+
+---
+
+## Phase 3: Polygon Selection and Group Integration
+
+**Status**: Not started. Depends on Phase 1 (point data) and the shared polygon selection infrastructure.
+
+**Goal**: Allow the user to select multiple points via polygon (lasso) selection and add their
+associated `TimeFrameIndex` entities to an entity group.
+
+### 3.1 Polygon Selection Infrastructure (Shared)
+
+Polygon selection should be implemented as a **shared component** in `CorePlotting/Selection/`
+since it will be used by both `ScatterPlotWidget` (selecting scatter points) and
+[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (selecting projected `PointData`).
+
+```cpp
+namespace CorePlotting::Selection {
+
+/// A closed polygon in world coordinates
+struct SelectionPolygon {
+    std::vector<glm::vec2> vertices;
+
+    /// Test if a world-space point is inside the polygon
+    [[nodiscard]] bool contains(glm::vec2 point) const;
+
+    /// Test if the polygon is valid (≥ 3 vertices, non-degenerate)
+    [[nodiscard]] bool isValid() const;
+};
+
+/// Result of a polygon selection query
+struct PolygonSelectionResult {
+    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
+};
+
+/// Find all points inside the polygon
+PolygonSelectionResult selectPointsInPolygon(
+    SelectionPolygon const & polygon,
+    std::span<float const> x_values,
+    std::span<float const> y_values);
+
+}  // namespace CorePlotting::Selection
+```
+
+The `contains()` method uses the ray-casting (point-in-polygon) algorithm. This component
+has no Qt or OpenGL dependency and is fully unit-testable.
+
+**Shared with:**
+
+| Widget | Selection Target | Input Coordinates |
+|--------|-----------------|-------------------|
+| **ScatterPlotWidget** | (x, y) scatter point pairs → `TimeFrameIndex` | World-space data coordinates |
+| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Projected `PointData` positions → EntityID | World-space projection coordinates |
+
+### 3.2 Polygon Drawing Interaction
+
+In `ScatterPlotOpenGLWidget`, add a polygon drawing mode:
+
+| Input | Action |
+|-------|--------|
+| Ctrl + Click | Begin polygon — first vertex at click position |
+| Ctrl + Click (subsequent) | Add vertex to polygon |
+| Ctrl + Double-click | Close polygon and execute selection |
+| Escape | Cancel polygon drawing |
+| Shift + Ctrl + Click | Remove mode (deselect points in polygon) |
+
+While drawing, render the polygon outline as a preview (similar to the selection stroke
+preview in [LinePlotWidget](../LinePlotWidget/index.qmd)).
+
+**Alternative: Freeform lasso** — Instead of click-per-vertex, allow Ctrl+Click+Drag to
+draw a freeform lasso shape. The drag path forms the polygon boundary. This is more
+intuitive for irregular selections but requires simplification of the path to a manageable
+vertex count.
+
+### 3.3 Selection State
+
+Track the current selection in state:
+
+```cpp
+struct ScatterPlotStateData {
+    // ... existing fields ...
+    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
+};
+```
+
+Selected points should be rendered with a distinct visual style (e.g., highlighted color,
+larger glyph, or a ring) to distinguish them from unselected points.
+
+### 3.4 Selection → Group Integration
+
+When points are selected, the properties panel should show group management controls:
+
+1. **"Add to Group" button** — enabled when a non-empty selection exists
+2. **Group combo box** — lists existing entity groups from `EntityRegistry`
+3. **"New Group" button** — creates a new group and adds the selected entities
+
+The workflow:
+
+```
+User draws polygon over scatter points
+        ↓
+selectPointsInPolygon() → selected_indices
+        ↓
+Map selected_indices → TimeFrameIndex values via ScatterPointData::time_indices
+        ↓
+Look up EntityIDs for those TimeFrameIndex values
+        ↓
+User selects/creates a group → EntityRegistry::addToGroup(entity_ids)
+```
+
+### 3.5 Shared Group Management Panel
+
+This group management pattern is shared across multiple widgets. As proposed in the
+[LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) Phase 1.3, a shared
+`GroupManagementPanel` widget should be factored into `Plots/Common/` (or a higher-level
+shared widget location):
+
+| Widget | What Gets Added to Group | Source of Selection |
+|--------|-------------------------|-------------------|
+| **ScatterPlotWidget** | `TimeFrameIndex` EntityIDs | Polygon selection |
+| **[LinePlotWidget](../LinePlotWidget/index.qmd)** | Alignment event EntityIDs (trials) | Line selection stroke |
+| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Line/Point EntityIDs | Line selection stroke / polygon selection |
+| **DataViewerWidget** | Data entity EntityIDs | (future) row/range selection |
+
+Initial implementation can be done inline in `ScatterPlotPropertiesWidget` and then
+refactored when the second widget needs the same functionality.
+
+---
+
+## Phase 4: Glyph Customization
+
+**Status**: Not started. Depends on Phase 1 (point rendering).
+
+**Goal**: Allow the user to configure the visual appearance of scatter points (glyph shape,
+size, color), following the patterns established by [EventPlotWidget](../EventPlotWidget/index.qmd)
+and planned for [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
+
+### 4.1 Glyph Options in State
+
+```cpp
+enum class ScatterGlyphType {
+    Circle,        ///< Filled circle (default)
+    Square,        ///< Filled square
+    Diamond,       ///< Rotated square
+    Cross,         ///< + shape
+    Triangle       ///< Upward triangle
+};
+
+struct ScatterGlyphOptions {
+    ScatterGlyphType glyph_type = ScatterGlyphType::Circle;
+    double glyph_size = 4.0;         ///< Size in pixels
+    std::string hex_color = "#3380FF"; ///< Fill color
+    double alpha = 0.7;              ///< Opacity (useful for overlapping points)
+    bool show_border = true;
+    std::string border_color = "#000000";
+    double border_width = 1.0;
+};
+
+struct ScatterPlotStateData {
+    // ... existing fields ...
+    ScatterGlyphOptions glyph_options;
+};
+```
+
+### 4.2 Shared Glyph Rendering Infrastructure
+
+The glyph types and rendering logic overlap with existing glyph infrastructure:
+
+| Widget | Glyph Types | Rendering Backend |
+|--------|-------------|-------------------|
+| **[EventPlotWidget](../EventPlotWidget/index.qmd)** | Tick, Circle, Square | `SceneRenderer` via `SceneBuilder::addGlyphs()` |
+| **ScatterPlotWidget** | Circle, Square, Diamond, Cross, Triangle | `SceneRenderer` or dedicated renderer |
+| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Point markers (planned) | `SceneRenderer` or dedicated renderer |
+
+If a dedicated `PointBatchRenderer` is implemented (see Phase 1.5 Option B), the glyph
+type should be a shader parameter so all shapes can be rendered in a single instanced
+draw call.
+
+### 4.3 Properties Panel Controls
+
+Add to `ScatterPlotPropertiesWidget` in a "Glyph Options" collapsible section:
+
+- **Glyph type combo box** — Circle, Square, Diamond, Cross, Triangle
+- **Size spinbox** — point size in pixels
+- **Color button** — opens `QColorDialog`
+- **Alpha slider** — opacity (0.0–1.0)
+- **Border checkbox** — show/hide border
+- **Border color button** + **border width spinbox** (visible when border enabled)
+
+### 4.4 Selected Point Style
+
+Selected points (from Phase 3) should have a distinct visual treatment:
+
+```cpp
+struct ScatterGlyphOptions {
+    // ... existing fields ...
+
+    // Selected point overrides
+    std::string selected_hex_color = "#FF3333";  ///< Selected point color
+    double selected_glyph_size = 6.0;            ///< Larger for visibility
+    double selected_alpha = 1.0;                 ///< Full opacity
+};
+```
+
+---
+
+## Phase 5: Temporal Offset for Outlier Detection
+
+**Status**: Not started. Depends on Phase 1 (data source configuration).
+
+**Goal**: Allow plotting a signal against its own time-shifted version to identify points
+where values change too rapidly.
+
+### 5.1 Use Case
+
+Plotting `MaskArea(t)` vs `MaskArea(t-1)` produces a scatter where:
+
+- Points near the diagonal ($y = x$) represent slow changes
+- Points far from the diagonal represent rapid transitions (potential outliers)
+
+This is a common quality-control visualization for time series data.
+
+### 5.2 Implementation
+
+The `ScatterAxisSource::time_offset` field (defined in Phase 1.1) handles this directly.
+When the user sets `time_offset = -1` for the Y-axis source:
+
+1. For each `TimeFrameIndex` $t$, the X value is $x(t)$ and the Y value is $x(t + \text{offset}) = x(t-1)$
+2. Points where the offset pushes $t$ outside valid range are excluded
+3. The `TimeFrameIndex` stored per point is the "primary" index (X-axis, no offset)
+
+### 5.3 Reference Line Rendering
+
+Optionally render a $y = x$ diagonal reference line when both axes use the same source key
+and one has a temporal offset. This makes outlier identification immediate: points far from
+the line are rapid-change outliers.
+
+The reference line should be rendered as a semi-transparent dashed line in world coordinates,
+similar to the $t = 0$ center line in [EventPlotWidget](../EventPlotWidget/index.qmd).
+
+### 5.4 Properties Panel Controls
+
+- **Offset spinbox** — per-axis integer spinbox (already in Phase 1.2)
+- **Show reference line checkbox** — auto-enabled when same key + offset detected
+- **Reference line style** — color, thickness, dash pattern
+
+---
+
+## Phase 6: DataManager Observer and Stale Key Handling
+
+**Status**: Not started. The properties widget currently has no DataManager observer.
+
+**Goal**: Register a DataManager observer to keep combo boxes current and handle deleted data keys.
+
+### 6.1 Observer Registration
+
+Following the pattern from [Plot Widget Guide](../plot_widget_guide.md):
+
+```cpp
+ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(
+    std::shared_ptr<ScatterPlotState> state,
+    std::shared_ptr<DataManager> data_manager,
+    QWidget * parent)
+    : QWidget(parent), _data_manager(std::move(data_manager))
+{
+    if (_data_manager) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _populateComboBoxes();
+        });
+    }
+}
+
+ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget()
+{
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
+}
+```
+
+### 6.2 Combo Box Population
+
+When the observer fires:
+
+1. Re-query `DataManager::getKeys<AnalogTimeSeries>()` and `DataManager::getKeys<TensorData>()`
+2. Rebuild X and Y key combo boxes, preserving current selection if still valid
+3. If a `TensorData` key is selected, re-query its column names and rebuild the column combo box
+
+### 6.3 Stale Key Handling
+
+If the currently configured X or Y source key is deleted from the DataManager:
+
+- Clear the axis source in state (`x_source = std::nullopt`)
+- Clear the rendered scatter points
+- Update the properties panel to indicate no source selected
+
+### 6.4 Tests
+
+Add `ScatterPlotPropertiesWidget.test.cpp` following the common test pattern from
+`tests/WhiskerToolbox/Plots/Common/PlotWidgetCommonTests.hpp`:
+
+- Combo box population from DataManager
+- Observer refresh on data addition/removal
+- Destruction cleanup (no dangling observer)
+- Stale key handling
+
+---
+
+## Phase 7: Feature Coloring via TensorData
+
+**Status**: Design phase. Depends on Phase 1 (rendering) and the shared colormap infrastructure.
+
+**Goal**: Color scatter points by an external feature value from a `TensorData` column, enabling
+visual grouping by continuous or categorical features.
+
+### 7.1 Color Configuration
+
+```cpp
+struct ScatterColorConfig {
+    std::string color_mode = "fixed";    ///< "fixed" or "by_feature"
+
+    // For feature-based coloring
+    std::string tensor_key;              ///< DataManager key for the color TensorData
+    std::string column_name;             ///< Column within the TensorData
+    std::string colormap = "viridis";    ///< Colormap name
+    double color_min = 0.0;
+    double color_max = 1.0;
+    bool use_auto_range = true;
+};
+```
+
+### 7.2 Shared Colormap Infrastructure
+
+This depends on the colormap infrastructure proposed in the [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd)
+and referenced across multiple widget roadmaps:
+
+```cpp
+namespace CorePlotting::Colormaps {
+    using ColormapFunction = std::function<glm::vec4(float t)>;
+    ColormapFunction getColormap(ColormapPreset preset);
+    glm::vec4 mapValue(ColormapFunction const & cmap, float value, float vmin, float vmax);
+}
+```
+
+The colormap system in `CorePlotting/Colormaps/` is shared across:
+
+| Widget | Usage |
+|--------|-------|
+| **ScatterPlotWidget** | Per-point color from feature value |
+| **[LinePlotWidget](../LinePlotWidget/roadmap.qmd)** | Per-trial line color from feature value |
+| **[EventPlotWidget](../EventPlotWidget/roadmap.qmd)** | Per-trial event color |
+| **[HeatmapWidget](../HeatmapWidget/roadmap.qmd)** | Heatmap cell color |
+
+### 7.3 Properties Panel
+
+Add to `ScatterPlotPropertiesWidget` in a "Point Coloring" collapsible section:
+
+1. **Color mode combo** — Fixed / By Feature
+2. **TensorData combo box** — lists `TensorData` keys from DataManager
+3. **Column combo box** — shows columns of the selected `TensorData`
+4. **Colormap combo** — colormap preset selection
+5. **Range controls** — auto/manual min/max spinboxes
+
+---
+
+## Dependency Graph
+
+```
+Phase 1: Data Source Selection + Rendering (FOUNDATION)
+    ↓
+    ├── Phase 2: Click-to-Navigate
+    ├── Phase 3: Polygon Selection + Groups
+    │       └── depends on: CorePlotting::Selection::SelectionPolygon
+    │           (shared with TemporalProjectionViewWidget)
+    ├── Phase 4: Glyph Customization
+    ├── Phase 5: Temporal Offset
+    └── Phase 6: DataManager Observer
+            (can also be implemented in parallel with Phase 1)
+
+Phase 7: Feature Coloring
+    ├── depends on: Phase 1 (rendering)
+    └── depends on: CorePlotting::Colormaps (shared with HeatmapWidget, EventPlotWidget, LinePlotWidget)
+```
+
+Phase 1 is the foundation — all other phases depend on it. Phases 2–6 are largely independent
+of each other and can be implemented in any order after Phase 1. Phase 6 (DataManager observer)
+can also be started in parallel with Phase 1 since it only involves the properties panel.
+
+## Shared Components Summary
+
+Components that should be factored into shared locations rather than implemented inline:
+
+| Component | Proposed Location | Used By |
+|-----------|-------------------|---------|
+| `SelectionPolygon` | `CorePlotting/Selection/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `GroupManagementPanel` | `Plots/Common/` | ScatterPlotWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `Colormaps` | `CorePlotting/Colormaps/` | ScatterPlotWidget, [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
+| `PointBatchRenderer` (optional) | `PlottingOpenGL/PointBatch/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+
+## Open Questions
+
+1. **Aggregation strategy for `Interval` rows**: When pairing `AnalogTimeSeries` with `TensorData` (`Interval` rows), should the default aggregation be mean, median, or configurable? Mean is simplest; median is more robust to outliers.
+
+2. **Point count scalability**: What is the expected maximum point count? For `AnalogTimeSeries` at high sampling rates, the point count could reach hundreds of thousands. If > 50K points, a dedicated `PointBatchRenderer` (Phase 1.5 Option B) becomes important.
+
+3. **Polygon selection vs. brush selection**: Should the primary multi-point selection mode be a polygon (click vertices) or a freeform lasso (drag to draw boundary)? The lasso is more intuitive but requires path simplification. Both could be supported.
+
+4. **Reference line generalization**: Should the $y = x$ reference line (Phase 5.3) be generalized to arbitrary linear reference lines ($y = ax + b$)? Useful for visualizing deviations from expected relationships.
+
+5. **Multiple glyphs per data source**: Should the widget support overlaying multiple scatter series (e.g., two different X/Y pairs in the same plot with distinct colors/glyphs)? This would require a series management pattern similar to [LinePlotWidget](../LinePlotWidget/index.qmd).
+
+# See Also
+
+- [ScatterPlotWidget Documentation](index.qmd) — Full architecture and feature documentation
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Group integration pattern (Phase 1), feature coloring (Phase 3)
+- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — TensorData feature coloring/sorting (Phase 5)
+- [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) — Colormap infrastructure (Phase 2)
+- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) — Polygon selection with PointData, shared rendering
