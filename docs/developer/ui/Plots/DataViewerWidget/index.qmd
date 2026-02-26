@@ -7,6 +7,18 @@ format: html
 
 The **Data Viewer Widget** visualizes **time series data** — analog time series, digital event series, and digital interval series — on a shared OpenGL canvas. Users select data series by key from a feature tree, configure display options per series, and view synchronized plots that scroll with the application's global time bar.
 
+For planned features and refactoring work, see the [roadmap](roadmap.qmd).
+
+::: {.callout-note}
+## Location Note
+
+The Data Viewer Widget predates the unified `Plots/` directory structure and currently lives at
+`src/WhiskerToolbox/DataViewer_Widget/` rather than `src/WhiskerToolbox/Plots/DataViewerWidget/`.
+A future refactoring may relocate it for consistency with other plot widgets. Several of its
+components could be refactored to use shared infrastructure from `Plots/Common/` — see the
+[roadmap](roadmap.qmd) for details.
+:::
+
 # Architecture
 
 The widget is structured into four subdirectories, each with a clear responsibility:
@@ -174,7 +186,47 @@ float final_offset = data_transform.offset * effective_gain + layout.y_transform
 
 All vertices use normalized coordinates (−1 to +1 in local space); the composed `LayoutTransform` handles all positioning and scaling. This is consistent across analog, event, and interval series.
 
+# Axis Behavior
+
+## X-Axis: Global Time-Yoked
+
+Unlike other plot widgets that allow independent X panning (see [Plot Widget Guide](../plot_widget_guide.md) for `RelativeTimeAxis` and `HorizontalAxis`), the Data Viewer's X-axis is **yoked to the application's global time position**. The visible time window is always centered on the current playback position. The user can **zoom** the X-axis (changing how much time is visible), but there is **no independent X panning** — the view follows the global time bar.
+
+This is distinct from the `RelativeTimeAxis` used by event-aligned widgets ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)) where X represents time relative to alignment events, and from the `HorizontalAxis` used by spatial widgets ([ScatterPlotWidget](../ScatterPlotWidget/index.qmd), [ACFWidget](../ACFWidget/index.qmd)).
+
+::: {.callout-tip}
+## Refactoring Opportunity
+A `CenteredTimeAxis` variant of the [Common Axis System](../plot_widget_guide.md#axis-types) could formalize this behavior: zoom-only with no pan, always centered on the global time position. This would bring the DataViewer in line with the shared axis architecture. See [roadmap Phase 1](roadmap.qmd#phase-1-common-axis-integration).
+:::
+
+## Y-Axis: Stacked Lane Layout
+
+Multiple series are arranged vertically in **stacked lanes**, with each series occupying its own vertical band. The `CorePlotting::LayoutEngine` with `StackedLayoutStrategy` computes the lane positions. This is conceptually similar to the trial-row layout in [EventPlotWidget](../EventPlotWidget/index.qmd), but with several key differences:
+
+| Aspect | DataViewer | EventPlotWidget |
+|--------|-----------|-----------------|
+| Lane contents | Each lane holds a different data series (analog, event, or interval) | Each lane holds one trial of the same event series |
+| Data types | Mixed: AnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries | Homogeneous: DigitalEventSeries only |
+| Lane height | All lanes currently shrink equally as more are added | Fixed per-trial height with Y pan/zoom to navigate |
+| Y pan/zoom | Y pan is available; lanes shrink as more are added | Full Y pan and zoom — can zoom into a subset of trials |
+
+Currently, when many series are added (e.g., 32 electrophysiology channels), each lane shrinks proportionally. This becomes impractical for analog signals where detail matters. The [roadmap](roadmap.qmd) proposes adopting EventPlotWidget-style Y pan/zoom so users can zoom into a subset of channels even when many are loaded.
+
 # Visualization Capabilities
+
+## Series Types
+
+Three data types can be visualized simultaneously:
+
+| Type | Visual Representation | Current Style Options | Planned Enhancements |
+|------|----------------------|-----------------------|---------------------|
+| **AnalogTimeSeries** | Connected line strips (polylines) | Color, alpha, line thickness, visibility, user scale, vertical offset, gap handling | — |
+| **DigitalEventSeries** | Point glyphs (ticks) | Color, alpha, line thickness, visibility, vertical spacing, event height | Adjustable glyph type (circle, square, diamond, cross, triangle), glyph size ([roadmap Phase 3](roadmap.qmd#phase-3-enhanced-event-glyph-options)) |
+| **DigitalIntervalSeries** | Filled rectangles | Color, alpha, line thickness (border), visibility, interval height | Adjustable border thickness, alpha shader, hatching patterns ([roadmap Phase 4](roadmap.qmd#phase-4-enhanced-interval-rendering)) |
+
+Per-series display options are managed through the `SeriesOptionsRegistry` and the `CorePlotting::SeriesStyle` base struct. See [roadmap Phases 3–4](roadmap.qmd#phase-3-enhanced-event-glyph-options) for planned enhancements to align with the shared `PointGlyphOptions` infrastructure planned for [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), and [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd).
+
+## Multi-Series Display
 
 Multiple series can be drawn on the same canvas with individual or overlapping positioning. Both X and Y axes are **zoomable**, and per-series amplitude scaling allows data of different magnitudes to be visualized simultaneously. Drawing is **synced to the global time scroll bar**, enabling simultaneous visualization across widgets (e.g., video + electrophysiology).
 
@@ -240,3 +292,26 @@ The `EventViewer_Widget` provides display mode controls:
 2.  **Full Canvas Mode**: Events stretch top-to-bottom
 
 Auto-spacing uses 80% of canvas height with 60% of spacing allocated to event height to prevent overlap.
+
+# Performance
+
+## Analog Vertex Cache
+
+The `AnalogVertexCache` provides a ring buffer-based caching strategy for scrolling analog time series. Instead of regenerating all vertices each frame, it maintains a cache and only generates new edge data:
+
+- **Without cache**: ~1.3ms to regenerate all vertices (100K visible points)
+- **With cache**: ~10–50µs for incremental updates (26–130x faster)
+
+This is critical for smooth scrolling with dense electrophysiology data.
+
+## SVG Export
+
+The `SVGExporter` generates publication-quality SVG output from the current view by building the same `RenderableScene` used for OpenGL rendering. It uses a fixed 1920×1080 canvas with `viewBox` for clean scaling, and preserves all visual styles (colors, transparency, line thickness).
+
+# See Also
+
+- [Data Viewer Widget Roadmap](roadmap.qmd) — Development roadmap and planned features
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Similar lane-based layout for trial rows; Y pan/zoom model to adopt
+- [LinePlotWidget](../LinePlotWidget/index.qmd) — Shared `CorePlotting` rendering pipeline for analog data
+- [OnionSkinViewWidget](../OnionSkinViewWidget/index.qmd) — Shares planned `PointGlyphOptions` and per-key visual options
