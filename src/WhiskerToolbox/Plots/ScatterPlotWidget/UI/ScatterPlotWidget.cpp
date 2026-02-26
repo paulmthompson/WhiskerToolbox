@@ -35,6 +35,7 @@ ScatterPlotWidget::ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
     horizontal_layout->setContentsMargins(0, 0, 0, 0);
 
     _opengl_widget = new ScatterPlotOpenGLWidget(this);
+    _opengl_widget->setDataManager(_data_manager);
     horizontal_layout->addWidget(_opengl_widget, 1);
 
     auto * vertical_layout = new QVBoxLayout();

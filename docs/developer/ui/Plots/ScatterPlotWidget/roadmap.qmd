@@ -16,19 +16,28 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State management**: `ScatterPlotState` with `HorizontalAxisState`, `VerticalAxisState` composition; `ScatterPlotStateData` serializable struct
 - **Axis system**: `HorizontalAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync, including the "silent update" pattern
 - **Interaction**: Separated X/Y zoom, pan via shared `PlotInteractionHelpers`
-- **Properties panel**: Axis range controls in collapsible `Section` widgets
+- **Properties panel**: Axis range controls in collapsible `Section` widgets; data source selection UI (key, column, offset per axis); reference line toggle; compatibility status label
 - **OpenGL lifecycle**: `ScatterPlotOpenGLWidget` initialization, projection/view matrix management, pan/zoom mouse handlers
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
+- **Data source descriptor**: `ScatterAxisSource` struct (Phase 1.1) defining data key, tensor column, and temporal offset
+- **Row type compatibility validation** (Phase 1.3): `resolveSourceRowType()` and `checkSourceCompatibility()` functions in `Core/SourceCompatibility.hpp/.cpp` with full test coverage (21 test cases, 52 assertions)
+- **Data source UI** (Phase 1.2): Key/column/offset combo boxes per axis with DataManager observer, compatibility label displaying `checkSourceCompatibility()` results
+- **Point pair computation** (Phase 1.4): `buildScatterPoints()` factory function in `Core/BuildScatterPoints.hpp/.cpp` supporting all compatible source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval) with temporal offset and TimeFrameIndex join. Tested in `BuildScatterPoints.test.cpp`.
+- **Point rendering** (Phase 1.5): SceneBuilder→SceneRenderer pipeline using `addGlyphs()` for points (blue circles, size 5, alpha 0.8) with single instanced draw call
+- **Auto-fit bounds** (Phase 1.6): Automatic X/Y bounds detection from data with 5% padding on first data load (when bounds are at defaults)
+- **Reference line rendering** (Phase 1.7): $y = x$ diagonal via `addPolyLine()` with show/hide toggle in properties panel; endpoints update on pan/zoom
+- **DataManager observer** (Phase 6 partial): Observer registration/removal in properties widget for combo box synchronization
 
-**Not yet implemented**: Data source selection, point rendering, click-to-navigate, glyph customization,
-temporal offset, polygon selection, group integration, and DataManager observer pattern described below.
+**Not yet implemented**: Click-to-navigate (Phase 2), glyph customization (Phase 4),
+polygon selection and group integration (Phase 3), feature coloring (Phase 7),
+stale key handling (Phase 6.3).
 
 ---
 
 ## Phase 1: Data Source Selection and Point Rendering
 
-**Status**: Not started. OpenGL scaffold and axis system are complete; data pipeline is the next essential step.
+**Status**: Complete. All sub-phases (1.1–1.7) are implemented and tested.
 
 **Goal**: Allow the user to select X and Y data sources from `AnalogTimeSeries` and `TensorData` columns,
 compute the paired (x, y) point set, and render scatter points in the OpenGL canvas.
@@ -84,7 +93,23 @@ and remove it in the destructor.
 
 ### 1.3 Row Type Compatibility Validation
 
-When the user selects X and Y sources, the widget must verify they are compatible:
+**Status**: Complete.
+
+Implemented as pure-logic validation functions in `Core/SourceCompatibility.hpp/.cpp`
+with `ScatterAxisSource` defined in `Core/ScatterAxisSource.hpp`.
+
+**Key types and functions:**
+
+- `ScatterAxisSource` — data source descriptor (key, tensor column, temporal offset)
+- `ScatterSourceRowType` — enum resolving source to one of: `AnalogTimeSeries`,
+  `TensorTimeFrameIndex`, `TensorInterval`, `TensorOrdinal`, `Unknown`
+- `SourceCompatibilityResult` — result struct with `compatible` flag, resolved row types,
+  and human-readable `warning_message`
+- `resolveSourceRowType(DataManager &, ScatterAxisSource const &)` — resolves a single source
+- `checkSourceCompatibility(DataManager &, ScatterAxisSource const &, ScatterAxisSource const &)` —
+  validates the full compatibility matrix
+
+**Compatibility matrix** (unchanged from original design):
 
 | X Source | Y Source | Compatibility |
 |----------|----------|---------------|
@@ -94,8 +119,11 @@ When the user selects X and Y sources, the widget must verify they are compatibl
 | `TensorData` (`Interval`) | `TensorData` (`Interval`) | Compatible if same intervals |
 | `TensorData` (`Ordinal`) | `TensorData` (`Ordinal`) | Compatible if same row count |
 
-When sources are incompatible, display a warning label in the properties panel and disable
-rendering. The `RowDescriptor::type()` accessor provides the row type for validation.
+When sources are incompatible, `checkSourceCompatibility` returns a descriptive
+`warning_message` suitable for display in the properties panel.
+
+**Tests**: `tests/WhiskerToolbox/Plots/ScatterPlotWidget/SourceCompatibility.test.cpp`
+(21 test cases covering all compatible pairings, all incompatible pairings, and missing/unknown sources).
 
 ### 1.4 Point Pair Computation
 
@@ -441,7 +469,7 @@ shows which points represent rapid changes (far from the diagonal) vs. slow chan
 
 ## Phase 6: DataManager Observer and Stale Key Handling
 
-**Status**: Not started. The properties widget currently has no DataManager observer.
+**Status**: Partially complete. Observer registration (6.1) and combo box population (6.2) are implemented as part of Phase 1.2. Stale key handling (6.3) and dedicated tests (6.4) remain.
 
 **Goal**: Register a DataManager observer to keep combo boxes current and handle deleted data keys.
 
@@ -559,19 +587,18 @@ Add to `ScatterPlotPropertiesWidget` in a "Point Coloring" collapsible section:
 ## Dependency Graph
 
 ```
-Phase 1: Data Source Selection + Rendering + Reference Line (FOUNDATION)
+Phase 1: Data Source Selection + Rendering + Reference Line (COMPLETE)
     ↓
     ├── Phase 2: Click-to-Navigate
     ├── Phase 3: Polygon Selection + Groups
     │       └── uses: PolygonInteractionController (already implemented)
     │       └── needs: CorePlotting::Selection::selectPointsInPolygon (new)
     ├── Phase 4: Glyph Customization
-    ├── Phase 5: Temporal Offset
-    └── Phase 6: DataManager Observer
-            (can also be implemented in parallel with Phase 1)
+    ├── Phase 5: Temporal Offset (offset mechanism implemented in Phase 1; UI/UX refinement needed)
+    └── Phase 6: DataManager Observer (observer + combo population done; stale key handling remains)
 
 Phase 7: Feature Coloring
-    ├── depends on: Phase 1 (rendering)
+    ├── depends on: Phase 1 (rendering) — COMPLETE
     └── depends on: CorePlotting::Colormaps (shared with HeatmapWidget, EventPlotWidget, LinePlotWidget)
 ```
 

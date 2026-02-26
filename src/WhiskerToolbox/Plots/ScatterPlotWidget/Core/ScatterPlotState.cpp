@@ -131,6 +131,32 @@ void ScatterPlotState::setYBounds(double y_min, double y_max)
     }
 }
 
+void ScatterPlotState::setXSource(std::optional<ScatterAxisSource> source)
+{
+    _data.x_source = std::move(source);
+    markDirty();
+    emit xSourceChanged();
+    emit stateChanged();
+}
+
+void ScatterPlotState::setYSource(std::optional<ScatterAxisSource> source)
+{
+    _data.y_source = std::move(source);
+    markDirty();
+    emit ySourceChanged();
+    emit stateChanged();
+}
+
+void ScatterPlotState::setShowReferenceLine(bool show)
+{
+    if (_data.show_reference_line != show) {
+        _data.show_reference_line = show;
+        markDirty();
+        emit referenceLineChanged();
+        emit stateChanged();
+    }
+}
+
 std::string ScatterPlotState::toJson() const
 {
     ScatterPlotStateData data_to_serialize = _data;

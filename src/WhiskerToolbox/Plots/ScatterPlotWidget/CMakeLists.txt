@@ -2,8 +2,14 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui OpenGL OpenGLWidgets)
 
 set(SCATTER_PLOT_WIDGET_SOURCES
 
+        Core/BuildScatterPoints.cpp
+        Core/BuildScatterPoints.hpp
+        Core/ScatterAxisSource.hpp
         Core/ScatterPlotState.cpp
         Core/ScatterPlotState.hpp
+        Core/ScatterPointData.hpp
+        Core/SourceCompatibility.cpp
+        Core/SourceCompatibility.hpp
 
         Rendering/ScatterPlotOpenGLWidget.cpp
         Rendering/ScatterPlotOpenGLWidget.hpp
@@ -42,6 +48,7 @@ target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)
 target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
+target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
 
 target_include_directories(ScatterPlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

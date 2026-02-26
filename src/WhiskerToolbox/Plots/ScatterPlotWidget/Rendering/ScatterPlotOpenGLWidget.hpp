@@ -5,14 +5,19 @@
  * @file ScatterPlotOpenGLWidget.hpp
  * @brief OpenGL-based scatter plot visualization widget
  *
- * Single source of truth: ScatterPlotState (view state + axis states).
+ * Renders scatter points using SceneBuilder/SceneRenderer infrastructure.
+ * Reads data from DataManager via ScatterPlotState data source configuration.
  * Supports pan and zoom; updates state on interaction and reads from state for projection.
  *
  * @see ScatterPlotState
+ * @see SceneRenderer for the rendering pipeline
  */
 
 #include "Core/ScatterPlotState.hpp"
+#include "Core/ScatterPointData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
+#include "PlottingOpenGL/SceneRenderer.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -20,6 +25,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+class DataManager;
 class QMouseEvent;
 class QWheelEvent;
 
@@ -27,6 +33,7 @@ class QWheelEvent;
  * @brief OpenGL widget for rendering scatter plots
  *
  * Displays 2D scatter plots with pan/zoom; state holds view transform and axis ranges.
+ * Uses SceneBuilder + SceneRenderer for glyph rendering with a y=x reference line.
  */
 class ScatterPlotOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -41,6 +48,7 @@ public:
     ScatterPlotOpenGLWidget & operator=(ScatterPlotOpenGLWidget &&) = delete;
 
     void setState(std::shared_ptr<ScatterPlotState> state);
+    void setDataManager(std::shared_ptr<DataManager> data_manager);
 
 signals:
     void viewBoundsChanged();
@@ -61,6 +69,7 @@ private slots:
 
 private:
     std::shared_ptr<ScatterPlotState> _state;
+    std::shared_ptr<DataManager> _data_manager;
     int _widget_width{1};
     int _widget_height{1};
 
@@ -73,10 +82,18 @@ private:
     QPoint _last_mouse_pos;
     static constexpr int DRAG_THRESHOLD = 4;
 
+    // Scene rendering
+    PlottingOpenGL::SceneRenderer _scene_renderer;
+    CorePlotting::RenderableScene _scene;
+    bool _scene_dirty{true};
+    bool _opengl_initialized{false};
+    ScatterPointData _scatter_data;
+
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
+    void rebuildScene();
 };
 
 #endif  // SCATTER_PLOT_OPENGL_WIDGET_HPP

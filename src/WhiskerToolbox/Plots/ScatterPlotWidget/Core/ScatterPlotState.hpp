@@ -14,6 +14,7 @@
  * @see PSTHState, LinePlotState for the same pattern
  */
 
+#include "ScatterAxisSource.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
@@ -25,6 +26,7 @@
 #include <rfl/json.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 /**
@@ -36,6 +38,10 @@ struct ScatterPlotStateData {
     CorePlotting::ViewStateData view_state;
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
+
+    std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
+    std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
+    bool show_reference_line = false;           ///< Show y=x reference line
 };
 
 /**
@@ -76,12 +82,25 @@ public:
     /** @brief Set Y data bounds; updates view state and vertical axis. */
     void setYBounds(double y_min, double y_max);
 
+    // === Data source configuration ===
+    [[nodiscard]] std::optional<ScatterAxisSource> const & xSource() const { return _data.x_source; }
+    [[nodiscard]] std::optional<ScatterAxisSource> const & ySource() const { return _data.y_source; }
+    void setXSource(std::optional<ScatterAxisSource> source);
+    void setYSource(std::optional<ScatterAxisSource> source);
+
+    // === Reference line ===
+    [[nodiscard]] bool showReferenceLine() const { return _data.show_reference_line; }
+    void setShowReferenceLine(bool show);
+
     // === Serialization ===
     [[nodiscard]] std::string toJson() const override;
     bool fromJson(std::string const & json) override;
 
 signals:
     void viewStateChanged();
+    void xSourceChanged();
+    void ySourceChanged();
+    void referenceLineChanged();
 
 private:
     ScatterPlotStateData _data;

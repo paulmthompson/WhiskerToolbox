@@ -19,8 +19,14 @@ Plots/ScatterPlotWidget/
 ├── ScatterPlotWidgetRegistration.hpp   # EditorRegistry registration module
 ├── ScatterPlotWidgetRegistration.cpp
 ├── Core/
+│   ├── ScatterAxisSource.hpp           # Data source descriptor struct (key, column, offset)
 │   ├── ScatterPlotState.hpp            # QObject state class (EditorState subclass)
-│   └── ScatterPlotState.cpp
+│   ├── ScatterPlotState.cpp
+│   ├── ScatterPointData.hpp            # Result struct for computed scatter points
+│   ├── BuildScatterPoints.hpp          # Factory function for point pair computation
+│   ├── BuildScatterPoints.cpp
+│   ├── SourceCompatibility.hpp         # Row-type compatibility validation
+│   └── SourceCompatibility.cpp
 ├── Rendering/
 │   ├── ScatterPlotOpenGLWidget.hpp     # OpenGL rendering + mouse interaction
 │   └── ScatterPlotOpenGLWidget.cpp
@@ -38,9 +44,13 @@ Plots/ScatterPlotWidget/
 | Component | Responsibility |
 |-----------|---------------|
 | `ScatterPlotWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, horizontal axis, vertical axis |
-| `ScatterPlotPropertiesWidget` (UI) | Properties panel — data source selection, glyph options, axis range controls |
-| `ScatterPlotOpenGLWidget` (Rendering) | OpenGL canvas — point rendering, mouse interaction (pan, zoom, click, selection) |
-| `ScatterPlotState` (Core) | Serializable state — view state, axis ranges, data source configuration |
+| `ScatterPlotPropertiesWidget` (UI) | Properties panel — data source selection (key, column, offset per axis), reference line toggle, compatibility label, axis range controls |
+| `ScatterPlotOpenGLWidget` (Rendering) | OpenGL canvas — point rendering via SceneRenderer, reference line, auto-fit bounds, mouse interaction (pan, zoom) |
+| `ScatterPlotState` (Core) | Serializable state — view state, axis ranges, data source configuration, reference line toggle |
+| `ScatterAxisSource` (Core) | Describes a single axis data source (key, tensor column, temporal offset) |
+| `ScatterPointData` (Core) | Result struct for computed scatter points (parallel x, y, TimeFrameIndex vectors) |
+| `BuildScatterPoints` (Core) | Factory function for computing point pairs from two axis sources |
+| `SourceCompatibility` (Core) | Row-type compatibility validation between two axis sources |
 | `ScatterPlotWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
 
 ## EditorState Pattern
@@ -58,7 +68,7 @@ The Scatter Plot Widget follows the project's **EditorState** architecture:
 
 ## ScatterPlotStateData
 
-The serializable state struct currently contains:
+The serializable state struct contains:
 
 ```cpp
 struct ScatterPlotStateData {
@@ -67,21 +77,28 @@ struct ScatterPlotStateData {
     CorePlotting::ViewStateData view_state;
     HorizontalAxisStateData horizontal_axis;
     VerticalAxisStateData vertical_axis;
+
+    std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
+    std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
+    bool show_reference_line = false;           ///< Show y=x reference line
 };
 ```
 
-This is a minimal state covering only the widget skeleton. See the [roadmap](roadmap.qmd) for planned extensions including data source configuration, glyph options, and selection state.
+The `x_source` and `y_source` fields describe which data to plot on each axis. When both are set and compatible, the widget computes and renders scatter points. The `show_reference_line` field toggles the $y = x$ diagonal line.
 
 ## Signal Architecture
 
-`ScatterPlotState` currently emits:
+`ScatterPlotState` emits:
 
 | Signal | Trigger |
 |--------|---------|
 | `viewStateChanged` | Zoom, pan, or bounds changed |
+| `xSourceChanged` | X-axis data source key, column, or offset changed |
+| `ySourceChanged` | Y-axis data source key, column, or offset changed |
+| `referenceLineChanged` | Reference line show/hide toggled |
 | `stateChanged` (inherited) | Any change requiring scene rebuild |
 
-**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild.
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild. Source changes emit their specific signal plus `stateChanged()` to trigger a full scene rebuild (recomputing point pairs and re-uploading GPU buffers).
 
 ## Axis States
 
@@ -114,7 +131,12 @@ The fundamental constraint is that both the X and Y sources must share a common 
 - **`RowType::Interval`** — each row corresponds to a `TimeFrameInterval`; to pair with `AnalogTimeSeries`, the analog signal must be aggregated (e.g., mean, median) over each interval
 - **`RowType::Ordinal`** — rows have no temporal meaning; can only be paired with another ordinal tensor of the same row count
 
-The properties panel should validate compatibility and show a warning if the selected X and Y sources have incompatible row types.
+This validation is implemented by `checkSourceCompatibility()` in `Core/SourceCompatibility.hpp`.
+The function resolves each source's row type via `resolveSourceRowType()` (which queries the
+DataManager for the key's data type and, for `TensorData`, the `RowDescriptor::type()`) and
+returns a `SourceCompatibilityResult` with a `compatible` flag and a human-readable
+`warning_message` when sources are incompatible. The properties panel should display this
+warning and disable rendering when sources are incompatible.
 
 ### TensorData Column Selection
 
@@ -126,30 +148,46 @@ An optional temporal offset allows plotting a value against its own shifted vers
 
 # Rendering Pipeline
 
-## Current Status
-
-The OpenGL widget currently provides:
-
-- Pan and zoom interaction via shared `PlotInteractionHelpers`
-- Projection matrix computation via `computeOrthoProjection()`
-- Background rendering (dark gray)
-- `paintGL()` stub (TODO: scatter point rendering)
-
-## Planned Data Flow
+## Data Flow
 
 ```
 ScatterPlotState (data source config: keys, columns, offsets)
         ↓
-DataManager::getData<AnalogTimeSeries>(key) / getData<TensorData>(key)->getColumn(name)
+buildScatterPoints(DataManager, x_source, y_source)
         ↓
-Row matching (TimeFrameIndex alignment)
+ScatterPointData { x_values, y_values, time_indices }
         ↓
-(x, y) point pairs + associated TimeFrameIndex per point
+Auto-fit bounds (5% padding, applied on first data load)
         ↓
-Point glyph rendering via SceneRenderer or dedicated point renderer
+SceneBuilder::addGlyphs() → MappedElement per point
+SceneBuilder::addPolyLine() → y=x reference line (optional)
+        ↓
+SceneBuilder::build() → RenderableScene
+        ↓
+SceneRenderer::uploadScene() + render(view, projection)
 ```
 
-See the [roadmap](roadmap.qmd) for implementation details.
+## Point Rendering
+
+Points are rendered via `SceneBuilder::addGlyphs()` using the shared glyph infrastructure from `CorePlotting`. Each scatter point is a `MappedElement` with its (x, y) position and an `EntityId` for hit testing. The `GlyphRenderer` uploads all points as a single GPU buffer and renders them in one instanced draw call, providing good performance for large point counts.
+
+Default glyph style: blue circles (`#3388FF`), size 5, alpha 0.8.
+
+## Reference Line
+
+The $y = x$ reference line is rendered via `SceneBuilder::addPolyLine()` with two vertices spanning the visible viewport diagonal. Endpoints are recomputed on pan/zoom to ensure the line always extends across the full visible area. Style: gray (`#888888`), alpha 0.5.
+
+## Auto-Fit Bounds
+
+When scatter points are computed for the first time (bounds still at default 0–100), the widget scans for min/max X and Y values, adds 5% padding, and calls `setXBounds()`/`setYBounds()` on the state. This ensures the data fills the viewport without manual range adjustment.
+
+## Scene Rebuild Strategy
+
+The scene is rebuilt (marked dirty) when:
+
+- X or Y source changes (new data key, column, or offset)
+- Reference line is toggled (show/hide)
+- View bounds change while reference line is shown (endpoints depend on viewport)
 
 # Interaction
 
@@ -190,7 +228,26 @@ Both axis widgets provide collapsible range control sections (`HorizontalAxisRan
 
 # Properties Panel
 
-The `ScatterPlotPropertiesWidget` currently provides:
+The `ScatterPlotPropertiesWidget` provides the following sections:
+
+## Data Source Selection
+
+A "Data Sources" collapsible section contains controls for both X and Y axes:
+
+**Per axis (X and Y):**
+
+1. **Key combo box** — lists all `AnalogTimeSeries` keys (prefixed `[ATS]`) and `TensorData` keys (prefixed `[Tensor]`) from DataManager
+2. **Column combo box** — visible only when a `TensorData` key is selected; populated with column names from `TensorData::getColumnNames()`, falling back to numeric indices (0, 1, 2, ...) if no names are set
+3. **Offset spinbox** — integer spinbox for temporal offset in `TimeFrameIndex` steps (default: 0, range: -10000 to 10000)
+4. **Compatibility label** — shows "Sources are compatible" (green) or a descriptive warning (red) based on `checkSourceCompatibility()` result
+
+The combo boxes are kept in sync with DataManager via the observer pattern: an observer is registered in the constructor (`_data_manager->addObserver()`) and removed in the destructor (`_data_manager->removeObserver()`). When the observer fires, all key combo boxes are repopulated while preserving the current selection.
+
+## Reference Line
+
+A "Reference Line" collapsible section contains:
+
+- **Show reference line checkbox** — toggles the $y = x$ diagonal line
 
 ## Axis Range Controls
 
@@ -201,12 +258,11 @@ Created when `setPlotWidget()` is called:
 
 ## Planned Additions
 
-The properties panel is currently minimal (axis range controls only). See the [roadmap](roadmap.qmd) for planned additions including:
+See the [roadmap](roadmap.qmd) for planned additions including:
 
-- Data source selection (X and Y key combo boxes with TensorData column sub-selectors)
-- Temporal offset controls
-- Glyph appearance options (shape, size, color)
+- Glyph appearance options (shape, size, color) via shared `GlyphStyleControls`
 - Point selection and group management controls
+- Feature-based coloring controls
 
 # Relationship to Other Widgets
 
@@ -217,7 +273,7 @@ The properties panel is currently minimal (axis range controls only). See the [r
 | `HorizontalAxisWidget` | Yes | Yes | Yes |
 | `VerticalAxisWidget` | Yes | Yes | Yes |
 | `PlotInteractionHelpers` | Yes | Yes | Yes |
-| OpenGL rendering | (planned) `SceneRenderer` | `BatchLineRenderer` + `SceneRenderer` | `SceneRenderer` |
+| OpenGL rendering | `SceneRenderer` | `BatchLineRenderer` + `SceneRenderer` | `SceneRenderer` |
 
 ## Feature Parallels with Other Widgets
 
@@ -245,6 +301,8 @@ This makes it more similar in structure to [TemporalProjectionViewWidget](../Tem
 ## Existing Tests
 
 - `tests/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp` — Verifies `ScatterPlotWidget` creation via `PlotFactory`
+- `tests/WhiskerToolbox/Plots/ScatterPlotWidget/SourceCompatibility.test.cpp` — Row-type compatibility validation (21 test cases covering `resolveSourceRowType`, all compatible pairings, all incompatible pairings, and missing/unknown sources)
+- `tests/WhiskerToolbox/Plots/ScatterPlotWidget/BuildScatterPoints.test.cpp` — Point pair computation covering all 6 source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval), temporal offset, empty/missing keys, incompatible sources, named columns, and `ScatterPointData` struct operations
 
 ## Needed Tests
 
