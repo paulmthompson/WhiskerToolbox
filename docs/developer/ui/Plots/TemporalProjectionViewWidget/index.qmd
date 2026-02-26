@@ -1,23 +1,299 @@
 ---
 title: "Temporal Projection View Widget"
+format: html
 ---
+
+# Temporal Projection View Widget Overview
+
+The **Temporal Projection View Widget** renders a **2D spatial overlay** of `PointData` and `LineData` collapsed across all time frames into a single view. Unlike trial-aligned plots ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)), this widget does **not** use `PlotAlignmentState` or `GatherResult`. Instead, it flattens all temporal samples via `SpatialMapper_AllTimes` and displays them in a single spatial coordinate frame.
+
+Users can add multiple `PointData` and `LineData` keys, configure rendering appearance (point size, line width), and interact via zoom, pan, and selection. Points and lines carry `EntityID` associations, enabling click-to-navigate, selection-to-group workflows, and group-based coloring.
+
+# Architecture
+
+The widget follows the standard plot widget directory layout:
+
+```
+Plots/TemporalProjectionViewWidget/
+├── CMakeLists.txt
+├── TemporalProjectionViewWidgetRegistration.hpp   # EditorRegistry registration module
+├── TemporalProjectionViewWidgetRegistration.cpp
+├── Core/
+│   ├── TemporalProjectionViewState.hpp            # QObject state class (EditorState subclass)
+│   └── TemporalProjectionViewState.cpp
+├── Rendering/
+│   ├── TemporalProjectionOpenGLWidget.hpp          # OpenGL rendering + mouse interaction
+│   └── TemporalProjectionOpenGLWidget.cpp
+└── UI/
+    ├── TemporalProjectionViewWidget.hpp            # Main composite widget (axes + OpenGL + layout)
+    ├── TemporalProjectionViewWidget.cpp
+    ├── TemporalProjectionViewWidget.ui
+    ├── TemporalProjectionViewPropertiesWidget.hpp  # Properties/settings panel
+    ├── TemporalProjectionViewPropertiesWidget.cpp
+    └── TemporalProjectionViewPropertiesWidget.ui
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `TemporalProjectionViewWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, horizontal axis, vertical axis |
+| `TemporalProjectionViewPropertiesWidget` (UI) | Properties panel — data key management (point + line), rendering controls, selection mode, axis range controls |
+| `TemporalProjectionOpenGLWidget` (Rendering) | OpenGL canvas — point rendering (via `SceneRenderer`), line rendering (via `BatchLineRenderer`), mouse interaction, selection |
+| `TemporalProjectionViewState` (Core) | Serializable state — view state, axis ranges, data keys, rendering parameters, selection mode |
+| `TemporalProjectionViewWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The Temporal Projection View Widget follows the project's **EditorState** architecture:
+
+- `TemporalProjectionViewState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `TemporalProjectionViewWidgetModule::registerTypes()`
+- `TemporalProjectionViewWidget` is the **view** factory, `TemporalProjectionViewPropertiesWidget` is the **properties** factory
+- Both share the same `TemporalProjectionViewState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `TemporalProjectionViewWidgetRegistration` handles coupling the view and properties widgets, connecting range controls and forwarding `timePositionSelected` to `EditorRegistry::setCurrentTime()`
+
+# State Management
+
+## TemporalProjectionViewStateData
+
+The serializable state struct contains all persistent configuration:
+
+```cpp
+struct TemporalProjectionViewStateData {
+    std::string instance_id;
+    std::string display_name = "Spatial Overlay";
+    CorePlotting::ViewStateData view_state;
+    HorizontalAxisStateData horizontal_axis;
+    VerticalAxisStateData vertical_axis;
+
+    // Data keys
+    std::vector<std::string> point_data_keys;
+    std::vector<std::string> line_data_keys;
+
+    // Rendering
+    float point_size = 5.0f;
+    float line_width = 2.0f;
+
+    // Selection
+    std::string selection_mode = "none"; // "none", "point", "line", "polygon"
+};
+```
+
+## Signal Architecture
+
+`TemporalProjectionViewState` emits category-level signals to minimize coupling complexity:
+
+| Signal | Trigger |
+|--------|---------|
+| `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
+| `pointDataKeyAdded` / `pointDataKeyRemoved` / `pointDataKeysCleared` | Point data key changes |
+| `lineDataKeyAdded` / `lineDataKeyRemoved` / `lineDataKeysCleared` | Line data key changes |
+| `pointSizeChanged` | Point rendering size changed |
+| `lineWidthChanged` | Line rendering width changed |
+| `selectionModeChanged` | Selection mode changed |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
+
+## Axis States
+
+`TemporalProjectionViewState` owns both axis states:
+
+- **`HorizontalAxisState`** — X-axis (generic value axis). See [Plot Widget Guide](../plot_widget_guide.md) for full axis documentation.
+- **`VerticalAxisState`** — Y-axis (generic value axis). Supports the "silent update" pattern to prevent feedback loops during zoom/pan.
+
+Both axis states synchronize bidirectionally with the view state:
+
+- User changes axis range via spinboxes → view state zoom/pan updated → projection refreshed
+- User zoom/pans in OpenGL → axis ranges updated silently via `setRangeSilent()` (no feedback loop)
+
+This is the same axis pattern used by [ScatterPlotWidget](../ScatterPlotWidget/index.qmd) and [ACFWidget](../ACFWidget/index.qmd).
+
+# Data Sources
 
 ## Overview
 
-Developer documentation for `TemporalProjectionViewWidget`, which displays 2D projections of data collapsed across temporal windows.
+The widget supports two spatial data types, each added as multiple keys from the DataManager:
 
-## Source Location
+| Data Type | Rendering Backend | Selection Method | EntityID Source |
+|-----------|-------------------|-----------------|-----------------|
+| `PointData` | `SceneRenderer` via `SceneBuilder::addGlyphs()` | Click-to-select (point mode) | Per-point EntityID from `PointData` |
+| `LineData` | `BatchLineStore` / `BatchLineRenderer` | Ctrl+Drag stroke intersection (line mode) | Per-line EntityID from `LineData` |
 
-`src/WhiskerToolbox/Plots/TemporalProjectionViewWidget/`
+### PointData
 
-## Architecture
+Each `PointData` key in `point_data_keys` is loaded via `DataManager::getData<PointData>(key)`. All time frames are flattened into a single set of `(x, y)` positions using `CorePlotting::SpatialMapper::mapAllPoints()`, which returns `MappedElement` objects containing world-space coordinates and associated EntityIDs.
 
-*TODO: Document widget architecture, state management, and key classes.*
+Points are rendered as circle glyphs via `SceneBuilder::addGlyphs()` → `SceneRenderer`. This is the same glyph rendering infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd) for raster tick marks.
 
-## Key Classes
+### LineData
 
-- `TemporalProjectionViewWidget` — Main widget class
+Each `LineData` key in `line_data_keys` is loaded via `DataManager::getData<LineData>(key)`. Lines are iterated across all time frames and built into `LineBatchData` via `CorePlotting::buildLineBatchFromLineData()`.
 
-## See Also
+Lines are rendered via `BatchLineStore` / `BatchLineRenderer`, the same SSBO-based batch line rendering pipeline shared with [LinePlotWidget](../LinePlotWidget/index.qmd). This infrastructure provides:
 
-- [Plot Widget Guide](../plot_widget_guide.md)
+- Efficient rendering of large numbers of line segments
+- Per-line selection state (normal / selected visual styles)
+- GPU compute shader intersection for selection strokes (with CPU fallback)
+
+## DataManager Observer
+
+The properties widget registers a DataManager observer to keep combo boxes current when data is added/removed:
+
+```cpp
+// Constructor
+_dm_observer_id = _data_manager->addObserver([this]() {
+    _populatePointComboBox();
+    _populateLineComboBox();
+});
+
+// Destructor — critical to avoid dangling references
+if (_data_manager && _dm_observer_id != -1) {
+    _data_manager->removeObserver(_dm_observer_id);
+}
+```
+
+See [Plot Widget Guide — DataManager Integration](../plot_widget_guide.md) for the full observer contract.
+
+# Rendering Pipeline
+
+## Data Flow
+
+```
+TemporalProjectionViewState (data keys + rendering params)
+        ↓
+DataManager::getData<PointData>(key) / getData<LineData>(key)
+        ↓
+SpatialMapper::mapAllPoints() → MappedElement[] (points)
+LineData::elementsView() → line vertices (lines)
+        ↓
+Bounding box computation (auto-fit from data, 2% margin)
+        ↓
+setXBounds() / setYBounds() → view state + axis sync
+        ↓
+SceneBuilder::addGlyphs() → RenderableScene (points)
+buildLineBatchFromLineData() → LineBatchData (lines)
+        ↓
+SceneRenderer::uploadScene() + BatchLineStore::upload()
+        ↓
+SceneRenderer::render() + BatchLineRenderer::render()
+```
+
+## Dual Rendering Backend
+
+The widget uses **two separate rendering pipelines** to handle points and lines with their distinct requirements:
+
+**Points** — Rendered via `SceneRenderer` / `SceneBuilder`, which uses the `GlyphRenderer` for instanced glyph drawing. Selected points are highlighted by overwriting their color in the `RenderableGlyphBatch::colors` array (yellow highlight for selected entities).
+
+**Lines** — Rendered via `BatchLineStore` / `BatchLineRenderer`, which uses SSBO-based segment storage with per-line selection masks. This enables cheap selection updates (mask-only GPU upload, no full scene rebuild). Selected lines are rendered in a distinct color (bright yellow) versus normal lines (semi-transparent red).
+
+This dual-backend approach avoids double-rendering: lines are **not** added to the `SceneBuilder` scene.
+
+## Auto-Fit Bounds
+
+After gathering all point and line data, the widget computes a tight bounding box with 2% padding:
+
+1. Scan all mapped point positions for min/max X and Y
+2. Scan all line vertices for min/max X and Y
+3. Fall back to `ImageSize` from data if no actual data points exist
+4. Fall back to 100×100 default if no data and no ImageSize
+5. Apply 2% margin to prevent edge clipping
+6. Reset zoom and pan to fit when bounds change
+
+## Line Rendering Colors
+
+The `BatchLineRenderer` supports visual states per line:
+
+| State | Color | Purpose |
+|-------|-------|---------|
+| Normal | Semi-transparent red (0.8, 0.2, 0.2, 0.6) | Unselected lines |
+| Selected | Bright yellow (1.0, 0.8, 0.0, 1.0) | Lines selected by stroke intersection |
+
+# Interaction
+
+## Zoom and Pan
+
+The widget supports separated X/Y zoom for independent exploration of spatial dimensions, using the shared `PlotInteractionHelpers`:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only |
+| Shift + wheel | Y-zoom only |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+These are the same shared interaction helpers used across all plot widgets — see [Plot Widget Guide](../plot_widget_guide.md).
+
+## Selection Modes
+
+The widget supports three selection modes, controlled by a combo box in the properties panel:
+
+### Point Selection (mode: "point")
+
+- **Ctrl + Click** on a point: Toggle selection (add or remove entity)
+- **Ctrl + Shift + Click**: Remove mode (deselect only)
+- Uses `SceneHitTester::queryQuadTree()` for spatial point lookup with 10-pixel tolerance
+- Selected points are highlighted yellow in the glyph batch
+
+This shares the `SceneHitTester` infrastructure from `CorePlotting/Interaction/` also used by [EventPlotWidget](../EventPlotWidget/index.qmd) for raster click hit testing.
+
+### Line Selection (mode: "line")
+
+- **Ctrl + Click + Drag**: Draw intersection stroke across lines
+- **Ctrl + Shift + Click + Drag**: Remove mode (deselect intersected lines)
+- **Escape**: Cancel in-progress selection
+- Uses the shared `LineSelectionHelpers` from `Plots/Common/`, which delegates to either GPU compute shader or CPU intersector
+- Selection updates are mask-only (no full scene rebuild)
+
+This shares the line selection infrastructure with [LinePlotWidget](../LinePlotWidget/index.qmd) via `LineSelectionHelpers`:
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `LineSelectionHelpers` | `Plots/Common/` | Shared stroke intersection + preview utilities |
+| `ILineBatchIntersector` | `CorePlotting/LineBatch/` | Intersector interface |
+| `CpuLineBatchIntersector` | `CorePlotting/LineBatch/` | CPU fallback intersector |
+| `ComputeShaderIntersector` | `PlottingOpenGL/LineBatch/` | GPU compute shader (GL 4.3+) |
+
+### Selection State
+
+Selected entity IDs are tracked in an `std::unordered_set<EntityId>`. When the selection changes, the `entitiesSelected` signal is emitted, allowing other components (e.g., group management) to react.
+
+Selection is preserved across scene rebuilds: after rebuilding, both point glyph colors and line selection masks are restored from the cached `_selected_entity_ids` set.
+
+# Properties Panel
+
+The `TemporalProjectionViewPropertiesWidget` provides the following controls:
+
+## Data Key Management
+
+- **Point data key combo box** + Add/Remove buttons — lists all `PointData` keys from DataManager
+- **Point data table** — shows currently added point data keys
+- **Line data key combo box** + Add/Remove buttons — lists all `LineData` keys from DataManager
+- **Line data table** — shows currently added line data keys
+
+## Rendering Controls
+
+- **Point size spinbox** — adjusts glyph radius (default: 5.0)
+- **Line width spinbox** — adjusts line thickness (default: 2.0)
+
+## Selection Controls
+
+- **Selection mode combo** — None / Point / Line
+- **Clear selection button** — clears all selected entities
+
+## Axis Range Controls
+
+When `setPlotWidget()` is called (during registration wiring), the properties panel creates:
+
+- **X-Axis Range Controls** — `HorizontalAxisRangeControls` in a collapsible `Section`
+- **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [Temporal Projection View Roadmap](roadmap.qmd) — Development roadmap for upcoming features
+- [ScatterPlotWidget](../ScatterPlotWidget/index.qmd) — Another point-rendering widget (paired numeric axes)
+- [LinePlotWidget](../LinePlotWidget/index.qmd) — Shares `BatchLineRenderer` and `LineSelectionHelpers` infrastructure
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Shares `SceneRenderer` glyph rendering and `SceneHitTester`

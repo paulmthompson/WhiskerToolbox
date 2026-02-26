@@ -1,0 +1,589 @@
+---
+title: "Temporal Projection View Widget Roadmap"
+format: html
+---
+
+# TemporalProjectionViewWidget Development Roadmap
+
+This document tracks remaining development tasks for the Temporal Projection View Widget. For documentation
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+## Completed Work Summary
+
+The following features are complete and documented in [index.qmd](index.qmd):
+
+- **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
+- **State management**: `TemporalProjectionViewState` with `HorizontalAxisState`, `VerticalAxisState` composition; `TemporalProjectionViewStateData` serializable struct with `rfl::json`
+- **Dual rendering pipeline**: `SceneRenderer` for point glyphs, `BatchLineRenderer` for selectable lines
+- **Data key management**: Add/remove multiple `PointData` and `LineData` keys via properties panel
+- **Spatial mapping**: `SpatialMapper::mapAllPoints()` for flattening all time frames; `buildLineBatchFromLineData()` for line segments
+- **Auto-fit bounds**: Bounding box computation from actual data with 2% margin, zoom/pan reset on bounds change
+- **Axis system**: `HorizontalAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync, including the "silent update" pattern
+- **Interaction**: Separated X/Y zoom, pan via shared `PlotInteractionHelpers`
+- **Point selection**: Ctrl+Click toggle via `SceneHitTester::queryQuadTree()` with 10px tolerance
+- **Line selection**: Ctrl+Click drag intersection stroke via shared `LineSelectionHelpers`, GPU compute shader and CPU intersector backends
+- **Selection state**: `std::unordered_set<EntityId>` with preservation across scene rebuilds
+- **Rendering controls**: Point size and line width spinboxes in properties panel
+- **Selection mode toggle**: None / Point / Line combo box in properties panel
+- **DataManager observer**: Combo box population and cleanup in destructor
+- **State serialization**: Full round-trip JSON via `rfl::json`
+- **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
+
+**Not yet implemented**: Point glyph customization (color, shape), line color configuration,
+polygon selection, double-click time navigation, group integration, group-based coloring,
+and subgroup visibility filtering described below.
+
+---
+
+## Phase 1: Point Glyph Customization
+
+**Status**: Not started. Points currently render as blue circles at a configurable size. Glyph
+shape and color are hardcoded.
+
+**Goal**: Allow the user to configure point glyph appearance (shape, size, color), aligning with
+the glyph options patterns used by [EventPlotWidget](../EventPlotWidget/index.qmd) and planned
+for [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 4).
+
+### 1.1 Glyph Options in State
+
+Extend `TemporalProjectionViewStateData` with per-key or global glyph configuration:
+
+```cpp
+enum class PointGlyphType {
+    Circle,        ///< Filled circle (default)
+    Square,        ///< Filled square
+    Diamond,       ///< Rotated square
+    Cross,         ///< + shape
+    Triangle       ///< Upward triangle
+};
+
+struct PointGlyphOptions {
+    PointGlyphType glyph_type = PointGlyphType::Circle;
+    float glyph_size = 5.0f;           ///< Size in pixels
+    std::string hex_color = "#3366CC"; ///< Fill color as hex string
+    float alpha = 1.0f;               ///< Opacity (0.0–1.0)
+};
+```
+
+**Design decision — per-key vs. global**: Initially, a single `PointGlyphOptions` applies to
+all point keys (simpler UI). Later, per-key options can be added with a map
+`std::map<std::string, PointGlyphOptions>` and a per-key options table in the properties panel, similar
+to the per-series `LinePlotOptions` pattern in [LinePlotWidget](../LinePlotWidget/index.qmd).
+
+### 1.2 Shared Glyph Type Enum
+
+The glyph types overlap across multiple widgets:
+
+| Widget | Glyph Types | Rendering Backend |
+|--------|-------------|-------------------|
+| [EventPlotWidget](../EventPlotWidget/index.qmd) | Tick, Circle, Square | `SceneRenderer` via `SceneBuilder::addGlyphs()` |
+| [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (planned) | Circle, Square, Diamond, Cross, Triangle | `SceneRenderer` or `PointBatchRenderer` |
+| **TemporalProjectionViewWidget** | Circle, Square, Diamond, Cross, Triangle | `SceneRenderer` via `SceneBuilder::addGlyphs()` |
+
+The `CorePlotting::RenderableGlyphBatch::GlyphType` enum should be extended (or a new shared
+enum created) to cover all shapes needed across widgets, avoiding per-widget glyph type
+definitions.
+
+### 1.3 Properties Panel Controls
+
+Add a "Point Appearance" collapsible section to `TemporalProjectionViewPropertiesWidget`:
+
+- **Glyph type combo box** — Circle, Square, Diamond, Cross, Triangle
+- **Size spinbox** — point size in pixels (existing, move into this section)
+- **Color button** — opens `QColorDialog`, stores hex string in state
+- **Alpha slider** — opacity (0.0–1.0)
+
+### 1.4 Rendering Update
+
+In `TemporalProjectionOpenGLWidget::rebuildScene()`, replace the hardcoded blue color and
+Circle glyph type with values read from state:
+
+```cpp
+CorePlotting::GlyphStyle style;
+style.glyph_type = toRenderableGlyphType(_state->getPointGlyphType());
+style.size = _state->getPointSize();
+style.color = hexToGlmVec4(_state->getPointColor(), _state->getPointAlpha());
+```
+
+---
+
+## Phase 2: Line Color Customization
+
+**Status**: Not started. Lines currently render as semi-transparent red (normal) and yellow
+(selected), hardcoded in `initializeGL()`.
+
+**Goal**: Allow the user to configure line rendering appearance (color, thickness), following
+the per-series options pattern from [LinePlotWidget](../LinePlotWidget/index.qmd).
+
+### 2.1 Line Options in State
+
+Extend `TemporalProjectionViewStateData`:
+
+```cpp
+struct LineRenderOptions {
+    std::string hex_color = "#CC3333";  ///< Normal line color
+    float line_width = 2.0f;           ///< Line thickness in pixels
+    float alpha = 0.6f;               ///< Opacity for normal lines
+};
+```
+
+As with point options, start with a single global `LineRenderOptions` and expand to
+per-key options later via `std::map<std::string, LineRenderOptions>`.
+
+### 2.2 Properties Panel Controls
+
+Add a "Line Appearance" collapsible section:
+
+- **Color button** — opens `QColorDialog`
+- **Line width spinbox** — thickness in pixels (existing, move into this section)
+- **Alpha slider** — opacity (0.0–1.0)
+
+### 2.3 Rendering Update
+
+Apply configurable colors to `BatchLineRenderer::setGlobalColor()` and
+`BatchLineRenderer::setLineWidth()` during initialization and when state changes.
+
+---
+
+## Phase 3: Double-Click Time Navigation
+
+**Status**: Not started. The `mouseDoubleClickEvent` handler exists but delegates to the
+base class. The `timePositionSelected` signal is already wired to `EditorRegistry::setCurrentTime()`
+via the registration.
+
+**Goal**: Double-clicking on a point or line should navigate other time-synced widgets to
+the associated time position.
+
+### 3.1 Point Double-Click → Time Navigation
+
+When in point selection mode and the user double-clicks on a point glyph:
+
+1. Perform hit testing via `SceneHitTester::queryQuadTree()` (same as single-click)
+2. Look up the `EntityId` for the hit point
+3. Resolve the `EntityId` → `TimeFrameIndex` mapping from the `PointData` source
+4. Convert `TimeFrameIndex` → `TimePosition` via the `TimeFrame`
+5. Emit `timePositionSelected(position)` → `EditorRegistry::setCurrentTime()`
+
+This is the same navigation pattern used by [EventPlotWidget](../EventPlotWidget/index.qmd)
+(`eventDoubleClicked` → `setCurrentTime()`).
+
+### 3.2 Line Double-Click → Time Navigation
+
+When in line selection mode and the user double-clicks near a line:
+
+1. Find the nearest line segment to the click position
+2. Look up the `EntityId` for that line
+3. Resolve the `EntityId` → `TimeFrameIndex` mapping from the `LineData` source
+4. Convert to `TimePosition` and emit `timePositionSelected`
+
+### 3.3 EntityId → TimeFrameIndex Mapping
+
+During scene building, construct a lookup from `EntityId` to its source time frame index.
+Both `PointData` and `LineData` store per-entry time indices, so the mapping can be built
+during the `rebuildScene()` pass and cached as `std::unordered_map<EntityId, TimeFrameIndex>`.
+
+---
+
+## Phase 4: Polygon Selection
+
+**Status**: Not started. Currently only point-by-point click selection and line stroke
+selection are implemented.
+
+**Goal**: Allow the user to draw a polygon (lasso) to select multiple points at once,
+complementing the existing click-to-select and stroke-to-intersect modes.
+
+### 4.1 Shared Polygon Selection Infrastructure
+
+Polygon selection should be implemented as a **shared component** in `CorePlotting/Selection/`,
+since it will also be used by [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 3).
+
+```cpp
+namespace CorePlotting::Selection {
+
+/// A closed polygon in world coordinates
+struct SelectionPolygon {
+    std::vector<glm::vec2> vertices;
+
+    /// Test if a world-space point is inside the polygon (ray-casting algorithm)
+    [[nodiscard]] bool contains(glm::vec2 point) const;
+
+    /// Test if the polygon is valid (≥ 3 vertices, non-degenerate)
+    [[nodiscard]] bool isValid() const;
+};
+
+/// Result of a polygon selection query
+struct PolygonSelectionResult {
+    std::vector<std::size_t> selected_indices;
+};
+
+/// Find all points inside the polygon
+PolygonSelectionResult selectPointsInPolygon(
+    SelectionPolygon const & polygon,
+    std::span<float const> x_values,
+    std::span<float const> y_values);
+
+}  // namespace CorePlotting::Selection
+```
+
+This component has no Qt or OpenGL dependency and is fully unit-testable.
+
+**Shared with:**
+
+| Widget | Selection Target | Input Coordinates |
+|--------|-----------------|-------------------|
+| **TemporalProjectionViewWidget** | Projected `PointData` positions → EntityID | World-space spatial coordinates |
+| [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) | (x, y) scatter point pairs → `TimeFrameIndex` | World-space data coordinates |
+
+### 4.2 Selection Mode Extension
+
+Add `"polygon"` as a fourth selection mode (the state already declares it in the enum comment):
+
+| Mode | Behavior |
+|------|----------|
+| `"none"` | No selection interaction |
+| `"point"` | Ctrl+Click to toggle individual points |
+| `"line"` | Ctrl+Click+Drag stroke intersection on lines |
+| `"polygon"` | Ctrl+Click to place vertices; Ctrl+Double-click to close polygon |
+
+### 4.3 Polygon Drawing Interaction
+
+| Input | Action |
+|-------|--------|
+| Ctrl + Click | Begin polygon / add vertex at click position |
+| Ctrl + Double-click | Close polygon and execute selection |
+| Escape | Cancel polygon drawing |
+| Ctrl + Shift + Click | Remove mode (deselect points in polygon) |
+
+While drawing, render the polygon outline as a preview overlay (similar to the line
+selection stroke preview using `SceneRenderer::renderPreview()`).
+
+**Alternative: Freeform lasso** — Instead of click-per-vertex, allow Ctrl+Click+Drag to
+draw a freeform lasso shape. This is more intuitive for irregular selections but requires
+path simplification to a manageable vertex count.
+
+### 4.4 Integration with Existing Selection
+
+Polygon selection results should merge with the existing `_selected_entity_ids` set using
+the same add/remove semantics as point and line selection. The `entitiesSelected` signal
+fires after polygon selection completes.
+
+---
+
+## Phase 5: Selection → Group Integration
+
+**Status**: Not started. Selection infrastructure is complete (point click and line stroke);
+`entitiesSelected` signal emits `EntityId` sets. Entity group infrastructure exists in the
+Entity system.
+
+**Goal**: Allow users to add selected points and lines to entity groups, enabling downstream
+filtering and analysis across widgets.
+
+### 5.1 Group Context Menu
+
+When entities are selected, right-clicking should show a context menu with:
+
+1. **"Add to Group"** submenu — lists existing entity groups from `EntityRegistry`
+2. **"Create New Group"** — creates a new group and adds selected entities
+3. **"Remove from Group"** submenu — lists groups the selected entities belong to
+4. **"Select Group"** submenu — select all entities belonging to a specific group
+
+### 5.2 Shared Group Management Panel
+
+This group management pattern is shared across multiple widgets. As proposed in the
+[LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) (Phase 1.3) and
+[ScatterPlotWidget Roadmap](../ScatterPlotWidget/roadmap.qmd) (Phase 3.5), a shared
+`GroupManagementPanel` widget should be factored into `Plots/Common/`:
+
+| Widget | What Gets Added to Group | Source of Selection |
+|--------|-------------------------|-------------------|
+| **TemporalProjectionViewWidget** | Point/Line EntityIDs | Click selection, stroke intersection, polygon selection |
+| [LinePlotWidget](../LinePlotWidget/roadmap.qmd) | Alignment event EntityIDs (trials) | Line selection stroke |
+| [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) | `TimeFrameIndex` EntityIDs | Polygon selection |
+| DataViewerWidget | Data entity EntityIDs | (future) row/range selection |
+
+The common pattern is:
+
+1. Widget exposes **selected entity IDs** (via `entitiesSelected` signal — already implemented)
+2. A shared **`GroupManagementPanel`** widget provides group combo box, add/new/remove buttons
+3. The panel calls `EntityRegistry::addToGroup()` / `removeFromGroup()` with the selected IDs
+
+Initial implementation can be done inline in `TemporalProjectionViewPropertiesWidget` and
+then refactored when the shared panel is implemented.
+
+### 5.3 Properties Panel Extension
+
+Add a "Selection & Groups" section to the properties panel:
+
+- **Selected count label** — "N entities selected"
+- **Add to Group button** + Group combo box
+- **New Group button**
+- **Remove from Group button** + Group combo box
+- **Clear Selection button** (existing, move into this section)
+
+---
+
+## Phase 6: Group-Based Coloring
+
+**Status**: Not started. Depends on Phase 5 (group integration).
+
+**Goal**: Color points and lines by their group membership, allowing visual identification
+of subgroups in the spatial overlay.
+
+### 6.1 Color Configuration
+
+```cpp
+struct GroupColorConfig {
+    std::string color_mode = "fixed";  // "fixed" or "by_group"
+
+    // For by_group coloring:
+    // Map from group name → hex color string
+    // Groups not in the map use the default color
+    std::map<std::string, std::string> group_colors;
+};
+```
+
+Add `GroupColorConfig` to `TemporalProjectionViewStateData` for both points and lines:
+
+```cpp
+struct TemporalProjectionViewStateData {
+    // ... existing fields ...
+    GroupColorConfig point_color_config;
+    GroupColorConfig line_color_config;
+};
+```
+
+### 6.2 Color Assignment During Scene Build
+
+In `rebuildScene()`, when `color_mode == "by_group"`:
+
+1. Query `EntityRegistry` for all groups
+2. For each point/line `EntityId`, look up which group(s) it belongs to
+3. Assign the first matching group's color (or default color if no group)
+4. Write the color into `RenderableGlyphBatch::colors` (points) or per-line color
+   override (lines)
+
+### 6.3 Properties Panel Controls
+
+Add a "Group Coloring" collapsible section:
+
+- **Color mode combo** — Fixed / By Group
+- **Group color table** — lists groups with color pickers per group
+- **Default color** — color for entities not in any group
+
+### 6.4 Shared Colormap/Group Color Infrastructure
+
+Group-based coloring is a simpler variant of the feature-based coloring proposed for
+[LinePlotWidget](../LinePlotWidget/roadmap.qmd) (Phase 3),
+[EventPlotWidget](../EventPlotWidget/roadmap.qmd) (Phase 5), and
+[ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 7). A shared
+`CorePlotting::GroupColorMapper` could provide:
+
+```cpp
+namespace CorePlotting {
+    /// Assign colors to entities based on group membership
+    class GroupColorMapper {
+    public:
+        void setGroupColor(std::string const & group_name, glm::vec4 color);
+        void setDefaultColor(glm::vec4 color);
+
+        /// Look up the color for an entity ID given its group memberships
+        [[nodiscard]] glm::vec4 colorForEntity(
+            EntityId id,
+            EntityRegistry const & registry) const;
+    };
+}
+```
+
+---
+
+## Phase 7: Subgroup Visibility Filtering
+
+**Status**: Not started. Depends on Phase 5 (group integration) and Phase 6 (group coloring).
+
+**Goal**: Allow the user to selectively show/hide points and lines by their group membership,
+enabling focused analysis of specific subgroups.
+
+### 7.1 Visibility State
+
+Extend state with a visibility filter:
+
+```cpp
+struct TemporalProjectionViewStateData {
+    // ... existing fields ...
+
+    // Groups to show. Empty means "show all".
+    std::vector<std::string> visible_groups;
+    bool show_ungrouped = true;  ///< Show entities not in any group
+};
+```
+
+### 7.2 Visibility Filtering During Scene Build
+
+In `rebuildScene()`, before building the scene, filter entities:
+
+**For points:**
+
+1. After `SpatialMapper::mapAllPoints()`, iterate `MappedElement` objects
+2. For each element, check if its `EntityId` belongs to a visible group
+3. Only include matching elements in the `SceneBuilder::addGlyphs()` call
+
+**For lines:**
+
+1. After building `LineBatchData`, set `visibility_mask[i] = 0` for lines whose
+   `EntityId` does not belong to a visible group
+2. Upload the filtered visibility mask to `BatchLineStore`
+
+The `BatchLineRenderer` already respects the visibility mask, so no rendering changes
+are needed for lines.
+
+### 7.3 Properties Panel Controls
+
+Add a "Visibility" collapsible section:
+
+- **Group checklist** — checkbox per group (checked = visible)
+- **"Show ungrouped" checkbox** — toggle visibility of entities not in any group
+- **"Show All" / "Hide All" buttons** — convenience toggles
+
+### 7.4 Signal Flow
+
+```
+User toggles group visibility checkbox
+        ↓
+State updates visible_groups
+        ↓
+stateChanged() emitted
+        ↓
+rebuildScene() filters by visibility
+        ↓
+Filtered scene rendered
+```
+
+---
+
+## Phase 8: Per-Key Rendering Options
+
+**Status**: Not started. Currently rendering options (point size, line width, color) are global.
+
+**Goal**: Allow per-data-key rendering customization, so different `PointData` and `LineData` keys
+can have distinct visual styles.
+
+### 8.1 Per-Key Options in State
+
+Replace global options with per-key option maps:
+
+```cpp
+struct TemporalProjectionViewStateData {
+    // ... existing fields ...
+
+    // Replace flat point_size/line_width with per-key options:
+    std::map<std::string, PointGlyphOptions> point_options;   // key → glyph options
+    std::map<std::string, LineRenderOptions> line_options;     // key → line options
+};
+```
+
+Keys not present in the map use default `PointGlyphOptions` / `LineRenderOptions`.
+
+### 8.2 Properties Panel
+
+Replace the current flat spinboxes with a per-key options table, similar to
+[LinePlotWidget](../LinePlotWidget/index.qmd)'s per-series options table:
+
+- **Point data table** — add columns for glyph type, size, color
+- **Line data table** — add columns for color, width, alpha
+
+### 8.3 Rendering Update
+
+In `rebuildScene()`, look up per-key options when building glyph styles and line colors:
+
+```cpp
+for (auto const & pb : point_batches) {
+    auto opts = lookupPointOptions(pb.key, _state->pointOptions());
+    CorePlotting::GlyphStyle style;
+    style.glyph_type = toRenderableGlyphType(opts.glyph_type);
+    style.size = opts.glyph_size;
+    style.color = hexToGlmVec4(opts.hex_color, opts.alpha);
+    builder.addGlyphs("points_" + pb.key, pb.mapped, style);
+}
+```
+
+---
+
+## Dependency Graph
+
+```
+Phase 1: Point Glyph Customization
+Phase 2: Line Color Customization
+Phase 3: Double-Click Time Navigation
+    │
+    │   (all independent of each other, can be done in any order)
+    │
+Phase 4: Polygon Selection
+    └── depends on: CorePlotting::Selection::SelectionPolygon
+        (shared with ScatterPlotWidget)
+    │
+Phase 5: Selection → Group Integration
+    ├── depends on: Phase 4 (polygon selection adds to selection set)
+    │   (but can start with click/stroke selection only)
+    └── depends on: Plots/Common/GroupManagementPanel
+        (shared with LinePlotWidget, ScatterPlotWidget)
+    │
+Phase 6: Group-Based Coloring
+    └── depends on: Phase 5 (group membership required)
+    │
+Phase 7: Subgroup Visibility Filtering
+    └── depends on: Phase 5 (group membership required)
+    │
+Phase 8: Per-Key Rendering Options
+    └── depends on: Phase 1 + Phase 2 (glyph/line options defined)
+```
+
+Phases 1–3 are independent and can be implemented in any order. Phase 4 (polygon selection)
+is independent of 1–3 but provides the most natural multi-select workflow. Phase 5 (group integration)
+can begin with existing click/stroke selection but benefits from Phase 4. Phases 6 and 7 both
+depend on Phase 5 but are independent of each other. Phase 8 extends Phases 1 and 2 to per-key
+granularity.
+
+---
+
+## Shared Components Summary
+
+Components that should be factored into shared locations rather than implemented inline:
+
+| Component | Proposed Location | Used By |
+|-----------|-------------------|---------|
+| `SelectionPolygon` | `CorePlotting/Selection/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+| `GroupManagementPanel` | `Plots/Common/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+| `GroupColorMapper` | `CorePlotting/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd) |
+| Extended `GlyphType` enum | `CorePlotting/SceneGraph/` | TemporalProjectionViewWidget, [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+| `PointBatchRenderer` (optional) | `PlottingOpenGL/PointBatch/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+
+## Open Questions
+
+1. **Per-key vs. global rendering options**: Should Phase 1 and Phase 2 start with global options
+   (simpler) or go directly to per-key options? Starting global and extending in Phase 8 is
+   recommended to avoid premature complexity.
+
+2. **Polygon selection vs. freeform lasso**: Should the primary multi-point selection be
+   click-per-vertex polygon or drag-to-draw lasso? Lasso is more intuitive but requires path
+   simplification. Both could be supported behind a toggle.
+
+3. **Group color conflict resolution**: When an entity belongs to multiple groups, which group's
+   color takes priority? Options: first group alphabetically, most recently assigned, or a
+   blended color. First-match is simplest.
+
+4. **Visibility filtering performance**: For very large datasets, should visibility filtering
+   happen at the data-gathering stage (skip loading invisible entities entirely) or at the
+   rendering stage (set visibility mask to 0)? The mask approach is simpler and sufficient
+   for moderate dataset sizes.
+
+5. **MaskData support**: The state struct has a comment noting "mask_data_keys deferred due to
+   CPU contour extraction performance". If GPU-based contour extraction becomes available,
+   `MaskData` rendering could be added as a future phase.
+
+# See Also
+
+- [TemporalProjectionViewWidget Documentation](index.qmd) — Full architecture and feature documentation
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Group integration pattern (Phase 1), feature coloring (Phase 3)
+- [ScatterPlotWidget Roadmap](../ScatterPlotWidget/roadmap.qmd) — Polygon selection (Phase 3), glyph customization (Phase 4)
+- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Glyph options (Phase 3), TensorData feature coloring (Phase 5)
