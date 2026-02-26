@@ -12,6 +12,7 @@
  */
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
 
@@ -22,6 +23,7 @@
 
 /**
  * @brief Enumeration for event glyph/marker type
+ * @deprecated Use CorePlotting::GlyphType instead. Kept for backward JSON compatibility.
  */
 enum class EventGlyphType {
     Tick,  ///< Vertical line (default)
@@ -56,12 +58,15 @@ struct EventPlotAxisOptions {
 
 /**
  * @brief Options for plotting an event series in the raster plot
+ *
+ * Uses CorePlotting::GlyphStyleData for marker styling.
+ * The legacy fields (tick_thickness, glyph_type, hex_color) are
+ * retained for backward JSON compatibility but are no longer
+ * used at runtime.
  */
 struct EventPlotOptions {
     std::string event_key;                           ///< Key of the DigitalEventSeries to plot
-    double tick_thickness = 2.0;                     ///< Thickness of the tick/glyph (default: 2.0)
-    EventGlyphType glyph_type = EventGlyphType::Tick;///< Type of glyph to display (default: Tick/vertical line)
-    std::string hex_color = "#000000";               ///< Color as hex string (default: black)
+    CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Tick, 2.0f, "#000000", 1.0f};
 };
 
 /**

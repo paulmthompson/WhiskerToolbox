@@ -224,47 +224,32 @@ y_axis_widget->setAxisMapping(channel_mapping);
 **Status**: Not started. Events are currently rendered as simple ticks with configurable color
 and spacing but no glyph type selection.
 
-**Goal**: Full control over event glyph appearance, aligning with the shared `PointGlyphOptions`
-infrastructure planned across multiple widgets.
+**Goal**: Full control over event glyph appearance, using the shared `CorePlotting::GlyphStyleData`
+infrastructure that is now implemented and integrated into TemporalProjectionViewWidget,
+OnionSkinViewWidget, and EventPlotWidget.
 
-### 3.1 Shared PointGlyphOptions
+### 3.1 Shared GlyphStyleData (Complete)
 
-This work depends on and contributes to the shared glyph infrastructure being developed
-across multiple widgets. The same `PointGlyphOptions` struct is planned for:
+The shared glyph infrastructure is now available:
 
-| Widget | Roadmap Reference | Status |
-|--------|-------------------|--------|
-| [EventPlotWidget](../EventPlotWidget/roadmap.qmd) | Phase 3.1 | Partially complete (glyph type exists) |
-| [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) | Phase 1.1 | Not started |
-| [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) | Phase 4 | Not started |
-| [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd) | Phase 1 | Not started |
-| **DataViewer Widget** | This phase | Not started |
+| Component | Location | Status |
+|-----------|----------|--------|
+| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` | **Complete** |
+| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` | **Complete** |
 
-The shared struct should live in `CorePlotting/`:
-
-```cpp
-enum class PointGlyphType {
-    Tick,          ///< Vertical tick mark (default for events)
-    Circle,        ///< Filled circle
-    Square,        ///< Filled square
-    Diamond,       ///< Rotated square
-    Cross,         ///< + shape
-    Triangle       ///< Upward triangle
-};
-
-struct PointGlyphOptions {
-    PointGlyphType glyph_type = PointGlyphType::Tick;
-    float glyph_size = 5.0f;           ///< Size in pixels
-    std::string hex_color = "#FFFFFF";  ///< Fill color
-    float alpha = 1.0f;                ///< Opacity
-};
-```
+Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.
 
 ### 3.2 State and Options Update
 
-Extend `DigitalEventSeriesOptionsData` to include glyph options:
+Extend `DigitalEventSeriesOptionsData` to include glyph options using the shared struct:
 
 ```cpp
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
+
 struct DigitalEventSeriesOptionsData {
     rfl::Flatten<CorePlotting::SeriesStyle> style;
     
@@ -274,24 +259,29 @@ struct DigitalEventSeriesOptionsData {
     float event_height;
     float margin_factor;
 
-    // New glyph options
-    PointGlyphType glyph_type = PointGlyphType::Tick;
-    float glyph_size = 5.0f;
+    // Glyph options (using shared infrastructure)
+    CorePlotting::GlyphStyleData glyph_style{
+        CorePlotting::GlyphType::Tick, 5.0f, "#FFFFFF", 1.0f};
 };
 ```
 
 ### 3.3 Properties Panel Controls
 
-Add per-event-key glyph controls to the `DataViewerPropertiesWidget` event section:
+Embed `GlyphStyleControls` from `Plots/Common/GlyphStyleWidget/` for per-event-key glyph
+customization, following the same pattern used by TemporalProjectionViewWidget and
+OnionSkinViewWidget:
 
-- **Glyph type** combo box: Tick, Circle, Square, Diamond, Cross, Triangle
-- **Glyph size** spinbox: Size in pixels
-- **Color** button: Opens `QColorDialog` (already exists)
+```cpp
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
+
+auto * controls = new GlyphStyleControls(glyph_style_state, parent);
+```
 
 ### 3.4 Scene Building Update
 
-Update `SceneBuildingHelpers::buildEventSeriesBatch()` to use the configured glyph type
-and size from the options, replacing the hardcoded tick rendering.
+Update `SceneBuildingHelpers::buildEventSeriesBatch()` to use
+`CorePlotting::toRenderableGlyphType()` and `CorePlotting::hexColorToVec4()` from
+`GlyphStyleConversion.hpp`, replacing the hardcoded tick rendering.
 
 ---
 
@@ -440,17 +430,25 @@ locations, and adopt shared components that are currently duplicated.
 
 ### 6.3 Shared Visual Options Infrastructure
 
-The per-type options structs planned across multiple widgets should be centralized:
+The point glyph options infrastructure is now implemented and centralized:
 
 ```
 CorePlotting/DataTypes/
+├── GlyphStyleData.hpp         # COMPLETE: GlyphType enum + GlyphStyleData struct
+├── GlyphStyleConversion.hpp   # COMPLETE: toRenderableGlyphType(), hexColorToVec4()
 ├── SeriesStyle.hpp            # Already exists: hex_color, alpha, line_thickness, is_visible
-├── PointGlyphOptions.hpp      # NEW: glyph_type, glyph_size, hex_color, alpha
-├── LineRenderingOptions.hpp   # NEW: line_style (solid/dashed/dotted), data_point overlay
-├── IntervalRenderingOptions.hpp # NEW: border, fill_alpha, hatch pattern
+├── LineRenderingOptions.hpp   # Planned: line_style (solid/dashed/dotted), data_point overlay
+├── IntervalRenderingOptions.hpp # Planned: border, fill_alpha, hatch pattern
+
+Plots/Common/GlyphStyleWidget/
+├── Core/GlyphStyleState.hpp   # COMPLETE: QObject wrapper with styleChanged/styleUpdated signals
+├── GlyphStyleControls.hpp     # COMPLETE: Widget with shape combo, size spinbox, color button, alpha
+├── CMakeLists.txt             # COMPLETE: Static library linking Qt6::Widgets + CorePlotting
 ```
 
-This consolidation benefits:
+Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.
+
+Remaining shared visual option structs to implement:
 
 - **DataViewer Widget**: Events (Phase 3), Intervals (Phase 4), Analog lines (Phase 5)
 - **[EventPlotWidget](../EventPlotWidget/roadmap.qmd)**: Phase 3 glyph options

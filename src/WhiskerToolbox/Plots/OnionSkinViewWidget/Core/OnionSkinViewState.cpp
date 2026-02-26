@@ -1,5 +1,6 @@
 #include "OnionSkinViewState.hpp"
 
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
@@ -10,7 +11,8 @@
 OnionSkinViewState::OnionSkinViewState(QObject * parent)
     : EditorState(parent),
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
-      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this)),
+      _glyph_style_state(std::make_unique<GlyphStyleState>(this))
 {
     _data.instance_id = getInstanceId().toStdString();
     _data.horizontal_axis = _horizontal_axis_state->data();
@@ -40,6 +42,16 @@ OnionSkinViewState::OnionSkinViewState(QObject * parent)
             this, syncVerticalData);
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
             this, syncVerticalData);
+
+    // Sync glyph style state with serializable data
+    _glyph_style_state->setStyleSilent(_data.point_glyph_style);
+    connect(_glyph_style_state.get(), &GlyphStyleState::styleChanged,
+            this, [this]() {
+                _data.point_glyph_style = _glyph_style_state->data();
+                markDirty();
+                emit glyphStyleChanged();
+                emit stateChanged();
+            });
 }
 
 QString OnionSkinViewState::getDisplayName() const
@@ -312,10 +324,11 @@ void OnionSkinViewState::setMaxAlpha(float alpha)
 
 void OnionSkinViewState::setPointSize(float size)
 {
-    if (_data.point_size != size) {
-        _data.point_size = size;
+    if (_data.point_glyph_style.size != size) {
+        _data.point_glyph_style.size = size;
+        _glyph_style_state->setStyleSilent(_data.point_glyph_style);
         markDirty();
-        emit pointSizeChanged(size);
+        emit glyphStyleChanged();
         emit stateChanged();
     }
 }
@@ -359,6 +372,7 @@ bool OnionSkinViewState::fromJson(std::string const & json)
         }
         _horizontal_axis_state->data() = _data.horizontal_axis;
         _vertical_axis_state->data() = _data.vertical_axis;
+        _glyph_style_state->setStyleSilent(_data.point_glyph_style);
         // Sync view state bounds from axes so they never drift
         _data.view_state.x_min = _horizontal_axis_state->getXMin();
         _data.view_state.x_max = _horizontal_axis_state->getXMax();

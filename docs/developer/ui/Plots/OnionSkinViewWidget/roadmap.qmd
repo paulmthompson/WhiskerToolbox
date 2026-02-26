@@ -36,50 +36,24 @@ The following features are complete and documented in [index.qmd](index.qmd):
 
 ## Phase 1: Per-Key Point Appearance Options
 
-**Status**: Not started. Points currently render as blue circles at a single global size. Glyph
-shape, size, and color are not configurable per key.
+**Status**: **Partially complete** — global glyph customization (shape, size, color, alpha) is
+implemented using the shared `CorePlotting::GlyphStyleData` struct and the `GlyphStyleControls`
+widget from `Plots/Common/GlyphStyleWidget/`. Per-key options are not yet implemented.
 
-**Goal**: Allow the user to configure point glyph appearance (shape, size, color) independently
-for each added `PointData` key, aligning with the glyph options patterns used by
-[EventPlotWidget](../EventPlotWidget/index.qmd) (glyph type + color) and planned for
-[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd) (Phase 1) and
-[ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 4).
+**What was implemented**:
 
-### 1.1 Shared Point Glyph Options Struct
+- `OnionSkinViewStateData::point_glyph_style` (`CorePlotting::GlyphStyleData`) replaces the
+  former `float point_size` field — serializable with reflectcpp.
+- `GlyphStyleState` (QObject wrapper) composed into `OnionSkinViewState`, with `styleChanged`
+  wired to `stateChanged()` + `markDirty()` for automatic scene rebuilds.
+- `GlyphStyleControls` widget embedded in `OnionSkinViewPropertiesWidget`, replacing the old
+  point-size spinbox.
+- Rendering in `OnionSkinViewOpenGLWidget::rebuildScene()` uses
+  `CorePlotting::toRenderableGlyphType()` and `CorePlotting::hexColorToVec4()` from
+  `GlyphStyleConversion.hpp`. The glyph style's color/alpha serves as the base, with temporal
+  alpha blending applied on top.
 
-Multiple widgets need the same glyph configuration. A shared options struct should be
-extracted to `CorePlotting/` or `Plots/Common/` (see [Phase 6](#phase-6-shared-visual-options-infrastructure)):
-
-```cpp
-enum class PointGlyphType {
-    Circle,        ///< Filled circle (default)
-    Square,        ///< Filled square
-    Diamond,       ///< Rotated square
-    Cross,         ///< + shape
-    Triangle       ///< Upward triangle
-};
-
-struct PointGlyphOptions {
-    PointGlyphType glyph_type = PointGlyphType::Circle;
-    float glyph_size = 8.0f;           ///< Size in pixels
-    std::string hex_color = "#3380E6"; ///< Fill color as hex string
-};
-```
-
-The same enum and struct are needed by:
-
-| Widget | Current Glyph Support | Planned per-key |
-|--------|----------------------|-----------------|
-| [EventPlotWidget](../EventPlotWidget/index.qmd) | Tick, Circle, Square (`EventPlotOptions`) | Yes (per-event key) |
-| [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) | Not implemented | Planned (Phase 4) |
-| [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd) | Not implemented | Planned (Phase 1) |
-| **OnionSkinViewWidget** | Not implemented | This phase |
-
-Extraction to `CorePlotting::PointGlyphType` / `CorePlotting::PointGlyphOptions` avoids
-per-widget enum duplication. The `CorePlotting::RenderableGlyphBatch::GlyphType` enum should
-be extended (or unified with `PointGlyphType`) to support all shapes.
-
-### 1.2 Per-Key State Extension
+**Remaining work** (per-key options):
 
 Extend `OnionSkinViewStateData`:
 
@@ -381,23 +355,22 @@ This verifies combo box population, observer refresh, destruction cleanup, and s
 
 ## Phase 6: Shared Visual Options Infrastructure
 
-**Status**: Not started. This is an architectural improvement that benefits multiple widgets.
+**Status**: **Partially complete** — the core shared glyph infrastructure has been implemented.
 
-**Goal**: Extract common per-key visual options (`PointGlyphOptions`, `LineRenderOptions`) into
-shared infrastructure used by OnionSkinViewWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd),
-[ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd),
-and [LinePlotWidget](../LinePlotWidget/index.qmd).
+The following shared components now exist and are used by OnionSkinViewWidget,
+TemporalProjectionViewWidget, and EventPlotWidget:
 
-### 6.1 Shared Components
-
-| Component | Location | Used By |
-|-----------|----------|---------|
-| `PointGlyphType` enum | `CorePlotting/DataTypes/` | EventPlot, ScatterPlot, TemporalProjection, OnionSkin |
-| `PointGlyphOptions` struct | `CorePlotting/DataTypes/` | ScatterPlot, TemporalProjection, OnionSkin |
-| `LineRenderOptions` struct | `CorePlotting/DataTypes/` | LinePlot, TemporalProjection, OnionSkin |
-| `GlyphOptionsWidget` | `Plots/Common/` | Properties panels for all point-rendering widgets |
-| `LineOptionsWidget` | `Plots/Common/` | Properties panels for all line-rendering widgets |
-| `ColorButton` | `Plots/Common/` | All widgets needing color pickers |
+| Component | Location | Status |
+|-----------|----------|--------|
+| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` | **Complete** |
+| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` | **Complete** |
+| `LineRenderOptions` struct | `CorePlotting/DataTypes/` | Not started |
+| `LineOptionsWidget` | `Plots/Common/` | Not started |
+| `ColorButton` | `Plots/Common/` | Not started |
 
 ### 6.2 Shared UI Widgets
 

@@ -16,7 +16,9 @@
  */
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -54,7 +56,7 @@ struct OnionSkinViewStateData {
     float max_alpha = 1.0f;
 
     // Rendering
-    float point_size = 8.0f;
+    CorePlotting::GlyphStyleData point_glyph_style{CorePlotting::GlyphType::Circle, 8.0f, "#007bff", 1.0f};
     float line_width = 2.0f;
     bool highlight_current = true;  ///< Draw current frame with distinct color/size
 };
@@ -162,7 +164,13 @@ public:
 
     // === Rendering Parameters ===
 
-    [[nodiscard]] float getPointSize() const { return _data.point_size; }
+    /** @brief Get glyph style state (for GlyphStyleControls binding) */
+    [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
+
+    /** @brief Get point size (convenience, reads from glyph style) */
+    [[nodiscard]] float getPointSize() const { return _data.point_glyph_style.size; }
+
+    /** @brief Set point size (convenience, delegates to glyph style state) */
     void setPointSize(float size);
 
     [[nodiscard]] float getLineWidth() const { return _data.line_width; }
@@ -199,7 +207,7 @@ signals:
     void maxAlphaChanged(float alpha);
 
     // Rendering signals
-    void pointSizeChanged(float size);
+    void glyphStyleChanged();
     void lineWidthChanged(float width);
     void highlightCurrentChanged(bool highlight);
 
@@ -207,6 +215,7 @@ private:
     OnionSkinViewStateData _data;
     std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
+    std::unique_ptr<GlyphStyleState> _glyph_style_state;
 };
 
 #endif  // ONION_SKIN_VIEW_STATE_HPP

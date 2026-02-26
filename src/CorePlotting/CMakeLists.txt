@@ -17,6 +17,8 @@ set(COREPLOTTING_SOURCES
     Mappers/HistogramMapper.cpp
     # DataTypes (style, cache - used by widgets)
     DataTypes/SeriesStyle.hpp
+    DataTypes/GlyphStyleData.hpp
+    DataTypes/GlyphStyleConversion.hpp
     DataTypes/SeriesDataCache.hpp
     DataTypes/HistogramData.hpp
     DataTypes/AlphaCurve.hpp

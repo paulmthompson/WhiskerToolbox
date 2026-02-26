@@ -297,20 +297,23 @@ void EventPlotPropertiesWidget::_updateEventOptions(QString const & event_name) 
     if (options) {
         // Update tick thickness
         ui->tick_thickness_spinbox->blockSignals(true);
-        ui->tick_thickness_spinbox->setValue(options->tick_thickness);
+        ui->tick_thickness_spinbox->setValue(static_cast<double>(options->glyph_style.size));
         ui->tick_thickness_spinbox->blockSignals(false);
 
         // Update glyph type combo box
         int glyph_index = 0;// Default to Tick
-        switch (options->glyph_type) {
-            case EventGlyphType::Tick:
+        switch (options->glyph_style.glyph_type) {
+            case CorePlotting::GlyphType::Tick:
                 glyph_index = 0;
                 break;
-            case EventGlyphType::Circle:
+            case CorePlotting::GlyphType::Circle:
                 glyph_index = 1;
                 break;
-            case EventGlyphType::Square:
+            case CorePlotting::GlyphType::Square:
                 glyph_index = 2;
+                break;
+            default:
+                glyph_index = 0;
                 break;
         }
         ui->glyph_type_combo->blockSignals(true);
@@ -318,7 +321,7 @@ void EventPlotPropertiesWidget::_updateEventOptions(QString const & event_name) 
         ui->glyph_type_combo->blockSignals(false);
 
         // Update color display
-        _updateColorDisplay(QString::fromStdString(options->hex_color));
+        _updateColorDisplay(QString::fromStdString(options->glyph_style.hex_color));
     }
 }
 
@@ -405,7 +408,7 @@ void EventPlotPropertiesWidget::_onTickThicknessChanged(double value) {
 
     auto options = _state->getPlotEventOptions(event_name);
     if (options) {
-        options->tick_thickness = value;
+        options->glyph_style.size = static_cast<float>(value);
         _state->updatePlotEventOptions(event_name, *options);
     }
 }
@@ -418,19 +421,19 @@ void EventPlotPropertiesWidget::_onGlyphTypeChanged(int index) {
 
     auto options = _state->getPlotEventOptions(event_name);
     if (options) {
-        EventGlyphType glyph_type = EventGlyphType::Tick;// Default
+        CorePlotting::GlyphType glyph_type = CorePlotting::GlyphType::Tick;// Default
         switch (index) {
             case 0:
-                glyph_type = EventGlyphType::Tick;
+                glyph_type = CorePlotting::GlyphType::Tick;
                 break;
             case 1:
-                glyph_type = EventGlyphType::Circle;
+                glyph_type = CorePlotting::GlyphType::Circle;
                 break;
             case 2:
-                glyph_type = EventGlyphType::Square;
+                glyph_type = CorePlotting::GlyphType::Square;
                 break;
         }
-        options->glyph_type = glyph_type;
+        options->glyph_style.glyph_type = glyph_type;
         _state->updatePlotEventOptions(event_name, *options);
     }
 }
@@ -445,7 +448,7 @@ void EventPlotPropertiesWidget::_onColorButtonClicked() {
     QColor current_color;
     auto options = _state->getPlotEventOptions(event_name);
     if (options) {
-        current_color = QColor(QString::fromStdString(options->hex_color));
+        current_color = QColor(QString::fromStdString(options->glyph_style.hex_color));
     } else {
         current_color = QColor("#000000");// Default black
     }
@@ -456,7 +459,7 @@ void EventPlotPropertiesWidget::_onColorButtonClicked() {
     if (color.isValid() && options) {
         QString hex_color = color.name();
         _updateColorDisplay(hex_color);
-        options->hex_color = hex_color.toStdString();
+        options->glyph_style.hex_color = hex_color.toStdString();
         _state->updatePlotEventOptions(event_name, *options);
     }
 }

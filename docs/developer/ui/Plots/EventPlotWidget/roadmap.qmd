@@ -21,13 +21,20 @@ The following phases are complete and documented in [index.qmd](index.qmd):
 
 ## Phase 3: Visual Customization
 
-**Status**: Partially complete — glyph type and color picker exist; remaining items below.
+**Status**: **Partially complete** — glyph type, color picker, and tick thickness exist.
+`EventPlotOptions` now uses `CorePlotting::GlyphStyleData` (from `GlyphStyleData.hpp`) instead of
+the widget-specific `EventGlyphType` enum and separate `tick_thickness`/`hex_color` fields.
+The rendering in `EventPlotOpenGLWidget::rebuildScene()` uses `CorePlotting::toRenderableGlyphType()`
+and `CorePlotting::hexColorToVec4()` from `GlyphStyleConversion.hpp`, correctly applying
+per-series glyph type, size, color, and alpha.
 
 **Goal**: Full control over glyph appearance and axis labeling.
 
 ### 3.1 Extended Glyph Options
 
-The current `EventPlotOptions` struct supports `event_key`, `tick_thickness`, `glyph_type`, and `hex_color`. The following additional options should be added:
+The current `EventPlotOptions` struct uses `CorePlotting::GlyphStyleData glyph_style` for
+all marker styling (shape, size, color, alpha). The following additional options should be
+considered:
 
 ```cpp
 struct EventPlotOptions {

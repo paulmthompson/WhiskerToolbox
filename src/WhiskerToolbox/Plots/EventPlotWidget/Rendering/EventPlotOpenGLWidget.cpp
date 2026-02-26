@@ -5,6 +5,7 @@
 #include "DataManager/utils/color.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
@@ -428,19 +429,12 @@ void EventPlotOpenGLWidget::rebuildScene()
     }
 
     // Map each trial's events
-    // Get color from EventPlotOptions (default black)
+    // Build rendering-level GlyphStyle from the per-series GlyphStyleData
     CorePlotting::GlyphStyle style;
-    // Default glyph size - can be overridden per-series via EventPlotOptions
-    style.size = 3.0f;
-    
-    // Convert hex color to glm::vec4 (default black if not set)
-    int r, g, b;
-    hexToRGB(source_options->hex_color.empty() ? "#000000" : source_options->hex_color, r, g, b);
-    style.color = glm::vec4(
-        static_cast<float>(r) / 255.0f,
-        static_cast<float>(g) / 255.0f,
-        static_cast<float>(b) / 255.0f,
-        1.0f);
+    auto const & gd = source_options->glyph_style;
+    style.glyph_type = CorePlotting::toRenderableGlyphType(gd.glyph_type);
+    style.size = gd.size;
+    style.color = CorePlotting::hexColorToVec4(gd.hex_color, gd.alpha);
 
     for (size_t trial = 0; trial < num_trials; ++trial) {
         auto const & trial_view = gathered[trial];

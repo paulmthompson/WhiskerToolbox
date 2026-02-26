@@ -271,12 +271,11 @@ TEST_CASE("TemporalProjectionViewState rendering parameters", "[TemporalProjecti
     }
     
     SECTION("setPointSize emits signal") {
-        QSignalSpy spy(&state, &TemporalProjectionViewState::pointSizeChanged);
+        QSignalSpy spy(&state, &TemporalProjectionViewState::glyphStyleChanged);
         
         state.setPointSize(7.5f);
         
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.takeFirst().at(0).toFloat() == 7.5f);
     }
     
     SECTION("setPointSize marks dirty") {
@@ -287,7 +286,7 @@ TEST_CASE("TemporalProjectionViewState rendering parameters", "[TemporalProjecti
     
     SECTION("setting same point size does not emit signal") {
         state.setPointSize(5.0f);
-        QSignalSpy spy(&state, &TemporalProjectionViewState::pointSizeChanged);
+        QSignalSpy spy(&state, &TemporalProjectionViewState::glyphStyleChanged);
         
         state.setPointSize(5.0f);
         

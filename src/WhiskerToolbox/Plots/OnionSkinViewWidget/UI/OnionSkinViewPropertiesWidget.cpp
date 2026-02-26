@@ -5,6 +5,7 @@
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Points/Point_Data.hpp"
@@ -12,7 +13,9 @@
 
 #include "ui_OnionSkinViewPropertiesWidget.h"
 
+#include <QFormLayout>
 #include <QHeaderView>
+#include <QLabel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 
@@ -101,12 +104,28 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             this, &OnionSkinViewPropertiesWidget::_onMaxAlphaChanged);
 
     // Connect UI signals — rendering
-    connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &OnionSkinViewPropertiesWidget::_onPointSizeChanged);
     connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &OnionSkinViewPropertiesWidget::_onLineWidthChanged);
     connect(ui->highlight_current_checkbox, &QCheckBox::toggled,
             this, &OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged);
+
+    // Hide the legacy point_size_spinbox (defined in .ui) and insert GlyphStyleControls
+    ui->point_size_spinbox->setVisible(false);
+    // Also hide the label for it
+    if (auto * label = ui->point_size_spinbox->parentWidget()->findChild<QLabel *>("point_size_label")) {
+        label->setVisible(false);
+    }
+    if (_state) {
+        _glyph_style_controls = new GlyphStyleControls(_state->glyphStyleState(), this);
+        // Insert before line_width_spinbox area in the rendering section
+        auto * rendering_layout = qobject_cast<QFormLayout *>(ui->point_size_spinbox->parentWidget()->layout());
+        if (rendering_layout) {
+            rendering_layout->insertRow(0, "Glyph Style", _glyph_style_controls);
+        } else {
+            // Fallback: add directly to main layout
+            ui->main_layout->addWidget(_glyph_style_controls);
+        }
+    }
 
     // Populate combo boxes
     _populatePointComboBox();
@@ -189,12 +208,6 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
                 });
 
         // Rendering signals (state → UI sync)
-        connect(_state.get(), &OnionSkinViewState::pointSizeChanged,
-                this, [this](float size) {
-                    ui->point_size_spinbox->blockSignals(true);
-                    ui->point_size_spinbox->setValue(static_cast<double>(size));
-                    ui->point_size_spinbox->blockSignals(false);
-                });
         connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
                 this, [this](float width) {
                     ui->line_width_spinbox->blockSignals(true);
@@ -580,11 +593,9 @@ void OnionSkinViewPropertiesWidget::_onMaxAlphaChanged(double value)
 // Rendering Controls
 // =============================================================================
 
-void OnionSkinViewPropertiesWidget::_onPointSizeChanged(double value)
+void OnionSkinViewPropertiesWidget::_onPointSizeChanged(double /*value*/)
 {
-    if (_state) {
-        _state->setPointSize(static_cast<float>(value));
-    }
+    // Legacy slot — no longer used; glyph style is managed by GlyphStyleControls
 }
 
 void OnionSkinViewPropertiesWidget::_onLineWidthChanged(double value)
@@ -641,9 +652,7 @@ void OnionSkinViewPropertiesWidget::_updateUIFromState()
     ui->max_alpha_spinbox->blockSignals(false);
 
     // Rendering
-    ui->point_size_spinbox->blockSignals(true);
-    ui->point_size_spinbox->setValue(static_cast<double>(_state->getPointSize()));
-    ui->point_size_spinbox->blockSignals(false);
+    // point_size_spinbox is hidden — GlyphStyleControls handles glyph style
 
     ui->line_width_spinbox->blockSignals(true);
     ui->line_width_spinbox->setValue(static_cast<double>(_state->getLineWidth()));

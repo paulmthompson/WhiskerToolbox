@@ -37,66 +37,32 @@ and subgroup visibility filtering described below.
 
 ## Phase 1: Point Glyph Customization
 
-**Status**: Not started. Points currently render as blue circles at a configurable size. Glyph
-shape and color are hardcoded.
+**Status**: **Complete**. Global glyph customization (shape, size, color, alpha) is now
+implemented using the shared `CorePlotting::GlyphStyleData` struct and the
+`GlyphStyleControls` widget from `Plots/Common/GlyphStyleWidget/`.
 
-**Goal**: Allow the user to configure point glyph appearance (shape, size, color), aligning with
-the glyph options patterns used by [EventPlotWidget](../EventPlotWidget/index.qmd) and planned
-for [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (Phase 4).
+**What was implemented**:
 
-### 1.1 Glyph Options in State
+- `TemporalProjectionViewStateData::point_glyph_style` (`CorePlotting::GlyphStyleData`) replaces
+  the former `float point_size` field — serializable with reflectcpp.
+- `GlyphStyleState` (QObject wrapper) composed into `TemporalProjectionViewState`, with
+  `styleChanged` wired to `stateChanged()` + `markDirty()` for automatic scene rebuilds.
+- `GlyphStyleControls` widget embedded in `TemporalProjectionViewPropertiesWidget`, replacing
+  the old point-size spinbox.
+- Rendering in `TemporalProjectionOpenGLWidget::rebuildScene()` uses
+  `CorePlotting::toRenderableGlyphType()` and `CorePlotting::hexColorToVec4()` from
+  `GlyphStyleConversion.hpp` instead of hardcoded Circle/blue.
 
-Extend `TemporalProjectionViewStateData` with per-key or global glyph configuration:
+**Shared infrastructure used** (see `Plots/Common/GlyphStyleWidget/`):
 
-```cpp
-enum class PointGlyphType {
-    Circle,        ///< Filled circle (default)
-    Square,        ///< Filled square
-    Diamond,       ///< Rotated square
-    Cross,         ///< + shape
-    Triangle       ///< Upward triangle
-};
-
-struct PointGlyphOptions {
-    PointGlyphType glyph_type = PointGlyphType::Circle;
-    float glyph_size = 5.0f;           ///< Size in pixels
-    std::string hex_color = "#3366CC"; ///< Fill color as hex string
-    float alpha = 1.0f;               ///< Opacity (0.0–1.0)
-};
-```
-
-**Design decision — per-key vs. global**: Initially, a single `PointGlyphOptions` applies to
-all point keys (simpler UI). Later, per-key options can be added with a map
-`std::map<std::string, PointGlyphOptions>` and a per-key options table in the properties panel, similar
-to the per-series `LinePlotOptions` pattern in [LinePlotWidget](../LinePlotWidget/index.qmd).
-
-### 1.2 Shared Glyph Type Enum
-
-The glyph types overlap across multiple widgets:
-
-| Widget | Glyph Types | Rendering Backend |
-|--------|-------------|-------------------|
-| [EventPlotWidget](../EventPlotWidget/index.qmd) | Tick, Circle, Square | `SceneRenderer` via `SceneBuilder::addGlyphs()` |
-| [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) (planned) | Circle, Square, Diamond, Cross, Triangle | `SceneRenderer` or `PointBatchRenderer` |
-| **TemporalProjectionViewWidget** | Circle, Square, Diamond, Cross, Triangle | `SceneRenderer` via `SceneBuilder::addGlyphs()` |
-
-The `CorePlotting::RenderableGlyphBatch::GlyphType` enum should be extended (or a new shared
-enum created) to cover all shapes needed across widgets, avoiding per-widget glyph type
-definitions.
-
-### 1.3 Properties Panel Controls
-
-Add a "Point Appearance" collapsible section to `TemporalProjectionViewPropertiesWidget`:
-
-- **Glyph type combo box** — Circle, Square, Diamond, Cross, Triangle
-- **Size spinbox** — point size in pixels (existing, move into this section)
-- **Color button** — opens `QColorDialog`, stores hex string in state
-- **Alpha slider** — opacity (0.0–1.0)
-
-### 1.4 Rendering Update
-
-In `TemporalProjectionOpenGLWidget::rebuildScene()`, replace the hardcoded blue color and
-Circle glyph type with values read from state:
+| Component | Location |
+|-----------|----------|
+| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` |
+| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` |
+| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` |
+| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` |
+| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` |
+| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` |
 
 ```cpp
 CorePlotting::GlyphStyle style;
@@ -554,7 +520,8 @@ Components that should be factored into shared locations rather than implemented
 | `SelectionPolygon` | `CorePlotting/Selection/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
 | `GroupManagementPanel` | `Plots/Common/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
 | `GroupColorMapper` | `CorePlotting/` | TemporalProjectionViewWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd) |
-| Extended `GlyphType` enum | `CorePlotting/SceneGraph/` | TemporalProjectionViewWidget, [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
+| Extended `GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | TemporalProjectionViewWidget, [EventPlotWidget](../EventPlotWidget/index.qmd), [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd), [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
+| `GlyphStyleControls` widget | `Plots/Common/GlyphStyleWidget/` | TemporalProjectionViewWidget, [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
 | `PointBatchRenderer` (optional) | `PlottingOpenGL/PointBatch/` | TemporalProjectionViewWidget, [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd) |
 
 ## Open Questions

@@ -15,7 +15,9 @@
  */
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -44,7 +46,7 @@ struct TemporalProjectionViewStateData {
     // Note: mask_data_keys deferred due to CPU contour extraction performance
 
     // Rendering
-    float point_size = 5.0f;
+    CorePlotting::GlyphStyleData point_glyph_style;
     float line_width = 2.0f;
 
     // Selection
@@ -141,11 +143,14 @@ public:
     void clearLineDataKeys();
 
     // === Rendering Parameters ===
+
+    /** @brief Get glyph style state (for GlyphStyleControls binding) */
+    [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
     
-    /** @brief Get point size */
-    [[nodiscard]] float getPointSize() const { return _data.point_size; }
+    /** @brief Get point size (convenience, reads from glyph style) */
+    [[nodiscard]] float getPointSize() const { return _data.point_glyph_style.size; }
     
-    /** @brief Set point size */
+    /** @brief Set point size (convenience, delegates to glyph style state) */
     void setPointSize(float size);
     
     /** @brief Get line width */
@@ -174,7 +179,7 @@ signals:
     void lineDataKeyAdded(QString const & key);
     void lineDataKeyRemoved(QString const & key);
     void lineDataKeysCleared();
-    void pointSizeChanged(float size);
+    void glyphStyleChanged();
     void lineWidthChanged(float width);
     void selectionModeChanged(QString const & mode);
 
@@ -182,6 +187,7 @@ private:
     TemporalProjectionViewStateData _data;
     std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
+    std::unique_ptr<GlyphStyleState> _glyph_style_state;
 };
 
 #endif  // TEMPORAL_PROJECTION_VIEW_STATE_HPP

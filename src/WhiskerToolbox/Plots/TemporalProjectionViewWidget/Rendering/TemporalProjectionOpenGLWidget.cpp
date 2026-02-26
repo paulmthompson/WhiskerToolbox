@@ -2,6 +2,7 @@
 
 #include "Core/TemporalProjectionViewState.hpp"
 #include "CoreGeometry/boundingbox.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
 #include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
@@ -67,8 +68,8 @@ void TemporalProjectionOpenGLWidget::setState(std::shared_ptr<TemporalProjection
                 this, &TemporalProjectionOpenGLWidget::onDataKeysChanged);
         connect(_state.get(), &TemporalProjectionViewState::lineDataKeysCleared,
                 this, &TemporalProjectionOpenGLWidget::onDataKeysChanged);
-        connect(_state.get(), &TemporalProjectionViewState::pointSizeChanged,
-                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &TemporalProjectionViewState::glyphStyleChanged,
+                this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &TemporalProjectionViewState::lineWidthChanged,
                 this, [this](float) { _scene_dirty = true; update(); });
         _scene_dirty = true;
@@ -409,13 +410,13 @@ void TemporalProjectionOpenGLWidget::rebuildScene()
     CorePlotting::SceneBuilder builder;
     builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
     
-    float const point_size = _state->getPointSize();
+    auto const & glyph_data = _state->glyphStyleState()->data();
 
     for (auto const & pb : point_batches) {
         CorePlotting::GlyphStyle style;
-        style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
-        style.size = point_size;
-        style.color = glm::vec4{0.2f, 0.4f, 0.8f, 1.0f}; // Blue points
+        style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
+        style.size = glyph_data.size;
+        style.color = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
         
         builder.addGlyphs("points_" + pb.key, pb.mapped, style);
     }

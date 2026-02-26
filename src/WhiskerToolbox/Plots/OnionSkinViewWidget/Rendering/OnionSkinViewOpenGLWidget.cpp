@@ -4,6 +4,7 @@
 #include "CorePlotting/DataTypes/AlphaCurve.hpp"
 #include "CorePlotting/Mappers/MaskContourMapper.hpp"
 #include "CorePlotting/Mappers/SpatialMapper_Window.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -74,8 +75,8 @@ void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> sta
                 this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
 
         // Rendering parameter signals
-        connect(_state.get(), &OnionSkinViewState::pointSizeChanged,
-                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::glyphStyleChanged,
+                this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
                 this, [this](float) { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
@@ -275,7 +276,8 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     auto const mask_keys = _state->getMaskDataKeys();
     int const behind = _state->getWindowBehind();
     int const ahead = _state->getWindowAhead();
-    float const point_size = _state->getPointSize();
+    auto const & glyph_data = _state->glyphStyleState()->data();
+    float const point_size = glyph_data.size;
     float const line_width = _state->getLineWidth();
     bool const highlight_current = _state->getHighlightCurrent();
     float const min_alpha = _state->getMinAlpha();
@@ -288,10 +290,11 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
     TimeFrameIndex const center{_current_time};
 
-    // Current frame highlight colors
+    // Derive base point color from glyph style; highlight color stays hardcoded
+    glm::vec4 const base_point_color = CorePlotting::hexColorToVec4(
+        glyph_data.hex_color, glyph_data.alpha);
     glm::vec4 const current_point_color{1.0f, 0.3f, 0.1f, max_alpha};  // Bright orange-red
     glm::vec4 const current_line_color{1.0f, 0.3f, 0.1f, max_alpha};
-    glm::vec4 const base_point_color{0.2f, 0.5f, 0.9f, 1.0f};  // Blue base
     glm::vec4 const base_line_color{0.2f, 0.7f, 0.4f, 1.0f};   // Green base
     glm::vec4 const base_mask_color{0.8f, 0.5f, 0.2f, 1.0f};   // Orange base
 
@@ -450,7 +453,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
         // Build a batch of points at this temporal distance
         CorePlotting::RenderableGlyphBatch batch;
-        batch.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
+        batch.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
         batch.model_matrix = glm::mat4(1.0f);
 
         bool const is_current = (dist == 0);

@@ -468,7 +468,7 @@ TEST_CASE("OnionSkinViewState rendering parameters", "[OnionSkinViewState]")
     }
 
     SECTION("setPointSize emits signal") {
-        QSignalSpy spy(&state, &OnionSkinViewState::pointSizeChanged);
+        QSignalSpy spy(&state, &OnionSkinViewState::glyphStyleChanged);
 
         state.setPointSize(10.0f);
 
@@ -484,7 +484,7 @@ TEST_CASE("OnionSkinViewState rendering parameters", "[OnionSkinViewState]")
     SECTION("setPointSize same value no-op") {
         state.setPointSize(8.0f); // default
         state.markClean();
-        QSignalSpy spy(&state, &OnionSkinViewState::pointSizeChanged);
+        QSignalSpy spy(&state, &OnionSkinViewState::glyphStyleChanged);
 
         state.setPointSize(8.0f);
 

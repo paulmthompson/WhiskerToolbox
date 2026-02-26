@@ -96,6 +96,7 @@ add_subdirectory(Plots/Common/PlotAlignmentWidget)
 add_subdirectory(Plots/Common/RelativeTimeAxisWidget)
 add_subdirectory(Plots/Common/VerticalAxisWidget)
 add_subdirectory(Plots/Common/HorizontalAxisWidget)
+add_subdirectory(Plots/Common/GlyphStyleWidget)
 
 # Qt, EditorState, reflectcpp - Python integration widget
 add_subdirectory(Python_Widget)

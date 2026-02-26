@@ -326,60 +326,55 @@ refactored when the second widget needs the same functionality.
 **Status**: Not started. Depends on Phase 1 (point rendering).
 
 **Goal**: Allow the user to configure the visual appearance of scatter points (glyph shape,
-size, color), following the patterns established by [EventPlotWidget](../EventPlotWidget/index.qmd)
-and planned for [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
+size, color), using the shared `CorePlotting::GlyphStyleData` infrastructure from
+`CorePlotting/DataTypes/GlyphStyleData.hpp` and `GlyphStyleControls` from
+`Plots/Common/GlyphStyleWidget/`.
 
 ### 4.1 Glyph Options in State
 
-```cpp
-enum class ScatterGlyphType {
-    Circle,        ///< Filled circle (default)
-    Square,        ///< Filled square
-    Diamond,       ///< Rotated square
-    Cross,         ///< + shape
-    Triangle       ///< Upward triangle
-};
+Use the shared `CorePlotting::GlyphStyleData` struct instead of defining a widget-specific
+glyph type enum:
 
-struct ScatterGlyphOptions {
-    ScatterGlyphType glyph_type = ScatterGlyphType::Circle;
-    double glyph_size = 4.0;         ///< Size in pixels
-    std::string hex_color = "#3380FF"; ///< Fill color
-    double alpha = 0.7;              ///< Opacity (useful for overlapping points)
-    bool show_border = true;
-    std::string border_color = "#000000";
-    double border_width = 1.0;
-};
+```cpp
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 
 struct ScatterPlotStateData {
     // ... existing fields ...
-    ScatterGlyphOptions glyph_options;
+    CorePlotting::GlyphStyleData glyph_style; // Uses shared GlyphType enum
 };
 ```
 
+The `CorePlotting::GlyphType` enum already covers Circle, Square, Tick, Cross, Diamond, and
+Triangle. Additional per-widget options like border settings can be added as separate fields.
+
 ### 4.2 Shared Glyph Rendering Infrastructure
 
-The glyph types and rendering logic overlap with existing glyph infrastructure:
+The shared glyph infrastructure is now implemented:
 
-| Widget | Glyph Types | Rendering Backend |
-|--------|-------------|-------------------|
-| **[EventPlotWidget](../EventPlotWidget/index.qmd)** | Tick, Circle, Square | `SceneRenderer` via `SceneBuilder::addGlyphs()` |
-| **ScatterPlotWidget** | Circle, Square, Diamond, Cross, Triangle | `SceneRenderer` or dedicated renderer |
-| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Point markers (planned) | `SceneRenderer` or dedicated renderer |
+| Component | Location | Status |
+|-----------|----------|--------|
+| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` | **Complete** |
+| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` | **Complete** |
 
-If a dedicated `PointBatchRenderer` is implemented (see Phase 1.5 Option B), the glyph
-type should be a shader parameter so all shapes can be rendered in a single instanced
-draw call.
+Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.
 
 ### 4.3 Properties Panel Controls
 
-Add to `ScatterPlotPropertiesWidget` in a "Glyph Options" collapsible section:
+Embed `GlyphStyleControls` from `Plots/Common/GlyphStyleWidget/` in a "Glyph Options"
+collapsible section of `ScatterPlotPropertiesWidget`, following the pattern used by
+TemporalProjectionViewWidget and OnionSkinViewWidget:
 
-- **Glyph type combo box** — Circle, Square, Diamond, Cross, Triangle
-- **Size spinbox** — point size in pixels
-- **Color button** — opens `QColorDialog`
-- **Alpha slider** — opacity (0.0–1.0)
-- **Border checkbox** — show/hide border
-- **Border color button** + **border width spinbox** (visible when border enabled)
+```cpp
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
+
+auto * controls = new GlyphStyleControls(state->glyphStyleState(), parent);
+```
+
+Additional scatter-specific controls (border, selection style) can be added alongside.
 
 ### 4.4 Selected Point Style
 

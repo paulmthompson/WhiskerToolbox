@@ -20,6 +20,9 @@
 
 #include "nlohmann/json.hpp"
 
+#include <algorithm>
+#include <limits>
+
 // StateData headers (pure data — no Qt dependency)
 #include "Test_Widget/TestWidgetStateData.hpp"
 #include "DataManager_Widget/DataManagerWidgetStateData.hpp"
@@ -432,16 +435,21 @@ void FuzzEventPlotStateDataRoundTrip(
     // Top-level fields
     data.background_color = background_color;
     data.pinned = pinned;
-    data.sorting_mode = static_cast<TrialSortMode>(std::abs(sorting_mode) % 3);
+    data.sorting_mode = static_cast<TrialSortMode>(static_cast<unsigned>(sorting_mode) % 3u);
 
     // Plot events
     auto const n = std::min({event_keys.size(), tick_thicknesses.size(), glyph_types.size()});
     for (size_t i = 0; i < std::min(n, size_t{10}); ++i) {
         EventPlotOptions opts;
         opts.event_key = event_keys[i];
-        opts.tick_thickness = tick_thicknesses[i];
-        opts.glyph_type = static_cast<EventGlyphType>(std::abs(glyph_types[i]) % 3);
-        opts.hex_color = "#0000FF";
+        // Clamp to float range to avoid inf (doubles can exceed float max)
+        auto const clamped = std::clamp(tick_thicknesses[i],
+                                         static_cast<double>(-std::numeric_limits<float>::max()),
+                                         static_cast<double>(std::numeric_limits<float>::max()));
+        opts.glyph_style.size = static_cast<float>(clamped);
+        // Use unsigned cast to avoid std::abs(INT_MIN) UB
+        opts.glyph_style.glyph_type = static_cast<CorePlotting::GlyphType>(static_cast<unsigned>(glyph_types[i]) % 6u);
+        opts.glyph_style.hex_color = "#0000FF";
         data.plot_events["event_" + std::to_string(i)] = opts;
     }
 

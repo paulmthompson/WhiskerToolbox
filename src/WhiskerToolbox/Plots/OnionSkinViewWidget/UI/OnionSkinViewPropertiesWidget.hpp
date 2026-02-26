@@ -25,6 +25,7 @@
 #include <memory>
 
 class DataManager;
+class GlyphStyleControls;
 class HorizontalAxisRangeControls;
 class OnionSkinViewWidget;
 class Section;
@@ -114,6 +115,7 @@ private:
     std::shared_ptr<OnionSkinViewState> _state;
     std::shared_ptr<DataManager> _data_manager;
     OnionSkinViewWidget * _plot_widget;
+    GlyphStyleControls * _glyph_style_controls = nullptr;
     HorizontalAxisRangeControls * _horizontal_range_controls;
     Section * _horizontal_range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
