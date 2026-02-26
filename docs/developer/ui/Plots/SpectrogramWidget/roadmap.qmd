@@ -1,0 +1,699 @@
+---
+title: "Spectrogram Widget Roadmap"
+format: html
+---
+
+# SpectrogramWidget Development Roadmap
+
+This document tracks remaining development tasks for the Spectrogram Widget. For documentation
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+## Completed Work Summary
+
+The following features are complete and documented in [index.qmd](index.qmd):
+
+- **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
+- **State management**: `SpectrogramState` with `SpectrogramViewState`, `SpectrogramAxisOptions` serialization via `rfl::json`
+- **Registration**: `SpectrogramWidgetModule::registerTypes()` with `create_editor_custom` factory, `timeChanged` connection
+- **UI shells**: `SpectrogramWidget.ui` and `SpectrogramPropertiesWidget.ui` with placeholder layouts
+- **Time navigation**: `timePositionSelected` signal connected to `EditorRegistry::setCurrentTime()`
+
+**Not yet implemented**: Spectrogram computation (TransformsV2), OpenGL rendering, colormap,
+colorbar, axis integration, data source selection, properties controls, PNG export, and all
+features described below.
+
+---
+
+## Phase 1: Spectrogram Transform (TransformsV2) {#phase-1-spectrogram-transform}
+
+**Status**: Not started. The `TransformsV2` infrastructure exists; this phase adds a new
+transform that computes a spectrogram from an analog signal.
+
+**Goal**: Define a `TransformsV2` transform that converts `AnalogTimeSeries` → `TensorData`
+(a time × frequency matrix of spectral power values).
+
+### 1.1 Transform Design
+
+Create a new transform in `src/TransformsV2/algorithms/`:
+
+```
+TransformsV2/algorithms/AnalogSpectrogram/
+├── AnalogSpectrogram.hpp
+├── AnalogSpectrogram.cpp
+└── AnalogSpectrogram_registration.cpp
+```
+
+Following the established pattern used by transforms like `AnalogHilbertPhase` and
+`AnalogBandpassFilter`.
+
+### 1.2 Transform Parameters
+
+```cpp
+struct AnalogSpectrogramParams {
+    /// FFT window size in samples (power of 2 preferred)
+    std::optional<rfl::Validator<size_t, rfl::Minimum<8>>> fft_size;
+
+    /// Hop size in samples (overlap = fft_size - hop_size)
+    std::optional<rfl::Validator<size_t, rfl::Minimum<1>>> hop_size;
+
+    /// Window function: "hann", "hamming", "blackman", "rectangular"
+    std::optional<std::string> window_function;
+
+    /// Sampling rate in Hz (0 = auto-detect from TimeFrame)
+    std::optional<rfl::Validator<double, rfl::Minimum<0.0>>> sampling_rate;
+
+    /// Output type: "power", "magnitude", "log_power" (dB)
+    std::optional<std::string> output_type;
+
+    /// Minimum frequency to include in output (Hz, 0 = DC)
+    std::optional<rfl::Validator<double, rfl::Minimum<0.0>>> min_frequency;
+
+    /// Maximum frequency to include in output (Hz, 0 = Nyquist)
+    std::optional<rfl::Validator<double, rfl::Minimum<0.0>>> max_frequency;
+
+    // --- Defaults ---
+    size_t getFFTSize() const { return fft_size ? fft_size->value() : 256; }
+    size_t getHopSize() const { return hop_size ? hop_size->value() : 128; }
+    std::string getWindowFunction() const { return window_function.value_or("hann"); }
+    std::string getOutputType() const { return output_type.value_or("log_power"); }
+};
+```
+
+### 1.3 Output Format
+
+The transform produces a `TensorData` object with:
+
+- **Rows**: Time frames (one per hop), each with a `TimeFrameIndex` corresponding to the
+  center of the analysis window
+- **Columns**: Frequency bins from `min_frequency` to `max_frequency`
+- **Values**: Spectral power (or magnitude, or dB) depending on `output_type`
+
+The resulting `TensorData` is stored in the DataManager under a new key and can be visualized
+directly by the SpectrogramWidget.
+
+### 1.4 FFT Implementation
+
+Options for the FFT backend:
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **KissFFT** (header-only) | Simple integration, no external dependency, cross-platform | Slower than FFTW for large transforms |
+| **PocketFFT** (header-only, from NumPy) | Very fast, BSD license, single header | Less well-known |
+| **FFTW3** | Industry standard, highly optimized | Heavy dependency, GPL license |
+| **Custom DFT** | Zero dependency | Performance concern for large windows |
+
+**Recommendation**: PocketFFT or KissFFT for a header-only solution with no licensing concerns
+and easy cross-platform support. The FFT sizes for spectrograms (typically 256–4096) are
+well within the efficient range for either library.
+
+### 1.5 Window Functions
+
+Implement standard window functions in a shared utility (could live in `CoreMath/`):
+
+| Window | Use Case |
+|--------|----------|
+| Hann | Default — good frequency resolution, low spectral leakage |
+| Hamming | Slightly narrower main lobe than Hann |
+| Blackman | Lowest sidelobes, wider main lobe |
+| Rectangular | No windowing (for testing or pre-windowed data) |
+
+### 1.6 Pipeline Integration
+
+The spectrogram transform should work in the standard pipeline JSON format:
+
+```json
+{
+  "steps": [
+    {
+      "transform": "AnalogSpectrogram",
+      "input": "raw_lfp",
+      "output": "lfp_spectrogram",
+      "params": {
+        "fft_size": 512,
+        "hop_size": 256,
+        "window_function": "hann",
+        "output_type": "log_power",
+        "min_frequency": 1.0,
+        "max_frequency": 100.0
+      }
+    }
+  ]
+}
+```
+
+### 1.7 Testing
+
+- Unit tests for the FFT computation against known analytical results
+- Unit tests for window functions (energy, symmetry)
+- Round-trip test: generate a sinusoid at known frequency → spectrogram → verify peak at
+  expected frequency bin
+- Serialization round-trip for `AnalogSpectrogramParams`
+
+---
+
+## Phase 2: OpenGL Rendering {#phase-2-opengl-rendering}
+
+**Status**: Not started. The widget shell exists but has no rendering layer.
+
+**Goal**: Add a `SpectrogramOpenGLWidget` that renders a time × frequency matrix as a
+colored image.
+
+### 2.1 OpenGL Widget
+
+Create the rendering layer:
+
+```
+Plots/SpectrogramWidget/Rendering/
+├── SpectrogramOpenGLWidget.hpp
+└── SpectrogramOpenGLWidget.cpp
+```
+
+Following the same `QOpenGLWidget` lifecycle pattern as `HeatmapOpenGLWidget` from
+[HeatmapWidget](../HeatmapWidget/index.qmd):
+
+- `initializeGL()` — initialize `SceneRenderer`, set background color
+- `resizeGL()` — update viewport and projection
+- `paintGL()` — render the scene via `SceneRenderer`
+- `rebuildScene()` — convert the spectral matrix to renderable geometry
+
+### 2.2 Rendering Strategy
+
+Two options for rendering the spectrogram matrix:
+
+**Option A: Rectangle Batch**
+Same pattern as [HeatmapWidget](../HeatmapWidget/index.qmd) — one `RenderableRectangleBatch`
+with one colored rectangle per cell. Simple, works well for moderate matrices
+(e.g., 200 time bins × 128 frequency bins = 25K rectangles).
+
+**Option B: Texture-Based Rendering**
+Upload the color-mapped matrix as a 2D OpenGL texture and render a single textured quad.
+This is dramatically more efficient for large spectrograms (e.g., 1000+ time bins × 512
+frequency bins). Requires a texture upload path in `SceneRenderer`.
+
+**Recommendation**: Start with **Option A** (rectangle batch) for consistency with HeatmapWidget
+and simplicity. If performance is insufficient for large spectrograms, add texture-based
+rendering as an optimization in a later phase.
+
+### 2.3 Scene Building
+
+The `rebuildScene()` method:
+
+1. Retrieve the `TensorData` spectrogram from DataManager using the configured key
+2. Determine the visible time window from the state's X bounds
+3. Slice the matrix to the visible time range and frequency range
+4. Apply the colormap to map scalar power values → RGBA colors
+5. Build a `RenderableRectangleBatch`: each cell is a rectangle from
+   `(time_bin_start, freq_bin_start)` to `(time_bin_start + bin_width, freq_bin_start + bin_height)`
+6. Upload to `SceneRenderer`
+
+### 2.4 Interaction
+
+Mouse interaction should use the shared `PlotInteractionHelpers` from
+[Plot Widget Guide](../plot_widget_guide.md):
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | Y-zoom (frequency axis) |
+| Shift + wheel | *(reserved — X zoom triggers data reload, see Phase 3)* |
+| Click + drag | Y-pan (scroll through frequency range) |
+| Double-click | Emit `timePositionSelected` for cross-widget navigation |
+
+Note: **X panning is disabled** because the spectrogram is centered on the global time
+position (see [X-Axis: Centered Time](index.qmd#x-axis-centered-time)). X zoom is a data
+operation, not a view transform, and is handled in Phase 3.
+
+### 2.5 CMakeLists Update
+
+Add the rendering sources to `SpectrogramWidget/CMakeLists.txt` and link
+`PlottingOpenGL` / `CorePlotting` as needed.
+
+---
+
+## Phase 3: Axis Integration {#phase-3-axis-integration}
+
+**Status**: Not started. Depends on [Phase 2](#phase-2-opengl-rendering).
+
+**Goal**: Wire up proper axis widgets and synchronize them with the view state.
+
+### 3.1 X-Axis: CenteredTimeAxis
+
+The X-axis should adopt the `CenteredTimeAxis` variant proposed in the
+[DataViewerWidget Roadmap Phase 1](../DataViewerWidget/roadmap.qmd#phase-1-common-axis-integration).
+Both the SpectrogramWidget and the DataViewerWidget share this centered,
+zoom-only-no-pan X-axis behavior.
+
+If `CenteredTimeAxis` is not yet available, implement a minimal version locally:
+
+```cpp
+struct SpectrogramTimeAxisConfig {
+    double half_window = 500.0;  ///< Visible half-window in time units
+};
+```
+
+The visible range is `[current_time - half_window, current_time + half_window]`, where
+`current_time` comes from `EditorRegistry::timeChanged`.
+
+**Critical behavior**: Changing `half_window` (X zoom) requires recomputing the spectrogram
+for the new time extent, or re-slicing a wider pre-computed spectrogram. This emits
+`stateChanged()` (triggering scene rebuild), unlike Y-axis zoom which only updates the
+projection matrix.
+
+### 3.2 Y-Axis: VerticalAxis (Frequency)
+
+Adopt the standard `VerticalAxisState` / `VerticalAxisWidget` from the
+[common axis system](../plot_widget_guide.md#3-verticalaxis--y-axis-value-or-trial-index):
+
+```cpp
+// In SpectrogramState constructor
+_vertical_axis_state = std::make_unique<VerticalAxisState>(this);
+_data.vertical_axis = _vertical_axis_state->data();
+
+// Set initial bounds from data
+_vertical_axis_state->setRange(0.0, nyquist_frequency);
+
+// Apply frequency axis mapping
+auto freq_mapping = CorePlotting::analogAxis("Frequency", "Hz");
+```
+
+Wire bidirectional synchronization with `VerticalAxisSynchronizer`:
+
+```cpp
+syncVerticalAxisToViewState(
+    _vertical_axis_state.get(), this,
+    [](auto const & vs) { return std::make_pair(vs.y_min, vs.y_max); }
+);
+```
+
+### 3.3 State Migration
+
+Replace the current custom `SpectrogramViewState` with the shared axis state types:
+
+```cpp
+struct SpectrogramStateData {
+    std::string instance_id;
+    std::string display_name = "Spectrogram";
+    CorePlotting::ViewStateData view_state;
+    VerticalAxisStateData vertical_axis;
+    CenteredTimeAxisStateData time_axis;        // When CenteredTimeAxis is available
+    std::string background_color = "#FFFFFF";
+    bool pinned = false;
+    std::string data_key;                       // Renamed from analog_signal_key
+    // ... colormap and color range fields (Phase 4)
+};
+```
+
+### 3.4 Layout
+
+The axes compose with the OpenGL canvas:
+
+```
+           ┌──────────────────────────────────┬────┐
+           │                                  │    │
+ Y-Axis    │     SpectrogramOpenGLWidget       │ CB │
+(Freq Hz)  │     (time × frequency)            │    │
+           ├──────────────────────────────────┴────┤
+           │       CenteredTimeAxisWidget           │
+           └────────────────────────────────────────┘
+```
+
+---
+
+## Phase 4: Colormap and Color Range {#phase-4-colormap-and-color-range}
+
+**Status**: Not started. Depends on [Phase 2](#phase-2-opengl-rendering).
+Shares infrastructure with [HeatmapWidget Roadmap Phase 2](../HeatmapWidget/roadmap.qmd#phase-2-colormap-infrastructure).
+
+**Goal**: Apply a user-selectable colormap to the spectral power matrix and display a colorbar.
+
+### 4.1 Shared Colormap Infrastructure
+
+The colormap system is shared with [HeatmapWidget](../HeatmapWidget/index.qmd) and lives in
+`src/CorePlotting/Colormaps/` (see [HeatmapWidget Roadmap Phase 2](../HeatmapWidget/roadmap.qmd#phase-2-colormap-infrastructure)):
+
+```cpp
+namespace CorePlotting::Colormaps {
+    using ColormapFunction = std::function<glm::vec4(float t)>;
+
+    enum class ColormapPreset {
+        Inferno, Viridis, Magma, Plasma, Coolwarm, GrayScale, Hot
+    };
+
+    ColormapFunction getColormap(ColormapPreset preset);
+    glm::vec4 mapValue(ColormapFunction const & cmap, float value, float vmin, float vmax);
+    std::vector<glm::vec4> mapMatrix(ColormapFunction const & cmap,
+                                      std::vector<double> const & values,
+                                      float vmin, float vmax);
+}
+```
+
+If the HeatmapWidget's colormap infrastructure is not yet available when SpectrogramWidget
+is being implemented, the SpectrogramWidget should implement the colormap locally and
+then extract it to `CorePlotting/Colormaps/` for sharing.
+
+### 4.2 Color Range Controls
+
+The mapping from spectral power to color requires a value range (`vmin`, `vmax`):
+
+```cpp
+struct SpectrogramColorRange {
+    bool auto_range = true;          ///< Determine range from data min/max
+    double vmin = 0.0;               ///< Manual minimum
+    double vmax = 1.0;               ///< Manual maximum
+    bool symmetric = false;          ///< Force symmetric range around zero
+    double clip_percentile = 2.0;    ///< Clip outliers at this percentile (0 = no clipping)
+};
+```
+
+This mirrors the `HeatmapColorRange` from [HeatmapWidget Roadmap Phase 3](../HeatmapWidget/roadmap.qmd#phase-3-scaling-and-normalization).
+For spectrograms, a default `clip_percentile` of 2.0 is recommended to handle extreme outliers
+in log-power values.
+
+### 4.3 State Extension
+
+```cpp
+struct SpectrogramStateData {
+    // ... existing fields ...
+    ColormapPreset colormap = ColormapPreset::Viridis;
+    SpectrogramColorRange color_range;
+};
+```
+
+### 4.4 Colorbar Integration
+
+Use the shared `ColorbarWidget` from `CorePlotting/Widgets/` (see [HeatmapWidget Roadmap Phase 4](../HeatmapWidget/roadmap.qmd#phase-4-colorbar-display)):
+
+- Display the current colormap gradient vertically
+- Show tick marks with power values (dB or linear depending on transform output type)
+- Update when colormap, color range, or data changes
+
+### 4.5 Default Colormap
+
+The SpectrogramWidget should default to **Viridis**, which is perceptually uniform and the
+standard colormap for spectrograms in scientific visualization. This differs from
+[HeatmapWidget](../HeatmapWidget/index.qmd) which defaults to **Inferno**.
+
+---
+
+## Phase 5: Data Source Selection and DataManager Integration {#phase-5-data-source-selection}
+
+**Status**: Not started. The state has an `analog_signal_key` field but no UI to set it.
+
+**Goal**: Full DataManager integration with combo box population, observer lifecycle, and
+support for both `AnalogTimeSeries` and `TensorData` inputs.
+
+### 5.1 Data Source Combo Box
+
+Add to `SpectrogramPropertiesWidget`:
+
+1. **Data type toggle**: Radio buttons or combo box to select between `AnalogTimeSeries` and `TensorData`
+2. **Data key combo box**: Lists available keys of the selected type from DataManager
+3. **Observer registration**: Standard DataManager observer pattern for real-time key updates
+   (see [Plot Widget Guide](../plot_widget_guide.md#datamanager-integration))
+
+### 5.2 State Extension
+
+Extend the state to track the input data type:
+
+```cpp
+enum class SpectrogramInputType {
+    AnalogTimeSeries,  ///< Raw signal — requires spectrogram transform
+    TensorData         ///< Pre-computed spectrogram matrix
+};
+
+struct SpectrogramStateData {
+    // ... existing fields ...
+    SpectrogramInputType input_type = SpectrogramInputType::TensorData;
+    std::string data_key;  ///< Key for the selected data (analog or tensor)
+};
+```
+
+### 5.3 Observer Lifecycle
+
+Follow the standard pattern from the [Plot Widget Guide](../plot_widget_guide.md#datamanager-integration):
+
+```cpp
+SpectrogramPropertiesWidget::SpectrogramPropertiesWidget(
+    std::shared_ptr<SpectrogramState> state,
+    std::shared_ptr<DataManager> data_manager,
+    QWidget * parent)
+    : QWidget(parent), _data_manager(std::move(data_manager))
+{
+    if (_data_manager) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _populateComboBoxes();
+        });
+    }
+}
+
+SpectrogramPropertiesWidget::~SpectrogramPropertiesWidget()
+{
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
+}
+```
+
+### 5.4 Stale Key Handling
+
+When a data key is deleted from DataManager:
+
+1. The observer callback repopulates the combo box (deleted key disappears)
+2. If the currently visualized key was deleted, clear the spectrogram display
+3. Null-check `getData<TensorData>(key)` in rendering code before use
+
+### 5.5 Testing
+
+Following the pattern from the [Plot Widget Guide](../plot_widget_guide.md#common-testing-requirements):
+
+- Combo box population test
+- Observer refresh test (add/remove data keys)
+- Destruction cleanup test (no crash after widget dies)
+- Stale key handling test
+
+---
+
+## Phase 6: Properties Panel Controls {#phase-6-properties-panel}
+
+**Status**: Not started. The properties widget has a placeholder layout only.
+
+**Goal**: Wire up all properties controls for the SpectrogramWidget.
+
+### 6.1 Properties Layout
+
+```
+┌─ Data Source ────────────────────────────────┐
+│  Input Type: [AnalogTimeSeries ▼]            │
+│  Data Key:   [channel_lfp ▼]                 │
+└──────────────────────────────────────────────┘
+┌─ Colormap ───────────────────────────────────┐
+│  Preset:     [Viridis ▼ (gradient preview)]  │
+│  Range:      [Auto ▼]                        │
+│  Min:        [____]  Max: [____]             │
+│  Clip %:     [2.0]                           │
+└──────────────────────────────────────────────┘
+┌─ Frequency Axis ─────────────────────────────┐
+│  Min Hz: [____]  Max Hz: [____]              │
+└──────────────────────────────────────────────┘
+┌─ Time Window ────────────────────────────────┐
+│  Half Window: [500.0] ms                     │
+└──────────────────────────────────────────────┘
+┌─ Export ─────────────────────────────────────┐
+│  [Export PNG...]                              │
+└──────────────────────────────────────────────┘
+```
+
+### 6.2 Collapsible Sections
+
+Use the `Section` widget (collapsible panels) for grouping, following the pattern in
+[HeatmapWidget](../HeatmapWidget/index.qmd) and other properties widgets.
+
+### 6.3 Colormap Combo Box
+
+Implement a shared `ColormapComboBox` that displays each preset with a small rendered
+gradient icon. This widget should live in `CorePlotting/Widgets/` or `Plots/Common/` and
+be shared with [HeatmapWidget Roadmap Phase 9](../HeatmapWidget/roadmap.qmd#phase-9-colormap-selection-ui).
+
+---
+
+## Phase 7: PNG Export {#phase-7-png-export}
+
+**Status**: Not started. Qt provides the underlying infrastructure.
+
+**Goal**: Export the spectrogram as a publication-quality PNG image.
+
+### 7.1 Basic Export
+
+```cpp
+void SpectrogramWidget::exportPNG(QString const & path) {
+    QImage image = _opengl_widget->grabFramebuffer();
+    image.save(path, "PNG");
+}
+```
+
+### 7.2 High-Resolution Export
+
+For publication quality, render at a higher resolution:
+
+```cpp
+void SpectrogramWidget::exportPNG(QString const & path, int scale_factor) {
+    // Temporarily resize OpenGL widget to scaled dimensions
+    // Render at high resolution
+    // Grab framebuffer
+    // Restore original size
+}
+```
+
+### 7.3 Composite Export
+
+For a complete figure, composite the OpenGL framebuffer with axes and colorbar:
+
+1. Render the spectrogram at target resolution
+2. Render frequency axis labels using `QPainter`
+3. Render time axis labels using `QPainter`
+4. Render colorbar using `QPainter`
+5. Composite into a single `QImage` and save
+
+This follows the same approach as [HeatmapWidget Roadmap Phase 10](../HeatmapWidget/roadmap.qmd#phase-10-png-export).
+
+### 7.4 UI Integration
+
+Add an "Export PNG..." button to the properties panel and a right-click context menu:
+
+- File path selection dialog
+- Resolution scale factor (1x, 2x, 4x)
+- Include axes checkbox
+- Include colorbar checkbox
+
+---
+
+## Phase 8: Cross-Widget Linking {#phase-8-cross-widget-linking}
+
+**Status**: Design exploration. Depends on [Phase 2](#phase-2-opengl-rendering).
+
+**Goal**: Enable interaction between the SpectrogramWidget and other time-synced widgets.
+
+### 8.1 Time Click Navigation
+
+Double-clicking a point on the spectrogram emits `timePositionSelected(TimePosition)`,
+which is already connected to `EditorRegistry::setCurrentTime()` in the registration module.
+This navigates all time-synced widgets (DataViewerWidget, Media_Widget, etc.) to the
+clicked time position.
+
+### 8.2 Frequency Band Selection (Future)
+
+A stretch goal: allow the user to click-drag a frequency band on the spectrogram to define
+a filter band. This could integrate with the `AnalogBandpassFilter` transform to
+create a filtered version of the signal, visible in the [DataViewerWidget](../DataViewerWidget/index.qmd).
+
+### 8.3 Pin Button
+
+The `pinned` field already exists in `SpectrogramStateData`. Add a pin/unpin toggle button
+to the properties panel toolbar. When pinned, the widget ignores `SelectionContext` changes.
+
+---
+
+## Phase 9: State Migration and Cleanup {#phase-9-state-cleanup}
+
+**Status**: Not started. Depends on [Phase 3](#phase-3-axis-integration).
+
+**Goal**: Clean up the state to use shared axis types and remove custom view state.
+
+### 9.1 Remove Custom SpectrogramViewState
+
+Once axis integration is complete (Phase 3), the custom `SpectrogramViewState` struct becomes
+redundant. Replace it with the standard `CorePlotting::ViewStateData` plus axis-specific state:
+
+```cpp
+struct SpectrogramStateData {
+    std::string instance_id;
+    std::string display_name = "Spectrogram";
+    CorePlotting::ViewStateData view_state;
+    VerticalAxisStateData vertical_axis;
+    CenteredTimeAxisStateData time_axis;
+    SpectrogramColorRange color_range;
+    ColormapPreset colormap = ColormapPreset::Viridis;
+    std::string background_color = "#FFFFFF";
+    bool pinned = false;
+    SpectrogramInputType input_type = SpectrogramInputType::TensorData;
+    std::string data_key;
+};
+```
+
+### 9.2 Remove SpectrogramAxisOptions
+
+The custom `SpectrogramAxisOptions` struct (x_label, y_label, show_x_axis, show_y_axis,
+show_grid) should be replaced by the axis widgets' own label and visibility controls from
+the [common axis system](../plot_widget_guide.md#axis-types).
+
+### 9.3 Signal Consolidation
+
+After removing custom state, several signals can be removed or consolidated:
+
+- Remove `axisOptionsChanged` — axis widgets emit their own signals
+- Keep `viewStateChanged` — driven by `CorePlotting::ViewStateData` changes
+- Keep `stateChanged` — for scene rebuild triggers
+
+---
+
+## Implementation Priority
+
+### Next Up (Core Functionality)
+
+1. **[Phase 1](#phase-1-spectrogram-transform)**: Spectrogram transform in TransformsV2 — foundation for all visualization
+2. **[Phase 2](#phase-2-opengl-rendering)**: OpenGL rendering — display the computed spectrogram
+3. **[Phase 4](#phase-4-colormap-and-color-range)**: Colormap and color range — essential for readable display
+
+### Following (Axis and UI)
+
+4. **[Phase 3](#phase-3-axis-integration)**: Axis integration — shared axis system adoption
+5. **[Phase 5](#phase-5-data-source-selection)**: Data source selection and DataManager integration
+6. **[Phase 6](#phase-6-properties-panel)**: Properties panel controls
+
+### Polish and Export
+
+7. **[Phase 7](#phase-7-png-export)**: PNG export
+8. **[Phase 8](#phase-8-cross-widget-linking)**: Cross-widget linking
+9. **[Phase 9](#phase-9-state-cleanup)**: State migration and cleanup
+
+---
+
+## Open Questions
+
+1. **FFT library**: KissFFT vs. PocketFFT vs. custom implementation? PocketFFT (header-only,
+   BSD, derived from NumPy) is the recommended choice, but the project may prefer minimizing
+   new dependencies.
+
+2. **Texture vs. rectangle rendering**: For large spectrograms (1000+ time bins × 512+
+   frequency bins), texture-based rendering would be dramatically more efficient. Should
+   this be implemented from the start, or should we begin with rectangle batches for
+   consistency with HeatmapWidget and optimize later?
+
+3. **X zoom behavior**: When the user zooms X (changing the time window), should the widget:
+   (a) re-run the spectrogram transform with new bounds, or (b) pre-compute a wider
+   spectrogram and slice it? Option (b) is faster for interactive use but requires more memory.
+
+4. **Shared colormap extraction timing**: Should the colormap infrastructure be extracted to
+   `CorePlotting/Colormaps/` before or during SpectrogramWidget development? If HeatmapWidget
+   Phase 2 happens first, the infrastructure will already exist. If SpectrogramWidget is
+   developed first, it should create the shared infrastructure.
+
+5. **CenteredTimeAxis dependency**: The SpectrogramWidget and DataViewerWidget both need
+   the `CenteredTimeAxis`. Should this be extracted as a prerequisite shared component, or
+   should each widget implement a local version and consolidate later?
+
+6. **AnalogTimeSeries workflow**: When the user selects an `AnalogTimeSeries` key, should
+   the widget automatically trigger the spectrogram transform, or should the user be expected
+   to run the transform manually first via `DataTransform_Widget` and then select the resulting
+   `TensorData` key?
+
+---
+
+# See Also
+
+- [SpectrogramWidget Documentation](index.qmd) — Current architecture and feature documentation
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
+- [HeatmapWidget](../HeatmapWidget/index.qmd) — Shares colormap, colorbar, and PNG export infrastructure
+- [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) — Colormap (Phase 2), colorbar (Phase 4), color range (Phase 3), PNG export (Phase 10)
+- [DataViewerWidget](../DataViewerWidget/index.qmd) — Shares centered time-yoked X-axis behavior
+- [DataViewerWidget Roadmap](../DataViewerWidget/roadmap.qmd) — CenteredTimeAxis proposal (Phase 1)
+- [LinePlotWidget](../LinePlotWidget/index.qmd) — Analog signal visualization in line form

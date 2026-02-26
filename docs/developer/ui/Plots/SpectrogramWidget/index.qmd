@@ -1,23 +1,249 @@
 ---
 title: "Spectrogram Widget"
+format: html
 ---
 
-## Overview
+# Spectrogram Widget Overview
 
-Developer documentation for `SpectrogramWidget`, which displays spectrograms of analog signals showing frequency content over time.
+The **Spectrogram Widget** displays a **time–frequency spectrogram** of a continuous signal, showing how the frequency content of an `AnalogTimeSeries` (or a `TensorData` column with `TimeFrameIndex` rows) evolves over time. The X-axis represents time, the Y-axis represents frequency, and cell color encodes spectral power. This provides a compact view of a signal's spectral dynamics, complementing the raw waveform display available in the [DataViewerWidget](../DataViewerWidget/index.qmd).
 
-## Source Location
+The spectrogram itself is **not computed inside the widget**. Instead, the spectral transform (e.g., Short-Time Fourier Transform) is defined as a `TransformsV2` data transformation that converts an `AnalogTimeSeries` into a `TensorData` object (a time × frequency matrix). The SpectrogramWidget is purely a **visualization** of the resulting 2-D matrix, color-mapped with a user-selectable colormap.
 
-`src/WhiskerToolbox/Plots/SpectrogramWidget/`
+# Architecture
 
-## Architecture
+The widget follows the standard plot widget directory layout:
 
-*TODO: Document widget architecture, state management, and key classes.*
+```
+Plots/SpectrogramWidget/
+├── CMakeLists.txt
+├── SpectrogramWidgetRegistration.hpp    # EditorRegistry registration module
+├── SpectrogramWidgetRegistration.cpp
+├── Core/
+│   └── SpectrogramState.hpp             # QObject state class + serializable struct
+│       SpectrogramState.cpp
+└── UI/
+    ├── SpectrogramWidget.hpp            # Main composite widget
+    ├── SpectrogramWidget.cpp
+    ├── SpectrogramWidget.ui
+    ├── SpectrogramPropertiesWidget.hpp  # Properties/settings panel
+    ├── SpectrogramPropertiesWidget.cpp
+    └── SpectrogramPropertiesWidget.ui
+```
 
-## Key Classes
+::: {.callout-note}
+## Missing Rendering Layer
+The widget does not yet have a `Rendering/` subdirectory with an OpenGL widget. When the rendering pipeline is implemented (see [roadmap Phase 2](roadmap.qmd#phase-2-opengl-rendering)), a `SpectrogramOpenGLWidget` will be added following the same pattern as [HeatmapWidget](../HeatmapWidget/index.qmd).
+:::
 
-- `SpectrogramWidget` — Main widget class
+## Component Overview
 
-## See Also
+| Component | Responsibility |
+|-----------|---------------|
+| `SpectrogramWidget` (UI) | Top-level Qt widget — will compose OpenGL canvas, axes, and colorbar |
+| `SpectrogramPropertiesWidget` (UI) | Properties panel — data source selection, colormap, axis controls |
+| `SpectrogramState` (Core) | Serializable state — view state, axis options, data key, background color |
+| `SpectrogramWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
 
-- [Plot Widget Guide](../plot_widget_guide.md)
+## EditorState Pattern
+
+The Spectrogram Widget follows the project's **EditorState** architecture:
+
+- `SpectrogramState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `SpectrogramWidgetModule::registerTypes()`
+- `SpectrogramWidget` is the **view** factory, `SpectrogramPropertiesWidget` is the **properties** factory
+- Both share the same `SpectrogramState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `SpectrogramWidgetRegistration` handles coupling the view and properties widgets, and connects `timePositionSelected` to `EditorRegistry::setCurrentTime()` for time navigation from the spectrogram
+
+# Input Data
+
+## Supported Data Types
+
+The SpectrogramWidget accepts two types of input from the DataManager:
+
+| Input Type | Description | Notes |
+|-----------|-------------|-------|
+| **`AnalogTimeSeries`** | Raw continuous signal | Must first be transformed into a spectrogram matrix via a `TransformsV2` transform before display |
+| **`TensorData`** (time × frequency) | Pre-computed spectrogram matrix with `TimeFrameIndex` rows | Displayed directly; rows are time frames, columns are frequency bins |
+
+When the user selects an `AnalogTimeSeries` key, the widget should trigger (or expect to already exist) a `TransformsV2` transform that produces the corresponding `TensorData` spectrogram. When the user selects a `TensorData` key directly, the widget visualizes it as-is.
+
+## Spectrogram Computation via TransformsV2
+
+The spectral computation is **not** part of the widget. It is defined as a data transform in the `TransformsV2` system (`src/TransformsV2/`), following the same pattern as other transforms (e.g., `AnalogHilbertPhase`, `AnalogBandpassFilter`). The transform takes an `AnalogTimeSeries` as input and produces a `TensorData` object as output.
+
+The transform parameters (window size, hop size, FFT length, window function) are configured through the standard `TransformsV2` parameter system with reflect-cpp serialization, and can be run via the `DataTransform_Widget` UI or through pipeline JSON files.
+
+See [roadmap Phase 1](roadmap.qmd#phase-1-spectrogram-transform) for the design of this transform.
+
+# State Management
+
+## SpectrogramStateData
+
+The serializable state struct contains all persistent configuration:
+
+```cpp
+struct SpectrogramStateData {
+    std::string instance_id;
+    std::string display_name = "Spectrogram";
+    SpectrogramViewState view_state;          ///< View state (zoom, pan, bounds)
+    SpectrogramAxisOptions axis_options;       ///< Axis labels and grid options
+    std::string background_color = "#FFFFFF"; ///< Background color
+    bool pinned = false;                       ///< Ignore SelectionContext changes
+    std::string analog_signal_key;            ///< Key of the data to display
+};
+```
+
+## SpectrogramViewState
+
+The view state manages the time window and zoom/pan:
+
+```cpp
+struct SpectrogramViewState {
+    double x_min = -500.0;   ///< Time window start
+    double x_max = 500.0;    ///< Time window end
+    double x_zoom = 1.0;     ///< X-axis zoom factor
+    double y_zoom = 1.0;     ///< Y-axis (frequency) zoom factor
+    double x_pan = 0.0;      ///< X-axis pan offset
+    double y_pan = 0.0;      ///< Y-axis pan offset
+};
+```
+
+## Signal Architecture
+
+`SpectrogramState` emits category-level signals:
+
+| Signal | Trigger |
+|--------|---------|
+| `viewStateChanged` | Zoom, pan, or bounds changed (view transform only) |
+| `axisOptionsChanged` | Axis labels or grid settings changed |
+| `backgroundColorChanged` | Background color changed |
+| `pinnedChanged` | Pin state toggled |
+| `analogSignalKeyChanged` | Data source key changed |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan emit only `viewStateChanged()` without triggering `stateChanged()`. Pan updates projection matrices only; bound changes (which require new data) also emit `stateChanged()`.
+
+# Axis Behavior
+
+## X-Axis: Centered Time (No X Pan) {#x-axis-centered-time}
+
+The SpectrogramWidget's X-axis follows the same model as the [DataViewerWidget](../DataViewerWidget/index.qmd): it is **yoked to the application's global time position**. The visible time window is always centered on the current playback position. Key characteristics:
+
+- **No independent X panning** — the view follows the global time bar
+- **X zoom requires recomputation** — changing the visible time extent means a new spectrogram must be computed (or a wider pre-computed spectrogram must be sliced), because the spectral data is resolution-dependent
+- **Center is fixed** to the global time position
+
+This behavior is distinct from the `RelativeTimeAxis` used by event-aligned widgets ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)) and from the `HorizontalAxis` used by spatial widgets ([ScatterPlotWidget](../ScatterPlotWidget/index.qmd), [ACFWidget](../ACFWidget/index.qmd)).
+
+::: {.callout-tip}
+## Shared CenteredTimeAxis
+The [DataViewerWidget Roadmap Phase 1](../DataViewerWidget/roadmap.qmd#phase-1-common-axis-integration) proposes a `CenteredTimeAxis` variant of the common axis system. The SpectrogramWidget should adopt this same axis component when it becomes available, bringing both widgets in line with the shared axis architecture from the [Plot Widget Guide](../plot_widget_guide.md#axis-types).
+:::
+
+## Y-Axis: Frequency (Vertical Axis)
+
+The Y-axis represents frequency and should use the standard `VerticalAxisState` / `VerticalAxisWidget` from the [common axis system](../plot_widget_guide.md#3-verticalaxis--y-axis-value-or-trial-index). This provides:
+
+- Zoom and pan for exploring specific frequency bands
+- Spinbox range controls via `VerticalAxisWithRangeControls`
+- The "silent update" pattern for zoom/pan feedback loop avoidance
+- `AxisMapping` support for frequency labels (e.g., Hz units)
+
+The Y bounds are determined by the spectrogram data: `y_min = 0 Hz`, `y_max = Nyquist frequency` (or the maximum frequency bin in the `TensorData`).
+
+# Rendering Pipeline
+
+## Planned Data Flow
+
+```
+AnalogTimeSeries (or pre-computed TensorData)
+        ↓
+TransformsV2 spectrogram transform → TensorData (time × frequency matrix)
+        ↓
+Color range mapping (auto or manual vmin/vmax)
+        ↓
+Colormap: scalar values → RGBA colors
+        ↓
+RenderableRectangleBatch (one colored rectangle per cell)
+   or texture-based rendering for large matrices
+        ↓
+PlottingOpenGL::SceneRenderer::render()
+```
+
+The rendering and data flow are **not yet implemented**. See [roadmap](roadmap.qmd) for the phased implementation plan.
+
+## Current State
+
+The widget skeleton is complete: EditorState registration, state serialization, UI shell widgets with `.ui` files, and the `create_editor_custom` factory in the registration module. The `SpectrogramWidget::_onTimeChanged()` slot is connected to `EditorRegistry::timeChanged` for receiving global time updates, but currently has an empty body.
+
+**Not yet implemented**: OpenGL rendering, data gathering, colormap application, axis integration, properties controls, and export.
+
+# Colormap and Colorbar
+
+## Shared Colormap Infrastructure
+
+The spectrogram visualization critically depends on a **colormap system** for mapping power values to colors. This infrastructure is shared with [HeatmapWidget](../HeatmapWidget/index.qmd), which also needs scalar-to-color mapping.
+
+The planned colormap system (see [HeatmapWidget Roadmap Phase 2](../HeatmapWidget/roadmap.qmd#phase-2-colormap-infrastructure)) will provide:
+
+- `ColormapFunction`: Maps `[0, 1] → RGBA`
+- `ColormapPreset` enum: Built-in colormaps (Inferno, Viridis, Magma, Plasma, Coolwarm, GrayScale, Hot)
+- `mapValue()` / `mapMatrix()`: Utilities for applying colormaps to scalar data
+- Location: `src/CorePlotting/Colormaps/`
+
+The SpectrogramWidget should default to **Viridis** or **Inferno** for power spectrum display, as these are perceptually uniform and widely used in spectral analysis.
+
+## Colorbar Display
+
+A `ColorbarWidget` (see [HeatmapWidget Roadmap Phase 4](../HeatmapWidget/roadmap.qmd#phase-4-colorbar-display)) will be placed to the right of the spectrogram canvas to display the value-to-color legend. The same shared `ColorbarWidget` from `CorePlotting/Widgets/` is used by both SpectrogramWidget and HeatmapWidget.
+
+The planned layout:
+
+```
+┌──────────────────────────────────┬────┐
+│                                  │    │
+│       SpectrogramOpenGLWidget    │ CB │
+│       (time × frequency)         │    │
+├──────────────────────────────────┴────┤
+│         CenteredTimeAxisWidget        │
+└───────────────────────────────────────┘
+```
+
+## Colormap Selection
+
+The user should be able to select from available colormaps in the properties panel. The UI should display a small gradient preview for each preset. This is the same colormap selector UI planned for [HeatmapWidget Roadmap Phase 9](../HeatmapWidget/roadmap.qmd#phase-9-colormap-selection-ui), and should be implemented as a shared `ColormapComboBox` widget.
+
+# Properties Panel
+
+## Current State
+
+The `SpectrogramPropertiesWidget` currently has a minimal layout with an alignment widget placeholder and a vertical spacer. No functional controls are wired.
+
+## Planned Controls
+
+| Section | Controls | Status |
+|---------|----------|--------|
+| **Data Source** | Combo box for `AnalogTimeSeries` / `TensorData` key selection | Not implemented |
+| **Colormap** | Colormap preset combo box with gradient previews | Not implemented |
+| **Color Range** | Auto/Manual mode, vmin/vmax spinboxes, symmetric toggle | Not implemented |
+| **Y-Axis (Frequency)** | `VerticalAxisWithRangeControls` in collapsible section | Not implemented |
+| **X-Axis (Time)** | Time window width control (zoom level for centered axis) | Not implemented |
+| **Export** | "Export PNG..." button | Not implemented |
+
+# PNG Export
+
+The SpectrogramWidget should support exporting the current view as a PNG image. This uses the same approach planned for [HeatmapWidget Roadmap Phase 10](../HeatmapWidget/roadmap.qmd#phase-10-png-export):
+
+- Basic: `QOpenGLWidget::grabFramebuffer()` to capture the current display
+- High-resolution: Render at scaled resolution for publication quality
+- Composite: Include axes and colorbar in the exported image
+
+# See Also
+
+- [Spectrogram Widget Roadmap](roadmap.qmd) — Development roadmap and phased implementation plan
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
+- [HeatmapWidget](../HeatmapWidget/index.qmd) — Shares colormap infrastructure, colorbar, and PNG export patterns
+- [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) — Colormap infrastructure (Phase 2), colorbar (Phase 4), PNG export (Phase 10)
+- [DataViewerWidget](../DataViewerWidget/index.qmd) — Shares x-axis behavior (centered, time-yoked, no pan)
+- [DataViewerWidget Roadmap](../DataViewerWidget/roadmap.qmd) — CenteredTimeAxis proposal (Phase 1)

@@ -13,7 +13,7 @@ testing requirements for all plot widgets in `src/WhiskerToolbox/Plots/`.
 | **HeatmapWidget** | RelativeTimeAxis | VerticalAxis | AnalogTimeSeries (color-mapped) |
 | **ScatterPlotWidget** | HorizontalAxis | VerticalAxis | Point pairs from two data keys |
 | **ACFWidget** | HorizontalAxis | VerticalAxis | DigitalEventSeries (autocorrelation) |
-| **SpectrogramWidget** | *(custom)* | *(custom)* | AnalogTimeSeries |
+| **SpectrogramWidget** | CenteredTimeAxis *(planned)* | VerticalAxis *(planned)* | AnalogTimeSeries / TensorData |
 | **TemporalProjectionViewWidget** | HorizontalAxis | VerticalAxis | PointData / LineData |
 | **OnionSkinViewWidget** | HorizontalAxis | VerticalAxis | PointData / LineData / MaskData |
 | **3DPlotWidget** | *(3D)* | *(3D)* | PointData |
