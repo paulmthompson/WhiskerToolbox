@@ -19,6 +19,7 @@
 #include <memory>
 
 class DataManager;
+class GlyphStyleControls;
 class HorizontalAxisRangeControls;
 class QCheckBox;
 class QComboBox;
@@ -91,6 +92,10 @@ private:
     // Reference line
     Section * _reference_line_section{nullptr};
     QCheckBox * _reference_line_checkbox{nullptr};
+
+    // Glyph style
+    Section * _glyph_style_section{nullptr};
+    GlyphStyleControls * _glyph_style_controls{nullptr};
 
     // Axis range controls
     HorizontalAxisRangeControls * _horizontal_range_controls{nullptr};

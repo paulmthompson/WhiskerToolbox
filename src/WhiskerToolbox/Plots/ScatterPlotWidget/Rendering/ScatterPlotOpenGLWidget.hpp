@@ -16,14 +16,17 @@
 #include "Core/ScatterPlotState.hpp"
 #include "Core/ScatterPointData.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <optional>
 
 class DataManager;
 class QMouseEvent;
@@ -52,6 +55,7 @@ public:
 
 signals:
     void viewBoundsChanged();
+    void pointDoubleClicked(TimePosition position);
 
 protected:
     void initializeGL() override;
@@ -88,6 +92,10 @@ private:
     bool _scene_dirty{true};
     bool _opengl_initialized{false};
     ScatterPointData _scatter_data;
+
+    // Hit testing (Phase 2: double-click-to-navigate)
+    CorePlotting::SceneHitTester _hit_tester;
+    std::optional<std::size_t> _navigated_index;  ///< Index of last navigated-to point (for highlight)
 
     void updateMatrices();
     void handlePanning(int delta_x, int delta_y);

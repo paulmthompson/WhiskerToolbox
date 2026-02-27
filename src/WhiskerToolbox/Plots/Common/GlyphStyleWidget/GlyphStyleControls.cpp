@@ -127,7 +127,16 @@ void GlyphStyleControls::onStateStyleUpdated()
 
 void GlyphStyleControls::updateFromState()
 {
-    if (!_state) return;
+    if (!_state) {
+        // Clear/reset UI to defaults when no state is bound
+        _updating_ui = true;
+        _type_combo->setCurrentIndex(0);
+        _size_spinbox->setValue(8.0);
+        _alpha_spinbox->setValue(1.0);
+        _color_button->setStyleSheet("background-color: #007bff; border: 1px solid #888;");
+        _updating_ui = false;
+        return;
+    }
 
     _updating_ui = true;
 
@@ -163,4 +172,20 @@ void GlyphStyleControls::updateColorButtonStyle()
     _color_button->setStyleSheet(
         QStringLiteral("background-color: %1; border: 1px solid #888;").arg(hex));
     _color_button->setToolTip(hex);
+}
+
+void GlyphStyleControls::setGlyphStyleState(GlyphStyleState * state)
+{
+    if (_state) {
+        _state->disconnect(this);
+    }
+    _state = state;
+    if (_state) {
+        connect(_state, &GlyphStyleState::styleChanged,
+                this, &GlyphStyleControls::onStateStyleChanged);
+        connect(_state, &GlyphStyleState::styleUpdated,
+                this, &GlyphStyleControls::onStateStyleUpdated);
+    }
+    setEnabled(_state != nullptr);
+    updateFromState();
 }

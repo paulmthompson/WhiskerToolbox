@@ -16,7 +16,9 @@
 
 #include "ScatterAxisSource.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -42,6 +44,9 @@ struct ScatterPlotStateData {
     std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
     std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
     bool show_reference_line = false;           ///< Show y=x reference line
+
+    /// Glyph style for scatter points (shape, size, color, alpha)
+    CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
 };
 
 /**
@@ -92,6 +97,10 @@ public:
     [[nodiscard]] bool showReferenceLine() const { return _data.show_reference_line; }
     void setShowReferenceLine(bool show);
 
+    // === Glyph style ===
+    /** @brief Get glyph style state (for GlyphStyleControls binding) */
+    [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
+
     // === Serialization ===
     [[nodiscard]] std::string toJson() const override;
     bool fromJson(std::string const & json) override;
@@ -101,11 +110,13 @@ signals:
     void xSourceChanged();
     void ySourceChanged();
     void referenceLineChanged();
+    void glyphStyleChanged();
 
 private:
     ScatterPlotStateData _data;
     std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
+    std::unique_ptr<GlyphStyleState> _glyph_style_state;
 };
 
 #endif  // SCATTER_PLOT_STATE_HPP

@@ -7,7 +7,7 @@ format: html
 
 The **Temporal Projection View Widget** renders a **2D spatial overlay** of `PointData` and `LineData` collapsed across all time frames into a single view. Unlike trial-aligned plots ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)), this widget does **not** use `PlotAlignmentState` or `GatherResult`. Instead, it flattens all temporal samples via `SpatialMapper_AllTimes` and displays them in a single spatial coordinate frame.
 
-Users can add multiple `PointData` and `LineData` keys, configure rendering appearance (point size, line width), and interact via zoom, pan, and selection. Points and lines carry `EntityID` associations, enabling click-to-navigate, selection-to-group workflows, and group-based coloring.
+Users can add multiple `PointData` and `LineData` keys, configure rendering appearance (point glyph shape, size, color, alpha, and line width), and interact via zoom, pan, and selection. Points and lines carry `EntityID` associations, enabling click-to-navigate, selection-to-group workflows, and group-based coloring.
 
 # Architecture
 
@@ -73,7 +73,7 @@ struct TemporalProjectionViewStateData {
     std::vector<std::string> line_data_keys;
 
     // Rendering
-    float point_size = 5.0f;
+    CorePlotting::GlyphStyleData point_glyph_style;  // shape, size, color, alpha
     float line_width = 2.0f;
 
     // Selection
@@ -90,7 +90,7 @@ struct TemporalProjectionViewStateData {
 | `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
 | `pointDataKeyAdded` / `pointDataKeyRemoved` / `pointDataKeysCleared` | Point data key changes |
 | `lineDataKeyAdded` / `lineDataKeyRemoved` / `lineDataKeysCleared` | Line data key changes |
-| `pointSizeChanged` | Point rendering size changed |
+| `glyphStyleChanged` | Any point glyph style property (shape, size, color, alpha) changed |
 | `lineWidthChanged` | Line rendering width changed |
 | `selectionModeChanged` | Selection mode changed |
 | `stateChanged` (inherited) | Any change requiring scene rebuild |
@@ -210,7 +210,116 @@ The `BatchLineRenderer` supports visual states per line:
 |-------|-------|---------|
 | Normal | Semi-transparent red (0.8, 0.2, 0.2, 0.6) | Unselected lines |
 | Selected | Bright yellow (1.0, 0.8, 0.0, 1.0) | Lines selected by stroke intersection |
+# Visual Customization
 
+The widget uses the project-wide `CorePlotting::GlyphStyleData` / `GlyphStyleState` /
+`GlyphStyleControls` stack to give users control over point glyph appearance. The same
+stack is used by [ScatterPlotWidget](../ScatterPlotWidget/index.qmd) and
+[EventPlotWidget](../EventPlotWidget/index.qmd).
+
+## Points
+
+### Serializable Style Data
+
+`CorePlotting::GlyphStyleData` (in `CorePlotting/DataTypes/GlyphStyleData.hpp`) is a plain
+struct with no Qt dependencies, suitable for embedding directly in state data structs and
+serializing with `rfl::json`:
+
+```cpp
+struct GlyphStyleData {
+    GlyphType   glyph_type  = GlyphType::Circle;
+    float       size        = 5.0f;
+    std::string hex_color   = "#FF4444";
+    float       alpha       = 0.8f;
+};
+```
+
+`TemporalProjectionViewStateData` embeds this as:
+
+```cpp
+CorePlotting::GlyphStyleData point_glyph_style;  // default: red circle, size 5, alpha 0.8
+```
+
+Available `GlyphType` values: `Circle`, `Square`, `Tick`, `Cross`, `Diamond`, `Triangle`.
+(`Diamond` and `Triangle` fall back to `Circle` in the current renderer.)
+
+### QObject State Wrapper
+
+`TemporalProjectionViewState` owns a `std::unique_ptr<GlyphStyleState>`
+(`Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp`). `GlyphStyleState` is a
+`QObject` that wraps `GlyphStyleData` and emits:
+
+| Signal | When Emitted | Purpose |
+|--------|--------------|--------|
+| `styleChanged()` | User edits a property | Triggers scene rebuild via `stateChanged()` |
+| `styleUpdated()` | `setStyleSilent()` (e.g., on `fromJson`) | Refreshes UI without rebuild |
+
+The state class wires these up in its constructor:
+
+```cpp
+// Initialize GlyphStyleState from serialized data
+_glyph_style_state->setStyleSilent(_data.point_glyph_style);
+
+// Propagate user changes back to serializable struct and notify renderer
+connect(_glyph_style_state.get(), &GlyphStyleState::styleChanged, this, [this]() {
+    _data.point_glyph_style = _glyph_style_state->data();
+    emit glyphStyleChanged();
+    emit stateChanged();
+});
+```
+
+The `glyphStyleState()` accessor returns the raw pointer for binding to `GlyphStyleControls`.
+
+### Properties Panel Controls
+
+A "Point Appearance" collapsible `Section` in `TemporalProjectionViewPropertiesWidget`
+embeds `GlyphStyleControls`, which provides four controls laid out as a `QFormLayout`:
+
+| Control | Type | What It Sets |
+|---------|------|-------------|
+| Shape | `QComboBox` | `GlyphType` (Circle / Square / Tick / Cross / Diamond / Triangle) |
+| Size | `QDoubleSpinBox` | Radius in pixels (0.5 – 50 px, step 0.5) |
+| Color | `QPushButton` | Opens `QColorDialog`; stores as hex string |
+| Alpha | `QDoubleSpinBox` | Transparency (0.0 – 1.0, step 0.05) |
+
+The controls use the anti-recursion `_updating_ui` guard pattern to avoid feedback loops
+when the state updates the UI.
+
+### Rendering Conversion
+
+`TemporalProjectionOpenGLWidget::rebuildScene()` reads the glyph style at scene build time
+via `_state->glyphStyleState()->data()` and converts it to rendering types using two free
+functions from `CorePlotting/DataTypes/GlyphStyleConversion.hpp`:
+
+```cpp
+auto const & glyph_data = _state->glyphStyleState()->data();
+
+CorePlotting::GlyphStyle point_style;
+point_style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
+point_style.size       = glyph_data.size;
+point_style.color      = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
+
+builder.addGlyphs("spatial_points", elements, point_style);
+```
+
+`toRenderableGlyphType()` maps the serializable `GlyphType` enum to the renderer-level
+`RenderableGlyphBatch::GlyphType`. `hexColorToVec4()` parses a `"#RRGGBB"` string and
+applies the separate alpha value, returning a `glm::vec4` for the shader.
+
+The `glyphStyleChanged` signal from `TemporalProjectionViewState` is connected in
+`TemporalProjectionOpenGLWidget::setState()` to set `_scene_dirty = true` and call
+`update()`, ensuring the next paint picks up the new style without any extra bookkeeping.
+
+**Shared infrastructure used** (see `Plots/Common/GlyphStyleWidget/`):
+
+| Component | Location |
+|-----------|----------|
+| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` |
+| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` |
+| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` |
+| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` |
+| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` |
+| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` |
 # Interaction
 
 ## Zoom and Pan
@@ -275,7 +384,7 @@ The `TemporalProjectionViewPropertiesWidget` provides the following controls:
 
 ## Rendering Controls
 
-- **Point size spinbox** — adjusts glyph radius (default: 5.0)
+- **Point Appearance section** — `GlyphStyleControls` with shape, size, color, and alpha controls. See [Visual Customization — Points](#points) for full details.
 - **Line width spinbox** — adjusts line thickness (default: 2.0)
 
 ## Selection Controls

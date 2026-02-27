@@ -514,36 +514,13 @@
        <number>0</number>
       </property>
       <item row="0" column="0">
-       <widget class="QLabel" name="point_size_label">
-        <property name="text">
-         <string>Point Size:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="point_size_spinbox">
-        <property name="minimum">
-         <double>0.500000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>50.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.500000000000000</double>
-        </property>
-        <property name="value">
-         <double>8.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
        <widget class="QLabel" name="line_width_label">
         <property name="text">
          <string>Line Width:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="line_width_spinbox">
         <property name="minimum">
          <double>0.500000000000000</double>

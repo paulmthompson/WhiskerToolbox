@@ -9,6 +9,7 @@
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Collapsible_Widget/Section.hpp"
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "UI/ScatterPlotWidget.hpp"
 
 #include <QCheckBox>
@@ -152,6 +153,22 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
     // Insert after data source section
     int insert_idx = ui->main_layout->indexOf(_data_source_section) + 1;
     ui->main_layout->insertWidget(insert_idx, _reference_line_section);
+
+    // === Glyph Style Section ===
+    _glyph_style_section = new Section(this, "Glyph Options");
+
+    if (_state) {
+        _glyph_style_controls = new GlyphStyleControls(_state->glyphStyleState(), this);
+
+        auto * glyph_layout = new QVBoxLayout();
+        glyph_layout->setContentsMargins(4, 4, 4, 4);
+        glyph_layout->addWidget(_glyph_style_controls);
+        _glyph_style_section->setContentLayout(*glyph_layout);
+    }
+
+    // Insert after reference line section
+    int glyph_insert_idx = ui->main_layout->indexOf(_reference_line_section) + 1;
+    ui->main_layout->insertWidget(glyph_insert_idx, _glyph_style_section);
 
     // --- Connections ---
     connect(_x_key_combo, &QComboBox::currentIndexChanged,

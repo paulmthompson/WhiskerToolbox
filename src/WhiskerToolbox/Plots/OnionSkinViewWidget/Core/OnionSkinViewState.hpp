@@ -27,6 +27,7 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -56,7 +57,8 @@ struct OnionSkinViewStateData {
     float max_alpha = 1.0f;
 
     // Rendering
-    CorePlotting::GlyphStyleData point_glyph_style{CorePlotting::GlyphType::Circle, 8.0f, "#007bff", 1.0f};
+    /// Per-key point glyph styles (key → GlyphStyleData)
+    std::map<std::string, CorePlotting::GlyphStyleData> point_key_glyph_styles;
     float line_width = 2.0f;
     bool highlight_current = true;  ///< Draw current frame with distinct color/size
 };
@@ -162,16 +164,26 @@ public:
     [[nodiscard]] float getMaxAlpha() const { return _data.max_alpha; }
     void setMaxAlpha(float alpha);
 
+    // === Per-Key Point Glyph Style ===
+
+    /**
+     * @brief Get the GlyphStyleState for a specific point data key.
+     *
+     * Returns nullptr if the key has not been added. The returned pointer is
+     * owned by this state and must not be deleted by the caller.
+     *
+     * @param key The point data key
+     */
+    [[nodiscard]] GlyphStyleState * glyphStyleStateForKey(QString const & key);
+
+    /**
+     * @brief Get the serializable glyph style data for a key (read-only).
+     *
+     * Returns a default style if the key has not been added.
+     */
+    [[nodiscard]] CorePlotting::GlyphStyleData getPointKeyGlyphStyle(QString const & key) const;
+
     // === Rendering Parameters ===
-
-    /** @brief Get glyph style state (for GlyphStyleControls binding) */
-    [[nodiscard]] GlyphStyleState * glyphStyleState() { return _glyph_style_state.get(); }
-
-    /** @brief Get point size (convenience, reads from glyph style) */
-    [[nodiscard]] float getPointSize() const { return _data.point_glyph_style.size; }
-
-    /** @brief Set point size (convenience, delegates to glyph style state) */
-    void setPointSize(float size);
 
     [[nodiscard]] float getLineWidth() const { return _data.line_width; }
     void setLineWidth(float width);
@@ -207,7 +219,10 @@ signals:
     void maxAlphaChanged(float alpha);
 
     // Rendering signals
+    /** @brief Emitted when the glyph style for any point key changes */
     void glyphStyleChanged();
+    /** @brief Emitted when the glyph style for a specific point key changes */
+    void pointKeyGlyphStyleChanged(QString const & key);
     void lineWidthChanged(float width);
     void highlightCurrentChanged(bool highlight);
 
@@ -215,7 +230,16 @@ private:
     OnionSkinViewStateData _data;
     std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
-    std::unique_ptr<GlyphStyleState> _glyph_style_state;
+    /// Per-key GlyphStyleState objects (one per point data key)
+    std::map<std::string, std::unique_ptr<GlyphStyleState>> _point_glyph_style_states;
+
+    /**
+     * @brief Create a GlyphStyleState for a newly added point key.
+     *
+     * Looks up existing serialized style from _data.point_key_glyph_styles,
+     * or uses the default style. Connects signals for scene rebuild.
+     */
+    void _createGlyphStyleStateForKey(std::string const & key);
 };
 
 #endif  // ONION_SKIN_VIEW_STATE_HPP

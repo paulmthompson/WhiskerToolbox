@@ -47,6 +47,7 @@ target_link_libraries(ScatterPlotWidget PRIVATE EditorState)
 target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)
+target_link_libraries(ScatterPlotWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE CorePlotting)
 target_link_libraries(ScatterPlotWidget PRIVATE PlottingOpenGL)
 

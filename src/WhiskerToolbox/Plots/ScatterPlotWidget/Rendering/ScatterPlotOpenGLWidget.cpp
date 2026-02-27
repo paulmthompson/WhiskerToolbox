@@ -3,6 +3,8 @@
 #include "Core/BuildScatterPoints.hpp"
 #include "Core/ScatterPlotState.hpp"
 #include "Core/SourceCompatibility.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
+#include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Mappers/MappedElement.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "CoreGeometry/boundingbox.hpp"
@@ -49,10 +51,12 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state)
         connect(_state.get(), &ScatterPlotState::viewStateChanged,
                 this, &ScatterPlotOpenGLWidget::onViewStateChanged);
         connect(_state.get(), &ScatterPlotState::xSourceChanged,
-                this, [this]() { _scene_dirty = true; update(); });
+                this, [this]() { _scene_dirty = true; _navigated_index.reset(); update(); });
         connect(_state.get(), &ScatterPlotState::ySourceChanged,
-                this, [this]() { _scene_dirty = true; update(); });
+                this, [this]() { _scene_dirty = true; _navigated_index.reset(); update(); });
         connect(_state.get(), &ScatterPlotState::referenceLineChanged,
+                this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::glyphStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
         _scene_dirty = true;
         updateMatrices();
@@ -155,7 +159,50 @@ void ScatterPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 
 void ScatterPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 {
-    QOpenGLWidget::mouseDoubleClickEvent(event);
+    if (event->button() != Qt::LeftButton || !_state || !_data_manager || _scatter_data.empty()) {
+        QOpenGLWidget::mouseDoubleClickEvent(event);
+        return;
+    }
+
+    QPointF const world = screenToWorld(event->pos());
+
+    // Convert pixel tolerance to world units (max of X and Y to handle non-uniform aspect)
+    float const world_per_pixel_x = static_cast<float>(
+        (_cached_view_state.x_max - _cached_view_state.x_min)
+        / (_widget_width * _cached_view_state.x_zoom));
+    float const world_per_pixel_y = static_cast<float>(
+        (_cached_view_state.y_max - _cached_view_state.y_min)
+        / (_widget_height * _cached_view_state.y_zoom));
+    float const world_tolerance = 8.0f * std::max(world_per_pixel_x, world_per_pixel_y);
+
+    CorePlotting::HitTestConfig config;
+    config.point_tolerance = world_tolerance;
+    config.prioritize_discrete = true;
+    _hit_tester.setConfig(config);
+
+    auto const result = _hit_tester.queryQuadTree(
+        static_cast<float>(world.x()),
+        static_cast<float>(world.y()),
+        _scene);
+
+    if (result.hasHit() && result.entity_id.has_value()) {
+        auto const idx = static_cast<std::size_t>(result.entity_id->id);
+        if (idx < _scatter_data.size()) {
+            _navigated_index = idx;
+            _scene_dirty = true;
+            update();
+
+            // Build TimePosition from the x-axis data source's TimeFrame
+            auto const & x_source = _state->xSource();
+            if (x_source.has_value()) {
+                auto const time_key = _data_manager->getTimeKey(x_source->data_key);
+                auto time_frame = _data_manager->getTime(time_key);
+                TimeFrameIndex const tfi = _scatter_data.time_indices[idx];
+                emit pointDoubleClicked(TimePosition{tfi, std::move(time_frame)});
+            }
+        }
+    }
+    event->accept();
 }
 
 void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
@@ -284,7 +331,7 @@ void ScatterPlotOpenGLWidget::rebuildScene()
     CorePlotting::SceneBuilder builder;
     builder.setBounds(bbox);
 
-    // Add scatter points as glyphs
+    // Add scatter points as glyphs (using glyph style from state)
     std::vector<CorePlotting::MappedElement> elements;
     elements.reserve(_scatter_data.size());
     for (std::size_t i = 0; i < _scatter_data.size(); ++i) {
@@ -295,12 +342,25 @@ void ScatterPlotOpenGLWidget::rebuildScene()
         });
     }
 
-    CorePlotting::GlyphStyle point_style;
-    point_style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
-    point_style.size = 5.0f;
-    point_style.color = glm::vec4(0.2f, 0.6f, 1.0f, 0.8f);  // Blue with slight transparency
+    auto const & glyph_data = _state->glyphStyleState()->data();
 
-    builder.addGlyphs("scatter_points", std::move(elements), point_style);
+    CorePlotting::GlyphStyle point_style;
+    point_style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
+    point_style.size = glyph_data.size;
+    point_style.color = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
+
+    builder.addGlyphs("scatter_points", elements, point_style);
+
+    // Add highlight glyph for the most recently navigated-to point
+    if (_navigated_index.has_value() && *_navigated_index < elements.size()) {
+        CorePlotting::GlyphStyle highlight_style;
+        highlight_style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
+        highlight_style.size = 9.0f;
+        highlight_style.color = glm::vec4(1.0f, 0.8f, 0.0f, 1.0f);  // Yellow highlight
+
+        std::vector<CorePlotting::MappedElement> highlight_elem{elements[*_navigated_index]};
+        builder.addGlyphs("scatter_highlight", std::move(highlight_elem), highlight_style);
+    }
 
     // Add y=x reference line if enabled
     if (_state->showReferenceLine()) {
