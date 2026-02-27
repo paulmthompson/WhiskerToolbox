@@ -957,7 +957,7 @@ public:
         std::iota(indices.begin(), indices.end(), size_type{0});
 
         if (ascending) {
-            std::sort(indices.begin(), indices.end(),
+            std::stable_sort(indices.begin(), indices.end(),
                 [&values](size_type a, size_type b) {
                     // Handle NaN: NaN values sort to end
                     if constexpr (std::is_floating_point_v<Scalar>) {
@@ -967,7 +967,7 @@ public:
                     return values[a] < values[b];
                 });
         } else {
-            std::sort(indices.begin(), indices.end(),
+            std::stable_sort(indices.begin(), indices.end(),
                 [&values](size_type a, size_type b) {
                     // Handle NaN: NaN values sort to end
                     if constexpr (std::is_floating_point_v<Scalar>) {
