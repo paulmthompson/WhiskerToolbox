@@ -4,6 +4,8 @@
 #include "Core/EventPlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
@@ -12,9 +14,12 @@
 #include "ui_EventPlotPropertiesWidget.h"
 
 #include <QColorDialog>
+#include <QComboBox>
 #include <QHeaderView>
+#include <QLabel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QVBoxLayout>
 
 #include <algorithm>
 
@@ -42,10 +47,6 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     ui->alignment_widget_placeholder->deleteLater();
     ui->main_layout->insertWidget(alignment_index, _alignment_widget);
 
-    // Set up color display button
-    ui->color_display_button->setFlat(false);
-    ui->color_display_button->setEnabled(false);// Make it non-clickable, just for display
-
     // Set up background color display button
     ui->background_color_display_button->setFlat(false);
     ui->background_color_display_button->setEnabled(false);// Make it non-clickable, just for display
@@ -66,16 +67,55 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
             this, &EventPlotPropertiesWidget::_onRemoveEventClicked);
     connect(ui->plot_events_table, &QTableWidget::itemSelectionChanged,
             this, &EventPlotPropertiesWidget::_onPlotEventSelectionChanged);
-    connect(ui->tick_thickness_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &EventPlotPropertiesWidget::_onTickThicknessChanged);
-    connect(ui->glyph_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &EventPlotPropertiesWidget::_onGlyphTypeChanged);
-    connect(ui->color_button, &QPushButton::clicked,
-            this, &EventPlotPropertiesWidget::_onColorButtonClicked);
     connect(ui->background_color_button, &QPushButton::clicked,
             this, &EventPlotPropertiesWidget::_onBackgroundColorButtonClicked);
     connect(ui->sorting_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &EventPlotPropertiesWidget::_onSortingModeChanged);
+
+    // === Glyph Style Options collapsible section ===
+    // Inserted after the add event widget. The GlyphStyleControls are
+    // bound to the per-key state of the selected row.
+    _glyph_style_section = new Section(this, "Glyph Options");
+    if (_state) {
+        _glyph_style_controls = new GlyphStyleControls(nullptr, this);
+        _glyph_style_controls->setEnabled(false);
+
+        auto * glyph_layout = new QVBoxLayout();
+        glyph_layout->setContentsMargins(4, 4, 4, 4);
+        glyph_layout->addWidget(_glyph_style_controls);
+        _glyph_style_section->setContentLayout(*glyph_layout);
+    }
+    // Insert after the add event widget
+    {
+        int insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _glyph_style_section);
+    }
+
+    // === Edge Selector for interval series ===
+    // Create edge selector widget (hidden by default, shown when an interval key is selected)
+    {
+        _edge_selector_widget = new QWidget(this);
+        auto * edge_layout = new QHBoxLayout(_edge_selector_widget);
+        edge_layout->setContentsMargins(0, 0, 0, 0);
+        edge_layout->setSpacing(4);
+
+        auto * edge_label = new QLabel(QStringLiteral("Edge:"), _edge_selector_widget);
+        _edge_selector_combo = new QComboBox(_edge_selector_widget);
+        _edge_selector_combo->addItem(QStringLiteral("Start"), static_cast<int>(IntervalAlignmentType::Beginning));
+        _edge_selector_combo->addItem(QStringLiteral("End"), static_cast<int>(IntervalAlignmentType::End));
+
+        edge_layout->addWidget(edge_label);
+        edge_layout->addWidget(_edge_selector_combo, 1);
+
+        // Insert between the add_event_widget combo row and the glyph section
+        int insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _edge_selector_widget);
+        _edge_selector_widget->setVisible(false);
+
+        // Show/hide edge selector when the add_event_combo selection changes
+        connect(ui->add_event_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::_onAddEventComboChanged);
+    }
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -169,12 +209,8 @@ void EventPlotPropertiesWidget::_populateAddEventComboBox() {
         return;
     }
 
-    // Get all DigitalEventSeries keys only
+    // Get DigitalEventSeries keys
     auto event_keys = _data_manager->getKeys<DigitalEventSeries>();
-
-    if (event_keys.empty()) {
-        return;
-    }
 
     // Sort keys before adding to combo box
     std::sort(event_keys.begin(), event_keys.end());
@@ -182,6 +218,17 @@ void EventPlotPropertiesWidget::_populateAddEventComboBox() {
     // Add DigitalEventSeries keys
     for (auto const & key: event_keys) {
         ui->add_event_combo->addItem(QString::fromStdString(key), QString::fromStdString(key));
+    }
+
+    // Get DigitalIntervalSeries keys
+    auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    std::sort(interval_keys.begin(), interval_keys.end());
+
+    // Add DigitalIntervalSeries keys (prefixed to distinguish in the combo)
+    for (auto const & key: interval_keys) {
+        ui->add_event_combo->addItem(
+            QString::fromStdString(key) + QStringLiteral(" [interval]"),
+            QString::fromStdString(key));
     }
 }
 
@@ -195,9 +242,23 @@ void EventPlotPropertiesWidget::_onAddEventClicked() {
         return;
     }
 
-    // Use the event key as the name (could be made more sophisticated)
+    // Determine if this is an interval series and get the edge type
+    std::optional<IntervalAlignmentType> interval_edge;
+    DM_DataType type = _data_manager->getType(event_key.toStdString());
+    if (type == DM_DataType::DigitalInterval) {
+        int edge_val = _edge_selector_combo->currentData().toInt();
+        interval_edge = static_cast<IntervalAlignmentType>(edge_val);
+    }
+
+    // Build a descriptive name: for intervals, include edge info
     QString event_name = event_key;
-    _state->addPlotEvent(event_name, event_key);
+    if (interval_edge.has_value()) {
+        event_name += (*interval_edge == IntervalAlignmentType::Beginning)
+                          ? QStringLiteral(" [start]")
+                          : QStringLiteral(" [end]");
+    }
+
+    _state->addPlotEvent(event_name, event_key, interval_edge);
 }
 
 void EventPlotPropertiesWidget::_onRemoveEventClicked() {
@@ -218,29 +279,26 @@ void EventPlotPropertiesWidget::_onRemoveEventClicked() {
     }
 }
 
+void EventPlotPropertiesWidget::_onAddEventComboChanged(int /*index*/) {
+    if (!_data_manager || !_edge_selector_widget) {
+        return;
+    }
+
+    QString event_key = ui->add_event_combo->currentData().toString();
+    if (event_key.isEmpty()) {
+        _edge_selector_widget->setVisible(false);
+        return;
+    }
+
+    DM_DataType type = _data_manager->getType(event_key.toStdString());
+    _edge_selector_widget->setVisible(type == DM_DataType::DigitalInterval);
+}
+
 void EventPlotPropertiesWidget::_onPlotEventSelectionChanged() {
     QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
     bool has_selection = !selected.isEmpty();
     ui->remove_event_button->setEnabled(has_selection);
-    ui->event_options_widget->setEnabled(has_selection);
-
-    if (has_selection && _state) {
-        int row = selected.first()->row();
-        QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
-        if (name_item) {
-            QString event_name = name_item->text();
-            _updateEventOptions(event_name);
-        }
-    } else {
-        // Clear options display - disable controls
-        ui->tick_thickness_spinbox->blockSignals(true);
-        ui->tick_thickness_spinbox->setValue(2.0);
-        ui->tick_thickness_spinbox->blockSignals(false);
-        ui->glyph_type_combo->blockSignals(true);
-        ui->glyph_type_combo->setCurrentIndex(0);
-        ui->glyph_type_combo->blockSignals(false);
-        _updateColorDisplay("#000000");
-    }
+    _updateGlyphStyleControls();
 }
 
 void EventPlotPropertiesWidget::_updatePlotEventsTable() {
@@ -288,46 +346,10 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable() {
     }
 }
 
-void EventPlotPropertiesWidget::_updateEventOptions(QString const & event_name) {
-    if (!_state) {
-        return;
-    }
-
-    auto options = _state->getPlotEventOptions(event_name);
-    if (options) {
-        // Update tick thickness
-        ui->tick_thickness_spinbox->blockSignals(true);
-        ui->tick_thickness_spinbox->setValue(static_cast<double>(options->glyph_style.size));
-        ui->tick_thickness_spinbox->blockSignals(false);
-
-        // Update glyph type combo box
-        int glyph_index = 0;// Default to Tick
-        switch (options->glyph_style.glyph_type) {
-            case CorePlotting::GlyphType::Tick:
-                glyph_index = 0;
-                break;
-            case CorePlotting::GlyphType::Circle:
-                glyph_index = 1;
-                break;
-            case CorePlotting::GlyphType::Square:
-                glyph_index = 2;
-                break;
-            default:
-                glyph_index = 0;
-                break;
-        }
-        ui->glyph_type_combo->blockSignals(true);
-        ui->glyph_type_combo->setCurrentIndex(glyph_index);
-        ui->glyph_type_combo->blockSignals(false);
-
-        // Update color display
-        _updateColorDisplay(QString::fromStdString(options->glyph_style.hex_color));
-    }
-}
-
 void EventPlotPropertiesWidget::_onStatePlotEventAdded(QString const & event_name) {
     Q_UNUSED(event_name)
     _updatePlotEventsTable();
+    _updateGlyphStyleControls();
 }
 
 void EventPlotPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name) {
@@ -336,20 +358,13 @@ void EventPlotPropertiesWidget::_onStatePlotEventRemoved(QString const & event_n
     // Clear selection if the removed event was selected
     ui->plot_events_table->clearSelection();
     ui->remove_event_button->setEnabled(false);
-    ui->event_options_widget->setEnabled(false);
+    _updateGlyphStyleControls();
 }
 
 void EventPlotPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event_name) {
-    // Update the table and options if this event is selected
+    Q_UNUSED(event_name)
+    // Update the table (event key may have changed)
     _updatePlotEventsTable();
-    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
-    if (!selected.isEmpty()) {
-        int row = selected.first()->row();
-        QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
-        if (name_item && name_item->text() == event_name) {
-            _updateEventOptions(event_name);
-        }
-    }
 }
 
 void EventPlotPropertiesWidget::_updateUIFromState() {
@@ -374,94 +389,33 @@ void EventPlotPropertiesWidget::_updateUIFromState() {
     ui->sorting_combo->blockSignals(false);
 }
 
-QString EventPlotPropertiesWidget::_getSelectedEventName() const {
-    QList<QTableWidgetItem *> selected = ui->plot_events_table->selectedItems();
+void EventPlotPropertiesWidget::_updateGlyphStyleControls()
+{
+    if (!_glyph_style_controls || !_state) {
+        return;
+    }
+
+    QList<QTableWidgetItem *> const selected = ui->plot_events_table->selectedItems();
     if (selected.isEmpty()) {
-        return QString();
+        _glyph_style_controls->setGlyphStyleState(nullptr);
+        return;
     }
 
-    int row = selected.first()->row();
-    QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
-    if (name_item) {
-        return name_item->text();
+    int const row = selected.first()->row();
+    QTableWidgetItem const * item = ui->plot_events_table->item(row, 0);
+    if (!item) {
+        _glyph_style_controls->setGlyphStyleState(nullptr);
+        return;
     }
-    return QString();
-}
 
-void EventPlotPropertiesWidget::_updateColorDisplay(QString const & hex_color) {
-    // Update the color display button with the new color
-    ui->color_display_button->setStyleSheet(
-            QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
+    GlyphStyleState * glyph_state = _state->glyphStyleStateForKey(item->text());
+    _glyph_style_controls->setGlyphStyleState(glyph_state);
 }
 
 void EventPlotPropertiesWidget::_updateBackgroundColorDisplay(QString const & hex_color) {
     // Update the background color display button with the new color
     ui->background_color_display_button->setStyleSheet(
             QString("QPushButton { background-color: %1; border: 1px solid #808080; }").arg(hex_color));
-}
-
-void EventPlotPropertiesWidget::_onTickThicknessChanged(double value) {
-    QString event_name = _getSelectedEventName();
-    if (event_name.isEmpty() || !_state) {
-        return;
-    }
-
-    auto options = _state->getPlotEventOptions(event_name);
-    if (options) {
-        options->glyph_style.size = static_cast<float>(value);
-        _state->updatePlotEventOptions(event_name, *options);
-    }
-}
-
-void EventPlotPropertiesWidget::_onGlyphTypeChanged(int index) {
-    QString event_name = _getSelectedEventName();
-    if (event_name.isEmpty() || !_state) {
-        return;
-    }
-
-    auto options = _state->getPlotEventOptions(event_name);
-    if (options) {
-        CorePlotting::GlyphType glyph_type = CorePlotting::GlyphType::Tick;// Default
-        switch (index) {
-            case 0:
-                glyph_type = CorePlotting::GlyphType::Tick;
-                break;
-            case 1:
-                glyph_type = CorePlotting::GlyphType::Circle;
-                break;
-            case 2:
-                glyph_type = CorePlotting::GlyphType::Square;
-                break;
-        }
-        options->glyph_style.glyph_type = glyph_type;
-        _state->updatePlotEventOptions(event_name, *options);
-    }
-}
-
-void EventPlotPropertiesWidget::_onColorButtonClicked() {
-    QString event_name = _getSelectedEventName();
-    if (event_name.isEmpty() || !_state) {
-        return;
-    }
-
-    // Get current color
-    QColor current_color;
-    auto options = _state->getPlotEventOptions(event_name);
-    if (options) {
-        current_color = QColor(QString::fromStdString(options->glyph_style.hex_color));
-    } else {
-        current_color = QColor("#000000");// Default black
-    }
-
-    // Open color dialog
-    QColor color = QColorDialog::getColor(current_color, this, "Choose Color");
-
-    if (color.isValid() && options) {
-        QString hex_color = color.name();
-        _updateColorDisplay(hex_color);
-        options->glyph_style.hex_color = hex_color.toStdString();
-        _state->updatePlotEventOptions(event_name, *options);
-    }
 }
 
 void EventPlotPropertiesWidget::_onBackgroundColorButtonClicked() {

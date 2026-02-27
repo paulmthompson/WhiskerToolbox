@@ -19,17 +19,8 @@
 #include <rfl.hpp>
 
 #include <map>
+#include <optional>
 #include <string>
-
-/**
- * @brief Enumeration for event glyph/marker type
- * @deprecated Use CorePlotting::GlyphType instead. Kept for backward JSON compatibility.
- */
-enum class EventGlyphType {
-    Tick,  ///< Vertical line (default)
-    Circle,///< Circle marker
-    Square ///< Square marker
-};
 
 /**
  * @brief Enumeration for trial sorting modes
@@ -59,14 +50,16 @@ struct EventPlotAxisOptions {
 /**
  * @brief Options for plotting an event series in the raster plot
  *
- * Uses CorePlotting::GlyphStyleData for marker styling.
- * The legacy fields (tick_thickness, glyph_type, hex_color) are
- * retained for backward JSON compatibility but are no longer
- * used at runtime.
+ * Event key plus optional metadata. Glyph styling is stored separately
+ * in the per-key glyph style map (`event_glyph_styles`) so that
+ * GlyphStyleState objects can manage live state and serialization.
+ *
+ * When the key refers to a DigitalIntervalSeries, `interval_edge` specifies
+ * which edge (start or end) to extract as events for plotting.
  */
 struct EventPlotOptions {
-    std::string event_key;                           ///< Key of the DigitalEventSeries to plot
-    CorePlotting::GlyphStyleData glyph_style{CorePlotting::GlyphType::Tick, 2.0f, "#000000", 1.0f};
+    std::string event_key;  ///< Key of the DigitalEventSeries or DigitalIntervalSeries to plot
+    std::optional<IntervalAlignmentType> interval_edge;  ///< Edge to extract when source is an interval series
 };
 
 /**
@@ -77,6 +70,7 @@ struct EventPlotStateData {
     std::string display_name = "Event Plot";
     PlotAlignmentData alignment;                                   ///< Alignment settings (event key, interval type, offset, window size)
     std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
+    std::map<std::string, CorePlotting::GlyphStyleData> event_glyph_styles;  ///< Per-event glyph styles (key → GlyphStyleData)
     CorePlotting::ViewStateData view_state;                        ///< View state (zoom, pan, bounds). Y bounds fixed at -1..1 for trial viewport
     RelativeTimeAxisStateData time_axis;                           ///< Time axis settings (min_range, max_range)
     EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options

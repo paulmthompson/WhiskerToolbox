@@ -292,9 +292,9 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
             }
 
             // Get the alignment time for this trial (center point)
-            // The alignment time is the reference point (t=0) for relative time calculation
+            // alignmentTimeAt() returns absolute time directly
             int64_t alignment_time = gathered.alignmentTimeAt(trial_idx);
-            int alignment_time_abs = time_frame->getTimeAtIndex(TimeFrameIndex{alignment_time});
+            int alignment_time_abs = static_cast<int>(alignment_time);
 
             // Iterate over events in this trial view
             for (auto const & event_with_id: trial_view->view()) {

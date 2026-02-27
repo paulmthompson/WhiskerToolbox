@@ -109,7 +109,6 @@ The UI for this project is located in src/WhiskerToolbox (legacy name). Most wid
 - TableViewerWidget/TableDesignerWidget - widget for viewing and creating table views
 - Media_Widget - widget for viewing media data (images, video, lines, masks, points). Also can be used for selecting and manipulating data
 - DataViewer_Widget/DataViewer - generic data viewer for time series data (analog, digital)
-- Analysis_Dashboard - Collection of widgets for plotting. These include spatial overlay widget (collapsing all point data, mask data, and line data onto a single view), scatter plot widget, event plot widget etc. The user can open as many plots as they want.
 - DataTransform_Widget - UI for executing data transforms
 - DataImport_Widget - unified data import widget supporting all data types (Lines, Masks, Points, AnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries, TensorData). Opens via Modules → Data Import menu. Uses EditorState pattern for state management and responds to SelectionContext for passive data type awareness.
 - DataExport_Widget (formerly IO_Widgets) - data export/saving functionality for supported data types

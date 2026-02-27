@@ -442,15 +442,19 @@ void FuzzEventPlotStateDataRoundTrip(
     for (size_t i = 0; i < std::min(n, size_t{10}); ++i) {
         EventPlotOptions opts;
         opts.event_key = event_keys[i];
-        // Clamp to float range to avoid inf (doubles can exceed float max)
+        std::string event_name = "event_" + std::to_string(i);
+        data.plot_events[event_name] = opts;
+
+        // Per-key glyph style in the separate map
+        CorePlotting::GlyphStyleData glyph;
         auto const clamped = std::clamp(tick_thicknesses[i],
                                          static_cast<double>(-std::numeric_limits<float>::max()),
                                          static_cast<double>(std::numeric_limits<float>::max()));
-        opts.glyph_style.size = static_cast<float>(clamped);
+        glyph.size = static_cast<float>(clamped);
         // Use unsigned cast to avoid std::abs(INT_MIN) UB
-        opts.glyph_style.glyph_type = static_cast<CorePlotting::GlyphType>(static_cast<unsigned>(glyph_types[i]) % 6u);
-        opts.glyph_style.hex_color = "#0000FF";
-        data.plot_events["event_" + std::to_string(i)] = opts;
+        glyph.glyph_type = static_cast<CorePlotting::GlyphType>(static_cast<unsigned>(glyph_types[i]) % 6u);
+        glyph.hex_color = "#0000FF";
+        data.event_glyph_styles[event_name] = glyph;
     }
 
     auto json1 = rfl::json::write(data);
