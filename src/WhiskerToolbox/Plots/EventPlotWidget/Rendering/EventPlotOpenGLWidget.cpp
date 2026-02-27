@@ -756,12 +756,15 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
             half_window,
             half_window);
     } else {
+        double half_window = alignment_data.window_size / 2.0;
         auto align = WhiskerToolbox::Plots::toAlignmentPoint(
             alignment_data.interval_alignment_type);
         return WhiskerToolbox::Plots::gatherWithIntervalAlignment<DigitalEventSeries>(
             source,
             alignment_source.interval_series,
-            align);
+            align,
+            half_window,
+            half_window);
     }
 }
 

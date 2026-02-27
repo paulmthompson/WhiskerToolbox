@@ -386,45 +386,48 @@ public:
         result._intervals.reserve(interval_source.size());
         result._alignment_times.reserve(interval_source.size());
         
-        // Detect cross-timeframe scenario
+        // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        bool const cross_tf = source_tf && adapter_tf && source_tf.get() != adapter_tf.get();
         
         for (auto const & aligned_interval : interval_source) {
             int64_t view_start, view_end, alignment_abs_time;
             
-            if (cross_tf) {
-                // Cross-TF: convert alignment to absolute time via adapter's TimeFrame
+            if (adapter_tf) {
+                // Adapter yields indices in its own TimeFrame; convert to
+                // absolute time, then to source-TF indices for view creation.
                 alignment_abs_time = adapter_tf->getTimeAtIndex(
                     TimeFrameIndex(aligned_interval.alignment_time));
+                int64_t start_abs = adapter_tf->getTimeAtIndex(
+                    TimeFrameIndex(aligned_interval.start));
+                int64_t end_abs = adapter_tf->getTimeAtIndex(
+                    TimeFrameIndex(aligned_interval.end));
                 
-                // Window offsets treated as time offsets in cross-TF case
-                int64_t pre_offset = aligned_interval.alignment_time - aligned_interval.start;
-                int64_t post_offset = aligned_interval.end - aligned_interval.alignment_time;
-                
-                // Compute window bounds in absolute time
-                int64_t start_abs = alignment_abs_time - pre_offset;
-                int64_t end_abs = alignment_abs_time + post_offset;
-                
-                // Convert to source TimeFrame indices for view creation
-                view_start = source_tf->getIndexAtTime(static_cast<float>(start_abs)).getValue();
-                view_end = source_tf->getIndexAtTime(static_cast<float>(end_abs)).getValue();
+                if (source_tf) {
+                    view_start = source_tf->getIndexAtTime(
+                        static_cast<float>(start_abs)).getValue();
+                    view_end = source_tf->getIndexAtTime(
+                        static_cast<float>(end_abs)).getValue();
+                } else {
+                    view_start = start_abs;
+                    view_end = end_abs;
+                }
+            } else if (source_tf) {
+                // No adapter TF: adapter values are already in absolute time.
+                // Convert directly to source-TF indices.
+                alignment_abs_time = aligned_interval.alignment_time;
+                view_start = source_tf->getIndexAtTime(
+                    static_cast<float>(aligned_interval.start)).getValue();
+                view_end = source_tf->getIndexAtTime(
+                    static_cast<float>(aligned_interval.end)).getValue();
             } else {
-                // Same TimeFrame or no TimeFrame: use raw indices for view bounds
+                // No TimeFrame at all: raw indices are the only option
+                alignment_abs_time = aligned_interval.alignment_time;
                 view_start = aligned_interval.start;
                 view_end = aligned_interval.end;
-                
-                // Convert alignment index to absolute time
-                if (source_tf) {
-                    alignment_abs_time = source_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.alignment_time));
-                } else {
-                    alignment_abs_time = aligned_interval.alignment_time;
-                }
             }
             
             result._intervals.push_back(Interval{view_start, view_end});
@@ -456,35 +459,43 @@ public:
         result._intervals.reserve(interval_source.size());
         result._alignment_times.reserve(interval_source.size());
         
-        // Detect cross-timeframe scenario
+        // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        bool const cross_tf = source_tf && adapter_tf && source_tf.get() != adapter_tf.get();
         
         for (auto const & aligned_interval : interval_source) {
             int64_t view_start, view_end, alignment_abs_time;
             
-            if (cross_tf) {
+            if (adapter_tf) {
                 alignment_abs_time = adapter_tf->getTimeAtIndex(
                     TimeFrameIndex(aligned_interval.alignment_time));
-                int64_t pre_offset = aligned_interval.alignment_time - aligned_interval.start;
-                int64_t post_offset = aligned_interval.end - aligned_interval.alignment_time;
-                int64_t start_abs = alignment_abs_time - pre_offset;
-                int64_t end_abs = alignment_abs_time + post_offset;
-                view_start = source_tf->getIndexAtTime(static_cast<float>(start_abs)).getValue();
-                view_end = source_tf->getIndexAtTime(static_cast<float>(end_abs)).getValue();
+                int64_t start_abs = adapter_tf->getTimeAtIndex(
+                    TimeFrameIndex(aligned_interval.start));
+                int64_t end_abs = adapter_tf->getTimeAtIndex(
+                    TimeFrameIndex(aligned_interval.end));
+                
+                if (source_tf) {
+                    view_start = source_tf->getIndexAtTime(
+                        static_cast<float>(start_abs)).getValue();
+                    view_end = source_tf->getIndexAtTime(
+                        static_cast<float>(end_abs)).getValue();
+                } else {
+                    view_start = start_abs;
+                    view_end = end_abs;
+                }
+            } else if (source_tf) {
+                alignment_abs_time = aligned_interval.alignment_time;
+                view_start = source_tf->getIndexAtTime(
+                    static_cast<float>(aligned_interval.start)).getValue();
+                view_end = source_tf->getIndexAtTime(
+                    static_cast<float>(aligned_interval.end)).getValue();
             } else {
+                alignment_abs_time = aligned_interval.alignment_time;
                 view_start = aligned_interval.start;
                 view_end = aligned_interval.end;
-                if (source_tf) {
-                    alignment_abs_time = source_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.alignment_time));
-                } else {
-                    alignment_abs_time = aligned_interval.alignment_time;
-                }
             }
             
             result._intervals.push_back(Interval{view_start, view_end});
@@ -517,35 +528,43 @@ public:
         result._intervals.reserve(interval_source.size());
         result._alignment_times.reserve(interval_source.size());
         
-        // Detect cross-timeframe scenario
+        // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
         if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
-        bool const cross_tf = source_tf && adapter_tf && source_tf.get() != adapter_tf.get();
         
         for (auto const & aligned_interval : interval_source) {
             int64_t view_start, view_end, alignment_abs_time;
             
-            if (cross_tf) {
+            if (adapter_tf) {
                 alignment_abs_time = adapter_tf->getTimeAtIndex(
                     TimeFrameIndex(aligned_interval.alignment_time));
-                int64_t pre_offset = aligned_interval.alignment_time - aligned_interval.start;
-                int64_t post_offset = aligned_interval.end - aligned_interval.alignment_time;
-                int64_t start_abs = alignment_abs_time - pre_offset;
-                int64_t end_abs = alignment_abs_time + post_offset;
-                view_start = source_tf->getIndexAtTime(static_cast<float>(start_abs)).getValue();
-                view_end = source_tf->getIndexAtTime(static_cast<float>(end_abs)).getValue();
+                int64_t start_abs = adapter_tf->getTimeAtIndex(
+                    TimeFrameIndex(aligned_interval.start));
+                int64_t end_abs = adapter_tf->getTimeAtIndex(
+                    TimeFrameIndex(aligned_interval.end));
+                
+                if (source_tf) {
+                    view_start = source_tf->getIndexAtTime(
+                        static_cast<float>(start_abs)).getValue();
+                    view_end = source_tf->getIndexAtTime(
+                        static_cast<float>(end_abs)).getValue();
+                } else {
+                    view_start = start_abs;
+                    view_end = end_abs;
+                }
+            } else if (source_tf) {
+                alignment_abs_time = aligned_interval.alignment_time;
+                view_start = source_tf->getIndexAtTime(
+                    static_cast<float>(aligned_interval.start)).getValue();
+                view_end = source_tf->getIndexAtTime(
+                    static_cast<float>(aligned_interval.end)).getValue();
             } else {
+                alignment_abs_time = aligned_interval.alignment_time;
                 view_start = aligned_interval.start;
                 view_end = aligned_interval.end;
-                if (source_tf) {
-                    alignment_abs_time = source_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.alignment_time));
-                } else {
-                    alignment_abs_time = aligned_interval.alignment_time;
-                }
             }
             
             result._intervals.push_back(Interval{view_start, view_end});
