@@ -270,12 +270,13 @@ TEST_CASE("createAlignedGatherResult - with interval alignment", "[PlotAlignment
     
     REQUIRE(result.size() == 3);  // 3 trials
     
-    SECTION("Uses interval bounds for data gathering") {
+    SECTION("Uses window around alignment point for data gathering") {
         // Spikes: {10, 50, 100, 150, 200, 250, 300, 350}
-        // Trial 0 [0, 100]: spikes at 10, 50, 100 (inclusive boundaries)
-        CHECK(result[0]->size() == 3);
+        // Alignment=Beginning, window_size=100 → half_window=50
+        // Trial 0 alignment=0, window [-50, 50]: spikes at 10, 50
+        CHECK(result[0]->size() == 2);
         
-        // Trial 1 [150, 250]: spikes at 150, 200, 250 (inclusive boundaries)
+        // Trial 1 alignment=150, window [100, 200]: spikes at 100, 150, 200
         CHECK(result[1]->size() == 3);
     }
     

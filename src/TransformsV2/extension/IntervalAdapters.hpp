@@ -124,11 +124,18 @@ public:
             std::size_t idx = 0;
             for (auto const& event : _events->view()) {
                 if (idx == _index) {
-                    int64_t time = event.time().getValue();
+                    // Convert event index to absolute time if a TimeFrame exists,
+                    // otherwise treat the raw index as the time value.
+                    auto tf = _events->getTimeFrame();
+                    int64_t abs_time = tf
+                        ? tf->getTimeAtIndex(event.time())
+                        : event.time().getValue();
+
+                    // Window offsets are always in absolute time units.
                     return AlignedInterval{
-                        .start = time - _pre_window,
-                        .end = time + _post_window,
-                        .alignment_time = time
+                        .start = abs_time - _pre_window,
+                        .end = abs_time + _post_window,
+                        .alignment_time = abs_time
                     };
                 }
                 ++idx;
@@ -207,9 +214,14 @@ public:
 
     /**
      * @brief Get the TimeFrame of the underlying event series
+     *
+     * Returns nullptr because the adapter's AlignedInterval values are
+     * already in absolute time units (the iterator converts via the
+     * event series' TimeFrame).  Returning nullptr tells GatherResult::create
+     * that no further index→time conversion is needed for these values.
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const {
-        return _events ? _events->getTimeFrame() : nullptr;
+        return nullptr;
     }
 
     [[nodiscard]] int64_t pre_window() const { return _pre_window; }
@@ -231,8 +243,16 @@ private:
  * Wraps a DigitalIntervalSeries and allows specifying whether alignment
  * should be at the start, end, or center of each interval.
  *
- * This is useful when you have intervals but want to align data relative
- * to a specific point within each interval.
+ * Two modes of operation:
+ *
+ * 1. **No window** (default): start/end are the raw interval bounds in TF-index
+ *    space. The adapter exposes its TimeFrame so GatherResult::create can convert
+ *    to absolute time.
+ *
+ * 2. **With window**: start/end are computed as [alignment_abs_time - pre_window,
+ *    alignment_abs_time + post_window] in absolute time units. The adapter returns
+ *    nullptr from getTimeFrame() so GatherResult::create treats them as already
+ *    absolute (matching EventExpanderAdapter's contract).
  */
 class IntervalWithAlignmentAdapter {
 public:
@@ -255,10 +275,16 @@ public:
         iterator(
             DigitalIntervalSeries const* intervals,
             std::size_t index,
-            AlignmentPoint align)
+            AlignmentPoint align,
+            int64_t pre_window,
+            int64_t post_window,
+            bool use_window)
             : _intervals(intervals)
             , _index(index)
-            , _align(align) {}
+            , _align(align)
+            , _pre_window(pre_window)
+            , _post_window(post_window)
+            , _use_window(use_window) {}
 
         [[nodiscard]] value_type operator*() const {
             // Iterate to find element at current index
@@ -267,24 +293,40 @@ public:
                 if (idx == _index) {
                     auto const& interval = interval_with_id.interval;
 
-                    int64_t alignment_time;
+                    int64_t alignment_idx;
                     switch (_align) {
                         case AlignmentPoint::Start:
-                            alignment_time = interval.start;
+                            alignment_idx = interval.start;
                             break;
                         case AlignmentPoint::End:
-                            alignment_time = interval.end;
+                            alignment_idx = interval.end;
                             break;
                         case AlignmentPoint::Center:
-                            alignment_time = (interval.start + interval.end) / 2;
+                            alignment_idx = (interval.start + interval.end) / 2;
                             break;
                     }
 
-                    return AlignedInterval{
-                        .start = interval.start,
-                        .end = interval.end,
-                        .alignment_time = alignment_time
-                    };
+                    if (_use_window) {
+                        // Window mode: convert alignment to absolute time,
+                        // then expand by pre/post window in absolute time units.
+                        auto tf = _intervals->getTimeFrame();
+                        int64_t abs_time = tf
+                            ? tf->getTimeAtIndex(TimeFrameIndex(alignment_idx))
+                            : alignment_idx;
+
+                        return AlignedInterval{
+                            .start = abs_time - _pre_window,
+                            .end = abs_time + _post_window,
+                            .alignment_time = abs_time
+                        };
+                    } else {
+                        // No window: use raw interval bounds (TF-index space)
+                        return AlignedInterval{
+                            .start = interval.start,
+                            .end = interval.end,
+                            .alignment_time = alignment_idx
+                        };
+                    }
                 }
                 ++idx;
             }
@@ -314,10 +356,13 @@ public:
         DigitalIntervalSeries const* _intervals{nullptr};
         std::size_t _index{0};
         AlignmentPoint _align{AlignmentPoint::Start};
+        int64_t _pre_window{0};
+        int64_t _post_window{0};
+        bool _use_window{false};
     };
 
     /**
-     * @brief Construct adapter from interval series and alignment point
+     * @brief Construct adapter from interval series and alignment point (no window)
      *
      * @param intervals The interval series
      * @param align Which point in each interval to use for alignment
@@ -328,12 +373,38 @@ public:
         : _intervals(std::move(intervals))
         , _align(align) {}
 
+    /**
+     * @brief Construct adapter with explicit window around alignment point
+     *
+     * When a window is specified, the iterator produces intervals in absolute
+     * time: [alignment_abs - pre_window, alignment_abs + post_window].
+     * The adapter returns nullptr from getTimeFrame() since values are already
+     * in absolute time.
+     *
+     * @param intervals The interval series
+     * @param align Which point in each interval to use for alignment
+     * @param pre_window Absolute time units before alignment point
+     * @param post_window Absolute time units after alignment point
+     */
+    IntervalWithAlignmentAdapter(
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        AlignmentPoint align,
+        int64_t pre_window,
+        int64_t post_window)
+        : _intervals(std::move(intervals))
+        , _align(align)
+        , _pre_window(pre_window)
+        , _post_window(post_window)
+        , _use_window(true) {}
+
     [[nodiscard]] iterator begin() const {
-        return iterator(_intervals.get(), 0, _align);
+        return iterator(_intervals.get(), 0, _align,
+                       _pre_window, _post_window, _use_window);
     }
 
     [[nodiscard]] iterator end() const {
-        return iterator(_intervals.get(), _intervals->size(), _align);
+        return iterator(_intervals.get(), _intervals->size(), _align,
+                       _pre_window, _post_window, _use_window);
     }
 
     [[nodiscard]] std::size_t size() const {
@@ -349,8 +420,14 @@ public:
 
     /**
      * @brief Get the TimeFrame of the underlying interval series
+     *
+     * Returns nullptr when a window is specified because the iterator
+     * produces absolute-time values (no further TF conversion needed).
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTimeFrame() const {
+        if (_use_window) {
+            return nullptr;  // Values already in absolute time
+        }
         return _intervals ? _intervals->getTimeFrame() : nullptr;
     }
 
@@ -359,6 +436,9 @@ public:
 private:
     std::shared_ptr<DigitalIntervalSeries const> _intervals;
     AlignmentPoint _align;
+    int64_t _pre_window{0};
+    int64_t _post_window{0};
+    bool _use_window{false};
 };
 
 // =============================================================================
@@ -398,6 +478,26 @@ inline IntervalWithAlignmentAdapter withAlignment(
     std::shared_ptr<DigitalIntervalSeries const> intervals,
     AlignmentPoint align = AlignmentPoint::Start) {
     return IntervalWithAlignmentAdapter(std::move(intervals), align);
+}
+
+/**
+ * @brief Create an IntervalWithAlignmentAdapter with explicit window
+ *
+ * The window is specified in absolute time units. The adapter produces
+ * intervals centered on the alignment point: [align - pre, align + post].
+ *
+ * @param intervals Interval series
+ * @param align Alignment point (Start, End, Center)
+ * @param pre_window Absolute time units before alignment point
+ * @param post_window Absolute time units after alignment point
+ */
+inline IntervalWithAlignmentAdapter withAlignment(
+    std::shared_ptr<DigitalIntervalSeries const> intervals,
+    AlignmentPoint align,
+    int64_t pre_window,
+    int64_t post_window) {
+    return IntervalWithAlignmentAdapter(
+        std::move(intervals), align, pre_window, post_window);
 }
 
 } // namespace WhiskerToolbox::Transforms::V2

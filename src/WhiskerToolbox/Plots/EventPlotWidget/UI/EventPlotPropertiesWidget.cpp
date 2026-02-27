@@ -275,6 +275,12 @@ void EventPlotPropertiesWidget::_onRemoveEventClicked() {
     QTableWidgetItem * name_item = ui->plot_events_table->item(row, 0);
     if (name_item) {
         QString event_name = name_item->text();
+        // Detach glyph controls from the state BEFORE it gets freed
+        // by removePlotEvent(). Otherwise setGlyphStyleState(nullptr)
+        // in the signal handler will dereference a dangling pointer.
+        if (_glyph_style_controls) {
+            _glyph_style_controls->setGlyphStyleState(nullptr);
+        }
         _state->removePlotEvent(event_name);
     }
 }
@@ -305,6 +311,10 @@ void EventPlotPropertiesWidget::_updatePlotEventsTable() {
     if (!_state) {
         return;
     }
+
+    // Block signals while rebuilding the table to prevent selectionChanged
+    // from firing mid-update and accessing stale/freed GlyphStyleState pointers.
+    QSignalBlocker blocker(ui->plot_events_table);
 
     ui->plot_events_table->setRowCount(0);
 
@@ -354,11 +364,15 @@ void EventPlotPropertiesWidget::_onStatePlotEventAdded(QString const & event_nam
 
 void EventPlotPropertiesWidget::_onStatePlotEventRemoved(QString const & event_name) {
     Q_UNUSED(event_name)
+    // Clear glyph controls FIRST — the removed event's GlyphStyleState is
+    // already freed by the time this slot runs, so we must detach from it
+    // before any UI update can re-read the dangling pointer.
+    if (_glyph_style_controls) {
+        _glyph_style_controls->setGlyphStyleState(nullptr);
+    }
     _updatePlotEventsTable();
-    // Clear selection if the removed event was selected
     ui->plot_events_table->clearSelection();
     ui->remove_event_button->setEnabled(false);
-    _updateGlyphStyleControls();
 }
 
 void EventPlotPropertiesWidget::_onStatePlotEventOptionsChanged(QString const & event_name) {

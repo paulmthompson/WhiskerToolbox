@@ -247,9 +247,10 @@ private:
 
     /**
      * @brief Find event near screen position (for hit testing)
-     * @return Pair of (trial_index, event_index) or nullopt if none
+     * @return Pair of (trial_index, event_name) or nullopt if none found.
+     *         event_name is the plot event name (from EventPlotState), not the DataManager key.
      */
-    [[nodiscard]] std::optional<std::pair<int, int>> findEventNear(
+    [[nodiscard]] std::optional<std::pair<int, std::string>> findEventNear(
         QPoint const & screen_pos, float tolerance_pixels = 10.0f) const;
 
     /**

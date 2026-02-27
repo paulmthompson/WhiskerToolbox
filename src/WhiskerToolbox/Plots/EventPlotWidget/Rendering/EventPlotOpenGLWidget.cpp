@@ -24,6 +24,37 @@
 #include <limits>
 #include <numeric>
 
+namespace {
+
+/// Parsed result from a series_trial_key like "spikes_trial_42"
+struct SeriesTrialKey {
+    std::string event_name;  ///< The event name prefix (e.g. "spikes")
+    int trial_index{-1};     ///< The trial number (e.g. 42), or -1 on failure
+
+    [[nodiscard]] bool isValid() const { return trial_index >= 0; }
+};
+
+/// Parse a series_trial_key of the form "{event_name}_trial_{N}".
+/// Finds the *last* occurrence of "_trial_" to handle event names that
+/// might themselves contain "_trial_" (unlikely but safe).
+[[nodiscard]] SeriesTrialKey parseSeriesTrialKey(std::string const & key) {
+    constexpr std::string_view delimiter = "_trial_";
+    auto pos = key.rfind(delimiter);
+    if (pos == std::string::npos) {
+        return {};
+    }
+    std::string name = key.substr(0, pos);
+    std::string number_str = key.substr(pos + delimiter.size());
+    try {
+        int trial_index = std::stoi(number_str);
+        return {std::move(name), trial_index};
+    } catch (...) {
+        return {};
+    }
+}
+
+} // anonymous namespace
+
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
 {
@@ -254,22 +285,21 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
             int trial_index = hit->first;
             float relative_time = static_cast<float>(world.x());
             
-            // Convert relative time to absolute TimeFrameIndex
+            // Convert relative time to absolute time
             // The alignment time is the absolute time of t=0 for this trial
             if (trial_index >= 0 && 
                 static_cast<size_t>(trial_index) < _cached_alignment_times.size()) {
                 int64_t alignment_time = _cached_alignment_times[trial_index];
                 int64_t absolute_time = alignment_time + static_cast<int64_t>(relative_time);
                 
-                // Get series key for the signal
+                // Resolve the data key from the hit's event name
+                // hit->second encodes the event name via the scene key
                 QString series_key;
-                if (_state) {
-                    auto event_names = _state->getPlotEventNames();
-                    if (!event_names.empty()) {
-                        auto options = _state->getPlotEventOptions(event_names.front());
-                        if (options) {
-                            series_key = QString::fromStdString(options->event_key);
-                        }
+                if (_state && !hit->second.empty()) {
+                    auto options = _state->getPlotEventOptions(
+                        QString::fromStdString(hit->second));
+                    if (options) {
+                        series_key = QString::fromStdString(options->event_key);
                     }
                 }
                 
@@ -585,7 +615,7 @@ void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
         *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-std::optional<std::pair<int, int>> EventPlotOpenGLWidget::findEventNear(
+std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
     QPoint const & screen_pos, float tolerance_pixels) const
 {
     // Convert screen position to world coordinates
@@ -610,12 +640,10 @@ std::optional<std::pair<int, int>> EventPlotOpenGLWidget::findEventNear(
         _scene);
     
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
-        // Extract trial index from series_key (format: "trial_N")
-        if (result.series_key.starts_with("trial_")) {
-            int trial_index = std::stoi(result.series_key.substr(6));
-            // The event index within the trial is not tracked by the hit tester
-            // Return trial and a placeholder event index (0)
-            return std::make_pair(trial_index, 0);
+        // Extract trial index from series_key (format: "{event_name}_trial_{N}")
+        auto parsed = parseSeriesTrialKey(result.series_key);
+        if (parsed.isValid()) {
+            return std::make_pair(parsed.trial_index, parsed.event_name);
         }
     }
     
@@ -646,22 +674,22 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos)
         _layout_response);
     
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
-        // Extract trial index from series_key (format: "trial_N")
-        if (result.series_key.starts_with("trial_")) {
-            int trial_index = std::stoi(result.series_key.substr(6));
-            
-            // Get series key from state for the signal
+        // Extract trial index and event name from series_key
+        // (format: "{event_name}_trial_{N}")
+        auto parsed = parseSeriesTrialKey(result.series_key);
+        if (parsed.isValid()) {
+            // Resolve the DataManager key from the event name
             QString series_key;
-            auto event_names = _state ? _state->getPlotEventNames() : std::vector<QString>{};
-            if (!event_names.empty()) {
-                auto options = _state->getPlotEventOptions(event_names.front());
+            if (_state) {
+                auto options = _state->getPlotEventOptions(
+                    QString::fromStdString(parsed.event_name));
                 if (options) {
                     series_key = QString::fromStdString(options->event_key);
                 }
             }
             
             // Emit selection signal with trial index and relative time
-            emit eventSelected(trial_index, result.world_x, series_key);
+            emit eventSelected(parsed.trial_index, result.world_x, series_key);
         }
     }
 }
@@ -728,12 +756,15 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
             half_window,
             half_window);
     } else {
+        double half_window = alignment_data.window_size / 2.0;
         auto align = WhiskerToolbox::Plots::toAlignmentPoint(
             alignment_data.interval_alignment_type);
         return WhiskerToolbox::Plots::gatherWithIntervalAlignment<DigitalEventSeries>(
             source,
             alignment_source.interval_series,
-            align);
+            align,
+            half_window,
+            half_window);
     }
 }
 
@@ -780,7 +811,8 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
             }
             
             // Sort by latency (ascending - smallest latency first, NaN/infinity last)
-            std::sort(sort_indices.begin(), sort_indices.end(),
+            // Use stable_sort to preserve original trial order among ties
+            std::stable_sort(sort_indices.begin(), sort_indices.end(),
                 [&latencies](size_t a, size_t b) {
                     // Handle infinity: put at end
                     if (std::isinf(latencies[a]) && !std::isinf(latencies[b])) return false;
@@ -800,7 +832,8 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
             }
             
             // Sort by count (descending - highest count first)
-            std::sort(sort_indices.begin(), sort_indices.end(),
+            // Use stable_sort to preserve original trial order among ties
+            std::stable_sort(sort_indices.begin(), sort_indices.end(),
                 [&counts](size_t a, size_t b) {
                     return counts[a] > counts[b];
                 });
