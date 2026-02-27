@@ -19,6 +19,7 @@
 #include <rfl.hpp>
 
 #include <map>
+#include <optional>
 #include <string>
 
 /**
@@ -52,9 +53,13 @@ struct EventPlotAxisOptions {
  * Event key plus optional metadata. Glyph styling is stored separately
  * in the per-key glyph style map (`event_glyph_styles`) so that
  * GlyphStyleState objects can manage live state and serialization.
+ *
+ * When the key refers to a DigitalIntervalSeries, `interval_edge` specifies
+ * which edge (start or end) to extract as events for plotting.
  */
 struct EventPlotOptions {
-    std::string event_key;  ///< Key of the DigitalEventSeries to plot
+    std::string event_key;  ///< Key of the DigitalEventSeries or DigitalIntervalSeries to plot
+    std::optional<IntervalAlignmentType> interval_edge;  ///< Edge to extract when source is an interval series
 };
 
 /**

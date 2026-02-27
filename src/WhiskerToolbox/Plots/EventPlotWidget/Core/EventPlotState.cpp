@@ -149,13 +149,15 @@ void EventPlotState::setWindowSize(double window_size)
     _alignment_state->setWindowSize(window_size);
 }
 
-void EventPlotState::addPlotEvent(QString const & event_name, QString const & event_key)
+void EventPlotState::addPlotEvent(QString const & event_name, QString const & event_key,
+                                  std::optional<IntervalAlignmentType> interval_edge)
 {
     std::string name_str = event_name.toStdString();
     std::string key_str = event_key.toStdString();
 
     EventPlotOptions options;
     options.event_key = key_str;
+    options.interval_edge = interval_edge;
 
     _data.plot_events[name_str] = options;
     _createGlyphStyleStateForKey(name_str);

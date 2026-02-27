@@ -271,12 +271,14 @@ private:
     void renderAxes();
 
     /**
-     * @brief Gather trial-aligned data for a specific event series key
-     * @param event_key The data manager key of the event series to gather
+     * @brief Gather trial-aligned data for a resolved event series
+     * @param source The resolved DigitalEventSeries to gather (may be derived from interval edges)
+     * @param source_key The original data manager key (used for alignment source lookup)
      * @return GatherResult with trial-aligned views, or empty on error
      */
     [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData(
-        std::string const & event_key) const;
+        std::shared_ptr<DigitalEventSeries> const & source,
+        std::string const & source_key) const;
 
     /**
      * @brief Compute sort indices for gathered trial data

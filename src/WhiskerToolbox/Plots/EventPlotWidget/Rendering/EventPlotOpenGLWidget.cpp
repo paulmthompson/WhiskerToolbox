@@ -1,5 +1,6 @@
 #include "EventPlotOpenGLWidget.hpp"
 
+#include "Core/IntervalEdgeExtraction.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "DataManager/utils/color.hpp"
@@ -378,17 +379,37 @@ void EventPlotOpenGLWidget::rebuildScene()
             continue;
         }
 
-        auto series = _data_manager->getData<DigitalEventSeries>(opts->event_key);
-        if (!series) {
-            continue;
+        // Resolve the source data to a DigitalEventSeries.
+        // For interval sources, extract edge events; for event sources, use directly.
+        std::shared_ptr<DigitalEventSeries> series;
+        std::shared_ptr<TimeFrame const> tf;
+
+        if (opts->interval_edge.has_value()) {
+            // Source is a DigitalIntervalSeries — extract edge events
+            auto interval_series = _data_manager->getData<DigitalIntervalSeries>(opts->event_key);
+            if (!interval_series) {
+                continue;
+            }
+            series = WhiskerToolbox::Plots::extractEdgeEvents(
+                interval_series, *opts->interval_edge);
+            if (!series) {
+                continue;
+            }
+            tf = series->getTimeFrame();
+        } else {
+            // Source is a DigitalEventSeries — use directly
+            series = _data_manager->getData<DigitalEventSeries>(opts->event_key);
+            if (!series) {
+                continue;
+            }
+            tf = series->getTimeFrame();
         }
 
-        auto tf = series->getTimeFrame();
         if (!tf) {
             continue;
         }
 
-        auto gathered = gatherTrialData(opts->event_key);
+        auto gathered = gatherTrialData(series, opts->event_key);
         if (gathered.empty()) {
             continue;
         }
@@ -676,9 +697,10 @@ void EventPlotOpenGLWidget::updateBackgroundColor()
 }
 
 GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
-    std::string const & event_key) const
+    std::shared_ptr<DigitalEventSeries> const & source,
+    std::string const & source_key) const
 {
-    if (!_data_manager || !_state || event_key.empty()) {
+    if (!_data_manager || !_state || !source || source_key.empty()) {
         return GatherResult<DigitalEventSeries>{};
     }
 
@@ -687,10 +709,32 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
         return GatherResult<DigitalEventSeries>{};
     }
 
-    return WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
-        _data_manager,
-        event_key,
-        alignment_state->data());
+    auto const & alignment_data = alignment_state->data();
+
+    // Get alignment source (event or interval series for trial boundaries)
+    auto alignment_source = WhiskerToolbox::Plots::getAlignmentSource(
+        _data_manager, alignment_data.alignment_event_key);
+    if (!alignment_source.isValid()) {
+        return GatherResult<DigitalEventSeries>{};
+    }
+
+    // Use the low-level gather functions directly with the pre-resolved source.
+    // This supports both DataManager-owned and derived (edge-extracted) series.
+    if (alignment_source.is_event_series) {
+        double half_window = alignment_data.window_size / 2.0;
+        return WhiskerToolbox::Plots::gatherWithEventAlignment<DigitalEventSeries>(
+            source,
+            alignment_source.event_series,
+            half_window,
+            half_window);
+    } else {
+        auto align = WhiskerToolbox::Plots::toAlignmentPoint(
+            alignment_data.interval_alignment_type);
+        return WhiskerToolbox::Plots::gatherWithIntervalAlignment<DigitalEventSeries>(
+            source,
+            alignment_source.interval_series,
+            align);
+    }
 }
 
 std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(

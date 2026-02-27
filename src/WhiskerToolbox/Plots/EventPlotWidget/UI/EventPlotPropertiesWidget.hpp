@@ -23,6 +23,7 @@ class DataManager;
 class EventPlotWidget;
 class GlyphStyleControls;
 class PlotAlignmentWidget;
+class QComboBox;
 class RelativeTimeAxisRangeControls;
 class VerticalAxisRangeControls;
 class Section;
@@ -129,6 +130,12 @@ private slots:
      */
     void _onStateSortingModeChanged(TrialSortMode mode);
 
+    /**
+     * @brief Handle add event combo box selection change to show/hide edge selector
+     * @param index Selected index in the combo box
+     */
+    void _onAddEventComboChanged(int index);
+
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys
@@ -170,6 +177,8 @@ private:
     Section * _range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
+    QWidget * _edge_selector_widget = nullptr;    ///< Container for edge selector (shown for interval keys)
+    QComboBox * _edge_selector_combo = nullptr;   ///< Combo box for selecting interval edge (Start/End)
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

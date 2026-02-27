@@ -262,9 +262,11 @@ public:
     /**
      * @brief Add an event to the plot
      * @param event_name Name/key for the event (used as identifier)
-     * @param event_key DataManager key of the DigitalEventSeries
+     * @param event_key DataManager key of the DigitalEventSeries or DigitalIntervalSeries
+     * @param interval_edge Edge to extract when source is an interval series (nullopt for event series)
      */
-    void addPlotEvent(QString const & event_name, QString const & event_key);
+    void addPlotEvent(QString const & event_name, QString const & event_key,
+                      std::optional<IntervalAlignmentType> interval_edge = std::nullopt);
 
     /**
      * @brief Remove an event from the plot

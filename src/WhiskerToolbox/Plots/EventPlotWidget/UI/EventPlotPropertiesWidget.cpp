@@ -4,6 +4,7 @@
 #include "Core/EventPlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
@@ -13,7 +14,9 @@
 #include "ui_EventPlotPropertiesWidget.h"
 
 #include <QColorDialog>
+#include <QComboBox>
 #include <QHeaderView>
+#include <QLabel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QVBoxLayout>
@@ -86,6 +89,32 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(std::shared_ptr<EventPlotSt
     {
         int insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
         ui->main_layout->insertWidget(insert_idx, _glyph_style_section);
+    }
+
+    // === Edge Selector for interval series ===
+    // Create edge selector widget (hidden by default, shown when an interval key is selected)
+    {
+        _edge_selector_widget = new QWidget(this);
+        auto * edge_layout = new QHBoxLayout(_edge_selector_widget);
+        edge_layout->setContentsMargins(0, 0, 0, 0);
+        edge_layout->setSpacing(4);
+
+        auto * edge_label = new QLabel(QStringLiteral("Edge:"), _edge_selector_widget);
+        _edge_selector_combo = new QComboBox(_edge_selector_widget);
+        _edge_selector_combo->addItem(QStringLiteral("Start"), static_cast<int>(IntervalAlignmentType::Beginning));
+        _edge_selector_combo->addItem(QStringLiteral("End"), static_cast<int>(IntervalAlignmentType::End));
+
+        edge_layout->addWidget(edge_label);
+        edge_layout->addWidget(_edge_selector_combo, 1);
+
+        // Insert between the add_event_widget combo row and the glyph section
+        int insert_idx = ui->main_layout->indexOf(ui->add_event_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _edge_selector_widget);
+        _edge_selector_widget->setVisible(false);
+
+        // Show/hide edge selector when the add_event_combo selection changes
+        connect(ui->add_event_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::_onAddEventComboChanged);
     }
 
     // Populate combo boxes
@@ -180,12 +209,8 @@ void EventPlotPropertiesWidget::_populateAddEventComboBox() {
         return;
     }
 
-    // Get all DigitalEventSeries keys only
+    // Get DigitalEventSeries keys
     auto event_keys = _data_manager->getKeys<DigitalEventSeries>();
-
-    if (event_keys.empty()) {
-        return;
-    }
 
     // Sort keys before adding to combo box
     std::sort(event_keys.begin(), event_keys.end());
@@ -193,6 +218,17 @@ void EventPlotPropertiesWidget::_populateAddEventComboBox() {
     // Add DigitalEventSeries keys
     for (auto const & key: event_keys) {
         ui->add_event_combo->addItem(QString::fromStdString(key), QString::fromStdString(key));
+    }
+
+    // Get DigitalIntervalSeries keys
+    auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    std::sort(interval_keys.begin(), interval_keys.end());
+
+    // Add DigitalIntervalSeries keys (prefixed to distinguish in the combo)
+    for (auto const & key: interval_keys) {
+        ui->add_event_combo->addItem(
+            QString::fromStdString(key) + QStringLiteral(" [interval]"),
+            QString::fromStdString(key));
     }
 }
 
@@ -206,9 +242,23 @@ void EventPlotPropertiesWidget::_onAddEventClicked() {
         return;
     }
 
-    // Use the event key as the name (could be made more sophisticated)
+    // Determine if this is an interval series and get the edge type
+    std::optional<IntervalAlignmentType> interval_edge;
+    DM_DataType type = _data_manager->getType(event_key.toStdString());
+    if (type == DM_DataType::DigitalInterval) {
+        int edge_val = _edge_selector_combo->currentData().toInt();
+        interval_edge = static_cast<IntervalAlignmentType>(edge_val);
+    }
+
+    // Build a descriptive name: for intervals, include edge info
     QString event_name = event_key;
-    _state->addPlotEvent(event_name, event_key);
+    if (interval_edge.has_value()) {
+        event_name += (*interval_edge == IntervalAlignmentType::Beginning)
+                          ? QStringLiteral(" [start]")
+                          : QStringLiteral(" [end]");
+    }
+
+    _state->addPlotEvent(event_name, event_key, interval_edge);
 }
 
 void EventPlotPropertiesWidget::_onRemoveEventClicked() {
@@ -227,6 +277,21 @@ void EventPlotPropertiesWidget::_onRemoveEventClicked() {
         QString event_name = name_item->text();
         _state->removePlotEvent(event_name);
     }
+}
+
+void EventPlotPropertiesWidget::_onAddEventComboChanged(int /*index*/) {
+    if (!_data_manager || !_edge_selector_widget) {
+        return;
+    }
+
+    QString event_key = ui->add_event_combo->currentData().toString();
+    if (event_key.isEmpty()) {
+        _edge_selector_widget->setVisible(false);
+        return;
+    }
+
+    DM_DataType type = _data_manager->getType(event_key.toStdString());
+    _edge_selector_widget->setVisible(type == DM_DataType::DigitalInterval);
 }
 
 void EventPlotPropertiesWidget::_onPlotEventSelectionChanged() {
