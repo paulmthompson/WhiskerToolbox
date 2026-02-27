@@ -734,3 +734,168 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     CHECK(normalized[4] == 2000);
     CHECK(normalized[5] == 2500);
 }
+
+// =============================================================================
+// Negative Relative Time Tests (events before alignment)
+// =============================================================================
+
+/**
+ * @brief Verify that events occurring before the alignment event produce
+ * negative relative times when normalized, while the GatherResult itself
+ * always stores non-negative absolute TimeFrameIndex values.
+ *
+ * Scenario: events at [10, 20, 30], alignment events at [11, 21, 31].
+ * After gathering with a window of ±5, each trial should contain one event
+ * whose absolute time is less than the alignment time, yielding a relative
+ * offset of -1 when subtracting alignment_time.
+ *
+ * The GatherResult must NEVER store negative TimeFrameIndex values.
+ * Negative offsets only arise when computing (event_time - alignment_time)
+ * for display in the plotting buffer.
+ */
+TEST_CASE("GatherResult - Events before alignment produce negative relative times",
+          "[GatherResult][alignment][negative]") {
+
+    // Spikes slightly before each alignment event
+    auto spikes = createEventSeries({10, 20, 30});
+
+    // Alignment events are 1 unit after each spike
+    auto alignment_events = createEventSeries({11, 21, 31});
+
+    // Window of ±5 around each alignment event
+    auto adapter = expandEvents(alignment_events, 5, 5);
+    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+
+    REQUIRE(result.size() == 3);
+
+    SECTION("alignment times match the alignment events") {
+        CHECK(result.alignmentTimeAt(0) == 11);
+        CHECK(result.alignmentTimeAt(1) == 21);
+        CHECK(result.alignmentTimeAt(2) == 31);
+    }
+
+    SECTION("intervals are correct windows around alignment events") {
+        // [11-5, 11+5] = [6, 16]
+        CHECK(result.intervalAt(0).start == 6);
+        CHECK(result.intervalAt(0).end == 16);
+
+        // [21-5, 21+5] = [16, 26]
+        CHECK(result.intervalAt(1).start == 16);
+        CHECK(result.intervalAt(1).end == 26);
+
+        // [31-5, 31+5] = [26, 36]
+        CHECK(result.intervalAt(2).start == 26);
+        CHECK(result.intervalAt(2).end == 36);
+    }
+
+    SECTION("gathered events store absolute (non-negative) TimeFrameIndex values") {
+        for (size_t trial = 0; trial < result.size(); ++trial) {
+            REQUIRE(result[trial]->size() == 1);
+            for (auto const & event : result[trial]->view()) {
+                // Absolute index must never be negative
+                CHECK(event.time().getValue() >= 0);
+            }
+        }
+    }
+
+    SECTION("normalized times are negative (-1) for each trial") {
+        for (size_t trial = 0; trial < result.size(); ++trial) {
+            int64_t alignment = result.alignmentTimeAt(trial);
+            REQUIRE(result[trial]->size() == 1);
+
+            for (auto const & event : result[trial]->view()) {
+                int64_t relative = event.time().getValue() - alignment;
+                CHECK(relative == -1);
+            }
+        }
+    }
+}
+
+TEST_CASE("GatherResult - Mixed pre-and-post alignment events",
+          "[GatherResult][alignment][negative]") {
+
+    // Events both before and after each alignment event
+    // Spikes at: 8, 10, 12 (around alignment at 10)
+    //           18, 20, 22 (around alignment at 20)
+    auto spikes = createEventSeries({8, 10, 12, 18, 20, 22});
+    auto alignment_events = createEventSeries({10, 20});
+
+    auto adapter = expandEvents(alignment_events, 5, 5);
+    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+
+    REQUIRE(result.size() == 2);
+
+    SECTION("Trial 0 has pre, on, and post alignment events") {
+        REQUIRE(result[0]->size() == 3);
+        int64_t alignment = result.alignmentTimeAt(0);  // 10
+
+        std::vector<int64_t> normalized;
+        for (auto const & event : result[0]->view()) {
+            CHECK(event.time().getValue() >= 0);  // absolute is non-negative
+            normalized.push_back(event.time().getValue() - alignment);
+        }
+
+        // 8-10=-2, 10-10=0, 12-10=2
+        REQUIRE(normalized.size() == 3);
+        CHECK(normalized[0] == -2);
+        CHECK(normalized[1] == 0);
+        CHECK(normalized[2] == 2);
+    }
+
+    SECTION("Trial 1 has pre, on, and post alignment events") {
+        REQUIRE(result[1]->size() == 3);
+        int64_t alignment = result.alignmentTimeAt(1);  // 20
+
+        std::vector<int64_t> normalized;
+        for (auto const & event : result[1]->view()) {
+            CHECK(event.time().getValue() >= 0);  // absolute is non-negative
+            normalized.push_back(event.time().getValue() - alignment);
+        }
+
+        // 18-20=-2, 20-20=0, 22-20=2
+        REQUIRE(normalized.size() == 3);
+        CHECK(normalized[0] == -2);
+        CHECK(normalized[1] == 0);
+        CHECK(normalized[2] == 2);
+    }
+}
+
+TEST_CASE("GatherResult - All events before alignment event",
+          "[GatherResult][alignment][negative]") {
+
+    // All spikes occur before the alignment event
+    auto spikes = createEventSeries({95, 96, 97, 98, 99});
+    auto alignment_events = createEventSeries({100});
+
+    // Window: [100-10, 100+10] = [90, 110]
+    auto adapter = expandEvents(alignment_events, 10, 10);
+    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+
+    REQUIRE(result.size() == 1);
+    REQUIRE(result[0]->size() == 5);
+    CHECK(result.alignmentTimeAt(0) == 100);
+
+    SECTION("all normalized times are negative") {
+        for (auto const & event : result[0]->view()) {
+            int64_t abs_time = event.time().getValue();
+            CHECK(abs_time >= 0);  // stored as non-negative
+
+            int64_t relative = abs_time - result.alignmentTimeAt(0);
+            CHECK(relative < 0);   // all events are before alignment
+        }
+    }
+
+    SECTION("specific negative values are correct") {
+        std::vector<int64_t> normalized;
+        for (auto const & event : result[0]->view()) {
+            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+        }
+        // 95-100=-5, 96-100=-4, 97-100=-3, 98-100=-2, 99-100=-1
+        REQUIRE(normalized.size() == 5);
+        CHECK(normalized[0] == -5);
+        CHECK(normalized[1] == -4);
+        CHECK(normalized[2] == -3);
+        CHECK(normalized[3] == -2);
+        CHECK(normalized[4] == -1);
+    }
+}
