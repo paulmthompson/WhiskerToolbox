@@ -73,11 +73,13 @@ EventPlotState::EventPlotState(QObject * parent)
             });
     connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
             this, [this]() {
-                // Only sync to data for serialization, don't update view bounds
-                // This is called when range is updated programmatically (e.g., from pan/zoom)
+                // Only sync to data for serialization, don't update view bounds.
+                // This is called when range is updated programmatically (e.g.,
+                // from pan/zoom/resize).  No markDirty()/stateChanged() — the
+                // view-only change is already handled by the projection matrix
+                // and emitting stateChanged() here would cause a full scene
+                // rebuild on every resize/pan frame.
                 _data.time_axis = _relative_time_axis_state->data();
-                markDirty();
-                emit stateChanged();
             });
 }
 
@@ -218,10 +220,9 @@ void EventPlotState::setXZoom(double zoom)
 {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
-        // Note: No stateChanged() here - zoom is a view-only change that
-        // doesn't require scene rebuild. The projection matrix handles it.
+        // No markDirty()/stateChanged() — zoom is a view-only change
+        // handled entirely by the projection matrix.
     }
 }
 
@@ -229,10 +230,9 @@ void EventPlotState::setYZoom(double zoom)
 {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
-        // Note: No stateChanged() here - zoom is a view-only change that
-        // doesn't require scene rebuild. The projection matrix handles it.
+        // No markDirty()/stateChanged() — zoom is a view-only change
+        // handled entirely by the projection matrix.
     }
 }
 
@@ -241,10 +241,9 @@ void EventPlotState::setPan(double x_pan, double y_pan)
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
-        // Note: No stateChanged() here - pan is a view-only change that
-        // doesn't require scene rebuild. The projection matrix handles it.
+        // No markDirty()/stateChanged() — pan is a view-only change
+        // handled entirely by the projection matrix.
     }
 }
 
