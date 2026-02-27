@@ -171,6 +171,8 @@ SceneRenderer::uploadScene() + render(view, projection)
 
 Points are rendered via `SceneBuilder::addGlyphs()` using the shared glyph infrastructure from `CorePlotting`. Each scatter point is a `MappedElement` with its (x, y) position and an `EntityId` for hit testing. The `GlyphRenderer` uploads all points as a single GPU buffer and renders them in one instanced draw call, providing good performance for large point counts.
 
+During the same `addGlyphs()` traversal, each point is also inserted into the scene's `QuadTree<EntityId>` spatial index. This index is used by `SceneHitTester::queryQuadTree()` for `O(log n)` nearest-neighbor lookup during double-click-to-navigate (see [roadmap](roadmap.qmd) Phase 2) and hover tooltip interactions, with no additional data structures required.
+
 Default glyph style: blue circles (`#3388FF`), size 5, alpha 0.8.
 
 ## Reference Line
@@ -204,9 +206,19 @@ The widget supports separated X/Y zoom for independent axis exploration, using t
 
 Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance. The `PlotInteractionHelpers` are shared across all OpenGL plot widgets — see [Plot Widget Guide](../plot_widget_guide.md).
 
-## Click-to-Navigate (Planned)
+## Double-Click-to-Navigate
 
-Single-clicking on a point will navigate to that point's `TimeFrameIndex` in other time-synced widgets. The `ScatterPlotWidget` already emits `timePositionSelected(TimePosition)` and the registration wires this to `EditorRegistry::setCurrentTime()`. This is the same pattern used by [EventPlotWidget](../EventPlotWidget/index.qmd) (double-click navigation) and planned for [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
+Double-clicking on a scatter point navigates other time-synced widgets to that point's `TimeFrameIndex`. Hit testing uses the shared `SceneHitTester` (`CorePlotting/Interaction/SceneHitTester.hpp`), which queries the `QuadTree<EntityId>` spatial index built automatically by `SceneBuilder::addGlyphs()` during scene construction. This is the same infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd) for double-click navigation and click-to-select.
+
+The implementation:
+
+1. On `mouseDoubleClickEvent`, converts screen position to world coordinates via `screenToWorld()`
+2. Converts an 8-pixel tolerance to world units (using the max of X and Y to handle non-uniform aspect ratios)
+3. Calls `_hit_tester.queryQuadTree(world_x, world_y, _scene)` for `O(log n)` nearest-neighbor lookup
+4. Maps the returned `EntityId` back to a `TimeFrameIndex` via the cached `ScatterPointData`
+5. Emits `pointDoubleClicked(TimePosition)`, which is forwarded as `timePositionSelected` and wired to `EditorRegistry::setCurrentTime()` in the registration
+
+The most recently navigated-to point is highlighted with a larger yellow glyph (size 9, rendered as a second `addGlyphs()` batch on top of the main point batch). The highlight is cleared when data sources change.
 
 ## Point Selection (Planned)
 
@@ -279,7 +291,7 @@ See the [roadmap](roadmap.qmd) for planned additions including:
 
 | Feature | ScatterPlot | Similar Implementation In |
 |---------|-------------|--------------------------|
-| Click-to-navigate | Planned (single click → `TimeFrameIndex`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (double-click → absolute time) |
+| Double-click-to-navigate | Implemented (double-click → `TimeFrameIndex` via `SceneHitTester`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (double-click → absolute time) |
 | Polygon selection | Planned (lasso → `TimeFrameIndex` set) | [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (planned for `PointData`) |
 | Glyph customization | Planned (shape, size, color) | [EventPlotWidget](../EventPlotWidget/index.qmd) (Tick/Circle/Square), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (point glyphs) |
 | Selection → Group | Planned (`TimeFrameIndex` → entity group) | [LinePlotWidget](../LinePlotWidget/index.qmd) (trial indices → alignment event groups) |

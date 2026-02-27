@@ -38,6 +38,10 @@ ScatterPlotWidget::ScatterPlotWidget(std::shared_ptr<DataManager> data_manager,
     _opengl_widget->setDataManager(_data_manager);
     horizontal_layout->addWidget(_opengl_widget, 1);
 
+    // Forward double-click navigation from OpenGL widget to top-level signal
+    connect(_opengl_widget, &ScatterPlotOpenGLWidget::pointDoubleClicked,
+            this, &ScatterPlotWidget::timePositionSelected);
+
     auto * vertical_layout = new QVBoxLayout();
     vertical_layout->setSpacing(0);
     vertical_layout->setContentsMargins(0, 0, 0, 0);
