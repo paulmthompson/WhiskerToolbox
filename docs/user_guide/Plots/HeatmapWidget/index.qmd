@@ -1,0 +1,7 @@
+---
+title: "HeatmapWidget"
+---
+
+# HeatmapWidget
+
+This section provides user guidance on the HeatmapWidget.
