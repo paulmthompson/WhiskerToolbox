@@ -271,24 +271,26 @@ private:
     void renderAxes();
 
     /**
-     * @brief Gather trial-aligned data for building scene
+     * @brief Gather trial-aligned data for a specific event series key
+     * @param event_key The data manager key of the event series to gather
+     * @return GatherResult with trial-aligned views, or empty on error
      */
-    [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData() const;
+    [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData(
+        std::string const & event_key) const;
 
     /**
-     * @brief Apply sorting to gathered trial data
-     * 
-     * Computes sort indices based on the specified mode and returns a reordered
-     * GatherResult. Sorting modes:
-     * - FirstEventLatency: Sort by latency to first positive event (ascending)
-     * - EventCount: Sort by total number of events (descending)
-     * 
-     * @param gathered The gathered trial data
+     * @brief Compute sort indices for gathered trial data
+     *
+     * Computes a permutation of trial indices based on the sorting mode.
+     * The returned indices can be applied to any GatherResult via reorder()
+     * so that multiple series share the same trial ordering.
+     *
+     * @param gathered The gathered trial data (used to compute sort criteria)
      * @param mode The sorting mode to apply
-     * @return Reordered GatherResult (or original if mode is TrialIndex)
+     * @return Permutation vector, or empty if no reordering needed
      */
-    [[nodiscard]] GatherResult<DigitalEventSeries> applySorting(
-        GatherResult<DigitalEventSeries> const& gathered,
+    [[nodiscard]] std::vector<size_t> computeSortIndices(
+        GatherResult<DigitalEventSeries> const & gathered,
         TrialSortMode mode) const;
 
     /**

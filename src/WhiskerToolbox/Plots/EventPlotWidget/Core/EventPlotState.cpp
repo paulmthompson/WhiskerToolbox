@@ -158,6 +158,7 @@ void EventPlotState::addPlotEvent(QString const & event_name, QString const & ev
     options.event_key = key_str;
 
     _data.plot_events[name_str] = options;
+    _createGlyphStyleStateForKey(name_str);
     markDirty();
     emit plotEventAdded(event_name);
     emit stateChanged();
@@ -169,6 +170,8 @@ void EventPlotState::removePlotEvent(QString const & event_name)
     auto it = _data.plot_events.find(name_str);
     if (it != _data.plot_events.end()) {
         _data.plot_events.erase(it);
+        _data.event_glyph_styles.erase(name_str);
+        _event_glyph_style_states.erase(name_str);
         markDirty();
         emit plotEventRemoved(event_name);
         emit stateChanged();
@@ -301,11 +304,68 @@ void EventPlotState::setSortingMode(TrialSortMode mode)
     }
 }
 
+// === Per-Key Glyph Style ===
+
+GlyphStyleState * EventPlotState::glyphStyleStateForKey(QString const & event_name)
+{
+    auto it = _event_glyph_style_states.find(event_name.toStdString());
+    if (it != _event_glyph_style_states.end()) {
+        return it->second.get();
+    }
+    return nullptr;
+}
+
+CorePlotting::GlyphStyleData EventPlotState::getEventGlyphStyle(QString const & event_name) const
+{
+    auto it = _data.event_glyph_styles.find(event_name.toStdString());
+    if (it != _data.event_glyph_styles.end()) {
+        return it->second;
+    }
+    // Default style: black tick, size 2
+    return CorePlotting::GlyphStyleData{CorePlotting::GlyphType::Tick, 2.0f, "#000000", 1.0f};
+}
+
+void EventPlotState::_createGlyphStyleStateForKey(std::string const & key)
+{
+    // Look up existing serialized style or use default
+    CorePlotting::GlyphStyleData style{CorePlotting::GlyphType::Tick, 2.0f, "#000000", 1.0f};
+    auto it = _data.event_glyph_styles.find(key);
+    if (it != _data.event_glyph_styles.end()) {
+        style = it->second;
+    } else {
+        // Store default into serializable data
+        _data.event_glyph_styles[key] = style;
+    }
+
+    auto state = std::make_unique<GlyphStyleState>(this);
+    state->setStyleSilent(style);
+
+    auto const qkey = QString::fromStdString(key);
+    // Connect styleChanged to sync data and emit signals
+    connect(state.get(), &GlyphStyleState::styleChanged,
+            this, [this, key, qkey]() {
+                auto state_it = _event_glyph_style_states.find(key);
+                if (state_it != _event_glyph_style_states.end()) {
+                    _data.event_glyph_styles[key] = state_it->second->data();
+                }
+                markDirty();
+                emit glyphStyleChanged();
+                emit eventGlyphStyleChanged(qkey);
+                emit stateChanged();
+            });
+
+    _event_glyph_style_states[key] = std::move(state);
+}
+
 std::string EventPlotState::toJson() const
 {
     // Include instance_id in serialization for restoration
     EventPlotStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
+    // Sync per-key glyph styles from live state objects into serializable data
+    for (auto const & [key, state_ptr] : _event_glyph_style_states) {
+        data_to_serialize.event_glyph_styles[key] = state_ptr->data();
+    }
     return rfl::json::write(data_to_serialize);
 }
 
@@ -329,6 +389,12 @@ bool EventPlotState::fromJson(std::string const & json)
         // EventPlot Y-axis is fixed [-1, 1]; ensure view_state matches
         _data.view_state.y_min = -1.0;
         _data.view_state.y_max = 1.0;
+
+        // Recreate per-key GlyphStyleState objects from deserialized data
+        _event_glyph_style_states.clear();
+        for (auto const & [name, _] : _data.plot_events) {
+            _createGlyphStyleStateForKey(name);
+        }
 
         // Emit all signals to ensure UI updates
         emit viewStateChanged();

@@ -21,6 +21,7 @@
 
 class DataManager;
 class EventPlotWidget;
+class GlyphStyleControls;
 class PlotAlignmentWidget;
 class RelativeTimeAxisRangeControls;
 class VerticalAxisRangeControls;
@@ -106,23 +107,6 @@ private slots:
     void _onStatePlotEventOptionsChanged(QString const & event_name);
 
     /**
-     * @brief Handle tick thickness spinbox value change
-     * @param value New thickness value
-     */
-    void _onTickThicknessChanged(double value);
-
-    /**
-     * @brief Handle glyph type combo box selection change
-     * @param index Selected index (0 = Tick, 1 = Circle, 2 = Square)
-     */
-    void _onGlyphTypeChanged(int index);
-
-    /**
-     * @brief Handle color button click
-     */
-    void _onColorButtonClicked();
-
-    /**
      * @brief Handle background color button click
      */
     void _onBackgroundColorButtonClicked();
@@ -157,27 +141,17 @@ private:
     void _updatePlotEventsTable();
 
     /**
-     * @brief Update the event options display for the selected event
-     * @param event_name Name of the event to display options for
+     * @brief Rebind the GlyphStyleControls to the currently selected event key.
+     *
+     * If no row is selected, the controls are disabled. Otherwise they are
+     * bound to the per-key GlyphStyleState for the selected key.
      */
-    void _updateEventOptions(QString const & event_name);
+    void _updateGlyphStyleControls();
 
     /**
      * @brief Update UI elements from current state
      */
     void _updateUIFromState();
-
-    /**
-     * @brief Get the currently selected event name from the table
-     * @return Event name if selection exists, empty string otherwise
-     */
-    [[nodiscard]] QString _getSelectedEventName() const;
-
-    /**
-     * @brief Update the color display button with a hex color
-     * @param hex_color Hex color string (e.g., "#000000")
-     */
-    void _updateColorDisplay(QString const & hex_color);
 
     /**
      * @brief Update the background color display button with a hex color
@@ -190,6 +164,8 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
     EventPlotWidget * _plot_widget;
+    GlyphStyleControls * _glyph_style_controls = nullptr;
+    Section * _glyph_style_section = nullptr;
     RelativeTimeAxisRangeControls * _range_controls;
     Section * _range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;

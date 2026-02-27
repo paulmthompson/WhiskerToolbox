@@ -14,6 +14,7 @@
 #include "Plots/EventPlotWidget/Core/EventPlotStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -284,10 +285,29 @@ public:
      */
     [[nodiscard]] std::optional<EventPlotOptions> getPlotEventOptions(QString const & event_name) const;
 
+    // === Per-Key Glyph Style ===
+
+    /**
+     * @brief Get the GlyphStyleState for a specific plot event key.
+     *
+     * Returns nullptr if the key has not been added. The returned pointer is
+     * owned by this state and must not be deleted by the caller.
+     *
+     * @param event_name The event name
+     */
+    [[nodiscard]] GlyphStyleState * glyphStyleStateForKey(QString const & event_name);
+
+    /**
+     * @brief Get the serializable glyph style data for a key (read-only).
+     *
+     * Returns a default style if the key has not been added.
+     */
+    [[nodiscard]] CorePlotting::GlyphStyleData getEventGlyphStyle(QString const & event_name) const;
+
     /**
      * @brief Update options for a specific plot event
      * @param event_name Name/key of the event
-     * @param options New options
+     * @param options New options (event_key only; glyph style is managed via GlyphStyleState)
      */
     void updatePlotEventOptions(QString const & event_name, EventPlotOptions const & options);
 
@@ -382,10 +402,31 @@ signals:
      */
     void sortingModeChanged(TrialSortMode mode);
 
+    /**
+     * @brief Emitted when the glyph style for any event key changes
+     */
+    void glyphStyleChanged();
+
+    /**
+     * @brief Emitted when the glyph style for a specific event key changes
+     * @param event_name Name of the event whose style changed
+     */
+    void eventGlyphStyleChanged(QString const & event_name);
+
 private:
     EventPlotStateData _data;
     std::unique_ptr<PlotAlignmentState> _alignment_state;
     std::unique_ptr<RelativeTimeAxisState> _relative_time_axis_state;
+    /// Per-event GlyphStyleState objects (one per plot event key)
+    std::map<std::string, std::unique_ptr<GlyphStyleState>> _event_glyph_style_states;
+
+    /**
+     * @brief Create a GlyphStyleState for a newly added event key.
+     *
+     * Looks up existing serialized style from _data.event_glyph_styles,
+     * or uses the default style. Connects signals for scene rebuild.
+     */
+    void _createGlyphStyleStateForKey(std::string const & key);
 };
 
 #endif// EVENT_PLOT_STATE_HPP
