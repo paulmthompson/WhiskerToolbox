@@ -70,6 +70,16 @@ public:
      */
     [[nodiscard]] QDoubleSpinBox * alphaSpinBox() const { return _alpha_spinbox; }
 
+    /**
+     * @brief Rebind controls to a different GlyphStyleState
+     *
+     * Disconnects from the current state (if any), connects to the new state,
+     * and refreshes the UI. Pass nullptr to disable the controls.
+     *
+     * @param state New state to bind to (must outlive this widget while bound)
+     */
+    void setGlyphStyleState(GlyphStyleState * state);
+
 private slots:
     void onGlyphTypeChanged(int index);
     void onSizeChanged(double value);
