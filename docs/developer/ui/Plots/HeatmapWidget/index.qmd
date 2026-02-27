@@ -174,6 +174,24 @@ Zoom and pan update only the view projection (no scene rebuild), providing smoot
 
 Double-clicking emits `plotDoubleClicked(time_frame_index)`, which the parent `HeatmapWidget` converts to a `TimePosition` and forwards to `EditorRegistry::setCurrentTime()`. This navigates other time-synced widgets to the clicked time position.
 
+## Hover
+
+Hovering over a heatmap row identifies the `DigitalEventSeries` corresponding to the Y-axis position under the cursor. A tooltip is displayed containing a miniature visualization for that unit:
+
+- A **raster plot** showing individual trial events across aligned trials
+- A **PSTH histogram** showing the unit's firing rate profile over relative time
+
+The tooltip is rendered on-demand using the cached `GatherResult` data from the last scene build, avoiding a full scene rebuild on each hover event. See [roadmap Phase 8](roadmap.qmd) for the full implementation plan, including rendering approach and layout.
+
+## Selection
+
+Single-clicking a heatmap row identifies the `DigitalEventSeries` key corresponding to the Y-axis position. A signal is emitted carrying that key via `SelectionContext`, which companion widgets can respond to:
+
+- **[PSTHWidget](../PSTHWidget/index.qmd)** — updates to display the selected unit's PSTH histogram
+- **[EventPlotWidget](../EventPlotWidget/index.qmd)** — updates to display the selected unit's trial-level raster plot
+
+This enables rapid population-level exploration: clicking rows in the heatmap drives synchronized detail views without manual widget configuration. Widgets can be **pinned** to opt out of responding to selection changes, preserving a fixed view while the heatmap is browsed. See [roadmap Phase 7](roadmap.qmd) for the full `SelectionContext` integration design.
+
 # Axis System
 
 ## Time Axis (X)
@@ -199,6 +217,40 @@ The `HeatmapPropertiesWidget` currently provides:
 
 The properties panel does not yet include unit selection, colormap, scaling, or sorting controls. These are planned in the [roadmap](roadmap.qmd).
 
+# Visual Customization
+
+## Colormap
+
+The mapping from scalar rate values to RGBA display colors is configurable via a colormap. Each cell's value in the `units × time_bins` matrix passes through the colormap to produce its rendered color, with intensity encoding magnitude.
+
+The default colormap is **Inferno** (perceptually uniform, dark-to-bright), which is accessible for color vision deficiency. Available presets:
+
+| Preset | Characteristics | Recommended For |
+|--------|-----------------|----------------|
+| Inferno | Perceptually uniform, dark-to-bright | Firing rate (default) |
+| Viridis | Perceptually uniform, blue-green-yellow | General use |
+| Magma | Perceptually uniform, dark-to-pink | Firing rate |
+| Plasma | Perceptually uniform, blue-to-yellow | General use |
+| Coolwarm | Diverging blue-white-red | Z-score scaling |
+| Grayscale | Simple grayscale | Publication printing |
+| Hot | Black-red-yellow-white | High-contrast display |
+
+The colormap is selected from the properties panel via a combo box with a visual gradient preview. When z-score scaling is active, the **Coolwarm** diverging colormap is automatically suggested. See [roadmap Phase 2](roadmap.qmd) for the shared colormap infrastructure design and [roadmap Phase 9](roadmap.qmd) for the selection UI.
+
+# Export
+
+## PNG Export
+
+The heatmap can be exported as a PNG image capturing the current view. The basic export uses Qt's `QOpenGLWidget::grabFramebuffer()` to capture exactly what is displayed, including the current zoom and pan state.
+
+Planned export options (see [roadmap Phase 10](roadmap.qmd)):
+
+- **High-resolution export** — render at a user-specified scale factor (2×, 4×) for publication quality
+- **Composite export** — include axis labels and colorbar alongside the heatmap in a single image
+- **SVG export** — resolution-independent output, to be adopted when shared SVG infrastructure is available from the [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 5
+
+Export will be accessible via a button in the properties panel and a right-click context menu on the plot.
+
 # Relationship to Other Widgets
 
 The Heatmap Widget is designed as the **population-level companion** to the single-unit [PSTHWidget](../PSTHWidget/index.qmd) and trial-level [EventPlotWidget](../EventPlotWidget/index.qmd):
@@ -217,8 +269,8 @@ The Heatmap Widget is designed as the **population-level companion** to the sing
 The intended workflow is:
 
 1. **HeatmapWidget** shows all units at a glance, colored by firing rate
-2. **Click a row** → updates [PSTHWidget](../PSTHWidget/index.qmd) and [EventPlotWidget](../EventPlotWidget/index.qmd) to show the selected unit's detailed histogram and raster
-3. **Hover over a row** → tooltip shows a miniature stacked PSTH + raster for that unit
+2. **[Row selection](#selection)** drives [PSTHWidget](../PSTHWidget/index.qmd) and [EventPlotWidget](../EventPlotWidget/index.qmd) to show the selected unit's detailed histogram and raster
+3. **[Row hover](#hover)** shows a miniature stacked PSTH + raster tooltip for that unit without changing the selection
 
 This three-widget ensemble provides a complete neural population analysis view. See the [roadmap](roadmap.qmd) for implementation plans.
 

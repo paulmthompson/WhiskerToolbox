@@ -3,6 +3,7 @@
 #include "Core/BuildScatterPoints.hpp"
 #include "Core/ScatterPlotState.hpp"
 #include "Core/SourceCompatibility.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Mappers/MappedElement.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
@@ -54,6 +55,8 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state)
         connect(_state.get(), &ScatterPlotState::ySourceChanged,
                 this, [this]() { _scene_dirty = true; _navigated_index.reset(); update(); });
         connect(_state.get(), &ScatterPlotState::referenceLineChanged,
+                this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::glyphStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
         _scene_dirty = true;
         updateMatrices();
@@ -328,7 +331,7 @@ void ScatterPlotOpenGLWidget::rebuildScene()
     CorePlotting::SceneBuilder builder;
     builder.setBounds(bbox);
 
-    // Add scatter points as glyphs
+    // Add scatter points as glyphs (using glyph style from state)
     std::vector<CorePlotting::MappedElement> elements;
     elements.reserve(_scatter_data.size());
     for (std::size_t i = 0; i < _scatter_data.size(); ++i) {
@@ -339,14 +342,16 @@ void ScatterPlotOpenGLWidget::rebuildScene()
         });
     }
 
+    auto const & glyph_data = _state->glyphStyleState()->data();
+
     CorePlotting::GlyphStyle point_style;
-    point_style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
-    point_style.size = 5.0f;
-    point_style.color = glm::vec4(0.2f, 0.6f, 1.0f, 0.8f);  // Blue with slight transparency
+    point_style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
+    point_style.size = glyph_data.size;
+    point_style.color = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
 
     builder.addGlyphs("scatter_points", elements, point_style);
 
-    // Add highlight glyph for the most recently navigated-to point (Phase 2.3)
+    // Add highlight glyph for the most recently navigated-to point
     if (_navigated_index.has_value() && *_navigated_index < elements.size()) {
         CorePlotting::GlyphStyle highlight_style;
         highlight_style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;

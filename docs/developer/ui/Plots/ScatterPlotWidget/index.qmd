@@ -81,6 +81,9 @@ struct ScatterPlotStateData {
     std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
     std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
     bool show_reference_line = false;           ///< Show y=x reference line
+
+    /// Glyph style for scatter points (shape, size, color, alpha)
+    CorePlotting::GlyphStyleData glyph_style{GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
 };
 ```
 
@@ -95,8 +98,7 @@ The `x_source` and `y_source` fields describe which data to plot on each axis. W
 | `viewStateChanged` | Zoom, pan, or bounds changed |
 | `xSourceChanged` | X-axis data source key, column, or offset changed |
 | `ySourceChanged` | Y-axis data source key, column, or offset changed |
-| `referenceLineChanged` | Reference line show/hide toggled |
-| `stateChanged` (inherited) | Any change requiring scene rebuild |
+| `referenceLineChanged` | Reference line show/hide toggled || `glyphStyleChanged` | Any glyph style property (shape, size, color, alpha) changed || `stateChanged` (inherited) | Any change requiring scene rebuild |
 
 **Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild. Source changes emit their specific signal plus `stateChanged()` to trigger a full scene rebuild (recomputing point pairs and re-uploading GPU buffers).
 
@@ -171,9 +173,9 @@ SceneRenderer::uploadScene() + render(view, projection)
 
 Points are rendered via `SceneBuilder::addGlyphs()` using the shared glyph infrastructure from `CorePlotting`. Each scatter point is a `MappedElement` with its (x, y) position and an `EntityId` for hit testing. The `GlyphRenderer` uploads all points as a single GPU buffer and renders them in one instanced draw call, providing good performance for large point counts.
 
-During the same `addGlyphs()` traversal, each point is also inserted into the scene's `QuadTree<EntityId>` spatial index. This index is used by `SceneHitTester::queryQuadTree()` for `O(log n)` nearest-neighbor lookup during double-click-to-navigate (see [roadmap](roadmap.qmd) Phase 2) and hover tooltip interactions, with no additional data structures required.
+During the same `addGlyphs()` traversal, each point is also inserted into the scene's `QuadTree<EntityId>` spatial index. This index is used by `SceneHitTester::queryQuadTree()` for `O(log n)` nearest-neighbor lookup during double-click-to-navigate and hover tooltip interactions, with no additional data structures required.
 
-Default glyph style: blue circles (`#3388FF`), size 5, alpha 0.8.
+Default glyph style: blue circles (`#3388FF`), size 5, alpha 0.8. See [Visual Customization](#visual-customization) for the full glyph style system.
 
 ## Reference Line
 
@@ -188,8 +190,108 @@ When scatter points are computed for the first time (bounds still at default 0�
 The scene is rebuilt (marked dirty) when:
 
 - X or Y source changes (new data key, column, or offset)
+- Glyph style changes (shape, size, color, alpha)
 - Reference line is toggled (show/hide)
 - View bounds change while reference line is shown (endpoints depend on viewport)
+
+# Visual Customization {#visual-customization}
+
+The scatter plot uses the project-wide `CorePlotting::GlyphStyleData` / `GlyphStyleState` /
+`GlyphStyleControls` stack to give users control over point appearance. The same stack is used
+by `TemporalProjectionViewWidget`, `OnionSkinViewWidget`, and `EventPlotWidget`.
+
+## Serializable Style Data
+
+`CorePlotting::GlyphStyleData` (in `CorePlotting/DataTypes/GlyphStyleData.hpp`) is a plain
+struct with no Qt dependencies, suitable for embedding directly in state data structs and
+serializing with `rfl::json`:
+
+```cpp
+struct GlyphStyleData {
+    GlyphType   glyph_type = GlyphType::Circle;  // marker shape
+    float       size       = 5.0f;               // radius in pixels
+    std::string hex_color  = "#007bff";          // hex color string
+    float       alpha      = 1.0f;               // transparency [0, 1]
+};
+```
+
+`ScatterPlotStateData` embeds this as:
+
+```cpp
+CorePlotting::GlyphStyleData glyph_style{GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
+```
+
+Available `GlyphType` values: `Circle`, `Square`, `Tick`, `Cross`, `Diamond`, `Triangle`.
+(`Diamond` and `Triangle` fall back to `Circle` in the current renderer.)
+
+## QObject State Wrapper
+
+`ScatterPlotState` owns a `std::unique_ptr<GlyphStyleState>` (`Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp`).
+`GlyphStyleState` is a `QObject` that wraps `GlyphStyleData` and emits:
+
+| Signal | When Emitted | Purpose |
+|--------|--------------|---------|
+| `styleChanged()` | User edits a property | Triggers scene rebuild |
+| `styleUpdated()` | `setStyleSilent()` (e.g., on `fromJson`) | Refreshes UI without rebuild |
+
+The state class wires these up in its constructor:
+
+```cpp
+// Initialize GlyphStyleState from serialized data
+_glyph_style_state->setStyleSilent(_data.glyph_style);
+
+// Propagate user changes back to serializable struct and notify renderer
+connect(_glyph_style_state.get(), &GlyphStyleState::styleChanged, this, [this]() {
+    _data.glyph_style = _glyph_style_state->data();
+    markDirty();
+    emit glyphStyleChanged();
+    emit stateChanged();
+});
+```
+
+The `glyphStyleState()` accessor returns the raw pointer for binding to `GlyphStyleControls`.
+
+## Properties Panel Controls
+
+A "Glyph Options" collapsible `Section` in `ScatterPlotPropertiesWidget` embeds
+`GlyphStyleControls`, which provides four controls laid out as a `QFormLayout`:
+
+| Control | Type | What It Sets |
+|---------|------|--------------|
+| Shape | `QComboBox` | `GlyphType` (Circle / Square / Tick / Cross / Diamond / Triangle) |
+| Size | `QDoubleSpinBox` | Radius in pixels (0.5 – 50 px, step 0.5) |
+| Color | `QPushButton` | Opens `QColorDialog`; stores as hex string |
+| Alpha | `QDoubleSpinBox` | Transparency (0.0 – 1.0, step 0.05) |
+
+The controls use the anti-recursion `_updating_ui` guard pattern to avoid
+feedback loops when the state updates the UI.
+
+## Rendering Conversion
+
+`ScatterPlotOpenGLWidget::rebuildScene()` reads the style at scene build time via
+`_state->glyphStyleState()->data()` and converts it to rendering types using two
+free functions from `CorePlotting/DataTypes/GlyphStyleConversion.hpp`:
+
+```cpp
+auto const & glyph_data = _state->glyphStyleState()->data();
+
+CorePlotting::GlyphStyle point_style;
+point_style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
+point_style.size       = glyph_data.size;
+point_style.color      = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
+
+builder.addGlyphs("scatter_points", elements, point_style);
+```
+
+`toRenderableGlyphType()` maps the serializable `GlyphType` enum to the
+renderer-level `RenderableGlyphBatch::GlyphType`. `hexColorToVec4()` parses
+a `"#RRGGBB"` string and applies the separate alpha value, returning a
+`glm::vec4` for the shader.
+
+The `glyphStyleChanged` signal from `ScatterPlotState` is connected in
+`ScatterPlotOpenGLWidget::setState()` to set `_scene_dirty = true` and call
+`update()`, ensuring the next paint picks up the new style without any extra
+bookkeeping.
 
 # Interaction
 
@@ -220,9 +322,29 @@ The implementation:
 
 The most recently navigated-to point is highlighted with a larger yellow glyph (size 9, rendered as a second `addGlyphs()` batch on top of the main point batch). The highlight is cleared when data sources change.
 
-## Point Selection (Planned)
+## Hover Highlight
 
-See the [roadmap](roadmap.qmd) Phase 3 for polygon (lasso) selection and group integration.
+When the cursor dwells over a scatter point, the nearest point is highlighted to give visual feedback before a double-click or selection action.
+
+**Visual style**: The hovered point is drawn at the **same color** it already has (preserving any feature-based or fixed coloring) but at a **larger size**, making it visually distinct without changing its semantic meaning.
+
+**Hit testing**: Uses the same `SceneHitTester`/`QuadTree` infrastructure as double-click navigation. A single-shot `QTimer` (~400 ms) debounces rapid mouse movement; the hit test fires only when the cursor stops moving. The timer is cancelled and any visible highlight is cleared immediately when a pan or zoom gesture begins.
+
+**Rendering**: Because `GlyphRenderer` uses `u_point_size` as a per-batch uniform (not per-instance), the hovered point must be issued as a **separate `addGlyphs()` call** at the desired larger size. Per-instance color is handled directly in the shader (`a_instance_color` attribute on the instanced VBO), so the hover batch re-uses the original point color without any additional CPU-side logic. This results in **one extra GPU draw call** for the single hovered point.
+
+See [roadmap](roadmap.qmd) Phase 8 for the complete dwell-timer and tooltip implementation plan.
+
+## Point Selection
+
+Points can be selected via polygon (lasso) drawing. Selected points are visually distinguished from unselected points and can be added to an entity group.
+
+**Visual style**: Selected points are drawn at the **same size** as normal points but with a distinct **selection color** (e.g., red). Keeping the same size means no per-batch size change is needed — only color differs.
+
+**Rendering**: Since color is stored as a per-instance attribute in the shader (`a_instance_color` on the instanced VBO), selected points can be rendered with any color without rebuilding the main point batch. The selected subset is issued as a **separate `addGlyphs()` call** with the selection color, rendering on top of the unselected points. This results in **one extra GPU draw call** for the entire selected set, regardless of how many points are selected.
+
+The polygon drawing interaction uses the shared `PolygonInteractionController` from `CorePlotting/Interaction/`. After the polygon is closed, `selectPointsInPolygon()` (a pure geometry function in `CorePlotting/Selection/`) identifies which points fall inside the polygon. Selected point indices are stored in `ScatterPlotStateData::selected_indices` and cleared when the data source changes.
+
+See [roadmap](roadmap.qmd) Phase 3 for the full polygon selection and group integration implementation plan.
 
 # Axis System
 
@@ -261,6 +383,12 @@ A "Reference Line" collapsible section contains:
 
 - **Show reference line checkbox** — toggles the $y = x$ diagonal line
 
+## Glyph Options
+
+A "Glyph Options" collapsible section contains `GlyphStyleControls` (shape, size, color,
+alpha). Changes propagate immediately to the rendered scene via `glyphStyleChanged`. See
+[Visual Customization](#visual-customization) for the full architecture.
+
 ## Axis Range Controls
 
 Created when `setPlotWidget()` is called:
@@ -272,7 +400,6 @@ Created when `setPlotWidget()` is called:
 
 See the [roadmap](roadmap.qmd) for planned additions including:
 
-- Glyph appearance options (shape, size, color) via shared `GlyphStyleControls`
 - Point selection and group management controls
 - Feature-based coloring controls
 
@@ -293,7 +420,7 @@ See the [roadmap](roadmap.qmd) for planned additions including:
 |---------|-------------|--------------------------|
 | Double-click-to-navigate | Implemented (double-click → `TimeFrameIndex` via `SceneHitTester`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (double-click → absolute time) |
 | Polygon selection | Planned (lasso → `TimeFrameIndex` set) | [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (planned for `PointData`) |
-| Glyph customization | Planned (shape, size, color) | [EventPlotWidget](../EventPlotWidget/index.qmd) (Tick/Circle/Square), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (point glyphs) |
+| Glyph customization | **Implemented** (`GlyphStyleData` / `GlyphStyleState` / `GlyphStyleControls`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (Tick/Circle/Square), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (point glyphs) |
 | Selection → Group | Planned (`TimeFrameIndex` → entity group) | [LinePlotWidget](../LinePlotWidget/index.qmd) (trial indices → alignment event groups) |
 | TensorData integration | Planned (column as axis source) | [EventPlotWidget](../EventPlotWidget/roadmap.qmd) (per-trial feature coloring/sorting) |
 
