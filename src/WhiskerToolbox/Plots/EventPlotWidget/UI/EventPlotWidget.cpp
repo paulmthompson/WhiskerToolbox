@@ -160,10 +160,12 @@ void EventPlotWidget::wireTimeAxis() {
         if (!_state || !_opengl_widget) {
             return CorePlotting::ViewState{};
         }
-        return CorePlotting::toRuntimeViewState(
+        auto vs = CorePlotting::toRuntimeViewState(
                 _state->viewState(),
                 _opengl_widget->width(),
                 _opengl_widget->height());
+        vs.preserve_aspect_ratio = false;
+        return vs;
     });
 }
 

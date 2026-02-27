@@ -1011,6 +1011,7 @@ public:
         result._source = _source;
         // Note: We keep the original intervals - reordering is logical only
         result._intervals = _intervals;
+        result._alignment_times = _alignment_times;
         result._views.reserve(size());
         result._reorder_indices = indices;  // Store the reorder mapping
 

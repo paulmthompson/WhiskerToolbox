@@ -1002,13 +1002,12 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
  * Here we replicate that logic with glm::ortho directly.
  *
  * The axis widget uses CorePlotting::toRuntimeViewState +
- * calculateVisibleWorldBounds, which applies padding_factor and aspect ratio.
+ * calculateVisibleWorldBounds.  When preserve_aspect_ratio is false
+ * (as set by wireTimeAxis in all time-series plot widgets), this reduces
+ * to the same direct mapping as computeOrthoProjection.
  *
- * When these disagree, events appear at different positions on the canvas
- * than the axis labels suggest — notably causing "slight offset" artifacts
- * for non-center positions.
- *
- * This test documents the discrepancy so it can be fixed.
+ * This test verifies that both projections produce identical screen
+ * positions for any world coordinate.
  */
 TEST_CASE("Projection consistency: canvas vs axis widget coordinate systems",
           "[Mappers][ViewState][projection][consistency]") {
@@ -1043,8 +1042,9 @@ TEST_CASE("Projection consistency: canvas vs axis widget coordinate systems",
     glm::vec4 origin_ndc = canvas_proj * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     float canvas_screen_x = (origin_ndc.x + 1.0f) * 0.5f * static_cast<float>(vp_width);
 
-    // ----- Axis widget projection (toRuntimeViewState) -----
+    // ----- Axis widget projection (toRuntimeViewState with no aspect ratio) -----
     auto runtime_vs = CorePlotting::toRuntimeViewState(vsd, vp_width, vp_height);
+    runtime_vs.preserve_aspect_ratio = false;  // Match canvas behaviour
     glm::vec2 axis_screen = CorePlotting::worldToScreen(runtime_vs, 0.0f, 0.0f);
 
     // Both should map world x=0 to the screen center
@@ -1059,19 +1059,6 @@ TEST_CASE("Projection consistency: canvas vs axis widget coordinate systems",
 
     glm::vec2 axis_screen_100 = CorePlotting::worldToScreen(runtime_vs, 100.0f, 0.0f);
 
-    // These SHOULD be equal for the axis to align with the canvas.
-    // KNOWN BUG: The axis widget uses calculateVisibleWorldBounds which applies
-    // padding_factor (1.1) and aspect ratio correction, while the OpenGL canvas
-    // uses computeOrthoProjection which maps [x_min, x_max] directly.
-    // This causes a 60-pixel offset at x=100 with a 1000×400 viewport.
-    //
-    // canvas maps [-500, 500] across 1000px → x=100 at pixel 600
-    // axis maps [-1375, 1375] across 1000px → x=100 at pixel 540
-    //
-    // Un-comment the CHECK below once the projection systems are unified:
-    // CHECK(canvas_screen_100 == axis_screen_100.x);
-    
-    // For now, just document the mismatch magnitude
-    float const offset = canvas_screen_100 - axis_screen_100.x;
-    CHECK(offset != 0.0f);  // Confirm the mismatch exists
+    // With preserve_aspect_ratio=false, both projections should agree
+    CHECK(canvas_screen_100 == axis_screen_100.x);
 }

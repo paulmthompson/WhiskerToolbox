@@ -899,3 +899,61 @@ TEST_CASE("GatherResult - All events before alignment event",
         CHECK(normalized[4] == -1);
     }
 }
+
+// =============================================================================
+// Reorder preserves alignment times
+// =============================================================================
+
+TEST_CASE("GatherResult reorder preserves alignment times",
+          "[GatherResult][reorder][alignment]") {
+    // Create events at 10, 20, 30 with a simple 0-39 TimeFrame (step=1)
+    auto events = createEventSeries({10, 20, 30});
+    std::vector<int> times(40);
+    std::iota(times.begin(), times.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(times);
+    events->setTimeFrame(tf);
+
+    // Expand each event into a ±5 window → 3 trials
+    auto adapter = expandEvents(events, 5, 5);
+    auto gathered = GatherResult<DigitalEventSeries>::create(events, adapter);
+
+    REQUIRE(gathered.size() == 3);
+
+    // Record alignment times before reorder
+    int64_t align_0 = gathered.alignmentTimeAt(0);  // event at t=10
+    int64_t align_1 = gathered.alignmentTimeAt(1);  // event at t=20
+    int64_t align_2 = gathered.alignmentTimeAt(2);  // event at t=30
+
+    CHECK(align_0 == 10);
+    CHECK(align_1 == 20);
+    CHECK(align_2 == 30);
+
+    SECTION("reverse order") {
+        auto reordered = gathered.reorder({2, 1, 0});
+
+        // After reorder [2,1,0]: position 0 should have trial 2's alignment
+        CHECK(reordered.alignmentTimeAt(0) == align_2);
+        CHECK(reordered.alignmentTimeAt(1) == align_1);
+        CHECK(reordered.alignmentTimeAt(2) == align_0);
+
+        // Views should also be reordered consistently
+        CHECK(reordered[0]->size() == gathered[2]->size());
+        CHECK(reordered[2]->size() == gathered[0]->size());
+    }
+
+    SECTION("arbitrary permutation") {
+        auto reordered = gathered.reorder({1, 2, 0});
+
+        CHECK(reordered.alignmentTimeAt(0) == align_1);
+        CHECK(reordered.alignmentTimeAt(1) == align_2);
+        CHECK(reordered.alignmentTimeAt(2) == align_0);
+    }
+
+    SECTION("identity permutation") {
+        auto reordered = gathered.reorder({0, 1, 2});
+
+        CHECK(reordered.alignmentTimeAt(0) == align_0);
+        CHECK(reordered.alignmentTimeAt(1) == align_1);
+        CHECK(reordered.alignmentTimeAt(2) == align_2);
+    }
+}
