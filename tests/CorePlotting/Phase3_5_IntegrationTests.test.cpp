@@ -1114,7 +1114,7 @@ TEST_CASE("Scenario 11: RasterMapper with relative time positioning",
     trial_events->setTimeFrame(time_frame);
     
     // Reference time (e.g., stimulus onset) at time 200
-    TimeFrameIndex reference_time{200};
+    int const reference_time = 200;
     
     // Build row layout (single row for this trial)
     LayoutRequest request;
@@ -1202,8 +1202,8 @@ TEST_CASE("Scenario 11: RasterMapper with relative time positioning",
         
         // Configure trials
         std::vector<RasterMapper::TrialConfig> trials = {
-            {trial_events.get(), TimeFrameIndex{200}, *multi_layout.findLayout("trial1")},
-            {trial2_events.get(), TimeFrameIndex{510}, *multi_layout.findLayout("trial2")}
+            {trial_events.get(), 200, *multi_layout.findLayout("trial1")},
+            {trial2_events.get(), 510, *multi_layout.findLayout("trial2")}
         };
         
         auto mapped = RasterMapper::mapTrials(trials, *time_frame);

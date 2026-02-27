@@ -542,18 +542,19 @@ TEST_CASE("GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 50
     }
     
     SECTION("Automatic alignment using cross-timeframe conversion") {
-        // Expand: ±1 index in 500Hz time = ±60 samples at 30kHz
-        auto adapter = expandEvents(alignment_events, 1, 1);  // ±1 at 500Hz
+        // Expand: ±60 time units around alignment event
+        // Event at 500Hz index 1 → absolute time 60
+        // Window: ±60 time units → [0, 120] at 30kHz
+        auto adapter = expandEvents(alignment_events, 60, 60);
         auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
         
         REQUIRE(result.size() == 1);
         
-        // Interval should be converted to 30kHz indices: [0, 120]
-        // (500Hz index 1 ± 1 = [0, 2] → [0, 120] at 30kHz)
+        // Interval should be [0, 120] at 30kHz
         CHECK(result.intervalAt(0).start == 0);
         CHECK(result.intervalAt(0).end == 120);
         
-        // Alignment time should be 60 (the converted event time at 30kHz)
+        // Alignment time is absolute time (60)
         CHECK(result.alignmentTimeAt(0) == 60);
         
         // All spikes should be in range [0, 120]
@@ -590,25 +591,25 @@ TEST_CASE("GatherResult - Automatic cross-timeframe with multiple trials", "[Gat
     auto alignment_events = createEventSeries({1, 3});  // Events in 500Hz indices
     alignment_events->setTimeFrame(event_timeframe);
     
-    // Expand: ±1 index at 500Hz → ±60 samples at 30kHz
-    auto adapter = expandEvents(alignment_events, 1, 1);
+    // Expand: ±60 time units around each alignment event
+    auto adapter = expandEvents(alignment_events, 60, 60);
     auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
     
     REQUIRE(result.size() == 2);
     
     SECTION("Intervals are converted to 30kHz") {
-        // Trial 1: 500Hz [0, 2] → 30kHz [0, 120]
+        // Trial 1: alignment abs time = 60, window ±60 → [0, 120]
         CHECK(result.intervalAt(0).start == 0);
         CHECK(result.intervalAt(0).end == 120);
         
-        // Trial 2: 500Hz [2, 4] → 30kHz [120, 240]
+        // Trial 2: alignment abs time = 180, window ±60 → [120, 240]
         CHECK(result.intervalAt(1).start == 120);
         CHECK(result.intervalAt(1).end == 240);
     }
     
-    SECTION("Alignment times are converted to 30kHz") {
-        CHECK(result.alignmentTimeAt(0) == 60);   // 500Hz index 1 → 30kHz index 60
-        CHECK(result.alignmentTimeAt(1) == 180);  // 500Hz index 3 → 30kHz index 180
+    SECTION("Alignment times are absolute time") {
+        CHECK(result.alignmentTimeAt(0) == 60);   // 500Hz index 1 → abs time 60
+        CHECK(result.alignmentTimeAt(1) == 180);  // 500Hz index 3 → abs time 180
     }
     
     SECTION("Trial 1: normalized times") {
@@ -699,9 +700,8 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     auto alignment_events = createEventSeries({100});  // 500Hz index
     alignment_events->setTimeFrame(event_timeframe);
     
-    // Asymmetric window in 500Hz indices: 15 before (30ms), 50 after (100ms)
-    // Converted to 30kHz: 15*60=900 before, 50*60=3000 after
-    auto adapter = expandEvents(alignment_events, 15, 50);
+    // Asymmetric window in time units: 900 before (30ms at 30kHz), 3000 after (100ms at 30kHz)
+    auto adapter = expandEvents(alignment_events, 900, 3000);
     auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
     
     REQUIRE(result.size() == 1);

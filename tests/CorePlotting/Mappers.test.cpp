@@ -383,10 +383,10 @@ TEST_CASE("RasterMapper::mapEventsRelative", "[Mappers][RasterMapper]") {
     events.setTimeFrame(tf);
     
     auto layout = createLayout(0.5f, 0.1f);
-    TimeFrameIndex reference{5};  // Reference at time 50
+    int ref_abs_time = tf->getTimeAtIndex(TimeFrameIndex{5});  // Reference at time 50
     
     SECTION("Computes relative time") {
-        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, reference);
+        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, ref_abs_time);
         
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
@@ -420,12 +420,12 @@ TEST_CASE("RasterMapper::mapEventsInWindow", "[Mappers][RasterMapper]") {
     events.setTimeFrame(tf);
     
     auto layout = createLayout(0.0f, 0.1f);
-    TimeFrameIndex reference{5};  // time 50
+    int ref_abs_time = tf->getTimeAtIndex(TimeFrameIndex{5});  // time 50
     
     SECTION("Filters events outside window") {
         // Window: [50-30, 50+20] = [20, 70]
         auto mapped = RasterMapper::mapEventsInWindow(
-            events, layout, *tf, reference, 30, 20
+            events, layout, *tf, ref_abs_time, 30, 20
         );
         
         std::vector<MappedElement> collected;
@@ -494,8 +494,8 @@ TEST_CASE("RasterMapper::mapTrials", "[Mappers][RasterMapper]") {
     trial2_events.setTimeFrame(tf);
     
     std::vector<RasterMapper::TrialConfig> trials = {
-        {&trial1_events, TimeFrameIndex{5}, RasterMapper::makeRowLayout(0, 2, "trial1")},
-        {&trial2_events, TimeFrameIndex{8}, RasterMapper::makeRowLayout(1, 2, "trial2")}
+        {&trial1_events, 50, RasterMapper::makeRowLayout(0, 2, "trial1")},
+        {&trial2_events, 80, RasterMapper::makeRowLayout(1, 2, "trial2")}
     };
     
     auto mapped = RasterMapper::mapTrials(trials, *tf);
@@ -622,9 +622,10 @@ TEST_CASE("RasterMapper - negative x for pre-alignment events",
         DigitalEventSeries events({TimeFrameIndex{10}});
         events.setTimeFrame(tf);
 
-        TimeFrameIndex reference{11};
+        TimeFrameIndex reference_idx{11};
+        int ref_abs_time = tf->getTimeAtIndex(reference_idx);
 
-        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, reference);
+        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, ref_abs_time);
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
             collected.push_back(elem);
@@ -643,9 +644,10 @@ TEST_CASE("RasterMapper - negative x for pre-alignment events",
         });
         events.setTimeFrame(tf);
 
-        TimeFrameIndex reference{10};
+        TimeFrameIndex reference_idx{10};
+        int ref_abs_time = tf->getTimeAtIndex(reference_idx);
 
-        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, reference);
+        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, ref_abs_time);
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
             collected.push_back(elem);
@@ -668,9 +670,10 @@ TEST_CASE("RasterMapper - negative x for pre-alignment events",
         });
         events.setTimeFrame(tf);
 
-        TimeFrameIndex reference{100};
+        TimeFrameIndex reference_idx{100};
+        int ref_abs_time = tf->getTimeAtIndex(reference_idx);
 
-        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, reference);
+        auto mapped = RasterMapper::mapEventsRelative(events, layout, *tf, ref_abs_time);
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
             collected.push_back(elem);
@@ -701,11 +704,11 @@ TEST_CASE("RasterMapper::mapEventsInWindow - includes pre-alignment events",
     });
     events.setTimeFrame(tf);
 
-    TimeFrameIndex reference{11};  // alignment event
+    int ref_abs_time = tf->getTimeAtIndex(TimeFrameIndex{11});  // alignment event
 
     SECTION("event at 10 maps to x=-1 within window") {
         auto mapped = RasterMapper::mapEventsInWindow(
-            events, layout, *tf, reference, 5, 5);
+            events, layout, *tf, ref_abs_time, 5, 5);
 
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
@@ -720,7 +723,7 @@ TEST_CASE("RasterMapper::mapEventsInWindow - includes pre-alignment events",
     SECTION("wider window captures all events with correct signs") {
         // Window: [11-25, 11+25] = [-14, 36] — all three events included
         auto mapped = RasterMapper::mapEventsInWindow(
-            events, layout, *tf, reference, 25, 25);
+            events, layout, *tf, ref_abs_time, 25, 25);
 
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
@@ -744,9 +747,9 @@ TEST_CASE("RasterMapper::mapEventsInWindow - includes pre-alignment events",
  *   1. Create a GatherResult via expandEvents + gather
  *   2. For each trial, extract:
  *        - trial_view = gathered[trial]          (DigitalEventSeries view)
- *        - reference  = TimeFrameIndex(gathered.alignmentTimeAt(trial))
+ *        - ref_abs_time = gathered.alignmentTimeAt(trial)  (absolute time)
  *   3. Feed through RasterMapper::mapEventsInWindow(view, layout, timeframe,
- *        reference, window_before, window_after)
+ *        ref_abs_time, window_before, window_after)
  *
  * The GatherResult stores absolute TimeFrameIndex values (always ≥ 0).
  * mapEventsInWindow converts them to relative times via the TimeFrame,
@@ -796,8 +799,8 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
         }
 
         // Now do EXACTLY what rebuildScene() does:
-        //   reference = TimeFrameIndex(gathered.alignmentTimeAt(trial))
-        //   mapped = mapEventsInWindow(view, layout, timeframe, reference,
+        //   ref_abs_time = gathered.alignmentTimeAt(trial)  (absolute time)
+        //   mapped = mapEventsInWindow(view, layout, timeframe, ref_abs_time,
         //                              window_before, window_after)
         // where window_before = -x_min (= 500), window_after = x_max (= 500)
         int const window_before = 500;
@@ -805,10 +808,10 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
 
         for (size_t trial = 0; trial < gathered.size(); ++trial) {
             auto const & trial_view = gathered[trial];
-            auto reference = TimeFrameIndex(gathered.alignmentTimeAt(trial));
+            auto ref_abs_time = static_cast<int>(gathered.alignmentTimeAt(trial));
 
             auto mapped = RasterMapper::mapEventsInWindow(
-                *trial_view, layout, *tf, reference,
+                *trial_view, layout, *tf, ref_abs_time,
                 window_before, window_after);
 
             std::vector<MappedElement> collected;
@@ -839,9 +842,9 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
         REQUIRE(gathered.size() == 1);
         REQUIRE(gathered[0]->size() == 3);
 
-        auto reference = TimeFrameIndex(gathered.alignmentTimeAt(0));
+        auto ref_abs_time = static_cast<int>(gathered.alignmentTimeAt(0));
         auto mapped = RasterMapper::mapEventsInWindow(
-            *gathered[0], layout, *tf, reference, 500, 500);
+            *gathered[0], layout, *tf, ref_abs_time, 500, 500);
 
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
@@ -872,9 +875,9 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
         REQUIRE(gathered.size() == 1);
         REQUIRE(gathered[0]->size() == 5);
 
-        auto reference = TimeFrameIndex(gathered.alignmentTimeAt(0));
+        auto ref_abs_time = static_cast<int>(gathered.alignmentTimeAt(0));
         auto mapped = RasterMapper::mapEventsInWindow(
-            *gathered[0], layout, *tf, reference, 500, 500);
+            *gathered[0], layout, *tf, ref_abs_time, 500, 500);
 
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
@@ -909,9 +912,9 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
         REQUIRE(gathered.size() == 1);
         REQUIRE(gathered[0]->size() == 3);
 
-        auto reference = TimeFrameIndex(gathered.alignmentTimeAt(0));
+        auto ref_abs_time = static_cast<int>(gathered.alignmentTimeAt(0));
         auto mapped = RasterMapper::mapEventsInWindow(
-            *gathered[0], layout, *tf_30k, reference, 500, 500);
+            *gathered[0], layout, *tf_30k, ref_abs_time, 500, 500);
 
         std::vector<MappedElement> collected;
         for (auto const & elem : mapped) {
@@ -924,6 +927,68 @@ TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment e
         CHECK(collected[0].x == -33.0f);
         CHECK(collected[1].x ==   0.0f);
         CHECK(collected[2].x ==  33.0f);
+    }
+    SECTION("cross-TimeFrame: events and alignment on different TimeFrames") {
+        // User scenario: events at indices [10, 20, 30] in TF [0..30] (identity, step=1)
+        //                alignment at indices [0, 1, 2]  in TF [11, 21, 31]
+        // Window ±5 (in time units) around each alignment event
+        //
+        // Trial 0: alignment abs time = 11, window [6, 16] → event at 10, relative = -1
+        // Trial 1: alignment abs time = 21, window [16, 26] → event at 20, relative = -1
+        // Trial 2: alignment abs time = 31, window [26, 36] → event at 30, relative = -1
+
+        auto event_tf = createLinearTimeFrame(40, 1);  // [0, 1, 2, ..., 39]
+
+        std::vector<int> alignment_times_vec = {11, 21, 31};
+        auto alignment_tf = std::make_shared<TimeFrame>(alignment_times_vec);
+
+        auto source = std::make_shared<DigitalEventSeries>(std::vector<TimeFrameIndex>{
+            TimeFrameIndex{10}, TimeFrameIndex{20}, TimeFrameIndex{30}
+        });
+        source->setTimeFrame(event_tf);
+
+        auto alignment = std::make_shared<DigitalEventSeries>(std::vector<TimeFrameIndex>{
+            TimeFrameIndex{0}, TimeFrameIndex{1}, TimeFrameIndex{2}
+        });
+        alignment->setTimeFrame(alignment_tf);
+
+        auto adapter = expandEvents(alignment, 5, 5);
+        auto gathered = GatherResult<DigitalEventSeries>::create(source, adapter);
+
+        REQUIRE(gathered.size() == 3);
+
+        // Verify alignment times are absolute time values
+        CHECK(gathered.alignmentTimeAt(0) == 11);
+        CHECK(gathered.alignmentTimeAt(1) == 21);
+        CHECK(gathered.alignmentTimeAt(2) == 31);
+
+        // Verify each trial captures exactly one event
+        for (size_t trial = 0; trial < gathered.size(); ++trial) {
+            REQUIRE(gathered[trial] != nullptr);
+            REQUIRE(gathered[trial]->size() == 1);
+        }
+
+        // Map through RasterMapper — same path as rebuildScene()
+        int const window_before = 500;
+        int const window_after  = 500;
+
+        for (size_t trial = 0; trial < gathered.size(); ++trial) {
+            auto const & trial_view = gathered[trial];
+            auto ref_abs_time = static_cast<int>(gathered.alignmentTimeAt(trial));
+
+            auto mapped = RasterMapper::mapEventsInWindow(
+                *trial_view, layout, *event_tf, ref_abs_time,
+                window_before, window_after);
+
+            std::vector<MappedElement> collected;
+            for (auto const & elem : mapped) {
+                collected.push_back(elem);
+            }
+
+            REQUIRE(collected.size() == 1);
+            // Each event is 1 time unit BEFORE its alignment event → x = -1
+            CHECK(collected[0].x == -1.0f);
+        }
     }
 }
 

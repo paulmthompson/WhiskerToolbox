@@ -511,13 +511,13 @@ void EventPlotOpenGLWidget::rebuildScene()
             auto const * trial_layout = _layout_response.findLayout(layout_key);
             if (!trial_layout) continue;
 
-            auto reference_time = TimeFrameIndex(sd.gathered.alignmentTimeAt(trial));
+            auto ref_abs_time = static_cast<int>(sd.gathered.alignmentTimeAt(trial));
 
             auto mapped = CorePlotting::RasterMapper::mapEventsInWindow(
                 *trial_view,
                 *trial_layout,
                 *sd.time_frame,
-                reference_time,
+                ref_abs_time,
                 static_cast<int>(-_cached_view_state.x_min),
                 static_cast<int>(_cached_view_state.x_max)
             );
@@ -758,15 +758,18 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
             
             for (size_t i = 0; i < num_trials; ++i) {
                 auto const& trial_view = gathered[i];
-                int64_t alignment_time = gathered.alignmentTimeAt(i);
+                int64_t alignment_time_abs = gathered.alignmentTimeAt(i);
                 
                 double first_positive_latency = std::numeric_limits<double>::infinity();
                 
                 if (trial_view) {
+                    auto trial_tf = trial_view->getTimeFrame();
                     for (auto const& event : trial_view->view()) {
-                        int64_t event_time = event.time().getValue();
+                        int64_t event_time_abs = trial_tf
+                            ? trial_tf->getTimeAtIndex(event.time())
+                            : event.time().getValue();
                         // Relative time (positive = after alignment)
-                        double relative_time = static_cast<double>(event_time - alignment_time);
+                        double relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
                         if (relative_time >= 0.0 && relative_time < first_positive_latency) {
                             first_positive_latency = relative_time;
                             break;  // Events are time-ordered, so first positive is the answer

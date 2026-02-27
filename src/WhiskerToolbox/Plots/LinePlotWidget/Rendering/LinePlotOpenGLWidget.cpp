@@ -420,6 +420,7 @@ void LinePlotOpenGLWidget::rebuildScene()
         }
 
         int64_t alignment_time = gathered.alignmentTimeAt(trial);
+        auto trial_tf = trial_view->getTimeFrame();
 
         auto all_samples = trial_view->view();
         bool first = true;
@@ -437,8 +438,10 @@ void LinePlotOpenGLWidget::rebuildScene()
             continue;
         }
 
-        double rel_start = static_cast<double>(first_time.getValue() - alignment_time);
-        double rel_end = static_cast<double>(last_time.getValue() - alignment_time);
+        int64_t first_abs = trial_tf ? trial_tf->getTimeAtIndex(first_time) : first_time.getValue();
+        int64_t last_abs = trial_tf ? trial_tf->getTimeAtIndex(last_time) : last_time.getValue();
+        double rel_start = static_cast<double>(first_abs - alignment_time);
+        double rel_end = static_cast<double>(last_abs - alignment_time);
         x_min = std::min(x_min, rel_start);
         x_max = std::max(x_max, rel_end);
     }
