@@ -276,7 +276,6 @@ Three separate sections, one for each data type:
 
 ## Rendering Controls
 
-- **Point size spinbox** — global point glyph radius (default: 8.0)
 - **Line width spinbox** — global line/contour thickness (default: 2.0)
 - **Highlight current checkbox** — toggles distinct current-frame coloring
 
@@ -286,6 +285,72 @@ When `setPlotWidget()` is called (during registration wiring), the properties pa
 
 - **X-Axis Range Controls** — `HorizontalAxisRangeControls` in a collapsible `Section`
 - **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`
+
+# Visual Customization
+
+## Point Glyph Style (Per-Key)
+
+Each `PointData` key added to the widget has its own independent glyph style, stored as a
+`CorePlotting::GlyphStyleData` struct (shape, size, hex color, alpha). This follows the same
+shared glyph infrastructure used by `ScatterPlotWidget` and `TemporalProjectionViewWidget`.
+
+### Data Model
+
+Serializable state is stored in `OnionSkinViewStateData`:
+
+```cpp
+std::map<std::string, CorePlotting::GlyphStyleData> point_key_glyph_styles;
+```
+
+Each key maps to a `GlyphStyleData` with default values
+`{GlyphType::Circle, 8.0f, "#007bff", 1.0f}` assigned when the key is first added.
+The map is serialized via `rfl::json` alongside all other state fields.
+
+### Live QObject Layer
+
+`OnionSkinViewState` also owns a parallel map of `GlyphStyleState` objects (one per key):
+
+```cpp
+std::map<std::string, std::unique_ptr<GlyphStyleState>> _point_glyph_style_states;
+```
+
+`GlyphStyleState` is a `QObject` wrapper around `GlyphStyleData` that emits `styleChanged`
+when the user edits any property. The state class connects each `GlyphStyleState::styleChanged`
+to sync `point_key_glyph_styles[key]`, mark dirty, emit `glyphStyleChanged()`, and emit
+`pointKeyGlyphStyleChanged(key)`. This two-level design keeps the serializable struct free of
+`QObject` and mirrors the `VerticalAxisState` / `VerticalAxisStateData` split used throughout
+the codebase.
+
+Key lifecycle:
+- `addPointDataKey(key)` → calls `_createGlyphStyleStateForKey(key)`, which loads any existing
+  serialized style (from `point_key_glyph_styles`) or inserts the default.
+- `removePointDataKey(key)` → erases both the `GlyphStyleData` entry and the `GlyphStyleState`.
+- `clearPointDataKeys()` → clears both maps.
+- `fromJson()` → clears `_point_glyph_style_states` and recreates them from the deserialized
+  `point_key_glyph_styles`, ensuring the live and serialized layers stay in sync.
+
+### Properties Panel Integration
+
+The "Point Glyph Options" collapsible `Section` in `OnionSkinViewPropertiesWidget` contains a
+single `GlyphStyleControls` widget. Because there are multiple point keys, the controls are
+*context-sensitive*: they rebind to the `GlyphStyleState` of whichever row is currently selected
+in the point data table, and are disabled when no row is selected.
+
+The rebind is implemented in `_updateGlyphStyleControls()`, which is called from:
+
+- `_onPointTableSelectionChanged()` — whenever the table selection changes
+- `_onStatePointKeyAdded()` / `_onStatePointKeyRemoved()` — after the table is repopulated
+
+`GlyphStyleControls::setGlyphStyleState(state)` disconnects from the previous `GlyphStyleState`,
+connects to the new one, refreshes all controls, and enables/disables the widget.
+
+### Rendering
+
+`OnionSkinViewOpenGLWidget::rebuildScene()` calls `_state->getPointKeyGlyphStyle(key)` for each
+point key to retrieve the current `GlyphStyleData`. Glyph type, size, and base color are read
+from the per-key style and used when building `RenderableGlyphBatch` entries. Temporal alpha
+modulates the base color's alpha channel; when `highlight_current` is enabled the current frame
+uses a hardcoded orange-red override color regardless of the per-key style.
 
 # Comparison with Related Widgets
 

@@ -29,47 +29,9 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
 
-**Not yet implemented**: Point glyph customization (color, shape), line color configuration,
+**Not yet implemented**: line color configuration,
 polygon selection, double-click time navigation, group integration, group-based coloring,
 and subgroup visibility filtering described below.
-
----
-
-## Phase 1: Point Glyph Customization
-
-**Status**: **Complete**. Global glyph customization (shape, size, color, alpha) is now
-implemented using the shared `CorePlotting::GlyphStyleData` struct and the
-`GlyphStyleControls` widget from `Plots/Common/GlyphStyleWidget/`.
-
-**What was implemented**:
-
-- `TemporalProjectionViewStateData::point_glyph_style` (`CorePlotting::GlyphStyleData`) replaces
-  the former `float point_size` field — serializable with reflectcpp.
-- `GlyphStyleState` (QObject wrapper) composed into `TemporalProjectionViewState`, with
-  `styleChanged` wired to `stateChanged()` + `markDirty()` for automatic scene rebuilds.
-- `GlyphStyleControls` widget embedded in `TemporalProjectionViewPropertiesWidget`, replacing
-  the old point-size spinbox.
-- Rendering in `TemporalProjectionOpenGLWidget::rebuildScene()` uses
-  `CorePlotting::toRenderableGlyphType()` and `CorePlotting::hexColorToVec4()` from
-  `GlyphStyleConversion.hpp` instead of hardcoded Circle/blue.
-
-**Shared infrastructure used** (see `Plots/Common/GlyphStyleWidget/`):
-
-| Component | Location |
-|-----------|----------|
-| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` |
-| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` |
-| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` |
-| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` |
-| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` |
-| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` |
-
-```cpp
-CorePlotting::GlyphStyle style;
-style.glyph_type = toRenderableGlyphType(_state->getPointGlyphType());
-style.size = _state->getPointSize();
-style.color = hexToGlmVec4(_state->getPointColor(), _state->getPointAlpha());
-```
 
 ---
 
@@ -490,7 +452,6 @@ for (auto const & pb : point_batches) {
 ## Dependency Graph
 
 ```
-Phase 1: Point Glyph Customization
 Phase 2: Line Color Customization
 Phase 3: Double-Click Time Navigation
     │
@@ -513,7 +474,7 @@ Phase 7: Subgroup Visibility Filtering
     └── depends on: Phase 5 (group membership required)
     │
 Phase 8: Per-Key Rendering Options
-    └── depends on: Phase 1 + Phase 2 (glyph/line options defined)
+    └── depends on: Phase 2 (glyph/line options defined)
 ```
 
 Phases 1–3 are independent and can be implemented in any order. Phase 4 (polygon selection)
@@ -537,7 +498,7 @@ Components that should be factored into shared locations rather than implemented
 | `GlyphStyleControls` widget | `Plots/Common/GlyphStyleWidget/` | TemporalProjectionViewWidget, [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
 ## Design Decisions
 
-1. **Per-key vs. global rendering options**: Phase 1 and Phase 2 start with global options
+1. **Per-key vs. global rendering options**: Phase 2 start with global options
    (simpler), extended to per-key options in Phase 8 to avoid premature complexity.
 
 2. **Polygon interaction**: Uses the existing `PolygonInteractionController` from
