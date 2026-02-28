@@ -21,11 +21,11 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Unit selection state** (Phase 1.1): `HeatmapStateData::unit_keys` with full add/remove/batch API and `unitsChanged()` signal
 - **Unit selection UI** (Phase 1.2): `Feature_Tree_Widget` embedded in properties panel, filtered to `DigitalEventSeries`, with prefix-based group toggling
-- **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` for histogram binning with a `std::variant`-based variation point for future methods
+- **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` returning `RateEstimate` (paired `times[]` + `values[]`) with a `std::variant<BinningParams, ...>`-based variation point for future methods. Being redesigned per [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
 - **Colormap infrastructure** (Phase 2): `CorePlotting::Colormaps` library in `CorePlotting/Colormaps/` providing `ColormapFunction`, `ColormapPreset` (Inferno, Viridis, Magma, Plasma, Coolwarm, Grayscale, Hot), LUT-based O(1) evaluation with linear interpolation, `mapValue()` / `mapValues()` / `mapMatrix()` utilities. Shared with SpectrogramWidget and any future external-feature coloring use cases.
-- **Heatmap scene building** (Phase 1.4): `HeatmapMapper` in `CorePlotting/Mappers/` converting `HeatmapRowData` rows to `RenderableRectangleBatch` with Auto / Manual / Symmetric color range modes. `HeatmapOpenGLWidget::rebuildScene()` now gathers units via `createUnitGatherContexts()`, estimates rates via `estimateRates()`, normalises by `num_trials`, maps through Inferno colormap, and uploads the scene. The full data pipeline is live.
+- **Heatmap scene building** (Phase 1.4): `HeatmapMapper` in `CorePlotting/Mappers/` converting `HeatmapRowData` rows to `RenderableRectangleBatch` with Auto / Manual / Symmetric color range modes. `HeatmapOpenGLWidget::rebuildScene()` now gathers units via `createUnitGatherContexts()`, estimates rates via `estimateRates()`, applies scaling via `applyScaling()`, converts `RateEstimate` objects to `HeatmapRowData`, and uploads the scene.
 - **Y-axis auto-fit** (Phase 1.5): `HeatmapWidget` auto-fits the vertical axis when the unit count changes. Y bounds are set to `[0, num_units]`, Y zoom is reset to 1.0, and Y pan is reset to 0.0 so all units are visible. The `VerticalAxisWidget` uses `identityAxis("Unit", 0)` for integer unit-index labels. Signal renamed from `trialCountChanged` to `unitCountChanged` for semantic clarity.
-- **Scaling and normalization** (Phase 3): `HeatmapScaling` enum and `normalizeRateProfiles()` in `EventRateEstimation/RateScaling.hpp` and `EventRateEstimation.cpp`. Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). `rebuildScene()` uses `normalizeRateProfiles()` before scene building. Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with combo boxes and manual vmin/vmax spinboxes.
+- **Scaling and normalization** (Phase 3): Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). Currently uses bespoke `HeatmapScaling`/`normalizeRateProfiles()` — will migrate to shared `ScalingMode`/`applyScaling()` per the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md). `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with combo boxes and manual vmin/vmax spinboxes.
 
 **Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), sorting, and all cross-widget linking described below.
 
@@ -95,7 +95,13 @@ The shared `EventRateEstimation` library (`Plots/Common/EventRateEstimation/`) p
 gathering and rate estimation infrastructure needed by both this widget and
 [PSTHWidget](../PSTHWidget/index.qmd).
 
-**Gathering API**:
+The library is being redesigned per the
+[Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md). Key
+changes: `RateProfile` → `RateEstimate` (paired `times[]` + `values[]`),
+`HeatmapScaling`/`normalizeRateProfiles()` → shared `ScalingMode`/`applyScaling()`,
+new `estimateRateWithTrials()` for uncertainty quantification.
+
+**Gathering API** (unchanged):
 
 ```cpp
 // Single unit — returns std::nullopt if gather fails or TimeFrame is missing
@@ -114,36 +120,29 @@ std::vector<UnitGatherContext> createUnitGatherContexts(
 `UnitGatherContext` bundles the `GatherResult<DigitalEventSeries>`, source `TimeFrame`, and
 key so callers do not need to re-fetch the `TimeFrame` at estimation time.
 
-**Rate estimation API**:
+**Rate estimation API** (after redesign):
 
 ```cpp
-// Single unit
-RateProfile estimateRate(
+// Single unit — returns paired times[] + values[]
+RateEstimate estimateRate(
     GatherResult<DigitalEventSeries> const & gathered,
     TimeFrame const * time_frame,
     double window_size,
     EstimationParams const & params = BinningParams{});
 
 // Multi-unit (heatmap use case)
-std::vector<RateProfile> estimateRates(
+std::vector<RateEstimate> estimateRates(
     std::vector<UnitGatherContext> const & units,
     double window_size,
     EstimationParams const & params = BinningParams{});
 ```
 
-`RateProfile` stores raw per-bin `counts`, `bin_start`, `bin_width`, and `num_trials`.
-Normalisation (÷ num_trials for mean count, ÷ num_trials × bin_size_s for Hz) is applied
-by the caller.
+`RateEstimate` stores paired `times[]` + `values[]` with `num_trials` and `metadata.sample_spacing`.
+The output is method-agnostic — binning, kernel smoothing, and adaptive methods all produce
+the same output type.
 
-**Variation point**: `EstimationParams` is a `std::variant<BinningParams>`. New methods are
-added by defining a new `*Params` struct, appending it to the variant alias, and adding a
-branch in the `std::visit` lambda — no virtual dispatch or heap allocation required.
-
-Currently implemented: `BinningParams { double bin_size = 10.0 }` (uniform histogram
-binning, same logic as `PSTHPlotOpenGLWidget::rebuildScene()`).
-
-`HeatmapOpenGLWidget::rebuildScene()` should call `createUnitGatherContexts()` then
-`estimateRates()` to obtain the `units × time_bins` rate matrix for scene building.
+**Variation point**: `EstimationParams` is a `std::variant<BinningParams, GaussianKernelParams, ...>`.
+New methods are added by defining a new `*Params` struct and appending it to the variant.
 
 ### 1.4 Heatmap Scene Building ✅
 
@@ -151,10 +150,10 @@ binning, same logic as `PSTHPlotOpenGLWidget::rebuildScene()`).
 
 1. Guard: returns early if no units are selected or alignment state is missing
 2. Calls `createUnitGatherContexts()` to gather trial-aligned `DigitalEventSeries` for all selected units
-3. Calls `estimateRates()` to estimate firing rates (raw counts) for each unit
-4. Normalises counts by `num_trials` → mean count per trial
-5. Converts `RateProfile` objects to `HeatmapRowData` (the `CorePlotting`-layer input type)
-6. Calls `HeatmapMapper::buildScene()` with the Inferno colormap and auto color range
+3. Calls `estimateRates()` to get `RateEstimate` objects for each unit
+4. Applies scaling via `applyScaling()` in-place
+5. Converts `RateEstimate` objects to `HeatmapRowData` (using `times[]` bin centers and `metadata.sample_spacing` to reconstruct left edges)
+6. Calls `HeatmapMapper::buildScene()` with the appropriate colormap and color range
 7. Uploads the scene via `_scene_renderer.uploadScene()` and emits `unitCountChanged`
 
 The new `HeatmapMapper` lives in `CorePlotting/Mappers/` and is decoupled from `EventRateEstimation`
@@ -246,31 +245,37 @@ automatically suggest **Coolwarm** (diverging around zero).
 
 ## Phase 3: Scaling and Normalization
 
-**Status**: Complete. Implemented in `EventRateEstimation/RateScaling.hpp` and `EventRateEstimation.cpp`.
+**Status**: Complete (initial implementation). Will be migrated to shared `ScalingMode`/`applyScaling()` from
+the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
 
 **Goal**: Support multiple Y-value (color intensity) representations for the heatmap cells.
 
-### 3.1 Scaling Enum ✅
+### 3.1 Scaling Mode ✅ → Migration Pending
 
-Defined in `EventRateEstimation/RateScaling.hpp` (a lightweight header with no transitive
-dependencies on GatherResult, DataManager, or Qt — safe for inclusion from state headers):
+Currently uses a bespoke `HeatmapScaling` enum in `EventRateEstimation/RateScaling.hpp`.
+This will be replaced by the shared `ScalingMode` enum from `RateEstimate.hpp`:
 
 ```cpp
-enum class HeatmapScaling {
-    FiringRate,     ///< Count / (bin_size_s × num_trials) → spikes/s (default)
-    ZScore,         ///< Per-unit z-score: (rate - mean) / std across all bins
-    Normalized01,   ///< Per-unit min-max normalization to [0, 1]
-    RawCount,       ///< Raw event count (no normalization)
-    CountPerTrial   ///< Count / num_trials
+enum class ScalingMode {
+    FiringRateHz,
+    ZScore,
+    Normalized01,
+    RawCount,
+    CountPerTrial,
 };
 ```
 
-Helper functions `scalingLabel()`, `scalingAxisLabel()`, and `allScalingModes()` are also
-provided in `RateScaling.hpp` for UI population.
+The scaling is applied in-place via `applyScaling(RateEstimate &, ScalingMode, time_units_per_second)`
+rather than producing a separate `NormalizedRow` type. See
+[Rate Estimation Redesign — Normalization](../Common/EventRateEstimation/rate_estimation_redesign.md#normalization-as-composable-transforms).
 
-### 3.2 State Extension ✅
+Helper functions `scalingLabel()`, `scalingAxisLabel()`, and `allScalingModes()` remain
+available for UI population.
 
-`HeatmapStateData` now includes both the scaling mode and a color range configuration:
+### 3.2 State Extension ✅ → Migration Pending
+
+`HeatmapStateData` includes the scaling mode and color range configuration. After migration,
+`HeatmapScaling` references will be replaced with `ScalingMode`:
 
 ```cpp
 struct HeatmapColorRangeConfig {
@@ -282,8 +287,8 @@ struct HeatmapColorRangeConfig {
 
 struct HeatmapStateData {
     // ... existing fields ...
-    WhiskerToolbox::Plots::HeatmapScaling scaling =
-            WhiskerToolbox::Plots::HeatmapScaling::FiringRate;
+    WhiskerToolbox::Plots::ScalingMode scaling =
+            WhiskerToolbox::Plots::ScalingMode::FiringRateHz;
     HeatmapColorRangeConfig color_range;
 };
 ```
@@ -297,18 +302,22 @@ color range to `Symmetric`; leaving z-score reverts to `Auto`.
 | `scalingChanged()` | Scaling mode changed |
 | `colorRangeChanged()` | Color range mode or bounds changed |
 
-### 3.3 Implementation ✅
+### 3.3 Implementation ✅ → Migration Pending
 
-Scaling is implemented in the `EventRateEstimation` library via `normalizeRateProfiles()`,
-which takes raw `RateProfile` objects and a `HeatmapScaling` mode and returns
-`NormalizedRow` objects ready for the CorePlotting mapper. This keeps the normalization
-logic in the rate estimation layer (before data reaches CorePlotting), as intended.
+Currently implemented via `normalizeRateProfiles()`, which takes raw `RateProfile` objects
+and a `HeatmapScaling` mode and returns `NormalizedRow` objects. After the redesign migration:
 
-`HeatmapOpenGLWidget::rebuildScene()` calls `normalizeRateProfiles()` after
-`estimateRates()` and before building the scene. The colormap automatically switches
-to **Coolwarm** for z-score scaling and **Inferno** for all other modes. The
-`HeatmapColorRangeConfig` from state is mapped to `CorePlotting::HeatmapColorRange`
-for the mapper.
+- `normalizeRateProfiles()` → `applyScaling(RateEstimate &, ScalingMode, time_units_per_second)`
+  applied in-place to each `RateEstimate`
+- `NormalizedRow` is eliminated — the `RateEstimate` itself is the ready-to-render output
+- The `RateProfile` → `NormalizedRow` → `HeatmapRowData` conversion chain simplifies to
+  `RateEstimate` → `HeatmapRowData` (single step, using `times[]` centers and `metadata.sample_spacing`)
+
+See [Rate Estimation Redesign — Bridging to Rendering](../Common/EventRateEstimation/rate_estimation_redesign.md#bridging-to-rendering).
+
+The colormap automatically switches to **Coolwarm** for z-score scaling and **Inferno** for
+all other modes. The `HeatmapColorRangeConfig` from state is mapped to
+`CorePlotting::HeatmapColorRange` for the mapper.
 
 ### 3.4 Color Range Controls ✅
 
@@ -334,15 +343,18 @@ A "Scaling & Color Range" collapsible `Section` is added to `HeatmapPropertiesWi
 The UI auto-syncs bidirectionally with `HeatmapState` via `scalingChanged()` and
 `colorRangeChanged()` signals with signal blockers to prevent feedback loops.
 
-### 3.6 Unit Tests ✅
+### 3.6 Unit Tests ✅ → Update Pending
 
-Comprehensive tests for `normalizeRateProfiles()` in
-`tests/WhiskerToolbox/Plots/Common/EventRateEstimation.test.cpp` covering:
+Comprehensive tests for `normalizeRateProfiles()` exist in
+`tests/WhiskerToolbox/Plots/Common/EventRateEstimation.test.cpp`. These will need to be
+updated after the redesign migration to test `applyScaling()` and the composable
+normalization primitives (`toFiringRateHz`, `zScoreNormalize`, etc.) instead.
+
+Existing coverage:
 
 - All five scaling modes with synthetic data
 - Edge cases (zero trials, constant signal, empty input)
 - Multiple units with per-unit independence
-- Axis metadata preservation (bin_start, bin_width)
 - Helper function tests (scalingLabel, allScalingModes)
 
 ---
@@ -396,36 +408,46 @@ which also needs a color legend for its power spectrum display.
 ## Phase 5: Shared Rate Estimation Options
 
 **Status**: Not started. Phase 1 is now complete; this phase can proceed.
-Closely related to [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2.
+Closes related to [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2.
 
-**Goal**: Share bin size, smoothing method, and rate estimation parameters between HeatmapWidget
-and [PSTHWidget](../PSTHWidget/index.qmd).
+**Goal**: Share estimation method selection and parameters between HeatmapWidget
+and [PSTHWidget](../PSTHWidget/index.qmd) via the shared `EstimationParams` variant
+from the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
 
 ### 5.1 State Extension
+
+Store estimation parameters in `HeatmapStateData`. Since `EstimationParams` is a
+`std::variant` that is not directly serializable via `rfl::json`, store individual
+parameter fields:
 
 ```cpp
 struct HeatmapStateData {
     // ... existing fields ...
-    double bin_size = 10.0;                                       ///< Bin size in time units
-    RateEstimationMethod rate_method = RateEstimationMethod::Binning;
-    double kernel_bandwidth = 20.0;                               ///< For kernel smoothing
+    double bin_size = 10.0;                ///< For BinningParams
+    double kernel_bandwidth = 20.0;        ///< sigma for GaussianKernelParams
+    double eval_step = 1.0;                ///< evaluation spacing for kernel methods
 };
 ```
 
-### 5.2 Smoothing Methods
+At runtime, the widget constructs the appropriate `EstimationParams` variant from these fields.
 
-The same methods planned for [PSTHWidget](../PSTHWidget/index.qmd) ([PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2):
+### 5.2 Estimation Methods
 
-| Method | Description |
-|--------|-------------|
-| `Binning` | Simple histogram binning (default) |
-| `GaussianKernel` | Convolve binned counts with Gaussian kernel |
-| `CausalExponential` | Causal exponential filter |
-| `AdaptiveKernel` | Shimazaki & Shinomoto (2010) variable-bandwidth kernel |
+All methods are defined in the shared `EstimationParams` variant:
 
-For the heatmap, kernel smoothing is applied independently per unit (each row is smoothed
-separately). The kernel bandwidth parameter controls the temporal resolution of the rate
-estimate across all units.
+```cpp
+using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
+```
+
+| Variant | Description |
+|---------|-------------|
+| `BinningParams` | Simple histogram binning (default) |
+| `GaussianKernelParams` | Convolution with Gaussian kernel |
+| `CausalExponentialParams` | Causal exponential filter |
+
+For the heatmap, estimation is applied independently per unit (each row is estimated
+separately). The output is always `RateEstimate` with paired `times[]` + `values[]`
+regardless of the estimation method.
 
 ### 5.3 Properties Panel
 
@@ -625,8 +647,9 @@ unit using the cached `GatherResult` data, and render directly with `QPainter` i
 widget. This avoids the memory cost but requires fast rendering.
 
 **Recommendation**: Option B with the cached `GatherResult` data from the scene rebuild.
-The binning computation is fast (already done for the heatmap), and `QPainter` rendering
-of a simple histogram + tick marks is lightweight.
+The rate computation uses the shared `estimateRate()` from the `EventRateEstimation` library
+(the same function used by the heatmap itself), and `QPainter` rendering of a simple
+histogram + tick marks is lightweight.
 
 ### 8.3 Tooltip Content
 
@@ -829,22 +852,15 @@ complexity. The two widgets can coexist in the Plot menu, clearly labeled:
 
 ### Open Questions
 
-1. **Shared rate estimation extraction**: Should the rate estimation be factored out of PSTHWidget
-   before or during HeatmapWidget Phase 1? Doing it first enables clean reuse; doing it during
-   avoids premature abstraction.
-
-2. **Colormap data format**: Should colormaps be stored as 256-entry LUTs (fast lookup, fixed
-   resolution) or as piecewise-linear functions (arbitrary resolution, smaller storage)?
-
-3. **Row label rendering**: Should unit labels be rendered as axis tick labels via `VerticalAxisWidget`,
+1. **Row label rendering**: Should unit labels be rendered as axis tick labels via `VerticalAxisWidget`,
    or as a separate label column? The axis approach reuses existing infrastructure but may not
    handle long labels well.
 
-4. **Performance at scale**: What is the target unit count? 100 units × 200 bins = 20K rectangles
+2. **Performance at scale**: What is the target unit count? 100 units × 200 bins = 20K rectangles
    is trivial for OpenGL. 1000 units × 1000 bins = 1M rectangles may need texture-based rendering
    instead of rectangle batches.
 
-5. **AnalogTimeSeries variant timing**: Should the analog heatmap be a mode of this widget
+3. **AnalogTimeSeries variant timing**: Should the analog heatmap be a mode of this widget
    or a completely separate widget? The shared infrastructure is substantial, but the data
    pipelines are fundamentally different.
 
