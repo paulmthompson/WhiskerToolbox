@@ -455,19 +455,7 @@ This makes it more similar in structure to [TemporalProjectionViewWidget](../Tem
 - `tests/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp` — Verifies `ScatterPlotWidget` creation via `PlotFactory`
 - `tests/WhiskerToolbox/Plots/ScatterPlotWidget/SourceCompatibility.test.cpp` — Row-type compatibility validation (21 test cases covering `resolveSourceRowType`, all compatible pairings, all incompatible pairings, and missing/unknown sources)
 - `tests/WhiskerToolbox/Plots/ScatterPlotWidget/BuildScatterPoints.test.cpp` — Point pair computation covering all 6 source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval), temporal offset, empty/missing keys, incompatible sources, named columns, and `ScatterPointData` struct operations
-
-## Needed Tests
-
-The properties widget should be tested for the standard DataManager observer contract:
-
-| Category | What It Verifies |
-|----------|-----------------|
-| Combo box population | Data source combo boxes reflect DataManager keys |
-| Observer refresh | Adding/removing data updates combo boxes |
-| Destruction cleanup | Observer removed in destructor; no crash after widget dies |
-| State serialization | Round-trip JSON serialization of `ScatterPlotStateData` |
-
-See [Plot Widget Guide](../plot_widget_guide.md) for full testing requirements and the common `PlotWidgetCommonTests.hpp` template.
+- `tests/WhiskerToolbox/Plots/ScatterPlotWidget/ScatterPlotPropertiesWidget.test.cpp` — Properties widget DataManager integration (combo box population, observer refresh on data add/remove, destruction cleanup, stale key handling, state synchronization)
 
 # See Also
 

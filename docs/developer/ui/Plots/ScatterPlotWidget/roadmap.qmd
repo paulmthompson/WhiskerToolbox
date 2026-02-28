@@ -27,14 +27,13 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Point rendering**: SceneBuilder→SceneRenderer pipeline using `addGlyphs()` for points with single instanced draw call
 - **Auto-fit bounds**: Automatic X/Y bounds detection from data with 5% padding on first data load (when bounds are at defaults)
 - **Reference line rendering**: $y = x$ diagonal via `addPolyLine()` with show/hide toggle in properties panel; endpoints update on pan/zoom
-- **DataManager observer** (Phase 6 partial): Observer registration/removal in properties widget for combo box synchronization
+- **DataManager observer**: Observer registration/removal in properties widget for combo box synchronization; stale key handling clears axis source when selected data key is deleted from DataManager; tested in `ScatterPlotPropertiesWidget.test.cpp`
 - **Double-click-to-navigate**: Point hit testing via shared `SceneHitTester` + `QuadTree<EntityId>` spatial index, `pointDoubleClicked` → `timePositionSelected` → `EditorRegistry::setCurrentTime()` signal chain, yellow highlight glyph for navigated-to point
 - **Glyph customization**: `GlyphStyleData` in `ScatterPlotStateData` with default blue circle style (`#3388FF`, size 5, alpha 0.8); `GlyphStyleState` owned by `ScatterPlotState` with `glyphStyleChanged` signal; `GlyphStyleControls` embedded in properties panel "Glyph Options" collapsible section; rendering uses `toRenderableGlyphType()` and `hexColorToVec4()` from `GlyphStyleConversion.hpp`; full round-trip JSON serialization
 - **Temporal offset for outlier detection**: Per-axis `time_offset` field in `ScatterAxisSource` enables lag-plots ($x(t)$ vs $x(t-1)$); `buildScatterPoints()` applies offsets for all source type combinations; offset spinboxes (-10000 to 10000) in properties panel per axis; points where offset pushes index outside valid range are excluded; tested in `BuildScatterPoints.test.cpp`
 
 **Not yet implemented**:
-polygon selection and group integration (Phase 3), feature coloring (Phase 7),
-stale key handling (Phase 6.3).
+polygon selection and group integration (Phase 3), feature coloring (Phase 7).
 
 ## Phase 3: Polygon Selection and Group Integration
 
@@ -159,67 +158,6 @@ shared widget location):
 
 Initial implementation can be done inline in `ScatterPlotPropertiesWidget` and then
 refactored when the second widget needs the same functionality.
-
----
-
-## Phase 6: DataManager Observer and Stale Key Handling
-
-**Status**: Partially complete. Observer registration (6.1) and combo box population (6.2) are implemented. 
-Stale key handling (6.3) and dedicated tests (6.4) remain.
-
-**Goal**: Register a DataManager observer to keep combo boxes current and handle deleted data keys.
-
-### 6.1 Observer Registration
-
-Following the pattern from [Plot Widget Guide](../plot_widget_guide.md):
-
-```cpp
-ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(
-    std::shared_ptr<ScatterPlotState> state,
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : QWidget(parent), _data_manager(std::move(data_manager))
-{
-    if (_data_manager) {
-        _dm_observer_id = _data_manager->addObserver([this]() {
-            _populateComboBoxes();
-        });
-    }
-}
-
-ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget()
-{
-    if (_data_manager && _dm_observer_id != -1) {
-        _data_manager->removeObserver(_dm_observer_id);
-    }
-}
-```
-
-### 6.2 Combo Box Population
-
-When the observer fires:
-
-1. Re-query `DataManager::getKeys<AnalogTimeSeries>()` and `DataManager::getKeys<TensorData>()`
-2. Rebuild X and Y key combo boxes, preserving current selection if still valid
-3. If a `TensorData` key is selected, re-query its column names and rebuild the column combo box
-
-### 6.3 Stale Key Handling
-
-If the currently configured X or Y source key is deleted from the DataManager:
-
-- Clear the axis source in state (`x_source = std::nullopt`)
-- Clear the rendered scatter points
-- Update the properties panel to indicate no source selected
-
-### 6.4 Tests
-
-Add `ScatterPlotPropertiesWidget.test.cpp` following the common test pattern from
-`tests/WhiskerToolbox/Plots/Common/PlotWidgetCommonTests.hpp`:
-
-- Combo box population from DataManager
-- Observer refresh on data addition/removal
-- Destruction cleanup (no dangling observer)
-- Stale key handling
 
 ---
 

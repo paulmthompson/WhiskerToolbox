@@ -192,10 +192,6 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
 
 void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
 {
-    if (!_data_manager) {
-        return;
-    }
-
     _updating_combos = true;
 
     // Save current selections
@@ -208,6 +204,11 @@ void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
     // Add empty "none" option
     _x_key_combo->addItem("");
     _y_key_combo->addItem("");
+
+    if (!_data_manager) {
+        _updating_combos = false;
+        return;
+    }
 
     // Add AnalogTimeSeries keys
     auto ats_keys = _data_manager->getKeys<AnalogTimeSeries>();
@@ -225,15 +226,29 @@ void ScatterPlotPropertiesWidget::_populateKeyComboBoxes()
         _y_key_combo->addItem(display);
     }
 
-    // Restore previous selections if still valid
+    // Restore previous selections if still valid, otherwise handle stale keys
     int x_idx = _x_key_combo->findText(x_current);
     if (x_idx >= 0) {
         _x_key_combo->setCurrentIndex(x_idx);
+    } else if (!x_current.isEmpty()) {
+        // Key was deleted from DataManager — clear the X source
+        _x_column_combo->clear();
+        _x_column_combo->setVisible(false);
+        if (_state) {
+            _state->setXSource(std::nullopt);
+        }
     }
 
     int y_idx = _y_key_combo->findText(y_current);
     if (y_idx >= 0) {
         _y_key_combo->setCurrentIndex(y_idx);
+    } else if (!y_current.isEmpty()) {
+        // Key was deleted from DataManager — clear the Y source
+        _y_column_combo->clear();
+        _y_column_combo->setVisible(false);
+        if (_state) {
+            _state->setYSource(std::nullopt);
+        }
     }
 
     _updating_combos = false;
