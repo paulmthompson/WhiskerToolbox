@@ -29,6 +29,7 @@
 class DataManager;
 class GlyphStyleControls;
 class HorizontalAxisRangeControls;
+class LineStyleControls;
 class OnionSkinViewWidget;
 class Section;
 class VerticalAxisRangeControls;
@@ -118,6 +119,13 @@ private:
      * bound to the per-key GlyphStyleState for the selected key.
      */
     void _updateGlyphStyleControls();
+    /**
+     * @brief Rebind the LineStyleControls to the currently selected line key.
+     *
+     * If no row is selected, the controls are disabled. Otherwise they are
+     * bound to the per-key LineStyleState for the selected key.
+     */
+    void _updateLineStyleControls();
 
     Ui::OnionSkinViewPropertiesWidget * ui;
     std::shared_ptr<OnionSkinViewState> _state;
@@ -125,6 +133,8 @@ private:
     OnionSkinViewWidget * _plot_widget;
     GlyphStyleControls * _glyph_style_controls = nullptr;
     Section * _glyph_style_section = nullptr;
+    LineStyleControls * _line_style_controls = nullptr;
+    Section * _line_style_section = nullptr;
     HorizontalAxisRangeControls * _horizontal_range_controls;
     Section * _horizontal_range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;

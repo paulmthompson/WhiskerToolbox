@@ -6,6 +6,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
+#include "Plots/Common/LineStyleControls/LineStyleControls.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Points/Point_Data.hpp"
@@ -126,6 +127,25 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
     {
         int insert_idx = ui->main_layout->indexOf(ui->add_point_widget) + 1;
         ui->main_layout->insertWidget(insert_idx, _glyph_style_section);
+    }
+
+    // === Line Style Options collapsible section ===
+    // Inserted after the line data add widget (before mask data label).
+    // The LineStyleControls are bound to the per-key state of the selected row.
+    _line_style_section = new Section(this, "Line Style Options");
+    if (_state) {
+        _line_style_controls = new LineStyleControls(nullptr, this);
+        _line_style_controls->setEnabled(false);
+
+        auto * line_style_layout = new QVBoxLayout();
+        line_style_layout->setContentsMargins(4, 4, 4, 4);
+        line_style_layout->addWidget(_line_style_controls);
+        _line_style_section->setContentLayout(*line_style_layout);
+    }
+    // Insert after the line data add widget (before mask_data_label)
+    {
+        int insert_idx = ui->main_layout->indexOf(ui->add_line_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _line_style_section);
     }
 
     // Populate combo boxes
@@ -404,11 +424,13 @@ void OnionSkinViewPropertiesWidget::_onLineTableSelectionChanged()
 {
     bool has_selection = !ui->line_data_table->selectedItems().isEmpty();
     ui->remove_line_button->setEnabled(has_selection);
+    _updateLineStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateLineKeyAdded(QString const & /*key*/)
 {
     _updateLineDataTable();
+    _updateLineStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateLineKeyRemoved(QString const & /*key*/)
@@ -416,6 +438,7 @@ void OnionSkinViewPropertiesWidget::_onStateLineKeyRemoved(QString const & /*key
     _updateLineDataTable();
     ui->line_data_table->clearSelection();
     ui->remove_line_button->setEnabled(false);
+    _updateLineStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_updateLineDataTable()
@@ -636,6 +659,29 @@ void OnionSkinViewPropertiesWidget::_updateGlyphStyleControls()
 
     GlyphStyleState * glyph_state = _state->glyphStyleStateForKey(item->text());
     _glyph_style_controls->setGlyphStyleState(glyph_state);
+}
+
+void OnionSkinViewPropertiesWidget::_updateLineStyleControls()
+{
+    if (!_line_style_controls || !_state) {
+        return;
+    }
+
+    QList<QTableWidgetItem *> const selected = ui->line_data_table->selectedItems();
+    if (selected.isEmpty()) {
+        _line_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    int const row = selected.first()->row();
+    QTableWidgetItem const * item = ui->line_data_table->item(row, 0);
+    if (!item) {
+        _line_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    LineStyleState * line_state = _state->lineStyleStateForKey(item->text());
+    _line_style_controls->setLineStyleState(line_state);
 }
 
 void OnionSkinViewPropertiesWidget::_updateUIFromState()
