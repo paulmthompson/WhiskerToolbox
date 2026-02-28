@@ -60,6 +60,18 @@ public:
     void setViewStateGetter(ViewStateGetter getter);
 
     /**
+     * @brief Set the widget whose horizontal extent defines the plot area
+     *
+     * When the axis widget is wider than the plot (e.g. because a vertical
+     * axis sits beside the OpenGL canvas), setting an alignment target
+     * ensures that tick marks line up with world-coordinate positions in
+     * the target widget rather than being offset.
+     *
+     * @param target The widget to align with (typically the QOpenGLWidget)
+     */
+    void setAlignmentTarget(QWidget * target);
+
+    /**
      * @brief Set an AxisMapping to control label formatting and domain interpretation
      *
      * When set, world-coordinate tick values are converted to domain values
@@ -110,6 +122,9 @@ protected:
 private:
     ViewStateGetter _view_state_getter;
 
+    /// Widget whose horizontal extent defines the plot area (for offset calculation)
+    QWidget * _alignment_target = nullptr;
+
     /// Optional axis mapping for domain↔world conversion and label formatting
     std::optional<CorePlotting::AxisMapping> _axis_mapping;
 
@@ -127,10 +142,17 @@ private:
     [[nodiscard]] double computeTickInterval(double range) const;
 
     /**
+     * @brief Compute the horizontal pixel offset from this widget's left edge
+     *        to the alignment target's left edge
+     * @return Offset in pixels (0 if no alignment target is set)
+     */
+    [[nodiscard]] int alignmentOffset() const;
+
+    /**
      * @brief Convert time value to pixel X position
      * @param time Time value in world coordinates
      * @param view_state Current view state
-     * @return Pixel X position
+     * @return Pixel X position (in this widget's coordinate space)
      */
     [[nodiscard]] int timeToPixelX(double time, CorePlotting::ViewState const & view_state) const;
 };
