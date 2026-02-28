@@ -4,6 +4,8 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateNormalization.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -237,10 +239,19 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
         return;
     }
 
-    // Get window size and bin size from state
+    // Get window size from state
     double window_size = _state->getWindowSize();
-    double bin_size = _state->getBinSize();
     double half_window = window_size / 2.0;
+
+    // Extract bin size from estimation parameters
+    // Currently only BinningParams is implemented; other methods use default bin_size
+    double bin_size = 10.0;  // fallback default
+    auto const & params = _state->estimationParams();
+    if (auto const * binning = std::get_if<WhiskerToolbox::Plots::BinningParams>(&params)) {
+        bin_size = binning->bin_size;
+    } else {
+        qDebug() << "PSTHPlotOpenGLWidget: Non-binning estimation method not yet supported, using default bin_size";
+    }
 
     // Calculate number of bins: from -window/2 to +window/2 with bin_size spacing
     int num_bins = static_cast<int>(std::ceil(window_size / bin_size));
@@ -345,8 +356,40 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
         max_count = std::max(max_count, count);
     }
     qDebug() << "  Total events:" << total_events;
-    qDebug() << "  Max bin count:" << max_count;
+    qDebug() << "  Max bin count (raw):" << max_count;
     qDebug() << "  Number of trials:" << total_trials;
+
+    // Apply scaling/normalization using shared RateEstimate infrastructure
+    // Build a RateEstimate from the histogram data
+    WhiskerToolbox::Plots::RateEstimate rate_estimate;
+    rate_estimate.values = histogram;  // Copy histogram counts
+    rate_estimate.num_trials = total_trials;
+    rate_estimate.metadata.sample_spacing = bin_size;
+
+    // Build times vector (bin centers)
+    rate_estimate.times.reserve(num_bins);
+    for (int i = 0; i < num_bins; ++i) {
+        double bin_center = -half_window + (i + 0.5) * bin_size;
+        rate_estimate.times.push_back(bin_center);
+    }
+
+    // Apply scaling based on state's scaling mode
+    // time_units_per_second: assume time is in milliseconds (1000.0)
+    // TODO: Make this configurable or derive from TimeFrame
+    constexpr double time_units_per_second = 1000.0;
+    auto scaling_mode = _state->scaling();
+    WhiskerToolbox::Plots::applyScaling(rate_estimate, scaling_mode, time_units_per_second);
+
+    // Copy scaled values back to histogram
+    histogram = rate_estimate.values;
+
+    // Recompute max after scaling for Y-axis bounds
+    max_count = 0.0;
+    for (double val : histogram) {
+        max_count = std::max(max_count, val);
+    }
+    qDebug() << "  Max bin value (scaled):" << max_count;
+    qDebug() << "  Scaling mode:" << static_cast<int>(scaling_mode);
 
     // Update y_max to match the maximum histogram value (with some padding).
     // Sync both vertical axis state and view_state Y bounds so y panning uses correct range.

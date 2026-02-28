@@ -69,6 +69,10 @@ struct HeatmapStateData {
     RelativeTimeAxisStateData time_axis;
     VerticalAxisStateData vertical_axis;
     std::string background_color = "#FFFFFF";
+    std::vector<std::string> unit_keys;              ///< Selected DigitalEventSeries keys
+    WhiskerToolbox::Plots::ScalingMode scaling;      ///< Default: FiringRateHz
+    WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Default: BinningParams{}
+    HeatmapColorRangeConfig color_range;             ///< Auto/Manual/Symmetric
 };
 ```
 
@@ -85,8 +89,10 @@ HeatmapState emits category-level signals to minimize coupling complexity:
 | `offsetChanged` | Alignment offset changed |
 | `windowSizeChanged` | Window size changed (also resets zoom/pan to fit) |
 | `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
-| `backgroundColorChanged` | Background color changed |
-| `stateChanged` (inherited) | Any change requiring scene rebuild |
+| `backgroundColorChanged` | Background color changed || `unitsChanged` | Unit key list added to, removed from, or replaced |
+| `estimationParamsChanged` | `EstimationParams` variant changed (method or parameters) |
+| `scalingChanged` | Scaling mode changed |
+| `colorRangeChanged` | Color range mode or bounds changed || `stateChanged` (inherited) | Any change requiring scene rebuild |
 
 **Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
 
@@ -105,53 +111,33 @@ The window size change handler resets the X view state bounds (`x_min`, `x_max`)
 
 # Rendering Pipeline
 
-## Data Flow (Current Scaffold)
+## Data Flow
 
 ```
-HeatmapState (alignment settings)
+HeatmapState (alignment + estimation_params + scaling)
         ↓
-GatherResult<DigitalEventSeries> per unit (trial-aligned views)
+createUnitGatherContexts() — one UnitGatherContext per selected unit
         ↓
-Rate estimation: aligned events → per-unit rate profile
+estimateRates(contexts, window_size, estimationParams())
         ↓
-units × time_bins matrix
+applyScaling(rate_estimate, scaling()) per unit
         ↓
-Colormap: scalar values → RGBA colors
+HeatmapRowData (times[], values[], metadata.sample_spacing)
         ↓
-RenderableRectangleBatch (one colored rectangle per cell)
+HeatmapMapper::buildScene() — colormap + color range → RenderableRectangleBatch
         ↓
-PlottingOpenGL::SceneRenderer::render()
+SceneRenderer::uploadScene() + render()
 ```
 
-The rendering pipeline currently has `TODO` placeholders in `rebuildScene()` for the data gathering and scene building steps. The OpenGL lifecycle, interaction, and projection infrastructure are fully wired.
+`HeatmapOpenGLWidget::rebuildScene()` implements this pipeline:
 
-## GatherResult Integration
-
-Trial alignment will use the shared `GatherResult` infrastructure from DataManager, the same pattern as [PSTHWidget](../PSTHWidget/index.qmd) and [EventPlotWidget](../EventPlotWidget/index.qmd). The `rebuildScene()` method will:
-
-1. Read alignment settings from `HeatmapState::alignmentState()`
-2. For each configured `DigitalEventSeries` unit, call `WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>()` using the shared `PlotAlignmentGather` utility
-3. Perform rate estimation on each unit's gathered data (same computation as [PSTHWidget](../PSTHWidget/index.qmd))
-4. Assemble the resulting rate profiles into a `units × time_bins` matrix
-5. Map the matrix through a colormap to produce per-cell RGBA values
-6. Build a `RenderableRectangleBatch` for the heatmap cells
-
-## Shared Rate Estimation with PSTHWidget
-
-The per-unit rate estimation (binning → counting → optional normalization/smoothing) is identical to the computation performed by [PSTHWidget](../PSTHWidget/index.qmd). The [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2 proposes factoring this into a shared `CorePlotting::RateEstimation` module:
-
-```cpp
-namespace CorePlotting::RateEstimation {
-    std::vector<double> estimateRate(
-        GatherResult<DigitalEventSeries> const & gathered,
-        RateEstimationMethod method,
-        double bin_size,
-        double window_size,
-        double kernel_bandwidth = 20.0);
-}
-```
-
-The HeatmapWidget will call this once per unit, assembling the results into a matrix. All rate estimation parameters (bin size, smoothing method, kernel bandwidth) should be configurable in `HeatmapState` and shared as options with [PSTHWidget](../PSTHWidget/index.qmd).
+1. Guard: returns early if no units are selected or alignment state is missing
+2. Calls `createUnitGatherContexts()` to gather trial-aligned `DigitalEventSeries` for all selected units
+3. Calls `estimateRates()` passing `_state->estimationParams()` directly (no conversion needed)
+4. Calls `applyScaling()` in-place on each `RateEstimate` using `_state->scaling()`
+5. Converts `RateEstimate` objects to `HeatmapRowData` using `times[]` bin centers and `metadata.sample_spacing`
+6. Calls `HeatmapMapper::buildScene()` with the colormap and `HeatmapColorRange` from state
+7. Uploads via `_scene_renderer.uploadScene()` and emits `unitCountChanged`
 
 # Interaction
 
@@ -209,13 +195,18 @@ Uses a `VerticalAxisWidget` with `VerticalAxisState`. The Y bounds are automatic
 
 # Properties Panel
 
-The `HeatmapPropertiesWidget` currently provides:
+The `HeatmapPropertiesWidget` provides the following collapsible sections:
 
-1. **PlotAlignmentWidget** — Shared alignment UI (event/interval key, alignment type, offset, window size). Inserted in place of a placeholder in the `.ui` file.
-2. **Time Axis Range Controls** — `RelativeTimeAxisRangeControls` in a collapsible `Section`, created when `setPlotWidget()` is called.
-3. **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`, created when `setPlotWidget()` is called.
+1. **PlotAlignmentWidget** — Shared alignment UI (event/interval key, alignment type, offset, window size).
+2. **Unit Selection** — `Feature_Tree_Widget` filtered to `DigitalEventSeries`, with prefix-based group toggling. Syncs with `HeatmapState::unit_keys`.
+3. **Scaling & Estimation** — Composable controls from the `RateEstimationControls` library:
+   - **`EstimationMethodControls`**: method combo (Histogram Binning / Gaussian Kernel / Causal Exponential) with a `QStackedWidget` showing per-method parameter spinboxes. Emits `paramsChanged(EstimationParams)` → connected directly to `HeatmapState::setEstimationParams()`. Stub methods show a "Not yet implemented" page.
+   - **`ScalingModeControls`**: scaling mode combo auto-populated from `allScalingModes()`. Emits `scalingModeChanged(ScalingMode)` → connected directly to `HeatmapState::setScaling()`.
+   - **Color range mode** combo (Auto / Manual / Symmetric) with vmin/vmax spinboxes (visible only in Manual mode).
+4. **Time Axis Range Controls** — `RelativeTimeAxisRangeControls` in a collapsible `Section`.
+5. **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`.
 
-The properties panel does not yet include unit selection, colormap, scaling, or sorting controls. These are planned in the [roadmap](roadmap.qmd).
+The `EstimationParams` value flows unchanged from UI → state → renderer: no `std::visit` or intermediate extraction is needed at the widget layer. The `_updating_ui` anti-recursion guard prevents feedback loops between state signals and the UI controls.
 
 # Visual Customization
 
@@ -261,7 +252,9 @@ The Heatmap Widget is designed as the **population-level companion** to the sing
 | `PlotAlignmentState` | Yes | Yes | Yes |
 | `RelativeTimeAxisWidget` | Yes | Yes | Yes |
 | `GatherResult` | Yes (per-unit, aggregated) | Yes (per-trial views) | Yes (aggregated) |
-| Rate estimation | Yes (per-unit) | N/A | Yes (single-unit) |
+| `EventRateEstimation` library | Yes (per-unit) | N/A | Yes (single-unit) |
+| `EstimationParams` / `EstimationMethodControls` | Yes | N/A | Planned |
+| `ScalingMode` / `ScalingModeControls` | Yes | N/A | Planned |
 | `SelectionContext` linking | Planned (source) | Planned | Planned |
 | OpenGL rendering | `SceneRenderer` | `SceneRenderer` | `SceneRenderer` |
 | Zoom/Pan interaction | `PlotInteractionHelpers` | `PlotInteractionHelpers` | `PlotInteractionHelpers` |

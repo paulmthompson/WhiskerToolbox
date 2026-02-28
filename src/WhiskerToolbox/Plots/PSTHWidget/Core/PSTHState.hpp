@@ -13,6 +13,8 @@
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
@@ -55,7 +57,8 @@ struct PSTHStateData {
     PlotAlignmentData alignment;                        ///< Alignment settings (event key, interval type, offset, window size)
     std::map<std::string, PSTHEventOptions> plot_events;///< Map of event names to their plot options
     PSTHStyle style = PSTHStyle::Bar;                   ///< Plot style (bar or line)
-    double bin_size = 10.0;                             ///< Bin size in time units (default: 10.0)
+    WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Rate estimation parameters (default: BinningParams{})
+    WhiskerToolbox::Plots::ScalingMode scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;  ///< Normalization mode
     CorePlotting::ViewStateData view_state;             ///< Zoom, pan, data bounds
     RelativeTimeAxisStateData time_axis;                ///< Time axis settings (min_range, max_range)
     VerticalAxisStateData vertical_axis;                ///< Vertical axis settings (y_min, y_max)
@@ -226,16 +229,28 @@ public:
     void setStyle(PSTHStyle style);
 
     /**
-     * @brief Get the bin size
-     * @return Bin size in time units
+     * @brief Get the estimation parameters
+     * @return Estimation parameters (BinningParams, GaussianKernelParams, etc.)
      */
-    [[nodiscard]] double getBinSize() const;
+    [[nodiscard]] WhiskerToolbox::Plots::EstimationParams const & estimationParams() const;
 
     /**
-     * @brief Set the bin size
-     * @param bin_size Bin size in time units
+     * @brief Set the estimation parameters
+     * @param params New estimation parameters
      */
-    void setBinSize(double bin_size);
+    void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
+
+    /**
+     * @brief Get the scaling/normalization mode
+     * @return Current scaling mode
+     */
+    [[nodiscard]] WhiskerToolbox::Plots::ScalingMode scaling() const;
+
+    /**
+     * @brief Set the scaling/normalization mode
+     * @param mode New scaling mode
+     */
+    void setScaling(WhiskerToolbox::Plots::ScalingMode mode);
 
     // === View State (Zoom / Pan / Bounds) ===
 
@@ -328,10 +343,15 @@ signals:
     void styleChanged(PSTHStyle style);
 
     /**
-     * @brief Emitted when bin size changes
-     * @param bin_size New bin size value
+     * @brief Emitted when estimation parameters change
      */
-    void binSizeChanged(double bin_size);
+    void estimationParamsChanged();
+
+    /**
+     * @brief Emitted when scaling/normalization mode changes
+     * @param mode New scaling mode
+     */
+    void scalingChanged(WhiskerToolbox::Plots::ScalingMode mode);
 
     /**
      * @brief Emitted when view state changes (zoom, pan, or bounds)

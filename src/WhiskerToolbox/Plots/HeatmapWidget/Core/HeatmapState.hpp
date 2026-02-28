@@ -17,7 +17,8 @@
 
 #include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
-#include "Plots/Common/EventRateEstimation/RateScaling.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -70,8 +71,9 @@ struct HeatmapStateData {
     VerticalAxisStateData vertical_axis;
     std::string background_color = "#FFFFFF";
     std::vector<std::string> unit_keys;  ///< Selected DigitalEventSeries keys
-    WhiskerToolbox::Plots::HeatmapScaling scaling =
-            WhiskerToolbox::Plots::HeatmapScaling::FiringRate;
+    WhiskerToolbox::Plots::ScalingMode scaling =
+            WhiskerToolbox::Plots::ScalingMode::FiringRateHz;
+    WhiskerToolbox::Plots::EstimationParams estimation_params;
     HeatmapColorRangeConfig color_range;
 };
 
@@ -136,9 +138,17 @@ public:
 
     // === Scaling ===
     /** @brief Get the current scaling mode */
-    [[nodiscard]] WhiskerToolbox::Plots::HeatmapScaling scaling() const { return _data.scaling; }
+    [[nodiscard]] WhiskerToolbox::Plots::ScalingMode scaling() const { return _data.scaling; }
     /** @brief Set the scaling mode. Emits scalingChanged() and stateChanged(). */
-    void setScaling(WhiskerToolbox::Plots::HeatmapScaling scaling);
+    void setScaling(WhiskerToolbox::Plots::ScalingMode scaling);
+
+    // === Estimation Parameters ===
+    /** @brief Get the current estimation parameters */
+    [[nodiscard]] WhiskerToolbox::Plots::EstimationParams const & estimationParams() const {
+        return _data.estimation_params;
+    }
+    /** @brief Set the estimation parameters. Emits estimationParamsChanged() and stateChanged(). */
+    void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
 
     // === Color Range ===
     /** @brief Get the current color range configuration */
@@ -171,6 +181,7 @@ signals:
     void unitsChanged();  ///< Emitted when the unit list changes (add/remove)
     void scalingChanged();     ///< Emitted when scaling mode changes
     void colorRangeChanged();  ///< Emitted when color range config changes
+    void estimationParamsChanged();  ///< Emitted when estimation params (bin_size) change
 
 private:
     HeatmapStateData _data;

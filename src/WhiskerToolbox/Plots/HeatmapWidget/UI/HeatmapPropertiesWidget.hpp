@@ -22,6 +22,7 @@
 #include <memory>
 
 class DataManager;
+class EstimationMethodControls;
 class Feature_Tree_Widget;
 class HeatmapWidget;
 class PlotAlignmentWidget;
@@ -29,6 +30,7 @@ class QComboBox;
 class QDoubleSpinBox;
 class QLabel;
 class RelativeTimeAxisRangeControls;
+class ScalingModeControls;
 class Section;
 class VerticalAxisRangeControls;
 
@@ -81,7 +83,8 @@ private:
 
     // Scaling UI
     Section * _scaling_section{nullptr};
-    QComboBox * _scaling_combo{nullptr};
+    EstimationMethodControls * _estimation_controls{nullptr};
+    ScalingModeControls * _scaling_controls{nullptr};
     QComboBox * _color_range_mode_combo{nullptr};
     QDoubleSpinBox * _vmin_spin{nullptr};
     QDoubleSpinBox * _vmax_spin{nullptr};

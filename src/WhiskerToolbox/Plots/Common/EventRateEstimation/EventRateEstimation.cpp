@@ -168,7 +168,28 @@ std::vector<UnitGatherContext> createUnitGatherContexts(
 namespace {
 
 /**
- * @brief Histogram binning implementation
+ * @brief Build the bin-center time vector for a binned histogram
+ *
+ * @param num_bins     Number of bins
+ * @param half_window  Half the analysis window
+ * @param bin_size     Width of each bin
+ * @return Vector of bin centers
+ */
+[[nodiscard]] std::vector<double> buildBinCenters(
+        int num_bins, double half_window, double bin_size)
+{
+    std::vector<double> times(static_cast<size_t>(num_bins));
+    for (int i = 0; i < num_bins; ++i) {
+        // Left edge of bin i: -half_window + i * bin_size
+        // Center: left_edge + bin_size / 2
+        times[static_cast<size_t>(i)] =
+                -half_window + static_cast<double>(i) * bin_size + bin_size / 2.0;
+    }
+    return times;
+}
+
+/**
+ * @brief Histogram binning implementation (aggregate across trials)
  *
  * Iterates over every valid trial in `gathered`, converts each event's
  * `TimeFrameIndex` to an absolute time via `time_frame` (or falls back to the
@@ -176,8 +197,11 @@ namespace {
  * time to get a relative time, and increments the corresponding bin.
  *
  * Events outside `[-half_window, +half_window)` are silently discarded.
+ *
+ * Returns a `RateEstimate` with bin centers in `times[]` and raw counts in
+ * `values[]`.
  */
-[[nodiscard]] RateProfile binningEstimate(
+[[nodiscard]] RateEstimate binningEstimate(
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
@@ -187,12 +211,12 @@ namespace {
     double const bin_size = params.bin_size;
 
     if (bin_size <= 0.0 || window_size <= 0.0) {
-        return RateProfile{};
+        return RateEstimate{};
     }
 
     int const num_bins = static_cast<int>(std::ceil(window_size / bin_size));
     if (num_bins <= 0) {
-        return RateProfile{};
+        return RateEstimate{};
     }
 
     std::vector<double> histogram(static_cast<size_t>(num_bins), 0.0);
@@ -232,7 +256,84 @@ namespace {
         ++num_trials;
     }
 
-    return RateProfile{std::move(histogram), -half_window, bin_size, num_trials};
+    RateEstimate result;
+    result.times = buildBinCenters(num_bins, half_window, bin_size);
+    result.values = std::move(histogram);
+    result.num_trials = num_trials;
+    result.metadata.sample_spacing = bin_size;
+    return result;
+}
+
+/**
+ * @brief Histogram binning with per-trial breakdown
+ *
+ * Same as `binningEstimate()` but also stores each trial's individual histogram.
+ */
+[[nodiscard]] RateEstimateWithTrials binningEstimateWithTrials(
+        GatherResult<DigitalEventSeries> const & gathered,
+        TimeFrame const * time_frame,
+        double window_size,
+        BinningParams const & params)
+{
+    double const half_window = window_size / 2.0;
+    double const bin_size = params.bin_size;
+
+    if (bin_size <= 0.0 || window_size <= 0.0) {
+        return RateEstimateWithTrials{};
+    }
+
+    int const num_bins = static_cast<int>(std::ceil(window_size / bin_size));
+    if (num_bins <= 0) {
+        return RateEstimateWithTrials{};
+    }
+
+    auto const n_bins = static_cast<size_t>(num_bins);
+    std::vector<double> aggregate(n_bins, 0.0);
+    std::vector<std::vector<double>> per_trial;
+    size_t num_trials = 0;
+
+    for (size_t trial_idx = 0; trial_idx < gathered.size(); ++trial_idx) {
+        auto const & trial_view = gathered[trial_idx];
+        if (!trial_view) {
+            continue;
+        }
+
+        std::vector<double> trial_hist(n_bins, 0.0);
+
+        double const alignment_time =
+                static_cast<double>(gathered.alignmentTimeAt(trial_idx));
+
+        for (auto const & event : trial_view->view()) {
+            double const event_abs = time_frame
+                    ? static_cast<double>(
+                              time_frame->getTimeAtIndex(event.time()))
+                    : static_cast<double>(event.time().getValue());
+
+            double const relative_time = event_abs - alignment_time;
+
+            if (relative_time < -half_window || relative_time >= half_window) {
+                continue;
+            }
+
+            int bin_index = static_cast<int>(
+                    std::floor((relative_time + half_window) / bin_size));
+            bin_index = std::clamp(bin_index, 0, num_bins - 1);
+
+            trial_hist[static_cast<size_t>(bin_index)] += 1.0;
+            aggregate[static_cast<size_t>(bin_index)] += 1.0;
+        }
+
+        per_trial.push_back(std::move(trial_hist));
+        ++num_trials;
+    }
+
+    RateEstimateWithTrials result;
+    result.estimate.times = buildBinCenters(num_bins, half_window, bin_size);
+    result.estimate.values = std::move(aggregate);
+    result.estimate.num_trials = num_trials;
+    result.estimate.metadata.sample_spacing = bin_size;
+    result.trials.per_trial_values = std::move(per_trial);
+    return result;
 }
 
 } // anonymous namespace
@@ -241,29 +342,49 @@ namespace {
 // Public dispatch functions
 // =============================================================================
 
-RateProfile estimateRate(
+RateEstimate estimateRate(
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
         EstimationParams const & params)
 {
     return std::visit(
-            [&](auto const & p) -> RateProfile {
+            [&](auto const & p) -> RateEstimate {
                 using T = std::decay_t<decltype(p)>;
                 if constexpr (std::is_same_v<T, BinningParams>) {
                     return binningEstimate(gathered, time_frame, window_size, p);
                 }
-                return RateProfile{};
+                // Stub for unimplemented methods
+                return RateEstimate{};
             },
             params);
 }
 
-std::vector<RateProfile> estimateRates(
+RateEstimateWithTrials estimateRateWithTrials(
+        GatherResult<DigitalEventSeries> const & gathered,
+        TimeFrame const * time_frame,
+        double window_size,
+        EstimationParams const & params)
+{
+    return std::visit(
+            [&](auto const & p) -> RateEstimateWithTrials {
+                using T = std::decay_t<decltype(p)>;
+                if constexpr (std::is_same_v<T, BinningParams>) {
+                    return binningEstimateWithTrials(
+                            gathered, time_frame, window_size, p);
+                }
+                // Stub for unimplemented methods
+                return RateEstimateWithTrials{};
+            },
+            params);
+}
+
+std::vector<RateEstimate> estimateRates(
         std::vector<UnitGatherContext> const & units,
         double window_size,
         EstimationParams const & params)
 {
-    std::vector<RateProfile> results;
+    std::vector<RateEstimate> results;
     results.reserve(units.size());
 
     for (auto const & unit : units) {
@@ -272,159 +393,6 @@ std::vector<RateProfile> estimateRates(
     }
 
     return results;
-}
-
-// =============================================================================
-// Normalization
-// =============================================================================
-
-namespace {
-
-/**
- * @brief Convert a RateProfile to a NormalizedRow preserving raw counts
- */
-[[nodiscard]] NormalizedRow toRawRow(RateProfile const & profile)
-{
-    return NormalizedRow{profile.counts, profile.bin_start, profile.bin_width};
-}
-
-/**
- * @brief Convert a RateProfile to count-per-trial
- */
-[[nodiscard]] NormalizedRow toCountPerTrial(RateProfile const & profile)
-{
-    NormalizedRow row{profile.counts, profile.bin_start, profile.bin_width};
-    if (profile.num_trials > 0) {
-        double const divisor = static_cast<double>(profile.num_trials);
-        for (auto & v : row.values) {
-            v /= divisor;
-        }
-    }
-    return row;
-}
-
-/**
- * @brief Convert a RateProfile to firing rate (Hz)
- *
- * rate = count / (num_trials × bin_size_seconds)
- */
-[[nodiscard]] NormalizedRow toFiringRate(RateProfile const & profile,
-                                         double time_units_per_second)
-{
-    NormalizedRow row{profile.counts, profile.bin_start, profile.bin_width};
-    if (profile.num_trials > 0 && profile.bin_width > 0.0) {
-        double const bin_size_s = profile.bin_width / time_units_per_second;
-        double const divisor = static_cast<double>(profile.num_trials) * bin_size_s;
-        for (auto & v : row.values) {
-            v /= divisor;
-        }
-    }
-    return row;
-}
-
-/**
- * @brief Per-unit z-score normalisation: (value - mean) / std
- *
- * If std is zero (constant signal), all values become 0.
- */
-void applyZScore(std::vector<double> & values)
-{
-    if (values.empty()) {
-        return;
-    }
-    auto const n = static_cast<double>(values.size());
-    double const sum = std::accumulate(values.begin(), values.end(), 0.0);
-    double const mean = sum / n;
-
-    double sq_sum = 0.0;
-    for (double v : values) {
-        double const diff = v - mean;
-        sq_sum += diff * diff;
-    }
-    double const std_dev = std::sqrt(sq_sum / n);
-
-    if (std_dev > 0.0) {
-        for (auto & v : values) {
-            v = (v - mean) / std_dev;
-        }
-    } else {
-        std::fill(values.begin(), values.end(), 0.0);
-    }
-}
-
-/**
- * @brief Per-unit min-max normalisation to [0, 1]
- *
- * If all values are equal, all become 0.
- */
-void applyNormalized01(std::vector<double> & values)
-{
-    if (values.empty()) {
-        return;
-    }
-    auto const [min_it, max_it] = std::minmax_element(values.begin(), values.end());
-    double const vmin = *min_it;
-    double const vmax = *max_it;
-    double const range = vmax - vmin;
-
-    if (range > 0.0) {
-        for (auto & v : values) {
-            v = (v - vmin) / range;
-        }
-    } else {
-        std::fill(values.begin(), values.end(), 0.0);
-    }
-}
-
-} // anonymous namespace
-
-std::vector<NormalizedRow> normalizeRateProfiles(
-        std::vector<RateProfile> const & profiles,
-        HeatmapScaling scaling,
-        double time_units_per_second)
-{
-    std::vector<NormalizedRow> rows;
-    rows.reserve(profiles.size());
-
-    switch (scaling) {
-        case HeatmapScaling::RawCount:
-            for (auto const & p : profiles) {
-                rows.push_back(toRawRow(p));
-            }
-            break;
-
-        case HeatmapScaling::CountPerTrial:
-            for (auto const & p : profiles) {
-                rows.push_back(toCountPerTrial(p));
-            }
-            break;
-
-        case HeatmapScaling::FiringRate:
-            for (auto const & p : profiles) {
-                rows.push_back(toFiringRate(p, time_units_per_second));
-            }
-            break;
-
-        case HeatmapScaling::ZScore:
-            // First normalise to count-per-trial, then z-score per unit
-            for (auto const & p : profiles) {
-                auto row = toCountPerTrial(p);
-                applyZScore(row.values);
-                rows.push_back(std::move(row));
-            }
-            break;
-
-        case HeatmapScaling::Normalized01:
-            // First normalise to count-per-trial, then min-max per unit
-            for (auto const & p : profiles) {
-                auto row = toCountPerTrial(p);
-                applyNormalized01(row.values);
-                rows.push_back(std::move(row));
-            }
-            break;
-    }
-
-    return rows;
 }
 
 } // namespace WhiskerToolbox::Plots

@@ -20,9 +20,11 @@
 #include <memory>
 
 class DataManager;
+class EstimationMethodControls;
 class PlotAlignmentWidget;
 class PSTHWidget;
 class RelativeTimeAxisRangeControls;
+class ScalingModeControls;
 class VerticalAxisRangeControls;
 class Section;
 
@@ -116,12 +118,6 @@ private slots:
      */
     void _onStyleChanged(int index);
 
-    /**
-     * @brief Handle bin size spinbox value change
-     * @param value New bin size value
-     */
-    void _onBinSizeChanged(double value);
-
 private:
     /**
      * @brief Populate the add event combo box with available DigitalEventSeries keys
@@ -160,6 +156,8 @@ private:
     std::shared_ptr<PSTHState> _state;
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
+    EstimationMethodControls * _estimation_controls;
+    ScalingModeControls * _scaling_controls;
     PSTHWidget * _plot_widget;
     RelativeTimeAxisRangeControls * _range_controls;
     Section * _range_controls_section;

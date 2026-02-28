@@ -255,37 +255,36 @@ void HeatmapOpenGLWidget::rebuildScene()
         return;
     }
 
-    // 2. Estimate firing rates for all units
-    auto rate_profiles = WhiskerToolbox::Plots::estimateRates(
-        contexts, window_size);
+    // 2. Estimate firing rates for all units using configured estimation method
+    auto rate_estimates = WhiskerToolbox::Plots::estimateRates(
+        contexts, window_size, _state->estimationParams());
 
-    if (rate_profiles.empty()) {
+    if (rate_estimates.empty()) {
         _scene_renderer.clearScene();
         emit unitCountChanged(0);
         return;
     }
 
-    // 3. Normalise rate profiles using the selected scaling mode
+    // 3. Apply scaling in-place using the selected scaling mode
     auto const scaling = _state->scaling();
     // TODO: make time_units_per_second configurable if data uses non-ms units
     constexpr double time_units_per_second = 1000.0;
-    auto normalized_rows = WhiskerToolbox::Plots::normalizeRateProfiles(
-        rate_profiles, scaling, time_units_per_second);
-
-    if (normalized_rows.empty()) {
-        _scene_renderer.clearScene();
-        emit unitCountChanged(0);
-        return;
+    for (auto & est : rate_estimates) {
+        WhiskerToolbox::Plots::applyScaling(est, scaling, time_units_per_second);
     }
 
-    // 4. Convert NormalizedRow to CorePlotting::HeatmapRowData for the mapper
+    // 4. Convert RateEstimate to CorePlotting::HeatmapRowData for the mapper
+    //    times[] are bin centers; reconstruct left edges from sample_spacing.
     std::vector<CorePlotting::HeatmapRowData> rows;
-    rows.reserve(normalized_rows.size());
-    for (auto & nr : normalized_rows) {
+    rows.reserve(rate_estimates.size());
+    for (auto & est : rate_estimates) {
+        double const spacing = est.metadata.sample_spacing;
+        double const left_edge = est.times.empty()
+            ? 0.0 : est.times.front() - spacing / 2.0;
         rows.push_back(CorePlotting::HeatmapRowData{
-            .values = std::move(nr.values),
-            .bin_start = nr.bin_start,
-            .bin_width = nr.bin_width,
+            .values = std::move(est.values),
+            .bin_start = left_edge,
+            .bin_width = spacing,
         });
     }
 
@@ -294,7 +293,7 @@ void HeatmapOpenGLWidget::rebuildScene()
 
     // Use Coolwarm for z-score, Inferno otherwise
     auto const colormap_preset =
-        (scaling == WhiskerToolbox::Plots::HeatmapScaling::ZScore)
+        (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
             ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
             : CorePlotting::Colormaps::ColormapPreset::Inferno;
     auto colormap = CorePlotting::Colormaps::getColormap(colormap_preset);

@@ -17,152 +17,10 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Plot styles**: Bar chart and step-function line rendering via shared `HistogramMapper`
 - **Interaction**: Separated X/Y zoom, pan, double-click time navigation
 - **Axis system**: `RelativeTimeAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync
-- **Properties panel**: Alignment controls, event series management, style/bin size selection, per-event color picker
+- **Properties panel**: Alignment controls, event series management, style selection, per-event color picker
 - **State serialization**: Full round-trip JSON via `rfl::json`
-
----
-
-## Phase 1: Normalization Modes
-
-**Status**: Not started. Core binning infrastructure exists; normalization is a straightforward extension.
-
-**Goal**: Support multiple Y-axis representations beyond raw event counts.
-
-### 1.1 Normalization Enum
-
-Extend state to support different Y-axis interpretations:
-
-```cpp
-enum class PSTHNormalization {
-    Count,          ///< Raw event count summed across trials (current behavior)
-    FiringRate,     ///< Count / (bin_size * num_trials) → spikes/s
-    Probability,    ///< Count / num_trials → probability of at least one spike per bin
-    CountPerTrial   ///< Count / num_trials → mean count per trial per bin
-};
-```
-
-Add to `PSTHStateData`:
-
-```cpp
-struct PSTHStateData {
-    // ... existing fields ...
-    PSTHNormalization normalization = PSTHNormalization::Count;
-};
-```
-
-### 1.2 Implementation
-
-After histogram binning in `rebuildScene()`, apply normalization:
-
-```cpp
-switch (normalization) {
-    case PSTHNormalization::FiringRate:
-        for (auto & c : histogram) c /= (bin_size_seconds * total_trials);
-        break;
-    case PSTHNormalization::Probability:
-        // Requires per-trial binary indicator, not just sum
-        break;
-    case PSTHNormalization::CountPerTrial:
-        for (auto & c : histogram) c /= total_trials;
-        break;
-}
-```
-
-### 1.3 Y-Axis Label Update
-
-The vertical axis label should reflect the normalization mode:
-
-| Mode | Axis Label |
-|------|-----------|
-| Count | "Count" |
-| FiringRate | "Firing Rate (Hz)" |
-| Probability | "P(spike)" |
-| CountPerTrial | "Count / Trial" |
-
-### 1.4 Properties Panel
-
-Add a normalization combo box to the Global Options section of `PSTHPropertiesWidget`.
-
----
-
-## Phase 2: Smoothing and Rate Estimation Methods
-
-**Status**: Partially complete. The shared gathering and binning infrastructure (Phase 2.6) has
-been extracted into `Plots/Common/EventRateEstimation/`. The smoothing methods (Gaussian
-kernel, causal exponential, adaptive kernel) are not yet implemented.
-
-**Goal**: Support multiple methods for converting aligned spike times to continuous rate estimates, beyond simple binning.
-
-### 2.1 Estimation Method Selection
-
-Estimation methods are selected via the shared `EstimationParams` variant from the
-[Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md#estimation-methods).
-New methods are added by defining a `*Params` struct and appending it to the variant:
-
-```cpp
-using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
-```
-
-### 2.2 State Extension
-
-Store the active estimation parameters in `PSTHStateData`. The state only needs to track
-which method is selected and its parameters — the variant itself is not serializable via
-`rfl::json`, so store the method choice as an enum and parameters as individual fields:
-
-```cpp
-struct PSTHStateData {
-    // ... existing fields ...
-    // Estimation method selection (maps to EstimationParams variant at runtime)
-    double bin_size = 10.0;              ///< For BinningParams
-    double kernel_bandwidth = 20.0;      ///< sigma for GaussianKernelParams
-    double eval_step = 1.0;              ///< evaluation spacing for kernel methods
-};
-```
-
-### 2.3 Gaussian Kernel Smoothing
-
-Convolve the spike train with a Gaussian kernel:
-
-$$\hat{r}(t) = \frac{1}{N} \sum_{i=1}^{N} \sum_{j} K_\sigma(t - t_{ij})$$
-
-where $K_\sigma$ is a Gaussian kernel with bandwidth $\sigma$ and $t_{ij}$ is the $j$-th spike in trial $i$.
-
-Implementation: Compute the binned histogram first, then convolve with a discrete Gaussian kernel. This produces a smooth rate function rendered via the Line style.
-
-### 2.4 Adaptive Kernel Smoothing
-
-The Shimazaki & Shinomoto (2010) algorithm optimizes the kernel bandwidth locally based on local spike density. This avoids over-smoothing in high-rate regions and under-smoothing in low-rate regions.
-
-This is the most complex method and may benefit from being implemented as a standalone algorithm in a shared library (e.g., `CoreMath/`) for reuse by other analysis tools.
-
-### 2.5 Rendering Consideration
-
-Kernel methods naturally produce continuous curves rather than histograms. When a kernel method is selected:
-
-- The Bar style should be disabled or automatically switched to Line
-- The output is a `RenderablePolyLineBatch` regardless of the `PSTHStyle` setting
-- The bin_size parameter is reinterpreted as the evaluation resolution (step size for the curve)
-
-### 2.6 Shared EventRateEstimation Library ✅
-
-The shared `EventRateEstimation` library (`Plots/Common/EventRateEstimation/`) provides all
-gathering, estimation, normalization, and uncertainty infrastructure. It is being redesigned
-per the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
-
-Key types after the redesign:
-
-- **`RateEstimate`** — universal output: paired `times[]` + `values[]` with metadata
-  (replaces `RateProfile` which had binning-specific `bin_start`/`bin_width`)
-- **`RateEstimateWithTrials`** — extends `RateEstimate` with per-trial breakdown
-  (opt-in via `estimateRateWithTrials()`)
-- **`ScalingMode`** + `applyScaling()` — shared normalization (replaces bespoke
-  `HeatmapScaling`/`PSTHNormalization` enums)
-- **`ConfidenceBand`** + `computeSEM()` / `bootstrapCI()` — uncertainty quantification
-
-The library has **no Qt dependency** and can be used from any rendering backend.
-`PSTHPlotOpenGLWidget::rebuildScene()` should be migrated to use `estimateRate()` and
-`applyScaling()` (replacing its inline binning and normalization loops) as part of
-completing Phase 2.
+- **Rate estimation integration**: `PSTHStateData` now stores `EstimationParams` variant directly. `PSTHPropertiesWidget` uses the shared `EstimationMethodControls` widget from `RateEstimationControls` library for method selection and per-method parameter editing. Renderer extracts bin size from `estimationParams()` via `std::get_if<BinningParams>`.
+- **Normalization/scaling** : `PSTHStateData` stores `ScalingMode` from the shared `RateEstimate.hpp`. `PSTHPropertiesWidget` uses the shared `ScalingModeControls` widget. `PSTHPlotOpenGLWidget::rebuildScene()` applies scaling via `applyScaling()` from `RateNormalization.hpp`, supporting all scaling modes (Raw Count, Firing Rate Hz, Z-Score, Normalized [0,1], Count/Trial).
 
 ---
 
@@ -450,21 +308,19 @@ The existing per-event `hex_color` in `PSTHEventOptions` should be applied to th
 
 ### Next Up
 
-1. **Phase 1**: Normalization modes (straightforward extension of existing binning)
-2. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
-   `EventRateEstimation` library; then add Gaussian kernel and other smoothing methods
-3. **Phase 4**: Cross-widget linking with pin support
-4. **Phase 5**: SVG export (infrastructure already exists)
+1. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
+   `EventRateEstimation` library's `estimateRate()`; then add Gaussian kernel and other smoothing methods
+2. **Phase 4**: Cross-widget linking with pin support
+3. **Phase 5**: SVG export (infrastructure already exists)
 
 ### Following
 
 4. **Phase 7**: Per-series histograms and multi-color overlay
 5. **Phase 3**: Variability / confidence intervals
-6. **Phase 2**: Smoothing and advanced rate estimation
 
 ### Later
 
-7. **Phase 6**: Embeddable PSTH for tooltips
+6. **Phase 6**: Embeddable PSTH for tooltips
 
 ---
 

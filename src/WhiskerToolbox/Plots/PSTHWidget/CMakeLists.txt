@@ -39,6 +39,7 @@ target_link_libraries(PSTHWidget PRIVATE
 target_link_libraries(PSTHWidget PRIVATE DataManager)
 target_link_libraries(PSTHWidget PRIVATE EditorState)
 target_link_libraries(PSTHWidget PRIVATE PlotAlignmentWidget)
+target_link_libraries(PSTHWidget PRIVATE RateEstimationControls)
 target_link_libraries(PSTHWidget PRIVATE RelativeTimeAxisWidget)
 target_link_libraries(PSTHWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(PSTHWidget PRIVATE Collapsible_Widget)

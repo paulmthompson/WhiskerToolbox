@@ -74,34 +74,22 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="bin_size_label">
-     <property name="text">
-      <string>Bin Size:</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QDoubleSpinBox" name="bin_size_spinbox">
+    <widget class="QWidget" name="estimation_placeholder" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="decimals">
-      <number>1</number>
-     </property>
-     <property name="minimum">
-      <double>0.10000000000000001</double>
-     </property>
-     <property name="maximum">
-      <double>10000.00000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>1.0000000000000000</double>
-     </property>
-     <property name="value">
-      <double>10.0000000000000000</double>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="scaling_placeholder" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
     </widget>
    </item>
