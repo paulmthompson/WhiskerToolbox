@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 
 namespace WhiskerToolbox::Plots {
 
@@ -271,6 +272,159 @@ std::vector<RateProfile> estimateRates(
     }
 
     return results;
+}
+
+// =============================================================================
+// Normalization
+// =============================================================================
+
+namespace {
+
+/**
+ * @brief Convert a RateProfile to a NormalizedRow preserving raw counts
+ */
+[[nodiscard]] NormalizedRow toRawRow(RateProfile const & profile)
+{
+    return NormalizedRow{profile.counts, profile.bin_start, profile.bin_width};
+}
+
+/**
+ * @brief Convert a RateProfile to count-per-trial
+ */
+[[nodiscard]] NormalizedRow toCountPerTrial(RateProfile const & profile)
+{
+    NormalizedRow row{profile.counts, profile.bin_start, profile.bin_width};
+    if (profile.num_trials > 0) {
+        double const divisor = static_cast<double>(profile.num_trials);
+        for (auto & v : row.values) {
+            v /= divisor;
+        }
+    }
+    return row;
+}
+
+/**
+ * @brief Convert a RateProfile to firing rate (Hz)
+ *
+ * rate = count / (num_trials × bin_size_seconds)
+ */
+[[nodiscard]] NormalizedRow toFiringRate(RateProfile const & profile,
+                                         double time_units_per_second)
+{
+    NormalizedRow row{profile.counts, profile.bin_start, profile.bin_width};
+    if (profile.num_trials > 0 && profile.bin_width > 0.0) {
+        double const bin_size_s = profile.bin_width / time_units_per_second;
+        double const divisor = static_cast<double>(profile.num_trials) * bin_size_s;
+        for (auto & v : row.values) {
+            v /= divisor;
+        }
+    }
+    return row;
+}
+
+/**
+ * @brief Per-unit z-score normalisation: (value - mean) / std
+ *
+ * If std is zero (constant signal), all values become 0.
+ */
+void applyZScore(std::vector<double> & values)
+{
+    if (values.empty()) {
+        return;
+    }
+    auto const n = static_cast<double>(values.size());
+    double const sum = std::accumulate(values.begin(), values.end(), 0.0);
+    double const mean = sum / n;
+
+    double sq_sum = 0.0;
+    for (double v : values) {
+        double const diff = v - mean;
+        sq_sum += diff * diff;
+    }
+    double const std_dev = std::sqrt(sq_sum / n);
+
+    if (std_dev > 0.0) {
+        for (auto & v : values) {
+            v = (v - mean) / std_dev;
+        }
+    } else {
+        std::fill(values.begin(), values.end(), 0.0);
+    }
+}
+
+/**
+ * @brief Per-unit min-max normalisation to [0, 1]
+ *
+ * If all values are equal, all become 0.
+ */
+void applyNormalized01(std::vector<double> & values)
+{
+    if (values.empty()) {
+        return;
+    }
+    auto const [min_it, max_it] = std::minmax_element(values.begin(), values.end());
+    double const vmin = *min_it;
+    double const vmax = *max_it;
+    double const range = vmax - vmin;
+
+    if (range > 0.0) {
+        for (auto & v : values) {
+            v = (v - vmin) / range;
+        }
+    } else {
+        std::fill(values.begin(), values.end(), 0.0);
+    }
+}
+
+} // anonymous namespace
+
+std::vector<NormalizedRow> normalizeRateProfiles(
+        std::vector<RateProfile> const & profiles,
+        HeatmapScaling scaling,
+        double time_units_per_second)
+{
+    std::vector<NormalizedRow> rows;
+    rows.reserve(profiles.size());
+
+    switch (scaling) {
+        case HeatmapScaling::RawCount:
+            for (auto const & p : profiles) {
+                rows.push_back(toRawRow(p));
+            }
+            break;
+
+        case HeatmapScaling::CountPerTrial:
+            for (auto const & p : profiles) {
+                rows.push_back(toCountPerTrial(p));
+            }
+            break;
+
+        case HeatmapScaling::FiringRate:
+            for (auto const & p : profiles) {
+                rows.push_back(toFiringRate(p, time_units_per_second));
+            }
+            break;
+
+        case HeatmapScaling::ZScore:
+            // First normalise to count-per-trial, then z-score per unit
+            for (auto const & p : profiles) {
+                auto row = toCountPerTrial(p);
+                applyZScore(row.values);
+                rows.push_back(std::move(row));
+            }
+            break;
+
+        case HeatmapScaling::Normalized01:
+            // First normalise to count-per-trial, then min-max per unit
+            for (auto const & p : profiles) {
+                auto row = toCountPerTrial(p);
+                applyNormalized01(row.values);
+                rows.push_back(std::move(row));
+            }
+            break;
+    }
+
+    return rows;
 }
 
 } // namespace WhiskerToolbox::Plots

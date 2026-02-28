@@ -24,14 +24,16 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` for histogram binning with a `std::variant`-based variation point for future methods
 - **Colormap infrastructure** (Phase 2): `CorePlotting::Colormaps` library in `CorePlotting/Colormaps/` providing `ColormapFunction`, `ColormapPreset` (Inferno, Viridis, Magma, Plasma, Coolwarm, Grayscale, Hot), LUT-based O(1) evaluation with linear interpolation, `mapValue()` / `mapValues()` / `mapMatrix()` utilities. Shared with SpectrogramWidget and any future external-feature coloring use cases.
 - **Heatmap scene building** (Phase 1.4): `HeatmapMapper` in `CorePlotting/Mappers/` converting `HeatmapRowData` rows to `RenderableRectangleBatch` with Auto / Manual / Symmetric color range modes. `HeatmapOpenGLWidget::rebuildScene()` now gathers units via `createUnitGatherContexts()`, estimates rates via `estimateRates()`, normalises by `num_trials`, maps through Inferno colormap, and uploads the scene. The full data pipeline is live.
+- **Y-axis auto-fit** (Phase 1.5): `HeatmapWidget` auto-fits the vertical axis when the unit count changes. Y bounds are set to `[0, num_units]`, Y zoom is reset to 1.0, and Y pan is reset to 0.0 so all units are visible. The `VerticalAxisWidget` uses `identityAxis("Unit", 0)` for integer unit-index labels. Signal renamed from `trialCountChanged` to `unitCountChanged` for semantic clarity.
+- **Scaling and normalization** (Phase 3): `HeatmapScaling` enum and `normalizeRateProfiles()` in `EventRateEstimation/RateScaling.hpp` and `EventRateEstimation.cpp`. Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). `rebuildScene()` uses `normalizeRateProfiles()` before scene building. Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with combo boxes and manual vmin/vmax spinboxes.
 
-**Not yet implemented**: Y-axis auto-fit (Phase 1.5), scaling/normalization modes (Phase 3), colorbar display (Phase 4), colormap selection UI (Phase 9), sorting, and all cross-widget linking described below.
+**Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), sorting, and all cross-widget linking described below.
 
 ---
 
 ## Phase 1: Core Rendering — Per-Unit Rate Matrix
 
-**Status**: Phases 1.1–1.4 complete. Phase 1.5 not started.
+**Status**: Phases 1.1–1.5 complete.
 
 **Goal**: Produce a `units × time_bins` firing rate matrix and render it as a colored heatmap.
 
@@ -153,16 +155,27 @@ binning, same logic as `PSTHPlotOpenGLWidget::rebuildScene()`).
 4. Normalises counts by `num_trials` → mean count per trial
 5. Converts `RateProfile` objects to `HeatmapRowData` (the `CorePlotting`-layer input type)
 6. Calls `HeatmapMapper::buildScene()` with the Inferno colormap and auto color range
-7. Uploads the scene via `_scene_renderer.uploadScene()` and emits `trialCountChanged`
+7. Uploads the scene via `_scene_renderer.uploadScene()` and emits `unitCountChanged`
 
 The new `HeatmapMapper` lives in `CorePlotting/Mappers/` and is decoupled from `EventRateEstimation`
 (accepts generic `HeatmapRowData` rather than `RateProfile`) so it can be reused by SpectrogramWidget
 without introducing an upward dependency.
 
-### 1.5 Y-Axis Auto-fit ⬜
+### 1.5 Y-Axis Auto-fit ✅
 
-After computing the rate matrix, set Y bounds to `[0, num_units]` and configure the vertical
-axis with `CorePlotting::trialIndexAxis(num_units)` mapping for integer unit labels.
+When `unitCountChanged` is emitted from `HeatmapOpenGLWidget::rebuildScene()`, `HeatmapWidget`
+auto-fits the vertical axis:
+
+- Sets Y bounds to `[0, num_units]` via `HeatmapState::setYBounds()`
+- Resets Y zoom to 1.0 and Y pan to 0.0 so all units fill the viewport
+- Syncs `VerticalAxisState` range controls
+- The `VerticalAxisWidget` uses `CorePlotting::identityAxis("Unit", 0)` for integer unit-index
+  labels (0, 1, 2, …). The identity mapping is correct because `HeatmapMapper` places rows
+  at world Y ∈ [0, num_units] (row *i* spans Y = [i, i+1]).
+
+Note: The signal was renamed from `trialCountChanged` to `unitCountChanged` and the cached
+count from `_trial_count` to `_unit_count` to accurately reflect that heatmap rows represent
+neural units, not trials.
 
 ---
 
@@ -233,11 +246,14 @@ automatically suggest **Coolwarm** (diverging around zero).
 
 ## Phase 3: Scaling and Normalization
 
-**Status**: Not started. Phase 1 is now complete; this phase can proceed.
+**Status**: Complete. Implemented in `EventRateEstimation/RateScaling.hpp` and `EventRateEstimation.cpp`.
 
 **Goal**: Support multiple Y-value (color intensity) representations for the heatmap cells.
 
-### 3.1 Scaling Enum
+### 3.1 Scaling Enum ✅
+
+Defined in `EventRateEstimation/RateScaling.hpp` (a lightweight header with no transitive
+dependencies on GatherResult, DataManager, or Qt — safe for inclusion from state headers):
 
 ```cpp
 enum class HeatmapScaling {
@@ -249,71 +265,91 @@ enum class HeatmapScaling {
 };
 ```
 
-### 3.2 State Extension
+Helper functions `scalingLabel()`, `scalingAxisLabel()`, and `allScalingModes()` are also
+provided in `RateScaling.hpp` for UI population.
+
+### 3.2 State Extension ✅
+
+`HeatmapStateData` now includes both the scaling mode and a color range configuration:
 
 ```cpp
-struct HeatmapStateData {
-    // ... existing fields ...
-    HeatmapScaling scaling = HeatmapScaling::FiringRate;
-};
-```
-
-### 3.3 Implementation
-
-After computing the raw count matrix in `rebuildScene()`:
-
-```cpp
-switch (scaling) {
-    case HeatmapScaling::FiringRate:
-        // rate = count / (bin_size_seconds * num_trials)
-        break;
-    case HeatmapScaling::ZScore:
-        // Per-unit: z = (value - unit_mean) / unit_std
-        // Best paired with Coolwarm colormap
-        break;
-    case HeatmapScaling::Normalized01:
-        // Per-unit: v = (value - unit_min) / (unit_max - unit_min)
-        break;
-    case HeatmapScaling::CountPerTrial:
-        // rate = count / num_trials
-        break;
-    case HeatmapScaling::RawCount:
-        break;  // No transformation
-}
-```
-
-### 3.4 Color Range Controls
-
-When not using per-unit normalization (z-score, 0-1), the colormap needs a global value range:
-
-- **Auto**: Determine range from data min/max (with optional percentile clipping)
-- **Manual**: User-specified `vmin`/`vmax` spinboxes
-- **Symmetric**: Force symmetric range around zero (useful for z-score)
-
-```cpp
-struct HeatmapColorRange {
-    bool auto_range = true;
+struct HeatmapColorRangeConfig {
+    enum class Mode { Auto, Manual, Symmetric };
+    Mode mode = Mode::Auto;
     double vmin = 0.0;
     double vmax = 1.0;
-    bool symmetric = false;       ///< Force range to [-max(|vmin|,|vmax|), max(|vmin|,|vmax|)]
-    double clip_percentile = 0.0; ///< Clip outliers at this percentile (0 = no clipping)
+};
+
+struct HeatmapStateData {
+    // ... existing fields ...
+    WhiskerToolbox::Plots::HeatmapScaling scaling =
+            WhiskerToolbox::Plots::HeatmapScaling::FiringRate;
+    HeatmapColorRangeConfig color_range;
 };
 ```
 
-### 3.5 Properties Panel
+`HeatmapState` exposes `scaling()`, `setScaling()`, `colorRange()`, `setColorRangeMode()`,
+`setColorRangeBounds()`, and `setColorRange()`. Setting z-score scaling auto-switches the
+color range to `Symmetric`; leaving z-score reverts to `Auto`.
 
-Add a "Scaling" section to `HeatmapPropertiesWidget`:
+| Signal | Trigger |
+|--------|---------|
+| `scalingChanged()` | Scaling mode changed |
+| `colorRangeChanged()` | Color range mode or bounds changed |
 
-- Scaling mode combo box
-- Color range mode (Auto / Manual / Symmetric)
-- `vmin` / `vmax` spinboxes (enabled when Manual)
-- Clip percentile spinbox (enabled when Auto)
+### 3.3 Implementation ✅
+
+Scaling is implemented in the `EventRateEstimation` library via `normalizeRateProfiles()`,
+which takes raw `RateProfile` objects and a `HeatmapScaling` mode and returns
+`NormalizedRow` objects ready for the CorePlotting mapper. This keeps the normalization
+logic in the rate estimation layer (before data reaches CorePlotting), as intended.
+
+`HeatmapOpenGLWidget::rebuildScene()` calls `normalizeRateProfiles()` after
+`estimateRates()` and before building the scene. The colormap automatically switches
+to **Coolwarm** for z-score scaling and **Inferno** for all other modes. The
+`HeatmapColorRangeConfig` from state is mapped to `CorePlotting::HeatmapColorRange`
+for the mapper.
+
+### 3.4 Color Range Controls ✅
+
+Implemented via the `HeatmapColorRangeConfig` struct (in `HeatmapState.hpp`) with
+three modes:
+
+- **Auto**: Range from data min/max (handled by `HeatmapMapper::computeAutoRange`)
+- **Manual**: User-specified `vmin`/`vmax` (spinboxes visible only in Manual mode)
+- **Symmetric**: Range symmetric around zero (useful for z-score)
+
+The `HeatmapColorRangeConfig` is serialized alongside other state via `rfl::json`.
+
+Note: Percentile clipping for Auto mode is deferred to a future enhancement.
+
+### 3.5 Properties Panel ✅
+
+A "Scaling & Color Range" collapsible `Section` is added to `HeatmapPropertiesWidget`:
+
+- **Scaling mode** combo box (all five modes, populated from `allScalingModes()`)
+- **Color range mode** combo box (Auto / Manual / Symmetric)
+- **Min / Max spinboxes** (visible only when Manual mode is selected)
+
+The UI auto-syncs bidirectionally with `HeatmapState` via `scalingChanged()` and
+`colorRangeChanged()` signals with signal blockers to prevent feedback loops.
+
+### 3.6 Unit Tests ✅
+
+Comprehensive tests for `normalizeRateProfiles()` in
+`tests/WhiskerToolbox/Plots/Common/EventRateEstimation.test.cpp` covering:
+
+- All five scaling modes with synthetic data
+- Edge cases (zero trials, constant signal, empty input)
+- Multiple units with per-unit independence
+- Axis metadata preservation (bin_start, bin_width)
+- Helper function tests (scalingLabel, allScalingModes)
 
 ---
 
 ## Phase 4: Colorbar Display
 
-**Status**: Not started. Phase 2 is now complete; this phase can proceed once Phase 3 is done.
+**Status**: Not started. Phases 2 and 3 are complete; this phase can proceed.
 
 **Goal**: Render a color legend alongside the heatmap showing the value-to-color mapping.
 
@@ -765,12 +801,12 @@ complexity. The two widgets can coexist in the Plot menu, clearly labeled:
 
 ### Next Up (Core Functionality)
 
-1. **[Phase 1.5](#phase-1-core-rendering--per-unit-rate-matrix)**: Y-axis auto-fit (unit labels via `VerticalAxisWidget`)
-2. **[Phase 3](#phase-3-scaling-and-normalization)**: Scaling/normalization modes (FiringRate, ZScore, Normalized01, RawCount, CountPerTrial)
-3. **[Phase 4](#phase-4-colorbar-display)**: Colorbar display (reuse `CorePlotting::Colormaps::getLUT()` for gradient preview)
+1. **[Phase 3](#phase-3-scaling-and-normalization)**: Scaling/normalization modes (FiringRate, ZScore, Normalized01, RawCount, CountPerTrial)
+2. **[Phase 4](#phase-4-colorbar-display)**: Colorbar display (reuse `CorePlotting::Colormaps::getLUT()` for gradient preview)
 
 ### Recently Completed
 
+- **Phase 1.5**: Y-axis auto-fit — `unitCountChanged` signal, identity axis with "Unit" title, auto-reset zoom/pan
 - **Phase 1.4**: Heatmap scene building — full `rebuildScene()` pipeline live
 - **Phase 2**: Colormap infrastructure — `CorePlotting::Colormaps` in `src/CorePlotting/Colormaps/`
 

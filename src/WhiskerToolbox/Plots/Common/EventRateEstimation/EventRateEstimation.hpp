@@ -59,12 +59,15 @@
  * @see HeatmapWidget — primary consumer (multi-unit rate matrix)
  */
 
+#include "RateScaling.hpp"
+
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -245,6 +248,39 @@ struct RateProfile {
         std::vector<UnitGatherContext> const & units,
         double window_size,
         EstimationParams const & params = BinningParams{});
+
+// =============================================================================
+// Scaling / Normalization (types in RateScaling.hpp)
+// =============================================================================
+
+/**
+ * @brief Apply a scaling/normalization transform to a set of rate profiles
+ *
+ * Converts raw `RateProfile` objects (with per-bin event counts) into
+ * `NormalizedRow` objects whose values reflect the chosen scaling mode.
+ *
+ * The `time_units_per_second` parameter is required for `FiringRate` scaling
+ * to convert bin widths from the data's native time units into seconds.
+ * For example, if time is in milliseconds, pass 1000.0.
+ *
+ * | Scaling mode    | Formula per bin                                  |
+ * |-----------------|--------------------------------------------------|
+ * | FiringRate      | count / (bin_size_s × num_trials)                |
+ * | CountPerTrial   | count / num_trials                               |
+ * | RawCount        | count (no transform)                             |
+ * | Normalized01    | per-unit (v - min) / (max - min)                 |
+ * | ZScore          | per-unit (v - mean) / std                        |
+ *
+ * @param profiles           Rate profiles from `estimateRate[s]()`
+ * @param scaling            Scaling mode to apply
+ * @param time_units_per_second Conversion factor from data time units to seconds
+ *                              (only used by FiringRate; ignored by others)
+ * @return One `NormalizedRow` per profile, in the same order
+ */
+[[nodiscard]] std::vector<NormalizedRow> normalizeRateProfiles(
+        std::vector<RateProfile> const & profiles,
+        HeatmapScaling scaling,
+        double time_units_per_second = 1.0);
 
 } // namespace WhiskerToolbox::Plots
 

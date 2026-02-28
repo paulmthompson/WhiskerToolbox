@@ -267,6 +267,63 @@ void HeatmapState::setBackgroundColor(QString const & hex_color)
     }
 }
 
+// === Scaling ===
+
+void HeatmapState::setScaling(WhiskerToolbox::Plots::HeatmapScaling scaling)
+{
+    if (_data.scaling != scaling) {
+        _data.scaling = scaling;
+
+        // When switching to ZScore, auto-suggest Symmetric color range
+        if (scaling == WhiskerToolbox::Plots::HeatmapScaling::ZScore
+            && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
+            _data.color_range.mode = HeatmapColorRangeConfig::Mode::Symmetric;
+            emit colorRangeChanged();
+        }
+        // When switching away from ZScore with Symmetric, revert to Auto
+        if (scaling != WhiskerToolbox::Plots::HeatmapScaling::ZScore
+            && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
+            _data.color_range.mode = HeatmapColorRangeConfig::Mode::Auto;
+            emit colorRangeChanged();
+        }
+
+        markDirty();
+        emit scalingChanged();
+        emit stateChanged();
+    }
+}
+
+// === Color Range ===
+
+void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode)
+{
+    if (_data.color_range.mode != mode) {
+        _data.color_range.mode = mode;
+        markDirty();
+        emit colorRangeChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::setColorRangeBounds(double vmin, double vmax)
+{
+    if (_data.color_range.vmin != vmin || _data.color_range.vmax != vmax) {
+        _data.color_range.vmin = vmin;
+        _data.color_range.vmax = vmax;
+        markDirty();
+        emit colorRangeChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::setColorRange(HeatmapColorRangeConfig const & config)
+{
+    _data.color_range = config;
+    markDirty();
+    emit colorRangeChanged();
+    emit stateChanged();
+}
+
 // === Serialization ===
 
 std::string HeatmapState::toJson() const

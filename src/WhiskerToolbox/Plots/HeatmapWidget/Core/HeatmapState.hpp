@@ -17,6 +17,7 @@
 
 #include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "Plots/Common/EventRateEstimation/RateScaling.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -31,6 +32,32 @@
 #include <string>
 #include <vector>
 
+// =============================================================================
+// Color Range Configuration (serializable)
+// =============================================================================
+
+/**
+ * @brief Configuration for how the heatmap color range is determined
+ *
+ * This mirrors CorePlotting::HeatmapColorRange but lives alongside
+ * HeatmapStateData so it can be serialized via rfl::json.
+ */
+struct HeatmapColorRangeConfig {
+    enum class Mode {
+        Auto,       ///< Range from data min/max (default)
+        Manual,     ///< User-specified vmin/vmax
+        Symmetric,  ///< Symmetric around zero (for z-scores)
+    };
+
+    Mode mode = Mode::Auto;
+    double vmin = 0.0;   ///< Manual minimum (used when mode == Manual)
+    double vmax = 1.0;   ///< Manual maximum (used when mode == Manual)
+};
+
+// =============================================================================
+// State Data
+// =============================================================================
+
 /**
  * @brief Serializable state data for HeatmapWidget
  */
@@ -43,6 +70,9 @@ struct HeatmapStateData {
     VerticalAxisStateData vertical_axis;
     std::string background_color = "#FFFFFF";
     std::vector<std::string> unit_keys;  ///< Selected DigitalEventSeries keys
+    WhiskerToolbox::Plots::HeatmapScaling scaling =
+            WhiskerToolbox::Plots::HeatmapScaling::FiringRate;
+    HeatmapColorRangeConfig color_range;
 };
 
 /**
@@ -104,6 +134,22 @@ public:
     /** @brief Get the number of selected units */
     [[nodiscard]] size_t unitCount() const { return _data.unit_keys.size(); }
 
+    // === Scaling ===
+    /** @brief Get the current scaling mode */
+    [[nodiscard]] WhiskerToolbox::Plots::HeatmapScaling scaling() const { return _data.scaling; }
+    /** @brief Set the scaling mode. Emits scalingChanged() and stateChanged(). */
+    void setScaling(WhiskerToolbox::Plots::HeatmapScaling scaling);
+
+    // === Color Range ===
+    /** @brief Get the current color range configuration */
+    [[nodiscard]] HeatmapColorRangeConfig const & colorRange() const { return _data.color_range; }
+    /** @brief Set the color range mode. Emits colorRangeChanged() and stateChanged(). */
+    void setColorRangeMode(HeatmapColorRangeConfig::Mode mode);
+    /** @brief Set the manual color range bounds. Emits colorRangeChanged() and stateChanged(). */
+    void setColorRangeBounds(double vmin, double vmax);
+    /** @brief Set the full color range config. Emits colorRangeChanged() and stateChanged(). */
+    void setColorRange(HeatmapColorRangeConfig const & config);
+
     // === Background Color ===
     [[nodiscard]] QString getBackgroundColor() const;
     void setBackgroundColor(QString const & hex_color);
@@ -123,6 +169,8 @@ signals:
     void viewStateChanged();
     void backgroundColorChanged(QString const & hex_color);
     void unitsChanged();  ///< Emitted when the unit list changes (add/remove)
+    void scalingChanged();     ///< Emitted when scaling mode changes
+    void colorRangeChanged();  ///< Emitted when color range config changes
 
 private:
     HeatmapStateData _data;

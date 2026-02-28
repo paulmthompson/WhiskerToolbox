@@ -54,7 +54,7 @@ private:
     void syncVerticalAxisRange();
 
     // -- Visible range helpers --
-    [[nodiscard]] std::pair<double, double> computeVisibleTrialRange() const;
+    [[nodiscard]] std::pair<double, double> computeVisibleUnitRange() const;
     [[nodiscard]] std::pair<double, double> computeVisibleTimeRange() const;
 
     std::shared_ptr<DataManager> _data_manager;
@@ -65,7 +65,7 @@ private:
     RelativeTimeAxisRangeControls * _range_controls;
     VerticalAxisWidget * _vertical_axis_widget;
     VerticalAxisRangeControls * _vertical_range_controls;
-    size_t _trial_count = 0;
+    size_t _unit_count = 0;
 };
 
 #endif// HEATMAP_WIDGET_HPP

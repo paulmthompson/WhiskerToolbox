@@ -4,6 +4,7 @@
 #include "Core/HeatmapState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
+#include "Plots/Common/EventRateEstimation/RateScaling.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
@@ -11,6 +12,10 @@
 
 #include "ui_HeatmapPropertiesWidget.h"
 
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QLabel>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
@@ -41,6 +46,9 @@ HeatmapPropertiesWidget::HeatmapPropertiesWidget(std::shared_ptr<HeatmapState> s
 
     // Set up the unit selection tree
     _setupUnitTree();
+
+    // Set up the scaling / color range section
+    _setupScalingSection();
 }
 
 HeatmapPropertiesWidget::~HeatmapPropertiesWidget()
@@ -197,4 +205,146 @@ void HeatmapPropertiesWidget::_syncTreeFromState()
     }
 
     tree->blockSignals(false);
+}
+
+// =============================================================================
+// Scaling Section
+// =============================================================================
+
+void HeatmapPropertiesWidget::_setupScalingSection()
+{
+    using WhiskerToolbox::Plots::HeatmapScaling;
+
+    _scaling_section = new Section(this, "Scaling & Color Range");
+
+    // --- Scaling mode combo ---
+    _scaling_combo = new QComboBox(_scaling_section);
+    _scaling_combo->setObjectName("scaling_combo");
+    for (auto mode : WhiskerToolbox::Plots::allScalingModes()) {
+        _scaling_combo->addItem(
+            QString::fromUtf8(WhiskerToolbox::Plots::scalingLabel(mode)),
+            static_cast<int>(mode));
+    }
+
+    // --- Color range mode combo ---
+    _color_range_mode_combo = new QComboBox(_scaling_section);
+    _color_range_mode_combo->setObjectName("color_range_mode_combo");
+    _color_range_mode_combo->addItem("Auto", static_cast<int>(HeatmapColorRangeConfig::Mode::Auto));
+    _color_range_mode_combo->addItem("Manual", static_cast<int>(HeatmapColorRangeConfig::Mode::Manual));
+    _color_range_mode_combo->addItem("Symmetric", static_cast<int>(HeatmapColorRangeConfig::Mode::Symmetric));
+
+    // --- Manual vmin / vmax spinboxes ---
+    _vmin_label = new QLabel("Min", _scaling_section);
+    _vmin_spin = new QDoubleSpinBox(_scaling_section);
+    _vmin_spin->setObjectName("vmin_spin");
+    _vmin_spin->setRange(-1e9, 1e9);
+    _vmin_spin->setDecimals(4);
+    _vmin_spin->setSingleStep(0.1);
+    _vmin_spin->setValue(0.0);
+
+    _vmax_label = new QLabel("Max", _scaling_section);
+    _vmax_spin = new QDoubleSpinBox(_scaling_section);
+    _vmax_spin->setObjectName("vmax_spin");
+    _vmax_spin->setRange(-1e9, 1e9);
+    _vmax_spin->setDecimals(4);
+    _vmax_spin->setSingleStep(0.1);
+    _vmax_spin->setValue(1.0);
+
+    // --- Layout ---
+    auto * form = new QFormLayout();
+    form->setContentsMargins(4, 4, 4, 4);
+    form->setSpacing(4);
+    form->addRow("Scaling:", _scaling_combo);
+    form->addRow("Color Range:", _color_range_mode_combo);
+    form->addRow(_vmin_label, _vmin_spin);
+    form->addRow(_vmax_label, _vmax_spin);
+
+    _scaling_section->setContentLayout(*form);
+
+    // Insert after the unit tree but before the spacer
+    int spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
+    ui->main_layout->insertWidget(spacer_index, _scaling_section);
+
+    // --- Sync from state ---
+    _syncScalingFromState();
+    _updateColorRangeVisibility();
+
+    // --- Connect signals ---
+    connect(_scaling_combo, &QComboBox::currentIndexChanged,
+            this, [this](int index) {
+                if (!_state || index < 0) return;
+                auto scaling = static_cast<HeatmapScaling>(
+                    _scaling_combo->itemData(index).toInt());
+                _state->setScaling(scaling);
+            });
+
+    connect(_color_range_mode_combo, &QComboBox::currentIndexChanged,
+            this, [this](int index) {
+                if (!_state || index < 0) return;
+                auto mode = static_cast<HeatmapColorRangeConfig::Mode>(
+                    _color_range_mode_combo->itemData(index).toInt());
+                _state->setColorRangeMode(mode);
+                _updateColorRangeVisibility();
+            });
+
+    connect(_vmin_spin, &QDoubleSpinBox::valueChanged,
+            this, [this](double val) {
+                if (!_state) return;
+                _state->setColorRangeBounds(val, _vmax_spin->value());
+            });
+
+    connect(_vmax_spin, &QDoubleSpinBox::valueChanged,
+            this, [this](double val) {
+                if (!_state) return;
+                _state->setColorRangeBounds(_vmin_spin->value(), val);
+            });
+
+    // Listen for state changes (e.g. z-score auto-switching color range mode)
+    connect(_state.get(), &HeatmapState::scalingChanged,
+            this, [this]() { _syncScalingFromState(); });
+    connect(_state.get(), &HeatmapState::colorRangeChanged,
+            this, [this]() {
+                _syncScalingFromState();
+                _updateColorRangeVisibility();
+            });
+}
+
+void HeatmapPropertiesWidget::_syncScalingFromState()
+{
+    if (!_state) return;
+
+    // Block signals to avoid feedback loops
+    QSignalBlocker scaling_blocker(_scaling_combo);
+    QSignalBlocker range_blocker(_color_range_mode_combo);
+    QSignalBlocker vmin_blocker(_vmin_spin);
+    QSignalBlocker vmax_blocker(_vmax_spin);
+
+    // Sync scaling combo
+    int scaling_idx = _scaling_combo->findData(static_cast<int>(_state->scaling()));
+    if (scaling_idx >= 0) {
+        _scaling_combo->setCurrentIndex(scaling_idx);
+    }
+
+    // Sync color range combo
+    auto const & cr = _state->colorRange();
+    int range_idx = _color_range_mode_combo->findData(static_cast<int>(cr.mode));
+    if (range_idx >= 0) {
+        _color_range_mode_combo->setCurrentIndex(range_idx);
+    }
+
+    // Sync spinboxes
+    _vmin_spin->setValue(cr.vmin);
+    _vmax_spin->setValue(cr.vmax);
+}
+
+void HeatmapPropertiesWidget::_updateColorRangeVisibility()
+{
+    if (!_state) return;
+
+    bool const is_manual =
+        _state->colorRange().mode == HeatmapColorRangeConfig::Mode::Manual;
+    _vmin_label->setVisible(is_manual);
+    _vmin_spin->setVisible(is_manual);
+    _vmax_label->setVisible(is_manual);
+    _vmax_spin->setVisible(is_manual);
 }

@@ -25,6 +25,9 @@ class DataManager;
 class Feature_Tree_Widget;
 class HeatmapWidget;
 class PlotAlignmentWidget;
+class QComboBox;
+class QDoubleSpinBox;
+class QLabel;
 class RelativeTimeAxisRangeControls;
 class Section;
 class VerticalAxisRangeControls;
@@ -76,9 +79,21 @@ private:
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
 
+    // Scaling UI
+    Section * _scaling_section{nullptr};
+    QComboBox * _scaling_combo{nullptr};
+    QComboBox * _color_range_mode_combo{nullptr};
+    QDoubleSpinBox * _vmin_spin{nullptr};
+    QDoubleSpinBox * _vmax_spin{nullptr};
+    QLabel * _vmin_label{nullptr};
+    QLabel * _vmax_label{nullptr};
+
     void _setupUnitTree();
     void _connectUnitTreeSignals();
     void _syncTreeFromState();
+    void _setupScalingSection();
+    void _syncScalingFromState();
+    void _updateColorRangeVisibility();
 };
 
 #endif// HEATMAP_PROPERTIES_WIDGET_HPP

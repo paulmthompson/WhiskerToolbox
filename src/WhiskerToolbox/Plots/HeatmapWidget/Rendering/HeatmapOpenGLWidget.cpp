@@ -229,7 +229,7 @@ void HeatmapOpenGLWidget::rebuildScene()
     auto const & unit_keys = _state->unitKeys();
     if (unit_keys.empty()) {
         _scene_renderer.clearScene();
-        emit trialCountChanged(0);
+        emit unitCountChanged(0);
         return;
     }
 
@@ -251,7 +251,7 @@ void HeatmapOpenGLWidget::rebuildScene()
 
     if (contexts.empty()) {
         _scene_renderer.clearScene();
-        emit trialCountChanged(0);
+        emit unitCountChanged(0);
         return;
     }
 
@@ -261,45 +261,70 @@ void HeatmapOpenGLWidget::rebuildScene()
 
     if (rate_profiles.empty()) {
         _scene_renderer.clearScene();
-        emit trialCountChanged(0);
+        emit unitCountChanged(0);
         return;
     }
 
-    // 3. Convert RateProfiles to HeatmapRowData for the mapper
+    // 3. Normalise rate profiles using the selected scaling mode
+    auto const scaling = _state->scaling();
+    // TODO: make time_units_per_second configurable if data uses non-ms units
+    constexpr double time_units_per_second = 1000.0;
+    auto normalized_rows = WhiskerToolbox::Plots::normalizeRateProfiles(
+        rate_profiles, scaling, time_units_per_second);
+
+    if (normalized_rows.empty()) {
+        _scene_renderer.clearScene();
+        emit unitCountChanged(0);
+        return;
+    }
+
+    // 4. Convert NormalizedRow to CorePlotting::HeatmapRowData for the mapper
     std::vector<CorePlotting::HeatmapRowData> rows;
-    rows.reserve(rate_profiles.size());
-    for (auto const & profile : rate_profiles) {
+    rows.reserve(normalized_rows.size());
+    for (auto & nr : normalized_rows) {
         rows.push_back(CorePlotting::HeatmapRowData{
-            .values = profile.counts,
-            .bin_start = profile.bin_start,
-            .bin_width = profile.bin_width,
+            .values = std::move(nr.values),
+            .bin_start = nr.bin_start,
+            .bin_width = nr.bin_width,
         });
     }
 
-    // 4. Normalise counts by num_trials for mean count per trial
-    for (std::size_t i = 0; i < rows.size(); ++i) {
-        if (rate_profiles[i].num_trials > 0) {
-            double const divisor = static_cast<double>(rate_profiles[i].num_trials);
-            for (auto & v : rows[i].values) {
-                v /= divisor;
-            }
-        }
+    // 5. Build the colored rectangle scene with appropriate colormap and range
+    auto const & color_range_config = _state->colorRange();
+
+    // Use Coolwarm for z-score, Inferno otherwise
+    auto const colormap_preset =
+        (scaling == WhiskerToolbox::Plots::HeatmapScaling::ZScore)
+            ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
+            : CorePlotting::Colormaps::ColormapPreset::Inferno;
+    auto colormap = CorePlotting::Colormaps::getColormap(colormap_preset);
+
+    // Map state color range config to CorePlotting::HeatmapColorRange
+    CorePlotting::HeatmapColorRange mapper_range;
+    switch (color_range_config.mode) {
+        case HeatmapColorRangeConfig::Mode::Auto:
+            mapper_range.mode = CorePlotting::HeatmapColorRange::Mode::Auto;
+            break;
+        case HeatmapColorRangeConfig::Mode::Manual:
+            mapper_range.mode = CorePlotting::HeatmapColorRange::Mode::Manual;
+            mapper_range.vmin = static_cast<float>(color_range_config.vmin);
+            mapper_range.vmax = static_cast<float>(color_range_config.vmax);
+            break;
+        case HeatmapColorRangeConfig::Mode::Symmetric:
+            mapper_range.mode = CorePlotting::HeatmapColorRange::Mode::Symmetric;
+            break;
     }
 
-    // 5. Build the colored rectangle scene using Inferno colormap
-    auto colormap = CorePlotting::Colormaps::getColormap(
-        CorePlotting::Colormaps::ColormapPreset::Inferno);
-
     auto scene = CorePlotting::HeatmapMapper::buildScene(
-        rows, colormap);
+        rows, colormap, mapper_range);
 
     _scene_renderer.uploadScene(scene);
 
     // 6. Update Y-axis to reflect unit count
     auto const num_units = rows.size();
-    if (num_units != _trial_count) {
-        _trial_count = num_units;
-        emit trialCountChanged(_trial_count);
+    if (num_units != _unit_count) {
+        _unit_count = num_units;
+        emit unitCountChanged(_unit_count);
     }
 }
 

@@ -99,7 +99,7 @@ HeatmapState emits category-level signals to minimize coupling complexity:
 `HeatmapState` owns both:
 
 - **`RelativeTimeAxisState`** — for the X-axis (relative time centered at t = 0). Synchronized bidirectionally with the view state using the "silent update" pattern described in the [Plot Widget Guide](../plot_widget_guide.md).
-- **`VerticalAxisState`** — for the Y-axis (unit index). The Y bounds are auto-adjusted when `trialCountChanged` is emitted by the OpenGL widget. Uses `identityAxis` mapping.
+- **`VerticalAxisState`** — for the Y-axis (unit index). The Y bounds are auto-adjusted when `unitCountChanged` is emitted by the OpenGL widget, along with zoom/pan reset so all units are visible. Uses `identityAxis(\"Unit\", 0)` mapping for integer labels.
 
 The window size change handler resets the X view state bounds (`x_min`, `x_max`) and zoom/pan to fit the new window, then propagates to both `viewStateChanged` and `stateChanged`.
 
@@ -205,7 +205,7 @@ See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration detai
 
 ## Unit Axis (Y)
 
-Uses a `VerticalAxisWidget` with `VerticalAxisState`. The Y bounds are automatically set when the OpenGL widget reports the unit count via `trialCountChanged`. The axis maps vertical position to unit index for labeling.
+Uses a `VerticalAxisWidget` with `VerticalAxisState`. The Y bounds are automatically set when the OpenGL widget reports the unit count via `unitCountChanged`. The widget auto-fits by resetting Y zoom to 1.0 and Y pan to 0.0. Uses `identityAxis("Unit", 0)` for integer unit-index labels.
 
 # Properties Panel
 
