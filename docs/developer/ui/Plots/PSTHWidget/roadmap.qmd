@@ -20,69 +20,22 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Properties panel**: Alignment controls, event series management, style selection, per-event color picker
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Rate estimation integration** (Phase 2 partial): `PSTHStateData` now stores `EstimationParams` variant directly. `PSTHPropertiesWidget` uses the shared `EstimationMethodControls` widget from `RateEstimationControls` library for method selection and per-method parameter editing. Renderer extracts bin size from `estimationParams()` via `std::get_if<BinningParams>`.
+- **Normalization/scaling** (Phase 1 complete): `PSTHStateData` stores `ScalingMode` from the shared `RateEstimate.hpp`. `PSTHPropertiesWidget` uses the shared `ScalingModeControls` widget. `PSTHPlotOpenGLWidget::rebuildScene()` applies scaling via `applyScaling()` from `RateNormalization.hpp`, supporting all scaling modes (Raw Count, Firing Rate Hz, Z-Score, Normalized [0,1], Count/Trial).
 
 ---
 
 ## Phase 1: Normalization Modes
 
-**Status**: Not started. Core binning infrastructure exists; normalization is a straightforward extension.
+**Status**: ✅ Complete. Uses shared `ScalingMode` enum and `ScalingModeControls` widget from `RateEstimationControls`.
 
-**Goal**: Support multiple Y-axis representations beyond raw event counts.
+The original design planned a bespoke `PSTHNormalization` enum, but this has been superseded by the shared `ScalingMode` infrastructure used across all rate-estimation widgets (PSTHWidget, HeatmapWidget). The `ScalingModeControls` widget provides a combo box with all normalization options: Raw Count (default), Firing Rate (Hz), Z-Score, Normalized [0,1], and Count/Trial.
 
-### 1.1 Normalization Enum
-
-Extend state to support different Y-axis interpretations:
-
-```cpp
-enum class PSTHNormalization {
-    Count,          ///< Raw event count summed across trials (current behavior)
-    FiringRate,     ///< Count / (bin_size * num_trials) → spikes/s
-    Probability,    ///< Count / num_trials → probability of at least one spike per bin
-    CountPerTrial   ///< Count / num_trials → mean count per trial per bin
-};
-```
-
-Add to `PSTHStateData`:
-
-```cpp
-struct PSTHStateData {
-    // ... existing fields ...
-    PSTHNormalization normalization = PSTHNormalization::Count;
-};
-```
-
-### 1.2 Implementation
-
-After histogram binning in `rebuildScene()`, apply normalization:
-
-```cpp
-switch (normalization) {
-    case PSTHNormalization::FiringRate:
-        for (auto & c : histogram) c /= (bin_size_seconds * total_trials);
-        break;
-    case PSTHNormalization::Probability:
-        // Requires per-trial binary indicator, not just sum
-        break;
-    case PSTHNormalization::CountPerTrial:
-        for (auto & c : histogram) c /= total_trials;
-        break;
-}
-```
-
-### 1.3 Y-Axis Label Update
-
-The vertical axis label should reflect the normalization mode:
-
-| Mode | Axis Label |
-|------|-----------|
-| Count | "Count" |
-| FiringRate | "Firing Rate (Hz)" |
-| Probability | "P(spike)" |
-| CountPerTrial | "Count / Trial" |
-
-### 1.4 Properties Panel
-
-Add a normalization combo box to the Global Options section of `PSTHPropertiesWidget`.
+**Implementation**:
+- `PSTHStateData::scaling` stores the `WhiskerToolbox::Plots::ScalingMode` enum
+- `PSTHState::scaling()` / `setScaling()` accessors with `scalingChanged(ScalingMode)` signal
+- `PSTHPropertiesWidget` embeds shared `ScalingModeControls` widget
+- `PSTHPlotOpenGLWidget::rebuildScene()` builds a `RateEstimate` from histogram data and calls `applyScaling()` before rendering
+- Y-axis bounds are recomputed after scaling to match the transformed values
 
 ---
 
@@ -470,21 +423,19 @@ The existing per-event `hex_color` in `PSTHEventOptions` should be applied to th
 
 ### Next Up
 
-1. **Phase 1**: Normalization modes (straightforward extension of existing binning)
-2. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
-   `EventRateEstimation` library; then add Gaussian kernel and other smoothing methods
-3. **Phase 4**: Cross-widget linking with pin support
-4. **Phase 5**: SVG export (infrastructure already exists)
+1. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
+   `EventRateEstimation` library's `estimateRate()`; then add Gaussian kernel and other smoothing methods
+2. **Phase 4**: Cross-widget linking with pin support
+3. **Phase 5**: SVG export (infrastructure already exists)
 
 ### Following
 
 4. **Phase 7**: Per-series histograms and multi-color overlay
 5. **Phase 3**: Variability / confidence intervals
-6. **Phase 2**: Smoothing and advanced rate estimation
 
 ### Later
 
-7. **Phase 6**: Embeddable PSTH for tooltips
+6. **Phase 6**: Embeddable PSTH for tooltips
 
 ---
 

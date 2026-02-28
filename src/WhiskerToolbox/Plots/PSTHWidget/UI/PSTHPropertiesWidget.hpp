@@ -24,6 +24,7 @@ class EstimationMethodControls;
 class PlotAlignmentWidget;
 class PSTHWidget;
 class RelativeTimeAxisRangeControls;
+class ScalingModeControls;
 class VerticalAxisRangeControls;
 class Section;
 
@@ -156,6 +157,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
     EstimationMethodControls * _estimation_controls;
+    ScalingModeControls * _scaling_controls;
     PSTHWidget * _plot_widget;
     RelativeTimeAxisRangeControls * _range_controls;
     Section * _range_controls_section;

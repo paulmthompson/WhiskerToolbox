@@ -84,6 +84,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QWidget" name="scaling_placeholder" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="plot_events_label">
      <property name="text">
       <string>Plot Events:</string>

@@ -5,6 +5,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RateEstimationControls/EstimationMethodControls.hpp"
+#include "Plots/Common/RateEstimationControls/ScalingModeControls.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Collapsible_Widget/Section.hpp"
@@ -28,6 +29,7 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
       _data_manager(data_manager),
       _alignment_widget(nullptr),
       _estimation_controls(nullptr),
+      _scaling_controls(nullptr),
       _plot_widget(nullptr),
       _range_controls(nullptr),
       _range_controls_section(nullptr),
@@ -82,6 +84,18 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
     connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
             _state.get(), &PSTHState::setEstimationParams);
 
+    // Create and insert ScalingModeControls after estimation controls
+    _scaling_controls = new ScalingModeControls(this);
+    _scaling_controls->setScalingMode(_state->scaling());
+    int scaling_index = ui->main_layout->indexOf(ui->scaling_placeholder);
+    ui->main_layout->removeWidget(ui->scaling_placeholder);
+    ui->scaling_placeholder->deleteLater();
+    ui->main_layout->insertWidget(scaling_index, _scaling_controls);
+
+    // Connect scaling controls
+    connect(_scaling_controls, &ScalingModeControls::scalingModeChanged,
+            _state.get(), &PSTHState::setScaling);
+
     // Populate combo boxes
     _populateAddEventComboBox();
 
@@ -109,6 +123,10 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
         connect(_state.get(), &PSTHState::estimationParamsChanged,
                 this, [this]() {
                     _estimation_controls->setParams(_state->estimationParams());
+                });
+        connect(_state.get(), &PSTHState::scalingChanged,
+                this, [this](WhiskerToolbox::Plots::ScalingMode mode) {
+                    _scaling_controls->setScalingMode(mode);
                 });
         // Note: yMin/yMax changes are handled by VerticalAxisRangeControls
         // No need to connect to yMinChanged/yMaxChanged here

@@ -14,6 +14,7 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
@@ -57,6 +58,7 @@ struct PSTHStateData {
     std::map<std::string, PSTHEventOptions> plot_events;///< Map of event names to their plot options
     PSTHStyle style = PSTHStyle::Bar;                   ///< Plot style (bar or line)
     WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Rate estimation parameters (default: BinningParams{})
+    WhiskerToolbox::Plots::ScalingMode scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;  ///< Normalization mode
     CorePlotting::ViewStateData view_state;             ///< Zoom, pan, data bounds
     RelativeTimeAxisStateData time_axis;                ///< Time axis settings (min_range, max_range)
     VerticalAxisStateData vertical_axis;                ///< Vertical axis settings (y_min, y_max)
@@ -238,6 +240,18 @@ public:
      */
     void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
 
+    /**
+     * @brief Get the scaling/normalization mode
+     * @return Current scaling mode
+     */
+    [[nodiscard]] WhiskerToolbox::Plots::ScalingMode scaling() const;
+
+    /**
+     * @brief Set the scaling/normalization mode
+     * @param mode New scaling mode
+     */
+    void setScaling(WhiskerToolbox::Plots::ScalingMode mode);
+
     // === View State (Zoom / Pan / Bounds) ===
 
     /** @brief Get the current view state */
@@ -332,6 +346,12 @@ signals:
      * @brief Emitted when estimation parameters change
      */
     void estimationParamsChanged();
+
+    /**
+     * @brief Emitted when scaling/normalization mode changes
+     * @param mode New scaling mode
+     */
+    void scalingChanged(WhiskerToolbox::Plots::ScalingMode mode);
 
     /**
      * @brief Emitted when view state changes (zoom, pan, or bounds)

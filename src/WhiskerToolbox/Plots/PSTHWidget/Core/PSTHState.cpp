@@ -236,6 +236,19 @@ void PSTHState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams cons
     }
 }
 
+WhiskerToolbox::Plots::ScalingMode PSTHState::scaling() const {
+    return _data.scaling;
+}
+
+void PSTHState::setScaling(WhiskerToolbox::Plots::ScalingMode mode) {
+    if (_data.scaling != mode) {
+        _data.scaling = mode;
+        markDirty();
+        emit scalingChanged(mode);
+        emit stateChanged();
+    }
+}
+
 // === View State (Zoom / Pan / Bounds) ===
 
 void PSTHState::setXZoom(double zoom) {
