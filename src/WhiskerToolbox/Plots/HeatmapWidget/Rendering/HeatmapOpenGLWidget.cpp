@@ -1,7 +1,10 @@
 #include "HeatmapOpenGLWidget.hpp"
 
+#include "CorePlotting/Colormaps/Colormap.hpp"
+#include "CorePlotting/Mappers/HeatmapMapper.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "Plots/Common/EventRateEstimation/EventRateEstimation.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 
@@ -116,7 +119,7 @@ void HeatmapOpenGLWidget::paintGL()
         rebuildScene();
         _scene_dirty = false;
     }
-    // TODO: Render heatmap visualization here
+    _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
 void HeatmapOpenGLWidget::resizeGL(int w, int h)
@@ -222,9 +225,82 @@ void HeatmapOpenGLWidget::rebuildScene()
         _scene_renderer.clearScene();
         return;
     }
-    // TODO: Gather trial-aligned AnalogTimeSeries data
-    // TODO: Build heatmap visualization scene
-    _scene_renderer.clearScene();
+
+    auto const & unit_keys = _state->unitKeys();
+    if (unit_keys.empty()) {
+        _scene_renderer.clearScene();
+        emit trialCountChanged(0);
+        return;
+    }
+
+    auto * alignment_state = _state->alignmentState();
+    if (!alignment_state) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    double const window_size = _state->getWindowSize();
+    if (window_size <= 0.0) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    // 1. Gather trial-aligned DigitalEventSeries data for all selected units
+    auto contexts = WhiskerToolbox::Plots::createUnitGatherContexts(
+        _data_manager, unit_keys, alignment_state->data());
+
+    if (contexts.empty()) {
+        _scene_renderer.clearScene();
+        emit trialCountChanged(0);
+        return;
+    }
+
+    // 2. Estimate firing rates for all units
+    auto rate_profiles = WhiskerToolbox::Plots::estimateRates(
+        contexts, window_size);
+
+    if (rate_profiles.empty()) {
+        _scene_renderer.clearScene();
+        emit trialCountChanged(0);
+        return;
+    }
+
+    // 3. Convert RateProfiles to HeatmapRowData for the mapper
+    std::vector<CorePlotting::HeatmapRowData> rows;
+    rows.reserve(rate_profiles.size());
+    for (auto const & profile : rate_profiles) {
+        rows.push_back(CorePlotting::HeatmapRowData{
+            .values = profile.counts,
+            .bin_start = profile.bin_start,
+            .bin_width = profile.bin_width,
+        });
+    }
+
+    // 4. Normalise counts by num_trials for mean count per trial
+    for (std::size_t i = 0; i < rows.size(); ++i) {
+        if (rate_profiles[i].num_trials > 0) {
+            double const divisor = static_cast<double>(rate_profiles[i].num_trials);
+            for (auto & v : rows[i].values) {
+                v /= divisor;
+            }
+        }
+    }
+
+    // 5. Build the colored rectangle scene using Inferno colormap
+    auto colormap = CorePlotting::Colormaps::getColormap(
+        CorePlotting::Colormaps::ColormapPreset::Inferno);
+
+    auto scene = CorePlotting::HeatmapMapper::buildScene(
+        rows, colormap);
+
+    _scene_renderer.uploadScene(scene);
+
+    // 6. Update Y-axis to reflect unit count
+    auto const num_units = rows.size();
+    if (num_units != _trial_count) {
+        _trial_count = num_units;
+        emit trialCountChanged(_trial_count);
+    }
 }
 
 void HeatmapOpenGLWidget::updateMatrices()

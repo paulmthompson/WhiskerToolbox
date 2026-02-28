@@ -14,9 +14,7 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "GatherResult/GatherResult.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>

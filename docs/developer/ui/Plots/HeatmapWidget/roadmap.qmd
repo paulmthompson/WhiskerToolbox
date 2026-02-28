@@ -22,14 +22,16 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Unit selection state** (Phase 1.1): `HeatmapStateData::unit_keys` with full add/remove/batch API and `unitsChanged()` signal
 - **Unit selection UI** (Phase 1.2): `Feature_Tree_Widget` embedded in properties panel, filtered to `DigitalEventSeries`, with prefix-based group toggling
 - **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` for histogram binning with a `std::variant`-based variation point for future methods
+- **Colormap infrastructure** (Phase 2): `CorePlotting::Colormaps` library in `CorePlotting/Colormaps/` providing `ColormapFunction`, `ColormapPreset` (Inferno, Viridis, Magma, Plasma, Coolwarm, Grayscale, Hot), LUT-based O(1) evaluation with linear interpolation, `mapValue()` / `mapValues()` / `mapMatrix()` utilities. Shared with SpectrogramWidget and any future external-feature coloring use cases.
+- **Heatmap scene building** (Phase 1.4): `HeatmapMapper` in `CorePlotting/Mappers/` converting `HeatmapRowData` rows to `RenderableRectangleBatch` with Auto / Manual / Symmetric color range modes. `HeatmapOpenGLWidget::rebuildScene()` now gathers units via `createUnitGatherContexts()`, estimates rates via `estimateRates()`, normalises by `num_trials`, maps through Inferno colormap, and uploads the scene. The full data pipeline is live.
 
-**Not yet implemented**: Heatmap scene building, Y-axis auto-fit, colormap rendering, sorting, and all cross-widget linking described below.
+**Not yet implemented**: Y-axis auto-fit (Phase 1.5), scaling/normalization modes (Phase 3), colorbar display (Phase 4), colormap selection UI (Phase 9), sorting, and all cross-widget linking described below.
 
 ---
 
 ## Phase 1: Core Rendering — Per-Unit Rate Matrix
 
-**Status**: Phases 1.1, 1.2, and 1.3 complete. Phases 1.4–1.5 not started.
+**Status**: Phases 1.1–1.4 complete. Phase 1.5 not started.
 
 **Goal**: Produce a `units × time_bins` firing rate matrix and render it as a colored heatmap.
 
@@ -141,13 +143,21 @@ binning, same logic as `PSTHPlotOpenGLWidget::rebuildScene()`).
 `HeatmapOpenGLWidget::rebuildScene()` should call `createUnitGatherContexts()` then
 `estimateRates()` to obtain the `units × time_bins` rate matrix for scene building.
 
-### 1.4 Heatmap Scene Building ⬜
+### 1.4 Heatmap Scene Building ✅
 
-Convert the rate matrix to a `RenderableRectangleBatch`:
+`HeatmapOpenGLWidget::rebuildScene()` now implements the full data pipeline:
 
-- Each cell is one rectangle: X from `bin_start` to `bin_start + bin_width`, Y from `unit_index` to `unit_index + 1`
-- Cell color is determined by mapping the rate value through a colormap (see [Phase 2](#phase-2-colormap-infrastructure))
-- The batch is uploaded to `SceneRenderer` for rendering
+1. Guard: returns early if no units are selected or alignment state is missing
+2. Calls `createUnitGatherContexts()` to gather trial-aligned `DigitalEventSeries` for all selected units
+3. Calls `estimateRates()` to estimate firing rates (raw counts) for each unit
+4. Normalises counts by `num_trials` → mean count per trial
+5. Converts `RateProfile` objects to `HeatmapRowData` (the `CorePlotting`-layer input type)
+6. Calls `HeatmapMapper::buildScene()` with the Inferno colormap and auto color range
+7. Uploads the scene via `_scene_renderer.uploadScene()` and emits `trialCountChanged`
+
+The new `HeatmapMapper` lives in `CorePlotting/Mappers/` and is decoupled from `EventRateEstimation`
+(accepts generic `HeatmapRowData` rather than `RateProfile`) so it can be reused by SpectrogramWidget
+without introducing an upward dependency.
 
 ### 1.5 Y-Axis Auto-fit ⬜
 
@@ -158,59 +168,52 @@ axis with `CorePlotting::trialIndexAxis(num_units)` mapping for integer unit lab
 
 ## Phase 2: Colormap Infrastructure
 
-**Status**: Not started. This is new shared infrastructure needed by both HeatmapWidget and
-[SpectrogramWidget](../SpectrogramWidget/index.qmd).
+**Status**: Complete. Implemented as `CorePlotting::Colormaps` in `src/CorePlotting/Colormaps/`.
 
 **Goal**: Provide a reusable colormap system for mapping scalar values to RGBA colors.
 
-### 2.1 Colormap Types
+### 2.1 Colormap Types ✅
+
+Implemented in `src/CorePlotting/Colormaps/Colormap.hpp`:
 
 ```cpp
 namespace CorePlotting::Colormaps {
 
-/// A colormap is a function from [0, 1] → RGBA
 using ColormapFunction = std::function<glm::vec4(float t)>;
+using ColormapLUT = std::array<glm::vec3, 256>;
 
-/// Built-in colormaps
 enum class ColormapPreset {
-    Inferno,        ///< Default — perceptually uniform, dark-to-bright (matplotlib inferno)
-    Viridis,        ///< Perceptually uniform, blue-green-yellow
-    Magma,          ///< Perceptually uniform, dark-to-pink
-    Plasma,         ///< Perceptually uniform, blue-to-yellow
-    Coolwarm,       ///< Diverging blue-white-red (good for z-scores)
-    GrayScale,      ///< Simple grayscale
-    Hot             ///< Black-red-yellow-white
+    Inferno, Viridis, Magma, Plasma,  // perceptually uniform
+    Coolwarm,                          // diverging blue-white-red
+    Grayscale, Hot                     // utility
 };
 
-/// Get a colormap function by preset
 ColormapFunction getColormap(ColormapPreset preset);
-
-/// Map a scalar value through a colormap with configurable range
-glm::vec4 mapValue(ColormapFunction const & cmap, float value, float vmin, float vmax);
-
-/// Map an entire matrix to an RGBA image
-std::vector<glm::vec4> mapMatrix(
-    ColormapFunction const & cmap,
-    std::vector<double> const & values,
-    float vmin, float vmax);
+ColormapFunction fromLUT(ColormapLUT const & lut);
+glm::vec4 mapValue(ColormapFunction const &, float value, float vmin, float vmax);
+std::vector<glm::vec4> mapValues(ColormapFunction const &, std::span<double const>, float vmin, float vmax);
+std::vector<glm::vec4> mapMatrix(ColormapFunction const &, std::span<double const>, size_t rows, size_t cols, float vmin, float vmax);
+ColormapLUT const & getLUT(ColormapPreset preset);  // for colorbar preview
+std::string presetName(ColormapPreset preset);
+std::vector<ColormapPreset> allPresets();
 
 }  // namespace CorePlotting::Colormaps
 ```
 
-### 2.2 Location
+### 2.2 Location ✅
 
-Place colormap utilities in `src/CorePlotting/Colormaps/`. This library has no Qt dependency
-and can be used by any rendering backend:
+Colormap utilities are in `src/CorePlotting/Colormaps/`:
 
 ```
-CorePlotting/Colormaps/
-├── CMakeLists.txt
-├── Colormap.hpp            # ColormapFunction, ColormapPreset, mapValue/mapMatrix
-├── Colormap.cpp
-├── InfernoData.hpp         # LUT data for Inferno (256 entries)
-├── ViridisData.hpp         # LUT data for Viridis
-└── ...
+CoreMatching/Colormaps/
+├── Colormap.hpp       # Public API — ColormapFunction, presets, mapValue/mapValues/mapMatrix
+├── Colormap.cpp       # LUT-based evaluation with linear interpolation
+└── ColormapLUTs.hpp   # LUT data for all presets (17-point control tables, elaborated to 256 entries)
 ```
+
+The perceptually uniform colormaps (Inferno, Viridis, Magma, Plasma) use 17-point control
+tables interpolated to 256 entries. Grayscale, Hot, and Coolwarm are generated
+algorithmically. All LUTs are lazy-initialized as static singletons.
 
 ### 2.3 Shared Consumers
 
@@ -230,7 +233,7 @@ automatically suggest **Coolwarm** (diverging around zero).
 
 ## Phase 3: Scaling and Normalization
 
-**Status**: Not started. Depends on [Phase 1](#phase-1-core-rendering--per-unit-rate-matrix).
+**Status**: Not started. Phase 1 is now complete; this phase can proceed.
 
 **Goal**: Support multiple Y-value (color intensity) representations for the heatmap cells.
 
@@ -310,7 +313,7 @@ Add a "Scaling" section to `HeatmapPropertiesWidget`:
 
 ## Phase 4: Colorbar Display
 
-**Status**: Not started. Depends on [Phase 2](#phase-2-colormap-infrastructure) and [Phase 3](#phase-3-scaling-and-normalization).
+**Status**: Not started. Phase 2 is now complete; this phase can proceed once Phase 3 is done.
 
 **Goal**: Render a color legend alongside the heatmap showing the value-to-color mapping.
 
@@ -356,7 +359,7 @@ which also needs a color legend for its power spectrum display.
 
 ## Phase 5: Shared Rate Estimation Options
 
-**Status**: Not started. Depends on [Phase 1](#phase-1-core-rendering--per-unit-rate-matrix).
+**Status**: Not started. Phase 1 is now complete; this phase can proceed.
 Closely related to [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2.
 
 **Goal**: Share bin size, smoothing method, and rate estimation parameters between HeatmapWidget
@@ -403,7 +406,7 @@ use shared UI components to avoid duplication.
 
 ## Phase 6: Row Sorting
 
-**Status**: Not started. Depends on [Phase 1](#phase-1-core-rendering--per-unit-rate-matrix).
+**Status**: Not started. Phase 1 is now complete; this phase can proceed.
 
 **Goal**: Allow users to reorder heatmap rows by various criteria for pattern discovery.
 
@@ -613,7 +616,7 @@ which proposes decoupling the PSTH computation and rendering from the full widge
 
 ## Phase 9: Colormap Selection UI
 
-**Status**: Not started. Depends on [Phase 2](#phase-2-colormap-infrastructure).
+**Status**: Not started. Phase 2 (colormap infrastructure) is now complete; this phase can proceed.
 
 **Goal**: Allow users to select and preview colormaps from the properties panel.
 
@@ -762,9 +765,14 @@ complexity. The two widgets can coexist in the Plot menu, clearly labeled:
 
 ### Next Up (Core Functionality)
 
-1. **[Phase 1](#phase-1-core-rendering--per-unit-rate-matrix)** (1.4–1.5): Heatmap scene building + Y-axis auto-fit
-2. **[Phase 2](#phase-2-colormap-infrastructure)**: Colormap infrastructure (shared with SpectrogramWidget)
-3. **[Phase 3](#phase-3-scaling-and-normalization)**: Scaling/normalization modes
+1. **[Phase 1.5](#phase-1-core-rendering--per-unit-rate-matrix)**: Y-axis auto-fit (unit labels via `VerticalAxisWidget`)
+2. **[Phase 3](#phase-3-scaling-and-normalization)**: Scaling/normalization modes (FiringRate, ZScore, Normalized01, RawCount, CountPerTrial)
+3. **[Phase 4](#phase-4-colorbar-display)**: Colorbar display (reuse `CorePlotting::Colormaps::getLUT()` for gradient preview)
+
+### Recently Completed
+
+- **Phase 1.4**: Heatmap scene building — full `rebuildScene()` pipeline live
+- **Phase 2**: Colormap infrastructure — `CorePlotting::Colormaps` in `src/CorePlotting/Colormaps/`
 
 ### Following (Polish and Features)
 

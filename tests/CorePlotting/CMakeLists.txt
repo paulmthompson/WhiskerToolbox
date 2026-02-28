@@ -36,6 +36,8 @@ add_executable(test_coreplotting
     SpatialLayoutStrategy.test.cpp
     MVPComposition.test.cpp
     ViewStateData.test.cpp
+    Colormap.test.cpp
+    HeatmapMapper.test.cpp
     # LineBatch
     LineBatch/LineBatchData.test.cpp
     LineBatch/CpuLineBatchIntersector.test.cpp
