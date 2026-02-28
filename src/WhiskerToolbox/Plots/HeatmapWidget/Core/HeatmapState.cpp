@@ -6,6 +6,8 @@
 
 #include <rfl/json.hpp>
 
+#include <algorithm>
+
 HeatmapState::HeatmapState(QObject * parent)
     : EditorState(parent),
       _alignment_state(std::make_unique<PlotAlignmentState>(this)),
@@ -183,6 +185,69 @@ void HeatmapState::setYBounds(double y_min, double y_max)
         emit viewStateChanged();
         emit stateChanged();
     }
+}
+
+// === Unit Management ===
+
+void HeatmapState::addUnit(std::string const & key)
+{
+    if (hasUnit(key)) {
+        return;
+    }
+    _data.unit_keys.push_back(key);
+    markDirty();
+    emit unitsChanged();
+    emit stateChanged();
+}
+
+void HeatmapState::removeUnit(std::string const & key)
+{
+    auto it = std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key);
+    if (it == _data.unit_keys.end()) {
+        return;
+    }
+    _data.unit_keys.erase(it);
+    markDirty();
+    emit unitsChanged();
+    emit stateChanged();
+}
+
+void HeatmapState::addUnits(std::vector<std::string> const & keys)
+{
+    bool changed = false;
+    for (auto const & key : keys) {
+        if (!hasUnit(key)) {
+            _data.unit_keys.push_back(key);
+            changed = true;
+        }
+    }
+    if (changed) {
+        markDirty();
+        emit unitsChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::removeUnits(std::vector<std::string> const & keys)
+{
+    bool changed = false;
+    for (auto const & key : keys) {
+        auto it = std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key);
+        if (it != _data.unit_keys.end()) {
+            _data.unit_keys.erase(it);
+            changed = true;
+        }
+    }
+    if (changed) {
+        markDirty();
+        emit unitsChanged();
+        emit stateChanged();
+    }
+}
+
+bool HeatmapState::hasUnit(std::string const & key) const
+{
+    return std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key) != _data.unit_keys.end();
 }
 
 // === Background Color ===

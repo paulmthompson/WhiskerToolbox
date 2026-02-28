@@ -19,55 +19,73 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Properties panel**: Alignment controls (`PlotAlignmentWidget`), axis range controls in collapsible sections
 - **OpenGL lifecycle**: `SceneRenderer` initialization, background color, projection/view matrix management
 - **State serialization**: Full round-trip JSON via `rfl::json`
+- **Unit selection state** (Phase 1.1): `HeatmapStateData::unit_keys` with full add/remove/batch API and `unitsChanged()` signal
+- **Unit selection UI** (Phase 1.2): `Feature_Tree_Widget` embedded in properties panel, filtered to `DigitalEventSeries`, with prefix-based group toggling
 
-**Not yet implemented**: Data gathering, rate estimation, colormap rendering, unit selection, sorting, and all cross-widget linking described below.
+**Not yet implemented**: Data gathering, rate estimation, colormap rendering, sorting, and all cross-widget linking described below.
 
 ---
 
 ## Phase 1: Core Rendering — Per-Unit Rate Matrix
 
-**Status**: Not started. OpenGL scaffold and `GatherResult` infrastructure exist; rate computation
-is a direct reuse of the [PSTHWidget](../PSTHWidget/index.qmd) binning pipeline.
+**Status**: Phases 1.1 and 1.2 complete. Phases 1.3–1.5 not started; rate computation is a
+direct reuse of the [PSTHWidget](../PSTHWidget/index.qmd) binning pipeline.
 
 **Goal**: Produce a `units × time_bins` firing rate matrix and render it as a colored heatmap.
 
-### 1.1 Unit Selection in State
+### 1.1 Unit Selection in State ✅
 
-Extend `HeatmapStateData` to track which `DigitalEventSeries` keys are displayed:
+`HeatmapStateData` stores the selected units as a flat key list (serialized via `rfl::json`):
 
 ```cpp
-struct HeatmapUnitConfig {
-    std::string event_key;        ///< DataManager key for this unit's DigitalEventSeries
-    std::string display_label;    ///< Optional label (defaults to key)
-};
-
 struct HeatmapStateData {
     // ... existing fields ...
-    std::vector<HeatmapUnitConfig> units;
+    std::vector<std::string> unit_keys;  ///< Selected DigitalEventSeries keys
 };
 ```
 
-Add signals to `HeatmapState`:
+`HeatmapState` exposes a full management API:
+
+```cpp
+void addUnit(std::string const & key);
+void removeUnit(std::string const & key);
+void addUnits(std::vector<std::string> const & keys);    // batch
+void removeUnits(std::vector<std::string> const & keys); // batch
+[[nodiscard]] bool hasUnit(std::string const & key) const;
+[[nodiscard]] std::vector<std::string> const & unitKeys() const;
+```
+
+All mutating methods emit `unitsChanged()` (for UI sync) and `stateChanged()` (for scene
+rebuild). Addition is idempotent — duplicate keys are silently ignored.
+
+Note: `HeatmapUnitConfig` (with a separate `display_label`) was simplified to a plain
+`std::string` key list. Labels are derived from the key at render time. A dedicated config
+struct can be introduced if per-unit labels or colors are needed in a future phase.
 
 | Signal | Trigger |
 |--------|---------|
-| `unitAdded(int index)` | A new unit was added to the list |
-| `unitRemoved(int index)` | A unit was removed from the list |
-| `unitsReordered()` | Units were reordered (sorting) |
+| `unitsChanged()` | Any change to the unit list (add, remove, or batch) |
+| `stateChanged()` (inherited) | Combined with `unitsChanged()` to trigger scene rebuild |
 
-### 1.2 Unit Selection UI
+### 1.2 Unit Selection UI ✅
 
-Add to `HeatmapPropertiesWidget`:
+`HeatmapPropertiesWidget` now embeds a `Feature_Tree_Widget` (the same component used by
+`DataViewer_Widget`) filtered to `DM_DataType::DigitalEvent` only:
 
-1. **Available units combo box**: Lists all `DigitalEventSeries` keys from DataManager
-2. **Add button**: Adds the selected key to the unit list
-3. **Unit list widget**: Shows current units with remove buttons
-4. **"Add All" button**: Adds all `DigitalEventSeries` keys at once (common workflow)
+- **Available keys** are shown in a tree, auto-grouped by prefix pattern
+  (e.g. `unit_1`, `unit_2`, `unit_3` appear under a `unit` group node)
+- **Checkbox per item** adds/removes that key from `HeatmapState::unit_keys`
+- **Group checkbox** adds/removes all keys with the same prefix in a single click
+- **Live updates** — the tree re-populates automatically when DataManager changes
+  (via the DataManager observer; the observer is properly unregistered on widget destruction)
+- **State sync** — on construction, existing `unit_keys` from serialized state are
+  reflected in the tree checkboxes
 
-The combo box should be kept in sync with DataManager via the standard observer pattern
-(see [Plot Widget Guide](../plot_widget_guide.md)).
+This replaces the combo box + Add/Remove/Add-All button design described in the original
+roadmap; the tree gives equivalent functionality with less UI surface and more visual
+structure when many units are present.
 
-### 1.3 Rate Estimation
+### 1.3 Rate Estimation ⬜
 
 For each unit, compute a rate profile using the same pipeline as [PSTHWidget](../PSTHWidget/index.qmd):
 
@@ -92,7 +110,7 @@ namespace CorePlotting::RateEstimation {
 }
 ```
 
-### 1.4 Heatmap Scene Building
+### 1.4 Heatmap Scene Building ⬜
 
 Convert the rate matrix to a `RenderableRectangleBatch`:
 
@@ -100,7 +118,7 @@ Convert the rate matrix to a `RenderableRectangleBatch`:
 - Cell color is determined by mapping the rate value through a colormap (see [Phase 2](#phase-2-colormap-infrastructure))
 - The batch is uploaded to `SceneRenderer` for rendering
 
-### 1.5 Y-Axis Auto-fit
+### 1.5 Y-Axis Auto-fit ⬜
 
 After computing the rate matrix, set Y bounds to `[0, num_units]` and configure the vertical
 axis with `CorePlotting::trialIndexAxis(num_units)` mapping for integer unit labels.

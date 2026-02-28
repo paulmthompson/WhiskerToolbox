@@ -29,6 +29,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 /**
  * @brief Serializable state data for HeatmapWidget
@@ -41,6 +42,7 @@ struct HeatmapStateData {
     RelativeTimeAxisStateData time_axis;
     VerticalAxisStateData vertical_axis;
     std::string background_color = "#FFFFFF";
+    std::vector<std::string> unit_keys;  ///< Selected DigitalEventSeries keys
 };
 
 /**
@@ -86,6 +88,22 @@ public:
     /** @brief Set Y data bounds. Emits viewStateChanged() AND stateChanged(). */
     void setYBounds(double y_min, double y_max);
 
+    // === Unit Management ===
+    /** @brief Get the list of selected DigitalEventSeries keys */
+    [[nodiscard]] std::vector<std::string> const & unitKeys() const { return _data.unit_keys; }
+    /** @brief Add a DigitalEventSeries key to the unit list */
+    void addUnit(std::string const & key);
+    /** @brief Remove a DigitalEventSeries key from the unit list */
+    void removeUnit(std::string const & key);
+    /** @brief Add multiple DigitalEventSeries keys at once */
+    void addUnits(std::vector<std::string> const & keys);
+    /** @brief Remove multiple DigitalEventSeries keys at once */
+    void removeUnits(std::vector<std::string> const & keys);
+    /** @brief Check if a unit key is currently selected */
+    [[nodiscard]] bool hasUnit(std::string const & key) const;
+    /** @brief Get the number of selected units */
+    [[nodiscard]] size_t unitCount() const { return _data.unit_keys.size(); }
+
     // === Background Color ===
     [[nodiscard]] QString getBackgroundColor() const;
     void setBackgroundColor(QString const & hex_color);
@@ -104,6 +122,7 @@ signals:
     void windowSizeChanged(double window_size);
     void viewStateChanged();
     void backgroundColorChanged(QString const & hex_color);
+    void unitsChanged();  ///< Emitted when the unit list changes (add/remove)
 
 private:
     HeatmapStateData _data;
