@@ -27,7 +27,6 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 class DigitalIntervalSeries;
 

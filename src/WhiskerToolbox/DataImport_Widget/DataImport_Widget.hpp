@@ -39,7 +39,6 @@
 #include <map>
 #include <memory>
 
-// Forward declarations
 class DataManager;
 class SelectionContext;
 class QStackedWidget;
