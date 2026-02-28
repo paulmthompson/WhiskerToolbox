@@ -101,6 +101,7 @@ private slots:
     void onStateChanged();
     void onViewStateChanged();
     void onDataKeysChanged();
+    void onLineStyleChanged();
 
 private:
     std::shared_ptr<TemporalProjectionViewState> _state;
@@ -141,6 +142,7 @@ private:
 
     void rebuildScene();
     void updateMatrices();
+    void applyLineStyle();
     void handlePanning(int delta_x, int delta_y);
     void handleZoom(float delta, bool y_only, bool both_axes);
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;

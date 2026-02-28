@@ -3,6 +3,7 @@
 #include "Core/TemporalProjectionViewState.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
+#include "CorePlotting/DataTypes/LineStyleData.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/LineBatch/CpuLineBatchIntersector.hpp"
 #include "CorePlotting/LineBatch/LineBatchBuilder.hpp"
@@ -70,8 +71,8 @@ void TemporalProjectionOpenGLWidget::setState(std::shared_ptr<TemporalProjection
                 this, &TemporalProjectionOpenGLWidget::onDataKeysChanged);
         connect(_state.get(), &TemporalProjectionViewState::glyphStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
-        connect(_state.get(), &TemporalProjectionViewState::lineWidthChanged,
-                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &TemporalProjectionViewState::lineStyleChanged,
+                this, &TemporalProjectionOpenGLWidget::onLineStyleChanged);
         _scene_dirty = true;
         updateMatrices();
         update();
@@ -110,9 +111,15 @@ void TemporalProjectionOpenGLWidget::initializeGL()
     }
 
     // Set visible colors for line states
+    // These are defaults; will be updated from state after initialization
     _line_renderer.setGlobalColor(glm::vec4{0.8f, 0.2f, 0.2f, 0.6f});   // Semi-transparent red for normal lines
     _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.8f, 0.0f, 1.0f}); // Bright yellow for selected lines
     _line_renderer.setLineWidth(1.5f);
+
+    // Apply state-based line style if state is already set
+    if (_state) {
+        applyLineStyle();
+    }
 
     // Initialize line intersector (GPU compute shader or CPU fallback)
     auto const sf = format();
@@ -274,6 +281,28 @@ void TemporalProjectionOpenGLWidget::onDataKeysChanged()
 {
     _scene_dirty = true;
     update();
+}
+
+void TemporalProjectionOpenGLWidget::onLineStyleChanged()
+{
+    if (_opengl_initialized) {
+        makeCurrent();
+        applyLineStyle();
+        doneCurrent();
+    }
+    update();
+}
+
+void TemporalProjectionOpenGLWidget::applyLineStyle()
+{
+    if (!_state) {
+        return;
+    }
+    auto const & line_style = _state->getLineStyle();
+    glm::vec4 const color = CorePlotting::hexColorToVec4(
+        line_style.hex_color, line_style.alpha);
+    _line_renderer.setGlobalColor(color);
+    _line_renderer.setLineWidth(line_style.thickness);
 }
 
 void TemporalProjectionOpenGLWidget::rebuildScene()
