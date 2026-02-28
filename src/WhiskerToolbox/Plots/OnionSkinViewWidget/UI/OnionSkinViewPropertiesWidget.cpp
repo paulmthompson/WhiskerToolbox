@@ -148,6 +148,25 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
         ui->main_layout->insertWidget(insert_idx, _line_style_section);
     }
 
+    // === Mask Style Options collapsible section ===
+    // Inserted after the mask data add widget (before temporal window label).
+    // The LineStyleControls are bound to the per-key state of the selected row.
+    _mask_style_section = new Section(this, "Mask Style Options");
+    if (_state) {
+        _mask_style_controls = new LineStyleControls(nullptr, this);
+        _mask_style_controls->setEnabled(false);
+
+        auto * mask_style_layout = new QVBoxLayout();
+        mask_style_layout->setContentsMargins(4, 4, 4, 4);
+        mask_style_layout->addWidget(_mask_style_controls);
+        _mask_style_section->setContentLayout(*mask_style_layout);
+    }
+    // Insert after the mask data add widget (before temporal_window_label)
+    {
+        int insert_idx = ui->main_layout->indexOf(ui->add_mask_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _mask_style_section);
+    }
+
     // Populate combo boxes
     _populatePointComboBox();
     _populateLineComboBox();
@@ -517,11 +536,13 @@ void OnionSkinViewPropertiesWidget::_onMaskTableSelectionChanged()
 {
     bool has_selection = !ui->mask_data_table->selectedItems().isEmpty();
     ui->remove_mask_button->setEnabled(has_selection);
+    _updateMaskStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateMaskKeyAdded(QString const & /*key*/)
 {
     _updateMaskDataTable();
+    _updateMaskStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateMaskKeyRemoved(QString const & /*key*/)
@@ -529,6 +550,7 @@ void OnionSkinViewPropertiesWidget::_onStateMaskKeyRemoved(QString const & /*key
     _updateMaskDataTable();
     ui->mask_data_table->clearSelection();
     ui->remove_mask_button->setEnabled(false);
+    _updateMaskStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_updateMaskDataTable()
@@ -682,6 +704,29 @@ void OnionSkinViewPropertiesWidget::_updateLineStyleControls()
 
     LineStyleState * line_state = _state->lineStyleStateForKey(item->text());
     _line_style_controls->setLineStyleState(line_state);
+}
+
+void OnionSkinViewPropertiesWidget::_updateMaskStyleControls()
+{
+    if (!_mask_style_controls || !_state) {
+        return;
+    }
+
+    QList<QTableWidgetItem *> const selected = ui->mask_data_table->selectedItems();
+    if (selected.isEmpty()) {
+        _mask_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    int const row = selected.first()->row();
+    QTableWidgetItem const * item = ui->mask_data_table->item(row, 0);
+    if (!item) {
+        _mask_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    LineStyleState * mask_state = _state->maskStyleStateForKey(item->text());
+    _mask_style_controls->setLineStyleState(mask_state);
 }
 
 void OnionSkinViewPropertiesWidget::_updateUIFromState()

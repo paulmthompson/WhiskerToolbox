@@ -9,6 +9,10 @@
  * - Adding/removing point, line, and mask data keys from DataManager
  * - Per-key point glyph options (shape, size, color, alpha) via GlyphStyleControls
  *   in a collapsible section; controls update when a point table row is selected
+ * - Per-key line style options (color, thickness, alpha) via LineStyleControls
+ *   in a collapsible section; controls update when a line table row is selected
+ * - Per-key mask contour style options (color, thickness, alpha) via LineStyleControls
+ *   in a collapsible section; controls update when a mask table row is selected
  * - Temporal window size (frames behind / ahead)
  * - Alpha curve type (Linear, Exponential, Gaussian) and min/max alpha
  * - Line width rendering control
@@ -126,6 +130,13 @@ private:
      * bound to the per-key LineStyleState for the selected key.
      */
     void _updateLineStyleControls();
+    /**
+     * @brief Rebind the mask LineStyleControls to the currently selected mask key.
+     *
+     * If no row is selected, the controls are disabled. Otherwise they are
+     * bound to the per-key LineStyleState for the selected mask key.
+     */
+    void _updateMaskStyleControls();
 
     Ui::OnionSkinViewPropertiesWidget * ui;
     std::shared_ptr<OnionSkinViewState> _state;
@@ -135,6 +146,8 @@ private:
     Section * _glyph_style_section = nullptr;
     LineStyleControls * _line_style_controls = nullptr;
     Section * _line_style_section = nullptr;
+    LineStyleControls * _mask_style_controls = nullptr;
+    Section * _mask_style_section = nullptr;
     HorizontalAxisRangeControls * _horizontal_range_controls;
     Section * _horizontal_range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;

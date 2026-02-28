@@ -30,8 +30,9 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Registration wiring**: `timeChanged` → `_onTimeChanged()`, `timePositionSelected` → `EditorRegistry::setCurrentTime()`
 - **Per-key line style**: Each `LineData` key has its own `CorePlotting::LineStyleData` (color, thickness, alpha) stored in `OnionSkinViewStateData::line_key_line_styles`; managed at runtime via `LineStyleState` QObject wrappers; editable in a collapsible "Line Style Options" section in the properties panel via `LineStyleControls`; \`alpha\` field sets the maximum alpha before temporal decay; serialized/deserialized as part of the JSON state
+- **Per-key mask contour style**: Each `MaskData` key has its own `CorePlotting::LineStyleData` (color, thickness, alpha) stored in `OnionSkinViewStateData::mask_key_line_styles`; managed at runtime via `LineStyleState` QObject wrappers; editable in a collapsible "Mask Style Options" section in the properties panel via `LineStyleControls`; `alpha` field sets the maximum alpha before temporal decay; serialized/deserialized as part of the JSON state
 
-**Not yet implemented**: Per-key visual customization for mask contours, SVG export, and the cross-widget shared options infrastructure described below.
+**Not yet implemented**: SVG export, and the cross-widget shared options infrastructure described below.
 
 ---
 
@@ -76,49 +77,25 @@ satisfies Phase 6 for line data (see updated Phase 6 table below).
 
 ## Phase 3: Per-Key Mask Contour Appearance Options
 
-**Status**: Not started. Mask contours currently share the global `line_width` state field and render
-with a hardcoded orange base color. The `LineStyleState` / `LineStyleControls` infrastructure
-from Phase 2 is already available and can be applied identically.
+**Status**: **Complete.**
 
-**Goal**: Allow the user to configure mask contour appearance (thickness, color) independently
-for each added `MaskData` key. Because masks are rendered as contour polylines, they use the
-same `LineRenderOptions` struct as line data (see [Phase 2](#phase-2-per-key-line-appearance-options)).
+Each `MaskData` key now has its own color, thickness, and alpha — all configurable in a
+collapsible "Mask Style Options" section in the properties panel.
 
-### 3.1 Per-Key State Extension
+### Implementation Summary
 
-```cpp
-struct OnionSkinMaskKeyOptions {
-    std::string data_key;
-    LineRenderOptions contour; // hex_color, line_width — same struct as line keys
-};
+Identical pattern to Phase 2: `CorePlotting::LineStyleData` is used as the serializable
+per-key style struct. At runtime each key has a `LineStyleState` QObject wrapper. The
+`alpha` field acts as the **maximum alpha**: temporal decay is applied against this value
+rather than the global `max_alpha`.
 
-struct OnionSkinViewStateData {
-    // Replace: std::vector<std::string> mask_data_keys;
-    // With:
-    std::vector<OnionSkinMaskKeyOptions> mask_keys;
-    // ...
-};
-```
-
-### 3.2 Properties Panel Controls
-
-Replace the current single-column mask data table with a multi-column table:
-
-| Column | Control | Description |
-|--------|---------|-------------|
-| Data Key | Label | Read-only key name |
-| Width | Spinbox | Contour line thickness in pixels |
-| Color | Color button | Opens `QColorDialog` |
-
-### 3.3 Rendering Update
-
-Identical pattern to Phase 2 — per-key contour color and width, modulated by temporal alpha.
-
-### 3.4 Migration of Global Rendering Controls
-
-After Phases 1–3, the global `point_size` and `line_width` properties become redundant (replaced
-by per-key options). These global controls should be removed from the properties panel and state
-struct, or repurposed as a "default" value used when adding new keys.
+| Component | Location | Notes |
+|-----------|----------|-------|
+| Serializable style | `CorePlotting::LineStyleData` | `mask_key_line_styles` map in `OnionSkinViewStateData` |
+| Runtime wrapper | `LineStyleState` | `Plots/Common/LineStyleControls/Core/` — per-key, owned by state |
+| Properties UI | `LineStyleControls` | `Plots/Common/LineStyleControls/` — color button, thickness + alpha spinboxes |
+| State methods | `maskStyleStateForKey()`, `getMaskKeyLineStyle()` | On `OnionSkinViewState` |
+| Signals | `maskStyleChanged()`, `maskKeyLineStyleChanged(key)` | Trigger scene rebuild |
 
 ---
 
@@ -291,10 +268,7 @@ consistent look and behavior across:
 | Priority | Phase | Status | Dependency |
 |----------|-------|--------|------------|
 | — | Phase 2 — Per-Key Line Options | **Complete** | — |
-| 1 | Phase 3 — Per-Key Mask Options | Not started | Phase 2 (`LineStyleState`/`LineStyleControls` now available) |
-| 2 | Phase 4 — SVG Export | Not started | Phases 2–3 (export should capture per-key styles) |
-| 3 | Phase 5 — Observer Improvements | Not started | None |
-| 4 | Phase 6 — Shared Options Infrastructure | Partially complete | Phase 3 will complete line infrastructure |
-
-Phase 3 can now be implemented directly using `LineStyleState` and `LineStyleControls` — no
-nadditional shared infrastructure is needed.
+| — | Phase 3 — Per-Key Mask Options | **Complete** | Phase 2 |
+| 1 | Phase 4 — SVG Export | Not started | Phases 2–3 (export should capture per-key styles) |
+| 2 | Phase 5 — Observer Improvements | Not started | None |
+| 3 | Phase 6 — Shared Options Infrastructure | Partially complete | — |

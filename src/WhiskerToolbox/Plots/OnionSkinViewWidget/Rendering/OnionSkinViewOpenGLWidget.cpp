@@ -79,6 +79,8 @@ void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> sta
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::lineStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::maskStyleChanged,
+                this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
                 this, [this](float) { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
@@ -278,7 +280,6 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     auto const mask_keys = _state->getMaskDataKeys();
     int const behind = _state->getWindowBehind();
     int const ahead = _state->getWindowAhead();
-    float const line_width = _state->getLineWidth();
     bool const highlight_current = _state->getHighlightCurrent();
     float const min_alpha = _state->getMinAlpha();
     float const max_alpha = _state->getMaxAlpha();
@@ -292,7 +293,6 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
     // Highlight colors (used when highlight_current is true)
     glm::vec4 const current_highlight_color{1.0f, 0.3f, 0.1f, max_alpha};  // Bright orange-red
-    glm::vec4 const base_mask_color{0.8f, 0.5f, 0.2f, 1.0f};   // Orange base
 
     // === Map all windowed data ===
     // Points — keyed by point data key so each key's glyph style can be applied independently
@@ -339,18 +339,26 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         keyed_lines.push_back(std::move(kl));
     }
 
-    // Mask contours
-    std::vector<CorePlotting::TimedOwningLineView> all_mask_contours;
+    // Mask contours — keyed by mask data key so each key's style can be applied independently
+    struct KeyedMaskContours {
+        QString key;
+        CorePlotting::LineStyleData line_style;
+        std::vector<CorePlotting::TimedOwningLineView> contours;
+    };
+    std::vector<KeyedMaskContours> keyed_mask_contours;
+    keyed_mask_contours.reserve(mask_keys.size());
+
     for (auto const & key_qstr : mask_keys) {
         auto mask_data = _data_manager->getData<MaskData>(key_qstr.toStdString());
         if (!mask_data) {
             continue;
         }
-        auto contours = CorePlotting::SpatialMapper::mapMaskContoursInWindow(
+        KeyedMaskContours kmc;
+        kmc.key = key_qstr;
+        kmc.line_style = _state->getMaskKeyLineStyle(key_qstr);
+        kmc.contours = CorePlotting::SpatialMapper::mapMaskContoursInWindow(
             *mask_data, center, behind, ahead);
-        all_mask_contours.insert(all_mask_contours.end(),
-                                std::make_move_iterator(contours.begin()),
-                                std::make_move_iterator(contours.end()));
+        keyed_mask_contours.push_back(std::move(kmc));
     }
 
     // === Compute bounding box from data ===
@@ -382,13 +390,15 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         }
     }
 
-    for (auto const & contour : all_mask_contours) {
-        for (auto const & v : contour.vertices()) {
-            min_x = std::min(min_x, v.x);
-            min_y = std::min(min_y, v.y);
-            max_x = std::max(max_x, v.x);
-            max_y = std::max(max_y, v.y);
-            has_data = true;
+    for (auto const & kmc : keyed_mask_contours) {
+        for (auto const & contour : kmc.contours) {
+            for (auto const & v : contour.vertices()) {
+                min_x = std::min(min_x, v.x);
+                min_y = std::min(min_y, v.y);
+                max_x = std::max(max_x, v.x);
+                max_y = std::max(max_y, v.y);
+                has_data = true;
+            }
         }
     }
 
@@ -560,48 +570,60 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         }
     }
 
-    // --- Mask contours (same pattern as lines) ---
-    std::vector<size_t> mask_indices(all_mask_contours.size());
-    std::iota(mask_indices.begin(), mask_indices.end(), 0);
-    std::sort(mask_indices.begin(), mask_indices.end(),
-              [&all_mask_contours](size_t a, size_t b) {
-                  return all_mask_contours[a].absTemporalDistance() >
-                         all_mask_contours[b].absTemporalDistance();
-              });
-
-    for (size_t const idx : mask_indices) {
-        auto const & contour = all_mask_contours[idx];
-        int const dist = contour.absTemporalDistance();
-        float const alpha = CorePlotting::computeTemporalAlpha(
-            dist, half_width, alpha_curve, min_alpha, max_alpha);
-
-        bool const is_current = (dist == 0);
-
-        CorePlotting::RenderablePolyLineBatch batch;
-        batch.thickness = (is_current && highlight_current)
-                              ? line_width * 1.5f
-                              : line_width;
-        batch.model_matrix = glm::mat4(1.0f);
-        batch.entity_ids.push_back(contour.entity_id);
-
-        glm::vec4 color = (is_current && highlight_current)
-                              ? current_highlight_color
-                              : glm::vec4{base_mask_color.r, base_mask_color.g,
-                                          base_mask_color.b, alpha};
-        batch.colors.push_back(color);
-
-        int32_t vertex_count = 0;
-        batch.line_start_indices.push_back(0);
-
-        for (auto const & v : contour.vertices()) {
-            batch.vertices.push_back(v.x);
-            batch.vertices.push_back(v.y);
-            ++vertex_count;
+    // --- Render each mask contour key with its own style, sorted back-to-front ---
+    for (auto const & kmc : keyed_mask_contours) {
+        if (kmc.contours.empty()) {
+            continue;
         }
-        batch.line_vertex_counts.push_back(vertex_count);
 
-        if (vertex_count > 0) {
-            builder.addPolyLineBatch(std::move(batch));
+        glm::vec4 const base_color = CorePlotting::hexColorToVec4(
+            kmc.line_style.hex_color, kmc.line_style.alpha);
+        float const key_line_width = kmc.line_style.thickness;
+
+        // Sort contours by temporal distance (farthest first = back-to-front)
+        std::vector<size_t> contour_indices(kmc.contours.size());
+        std::iota(contour_indices.begin(), contour_indices.end(), 0);
+        std::sort(contour_indices.begin(), contour_indices.end(),
+                  [&kmc](size_t a, size_t b) {
+                      return kmc.contours[a].absTemporalDistance() >
+                             kmc.contours[b].absTemporalDistance();
+                  });
+
+        for (size_t const idx : contour_indices) {
+            auto const & contour = kmc.contours[idx];
+            int const dist = contour.absTemporalDistance();
+            float const alpha = CorePlotting::computeTemporalAlpha(
+                dist, half_width, alpha_curve, min_alpha,
+                kmc.line_style.alpha);
+
+            bool const is_current = (dist == 0);
+
+            CorePlotting::RenderablePolyLineBatch batch;
+            batch.thickness = (is_current && highlight_current)
+                                  ? key_line_width * 1.5f
+                                  : key_line_width;
+            batch.model_matrix = glm::mat4(1.0f);
+            batch.entity_ids.push_back(contour.entity_id);
+
+            glm::vec4 color = (is_current && highlight_current)
+                                  ? current_highlight_color
+                                  : glm::vec4{base_color.r, base_color.g,
+                                              base_color.b, alpha};
+            batch.colors.push_back(color);
+
+            int32_t vertex_count = 0;
+            batch.line_start_indices.push_back(0);
+
+            for (auto const & v : contour.vertices()) {
+                batch.vertices.push_back(v.x);
+                batch.vertices.push_back(v.y);
+                ++vertex_count;
+            }
+            batch.line_vertex_counts.push_back(vertex_count);
+
+            if (vertex_count > 0) {
+                builder.addPolyLineBatch(std::move(batch));
+            }
         }
     }
 
