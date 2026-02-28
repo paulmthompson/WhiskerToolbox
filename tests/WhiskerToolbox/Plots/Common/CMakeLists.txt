@@ -71,6 +71,38 @@ endif()
 
 # ── Common DataManager integration tests (template-based) ────────────────────
 
+# ── EventRateEstimation tests ─────────────────────────────────────────────────
+
+add_executable(test_event_rate_estimation
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Plots/Common/EventRateEstimation.test.cpp
+)
+
+target_link_libraries(test_event_rate_estimation PRIVATE
+    Catch2::Catch2WithMain
+    EventRateEstimation
+    DataManager
+)
+
+target_include_directories(test_event_rate_estimation PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+)
+
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_event_rate_estimation PROPERTIES
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_event_rate_estimation_all
+        COMMAND test_event_rate_estimation
+    )
+    set_property(TEST test_event_rate_estimation_all PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+endif()
+
+# ── Common DataManager integration tests (template-based) ────────────────────
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Test)
 
 add_executable(test_plot_widget_common

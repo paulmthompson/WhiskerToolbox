@@ -61,15 +61,19 @@ HeatmapWidget::HeatmapWidget(std::shared_ptr<DataManager> data_manager,
                 emit timePositionSelected(TimePosition(time_frame_index));
             });
 
-    connect(_opengl_widget, &HeatmapOpenGLWidget::trialCountChanged,
+    connect(_opengl_widget, &HeatmapOpenGLWidget::unitCountChanged,
             this, [this](size_t count) {
-                _trial_count = count;
+                _unit_count = count;
                 if (_state && count > 0) {
                     _state->setYBounds(0.0, static_cast<double>(count));
+                    // Auto-fit: reset Y zoom/pan so all units are visible
+                    _state->setYZoom(1.0);
+                    _state->setPan(_state->viewState().x_pan, 0.0);
                 }
                 if (_vertical_axis_widget) {
                     _vertical_axis_widget->update();
                 }
+                syncVerticalAxisRange();
             });
 }
 
@@ -124,6 +128,7 @@ void HeatmapWidget::wireTimeAxis() {
     }
 
     _axis_widget->setAxisMapping(CorePlotting::relativeTimeAxis());
+    _axis_widget->setAlignmentTarget(_opengl_widget);
 
     _axis_widget->setViewStateGetter([this]() {
         if (!_state || !_opengl_widget) {
@@ -168,10 +173,10 @@ void HeatmapWidget::wireVerticalAxis()
         return;
     }
 
-    _vertical_axis_widget->setAxisMapping(CorePlotting::identityAxis("Trial", 0));
+    _vertical_axis_widget->setAxisMapping(CorePlotting::identityAxis("Unit", 0));
 
     _vertical_axis_widget->setRangeGetter(
-            [this]() { return computeVisibleTrialRange(); });
+            [this]() { return computeVisibleUnitRange(); });
 
     auto * vas = _state->verticalAxisState();
     if (vas) {
@@ -233,11 +238,11 @@ void HeatmapWidget::syncVerticalAxisRange()
     if (!vas) {
         return;
     }
-    auto [min, max] = computeVisibleTrialRange();
+    auto [min, max] = computeVisibleUnitRange();
     vas->setRangeSilent(min, max);
 }
 
-std::pair<double, double> HeatmapWidget::computeVisibleTrialRange() const
+std::pair<double, double> HeatmapWidget::computeVisibleUnitRange() const
 {
     if (!_state) {
         return {0.0, 0.0};

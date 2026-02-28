@@ -87,30 +87,35 @@ Add a normalization combo box to the Global Options section of `PSTHPropertiesWi
 
 ## Phase 2: Smoothing and Rate Estimation Methods
 
-**Status**: Design phase. Depends on Phase 1 (normalization).
+**Status**: Partially complete. The shared gathering and binning infrastructure (Phase 2.6) has
+been extracted into `Plots/Common/EventRateEstimation/`. The smoothing methods (Gaussian
+kernel, causal exponential, adaptive kernel) are not yet implemented.
 
 **Goal**: Support multiple methods for converting aligned spike times to continuous rate estimates, beyond simple binning.
 
-### 2.1 Rate Estimation Enum
+### 2.1 Estimation Method Selection
+
+Estimation methods are selected via the shared `EstimationParams` variant from the
+[Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md#estimation-methods).
+New methods are added by defining a `*Params` struct and appending it to the variant:
 
 ```cpp
-enum class RateEstimationMethod {
-    Binning,                ///< Simple histogram binning (current)
-    GaussianKernel,         ///< Convolution with Gaussian kernel
-    CausalExponential,      ///< Causal exponential filter (only past spikes)
-    AdaptiveKernel          ///< Variable-bandwidth kernel (Shimazaki & Shinomoto 2010)
-};
+using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
 ```
 
-### 2.2 Smoothing Parameter
+### 2.2 State Extension
 
-For kernel methods, add a bandwidth/sigma parameter:
+Store the active estimation parameters in `PSTHStateData`. The state only needs to track
+which method is selected and its parameters — the variant itself is not serializable via
+`rfl::json`, so store the method choice as an enum and parameters as individual fields:
 
 ```cpp
 struct PSTHStateData {
     // ... existing fields ...
-    RateEstimationMethod rate_method = RateEstimationMethod::Binning;
-    double kernel_bandwidth = 20.0;  // Bandwidth in time units (for kernel methods)
+    // Estimation method selection (maps to EstimationParams variant at runtime)
+    double bin_size = 10.0;              ///< For BinningParams
+    double kernel_bandwidth = 20.0;      ///< sigma for GaussianKernelParams
+    double eval_step = 1.0;              ///< evaluation spacing for kernel methods
 };
 ```
 
@@ -138,73 +143,89 @@ Kernel methods naturally produce continuous curves rather than histograms. When 
 - The output is a `RenderablePolyLineBatch` regardless of the `PSTHStyle` setting
 - The bin_size parameter is reinterpreted as the evaluation resolution (step size for the curve)
 
-### 2.6 Reuse for HeatmapWidget
+### 2.6 Shared EventRateEstimation Library ✅
 
-The `GatherResult` → rate estimation pipeline is directly reusable for the [HeatmapWidget](../HeatmapWidget/index.qmd). The heatmap needs per-unit firing rate across time, which is exactly the same computation as PSTH but performed independently for each unit. A shared rate estimation function should be factored out:
+The shared `EventRateEstimation` library (`Plots/Common/EventRateEstimation/`) provides all
+gathering, estimation, normalization, and uncertainty infrastructure. It is being redesigned
+per the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
 
-```cpp
-namespace CorePlotting::RateEstimation {
-    // Takes aligned spike times, returns rate estimate at bin centers
-    std::vector<double> estimateRate(
-        GatherResult<DigitalEventSeries> const & gathered,
-        RateEstimationMethod method,
-        double bin_size,
-        double window_size,
-        double kernel_bandwidth = 20.0);
-}
-```
+Key types after the redesign:
+
+- **`RateEstimate`** — universal output: paired `times[]` + `values[]` with metadata
+  (replaces `RateProfile` which had binning-specific `bin_start`/`bin_width`)
+- **`RateEstimateWithTrials`** — extends `RateEstimate` with per-trial breakdown
+  (opt-in via `estimateRateWithTrials()`)
+- **`ScalingMode`** + `applyScaling()` — shared normalization (replaces bespoke
+  `HeatmapScaling`/`PSTHNormalization` enums)
+- **`ConfidenceBand`** + `computeSEM()` / `bootstrapCI()` — uncertainty quantification
+
+The library has **no Qt dependency** and can be used from any rendering backend.
+`PSTHPlotOpenGLWidget::rebuildScene()` should be migrated to use `estimateRate()` and
+`applyScaling()` (replacing its inline binning and normalization loops) as part of
+completing Phase 2.
 
 ---
 
 ## Phase 3: Variability and Confidence Intervals
 
-**Status**: Design phase. Depends on Phase 1 (normalization).
+**Status**: Design phase. Depends on Phase 1 (normalization) and the
+[Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
 
 **Goal**: Display trial-to-trial variability in the PSTH, providing a visual measure of the reliability of the rate estimate.
 
-### 3.1 Variability Modes
+This phase uses the shared uncertainty infrastructure from the redesign rather than defining
+bespoke per-trial histogram or confidence band types.
+
+### 3.1 Per-Trial Data via `estimateRateWithTrials()`
+
+The shared library provides `estimateRateWithTrials()`, which returns a
+`RateEstimateWithTrials` containing both the aggregate `RateEstimate` (mean across trials)
+and a `PerTrialData` matrix (each trial's individual rate curve). This is the opt-in
+computation path — `estimateRate()` (the default) does not allocate per-trial storage.
+
+See [Rate Estimation Redesign — Per-Trial Data](../Common/EventRateEstimation/rate_estimation_redesign.md#per-trial-data-for-uncertainty-and-z-score).
+
+### 3.2 Confidence Bands via Shared API
+
+The shared `ConfidenceBand` struct and computation functions handle all variability modes:
 
 ```cpp
-enum class VariabilityDisplay {
-    None,           ///< No variability display (current behavior)
-    SEM,            ///< Standard error of the mean
-    StdDev,         ///< Standard deviation
-    CI95,           ///< 95% confidence interval (bootstrap or normal approximation)
-    Percentile      ///< User-defined percentile band (e.g., 25th–75th)
+struct ConfidenceBand {
+    std::vector<double> lower;    ///< Lower bound at each time point
+    std::vector<double> upper;    ///< Upper bound at each time point
 };
+
+auto ci = computeSEM(data, 1.96);               // SEM × 1.96 for 95% CI
+auto ci = computePercentileCI(data, 2.5, 97.5); // Percentile-based 95% CI
+auto ci = bootstrapCI(data, 1000, 0.95);        // Bootstrap CI
 ```
 
-### 3.2 Per-Trial Histograms
-
-To compute variability, the binning step must produce per-trial histograms rather than a single aggregated histogram:
+For the normalization + uncertainty pipeline, use the `applyScaling(RateEstimateWithTrials &)`
+overload to ensure aggregate and per-trial data are normalized consistently before computing CI:
 
 ```cpp
-// Per-trial counts: trials × bins matrix
-std::vector<std::vector<double>> per_trial_histograms(num_trials, std::vector<double>(num_bins, 0.0));
+auto data = estimateRateWithTrials(gathered, tf, window_size, params);
+applyScaling(data, ScalingMode::ZScore, 1000.0);  // normalizes aggregate + all trials
+auto ci = computeSEM(data);  // CI is in z-score space — consistent
 ```
 
-Then compute mean ± variability metric across trials for each bin.
+See [Rate Estimation Redesign — Uncertainty](../Common/EventRateEstimation/rate_estimation_redesign.md#uncertainty-quantification).
 
 ### 3.3 Rendering Confidence Bands
 
-Confidence bands should be rendered as a filled semi-transparent region behind the mean line/bars. This requires a new renderable primitive or a `RenderableRectangleBatch` with per-bin upper/lower bounds:
+Confidence bands should be rendered as a filled semi-transparent region behind the mean
+line/bars. The `ConfidenceBand` provides `lower[i]` and `upper[i]` at each time point,
+which maps directly to a filled polygon or rectangle batch.
 
-```cpp
-struct ConfidenceBandData {
-    double bin_start;
-    double bin_width;
-    std::vector<double> upper;  // Upper bound per bin
-    std::vector<double> lower;  // Lower bound per bin
-};
-```
-
-The `HistogramMapper` could be extended with a `toConfidenceBand()` method that produces a filled polygon batch, or a new `ConfidenceBandMapper` could be introduced. The band should use the same fill color as the histogram but with reduced opacity (e.g., alpha = 0.2).
+The `HistogramMapper` could be extended with a `toConfidenceBand()` method that produces
+a filled polygon batch, or a new `ConfidenceBandMapper` could be introduced. The band
+should use the same fill color as the histogram but with reduced opacity (e.g., alpha = 0.2).
 
 ### 3.4 Properties Panel
 
 Add controls to `PSTHPropertiesWidget`:
 
-- Variability mode combo box (`None`, `SEM`, `StdDev`, `CI95`, `Percentile`)
+- Variability mode combo box (`None`, `SEM`, `CI95`, `Percentile`, `Bootstrap`)
 - Confidence band color/opacity slider
 - For Percentile mode: lower and upper percentile spinboxes
 
@@ -353,19 +374,10 @@ This requires decoupling the PSTH computation and rendering from the full widget
 
 ### 6.2 Lightweight Histogram Renderer
 
-Factor out a stateless histogram computation function:
-
-```cpp
-namespace CorePlotting::PSTH {
-    /// Compute a PSTH histogram from a GatherResult
-    HistogramData computePSTH(
-        GatherResult<DigitalEventSeries> const & gathered,
-        std::shared_ptr<TimeFrame> time_frame,
-        double bin_size,
-        double window_size,
-        PSTHNormalization normalization = PSTHNormalization::Count);
-}
-```
+Use the shared `estimateRate()` from the `EventRateEstimation` library to compute the
+histogram data. The `RateEstimate` output (paired `times[]` + `values[]`) can be rendered
+directly by a lightweight `QPainter`-based renderer without needing the full OpenGL widget
+machinery.
 
 For tooltip rendering, there are two approaches:
 
@@ -439,8 +451,10 @@ The existing per-event `hex_color` in `PSTHEventOptions` should be applied to th
 ### Next Up
 
 1. **Phase 1**: Normalization modes (straightforward extension of existing binning)
-2. **Phase 4**: Cross-widget linking with pin support
-3. **Phase 5**: SVG export (infrastructure already exists)
+2. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
+   `EventRateEstimation` library; then add Gaussian kernel and other smoothing methods
+3. **Phase 4**: Cross-widget linking with pin support
+4. **Phase 5**: SVG export (infrastructure already exists)
 
 ### Following
 
@@ -456,17 +470,11 @@ The existing per-event `hex_color` in `PSTHEventOptions` should be applied to th
 
 ## Open Questions
 
-1. **Normalization units**: Should firing rate be in Hz (requires knowing the time unit)? Or should we assume the time frame is in milliseconds?
+1. **SVG export scope**: Should SVG export be a per-widget feature (button in each widget), or a centralized "Export All Visible Plots" action? The DataViewerWidget already has its own bespoke SVG exporter — should that be migrated to the shared infrastructure?
 
-2. **Kernel method location**: Should the rate estimation algorithms (Gaussian kernel, adaptive kernel) live in `CorePlotting/`, `CoreMath/`, or a new `RateEstimation/` library? They are useful beyond just PSTH.
+2. **Tooltip rendering**: Should tooltip histograms use `QPainter` (simpler, no GL context needed) or render to `QPixmap` via GL (consistent with main rendering)? `QPainter` is strongly preferred for reliability.
 
-3. **SVG export scope**: Should SVG export be a per-widget feature (button in each widget), or a centralized "Export All Visible Plots" action? The DataViewerWidget already has its own bespoke SVG exporter — should that be migrated to the shared infrastructure?
-
-4. **Tooltip rendering**: Should tooltip histograms use `QPainter` (simpler, no GL context needed) or render to `QPixmap` via GL (consistent with main rendering)? `QPainter` is strongly preferred for reliability.
-
-5. **Multiple event series**: When overlaying multiple event series, should the default be stacked or overlaid? Neuroscience convention varies — PSTH typically shows one unit at a time, but comparing two conditions on the same unit is common.
-
-6. **Shared `computePSTH()` location**: The function that converts `GatherResult<DigitalEventSeries>` to `HistogramData` currently lives inline in `PSTHPlotOpenGLWidget::rebuildScene()`. It should be extracted for reuse by HeatmapWidget (Phase 2.6) and tooltip rendering (Phase 6). Best location: `CorePlotting/Algorithms/` or `GatherResult/Algorithms/`.
+3. **Multiple event series**: When overlaying multiple event series, should the default be stacked or overlaid? Neuroscience convention varies — PSTH typically shows one unit at a time, but comparing two conditions on the same unit is common.
 
 # See Also
 

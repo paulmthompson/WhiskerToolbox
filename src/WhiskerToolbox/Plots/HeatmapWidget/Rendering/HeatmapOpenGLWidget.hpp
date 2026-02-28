@@ -14,9 +14,7 @@
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "GatherResult/GatherResult.hpp"
 
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -49,7 +47,7 @@ public:
 signals:
     void plotDoubleClicked(int64_t time_frame_index);
     void viewBoundsChanged();
-    void trialCountChanged(size_t count);
+    void unitCountChanged(size_t count);
 
 protected:
     void initializeGL() override;
@@ -84,7 +82,7 @@ private:
     QPoint _click_start_pos;
     static constexpr int DRAG_THRESHOLD = 5;
 
-    size_t _trial_count{0};
+    size_t _unit_count{0};
 
     int _widget_width{1};
     int _widget_height{1};

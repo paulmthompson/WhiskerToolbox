@@ -161,6 +161,7 @@ void EventPlotWidget::wireTimeAxis() {
     }
 
     _axis_widget->setAxisMapping(CorePlotting::relativeTimeAxis());
+    _axis_widget->setAlignmentTarget(_opengl_widget);
 
     _axis_widget->setViewStateGetter([this]() {
         if (!_state || !_opengl_widget) {

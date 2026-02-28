@@ -6,6 +6,8 @@
 
 #include <rfl/json.hpp>
 
+#include <algorithm>
+
 HeatmapState::HeatmapState(QObject * parent)
     : EditorState(parent),
       _alignment_state(std::make_unique<PlotAlignmentState>(this)),
@@ -185,6 +187,69 @@ void HeatmapState::setYBounds(double y_min, double y_max)
     }
 }
 
+// === Unit Management ===
+
+void HeatmapState::addUnit(std::string const & key)
+{
+    if (hasUnit(key)) {
+        return;
+    }
+    _data.unit_keys.push_back(key);
+    markDirty();
+    emit unitsChanged();
+    emit stateChanged();
+}
+
+void HeatmapState::removeUnit(std::string const & key)
+{
+    auto it = std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key);
+    if (it == _data.unit_keys.end()) {
+        return;
+    }
+    _data.unit_keys.erase(it);
+    markDirty();
+    emit unitsChanged();
+    emit stateChanged();
+}
+
+void HeatmapState::addUnits(std::vector<std::string> const & keys)
+{
+    bool changed = false;
+    for (auto const & key : keys) {
+        if (!hasUnit(key)) {
+            _data.unit_keys.push_back(key);
+            changed = true;
+        }
+    }
+    if (changed) {
+        markDirty();
+        emit unitsChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::removeUnits(std::vector<std::string> const & keys)
+{
+    bool changed = false;
+    for (auto const & key : keys) {
+        auto it = std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key);
+        if (it != _data.unit_keys.end()) {
+            _data.unit_keys.erase(it);
+            changed = true;
+        }
+    }
+    if (changed) {
+        markDirty();
+        emit unitsChanged();
+        emit stateChanged();
+    }
+}
+
+bool HeatmapState::hasUnit(std::string const & key) const
+{
+    return std::find(_data.unit_keys.begin(), _data.unit_keys.end(), key) != _data.unit_keys.end();
+}
+
 // === Background Color ===
 
 QString HeatmapState::getBackgroundColor() const
@@ -200,6 +265,63 @@ void HeatmapState::setBackgroundColor(QString const & hex_color)
         emit backgroundColorChanged(hex_color);
         emit stateChanged();
     }
+}
+
+// === Scaling ===
+
+void HeatmapState::setScaling(WhiskerToolbox::Plots::HeatmapScaling scaling)
+{
+    if (_data.scaling != scaling) {
+        _data.scaling = scaling;
+
+        // When switching to ZScore, auto-suggest Symmetric color range
+        if (scaling == WhiskerToolbox::Plots::HeatmapScaling::ZScore
+            && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
+            _data.color_range.mode = HeatmapColorRangeConfig::Mode::Symmetric;
+            emit colorRangeChanged();
+        }
+        // When switching away from ZScore with Symmetric, revert to Auto
+        if (scaling != WhiskerToolbox::Plots::HeatmapScaling::ZScore
+            && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
+            _data.color_range.mode = HeatmapColorRangeConfig::Mode::Auto;
+            emit colorRangeChanged();
+        }
+
+        markDirty();
+        emit scalingChanged();
+        emit stateChanged();
+    }
+}
+
+// === Color Range ===
+
+void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode)
+{
+    if (_data.color_range.mode != mode) {
+        _data.color_range.mode = mode;
+        markDirty();
+        emit colorRangeChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::setColorRangeBounds(double vmin, double vmax)
+{
+    if (_data.color_range.vmin != vmin || _data.color_range.vmax != vmax) {
+        _data.color_range.vmin = vmin;
+        _data.color_range.vmax = vmax;
+        markDirty();
+        emit colorRangeChanged();
+        emit stateChanged();
+    }
+}
+
+void HeatmapState::setColorRange(HeatmapColorRangeConfig const & config)
+{
+    _data.color_range = config;
+    markDirty();
+    emit colorRangeChanged();
+    emit stateChanged();
 }
 
 // === Serialization ===

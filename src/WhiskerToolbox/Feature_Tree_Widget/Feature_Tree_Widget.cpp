@@ -75,16 +75,25 @@ Feature_Tree_Widget::Feature_Tree_Widget(QWidget * parent)
 }
 
 Feature_Tree_Widget::~Feature_Tree_Widget() {
+    if (_data_manager && _observer_id >= 0) {
+        _data_manager->removeObserver(_observer_id);
+    }
     delete ui;
 }
 
 QTreeWidget * Feature_Tree_Widget::treeWidget() const { return ui->treeWidget; }
 
 void Feature_Tree_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    // Remove previous observer if any
+    if (_data_manager && _observer_id >= 0) {
+        _data_manager->removeObserver(_observer_id);
+        _observer_id = -1;
+    }
+
     _data_manager = std::move(data_manager);
 
     // Register observer for data manager updates
-    _data_manager->addObserver([this]() {
+    _observer_id = _data_manager->addObserver([this]() {
         _refreshFeatures();
     });
 

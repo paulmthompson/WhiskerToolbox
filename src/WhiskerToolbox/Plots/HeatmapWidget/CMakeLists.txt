@@ -39,6 +39,7 @@ target_link_libraries(HeatmapWidget PRIVATE
 target_link_libraries(HeatmapWidget PRIVATE Collapsible_Widget)
 target_link_libraries(HeatmapWidget PRIVATE DataManager)
 target_link_libraries(HeatmapWidget PRIVATE EditorState)
+target_link_libraries(HeatmapWidget PRIVATE Feature_Tree_Widget)
 target_link_libraries(HeatmapWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(HeatmapWidget PRIVATE RelativeTimeAxisWidget)
 target_link_libraries(HeatmapWidget PRIVATE VerticalAxisWidget)
@@ -47,6 +48,7 @@ target_link_libraries(HeatmapWidget PRIVATE NEURALYZER_GEOMETRY)
 target_link_libraries(HeatmapWidget PRIVATE PlottingOpenGL)
 target_link_libraries(HeatmapWidget PRIVATE glm::glm)
 target_link_libraries(HeatmapWidget PRIVATE GatherResult)
+target_link_libraries(HeatmapWidget PRIVATE EventRateEstimation)
 
 target_include_directories(HeatmapWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

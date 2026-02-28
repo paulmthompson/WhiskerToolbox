@@ -22,8 +22,12 @@
 #include <memory>
 
 class DataManager;
+class Feature_Tree_Widget;
 class HeatmapWidget;
 class PlotAlignmentWidget;
+class QComboBox;
+class QDoubleSpinBox;
+class QLabel;
 class RelativeTimeAxisRangeControls;
 class Section;
 class VerticalAxisRangeControls;
@@ -68,11 +72,28 @@ private:
     std::shared_ptr<HeatmapState> _state;
     std::shared_ptr<DataManager> _data_manager;
     PlotAlignmentWidget * _alignment_widget;
+    Feature_Tree_Widget * _unit_tree_widget;
     HeatmapWidget * _plot_widget;
     RelativeTimeAxisRangeControls * _range_controls;
     Section * _range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
+
+    // Scaling UI
+    Section * _scaling_section{nullptr};
+    QComboBox * _scaling_combo{nullptr};
+    QComboBox * _color_range_mode_combo{nullptr};
+    QDoubleSpinBox * _vmin_spin{nullptr};
+    QDoubleSpinBox * _vmax_spin{nullptr};
+    QLabel * _vmin_label{nullptr};
+    QLabel * _vmax_label{nullptr};
+
+    void _setupUnitTree();
+    void _connectUnitTreeSignals();
+    void _syncTreeFromState();
+    void _setupScalingSection();
+    void _syncScalingFromState();
+    void _updateColorRangeVisibility();
 };
 
 #endif// HEATMAP_PROPERTIES_WIDGET_HPP
