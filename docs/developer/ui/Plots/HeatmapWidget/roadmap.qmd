@@ -21,15 +21,15 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Unit selection state** (Phase 1.1): `HeatmapStateData::unit_keys` with full add/remove/batch API and `unitsChanged()` signal
 - **Unit selection UI** (Phase 1.2): `Feature_Tree_Widget` embedded in properties panel, filtered to `DigitalEventSeries`, with prefix-based group toggling
+- **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` for histogram binning with a `std::variant`-based variation point for future methods
 
-**Not yet implemented**: Data gathering, rate estimation, colormap rendering, sorting, and all cross-widget linking described below.
+**Not yet implemented**: Heatmap scene building, Y-axis auto-fit, colormap rendering, sorting, and all cross-widget linking described below.
 
 ---
 
 ## Phase 1: Core Rendering — Per-Unit Rate Matrix
 
-**Status**: Phases 1.1 and 1.2 complete. Phases 1.3–1.5 not started; rate computation is a
-direct reuse of the [PSTHWidget](../PSTHWidget/index.qmd) binning pipeline.
+**Status**: Phases 1.1, 1.2, and 1.3 complete. Phases 1.4–1.5 not started.
 
 **Goal**: Produce a `units × time_bins` firing rate matrix and render it as a colored heatmap.
 
@@ -85,30 +85,61 @@ This replaces the combo box + Add/Remove/Add-All button design described in the 
 roadmap; the tree gives equivalent functionality with less UI surface and more visual
 structure when many units are present.
 
-### 1.3 Rate Estimation ⬜
+### 1.3 Rate Estimation ✅
 
-For each unit, compute a rate profile using the same pipeline as [PSTHWidget](../PSTHWidget/index.qmd):
+The shared `EventRateEstimation` library (`Plots/Common/EventRateEstimation/`) provides all
+gathering and rate estimation infrastructure needed by both this widget and
+[PSTHWidget](../PSTHWidget/index.qmd).
 
-1. Call `WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>()` with the unit's key and the alignment settings
-2. Bin aligned events into uniform time bins (same logic as `PSTHPlotOpenGLWidget::rebuildScene()`)
-3. Store the resulting counts as a row in the `units × time_bins` matrix
-
-Initially, use raw counts divided by trial count (mean count per trial). More sophisticated
-normalization is addressed in [Phase 3](#phase-3-scaling-and-normalization).
-
-The rate estimation computation should be factored into a shared function as proposed in
-the [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2:
+**Gathering API**:
 
 ```cpp
-namespace CorePlotting::RateEstimation {
-    std::vector<double> estimateRate(
-        GatherResult<DigitalEventSeries> const & gathered,
-        RateEstimationMethod method,
-        double bin_size,
-        double window_size,
-        double kernel_bandwidth = 20.0);
-}
+// Single unit — returns std::nullopt if gather fails or TimeFrame is missing
+std::optional<UnitGatherContext> createUnitGatherContext(
+    std::shared_ptr<DataManager> const & dm,
+    std::string const & event_key,
+    PlotAlignmentData const & alignment_data);
+
+// Batch — skips failing keys, preserves order of successes
+std::vector<UnitGatherContext> createUnitGatherContexts(
+    std::shared_ptr<DataManager> const & dm,
+    std::vector<std::string> const & event_keys,
+    PlotAlignmentData const & alignment_data);
 ```
+
+`UnitGatherContext` bundles the `GatherResult<DigitalEventSeries>`, source `TimeFrame`, and
+key so callers do not need to re-fetch the `TimeFrame` at estimation time.
+
+**Rate estimation API**:
+
+```cpp
+// Single unit
+RateProfile estimateRate(
+    GatherResult<DigitalEventSeries> const & gathered,
+    TimeFrame const * time_frame,
+    double window_size,
+    EstimationParams const & params = BinningParams{});
+
+// Multi-unit (heatmap use case)
+std::vector<RateProfile> estimateRates(
+    std::vector<UnitGatherContext> const & units,
+    double window_size,
+    EstimationParams const & params = BinningParams{});
+```
+
+`RateProfile` stores raw per-bin `counts`, `bin_start`, `bin_width`, and `num_trials`.
+Normalisation (÷ num_trials for mean count, ÷ num_trials × bin_size_s for Hz) is applied
+by the caller.
+
+**Variation point**: `EstimationParams` is a `std::variant<BinningParams>`. New methods are
+added by defining a new `*Params` struct, appending it to the variant alias, and adding a
+branch in the `std::visit` lambda — no virtual dispatch or heap allocation required.
+
+Currently implemented: `BinningParams { double bin_size = 10.0 }` (uniform histogram
+binning, same logic as `PSTHPlotOpenGLWidget::rebuildScene()`).
+
+`HeatmapOpenGLWidget::rebuildScene()` should call `createUnitGatherContexts()` then
+`estimateRates()` to obtain the `units × time_bins` rate matrix for scene building.
 
 ### 1.4 Heatmap Scene Building ⬜
 
@@ -731,7 +762,7 @@ complexity. The two widgets can coexist in the Plot menu, clearly labeled:
 
 ### Next Up (Core Functionality)
 
-1. **[Phase 1](#phase-1-core-rendering--per-unit-rate-matrix)**: Unit selection + rate matrix + basic rendering
+1. **[Phase 1](#phase-1-core-rendering--per-unit-rate-matrix)** (1.4–1.5): Heatmap scene building + Y-axis auto-fit
 2. **[Phase 2](#phase-2-colormap-infrastructure)**: Colormap infrastructure (shared with SpectrogramWidget)
 3. **[Phase 3](#phase-3-scaling-and-normalization)**: Scaling/normalization modes
 

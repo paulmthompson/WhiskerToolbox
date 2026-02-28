@@ -87,7 +87,9 @@ Add a normalization combo box to the Global Options section of `PSTHPropertiesWi
 
 ## Phase 2: Smoothing and Rate Estimation Methods
 
-**Status**: Design phase. Depends on Phase 1 (normalization).
+**Status**: Partially complete. The shared gathering and binning infrastructure (Phase 2.6) has
+been extracted into `Plots/Common/EventRateEstimation/`. The smoothing methods (Gaussian
+kernel, causal exponential, adaptive kernel) are not yet implemented.
 
 **Goal**: Support multiple methods for converting aligned spike times to continuous rate estimates, beyond simple binning.
 
@@ -138,21 +140,23 @@ Kernel methods naturally produce continuous curves rather than histograms. When 
 - The output is a `RenderablePolyLineBatch` regardless of the `PSTHStyle` setting
 - The bin_size parameter is reinterpreted as the evaluation resolution (step size for the curve)
 
-### 2.6 Reuse for HeatmapWidget
+### 2.6 Reuse for HeatmapWidget ✅
 
-The `GatherResult` → rate estimation pipeline is directly reusable for the [HeatmapWidget](../HeatmapWidget/index.qmd). The heatmap needs per-unit firing rate across time, which is exactly the same computation as PSTH but performed independently for each unit. A shared rate estimation function should be factored out:
+The shared `EventRateEstimation` library (`Plots/Common/EventRateEstimation/`) has been
+created. It provides:
 
-```cpp
-namespace CorePlotting::RateEstimation {
-    // Takes aligned spike times, returns rate estimate at bin centers
-    std::vector<double> estimateRate(
-        GatherResult<DigitalEventSeries> const & gathered,
-        RateEstimationMethod method,
-        double bin_size,
-        double window_size,
-        double kernel_bandwidth = 20.0);
-}
-```
+- **`UnitGatherContext`** — bundles `GatherResult<DigitalEventSeries>` + `TimeFrame` + key
+- **`createUnitGatherContext()` / `createUnitGatherContexts()`** — aligned gathering for
+  one or many keys using `PlotAlignmentData` (supports both event-series and interval-series
+  alignment; no Qt dependency)
+- **`RateProfile`** — output struct: `counts`, `bin_start`, `bin_width`, `num_trials`
+- **`estimateRate()` / `estimateRates()`** — single-unit and multi-unit dispatch
+- **`EstimationParams`** (`std::variant<BinningParams>`) — variation point for methods;
+  currently only `BinningParams { bin_size }` is implemented
+
+The library has **no Qt dependency** and can be used from any rendering backend.
+`PSTHPlotOpenGLWidget::rebuildScene()` should be migrated to use this library
+(replacing its inline binning loop) as part of completing Phase 2.
 
 ---
 
@@ -439,8 +443,10 @@ The existing per-event `hex_color` in `PSTHEventOptions` should be applied to th
 ### Next Up
 
 1. **Phase 1**: Normalization modes (straightforward extension of existing binning)
-2. **Phase 4**: Cross-widget linking with pin support
-3. **Phase 5**: SVG export (infrastructure already exists)
+2. **Phase 2** (remaining): Migrate `PSTHPlotOpenGLWidget::rebuildScene()` to use
+   `EventRateEstimation` library; then add Gaussian kernel and other smoothing methods
+3. **Phase 4**: Cross-widget linking with pin support
+4. **Phase 5**: SVG export (infrastructure already exists)
 
 ### Following
 
