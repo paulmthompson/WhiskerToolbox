@@ -15,7 +15,7 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
 - **State management**: `LinePlotState` with `PlotAlignmentState`, `RelativeTimeAxisState`, `VerticalAxisState` composition; separate `LinePlotStateData.hpp` for fuzz-testable serializable struct
 - **Rendering pipeline**: `GatherResult<AnalogTimeSeries>` integration, `LineBatchData` construction, `BatchLineRenderer` GPU rendering, auto-fit Y/X bounds
-- **Per-series options**: Line thickness and color configuration via properties panel
+- **Per-series options**: Line style (color, thickness, alpha) via `LineStyleData`/`LineStyleState`/`LineStyleControls` — same infrastructure as [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) and [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd)
 - **Axis system**: `RelativeTimeAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync
 - **Interaction**: Separated X/Y zoom, pan, double-click time navigation via shared `PlotInteractionHelpers`
 - **Line selection**: Ctrl+Click drag intersection stroke (add/remove modes), GPU compute shader and CPU intersector backends, shared `LineSelectionHelpers` with [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)
@@ -484,7 +484,10 @@ All three widgets show data aligned to the same event
 
 ## Phase 7: Multi-Series Rendering
 
-**Status**: Partially implemented. The state supports multiple series (`std::map<std::string, LinePlotOptions>`), but the renderer currently only uses the **first** series key for data gathering.
+**Status**: Partially implemented. The state supports multiple series (`std::map<std::string, LinePlotOptions>`)
+with per-series `LineStyleData` (color, thickness, alpha) and `LineStyleState` instances. The properties panel
+uses the shared `LineStyleControls` widget to edit the selected series' style. However, the renderer currently
+only uses the **first** series key for data gathering.
 
 **Goal**: Render multiple `AnalogTimeSeries` overlaid in the same plot, each with independent appearance.
 

@@ -117,6 +117,7 @@ private slots:
     void onStateChanged();
     void onViewStateChanged();
     void onWindowSizeChanged(double window_size);
+    void onSeriesStyleChanged(QString const & series_name);
 
 private:
     std::shared_ptr<LinePlotState> _state;
@@ -162,6 +163,7 @@ private:
 
     void rebuildScene();
     void updateMatrices();
+    void applyLineStyle();
     [[nodiscard]] QPointF screenToWorld(QPoint const & screen_pos) const;
     [[nodiscard]] glm::vec2 screenToNDC(QPoint const & screen_pos) const;
     void handlePanning(int delta_x, int delta_y);

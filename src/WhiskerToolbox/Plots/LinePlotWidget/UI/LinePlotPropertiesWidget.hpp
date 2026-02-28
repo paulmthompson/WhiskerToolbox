@@ -20,6 +20,7 @@
 #include <memory>
 
 class DataManager;
+class LineStyleControls;
 class LinePlotWidget;
 class PlotAlignmentWidget;
 class RelativeTimeAxisRangeControls;
@@ -105,17 +106,6 @@ private slots:
      */
     void _onStatePlotSeriesOptionsChanged(QString const & series_name);
 
-    /**
-     * @brief Handle line thickness spinbox value change
-     * @param value New thickness value
-     */
-    void _onLineThicknessChanged(double value);
-
-    /**
-     * @brief Handle color button click
-     */
-    void _onColorButtonClicked();
-
 private:
     /**
      * @brief Populate the add series combo box with available AnalogTimeSeries keys
@@ -126,12 +116,6 @@ private:
      * @brief Update the plot series table from state
      */
     void _updatePlotSeriesTable();
-
-    /**
-     * @brief Update the series options display for the selected series
-     * @param series_name Name of the series to display options for
-     */
-    void _updateSeriesOptions(QString const & series_name);
 
     /**
      * @brief Update UI elements from current state
@@ -145,10 +129,10 @@ private:
     [[nodiscard]] QString _getSelectedSeriesName() const;
 
     /**
-     * @brief Update the color display button with a hex color
-     * @param hex_color Hex color string (e.g., "#000000")
+     * @brief Update LineStyleControls binding for the selected series
+     * @param series_name Name of the series to bind to
      */
-    void _updateColorDisplay(QString const & hex_color);
+    void _updateLineStyleControlsBinding(QString const & series_name);
 
     Ui::LinePlotPropertiesWidget * ui;
     std::shared_ptr<LinePlotState> _state;
@@ -159,6 +143,7 @@ private:
     Section * _range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
+    LineStyleControls * _line_style_controls;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

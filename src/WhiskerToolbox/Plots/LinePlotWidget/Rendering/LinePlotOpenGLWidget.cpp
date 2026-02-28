@@ -1,5 +1,7 @@
 #include "LinePlotOpenGLWidget.hpp"
 
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
+#include "CorePlotting/DataTypes/LineStyleData.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
@@ -86,6 +88,8 @@ void LinePlotOpenGLWidget::setState(std::shared_ptr<LinePlotState> state)
                     _scene_dirty = true;
                     update();
                 });
+        connect(_state.get(), &LinePlotState::seriesStyleChanged,
+                this, &LinePlotOpenGLWidget::onSeriesStyleChanged);
 
         _scene_dirty = true;
         updateMatrices();
@@ -139,11 +143,14 @@ void LinePlotOpenGLWidget::initializeGL()
         qWarning() << "LinePlotOpenGLWidget: Failed to initialize BatchLineRenderer";
     }
 
-    // Set visible colors for line states
+    // Set visible colors for line states — defaults overridden by applyLineStyle
     _line_renderer.setGlobalColor(glm::vec4{0.3f, 0.5f, 1.0f, 0.6f});   // Semi-transparent blue for normal lines
     _line_renderer.setSelectedColor(glm::vec4{1.0f, 0.2f, 0.2f, 1.0f}); // Bright red for selected lines
     _line_renderer.setHoverColor(glm::vec4{1.0f, 1.0f, 0.0f, 1.0f});    // Yellow for hover
     _line_renderer.setLineWidth(1.5f);
+
+    // Apply line style from state if available
+    applyLineStyle();
 
     // Pick intersector: GPU compute if GL 4.3+, CPU fallback otherwise
     bool const has_compute = [&] {
@@ -357,6 +364,37 @@ void LinePlotOpenGLWidget::onWindowSizeChanged(double /* window_size */)
 {
     _scene_dirty = true;
     update();
+}
+
+void LinePlotOpenGLWidget::onSeriesStyleChanged(QString const & /* series_name */)
+{
+    // When any series style changes, re-apply line style
+    // Currently we use first series for global color; future: per-line colors
+    applyLineStyle();
+    update();
+}
+
+void LinePlotOpenGLWidget::applyLineStyle()
+{
+    if (!_state || !_opengl_initialized) {
+        return;
+    }
+
+    // Get line style from first series (current behavior: global style)
+    auto series_names = _state->getPlotSeriesNames();
+    if (series_names.empty()) {
+        return;
+    }
+
+    auto options = _state->getPlotSeriesOptions(series_names.front());
+    if (!options) {
+        return;
+    }
+
+    auto const & style = options->line_style;
+    glm::vec4 color = CorePlotting::hexColorToVec4(style.hex_color, style.alpha);
+    _line_renderer.setGlobalColor(color);
+    _line_renderer.setLineWidth(style.thickness);
 }
 
 // =============================================================================
