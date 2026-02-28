@@ -21,13 +21,14 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Unit selection state** (Phase 1.1): `HeatmapStateData::unit_keys` with full add/remove/batch API and `unitsChanged()` signal
 - **Unit selection UI** (Phase 1.2): `Feature_Tree_Widget` embedded in properties panel, filtered to `DigitalEventSeries`, with prefix-based group toggling
-- **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` returning `RateEstimate` (paired `times[]` + `values[]`) with a `std::variant<BinningParams, ...>`-based variation point for future methods. Being redesigned per [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
+- **Rate estimation infrastructure** (Phase 1.3): `EventRateEstimation` library in `Plots/Common/EventRateEstimation/` providing `createUnitGatherContext()` / `createUnitGatherContexts()` for batched aligned gathering and `estimateRate()` / `estimateRates()` returning `RateEstimate` (paired `times[]` + `values[]`) with a `std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>`-based variation point. See [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md) for the full API design.
 - **Colormap infrastructure** (Phase 2): `CorePlotting::Colormaps` library in `CorePlotting/Colormaps/` providing `ColormapFunction`, `ColormapPreset` (Inferno, Viridis, Magma, Plasma, Coolwarm, Grayscale, Hot), LUT-based O(1) evaluation with linear interpolation, `mapValue()` / `mapValues()` / `mapMatrix()` utilities. Shared with SpectrogramWidget and any future external-feature coloring use cases.
 - **Heatmap scene building** (Phase 1.4): `HeatmapMapper` in `CorePlotting/Mappers/` converting `HeatmapRowData` rows to `RenderableRectangleBatch` with Auto / Manual / Symmetric color range modes. `HeatmapOpenGLWidget::rebuildScene()` now gathers units via `createUnitGatherContexts()`, estimates rates via `estimateRates()`, applies scaling via `applyScaling()`, converts `RateEstimate` objects to `HeatmapRowData`, and uploads the scene.
 - **Y-axis auto-fit** (Phase 1.5): `HeatmapWidget` auto-fits the vertical axis when the unit count changes. Y bounds are set to `[0, num_units]`, Y zoom is reset to 1.0, and Y pan is reset to 0.0 so all units are visible. The `VerticalAxisWidget` uses `identityAxis("Unit", 0)` for integer unit-index labels. Signal renamed from `trialCountChanged` to `unitCountChanged` for semantic clarity.
-- **Scaling and normalization** (Phase 3): Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). Currently uses bespoke `HeatmapScaling`/`normalizeRateProfiles()` — will migrate to shared `ScalingMode`/`applyScaling()` per the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md). `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with combo boxes and manual vmin/vmax spinboxes.
+- **Scaling and normalization** (Phase 3): Five scaling modes (Firing Rate Hz, Z-Score, Normalized [0,1], Raw Count, Count/Trial). Uses shared `ScalingMode`/`applyScaling()` from `RateEstimate.hpp`. `HeatmapStateData` extended with `scaling` and `color_range` (Auto/Manual/Symmetric). Auto-switches to Coolwarm colormap for z-score and Symmetric color range. Properties panel has "Scaling & Color Range" collapsible section with `ScalingModeControls` widget and manual vmin/vmax spinboxes.
+- **Rate estimation options** (Phase 5): `EstimationParams` variant (`std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>`) stored directly in `HeatmapStateData::estimation_params`. Lightweight `EstimationParams.hpp` header (no heavy transitive deps) safe to include from state headers. `RateEstimationControls` library provides composable Qt widgets: `EstimationMethodControls` (method combo + stacked per-method parameter pages) and `ScalingModeControls` (scaling mode combo). `HeatmapPropertiesWidget` uses both widgets. Renderer passes `estimationParams()` directly to `estimateRates()` — no intermediate conversion.
 
-**Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), sorting, and all cross-widget linking described below.
+**Not yet implemented**: colorbar display (Phase 4), colormap selection UI (Phase 9), Gaussian/Causal method implementations (stubs in EstimationMethodControls show "Not yet implemented"), sorting, and all cross-widget linking described below.
 
 ---
 
@@ -405,60 +406,141 @@ which also needs a color legend for its power spectrum display.
 
 ---
 
-## Phase 5: Shared Rate Estimation Options
+## Phase 5: Shared Rate Estimation Options ✅
 
-**Status**: Not started. Phase 1 is now complete; this phase can proceed.
+**Status**: Complete.
 Closes related to [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 2.
 
 **Goal**: Share estimation method selection and parameters between HeatmapWidget
 and [PSTHWidget](../PSTHWidget/index.qmd) via the shared `EstimationParams` variant
 from the [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md).
 
-### 5.1 State Extension
+### 5.1 State Extension ✅
 
-Store estimation parameters in `HeatmapStateData`. Since `EstimationParams` is a
-`std::variant` that is not directly serializable via `rfl::json`, store individual
-parameter fields:
+`HeatmapStateData` stores the full `EstimationParams` variant directly:
 
 ```cpp
 struct HeatmapStateData {
     // ... existing fields ...
-    double bin_size = 10.0;                ///< For BinningParams
-    double kernel_bandwidth = 20.0;        ///< sigma for GaussianKernelParams
-    double eval_step = 1.0;                ///< evaluation spacing for kernel methods
+    WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Default: BinningParams{}
 };
 ```
 
-At runtime, the widget constructs the appropriate `EstimationParams` variant from these fields.
+All method-specific parameters are preserved inside the variant regardless of which method
+is active. Storing the variant (rather than individual scalar fields) means no runtime
+reconstruction is needed — `HeatmapOpenGLWidget::rebuildScene()` passes
+`_state->estimationParams()` directly to `estimateRates()`.
 
-### 5.2 Estimation Methods
-
-All methods are defined in the shared `EstimationParams` variant:
+`HeatmapState` exposes:
 
 ```cpp
+[[nodiscard]] WhiskerToolbox::Plots::EstimationParams const & estimationParams() const;
+void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
+```
+
+`setEstimationParams()` uses `!=` comparison (backed by defaulted `operator==` on each
+param struct) to avoid spurious redraws. On change it emits `estimationParamsChanged()` and
+`stateChanged()`.
+
+**Header design**: `EstimationParams.hpp` (`Plots/Common/EventRateEstimation/EstimationParams.hpp`)
+is a standalone lightweight header that depends only on `<variant>`. This makes it safe to
+include from state headers without pulling in the full `EventRateEstimation.hpp` chain
+(DataManager, GatherResult, etc.).
+
+### 5.2 Estimation Methods ✅
+
+All methods are defined in `EstimationParams.hpp`:
+
+```cpp
+struct BinningParams {
+    double bin_size = 10.0; ///< Bin width (same units as window_size)
+    [[nodiscard]] bool operator==(BinningParams const &) const = default;
+};
+
+struct GaussianKernelParams {
+    double sigma = 20.0;    ///< Kernel bandwidth
+    double eval_step = 1.0; ///< Evaluation point spacing
+    [[nodiscard]] bool operator==(GaussianKernelParams const &) const = default;
+};
+
+struct CausalExponentialParams {
+    double tau = 50.0;      ///< Exponential time constant
+    double eval_step = 1.0; ///< Evaluation point spacing
+    [[nodiscard]] bool operator==(CausalExponentialParams const &) const = default;
+};
+
 using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
 ```
 
-| Variant | Description |
-|---------|-------------|
-| `BinningParams` | Simple histogram binning (default) |
-| `GaussianKernelParams` | Convolution with Gaussian kernel |
-| `CausalExponentialParams` | Causal exponential filter |
+| Variant | Implemented | Description |
+|---------|-------------|-------------|
+| `BinningParams` | ✅ | Simple histogram binning (default) |
+| `GaussianKernelParams` | Stub | Convolution with Gaussian kernel |
+| `CausalExponentialParams` | Stub | Causal exponential filter |
 
-For the heatmap, estimation is applied independently per unit (each row is estimated
-separately). The output is always `RateEstimate` with paired `times[]` + `values[]`
-regardless of the estimation method.
+For the heatmap, estimation is applied independently per unit. The output is always
+`RateEstimate` with paired `times[]` + `values[]` regardless of method.
 
-### 5.3 Properties Panel
+### 5.3 RateEstimationControls Library ✅
 
-Add a "Rate Estimation" collapsible section to `HeatmapPropertiesWidget`:
+The shared `RateEstimationControls` static library (`Plots/Common/RateEstimationControls/`)
+provides two composable `QWidget` subclasses that can be embedded in any properties panel:
 
-- Bin size spinbox
-- Rate estimation method combo box
-- Kernel bandwidth spinbox (enabled for kernel methods)
+**`EstimationMethodControls`** — method selection + per-method parameters:
 
-These controls mirror the corresponding controls in `PSTHPropertiesWidget`, and should ideally
-use shared UI components to avoid duplication.
+```
+┌────────────────────────────────────┐
+│ Method: [Histogram Binning ▼]      │
+│ ┌──────────────────────────────┐   │
+│ │  Bin Size: [10.0 ms ▲▼]     │   │  ← stacked page for BinningParams
+│ └──────────────────────────────┘   │
+└────────────────────────────────────┘
+```
+
+- Combo box with all three methods (`Histogram Binning`, `Gaussian Kernel (stub)`,
+  `Causal Exponential (stub)`)
+- `QStackedWidget` — one page per method with method-specific spinboxes
+- Stub pages show a "Not yet implemented" label with controls disabled
+- Emits `paramsChanged(EstimationParams)` whenever any parameter changes
+- `setParams(EstimationParams const &)` updates the combo and the active page (with
+  `_updating_ui` anti-recursion guard)
+
+**`ScalingModeControls`** — scaling mode selection:
+
+- Combo box auto-populated from `allScalingModes()`
+- Optional label text via constructor parameter
+- Emits `scalingModeChanged(ScalingMode)`
+- `setScalingMode(ScalingMode)` with `_updating_ui` guard
+
+Both widgets follow the `GlyphStyleControls` composable-widget pattern used elsewhere in
+the project.
+
+### 5.4 Properties Panel Integration ✅
+
+`HeatmapPropertiesWidget` now uses both composable controls inside its "Scaling & Estimation"
+section:
+
+```cpp
+// Setup (in _setupScalingSection)
+_estimation_controls = new EstimationMethodControls(this);
+_estimation_controls->setParams(_state->estimationParams());
+connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
+        _state, &HeatmapState::setEstimationParams);
+
+_scaling_controls = new ScalingModeControls("Scaling", this);
+_scaling_controls->setScalingMode(_state->scaling());
+connect(_scaling_controls, &ScalingModeControls::scalingModeChanged,
+        _state, &HeatmapState::setScaling);
+
+// Sync from state
+void _syncScalingFromState() {
+    _estimation_controls->setParams(_state->estimationParams());
+    _scaling_controls->setScalingMode(_state->scaling());
+}
+```
+
+No `BinningParams` construction or `std::visit` extraction is needed at the widget layer —
+the `EstimationParams` value flows unchanged from UI → state → renderer.
 
 ---
 

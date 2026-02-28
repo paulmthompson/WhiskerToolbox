@@ -293,6 +293,16 @@ void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling)
     }
 }
 
+void HeatmapState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params)
+{
+    if (_data.estimation_params != params) {
+        _data.estimation_params = params;
+        markDirty();
+        emit estimationParamsChanged();
+        emit stateChanged();
+    }
+}
+
 // === Color Range ===
 
 void HeatmapState::setColorRangeMode(HeatmapColorRangeConfig::Mode mode)

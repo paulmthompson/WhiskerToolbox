@@ -6,6 +6,8 @@
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
 #include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/RateEstimationControls/EstimationMethodControls.hpp"
+#include "Plots/Common/RateEstimationControls/ScalingModeControls.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "UI/HeatmapWidget.hpp"
@@ -215,16 +217,15 @@ void HeatmapPropertiesWidget::_setupScalingSection()
 {
     using WhiskerToolbox::Plots::ScalingMode;
 
-    _scaling_section = new Section(this, "Scaling & Color Range");
+    _scaling_section = new Section(this, "Rate Estimation & Scaling");
 
-    // --- Scaling mode combo ---
-    _scaling_combo = new QComboBox(_scaling_section);
-    _scaling_combo->setObjectName("scaling_combo");
-    for (auto mode : WhiskerToolbox::Plots::allScalingModes()) {
-        _scaling_combo->addItem(
-            QString::fromUtf8(WhiskerToolbox::Plots::scalingLabel(mode)),
-            static_cast<int>(mode));
-    }
+    // --- Estimation method controls (composable widget) ---
+    _estimation_controls = new EstimationMethodControls(_scaling_section);
+    _estimation_controls->setParams(_state->estimationParams());
+
+    // --- Scaling mode controls (composable widget) ---
+    _scaling_controls = new ScalingModeControls(_scaling_section);
+    _scaling_controls->setScalingMode(_state->scaling());
 
     // --- Color range mode combo ---
     _color_range_mode_combo = new QComboBox(_scaling_section);
@@ -251,15 +252,21 @@ void HeatmapPropertiesWidget::_setupScalingSection()
     _vmax_spin->setValue(1.0);
 
     // --- Layout ---
-    auto * form = new QFormLayout();
-    form->setContentsMargins(4, 4, 4, 4);
-    form->setSpacing(4);
-    form->addRow("Scaling:", _scaling_combo);
-    form->addRow("Color Range:", _color_range_mode_combo);
-    form->addRow(_vmin_label, _vmin_spin);
-    form->addRow(_vmax_label, _vmax_spin);
+    auto * layout = new QVBoxLayout();
+    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setSpacing(4);
+    layout->addWidget(_estimation_controls);
+    layout->addWidget(_scaling_controls);
 
-    _scaling_section->setContentLayout(*form);
+    auto * color_form = new QFormLayout();
+    color_form->setContentsMargins(0, 4, 0, 0);
+    color_form->setSpacing(4);
+    color_form->addRow("Color Range:", _color_range_mode_combo);
+    color_form->addRow(_vmin_label, _vmin_spin);
+    color_form->addRow(_vmax_label, _vmax_spin);
+    layout->addLayout(color_form);
+
+    _scaling_section->setContentLayout(*layout);
 
     // Insert after the unit tree but before the spacer
     int spacer_index = ui->main_layout->indexOf(ui->vertical_spacer);
@@ -270,12 +277,16 @@ void HeatmapPropertiesWidget::_setupScalingSection()
     _updateColorRangeVisibility();
 
     // --- Connect signals ---
-    connect(_scaling_combo, &QComboBox::currentIndexChanged,
-            this, [this](int index) {
-                if (!_state || index < 0) return;
-                auto scaling = static_cast<ScalingMode>(
-                    _scaling_combo->itemData(index).toInt());
-                _state->setScaling(scaling);
+    connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
+            this, [this](WhiskerToolbox::Plots::EstimationParams const & params) {
+                if (!_state) return;
+                _state->setEstimationParams(params);
+            });
+
+    connect(_scaling_controls, &ScalingModeControls::scalingModeChanged,
+            this, [this](ScalingMode mode) {
+                if (!_state) return;
+                _state->setScaling(mode);
             });
 
     connect(_color_range_mode_combo, &QComboBox::currentIndexChanged,
@@ -307,25 +318,25 @@ void HeatmapPropertiesWidget::_setupScalingSection()
                 _syncScalingFromState();
                 _updateColorRangeVisibility();
             });
+    connect(_state.get(), &HeatmapState::estimationParamsChanged,
+            this, [this]() { _syncScalingFromState(); });
 }
 
 void HeatmapPropertiesWidget::_syncScalingFromState()
 {
     if (!_state) return;
 
-    // Block signals to avoid feedback loops
-    QSignalBlocker scaling_blocker(_scaling_combo);
+    // Sync estimation controls
+    _estimation_controls->setParams(_state->estimationParams());
+
+    // Sync scaling controls
+    _scaling_controls->setScalingMode(_state->scaling());
+
+    // Sync color range combo
     QSignalBlocker range_blocker(_color_range_mode_combo);
     QSignalBlocker vmin_blocker(_vmin_spin);
     QSignalBlocker vmax_blocker(_vmax_spin);
 
-    // Sync scaling combo
-    int scaling_idx = _scaling_combo->findData(static_cast<int>(_state->scaling()));
-    if (scaling_idx >= 0) {
-        _scaling_combo->setCurrentIndex(scaling_idx);
-    }
-
-    // Sync color range combo
     auto const & cr = _state->colorRange();
     int range_idx = _color_range_mode_combo->findData(static_cast<int>(cr.mode));
     if (range_idx >= 0) {

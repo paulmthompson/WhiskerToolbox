@@ -24,10 +24,10 @@
  *           });
  * @endcode
  *
- * @see EventRateEstimation.hpp for EstimationParams and the per-method structs
+ * @see EstimationParams.hpp for EstimationParams and the per-method structs
  */
 
-#include "Plots/Common/EventRateEstimation/EventRateEstimation.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
 
 #include <QWidget>
 

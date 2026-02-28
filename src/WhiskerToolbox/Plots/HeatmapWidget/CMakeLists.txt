@@ -49,6 +49,7 @@ target_link_libraries(HeatmapWidget PRIVATE PlottingOpenGL)
 target_link_libraries(HeatmapWidget PRIVATE glm::glm)
 target_link_libraries(HeatmapWidget PRIVATE GatherResult)
 target_link_libraries(HeatmapWidget PRIVATE EventRateEstimation)
+target_link_libraries(HeatmapWidget PRIVATE RateEstimationControls)
 
 target_include_directories(HeatmapWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

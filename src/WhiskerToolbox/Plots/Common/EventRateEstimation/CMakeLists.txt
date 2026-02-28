@@ -1,6 +1,7 @@
 set(EVENT_RATE_ESTIMATION_SOURCES
         EventRateEstimation.hpp
         EventRateEstimation.cpp
+        EstimationParams.hpp
         RateEstimate.hpp
         RateNormalization.hpp
         RateNormalization.cpp

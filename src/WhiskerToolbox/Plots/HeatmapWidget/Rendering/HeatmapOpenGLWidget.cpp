@@ -255,9 +255,9 @@ void HeatmapOpenGLWidget::rebuildScene()
         return;
     }
 
-    // 2. Estimate firing rates for all units
+    // 2. Estimate firing rates for all units using configured estimation method
     auto rate_estimates = WhiskerToolbox::Plots::estimateRates(
-        contexts, window_size);
+        contexts, window_size, _state->estimationParams());
 
     if (rate_estimates.empty()) {
         _scene_renderer.clearScene();
