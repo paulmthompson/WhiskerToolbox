@@ -1,6 +1,11 @@
 set(EVENT_RATE_ESTIMATION_SOURCES
         EventRateEstimation.hpp
         EventRateEstimation.cpp
+        RateEstimate.hpp
+        RateNormalization.hpp
+        RateNormalization.cpp
+        RateUncertainty.hpp
+        RateUncertainty.cpp
 )
 
 add_library(EventRateEstimation STATIC ${EVENT_RATE_ESTIMATION_SOURCES})

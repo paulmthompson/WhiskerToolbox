@@ -4,7 +4,7 @@
 #include "Core/HeatmapState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"
-#include "Plots/Common/EventRateEstimation/RateScaling.hpp"
+#include "Plots/Common/EventRateEstimation/RateEstimate.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
@@ -213,7 +213,7 @@ void HeatmapPropertiesWidget::_syncTreeFromState()
 
 void HeatmapPropertiesWidget::_setupScalingSection()
 {
-    using WhiskerToolbox::Plots::HeatmapScaling;
+    using WhiskerToolbox::Plots::ScalingMode;
 
     _scaling_section = new Section(this, "Scaling & Color Range");
 
@@ -273,7 +273,7 @@ void HeatmapPropertiesWidget::_setupScalingSection()
     connect(_scaling_combo, &QComboBox::currentIndexChanged,
             this, [this](int index) {
                 if (!_state || index < 0) return;
-                auto scaling = static_cast<HeatmapScaling>(
+                auto scaling = static_cast<ScalingMode>(
                     _scaling_combo->itemData(index).toInt());
                 _state->setScaling(scaling);
             });

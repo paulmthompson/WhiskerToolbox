@@ -101,6 +101,9 @@ add_subdirectory(Plots/Common/GlyphStyleWidget)
 # DataManager, GatherResult, PlotAlignmentWidget - shared firing-rate estimation (no Qt)
 add_subdirectory(Plots/Common/EventRateEstimation)
 
+# Qt, EventRateEstimation - Composable UI controls for rate estimation method & scaling
+add_subdirectory(Plots/Common/RateEstimationControls)
+
 # Qt, EditorState, reflectcpp - Python integration widget
 add_subdirectory(Python_Widget)
 

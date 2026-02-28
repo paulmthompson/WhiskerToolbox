@@ -23,43 +23,52 @@
  *
  * ## 2. Rate Estimation
  *
- * Converts aligned trial data into per-bin event count profiles. The estimation
- * method is a variation point expressed via `EstimationParams`, a `std::variant`
- * of per-method parameter structs. Currently only `BinningParams` (histogram
- * binning) is implemented; additional methods are added by:
+ * Converts aligned trial data into `RateEstimate` objects — paired `(times, values)`
+ * vectors suitable for direct plotting. The estimation method is a variation point
+ * expressed via `EstimationParams`, a `std::variant` of per-method parameter structs.
+ * Currently only `BinningParams` (histogram binning) is implemented; additional
+ * methods are added by:
  *  - Defining a new `*Params` struct below
  *  - Adding it to the `EstimationParams` alias
  *  - Adding a visitor branch in `EventRateEstimation.cpp`
  *
  * @code
  * // Single unit — default binning
- * auto profile = estimateRate(ctx.gathered, ctx.time_frame.get(), window_ms);
+ * auto est = estimateRate(ctx.gathered, ctx.time_frame.get(), window_ms);
  *
  * // Single unit — custom bin size
- * auto profile = estimateRate(ctx.gathered, ctx.time_frame.get(), window_ms,
- *                             BinningParams{.bin_size = 5.0});
+ * auto est = estimateRate(ctx.gathered, ctx.time_frame.get(), window_ms,
+ *                         BinningParams{.bin_size = 5.0});
+ *
+ * // Single unit with per-trial data (for CI/variability)
+ * auto data = estimateRateWithTrials(ctx.gathered, ctx.time_frame.get(), window_ms);
  *
  * // Multiple units — heatmap use case
- * auto profiles = estimateRates(contexts, window_ms);
+ * auto estimates = estimateRates(contexts, window_ms);
  * @endcode
  *
  * ## Design notes
  *
  * - **No Qt dependency**: this library is pure C++23 and can be used from any
  *   rendering backend.
- * - **Raw counts, not rates**: `RateProfile::counts` stores raw event counts per
- *   bin. Callers choose their own normalisation (÷ num_trials for mean count per
- *   trial, ÷ (num_trials × bin_size_s) for Hz, etc.).
+ * - **Raw counts by default**: `RateEstimate::values` stores raw event counts.
+ *   Use `applyScaling()` from `RateNormalization.hpp` to convert to Hz, z-score, etc.
  * - **`std::variant` variation point**: runtime method selection with zero heap
  *   allocation overhead (versus a virtual base class strategy). New methods are
  *   backward-compatible additions to the variant.
+ * - **Method-agnostic output**: All estimation methods produce the same `RateEstimate`
+ *   output type with paired `times[]` + `values[]`.
  *
+ * @see RateEstimate.hpp for the output types (RateEstimate, RateEstimateWithTrials)
+ * @see RateNormalization.hpp for scaling/normalization transforms (applyScaling)
+ * @see RateUncertainty.hpp for confidence band computation
  * @see Plots/Common/PlotAlignmentGather.hpp for the underlying gather functions
  * @see PSTHWidget — primary consumer (single-unit histogram)
  * @see HeatmapWidget — primary consumer (multi-unit rate matrix)
  */
 
-#include "RateScaling.hpp"
+#include "RateEstimate.hpp"
+#include "RateNormalization.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
@@ -148,18 +157,27 @@ struct UnitGatherContext {
  * equal-width bins of `bin_size` and counts events that fall into each bin
  * across all trials.
  *
- * The result is a raw count histogram. To obtain:
- *  - **Mean count/trial**: divide `counts[i]` by `num_trials`
- *  - **Firing rate (Hz)**: divide by `num_trials × (bin_size / time_units_per_s)`
+ * The result stores raw event counts in `RateEstimate::values` and bin
+ * centers in `RateEstimate::times`. Use `applyScaling()` to convert to
+ * Hz, z-score, etc.
  */
 struct BinningParams {
     double bin_size = 10.0; ///< Bin width in the same time units as `window_size`
 };
 
-// Future methods follow the same pattern — define a struct, add to the variant:
-//
-//   struct GaussianKernelParams { double sigma = 20.0; };
-//   struct CausalExponentialParams { double tau = 50.0; };
+// Future methods — stubs for the variant, not yet implemented:
+
+/// @brief Parameters for Gaussian kernel smoothing (stub — not yet implemented)
+struct GaussianKernelParams {
+    double sigma = 20.0;       ///< Kernel bandwidth (same units as window)
+    double eval_step = 1.0;    ///< Spacing of evaluation points
+};
+
+/// @brief Parameters for causal exponential filter (stub — not yet implemented)
+struct CausalExponentialParams {
+    double tau = 50.0;         ///< Decay time constant
+    double eval_step = 1.0;    ///< Spacing of evaluation points
+};
 
 // =============================================================================
 // Rate Estimation: variation point
@@ -174,41 +192,27 @@ struct BinningParams {
  *
  * To add a new method:
  *  1. Define a new `*Params` struct above
- *  2. Append it to this alias: `using EstimationParams = std::variant<BinningParams, NewParams>`
- *  3. Add a `if constexpr (std::is_same_v<T, NewParams>)` branch in
- *     `EventRateEstimation.cpp`
- */
-using EstimationParams = std::variant<BinningParams>;
-
-// =============================================================================
-// Output
-// =============================================================================
-
-/**
- * @brief Rate estimation result for a single unit
+ *  2. Append it to this alias
+ *  3. Add the implementation in `EventRateEstimation.cpp`
  *
- * Stores raw per-bin event counts and enough metadata to reconstruct the
- * time axis and apply normalisation.  The bin at index `i` covers the
- * half-open interval `[bin_start + i*bin_width, bin_start + (i+1)*bin_width)`.
+ * @note GaussianKernelParams and CausalExponentialParams are included in the
+ * variant but their implementations return empty RateEstimate (stub).
  */
-struct RateProfile {
-    std::vector<double> counts; ///< Raw event count per bin (summed across all trials)
-    double bin_start;           ///< Left edge of the first bin (relative to t=0 alignment)
-    double bin_width;           ///< Width of each bin (same units as `window_size`)
-    size_t num_trials;          ///< Number of trials that contributed (null trials excluded)
-};
+using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
 
 // =============================================================================
 // Single-unit estimation
 // =============================================================================
 
 /**
- * @brief Estimate the rate profile for a single unit
+ * @brief Estimate the rate for a single unit (aggregate across trials)
  *
- * Bins all events across all trials in `gathered` into a histogram covering
- * `[-window_size/2, +window_size/2)`. Uses `time_frame` to convert each
- * event's `TimeFrameIndex` to an absolute time before computing the relative
- * time with respect to the per-trial alignment time from `gathered`.
+ * Returns a `RateEstimate` with paired `times[]` (bin centers for binning)
+ * and `values[]` (raw event counts summed across all trials).
+ *
+ * Uses `time_frame` to convert each event's `TimeFrameIndex` to an absolute
+ * time before computing the relative time with respect to the per-trial
+ * alignment time from `gathered`.
  *
  * If `time_frame` is null, `TimeFrameIndex::getValue()` is used directly as
  * the absolute time (identity mapping).
@@ -217,9 +221,32 @@ struct RateProfile {
  * @param time_frame  TimeFrame of the source series (may be null)
  * @param window_size Total window span in time units (bins cover ±window_size/2)
  * @param params      Estimation method and parameters (default: `BinningParams{}`)
- * @return `RateProfile` with per-bin counts and axis metadata
+ * @return `RateEstimate` with times, values, num_trials, and metadata
  */
-[[nodiscard]] RateProfile estimateRate(
+[[nodiscard]] RateEstimate estimateRate(
+        GatherResult<DigitalEventSeries> const & gathered,
+        TimeFrame const * time_frame,
+        double window_size,
+        EstimationParams const & params = BinningParams{});
+
+/**
+ * @brief Estimate rate with per-trial breakdown for a single unit
+ *
+ * Same as `estimateRate()` but additionally returns per-trial rate curves
+ * in `RateEstimateWithTrials::trials`. The aggregate `estimate` is the
+ * trial-summed result (same as `estimateRate()`), and each trial's individual
+ * histogram is stored separately.
+ *
+ * Use this when you need uncertainty quantification (SEM, CI, bootstrap)
+ * via the functions in `RateUncertainty.hpp`.
+ *
+ * @param gathered    Trial-aligned views of one `DigitalEventSeries`
+ * @param time_frame  TimeFrame of the source series (may be null)
+ * @param window_size Total window span in time units
+ * @param params      Estimation method and parameters (default: `BinningParams{}`)
+ * @return `RateEstimateWithTrials` with aggregate + per-trial data
+ */
+[[nodiscard]] RateEstimateWithTrials estimateRateWithTrials(
         GatherResult<DigitalEventSeries> const & gathered,
         TimeFrame const * time_frame,
         double window_size,
@@ -230,7 +257,7 @@ struct RateProfile {
 // =============================================================================
 
 /**
- * @brief Estimate rate profiles for multiple units
+ * @brief Estimate rates for multiple units
  *
  * Applies `estimateRate` independently to each `UnitGatherContext` in `units`.
  * All units share the same `window_size` and `params`. The output vector is
@@ -242,45 +269,12 @@ struct RateProfile {
  * @param units       Per-unit gather contexts (from `createUnitGatherContexts`)
  * @param window_size Total window span in time units
  * @param params      Estimation method and parameters (default: `BinningParams{}`)
- * @return One `RateProfile` per unit, in input order
+ * @return One `RateEstimate` per unit, in input order
  */
-[[nodiscard]] std::vector<RateProfile> estimateRates(
+[[nodiscard]] std::vector<RateEstimate> estimateRates(
         std::vector<UnitGatherContext> const & units,
         double window_size,
         EstimationParams const & params = BinningParams{});
-
-// =============================================================================
-// Scaling / Normalization (types in RateScaling.hpp)
-// =============================================================================
-
-/**
- * @brief Apply a scaling/normalization transform to a set of rate profiles
- *
- * Converts raw `RateProfile` objects (with per-bin event counts) into
- * `NormalizedRow` objects whose values reflect the chosen scaling mode.
- *
- * The `time_units_per_second` parameter is required for `FiringRate` scaling
- * to convert bin widths from the data's native time units into seconds.
- * For example, if time is in milliseconds, pass 1000.0.
- *
- * | Scaling mode    | Formula per bin                                  |
- * |-----------------|--------------------------------------------------|
- * | FiringRate      | count / (bin_size_s × num_trials)                |
- * | CountPerTrial   | count / num_trials                               |
- * | RawCount        | count (no transform)                             |
- * | Normalized01    | per-unit (v - min) / (max - min)                 |
- * | ZScore          | per-unit (v - mean) / std                        |
- *
- * @param profiles           Rate profiles from `estimateRate[s]()`
- * @param scaling            Scaling mode to apply
- * @param time_units_per_second Conversion factor from data time units to seconds
- *                              (only used by FiringRate; ignored by others)
- * @return One `NormalizedRow` per profile, in the same order
- */
-[[nodiscard]] std::vector<NormalizedRow> normalizeRateProfiles(
-        std::vector<RateProfile> const & profiles,
-        HeatmapScaling scaling,
-        double time_units_per_second = 1.0);
 
 } // namespace WhiskerToolbox::Plots
 

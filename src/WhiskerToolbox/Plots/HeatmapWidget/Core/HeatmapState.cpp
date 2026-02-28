@@ -269,19 +269,19 @@ void HeatmapState::setBackgroundColor(QString const & hex_color)
 
 // === Scaling ===
 
-void HeatmapState::setScaling(WhiskerToolbox::Plots::HeatmapScaling scaling)
+void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling)
 {
     if (_data.scaling != scaling) {
         _data.scaling = scaling;
 
         // When switching to ZScore, auto-suggest Symmetric color range
-        if (scaling == WhiskerToolbox::Plots::HeatmapScaling::ZScore
+        if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore
             && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Symmetric;
             emit colorRangeChanged();
         }
         // When switching away from ZScore with Symmetric, revert to Auto
-        if (scaling != WhiskerToolbox::Plots::HeatmapScaling::ZScore
+        if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore
             && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Auto;
             emit colorRangeChanged();
