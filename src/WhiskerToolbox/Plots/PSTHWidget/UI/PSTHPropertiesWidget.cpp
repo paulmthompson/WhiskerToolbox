@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/PlotAlignmentWidget/UI/PlotAlignmentWidget.hpp"
+#include "Plots/Common/RateEstimationControls/EstimationMethodControls.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/RelativeTimeAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Collapsible_Widget/Section.hpp"
@@ -26,6 +27,7 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
       _state(state),
       _data_manager(data_manager),
       _alignment_widget(nullptr),
+      _estimation_controls(nullptr),
       _plot_widget(nullptr),
       _range_controls(nullptr),
       _range_controls_section(nullptr),
@@ -67,8 +69,18 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
             this, &PSTHPropertiesWidget::_onColorButtonClicked);
     connect(ui->style_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &PSTHPropertiesWidget::_onStyleChanged);
-    connect(ui->bin_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &PSTHPropertiesWidget::_onBinSizeChanged);
+
+    // Create and insert EstimationMethodControls in place of bin_size widgets
+    _estimation_controls = new EstimationMethodControls(this);
+    // Find and replace bin_size_label placeholder
+    int estimation_index = ui->main_layout->indexOf(ui->estimation_placeholder);
+    ui->main_layout->removeWidget(ui->estimation_placeholder);
+    ui->estimation_placeholder->deleteLater();
+    ui->main_layout->insertWidget(estimation_index, _estimation_controls);
+
+    // Connect estimation controls
+    connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
+            _state.get(), &PSTHState::setEstimationParams);
 
     // Populate combo boxes
     _populateAddEventComboBox();
@@ -94,11 +106,9 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
                     ui->style_combo->setCurrentIndex(style == PSTHStyle::Bar ? 0 : 1);
                     ui->style_combo->blockSignals(false);
                 });
-        connect(_state.get(), &PSTHState::binSizeChanged,
-                this, [this](double bin_size) {
-                    ui->bin_size_spinbox->blockSignals(true);
-                    ui->bin_size_spinbox->setValue(bin_size);
-                    ui->bin_size_spinbox->blockSignals(false);
+        connect(_state.get(), &PSTHState::estimationParamsChanged,
+                this, [this]() {
+                    _estimation_controls->setParams(_state->estimationParams());
                 });
         // Note: yMin/yMax changes are handled by VerticalAxisRangeControls
         // No need to connect to yMinChanged/yMaxChanged here
@@ -354,9 +364,10 @@ void PSTHPropertiesWidget::_updateUIFromState()
     ui->style_combo->setCurrentIndex(_state->getStyle() == PSTHStyle::Bar ? 0 : 1);
     ui->style_combo->blockSignals(false);
 
-    ui->bin_size_spinbox->blockSignals(true);
-    ui->bin_size_spinbox->setValue(_state->getBinSize());
-    ui->bin_size_spinbox->blockSignals(false);
+    // Update estimation controls
+    if (_estimation_controls) {
+        _estimation_controls->setParams(_state->estimationParams());
+    }
 
     // Note: yMin/yMax are handled by VerticalAxisRangeControls, not legacy spinboxes
 
@@ -421,13 +432,4 @@ void PSTHPropertiesWidget::_onStyleChanged(int index)
 
     PSTHStyle style = (index == 0) ? PSTHStyle::Bar : PSTHStyle::Line;
     _state->setStyle(style);
-}
-
-void PSTHPropertiesWidget::_onBinSizeChanged(double value)
-{
-    if (!_state) {
-        return;
-    }
-
-    _state->setBinSize(value);
 }

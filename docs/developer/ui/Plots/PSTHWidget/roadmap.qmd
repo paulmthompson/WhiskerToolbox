@@ -17,8 +17,9 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Plot styles**: Bar chart and step-function line rendering via shared `HistogramMapper`
 - **Interaction**: Separated X/Y zoom, pan, double-click time navigation
 - **Axis system**: `RelativeTimeAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync
-- **Properties panel**: Alignment controls, event series management, style/bin size selection, per-event color picker
+- **Properties panel**: Alignment controls, event series management, style selection, per-event color picker
 - **State serialization**: Full round-trip JSON via `rfl::json`
+- **Rate estimation integration** (Phase 2 partial): `PSTHStateData` now stores `EstimationParams` variant directly. `PSTHPropertiesWidget` uses the shared `EstimationMethodControls` widget from `RateEstimationControls` library for method selection and per-method parameter editing. Renderer extracts bin size from `estimationParams()` via `std::get_if<BinningParams>`.
 
 ---
 
@@ -87,13 +88,14 @@ Add a normalization combo box to the Global Options section of `PSTHPropertiesWi
 
 ## Phase 2: Smoothing and Rate Estimation Methods
 
-**Status**: Partially complete. The shared gathering and binning infrastructure (Phase 2.6) has
-been extracted into `Plots/Common/EventRateEstimation/`. The smoothing methods (Gaussian
-kernel, causal exponential, adaptive kernel) are not yet implemented.
+**Status**: Partially complete. The shared gathering and binning infrastructure has been extracted into
+`Plots/Common/EventRateEstimation/`. `PSTHStateData` now stores `EstimationParams` variant directly
+and `PSTHPropertiesWidget` uses the shared `EstimationMethodControls` widget. The smoothing methods
+(Gaussian kernel, causal exponential, adaptive kernel) are not yet implemented.
 
 **Goal**: Support multiple methods for converting aligned spike times to continuous rate estimates, beyond simple binning.
 
-### 2.1 Estimation Method Selection
+### 2.1 Estimation Method Selection ✅
 
 Estimation methods are selected via the shared `EstimationParams` variant from the
 [Rate Estimation Redesign](../Common/EventRateEstimation/rate_estimation_redesign.md#estimation-methods).
@@ -103,21 +105,39 @@ New methods are added by defining a `*Params` struct and appending it to the var
 using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
 ```
 
-### 2.2 State Extension
+### 2.2 State Extension ✅
 
-Store the active estimation parameters in `PSTHStateData`. The state only needs to track
-which method is selected and its parameters — the variant itself is not serializable via
-`rfl::json`, so store the method choice as an enum and parameters as individual fields:
+`PSTHStateData` stores the `EstimationParams` variant directly:
 
 ```cpp
 struct PSTHStateData {
     // ... existing fields ...
-    // Estimation method selection (maps to EstimationParams variant at runtime)
-    double bin_size = 10.0;              ///< For BinningParams
-    double kernel_bandwidth = 20.0;      ///< sigma for GaussianKernelParams
-    double eval_step = 1.0;              ///< evaluation spacing for kernel methods
+    WhiskerToolbox::Plots::EstimationParams estimation_params;  ///< Default: BinningParams{}
 };
 ```
+
+`PSTHState` exposes:
+
+```cpp
+[[nodiscard]] WhiskerToolbox::Plots::EstimationParams const & estimationParams() const;
+void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
+```
+
+On change, emits `estimationParamsChanged()` and `stateChanged()`.
+
+### 2.3 Properties Panel ✅
+
+`PSTHPropertiesWidget` uses the shared `EstimationMethodControls` widget from the
+`RateEstimationControls` library:
+
+```cpp
+_estimation_controls = new EstimationMethodControls(this);
+connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
+        _state.get(), &PSTHState::setEstimationParams);
+```
+
+The method combo shows Histogram Binning (implemented), Gaussian Kernel (stub), and
+Causal Exponential (stub). Stub methods display "Not yet implemented" with disabled controls.
 
 ### 2.3 Gaussian Kernel Smoothing
 

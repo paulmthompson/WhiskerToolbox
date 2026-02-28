@@ -65,7 +65,7 @@ struct PSTHStateData {
     PlotAlignmentData alignment;                         // Shared alignment config
     std::map<std::string, PSTHEventOptions> plot_events; // Per-event series options
     PSTHStyle style = PSTHStyle::Bar;                    // Bar or Line
-    double bin_size = 10.0;                              // Bin width in time units
+    WhiskerToolbox::Plots::EstimationParams estimation_params;  // Rate estimation method
     CorePlotting::ViewStateData view_state;              // Zoom, pan, bounds
     RelativeTimeAxisStateData time_axis;                 // Time axis range
     VerticalAxisStateData vertical_axis;                 // Vertical axis range (count)
@@ -110,7 +110,7 @@ PSTHState emits category-level signals to minimize coupling complexity:
 | `windowSizeChanged` | Window size changed (also resets zoom/pan) |
 | `plotEventAdded` / `plotEventRemoved` / `plotEventOptionsChanged` | Per-event series changes |
 | `styleChanged` | Bar ↔ Line style switch |
-| `binSizeChanged` | Histogram bin size changed |
+| `estimationParamsChanged` | Estimation method or parameters changed |
 | `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
 | `stateChanged` (inherited) | Any change requiring scene rebuild |
 
@@ -252,7 +252,7 @@ Uses the shared `PlotAlignmentWidget` component (same as EventPlot and Heatmap).
 ## Global Options
 
 - **Style combo box**: Bar or Line rendering mode
-- **Bin size spinbox**: Configurable histogram bin width (min: 0.1, max: 10000.0, step: 1.0, default: 10.0)
+- **Estimation method controls**: Uses shared `EstimationMethodControls` widget from `RateEstimationControls` library. Supports binning (default), Gaussian kernel, and causal exponential estimation methods. Each method has its own parameter page in a stacked widget.
 
 ## Event Series Management
 
@@ -302,6 +302,7 @@ The PSTH Widget shares significant infrastructure with sibling plot types:
 | `PlotAlignmentWidget` | Yes | Yes | Yes | No |
 | `RelativeTimeAxisWidget` | Yes | Yes | Yes | No |
 | `VerticalAxisWidget` | Yes | No (trial rows) | Yes | Yes |
+| `EstimationMethodControls` | Yes | N/A | Yes | N/A |
 | `GatherResult` | Yes (aggregated) | Yes (per-trial) | Yes (aggregated) | No |
 | `HistogramMapper` | Yes | No | No | Yes |
 | `PlotInteractionHelpers` | Yes | Yes | Yes | Yes |

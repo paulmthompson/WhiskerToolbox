@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "Plots/Common/EventRateEstimation/EstimationParams.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -237,10 +238,19 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
         return;
     }
 
-    // Get window size and bin size from state
+    // Get window size from state
     double window_size = _state->getWindowSize();
-    double bin_size = _state->getBinSize();
     double half_window = window_size / 2.0;
+
+    // Extract bin size from estimation parameters
+    // Currently only BinningParams is implemented; other methods use default bin_size
+    double bin_size = 10.0;  // fallback default
+    auto const & params = _state->estimationParams();
+    if (auto const * binning = std::get_if<WhiskerToolbox::Plots::BinningParams>(&params)) {
+        bin_size = binning->bin_size;
+    } else {
+        qDebug() << "PSTHPlotOpenGLWidget: Non-binning estimation method not yet supported, using default bin_size";
+    }
 
     // Calculate number of bins: from -window/2 to +window/2 with bin_size spacing
     int num_bins = static_cast<int>(std::ceil(window_size / bin_size));

@@ -223,15 +223,15 @@ void PSTHState::setStyle(PSTHStyle style) {
     }
 }
 
-double PSTHState::getBinSize() const {
-    return _data.bin_size;
+WhiskerToolbox::Plots::EstimationParams const & PSTHState::estimationParams() const {
+    return _data.estimation_params;
 }
 
-void PSTHState::setBinSize(double bin_size) {
-    if (_data.bin_size != bin_size) {
-        _data.bin_size = bin_size;
+void PSTHState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params) {
+    if (_data.estimation_params != params) {
+        _data.estimation_params = params;
         markDirty();
-        emit binSizeChanged(bin_size);
+        emit estimationParamsChanged();
         emit stateChanged();
     }
 }
