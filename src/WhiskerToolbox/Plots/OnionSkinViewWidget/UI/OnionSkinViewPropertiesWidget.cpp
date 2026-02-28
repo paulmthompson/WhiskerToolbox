@@ -21,6 +21,7 @@
 #include <QTableWidgetItem>
 
 #include <algorithm>
+#include <set>
 
 OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
     std::shared_ptr<OnionSkinViewState> state,
@@ -105,8 +106,6 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             this, &OnionSkinViewPropertiesWidget::_onMaxAlphaChanged);
 
     // Connect UI signals — rendering
-    connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &OnionSkinViewPropertiesWidget::_onLineWidthChanged);
     connect(ui->highlight_current_checkbox, &QCheckBox::toggled,
             this, &OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged);
 
@@ -178,6 +177,7 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             _populatePointComboBox();
             _populateLineComboBox();
             _populateMaskComboBox();
+            _purgeStaleKeys();
         });
     }
 
@@ -248,12 +248,6 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
                 });
 
         // Rendering signals (state → UI sync)
-        connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
-                this, [this](float width) {
-                    ui->line_width_spinbox->blockSignals(true);
-                    ui->line_width_spinbox->setValue(static_cast<double>(width));
-                    ui->line_width_spinbox->blockSignals(false);
-                });
         connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
                 this, [this](bool highlight) {
                     ui->highlight_current_checkbox->blockSignals(true);
@@ -505,6 +499,43 @@ void OnionSkinViewPropertiesWidget::_populateMaskComboBox()
     }
 }
 
+void OnionSkinViewPropertiesWidget::_purgeStaleKeys()
+{
+    if (!_state || !_data_manager) {
+        return;
+    }
+
+    // Build set of valid keys for each data type
+    auto point_keys = _data_manager->getKeys<PointData>();
+    auto line_keys = _data_manager->getKeys<LineData>();
+    auto mask_keys = _data_manager->getKeys<MaskData>();
+
+    std::set<std::string> valid_point_keys(point_keys.begin(), point_keys.end());
+    std::set<std::string> valid_line_keys(line_keys.begin(), line_keys.end());
+    std::set<std::string> valid_mask_keys(mask_keys.begin(), mask_keys.end());
+
+    // Purge stale point keys
+    for (auto const & key : _state->getPointDataKeys()) {
+        if (valid_point_keys.find(key.toStdString()) == valid_point_keys.end()) {
+            _state->removePointDataKey(key);
+        }
+    }
+
+    // Purge stale line keys
+    for (auto const & key : _state->getLineDataKeys()) {
+        if (valid_line_keys.find(key.toStdString()) == valid_line_keys.end()) {
+            _state->removeLineDataKey(key);
+        }
+    }
+
+    // Purge stale mask keys
+    for (auto const & key : _state->getMaskDataKeys()) {
+        if (valid_mask_keys.find(key.toStdString()) == valid_mask_keys.end()) {
+            _state->removeMaskDataKey(key);
+        }
+    }
+}
+
 void OnionSkinViewPropertiesWidget::_onAddMaskClicked()
 {
     if (!_state) {
@@ -642,13 +673,6 @@ void OnionSkinViewPropertiesWidget::_onMaxAlphaChanged(double value)
 // Rendering Controls
 // =============================================================================
 
-void OnionSkinViewPropertiesWidget::_onLineWidthChanged(double value)
-{
-    if (_state) {
-        _state->setLineWidth(static_cast<float>(value));
-    }
-}
-
 void OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged(bool checked)
 {
     if (_state) {
@@ -766,10 +790,6 @@ void OnionSkinViewPropertiesWidget::_updateUIFromState()
 
     // Rendering
     // Point glyph style is managed per-key via GlyphStyleControls + _updateGlyphStyleControls()
-
-    ui->line_width_spinbox->blockSignals(true);
-    ui->line_width_spinbox->setValue(static_cast<double>(_state->getLineWidth()));
-    ui->line_width_spinbox->blockSignals(false);
 
     ui->highlight_current_checkbox->blockSignals(true);
     ui->highlight_current_checkbox->setChecked(_state->getHighlightCurrent());

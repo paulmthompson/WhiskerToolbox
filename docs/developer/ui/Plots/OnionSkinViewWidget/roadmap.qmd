@@ -26,79 +26,15 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **Interaction**: Separated X/Y zoom, pan via shared `PlotInteractionHelpers`
 - **Entity selection**: Click-to-select point at current frame (15px tolerance), double-click for navigation
 - **Properties panel**: Data key tables + combo boxes for all 3 types, temporal window controls, alpha curve controls, rendering controls (point size, line width, highlight current), axis range controls in collapsible sections
-- **DataManager observer**: Combo box population (point, line, mask) and cleanup in destructor
+- **DataManager observer**: Combo box population (point, line, mask), cleanup in destructor, and stale key purging when data keys are deleted from DataManager; tested in `OnionSkinViewPropertiesWidget.test.cpp`
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Registration wiring**: `timeChanged` → `_onTimeChanged()`, `timePositionSelected` → `EditorRegistry::setCurrentTime()`
 - **Per-key line style**: Each `LineData` key has its own `CorePlotting::LineStyleData` (color, thickness, alpha) stored in `OnionSkinViewStateData::line_key_line_styles`; managed at runtime via `LineStyleState` QObject wrappers; editable in a collapsible "Line Style Options" section in the properties panel via `LineStyleControls`; \`alpha\` field sets the maximum alpha before temporal decay; serialized/deserialized as part of the JSON state
 - **Per-key mask contour style**: Each `MaskData` key has its own `CorePlotting::LineStyleData` (color, thickness, alpha) stored in `OnionSkinViewStateData::mask_key_line_styles`; managed at runtime via `LineStyleState` QObject wrappers; editable in a collapsible "Mask Style Options" section in the properties panel via `LineStyleControls`; `alpha` field sets the maximum alpha before temporal decay; serialized/deserialized as part of the JSON state
 
-**Not yet implemented**: SVG export, and the cross-widget shared options infrastructure described below.
+**Not yet implemented**: SVG export and the cross-widget shared options infrastructure described below.
 
 ---
-
-## Phase 2: Per-Key Line Appearance Options
-
-**Status**: **Complete.**
-
-Each `LineData` key now has its own color, thickness, and alpha — all configurable in a
-collapsible "Line Style Options" section in the properties panel.
-
-### Implementation Summary
-
-`CorePlotting::LineStyleData` (hex color, thickness, alpha) is used as the serializable
-per-key style struct — no bespoke struct needed. At runtime each key has a `LineStyleState`
-QObject wrapper that emits `styleChanged` / `styleUpdated` signals, mirroring the
-`GlyphStyleState` pattern used for point data.
-
-| Component | Location | Notes |
-|-----------|----------|-------|
-| Serializable style | `CorePlotting::LineStyleData` | `line_key_line_styles` map in `OnionSkinViewStateData` |
-| Runtime wrapper | `LineStyleState` | `Plots/Common/LineStyleControls/Core/` — per-key, owned by state |
-| Properties UI | `LineStyleControls` | `Plots/Common/LineStyleControls/` — color button, thickness + alpha spinboxes |
-| State methods | `lineStyleStateForKey()`, `getLineKeyLineStyle()` | On `OnionSkinViewState` |
-| Signals | `lineStyleChanged()`, `lineKeyLineStyleChanged(key)` | Trigger scene rebuild |
-
-The `alpha` field of `LineStyleData` acts as the **maximum alpha**: the temporal decay is
-applied against this value rather than the global `max_alpha`, so each line key can independently
-limit how opaque its nearest frames appear.
-
-The same `LineStyleState` / `LineStyleControls` library is the shared infrastructure that
-satisfies Phase 6 for line data (see updated Phase 6 table below).
-
-### Adoption by Other Widgets
-
-| Widget | Line Support | Status |
-|--------|-------------|--------|
-| [LinePlotWidget](../LinePlotWidget/index.qmd) | Per-series thickness + color (`LinePlotOptions`) | Done (predates this work) |
-| **OnionSkinViewWidget** | Per-key `LineStyleData` via `LineStyleState` | **Done (this phase)** |
-| [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd) | Global only | Planned (Phase 2) |
-
----
-
-## Phase 3: Per-Key Mask Contour Appearance Options
-
-**Status**: **Complete.**
-
-Each `MaskData` key now has its own color, thickness, and alpha — all configurable in a
-collapsible "Mask Style Options" section in the properties panel.
-
-### Implementation Summary
-
-Identical pattern to Phase 2: `CorePlotting::LineStyleData` is used as the serializable
-per-key style struct. At runtime each key has a `LineStyleState` QObject wrapper. The
-`alpha` field acts as the **maximum alpha**: temporal decay is applied against this value
-rather than the global `max_alpha`.
-
-| Component | Location | Notes |
-|-----------|----------|-------|
-| Serializable style | `CorePlotting::LineStyleData` | `mask_key_line_styles` map in `OnionSkinViewStateData` |
-| Runtime wrapper | `LineStyleState` | `Plots/Common/LineStyleControls/Core/` — per-key, owned by state |
-| Properties UI | `LineStyleControls` | `Plots/Common/LineStyleControls/` — color button, thickness + alpha spinboxes |
-| State methods | `maskStyleStateForKey()`, `getMaskKeyLineStyle()` | On `OnionSkinViewState` |
-| Signals | `maskStyleChanged()`, `maskKeyLineStyleChanged(key)` | Trigger scene rebuild |
-
----
-
 ## Phase 4: SVG Export
 
 **Status**: Not started. No export infrastructure exists in the current widget.
@@ -164,55 +100,6 @@ Add an "Export" section to the properties panel:
 
 ---
 
-## Phase 5: DataManager Observer Improvements
-
-**Status**: Not started. The current observer repopulates combo boxes but does not handle
-stale visualization keys.
-
-**Goal**: Implement stale key purging when data keys are deleted from the DataManager, following
-the pattern recommended in the [Plot Widget Guide](../plot_widget_guide.md).
-
-### 5.1 Stale Key Purging
-
-When the DataManager observer fires, after repopulating combo boxes, check whether any
-currently added data keys have been deleted:
-
-```cpp
-void OnionSkinViewPropertiesWidget::_onDataManagerChanged() {
-    _populatePointComboBox();
-    _populateLineComboBox();
-    _populateMaskComboBox();
-
-    // Purge stale point keys
-    auto all_keys = _data_manager->getAllKeys();
-    std::set<std::string> valid(all_keys.begin(), all_keys.end());
-
-    for (auto const & key : _state->getPointDataKeys()) {
-        if (valid.find(key.toStdString()) == valid.end()) {
-            _state->removePointDataKey(key);
-        }
-    }
-    // Repeat for line and mask keys...
-}
-```
-
-### 5.2 Template-Based Common Tests
-
-Add `OnionSkinViewPropertiesWidget` to the template test suite in
-`tests/WhiskerToolbox/Plots/Common/PlotWidgetCommonTests.hpp` by providing a traits class:
-
-```cpp
-struct OnionSkinViewPropertiesTraits {
-    using WidgetType = OnionSkinViewPropertiesWidget;
-    using StateType = OnionSkinViewState;
-    // ...
-};
-```
-
-This verifies combo box population, observer refresh, destruction cleanup, and stale key handling.
-
----
-
 ## Phase 6: Shared Visual Options Infrastructure
 
 **Status**: **Largely complete** — the core shared glyph infrastructure and the full line style
@@ -269,6 +156,6 @@ consistent look and behavior across:
 |----------|-------|--------|------------|
 | — | Phase 2 — Per-Key Line Options | **Complete** | — |
 | — | Phase 3 — Per-Key Mask Options | **Complete** | Phase 2 |
+| — | Phase 5 — Observer Improvements | **Complete** | — |
 | 1 | Phase 4 — SVG Export | Not started | Phases 2–3 (export should capture per-key styles) |
-| 2 | Phase 5 — Observer Improvements | Not started | None |
-| 3 | Phase 6 — Shared Options Infrastructure | Partially complete | — |
+| 2 | Phase 6 — Shared Options Infrastructure | Partially complete | — |

@@ -327,16 +327,6 @@ void OnionSkinViewState::setMaxAlpha(float alpha)
 
 // === Rendering Parameters ===
 
-void OnionSkinViewState::setLineWidth(float width)
-{
-    if (_data.line_width != width) {
-        _data.line_width = width;
-        markDirty();
-        emit lineWidthChanged(width);
-        emit stateChanged();
-    }
-}
-
 void OnionSkinViewState::setHighlightCurrent(bool highlight)
 {
     if (_data.highlight_current != highlight) {

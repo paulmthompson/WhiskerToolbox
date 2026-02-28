@@ -81,8 +81,6 @@ void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> sta
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::maskStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
-        connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
-                this, [this](float) { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
                 this, [this](bool) { _scene_dirty = true; update(); });
 

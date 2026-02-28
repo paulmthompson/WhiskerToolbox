@@ -49,7 +49,6 @@ TEST_CASE("OnionSkinViewState construction", "[OnionSkinViewState]")
         REQUIRE(state.getAlphaCurve() == "linear");
         REQUIRE(state.getMinAlpha() == 0.1f);
         REQUIRE(state.getMaxAlpha() == 1.0f);
-        REQUIRE(state.getLineWidth() == 2.0f);
         REQUIRE(state.getHighlightCurrent() == true);
     }
 }
@@ -643,19 +642,6 @@ TEST_CASE("OnionSkinViewState rendering parameters", "[OnionSkinViewState]")
         REQUIRE(state.isDirty());
     }
 
-    SECTION("setLineWidth changes value") {
-        state.setLineWidth(3.5f);
-        REQUIRE(state.getLineWidth() == 3.5f);
-    }
-
-    SECTION("setLineWidth emits signal") {
-        QSignalSpy spy(&state, &OnionSkinViewState::lineWidthChanged);
-
-        state.setLineWidth(4.0f);
-
-        REQUIRE(spy.count() == 1);
-    }
-
     SECTION("setHighlightCurrent changes value") {
         state.setHighlightCurrent(false);
         REQUIRE(state.getHighlightCurrent() == false);
@@ -782,7 +768,6 @@ TEST_CASE("OnionSkinViewState serialization", "[OnionSkinViewState]")
         OnionSkinViewState state;
         state.addPointDataKey("pts");
         state.glyphStyleStateForKey("pts")->setSize(12.0f);
-        state.setLineWidth(3.0f);
         state.setHighlightCurrent(false);
 
         std::string json = state.toJson();
@@ -791,7 +776,6 @@ TEST_CASE("OnionSkinViewState serialization", "[OnionSkinViewState]")
         REQUIRE(restored.fromJson(json));
         // Per-key glyph style should be restored
         REQUIRE(restored.getPointKeyGlyphStyle("pts").size == 12.0f);
-        REQUIRE(restored.getLineWidth() == 3.0f);
         REQUIRE(restored.getHighlightCurrent() == false);
     }
 

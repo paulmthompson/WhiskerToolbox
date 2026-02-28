@@ -65,7 +65,6 @@ struct OnionSkinViewStateData {
     std::map<std::string, CorePlotting::LineStyleData> line_key_line_styles;
     /// Per-key mask contour styles (key → LineStyleData)
     std::map<std::string, CorePlotting::LineStyleData> mask_key_line_styles;
-    float line_width = 2.0f;
     bool highlight_current = true;  ///< Draw current frame with distinct color/size
 };
 
@@ -229,9 +228,6 @@ public:
 
     // === Rendering Parameters ===
 
-    [[nodiscard]] float getLineWidth() const { return _data.line_width; }
-    void setLineWidth(float width);
-
     [[nodiscard]] bool getHighlightCurrent() const { return _data.highlight_current; }
     void setHighlightCurrent(bool highlight);
 
@@ -275,7 +271,6 @@ signals:
     void maskStyleChanged();
     /** @brief Emitted when the mask contour style for a specific mask key changes */
     void maskKeyLineStyleChanged(QString const & key);
-    void lineWidthChanged(float width);
     void highlightCurrentChanged(bool highlight);
 
 private:

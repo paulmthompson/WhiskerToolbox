@@ -97,7 +97,6 @@ private slots:
     void _onMaxAlphaChanged(double value);
 
     // Rendering controls
-    void _onLineWidthChanged(double value);
     void _onHighlightCurrentChanged(bool checked);
 
     // State change handlers
@@ -112,6 +111,7 @@ private:
     void _populatePointComboBox();
     void _populateLineComboBox();
     void _populateMaskComboBox();
+    void _purgeStaleKeys();
     void _updatePointDataTable();
     void _updateLineDataTable();
     void _updateMaskDataTable();
