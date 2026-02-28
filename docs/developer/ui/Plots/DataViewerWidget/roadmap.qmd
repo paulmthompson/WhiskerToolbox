@@ -1,0 +1,535 @@
+---
+title: "Data Viewer Widget Roadmap"
+format: html
+---
+
+# DataViewer Widget Development Roadmap
+
+This document tracks remaining development tasks for the Data Viewer Widget. For documentation
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+::: {.callout-note}
+## Pre-Architecture Widget
+
+The Data Viewer Widget was the first plot widget developed, before the unified `Plots/` directory
+structure and common axis/interaction infrastructure. Several refactoring items below extract
+DataViewer-specific code into shared components or adopt existing shared components from
+`Plots/Common/`. These refactoring tasks are ordered by priority and can be interleaved with
+feature work.
+:::
+
+## Completed Work Summary
+
+The following features are complete and documented in [index.qmd](index.qmd):
+
+- **EditorState pattern**: `DataViewerState` with `DataViewerStateData` serialization via reflect-cpp
+- **SeriesOptionsRegistry**: Generic type-safe per-series options for analog, event, and interval types
+- **Rendering pipeline**: `SceneBuildingHelpers` → `RenderableBatch` → `PlottingOpenGL::SceneRenderer`
+- **Layout system**: `CorePlotting::LayoutEngine` with `StackedLayoutStrategy`; spike sorter configuration for custom channel ordering
+- **Y-axis transform pipeline**: `TransformComposers` composing data normalization, user adjustments, layout positioning, global scaling
+- **Interaction system**: `DataViewerInteractionManager` state machine (Normal, CreateInterval, ModifyInterval, CreateLine modes)
+- **Interval editing**: Click-to-select, edge dragging, collision prevention, multi-timeframe support
+- **Entity selection**: Multi-select via Ctrl+click in `DataViewerSelectionManager`
+- **Coordinate transforms**: Unified `DataViewerCoordinates` class for canvas ↔ world ↔ time ↔ data conversions
+- **Analog vertex cache**: Ring buffer for 26–130x faster scrolling rendering
+- **SVG export**: Publication-quality export using the same scene building as OpenGL rendering
+- **Time frame synchronization**: Cross-sampling-rate display (e.g., 30 kHz electrophysiology + 500 Hz video)
+- **Grouped data**: Group loading with auto-calculated scaling and event spacing
+- **Theme and grid**: Dark/Light themes, configurable grid overlay
+- **DataManager observer**: Combo box population, stale key cleanup
+
+**Not yet implemented**: Common axis integration, Y pan/zoom for channel navigation, enhanced
+per-type visual options, viewport culling, and shared component extraction described below.
+
+---
+
+## Phase 1: Common Axis Integration {#phase-1-common-axis-integration}
+
+**Status**: Not started. The DataViewer uses a custom time window and Y bounds managed directly
+in `DataViewerState`/`TimeSeriesViewState` rather than the shared axis system from
+[Plots/Common/](../plot_widget_guide.md#axis-types).
+
+**Goal**: Adopt the common axis architecture so the DataViewer benefits from shared axis widgets,
+serialization, and the "silent update" pattern.
+
+### 1.1 CenteredTimeAxis — New Horizontal Axis Variant
+
+The DataViewer's X-axis behavior is unique among the plot widgets: it is **always centered on the
+global time position** with zoom but **no independent X panning**. Neither the existing
+`RelativeTimeAxis` (event-relative, symmetric window) nor `HorizontalAxis` (arbitrary range with
+pan) match this pattern exactly.
+
+A new `CenteredTimeAxis` variant should be added to `Plots/Common/`:
+
+```
+Plots/Common/CenteredTimeAxisWidget/
+├── Core/
+│   ├── CenteredTimeAxisStateData.hpp   # half_window (zoom level), serializable
+│   └── CenteredTimeAxisState.hpp       # QObject with halfWindowChanged signal
+├── CenteredTimeAxisWidget.hpp          # Axis display (tick marks, labels)
+└── CenteredTimeAxisWithRangeControls.hpp  # Factory with zoom spinbox
+```
+
+**State fields:**
+```cpp
+struct CenteredTimeAxisStateData {
+    double half_window = 5000.0;  ///< Visible half-window in time units (±half_window from center)
+};
+```
+
+**Key behavior differences from existing axes:**
+
+| Aspect | CenteredTimeAxis | RelativeTimeAxis | HorizontalAxis |
+|--------|-----------------|------------------|----------------|
+| Center | Global time position (external) | 0 (alignment event) | User-adjustable |
+| Pan | None — follows time bar | User-adjustable | User-adjustable |
+| Zoom | Adjusts half_window | Adjusts min/max symmetrically | Adjusts x_min/x_max |
+| Labels | Absolute time values | Relative offsets (±N) | Arbitrary values |
+
+**Signals:** `halfWindowChanged`, `rangeUpdated` (emitted when center or zoom changes)
+
+The axis widget receives the current time position from an external source (the application's
+global time bar emits `timeChanged`). The visible range is computed as:
+`[current_time - half_window, current_time + half_window]`.
+
+**Sharing potential:** This axis variant could also be useful for any future widget that needs a
+time-following view (e.g., a real-time signal monitor). It follows the same four-layer pattern
+described in the [Plot Widget Guide](../plot_widget_guide.md#axis-types):
+`StateData → State → Widget → WithRangeControls`.
+
+### 1.2 VerticalAxis Adoption for Y Pan/Zoom
+
+Adopt the existing `VerticalAxisState` / `VerticalAxisWidget` from
+[Plots/Common/VerticalAxisWidget/](../plot_widget_guide.md) to replace the current direct
+`y_min`/`y_max` management in `DataViewerState`. This provides:
+
+- Shared spinbox range controls via `VerticalAxisWithRangeControls`
+- The "silent update" pattern for pan/zoom feedback loop avoidance
+- `VerticalAxisSynchronizer` for automatic OpenGL viewport sync
+- `AxisMapping` support for custom label formatting (e.g., channel names instead of Y values)
+
+**Integration pattern** (see [Plot Widget Guide — Adding an Axis](../plot_widget_guide.md)):
+
+```cpp
+// In DataViewerState constructor
+_vertical_axis_state = std::make_unique<VerticalAxisState>(this);
+_data.vertical_axis = _vertical_axis_state->data();
+
+// Sync vertical axis ↔ view state
+syncVerticalAxisToViewState(
+    _vertical_axis_state.get(), this,
+    [](auto const & vs) { return std::make_pair(vs.y_min, vs.y_max); }
+);
+```
+
+### 1.3 Migration Steps
+
+1. Add `CenteredTimeAxisStateData` and `CenteredTimeAxisState` to `Plots/Common/`
+2. Add `CenteredTimeAxisWidget` with zoom-only controls (no pan spinbox)
+3. Replace `DataViewerState::setTimeWindow()` / `adjustTimeWindowWidth()` with `CenteredTimeAxisState`
+4. Add `VerticalAxisState` member to `DataViewerState`
+5. Wire `VerticalAxisSynchronizer` to `DataViewerState::viewStateChanged`
+6. Add `VerticalAxisWithRangeControls` to `DataViewerPropertiesWidget`
+7. Update `DataViewerStateData` serialization to include new axis data structs
+
+---
+
+## Phase 2: Y Pan/Zoom for Channel Navigation {#phase-2-y-pan-zoom}
+
+**Status**: Not started. Currently, all lanes shrink equally as more series are added, making
+dense channel groups (e.g., 32-channel silicon probes) impractical to view.
+
+**Goal**: Allow users to pan and zoom the Y-axis so they can view a subset of channels at
+readable resolution, inspired by [EventPlotWidget](../EventPlotWidget/index.qmd)'s trial Y
+navigation.
+
+**Depends on**: [Phase 1.2](#phase-1-common-axis-integration) (VerticalAxis adoption).
+
+### 2.1 Fixed Lane Height Model
+
+Change the lane layout from "divide available space equally" to "fixed height per lane":
+
+```cpp
+struct DataViewerLayoutConfig {
+    float lane_height = 80.0f;        ///< Fixed height per lane in world units
+    float lane_gap = 5.0f;            ///< Gap between lanes
+    bool auto_fit_on_add = true;      ///< Auto-adjust Y range when adding series
+};
+```
+
+The total Y extent is `num_series * (lane_height + lane_gap)`. The `VerticalAxisState` range
+determines which portion is visible. This is analogous to the EventPlotWidget where the total
+Y extent is `num_trials * row_height` and the user pans/zooms to navigate.
+
+### 2.2 Viewport Visibility Culling
+
+When many channels are loaded but only a few are visible (e.g., viewing 4 of 32 channels),
+non-visible series should be culled from the rendering pipeline:
+
+1. **Layout query**: Determine which lanes overlap the current Y viewport
+2. **Data skip**: Do not query `DataManager` for series outside the viewport
+3. **GPU skip**: Do not build `RenderableBatch` objects for non-visible series
+
+This provides a meaningful performance optimization for high-channel-count recordings:
+
+```cpp
+// In scene building
+auto visible_lanes = layout_response.lanesInRange(y_min, y_max);
+for (auto const & lane : visible_lanes) {
+    // Only build batches for visible series
+    auto const & key = lane.series_key;
+    // ... build batch for this series
+}
+```
+
+The `AnalogVertexCache` should also be made viewport-aware — only cache and update vertices
+for series whose lanes intersect the viewport.
+
+### 2.3 Scroll Interaction
+
+Mouse wheel on the canvas should:
+
+- **Scroll Y** (default): Pan through channels vertically
+- **Ctrl+Scroll**: Zoom Y (change visible range)
+- **Shift+Scroll**: Zoom X (change time window width)
+
+This matches the existing DataViewer scroll behavior but adds proper Y scrolling through
+lanes (currently, Y scroll only affects `global_zoom`).
+
+### 2.4 AxisMapping for Channel Labels
+
+Use the `AxisMapping` system from the [Plot Widget Guide](../plot_widget_guide.md#axismapping--custom-label-formatting)
+to display channel names on the Y-axis instead of numeric values:
+
+```cpp
+// Create an axis mapping that shows channel names at lane centers
+auto channel_mapping = CorePlotting::AxisMapping{
+    .worldToDomain = [](double world) { return world; },
+    .domainToWorld = [](double domain) { return domain; },
+    .formatLabel = [&channel_names](double domain) {
+        int lane_index = static_cast<int>(std::round(domain));
+        if (lane_index >= 0 && lane_index < channel_names.size()) {
+            return channel_names[lane_index];
+        }
+        return std::string{};
+    }
+};
+y_axis_widget->setAxisMapping(channel_mapping);
+```
+
+---
+
+## Phase 3: Enhanced Event Glyph Options {#phase-3-enhanced-event-glyph-options}
+
+**Status**: Not started. Events are currently rendered as simple ticks with configurable color
+and spacing but no glyph type selection.
+
+**Goal**: Full control over event glyph appearance, using the shared `CorePlotting::GlyphStyleData`
+infrastructure that is now implemented and integrated into TemporalProjectionViewWidget,
+OnionSkinViewWidget, and EventPlotWidget.
+
+### 3.1 Shared GlyphStyleData (Complete)
+
+The shared glyph infrastructure is now available:
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| `CorePlotting::GlyphType` enum | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::GlyphStyleData` struct | `CorePlotting/DataTypes/GlyphStyleData.hpp` | **Complete** |
+| `CorePlotting::toRenderableGlyphType()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `CorePlotting::hexColorToVec4()` | `CorePlotting/DataTypes/GlyphStyleConversion.hpp` | **Complete** |
+| `GlyphStyleState` | `Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp` | **Complete** |
+| `GlyphStyleControls` | `Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp` | **Complete** |
+
+Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.
+
+### 3.2 State and Options Update
+
+Extend `DigitalEventSeriesOptionsData` to include glyph options using the shared struct:
+
+```cpp
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
+
+struct DigitalEventSeriesOptionsData {
+    rfl::Flatten<CorePlotting::SeriesStyle> style;
+    
+    // Event-specific settings (existing)
+    EventPlottingModeData plotting_mode;
+    float vertical_spacing;
+    float event_height;
+    float margin_factor;
+
+    // Glyph options (using shared infrastructure)
+    CorePlotting::GlyphStyleData glyph_style{
+        CorePlotting::GlyphType::Tick, 5.0f, "#FFFFFF", 1.0f};
+};
+```
+
+### 3.3 Properties Panel Controls
+
+Embed `GlyphStyleControls` from `Plots/Common/GlyphStyleWidget/` for per-event-key glyph
+customization, following the same pattern used by TemporalProjectionViewWidget and
+OnionSkinViewWidget:
+
+```cpp
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
+
+auto * controls = new GlyphStyleControls(glyph_style_state, parent);
+```
+
+### 3.4 Scene Building Update
+
+Update `SceneBuildingHelpers::buildEventSeriesBatch()` to use
+`CorePlotting::toRenderableGlyphType()` and `CorePlotting::hexColorToVec4()` from
+`GlyphStyleConversion.hpp`, replacing the hardcoded tick rendering.
+
+---
+
+## Phase 4: Enhanced Interval Rendering {#phase-4-enhanced-interval-rendering}
+
+**Status**: Not started. Intervals are currently rendered as filled rectangles with configurable
+color and alpha but no border or pattern options.
+
+**Goal**: Rich interval visualization with adjustable border, alpha, and hatching patterns.
+
+### 4.1 IntervalRenderingOptions
+
+Extend `DigitalIntervalSeriesOptionsData`:
+
+```cpp
+struct DigitalIntervalSeriesOptionsData {
+    rfl::Flatten<CorePlotting::SeriesStyle> style;
+    
+    // Existing
+    bool extend_full_canvas = true;
+    float margin_factor = 0.95f;
+    float interval_height = 1.0f;
+
+    // New border options
+    float border_thickness = 1.0f;        ///< Border line width in pixels (0 = no border)
+    std::string border_color = "#FFFFFF"; ///< Border color in hex
+    float border_alpha = 1.0f;            ///< Border alpha (separate from fill alpha)
+
+    // New fill options
+    float fill_alpha = 0.5f;             ///< Fill alpha (replaces general alpha for fill)
+
+    // New hatching options
+    IntervalHatchPattern hatch_pattern = IntervalHatchPattern::None;
+    float hatch_spacing = 8.0f;          ///< Spacing between hatch lines in pixels
+    float hatch_angle = 45.0f;           ///< Angle of hatch lines in degrees
+    std::string hatch_color = "#FFFFFF"; ///< Hatch line color
+};
+```
+
+### 4.2 Hatching Patterns
+
+```cpp
+enum class IntervalHatchPattern {
+    None,              ///< Solid fill only (default)
+    ForwardDiagonal,   ///< Lines from bottom-left to top-right
+    BackwardDiagonal,  ///< Lines from top-left to bottom-right
+    CrossHatch,        ///< Both diagonal directions
+    Horizontal,        ///< Horizontal lines
+    Vertical           ///< Vertical lines
+};
+```
+
+Hatching can be implemented via:
+
+1. **Fragment shader approach**: A shader that discards fragments based on position modulo
+   hatch spacing and angle. This is efficient but requires a new shader variant.
+2. **Additional geometry approach**: Generate hatch lines as `RenderablePolyLineBatch` clipped
+   to the interval rectangle. Simpler but generates more geometry.
+
+The fragment shader approach is preferred for performance with many intervals.
+
+### 4.3 SVG Export Update
+
+Update `SVGExporter` to support border and hatching in SVG output. SVG natively supports
+`stroke`, `stroke-width`, and `<pattern>` elements for hatching, making this straightforward.
+
+### 4.4 Properties Panel Controls
+
+Add to the interval section of `DataViewerPropertiesWidget`:
+
+- **Fill alpha** slider (0.0–1.0)
+- **Border thickness** spinbox
+- **Border color** button
+- **Hatch pattern** combo box
+- **Hatch spacing** spinbox (enabled when pattern ≠ None)
+
+---
+
+## Phase 5: Analog Line Style Enhancements {#phase-5-analog-line-style}
+
+**Status**: Partially implemented. Color, alpha, and line thickness exist in
+`AnalogSeriesOptionsData` via `CorePlotting::SeriesStyle`. Gap handling modes exist
+but are basic.
+
+**Goal**: Additional line rendering options for publication-quality analog traces.
+
+### 5.1 Planned Options
+
+```cpp
+struct AnalogSeriesOptionsData {
+    // Existing via SeriesStyle
+    // hex_color, alpha, line_thickness, is_visible
+
+    // Existing analog-specific
+    // user_scale_factor, y_offset, gap_handling, enable_gap_detection, gap_threshold
+
+    // New options
+    LineStyle line_style = LineStyle::Solid;  ///< Solid, Dashed, Dotted
+    bool show_data_points = false;            ///< Overlay point markers on the line
+    PointGlyphType data_point_glyph = PointGlyphType::Circle;
+    float data_point_size = 3.0f;
+};
+
+enum class LineStyle {
+    Solid,    ///< Continuous line (default)
+    Dashed,   ///< Dashed segments
+    Dotted    ///< Dotted segments
+};
+```
+
+### 5.2 Rendering
+
+Dashed/dotted styles can be implemented via fragment shader stipple patterns or by breaking
+the polyline into segments during scene building. The shader approach is preferred for
+consistency with interval hatching (Phase 4).
+
+---
+
+## Phase 6: Shared Component Extraction {#phase-6-shared-components}
+
+**Status**: Not started. Design exploration — depends on Phases 1–4 establishing which patterns
+are truly shared.
+
+**Goal**: Extract DataViewer-specific implementations that have general utility into shared
+locations, and adopt shared components that are currently duplicated.
+
+### 6.1 Components to Extract from DataViewer
+
+| Component | Current Location | Target Location | Also Used By |
+|-----------|-----------------|-----------------|--------------|
+| `SeriesOptionsRegistry` | `DataViewer_Widget/Core/` | `Plots/Common/` or `CorePlotting/` | Any multi-series plot widget |
+| `TransformComposers` | `DataViewer_Widget/Rendering/` | `CorePlotting/Layout/` | Any widget with stacked lane layout |
+| `AnalogVertexCache` | `DataViewer_Widget/Rendering/` | `CorePlotting/` or `PlottingOpenGL/` | [LinePlotWidget](../LinePlotWidget/index.qmd) (dense time series) |
+| `DataViewerCoordinates` | `DataViewer_Widget/Interaction/` | Pattern generalizable via `Plots/Common/` | Layout+coordinate queries shared |
+| `SpikeSorterConfigLoader` | `DataViewer_Widget/Core/` | `DataManager/` or `CorePlotting/` | Any widget displaying multi-channel data |
+
+### 6.2 Components to Adopt from Plots/Common/
+
+| Shared Component | Current DataViewer Equivalent | Adoption Notes |
+|-----------------|------------------------------|----------------|
+| `VerticalAxisState` + `VerticalAxisWidget` | Direct `y_min`/`y_max` in state | Phase 1.2 |
+| `CenteredTimeAxis` (new) | Direct time window in state | Phase 1.1 |
+| `PlotInteractionHelpers` | Custom zoom/pan in `DataViewerInputHandler` | Adopt shared zoom/pan concepts |
+| `AxisMapping` | No custom labels currently | Phase 2.4 for channel names |
+| `VerticalAxisSynchronizer` | Manual view↔axis sync | Phase 1.2 |
+
+### 6.3 Shared Visual Options Infrastructure
+
+The point glyph options infrastructure is now implemented and centralized:
+
+```
+CorePlotting/DataTypes/
+├── GlyphStyleData.hpp         # COMPLETE: GlyphType enum + GlyphStyleData struct
+├── GlyphStyleConversion.hpp   # COMPLETE: toRenderableGlyphType(), hexColorToVec4()
+├── SeriesStyle.hpp            # Already exists: hex_color, alpha, line_thickness, is_visible
+├── LineRenderingOptions.hpp   # Planned: line_style (solid/dashed/dotted), data_point overlay
+├── IntervalRenderingOptions.hpp # Planned: border, fill_alpha, hatch pattern
+
+Plots/Common/GlyphStyleWidget/
+├── Core/GlyphStyleState.hpp   # COMPLETE: QObject wrapper with styleChanged/styleUpdated signals
+├── GlyphStyleControls.hpp     # COMPLETE: Widget with shape combo, size spinbox, color button, alpha
+├── CMakeLists.txt             # COMPLETE: Static library linking Qt6::Widgets + CorePlotting
+```
+
+Already integrated into: TemporalProjectionViewWidget, OnionSkinViewWidget, EventPlotWidget.
+
+Remaining shared visual option structs to implement:
+
+- **DataViewer Widget**: Events (Phase 3), Intervals (Phase 4), Analog lines (Phase 5)
+- **[EventPlotWidget](../EventPlotWidget/roadmap.qmd)**: Phase 3 glyph options
+- **[OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd)**: Phase 1 point options, Phase 2 line options
+- **[ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd)**: Phase 4 point options
+- **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/roadmap.qmd)**: Phase 1 point options
+
+---
+
+## Phase 7: Directory Relocation {#phase-7-directory-relocation}
+
+**Status**: Not started. Low priority — functional correctness is unaffected.
+
+**Goal**: Move `src/WhiskerToolbox/DataViewer_Widget/` to `src/WhiskerToolbox/Plots/DataViewerWidget/`
+for consistency with other plot widgets.
+
+### 7.1 Steps
+
+1. Move directory `DataViewer_Widget/` → `Plots/DataViewerWidget/`
+2. Update `CMakeLists.txt` references in `src/WhiskerToolbox/` and the widget's own `CMakeLists.txt`
+3. Update `#include` paths across the codebase
+4. Update registration module type ID if it references the path
+5. Update test directory structure in `tests/` if mirrored
+
+This is a purely mechanical refactor with no behavioral change. It should be done after the
+major feature phases to avoid merge conflicts.
+
+---
+
+## Implementation Priority
+
+### Next Up
+
+1. **Phase 1**: Common axis integration — foundation for all subsequent Y-axis work
+2. **Phase 2**: Y pan/zoom for channel navigation — highest-impact UX improvement
+
+### Following
+
+3. **Phase 3**: Enhanced event glyph options — shared infrastructure milestone
+4. **Phase 4**: Enhanced interval rendering — border, alpha, hatching
+5. **Phase 5**: Analog line style enhancements
+6. **Phase 6**: Shared component extraction — house-cleaning across widgets
+
+### Deferred
+
+7. **Phase 7**: Directory relocation — mechanical cleanup
+
+---
+
+## Open Questions
+
+1. **CenteredTimeAxis scope**: Should the new axis variant handle the time-following logic
+   itself (receiving `timeChanged` signals), or should it remain a pure zoom widget with the
+   center set externally? The external approach is more flexible but requires the parent widget
+   to manually update the center on every time change.
+
+2. **Lane height policy**: Should lane height be fixed across all series types, or should
+   analog channels get taller lanes than event/interval channels by default? A configurable
+   policy (uniform vs. type-weighted) could address both preferences.
+
+3. **Viewport culling granularity**: Should culling operate at the series level (skip entire
+   series) or could it operate at the sample level (skip analog samples outside the viewport)?
+   Sample-level culling is already partially handled by the `AnalogVertexCache` time range
+   queries.
+
+4. **Hatching renderer**: Fragment shader stipple vs. additional geometry — the shader approach
+   is more performant but adds shader complexity. Is the interval count high enough to
+   warrant shader-based hatching, or would geometry-based hatching suffice?
+
+5. **SeriesOptionsRegistry scope**: If extracted to `Plots/Common/`, should it remain specific
+   to the three DataViewer series types (analog, event, interval), or should it be generalized
+   to support arbitrary option types via a compile-time type list?
+
+---
+
+# See Also
+
+- [Data Viewer Widget Documentation](index.qmd) — Full architecture and feature documentation
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
+- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — Shared glyph infrastructure (Phase 3), cross-widget linking (Phase 6)
+- [OnionSkinViewWidget Roadmap](../OnionSkinViewWidget/roadmap.qmd) — Shared `PointGlyphOptions` (Phase 1), shared visual options (Phase 6)
+- [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Group integration and per-series options patterns
+- [ScatterPlotWidget Roadmap](../ScatterPlotWidget/roadmap.qmd) — Shared point glyph infrastructure
+- [TemporalProjectionViewWidget Roadmap](../TemporalProjectionViewWidget/roadmap.qmd) — Shared point/line visual options

@@ -39,6 +39,13 @@ struct ViewState {
     // View parameters
     float padding_factor = 1.1f;
 
+    /// When true, calculateVisibleWorldBounds scales the visible range by the
+    /// viewport aspect ratio so that world-space units look square on screen.
+    /// Set to false for time-series plots where x (time) and y (trial/value)
+    /// have independent units and the canvas projection does not apply
+    /// aspect-ratio correction.
+    bool preserve_aspect_ratio = true;
+
     // Data bounds (The "World" limits)
     BoundingBox data_bounds{0.0f, 0.0f, 0.0f, 0.0f};
     bool data_bounds_valid = false;

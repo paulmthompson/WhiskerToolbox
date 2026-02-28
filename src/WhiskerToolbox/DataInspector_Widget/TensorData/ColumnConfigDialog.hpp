@@ -12,9 +12,7 @@
  * 4. Set the column name
  *
  * Every column is fully described by a (source_key, pipeline_json) pair.
- * The pipeline JSON is always the source of truth — there is no separate
- * "simple operation" combo-box path. The "Request from Transforms V2" button
- * is the primary way to build pipelines.
+ * The "Request from Transforms V2" button is the primary way to build pipelines.
  *
  * @see TensorDesigner for the hosting panel
  * @see TensorColumnBuilders::ColumnRecipe for the output type

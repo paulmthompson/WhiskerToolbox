@@ -22,7 +22,7 @@ TEST_CASE("DataViewerState construction", "[DataViewerState]")
     SECTION("default construction creates valid state") {
         DataViewerState state;
         
-        REQUIRE(state.getTypeName() == "DataViewer");
+        REQUIRE(state.getTypeName() == "DataViewerWidget");
         REQUIRE(state.getDisplayName() == "Data Viewer");
         REQUIRE_FALSE(state.getInstanceId().isEmpty());
         REQUIRE_FALSE(state.isDirty());

@@ -20,28 +20,13 @@
  * @see TimeScrollBar for the widget implementation
  */
 
+#include "TimeScrollBar/TimeScrollBarStateData.hpp"
 #include "EditorState/EditorState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
 #include <string>
-
-/**
- * @brief Serializable data structure for TimeScrollBarState
- * 
- * This struct is designed for reflect-cpp serialization.
- * All members should be default-constructible and serializable.
- */
-struct TimeScrollBarStateData {
-    std::string instance_id;                          ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Timeline";            ///< User-visible name
-    
-    // Playback parameters
-    int play_speed = 1;                               ///< Play speed multiplier (1x, 2x, etc.)
-    int frame_jump = 10;                              ///< Frame jump value for keyboard shortcuts
-    bool is_playing = false;                          ///< Whether video is currently playing
-};
 
 /**
  * @brief State class for TimeScrollBar

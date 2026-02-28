@@ -1,0 +1,426 @@
+---
+title: "Scatter Plot Widget Roadmap"
+format: html
+---
+
+# ScatterPlotWidget Development Roadmap
+
+This document tracks remaining development tasks for the Scatter Plot Widget. For documentation
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+## Completed Work Summary
+
+The following features are complete and documented in [index.qmd](index.qmd):
+
+- **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
+- **State management**: `ScatterPlotState` with `HorizontalAxisState`, `VerticalAxisState` composition; `ScatterPlotStateData` serializable struct
+- **Axis system**: `HorizontalAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync, including the "silent update" pattern
+- **Interaction**: Separated X/Y zoom, pan via shared `PlotInteractionHelpers`
+- **Properties panel**: Axis range controls in collapsible `Section` widgets; data source selection UI (key, column, offset per axis); reference line toggle; compatibility status label
+- **OpenGL lifecycle**: `ScatterPlotOpenGLWidget` initialization, projection/view matrix management, pan/zoom mouse handlers
+- **State serialization**: Full round-trip JSON via `rfl::json`
+- **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
+- **Data source descriptor**: `ScatterAxisSource` struct defining data key, tensor column, and temporal offset
+- **Row type compatibility validation**: `resolveSourceRowType()` and `checkSourceCompatibility()` functions in `Core/SourceCompatibility.hpp/.cpp` with full test coverage (21 test cases, 52 assertions)
+- **Data source UI**: Key/column/offset combo boxes per axis with DataManager observer, compatibility label displaying `checkSourceCompatibility()` results
+- **Point pair computation**: `buildScatterPoints()` factory function in `Core/BuildScatterPoints.hpp/.cpp` supporting all compatible source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval) with temporal offset and TimeFrameIndex join. Tested in `BuildScatterPoints.test.cpp`.
+- **Point rendering**: SceneBuilder→SceneRenderer pipeline using `addGlyphs()` for points with single instanced draw call
+- **Auto-fit bounds**: Automatic X/Y bounds detection from data with 5% padding on first data load (when bounds are at defaults)
+- **Reference line rendering**: $y = x$ diagonal via `addPolyLine()` with show/hide toggle in properties panel; endpoints update on pan/zoom
+- **DataManager observer** (Phase 6 partial): Observer registration/removal in properties widget for combo box synchronization
+- **Double-click-to-navigate**: Point hit testing via shared `SceneHitTester` + `QuadTree<EntityId>` spatial index, `pointDoubleClicked` → `timePositionSelected` → `EditorRegistry::setCurrentTime()` signal chain, yellow highlight glyph for navigated-to point
+- **Glyph customization**: `GlyphStyleData` in `ScatterPlotStateData` with default blue circle style (`#3388FF`, size 5, alpha 0.8); `GlyphStyleState` owned by `ScatterPlotState` with `glyphStyleChanged` signal; `GlyphStyleControls` embedded in properties panel "Glyph Options" collapsible section; rendering uses `toRenderableGlyphType()` and `hexColorToVec4()` from `GlyphStyleConversion.hpp`; full round-trip JSON serialization
+
+**Not yet implemented**:
+polygon selection and group integration (Phase 3), feature coloring (Phase 7),
+stale key handling (Phase 6.3).
+
+## Phase 3: Polygon Selection and Group Integration
+
+**Status**: Not started. Depends on shared polygon selection infrastructure.
+
+**Goal**: Allow the user to select multiple points via polygon (lasso) selection and add their
+associated `TimeFrameIndex` entities to an entity group.
+
+### 3.1 Polygon Interaction (Existing Infrastructure)
+
+The polygon drawing interaction is already implemented as a shared component:
+`CorePlotting::Interaction::PolygonInteractionController` (in
+`CorePlotting/Interaction/PolygonInteractionController.hpp/.cpp`). This controller provides:
+
+- Click-based polygon creation: `start()` → repeated `addVertex()` → `complete()`
+- Cursor preview via `updateCursorPosition()` (shows edge from last vertex to cursor)
+- Auto-close by clicking near the first vertex (configurable threshold)
+- Vertex drag mode for modifying existing polygons
+- Undo via `removeLastVertex()`
+- `GlyphPreview` output for rendering the polygon outline during construction
+- Configurable colors, stroke width, vertex size
+
+The ScatterPlotWidget needs to:
+
+1. **Instantiate** a `PolygonInteractionController` in `ScatterPlotOpenGLWidget`
+2. **Wire mouse events**: Ctrl+Click → `addVertex()`, mouse move → `updateCursorPosition()`,
+   Escape → `cancel()`, Ctrl+Double-click → `complete()`
+3. **Render the preview** via `getPreview()` using the existing `PreviewRenderer`
+4. **On completion**, extract `getVertices()` and run point-in-polygon selection
+
+### 3.1.1 Point-in-Polygon Selection
+
+A selection utility performs the actual point containment test after the polygon is closed:
+
+```cpp
+namespace CorePlotting::Selection {
+
+struct PolygonSelectionResult {
+    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
+};
+
+/// Find all points inside the polygon (ray-casting algorithm)
+PolygonSelectionResult selectPointsInPolygon(
+    std::span<glm::vec2 const> polygon_vertices,
+    std::span<float const> x_values,
+    std::span<float const> y_values);
+
+}  // namespace CorePlotting::Selection
+```
+
+This is a pure geometry function with no Qt or OpenGL dependency, placed in
+`CorePlotting/Selection/` for sharing with
+[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd).
+
+### 3.2 Polygon Drawing Interaction
+
+In `ScatterPlotOpenGLWidget`, wire the existing `PolygonInteractionController`:
+
+| Input | Action | Controller Method |
+|-------|--------|-------------------|
+| Ctrl + Click | Begin polygon / add vertex | `start()` or `addVertex()` |
+| Mouse move (while active) | Update preview line | `updateCursorPosition()` |
+| Ctrl + Double-click | Close polygon and execute selection | `complete()` |
+| Escape | Cancel polygon drawing | `cancel()` |
+| Backspace (while drawing) | Undo last vertex | `removeLastVertex()` |
+| Click near first vertex | Auto-close polygon | `addVertex()` returns `ClosedPolygon` |
+| Shift + Ctrl + Click | Remove mode (deselect points in polygon) | New polygon in subtract mode |
+
+The `PolygonInteractionController::getPreview()` returns a `GlyphPreview` with `Type::Polygon`
+that the existing `PreviewRenderer` can render. The preview includes polygon edges, vertex
+markers, and a closure line from the last vertex to the cursor.
+
+### 3.3 Selection State
+
+Track the current selection in state:
+
+```cpp
+struct ScatterPlotStateData {
+    // ... existing fields ...
+    std::vector<std::size_t> selected_indices;  ///< Indices into the point array
+};
+```
+
+Selected points should be rendered with a distinct visual style (e.g., highlighted color,
+larger glyph, or a ring) to distinguish them from unselected points.
+
+### 3.4 Selection → Group Integration
+
+When points are selected, the properties panel should show group management controls:
+
+1. **"Add to Group" button** — enabled when a non-empty selection exists
+2. **Group combo box** — lists existing entity groups from `EntityRegistry`
+3. **"New Group" button** — creates a new group and adds the selected entities
+
+The workflow:
+
+```
+User draws polygon over scatter points
+        ↓
+selectPointsInPolygon() → selected_indices
+        ↓
+Map selected_indices → TimeFrameIndex values via ScatterPointData::time_indices
+        ↓
+Look up EntityIDs for those TimeFrameIndex values
+        ↓
+User selects/creates a group → EntityRegistry::addToGroup(entity_ids)
+```
+
+### 3.5 Shared Group Management Panel
+
+This group management pattern is shared across multiple widgets. As proposed in the
+[LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) Phase 1.3, a shared
+`GroupManagementPanel` widget should be factored into `Plots/Common/` (or a higher-level
+shared widget location):
+
+| Widget | What Gets Added to Group | Source of Selection |
+|--------|-------------------------|-------------------|
+| **ScatterPlotWidget** | `TimeFrameIndex` EntityIDs | Polygon selection |
+| **[LinePlotWidget](../LinePlotWidget/index.qmd)** | Alignment event EntityIDs (trials) | Line selection stroke |
+| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Line/Point EntityIDs | Line selection stroke / polygon selection |
+| **DataViewerWidget** | Data entity EntityIDs | (future) row/range selection |
+
+Initial implementation can be done inline in `ScatterPlotPropertiesWidget` and then
+refactored when the second widget needs the same functionality.
+
+---
+
+## Phase 5: Temporal Offset for Outlier Detection
+
+**Status**: Not started. Depends on data source configuration.
+
+**Goal**: Allow plotting a signal against its own time-shifted version to identify points
+where values change too rapidly.
+
+### 5.1 Use Case
+
+Plotting `MaskArea(t)` vs `MaskArea(t-1)` produces a scatter where:
+
+- Points near the diagonal ($y = x$) represent slow changes
+- Points far from the diagonal represent rapid transitions (potential outliers)
+
+This is a common quality-control visualization for time series data.
+
+### 5.2 Implementation
+
+The `ScatterAxisSource::time_offset` field handles this directly.
+When the user sets `time_offset = -1` for the Y-axis source:
+
+1. For each `TimeFrameIndex` $t$, the X value is $x(t)$ and the Y value is $x(t + \text{offset}) = x(t-1)$
+2. Points where the offset pushes $t$ outside valid range are excluded
+3. The `TimeFrameIndex` stored per point is the "primary" index (X-axis, no offset)
+
+### 5.3 Reference Line
+
+When both axes use the same source key and one has a temporal offset, the reference line immediately
+shows which points represent rapid changes (far from the diagonal) vs. slow changes (near it).
+
+### 5.4 Properties Panel Controls
+
+- **Offset spinbox** — per-axis integer spinbox
+
+---
+
+## Phase 6: DataManager Observer and Stale Key Handling
+
+**Status**: Partially complete. Observer registration (6.1) and combo box population (6.2) are implemented. 
+Stale key handling (6.3) and dedicated tests (6.4) remain.
+
+**Goal**: Register a DataManager observer to keep combo boxes current and handle deleted data keys.
+
+### 6.1 Observer Registration
+
+Following the pattern from [Plot Widget Guide](../plot_widget_guide.md):
+
+```cpp
+ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(
+    std::shared_ptr<ScatterPlotState> state,
+    std::shared_ptr<DataManager> data_manager,
+    QWidget * parent)
+    : QWidget(parent), _data_manager(std::move(data_manager))
+{
+    if (_data_manager) {
+        _dm_observer_id = _data_manager->addObserver([this]() {
+            _populateComboBoxes();
+        });
+    }
+}
+
+ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget()
+{
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
+}
+```
+
+### 6.2 Combo Box Population
+
+When the observer fires:
+
+1. Re-query `DataManager::getKeys<AnalogTimeSeries>()` and `DataManager::getKeys<TensorData>()`
+2. Rebuild X and Y key combo boxes, preserving current selection if still valid
+3. If a `TensorData` key is selected, re-query its column names and rebuild the column combo box
+
+### 6.3 Stale Key Handling
+
+If the currently configured X or Y source key is deleted from the DataManager:
+
+- Clear the axis source in state (`x_source = std::nullopt`)
+- Clear the rendered scatter points
+- Update the properties panel to indicate no source selected
+
+### 6.4 Tests
+
+Add `ScatterPlotPropertiesWidget.test.cpp` following the common test pattern from
+`tests/WhiskerToolbox/Plots/Common/PlotWidgetCommonTests.hpp`:
+
+- Combo box population from DataManager
+- Observer refresh on data addition/removal
+- Destruction cleanup (no dangling observer)
+- Stale key handling
+
+---
+
+## Phase 7: Feature Coloring via TensorData
+
+**Status**: Design phase. Depends on point rendering and the shared colormap infrastructure.
+
+**Goal**: Color scatter points by an external feature value from a `TensorData` column, enabling
+visual grouping by continuous or categorical features.
+
+### 7.1 Color Configuration
+
+```cpp
+struct ScatterColorConfig {
+    std::string color_mode = "fixed";    ///< "fixed" or "by_feature"
+
+    // For feature-based coloring
+    std::string tensor_key;              ///< DataManager key for the color TensorData
+    std::string column_name;             ///< Column within the TensorData
+    std::string colormap = "viridis";    ///< Colormap name
+    double color_min = 0.0;
+    double color_max = 1.0;
+    bool use_auto_range = true;
+};
+```
+
+### 7.2 Shared Colormap Infrastructure
+
+This depends on the colormap infrastructure proposed in the [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd)
+and referenced across multiple widget roadmaps:
+
+```cpp
+namespace CorePlotting::Colormaps {
+    using ColormapFunction = std::function<glm::vec4(float t)>;
+    ColormapFunction getColormap(ColormapPreset preset);
+    glm::vec4 mapValue(ColormapFunction const & cmap, float value, float vmin, float vmax);
+}
+```
+
+The colormap system in `CorePlotting/Colormaps/` is shared across:
+
+| Widget | Usage |
+|--------|-------|
+| **ScatterPlotWidget** | Per-point color from feature value |
+| **[LinePlotWidget](../LinePlotWidget/roadmap.qmd)** | Per-trial line color from feature value |
+| **[EventPlotWidget](../EventPlotWidget/roadmap.qmd)** | Per-trial event color |
+| **[HeatmapWidget](../HeatmapWidget/roadmap.qmd)** | Heatmap cell color |
+
+### 7.3 Properties Panel
+
+Add to `ScatterPlotPropertiesWidget` in a "Point Coloring" collapsible section:
+
+1. **Color mode combo** — Fixed / By Feature
+2. **TensorData combo box** — lists `TensorData` keys from DataManager
+3. **Column combo box** — shows columns of the selected `TensorData`
+4. **Colormap combo** — colormap preset selection
+5. **Range controls** — auto/manual min/max spinboxes
+
+---
+
+## Shared Components Summary
+
+Components that should be factored into shared locations rather than implemented inline:
+
+| Component | Proposed Location | Used By |
+|-----------|-------------------|---------|
+| `selectPointsInPolygon` | `CorePlotting/Selection/` | ScatterPlotWidget, [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `GroupManagementPanel` | `Plots/Common/` | ScatterPlotWidget, [LinePlotWidget](../LinePlotWidget/roadmap.qmd), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+| `Colormaps` | `CorePlotting/Colormaps/` | ScatterPlotWidget, [HeatmapWidget](../HeatmapWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), [LinePlotWidget](../LinePlotWidget/roadmap.qmd) |
+
+
+---
+
+## Phase 8: Hover Tooltip (Deferred)
+
+**Status**: Deferred. Depends on hit testing infrastructure.
+
+**Goal**: Show a tooltip with point coordinates and `TimeFrameIndex` when the user hovers
+over a scatter point for a brief dwell time.
+
+**Complexity note**: Hover tooltips require a debounce/dwell timer to avoid flickering
+on fast mouse movements, careful coordinate conversion, and Qt tooltip lifecycle management.
+These concerns are separated from the simpler double-click navigation to keep
+that phase focused.
+
+### 8.1 Dwell Timer
+
+Use a `QTimer` (single-shot, ~400 ms) that resets on every `mouseMoveEvent`. When the timer
+fires without a reset, perform a hit test at the last known cursor position using the
+`SceneHitTester` infrastructure:
+
+```cpp
+// In ScatterPlotOpenGLWidget
+QTimer * _hover_timer = nullptr;   // single-shot, ~400 ms
+QPoint _last_cursor_pos;
+
+void mouseMoveEvent(QMouseEvent * event) override {
+    _last_cursor_pos = event->pos();
+    _hover_timer->start(400);       // restart on every move
+    // ... existing pan logic ...
+}
+
+void _onHoverTimerFired() {
+    QPointF world = screenToWorld(_last_cursor_pos);
+    auto result = _hit_tester.queryQuadTree(
+        static_cast<float>(world.x()),
+        static_cast<float>(world.y()),
+        _scene);
+    if (result.hasHit() && result.entity_id.has_value()) {
+        // build tooltip string from result.world_x, result.world_y, entity_id
+        // and show via QToolTip::showText()
+    } else {
+        QToolTip::hideText();
+    }
+}
+```
+
+### 8.2 Tooltip Content
+
+The tooltip should display:
+
+- X and Y values (formatted to a reasonable precision)
+- The `TimeFrameIndex` value
+- Optionally: the absolute time value (`time_frame->getTimeAtIndex(tfi)`)
+
+### 8.3 Interaction with Pan/Zoom
+
+Hide the tooltip immediately when a pan or zoom gesture begins, and cancel the pending
+timer to avoid a tooltip appearing mid-pan.
+
+---
+
+## Design Decisions
+
+1. **Point count scalability**: The `SceneBuilder::addGlyphs()` → `GlyphRenderer` pipeline uses
+   instanced rendering (single GPU draw call for all points in a batch). This is the same path
+   EventPlotWidget uses for large spike counts and scales well to tens of thousands of points.
+   No dedicated `PointBatchRenderer` is needed.
+
+2. **Polygon interaction**: Uses the existing `PolygonInteractionController` from
+   `CorePlotting/Interaction/`. This shared controller handles click-based polygon creation,
+   vertex drag modification, cursor preview, and auto-close detection.
+
+3. **Reference line**: Only $y = x$ reference line for now. Can be generalized to
+   arbitrary linear reference lines ($y = ax + b$) in a future phase if needed.
+
+4. **Hit testing via shared QuadTree**: Point hit testing uses the existing `SceneHitTester`
+   (`CorePlotting/Interaction/SceneHitTester.hpp`) which queries the `QuadTree<EntityId>`
+   spatial index built automatically by `SceneBuilder::addGlyphs()`. This is the same
+   infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd) for double-click
+   navigation and click-to-select. The QuadTree provides `O(log n)` nearest-neighbor lookup,
+   scaling well to large point counts without widget-specific spatial indexing code. Navigation
+   uses `mouseDoubleClickEvent`, matching EventPlotWidget. Hover tooltips are deferred to
+   Phase 8 because they require a debounce timer and additional Qt tooltip lifecycle management.
+
+5. **Two-batch rendering for selection/highlight**: `GlyphRenderer` renders each `RenderableGlyphBatch` in order, with its own `u_point_size` / `u_glyph_size` uniform. Per-instance color is already supported by the shader (`a_instance_color` / `a_color` VBO attribute), but per-instance size is not — size is a per-batch uniform. Therefore, rendering selected/highlighted points at a different size requires a second `addGlyphs()` call. This results in exactly two GPU draw calls (one for unselected, one for selected) regardless of the selection count, with no shader changes needed.
+
+6. **Single dataset per plot**: Each ScatterPlotWidget displays a single X/Y data source pair.
+   Users can open multiple scatter plot instances via the Analysis Dashboard for side-by-side
+   comparison of different variable pairs.
+
+# See Also
+
+- [ScatterPlotWidget Documentation](index.qmd) — Full architecture and feature documentation
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [LinePlotWidget Roadmap](../LinePlotWidget/roadmap.qmd) — Group integration pattern (Phase 1), feature coloring (Phase 3)
+- [EventPlotWidget Roadmap](../EventPlotWidget/roadmap.qmd) — TensorData feature coloring/sorting (Phase 5)
+- [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) — Colormap infrastructure (Phase 2)
+- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) — Polygon selection with PointData, shared rendering

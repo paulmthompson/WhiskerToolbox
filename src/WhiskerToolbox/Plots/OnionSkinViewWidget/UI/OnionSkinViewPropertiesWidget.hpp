@@ -7,9 +7,11 @@
  *
  * Provides controls for:
  * - Adding/removing point, line, and mask data keys from DataManager
+ * - Per-key point glyph options (shape, size, color, alpha) via GlyphStyleControls
+ *   in a collapsible section; controls update when a point table row is selected
  * - Temporal window size (frames behind / ahead)
  * - Alpha curve type (Linear, Exponential, Gaussian) and min/max alpha
- * - Point size and line width rendering controls
+ * - Line width rendering control
  * - Current-frame highlight toggle
  * - Axis range controls via HorizontalAxisRangeControls and
  *   VerticalAxisRangeControls in collapsible sections
@@ -25,6 +27,7 @@
 #include <memory>
 
 class DataManager;
+class GlyphStyleControls;
 class HorizontalAxisRangeControls;
 class OnionSkinViewWidget;
 class Section;
@@ -89,7 +92,6 @@ private slots:
     void _onMaxAlphaChanged(double value);
 
     // Rendering controls
-    void _onPointSizeChanged(double value);
     void _onLineWidthChanged(double value);
     void _onHighlightCurrentChanged(bool checked);
 
@@ -109,11 +111,20 @@ private:
     void _updateLineDataTable();
     void _updateMaskDataTable();
     void _updateUIFromState();
+    /**
+     * @brief Rebind the GlyphStyleControls to the currently selected point key.
+     *
+     * If no row is selected, the controls are disabled. Otherwise they are
+     * bound to the per-key GlyphStyleState for the selected key.
+     */
+    void _updateGlyphStyleControls();
 
     Ui::OnionSkinViewPropertiesWidget * ui;
     std::shared_ptr<OnionSkinViewState> _state;
     std::shared_ptr<DataManager> _data_manager;
     OnionSkinViewWidget * _plot_widget;
+    GlyphStyleControls * _glyph_style_controls = nullptr;
+    Section * _glyph_style_section = nullptr;
     HorizontalAxisRangeControls * _horizontal_range_controls;
     Section * _horizontal_range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;

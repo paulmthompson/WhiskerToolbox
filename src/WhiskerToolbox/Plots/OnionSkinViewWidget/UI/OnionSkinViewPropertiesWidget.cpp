@@ -5,6 +5,7 @@
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Points/Point_Data.hpp"
@@ -12,7 +13,9 @@
 
 #include "ui_OnionSkinViewPropertiesWidget.h"
 
+#include <QFormLayout>
 #include <QHeaderView>
+#include <QLabel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 
@@ -101,12 +104,29 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             this, &OnionSkinViewPropertiesWidget::_onMaxAlphaChanged);
 
     // Connect UI signals — rendering
-    connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &OnionSkinViewPropertiesWidget::_onPointSizeChanged);
     connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &OnionSkinViewPropertiesWidget::_onLineWidthChanged);
     connect(ui->highlight_current_checkbox, &QCheckBox::toggled,
             this, &OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged);
+
+    // === Point Glyph Options collapsible section ===
+    // Inserted after the point data table area (before line data label).
+    // The GlyphStyleControls are bound to the per-key state of the selected row.
+    _glyph_style_section = new Section(this, "Point Glyph Options");
+    if (_state) {
+        _glyph_style_controls = new GlyphStyleControls(nullptr, this);
+        _glyph_style_controls->setEnabled(false);
+
+        auto * glyph_layout = new QVBoxLayout();
+        glyph_layout->setContentsMargins(4, 4, 4, 4);
+        glyph_layout->addWidget(_glyph_style_controls);
+        _glyph_style_section->setContentLayout(*glyph_layout);
+    }
+    // Insert after the point data add widget (before line_data_label)
+    {
+        int insert_idx = ui->main_layout->indexOf(ui->add_point_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _glyph_style_section);
+    }
 
     // Populate combo boxes
     _populatePointComboBox();
@@ -189,12 +209,6 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
                 });
 
         // Rendering signals (state → UI sync)
-        connect(_state.get(), &OnionSkinViewState::pointSizeChanged,
-                this, [this](float size) {
-                    ui->point_size_spinbox->blockSignals(true);
-                    ui->point_size_spinbox->setValue(static_cast<double>(size));
-                    ui->point_size_spinbox->blockSignals(false);
-                });
         connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
                 this, [this](float width) {
                     ui->line_width_spinbox->blockSignals(true);
@@ -297,11 +311,13 @@ void OnionSkinViewPropertiesWidget::_onPointTableSelectionChanged()
 {
     bool has_selection = !ui->point_data_table->selectedItems().isEmpty();
     ui->remove_point_button->setEnabled(has_selection);
+    _updateGlyphStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStatePointKeyAdded(QString const & /*key*/)
 {
     _updatePointDataTable();
+    _updateGlyphStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStatePointKeyRemoved(QString const & /*key*/)
@@ -309,6 +325,7 @@ void OnionSkinViewPropertiesWidget::_onStatePointKeyRemoved(QString const & /*ke
     _updatePointDataTable();
     ui->point_data_table->clearSelection();
     ui->remove_point_button->setEnabled(false);
+    _updateGlyphStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_updatePointDataTable()
@@ -580,13 +597,6 @@ void OnionSkinViewPropertiesWidget::_onMaxAlphaChanged(double value)
 // Rendering Controls
 // =============================================================================
 
-void OnionSkinViewPropertiesWidget::_onPointSizeChanged(double value)
-{
-    if (_state) {
-        _state->setPointSize(static_cast<float>(value));
-    }
-}
-
 void OnionSkinViewPropertiesWidget::_onLineWidthChanged(double value)
 {
     if (_state) {
@@ -604,6 +614,29 @@ void OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged(bool checked)
 // =============================================================================
 // Internal Helpers
 // =============================================================================
+
+void OnionSkinViewPropertiesWidget::_updateGlyphStyleControls()
+{
+    if (!_glyph_style_controls || !_state) {
+        return;
+    }
+
+    QList<QTableWidgetItem *> const selected = ui->point_data_table->selectedItems();
+    if (selected.isEmpty()) {
+        _glyph_style_controls->setGlyphStyleState(nullptr);
+        return;
+    }
+
+    int const row = selected.first()->row();
+    QTableWidgetItem const * item = ui->point_data_table->item(row, 0);
+    if (!item) {
+        _glyph_style_controls->setGlyphStyleState(nullptr);
+        return;
+    }
+
+    GlyphStyleState * glyph_state = _state->glyphStyleStateForKey(item->text());
+    _glyph_style_controls->setGlyphStyleState(glyph_state);
+}
 
 void OnionSkinViewPropertiesWidget::_updateUIFromState()
 {
@@ -641,9 +674,7 @@ void OnionSkinViewPropertiesWidget::_updateUIFromState()
     ui->max_alpha_spinbox->blockSignals(false);
 
     // Rendering
-    ui->point_size_spinbox->blockSignals(true);
-    ui->point_size_spinbox->setValue(static_cast<double>(_state->getPointSize()));
-    ui->point_size_spinbox->blockSignals(false);
+    // Point glyph style is managed per-key via GlyphStyleControls + _updateGlyphStyleControls()
 
     ui->line_width_spinbox->blockSignals(true);
     ui->line_width_spinbox->setValue(static_cast<double>(_state->getLineWidth()));

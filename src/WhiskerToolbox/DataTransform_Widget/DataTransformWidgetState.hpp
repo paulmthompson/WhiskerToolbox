@@ -21,26 +21,13 @@
  * @see SelectionContext for inter-widget communication
  */
 
+#include "DataTransform_Widget/DataTransformWidgetStateData.hpp"
 #include "EditorState/EditorState.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
 #include <string>
-
-/**
- * @brief Serializable data structure for DataTransformWidgetState
- * 
- * This struct is designed for reflect-cpp serialization.
- * All members should be default-constructible and serializable.
- */
-struct DataTransformWidgetStateData {
-    std::string selected_input_data_key;  ///< Input data key for transform (from SelectionContext)
-    std::string selected_operation;        ///< Currently selected transform operation name
-    std::string last_output_name;          ///< Last used output name (for convenience)
-    std::string instance_id;               ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Data Transform";  ///< User-visible name
-};
 
 /**
  * @brief State class for DataTransform_Widget

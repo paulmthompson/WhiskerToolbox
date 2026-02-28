@@ -41,6 +41,7 @@ target_link_libraries(OnionSkinViewWidget PRIVATE CorePlotting)
 target_link_libraries(OnionSkinViewWidget PRIVATE PlottingOpenGL)
 target_link_libraries(OnionSkinViewWidget PRIVATE DataManager)
 target_link_libraries(OnionSkinViewWidget PRIVATE EditorState)
+target_link_libraries(OnionSkinViewWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(OnionSkinViewWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(OnionSkinViewWidget PRIVATE VerticalAxisWidget)
 

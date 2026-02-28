@@ -43,6 +43,7 @@ target_link_libraries(TemporalProjectionViewWidget PRIVATE DataManager)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE EditorState)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(TemporalProjectionViewWidget PRIVATE VerticalAxisWidget)
+target_link_libraries(TemporalProjectionViewWidget PRIVATE GlyphStyleWidget)
 
 target_include_directories(TemporalProjectionViewWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

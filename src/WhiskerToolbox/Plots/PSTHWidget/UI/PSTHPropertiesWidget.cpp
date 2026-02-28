@@ -251,6 +251,10 @@ void PSTHPropertiesWidget::_updatePlotEventsTable()
         return;
     }
 
+    // Block signals while rebuilding the table to prevent selectionChanged
+    // from firing mid-update and accessing stale/freed GlyphStyleState pointers.
+    QSignalBlocker blocker(ui->plot_events_table);
+
     ui->plot_events_table->setRowCount(0);
 
     auto event_names = _state->getPlotEventNames();

@@ -1,0 +1,317 @@
+---
+title: "Data Viewer Widget"
+format: html
+---
+
+# Data Viewer Widget Overview
+
+The **Data Viewer Widget** visualizes **time series data** — analog time series, digital event series, and digital interval series — on a shared OpenGL canvas. Users select data series by key from a feature tree, configure display options per series, and view synchronized plots that scroll with the application's global time bar.
+
+For planned features and refactoring work, see the [roadmap](roadmap.qmd).
+
+::: {.callout-note}
+## Location Note
+
+The Data Viewer Widget predates the unified `Plots/` directory structure and currently lives at
+`src/WhiskerToolbox/DataViewer_Widget/` rather than `src/WhiskerToolbox/Plots/DataViewerWidget/`.
+A future refactoring may relocate it for consistency with other plot widgets. Several of its
+components could be refactored to use shared infrastructure from `Plots/Common/` — see the
+[roadmap](roadmap.qmd) for details.
+:::
+
+# Architecture
+
+The widget is structured into four subdirectories, each with a clear responsibility:
+
+```
+DataViewer_Widget/
+├── Core/           # State, data storage, series options
+├── Interaction/    # Input handling, selection, tooltips, coordinates
+├── Rendering/      # OpenGL canvas, scene building, SVG export
+└── UI/             # Qt widgets, properties panel, sub-widgets
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `DataViewer_Widget` (UI) | Top-level Qt widget — owns state, manages feature add/remove, time scroll |
+| `DataViewerPropertiesWidget` (UI) | Properties panel — feature tree, per-series controls, theme/grid/export |
+| `OpenGLWidget` (Rendering) | OpenGL canvas — builds scene, renders batches, handles mouse events |
+| `DataViewerState` (Core) | Serializable state — view window, theme, grid, per-series options |
+| `TimeSeriesDataStore` (Core) | Runtime data — series pointers, layout transforms, vertex caches |
+| `SeriesOptionsRegistry` (Core) | Type-safe registry for per-series display options in state |
+| `DataViewerInteractionManager` (Interaction) | Interaction state machine — interval creation/modification |
+| `DataViewerInputHandler` (Interaction) | Mouse event processing — pan, click, hover routing |
+| `DataViewerSelectionManager` (Interaction) | Entity selection — multi-select via Ctrl+click |
+| `DataViewerTooltipController` (Interaction) | Tooltip display with hover delay |
+| `DataViewerCoordinates` (Interaction) | Canvas ↔ world ↔ time coordinate conversions |
+| `SceneBuildingHelpers` (Rendering) | Converts series data into `RenderableBatch` primitives |
+| `TransformComposers` (Rendering) | Composes Y transforms from normalization, layout, and global scale |
+| `DataViewerWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The Data Viewer Widget follows the project's **EditorState** architecture:
+
+-   `DataViewerState` inherits from `EditorState`
+-   Registered with `EditorRegistry` via `DataViewerWidgetModule::registerTypes()`
+-   `DataViewer_Widget` is the **view** factory, `DataViewerPropertiesWidget` is the **properties** factory
+-   Both share the same `DataViewerState` instance
+-   State is placed in a zone (Center by default) via `ZoneManager`
+
+# State Management
+
+## Separation of Concerns
+
+The widget cleanly separates **serializable user preferences** from **runtime/computed data**:
+
+| What | Where | Serialized? |
+|------|-------|-------------|
+| Series display options (color, visibility, scale) | `DataViewerState` via `SeriesOptionsRegistry` | Yes |
+| View state (time window, Y bounds, zoom, pan) | `DataViewerState` | Yes |
+| Theme and grid settings | `DataViewerState` | Yes |
+| UI preferences (zoom mode, panel collapsed) | `DataViewerState` | Yes |
+| Interaction mode | `DataViewerState` | Yes |
+| Series data (`shared_ptr<AnalogTimeSeries>`, etc.) | `TimeSeriesDataStore` | No |
+| Layout transforms (offset, gain from LayoutEngine) | `TimeSeriesDataStore` | No |
+| Cached statistics (mean, std_dev) | `TimeSeriesDataStore` | No |
+| Vertex caches, OpenGL resources | `OpenGLWidget` / `TimeSeriesDataStore` | No |
+| Drag state, hover position, batch flags | Various interaction handlers | No |
+
+## Data Flow: Two-Lookup Pattern
+
+At render time, the renderer combines data from two sources:
+
+```cpp
+for (auto const& [key, entry] : _data_store->analogSeries()) {
+    // 1. Data + computed layout from TimeSeriesDataStore
+    auto const& series = entry.series;
+    auto const& layout_transform = entry.layout_transform;
+    auto const& data_cache = entry.data_cache;
+
+    // 2. User display options from DataViewerState
+    auto const* opts = _state->seriesOptions().get<AnalogSeriesOptionsData>(key);
+    if (!opts || !opts->get_is_visible()) continue;
+
+    // Render using both sources
+    renderSeries(series, layout_transform, data_cache, *opts);
+}
+```
+
+## Signal Flow
+
+The state drives a unidirectional data flow:
+
+```
+User action (UI)
+    → Modify DataViewerState
+        → State emits signal (viewStateChanged, themeChanged, etc.)
+            → OpenGLWidget reacts → calls update()
+```
+
+Key principle: **UI modifies state directly; OpenGLWidget never has pass-through setter methods.** All rendering configuration flows through the state object.
+
+## SeriesOptionsRegistry
+
+The `SeriesOptionsRegistry` provides a **generic, type-safe API** for managing per-series display options across all three series types:
+
+```cpp
+auto& registry = state->seriesOptions();
+
+// Set (type inferred from argument)
+AnalogSeriesOptionsData opts;
+opts.hex_color() = "#ff0000";
+registry.set("channel_1", opts);
+
+// Get (type explicit)
+auto const* analog = registry.get<AnalogSeriesOptionsData>("channel_1");
+
+// Visibility queries
+QStringList visible = registry.visibleKeys<AnalogSeriesOptionsData>();
+```
+
+Three signals cover all change types: `optionsChanged`, `optionsRemoved`, `visibilityChanged`.
+
+## Serialization
+
+`DataViewerState` serializes to JSON via reflect-cpp. The underlying `DataViewerStateData` struct contains all persistent state:
+
+```json
+{
+  "instance_id": "abc123",
+  "display_name": "Data Viewer",
+  "view": { "time_start": 0, "time_end": 10000, "global_zoom": 1.5 },
+  "theme": { "theme": "Dark", "background_color": "#000000" },
+  "grid": { "enabled": false, "spacing": 100 },
+  "analog_options": {
+    "channel_1": { "hex_color": "#0000ff", "is_visible": true, "user_scale_factor": 1.0 }
+  }
+}
+```
+
+All enums serialize as human-readable strings. Style fields use `rfl::Flatten` for a flat JSON structure.
+
+# Rendering Pipeline
+
+## Layered Architecture
+
+The rendering system is organized into five layers:
+
+1.  **Data Storage** (`TimeSeriesDataStore`): Series data in typed maps with layout transforms and caches
+2.  **View State** (`DataViewerState`): Time window, Y bounds, zoom, pan — the "camera"
+3.  **Layout** (`CorePlotting::LayoutEngine`): Computes vertical positioning via `StackedLayoutStrategy`; produces a `LayoutResponse` with per-series `SeriesLayout`
+4.  **Scene Building** (`SceneBuildingHelpers`): Converts series data + layout into `RenderableBatch` primitives (polylines for analog, glyphs for events, rectangles for intervals)
+5.  **Rendering** (`PlottingOpenGL::SceneRenderer`): Uploads and draws batches via OpenGL shaders
+
+## Y-Axis Transform Pipeline
+
+Each series' vertical positioning is composed from multiple stages via `TransformComposers.hpp`:
+
+1.  **Data normalization** — z-score style: maps mean ± 3σ to ±1
+2.  **User adjustments** — intrinsic scale, `user_scale_factor`, vertical offset
+3.  **Layout positioning** — from `LayoutEngine` (lane center + half-height)
+4.  **Global scaling** — `global_zoom` and `global_vertical_scale` applied to amplitude only (lane position is NOT affected)
+
+```cpp
+// TransformComposers::composeAnalogYTransform
+auto data_norm = NormalizationHelpers::forStdDevRange(mean, std_dev, 3.0f);
+auto user_adj  = NormalizationHelpers::manual(intrinsic_scale * user_scale_factor, offset);
+auto data_transform = user_adj.compose(data_norm);
+
+float effective_gain = layout.y_transform.gain * margin * global_zoom * global_vertical_scale;
+float final_gain   = data_transform.gain * effective_gain;
+float final_offset = data_transform.offset * effective_gain + layout.y_transform.offset;
+```
+
+All vertices use normalized coordinates (−1 to +1 in local space); the composed `LayoutTransform` handles all positioning and scaling. This is consistent across analog, event, and interval series.
+
+# Axis Behavior
+
+## X-Axis: Global Time-Yoked
+
+Unlike other plot widgets that allow independent X panning (see [Plot Widget Guide](../plot_widget_guide.md) for `RelativeTimeAxis` and `HorizontalAxis`), the Data Viewer's X-axis is **yoked to the application's global time position**. The visible time window is always centered on the current playback position. The user can **zoom** the X-axis (changing how much time is visible), but there is **no independent X panning** — the view follows the global time bar.
+
+This is distinct from the `RelativeTimeAxis` used by event-aligned widgets ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)) where X represents time relative to alignment events, and from the `HorizontalAxis` used by spatial widgets ([ScatterPlotWidget](../ScatterPlotWidget/index.qmd), [ACFWidget](../ACFWidget/index.qmd)).
+
+::: {.callout-tip}
+## Refactoring Opportunity
+A `CenteredTimeAxis` variant of the [Common Axis System](../plot_widget_guide.md#axis-types) could formalize this behavior: zoom-only with no pan, always centered on the global time position. This would bring the DataViewer in line with the shared axis architecture. See [roadmap Phase 1](roadmap.qmd#phase-1-common-axis-integration).
+:::
+
+## Y-Axis: Stacked Lane Layout
+
+Multiple series are arranged vertically in **stacked lanes**, with each series occupying its own vertical band. The `CorePlotting::LayoutEngine` with `StackedLayoutStrategy` computes the lane positions. This is conceptually similar to the trial-row layout in [EventPlotWidget](../EventPlotWidget/index.qmd), but with several key differences:
+
+| Aspect | DataViewer | EventPlotWidget |
+|--------|-----------|-----------------|
+| Lane contents | Each lane holds a different data series (analog, event, or interval) | Each lane holds one trial of the same event series |
+| Data types | Mixed: AnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries | Homogeneous: DigitalEventSeries only |
+| Lane height | All lanes currently shrink equally as more are added | Fixed per-trial height with Y pan/zoom to navigate |
+| Y pan/zoom | Y pan is available; lanes shrink as more are added | Full Y pan and zoom — can zoom into a subset of trials |
+
+Currently, when many series are added (e.g., 32 electrophysiology channels), each lane shrinks proportionally. This becomes impractical for analog signals where detail matters. The [roadmap](roadmap.qmd) proposes adopting EventPlotWidget-style Y pan/zoom so users can zoom into a subset of channels even when many are loaded.
+
+# Visualization Capabilities
+
+## Series Types
+
+Three data types can be visualized simultaneously:
+
+| Type | Visual Representation | Current Style Options | Planned Enhancements |
+|------|----------------------|-----------------------|---------------------|
+| **AnalogTimeSeries** | Connected line strips (polylines) | Color, alpha, line thickness, visibility, user scale, vertical offset, gap handling | — |
+| **DigitalEventSeries** | Point glyphs (ticks) | Color, alpha, line thickness, visibility, vertical spacing, event height | Adjustable glyph type (circle, square, diamond, cross, triangle), glyph size ([roadmap Phase 3](roadmap.qmd#phase-3-enhanced-event-glyph-options)) |
+| **DigitalIntervalSeries** | Filled rectangles | Color, alpha, line thickness (border), visibility, interval height | Adjustable border thickness, alpha shader, hatching patterns ([roadmap Phase 4](roadmap.qmd#phase-4-enhanced-interval-rendering)) |
+
+Per-series display options are managed through the `SeriesOptionsRegistry` and the `CorePlotting::SeriesStyle` base struct. See [roadmap Phases 3–4](roadmap.qmd#phase-3-enhanced-event-glyph-options) for planned enhancements to align with the shared `PointGlyphOptions` infrastructure planned for [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd), [EventPlotWidget](../EventPlotWidget/roadmap.qmd), and [ScatterPlotWidget](../ScatterPlotWidget/roadmap.qmd).
+
+## Multi-Series Display
+
+Multiple series can be drawn on the same canvas with individual or overlapping positioning. Both X and Y axes are **zoomable**, and per-series amplitude scaling allows data of different magnitudes to be visualized simultaneously. Drawing is **synced to the global time scroll bar**, enabling simultaneous visualization across widgets (e.g., video + electrophysiology).
+
+The viewer handles **different sampling rates** transparently. For instance, camera-frame events at 500 Hz plot correctly alongside electrophysiology at 30 kHz. The `TimeFrame` system in `DataManager` handles coordinate conversions, and the viewer plots data appropriately in the master time frame.
+
+# Time Frame Synchronization
+
+-   **Master Time Frame**: `OpenGLWidget` holds a reference to the master time frame used for X-axis coordinates
+-   **Time Frame Conversion**: Series with different time frames are converted to master time for display
+-   **Cross-Rate Compatibility**: Simultaneous visualization of data at different sampling rates (e.g., 30 kHz electrophysiology with 500 Hz video)
+-   **Range Query Optimization**: Data range queries use each series' native time frame for efficient rendering
+
+# Handling Grouped Data
+
+Groups of signals collected simultaneously (e.g., 32 channels from a silicon probe) share scaling properties and spacing by default, while individual channels can be adjusted independently. Dead channels can be hidden per-channel.
+
+Channel arrangement can be customized via **spike sorter configuration**, which reorders channels based on physical electrode positions rather than numerical channel order. The `SpikeSorterConfigLoader` reads position data and the `LayoutEngine` applies custom ordering.
+
+# Interaction System
+
+## Interaction Modes
+
+The `DataViewerInteractionManager` implements a state machine with four modes:
+
+| Mode | Behavior |
+|------|----------|
+| `Normal` | Pan, select entities, hover tooltips |
+| `CreateInterval` | Click-drag to create a new digital interval |
+| `ModifyInterval` | Edge-drag to resize an existing interval |
+| `CreateLine` | Click-drag to draw a selection line |
+
+Switching modes cancels any active interaction. Completed interactions emit `interactionCompleted` with `DataCoordinates` containing all information needed to update the `DataManager`.
+
+## Entity Selection
+
+`DataViewerSelectionManager` provides multi-select support (Ctrl+click). Selection state is tracked via `EntityId` and emits `selectionChanged` signals.
+
+## Coordinate Conversions
+
+`DataViewerCoordinates` provides a unified interface for converting between:
+
+-   **Canvas coordinates** (pixels, origin at top-left)
+-   **World coordinates** (normalized space used by scene/layout)
+-   **Time coordinates** (data time values)
+-   **Data values** (analog series values via inverse transform)
+
+## Interactive Interval Editing
+
+The widget supports editing digital interval series through mouse-based dragging:
+
+-   **Click-to-Select**: Click on intervals to select them; selected intervals get enhanced borders
+-   **Edge Dragging**: Hover near boundaries (within 10px) shows resize cursor; drag to modify start/end times
+-   **Real-time Preview**: Original position shown dimmed alongside new position during drag
+-   **Collision Prevention**: Automatic constraints prevent overlap with neighboring intervals
+-   **Multi-Timeframe**: Mouse coordinates in master time frame are automatically converted to the series' native time frame; boundary constraints are enforced in native time frame for accuracy
+-   **Cancel**: ESC key restores original boundaries
+
+## Event Viewer Features
+
+The `EventViewer_Widget` provides display mode controls:
+
+1.  **Stacked Mode (Default)**: Each event series gets a horizontal lane with configurable spacing and height; auto-calculated when groups are loaded
+2.  **Full Canvas Mode**: Events stretch top-to-bottom
+
+Auto-spacing uses 80% of canvas height with 60% of spacing allocated to event height to prevent overlap.
+
+# Performance
+
+## Analog Vertex Cache
+
+The `AnalogVertexCache` provides a ring buffer-based caching strategy for scrolling analog time series. Instead of regenerating all vertices each frame, it maintains a cache and only generates new edge data:
+
+- **Without cache**: ~1.3ms to regenerate all vertices (100K visible points)
+- **With cache**: ~10–50µs for incremental updates (26–130x faster)
+
+This is critical for smooth scrolling with dense electrophysiology data.
+
+## SVG Export
+
+The `SVGExporter` generates publication-quality SVG output from the current view by building the same `RenderableScene` used for OpenGL rendering. It uses a fixed 1920×1080 canvas with `viewBox` for clean scaling, and preserves all visual styles (colors, transparency, line thickness).
+
+# See Also
+
+- [Data Viewer Widget Roadmap](roadmap.qmd) — Development roadmap and planned features
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Similar lane-based layout for trial rows; Y pan/zoom model to adopt
+- [LinePlotWidget](../LinePlotWidget/index.qmd) — Shared `CorePlotting` rendering pipeline for analog data
+- [OnionSkinViewWidget](../OnionSkinViewWidget/index.qmd) — Shares planned `PointGlyphOptions` and per-key visual options

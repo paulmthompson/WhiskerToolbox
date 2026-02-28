@@ -157,6 +157,43 @@ template<typename T>
     return gather(source, adapter);
 }
 
+/**
+ * @brief Gather data aligned to a DigitalIntervalSeries with explicit window
+ *
+ * Uses the specified alignment point (Start/End/Center) of each interval,
+ * but creates a view window of [alignment - pre_window, alignment + post_window]
+ * in absolute time units rather than using the raw interval bounds.
+ *
+ * This is essential for raster plots where the user specifies a display window
+ * that extends beyond the interval boundaries.
+ *
+ * @tparam T Data type to gather (e.g., DigitalEventSeries, AnalogTimeSeries)
+ * @param source Source data to create views from
+ * @param alignment_intervals Intervals defining alignment points
+ * @param align Which point in each interval to use for alignment
+ * @param pre_window Absolute time units before alignment to include
+ * @param post_window Absolute time units after alignment to include
+ * @return GatherResult with one view per interval
+ */
+template<typename T>
+[[nodiscard]] GatherResult<T> gatherWithIntervalAlignment(
+        std::shared_ptr<T> source,
+        std::shared_ptr<DigitalIntervalSeries> alignment_intervals,
+        AlignmentPoint align,
+        double pre_window,
+        double post_window) {
+
+    if (!source || !alignment_intervals) {
+        return GatherResult<T>{};
+    }
+
+    auto adapter = withAlignment(
+        alignment_intervals, align,
+        static_cast<int64_t>(pre_window),
+        static_cast<int64_t>(post_window));
+    return gather(source, adapter);
+}
+
 // =============================================================================
 // High-Level Integration Functions
 // =============================================================================
@@ -284,12 +321,15 @@ template<typename T>
             half_window,
             half_window);
     } else {
-        // For interval series: use the specified alignment point
+        // For interval series: use the specified alignment point with window expansion
+        double half_window = alignment_data.window_size / 2.0;
         AlignmentPoint align = toAlignmentPoint(alignment_data.interval_alignment_type);
         return gatherWithIntervalAlignment<T>(
             source, 
             alignment_source.interval_series, 
-            align);
+            align,
+            half_window,
+            half_window);
     }
 }
 

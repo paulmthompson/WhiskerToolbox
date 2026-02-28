@@ -90,6 +90,7 @@ LineBatchData buildLineBatchFromGatherResult(
 
         // Iterate time-value pairs via the lazy view
         auto trial_view = series->view();
+        auto trial_tf = series->getTimeFrame();
 
         // We need to read pairs of consecutive points.
         // Materialise a lightweight buffer of (x,y) for this trial.
@@ -98,7 +99,10 @@ LineBatchData buildLineBatchFromGatherResult(
         pts.reserve(series->getNumSamples());
 
         for (auto tvp : trial_view) {
-            float const x = static_cast<float>(tvp.time().getValue() - align);
+            int64_t time_abs = trial_tf
+                ? trial_tf->getTimeAtIndex(tvp.time())
+                : tvp.time().getValue();
+            float const x = static_cast<float>(time_abs - align);
             float const y = tvp.value();
             pts.push_back({x, y});
         }

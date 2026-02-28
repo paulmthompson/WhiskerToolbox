@@ -3,8 +3,11 @@
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
+#include "CorePlotting/CoordinateTransform/NumericSafety.hpp"
 
 #include <rfl/json.hpp>
+
+#include <cmath>
 
 LinePlotState::LinePlotState(QObject * parent)
     : EditorState(parent),
@@ -56,7 +59,8 @@ LinePlotState::LinePlotState(QObject * parent)
     // Sync relative time axis state to data when range changes
     auto syncTimeAxisData = [this]() {
         _data.time_axis = _relative_time_axis_state->data();
-        double const range = _data.time_axis.max_range - _data.time_axis.min_range;
+        double const range = CorePlotting::safe_range(_data.time_axis.min_range,
+                                                      _data.time_axis.max_range);
         if (std::abs(range - _data.alignment.window_size) > 0.01) {
             _data.alignment.window_size = range;
             _alignment_state->data().window_size = range;
@@ -241,6 +245,7 @@ void LinePlotState::setPan(double x_pan, double y_pan)
 
 void LinePlotState::setXBounds(double x_min, double x_max)
 {
+    if (!std::isfinite(x_min) || !std::isfinite(x_max)) return;
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -254,6 +259,7 @@ void LinePlotState::setXBounds(double x_min, double x_max)
 
 void LinePlotState::setYBounds(double y_min, double y_max)
 {
+    if (!std::isfinite(y_min) || !std::isfinite(y_max)) return;
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
         _data.view_state.y_max = y_max;

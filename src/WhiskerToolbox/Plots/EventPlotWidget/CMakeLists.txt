@@ -38,6 +38,7 @@ target_link_libraries(EventPlotWidget PRIVATE
 
 target_link_libraries(EventPlotWidget PRIVATE DataManager)
 target_link_libraries(EventPlotWidget PRIVATE EditorState)
+target_link_libraries(EventPlotWidget PRIVATE GlyphStyleWidget)
 target_link_libraries(EventPlotWidget PRIVATE PlotAlignmentWidget)
 target_link_libraries(EventPlotWidget PRIVATE RelativeTimeAxisWidget)
 target_link_libraries(EventPlotWidget PRIVATE VerticalAxisWidget)

@@ -4,6 +4,7 @@
 #include "Core/TemporalProjectionViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Points/Point_Data.hpp"
@@ -30,6 +31,7 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
       _horizontal_range_controls_section(nullptr),
       _vertical_range_controls(nullptr),
       _vertical_range_controls_section(nullptr),
+      _glyph_style_controls(nullptr),
       _dm_observer_id(-1)
 {
     ui->setupUi(this);
@@ -69,8 +71,12 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
             this, &TemporalProjectionViewPropertiesWidget::_onLineTableSelectionChanged);
 
     // Connect UI signals — rendering
-    connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &TemporalProjectionViewPropertiesWidget::_onPointSizeChanged);
+    // Point size spinbox is superseded by GlyphStyleControls;
+    // hide the old spinbox and add controls programmatically
+    ui->point_size_spinbox->setVisible(false);
+    if (auto * label = ui->point_size_label) {
+        label->setVisible(false);
+    }
     connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &TemporalProjectionViewPropertiesWidget::_onLineWidthChanged);
 
@@ -106,11 +112,9 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
                 this, &TemporalProjectionViewPropertiesWidget::_onStateLineKeyRemoved);
         connect(_state.get(), &TemporalProjectionViewState::lineDataKeysCleared,
                 this, [this]() { _updateLineDataTable(); });
-        connect(_state.get(), &TemporalProjectionViewState::pointSizeChanged,
-                this, [this](float size) {
-                    ui->point_size_spinbox->blockSignals(true);
-                    ui->point_size_spinbox->setValue(static_cast<double>(size));
-                    ui->point_size_spinbox->blockSignals(false);
+        connect(_state.get(), &TemporalProjectionViewState::glyphStyleChanged,
+                this, [this]() {
+                    // GlyphStyleControls self-updates via GlyphStyleState signals
                 });
         connect(_state.get(), &TemporalProjectionViewState::lineWidthChanged,
                 this, [this](float width) {
@@ -132,6 +136,17 @@ TemporalProjectionViewPropertiesWidget::TemporalProjectionViewPropertiesWidget(
                 });
 
         _updateUIFromState();
+
+        // Create GlyphStyleControls and insert into layout
+        if (!_glyph_style_controls) {
+            _glyph_style_controls = new GlyphStyleControls(
+                _state->glyphStyleState(), this);
+            // Insert before the line width controls in the rendering section
+            auto * rendering_layout = ui->point_size_spinbox->parentWidget()->layout();
+            if (rendering_layout) {
+                rendering_layout->addWidget(_glyph_style_controls);
+            }
+        }
     }
 }
 
@@ -364,13 +379,6 @@ void TemporalProjectionViewPropertiesWidget::_updateLineDataTable()
 // Rendering Controls
 // =============================================================================
 
-void TemporalProjectionViewPropertiesWidget::_onPointSizeChanged(double value)
-{
-    if (_state) {
-        _state->setPointSize(static_cast<float>(value));
-    }
-}
-
 void TemporalProjectionViewPropertiesWidget::_onLineWidthChanged(double value)
 {
     if (_state) {
@@ -420,10 +428,7 @@ void TemporalProjectionViewPropertiesWidget::_updateUIFromState()
         return;
     }
 
-    // Point size
-    ui->point_size_spinbox->blockSignals(true);
-    ui->point_size_spinbox->setValue(static_cast<double>(_state->getPointSize()));
-    ui->point_size_spinbox->blockSignals(false);
+    // Point style is managed by GlyphStyleControls (self-syncs via GlyphStyleState)
 
     // Line width
     ui->line_width_spinbox->blockSignals(true);

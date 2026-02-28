@@ -3,10 +3,9 @@
 
 /**
  * @file TensorData.hpp
- * @brief Refactored TensorData — unified N-dimensional tensor with named axes,
+ * @brief TensorData — unified N-dimensional tensor with named axes,
  *        multiple storage backends, view/lazy support, and DataTraits.
- *
- * This is step 5 of the TensorData refactor (see tensor_data_refactor_proposal.md).
+ 
  * It wires together:
  * - DimensionDescriptor (named axes, shape, column names)
  * - RowDescriptor (time-indexed, interval, or ordinal rows)
@@ -24,11 +23,6 @@
  *    always available. LibTorch is behind `#ifdef TENSOR_BACKEND_LIBTORCH`.
  * 5. **Views are immutable.** Mutation requires materialization.
  *
- * ## Migration Note
- *
- * This class coexists with the legacy Tensor_Data.hpp during the transition.
- * New code should use this class. Legacy call sites will be migrated in
- * subsequent steps.
  */
 
 #include "DimensionDescriptor.hpp"
@@ -60,7 +54,6 @@
 #pragma pop_macro("CHECK")
 #endif
 
-// Forward declarations
 class TimeIndexStorage;
 class LazyColumnTensorStorage;
 class TensorData;
@@ -72,7 +65,6 @@ class TensorData;
  * (for notifyObservers). Called exactly once, at the end of createFromLazyColumns().
  * Constructed at the builder layer (e.g., TensorColumnBuilders.hpp in TransformsV2).
  *
- * @see tensor_data_refactor_proposal.md §6.6 for design rationale.
  */
 using InvalidationWiringFn = std::function<void(LazyColumnTensorStorage &, TensorData &)>;
 

@@ -100,7 +100,7 @@ public:
      * - Serialization type field
      * - Properties panel routing
      * 
-     * @return Type name, e.g., "MediaWidget", "DataViewer"
+     * @return Type name, e.g., "MediaWidget", "DataViewerWidget"
      */
     [[nodiscard]] virtual QString getTypeName() const = 0;
 

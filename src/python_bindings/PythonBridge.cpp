@@ -97,6 +97,10 @@ bool PythonBridge::exposeTimeFrame(std::string const & time_key, std::string con
         return false;
     }
 
+    // Ensure the embedded module is imported so pybind11 types (including
+    // TimeFrame) are registered before we call py::cast().
+    exposeDataManager();
+
     auto tf = _dm->getTime(TimeKey(time_key));
     if (!tf) {
         return false;

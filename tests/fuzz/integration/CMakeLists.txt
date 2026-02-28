@@ -1,5 +1,8 @@
 # Integration fuzz tests for complex workflows
 
+# Workspace/EditorRegistry serialization fuzz tests (Phase 3)
+add_subdirectory(workspace)
+
 # Transform Pipeline fuzz test
 add_executable(fuzz_transform_pipeline
     fuzz_transform_pipeline.cpp

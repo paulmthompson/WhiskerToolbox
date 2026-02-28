@@ -1,0 +1,367 @@
+---
+title: "Creating a C++ Model Wrapper"
+---
+
+## Overview
+
+This guide explains how to integrate a PyTorch model into Neuralyzer by creating a C++ wrapper. 
+There are two approaches:
+
+1. **Runtime JSON model** — define the model's I/O in a JSON file (no C++ needed)
+2. **Compiled C++ model** — create a `ModelBase` subclass with custom logic
+
+Most models can use the JSON approach. The compiled approach is only needed when the model 
+requires custom pre/post-processing logic in `forward()` that cannot be expressed through 
+the standard encoder/decoder pipeline.
+
+## Prerequisites
+
+- A trained PyTorch model exported as either:
+  - **AOT Inductor** (`.pt2`) — recommended, see [AOT Inductor Tutorial](aot_inductor_tutorial.qmd)
+  - **TorchScript** (`.pt`) — `torch.jit.trace()` or `torch.jit.script()`
+- Knowledge of the model's input and output tensor shapes
+
+## Approach 1: Runtime JSON Model (Recommended)
+
+For models with straightforward I/O (images in, masks/points/lines out), define a JSON 
+specification file and register it at runtime. No recompilation needed.
+
+### Step 1: Determine Model I/O
+
+Identify each input and output tensor:
+
+- **Name** — a unique identifier (e.g. `"image"`, `"heatmap"`)
+- **Shape** — dimensions excluding the batch axis (e.g. `[3, 256, 256]`)
+- **Data type** — which Neuralyzer data type maps to this tensor
+- **Encoder/Decoder** — which conversion strategy to use
+
+### Step 2: Write the JSON Spec
+
+Create a `.json` file alongside your model weights:
+
+```json
+{
+  "model_id": "whisker_detector",
+  "display_name": "Whisker Detector",
+  "description": "Detects whisker positions from video frames",
+  "weights_path": "whisker_detector.pt2",
+  "backend": "auto",
+  "preferred_batch_size": 0,
+  "max_batch_size": 0,
+  "inputs": [
+    {
+      "name": "image",
+      "shape": [3, 256, 256],
+      "description": "Input video frame (RGB)",
+      "recommended_encoder": "ImageEncoder",
+      "is_static": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "whisker_mask",
+      "shape": [1, 256, 256],
+      "description": "Predicted whisker probability map",
+      "recommended_decoder": "TensorToLine2D"
+    }
+  ]
+}
+```
+
+#### JSON Schema Reference
+
+**Top-level fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `model_id` | string | Yes | Unique identifier for registration |
+| `display_name` | string | Yes | Shown in the UI model selector |
+| `description` | string | No | Tooltip text in the UI |
+| `weights_path` | string | No | Path to model file. Relative paths resolve against the JSON file's directory. |
+| `backend` | string | No | `"auto"` (default), `"torchscript"`, or `"aotinductor"` |
+| `preferred_batch_size` | int | No | Default batch size in the UI (0 = model decides) |
+| `max_batch_size` | int | No | Maximum batch size (0 = unlimited) |
+| `inputs` | array | Yes | Input slot specifications |
+| `outputs` | array | Yes | Output slot specifications |
+
+**Slot fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Slot identifier, must match the model's expected input order |
+| `shape` | array of int | Yes | Tensor shape excluding batch dimension |
+| `description` | string | No | Human-readable description |
+| `recommended_encoder` | string | No | `"ImageEncoder"`, `"Point2DEncoder"`, `"Mask2DEncoder"`, `"Line2DEncoder"` |
+| `recommended_decoder` | string | No | `"TensorToPoint2D"`, `"TensorToMask2D"`, `"TensorToLine2D"` |
+| `is_static` | bool | No | If true, this is a memory input set once by the user |
+| `is_boolean_mask` | bool | No | If true, values are 0/1 flags |
+| `sequence_dim` | int | No | Axis index for frame sequences (-1 = none) |
+
+### Step 3: Register in Neuralyzer
+
+The JSON model can be registered programmatically:
+
+```cpp
+auto result = dl::ModelRegistry::instance().registerFromJson("path/to/spec.json");
+```
+
+The model will then appear in the Deep Learning widget's model selector.
+
+## Approach 2: Compiled C++ Model
+
+For models requiring custom logic (e.g., multi-step inference, output-to-input feedback loops, 
+custom tensor manipulation), create a `ModelBase` subclass.
+
+### Step 1: Create the Header
+
+Create a header in `src/DeepLearning/models_v2/your_model/`:
+
+```cpp
+#ifndef WHISKERTOOLBOX_YOUR_MODEL_HPP
+#define WHISKERTOOLBOX_YOUR_MODEL_HPP
+
+#include "models_v2/ModelBase.hpp"
+
+#include <memory>
+
+namespace dl {
+
+// Forward declare to keep torch out of the header if needed
+class ModelExecution;
+
+class YourModel : public ModelBase {
+public:
+    YourModel();
+    ~YourModel() override;
+
+    // Non-copyable, movable
+    YourModel(YourModel const &) = delete;
+    YourModel & operator=(YourModel const &) = delete;
+    YourModel(YourModel &&) noexcept;
+    YourModel & operator=(YourModel &&) noexcept;
+
+    [[nodiscard]] std::string modelId() const override;
+    [[nodiscard]] std::string displayName() const override;
+    [[nodiscard]] std::string description() const override;
+    [[nodiscard]] std::vector<TensorSlotDescriptor> inputSlots() const override;
+    [[nodiscard]] std::vector<TensorSlotDescriptor> outputSlots() const override;
+
+    void loadWeights(std::filesystem::path const & path) override;
+    [[nodiscard]] bool isReady() const override;
+
+    [[nodiscard]] int preferredBatchSize() const override;
+    [[nodiscard]] int maxBatchSize() const override;
+
+    std::unordered_map<std::string, torch::Tensor>
+    forward(std::unordered_map<std::string, torch::Tensor> const & inputs) override;
+
+private:
+    std::unique_ptr<ModelExecution> _execution;
+};
+
+} // namespace dl
+
+#endif
+```
+
+### Step 2: Implement the Model
+
+```cpp
+#include "YourModel.hpp"
+#include "models_v2/ModelExecution.hpp"
+#include "device/DeviceManager.hpp"
+#include "registry/ModelRegistry.hpp"
+
+namespace dl {
+
+// ── Self-registration ──
+DL_REGISTER_MODEL(YourModel);
+
+// ── Metadata ──
+
+std::string YourModel::modelId() const { return "your_model"; }
+std::string YourModel::displayName() const { return "Your Model"; }
+std::string YourModel::description() const {
+    return "Description of what your model does.";
+}
+
+int YourModel::preferredBatchSize() const { return 0; }
+int YourModel::maxBatchSize() const { return 0; }
+
+// ── Slot Descriptors ──
+
+std::vector<TensorSlotDescriptor> YourModel::inputSlots() const {
+    return {
+        TensorSlotDescriptor{
+            .name = "image",
+            .shape = {3, 256, 256},
+            .description = "Input video frame",
+            .recommended_encoder = "ImageEncoder",
+        },
+    };
+}
+
+std::vector<TensorSlotDescriptor> YourModel::outputSlots() const {
+    return {
+        TensorSlotDescriptor{
+            .name = "output_mask",
+            .shape = {1, 256, 256},
+            .description = "Predicted segmentation mask",
+            .recommended_decoder = "TensorToMask2D",
+        },
+    };
+}
+
+// ── Weight Loading ──
+
+void YourModel::loadWeights(std::filesystem::path const & path) {
+    _execution = std::make_unique<ModelExecution>();
+    _execution->load(path);  // auto-detects backend from extension
+}
+
+bool YourModel::isReady() const {
+    return _execution && _execution->isLoaded();
+}
+
+// ── Inference ──
+
+std::unordered_map<std::string, torch::Tensor>
+YourModel::forward(
+    std::unordered_map<std::string, torch::Tensor> const & inputs)
+{
+    // Validate required inputs
+    if (inputs.find("image") == inputs.end()) {
+        throw std::runtime_error("Missing required input: image");
+    }
+
+    // Move inputs to the correct device
+    auto & dm = DeviceManager::instance();
+    std::vector<torch::Tensor> ordered_inputs;
+    ordered_inputs.push_back(dm.toDevice(inputs.at("image")));
+
+    // Execute inference
+    auto outputs = _execution->execute(ordered_inputs);
+
+    // Map outputs to named slots
+    std::unordered_map<std::string, torch::Tensor> result;
+    if (!outputs.empty()) {
+        result["output_mask"] = outputs[0];
+    }
+    return result;
+}
+
+} // namespace dl
+```
+
+### Step 3: Key Design Decisions
+
+#### Slot Descriptors
+
+When defining `inputSlots()` and `outputSlots()`, consider:
+
+- **`recommended_encoder`** / **`recommended_decoder`** — the UI pre-selects these but the 
+  user can override them. Choose the most common use case.
+- **`is_static = true`** — use for memory inputs that the user sets once (e.g., reference 
+  frames). The UI renders these as a separate "Memory Inputs" section.
+- **`is_boolean_mask = true`** — use for 0/1 flag tensors that indicate which memory slots 
+  are active. The UI renders checkboxes instead of data source selectors.
+- **`sequence_dim`** — set to a non-negative axis index if the model expects multiple frames 
+  stacked along that dimension. The `SlotAssembler` will automatically arrange static input 
+  entries along this axis.
+- **Batch size** — set `preferredBatchSize() = 1` if your model has an output→input feedback 
+  loop (like NeuroSAM). Leave at 0 for models that can process arbitrary batch sizes.
+
+#### Using `ModelExecution`
+
+`ModelExecution` auto-detects the inference backend from the weight file extension:
+
+| Extension | Backend | API |
+|-----------|---------|-----|
+| `.pt` | TorchScript | `torch::jit::load()` |
+| `.pt2` | AOT Inductor | `AOTIModelPackageLoader` |
+
+You can also force a specific backend:
+
+```cpp
+_execution = std::make_unique<ModelExecution>(BackendType::AOTInductor);
+```
+
+#### Device Management
+
+Always use `DeviceManager` for device placement:
+
+```cpp
+auto & dm = DeviceManager::instance();
+auto device_tensor = dm.toDevice(cpu_tensor);  // moves to CUDA if available
+```
+
+Never create your own `torch::Device` objects or hardcode `torch::kCUDA`.
+
+### Step 4: Register with CMake
+
+Add your source files to `src/DeepLearning/CMakeLists.txt`:
+
+```cmake
+set(DEEP_LEARNING_SOURCES
+    # ... existing sources ...
+    models_v2/your_model/YourModel.hpp
+    models_v2/your_model/YourModel.cpp
+)
+```
+
+The `DL_REGISTER_MODEL` macro handles self-registration at static initialization time. Your 
+model will appear in the Deep Learning widget's model selector after rebuilding.
+
+### Step 5: Write Tests
+
+Create `tests/DeepLearning/models_v2/YourModel.test.cpp`:
+
+```cpp
+#include <catch2/catch_test_macros.hpp>
+
+#include "models_v2/your_model/YourModel.hpp"
+#include "registry/ModelRegistry.hpp"
+
+TEST_CASE("YourModel metadata", "[YourModel]") {
+    dl::YourModel model;
+    CHECK(model.modelId() == "your_model");
+    CHECK(model.displayName() == "Your Model");
+}
+
+TEST_CASE("YourModel input slots", "[YourModel]") {
+    dl::YourModel model;
+    auto inputs = model.inputSlots();
+    REQUIRE(inputs.size() == 1);
+    CHECK(inputs[0].name == "image");
+    CHECK(inputs[0].shape == std::vector<int64_t>{3, 256, 256});
+}
+
+TEST_CASE("YourModel is not ready without weights", "[YourModel]") {
+    dl::YourModel model;
+    CHECK_FALSE(model.isReady());
+}
+
+TEST_CASE("YourModel registered in ModelRegistry", "[YourModel]") {
+    auto & registry = dl::ModelRegistry::instance();
+    auto models = registry.availableModels();
+    CHECK(std::find(models.begin(), models.end(), "your_model") != models.end());
+}
+```
+
+## Choosing Between Approaches
+
+| Criterion | JSON Runtime Model | Compiled C++ Model |
+|-----------|-------------------|-------------------|
+| Recompilation needed | No | Yes |
+| Custom pre/post-processing | No | Yes |
+| Output→input feedback loops | No | Yes |
+| Multiple inference steps | No | Yes |
+| Simplicity | Simplest | More work |
+| Typical use case | Standard image→mask/point/line models | Models like NeuroSAM with memory feedback |
+
+## Model Export
+
+Both approaches require the model to be exported from Python. See:
+
+- [AOT Inductor Export Tutorial](aot_inductor_tutorial.qmd) — recommended for new models
+- TorchScript export: `torch.jit.trace(model, example_inputs).save("model.pt")`

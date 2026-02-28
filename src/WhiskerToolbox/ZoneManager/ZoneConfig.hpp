@@ -37,7 +37,7 @@
  *           "orientation": "vertical",
  *           "ratio": 0.7,
  *           "widgets": [
- *             {"type_id": "DataViewer", "title": "Data Viewer"}
+ *             {"type_id": "DataViewerWidget", "title": "Data Viewer"}
  *           ]
  *         }
  *       ]

@@ -107,9 +107,9 @@ public:
 
     /**
      * @brief Get the type name for this state
-     * @return "DataViewer"
+     * @return "DataViewerWidget" — must match the type_id used in DataViewerWidgetRegistration
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("DataViewer"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("DataViewerWidget"); }
 
     /**
      * @brief Get the display name for UI

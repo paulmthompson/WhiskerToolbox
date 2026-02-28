@@ -105,7 +105,7 @@ public:
      * @brief Get the type name for this state
      * @return "TableDesigner"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("TableDesigner"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("TableDesignerWidget"); }
 
     /**
      * @brief Get the display name for UI

@@ -25,7 +25,7 @@ TEST_CASE("OnionSkinViewState construction", "[OnionSkinViewState]")
     SECTION("default construction creates valid state") {
         OnionSkinViewState state;
 
-        REQUIRE(state.getTypeName() == "OnionSkinView");
+        REQUIRE(state.getTypeName() == "OnionSkinViewWidget");
         REQUIRE(state.getDisplayName() == "Onion Skin View");
         REQUIRE_FALSE(state.getInstanceId().isEmpty());
         REQUIRE_FALSE(state.isDirty());
@@ -49,7 +49,6 @@ TEST_CASE("OnionSkinViewState construction", "[OnionSkinViewState]")
         REQUIRE(state.getAlphaCurve() == "linear");
         REQUIRE(state.getMinAlpha() == 0.1f);
         REQUIRE(state.getMaxAlpha() == 1.0f);
-        REQUIRE(state.getPointSize() == 8.0f);
         REQUIRE(state.getLineWidth() == 2.0f);
         REQUIRE(state.getHighlightCurrent() == true);
     }
@@ -462,33 +461,72 @@ TEST_CASE("OnionSkinViewState rendering parameters", "[OnionSkinViewState]")
 {
     OnionSkinViewState state;
 
-    SECTION("setPointSize changes value") {
-        state.setPointSize(12.0f);
-        REQUIRE(state.getPointSize() == 12.0f);
+    SECTION("per-key glyph style state is created when key is added") {
+        state.addPointDataKey("pts");
+        GlyphStyleState * glyph_state = state.glyphStyleStateForKey("pts");
+        REQUIRE(glyph_state != nullptr);
+        // Default size
+        REQUIRE(glyph_state->size() == 8.0f);
     }
 
-    SECTION("setPointSize emits signal") {
-        QSignalSpy spy(&state, &OnionSkinViewState::pointSizeChanged);
+    SECTION("glyphStyleStateForKey returns nullptr for unknown key") {
+        REQUIRE(state.glyphStyleStateForKey("nonexistent") == nullptr);
+    }
 
-        state.setPointSize(10.0f);
+    SECTION("getPointKeyGlyphStyle returns default for unknown key") {
+        auto style = state.getPointKeyGlyphStyle("nonexistent");
+        REQUIRE(style.size == 8.0f);
+    }
+
+    SECTION("per-key glyph style change emits glyphStyleChanged") {
+        state.addPointDataKey("pts");
+        QSignalSpy spy(&state, &OnionSkinViewState::glyphStyleChanged);
+
+        GlyphStyleState * glyph_state = state.glyphStyleStateForKey("pts");
+        REQUIRE(glyph_state != nullptr);
+        glyph_state->setSize(12.0f);
 
         REQUIRE(spy.count() == 1);
     }
 
-    SECTION("setPointSize marks dirty") {
-        state.markClean();
-        state.setPointSize(3.0f);
-        REQUIRE(state.isDirty());
+    SECTION("per-key glyph style change emits pointKeyGlyphStyleChanged") {
+        state.addPointDataKey("pts");
+        QSignalSpy spy(&state, &OnionSkinViewState::pointKeyGlyphStyleChanged);
+
+        GlyphStyleState * glyph_state = state.glyphStyleStateForKey("pts");
+        REQUIRE(glyph_state != nullptr);
+        glyph_state->setSize(15.0f);
+
+        REQUIRE(spy.count() == 1);
+        REQUIRE(spy.takeFirst().at(0).toString() == "pts");
     }
 
-    SECTION("setPointSize same value no-op") {
-        state.setPointSize(8.0f); // default
+    SECTION("per-key glyph style removed when key is removed") {
+        state.addPointDataKey("pts");
+        REQUIRE(state.glyphStyleStateForKey("pts") != nullptr);
+
+        state.removePointDataKey("pts");
+        REQUIRE(state.glyphStyleStateForKey("pts") == nullptr);
+    }
+
+    SECTION("per-key glyph styles cleared when clearPointDataKeys is called") {
+        state.addPointDataKey("a");
+        state.addPointDataKey("b");
+
+        state.clearPointDataKeys();
+
+        REQUIRE(state.glyphStyleStateForKey("a") == nullptr);
+        REQUIRE(state.glyphStyleStateForKey("b") == nullptr);
+    }
+
+    SECTION("per-key glyph style change marks dirty") {
+        state.addPointDataKey("pts");
         state.markClean();
-        QSignalSpy spy(&state, &OnionSkinViewState::pointSizeChanged);
 
-        state.setPointSize(8.0f);
+        GlyphStyleState * glyph_state = state.glyphStyleStateForKey("pts");
+        glyph_state->setSize(14.0f);
 
-        REQUIRE(spy.count() == 0);
+        REQUIRE(state.isDirty());
     }
 
     SECTION("setLineWidth changes value") {
@@ -628,7 +666,8 @@ TEST_CASE("OnionSkinViewState serialization", "[OnionSkinViewState]")
 
     SECTION("round-trip preserves rendering parameters") {
         OnionSkinViewState state;
-        state.setPointSize(12.0f);
+        state.addPointDataKey("pts");
+        state.glyphStyleStateForKey("pts")->setSize(12.0f);
         state.setLineWidth(3.0f);
         state.setHighlightCurrent(false);
 
@@ -636,7 +675,8 @@ TEST_CASE("OnionSkinViewState serialization", "[OnionSkinViewState]")
 
         OnionSkinViewState restored;
         REQUIRE(restored.fromJson(json));
-        REQUIRE(restored.getPointSize() == 12.0f);
+        // Per-key glyph style should be restored
+        REQUIRE(restored.getPointKeyGlyphStyle("pts").size == 12.0f);
         REQUIRE(restored.getLineWidth() == 3.0f);
         REQUIRE(restored.getHighlightCurrent() == false);
     }

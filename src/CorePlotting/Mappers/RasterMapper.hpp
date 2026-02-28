@@ -48,17 +48,16 @@ namespace RasterMapper {
  * @param series Event series to map
  * @param layout Layout allocation for Y positioning (from RowLayoutStrategy)
  * @param time_frame TimeFrame for index→time conversion
- * @param reference_time Reference time for relative calculation (e.g., stimulus onset)
+ * @param ref_abs_time Reference time in absolute time units (e.g., stimulus onset)
  * @return Range of MappedElement
  */
 [[nodiscard]] inline auto mapEventsRelative(
     DigitalEventSeries const & series,
     SeriesLayout const & layout,
     TimeFrame const & time_frame,
-    TimeFrameIndex reference_time
+    int ref_abs_time
 ) {
     float const y_center = layout.y_transform.offset;
-    int const ref_abs_time = time_frame.getTimeAtIndex(reference_time);
     
     return series.view()
         | std::views::transform([&time_frame, y_center, ref_abs_time](auto const & event_with_id) {
@@ -76,7 +75,7 @@ namespace RasterMapper {
  * @param series Event series to map
  * @param layout Layout allocation for Y positioning
  * @param time_frame TimeFrame for conversion
- * @param reference_time Reference time (center of window)
+ * @param ref_abs_time Reference time in absolute time units (center of window)
  * @param window_before Time units before reference to include
  * @param window_after Time units after reference to include
  * @return Range of MappedElement for events in window
@@ -85,12 +84,11 @@ namespace RasterMapper {
     DigitalEventSeries const & series,
     SeriesLayout const & layout,
     TimeFrame const & time_frame,
-    TimeFrameIndex reference_time,
+    int ref_abs_time,
     int window_before,
     int window_after
 ) {
     float const y_center = layout.y_transform.offset;
-    int const ref_abs_time = time_frame.getTimeAtIndex(reference_time);
     int const window_start = ref_abs_time - window_before;
     int const window_end = ref_abs_time + window_after;
     
@@ -115,7 +113,7 @@ namespace RasterMapper {
  */
 struct TrialConfig {
     DigitalEventSeries const * series;  ///< Event series for this trial
-    TimeFrameIndex reference_time;       ///< Reference event for this trial
+    int ref_abs_time;                    ///< Reference time in absolute time units
     SeriesLayout layout;                 ///< Layout (Y position) for this trial
 };
 
@@ -149,7 +147,7 @@ struct TrialConfig {
     for (auto const & trial : trials) {
         if (!trial.series) continue;
         
-        for (auto const & elem : mapEventsRelative(*trial.series, trial.layout, time_frame, trial.reference_time)) {
+        for (auto const & elem : mapEventsRelative(*trial.series, trial.layout, time_frame, trial.ref_abs_time)) {
             result.push_back(elem);
         }
     }
@@ -182,7 +180,7 @@ struct TrialConfig {
         
         for (auto const & elem : mapEventsInWindow(
                 *trial.series, trial.layout, time_frame, 
-                trial.reference_time, window_before, window_after)) {
+                trial.ref_abs_time, window_before, window_after)) {
             result.push_back(elem);
         }
     }
@@ -259,19 +257,19 @@ struct TrialConfig {
  * @param series Event series
  * @param layout Layout allocation
  * @param time_frame TimeFrame for conversion
- * @param reference_time Reference time
+ * @param ref_abs_time Reference time in absolute time units
  * @return Vector of MappedElement
  */
 [[nodiscard]] inline std::vector<MappedElement> mapEventsRelativeToVector(
     DigitalEventSeries const & series,
     SeriesLayout const & layout,
     TimeFrame const & time_frame,
-    TimeFrameIndex reference_time
+    int ref_abs_time
 ) {
     std::vector<MappedElement> result;
     result.reserve(series.size());
     
-    for (auto const & elem : mapEventsRelative(series, layout, time_frame, reference_time)) {
+    for (auto const & elem : mapEventsRelative(series, layout, time_frame, ref_abs_time)) {
         result.push_back(elem);
     }
     

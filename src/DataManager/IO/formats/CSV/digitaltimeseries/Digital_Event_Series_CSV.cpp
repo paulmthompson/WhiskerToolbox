@@ -27,6 +27,12 @@ std::optional<std::string> check_dir_and_get_full_path(T opts) {
 
 std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options) {
     std::vector<std::shared_ptr<DigitalEventSeries>> result;
+
+    if (options.event_column < 0) {
+        std::cerr << "Error loading digital event series: event_column must be non-negative, got "
+                  << options.event_column << std::endl;
+        return result;
+    }
     
     std::ifstream file(options.filepath);
     if (!file.is_open()) {

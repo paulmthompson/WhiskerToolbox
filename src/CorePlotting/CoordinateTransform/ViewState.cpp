@@ -22,21 +22,26 @@ BoundingBox calculateVisibleWorldBounds(ViewState const & state) {
         return {center_x - 1.0f, center_y - 1.0f, center_x + 1.0f, center_y + 1.0f};
     }
 
-    // Calculate Aspect Ratio
-    float aspect = static_cast<float>(state.viewport_width) / static_cast<float>(std::max(1, state.viewport_height));
-
     float half_w, half_h;
 
-    // Logic to maintain aspect ratio while fitting data
-    // If widget is wider than tall (aspect > 1), we might need to show more width to keep height correct?
-    // The original logic seems to try to fit the data bounds into the viewport.
+    if (state.preserve_aspect_ratio) {
+        // Scale visible range by viewport aspect ratio so that world-space
+        // units appear square on screen.  Correct for spatial plots.
+        float aspect = static_cast<float>(state.viewport_width)
+                     / static_cast<float>(std::max(1, state.viewport_height));
 
-    if (aspect > 1.0f) {
-        half_w = (data_width * state.padding_factor * aspect) / (2.0f * state.zoom_level_x);
-        half_h = (data_height * state.padding_factor) / (2.0f * state.zoom_level_y);
+        if (aspect > 1.0f) {
+            half_w = (data_width * state.padding_factor * aspect) / (2.0f * state.zoom_level_x);
+            half_h = (data_height * state.padding_factor) / (2.0f * state.zoom_level_y);
+        } else {
+            half_w = (data_width * state.padding_factor) / (2.0f * state.zoom_level_x);
+            half_h = (data_height * state.padding_factor / aspect) / (2.0f * state.zoom_level_y);
+        }
     } else {
+        // No aspect ratio correction — each axis maps its data range
+        // directly to the viewport, matching computeOrthoProjection().
         half_w = (data_width * state.padding_factor) / (2.0f * state.zoom_level_x);
-        half_h = (data_height * state.padding_factor / aspect) / (2.0f * state.zoom_level_y);
+        half_h = (data_height * state.padding_factor) / (2.0f * state.zoom_level_y);
     }
 
     // Apply Pan (Normalized to Data Dimensions)
@@ -124,12 +129,17 @@ void applyBoxZoom(ViewState & state, BoundingBox const & bounds) {
     float padding = state.padding_factor;
 
     float zfx, zfy;
-    if (aspect_ratio > 1.0f) {
-        zfx = target_width / (aspect_ratio * data_width * padding);
-        zfy = target_height / (data_height * padding);
+    if (state.preserve_aspect_ratio) {
+        if (aspect_ratio > 1.0f) {
+            zfx = target_width / (aspect_ratio * data_width * padding);
+            zfy = target_height / (data_height * padding);
+        } else {
+            zfx = target_width / (data_width * padding);
+            zfy = (target_height * aspect_ratio) / (data_height * padding);
+        }
     } else {
         zfx = target_width / (data_width * padding);
-        zfy = (target_height * aspect_ratio) / (data_height * padding);
+        zfy = target_height / (data_height * padding);
     }
 
     state.zoom_level_x = std::clamp(1.0f / zfx, 0.1f, 10000.0f);// Increased max zoom

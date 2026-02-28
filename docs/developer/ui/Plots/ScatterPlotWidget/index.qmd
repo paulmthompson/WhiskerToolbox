@@ -1,0 +1,465 @@
+---
+title: "Scatter Plot Widget"
+format: html
+---
+
+# Scatter Plot Widget Overview
+
+The **Scatter Plot Widget** renders **2D scatter plots** of paired numeric data, where each point represents a single `TimeFrameIndex` observation. The primary data sources are `AnalogTimeSeries` and individual columns of `TensorData`. Users can select any combination of these for the X and Y axes, configure glyph appearance (shape, size, color), interact via zoom/pan with click-to-navigate, and select points to add their associated `TimeFrameIndex` entities to groups.
+
+Unlike the trial-aligned plot widgets ([LinePlotWidget](../LinePlotWidget/index.qmd), [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), [HeatmapWidget](../HeatmapWidget/index.qmd)), the Scatter Plot Widget does **not** use `PlotAlignmentState` or `GatherResult`. Instead, it reads data directly from `AnalogTimeSeries` or `TensorData` column vectors indexed by `TimeFrameIndex`.
+
+# Architecture
+
+The widget follows the standard plot widget directory layout:
+
+```
+Plots/ScatterPlotWidget/
+├── CMakeLists.txt
+├── ScatterPlotWidgetRegistration.hpp   # EditorRegistry registration module
+├── ScatterPlotWidgetRegistration.cpp
+├── Core/
+│   ├── ScatterAxisSource.hpp           # Data source descriptor struct (key, column, offset)
+│   ├── ScatterPlotState.hpp            # QObject state class (EditorState subclass)
+│   ├── ScatterPlotState.cpp
+│   ├── ScatterPointData.hpp            # Result struct for computed scatter points
+│   ├── BuildScatterPoints.hpp          # Factory function for point pair computation
+│   ├── BuildScatterPoints.cpp
+│   ├── SourceCompatibility.hpp         # Row-type compatibility validation
+│   └── SourceCompatibility.cpp
+├── Rendering/
+│   ├── ScatterPlotOpenGLWidget.hpp     # OpenGL rendering + mouse interaction
+│   └── ScatterPlotOpenGLWidget.cpp
+└── UI/
+    ├── ScatterPlotWidget.hpp           # Main composite widget (axes + OpenGL + layout)
+    ├── ScatterPlotWidget.cpp
+    ├── ScatterPlotWidget.ui
+    ├── ScatterPlotPropertiesWidget.hpp # Properties/settings panel
+    ├── ScatterPlotPropertiesWidget.cpp
+    └── ScatterPlotPropertiesWidget.ui
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `ScatterPlotWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, horizontal axis, vertical axis |
+| `ScatterPlotPropertiesWidget` (UI) | Properties panel — data source selection (key, column, offset per axis), reference line toggle, compatibility label, axis range controls |
+| `ScatterPlotOpenGLWidget` (Rendering) | OpenGL canvas — point rendering via SceneRenderer, reference line, auto-fit bounds, mouse interaction (pan, zoom) |
+| `ScatterPlotState` (Core) | Serializable state — view state, axis ranges, data source configuration, reference line toggle |
+| `ScatterAxisSource` (Core) | Describes a single axis data source (key, tensor column, temporal offset) |
+| `ScatterPointData` (Core) | Result struct for computed scatter points (parallel x, y, TimeFrameIndex vectors) |
+| `BuildScatterPoints` (Core) | Factory function for computing point pairs from two axis sources |
+| `SourceCompatibility` (Core) | Row-type compatibility validation between two axis sources |
+| `ScatterPlotWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The Scatter Plot Widget follows the project's **EditorState** architecture:
+
+- `ScatterPlotState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `ScatterPlotWidgetModule::registerTypes()`
+- `ScatterPlotWidget` is the **view** factory, `ScatterPlotPropertiesWidget` is the **properties** factory
+- Both share the same `ScatterPlotState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `ScatterPlotWidgetRegistration` handles coupling the view and properties widgets, connecting range controls and forwarding `timePositionSelected` to `EditorRegistry::setCurrentTime()`
+
+# State Management
+
+## ScatterPlotStateData
+
+The serializable state struct contains:
+
+```cpp
+struct ScatterPlotStateData {
+    std::string instance_id;
+    std::string display_name = "Scatter Plot";
+    CorePlotting::ViewStateData view_state;
+    HorizontalAxisStateData horizontal_axis;
+    VerticalAxisStateData vertical_axis;
+
+    std::optional<ScatterAxisSource> x_source;  ///< X-axis data source
+    std::optional<ScatterAxisSource> y_source;  ///< Y-axis data source
+    bool show_reference_line = false;           ///< Show y=x reference line
+
+    /// Glyph style for scatter points (shape, size, color, alpha)
+    CorePlotting::GlyphStyleData glyph_style{GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
+};
+```
+
+The `x_source` and `y_source` fields describe which data to plot on each axis. When both are set and compatible, the widget computes and renders scatter points. The `show_reference_line` field toggles the $y = x$ diagonal line.
+
+## Signal Architecture
+
+`ScatterPlotState` emits:
+
+| Signal | Trigger |
+|--------|---------|
+| `viewStateChanged` | Zoom, pan, or bounds changed |
+| `xSourceChanged` | X-axis data source key, column, or offset changed |
+| `ySourceChanged` | Y-axis data source key, column, or offset changed |
+| `referenceLineChanged` | Reference line show/hide toggled || `glyphStyleChanged` | Any glyph style property (shape, size, color, alpha) changed || `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild. Source changes emit their specific signal plus `stateChanged()` to trigger a full scene rebuild (recomputing point pairs and re-uploading GPU buffers).
+
+## Axis States
+
+`ScatterPlotState` owns both axis states:
+
+- **`HorizontalAxisState`** — X-axis (generic value axis, not relative time). See [Plot Widget Guide](../plot_widget_guide.md) for full axis documentation.
+- **`VerticalAxisState`** — Y-axis (generic value axis). Supports the "silent update" pattern to prevent feedback loops during zoom/pan.
+
+Both axis states synchronize bidirectionally with the view state:
+
+- User changes axis range via spinboxes → view state zoom/pan updated → projection refreshed
+- User zoom/pans in OpenGL → axis ranges updated silently via `setRangeSilent()` (no feedback loop)
+
+# Data Sources
+
+## Overview
+
+The Scatter Plot Widget pairs two numeric data sources — one for the X-axis and one for the Y-axis. The supported source types are:
+
+| Source Type | Row Index Type | How Values Are Read |
+|-------------|---------------|---------------------|
+| `AnalogTimeSeries` | Always `TimeFrameIndex` | Direct value at each time frame index |
+| `TensorData` column | `TimeFrameIndex` or `Interval` (via `RowDescriptor`) | `getColumn(name)` or `getColumn(index)` |
+
+### Row Type Compatibility
+
+The fundamental constraint is that both the X and Y sources must share a common row type so each scatter point maps to a single observation. For `AnalogTimeSeries`, the row type is always `TimeFrameIndex`. For `TensorData`, the row type is determined by its `RowDescriptor`:
+
+- **`RowType::TimeFrameIndex`** — directly compatible with `AnalogTimeSeries`; rows map 1:1 via shared `TimeFrameIndex` values
+- **`RowType::Interval`** — each row corresponds to a `TimeFrameInterval`; to pair with `AnalogTimeSeries`, the analog signal must be aggregated (e.g., mean, median) over each interval
+- **`RowType::Ordinal`** — rows have no temporal meaning; can only be paired with another ordinal tensor of the same row count
+
+This validation is implemented by `checkSourceCompatibility()` in `Core/SourceCompatibility.hpp`.
+The function resolves each source's row type via `resolveSourceRowType()` (which queries the
+DataManager for the key's data type and, for `TensorData`, the `RowDescriptor::type()`) and
+returns a `SourceCompatibilityResult` with a `compatible` flag and a human-readable
+`warning_message` when sources are incompatible. The properties panel should display this
+warning and disable rendering when sources are incompatible.
+
+### TensorData Column Selection
+
+When a `TensorData` key is selected for either axis, an additional combo box appears below to select which column to use. `TensorData` supports named columns via `getColumnNames()`, so the combo box displays column names when available, falling back to numeric indices (0, 1, 2, ...) otherwise.
+
+### Temporal Offset
+
+An optional temporal offset allows plotting a value against its own shifted version (e.g., $x(t)$ vs $x(t-1)$). This is useful for identifying outliers where values change too rapidly between consecutive time points. The offset is specified in units of `TimeFrameIndex` steps and applies to either axis independently.
+
+# Rendering Pipeline
+
+## Data Flow
+
+```
+ScatterPlotState (data source config: keys, columns, offsets)
+        ↓
+buildScatterPoints(DataManager, x_source, y_source)
+        ↓
+ScatterPointData { x_values, y_values, time_indices }
+        ↓
+Auto-fit bounds (5% padding, applied on first data load)
+        ↓
+SceneBuilder::addGlyphs() → MappedElement per point
+SceneBuilder::addPolyLine() → y=x reference line (optional)
+        ↓
+SceneBuilder::build() → RenderableScene
+        ↓
+SceneRenderer::uploadScene() + render(view, projection)
+```
+
+## Point Rendering
+
+Points are rendered via `SceneBuilder::addGlyphs()` using the shared glyph infrastructure from `CorePlotting`. Each scatter point is a `MappedElement` with its (x, y) position and an `EntityId` for hit testing. The `GlyphRenderer` uploads all points as a single GPU buffer and renders them in one instanced draw call, providing good performance for large point counts.
+
+During the same `addGlyphs()` traversal, each point is also inserted into the scene's `QuadTree<EntityId>` spatial index. This index is used by `SceneHitTester::queryQuadTree()` for `O(log n)` nearest-neighbor lookup during double-click-to-navigate and hover tooltip interactions, with no additional data structures required.
+
+Default glyph style: blue circles (`#3388FF`), size 5, alpha 0.8. See [Visual Customization](#visual-customization) for the full glyph style system.
+
+## Reference Line
+
+The $y = x$ reference line is rendered via `SceneBuilder::addPolyLine()` with two vertices spanning the visible viewport diagonal. Endpoints are recomputed on pan/zoom to ensure the line always extends across the full visible area. Style: gray (`#888888`), alpha 0.5.
+
+## Auto-Fit Bounds
+
+When scatter points are computed for the first time (bounds still at default 0–100), the widget scans for min/max X and Y values, adds 5% padding, and calls `setXBounds()`/`setYBounds()` on the state. This ensures the data fills the viewport without manual range adjustment.
+
+## Scene Rebuild Strategy
+
+The scene is rebuilt (marked dirty) when:
+
+- X or Y source changes (new data key, column, or offset)
+- Glyph style changes (shape, size, color, alpha)
+- Reference line is toggled (show/hide)
+- View bounds change while reference line is shown (endpoints depend on viewport)
+
+# Visual Customization {#visual-customization}
+
+The scatter plot uses the project-wide `CorePlotting::GlyphStyleData` / `GlyphStyleState` /
+`GlyphStyleControls` stack to give users control over point appearance. The same stack is used
+by `TemporalProjectionViewWidget`, `OnionSkinViewWidget`, and `EventPlotWidget`.
+
+## Serializable Style Data
+
+`CorePlotting::GlyphStyleData` (in `CorePlotting/DataTypes/GlyphStyleData.hpp`) is a plain
+struct with no Qt dependencies, suitable for embedding directly in state data structs and
+serializing with `rfl::json`:
+
+```cpp
+struct GlyphStyleData {
+    GlyphType   glyph_type = GlyphType::Circle;  // marker shape
+    float       size       = 5.0f;               // radius in pixels
+    std::string hex_color  = "#007bff";          // hex color string
+    float       alpha      = 1.0f;               // transparency [0, 1]
+};
+```
+
+`ScatterPlotStateData` embeds this as:
+
+```cpp
+CorePlotting::GlyphStyleData glyph_style{GlyphType::Circle, 5.0f, "#3388FF", 0.8f};
+```
+
+Available `GlyphType` values: `Circle`, `Square`, `Tick`, `Cross`, `Diamond`, `Triangle`.
+(`Diamond` and `Triangle` fall back to `Circle` in the current renderer.)
+
+## QObject State Wrapper
+
+`ScatterPlotState` owns a `std::unique_ptr<GlyphStyleState>` (`Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp`).
+`GlyphStyleState` is a `QObject` that wraps `GlyphStyleData` and emits:
+
+| Signal | When Emitted | Purpose |
+|--------|--------------|---------|
+| `styleChanged()` | User edits a property | Triggers scene rebuild |
+| `styleUpdated()` | `setStyleSilent()` (e.g., on `fromJson`) | Refreshes UI without rebuild |
+
+The state class wires these up in its constructor:
+
+```cpp
+// Initialize GlyphStyleState from serialized data
+_glyph_style_state->setStyleSilent(_data.glyph_style);
+
+// Propagate user changes back to serializable struct and notify renderer
+connect(_glyph_style_state.get(), &GlyphStyleState::styleChanged, this, [this]() {
+    _data.glyph_style = _glyph_style_state->data();
+    markDirty();
+    emit glyphStyleChanged();
+    emit stateChanged();
+});
+```
+
+The `glyphStyleState()` accessor returns the raw pointer for binding to `GlyphStyleControls`.
+
+## Properties Panel Controls
+
+A "Glyph Options" collapsible `Section` in `ScatterPlotPropertiesWidget` embeds
+`GlyphStyleControls`, which provides four controls laid out as a `QFormLayout`:
+
+| Control | Type | What It Sets |
+|---------|------|--------------|
+| Shape | `QComboBox` | `GlyphType` (Circle / Square / Tick / Cross / Diamond / Triangle) |
+| Size | `QDoubleSpinBox` | Radius in pixels (0.5 – 50 px, step 0.5) |
+| Color | `QPushButton` | Opens `QColorDialog`; stores as hex string |
+| Alpha | `QDoubleSpinBox` | Transparency (0.0 – 1.0, step 0.05) |
+
+The controls use the anti-recursion `_updating_ui` guard pattern to avoid
+feedback loops when the state updates the UI.
+
+## Rendering Conversion
+
+`ScatterPlotOpenGLWidget::rebuildScene()` reads the style at scene build time via
+`_state->glyphStyleState()->data()` and converts it to rendering types using two
+free functions from `CorePlotting/DataTypes/GlyphStyleConversion.hpp`:
+
+```cpp
+auto const & glyph_data = _state->glyphStyleState()->data();
+
+CorePlotting::GlyphStyle point_style;
+point_style.glyph_type = CorePlotting::toRenderableGlyphType(glyph_data.glyph_type);
+point_style.size       = glyph_data.size;
+point_style.color      = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
+
+builder.addGlyphs("scatter_points", elements, point_style);
+```
+
+`toRenderableGlyphType()` maps the serializable `GlyphType` enum to the
+renderer-level `RenderableGlyphBatch::GlyphType`. `hexColorToVec4()` parses
+a `"#RRGGBB"` string and applies the separate alpha value, returning a
+`glm::vec4` for the shader.
+
+The `glyphStyleChanged` signal from `ScatterPlotState` is connected in
+`ScatterPlotOpenGLWidget::setState()` to set `_scene_dirty = true` and call
+`update()`, ensuring the next paint picks up the new style without any extra
+bookkeeping.
+
+# Interaction
+
+## Zoom and Pan
+
+The widget supports separated X/Y zoom for independent axis exploration, using the shared `PlotInteractionHelpers`:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only |
+| Shift + wheel | Y-zoom only |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance. The `PlotInteractionHelpers` are shared across all OpenGL plot widgets — see [Plot Widget Guide](../plot_widget_guide.md).
+
+## Double-Click-to-Navigate
+
+Double-clicking on a scatter point navigates other time-synced widgets to that point's `TimeFrameIndex`. Hit testing uses the shared `SceneHitTester` (`CorePlotting/Interaction/SceneHitTester.hpp`), which queries the `QuadTree<EntityId>` spatial index built automatically by `SceneBuilder::addGlyphs()` during scene construction. This is the same infrastructure used by [EventPlotWidget](../EventPlotWidget/index.qmd) for double-click navigation and click-to-select.
+
+The implementation:
+
+1. On `mouseDoubleClickEvent`, converts screen position to world coordinates via `screenToWorld()`
+2. Converts an 8-pixel tolerance to world units (using the max of X and Y to handle non-uniform aspect ratios)
+3. Calls `_hit_tester.queryQuadTree(world_x, world_y, _scene)` for `O(log n)` nearest-neighbor lookup
+4. Maps the returned `EntityId` back to a `TimeFrameIndex` via the cached `ScatterPointData`
+5. Emits `pointDoubleClicked(TimePosition)`, which is forwarded as `timePositionSelected` and wired to `EditorRegistry::setCurrentTime()` in the registration
+
+The most recently navigated-to point is highlighted with a larger yellow glyph (size 9, rendered as a second `addGlyphs()` batch on top of the main point batch). The highlight is cleared when data sources change.
+
+## Hover Highlight
+
+When the cursor dwells over a scatter point, the nearest point is highlighted to give visual feedback before a double-click or selection action.
+
+**Visual style**: The hovered point is drawn at the **same color** it already has (preserving any feature-based or fixed coloring) but at a **larger size**, making it visually distinct without changing its semantic meaning.
+
+**Hit testing**: Uses the same `SceneHitTester`/`QuadTree` infrastructure as double-click navigation. A single-shot `QTimer` (~400 ms) debounces rapid mouse movement; the hit test fires only when the cursor stops moving. The timer is cancelled and any visible highlight is cleared immediately when a pan or zoom gesture begins.
+
+**Rendering**: Because `GlyphRenderer` uses `u_point_size` as a per-batch uniform (not per-instance), the hovered point must be issued as a **separate `addGlyphs()` call** at the desired larger size. Per-instance color is handled directly in the shader (`a_instance_color` attribute on the instanced VBO), so the hover batch re-uses the original point color without any additional CPU-side logic. This results in **one extra GPU draw call** for the single hovered point.
+
+See [roadmap](roadmap.qmd) Phase 8 for the complete dwell-timer and tooltip implementation plan.
+
+## Point Selection
+
+Points can be selected via polygon (lasso) drawing. Selected points are visually distinguished from unselected points and can be added to an entity group.
+
+**Visual style**: Selected points are drawn at the **same size** as normal points but with a distinct **selection color** (e.g., red). Keeping the same size means no per-batch size change is needed — only color differs.
+
+**Rendering**: Since color is stored as a per-instance attribute in the shader (`a_instance_color` on the instanced VBO), selected points can be rendered with any color without rebuilding the main point batch. The selected subset is issued as a **separate `addGlyphs()` call** with the selection color, rendering on top of the unselected points. This results in **one extra GPU draw call** for the entire selected set, regardless of how many points are selected.
+
+The polygon drawing interaction uses the shared `PolygonInteractionController` from `CorePlotting/Interaction/`. After the polygon is closed, `selectPointsInPolygon()` (a pure geometry function in `CorePlotting/Selection/`) identifies which points fall inside the polygon. Selected point indices are stored in `ScatterPlotStateData::selected_indices` and cleared when the data source changes.
+
+See [roadmap](roadmap.qmd) Phase 3 for the full polygon selection and group integration implementation plan.
+
+# Axis System
+
+## Horizontal Axis (X)
+
+Uses the shared `HorizontalAxisWidget` with `HorizontalAxisState`. The axis uses `identityAxis("X", 0)` mapping. Range is synchronized bidirectionally with the view state using `setRangeSilent()`.
+
+This is the same axis type used by [ACFWidget](../ACFWidget/index.qmd), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd), and [OnionSkinViewWidget](../OnionSkinViewWidget/index.qmd). See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration details.
+
+## Vertical Axis (Y)
+
+Uses `VerticalAxisWidget` with `VerticalAxisState`. Range is auto-adjusted when data bounds are computed, and synchronized bidirectionally with the view state.
+
+Both axis widgets provide collapsible range control sections (`HorizontalAxisRangeControls` and `VerticalAxisRangeControls`) that are inserted into the properties panel when `setPlotWidget()` is called.
+
+# Properties Panel
+
+The `ScatterPlotPropertiesWidget` provides the following sections:
+
+## Data Source Selection
+
+A "Data Sources" collapsible section contains controls for both X and Y axes:
+
+**Per axis (X and Y):**
+
+1. **Key combo box** — lists all `AnalogTimeSeries` keys (prefixed `[ATS]`) and `TensorData` keys (prefixed `[Tensor]`) from DataManager
+2. **Column combo box** — visible only when a `TensorData` key is selected; populated with column names from `TensorData::getColumnNames()`, falling back to numeric indices (0, 1, 2, ...) if no names are set
+3. **Offset spinbox** — integer spinbox for temporal offset in `TimeFrameIndex` steps (default: 0, range: -10000 to 10000)
+4. **Compatibility label** — shows "Sources are compatible" (green) or a descriptive warning (red) based on `checkSourceCompatibility()` result
+
+The combo boxes are kept in sync with DataManager via the observer pattern: an observer is registered in the constructor (`_data_manager->addObserver()`) and removed in the destructor (`_data_manager->removeObserver()`). When the observer fires, all key combo boxes are repopulated while preserving the current selection.
+
+## Reference Line
+
+A "Reference Line" collapsible section contains:
+
+- **Show reference line checkbox** — toggles the $y = x$ diagonal line
+
+## Glyph Options
+
+A "Glyph Options" collapsible section contains `GlyphStyleControls` (shape, size, color,
+alpha). Changes propagate immediately to the rendered scene via `glyphStyleChanged`. See
+[Visual Customization](#visual-customization) for the full architecture.
+
+## Axis Range Controls
+
+Created when `setPlotWidget()` is called:
+
+- **X-Axis Range Controls** — `HorizontalAxisRangeControls` in a collapsible `Section`
+- **Y-Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`
+
+## Planned Additions
+
+See the [roadmap](roadmap.qmd) for planned additions including:
+
+- Point selection and group management controls
+- Feature-based coloring controls
+
+# Relationship to Other Widgets
+
+## Shared Infrastructure
+
+| Shared Component | ScatterPlot | [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) | [ACFWidget](../ACFWidget/index.qmd) |
+|-----------------|-------------|------------------------------|-----------|
+| `HorizontalAxisWidget` | Yes | Yes | Yes |
+| `VerticalAxisWidget` | Yes | Yes | Yes |
+| `PlotInteractionHelpers` | Yes | Yes | Yes |
+| OpenGL rendering | `SceneRenderer` | `BatchLineRenderer` + `SceneRenderer` | `SceneRenderer` |
+
+## Feature Parallels with Other Widgets
+
+| Feature | ScatterPlot | Similar Implementation In |
+|---------|-------------|--------------------------|
+| Double-click-to-navigate | Implemented (double-click → `TimeFrameIndex` via `SceneHitTester`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (double-click → absolute time) |
+| Polygon selection | Planned (lasso → `TimeFrameIndex` set) | [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (planned for `PointData`) |
+| Glyph customization | **Implemented** (`GlyphStyleData` / `GlyphStyleState` / `GlyphStyleControls`) | [EventPlotWidget](../EventPlotWidget/index.qmd) (Tick/Circle/Square), [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) (point glyphs) |
+| Selection → Group | Planned (`TimeFrameIndex` → entity group) | [LinePlotWidget](../LinePlotWidget/index.qmd) (trial indices → alignment event groups) |
+| TensorData integration | Planned (column as axis source) | [EventPlotWidget](../EventPlotWidget/roadmap.qmd) (per-trial feature coloring/sorting) |
+
+## Key Architectural Distinction
+
+Unlike the trial-aligned widgets (LinePlot, EventPlot, PSTH, Heatmap), the Scatter Plot Widget:
+
+- Does **not** use `PlotAlignmentState` or `PlotAlignmentWidget`
+- Does **not** use `GatherResult` for trial aggregation
+- Reads data directly from `AnalogTimeSeries` and `TensorData` columns
+- Each point corresponds to a single `TimeFrameIndex` rather than a trial
+
+This makes it more similar in structure to [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) and [ACFWidget](../ACFWidget/index.qmd) than to the trial-aligned family.
+
+# Testing
+
+## Existing Tests
+
+- `tests/WhiskerToolbox/Analysis_Dashboard/Analysis_Dashboard.test.cpp` — Verifies `ScatterPlotWidget` creation via `PlotFactory`
+- `tests/WhiskerToolbox/Plots/ScatterPlotWidget/SourceCompatibility.test.cpp` — Row-type compatibility validation (21 test cases covering `resolveSourceRowType`, all compatible pairings, all incompatible pairings, and missing/unknown sources)
+- `tests/WhiskerToolbox/Plots/ScatterPlotWidget/BuildScatterPoints.test.cpp` — Point pair computation covering all 6 source type combinations (ATS×ATS, ATS×TensorTFI, TensorTFI×ATS, TensorTFI×TensorTFI, Ordinal×Ordinal, Interval×Interval), temporal offset, empty/missing keys, incompatible sources, named columns, and `ScatterPointData` struct operations
+
+## Needed Tests
+
+The properties widget should be tested for the standard DataManager observer contract:
+
+| Category | What It Verifies |
+|----------|-----------------|
+| Combo box population | Data source combo boxes reflect DataManager keys |
+| Observer refresh | Adding/removing data updates combo boxes |
+| Destruction cleanup | Observer removed in destructor; no crash after widget dies |
+| State serialization | Round-trip JSON serialization of `ScatterPlotStateData` |
+
+See [Plot Widget Guide](../plot_widget_guide.md) for full testing requirements and the common `PlotWidgetCommonTests.hpp` template.
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration, testing
+- [ScatterPlotWidget Roadmap](roadmap.qmd) — Planned features and development phases
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Glyph customization, click-to-navigate patterns
+- [LinePlotWidget](../LinePlotWidget/index.qmd) — Selection → group integration pattern
+- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) — Polygon selection with PointData, shared axis types

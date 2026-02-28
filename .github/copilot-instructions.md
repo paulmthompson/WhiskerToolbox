@@ -6,20 +6,73 @@ Cross platform (Windows, Linux, MacOS) support is provided via CMake.
 
 GCC, Clang, and MSVC compilers are supported.
 
-CMake presets are used. Your context has already built the project using the following commands:
+## Building
+
+**IMPORTANT: Always use CMake presets. Never invoke the compiler (clang++, g++, etc.) or build tool (ninja, make) directly.**
+
+The project has already been configured. To rebuild after code changes:
+
+```bash
+cmake --build --preset linux-clang-release
+```
+
+If you need to reconfigure (e.g. after CMakeLists.txt changes):
 
 ```bash
 cmake --preset linux-clang-release -DENABLE_ORTOOLS=OFF -DENABLE_TIME_TRACE=ON
 cmake --build --preset linux-clang-release
 ```
 
-The build files are located in out/build/Clang/Release
+The build output is in `out/build/Clang/Release`. **Never run ninja or make directly in the build directory.**
 
-To run tests, the following command has been used:
+**Never modify or delete files in the build directory (out/build/).** Doing so can invalidate the CMake cache and trigger a full rebuild that takes a very long time.
 
+## Running Tests
+
+**IMPORTANT: Always use ctest with the preset. Never run test binaries directly.**
+
+Run all tests:
 ```bash
 ctest --preset linux-clang-release --output-on-failure
 ```
+
+Run specific tests by name with `-R` (regex filter):
+```bash
+ctest --preset linux-clang-release --output-on-failure -R "test name pattern"
+```
+
+### Finding Test Names
+
+**To find the correct test name, use `ctest -N` to list all tests and grep for keywords:**
+
+```bash
+ctest --preset linux-clang-release -N | grep -i "keyword"
+```
+
+The project uses two test discovery modes:
+
+1. **Catch2 tests** (most tests): Each TEST_CASE gets its own ctest entry. The test name is 
+   the TEST_CASE string, e.g. `"loadStepFromDescriptor loads valid step with parameters"`.
+
+2. **Fuzz tests** (tests/fuzz/): Use GoogleTest discovery. Test names follow the pattern
+   `TestSuite.TestName`, e.g. `"PipelineLoaderFuzz.FuzzBinaryTransformPipeline"`.
+
+3. **Bundled tests**: When `ENABLE_DETAILED_TEST_DISCOVERY` is OFF, all Catch2 tests in a 
+   binary are bundled as a single ctest entry like `"test_TransformsV2_all"`.
+
+**Do NOT guess test names or iterate blindly. Always use `ctest -N | grep` first.**
+
+### Test CMakeLists Structure
+
+Tests are organized under `tests/` with subdirectories mirroring `src/`. Each test subdirectory 
+has a `CMakeLists.txt` that defines the test executable and its sources. If you need to find 
+which test binary contains a specific test file, look at the `CMakeLists.txt` in that directory.
+
+The `tests/TransformsV2/CMakeLists.txt` uses `--whole-archive` linker flags because TransformsV2 
+uses static registration (RAII objects in anonymous namespaces). Any new test binary linking 
+TransformsV2 must also use `--whole-archive` or the transforms won't be registered at runtime.
+
+## Development Tools
 
 You have access to several tools in your environment for performance analysis including heaptrack,
 infer, cppcheck, iwyu, clang-tidy, and clang-format. The full description is located in 
@@ -56,7 +109,6 @@ The UI for this project is located in src/WhiskerToolbox (legacy name). Most wid
 - TableViewerWidget/TableDesignerWidget - widget for viewing and creating table views
 - Media_Widget - widget for viewing media data (images, video, lines, masks, points). Also can be used for selecting and manipulating data
 - DataViewer_Widget/DataViewer - generic data viewer for time series data (analog, digital)
-- Analysis_Dashboard - Collection of widgets for plotting. These include spatial overlay widget (collapsing all point data, mask data, and line data onto a single view), scatter plot widget, event plot widget etc. The user can open as many plots as they want.
 - DataTransform_Widget - UI for executing data transforms
 - DataImport_Widget - unified data import widget supporting all data types (Lines, Masks, Points, AnalogTimeSeries, DigitalEventSeries, DigitalIntervalSeries, TensorData). Opens via Modules → Data Import menu. Uses EditorState pattern for state management and responds to SelectionContext for passive data type awareness.
 - DataExport_Widget (formerly IO_Widgets) - data export/saving functionality for supported data types

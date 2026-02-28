@@ -1,0 +1,228 @@
+---
+title: "Storage Backend Benchmarking Roadmap"
+author: "WhiskerToolbox Team"
+date: last-modified
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+# Overview
+
+This document defines the benchmarking plan for quantifying the performance of storage
+backends across all five core time series types. The goals are to:
+
+1. Validate that cache optimization effectively eliminates virtual dispatch overhead
+2. Measure the cost of view indirection and lazy computation
+3. Provide data-driven guidance for choosing the right storage backend
+4. Detect performance regressions as the codebase evolves
+
+The project uses [Google Benchmark](https://github.com/google/benchmark) (already integrated
+in the `benchmark/` directory).
+
+# Benchmark Coverage Matrix
+
+## Iteration Performance
+
+Measures time to iterate through all elements. This is the most critical benchmark — 
+cache optimization directly impacts iteration throughput.
+
+| Benchmark | AnalogTS | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventS | DigitalIntervalS |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Raw vector baseline** | Create | Create | Create | Create | Create |
+| **Owning (cached)** | Create | Create | Create | Create | Create |
+| **View contiguous (cached)** | Create | Create | Create | Create | Create |
+| **View sparse (uncached)** | Create | Create | Create | Create | Create |
+| **Lazy** | Create | Create | Create | Create | Create |
+
+**Target**: Owning iteration ≤5% slower than raw vector. Contiguous view ≤10% slower than owning.
+
+## Lookup Performance
+
+Measures the cost of individual lookups by time or EntityId.
+
+| Benchmark | AnalogTS | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventS | DigitalIntervalS |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Time range query** | Create | Create | Create | Create | Create |
+| **EntityId lookup** | N/A | N/A | Create | Create | Create |
+| **Interval overlap query** | N/A | N/A | N/A | N/A | Create |
+| **Interval containment query** | N/A | N/A | N/A | N/A | Create |
+
+## Factory Method Performance
+
+Measures the cost of creating views and materializing lazy storage.
+
+| Benchmark | AnalogTS | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventS | DigitalIntervalS |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **createView (time, 10% filter)** | Create | Create | Create | Create | Create |
+| **createView (time, 50% filter)** | Create | Create | Create | Create | Create |
+| **createView (EntityIds)** | N/A | N/A | Create | Create | Create |
+| **materialize (owning→owning)** | Create | Create | Create | Create | Create |
+| **materialize (lazy→owning)** | Create | Create | Create | Create | Create |
+
+## Mutation Performance
+
+Measures insert and remove operations on owning storage.
+
+| Benchmark | AnalogTS | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventS | DigitalIntervalS |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Sequential insert** | Existing | Create | Create | Create | Create |
+| **Random-time insert** | Create | Create | Create | Create | Create |
+| **Remove by EntityId** | N/A | N/A | Create | Create | Create |
+
+## Memory Footprint
+
+Measures memory usage per backend for a fixed number of elements (1M).
+
+| Measurement | AnalogTS | RaggedAnalogTS | RaggedTS\<T\> | DigitalEventS | DigitalIntervalS |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Owning storage** | Measure | Measure | Measure | Measure | Measure |
+| **View storage overhead** | Measure | Measure | Measure | Measure | Measure |
+| **Lazy storage overhead** | Measure | Measure | Measure | Measure | Measure |
+| **Cache struct size** | Measure | Measure | Measure | Measure | Measure |
+
+# Benchmark Parameters
+
+## Data Sizes
+
+Each iteration/lookup benchmark should be run at multiple scales to detect algorithmic 
+complexity issues:
+
+| Parameter Name | Values | Purpose |
+|---------------|--------|---------|
+| `num_elements` | 1K, 10K, 100K, 1M | Scaling behavior |
+| `filter_ratio` | 0.01, 0.10, 0.50, 0.90 | View creation selectivity |
+| `num_queries` | 1K, 10K | Amortized lookup cost |
+
+## Data Types for RaggedTimeSeries
+
+`RaggedTimeSeries<T>` benchmarks should use representative concrete types:
+
+| Type | Size (bytes) | Represents |
+|------|-------------|------------|
+| `Point2D<float>` | ~8 | Small, trivially copyable |
+| `Line2D` | ~variable | Medium, heap-allocated vector |
+| `Mask2D` | ~variable | Large, heap-allocated 2D array |
+
+# Proposed File Structure
+
+```
+benchmark/
+├── storage_backend/
+│   ├── CMakeLists.txt
+│   ├── StorageBenchmarkFixtures.hpp
+│   ├── AnalogTimeSeries.benchmark.cpp
+│   ├── RaggedAnalogTimeSeries.benchmark.cpp
+│   ├── RaggedTimeSeries.benchmark.cpp
+│   ├── DigitalEventSeries.benchmark.cpp
+│   └── DigitalIntervalSeries.benchmark.cpp
+├── MaskArea.benchmark.cpp              # Existing
+├── PolyLineUpload.benchmark.cpp        # Existing
+└── ...
+```
+
+`StorageBenchmarkFixtures.hpp` provides shared fixture creation for each backend:
+
+```cpp
+// Creates an owning DigitalEventSeries with N sorted events
+inline auto makeOwningDigitalEvents(size_t n) 
+    -> std::shared_ptr<DigitalEventSeries>;
+
+// Creates a view over a subset of the source
+inline auto makeViewDigitalEvents(
+    std::shared_ptr<DigitalEventSeries> source, 
+    double filter_ratio) -> std::shared_ptr<DigitalEventSeries>;
+
+// Creates a lazy series from a transform view
+inline auto makeLazyDigitalEvents(
+    std::shared_ptr<DigitalEventSeries> source) 
+    -> std::shared_ptr<DigitalEventSeries>;
+```
+
+# Example Benchmark
+
+```cpp
+#include <benchmark/benchmark.h>
+#include "DataManager/DigitalTimeSeries/DigitalEventSeries.hpp"
+
+static void BM_DigitalEvent_Iteration_Owning(benchmark::State& state) {
+    auto const n = static_cast<size_t>(state.range(0));
+    auto series = makeOwningDigitalEvents(n);
+    
+    for (auto _ : state) {
+        int64_t sum = 0;
+        for (auto const& elem : series->elementsView()) {
+            sum += elem.time().getValue();
+        }
+        benchmark::DoNotOptimize(sum);
+    }
+    state.SetItemsProcessed(
+        state.iterations() * static_cast<int64_t>(n));
+}
+BENCHMARK(BM_DigitalEvent_Iteration_Owning)
+    ->Arg(1000)->Arg(10000)->Arg(100000)->Arg(1000000);
+
+static void BM_DigitalEvent_Iteration_ViewContiguous(benchmark::State& state) {
+    auto const n = static_cast<size_t>(state.range(0));
+    auto source = makeOwningDigitalEvents(n);
+    auto view = DigitalEventSeries::createView(
+        source, TimeFrameIndex{0}, TimeFrameIndex{static_cast<int64_t>(n)});
+    
+    for (auto _ : state) {
+        int64_t sum = 0;
+        for (auto const& elem : view->elementsView()) {
+            sum += elem.time().getValue();
+        }
+        benchmark::DoNotOptimize(sum);
+    }
+    state.SetItemsProcessed(
+        state.iterations() * static_cast<int64_t>(n));
+}
+BENCHMARK(BM_DigitalEvent_Iteration_ViewContiguous)
+    ->Arg(1000)->Arg(10000)->Arg(100000)->Arg(1000000);
+
+static void BM_DigitalEvent_Iteration_RawVector(benchmark::State& state) {
+    auto const n = static_cast<size_t>(state.range(0));
+    std::vector<int64_t> raw(n);
+    std::iota(raw.begin(), raw.end(), 0);
+    
+    for (auto _ : state) {
+        int64_t sum = 0;
+        for (auto val : raw) { sum += val; }
+        benchmark::DoNotOptimize(sum);
+    }
+    state.SetItemsProcessed(
+        state.iterations() * static_cast<int64_t>(n));
+}
+BENCHMARK(BM_DigitalEvent_Iteration_RawVector)
+    ->Arg(1000)->Arg(10000)->Arg(100000)->Arg(1000000);
+```
+
+# Success Criteria
+
+| Metric | Target | Rationale |
+|--------|--------|-----------|
+| Owning iteration vs raw vector | ≤5% overhead | Cache fast-path should be near-zero cost |
+| View contiguous vs owning | ≤10% overhead | Pointer offset should be negligible |
+| View sparse vs owning | 2–5x slower | Indirection through index vector expected |
+| Lazy vs owning | 5–50x slower | Depends on transform complexity |
+| Cache struct overhead | ≤32 bytes per container | 3 pointers + size + bool |
+| View creation (10% filter) | O(n) | Linear scan to build index vector |
+| Materialization | ≤2x iteration cost | Simple copy with allocation |
+
+# Measurement Tools
+
+| Tool | Use Case | Availability |
+|------|----------|-------------|
+| Google Benchmark | Microbenchmarks (iteration, lookup) | Integrated in `benchmark/` |
+| heaptrack | Memory profiling | Available in environment |
+| perf | CPU profiling, cache miss analysis | Available on Linux |
+| `-ftime-trace` (Clang) | Compile-time analysis | Enabled via `ENABLE_TIME_TRACE` preset |
+
+# Priority Order
+
+1. **High**: Iteration benchmarks (owning vs view vs lazy vs raw) — validates core optimization
+2. **Medium**: Lookup benchmarks, factory method benchmarks — validates algorithmic choices
+3. **Low**: Mutation benchmarks, memory footprint — informational, less likely to regress

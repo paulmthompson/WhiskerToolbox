@@ -1,0 +1,348 @@
+---
+title: "Line Plot Widget"
+format: html
+---
+
+# Line Plot Widget Overview
+
+The **Line Plot Widget** renders **trial-aligned line plots** of continuous analog signals (`AnalogTimeSeries`), aligned to a user-selected reference event or interval. Each trial produces a line showing the signal value over relative time, with all trials overlaid in the same coordinate space. This is useful for visualizing signals such as ΔF/F calcium traces aligned to a repeated stimulus, or tongue area aligned to lick onset.
+
+Users can overlay multiple `AnalogTimeSeries`, configure per-series line appearance (thickness, color), and interact with the plot via zoom, pan, and line selection. Selected lines (trials) can be used for downstream analysis such as adding trials to entity groups.
+
+# Architecture
+
+The widget follows the standard plot widget directory layout:
+
+```
+Plots/LinePlotWidget/
+├── CMakeLists.txt
+├── LinePlotWidgetRegistration.hpp    # EditorRegistry registration module
+├── LinePlotWidgetRegistration.cpp
+├── Core/
+│   ├── LinePlotState.hpp             # QObject state class (EditorState subclass)
+│   ├── LinePlotState.cpp
+│   ├── LinePlotStateData.hpp         # Plain serializable struct (rfl-compatible)
+│   ├── ViewStateAdapter.hpp          # Helper for ViewState conversion
+│   └── ViewStateAdapter.cpp
+├── Rendering/
+│   ├── LinePlotOpenGLWidget.hpp      # OpenGL rendering + mouse interaction + line selection
+│   └── LinePlotOpenGLWidget.cpp
+└── UI/
+    ├── LinePlotWidget.hpp            # Main composite widget (axes + OpenGL + layout)
+    ├── LinePlotWidget.cpp
+    ├── LinePlotWidget.ui
+    ├── LinePlotPropertiesWidget.hpp  # Properties/settings panel
+    ├── LinePlotPropertiesWidget.cpp
+    └── LinePlotPropertiesWidget.ui
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `LinePlotWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, relative time axis, vertical axis |
+| `LinePlotPropertiesWidget` (UI) | Properties panel — alignment settings, series management, line options (thickness, color), axis range controls |
+| `LinePlotOpenGLWidget` (Rendering) | OpenGL canvas — batch line rendering, mouse interaction, line selection via intersection |
+| `LinePlotState` (Core) | Serializable state — alignment, view state, per-series line options |
+| `LinePlotStateData` (Core) | Plain struct for serialization via `rfl::json` (separated for fuzz testing) |
+| `ViewStateAdapter` (Core) | Converts `LinePlotViewState` to `CorePlotting::ViewState` |
+| `LinePlotWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The Line Plot Widget follows the project's **EditorState** architecture:
+
+- `LinePlotState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `LinePlotWidgetModule::registerTypes()`
+- `LinePlotWidget` is the **view** factory, `LinePlotPropertiesWidget` is the **properties** factory
+- Both share the same `LinePlotState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `LinePlotWidgetRegistration` handles coupling the view and properties widgets (connecting range controls and forwarding `timePositionSelected` to `EditorRegistry::setCurrentTime()`)
+
+# State Management
+
+## LinePlotStateData
+
+The serializable state struct is defined in a **separate header** (`LinePlotStateData.hpp`) from the Qt state class. This separation allows fuzz testing to include the data struct without Qt dependencies:
+
+```cpp
+struct LinePlotOptions {
+    std::string series_key;          ///< Key of the AnalogTimeSeries to plot
+    double line_thickness = 1.0;     ///< Thickness of the line
+    std::string hex_color = "#000000"; ///< Color as hex string
+};
+
+struct LinePlotStateData {
+    std::string instance_id;
+    std::string display_name = "Line Plot";
+    PlotAlignmentData alignment;                              // Shared alignment config
+    std::map<std::string, LinePlotOptions> plot_series;      // Per-series options
+    CorePlotting::ViewStateData view_state;                   // Zoom, pan, bounds
+    RelativeTimeAxisStateData time_axis;                      // Time axis range
+    VerticalAxisStateData vertical_axis;                      // Vertical axis range
+};
+```
+
+## Per-Series Options
+
+Each overlaid `AnalogTimeSeries` has independent display options via `LinePlotOptions`:
+
+- **`series_key`** — DataManager key of the `AnalogTimeSeries`
+- **`line_thickness`** — Line width (default: 1.0)
+- **`hex_color`** — Color as hex string (default: black)
+
+Series are stored in a `std::map<std::string, LinePlotOptions>` keyed by a user-assigned name (currently the same as the series key). The state emits per-series signals (`plotSeriesAdded`, `plotSeriesRemoved`, `plotSeriesOptionsChanged`) so the UI and renderer can react granularly.
+
+## Signal Architecture
+
+LinePlotState emits category-level signals to minimize coupling complexity:
+
+| Signal | Trigger |
+|--------|---------|
+| `alignmentEventKeyChanged` | Alignment event/interval key changed |
+| `intervalAlignmentTypeChanged` | Interval alignment type changed |
+| `offsetChanged` | Alignment offset changed |
+| `windowSizeChanged` | Window size changed (also resets zoom/pan to fit) |
+| `plotSeriesAdded` / `plotSeriesRemoved` / `plotSeriesOptionsChanged` | Per-series changes |
+| `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
+
+## Composition with PlotAlignmentState
+
+`LinePlotState` owns a `PlotAlignmentState` instance that manages alignment settings (event key, interval alignment type, offset, window size). This is the same shared component used by [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), and [HeatmapWidget](../HeatmapWidget/index.qmd), ensuring consistent alignment behavior across all trial-aligned plot types.
+
+## Composition with Axis States
+
+`LinePlotState` owns both:
+
+- **`RelativeTimeAxisState`** — for the X-axis (relative time centered at t = 0). Synchronized bidirectionally with the view state using the "silent update" pattern described in the [Plot Widget Guide](../plot_widget_guide.md).
+- **`VerticalAxisState`** — for the Y-axis (signal value). The Y bounds are auto-adjusted when the scene rebuilds to encompass the min/max signal values across all trials (with 5% padding).
+
+# Rendering Pipeline
+
+## Data Flow
+
+```
+LinePlotState (alignment settings + per-series options)
+        ↓
+GatherResult<AnalogTimeSeries> (trial-aligned views)
+        ↓
+Y/X bounds computation (auto-fit from data)
+        ↓
+CorePlotting::buildLineBatchFromGatherResult() → LineBatchData
+        ↓
+PlottingOpenGL::BatchLineStore (GPU upload)
+        ↓
+PlottingOpenGL::BatchLineRenderer::render()
+```
+
+## GatherResult Integration
+
+Trial alignment uses the shared `GatherResult` infrastructure from DataManager. The `LinePlotOpenGLWidget::gatherTrialData()` method:
+
+1. Reads the first series key from the plot series list
+2. Gets alignment settings from `LinePlotState::alignmentState()`
+3. Calls `WhiskerToolbox::Plots::createAlignedGatherResult<AnalogTimeSeries>()` using the shared `PlotAlignmentGather` utility
+4. Returns a `GatherResult<AnalogTimeSeries>` where each element is a trial view of the signal
+
+This uses the same template-based `GatherResult` pattern as [EventPlotWidget](../EventPlotWidget/index.qmd) (for `DigitalEventSeries`) and [HeatmapWidget](../HeatmapWidget/index.qmd).
+
+## Scene Building
+
+The `LinePlotOpenGLWidget` manages the full rendering lifecycle:
+
+1. **Scene rebuild** (on `stateChanged`): Gathers trial data, computes auto-fit bounds, builds `LineBatchData` via `CorePlotting::buildLineBatchFromGatherResult()`, restores selection masks, and uploads to `BatchLineStore`
+2. **View update** (on `viewStateChanged`): Updates only the projection matrix — no data re-gathering
+3. **Paint** (on `paintGL`): Renders the cached batch lines through `BatchLineRenderer`, plus the `SceneRenderer` for overlays (axes, grids — future), and the selection preview line if actively selecting
+
+Auto-fit bounds are computed by scanning all trial data for min/max X (relative time) and Y (signal value), with 5% vertical padding. Bounds are applied to the state via `setXBounds()` and `setYBounds()`.
+
+## Batch Line Rendering System
+
+The LinePlotWidget uses a specialized **batch line rendering** pipeline distinct from the `SceneRenderer` used by other plot types:
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `LineBatchData` | `CorePlotting/LineBatch/` | CPU-side flat segment representation |
+| `LineBatchBuilder` | `CorePlotting/LineBatch/` | Builds `LineBatchData` from `GatherResult<AnalogTimeSeries>` or `LineData` |
+| `BatchLineStore` | `PlottingOpenGL/LineBatch/` | GPU buffer management for line segments |
+| `BatchLineRenderer` | `PlottingOpenGL/LineBatch/` | Renders batch lines with per-line coloring (normal, selected, hover states) |
+| `ILineBatchIntersector` | `CorePlotting/LineBatch/` | Interface for line-vs-segment intersection |
+| `CpuLineBatchIntersector` | `CorePlotting/LineBatch/` | CPU-based brute-force intersector (fallback) |
+| `ComputeShaderIntersector` | `PlottingOpenGL/LineBatch/` | GPU compute shader intersector (GL 4.3+) |
+
+This infrastructure is **shared with** [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd), which uses the same `LineBatchData` / `BatchLineRenderer` / intersection system for rendering and selecting `LineData` entities.
+
+### Line State Colors
+
+The `BatchLineRenderer` supports three visual states per line:
+
+| State | Default Color | Purpose |
+|-------|---------------|---------|
+| Normal | Semi-transparent blue (0.3, 0.5, 1.0, 0.6) | Unselected trial lines |
+| Selected | Bright red (1.0, 0.2, 0.2, 1.0) | Lines crossed by selection stroke |
+| Hover | Yellow (1.0, 1.0, 0.0, 1.0) | Mouse hover (not yet implemented) |
+
+# Interaction
+
+## Zoom and Pan
+
+The widget supports separated X/Y zoom for independent exploration of time and value dimensions, using the shared `PlotInteractionHelpers`:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only (time axis) |
+| Shift + wheel | Y-zoom only (value axis) |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+The interaction delegates to `WhiskerToolbox::Plots::handlePanning()` and `WhiskerToolbox::Plots::handleZoom()` from `PlotInteractionHelpers`, which are shared across all OpenGL plot widgets. A `DRAG_THRESHOLD` of 4 pixels prevents accidental pans during clicks.
+
+Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance.
+
+## Double Click
+
+Double-clicking converts the clicked relative time position to an absolute time using the first trial's alignment time, then emits `plotDoubleClicked(absolute_time, series_key)`. The parent `LinePlotWidget` converts this to a `TimePosition` and forwards to `EditorRegistry::setCurrentTime()`, navigating other time-synced widgets.
+
+## Line Selection
+
+The LinePlotWidget supports **line selection** via a freehand intersection stroke, allowing the user to select specific trials from the overlaid lines:
+
+| Input | Action |
+|-------|--------|
+| Ctrl + Click + Drag | Draw selection stroke — intersected lines are selected |
+| Shift + Ctrl + Click + Drag | Remove mode — intersected lines are deselected |
+| Ctrl key release during drag | Cancel selection |
+
+**Selection flow:**
+
+1. `startSelection()` — records start position in NDC, sets cursor to crosshair
+2. `updateSelection()` — tracks endpoint, triggers repaint to show preview line
+3. `completeSelection()` — runs intersection query, applies results, emits `trialsSelected()`
+
+The intersection uses the `ILineBatchIntersector` interface with two backends:
+
+- **GPU compute shader** (`ComputeShaderIntersector`) — used when OpenGL 4.3+ is available
+- **CPU fallback** (`CpuLineBatchIntersector`) — brute-force segment-vs-segment test
+
+The selection preview is rendered as a `GlyphPreview::Line` via `SceneRenderer::renderPreview()` — white for add mode, red for remove mode.
+
+This selection infrastructure is **shared with** [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) via `LineSelectionHelpers`. The shared helpers handle:
+
+- Building, the preview glyph (`buildLineSelectionPreview()`)
+- Running the intersection query (`runLineSelectionIntersection()`)
+
+Widget-specific logic (mapping hit indices to trial indices vs. entity IDs) remains in each widget.
+
+Selected trial indices are emitted via `trialsSelected(std::vector<uint32_t>)` and preserved across scene rebuilds by restoring the selection mask from the cached indices.
+
+# Axis System
+
+## Time Axis (X)
+
+Uses the shared `RelativeTimeAxisWidget` with `RelativeTimeAxisState`. The axis is synchronized bidirectionally with the view state:
+
+- **User changes axis range** → view state updates → scene rebuilds (via `rangeChanged`)
+- **User zooms/pans** → axis range updates silently via `setRangeSilent()` (no feedback loop)
+
+See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration details including the "Silent Update" pattern.
+
+## Value Axis (Y)
+
+Uses `VerticalAxisWidget` with `VerticalAxisState`. The Y bounds are **auto-adjusted** when the scene rebuilds:
+
+- After scanning all trial data, `y_min` and `y_max` are set to the signal extremes with 5% padding
+- This triggers a vertical axis range update via `LinePlotState::setYBounds()`
+
+Both axis widgets provide collapsible range control sections (`RelativeTimeAxisRangeControls` and `VerticalAxisRangeControls`) that are inserted into the properties panel when `setPlotWidget()` is called.
+
+# Properties Panel
+
+The `LinePlotPropertiesWidget` provides the following controls:
+
+## Alignment Section
+
+Uses the shared `PlotAlignmentWidget` component (same as [EventPlotWidget](../EventPlotWidget/index.qmd), [PSTHWidget](../PSTHWidget/index.qmd), and [HeatmapWidget](../HeatmapWidget/index.qmd)). Provides:
+
+- Alignment event combo box (populated with `DigitalEventSeries` and `DigitalIntervalSeries` keys)
+- Interval alignment type (Beginning/End)
+- Offset control
+- Window size control
+
+## Series Management
+
+The properties panel includes:
+
+1. **Add series combo box** — lists all `AnalogTimeSeries` keys from the DataManager
+2. **Add button** — adds the selected key as a new plot series
+3. **Series table** — two-column table (Series Name, Data Key) with single-row selection
+4. **Remove button** — removes the selected series from the plot
+
+The combo box is kept in sync with the DataManager via the standard observer pattern (see [Plot Widget Guide](../plot_widget_guide.md)).
+
+## Per-Series Options
+
+When a series is selected in the table, the options panel shows:
+
+- **Line thickness spinbox** — adjusts the line width
+- **Color button** — opens a `QColorDialog` for color selection
+- **Color display** — shows the current color as a styled button
+
+## Axis Range Controls
+
+Created when `setPlotWidget()` is called:
+
+- **Time Axis Range Controls** — `RelativeTimeAxisRangeControls` in a collapsible `Section`
+- **Vertical Axis Range Controls** — `VerticalAxisRangeControls` in a collapsible `Section`
+
+# Relationship to Other Widgets
+
+The Line Plot Widget shares significant infrastructure with sibling trial-aligned plot types:
+
+| Shared Component | LinePlot | [EventPlotWidget](../EventPlotWidget/index.qmd) | [PSTHWidget](../PSTHWidget/index.qmd) | [HeatmapWidget](../HeatmapWidget/index.qmd) |
+|-----------------|----------|-----------|-----------|-------------|
+| `PlotAlignmentWidget` | Yes | Yes | Yes | Yes |
+| `PlotAlignmentState` | Yes | Yes | Yes | Yes |
+| `RelativeTimeAxisWidget` | Yes | Yes | Yes | Yes |
+| `GatherResult` | Yes (`AnalogTimeSeries`) | Yes (`DigitalEventSeries`) | Yes (`DigitalEventSeries`) | Yes (`DigitalEventSeries`) |
+| `PlotInteractionHelpers` | Yes | Yes | Yes | Yes |
+| OpenGL rendering | `BatchLineRenderer` | `SceneRenderer` | `SceneRenderer` | `SceneRenderer` |
+
+Additionally, the LinePlotWidget shares **line selection infrastructure** uniquely with [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd):
+
+| Shared Component | LinePlot | [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) |
+|-----------------|----------|------------------------------|
+| `LineBatchData` | Yes (trials) | Yes (entities) |
+| `LineBatchBuilder` | Yes (`buildLineBatchFromGatherResult`) | Yes (`buildLineBatchFromLineData`) |
+| `BatchLineStore` / `BatchLineRenderer` | Yes | Yes |
+| `ILineBatchIntersector` (CPU/GPU) | Yes | Yes |
+| `LineSelectionHelpers` | Yes | Yes |
+
+The key architectural distinction: LinePlotWidget maps selection results to **trial indices** (0-based into `GatherResult`), while TemporalProjectionViewWidget maps them to **entity IDs**.
+
+# Testing
+
+## Test Files
+
+- `tests/WhiskerToolbox/Plots/LinePlotWidget/LinePlotPropertiesWidget.test.cpp` — properties widget observer tests
+- `tests/WhiskerToolbox/Plots/Common/PlotWidgetCommonTests.test.cpp` — common template-based tests covering LinePlotWidget alongside EventPlotWidget and ACFWidget
+
+The common tests verify:
+
+- Combo box population from DataManager
+- Observer refresh on data addition/removal
+- Destruction cleanup (no dangling observer)
+- Stale key handling
+
+See [Plot Widget Guide](../plot_widget_guide.md) for full testing requirements.
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Trial-level raster plot; shares alignment and `GatherResult` infrastructure
+- [PSTHWidget](../PSTHWidget/index.qmd) — Aggregated histogram; shares alignment infrastructure
+- [HeatmapWidget](../HeatmapWidget/index.qmd) — Population heatmap; shares alignment infrastructure
+- [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) — Shares batch line rendering and selection infrastructure
+- [LinePlotWidget Roadmap](roadmap.qmd) — Planned features and development phases

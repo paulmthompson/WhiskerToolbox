@@ -31,7 +31,13 @@ target_link_libraries(DataImportWidgetState_test
         TensorData        # Required for Tensor imports
 )
 
-catch_discover_tests(DataImportWidgetState_test)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(DataImportWidgetState_test)
+else()
+    add_test(NAME DataImportWidgetState_test_all
+        COMMAND DataImportWidgetState_test
+        )
+endif()
 
 # === DataImportTypeRegistry Unit Tests ===
 # These tests need the full registry with registered widget types
@@ -51,4 +57,11 @@ target_link_libraries(DataImportTypeRegistry_test
         TensorData        # Required for Tensor imports
 )
 
-catch_discover_tests(DataImportTypeRegistry_test)
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(DataImportTypeRegistry_test)
+else()
+    add_test(NAME DataImportTypeRegistry_test_all
+        COMMAND DataImportTypeRegistry_test
+        )
+endif()
+

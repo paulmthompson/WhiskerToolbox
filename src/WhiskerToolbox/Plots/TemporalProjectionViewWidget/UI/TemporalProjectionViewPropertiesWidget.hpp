@@ -23,6 +23,7 @@
 #include <memory>
 
 class DataManager;
+class GlyphStyleControls;
 class HorizontalAxisRangeControls;
 class TemporalProjectionViewWidget;
 class Section;
@@ -73,7 +74,6 @@ private slots:
     void _onLineTableSelectionChanged();
 
     // Rendering controls
-    void _onPointSizeChanged(double value);
     void _onLineWidthChanged(double value);
 
     // Selection mode
@@ -101,6 +101,7 @@ private:
     Section * _horizontal_range_controls_section;
     VerticalAxisRangeControls * _vertical_range_controls;
     Section * _vertical_range_controls_section;
+    GlyphStyleControls * _glyph_style_controls;
 
     /// DataManager observer callback ID (stored for cleanup)
     int _dm_observer_id = -1;

@@ -1,5 +1,6 @@
 #include "ScatterPlotState.hpp"
 
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
@@ -8,7 +9,8 @@
 ScatterPlotState::ScatterPlotState(QObject * parent)
     : EditorState(parent),
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
-      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this)),
+      _glyph_style_state(std::make_unique<GlyphStyleState>(this))
 {
     _data.instance_id = getInstanceId().toStdString();
     _data.horizontal_axis = _horizontal_axis_state->data();
@@ -39,6 +41,16 @@ ScatterPlotState::ScatterPlotState(QObject * parent)
             this, syncVerticalData);
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
             this, syncVerticalData);
+
+    // Sync glyph style state with serializable data
+    _glyph_style_state->setStyleSilent(_data.glyph_style);
+    connect(_glyph_style_state.get(), &GlyphStyleState::styleChanged,
+            this, [this]() {
+                _data.glyph_style = _glyph_style_state->data();
+                markDirty();
+                emit glyphStyleChanged();
+                emit stateChanged();
+            });
 }
 
 QString ScatterPlotState::getDisplayName() const
@@ -131,6 +143,32 @@ void ScatterPlotState::setYBounds(double y_min, double y_max)
     }
 }
 
+void ScatterPlotState::setXSource(std::optional<ScatterAxisSource> source)
+{
+    _data.x_source = std::move(source);
+    markDirty();
+    emit xSourceChanged();
+    emit stateChanged();
+}
+
+void ScatterPlotState::setYSource(std::optional<ScatterAxisSource> source)
+{
+    _data.y_source = std::move(source);
+    markDirty();
+    emit ySourceChanged();
+    emit stateChanged();
+}
+
+void ScatterPlotState::setShowReferenceLine(bool show)
+{
+    if (_data.show_reference_line != show) {
+        _data.show_reference_line = show;
+        markDirty();
+        emit referenceLineChanged();
+        emit stateChanged();
+    }
+}
+
 std::string ScatterPlotState::toJson() const
 {
     ScatterPlotStateData data_to_serialize = _data;
@@ -148,6 +186,7 @@ bool ScatterPlotState::fromJson(std::string const & json)
         }
         _horizontal_axis_state->data() = _data.horizontal_axis;
         _vertical_axis_state->data() = _data.vertical_axis;
+        _glyph_style_state->setStyleSilent(_data.glyph_style);
 
         // Sync view state bounds from axis states so they never drift
         _data.view_state.x_min = _horizontal_axis_state->getXMin();

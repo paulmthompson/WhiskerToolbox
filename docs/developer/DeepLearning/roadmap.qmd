@@ -1,0 +1,83 @@
+---
+title: "Deep Learning Roadmap"
+---
+
+## Overview
+
+This document tracks remaining development tasks for the Deep Learning library and widget. 
+The core library (encoders, decoders, model abstraction, multi-backend inference, registry, 
+runtime JSON models, and widget UI) is complete. The items below represent outstanding work 
+for full production readiness.
+
+## Remaining Tasks
+
+### Integration Testing
+
+End-to-end tests that exercise the full pipeline with real model weights are still needed. 
+These require Python model export as a prerequisite.
+
+- [ ] **Export test models** — Create a simple model, export as both `.pt` (TorchScript) and 
+  `.pt2` (AOT Inductor), and commit the exported files as test fixtures 
+  (see [AOT Inductor Tutorial](aot_inductor_tutorial.qmd))
+- [ ] **Integration test: TorchScript backend** — Load a `.pt` file, run inference, verify 
+  output tensor shape and value range
+- [ ] **Integration test: AOT Inductor backend** — Load a `.pt2` file, run inference, verify 
+  output tensor shape and value range
+- [ ] **Integration test: NeuroSAM full pipeline** — Load NeuroSAM weights, bind inputs, run 
+  inference, verify output written to DataManager
+- [ ] **End-to-end UI test** — Select a model in the widget, configure bindings, execute 
+  inference, verify results appear in DataManager
+
+### Batch Inference
+
+The widget currently supports single-frame inference. Batch processing over multiple frames 
+is partially implemented.
+
+- [ ] **Implement "Run Batch" action** — Loop over `batch_size` consecutive frames, encode 
+  each at its batch index, call `forward()` once, decode each output element back into 
+  the DataManager. The `_onRunBatch()` handler currently shows a "not yet implemented" dialog.
+- [ ] **Progress reporting** — Show a progress bar in the View widget during batch processing
+- [ ] **TimeFrame integration** — Ensure batch inference correctly resolves time offsets for 
+  memory/static inputs relative to each frame being processed
+
+### Tensor Preview Visualization
+
+The View widget has placeholder areas for tensor channel previews.
+
+- [ ] **Tensor channel thumbnails** — Render color-mapped previews of each input tensor 
+  channel after encoding (pre-inference visualization)
+- [ ] **Output overlay** — Overlay decoded output (mask, points, lines) on the source image 
+  in the View widget
+
+### Widget Polish
+
+- [ ] **State persistence** — Verify full save/restore of `DeepLearningState` across 
+  application sessions (slot bindings, weights path, batch size, static inputs)
+- [ ] **Error handling UX** — Surface model loading errors and inference failures as 
+  user-friendly status messages in the Properties widget
+- [ ] **Model hot-reload** — Detect when the weights file changes on disk and offer to 
+  reload
+
+### Model Export Documentation
+
+- [ ] **User-facing export guide** — Document the Python export workflow in the user guide 
+  for users who train their own models
+- [ ] **Multi-model `.pt2` packages** — Document and test loading multiple models from a 
+  single `.pt2` archive
+
+### Additional Encoder/Decoder Support
+
+- [ ] **Distance mode** for `Line2DEncoder` — Distance transform instead of binary/heatmap
+- [ ] **Multi-peak `TensorToPoint2D`** — Expose multi-peak detection parameters in the 
+  widget UI (currently only available programmatically)
+- [ ] **`TensorToAnalogTimeSeries`** decoder — For models that output scalar time series 
+  rather than spatial maps
+
+### Performance
+
+- [ ] **Async inference** — Add `forwardAsync()` returning `std::future` to `ModelBase` for 
+  non-blocking inference during batch processing
+- [ ] **GPU memory management** — Track and display GPU memory usage in the widget; warn 
+  when approaching limits
+- [ ] **Benchmark suite** — Benchmark encode/decode throughput and end-to-end inference 
+  latency for representative models

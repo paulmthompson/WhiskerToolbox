@@ -4,6 +4,7 @@
 #include "CorePlotting/DataTypes/AlphaCurve.hpp"
 #include "CorePlotting/Mappers/MaskContourMapper.hpp"
 #include "CorePlotting/Mappers/SpatialMapper_Window.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -74,8 +75,8 @@ void OnionSkinViewOpenGLWidget::setState(std::shared_ptr<OnionSkinViewState> sta
                 this, &OnionSkinViewOpenGLWidget::onDataKeysChanged);
 
         // Rendering parameter signals
-        connect(_state.get(), &OnionSkinViewState::pointSizeChanged,
-                this, [this](float) { _scene_dirty = true; update(); });
+        connect(_state.get(), &OnionSkinViewState::glyphStyleChanged,
+                this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
                 this, [this](float) { _scene_dirty = true; update(); });
         connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
@@ -275,7 +276,6 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     auto const mask_keys = _state->getMaskDataKeys();
     int const behind = _state->getWindowBehind();
     int const ahead = _state->getWindowAhead();
-    float const point_size = _state->getPointSize();
     float const line_width = _state->getLineWidth();
     bool const highlight_current = _state->getHighlightCurrent();
     float const min_alpha = _state->getMinAlpha();
@@ -288,26 +288,32 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
 
     TimeFrameIndex const center{_current_time};
 
-    // Current frame highlight colors
-    glm::vec4 const current_point_color{1.0f, 0.3f, 0.1f, max_alpha};  // Bright orange-red
-    glm::vec4 const current_line_color{1.0f, 0.3f, 0.1f, max_alpha};
-    glm::vec4 const base_point_color{0.2f, 0.5f, 0.9f, 1.0f};  // Blue base
+    // Highlight colors (used when highlight_current is true)
+    glm::vec4 const current_highlight_color{1.0f, 0.3f, 0.1f, max_alpha};  // Bright orange-red
     glm::vec4 const base_line_color{0.2f, 0.7f, 0.4f, 1.0f};   // Green base
     glm::vec4 const base_mask_color{0.8f, 0.5f, 0.2f, 1.0f};   // Orange base
 
     // === Map all windowed data ===
-    // Points
-    std::vector<CorePlotting::TimedMappedElement> all_points;
+    // Points — keyed by point data key so each key's glyph style can be applied independently
+    struct KeyedPoints {
+        QString key;
+        CorePlotting::GlyphStyleData glyph_style;
+        std::vector<CorePlotting::TimedMappedElement> points;
+    };
+    std::vector<KeyedPoints> keyed_points;
+    keyed_points.reserve(point_keys.size());
+
     for (auto const & key_qstr : point_keys) {
         auto point_data = _data_manager->getData<PointData>(key_qstr.toStdString());
         if (!point_data) {
             continue;
         }
-        auto pts = CorePlotting::SpatialMapper::mapPointsInWindow(
+        KeyedPoints kp;
+        kp.key = key_qstr;
+        kp.glyph_style = _state->getPointKeyGlyphStyle(key_qstr);
+        kp.points = CorePlotting::SpatialMapper::mapPointsInWindow(
             *point_data, center, behind, ahead);
-        all_points.insert(all_points.end(),
-                         std::make_move_iterator(pts.begin()),
-                         std::make_move_iterator(pts.end()));
+        keyed_points.push_back(std::move(kp));
     }
 
     // Lines
@@ -345,12 +351,14 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     float max_y = std::numeric_limits<float>::lowest();
     bool has_data = false;
 
-    for (auto const & pt : all_points) {
-        min_x = std::min(min_x, pt.x);
-        min_y = std::min(min_y, pt.y);
-        max_x = std::max(max_x, pt.x);
-        max_y = std::max(max_y, pt.y);
-        has_data = true;
+    for (auto const & kp : keyed_points) {
+        for (auto const & pt : kp.points) {
+            min_x = std::min(min_x, pt.x);
+            min_y = std::min(min_y, pt.y);
+            max_x = std::max(max_x, pt.x);
+            max_y = std::max(max_y, pt.y);
+            has_data = true;
+        }
     }
 
     for (auto const & line : all_lines) {
@@ -432,49 +440,55 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     CorePlotting::SceneBuilder builder;
     builder.setBounds(BoundingBox{min_x, min_y, max_x, max_y});
 
-    // --- Group points by temporal distance for sorted rendering ---
-    // Collect unique distances and sort descending (farthest first)
-    std::vector<int> point_distances;
-    for (auto const & pt : all_points) {
-        point_distances.push_back(pt.absTemporalDistance());
-    }
-    std::sort(point_distances.begin(), point_distances.end(), std::greater<>());
-    point_distances.erase(
-        std::unique(point_distances.begin(), point_distances.end()),
-        point_distances.end());
-
-    // Add glyph batches from farthest to nearest
-    for (int const dist : point_distances) {
-        float const alpha = CorePlotting::computeTemporalAlpha(
-            dist, half_width, alpha_curve, min_alpha, max_alpha);
-
-        // Build a batch of points at this temporal distance
-        CorePlotting::RenderableGlyphBatch batch;
-        batch.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
-        batch.model_matrix = glm::mat4(1.0f);
-
-        bool const is_current = (dist == 0);
-        float const this_size = (is_current && highlight_current)
-                                    ? point_size * 1.5f
-                                    : point_size;
-        batch.size = this_size;
-
-        for (auto const & pt : all_points) {
-            if (pt.absTemporalDistance() != dist) {
-                continue;
-            }
-            batch.positions.emplace_back(pt.x, pt.y);
-            batch.entity_ids.push_back(pt.entity_id);
-
-            glm::vec4 color = (is_current && highlight_current)
-                                  ? current_point_color
-                                  : glm::vec4{base_point_color.r, base_point_color.g,
-                                              base_point_color.b, alpha};
-            batch.colors.push_back(color);
+    // --- Render each point key with its own glyph style, sorted back-to-front ---
+    for (auto const & kp : keyed_points) {
+        if (kp.points.empty()) {
+            continue;
         }
 
-        if (!batch.positions.empty()) {
-            builder.addGlyphBatch(std::move(batch));
+        glm::vec4 const base_color = CorePlotting::hexColorToVec4(
+            kp.glyph_style.hex_color, kp.glyph_style.alpha);
+        float const point_size = kp.glyph_style.size;
+        auto const glyph_type = CorePlotting::toRenderableGlyphType(kp.glyph_style.glyph_type);
+
+        // Collect unique temporal distances and sort descending (farthest first)
+        std::vector<int> point_distances;
+        point_distances.reserve(kp.points.size());
+        for (auto const & pt : kp.points) {
+            point_distances.push_back(pt.absTemporalDistance());
+        }
+        std::sort(point_distances.begin(), point_distances.end(), std::greater<>());
+        point_distances.erase(
+            std::unique(point_distances.begin(), point_distances.end()),
+            point_distances.end());
+
+        for (int const dist : point_distances) {
+            float const alpha = CorePlotting::computeTemporalAlpha(
+                dist, half_width, alpha_curve, min_alpha, max_alpha);
+
+            CorePlotting::RenderableGlyphBatch batch;
+            batch.glyph_type = glyph_type;
+            batch.model_matrix = glm::mat4(1.0f);
+
+            bool const is_current = (dist == 0);
+            batch.size = (is_current && highlight_current) ? point_size * 1.5f : point_size;
+
+            for (auto const & pt : kp.points) {
+                if (pt.absTemporalDistance() != dist) {
+                    continue;
+                }
+                batch.positions.emplace_back(pt.x, pt.y);
+                batch.entity_ids.push_back(pt.entity_id);
+
+                glm::vec4 color = (is_current && highlight_current)
+                                      ? current_highlight_color
+                                      : glm::vec4{base_color.r, base_color.g, base_color.b, alpha};
+                batch.colors.push_back(color);
+            }
+
+            if (!batch.positions.empty()) {
+                builder.addGlyphBatch(std::move(batch));
+            }
         }
     }
 
@@ -506,7 +520,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         batch.entity_ids.push_back(line.entity_id);
 
         glm::vec4 color = (is_current && highlight_current)
-                              ? current_line_color
+                              ? current_highlight_color
                               : glm::vec4{base_line_color.r, base_line_color.g,
                                           base_line_color.b, alpha};
         batch.colors.push_back(color);
@@ -551,7 +565,7 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
         batch.entity_ids.push_back(contour.entity_id);
 
         glm::vec4 color = (is_current && highlight_current)
-                              ? current_line_color
+                              ? current_highlight_color
                               : glm::vec4{base_mask_color.r, base_mask_color.g,
                                           base_mask_color.b, alpha};
         batch.colors.push_back(color);
@@ -574,11 +588,13 @@ void OnionSkinViewOpenGLWidget::rebuildScene()
     _scene = builder.build();
     _scene_renderer.uploadScene(_scene);
 
-    // Cache current-frame points for click selection (P2.5)
+    // Cache current-frame points for click selection
     _current_frame_points.clear();
-    for (auto const & pt : all_points) {
-        if (pt.temporal_distance == 0) {
-            _current_frame_points.push_back(pt);
+    for (auto const & kp : keyed_points) {
+        for (auto const & pt : kp.points) {
+            if (pt.temporal_distance == 0) {
+                _current_frame_points.push_back(pt);
+            }
         }
     }
 }

@@ -16,7 +16,9 @@
  */
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleData.hpp"
 #include "EditorState/EditorState.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -25,6 +27,7 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -54,7 +57,8 @@ struct OnionSkinViewStateData {
     float max_alpha = 1.0f;
 
     // Rendering
-    float point_size = 8.0f;
+    /// Per-key point glyph styles (key → GlyphStyleData)
+    std::map<std::string, CorePlotting::GlyphStyleData> point_key_glyph_styles;
     float line_width = 2.0f;
     bool highlight_current = true;  ///< Draw current frame with distinct color/size
 };
@@ -82,7 +86,7 @@ public:
 
     [[nodiscard]] QString getTypeName() const override
     {
-        return QStringLiteral("OnionSkinView");
+        return QStringLiteral("OnionSkinViewWidget");
     }
     [[nodiscard]] QString getDisplayName() const override;
     void setDisplayName(QString const & name) override;
@@ -160,10 +164,26 @@ public:
     [[nodiscard]] float getMaxAlpha() const { return _data.max_alpha; }
     void setMaxAlpha(float alpha);
 
-    // === Rendering Parameters ===
+    // === Per-Key Point Glyph Style ===
 
-    [[nodiscard]] float getPointSize() const { return _data.point_size; }
-    void setPointSize(float size);
+    /**
+     * @brief Get the GlyphStyleState for a specific point data key.
+     *
+     * Returns nullptr if the key has not been added. The returned pointer is
+     * owned by this state and must not be deleted by the caller.
+     *
+     * @param key The point data key
+     */
+    [[nodiscard]] GlyphStyleState * glyphStyleStateForKey(QString const & key);
+
+    /**
+     * @brief Get the serializable glyph style data for a key (read-only).
+     *
+     * Returns a default style if the key has not been added.
+     */
+    [[nodiscard]] CorePlotting::GlyphStyleData getPointKeyGlyphStyle(QString const & key) const;
+
+    // === Rendering Parameters ===
 
     [[nodiscard]] float getLineWidth() const { return _data.line_width; }
     void setLineWidth(float width);
@@ -199,7 +219,10 @@ signals:
     void maxAlphaChanged(float alpha);
 
     // Rendering signals
-    void pointSizeChanged(float size);
+    /** @brief Emitted when the glyph style for any point key changes */
+    void glyphStyleChanged();
+    /** @brief Emitted when the glyph style for a specific point key changes */
+    void pointKeyGlyphStyleChanged(QString const & key);
     void lineWidthChanged(float width);
     void highlightCurrentChanged(bool highlight);
 
@@ -207,6 +230,16 @@ private:
     OnionSkinViewStateData _data;
     std::unique_ptr<HorizontalAxisState> _horizontal_axis_state;
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
+    /// Per-key GlyphStyleState objects (one per point data key)
+    std::map<std::string, std::unique_ptr<GlyphStyleState>> _point_glyph_style_states;
+
+    /**
+     * @brief Create a GlyphStyleState for a newly added point key.
+     *
+     * Looks up existing serialized style from _data.point_key_glyph_styles,
+     * or uses the default style. Connects signals for scene rebuild.
+     */
+    void _createGlyphStyleStateForKey(std::string const & key);
 };
 
 #endif  // ONION_SKIN_VIEW_STATE_HPP

@@ -542,18 +542,19 @@ TEST_CASE("GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 50
     }
     
     SECTION("Automatic alignment using cross-timeframe conversion") {
-        // Expand: ±1 index in 500Hz time = ±60 samples at 30kHz
-        auto adapter = expandEvents(alignment_events, 1, 1);  // ±1 at 500Hz
+        // Expand: ±60 time units around alignment event
+        // Event at 500Hz index 1 → absolute time 60
+        // Window: ±60 time units → [0, 120] at 30kHz
+        auto adapter = expandEvents(alignment_events, 60, 60);
         auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
         
         REQUIRE(result.size() == 1);
         
-        // Interval should be converted to 30kHz indices: [0, 120]
-        // (500Hz index 1 ± 1 = [0, 2] → [0, 120] at 30kHz)
+        // Interval should be [0, 120] at 30kHz
         CHECK(result.intervalAt(0).start == 0);
         CHECK(result.intervalAt(0).end == 120);
         
-        // Alignment time should be 60 (the converted event time at 30kHz)
+        // Alignment time is absolute time (60)
         CHECK(result.alignmentTimeAt(0) == 60);
         
         // All spikes should be in range [0, 120]
@@ -590,25 +591,25 @@ TEST_CASE("GatherResult - Automatic cross-timeframe with multiple trials", "[Gat
     auto alignment_events = createEventSeries({1, 3});  // Events in 500Hz indices
     alignment_events->setTimeFrame(event_timeframe);
     
-    // Expand: ±1 index at 500Hz → ±60 samples at 30kHz
-    auto adapter = expandEvents(alignment_events, 1, 1);
+    // Expand: ±60 time units around each alignment event
+    auto adapter = expandEvents(alignment_events, 60, 60);
     auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
     
     REQUIRE(result.size() == 2);
     
     SECTION("Intervals are converted to 30kHz") {
-        // Trial 1: 500Hz [0, 2] → 30kHz [0, 120]
+        // Trial 1: alignment abs time = 60, window ±60 → [0, 120]
         CHECK(result.intervalAt(0).start == 0);
         CHECK(result.intervalAt(0).end == 120);
         
-        // Trial 2: 500Hz [2, 4] → 30kHz [120, 240]
+        // Trial 2: alignment abs time = 180, window ±60 → [120, 240]
         CHECK(result.intervalAt(1).start == 120);
         CHECK(result.intervalAt(1).end == 240);
     }
     
-    SECTION("Alignment times are converted to 30kHz") {
-        CHECK(result.alignmentTimeAt(0) == 60);   // 500Hz index 1 → 30kHz index 60
-        CHECK(result.alignmentTimeAt(1) == 180);  // 500Hz index 3 → 30kHz index 180
+    SECTION("Alignment times are absolute time") {
+        CHECK(result.alignmentTimeAt(0) == 60);   // 500Hz index 1 → abs time 60
+        CHECK(result.alignmentTimeAt(1) == 180);  // 500Hz index 3 → abs time 180
     }
     
     SECTION("Trial 1: normalized times") {
@@ -699,9 +700,8 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     auto alignment_events = createEventSeries({100});  // 500Hz index
     alignment_events->setTimeFrame(event_timeframe);
     
-    // Asymmetric window in 500Hz indices: 15 before (30ms), 50 after (100ms)
-    // Converted to 30kHz: 15*60=900 before, 50*60=3000 after
-    auto adapter = expandEvents(alignment_events, 15, 50);
+    // Asymmetric window in time units: 900 before (30ms at 30kHz), 3000 after (100ms at 30kHz)
+    auto adapter = expandEvents(alignment_events, 900, 3000);
     auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
     
     REQUIRE(result.size() == 1);
@@ -733,4 +733,227 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     CHECK(normalized[3] == 500);
     CHECK(normalized[4] == 2000);
     CHECK(normalized[5] == 2500);
+}
+
+// =============================================================================
+// Negative Relative Time Tests (events before alignment)
+// =============================================================================
+
+/**
+ * @brief Verify that events occurring before the alignment event produce
+ * negative relative times when normalized, while the GatherResult itself
+ * always stores non-negative absolute TimeFrameIndex values.
+ *
+ * Scenario: events at [10, 20, 30], alignment events at [11, 21, 31].
+ * After gathering with a window of ±5, each trial should contain one event
+ * whose absolute time is less than the alignment time, yielding a relative
+ * offset of -1 when subtracting alignment_time.
+ *
+ * The GatherResult must NEVER store negative TimeFrameIndex values.
+ * Negative offsets only arise when computing (event_time - alignment_time)
+ * for display in the plotting buffer.
+ */
+TEST_CASE("GatherResult - Events before alignment produce negative relative times",
+          "[GatherResult][alignment][negative]") {
+
+    // Spikes slightly before each alignment event
+    auto spikes = createEventSeries({10, 20, 30});
+
+    // Alignment events are 1 unit after each spike
+    auto alignment_events = createEventSeries({11, 21, 31});
+
+    // Window of ±5 around each alignment event
+    auto adapter = expandEvents(alignment_events, 5, 5);
+    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+
+    REQUIRE(result.size() == 3);
+
+    SECTION("alignment times match the alignment events") {
+        CHECK(result.alignmentTimeAt(0) == 11);
+        CHECK(result.alignmentTimeAt(1) == 21);
+        CHECK(result.alignmentTimeAt(2) == 31);
+    }
+
+    SECTION("intervals are correct windows around alignment events") {
+        // [11-5, 11+5] = [6, 16]
+        CHECK(result.intervalAt(0).start == 6);
+        CHECK(result.intervalAt(0).end == 16);
+
+        // [21-5, 21+5] = [16, 26]
+        CHECK(result.intervalAt(1).start == 16);
+        CHECK(result.intervalAt(1).end == 26);
+
+        // [31-5, 31+5] = [26, 36]
+        CHECK(result.intervalAt(2).start == 26);
+        CHECK(result.intervalAt(2).end == 36);
+    }
+
+    SECTION("gathered events store absolute (non-negative) TimeFrameIndex values") {
+        for (size_t trial = 0; trial < result.size(); ++trial) {
+            REQUIRE(result[trial]->size() == 1);
+            for (auto const & event : result[trial]->view()) {
+                // Absolute index must never be negative
+                CHECK(event.time().getValue() >= 0);
+            }
+        }
+    }
+
+    SECTION("normalized times are negative (-1) for each trial") {
+        for (size_t trial = 0; trial < result.size(); ++trial) {
+            int64_t alignment = result.alignmentTimeAt(trial);
+            REQUIRE(result[trial]->size() == 1);
+
+            for (auto const & event : result[trial]->view()) {
+                int64_t relative = event.time().getValue() - alignment;
+                CHECK(relative == -1);
+            }
+        }
+    }
+}
+
+TEST_CASE("GatherResult - Mixed pre-and-post alignment events",
+          "[GatherResult][alignment][negative]") {
+
+    // Events both before and after each alignment event
+    // Spikes at: 8, 10, 12 (around alignment at 10)
+    //           18, 20, 22 (around alignment at 20)
+    auto spikes = createEventSeries({8, 10, 12, 18, 20, 22});
+    auto alignment_events = createEventSeries({10, 20});
+
+    auto adapter = expandEvents(alignment_events, 5, 5);
+    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+
+    REQUIRE(result.size() == 2);
+
+    SECTION("Trial 0 has pre, on, and post alignment events") {
+        REQUIRE(result[0]->size() == 3);
+        int64_t alignment = result.alignmentTimeAt(0);  // 10
+
+        std::vector<int64_t> normalized;
+        for (auto const & event : result[0]->view()) {
+            CHECK(event.time().getValue() >= 0);  // absolute is non-negative
+            normalized.push_back(event.time().getValue() - alignment);
+        }
+
+        // 8-10=-2, 10-10=0, 12-10=2
+        REQUIRE(normalized.size() == 3);
+        CHECK(normalized[0] == -2);
+        CHECK(normalized[1] == 0);
+        CHECK(normalized[2] == 2);
+    }
+
+    SECTION("Trial 1 has pre, on, and post alignment events") {
+        REQUIRE(result[1]->size() == 3);
+        int64_t alignment = result.alignmentTimeAt(1);  // 20
+
+        std::vector<int64_t> normalized;
+        for (auto const & event : result[1]->view()) {
+            CHECK(event.time().getValue() >= 0);  // absolute is non-negative
+            normalized.push_back(event.time().getValue() - alignment);
+        }
+
+        // 18-20=-2, 20-20=0, 22-20=2
+        REQUIRE(normalized.size() == 3);
+        CHECK(normalized[0] == -2);
+        CHECK(normalized[1] == 0);
+        CHECK(normalized[2] == 2);
+    }
+}
+
+TEST_CASE("GatherResult - All events before alignment event",
+          "[GatherResult][alignment][negative]") {
+
+    // All spikes occur before the alignment event
+    auto spikes = createEventSeries({95, 96, 97, 98, 99});
+    auto alignment_events = createEventSeries({100});
+
+    // Window: [100-10, 100+10] = [90, 110]
+    auto adapter = expandEvents(alignment_events, 10, 10);
+    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+
+    REQUIRE(result.size() == 1);
+    REQUIRE(result[0]->size() == 5);
+    CHECK(result.alignmentTimeAt(0) == 100);
+
+    SECTION("all normalized times are negative") {
+        for (auto const & event : result[0]->view()) {
+            int64_t abs_time = event.time().getValue();
+            CHECK(abs_time >= 0);  // stored as non-negative
+
+            int64_t relative = abs_time - result.alignmentTimeAt(0);
+            CHECK(relative < 0);   // all events are before alignment
+        }
+    }
+
+    SECTION("specific negative values are correct") {
+        std::vector<int64_t> normalized;
+        for (auto const & event : result[0]->view()) {
+            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+        }
+        // 95-100=-5, 96-100=-4, 97-100=-3, 98-100=-2, 99-100=-1
+        REQUIRE(normalized.size() == 5);
+        CHECK(normalized[0] == -5);
+        CHECK(normalized[1] == -4);
+        CHECK(normalized[2] == -3);
+        CHECK(normalized[3] == -2);
+        CHECK(normalized[4] == -1);
+    }
+}
+
+// =============================================================================
+// Reorder preserves alignment times
+// =============================================================================
+
+TEST_CASE("GatherResult reorder preserves alignment times",
+          "[GatherResult][reorder][alignment]") {
+    // Create events at 10, 20, 30 with a simple 0-39 TimeFrame (step=1)
+    auto events = createEventSeries({10, 20, 30});
+    std::vector<int> times(40);
+    std::iota(times.begin(), times.end(), 0);
+    auto tf = std::make_shared<TimeFrame>(times);
+    events->setTimeFrame(tf);
+
+    // Expand each event into a ±5 window → 3 trials
+    auto adapter = expandEvents(events, 5, 5);
+    auto gathered = GatherResult<DigitalEventSeries>::create(events, adapter);
+
+    REQUIRE(gathered.size() == 3);
+
+    // Record alignment times before reorder
+    int64_t align_0 = gathered.alignmentTimeAt(0);  // event at t=10
+    int64_t align_1 = gathered.alignmentTimeAt(1);  // event at t=20
+    int64_t align_2 = gathered.alignmentTimeAt(2);  // event at t=30
+
+    CHECK(align_0 == 10);
+    CHECK(align_1 == 20);
+    CHECK(align_2 == 30);
+
+    SECTION("reverse order") {
+        auto reordered = gathered.reorder({2, 1, 0});
+
+        // After reorder [2,1,0]: position 0 should have trial 2's alignment
+        CHECK(reordered.alignmentTimeAt(0) == align_2);
+        CHECK(reordered.alignmentTimeAt(1) == align_1);
+        CHECK(reordered.alignmentTimeAt(2) == align_0);
+
+        // Views should also be reordered consistently
+        CHECK(reordered[0]->size() == gathered[2]->size());
+        CHECK(reordered[2]->size() == gathered[0]->size());
+    }
+
+    SECTION("arbitrary permutation") {
+        auto reordered = gathered.reorder({1, 2, 0});
+
+        CHECK(reordered.alignmentTimeAt(0) == align_1);
+        CHECK(reordered.alignmentTimeAt(1) == align_2);
+        CHECK(reordered.alignmentTimeAt(2) == align_0);
+    }
+
+    SECTION("identity permutation") {
+        auto reordered = gathered.reorder({0, 1, 2});
+
+        CHECK(reordered.alignmentTimeAt(0) == align_0);
+        CHECK(reordered.alignmentTimeAt(1) == align_1);
+        CHECK(reordered.alignmentTimeAt(2) == align_2);
+    }
 }

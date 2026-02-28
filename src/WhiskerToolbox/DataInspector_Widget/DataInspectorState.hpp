@@ -35,6 +35,7 @@
  * @see SelectionContext for inter-widget communication
  */
 
+#include "DataInspector_Widget/DataInspectorStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
 #include "TimeFrame/TimeFrame.hpp"
@@ -46,25 +47,6 @@
 
 #include <string>
 #include <vector>
-
-/**
- * @brief Serializable data structure for DataInspectorState
- * 
- * This struct is designed for reflect-cpp serialization.
- * All members should be default-constructible and serializable.
- */
-struct DataInspectorStateData {
-    std::string inspected_data_key;  ///< Currently inspected data key
-    bool is_pinned = false;          ///< Whether to ignore SelectionContext updates
-    std::string display_name = "Data Inspector";  ///< User-visible name
-    std::string instance_id;         ///< Unique instance ID (preserved across serialization)
-    std::vector<std::string> collapsed_sections;  ///< Section IDs that are collapsed in UI
-    
-    // Type-specific UI state stored as JSON string for flexibility
-    // This allows type-specific widgets to store their preferences without
-    // needing per-type state classes
-    std::string ui_state_json = "{}";
-};
 
 /**
  * @brief State class for DataInspector_Widget

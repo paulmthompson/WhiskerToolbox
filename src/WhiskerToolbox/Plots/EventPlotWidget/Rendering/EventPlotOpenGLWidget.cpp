@@ -1,10 +1,12 @@
 #include "EventPlotOpenGLWidget.hpp"
 
+#include "Core/IntervalEdgeExtraction.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
 #include "DataManager/utils/color.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "CorePlotting/DataTypes/GlyphStyleConversion.hpp"
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"
 #include "CorePlotting/Layout/RowLayoutStrategy.hpp"
@@ -21,6 +23,37 @@
 #include <cmath>
 #include <limits>
 #include <numeric>
+
+namespace {
+
+/// Parsed result from a series_trial_key like "spikes_trial_42"
+struct SeriesTrialKey {
+    std::string event_name;  ///< The event name prefix (e.g. "spikes")
+    int trial_index{-1};     ///< The trial number (e.g. 42), or -1 on failure
+
+    [[nodiscard]] bool isValid() const { return trial_index >= 0; }
+};
+
+/// Parse a series_trial_key of the form "{event_name}_trial_{N}".
+/// Finds the *last* occurrence of "_trial_" to handle event names that
+/// might themselves contain "_trial_" (unlikely but safe).
+[[nodiscard]] SeriesTrialKey parseSeriesTrialKey(std::string const & key) {
+    constexpr std::string_view delimiter = "_trial_";
+    auto pos = key.rfind(delimiter);
+    if (pos == std::string::npos) {
+        return {};
+    }
+    std::string name = key.substr(0, pos);
+    std::string number_str = key.substr(pos + delimiter.size());
+    try {
+        int trial_index = std::stoi(number_str);
+        return {std::move(name), trial_index};
+    } catch (...) {
+        return {};
+    }
+}
+
+} // anonymous namespace
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent)
@@ -252,22 +285,21 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
             int trial_index = hit->first;
             float relative_time = static_cast<float>(world.x());
             
-            // Convert relative time to absolute TimeFrameIndex
+            // Convert relative time to absolute time
             // The alignment time is the absolute time of t=0 for this trial
             if (trial_index >= 0 && 
                 static_cast<size_t>(trial_index) < _cached_alignment_times.size()) {
                 int64_t alignment_time = _cached_alignment_times[trial_index];
                 int64_t absolute_time = alignment_time + static_cast<int64_t>(relative_time);
                 
-                // Get series key for the signal
+                // Resolve the data key from the hit's event name
+                // hit->second encodes the event name via the scene key
                 QString series_key;
-                if (_state) {
-                    auto event_names = _state->getPlotEventNames();
-                    if (!event_names.empty()) {
-                        auto options = _state->getPlotEventOptions(event_names.front());
-                        if (options) {
-                            series_key = QString::fromStdString(options->event_key);
-                        }
+                if (_state && !hit->second.empty()) {
+                    auto options = _state->getPlotEventOptions(
+                        QString::fromStdString(hit->second));
+                    if (options) {
+                        series_key = QString::fromStdString(options->event_key);
                     }
                 }
                 
@@ -350,136 +382,192 @@ void EventPlotOpenGLWidget::rebuildScene()
         return;
     }
 
-    // Gather trial-aligned data
-    GatherResult<DigitalEventSeries> gathered = gatherTrialData();
-
-    if (gathered.empty()) {
+    // Get all event series names
+    auto event_names = _state->getPlotEventNames();
+    if (event_names.empty()) {
         _cached_alignment_times.clear();
         _scene_renderer.clearScene();
         return;
     }
 
-    // Apply trial sorting based on state
-    auto sorting_mode = _state->getSortingMode();
-    if (sorting_mode != TrialSortMode::TrialIndex) {
-        gathered = applySorting(gathered, sorting_mode);
+    // -------------------------------------------------------------------------
+    // Step 1: Gather a GatherResult for EACH event series
+    // All series share the same alignment event, so they produce the same
+    // number of trials, but each contains different event data.
+    // -------------------------------------------------------------------------
+    struct SeriesData {
+        QString name;
+        std::string event_key;
+        GatherResult<DigitalEventSeries> gathered;
+        std::shared_ptr<TimeFrame const> time_frame;
+    };
+    std::vector<SeriesData> all_series;
+
+    for (auto const & event_name : event_names) {
+        auto const opts = _state->getPlotEventOptions(event_name);
+        if (!opts || opts->event_key.empty()) {
+            continue;
+        }
+
+        // Resolve the source data to a DigitalEventSeries.
+        // For interval sources, extract edge events; for event sources, use directly.
+        std::shared_ptr<DigitalEventSeries> series;
+        std::shared_ptr<TimeFrame const> tf;
+
+        if (opts->interval_edge.has_value()) {
+            // Source is a DigitalIntervalSeries — extract edge events
+            auto interval_series = _data_manager->getData<DigitalIntervalSeries>(opts->event_key);
+            if (!interval_series) {
+                continue;
+            }
+            series = WhiskerToolbox::Plots::extractEdgeEvents(
+                interval_series, *opts->interval_edge);
+            if (!series) {
+                continue;
+            }
+            tf = series->getTimeFrame();
+        } else {
+            // Source is a DigitalEventSeries — use directly
+            series = _data_manager->getData<DigitalEventSeries>(opts->event_key);
+            if (!series) {
+                continue;
+            }
+            tf = series->getTimeFrame();
+        }
+
+        if (!tf) {
+            continue;
+        }
+
+        auto gathered = gatherTrialData(series, opts->event_key);
+        if (gathered.empty()) {
+            continue;
+        }
+
+        all_series.push_back({event_name, opts->event_key, std::move(gathered), tf});
     }
 
-    // Cache alignment times for relative→absolute time conversion during interaction
-    // Must happen AFTER sorting so indices match the displayed trial order
-    size_t num_trials = gathered.size();
+    if (all_series.empty()) {
+        _cached_alignment_times.clear();
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 2: Determine trial count and compute sort order from FIRST series
+    // The sort order is computed from the first series but applied to ALL series
+    // so that trial rows remain consistent across overlaid event data.
+    // -------------------------------------------------------------------------
+    size_t num_trials = all_series.front().gathered.size();
+
+    auto sorting_mode = _state->getSortingMode();
+    std::vector<size_t> sort_indices =
+        computeSortIndices(all_series.front().gathered, sorting_mode);
+
+    // Apply sort order to every series' GatherResult
+    if (!sort_indices.empty()) {
+        for (auto & sd : all_series) {
+            sd.gathered = sd.gathered.reorder(sort_indices);
+        }
+    }
+
+    // Cache alignment times (from first series, post-sort) for interaction
+    auto const & ref_gathered = all_series.front().gathered;
     _cached_alignment_times.clear();
     _cached_alignment_times.reserve(num_trials);
     for (size_t i = 0; i < num_trials; ++i) {
-        _cached_alignment_times.push_back(gathered.alignmentTimeAt(i));
+        _cached_alignment_times.push_back(ref_gathered.alignmentTimeAt(i));
     }
 
-    // Build layout request
+    // -------------------------------------------------------------------------
+    // Step 3: Build layout (one row per trial, shared by all series)
+    // -------------------------------------------------------------------------
     CorePlotting::LayoutRequest layout_request;
     layout_request.viewport_y_min = -1.0f;
     layout_request.viewport_y_max = 1.0f;
 
     for (size_t i = 0; i < num_trials; ++i) {
         std::string key = "trial_" + std::to_string(i);
-        // SeriesInfo constructor: (id, type, is_stackable)
         layout_request.series.emplace_back(key, CorePlotting::SeriesType::DigitalEvent, true);
     }
 
-    // Compute layout using RowLayoutStrategy and cache for hit testing
     _layout_response = _layout_strategy.compute(layout_request);
 
-    // Build scene with SceneBuilder
-    // BoundingBox constructor: (min_x, min_y, max_x, max_y)
+    // -------------------------------------------------------------------------
+    // Step 4: Build scene — separate draw call per series with own glyph style
+    // -------------------------------------------------------------------------
     BoundingBox bounds{
-        static_cast<float>(_cached_view_state.x_min),  // min_x (time start)
-        -1.0f,                                          // min_y (viewport bottom)
-        static_cast<float>(_cached_view_state.x_max),  // max_x (time end)
-        1.0f                                            // max_y (viewport top)
+        static_cast<float>(_cached_view_state.x_min),
+        -1.0f,
+        static_cast<float>(_cached_view_state.x_max),
+        1.0f
     };
 
     CorePlotting::SceneBuilder builder;
     builder.setBounds(bounds);
 
-    // Get time frame from SOURCE series (the spikes/events being plotted)
-    // This is required for correct index→time conversion when source and alignment
-    // series may have different sampling rates (e.g., 30kHz spikes, 500Hz events)
-    auto event_names = _state->getPlotEventNames();
-    if (event_names.empty()) {
-        _scene_renderer.clearScene();
-        return;
-    }
+    // Row height in world units — used to scale glyph sizes.
+    // The viewport Y range is [-1, +1] (2.0 units) divided among num_trials rows.
+    float const row_height = 2.0f / static_cast<float>(num_trials);
 
-    auto const source_options = _state->getPlotEventOptions(event_names.front());
-    if (!source_options || source_options->event_key.empty()) {
-        _scene_renderer.clearScene();
-        return;
-    }
+    for (auto const & sd : all_series) {
+        // Per-series glyph style
+        auto const gd = _state->getEventGlyphStyle(sd.name);
+        CorePlotting::GlyphStyle style;
+        style.glyph_type = CorePlotting::toRenderableGlyphType(gd.glyph_type);
 
-    auto source_series = _data_manager->getData<DigitalEventSeries>(source_options->event_key);
-    if (!source_series) {
-        _scene_renderer.clearScene();
-        return;
-    }
-
-    auto time_frame = source_series->getTimeFrame();
-    if (!time_frame) {
-        _scene_renderer.clearScene();
-        return;
-    }
-
-    // Map each trial's events
-    // Get color from EventPlotOptions (default black)
-    CorePlotting::GlyphStyle style;
-    // Default glyph size - can be overridden per-series via EventPlotOptions
-    style.size = 3.0f;
-    
-    // Convert hex color to glm::vec4 (default black if not set)
-    int r, g, b;
-    hexToRGB(source_options->hex_color.empty() ? "#000000" : source_options->hex_color, r, g, b);
-    style.color = glm::vec4(
-        static_cast<float>(r) / 255.0f,
-        static_cast<float>(g) / 255.0f,
-        static_cast<float>(b) / 255.0f,
-        1.0f);
-
-    for (size_t trial = 0; trial < num_trials; ++trial) {
-        auto const & trial_view = gathered[trial];
-        if (!trial_view) continue;
-
-        std::string key = "trial_" + std::to_string(trial);
-        auto const * trial_layout = _layout_response.findLayout(key);
-        if (!trial_layout) continue;
-
-        // Use alignmentTimeAt() which returns the proper alignment point:
-        // - For EventExpanderAdapter: the event time (center of window)
-        // - For IntervalWithAlignmentAdapter: start, end, or center based on setting
-        // - For basic gather: interval.start as fallback
-        auto reference_time = TimeFrameIndex(gathered.alignmentTimeAt(trial));
-
-        // Use RasterMapper to generate mapped elements
-        auto mapped = CorePlotting::RasterMapper::mapEventsInWindow(
-            *trial_view,
-            *trial_layout,
-            *time_frame,
-            reference_time,
-            static_cast<int>(-_cached_view_state.x_min),
-            static_cast<int>(_cached_view_state.x_max)
-        );
-
-        // Convert range to vector for builder
-        std::vector<CorePlotting::MappedElement> elements;
-        for (auto const & elem : mapped) {
-            elements.push_back(elem);
+        // Convert user-facing size to renderer units.
+        // GlyphStyleData::size is a scale factor where 1.0 = full row height.
+        //  - Circles (GL_POINTS): gl_PointSize is in screen pixels, so convert
+        //    row-height fraction to pixels.
+        //  - Instanced glyphs (ticks, squares, crosses): u_glyph_size is a
+        //    world-space multiplier, so scale by row_height.
+        bool const is_circle =
+            (style.glyph_type == CorePlotting::RenderableGlyphBatch::GlyphType::Circle);
+        if (is_circle) {
+            style.size = gd.size * static_cast<float>(_widget_height)
+                         / static_cast<float>(num_trials);
+        } else {
+            style.size = gd.size * row_height;
         }
 
-        builder.addGlyphs(key, std::move(elements), style);
+        style.color = CorePlotting::hexColorToVec4(gd.hex_color, gd.alpha);
+
+        for (size_t trial = 0; trial < num_trials; ++trial) {
+            auto const & trial_view = sd.gathered[trial];
+            if (!trial_view) continue;
+
+            std::string layout_key = "trial_" + std::to_string(trial);
+            auto const * trial_layout = _layout_response.findLayout(layout_key);
+            if (!trial_layout) continue;
+
+            auto ref_abs_time = static_cast<int>(sd.gathered.alignmentTimeAt(trial));
+
+            auto mapped = CorePlotting::RasterMapper::mapEventsInWindow(
+                *trial_view,
+                *trial_layout,
+                *sd.time_frame,
+                ref_abs_time,
+                static_cast<int>(-_cached_view_state.x_min),
+                static_cast<int>(_cached_view_state.x_max)
+            );
+
+            // Unique key per series+trial to avoid collisions in scene builder
+            std::string series_trial_key =
+                sd.name.toStdString() + "_trial_" + std::to_string(trial);
+            std::vector<CorePlotting::MappedElement> elements;
+            for (auto const & elem : mapped) {
+                elements.push_back(elem);
+            }
+
+            builder.addGlyphs(series_trial_key, std::move(elements), style);
+        }
     }
 
     // Build and upload scene
     _scene = builder.build();
     _scene_renderer.uploadScene(_scene);
 
-    // Emit trial count signal for vertical axis update
     emit trialCountChanged(num_trials);
 }
 
@@ -527,7 +615,7 @@ void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
         *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-std::optional<std::pair<int, int>> EventPlotOpenGLWidget::findEventNear(
+std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
     QPoint const & screen_pos, float tolerance_pixels) const
 {
     // Convert screen position to world coordinates
@@ -552,12 +640,10 @@ std::optional<std::pair<int, int>> EventPlotOpenGLWidget::findEventNear(
         _scene);
     
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
-        // Extract trial index from series_key (format: "trial_N")
-        if (result.series_key.starts_with("trial_")) {
-            int trial_index = std::stoi(result.series_key.substr(6));
-            // The event index within the trial is not tracked by the hit tester
-            // Return trial and a placeholder event index (0)
-            return std::make_pair(trial_index, 0);
+        // Extract trial index from series_key (format: "{event_name}_trial_{N}")
+        auto parsed = parseSeriesTrialKey(result.series_key);
+        if (parsed.isValid()) {
+            return std::make_pair(parsed.trial_index, parsed.event_name);
         }
     }
     
@@ -588,22 +674,22 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos)
         _layout_response);
     
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
-        // Extract trial index from series_key (format: "trial_N")
-        if (result.series_key.starts_with("trial_")) {
-            int trial_index = std::stoi(result.series_key.substr(6));
-            
-            // Get series key from state for the signal
+        // Extract trial index and event name from series_key
+        // (format: "{event_name}_trial_{N}")
+        auto parsed = parseSeriesTrialKey(result.series_key);
+        if (parsed.isValid()) {
+            // Resolve the DataManager key from the event name
             QString series_key;
-            auto event_names = _state ? _state->getPlotEventNames() : std::vector<QString>{};
-            if (!event_names.empty()) {
-                auto options = _state->getPlotEventOptions(event_names.front());
+            if (_state) {
+                auto options = _state->getPlotEventOptions(
+                    QString::fromStdString(parsed.event_name));
                 if (options) {
                     series_key = QString::fromStdString(options->event_key);
                 }
             }
             
             // Emit selection signal with trial index and relative time
-            emit eventSelected(trial_index, result.world_x, series_key);
+            emit eventSelected(parsed.trial_index, result.world_x, series_key);
         }
     }
 }
@@ -638,46 +724,56 @@ void EventPlotOpenGLWidget::updateBackgroundColor()
         1.0f);
 }
 
-GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData() const
+GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
+    std::shared_ptr<DigitalEventSeries> const & source,
+    std::string const & source_key) const
 {
-    if (!_data_manager || !_state) {
+    if (!_data_manager || !_state || !source || source_key.empty()) {
         return GatherResult<DigitalEventSeries>{};
     }
 
-    // Get the first event series key from the plot events
-    // Note: In a more complete implementation, we'd gather multiple series
-    auto event_names = _state->getPlotEventNames();
-    if (event_names.empty()) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-
-    // Get the first event's options
-    auto const event_options = _state->getPlotEventOptions(event_names.front());
-    if (!event_options || event_options->event_key.empty()) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-
-    // Get alignment state
     auto alignment_state = _state->alignmentState();
     if (!alignment_state) {
         return GatherResult<DigitalEventSeries>{};
     }
 
-    // Use the new PlotAlignmentGather API which handles:
-    // 1. DigitalEventSeries alignment with window expansion
-    // 2. DigitalIntervalSeries alignment with start/end selection
-    return WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
-        _data_manager,
-        event_options->event_key,
-        alignment_state->data());
+    auto const & alignment_data = alignment_state->data();
+
+    // Get alignment source (event or interval series for trial boundaries)
+    auto alignment_source = WhiskerToolbox::Plots::getAlignmentSource(
+        _data_manager, alignment_data.alignment_event_key);
+    if (!alignment_source.isValid()) {
+        return GatherResult<DigitalEventSeries>{};
+    }
+
+    // Use the low-level gather functions directly with the pre-resolved source.
+    // This supports both DataManager-owned and derived (edge-extracted) series.
+    if (alignment_source.is_event_series) {
+        double half_window = alignment_data.window_size / 2.0;
+        return WhiskerToolbox::Plots::gatherWithEventAlignment<DigitalEventSeries>(
+            source,
+            alignment_source.event_series,
+            half_window,
+            half_window);
+    } else {
+        double half_window = alignment_data.window_size / 2.0;
+        auto align = WhiskerToolbox::Plots::toAlignmentPoint(
+            alignment_data.interval_alignment_type);
+        return WhiskerToolbox::Plots::gatherWithIntervalAlignment<DigitalEventSeries>(
+            source,
+            alignment_source.interval_series,
+            align,
+            half_window,
+            half_window);
+    }
 }
 
-GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::applySorting(
-    GatherResult<DigitalEventSeries> const& gathered,
+std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
+    GatherResult<DigitalEventSeries> const & gathered,
     TrialSortMode mode) const
 {
     if (gathered.empty() || mode == TrialSortMode::TrialIndex) {
-        return gathered;  // No sorting needed
+        return {};  // Empty = no reordering
     }
 
     size_t num_trials = gathered.size();
@@ -693,15 +789,18 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::applySorting(
             
             for (size_t i = 0; i < num_trials; ++i) {
                 auto const& trial_view = gathered[i];
-                int64_t alignment_time = gathered.alignmentTimeAt(i);
+                int64_t alignment_time_abs = gathered.alignmentTimeAt(i);
                 
                 double first_positive_latency = std::numeric_limits<double>::infinity();
                 
                 if (trial_view) {
+                    auto trial_tf = trial_view->getTimeFrame();
                     for (auto const& event : trial_view->view()) {
-                        int64_t event_time = event.time().getValue();
+                        int64_t event_time_abs = trial_tf
+                            ? trial_tf->getTimeAtIndex(event.time())
+                            : event.time().getValue();
                         // Relative time (positive = after alignment)
-                        double relative_time = static_cast<double>(event_time - alignment_time);
+                        double relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
                         if (relative_time >= 0.0 && relative_time < first_positive_latency) {
                             first_positive_latency = relative_time;
                             break;  // Events are time-ordered, so first positive is the answer
@@ -712,7 +811,8 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::applySorting(
             }
             
             // Sort by latency (ascending - smallest latency first, NaN/infinity last)
-            std::sort(sort_indices.begin(), sort_indices.end(),
+            // Use stable_sort to preserve original trial order among ties
+            std::stable_sort(sort_indices.begin(), sort_indices.end(),
                 [&latencies](size_t a, size_t b) {
                     // Handle infinity: put at end
                     if (std::isinf(latencies[a]) && !std::isinf(latencies[b])) return false;
@@ -732,7 +832,8 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::applySorting(
             }
             
             // Sort by count (descending - highest count first)
-            std::sort(sort_indices.begin(), sort_indices.end(),
+            // Use stable_sort to preserve original trial order among ties
+            std::stable_sort(sort_indices.begin(), sort_indices.end(),
                 [&counts](size_t a, size_t b) {
                     return counts[a] > counts[b];
                 });
@@ -744,6 +845,6 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::applySorting(
             break;
     }
 
-    // Apply reordering to the GatherResult
-    return gathered.reorder(sort_indices);
+    // Return the computed permutation
+    return sort_indices;
 }

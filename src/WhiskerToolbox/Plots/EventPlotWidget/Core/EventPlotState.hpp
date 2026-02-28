@@ -11,8 +11,10 @@
  * @see EditorState for base class documentation
  */
 
+#include "Plots/EventPlotWidget/Core/EventPlotStateData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentData.hpp"
 #include "Plots/Common/PlotAlignmentWidget/Core/PlotAlignmentState.hpp"
 #include "Plots/Common/RelativeTimeAxisWidget/Core/RelativeTimeAxisStateData.hpp"
@@ -26,67 +28,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-
-/**
- * @brief Enumeration for event glyph/marker type
- */
-enum class EventGlyphType {
-    Tick,  ///< Vertical line (default)
-    Circle,///< Circle marker
-    Square ///< Square marker
-};
-
-/**
- * @brief Enumeration for trial sorting modes
- * 
- * Defines how trials are sorted in the raster plot. Built-in modes compute
- * sort keys directly from the GatherResult data. External mode is reserved
- * for future integration with DataTransform v2 for user-computed sort keys.
- */
-enum class TrialSortMode {
-    TrialIndex,         ///< No sorting - display in original trial order (default)
-    FirstEventLatency,  ///< Sort by latency to first positive event (ascending)
-    EventCount          ///< Sort by total number of events (descending)
-    // Future: External - sort by external feature from DataManager
-};
-
-/**
- * @brief Axis labeling and grid options
- */
-struct EventPlotAxisOptions {
-    std::string x_label = "Time (ms)";  ///< X-axis label
-    std::string y_label = "Trial";       ///< Y-axis label
-    bool show_x_axis = true;             ///< Whether to show X axis
-    bool show_y_axis = true;             ///< Whether to show Y axis
-    bool show_grid = false;              ///< Whether to show grid lines
-};;
-
-/**
- * @brief Options for plotting an event series in the raster plot
- */
-struct EventPlotOptions {
-    std::string event_key;                           ///< Key of the DigitalEventSeries to plot
-    double tick_thickness = 2.0;                     ///< Thickness of the tick/glyph (default: 2.0)
-    EventGlyphType glyph_type = EventGlyphType::Tick;///< Type of glyph to display (default: Tick/vertical line)
-    std::string hex_color = "#000000";               ///< Color as hex string (default: black)
-};
-
-/**
- * @brief Serializable state data for EventPlotWidget
- */
-struct EventPlotStateData {
-    std::string instance_id;
-    std::string display_name = "Event Plot";
-    PlotAlignmentData alignment;                                   ///< Alignment settings (event key, interval type, offset, window size)
-    std::map<std::string, EventPlotOptions> plot_events;          ///< Map of event names to their plot options
-    CorePlotting::ViewStateData view_state;                        ///< View state (zoom, pan, bounds). Y bounds fixed at -1..1 for trial viewport
-    RelativeTimeAxisStateData time_axis;                           ///< Time axis settings (min_range, max_range)
-    EventPlotAxisOptions axis_options;                             ///< Axis labels and grid options
-    std::string background_color = "#FFFFFF";                     ///< Background color as hex string (default: white)
-    bool pinned = false;                                           ///< Whether to ignore SelectionContext changes
-    TrialSortMode sorting_mode = TrialSortMode::TrialIndex;       ///< Trial sorting mode (default: trial index)
-};
 
 /**
  * @brief State class for EventPlotWidget
@@ -115,7 +56,7 @@ public:
      * @brief Get the type name for this state
      * @return "EventPlot"
      */
-    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("EventPlot"); }
+    [[nodiscard]] QString getTypeName() const override { return QStringLiteral("EventPlotWidget"); }
 
     /**
      * @brief Get the display name for UI
@@ -321,9 +262,11 @@ public:
     /**
      * @brief Add an event to the plot
      * @param event_name Name/key for the event (used as identifier)
-     * @param event_key DataManager key of the DigitalEventSeries
+     * @param event_key DataManager key of the DigitalEventSeries or DigitalIntervalSeries
+     * @param interval_edge Edge to extract when source is an interval series (nullopt for event series)
      */
-    void addPlotEvent(QString const & event_name, QString const & event_key);
+    void addPlotEvent(QString const & event_name, QString const & event_key,
+                      std::optional<IntervalAlignmentType> interval_edge = std::nullopt);
 
     /**
      * @brief Remove an event from the plot
@@ -344,10 +287,29 @@ public:
      */
     [[nodiscard]] std::optional<EventPlotOptions> getPlotEventOptions(QString const & event_name) const;
 
+    // === Per-Key Glyph Style ===
+
+    /**
+     * @brief Get the GlyphStyleState for a specific plot event key.
+     *
+     * Returns nullptr if the key has not been added. The returned pointer is
+     * owned by this state and must not be deleted by the caller.
+     *
+     * @param event_name The event name
+     */
+    [[nodiscard]] GlyphStyleState * glyphStyleStateForKey(QString const & event_name);
+
+    /**
+     * @brief Get the serializable glyph style data for a key (read-only).
+     *
+     * Returns a default style if the key has not been added.
+     */
+    [[nodiscard]] CorePlotting::GlyphStyleData getEventGlyphStyle(QString const & event_name) const;
+
     /**
      * @brief Update options for a specific plot event
      * @param event_name Name/key of the event
-     * @param options New options
+     * @param options New options (event_key only; glyph style is managed via GlyphStyleState)
      */
     void updatePlotEventOptions(QString const & event_name, EventPlotOptions const & options);
 
@@ -442,10 +404,31 @@ signals:
      */
     void sortingModeChanged(TrialSortMode mode);
 
+    /**
+     * @brief Emitted when the glyph style for any event key changes
+     */
+    void glyphStyleChanged();
+
+    /**
+     * @brief Emitted when the glyph style for a specific event key changes
+     * @param event_name Name of the event whose style changed
+     */
+    void eventGlyphStyleChanged(QString const & event_name);
+
 private:
     EventPlotStateData _data;
     std::unique_ptr<PlotAlignmentState> _alignment_state;
     std::unique_ptr<RelativeTimeAxisState> _relative_time_axis_state;
+    /// Per-event GlyphStyleState objects (one per plot event key)
+    std::map<std::string, std::unique_ptr<GlyphStyleState>> _event_glyph_style_states;
+
+    /**
+     * @brief Create a GlyphStyleState for a newly added event key.
+     *
+     * Looks up existing serialized style from _data.event_glyph_styles,
+     * or uses the default style. Connects signals for scene rebuild.
+     */
+    void _createGlyphStyleStateForKey(std::string const & key);
 };
 
 #endif// EVENT_PLOT_STATE_HPP

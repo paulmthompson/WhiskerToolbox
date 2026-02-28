@@ -1,0 +1,337 @@
+---
+title: "PSTH Widget"
+format: html
+---
+
+# PSTH Widget Overview
+
+The **PSTH Widget** renders **Peri-Stimulus Time Histogram** plots showing the rate or count of discrete events (spikes, behavioral markers) aggregated across multiple trials, aligned to a user-selected reference event or interval. Users can overlay multiple `DigitalEventSeries`, configure bin size and plot style (bar chart or line), and interact with the plot via zoom and pan. The histogram aggregates event counts across all trials into uniformly spaced time bins relative to the alignment point (t = 0).
+
+# Architecture
+
+The widget follows the standard plot widget directory layout:
+
+```
+Plots/PSTHWidget/
+├── CMakeLists.txt
+├── PSTHWidgetRegistration.hpp    # EditorRegistry registration module
+├── PSTHWidgetRegistration.cpp
+├── Core/
+│   ├── PSTHState.hpp             # QObject state class (EditorState subclass)
+│   └── PSTHState.cpp
+├── Rendering/
+│   ├── PSTHPlotOpenGLWidget.hpp  # OpenGL rendering + mouse interaction
+│   └── PSTHPlotOpenGLWidget.cpp
+└── UI/
+    ├── PSTHWidget.hpp            # Main composite widget (axes + OpenGL + layout)
+    ├── PSTHWidget.cpp
+    ├── PSTHWidget.ui
+    ├── PSTHPropertiesWidget.hpp  # Properties/settings panel
+    ├── PSTHPropertiesWidget.cpp
+    └── PSTHPropertiesWidget.ui
+```
+
+## Component Overview
+
+| Component | Responsibility |
+|-----------|---------------|
+| `PSTHWidget` (UI) | Top-level Qt widget — composes OpenGL canvas, relative time axis, vertical axis |
+| `PSTHPropertiesWidget` (UI) | Properties panel — alignment settings, event series management, style/bin size, color picker |
+| `PSTHPlotOpenGLWidget` (Rendering) | OpenGL canvas — histogram binning, scene building, rendering, mouse interaction |
+| `PSTHState` (Core) | Serializable state — alignment, view state, per-event options, bin size, plot style |
+| `PSTHWidgetRegistration` | Registers type with `EditorRegistry` (state, view, properties factories) |
+
+## EditorState Pattern
+
+The PSTH Widget follows the project's **EditorState** architecture:
+
+- `PSTHState` inherits from `EditorState`
+- Registered with `EditorRegistry` via `PSTHWidgetModule::registerTypes()`
+- `PSTHWidget` is the **view** factory, `PSTHPropertiesWidget` is the **properties** factory
+- Both share the same `PSTHState` instance
+- Properties placed in Right zone, view placed in Center zone (default)
+- The `create_editor_custom` factory in `PSTHWidgetRegistration` handles coupling the view and properties widgets (e.g., connecting range controls)
+
+# State Management
+
+## PSTHStateData
+
+The serializable state struct (defined inline in `PSTHState.hpp`) contains all persistent configuration:
+
+```cpp
+struct PSTHStateData {
+    std::string instance_id;
+    std::string display_name = "PSTH Plot";
+    PlotAlignmentData alignment;                         // Shared alignment config
+    std::map<std::string, PSTHEventOptions> plot_events; // Per-event series options
+    PSTHStyle style = PSTHStyle::Bar;                    // Bar or Line
+    double bin_size = 10.0;                              // Bin width in time units
+    CorePlotting::ViewStateData view_state;              // Zoom, pan, bounds
+    RelativeTimeAxisStateData time_axis;                 // Time axis range
+    VerticalAxisStateData vertical_axis;                 // Vertical axis range (count)
+};
+```
+
+Note that `PSTHStateData` is defined in the same header as `PSTHState` (`PSTHState.hpp`) rather than in a separate `PSTHStateData.hpp`. This is a minor deviation from the [Plot Widget Guide](../plot_widget_guide.md) directory convention.
+
+## Per-Event Options
+
+Each overlaid `DigitalEventSeries` has independent display options:
+
+```cpp
+struct PSTHEventOptions {
+    std::string event_key;              // DataManager key
+    std::string hex_color = "#000000";  // Color as hex string
+};
+```
+
+Events are stored in a `std::map<std::string, PSTHEventOptions>` keyed by a user-assigned name (currently the same as the event key). The state emits per-event signals (`plotEventAdded`, `plotEventRemoved`, `plotEventOptionsChanged`) so the UI and renderer can react granularly.
+
+## Plot Style
+
+The widget supports two rendering styles via the `PSTHStyle` enum:
+
+| Style | Description |
+|-------|-------------|
+| `Bar` | Classic bar chart (default). Each bin rendered as a filled rectangle via `HistogramMapper::toBars()`. |
+| `Line` | Step-function line connecting bin tops via `HistogramMapper::toLine()`. Produces a classic histogram outline. |
+
+Both styles use the shared `CorePlotting::HistogramMapper` infrastructure that is also used by [ACFWidget](../ACFWidget/index.qmd).
+
+## Signal Architecture
+
+PSTHState emits category-level signals to minimize coupling complexity:
+
+| Signal | Trigger |
+|--------|---------|
+| `alignmentEventKeyChanged` | Alignment event/interval key changed |
+| `intervalAlignmentTypeChanged` | Interval alignment type changed |
+| `offsetChanged` | Alignment offset changed |
+| `windowSizeChanged` | Window size changed (also resets zoom/pan) |
+| `plotEventAdded` / `plotEventRemoved` / `plotEventOptionsChanged` | Per-event series changes |
+| `styleChanged` | Bar ↔ Line style switch |
+| `binSizeChanged` | Histogram bin size changed |
+| `viewStateChanged` | Zoom, pan, or bounds changed (view transform only — no scene rebuild) |
+| `stateChanged` (inherited) | Any change requiring scene rebuild |
+
+**Performance-critical separation**: Zoom and pan operations emit only `viewStateChanged()`, which updates the projection matrix without triggering an expensive scene rebuild via `stateChanged()`.
+
+## Composition with PlotAlignmentState
+
+`PSTHState` owns a `PlotAlignmentState` instance that manages alignment settings (event key, interval alignment type, offset, window size). This is the same shared component used by [EventPlotWidget](../EventPlotWidget/index.qmd) and [HeatmapWidget](../HeatmapWidget/index.qmd), ensuring consistent alignment behavior across all trial-aligned plot types.
+
+## Composition with Axis States
+
+`PSTHState` owns both:
+
+- **`RelativeTimeAxisState`** — for the X-axis (relative time centered at t = 0). Synchronized bidirectionally with the view state, using the "silent update" pattern described in the [Plot Widget Guide](../plot_widget_guide.md).
+- **`VerticalAxisState`** — for the Y-axis (event count). The Y bounds are auto-adjusted when the scene rebuilds to accommodate the maximum bin count (with 10% padding). Uses `identityAxis("Count", 0)` mapping for integer labels.
+
+# Rendering Pipeline
+
+## Data Flow
+
+```
+PSTHState (alignment settings + bin size + per-event options)
+        ↓
+GatherResult<DigitalEventSeries> (trial-aligned views)
+        ↓
+Event binning: events → histogram counts per bin
+        ↓
+CorePlotting::HistogramData (bin_start, bin_width, counts[])
+        ↓
+CorePlotting::HistogramMapper::buildScene() → RenderableScene
+        ↓
+PlottingOpenGL::SceneRenderer::render()
+```
+
+## GatherResult Integration
+
+Trial alignment uses the shared `GatherResult` infrastructure from DataManager. The `PSTHPlotOpenGLWidget::rebuildScene()` method:
+
+1. Reads alignment settings from `PSTHState::alignmentState()`
+2. For each configured event series, calls `WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>()` using the shared `PlotAlignmentGather` utility
+3. Iterates over all trials in the `GatherResult`, converting each event's `TimeFrameIndex` to absolute time via the source series' `TimeFrame`
+4. Computes relative time (event time − alignment time) for each event
+5. Assigns events to histogram bins based on relative time
+
+This is the same `GatherResult` pattern used by [EventPlotWidget](../EventPlotWidget/index.qmd) (for per-trial views) and [HeatmapWidget](../HeatmapWidget/index.qmd) (for aggregated heat values). The pattern of going from aligned spike times to aggregated rate/count via `GatherResult` is directly reusable for the HeatmapWidget's firing rate computation.
+
+## Histogram Binning
+
+Bins are computed in `rebuildScene()`:
+
+- **Bin range**: `[-window_size/2, +window_size/2]`
+- **Number of bins**: `ceil(window_size / bin_size)`
+- **Bin assignment**: `floor((relative_time + half_window) / bin_size)`, clamped to `[0, num_bins - 1]`
+- **Y-axis auto-fit**: After computing histogram counts, the vertical axis `y_max` is set to `max_count * 1.1` to provide padding above the tallest bar
+
+The binning currently produces **raw event counts** (sum across all trials). See the [PSTH Roadmap](roadmap.qmd) for planned normalization modes (firing rate, spike probability) and smoothing algorithms.
+
+## Scene Building
+
+The `PSTHPlotOpenGLWidget` manages the full rendering lifecycle:
+
+1. **Scene rebuild** (on `stateChanged`): Gathers trial data, bins events into `HistogramData`, maps to geometry via `HistogramMapper`, and uploads to `SceneRenderer`
+2. **View update** (on `viewStateChanged`): Updates only the projection matrix — no data re-gathering
+3. **Paint** (on `paintGL`): Renders the cached scene through `PlottingOpenGL::SceneRenderer`
+
+A `_updating_y_max_from_rebuild` flag prevents feedback loops when the scene rebuild updates the vertical axis bounds.
+
+## Shared Histogram Infrastructure
+
+The histogram rendering pipeline is decoupled from the PSTH-specific logic:
+
+| Component | Location | Shared With |
+|-----------|----------|-------------|
+| `HistogramData` | `CorePlotting/DataTypes/` | [ACFWidget](../ACFWidget/index.qmd) |
+| `HistogramMapper` | `CorePlotting/Mappers/` | [ACFWidget](../ACFWidget/index.qmd) |
+| `HistogramStyle` | `CorePlotting/Mappers/` | [ACFWidget](../ACFWidget/index.qmd) |
+| `RenderableRectangleBatch` | `CorePlotting/SceneGraph/` | All OpenGL widgets |
+| `RenderablePolyLineBatch` | `CorePlotting/SceneGraph/` | All OpenGL widgets |
+
+`HistogramMapper` converts `HistogramData` into either a `RenderableRectangleBatch` (bar mode) or a `RenderablePolyLineBatch` (line mode), which is then uploaded to the `SceneRenderer`. This same infrastructure is reused by ACFWidget for autocorrelation and ISI histogram rendering.
+
+# Interaction
+
+## Zoom and Pan
+
+The widget supports separated X/Y zoom for independent exploration of time and count dimensions, using the shared `PlotInteractionHelpers`:
+
+| Input | Action |
+|-------|--------|
+| Mouse wheel | X-zoom only (time axis) |
+| Shift + wheel | Y-zoom only (count axis) |
+| Ctrl + wheel | Uniform zoom (both axes) |
+| Click + drag | Pan in both axes |
+
+The interaction delegates to `WhiskerToolbox::Plots::handlePanning()` and `WhiskerToolbox::Plots::handleZoom()` from `PlotInteractionHelpers.hpp`, which are shared across all OpenGL plot widgets. A `DRAG_THRESHOLD` of 4 pixels prevents accidental pans during clicks.
+
+Zoom and pan update only the view projection (no scene rebuild), providing smooth interactive performance.
+
+## Double Click
+
+Double-clicking emits `plotDoubleClicked(time_frame_index)`, which the parent `PSTHWidget` converts to a `TimePosition` and forwards to `EditorRegistry::setCurrentTime()`. This navigates other time-synced widgets to the clicked time position. The world-to-time conversion is currently a stub (emits index 0).
+
+# Axis System
+
+## Time Axis (X)
+
+Uses the shared `RelativeTimeAxisWidget` with `RelativeTimeAxisState`. The axis is synchronized bidirectionally with the view state:
+
+- **User changes axis range** → view state updates → scene rebuilds (via `rangeChanged`)
+- **User zooms/pans** → axis range updates silently via `setRangeSilent()` (no feedback loop)
+
+The axis uses `CorePlotting::relativeTimeAxis()` mapping for "+N" / "−N" / "0" label formatting.
+
+See [Plot Widget Guide](../plot_widget_guide.md) for full axis integration details including the "Silent Update" pattern.
+
+## Count Axis (Y)
+
+Uses `VerticalAxisWidget` with `VerticalAxisState`. The Y bounds are **auto-adjusted** when the histogram is rebuilt:
+
+- After computing bin counts, `y_max` is set to `max_count * 1.1`
+- This triggers a vertical axis range update via `VerticalAxisState::setYMax()`
+- The axis uses `CorePlotting::identityAxis("Count", 0)` mapping for integer labels
+
+Both axis widgets provide collapsible range control sections (`RelativeTimeAxisRangeControls` and `VerticalAxisRangeControls`) that are inserted into the properties panel when `setPlotWidget()` is called.
+
+# Properties Panel
+
+The `PSTHPropertiesWidget` provides the following controls:
+
+## Alignment Section
+
+Uses the shared `PlotAlignmentWidget` component (same as EventPlot and Heatmap). Provides:
+
+- Alignment event combo box (populated with `DigitalEventSeries` and `DigitalIntervalSeries` keys)
+- Interval alignment type (Beginning/End)
+- Offset control
+- Window size control
+
+## Global Options
+
+- **Style combo box**: Bar or Line rendering mode
+- **Bin size spinbox**: Configurable histogram bin width (min: 0.1, max: 10000.0, step: 1.0, default: 10.0)
+
+## Event Series Management
+
+- **Add event combo box**: Lists available `DigitalEventSeries` keys from DataManager
+- **Add/Remove buttons**: Manage the set of overlaid event series
+- **Plot events table**: Two-column table (Event Name, Data Key) showing current series
+- **Per-event color picker**: Color button + display swatch for the selected event
+
+## Axis Range Controls
+
+Collapsible sections for both time axis and vertical axis range controls, created when `setPlotWidget()` connects the properties widget to the view widget.
+
+# DataManager Integration
+
+## Observer Pattern
+
+The properties widget registers a DataManager observer to keep the add-event combo box synchronized:
+
+```cpp
+_dm_observer_id = _data_manager->addObserver([this]() {
+    _populateAddEventComboBox();
+});
+```
+
+The observer is removed in the destructor to prevent dangling references:
+
+```cpp
+PSTHPropertiesWidget::~PSTHPropertiesWidget() {
+    if (_data_manager && _dm_observer_id != -1) {
+        _data_manager->removeObserver(_dm_observer_id);
+    }
+}
+```
+
+The `PlotAlignmentWidget` manages its own separate observer for the alignment event combo box.
+
+## Data Retrieval
+
+The OpenGL widget retrieves event data via `DataManager::getData<DigitalEventSeries>(key)` and accesses the source series' `TimeFrame` for absolute time conversion during binning. Null checks are performed at each stage to handle deleted or missing keys gracefully.
+
+# Relationship to Other Widgets
+
+The PSTH Widget shares significant infrastructure with sibling plot types:
+
+| Shared Component | PSTHWidget | [EventPlotWidget](../EventPlotWidget/index.qmd) | [HeatmapWidget](../HeatmapWidget/index.qmd) | [ACFWidget](../ACFWidget/index.qmd) |
+|-----------------|------------|-------------|-------------|-----------|
+| `PlotAlignmentWidget` | Yes | Yes | Yes | No |
+| `RelativeTimeAxisWidget` | Yes | Yes | Yes | No |
+| `VerticalAxisWidget` | Yes | No (trial rows) | Yes | Yes |
+| `GatherResult` | Yes (aggregated) | Yes (per-trial) | Yes (aggregated) | No |
+| `HistogramMapper` | Yes | No | No | Yes |
+| `PlotInteractionHelpers` | Yes | Yes | Yes | Yes |
+| `SceneRenderer` | Yes | Yes | Yes | Yes |
+
+The PSTH and EventPlot (raster plot) are natural companions — the raster plot shows individual trial structure while the PSTH shows the aggregate rate across trials. See the [PSTH Roadmap](roadmap.qmd) for planned cross-widget linking where both can be synchronized to the same unit selection.
+
+# Testing
+
+## Test Files
+
+- `tests/WhiskerToolbox/Plots/PSTHWidget/PSTHPropertiesWidget.test.cpp` — Properties widget observer and combo box tests
+- `tests/CorePlotting/HistogramMapper.test.cpp` — Unit tests for `HistogramData` and `HistogramMapper`
+- Common plot widget tests can be instantiated via `PlotWidgetCommonTests.hpp` (see [Plot Widget Guide](../plot_widget_guide.md))
+
+## Test Categories
+
+| Category | What It Verifies |
+|----------|-----------------|
+| Combo box population | Event series combo box reflects DataManager keys |
+| Observer refresh | Adding/removing data updates combo boxes |
+| Destruction cleanup | Observer removed in destructor; no crash after widget dies |
+| Histogram data accessors | `binLeft`, `binCenter`, `binRight`, `binEnd`, `maxCount` correctness |
+| Histogram mapper output | Bar and line modes produce correct geometry |
+| State serialization | Round-trip JSON serialization of `PSTHStateData` |
+
+# See Also
+
+- [Plot Widget Guide](../plot_widget_guide.md) — Shared architecture, axis types, DataManager integration
+- [EventPlotWidget](../EventPlotWidget/index.qmd) — Raster plot (per-trial event display); natural companion to PSTH
+- [HeatmapWidget](../HeatmapWidget/index.qmd) — Heatmap visualization (shares alignment and GatherResult infrastructure)
+- [ACFWidget](../ACFWidget/index.qmd) — Autocorrelation / ISI histograms (shares HistogramMapper infrastructure)
+- [PSTH Roadmap](roadmap.qmd) — Remaining development tasks and future features

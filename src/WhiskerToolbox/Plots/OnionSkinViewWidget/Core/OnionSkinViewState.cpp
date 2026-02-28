@@ -1,5 +1,6 @@
 #include "OnionSkinViewState.hpp"
 
+#include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
@@ -129,6 +130,7 @@ void OnionSkinViewState::addPointDataKey(QString const & key)
     auto it = std::find(_data.point_data_keys.begin(), _data.point_data_keys.end(), key_str);
     if (it == _data.point_data_keys.end()) {
         _data.point_data_keys.push_back(key_str);
+        _createGlyphStyleStateForKey(key_str);
         markDirty();
         emit pointDataKeyAdded(key);
         emit stateChanged();
@@ -141,6 +143,8 @@ void OnionSkinViewState::removePointDataKey(QString const & key)
     auto it = std::find(_data.point_data_keys.begin(), _data.point_data_keys.end(), key_str);
     if (it != _data.point_data_keys.end()) {
         _data.point_data_keys.erase(it);
+        _data.point_key_glyph_styles.erase(key_str);
+        _point_glyph_style_states.erase(key_str);
         markDirty();
         emit pointDataKeyRemoved(key);
         emit stateChanged();
@@ -151,6 +155,8 @@ void OnionSkinViewState::clearPointDataKeys()
 {
     if (!_data.point_data_keys.empty()) {
         _data.point_data_keys.clear();
+        _data.point_key_glyph_styles.clear();
+        _point_glyph_style_states.clear();
         markDirty();
         emit pointDataKeysCleared();
         emit stateChanged();
@@ -310,16 +316,6 @@ void OnionSkinViewState::setMaxAlpha(float alpha)
 
 // === Rendering Parameters ===
 
-void OnionSkinViewState::setPointSize(float size)
-{
-    if (_data.point_size != size) {
-        _data.point_size = size;
-        markDirty();
-        emit pointSizeChanged(size);
-        emit stateChanged();
-    }
-}
-
 void OnionSkinViewState::setLineWidth(float width)
 {
     if (_data.line_width != width) {
@@ -340,12 +336,69 @@ void OnionSkinViewState::setHighlightCurrent(bool highlight)
     }
 }
 
+// === Per-Key Point Glyph Style ===
+
+void OnionSkinViewState::_createGlyphStyleStateForKey(std::string const & key)
+{
+    // Look up existing serialized style or use default
+    CorePlotting::GlyphStyleData style{CorePlotting::GlyphType::Circle, 8.0f, "#007bff", 1.0f};
+    auto it = _data.point_key_glyph_styles.find(key);
+    if (it != _data.point_key_glyph_styles.end()) {
+        style = it->second;
+    } else {
+        // Store default into serializable data
+        _data.point_key_glyph_styles[key] = style;
+    }
+
+    auto state = std::make_unique<GlyphStyleState>(this);
+    state->setStyleSilent(style);
+
+    auto const qkey = QString::fromStdString(key);
+    // Connect styleChanged to sync data and emit signals
+    connect(state.get(), &GlyphStyleState::styleChanged,
+            this, [this, key, qkey]() {
+                auto state_it = _point_glyph_style_states.find(key);
+                if (state_it != _point_glyph_style_states.end()) {
+                    _data.point_key_glyph_styles[key] = state_it->second->data();
+                }
+                markDirty();
+                emit glyphStyleChanged();
+                emit pointKeyGlyphStyleChanged(qkey);
+                emit stateChanged();
+            });
+
+    _point_glyph_style_states[key] = std::move(state);
+}
+
+GlyphStyleState * OnionSkinViewState::glyphStyleStateForKey(QString const & key)
+{
+    auto it = _point_glyph_style_states.find(key.toStdString());
+    if (it != _point_glyph_style_states.end()) {
+        return it->second.get();
+    }
+    return nullptr;
+}
+
+CorePlotting::GlyphStyleData OnionSkinViewState::getPointKeyGlyphStyle(QString const & key) const
+{
+    auto it = _data.point_key_glyph_styles.find(key.toStdString());
+    if (it != _data.point_key_glyph_styles.end()) {
+        return it->second;
+    }
+    // Default style
+    return CorePlotting::GlyphStyleData{CorePlotting::GlyphType::Circle, 8.0f, "#007bff", 1.0f};
+}
+
 // === Serialization ===
 
 std::string OnionSkinViewState::toJson() const
 {
     OnionSkinViewStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
+    // Sync per-key glyph styles from live state objects into serializable data
+    for (auto const & [key, state_ptr] : _point_glyph_style_states) {
+        data_to_serialize.point_key_glyph_styles[key] = state_ptr->data();
+    }
     return rfl::json::write(data_to_serialize);
 }
 
@@ -364,6 +417,11 @@ bool OnionSkinViewState::fromJson(std::string const & json)
         _data.view_state.x_max = _horizontal_axis_state->getXMax();
         _data.view_state.y_min = _vertical_axis_state->getYMin();
         _data.view_state.y_max = _vertical_axis_state->getYMax();
+        // Recreate per-key GlyphStyleState objects from deserialized data
+        _point_glyph_style_states.clear();
+        for (auto const & key : _data.point_data_keys) {
+            _createGlyphStyleStateForKey(key);
+        }
         emit stateChanged();
         return true;
     }

@@ -73,7 +73,7 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
 
     // Forward signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::eventDoubleClicked,
-            this, [this](int64_t time_frame_index, QString const & series_key) {
+            this, [this](int64_t absolute_time, QString const & series_key) {
                 // Get the TimeFrame from the series via DataManager
                 std::shared_ptr<TimeFrame> time_frame;
                 if (_data_manager && !series_key.isEmpty()) {
@@ -82,7 +82,13 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
                         time_frame = _data_manager->getTime(time_key);
                     }
                 }
-                emit timePositionSelected(TimePosition(TimeFrameIndex(time_frame_index), time_frame));
+                // The OpenGL widget computes alignment in absolute time units,
+                // so we need to convert back to a TimeFrameIndex via the TimeFrame.
+                TimeFrameIndex frame_index(absolute_time);
+                if (time_frame) {
+                    frame_index = time_frame->getIndexAtTime(static_cast<float>(absolute_time));
+                }
+                emit timePositionSelected(TimePosition(frame_index, time_frame));
             });
 
     // Forward event selection signal
@@ -160,10 +166,12 @@ void EventPlotWidget::wireTimeAxis() {
         if (!_state || !_opengl_widget) {
             return CorePlotting::ViewState{};
         }
-        return CorePlotting::toRuntimeViewState(
+        auto vs = CorePlotting::toRuntimeViewState(
                 _state->viewState(),
                 _opengl_widget->width(),
                 _opengl_widget->height());
+        vs.preserve_aspect_ratio = false;
+        return vs;
     });
 }
 

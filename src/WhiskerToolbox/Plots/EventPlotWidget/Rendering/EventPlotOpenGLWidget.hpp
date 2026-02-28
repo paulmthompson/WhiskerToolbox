@@ -247,9 +247,10 @@ private:
 
     /**
      * @brief Find event near screen position (for hit testing)
-     * @return Pair of (trial_index, event_index) or nullopt if none
+     * @return Pair of (trial_index, event_name) or nullopt if none found.
+     *         event_name is the plot event name (from EventPlotState), not the DataManager key.
      */
-    [[nodiscard]] std::optional<std::pair<int, int>> findEventNear(
+    [[nodiscard]] std::optional<std::pair<int, std::string>> findEventNear(
         QPoint const & screen_pos, float tolerance_pixels = 10.0f) const;
 
     /**
@@ -271,24 +272,28 @@ private:
     void renderAxes();
 
     /**
-     * @brief Gather trial-aligned data for building scene
+     * @brief Gather trial-aligned data for a resolved event series
+     * @param source The resolved DigitalEventSeries to gather (may be derived from interval edges)
+     * @param source_key The original data manager key (used for alignment source lookup)
+     * @return GatherResult with trial-aligned views, or empty on error
      */
-    [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData() const;
+    [[nodiscard]] GatherResult<DigitalEventSeries> gatherTrialData(
+        std::shared_ptr<DigitalEventSeries> const & source,
+        std::string const & source_key) const;
 
     /**
-     * @brief Apply sorting to gathered trial data
-     * 
-     * Computes sort indices based on the specified mode and returns a reordered
-     * GatherResult. Sorting modes:
-     * - FirstEventLatency: Sort by latency to first positive event (ascending)
-     * - EventCount: Sort by total number of events (descending)
-     * 
-     * @param gathered The gathered trial data
+     * @brief Compute sort indices for gathered trial data
+     *
+     * Computes a permutation of trial indices based on the sorting mode.
+     * The returned indices can be applied to any GatherResult via reorder()
+     * so that multiple series share the same trial ordering.
+     *
+     * @param gathered The gathered trial data (used to compute sort criteria)
      * @param mode The sorting mode to apply
-     * @return Reordered GatherResult (or original if mode is TrialIndex)
+     * @return Permutation vector, or empty if no reordering needed
      */
-    [[nodiscard]] GatherResult<DigitalEventSeries> applySorting(
-        GatherResult<DigitalEventSeries> const& gathered,
+    [[nodiscard]] std::vector<size_t> computeSortIndices(
+        GatherResult<DigitalEventSeries> const & gathered,
         TrialSortMode mode) const;
 
     /**

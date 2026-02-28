@@ -1,0 +1,546 @@
+---
+title: "Line Plot Widget Roadmap"
+format: html
+---
+
+# LinePlotWidget Development Roadmap
+
+This document tracks remaining development tasks for the Line Plot Widget. For documentation
+of completed features and current architecture, see the [main developer documentation](index.qmd).
+
+## Completed Work Summary
+
+The following features are complete and documented in [index.qmd](index.qmd):
+
+- **Widget skeleton**: EditorState pattern, registration, state/view/properties factories
+- **State management**: `LinePlotState` with `PlotAlignmentState`, `RelativeTimeAxisState`, `VerticalAxisState` composition; separate `LinePlotStateData.hpp` for fuzz-testable serializable struct
+- **Rendering pipeline**: `GatherResult<AnalogTimeSeries>` integration, `LineBatchData` construction, `BatchLineRenderer` GPU rendering, auto-fit Y/X bounds
+- **Per-series options**: Line thickness and color configuration via properties panel
+- **Axis system**: `RelativeTimeAxisWidget` (X) and `VerticalAxisWidget` (Y) with bidirectional sync
+- **Interaction**: Separated X/Y zoom, pan, double-click time navigation via shared `PlotInteractionHelpers`
+- **Line selection**: Ctrl+Click drag intersection stroke (add/remove modes), GPU compute shader and CPU intersector backends, shared `LineSelectionHelpers` with [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)
+- **Properties panel**: Alignment controls (`PlotAlignmentWidget`), series management (add/remove/table), line options (thickness, color), axis range controls in collapsible sections
+- **State serialization**: Full round-trip JSON via `rfl::json`
+- **DataManager observer**: Combo box population and cleanup in destructor
+
+**Not yet implemented**: Group integration for selected trials, mean/confidence interval overlay, external feature coloring, distribution tooltips, SVG export, and cross-widget linking described below.
+
+---
+
+## Phase 1: Selection → Group Integration
+
+**Status**: Not started. Line selection infrastructure is complete (`trialsSelected` signal emits 0-based trial indices). Group infrastructure exists in the Entity system.
+
+**Goal**: Allow users to add selected trials (alignment events) to entity groups, enabling downstream filtering and analysis across widgets.
+
+### 1.1 Selection → Group UI
+
+When trials are selected (via Ctrl+Click drag), the properties panel should show:
+
+1. **"Add to Group" button** — enabled when a non-empty selection exists
+2. **Group combo box** — lists existing entity groups from the `EntityRegistry`
+3. **"New Group" button** — creates a new group and adds the selected events to it
+
+The workflow:
+
+```
+User selects trials via Ctrl+Click drag
+        ↓
+trialsSelected(vector<uint32_t>) signal fires
+        ↓
+Properties panel enables "Add to Group" controls
+        ↓
+User selects/creates a group and clicks "Add to Group"
+        ↓
+Alignment event EntityIDs for the selected trial indices
+are added to the group in EntityRegistry
+```
+
+### 1.2 Trial Index → EntityID Mapping
+
+The `GatherResult<AnalogTimeSeries>` holds alignment information. Each trial index corresponds to an alignment event (from a `DigitalEventSeries` or `DigitalIntervalSeries`). The mapping from trial index to the alignment event's EntityID must be established during scene building and cached for use by the group integration.
+
+### 1.3 Shared Group Integration Infrastructure
+
+This group management pattern will be shared across multiple widgets:
+
+| Widget | What Gets Added to Group | Source of Selection |
+|--------|-------------------------|-------------------|
+| **LinePlotWidget** | Alignment event EntityIDs (trials) | Line selection stroke |
+| **[TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd)** | Line/Point EntityIDs | Line selection stroke |
+| **[ScatterPlotWidget](../ScatterPlotWidget/index.qmd)** | Point EntityIDs | (future) lasso/brush selection |
+| **DataViewerWidget** | Data entity EntityIDs | (future) row/range selection |
+
+The common pattern is:
+
+1. Widget exposes **selected entity IDs** (possibly via a shared signal type or interface)
+2. A shared **GroupManagementPanel** widget provides group combo box, add/new/remove buttons
+3. The panel calls `EntityRegistry::addToGroup()` with the selected IDs
+
+This `GroupManagementPanel` should be factored into `Plots/Common/` (or a higher-level shared widget location) so all widgets can embed the same group management UI. Initial implementation can be done inline in `LinePlotPropertiesWidget` and then refactored.
+
+### 1.4 Visual Feedback for Groups
+
+Once trials can belong to groups, optionally color or highlight lines belonging to specific groups. This connects to [Phase 3 (External Feature Coloring)](#phase-3-external-feature-coloring).
+
+---
+
+## Phase 2: Mean / Summary Overlay with Confidence Intervals
+
+**Status**: Not started. Depends on the existing `GatherResult` and batch rendering pipeline.
+
+**Goal**: Optionally display a summary line (mean, median) of the overlaid trial lines, with optional confidence intervals, similar to the summary statistics shown in a PSTH.
+
+### 2.1 Summary Mode Enum
+
+```cpp
+enum class LinePlotSummaryMode {
+    None,       ///< No summary overlay (default)
+    Mean,       ///< Arithmetic mean across trials
+    Median      ///< Median across trials
+};
+```
+
+### 2.2 Confidence Interval Options
+
+```cpp
+enum class ConfidenceIntervalType {
+    None,           ///< No confidence band
+    SEM,            ///< Standard error of the mean
+    StdDev,         ///< Standard deviation
+    CI95,           ///< 95% confidence interval
+    Percentile      ///< User-defined percentile band (e.g., 25th–75th)
+};
+
+struct LinePlotSummaryConfig {
+    LinePlotSummaryMode mode = LinePlotSummaryMode::None;
+    ConfidenceIntervalType ci_type = ConfidenceIntervalType::None;
+    double ci_alpha = 0.2;                  ///< Opacity of confidence band fill
+    std::string summary_color = "#FF0000";  ///< Color of the summary line
+    double summary_thickness = 2.5;         ///< Thickness of the summary line
+
+    // For Percentile mode
+    double lower_percentile = 25.0;
+    double upper_percentile = 75.0;
+};
+```
+
+### 2.3 State Extension
+
+```cpp
+struct LinePlotStateData {
+    // ... existing fields ...
+    LinePlotSummaryConfig summary;
+};
+```
+
+### 2.4 Implementation
+
+After building `LineBatchData` from trial data, compute the summary:
+
+1. **Resample** all trial lines to a common time grid (the `GatherResult` may have different sample counts per trial due to varying TimeFrame resolutions)
+2. **Pointwise aggregation**: For each time sample, compute the summary statistic (mean or median) across all trials
+3. **Confidence interval**: Compute upper/lower bounds at each sample point
+4. **Render summary line** as a thicker line on top of the trial lines via `SceneRenderer` or as an additional entry in the `LineBatchData`
+5. **Render confidence band** as a filled semi-transparent polygon (similar to the confidence band rendering proposed in the [PSTH Roadmap](../PSTHWidget/roadmap.qmd) Phase 3)
+
+### 2.5 Shared Confidence Band Rendering
+
+The [PSTHWidget Roadmap](../PSTHWidget/roadmap.qmd) Phase 3 proposes confidence band rendering for histograms. The pointwise confidence band infrastructure (upper/lower bounds per sample → filled polygon) is reusable here. A shared `ConfidenceBandMapper` in `CorePlotting/Mappers/` would serve both widgets:
+
+```cpp
+namespace CorePlotting {
+    struct ConfidenceBandData {
+        std::vector<double> x_values;    ///< Shared X positions
+        std::vector<double> upper;       ///< Upper bound per sample
+        std::vector<double> lower;       ///< Lower bound per sample
+    };
+
+    /// Build a filled polygon renderable from confidence band data
+    RenderableTriangleStripBatch buildConfidenceBand(
+        ConfidenceBandData const & band,
+        glm::vec4 fill_color);
+}
+```
+
+### 2.6 Properties Panel
+
+Add to `LinePlotPropertiesWidget` in a "Summary" collapsible section:
+
+- Summary mode combo (None, Mean, Median)
+- Confidence interval type combo (None, SEM, StdDev, CI95, Percentile)
+- Summary line color picker
+- Summary line thickness spinbox
+- CI opacity slider
+- Percentile range spinboxes (visible only for Percentile mode)
+
+---
+
+## Phase 3: External Feature Coloring
+
+**Status**: Not started. Design influenced by [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 5.
+
+**Goal**: Allow trial lines to be colored by an external feature stored in a `TensorData` column, enabling visual grouping by categorical or continuous features.
+
+### Concept
+
+The same `TensorData` infrastructure used for [EventPlotWidget external feature sorting/coloring](../EventPlotWidget/roadmap.qmd) applies here. A `TensorData` with interval-based rows can provide per-trial feature values:
+
+- **Binary features** (0.0/1.0 from threshold transforms) → two-color categorical coloring
+- **Continuous features** (e.g., firing rate, latency) → colormap-based gradient coloring
+- **Alpha scaling** — instead of (or in addition to) color, the feature value scales line opacity
+
+### 3.1 Color Configuration
+
+```cpp
+struct LineColorConfig {
+    std::string color_mode = "fixed";    // "fixed", "by_feature", or "by_group"
+
+    // For fixed coloring (existing behavior) — uses LinePlotOptions::hex_color
+
+    // For feature-based coloring
+    ExternalFeatureConfig feature;       // Which TensorData column
+    std::string colormap = "viridis";    // Colormap name
+    double color_min = 0.0;
+    double color_max = 1.0;
+    bool use_auto_range = true;
+
+    // Alpha scaling (independent of color mode)
+    bool alpha_by_feature = false;
+    ExternalFeatureConfig alpha_feature;
+    double alpha_min = 0.1;
+    double alpha_max = 1.0;
+};
+```
+
+The `ExternalFeatureConfig` struct is shared with [EventPlotWidget](../EventPlotWidget/roadmap.qmd):
+
+```cpp
+struct ExternalFeatureConfig {
+    std::string tensor_key;       // DataManager key for TensorData
+    std::string column_name;      // Column within the TensorData
+    bool ascending = true;        // Sort direction (for sorting use)
+};
+```
+
+### 3.2 Colormap Infrastructure
+
+This feature depends on the colormap infrastructure proposed in the [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) Phase 2:
+
+```cpp
+namespace CorePlotting::Colormaps {
+    using ColormapFunction = std::function<glm::vec4(float t)>;
+    ColormapFunction getColormap(ColormapPreset preset);
+    glm::vec4 mapValue(ColormapFunction const & cmap, float value, float vmin, float vmax);
+}
+```
+
+The colormap system in `CorePlotting/Colormaps/` is shared across:
+
+| Widget | Usage |
+|--------|-------|
+| **LinePlotWidget** | Per-trial line color from feature value |
+| **[EventPlotWidget](../EventPlotWidget/index.qmd)** | Per-trial event color ([EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 5) |
+| **[HeatmapWidget](../HeatmapWidget/index.qmd)** | Heatmap cell color ([Heatmap Roadmap](../HeatmapWidget/roadmap.qmd) Phase 2) |
+| **[SpectrogramWidget](../SpectrogramWidget/index.qmd)** | Spectrogram cell color |
+
+### 3.3 Per-Line Color in BatchLineRenderer
+
+The current `BatchLineRenderer` uses **global** colors for normal/selected/hover states. To support per-line coloring, the renderer needs to be extended:
+
+```cpp
+/// Per-line color override (optional — falls back to global if empty)
+std::vector<glm::vec4> per_line_colors;
+```
+
+When `per_line_colors` is non-empty, each line uses its own color instead of the global normal color. Selected and hover states could blend with the per-line color.
+
+This renderer extension also benefits [TemporalProjectionViewWidget](../TemporalProjectionViewWidget/index.qmd) for entity-based coloring.
+
+### 3.4 Properties Panel
+
+Add to `LinePlotPropertiesWidget` in a "Trial Coloring" collapsible section:
+
+1. **Color mode combo** — Fixed / By Feature / By Group
+2. **TensorData combo box** — lists `TensorData` keys from DataManager
+3. **Column combo box** — shows columns of the selected `TensorData`
+4. **Colormap combo** — colormap preset selection
+5. **Range controls** — auto/manual min/max spinboxes
+6. **Alpha scaling checkbox** — enables alpha-by-feature mode
+7. **Alpha feature controls** — separate TensorData/column for alpha (if different from color)
+
+---
+
+## Phase 4: Distribution Tooltips
+
+**Status**: Not started. New shared infrastructure needed.
+
+**Goal**: When the user hovers over the plot, display a tooltip containing a **vertical histogram** showing the distribution of Y values across trials at that time point. This helps assess the reliability of an "average" (or summary) value by showing trial-to-trial variability.
+
+### 4.1 Distribution Computation
+
+At a given relative time $t$:
+
+1. For each trial, interpolate or look up the signal value at time $t$
+2. Collect the $N$ values (one per trial) into a distribution
+3. Compute a histogram of these values with configurable bin count
+
+### 4.2 Tooltip Image Generation
+
+Generate a small image (e.g., 150×200 pixels) showing:
+
+- A vertical histogram (bins on Y-axis matching the plot's value axis, count/frequency on X-axis)
+- Optional summary statistics overlay (mean, median, std dev)
+- Current time position label
+
+The image should be rendered off-screen (using `QImage` / `QPainter`) and displayed in a Qt tooltip.
+
+### 4.3 Shared Tooltip Image Infrastructure
+
+The [HeatmapWidget Roadmap](../HeatmapWidget/roadmap.qmd) proposes a tooltip that shows a miniature stacked PSTH + raster for a hovered unit. The tooltip image generation infrastructure is reusable across widgets:
+
+| Widget | Tooltip Content |
+|--------|----------------|
+| **LinePlotWidget** | Vertical histogram of Y values at hovered time point |
+| **[HeatmapWidget](../HeatmapWidget/index.qmd)** | Miniature PSTH + raster for hovered unit |
+| **[EventPlotWidget](../EventPlotWidget/index.qmd)** | (future) Trial metadata summary |
+
+A shared `PlotTooltipRenderer` could provide:
+
+```cpp
+namespace CorePlotting::Tooltips {
+
+/// Render a vertical histogram as a QImage
+QImage renderVerticalHistogram(
+    std::vector<double> const & values,
+    int num_bins,
+    double y_min, double y_max,
+    QSize image_size = {150, 200});
+
+/// Render a miniature plot image from a RenderableScene
+QImage renderMiniPlot(
+    RenderableScene const & scene,
+    CorePlotting::ViewStateData const & view_state,
+    QSize image_size);
+
+/// Show an image tooltip at the given screen position
+void showImageTooltip(QWidget * parent, QPoint global_pos, QImage const & image);
+
+}
+```
+
+This infrastructure should live in a shared location (e.g., `Plots/Common/Tooltips/`) accessible to all plot widgets.
+
+### 4.4 Hover Detection
+
+Add hover tracking to `LinePlotOpenGLWidget`:
+
+- On `mouseMoveEvent` (without button press), convert screen position to world coordinates
+- Debounce via a timer (e.g., 100ms) to avoid excessive recomputation
+- When the tooltip timer fires, compute the distribution and show the tooltip
+- Hide the tooltip when the mouse moves away or leaves the widget
+
+### 4.5 Configuration
+
+Add to `LinePlotStateData`:
+
+```cpp
+struct TooltipConfig {
+    bool enabled = false;
+    int histogram_bins = 20;
+    bool show_summary_stats = true;   // Mean, median overlay
+};
+```
+
+---
+
+## Phase 5: SVG Export
+
+**Status**: Not started. New shared infrastructure needed.
+
+**Goal**: Allow the user to save the current plot view as an SVG file for publication-quality figures.
+
+### 5.1 SVG Generation
+
+SVG export should produce a vector graphics representation of the current view:
+
+- All trial lines (with current colors, thicknesses, and opacity)
+- Selected lines highlighted
+- Summary line and confidence interval (if enabled)
+- Axis labels and tick marks
+- Background
+
+### 5.2 Implementation Approaches
+
+**Option A: QPainter-based SVG** (recommended initial approach)
+
+Use `QSvgGenerator` with `QPainter` to re-render the scene:
+
+```cpp
+void LinePlotWidget::exportToSvg(QString const & file_path) {
+    QSvgGenerator generator;
+    generator.setFileName(file_path);
+    generator.setSize(size());
+    generator.setViewBox(QRect(0, 0, width(), height()));
+
+    QPainter painter(&generator);
+    // Re-render all lines via QPainter rather than OpenGL
+    renderToQPainter(painter);
+    painter.end();
+}
+```
+
+This requires a separate `renderToQPainter()` code path that iterates over the `LineBatchData` and draws lines using `QPainter::drawPolyline()`.
+
+**Option B: Direct SVG string generation**
+
+Build the SVG XML directly from `LineBatchData`, which gives more control over SVG structure and styling but requires manual coordinate transformation.
+
+### 5.3 Shared Export Infrastructure
+
+SVG export is useful for all plot widgets. A shared utility in `Plots/Common/Export/` could provide:
+
+```cpp
+namespace WhiskerToolbox::Plots::Export {
+
+/// Export a LineBatchData to SVG
+void exportLineBatchToSvg(
+    QString const & file_path,
+    CorePlotting::LineBatchData const & batch,
+    CorePlotting::ViewStateData const & view_state,
+    ExportOptions const & options);
+
+/// Export a RenderableScene to SVG
+void exportSceneToSvg(
+    QString const & file_path,
+    CorePlotting::RenderableScene const & scene,
+    CorePlotting::ViewStateData const & view_state,
+    ExportOptions const & options);
+
+struct ExportOptions {
+    QSize image_size = {800, 600};
+    bool include_axes = true;
+    bool include_background = true;
+    QString title;
+};
+
+}
+```
+
+### 5.4 UI
+
+Add to `LinePlotPropertiesWidget` or toolbar:
+
+- **"Export SVG" button** — opens a file save dialog, then calls the export function
+- Optional: **"Copy to Clipboard"** — renders as SVG/PNG and copies to clipboard
+
+---
+
+## Phase 6: Cross-Widget Linking
+
+**Status**: Design phase. Foundation exists via `EditorRegistry::setCurrentTime()` for double-click navigation.
+
+**Goal**: Enable LinePlotWidget to participate in the `SelectionContext` system for inter-widget communication.
+
+### 6.1 SelectionContext Integration
+
+Following the pattern described in the [EventPlot Roadmap](../EventPlotWidget/roadmap.qmd) Phase 6:
+
+- **As receiver**: When a `DigitalEventSeries` is selected in another widget, the LinePlotWidget could automatically update its alignment event key (unless pinned)
+- **As source**: When trials are selected, emit the selected alignment event EntityIDs through `SelectionContext` for other widgets to react
+
+### 6.2 Pinning
+
+Add a `pinned` flag to `LinePlotStateData`:
+
+```cpp
+struct LinePlotStateData {
+    // ... existing fields ...
+    bool pinned = false;
+};
+```
+
+When pinned, the widget ignores external `SelectionContext` changes. This enables workflows where one Line Plot is locked to a specific signal while another follows the user's selection.
+
+### 6.3 Companion Widget Workflow
+
+The Line Plot Widget is the analog-signal companion to the discrete-event [EventPlotWidget](../EventPlotWidget/index.qmd) and [PSTHWidget](../PSTHWidget/index.qmd). A typical linked workflow:
+
+```
+User selects alignment event in any trial-aligned widget
+        ↓
+SelectionContext::setSelectedData(alignment_event_key)
+        ↓
+LinePlotWidget (unpinned) updates alignment event
+        ↓
+EventPlotWidget (unpinned) updates alignment event
+        ↓
+PSTHWidget (unpinned) updates alignment event
+        ↓
+All three widgets show data aligned to the same event
+```
+
+---
+
+## Phase 7: Multi-Series Rendering
+
+**Status**: Partially implemented. The state supports multiple series (`std::map<std::string, LinePlotOptions>`), but the renderer currently only uses the **first** series key for data gathering.
+
+**Goal**: Render multiple `AnalogTimeSeries` overlaid in the same plot, each with independent appearance.
+
+### 7.1 Multi-Series Data Gathering
+
+Extend `rebuildScene()` to iterate over all series:
+
+```cpp
+for (auto const & [name, options] : _state->data().plot_series) {
+    auto gathered = createAlignedGatherResult<AnalogTimeSeries>(
+        _data_manager, options.series_key, alignment_data);
+    // Build batch for this series with per-series color
+    auto batch = buildLineBatchFromGatherResult(gathered, alignment_times);
+    // Upload and render with series-specific color from options.hex_color
+}
+```
+
+### 7.2 Per-Series Color in BatchLineRenderer
+
+Currently the `BatchLineRenderer` uses a single global color for all normal lines. Multi-series rendering requires either:
+
+- **Multiple draw calls** with different global colors (simpler, one per series)
+- **Per-line color attribute** in the shader (more efficient, see [Phase 3](#phase-3-external-feature-coloring))
+
+The per-line color approach from Phase 3 naturally supports multi-series coloring.
+
+### 7.3 Legend
+
+When multiple series are displayed, a legend should map series names to their colors. This could be rendered as:
+
+- An OpenGL overlay in the top-right corner of the plot
+- A separate legend widget in the properties panel
+
+---
+
+## Dependency Graph
+
+```
+Phase 1: Selection → Groups
+    ↓
+Phase 6: Cross-Widget Linking (uses groups for broadcast)
+
+Phase 2: Mean / CI Overlay
+
+Phase 3: External Feature Coloring
+    ├── depends on: CorePlotting::Colormaps (shared w/ HeatmapWidget, EventPlotWidget)
+    └── depends on: Per-line color in BatchLineRenderer
+
+Phase 4: Distribution Tooltips
+    └── depends on: shared PlotTooltipRenderer (also needed by HeatmapWidget)
+
+Phase 5: SVG Export
+    └── depends on: shared Export infrastructure
+
+Phase 7: Multi-Series Rendering
+    └── depends on: Per-line color in BatchLineRenderer (Phase 3)
+```
+
+Phases 1, 2, and 5 are independent and can proceed in parallel. Phase 3 unblocks Phase 7. Phase 4 introduces new shared infrastructure.

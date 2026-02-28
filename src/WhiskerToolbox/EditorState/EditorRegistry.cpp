@@ -316,6 +316,22 @@ EditorLib::OperationContext * EditorRegistry::operationContext() const {
 
 // === Serialization ===
 
+void EditorRegistry::cacheClosedState(EditorTypeId const & type_id, std::string state_json) {
+    _closed_state_cache[type_id] = std::move(state_json);
+}
+
+std::optional<std::string> EditorRegistry::getCachedState(EditorTypeId const & type_id) const {
+    auto it = _closed_state_cache.find(type_id);
+    if (it != _closed_state_cache.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+void EditorRegistry::clearStateCache() {
+    _closed_state_cache.clear();
+}
+
 std::string EditorRegistry::toJson() const {
     SerializedWorkspace workspace;
 
@@ -351,6 +367,9 @@ bool EditorRegistry::fromJson(std::string const & json) {
         unregisterState(EditorInstanceId(s->getInstanceId()));
     }
 
+    // Clear the closed-state cache — workspace restore defines the starting state
+    clearStateCache();
+
     // Restore states
     for (auto const & serialized: workspace.states) {
         EditorTypeId type_id(QString::fromStdString(serialized.type_id));
@@ -378,14 +397,16 @@ bool EditorRegistry::fromJson(std::string const & json) {
     }
 
     // Restore selection
+    // Important: setSelectedData() must be called first because it clears
+    // _selected_data. Then addToSelection() adds the remaining keys.
     SelectionSource source{EditorInstanceId("EditorRegistry"), "fromJson"};
     _selection_context->clearSelection(source);
-    for (auto const & key: workspace.all_selections) {
-        _selection_context->addToSelection(SelectedDataKey(QString::fromStdString(key)), source);
-    }
     if (!workspace.primary_selection.empty()) {
         _selection_context->setSelectedData(
                 SelectedDataKey(QString::fromStdString(workspace.primary_selection)), source);
+    }
+    for (auto const & key: workspace.all_selections) {
+        _selection_context->addToSelection(SelectedDataKey(QString::fromStdString(key)), source);
     }
 
     return true;

@@ -38,10 +38,9 @@ website:
       style: "docked"
       contents:
         - developer/index.qmd
-        - developer/python_integration.qmd
+        - developer/python_bindings/python_integration.qmd
         - developer/benchmark/benchmarking.qmd
         - developer/building.qmd
-        - developer/code_quality.qmd
         - developer/copilot.qmd
         - developer/contributing_code.qmd
         - developer/fuzz/fuzzing.qmd
@@ -55,6 +54,12 @@ website:
             - developer/CoreGeometry/index.qmd
             - developer/coreplotting/index.qmd
             - developer/Entity/index.qmd
+            - section: "Deep Learning"
+              href: developer/DeepLearning/index.qmd
+              contents:
+                - developer/DeepLearning/model_wrapper_guide.qmd
+                - developer/DeepLearning/aot_inductor_tutorial.qmd
+                - developer/DeepLearning/roadmap.qmd
             - section: "Transforms V2"
               href: developer/transforms_v2/index.qmd
               contents:
@@ -69,13 +74,14 @@ website:
             - developer/DataManager/file_io.qmd
             - developer/DataManager/data_structures.qmd
             - developer/DataManager/binary_loading_performance.qmd
-        - developer/table_view.qmd
+            - developer/DataManager/generic_time_series.qmd
+            - developer/DataManager/storage_architecture.qmd
+            - developer/DataManager/storage_testing_roadmap.qmd
+            - developer/DataManager/storage_benchmarking_roadmap.qmd
         - section: "User Interface"
           contents:
-            - developer/ui/analysis_dashboard/analysis_dashboard.qmd
             - developer/ui/data_manager/data_manager_widget.qmd
             - developer/ui/data_transform/data_transform_widget.qmd
-            - developer/ui/data_viewer/data_viewer_widget.qmd
             - developer/ui/media_widget/media_widget.qmd
             - section: "Features"
               href: developer/ui/Features/overview.qmd
@@ -83,6 +89,20 @@ website:
                   - developer/ui/Features/Collapsible_Widget.qmd
             - text: "AutoParam System"
               href: developer/ui/autoparam.qmd
+            - section: "Plot Widgets"
+              href: developer/ui/Plots/plot_widget_guide.md
+              contents:
+                  - developer/ui/Plots/3DPlot/index.qmd
+                  - developer/ui/Plots/ACFWidget/index.qmd
+                  - developer/ui/Plots/DataViewerWidget/index.qmd
+                  - developer/ui/Plots/EventPlotWidget/index.qmd
+                  - developer/ui/Plots/HeatmapWidget/index.qmd
+                  - developer/ui/Plots/LinePlotWidget/index.qmd
+                  - developer/ui/Plots/OnionSkinViewWidget/index.qmd
+                  - developer/ui/Plots/PSTHWidget/index.qmd
+                  - developer/ui/Plots/ScatterPlotWidget/index.qmd
+                  - developer/ui/Plots/SpectrogramWidget/index.qmd
+                  - developer/ui/Plots/TemporalProjectionViewWidget/index.qmd
 
     - title: "Learning Resources"
       contents:
@@ -184,6 +204,9 @@ website:
             - user_guide/data_transformations/skeletonize_mask.qmd
             - user_guide/data_transformations/fill_mask_holes.qmd
             - user_guide/data_transformations/apply_median_filter.qmd
+        - section: "Deep Learning"
+          contents:
+            - user_guide/deep_learning/deep_learning_widget.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd

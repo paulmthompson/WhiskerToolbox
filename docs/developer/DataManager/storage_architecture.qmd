@@ -1,0 +1,428 @@
+---
+title: "Storage Backend Architecture"
+date: last-modified
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+# Overview
+
+All core time series types in Neuralyzer use a unified, three-layer storage abstraction
+that supports multiple backends (owning, view, lazy) while maintaining high performance through
+cache optimization. This document describes the architecture, explains the design decisions,
+and provides guidance for working with storage backends.
+
+The storage architecture applies to five data types:
+
+| Data Type | Template | Has EntityId | Data Layout |
+|-----------|----------|-------------|-------------|
+| `AnalogTimeSeries` | No | No | Flat `float` array, uniform sampling |
+| `RaggedAnalogTimeSeries` | No | No | SoA `(time, float)` pairs, ragged |
+| `RaggedTimeSeries<T>` | Yes (`T` = `Mask2D`, `Line2D`, `Point2D<float>`) | Yes | SoA `(time, data, entity_id)`, ragged |
+| `DigitalEventSeries` | No | Yes | Sorted `TimeFrameIndex` + `EntityId` |
+| `DigitalIntervalSeries` | No | Yes | Sorted `Interval{start,end}` + `EntityId` |
+
+# Three-Layer Design
+
+Every storage implementation follows the same three-layer pattern:
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Layer 3: Type-Erased Wrapper                          │
+│  StorageConcept (virtual) + StorageModel<T> (adapter)  │
+│  → Runtime polymorphism, hides template parameters     │
+├────────────────────────────────────────────────────────┤
+│  Layer 2: Concrete Storage Implementations             │
+│  Owning / View / Lazy                                  │
+│  → Actual data storage and access logic                │
+├────────────────────────────────────────────────────────┤
+│  Layer 1: CRTP Base Class                              │
+│  StorageBase<Derived>                                  │
+│  → Zero-overhead compile-time dispatch                 │
+└────────────────────────────────────────────────────────┘
+```
+
+## Layer 1: CRTP Base
+
+Each storage family defines a CRTP (Curiously Recurring Template Pattern) base class that 
+provides a common interface dispatched at compile time with zero overhead:
+
+```cpp
+template<typename Derived, typename TData>
+class RaggedStorageBase {
+public:
+    [[nodiscard]] size_t size() const { 
+        return static_cast<Derived const*>(this)->sizeImpl(); 
+    }
+    [[nodiscard]] TimeFrameIndex getTime(size_t idx) const { 
+        return static_cast<Derived const*>(this)->getTimeImpl(idx); 
+    }
+    [[nodiscard]] TData const& getData(size_t idx) const { 
+        return static_cast<Derived const*>(this)->getDataImpl(idx); 
+    }
+    // ... other methods delegate to Derived::*Impl()
+};
+```
+
+Each concrete storage class (Owning, View, Lazy) inherits from this base and provides 
+the `*Impl()` methods. The compiler resolves all calls at compile time — no virtual dispatch.
+
+### CRTP Base Classes by Type
+
+| Data Type | CRTP Base | Key Methods |
+|-----------|-----------|-------------|
+| `RaggedTimeSeries<T>` | `RaggedStorageBase<D, TData>` | `size`, `getTime`, `getData`, `getEntityId`, `findByEntityId`, `getTimeRange`, `tryGetCache` |
+| `RaggedAnalogTimeSeries` | `RaggedAnalogStorageBase<D>` | `size`, `getTime`, `getValue`, `getTimeRange`, `getValuesAtTime`, `tryGetCache` |
+| `DigitalEventSeries` | `DigitalEventStorageBase<D>` | `size`, `getEvent`, `getEntityId`, `findByTime`, `findByEntityId`, `getTimeRange`, `tryGetCache` |
+| `DigitalIntervalSeries` | `DigitalIntervalStorageBase<D>` | `size`, `getInterval`, `getEntityId`, `findByInterval`, `getOverlappingRange`, `getContainedRange`, `tryGetCache` |
+| `AnalogTimeSeries` | `AnalogDataStorageBase<D>` | `getValueAt`, `size`, `getSpan`, `isContiguous` |
+
+## Layer 2: Concrete Storage Backends
+
+Each storage family provides three concrete implementations:
+
+### Owning Storage
+
+Owns the data in contiguous arrays. Supports full mutation (add, remove, clear). 
+Uses Structure-of-Arrays (SoA) layout for cache-friendly iteration:
+
+```cpp
+// Example: OwningRaggedStorage<TData>
+class OwningRaggedStorage<TData> : public RaggedStorageBase<...> {
+    std::vector<TimeFrameIndex> _times;
+    std::vector<TData>          _data;
+    std::vector<EntityId>       _entity_ids;
+    
+    // Acceleration structures
+    std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;
+    std::unordered_map<EntityId, size_t> _entity_to_index;
+};
+```
+
+**Performance characteristics:**
+
+- Cache always valid (contiguous memory)
+- O(1) amortized append, O(1) EntityId lookup via hash map
+- O(log n) time-based lookup via sorted map
+
+### View Storage
+
+Zero-copy reference to a subset of owning storage, filtered by time range or EntityIds:
+
+```cpp
+// Example: ViewRaggedStorage<TData>
+class ViewRaggedStorage<TData> : public RaggedStorageBase<...> {
+    std::shared_ptr<OwningRaggedStorage<TData> const> _source;
+    std::vector<size_t> _indices;  // indices into source arrays
+};
+```
+
+**Performance characteristics:**
+
+- No data duplication — holds only index vector
+- Cache valid when indices are contiguous (e.g., time range that maps to consecutive elements)
+- Read-only: mutations throw `std::runtime_error`
+- Source kept alive via `shared_ptr`
+
+### Lazy Storage
+
+On-demand computation from a transform view. Data is never stored — computed each time 
+it is accessed:
+
+```cpp
+// Example: LazyRaggedStorage<TData, ViewType>
+template<typename TData, typename ViewType>
+class LazyRaggedStorage : public RaggedStorageBase<...> {
+    ViewType _view;
+    mutable TData _cached_data;  // for returning const ref
+    
+    // Precomputed index structures
+    std::unordered_map<EntityId, size_t> _entity_to_index;
+    std::map<TimeFrameIndex, std::pair<size_t, size_t>> _time_ranges;
+};
+```
+
+**Performance characteristics:**
+
+- Minimal memory: only index structures stored, data computed on access
+- Cache always invalid (non-contiguous by nature)
+- Read-only: mutations throw `std::runtime_error`
+- Template parameter `ViewType` is unbounded — this is why type erasure is needed
+
+## Layer 3: Type-Erased Wrapper
+
+The wrapper uses the **StorageConcept/StorageModel** pattern (a form of type erasure) to 
+hide the concrete storage type behind a uniform interface:
+
+```cpp
+template<typename TData>
+class RaggedStorageWrapper {
+    struct StorageConcept {           // Abstract interface
+        virtual ~StorageConcept() = default;
+        virtual size_t size() const = 0;
+        virtual TimeFrameIndex getTime(size_t idx) const = 0;
+        virtual TData const& getData(size_t idx) const = 0;
+        // ... more virtual methods
+    };
+    
+    template<typename StorageImpl>
+    struct StorageModel final : StorageConcept {  // Adapter
+        StorageImpl _storage;
+        
+        size_t size() const override { return _storage.size(); }
+        TimeFrameIndex getTime(size_t idx) const override { 
+            return _storage.getTime(idx); 
+        }
+        // ... delegates all methods to _storage
+    };
+    
+    std::unique_ptr<StorageConcept> _impl;  // Type-erased storage
+};
+```
+
+This pattern is critical because `LazyRaggedStorage<TData, ViewType>` has an unbounded 
+template parameter (`ViewType`). A `std::variant` cannot hold an open set of types, but 
+type erasure can.
+
+### Why Type Erasure over `std::variant`
+
+| Aspect | Type Erasure | `std::variant` |
+|--------|-------------|----------------|
+| **Open extension** | Yes — any type satisfying the concept | No — closed set of types |
+| **Template parameter hiding** | Yes — `LazyStorage<ViewType>` invisible | No — must list all `ViewType`s |
+| **Heap allocation** | Yes (one `unique_ptr`) | No (inline storage) |
+| **Virtual call overhead** | Yes (mitigated by cache) | No (`std::visit` optimized) |
+
+A `std::variant`-based wrapper (`RaggedStorageVariant`) exists in the codebase for benchmarking 
+but is not used in production because it cannot support lazy transforms.
+
+### Wrapper Smart Pointer Strategy
+
+| Data Type | Wrapper Uses | Reason |
+|-----------|-------------|--------|
+| `RaggedTimeSeries<T>` | `unique_ptr<StorageConcept>` | Single ownership, no shared views |
+| `RaggedAnalogTimeSeries` | `unique_ptr<StorageConcept>` | Single ownership |
+| `DigitalEventSeries` | `shared_ptr<StorageConcept>` | Enables `getSharedOwningStorage()` for zero-copy view creation via aliasing constructor |
+| `DigitalIntervalSeries` | `shared_ptr<StorageConcept>` | Same as above |
+| `AnalogTimeSeries` | `unique_ptr<StorageConcept>` | Single ownership |
+
+The digital series types use `shared_ptr` so that view storage can hold a reference to the
+owning storage without an extra allocation, using `shared_ptr`'s aliasing constructor.
+
+# Cache Optimization
+
+The main performance concern with type erasure is virtual dispatch overhead during 
+iteration. The **cache optimization** solves this by providing a fast-path that bypasses 
+virtual calls entirely.
+
+## How It Works
+
+Each storage type provides a `tryGetCache()` method returning a cache struct with raw
+pointers to contiguous data:
+
+```cpp
+template<typename TData>
+struct RaggedStorageCache {
+    TimeFrameIndex const* times_ptr = nullptr;
+    TData const*          data_ptr = nullptr;
+    EntityId const*       entity_ids_ptr = nullptr;
+    size_t                cache_size = 0;
+    bool                  is_contiguous = false;
+    
+    [[nodiscard]] bool isValid() const { return is_contiguous; }
+};
+```
+
+The data type class (e.g., `RaggedTimeSeries`) caches these pointers and updates them
+after any mutation:
+
+```cpp
+void _cacheOptimizationPointers() {
+    auto cache = _storage.tryGetCache();
+    _cached_times    = cache.times_ptr;
+    _cached_data     = cache.data_ptr;
+    _cached_entities = cache.entity_ids_ptr;
+    _cached_size     = cache.cache_size;
+    _cache_valid     = cache.isValid();
+}
+```
+
+Iterators and accessors check the cached pointers first:
+
+```cpp
+TData const& getData(size_t idx) const {
+    if (_cache_valid) {
+        return _cached_data[idx];  // Zero virtual calls
+    }
+    return _storage.getData(idx);  // Falls back to virtual dispatch
+}
+```
+
+## Cache Validity by Backend
+
+| Backend | Cache Valid? | Why |
+|---------|-------------|-----|
+| **Owning** | Always | Data is contiguous in vectors |
+| **View (contiguous indices)** | Yes | Indices `[k, k+1, ..., m]` → pointer + offset into source |
+| **View (sparse indices)** | No | Indices are non-sequential |
+| **Lazy** | Never | Data computed on demand, not stored contiguously |
+
+## Performance Impact
+
+| Access Pattern | Virtual Calls | Notes |
+|---------------|--------------|-------|
+| Iteration (cached) | 0 per element | Fast path with raw pointer arithmetic |
+| Iteration (uncached) | 1 per element | Falls back through type erasure |
+| Single access via `getValueAt()` | 1 | Unavoidable for type-erased interface |
+| Bulk access via `getSpan()` | 1 total | Returns `std::span`, then iterate natively |
+
+# Type-Specific Performance Strategies
+
+## AnalogTimeSeries
+
+`AnalogTimeSeries` has the richest set of storage backends, including memory-mapped storage 
+for large files:
+
+| Storage Type | Use Case | Contiguous? |
+|-------------|----------|-------------|
+| `Vector` | Default, small-medium datasets | Yes |
+| `MemoryMapped` | Large binary files (Intan, OpenEphys) | Yes (if stride=1) |
+| `View` | Subranges of vector storage | Yes |
+| `LazyView` | Transform outputs | No |
+
+Memory-mapped storage supports stride, type conversion (int8/16/32/float64), and 
+scale/offset — enabling direct reading from acquisition system file formats without 
+loading entire files into memory.
+
+## DigitalEventSeries & DigitalIntervalSeries
+
+These types keep events/intervals sorted, enabling binary search for time-range queries.
+The digital interval type provides two distinct range query modes:
+
+- **Overlapping**: Returns intervals where `[start, end]` overlaps the query range
+- **Contained**: Returns intervals fully within the query range
+
+Both storage types use `shared_ptr` for the wrapper, enabling the aliasing constructor
+pattern for zero-copy view creation from the owning storage.
+
+## RaggedTimeSeries
+
+Ragged types use `std::map<TimeFrameIndex, std::pair<size_t, size_t>>` for time-range
+acceleration — mapping each timestamp to `(start_index, end_index)` in the SoA arrays.
+This provides O(log n) time lookup without scanning.
+
+View storage detects contiguous index ranges automatically, enabling the cache fast-path
+even for filtered subsets when the filter selects a consecutive block.
+
+# Factory Methods
+
+All types provide a consistent set of factory methods:
+
+## `createView()` — Filter Existing Data
+
+```cpp
+// Filter by time range
+auto view = DigitalEventSeries::createView(source, start_time, end_time);
+
+// Filter by EntityIds (types with EntityId support only)
+std::unordered_set<EntityId> ids = {id1, id2};
+auto view = LineData::createView(source, ids);
+```
+
+- Returns a new instance backed by view storage
+- No data copying — holds reference to source via `shared_ptr`
+- Source must outlive the view (enforced by shared ownership)
+
+## `createFromView<ViewType>()` — Lazy Transform
+
+```cpp
+auto transform_view = source->elementsView()
+    | std::views::transform([](auto const& elem) {
+        return SomeOutput{elem.time(), computeResult(elem.value())};
+    });
+auto lazy = DigitalEventSeries::createFromView<decltype(transform_view)>(
+    std::move(transform_view), source->size());
+```
+
+- Returns a new instance backed by lazy storage
+- Data computed on each access — never stored
+- Template parameter `ViewType` hidden behind type erasure
+
+## `materialize()` — Convert to Owning
+
+```cpp
+auto owning = lazy_series->materialize();
+```
+
+- Iterates through all elements, copies into owning storage
+- Result is independent of source — safe to use after source is destroyed
+- Use when lazy evaluation overhead exceeds the cost of materialization
+
+## Factory Method Availability
+
+| Factory Method | ATS | RATS | RTS\<T\> | DES | DIS |
+|----------------|-----|------|----------|-----|-----|
+| `createView(time)` | Yes | Yes | Yes | Yes | Yes |
+| `createView(EntityIds)` | N/A | N/A | Yes | Yes | Yes |
+| `createFromView<V>()` | Yes | Yes | Yes | Yes | Yes |
+| `materialize()` | Yes | Yes | Yes | Yes | Yes |
+
+*ATS = AnalogTimeSeries, RATS = RaggedAnalogTimeSeries, RTS = RaggedTimeSeries, DES = DigitalEventSeries, DIS = DigitalIntervalSeries*
+
+# Storage Type Queries
+
+All types provide runtime inspection of their storage backend:
+
+```cpp
+series->isView();           // true if backed by view storage
+series->isLazy();           // true if backed by lazy storage
+series->getStorageType();   // returns enum (Owning, View, Lazy, etc.)
+```
+
+# When to Use Each Backend
+
+```
+Need to store/mutate data?
+├─ YES → Use owning storage (default constructor)
+└─ NO ↓
+
+Need a subset of existing data?
+├─ YES → Use createView() with time or EntityId filters
+│   └─ Access pattern:
+│       ├─ One-time iteration → Keep as view
+│       └─ Multiple iterations → Call materialize()
+└─ NO ↓
+
+Computing derived data from a transform?
+└─ YES → Use createFromView() with transform view
+    └─ Access pattern:
+        ├─ Rare access → Keep lazy (saves memory)
+        └─ Frequent access → Call materialize() (saves CPU)
+```
+
+# Integration with Entity System
+
+Types with EntityId support integrate with the `EntityRegistry` and `LineageRegistry`:
+
+- **Owning storage**: EntityIds assigned via `EntityRegistry::ensureId()` during insertion
+- **View storage**: EntityIds inherited from source (no new entities created)
+- **Lazy storage**: EntityIds passed through from the transform input
+
+The `IEntityDataSource` interface requires only `getEntityId()` and `getAllEntityIds()`,
+which all storage backends naturally support, keeping the storage and entity systems 
+decoupled.
+
+# Source Files
+
+| Component | File |
+|-----------|------|
+| Ragged storage | `src/DataManager/utils/RaggedStorage.hpp` |
+| Ragged analog storage | `src/DataManager/utils/RaggedAnalogStorage.hpp` |
+| Digital event storage | `src/DataManager/utils/DigitalEventStorage.hpp` |
+| Digital interval storage | `src/DataManager/utils/DigitalIntervalStorage.hpp` |
+| Analog data storage | `src/DataManager/AnalogTimeSeries/storage/AnalogDataStorage.hpp` |
+| Time series concepts | `src/DataManager/utils/TimeSeriesConcepts.hpp` |
+| Generic filters | `src/DataManager/utils/TimeSeriesFilters.hpp` |

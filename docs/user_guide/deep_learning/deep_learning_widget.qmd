@@ -1,0 +1,155 @@
+---
+title: "Deep Learning Widget"
+---
+
+## Overview
+
+The Deep Learning widget allows you to run neural network inference on your data directly 
+within Neuralyzer. You can load pre-trained PyTorch models, configure which data sources feed 
+into the model, and write the results back to the DataManager for further analysis.
+
+The widget supports models that transform images, points, masks, and lines — the same data 
+types used throughout Neuralyzer.
+
+## Opening the Widget
+
+Open the Deep Learning widget from the menu:
+
+**View → Analysis → Deep Learning**
+
+This opens two panels:
+
+- **Properties panel** (right side) — where you configure the model and run inference
+- **View panel** (center) — displays model status and inference results
+
+## Workflow
+
+### 1. Select a Model
+
+At the top of the Properties panel, use the **Model** dropdown to select from available models. 
+Each model describes what inputs it expects and what outputs it produces. A description appears 
+below the dropdown when a model is selected.
+
+Available models are either compiled into Neuralyzer (like NeuroSAM) or loaded from JSON 
+specification files at runtime.
+
+### 2. Load Weights
+
+In the **Weights** section:
+
+1. Click **Browse...** to locate your model weights file
+2. Supported formats:
+   - **`.pt2`** (AOT Inductor) — recommended, best performance
+   - **`.pt`** (TorchScript) — legacy support
+3. The **Status** indicator shows the current state:
+   - Gray: No model selected
+   - Orange: No weights specified, or file exists but not yet loaded
+   - Red: File not found or loading error
+   - Green: Weights loaded successfully, ready for inference
+
+### 3. Configure Inputs
+
+Once a model is selected, the Properties panel dynamically generates input configuration 
+sections based on the model's requirements.
+
+#### Dynamic Inputs
+
+Dynamic inputs change every frame during inference. For each dynamic input slot:
+
+- **Source** — select a data source from the DataManager dropdown. The dropdown is filtered 
+  by compatible data types (e.g., an image input only shows MediaData sources)
+- **Encoder** — how to convert the data into a tensor. Pre-selected based on the model's 
+  recommendation, but you can override:
+  - `ImageEncoder` — for video frames and images
+  - `Point2DEncoder` — for point/keypoint data
+  - `Mask2DEncoder` — for binary masks
+  - `Line2DEncoder` — for polyline/curve data
+- **Mode** — encoding strategy (depends on encoder):
+  - `Raw` — direct pixel values (images)
+  - `Binary` — 1.0 at data locations, 0.0 elsewhere
+  - `Heatmap` — Gaussian blob at each data location
+- **Sigma** — Gaussian width for Heatmap mode (higher = wider blobs)
+
+#### Memory Inputs (Static)
+
+Some models use memory/reference frames that are set once and reused across inference. These 
+appear in a separate **Memory Inputs** section:
+
+- **Source** — select the data source for this memory slot
+- **Time Offset** — which frame relative to the current frame to use. For example:
+  - `t-1` = one frame before the current frame
+  - `t-5` = five frames before the current frame
+  - `t0` = the current frame
+
+#### Boolean Mask Inputs
+
+For models that track which memory slots are active (like NeuroSAM), boolean mask inputs 
+appear as checkboxes. These are automatically managed:
+
+- When a memory slot has a data source bound, its checkbox is locked to **checked**
+- Slots without data can be manually toggled
+
+### 4. Configure Outputs
+
+For each model output:
+
+- **Target** — select a DataManager key where results will be written. If the key doesn't 
+  exist yet, it will be created automatically.
+- **Decoder** — how to interpret the output tensor:
+  - `TensorToMask2D` — threshold the output to produce a binary mask
+  - `TensorToPoint2D` — find the peak activation to produce a point coordinate
+  - `TensorToLine2D` — threshold, skeletonize, and trace to produce a polyline
+- **Threshold** — the cutoff value for mask/line decoding (0.0–1.0). Pixels above this 
+  value are included in the output.
+
+### 5. Run Inference
+
+The bottom of the Properties panel has three controls:
+
+- **Frame** — specify which frame number to process
+- **Batch Size** — how many frames to process at once (auto-set from the model's preference)
+- **Run Frame** — run inference on the specified frame number
+- **Current** — run inference on the current timeline position (tracks the global timeline)
+- **Run Batch** — *(coming soon)* process multiple consecutive frames
+
+After running, the status updates to show "Inference complete (frame N)" and the decoded 
+results are written to the target DataManager keys.
+
+## Example: Running NeuroSAM
+
+NeuroSAM is a segment-anything model for neural data. It uses memory frames to guide 
+segmentation:
+
+1. **Select model**: Choose "NeuroSAM" from the dropdown
+2. **Load weights**: Browse to your NeuroSAM `.pt2` or `.pt` file
+3. **Configure inputs**:
+   - `encoder_image` → bind to your video data source
+   - `memory_images` → bind reference frames with time offsets (e.g., `t-1`, `t-5`)
+   - `memory_masks` → bind reference masks corresponding to the memory frames
+4. **Configure output**:
+   - `probability_map` → set a target key (e.g., `masks/neurosam_output`)
+   - Decoder: `TensorToMask2D`, Threshold: `0.5`
+5. **Run**: Click **Run Frame** or **Current**
+
+The predicted mask appears in the DataManager and can be viewed in the Media Widget.
+
+## Tips
+
+- **Encoder selection matters**: Using `Heatmap` mode with `Point2DEncoder` produces smoother 
+  gradients that many models prefer over `Binary` mode. Experiment with both.
+- **Threshold tuning**: Start with 0.5 for mask outputs and adjust based on your model's 
+  confidence calibration. Lower thresholds capture more area, higher thresholds are more 
+  selective.
+- **Memory frames**: For models with memory inputs, providing more reference frames with 
+  accurate masks generally improves prediction quality.
+- **Device**: If CUDA is available, inference automatically runs on GPU. Check the application 
+  console output to confirm.
+
+## Supported Model Formats
+
+| Format | Extension | Description | Recommendation |
+|--------|-----------|-------------|----------------|
+| AOT Inductor | `.pt2` | Ahead-of-time compiled native kernels | **Recommended** — best performance |
+| TorchScript | `.pt` | JIT-traced or scripted model | Legacy support — simplest to export |
+
+The backend is automatically detected from the file extension. No manual configuration needed.
