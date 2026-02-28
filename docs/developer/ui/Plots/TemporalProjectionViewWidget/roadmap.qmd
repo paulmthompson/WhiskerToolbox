@@ -36,24 +36,6 @@ and subgroup visibility filtering described below.
 
 ---
 
-## Phase 2: Line Color Customization — **Complete**
-
-**Status**: Complete. Line style (color, thickness, alpha) is configurable via
-`LineStyleData`/`LineStyleState`/`LineStyleControls`, following the same infrastructure
-used by [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd).
-
-| Component | Location | Notes |
-|-----------|----------|-------|
-| Serializable style | `CorePlotting::LineStyleData` | `line_style` field in `TemporalProjectionViewStateData` (replaces `float line_width`) |
-| Runtime wrapper | `LineStyleState` | Owned by `TemporalProjectionViewState`; single global instance |
-| Properties UI | `LineStyleControls` | Color button + thickness + alpha spinboxes; bound via `lineStyleState()` |
-| State signal | `lineStyleChanged()` | Replaces removed `lineWidthChanged(float)` |
-| Rendering | `applyLineStyle()` | Calls `_line_renderer.setGlobalColor()` + `setLineWidth()` |
-
-Per-key line options are deferred to Phase 8.
-
----
-
 ## Phase 3: Double-Click Time Navigation
 
 **Status**: Not started. The `mouseDoubleClickEvent` handler exists but delegates to the
@@ -433,7 +415,6 @@ for (auto const & pb : point_batches) {
 ## Dependency Graph
 
 ```
-Phase 2: Line Color Customization  ← Complete
 Phase 3: Double-Click Time Navigation
     │
     │   (all independent of each other, can be done in any order)
