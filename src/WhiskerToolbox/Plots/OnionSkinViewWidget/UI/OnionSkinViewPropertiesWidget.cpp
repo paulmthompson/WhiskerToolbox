@@ -6,6 +6,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Plots/Common/GlyphStyleWidget/GlyphStyleControls.hpp"
+#include "Plots/Common/LineStyleControls/LineStyleControls.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
 #include "Points/Point_Data.hpp"
@@ -20,6 +21,7 @@
 #include <QTableWidgetItem>
 
 #include <algorithm>
+#include <set>
 
 OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
     std::shared_ptr<OnionSkinViewState> state,
@@ -104,8 +106,6 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             this, &OnionSkinViewPropertiesWidget::_onMaxAlphaChanged);
 
     // Connect UI signals — rendering
-    connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-            this, &OnionSkinViewPropertiesWidget::_onLineWidthChanged);
     connect(ui->highlight_current_checkbox, &QCheckBox::toggled,
             this, &OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged);
 
@@ -128,6 +128,44 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
         ui->main_layout->insertWidget(insert_idx, _glyph_style_section);
     }
 
+    // === Line Style Options collapsible section ===
+    // Inserted after the line data add widget (before mask data label).
+    // The LineStyleControls are bound to the per-key state of the selected row.
+    _line_style_section = new Section(this, "Line Style Options");
+    if (_state) {
+        _line_style_controls = new LineStyleControls(nullptr, this);
+        _line_style_controls->setEnabled(false);
+
+        auto * line_style_layout = new QVBoxLayout();
+        line_style_layout->setContentsMargins(4, 4, 4, 4);
+        line_style_layout->addWidget(_line_style_controls);
+        _line_style_section->setContentLayout(*line_style_layout);
+    }
+    // Insert after the line data add widget (before mask_data_label)
+    {
+        int insert_idx = ui->main_layout->indexOf(ui->add_line_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _line_style_section);
+    }
+
+    // === Mask Style Options collapsible section ===
+    // Inserted after the mask data add widget (before temporal window label).
+    // The LineStyleControls are bound to the per-key state of the selected row.
+    _mask_style_section = new Section(this, "Mask Style Options");
+    if (_state) {
+        _mask_style_controls = new LineStyleControls(nullptr, this);
+        _mask_style_controls->setEnabled(false);
+
+        auto * mask_style_layout = new QVBoxLayout();
+        mask_style_layout->setContentsMargins(4, 4, 4, 4);
+        mask_style_layout->addWidget(_mask_style_controls);
+        _mask_style_section->setContentLayout(*mask_style_layout);
+    }
+    // Insert after the mask data add widget (before temporal_window_label)
+    {
+        int insert_idx = ui->main_layout->indexOf(ui->add_mask_widget) + 1;
+        ui->main_layout->insertWidget(insert_idx, _mask_style_section);
+    }
+
     // Populate combo boxes
     _populatePointComboBox();
     _populateLineComboBox();
@@ -139,6 +177,7 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
             _populatePointComboBox();
             _populateLineComboBox();
             _populateMaskComboBox();
+            _purgeStaleKeys();
         });
     }
 
@@ -209,12 +248,6 @@ OnionSkinViewPropertiesWidget::OnionSkinViewPropertiesWidget(
                 });
 
         // Rendering signals (state → UI sync)
-        connect(_state.get(), &OnionSkinViewState::lineWidthChanged,
-                this, [this](float width) {
-                    ui->line_width_spinbox->blockSignals(true);
-                    ui->line_width_spinbox->setValue(static_cast<double>(width));
-                    ui->line_width_spinbox->blockSignals(false);
-                });
         connect(_state.get(), &OnionSkinViewState::highlightCurrentChanged,
                 this, [this](bool highlight) {
                     ui->highlight_current_checkbox->blockSignals(true);
@@ -404,11 +437,13 @@ void OnionSkinViewPropertiesWidget::_onLineTableSelectionChanged()
 {
     bool has_selection = !ui->line_data_table->selectedItems().isEmpty();
     ui->remove_line_button->setEnabled(has_selection);
+    _updateLineStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateLineKeyAdded(QString const & /*key*/)
 {
     _updateLineDataTable();
+    _updateLineStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateLineKeyRemoved(QString const & /*key*/)
@@ -416,6 +451,7 @@ void OnionSkinViewPropertiesWidget::_onStateLineKeyRemoved(QString const & /*key
     _updateLineDataTable();
     ui->line_data_table->clearSelection();
     ui->remove_line_button->setEnabled(false);
+    _updateLineStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_updateLineDataTable()
@@ -463,6 +499,43 @@ void OnionSkinViewPropertiesWidget::_populateMaskComboBox()
     }
 }
 
+void OnionSkinViewPropertiesWidget::_purgeStaleKeys()
+{
+    if (!_state || !_data_manager) {
+        return;
+    }
+
+    // Build set of valid keys for each data type
+    auto point_keys = _data_manager->getKeys<PointData>();
+    auto line_keys = _data_manager->getKeys<LineData>();
+    auto mask_keys = _data_manager->getKeys<MaskData>();
+
+    std::set<std::string> valid_point_keys(point_keys.begin(), point_keys.end());
+    std::set<std::string> valid_line_keys(line_keys.begin(), line_keys.end());
+    std::set<std::string> valid_mask_keys(mask_keys.begin(), mask_keys.end());
+
+    // Purge stale point keys
+    for (auto const & key : _state->getPointDataKeys()) {
+        if (valid_point_keys.find(key.toStdString()) == valid_point_keys.end()) {
+            _state->removePointDataKey(key);
+        }
+    }
+
+    // Purge stale line keys
+    for (auto const & key : _state->getLineDataKeys()) {
+        if (valid_line_keys.find(key.toStdString()) == valid_line_keys.end()) {
+            _state->removeLineDataKey(key);
+        }
+    }
+
+    // Purge stale mask keys
+    for (auto const & key : _state->getMaskDataKeys()) {
+        if (valid_mask_keys.find(key.toStdString()) == valid_mask_keys.end()) {
+            _state->removeMaskDataKey(key);
+        }
+    }
+}
+
 void OnionSkinViewPropertiesWidget::_onAddMaskClicked()
 {
     if (!_state) {
@@ -494,11 +567,13 @@ void OnionSkinViewPropertiesWidget::_onMaskTableSelectionChanged()
 {
     bool has_selection = !ui->mask_data_table->selectedItems().isEmpty();
     ui->remove_mask_button->setEnabled(has_selection);
+    _updateMaskStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateMaskKeyAdded(QString const & /*key*/)
 {
     _updateMaskDataTable();
+    _updateMaskStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_onStateMaskKeyRemoved(QString const & /*key*/)
@@ -506,6 +581,7 @@ void OnionSkinViewPropertiesWidget::_onStateMaskKeyRemoved(QString const & /*key
     _updateMaskDataTable();
     ui->mask_data_table->clearSelection();
     ui->remove_mask_button->setEnabled(false);
+    _updateMaskStyleControls();
 }
 
 void OnionSkinViewPropertiesWidget::_updateMaskDataTable()
@@ -597,13 +673,6 @@ void OnionSkinViewPropertiesWidget::_onMaxAlphaChanged(double value)
 // Rendering Controls
 // =============================================================================
 
-void OnionSkinViewPropertiesWidget::_onLineWidthChanged(double value)
-{
-    if (_state) {
-        _state->setLineWidth(static_cast<float>(value));
-    }
-}
-
 void OnionSkinViewPropertiesWidget::_onHighlightCurrentChanged(bool checked)
 {
     if (_state) {
@@ -636,6 +705,52 @@ void OnionSkinViewPropertiesWidget::_updateGlyphStyleControls()
 
     GlyphStyleState * glyph_state = _state->glyphStyleStateForKey(item->text());
     _glyph_style_controls->setGlyphStyleState(glyph_state);
+}
+
+void OnionSkinViewPropertiesWidget::_updateLineStyleControls()
+{
+    if (!_line_style_controls || !_state) {
+        return;
+    }
+
+    QList<QTableWidgetItem *> const selected = ui->line_data_table->selectedItems();
+    if (selected.isEmpty()) {
+        _line_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    int const row = selected.first()->row();
+    QTableWidgetItem const * item = ui->line_data_table->item(row, 0);
+    if (!item) {
+        _line_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    LineStyleState * line_state = _state->lineStyleStateForKey(item->text());
+    _line_style_controls->setLineStyleState(line_state);
+}
+
+void OnionSkinViewPropertiesWidget::_updateMaskStyleControls()
+{
+    if (!_mask_style_controls || !_state) {
+        return;
+    }
+
+    QList<QTableWidgetItem *> const selected = ui->mask_data_table->selectedItems();
+    if (selected.isEmpty()) {
+        _mask_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    int const row = selected.first()->row();
+    QTableWidgetItem const * item = ui->mask_data_table->item(row, 0);
+    if (!item) {
+        _mask_style_controls->setLineStyleState(nullptr);
+        return;
+    }
+
+    LineStyleState * mask_state = _state->maskStyleStateForKey(item->text());
+    _mask_style_controls->setLineStyleState(mask_state);
 }
 
 void OnionSkinViewPropertiesWidget::_updateUIFromState()
@@ -675,10 +790,6 @@ void OnionSkinViewPropertiesWidget::_updateUIFromState()
 
     // Rendering
     // Point glyph style is managed per-key via GlyphStyleControls + _updateGlyphStyleControls()
-
-    ui->line_width_spinbox->blockSignals(true);
-    ui->line_width_spinbox->setValue(static_cast<double>(_state->getLineWidth()));
-    ui->line_width_spinbox->blockSignals(false);
 
     ui->highlight_current_checkbox->blockSignals(true);
     ui->highlight_current_checkbox->setChecked(_state->getHighlightCurrent());

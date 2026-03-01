@@ -22,6 +22,12 @@ void RelativeTimeAxisWidget::setViewStateGetter(ViewStateGetter getter)
     update();
 }
 
+void RelativeTimeAxisWidget::setAlignmentTarget(QWidget * target)
+{
+    _alignment_target = target;
+    update();
+}
+
 void RelativeTimeAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping)
 {
     _axis_mapping = std::move(mapping);
@@ -71,9 +77,12 @@ void RelativeTimeAxisWidget::paintEvent(QPaintEvent * /* event */)
     double visible_max = visible_bounds.max_x;
     double zoomed_range = visible_max - visible_min;
 
-    // Draw axis line at top
+    // Compute alignment offset so tick marks align with the OpenGL canvas
+    int const offset = alignmentOffset();
+
+    // Draw axis line at top (only over the aligned plot area)
     painter.setPen(QPen(QColor(150, 150, 150), 1));
-    painter.drawLine(0, 0, width(), 0);
+    painter.drawLine(offset, 0, offset + view_state.viewport_width, 0);
 
     // Compute nice tick interval
     double tick_interval = computeTickInterval(zoomed_range);
@@ -150,8 +159,8 @@ void RelativeTimeAxisWidget::paintEvent(QPaintEvent * /* event */)
         max_label = QString("max: %1").arg(static_cast<int>(view_state.data_bounds.max_x));
     }
 
-    QRect min_rect(2, kAxisHeight - 12, 60, 12);
-    QRect max_rect(width() - 62, kAxisHeight - 12, 60, 12);
+    QRect min_rect(offset + 2, kAxisHeight - 12, 60, 12);
+    QRect max_rect(offset + view_state.viewport_width - 62, kAxisHeight - 12, 60, 12);
 
     painter.drawText(min_rect, Qt::AlignLeft | Qt::AlignVCenter, min_label);
     painter.drawText(max_rect, Qt::AlignRight | Qt::AlignVCenter, max_label);
@@ -181,13 +190,25 @@ double RelativeTimeAxisWidget::computeTickInterval(double range) const
     return nice * magnitude;
 }
 
+int RelativeTimeAxisWidget::alignmentOffset() const
+{
+    if (!_alignment_target) {
+        return 0;
+    }
+    // Compute horizontal distance from our left edge to the target's left edge
+    QPoint const target_origin = _alignment_target->mapToGlobal(QPoint(0, 0));
+    QPoint const our_origin = mapToGlobal(QPoint(0, 0));
+    return target_origin.x() - our_origin.x();
+}
+
 int RelativeTimeAxisWidget::timeToPixelX(double time, CorePlotting::ViewState const & view_state) const
 {
     if (!view_state.data_bounds_valid || view_state.viewport_width <= 0) {
         return 0;
     }
 
-    // Use CorePlotting's worldToScreen function
+    // worldToScreen returns a position in the target widget's coordinate space.
+    // Shift by the alignment offset so it maps to our coordinate space.
     auto const screen_pos = CorePlotting::worldToScreen(view_state, static_cast<float>(time), 0.0f);
-    return static_cast<int>(screen_pos.x);
+    return static_cast<int>(screen_pos.x) + alignmentOffset();
 }

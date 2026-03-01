@@ -2,6 +2,10 @@
 find_package(glm CONFIG REQUIRED)
 
 set(COREPLOTTING_SOURCES
+    # Colormaps (shared colormap infrastructure)
+    Colormaps/Colormap.hpp
+    Colormaps/Colormap.cpp
+    Colormaps/ColormapLUTs.hpp
     # Mappers (visualization-specific coordinate mapping)
     Mappers/MappedElement.hpp
     Mappers/MappedLineView.hpp
@@ -15,10 +19,13 @@ set(COREPLOTTING_SOURCES
     Mappers/RasterMapper.hpp
     Mappers/HistogramMapper.hpp
     Mappers/HistogramMapper.cpp
+    Mappers/HeatmapMapper.hpp
+    Mappers/HeatmapMapper.cpp
     # DataTypes (style, cache - used by widgets)
     DataTypes/SeriesStyle.hpp
     DataTypes/GlyphStyleData.hpp
     DataTypes/GlyphStyleConversion.hpp
+    DataTypes/LineStyleData.hpp
     DataTypes/SeriesDataCache.hpp
     DataTypes/HistogramData.hpp
     DataTypes/AlphaCurve.hpp

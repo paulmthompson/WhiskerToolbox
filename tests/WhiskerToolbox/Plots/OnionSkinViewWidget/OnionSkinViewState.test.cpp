@@ -49,7 +49,6 @@ TEST_CASE("OnionSkinViewState construction", "[OnionSkinViewState]")
         REQUIRE(state.getAlphaCurve() == "linear");
         REQUIRE(state.getMinAlpha() == 0.1f);
         REQUIRE(state.getMaxAlpha() == 1.0f);
-        REQUIRE(state.getLineWidth() == 2.0f);
         REQUIRE(state.getHighlightCurrent() == true);
     }
 }
@@ -241,6 +240,120 @@ TEST_CASE("OnionSkinViewState line data keys", "[OnionSkinViewState]")
 
         REQUIRE(state.getLineDataKeys().empty());
         REQUIRE(spy.count() == 1);
+    }
+}
+
+// ==================== Per-Key Line Style Tests ====================
+
+TEST_CASE("OnionSkinViewState per-key line style", "[OnionSkinViewState]")
+{
+    OnionSkinViewState state;
+
+    SECTION("addLineDataKey creates LineStyleState") {
+        state.addLineDataKey("lines_1");
+
+        LineStyleState * line_state = state.lineStyleStateForKey("lines_1");
+        REQUIRE(line_state != nullptr);
+    }
+
+    SECTION("lineStyleStateForKey returns nullptr for unknown key") {
+        REQUIRE(state.lineStyleStateForKey("nonexistent") == nullptr);
+    }
+
+    SECTION("default line style has expected values") {
+        state.addLineDataKey("lines_1");
+
+        auto style = state.getLineKeyLineStyle("lines_1");
+        REQUIRE(style.hex_color == "#46b346");
+        REQUIRE(style.thickness == 2.0f);
+        REQUIRE(style.alpha == 1.0f);
+    }
+
+    SECTION("getLineKeyLineStyle returns default for unknown key") {
+        auto style = state.getLineKeyLineStyle("nonexistent");
+        REQUIRE(style.hex_color == "#46b346");
+        REQUIRE(style.thickness == 2.0f);
+        REQUIRE(style.alpha == 1.0f);
+    }
+
+    SECTION("per-key line style change emits lineStyleChanged") {
+        state.addLineDataKey("lines_1");
+        QSignalSpy spy(&state, &OnionSkinViewState::lineStyleChanged);
+
+        LineStyleState * line_state = state.lineStyleStateForKey("lines_1");
+        line_state->setThickness(4.0f);
+
+        REQUIRE(spy.count() == 1);
+    }
+
+    SECTION("per-key line style change emits lineKeyLineStyleChanged with key") {
+        state.addLineDataKey("lines_1");
+        QSignalSpy spy(&state, &OnionSkinViewState::lineKeyLineStyleChanged);
+
+        LineStyleState * line_state = state.lineStyleStateForKey("lines_1");
+        line_state->setHexColor("#ff0000");
+
+        REQUIRE(spy.count() == 1);
+        REQUIRE(spy.takeFirst().at(0).toString() == "lines_1");
+    }
+
+    SECTION("per-key line style change marks dirty") {
+        state.addLineDataKey("lines_1");
+        state.markClean();
+
+        LineStyleState * line_state = state.lineStyleStateForKey("lines_1");
+        line_state->setAlpha(0.5f);
+
+        REQUIRE(state.isDirty());
+    }
+
+    SECTION("per-key line style syncs to serializable data") {
+        state.addLineDataKey("lines_1");
+
+        LineStyleState * line_state = state.lineStyleStateForKey("lines_1");
+        line_state->setHexColor("#ff0000");
+        line_state->setThickness(5.0f);
+        line_state->setAlpha(0.7f);
+
+        auto style = state.getLineKeyLineStyle("lines_1");
+        REQUIRE(style.hex_color == "#ff0000");
+        REQUIRE(style.thickness == 5.0f);
+        REQUIRE(style.alpha == 0.7f);
+    }
+
+    SECTION("per-key line style removed when key is removed") {
+        state.addLineDataKey("lines_1");
+        REQUIRE(state.lineStyleStateForKey("lines_1") != nullptr);
+
+        state.removeLineDataKey("lines_1");
+        REQUIRE(state.lineStyleStateForKey("lines_1") == nullptr);
+    }
+
+    SECTION("per-key line styles cleared when clearLineDataKeys is called") {
+        state.addLineDataKey("a");
+        state.addLineDataKey("b");
+
+        state.clearLineDataKeys();
+
+        REQUIRE(state.lineStyleStateForKey("a") == nullptr);
+        REQUIRE(state.lineStyleStateForKey("b") == nullptr);
+    }
+
+    SECTION("multiple line keys have independent styles") {
+        state.addLineDataKey("lines_a");
+        state.addLineDataKey("lines_b");
+
+        LineStyleState * style_a = state.lineStyleStateForKey("lines_a");
+        LineStyleState * style_b = state.lineStyleStateForKey("lines_b");
+        REQUIRE(style_a != nullptr);
+        REQUIRE(style_b != nullptr);
+        REQUIRE(style_a != style_b);
+
+        style_a->setHexColor("#ff0000");
+        style_b->setHexColor("#00ff00");
+
+        REQUIRE(state.getLineKeyLineStyle("lines_a").hex_color == "#ff0000");
+        REQUIRE(state.getLineKeyLineStyle("lines_b").hex_color == "#00ff00");
     }
 }
 
@@ -529,19 +642,6 @@ TEST_CASE("OnionSkinViewState rendering parameters", "[OnionSkinViewState]")
         REQUIRE(state.isDirty());
     }
 
-    SECTION("setLineWidth changes value") {
-        state.setLineWidth(3.5f);
-        REQUIRE(state.getLineWidth() == 3.5f);
-    }
-
-    SECTION("setLineWidth emits signal") {
-        QSignalSpy spy(&state, &OnionSkinViewState::lineWidthChanged);
-
-        state.setLineWidth(4.0f);
-
-        REQUIRE(spy.count() == 1);
-    }
-
     SECTION("setHighlightCurrent changes value") {
         state.setHighlightCurrent(false);
         REQUIRE(state.getHighlightCurrent() == false);
@@ -668,7 +768,6 @@ TEST_CASE("OnionSkinViewState serialization", "[OnionSkinViewState]")
         OnionSkinViewState state;
         state.addPointDataKey("pts");
         state.glyphStyleStateForKey("pts")->setSize(12.0f);
-        state.setLineWidth(3.0f);
         state.setHighlightCurrent(false);
 
         std::string json = state.toJson();
@@ -677,8 +776,32 @@ TEST_CASE("OnionSkinViewState serialization", "[OnionSkinViewState]")
         REQUIRE(restored.fromJson(json));
         // Per-key glyph style should be restored
         REQUIRE(restored.getPointKeyGlyphStyle("pts").size == 12.0f);
-        REQUIRE(restored.getLineWidth() == 3.0f);
         REQUIRE(restored.getHighlightCurrent() == false);
+    }
+
+    SECTION("round-trip preserves per-key line styles") {
+        OnionSkinViewState state;
+        state.addLineDataKey("whisker_traces");
+        state.lineStyleStateForKey("whisker_traces")->setHexColor("#ff0000");
+        state.lineStyleStateForKey("whisker_traces")->setThickness(4.5f);
+        state.lineStyleStateForKey("whisker_traces")->setAlpha(0.8f);
+
+        std::string json = state.toJson();
+
+        OnionSkinViewState restored;
+        REQUIRE(restored.fromJson(json));
+
+        auto style = restored.getLineKeyLineStyle("whisker_traces");
+        REQUIRE(style.hex_color == "#ff0000");
+        REQUIRE(style.thickness == 4.5f);
+        REQUIRE(style.alpha == 0.8f);
+
+        // Live state should also be available
+        LineStyleState * line_state = restored.lineStyleStateForKey("whisker_traces");
+        REQUIRE(line_state != nullptr);
+        REQUIRE(line_state->hexColor() == "#ff0000");
+        REQUIRE(line_state->thickness() == 4.5f);
+        REQUIRE(line_state->alpha() == 0.8f);
     }
 
     SECTION("round-trip preserves display name") {

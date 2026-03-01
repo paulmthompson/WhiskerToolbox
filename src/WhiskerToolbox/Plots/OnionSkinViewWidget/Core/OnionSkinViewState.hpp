@@ -17,8 +17,10 @@
 
 #include "CorePlotting/CoordinateTransform/ViewStateData.hpp"
 #include "CorePlotting/DataTypes/GlyphStyleData.hpp"
+#include "CorePlotting/DataTypes/LineStyleData.hpp"
 #include "EditorState/EditorState.hpp"
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
+#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisStateData.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisStateData.hpp"
@@ -59,7 +61,10 @@ struct OnionSkinViewStateData {
     // Rendering
     /// Per-key point glyph styles (key → GlyphStyleData)
     std::map<std::string, CorePlotting::GlyphStyleData> point_key_glyph_styles;
-    float line_width = 2.0f;
+    /// Per-key line styles (key → LineStyleData)
+    std::map<std::string, CorePlotting::LineStyleData> line_key_line_styles;
+    /// Per-key mask contour styles (key → LineStyleData)
+    std::map<std::string, CorePlotting::LineStyleData> mask_key_line_styles;
     bool highlight_current = true;  ///< Draw current frame with distinct color/size
 };
 
@@ -183,10 +188,45 @@ public:
      */
     [[nodiscard]] CorePlotting::GlyphStyleData getPointKeyGlyphStyle(QString const & key) const;
 
-    // === Rendering Parameters ===
+    // === Per-Key Line Style ===
 
-    [[nodiscard]] float getLineWidth() const { return _data.line_width; }
-    void setLineWidth(float width);
+    /**
+     * @brief Get the LineStyleState for a specific line data key.
+     *
+     * Returns nullptr if the key has not been added. The returned pointer is
+     * owned by this state and must not be deleted by the caller.
+     *
+     * @param key The line data key
+     */
+    [[nodiscard]] LineStyleState * lineStyleStateForKey(QString const & key);
+
+    /**
+     * @brief Get the serializable line style data for a key (read-only).
+     *
+     * Returns a default style if the key has not been added.
+     */
+    [[nodiscard]] CorePlotting::LineStyleData getLineKeyLineStyle(QString const & key) const;
+
+    // === Per-Key Mask Contour Style ===
+
+    /**
+     * @brief Get the LineStyleState for a specific mask data key.
+     *
+     * Returns nullptr if the key has not been added. The returned pointer is
+     * owned by this state and must not be deleted by the caller.
+     *
+     * @param key The mask data key
+     */
+    [[nodiscard]] LineStyleState * maskStyleStateForKey(QString const & key);
+
+    /**
+     * @brief Get the serializable mask contour style data for a key (read-only).
+     *
+     * Returns a default style if the key has not been added.
+     */
+    [[nodiscard]] CorePlotting::LineStyleData getMaskKeyLineStyle(QString const & key) const;
+
+    // === Rendering Parameters ===
 
     [[nodiscard]] bool getHighlightCurrent() const { return _data.highlight_current; }
     void setHighlightCurrent(bool highlight);
@@ -223,7 +263,14 @@ signals:
     void glyphStyleChanged();
     /** @brief Emitted when the glyph style for a specific point key changes */
     void pointKeyGlyphStyleChanged(QString const & key);
-    void lineWidthChanged(float width);
+    /** @brief Emitted when the line style for any line key changes */
+    void lineStyleChanged();
+    /** @brief Emitted when the line style for a specific line key changes */
+    void lineKeyLineStyleChanged(QString const & key);
+    /** @brief Emitted when the mask contour style for any mask key changes */
+    void maskStyleChanged();
+    /** @brief Emitted when the mask contour style for a specific mask key changes */
+    void maskKeyLineStyleChanged(QString const & key);
     void highlightCurrentChanged(bool highlight);
 
 private:
@@ -232,6 +279,10 @@ private:
     std::unique_ptr<VerticalAxisState> _vertical_axis_state;
     /// Per-key GlyphStyleState objects (one per point data key)
     std::map<std::string, std::unique_ptr<GlyphStyleState>> _point_glyph_style_states;
+    /// Per-key LineStyleState objects (one per line data key)
+    std::map<std::string, std::unique_ptr<LineStyleState>> _line_style_states;
+    /// Per-key LineStyleState objects (one per mask data key)
+    std::map<std::string, std::unique_ptr<LineStyleState>> _mask_line_style_states;
 
     /**
      * @brief Create a GlyphStyleState for a newly added point key.
@@ -240,6 +291,22 @@ private:
      * or uses the default style. Connects signals for scene rebuild.
      */
     void _createGlyphStyleStateForKey(std::string const & key);
+
+    /**
+     * @brief Create a LineStyleState for a newly added line key.
+     *
+     * Looks up existing serialized style from _data.line_key_line_styles,
+     * or uses the default style. Connects signals for scene rebuild.
+     */
+    void _createLineStyleStateForKey(std::string const & key);
+
+    /**
+     * @brief Create a LineStyleState for a newly added mask key.
+     *
+     * Looks up existing serialized style from _data.mask_key_line_styles,
+     * or uses the default style. Connects signals for scene rebuild.
+     */
+    void _createMaskStyleStateForKey(std::string const & key);
 };
 
 #endif  // ONION_SKIN_VIEW_STATE_HPP

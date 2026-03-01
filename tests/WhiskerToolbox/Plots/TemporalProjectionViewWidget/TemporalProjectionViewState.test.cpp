@@ -42,7 +42,7 @@ TEST_CASE("TemporalProjectionViewState construction", "[TemporalProjectionViewSt
         REQUIRE(state.getPointDataKeys().empty());
         REQUIRE(state.getLineDataKeys().empty());
         REQUIRE(state.getPointSize() == 5.0f);
-        REQUIRE(state.getLineWidth() == 2.0f);
+        REQUIRE(state.getLineWidth() == 1.0f);  // LineStyleData default
         REQUIRE(state.getSelectionMode() == "none");
     }
 }
@@ -299,12 +299,11 @@ TEST_CASE("TemporalProjectionViewState rendering parameters", "[TemporalProjecti
     }
     
     SECTION("setLineWidth emits signal") {
-        QSignalSpy spy(&state, &TemporalProjectionViewState::lineWidthChanged);
+        QSignalSpy spy(&state, &TemporalProjectionViewState::lineStyleChanged);
         
         state.setLineWidth(3.5f);
         
         REQUIRE(spy.count() == 1);
-        REQUIRE(spy.takeFirst().at(0).toFloat() == 3.5f);
     }
     
     SECTION("setLineWidth marks dirty") {
@@ -315,7 +314,7 @@ TEST_CASE("TemporalProjectionViewState rendering parameters", "[TemporalProjecti
     
     SECTION("setting same line width does not emit signal") {
         state.setLineWidth(2.0f);
-        QSignalSpy spy(&state, &TemporalProjectionViewState::lineWidthChanged);
+        QSignalSpy spy(&state, &TemporalProjectionViewState::lineStyleChanged);
         
         state.setLineWidth(2.0f);
         

@@ -51,7 +51,6 @@
 
 #include <memory>
 
-// Forward declarations
 class DataManager;
 class EditorRegistry;
 

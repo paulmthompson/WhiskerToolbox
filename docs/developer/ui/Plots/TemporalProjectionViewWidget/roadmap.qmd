@@ -29,47 +29,10 @@ The following features are complete and documented in [index.qmd](index.qmd):
 - **State serialization**: Full round-trip JSON via `rfl::json`
 - **Registration wiring**: `timePositionSelected` → `EditorRegistry::setCurrentTime()` connection
 
-**Not yet implemented**: line color configuration,
-polygon selection, double-click time navigation, group integration, group-based coloring,
+- **Line style customization** (Phase 2): `LineStyleData` (color, thickness, alpha) via `LineStyleState`/`LineStyleControls` — global single style, replaces hardcoded red
+
+**Not yet implemented**: polygon selection, double-click time navigation, group integration, group-based coloring,
 and subgroup visibility filtering described below.
-
----
-
-## Phase 2: Line Color Customization
-
-**Status**: Not started. Lines currently render as semi-transparent red (normal) and yellow
-(selected), hardcoded in `initializeGL()`.
-
-**Goal**: Allow the user to configure line rendering appearance (color, thickness), following
-the per-series options pattern from [LinePlotWidget](../LinePlotWidget/index.qmd).
-
-### 2.1 Line Options in State
-
-Extend `TemporalProjectionViewStateData`:
-
-```cpp
-struct LineRenderOptions {
-    std::string hex_color = "#CC3333";  ///< Normal line color
-    float line_width = 2.0f;           ///< Line thickness in pixels
-    float alpha = 0.6f;               ///< Opacity for normal lines
-};
-```
-
-As with point options, start with a single global `LineRenderOptions` and expand to
-per-key options later via `std::map<std::string, LineRenderOptions>`.
-
-### 2.2 Properties Panel Controls
-
-Add a "Line Appearance" collapsible section:
-
-- **Color button** — opens `QColorDialog`
-- **Line width spinbox** — thickness in pixels (existing, move into this section)
-- **Alpha slider** — opacity (0.0–1.0)
-
-### 2.3 Rendering Update
-
-Apply configurable colors to `BatchLineRenderer::setGlobalColor()` and
-`BatchLineRenderer::setLineWidth()` during initialization and when state changes.
 
 ---
 
@@ -452,7 +415,6 @@ for (auto const & pb : point_batches) {
 ## Dependency Graph
 
 ```
-Phase 2: Line Color Customization
 Phase 3: Double-Click Time Navigation
     │
     │   (all independent of each other, can be done in any order)
@@ -498,8 +460,8 @@ Components that should be factored into shared locations rather than implemented
 | `GlyphStyleControls` widget | `Plots/Common/GlyphStyleWidget/` | TemporalProjectionViewWidget, [OnionSkinViewWidget](../OnionSkinViewWidget/roadmap.qmd) |
 ## Design Decisions
 
-1. **Per-key vs. global rendering options**: Phase 2 start with global options
-   (simpler), extended to per-key options in Phase 8 to avoid premature complexity.
+1. **Per-key vs. global rendering options**: Phase 2 started with global options
+   (simpler, now complete), extended to per-key options in Phase 8 to avoid premature complexity.
 
 2. **Polygon interaction**: Uses the existing `PolygonInteractionController` from
    `CorePlotting/Interaction/`. This shared controller handles click-based polygon creation,

@@ -1,6 +1,9 @@
 
 #include "PipelineLoader.hpp"
 
+#include "core/ElementRegistry.hpp" // elmentRegistry
+#include "core/ParameterIO.hpp" // loadParametersForTransform
+
 namespace WhiskerToolbox::Transforms::V2::Examples {
 
 PipelineStep createPipelineStepFromRegistry(

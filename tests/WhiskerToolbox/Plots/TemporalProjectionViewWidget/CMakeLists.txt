@@ -23,6 +23,7 @@ target_link_libraries(test_temporal_projection_view_widget PRIVATE
     TemporalProjectionViewWidget
     HorizontalAxisWidget
     VerticalAxisWidget
+    LineStyleControls
     DataManager 
     EditorState
     CorePlotting

@@ -1,8 +1,6 @@
 #ifndef WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
 #define WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
 
-#include "core/ElementRegistry.hpp"
-
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -119,13 +117,9 @@ bool saveParametersToFile(ParamsT const& params,
  *     auto params = std::any_cast<MaskAreaParams>(params_any);
  *     // use params...\n * }\n * ```
  */
-inline std::any loadParametersForTransform(
+std::any loadParametersForTransform(
     std::string const& transform_name,
-    std::string const& json_str)
-{
-    auto& registry = ElementRegistry::instance();
-    return registry.deserializeParameters(transform_name, json_str);
-}
+    std::string const& json_str);
 
 } // namespace WhiskerToolbox::Transforms::V2::Examples
 

@@ -1,7 +1,10 @@
 #include "HeatmapOpenGLWidget.hpp"
 
+#include "CorePlotting/Colormaps/Colormap.hpp"
+#include "CorePlotting/Mappers/HeatmapMapper.hpp"
 #include "DataManager/DataManager.hpp"
 #include "GatherResult/GatherResult.hpp"
+#include "Plots/Common/EventRateEstimation/EventRateEstimation.hpp"
 #include "Plots/Common/PlotAlignmentGather.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 
@@ -116,7 +119,7 @@ void HeatmapOpenGLWidget::paintGL()
         rebuildScene();
         _scene_dirty = false;
     }
-    // TODO: Render heatmap visualization here
+    _scene_renderer.render(_view_matrix, _projection_matrix);
 }
 
 void HeatmapOpenGLWidget::resizeGL(int w, int h)
@@ -222,9 +225,106 @@ void HeatmapOpenGLWidget::rebuildScene()
         _scene_renderer.clearScene();
         return;
     }
-    // TODO: Gather trial-aligned AnalogTimeSeries data
-    // TODO: Build heatmap visualization scene
-    _scene_renderer.clearScene();
+
+    auto const & unit_keys = _state->unitKeys();
+    if (unit_keys.empty()) {
+        _scene_renderer.clearScene();
+        emit unitCountChanged(0);
+        return;
+    }
+
+    auto * alignment_state = _state->alignmentState();
+    if (!alignment_state) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    double const window_size = _state->getWindowSize();
+    if (window_size <= 0.0) {
+        _scene_renderer.clearScene();
+        return;
+    }
+
+    // 1. Gather trial-aligned DigitalEventSeries data for all selected units
+    auto contexts = WhiskerToolbox::Plots::createUnitGatherContexts(
+        _data_manager, unit_keys, alignment_state->data());
+
+    if (contexts.empty()) {
+        _scene_renderer.clearScene();
+        emit unitCountChanged(0);
+        return;
+    }
+
+    // 2. Estimate firing rates for all units using configured estimation method
+    auto rate_estimates = WhiskerToolbox::Plots::estimateRates(
+        contexts, window_size, _state->estimationParams());
+
+    if (rate_estimates.empty()) {
+        _scene_renderer.clearScene();
+        emit unitCountChanged(0);
+        return;
+    }
+
+    // 3. Apply scaling in-place using the selected scaling mode
+    auto const scaling = _state->scaling();
+    // TODO: make time_units_per_second configurable if data uses non-ms units
+    constexpr double time_units_per_second = 1000.0;
+    for (auto & est : rate_estimates) {
+        WhiskerToolbox::Plots::applyScaling(est, scaling, time_units_per_second);
+    }
+
+    // 4. Convert RateEstimate to CorePlotting::HeatmapRowData for the mapper
+    //    times[] are bin centers; reconstruct left edges from sample_spacing.
+    std::vector<CorePlotting::HeatmapRowData> rows;
+    rows.reserve(rate_estimates.size());
+    for (auto & est : rate_estimates) {
+        double const spacing = est.metadata.sample_spacing;
+        double const left_edge = est.times.empty()
+            ? 0.0 : est.times.front() - spacing / 2.0;
+        rows.push_back(CorePlotting::HeatmapRowData{
+            .values = std::move(est.values),
+            .bin_start = left_edge,
+            .bin_width = spacing,
+        });
+    }
+
+    // 5. Build the colored rectangle scene with appropriate colormap and range
+    auto const & color_range_config = _state->colorRange();
+
+    // Use Coolwarm for z-score, Inferno otherwise
+    auto const colormap_preset =
+        (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore)
+            ? CorePlotting::Colormaps::ColormapPreset::Coolwarm
+            : CorePlotting::Colormaps::ColormapPreset::Inferno;
+    auto colormap = CorePlotting::Colormaps::getColormap(colormap_preset);
+
+    // Map state color range config to CorePlotting::HeatmapColorRange
+    CorePlotting::HeatmapColorRange mapper_range;
+    switch (color_range_config.mode) {
+        case HeatmapColorRangeConfig::Mode::Auto:
+            mapper_range.mode = CorePlotting::HeatmapColorRange::Mode::Auto;
+            break;
+        case HeatmapColorRangeConfig::Mode::Manual:
+            mapper_range.mode = CorePlotting::HeatmapColorRange::Mode::Manual;
+            mapper_range.vmin = static_cast<float>(color_range_config.vmin);
+            mapper_range.vmax = static_cast<float>(color_range_config.vmax);
+            break;
+        case HeatmapColorRangeConfig::Mode::Symmetric:
+            mapper_range.mode = CorePlotting::HeatmapColorRange::Mode::Symmetric;
+            break;
+    }
+
+    auto scene = CorePlotting::HeatmapMapper::buildScene(
+        rows, colormap, mapper_range);
+
+    _scene_renderer.uploadScene(scene);
+
+    // 6. Update Y-axis to reflect unit count
+    auto const num_units = rows.size();
+    if (num_units != _unit_count) {
+        _unit_count = num_units;
+        emit unitCountChanged(_unit_count);
+    }
 }
 
 void HeatmapOpenGLWidget::updateMatrices()
