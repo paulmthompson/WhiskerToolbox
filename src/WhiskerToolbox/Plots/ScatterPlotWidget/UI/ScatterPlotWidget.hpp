@@ -18,6 +18,7 @@
 #include <memory>
 
 class DataManager;
+class GroupManager;
 class ScatterPlotState;
 class ScatterPlotOpenGLWidget;
 class HorizontalAxisRangeControls;
@@ -45,6 +46,12 @@ public:
     void setState(std::shared_ptr<ScatterPlotState> state);
     [[nodiscard]] std::shared_ptr<ScatterPlotState> state() const { return _state; }
     [[nodiscard]] ScatterPlotState * state();
+    
+    /**
+     * @brief Set the GroupManager for group-related context menu actions
+     * @param group_manager Pointer to the GroupManager (not owned)
+     */
+    void setGroupManager(GroupManager * group_manager);
 
     [[nodiscard]] HorizontalAxisRangeControls * getHorizontalRangeControls() const;
     [[nodiscard]] VerticalAxisRangeControls * getVerticalRangeControls() const;

@@ -36,6 +36,7 @@
 
 class DataManager;
 class EditorRegistry;
+class GroupManager;
 
 namespace ScatterPlotWidgetModule {
 
@@ -47,11 +48,16 @@ namespace ScatterPlotWidgetModule {
  * - View factory: Creates ScatterPlotWidget (the main plot component)
  * - Properties factory: Creates ScatterPlotPropertiesWidget
  * 
+ * The Scatter Plot supports group context menu for adding selected points
+ * to entity groups when a GroupManager is provided.
+ * 
  * @param registry The EditorRegistry to register types with
  * @param data_manager Shared DataManager for widget construction
+ * @param group_manager Optional GroupManager for group-aware features (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager);
+                   std::shared_ptr<DataManager> data_manager,
+                   GroupManager * group_manager = nullptr);
 
 }  // namespace ScatterPlotWidgetModule
 

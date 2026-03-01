@@ -79,6 +79,9 @@ set(COREPLOTTING_SOURCES
     Interaction/HitTestResult.hpp
     Interaction/SceneHitTester.cpp
     Interaction/SceneHitTester.hpp
+    # Selection (polygon containment, shared across plot widgets)
+    Selection/PolygonSelection.hpp
+    Selection/PolygonSelection.cpp
     # Export
     Export/SVGPrimitives.hpp
     Export/SVGPrimitives.cpp

@@ -170,6 +170,33 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
     int glyph_insert_idx = ui->main_layout->indexOf(_reference_line_section) + 1;
     ui->main_layout->insertWidget(glyph_insert_idx, _glyph_style_section);
 
+    // === Selection Mode Section ===
+    _selection_section = new Section(this, "Selection");
+
+    auto * sel_layout = new QVBoxLayout();
+    sel_layout->setContentsMargins(4, 4, 4, 4);
+    sel_layout->setSpacing(4);
+
+    auto * sel_form = new QFormLayout();
+    sel_form->setContentsMargins(0, 0, 0, 0);
+    _selection_mode_combo = new QComboBox();
+    _selection_mode_combo->addItem("Single Point");
+    _selection_mode_combo->addItem("Polygon");
+    sel_form->addRow("Mode:", _selection_mode_combo);
+    sel_layout->addLayout(sel_form);
+
+    _selection_instructions_label = new QLabel();
+    _selection_instructions_label->setWordWrap(true);
+    _selection_instructions_label->setStyleSheet("color: #888; font-size: 11px;");
+    sel_layout->addWidget(_selection_instructions_label);
+
+    _selection_section->setContentLayout(*sel_layout);
+
+    int sel_insert_idx = ui->main_layout->indexOf(_glyph_style_section) + 1;
+    ui->main_layout->insertWidget(sel_insert_idx, _selection_section);
+
+    _updateSelectionInstructions();
+
     // --- Connections ---
     connect(_x_key_combo, &QComboBox::currentIndexChanged,
             this, [this]() { if (!_updating_combos) _onXKeyChanged(); });
@@ -185,6 +212,8 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI()
             this, &ScatterPlotPropertiesWidget::_onYOffsetChanged);
     connect(_reference_line_checkbox, &QCheckBox::toggled,
             this, &ScatterPlotPropertiesWidget::_onReferenceLineToggled);
+    connect(_selection_mode_combo, &QComboBox::currentIndexChanged,
+            this, &ScatterPlotPropertiesWidget::_onSelectionModeChanged);
 
     // Populate initial data
     _populateKeyComboBoxes();
@@ -354,6 +383,40 @@ void ScatterPlotPropertiesWidget::_onReferenceLineToggled(bool checked)
 {
     if (_state) {
         _state->setShowReferenceLine(checked);
+    }
+}
+
+void ScatterPlotPropertiesWidget::_onSelectionModeChanged(int index)
+{
+    if (_updating_combos || !_state) {
+        return;
+    }
+    auto mode = (index == 1) ? ScatterSelectionMode::Polygon : ScatterSelectionMode::SinglePoint;
+    _state->setSelectionMode(mode);
+    _updateSelectionInstructions();
+}
+
+void ScatterPlotPropertiesWidget::_updateSelectionInstructions()
+{
+    if (!_selection_instructions_label || !_selection_mode_combo) {
+        return;
+    }
+
+    int const idx = _selection_mode_combo->currentIndex();
+    if (idx == 0) {
+        // Single Point
+        _selection_instructions_label->setText(
+            "Ctrl+Click: toggle point selection\n"
+            "Shift+Click: remove from selection\n"
+            "Right-click: group context menu");
+    } else {
+        // Polygon
+        _selection_instructions_label->setText(
+            "Ctrl+Click: add polygon vertex\n"
+            "Enter: close polygon & select enclosed points\n"
+            "Backspace: undo last vertex\n"
+            "Escape: cancel polygon\n"
+            "Right-click: group context menu");
     }
 }
 
@@ -554,6 +617,14 @@ void ScatterPlotPropertiesWidget::_updateUIFromState()
     // Reference line
     if (_reference_line_checkbox) {
         _reference_line_checkbox->setChecked(_state->showReferenceLine());
+    }
+
+    // Selection mode
+    if (_selection_mode_combo) {
+        auto mode = _state->selectionMode();
+        _selection_mode_combo->setCurrentIndex(
+            mode == ScatterSelectionMode::Polygon ? 1 : 0);
+        _updateSelectionInstructions();
     }
 
     _updating_combos = false;

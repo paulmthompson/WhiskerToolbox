@@ -7,10 +7,16 @@
 #include "CorePlotting/Interaction/HitTestResult.hpp"
 #include "CorePlotting/Mappers/MappedElement.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
+#include "CorePlotting/Selection/PolygonSelection.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "DataManager/DataManager.hpp"
+#include "GroupContextMenu/GroupContextMenuHandler.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
 
+#include <QContextMenuEvent>
+#include <QKeyEvent>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QWheelEvent>
 
@@ -34,6 +40,7 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
 ScatterPlotOpenGLWidget::~ScatterPlotOpenGLWidget()
 {
     makeCurrent();
+    _preview_renderer.cleanup();
     _scene_renderer.cleanup();
     doneCurrent();
 }
@@ -58,6 +65,15 @@ void ScatterPlotOpenGLWidget::setState(std::shared_ptr<ScatterPlotState> state)
                 this, [this]() { _scene_dirty = true; update(); });
         connect(_state.get(), &ScatterPlotState::glyphStyleChanged,
                 this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::selectionChanged,
+                this, [this]() { _scene_dirty = true; update(); });
+        connect(_state.get(), &ScatterPlotState::selectionModeChanged,
+                this, [this]() {
+                    // Cancel any in-progress polygon when switching modes
+                    cancelPolygonSelection();
+                    _scene_dirty = true;
+                    update();
+                });
         _scene_dirty = true;
         updateMatrices();
         update();
@@ -88,6 +104,7 @@ void ScatterPlotOpenGLWidget::initializeGL()
     if (!_scene_renderer.initialize()) {
         return;
     }
+    _preview_renderer.initialize();
     _opengl_initialized = true;
     updateMatrices();
 }
@@ -106,6 +123,14 @@ void ScatterPlotOpenGLWidget::paintGL()
     }
 
     _scene_renderer.render(_view_matrix, _projection_matrix);
+
+    // Render polygon selection preview overlay (in screen coordinates)
+    if (_polygon_controller.isActive() && _preview_renderer.isInitialized()) {
+        auto preview = _polygon_controller.getPreview();
+        if (preview.isValid()) {
+            _preview_renderer.render(preview, _widget_width, _widget_height);
+        }
+    }
 }
 
 void ScatterPlotOpenGLWidget::resizeGL(int w, int h)
@@ -119,6 +144,28 @@ void ScatterPlotOpenGLWidget::resizeGL(int w, int h)
 void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::LeftButton) {
+        bool const ctrl = (event->modifiers() & Qt::ControlModifier) != 0;
+        bool const shift = (event->modifiers() & Qt::ShiftModifier) != 0;
+
+        if (_state && (ctrl || shift)) {
+            auto const mode = _state->selectionMode();
+            if (mode == ScatterSelectionMode::SinglePoint) {
+                if (ctrl) {
+                    handleSinglePointCtrlClick(event->pos());
+                } else if (shift) {
+                    handleSinglePointShiftClick(event->pos());
+                }
+                event->accept();
+                return;
+            }
+            if (mode == ScatterSelectionMode::Polygon && ctrl) {
+                handlePolygonCtrlClick(event);
+                event->accept();
+                return;
+            }
+        }
+
+        // Default: start potential pan
         _is_panning = false;
         _click_start_pos = event->pos();
         _last_mouse_pos = event->pos();
@@ -128,6 +175,14 @@ void ScatterPlotOpenGLWidget::mousePressEvent(QMouseEvent * event)
 
 void ScatterPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event)
 {
+    // Update polygon preview line during polygon selection
+    if (_polygon_controller.isActive()) {
+        auto const screen_x = static_cast<float>(event->pos().x());
+        auto const screen_y = static_cast<float>(event->pos().y());
+        _polygon_controller.updateCursorPosition(screen_x, screen_y);
+        update();  // Redraw to show updated preview
+    }
+
     if (event->buttons() & Qt::LeftButton) {
         int const dx = event->pos().x() - _click_start_pos.x();
         int const dy = event->pos().y() - _click_start_pos.y();
@@ -159,48 +214,29 @@ void ScatterPlotOpenGLWidget::mouseReleaseEvent(QMouseEvent * event)
 
 void ScatterPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event)
 {
-    if (event->button() != Qt::LeftButton || !_state || !_data_manager || _scatter_data.empty()) {
+    if (event->button() != Qt::LeftButton || !_state || !_data_manager) {
         QOpenGLWidget::mouseDoubleClickEvent(event);
         return;
     }
 
-    QPointF const world = screenToWorld(event->pos());
+    auto const hit_index = hitTestPointAt(event->pos());
+    if (!hit_index.has_value()) {
+        event->accept();
+        return;
+    }
 
-    // Convert pixel tolerance to world units (max of X and Y to handle non-uniform aspect)
-    float const world_per_pixel_x = static_cast<float>(
-        (_cached_view_state.x_max - _cached_view_state.x_min)
-        / (_widget_width * _cached_view_state.x_zoom));
-    float const world_per_pixel_y = static_cast<float>(
-        (_cached_view_state.y_max - _cached_view_state.y_min)
-        / (_widget_height * _cached_view_state.y_zoom));
-    float const world_tolerance = 8.0f * std::max(world_per_pixel_x, world_per_pixel_y);
+    auto const idx = *hit_index;
+    _navigated_index = idx;
+    _scene_dirty = true;
+    update();
 
-    CorePlotting::HitTestConfig config;
-    config.point_tolerance = world_tolerance;
-    config.prioritize_discrete = true;
-    _hit_tester.setConfig(config);
-
-    auto const result = _hit_tester.queryQuadTree(
-        static_cast<float>(world.x()),
-        static_cast<float>(world.y()),
-        _scene);
-
-    if (result.hasHit() && result.entity_id.has_value()) {
-        auto const idx = static_cast<std::size_t>(result.entity_id->id);
-        if (idx < _scatter_data.size()) {
-            _navigated_index = idx;
-            _scene_dirty = true;
-            update();
-
-            // Build TimePosition from the x-axis data source's TimeFrame
-            auto const & x_source = _state->xSource();
-            if (x_source.has_value()) {
-                auto const time_key = _data_manager->getTimeKey(x_source->data_key);
-                auto time_frame = _data_manager->getTime(time_key);
-                TimeFrameIndex const tfi = _scatter_data.time_indices[idx];
-                emit pointDoubleClicked(TimePosition{tfi, std::move(time_frame)});
-            }
-        }
+    // Build TimePosition from the x-axis data source's TimeFrame
+    auto const & x_source = _state->xSource();
+    if (x_source.has_value()) {
+        auto const time_key = _data_manager->getTimeKey(x_source->data_key);
+        auto time_frame = _data_manager->getTime(time_key);
+        TimeFrameIndex const tfi = _scatter_data.time_indices[idx];
+        emit pointDoubleClicked(TimePosition{tfi, std::move(time_frame)});
     }
     event->accept();
 }
@@ -212,6 +248,32 @@ void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event)
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
     event->accept();
+}
+
+void ScatterPlotOpenGLWidget::keyPressEvent(QKeyEvent * event)
+{
+    if (_polygon_controller.isActive()) {
+        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+            completePolygonSelection();
+            event->accept();
+            return;
+        }
+        if (event->key() == Qt::Key_Escape) {
+            cancelPolygonSelection();
+            event->accept();
+            return;
+        }
+        if (event->key() == Qt::Key_Backspace) {
+            _polygon_controller.removeLastVertex();
+            if (!_polygon_vertices_world.empty()) {
+                _polygon_vertices_world.pop_back();
+            }
+            update();
+            event->accept();
+            return;
+        }
+    }
+    QOpenGLWidget::keyPressEvent(event);
 }
 
 void ScatterPlotOpenGLWidget::onStateChanged()
@@ -349,7 +411,36 @@ void ScatterPlotOpenGLWidget::rebuildScene()
     point_style.size = glyph_data.size;
     point_style.color = CorePlotting::hexColorToVec4(glyph_data.hex_color, glyph_data.alpha);
 
-    builder.addGlyphs("scatter_points", elements, point_style);
+    // Separate selected and unselected points into two batches
+    auto const & selected_indices = _state->selectedIndices();
+    std::unordered_set<std::size_t> selected_set(selected_indices.begin(), selected_indices.end());
+
+    std::vector<CorePlotting::MappedElement> unselected_elements;
+    std::vector<CorePlotting::MappedElement> selected_elements;
+    unselected_elements.reserve(elements.size());
+
+    for (std::size_t i = 0; i < elements.size(); ++i) {
+        if (selected_set.contains(i)) {
+            selected_elements.push_back(elements[i]);
+        } else {
+            unselected_elements.push_back(elements[i]);
+        }
+    }
+
+    // Render unselected points with the normal style
+    if (!unselected_elements.empty()) {
+        builder.addGlyphs("scatter_points", std::move(unselected_elements), point_style);
+    }
+
+    // Render selected points with a highlighted style (larger, orange/yellow ring)
+    if (!selected_elements.empty()) {
+        CorePlotting::GlyphStyle selected_style;
+        selected_style.glyph_type = CorePlotting::RenderableGlyphBatch::GlyphType::Circle;
+        selected_style.size = glyph_data.size + 4.0f;
+        selected_style.color = glm::vec4(1.0f, 0.6f, 0.0f, 0.9f);  // Orange highlight
+
+        builder.addGlyphs("scatter_selected", std::move(selected_elements), selected_style);
+    }
 
     // Add highlight glyph for the most recently navigated-to point
     if (_navigated_index.has_value() && *_navigated_index < elements.size()) {
@@ -381,4 +472,256 @@ void ScatterPlotOpenGLWidget::rebuildScene()
 
     _scene = builder.build();
     _scene_renderer.uploadScene(_scene);
+}
+
+void ScatterPlotOpenGLWidget::setGroupManager(GroupManager * group_manager)
+{
+    // Disconnect from previous group manager if any
+    if (_group_manager) {
+        disconnect(_group_manager, nullptr, this, nullptr);
+    }
+
+    _group_manager = group_manager;
+
+    // Create context menu if it doesn't exist
+    if (!_context_menu) {
+        createContextMenu();
+    }
+
+    // Update the group menu handler with the new group manager
+    if (_group_menu_handler) {
+        _group_menu_handler->setGroupManager(group_manager);
+    }
+
+    // Connect to group manager signals if available
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::groupCreated, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+        connect(_group_manager, &GroupManager::groupRemoved, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+        connect(_group_manager, &GroupManager::groupModified, this, [this]() {
+            _scene_dirty = true;
+            update();
+        });
+    }
+}
+
+void ScatterPlotOpenGLWidget::createContextMenu()
+{
+    _context_menu = new QMenu(this);
+
+    // Create the group context menu handler
+    _group_menu_handler = std::make_unique<GroupContextMenuHandler>(this);
+
+    // Setup callbacks for the group handler
+    GroupContextMenuCallbacks callbacks;
+    callbacks.getSelectedEntities = [this]() {
+        return getSelectedEntities();
+    };
+    callbacks.clearSelection = [this]() {
+        if (_state) {
+            _state->clearSelection();
+        }
+    };
+    callbacks.hasSelection = [this]() {
+        return _state && !_state->selectedIndices().empty();
+    };
+    callbacks.onGroupOperationCompleted = [this]() {
+        if (_state) {
+            _state->clearSelection();
+        }
+        _scene_dirty = true;
+        update();
+    };
+
+    _group_menu_handler->setCallbacks(callbacks);
+
+    if (_group_manager) {
+        _group_menu_handler->setGroupManager(_group_manager);
+    }
+
+    _group_menu_handler->setupGroupMenuSection(_context_menu, true);
+
+    auto * clear_selection_action = new QAction("Clear Selection", this);
+    _context_menu->addAction(clear_selection_action);
+    connect(clear_selection_action, &QAction::triggered, this, [this]() {
+        if (_state) {
+            _state->clearSelection();
+        }
+    });
+}
+
+void ScatterPlotOpenGLWidget::contextMenuEvent(QContextMenuEvent * event)
+{
+    if (!_context_menu || !_group_manager) {
+        QOpenGLWidget::contextMenuEvent(event);
+        return;
+    }
+
+    _group_menu_handler->updateMenuState(_context_menu);
+    _context_menu->popup(event->globalPos());
+    event->accept();
+}
+
+std::optional<std::size_t> ScatterPlotOpenGLWidget::hitTestPointAt(QPoint const & screen_pos) const
+{
+    if (!_state || !_data_manager || _scatter_data.empty()) {
+        return std::nullopt;
+    }
+
+    QPointF const world = screenToWorld(screen_pos);
+
+    // Convert pixel tolerance to world units
+    float const world_per_pixel_x = static_cast<float>(
+        (_cached_view_state.x_max - _cached_view_state.x_min)
+        / (_widget_width * _cached_view_state.x_zoom));
+    float const world_per_pixel_y = static_cast<float>(
+        (_cached_view_state.y_max - _cached_view_state.y_min)
+        / (_widget_height * _cached_view_state.y_zoom));
+    float const world_tolerance = 8.0f * std::max(world_per_pixel_x, world_per_pixel_y);
+
+    CorePlotting::HitTestConfig config;
+    config.point_tolerance = world_tolerance;
+    config.prioritize_discrete = true;
+    
+    // Note: We need a mutable hit tester for the query, but this is safe
+    // as the config doesn't persist and queryQuadTree is conceptually const
+    auto & mutable_tester = const_cast<CorePlotting::SceneHitTester &>(_hit_tester);
+    mutable_tester.setConfig(config);
+
+    auto const result = mutable_tester.queryQuadTree(
+        static_cast<float>(world.x()),
+        static_cast<float>(world.y()),
+        _scene);
+
+    if (result.hasHit() && result.entity_id.has_value()) {
+        auto const idx = static_cast<std::size_t>(result.entity_id->id);
+        if (idx < _scatter_data.size()) {
+            return idx;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::unordered_set<EntityId> ScatterPlotOpenGLWidget::getSelectedEntities() const
+{
+    std::unordered_set<EntityId> result;
+    if (!_state || _scatter_data.empty()) {
+        return result;
+    }
+    for (auto const idx : _state->selectedIndices()) {
+        if (idx < _scatter_data.size()) {
+            auto eid = getEntityIdForPoint(idx);
+            if (eid.has_value()) {
+                result.insert(*eid);
+            }
+        }
+    }
+    return result;
+}
+
+std::optional<EntityId> ScatterPlotOpenGLWidget::getEntityIdForPoint(std::size_t index) const
+{
+    if (index >= _scatter_data.size() || !_state || !_data_manager) {
+        return std::nullopt;
+    }
+
+    TimeFrameIndex const tfi = _scatter_data.time_indices[index];
+    return EntityId{static_cast<uint64_t>(tfi.getValue())};
+}
+
+// === Single-point selection ===
+
+void ScatterPlotOpenGLWidget::handleSinglePointCtrlClick(QPoint const & screen_pos)
+{
+    if (!_state) return;
+
+    auto const hit_index = hitTestPointAt(screen_pos);
+    if (!hit_index.has_value()) {
+        return;
+    }
+    auto const idx = *hit_index;
+
+    // Toggle: if already selected, deselect; otherwise, add to selection
+    if (_state->isSelected(idx)) {
+        _state->removeSelectedIndex(idx);
+    } else {
+        _state->addSelectedIndex(idx);
+    }
+}
+
+void ScatterPlotOpenGLWidget::handleSinglePointShiftClick(QPoint const & screen_pos)
+{
+    if (!_state) return;
+
+    auto const hit_index = hitTestPointAt(screen_pos);
+    if (!hit_index.has_value()) {
+        return;
+    }
+    // Shift+Click always removes from selection
+    _state->removeSelectedIndex(*hit_index);
+}
+
+// === Polygon selection ===
+
+void ScatterPlotOpenGLWidget::handlePolygonCtrlClick(QMouseEvent * event)
+{
+    auto const screen_x = static_cast<float>(event->pos().x());
+    auto const screen_y = static_cast<float>(event->pos().y());
+    QPointF const world = screenToWorld(event->pos());
+
+    if (!_polygon_controller.isActive()) {
+        // Start a new polygon
+        _polygon_vertices_world.clear();
+        _polygon_vertices_world.emplace_back(
+            static_cast<float>(world.x()), static_cast<float>(world.y()));
+        _polygon_controller.start(screen_x, screen_y, "scatter_polygon_selection");
+    } else {
+        // Add a vertex
+        _polygon_vertices_world.emplace_back(
+            static_cast<float>(world.x()), static_cast<float>(world.y()));
+        auto result = _polygon_controller.addVertex(screen_x, screen_y);
+        if (result == CorePlotting::Interaction::AddVertexResult::ClosedPolygon) {
+            completePolygonSelection();
+            return;
+        }
+    }
+    update();
+}
+
+void ScatterPlotOpenGLWidget::completePolygonSelection()
+{
+    if (!_state || _polygon_vertices_world.size() < 3) {
+        cancelPolygonSelection();
+        return;
+    }
+
+    _polygon_controller.complete();
+
+    // Run point-in-polygon selection on the scatter data
+    auto selection_result = CorePlotting::Selection::selectPointsInPolygon(
+        _polygon_vertices_world,
+        _scatter_data.x_values,
+        _scatter_data.y_values);
+
+    // Merge into the current selection (additive)
+    for (auto idx : selection_result.selected_indices) {
+        _state->addSelectedIndex(idx);
+    }
+
+    _polygon_vertices_world.clear();
+    _scene_dirty = true;
+    update();
+}
+
+void ScatterPlotOpenGLWidget::cancelPolygonSelection()
+{
+    _polygon_controller.cancel();
+    _polygon_vertices_world.clear();
+    update();
 }

@@ -72,6 +72,8 @@ private:
     void _updateUIFromState();
     void _applyXSourceToState();
     void _applyYSourceToState();
+    void _onSelectionModeChanged(int index);
+    void _updateSelectionInstructions();
 
     Ui::ScatterPlotPropertiesWidget * ui;
     std::shared_ptr<ScatterPlotState> _state;
@@ -96,6 +98,11 @@ private:
     // Glyph style
     Section * _glyph_style_section{nullptr};
     GlyphStyleControls * _glyph_style_controls{nullptr};
+
+    // Selection mode
+    Section * _selection_section{nullptr};
+    QComboBox * _selection_mode_combo{nullptr};
+    QLabel * _selection_instructions_label{nullptr};
 
     // Axis range controls
     HorizontalAxisRangeControls * _horizontal_range_controls{nullptr};
