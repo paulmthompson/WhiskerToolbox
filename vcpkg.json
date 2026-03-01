@@ -32,7 +32,9 @@
         },
         {
             "name": "python3",
-            "default-features": false
+            "default-features": false,
+            "features": [
+            ]
         },
         {
             "name": "reflectcpp"
@@ -198,6 +200,10 @@
         {
             "name": "protobuf",
             "version": "5.29.3"
+        },
+        {
+            "name": "pybind11",
+            "version": "3.0.0"
         },
         {
             "name": "python3",
